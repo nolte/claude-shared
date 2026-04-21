@@ -72,4 +72,4 @@ Early stage — the repository currently serves as the anchor point for consolid
 
 ## License
 
-To be decided.
+[MIT](LICENSE) — Copyright (c) 2026 nolte.
