@@ -31,4 +31,5 @@ repos:
           - MD036  # no-emphasis-as-heading
           - MD040  # fenced-code-language
           - MD041  # first-line-h1
+          - MD049  # emphasis-style (allow underscore)
           - --
