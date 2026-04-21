@@ -1,0 +1,151 @@
+site_name: claude-shared
+site_url: https://nolte.github.io/claude-shared
+site_description: Shared Claude Code skills, agents and conventions — packaged as the nolte-shared plugin.
+site_author: nolte
+
+repo_url: https://github.com/nolte/claude-shared
+repo_name: nolte/claude-shared
+edit_uri: edit/main/docs/
+
+copyright: Copyright &copy; 2026 nolte
+
+docs_dir: docs
+
+theme:
+  name: material
+  language: de
+
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Zum Dunkelmodus wechseln
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Zum Hellmodus wechseln
+
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  features:
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - header.autohide
+    - toc.follow
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - content.action.edit
+
+plugins:
+  - search:
+      lang:
+        - de
+        - en
+      separator: '[\s\-,:!=\[\]()\"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: de
+          name: Deutsch
+          default: true
+          build: true
+        - locale: en
+          name: English
+          build: true
+          nav_translations:
+            Startseite: Home
+            Erste Schritte: Getting Started
+            Überblick: Overview
+            Installation: Installation
+            Nutzung: Usage
+            Skills: Skills
+            Skill-Management: Skill Management
+            Spec: Spec
+            Agents: Agents
+            Spezifikationen: Specifications
+            Skill-Autorenschaft: Skill Authoring
+            Agent-Autorenschaft: Agent Authoring
+            Entwicklung: Development
+            Projektstruktur: Project Structure
+            Beitragen: Contributing
+            Changelog: Changelog
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/nolte/claude-shared
+
+nav:
+  - Startseite: de/index.md
+  - Erste Schritte:
+      - de/getting-started/index.md
+      - Installation: de/getting-started/installation.md
+      - Nutzung: de/getting-started/nutzung.md
+  - Skills:
+      - de/skills/index.md
+      - Skill-Management: de/skills/skill-management.md
+      - Spec: de/skills/spec.md
+  - Agents:
+      - de/agents/index.md
+  - Spezifikationen:
+      - de/specs/index.md
+      - Skill-Autorenschaft: de/specs/skill-management.md
+      - Agent-Autorenschaft: de/specs/agent-management.md
+  - Entwicklung:
+      - de/development/index.md
+      - Projektstruktur: de/development/projektstruktur.md
+      - Beitragen: de/development/beitragen.md
+  - Changelog: de/changelog/index.md
