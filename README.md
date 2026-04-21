@@ -72,6 +72,7 @@ This plugin is part of a small portfolio of shared foundations. The specs in `sp
 
 - [`nolte/gh-plumbing`](https://github.com/nolte/gh-plumbing) — shared GitHub plumbing: reusable Actions workflows (release-drafter, automerge, `main` fast-forward on release, MkDocs publishing) and a commons `settings.yml` extended via the Probot Settings app. Anchors the branching-model and PR-workflow specs.
 - [`nolte/vale-style`](https://github.com/nolte/vale-style) — canonical Vale prose-style package: shared vocabularies (including language-scoped ones like `technical-de/`) and rules that repositories compose with Microsoft + RedHat styles. Anchors the prose-style spec.
+- [`nolte/taskfiles`](https://github.com/nolte/taskfiles) — shared [Task](https://taskfile.dev) include snippets (for example `taskfile-include-mkdocs.yaml`, `taskfile-include-pre-commit.yaml`) that downstream `Taskfile.yml`s pull in via `TASK_COLLECTION_BASE`, so MkDocs and pre-commit wiring stays uniform across repositories.
 
 ## Status
 
