@@ -17,6 +17,9 @@ env/
 # MkDocs build output
 /site/
 
+# Task runner cache
+.task/
+
 # Environment
 .env
 .env.*
