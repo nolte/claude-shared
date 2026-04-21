@@ -66,6 +66,13 @@ Use `/reload-plugins` to pick up changes during a session without restarting.
 
 Conventions for authoring skills and agents are defined in `spec/claude/skill-management/` and `spec/claude/agent-management/`.
 
+## Related repositories
+
+This plugin is part of a small portfolio of shared foundations. The specs in `spec/project/` reference these repositories directly, and downstream projects are expected to pin them:
+
+- [`nolte/gh-plumbing`](https://github.com/nolte/gh-plumbing) — shared GitHub plumbing: reusable Actions workflows (release-drafter, automerge, `main` fast-forward on release, MkDocs publishing) and a commons `settings.yml` extended via the Probot Settings app. Anchors the branching-model and PR-workflow specs.
+- [`nolte/vale-style`](https://github.com/nolte/vale-style) — canonical Vale prose-style package: shared vocabularies (including language-scoped ones like `technical-de/`) and rules that repositories compose with Microsoft + RedHat styles. Anchors the prose-style spec.
+
 ## Status
 
 Early stage — the repository currently serves as the anchor point for consolidating agents and skills that were previously scattered across individual projects.
