@@ -9,6 +9,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Taskfile.yml includes remote taskfiles from nolte/taskfiles;
+  # Task gates that experimental feature behind this flag.
+  TASK_X_REMOTE_TASKFILES: "1"
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -17,6 +22,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - run: pip install pre-commit
       - uses: arduino/setup-task@v2
         with:
           version: 3.x
