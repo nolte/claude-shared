@@ -4,6 +4,7 @@ repository:
   name: claude-shared
   description: Shared Claude Code skills and agents for consistent development workflows across projects.
   homepage: https://nolte.github.io/claude-shared
+  default_branch: develop
   topics:
     - claude-code
     - claude-code-plugin
