@@ -39,6 +39,14 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - **SHOULD** invoke lint, test, and docs commands from CI through Taskfile targets so local and CI behavior stay identical
 - **SHOULD** produce CI status badges in `README.md` for the primary workflows
 
+### Release and documentation workflows
+The `nolte/gh-plumbing` portfolio ships reusable workflows for release management and documentation delivery. The `branching-model` spec lists the release-management workflows in full and makes three of them mandatory. This spec additionally surfaces the documentation and packaging companions so that a project-structure audit catches them even when the branching-model spec is read in isolation.
+
+- **MUST** include the release-management workflows mandated by the `branching-model` spec: `.github/workflows/release-drafter.yml`, `.github/workflows/release-cd-refresh-master.yml`, and `.github/workflows/automerge.yaml`, each wired to the corresponding reusable workflow under `nolte/gh-plumbing/.github/workflows/`
+- **SHOULD** include `.github/workflows/release-cd-deliver-docs.yml` — triggered on `release: [published]` and invoking `nolte/gh-plumbing/.github/workflows/reusable-mkdocs.yaml` — whenever `mkdocs.yml` is present, so documentation is republished on every release
+- **MAY** include a repository-specific packaging workflow (for example a `release.yml` that patches `manifest.json`, builds a ZIP, and uploads it via `gh release upload`) triggered on `release: [published]` when the repository ships a delivery artifact such as an HACS integration
+- **SHOULD** pin every reusable-workflow reference to a tag (for example `@v1.1.12`) rather than a moving branch, so release-pipeline behavior stays reproducible
+
 ### GitHub repository configuration
 - **MUST** manage GitHub repository settings — topics, description, homepage, branch protection, labels, collaborators, and merge-button options — as code via `.github/settings.yml`, consumed by the [Probot Settings app](https://probot.github.io/apps/settings/)
 - **MUST** inherit the portfolio-wide defaults via `_extends: nolte/gh-plumbing:.github/commons-settings.yml` (the short form `gh-plumbing:.github/commons-settings.yml` is equivalent within the `nolte` organization) and keep per-repository content limited to repo-specific fields such as `name`, `description`, `homepage`, and `topics`
@@ -92,6 +100,9 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - [ ] `README.md`, `.gitignore`, `CLAUDE.md`, `renovate.json5` (or `renovate.json`), and `.pre-commit-config.yaml` exist at the repository root
 - [ ] `.claude/` exists and contains at least one of `agents/`, `skills/`, `commands/`, or a `settings*.json` file
 - [ ] `.github/workflows/` contains at least one workflow file
+- [ ] `.github/workflows/` contains `release-drafter.yml`, `release-cd-refresh-master.yml`, and `automerge.yaml`, each wired to the matching `nolte/gh-plumbing` reusable workflow
+- [ ] If `mkdocs.yml` is present, `.github/workflows/release-cd-deliver-docs.yml` exists and triggers on `release: [published]`
+- [ ] Every `uses: nolte/gh-plumbing/.github/workflows/...` reference in `.github/workflows/` is pinned to a release tag, not a moving branch
 - [ ] `.github/settings.yml` is present and extends `nolte/gh-plumbing:.github/commons-settings.yml` (or the equivalent short form)
 - [ ] `.github/release-drafter.yml` is present and extends `nolte/gh-plumbing:.github/commons-release-drafter.yml`
 - [ ] `.github/boring-cyborg.yml` and `.github/stale.yml` are present and extend their respective `nolte/gh-plumbing` commons files

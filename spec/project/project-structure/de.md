@@ -39,6 +39,14 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - **SOLLTE [SHOULD]** Lint-, Test- und Docs-Kommandos in der CI über Taskfile-Targets aufrufen, damit lokales Verhalten und CI-Verhalten identisch bleiben
 - **SOLLTE [SHOULD]** CI-Status-Badges für die primären Workflows in der `README.md` anzeigen
 
+### Release- und Dokumentations-Workflows
+Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Release-Management und Dokumentations-Auslieferung. Die `branching-model`-Spec listet die Release-Management-Workflows vollständig auf und macht drei davon verpflichtend. Diese Spec hebt zusätzlich die Dokumentations- und Packaging-Begleiter hervor, damit ein Projektstruktur-Audit sie auch dann erkennt, wenn die branching-model-Spec isoliert betrachtet wird.
+
+- **MUSS [MUST]** die Release-Management-Workflows enthalten, die die `branching-model`-Spec vorschreibt: `.github/workflows/release-drafter.yml`, `.github/workflows/release-cd-refresh-master.yml` und `.github/workflows/automerge.yaml`, jeweils verkabelt mit dem entsprechenden wiederverwendbaren Workflow unter `nolte/gh-plumbing/.github/workflows/`
+- **SOLLTE [SHOULD]** `.github/workflows/release-cd-deliver-docs.yml` enthalten — getriggert auf `release: [published]` und aufrufend `nolte/gh-plumbing/.github/workflows/reusable-mkdocs.yaml` —, sobald `mkdocs.yml` vorhanden ist, damit die Dokumentation mit jedem Release neu veröffentlicht wird
+- **KANN [MAY]** einen repository-spezifischen Packaging-Workflow enthalten (zum Beispiel eine `release.yml`, die `manifest.json` patcht, ein ZIP baut und via `gh release upload` hochlädt), getriggert auf `release: [published]`, wenn das Repository ein Auslieferungs-Artefakt wie eine HACS-Integration verschifft
+- **SOLLTE [SHOULD]** jede Referenz auf einen wiederverwendbaren Workflow an einen Tag pinnen (zum Beispiel `@v1.1.12`) statt an einen beweglichen Branch, damit das Release-Pipeline-Verhalten reproduzierbar bleibt
+
 ### GitHub-Repository-Konfiguration
 - **MUSS [MUST]** GitHub-Repository-Einstellungen — Topics, Beschreibung, Homepage, Branch-Protection, Labels, Mitarbeitende und Merge-Button-Optionen — als Code über `.github/settings.yml` verwalten, konsumiert von der [Probot-Settings-App](https://probot.github.io/apps/settings/)
 - **MUSS [MUST]** die portfolioweiten Defaults über `_extends: nolte/gh-plumbing:.github/commons-settings.yml` erben (die Kurzform `gh-plumbing:.github/commons-settings.yml` ist innerhalb der `nolte`-Organisation gleichwertig) und die per-Repository-Inhalte auf repository-spezifische Felder wie `name`, `description`, `homepage` und `topics` beschränken
@@ -92,6 +100,9 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - [ ] `README.md`, `.gitignore`, `CLAUDE.md`, `renovate.json5` (oder `renovate.json`) und `.pre-commit-config.yaml` existieren im Repository-Wurzelverzeichnis
 - [ ] `.claude/` existiert und enthält mindestens eines von `agents/`, `skills/`, `commands/` oder einer `settings*.json`-Datei
 - [ ] `.github/workflows/` enthält mindestens eine Workflow-Datei
+- [ ] `.github/workflows/` enthält `release-drafter.yml`, `release-cd-refresh-master.yml` und `automerge.yaml`, jeweils verkabelt mit dem passenden wiederverwendbaren `nolte/gh-plumbing`-Workflow
+- [ ] Wenn `mkdocs.yml` vorhanden ist, existiert `.github/workflows/release-cd-deliver-docs.yml` und triggert auf `release: [published]`
+- [ ] Jede `uses: nolte/gh-plumbing/.github/workflows/...`-Referenz in `.github/workflows/` ist an einen Release-Tag gepinnt, nicht an einen beweglichen Branch
 - [ ] `.github/settings.yml` ist vorhanden und erweitert `nolte/gh-plumbing:.github/commons-settings.yml` (oder die gleichwertige Kurzform)
 - [ ] `.github/release-drafter.yml` ist vorhanden und erweitert `nolte/gh-plumbing:.github/commons-release-drafter.yml`
 - [ ] `.github/boring-cyborg.yml` und `.github/stale.yml` sind vorhanden und erweitern die jeweilige `nolte/gh-plumbing`-commons-Datei

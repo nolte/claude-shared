@@ -69,6 +69,12 @@ For each **missing** or **drift** item the audit surfaced, confirm with the user
 - **`.github/boring-cyborg.yml`** — `_extends: nolte/gh-plumbing:.github/commons-boring-cyborg.yml`.
 - **`.github/stale.yml`** — `_extends: nolte/gh-plumbing:.github/commons-stale.yml`.
 - **`.github/workflows/`** — if empty, scaffold at minimum a `ci.yml` that invokes Taskfile targets (`task lint`, `task test`, `task docs`). Do not invent language-specific pipelines beyond what Taskfile already exposes.
+- **Release-management workflows** — when any of the three required workflows is missing, scaffold it as a thin caller of the matching reusable workflow in `nolte/gh-plumbing`, pinned to the current release tag (ask the user for the tag, or fall back to `@develop` and flag it):
+  - `.github/workflows/release-drafter.yml` → `on: push: branches: [develop]`, calls `nolte/gh-plumbing/.github/workflows/reusable-release-drafter.yml@<tag>` with `permissions: contents: write, pull-requests: write`
+  - `.github/workflows/release-cd-refresh-master.yml` → `on: release: types: [published]`, calls `nolte/gh-plumbing/.github/workflows/reusable-release-cd-refresh-master.yml@<tag>` with `target_branch: main` and `permissions: contents: write`
+  - `.github/workflows/automerge.yaml` → standard `pull_request` / `pull_request_review` / `check_suite` triggers, calls `nolte/gh-plumbing/.github/workflows/reusable-automerge.yaml@<tag>` with `permissions: contents: write, pull-requests: write`
+- **`.github/workflows/release-cd-deliver-docs.yml`** — scaffold only when `mkdocs.yml` exists in the repo. `on: release: types: [published]`, calls `nolte/gh-plumbing/.github/workflows/reusable-mkdocs.yaml@<tag>` with `requirements: docs/requirements.txt`, `permissions: contents: write, id-token: write, pages: write`, and a `concurrency` group of `pages` with `cancel-in-progress: true`.
+- **Repository-specific packaging workflow** — do **not** scaffold. If the repo is an HA integration (`hacs.json` present) or otherwise ships a delivery artifact and no packaging workflow exists, report the gap and ask the user how the artifact is produced before writing anything.
 - **`Taskfile.yml`** — include `test`, `lint`, `docs` targets at a minimum; wire them to the real stack commands detected in the repo.
 - **`docs/` + `mkdocs.yml`** — scaffold an `mkdocs.yml` that points at `docs/` and a stub `docs/index.md`.
 - **`spec/` / `tests/`** — create as empty directories with a single `.gitkeep` only when the repo truly has nothing to move there yet.
