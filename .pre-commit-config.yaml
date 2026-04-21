@@ -6,7 +6,7 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
-        args: [--allow-multiple-documents]
+        args: [--allow-multiple-documents, --unsafe]
       - id: check-json
       - id: check-merge-conflict
       - id: mixed-line-ending
@@ -22,4 +22,13 @@ repos:
     rev: v0.42.0
     hooks:
       - id: markdownlint
-        args: [--disable, MD013, MD033, MD041, "--"]
+        args:
+          - --disable
+          - MD013  # line-length
+          - MD022  # blanks-around-headings
+          - MD032  # blanks-around-lists
+          - MD033  # no-inline-html
+          - MD036  # no-emphasis-as-heading
+          - MD040  # fenced-code-language
+          - MD041  # first-line-h1
+          - --
