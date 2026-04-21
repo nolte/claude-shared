@@ -1,5 +1,7 @@
 # claude-shared
 
+[![ci](https://github.com/nolte/claude-shared/actions/workflows/ci.yml/badge.svg)](https://github.com/nolte/claude-shared/actions/workflows/ci.yml)
+
 A shared foundation of [Claude Code](https://docs.claude.com/en/docs/claude-code) agents and skills, intended to be reused across multiple software development projects.
 
 ## Purpose

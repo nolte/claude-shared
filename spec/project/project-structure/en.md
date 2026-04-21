@@ -69,6 +69,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
   - `src/` for a single-component library or service
   - `src/<component>/` per subproject in a multi-component repository (for example `src/backend/`, `src/frontend/`, `src/knowledge-service/`)
   - `custom_components/<name>/` for a Home Assistant custom integration
+  - `.claude-plugin/` together with `skills/<name>/` (and optionally `agents/<name>.md`) for a Claude Code plugin repository, where prompt and skill content is the primary deliverable and no runtime source exists
 - **MUST NOT** keep primary source files loose at the repository root; only tooling configs, metadata, and small scripts may live there
 - **MAY** include a `scripts/` and/or `tools/` folder for repository-local automation helpers
 
@@ -98,7 +99,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - [ ] `docs/` and `mkdocs.yml` exist, and `mkdocs build` completes without errors
 - [ ] `spec/` exists at the repository root
 - [ ] `tests/` exists and contains at least one test
-- [ ] Primary source lives under `src/`, `src/<component>/`, or `custom_components/<name>/` — not loose at the root
+- [ ] Primary source lives under `src/`, `src/<component>/`, `custom_components/<name>/`, or `.claude-plugin/` + `skills/<name>/` — not loose at the root
 - [ ] If `.env.example` is present, a literal `.env` entry appears in `.gitignore`
 - [ ] If `hacs.json` is present, `custom_components/<domain>/` exists and matches the HA integration domain
 - [ ] CI status badges for the primary workflows appear near the top of `README.md`
@@ -110,3 +111,4 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - Should release artifacts (changelogs, release workflows, versioning policy) be referenced from here or left entirely to a separate release-process spec?
 - Should multilingual documentation (`docs/<lang>/`) be a **SHOULD** once a second language appears, or stay **MAY**?
 - Is there a canonical minimum Taskfile target set beyond test/lint/docs (for example `setup`, `ci`, `release`)?
+- Should `tests/` be softened from **MUST** to **SHOULD** for Claude Code plugin repositories that ship only prompt/skill content and carry no runtime code?

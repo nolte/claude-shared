@@ -69,6 +69,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
   - `src/` für eine Einzweck-Bibliothek oder einen Einzweck-Dienst
   - `src/<component>/` je Teilprojekt in einem mehrteiligen Repository (zum Beispiel `src/backend/`, `src/frontend/`, `src/knowledge-service/`)
   - `custom_components/<name>/` für eine Home-Assistant-Custom-Integration
+  - `.claude-plugin/` zusammen mit `skills/<name>/` (und optional `agents/<name>.md`) für ein Claude-Code-Plugin-Repository, bei dem Prompt- und Skill-Inhalte das primäre Lieferobjekt sind und kein Runtime-Quellcode existiert
 - **MUSS NICHT [MUST NOT]** primäre Quellcode-Dateien lose im Repository-Wurzelverzeichnis halten; dort dürfen nur Tooling-Konfigurationen, Metadaten und kleine Skripte liegen
 - **KANN [MAY]** einen `scripts/`- und/oder `tools/`-Ordner für repository-lokale Automatisierungs-Helfer enthalten
 
@@ -98,7 +99,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - [ ] `docs/` und `mkdocs.yml` existieren und `mkdocs build` läuft fehlerfrei durch
 - [ ] `spec/` existiert im Repository-Wurzelverzeichnis
 - [ ] `tests/` existiert und enthält mindestens einen Test
-- [ ] Primärer Quellcode liegt unter `src/`, `src/<component>/` oder `custom_components/<name>/` — nicht lose im Wurzelverzeichnis
+- [ ] Primärer Quellcode liegt unter `src/`, `src/<component>/`, `custom_components/<name>/` oder `.claude-plugin/` + `skills/<name>/` — nicht lose im Wurzelverzeichnis
 - [ ] Wenn eine `.env.example` vorhanden ist, erscheint ein wörtlicher `.env`-Eintrag in der `.gitignore`
 - [ ] Wenn eine `hacs.json` vorhanden ist, existiert `custom_components/<domain>/` und stimmt mit der HA-Integrations-Domain überein
 - [ ] CI-Status-Badges für die primären Workflows erscheinen am oberen Rand der `README.md`
@@ -110,3 +111,4 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - Sollen Release-Artefakte (Changelogs, Release-Workflows, Versionierungs-Policy) von hier referenziert oder vollständig einer separaten Release-Prozess-Spec überlassen werden?
 - Soll mehrsprachige Dokumentation (`docs/<lang>/`) zum **SOLLTE [SHOULD]** werden, sobald eine zweite Sprache erscheint, oder **KANN [MAY]** bleiben?
 - Gibt es ein kanonisches Mindest-Set an Taskfile-Targets über Test/Lint/Docs hinaus (zum Beispiel `setup`, `ci`, `release`)?
+- Soll `tests/` für Claude-Code-Plugin-Repositories, die nur Prompt-/Skill-Inhalte ausliefern und keinen Runtime-Code enthalten, von **MUSS [MUST]** auf **SOLLTE [SHOULD]** abgeschwächt werden?

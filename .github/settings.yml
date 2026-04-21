@@ -1,0 +1,12 @@
+_extends: nolte/gh-plumbing:.github/commons-settings.yml
+
+repository:
+  name: claude-shared
+  description: Shared Claude Code skills and agents for consistent development workflows across projects.
+  homepage: https://nolte.github.io/claude-shared
+  topics:
+    - claude-code
+    - claude-code-plugin
+    - skills
+    - agents
+    - nolte-shared
