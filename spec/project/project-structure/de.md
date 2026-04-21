@@ -25,7 +25,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - **MUSS [MUST]** eine `README.md` im Repository-Wurzelverzeichnis enthalten mit Projektvorstellung, Feature-Übersicht, Quickstart und Verweisen auf die vollständige Dokumentation
 - **MUSS [MUST]** eine `.gitignore` enthalten
 - **MUSS [MUST]** eine `CLAUDE.md` enthalten, die KI-gestützte Entwicklungs­konventionen, Architektur-Hinweise und Kommando-Einstiegspunkte des Repositories dokumentiert
-- **MUSS [MUST]** eine `renovate.json5` (bevorzugt) oder `renovate.json` für automatisierte Abhängigkeits-Updates enthalten
+- **MUSS [MUST]** eine `renovate.json5` (bevorzugt) oder `renovate.json` enthalten, die das portfolioweite Preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>` erweitert — an einen Release-Tag gepinnt (zum Beispiel `#v1.1.12`) —, damit die Renovate-Konfiguration portfolio­übergreifend konsistent bleibt; per-Repository-Überschreibungen **SOLLTEN [SHOULD]** schmal gehalten werden (typischerweise Package-Gruppierungen oder Automerge-Regeln)
 - **MUSS [MUST]** eine `.pre-commit-config.yaml` enthalten, die für den Stack relevante Linter und Formatter fixiert
 - **SOLLTE [SHOULD]** eine `LICENSE`-Datei im Wurzelverzeichnis enthalten, wenn das Repository veröffentlicht oder zur Weiterverbreitung gedacht ist
 
@@ -98,6 +98,7 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 
 ## Akzeptanzkriterien
 - [ ] `README.md`, `.gitignore`, `CLAUDE.md`, `renovate.json5` (oder `renovate.json`) und `.pre-commit-config.yaml` existieren im Repository-Wurzelverzeichnis
+- [ ] `renovate.json5` (oder `renovate.json`) erweitert `github>nolte/gh-plumbing//renovate-configs/common#<tag>`, gepinnt an einen Release-Tag und nicht an einen beweglichen Branch
 - [ ] `.claude/` existiert und enthält mindestens eines von `agents/`, `skills/`, `commands/` oder einer `settings*.json`-Datei
 - [ ] `.github/workflows/` enthält mindestens eine Workflow-Datei
 - [ ] `.github/workflows/` enthält `release-drafter.yml`, `release-cd-refresh-master.yml` und `automerge.yaml`, jeweils verkabelt mit dem passenden wiederverwendbaren `nolte/gh-plumbing`-Workflow

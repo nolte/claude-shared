@@ -62,7 +62,7 @@ Never attempt to *install* an app programmatically — app installation is inten
 
 For each **missing** or **drift** item the audit surfaced, confirm with the user per item (group-level "apply all in this group" is fine when the user asks for it). For each approved item:
 
-- **Missing top-level files** — scaffold with the minimal content the spec requires. `renovate.json5` starts with `{ extends: ["config:recommended"] }`; `.pre-commit-config.yaml` pins the stack's current linters; `CLAUDE.md` covers architecture hints and command entry points.
+- **Missing top-level files** — scaffold with the minimal content the spec requires. `renovate.json5` extends the portfolio preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>` pinned to the current `nolte/gh-plumbing` release tag (fetch via `gh api repos/nolte/gh-plumbing/releases/latest --jq '.tag_name'`; fall back to asking the user). `.pre-commit-config.yaml` pins the stack's current linters; `CLAUDE.md` covers architecture hints and command entry points.
 - **`.claude/` directory** — create with a `settings.json` stub (empty `permissions` and `env`) so the directory isn't empty. Never copy plugin-owned skills into `.claude/skills/`.
 - **`.github/settings.yml`** — write with `_extends: nolte/gh-plumbing:.github/commons-settings.yml` plus only the repo-specific keys (`name`, `description`, `homepage`, `topics`). Pre-fill values from `git remote get-url origin` and `gh repo view --json ...` when available.
 - **`.github/release-drafter.yml`** — `_extends: nolte/gh-plumbing:.github/commons-release-drafter.yml`, nothing else unless the user explicitly requests overrides.
