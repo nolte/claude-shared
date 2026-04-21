@@ -8,3 +8,4 @@ Canonical language: `en` · Translations: `de`
 |---|---|---|---|---|---|
 | claude | agent-management | Claude Agent Authoring | Claude-Agent-Autorenschaft | draft | unversioned |
 | claude | skill-management | Claude Skill Authoring | Claude-Skill-Autorenschaft | draft | unversioned |
+| project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | unversioned |
