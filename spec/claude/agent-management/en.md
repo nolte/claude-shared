@@ -22,12 +22,21 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 
 ### Structure
 - **MUST** be authored as a single markdown file named `<name>.md` where `<name>` is ASCII kebab-case
-- **MUST** include YAML frontmatter with the fields `name` and `description`
+- **MUST** include YAML frontmatter with the fields `name`, `description`, and `distribution`
 - **MUST** set `name` to match the filename without the `.md` suffix
 - **MUST** write a `description` that names concrete user-facing triggers and task shapes ("use when the user asks X", "invoke for Y") rather than abstract capabilities, so the calling Claude can reliably decide when to dispatch
+- **MUST** set `distribution` to exactly one of `plugin` or `project`, declaring the intended delivery form (see "Distribution" below); the author chooses this consciously at creation time and changes it only by re-authoring the agent for the new form
 - **MUST** contain a system prompt in the markdown body that scopes the agent to a single responsibility and states its expected output shape
 - **MUST** keep frontmatter and system-prompt content in English for token efficiency; the agent may still be instructed to respond to the user in the user's language
 - **MUST** be self-contained — any supporting assets (references, examples, prompt fragments) live alongside the agent file in a sibling folder `agents/<name>/` and are referenced by relative path
+
+### Distribution
+An agent is authored for exactly one of two delivery forms. The choice is made up front and written into the `distribution` field:
+
+- `plugin` — shipped as part of a Claude Code plugin. The agent is expected to be installed and updated through the plugin mechanism, alongside other agents/skills of the same plugin, and may assume the plugin's conventions and co-located resources.
+- `project` — direct reuse in a single project or user environment. The agent is copied or symlinked into the consuming setup and stands alone, without assuming any plugin context.
+
+Every agent declares this intent so authors, reviewers, and consumers all see from the file itself whether it belongs to a plugin bundle or is meant for standalone project use.
 
 ### Tool access
 - **MUST** declare a `tools` field in frontmatter when the agent should be restricted; omit the field only when the agent genuinely needs the full tool surface
@@ -43,11 +52,14 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - **MAY** have a sibling folder `agents/<name>/` for supporting files when needed
 
 ### Runtime location (consuming project)
-- **MUST** be loadable by Claude Code from one of the standard locations:
+Runtime location follows the declared `distribution`:
+
+- If `distribution: plugin`, the agent **MUST** be loadable from the plugin's designated agents path once the plugin is installed in a consuming project. It **MUST NOT** require any manual drop into `.claude/agents/` or `~/.claude/agents/` to work.
+- If `distribution: project`, the agent **MUST** be loadable by Claude Code from one of:
   - `.claude/agents/<name>.md` — project-level installation
   - `~/.claude/agents/<name>.md` — user-level installation
-  - the plugin's designated agents path when delivered as part of a plugin
-- **MUST NOT** assume a particular install location; all internal references stay relative to the agent file or to the project the agent operates on
+
+In both cases the agent **MUST NOT** assume a particular absolute install location; all internal references stay relative to the agent file or to the project the agent operates on.
 
 ### Recommendations
 - **SHOULD** begin the system prompt with the agent's role and boundaries, then the expected output format, then the working procedure
@@ -58,10 +70,12 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 
 ## Acceptance Criteria
 - [ ] Source file exists at `agents/<name>.md` in claude-shared with `<name>` in ASCII kebab-case
-- [ ] Agent can be deployed to `.claude/agents/<name>.md` (or `~/.claude/agents/<name>.md`) in a consuming project and is dispatchable via `subagent_type: <name>`
-- [ ] Frontmatter parses as valid YAML and contains at minimum `name` and `description`
+- [ ] Frontmatter parses as valid YAML and contains at minimum `name`, `description`, and `distribution`
 - [ ] `name` in frontmatter equals the filename without `.md`
 - [ ] `description` names concrete triggers the calling Claude can match against user requests
+- [ ] `distribution` is exactly `plugin` or `project` — no other value, no missing field
+- [ ] If `distribution: plugin`, the agent is dispatchable via `subagent_type: <name>` in a project where the containing plugin is installed, without manually copying the file
+- [ ] If `distribution: project`, the agent is dispatchable via `subagent_type: <name>` after being deployed to `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, with no plugin required
 - [ ] If `tools` is set, the listed tools are sufficient for the agent's stated responsibility and contain no unused entries
 - [ ] Read-only agents have no write/edit/execution tools in their `tools` list
 - [ ] Agent works when invoked in a downstream project that does not contain claude-shared-specific context

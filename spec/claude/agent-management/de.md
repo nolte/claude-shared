@@ -22,12 +22,21 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 
 ### Struktur
 - **MUSS [MUST]** als einzelne Markdown-Datei mit dem Namen `<name>.md` angelegt werden, wobei `<name>` ASCII-Kebab-Case ist
-- **MUSS [MUST]** YAML-Frontmatter mit den Feldern `name` und `description` enthalten
+- **MUSS [MUST]** YAML-Frontmatter mit den Feldern `name`, `description` und `distribution` enthalten
 - **MUSS [MUST]** `name` exakt auf den Dateinamen ohne die Endung `.md` setzen
 - **MUSS [MUST]** eine `description` schreiben, die konkrete nutzerseitige Trigger und Aufgabenformen benennt („einsetzen, wenn der Nutzer X fragt", „aufrufen für Y") statt abstrakter Fähigkeiten, damit der aufrufende Claude zuverlässig über das Dispatchen entscheiden kann
+- **MUSS [MUST]** `distribution` exakt auf einen der Werte `plugin` oder `project` setzen und damit die beabsichtigte Auslieferungsform deklarieren (siehe „Distribution" unten); der Autor trifft diese Wahl bewusst bei der Erstellung und ändert sie nur durch Neuausrichtung des Agents auf die andere Form
 - **MUSS [MUST]** im Markdown-Körper einen System-Prompt enthalten, der den Agent auf genau eine Verantwortlichkeit eingrenzt und die erwartete Ausgabeform benennt
 - **MUSS [MUST]** Frontmatter- und System-Prompt-Inhalte aus Token-Effizienzgründen auf Englisch halten; der Agent darf dennoch angewiesen werden, dem Nutzer in dessen Sprache zu antworten
 - **MUSS [MUST]** in sich geschlossen sein — unterstützende Artefakte (Referenzen, Beispiele, Prompt-Bausteine) liegen neben der Agent-Datei in einem Schwester-Ordner `agents/<name>/` und werden über relative Pfade referenziert
+
+### Distribution
+Ein Agent wird für genau eine von zwei Auslieferungsformen angelegt. Die Wahl wird vorab getroffen und im Feld `distribution` festgehalten:
+
+- `plugin` — wird als Teil eines Claude-Code-Plugins ausgeliefert. Der Agent wird über den Plugin-Mechanismus installiert und aktualisiert, zusammen mit weiteren Agents/Skills desselben Plugins, und darf die Konventionen sowie ko-lokalisierten Ressourcen des Plugins voraussetzen.
+- `project` — direkte Wiederverwendung in einem einzelnen Projekt oder Nutzer-Setup. Der Agent wird in das konsumierende Setup kopiert oder symlinkt und steht für sich allein, ohne einen Plugin-Kontext vorauszusetzen.
+
+Jeder Agent deklariert diese Absicht, damit Autoren, Reviewer und Konsumenten aus der Datei selbst erkennen, ob er zu einem Plugin-Bundle gehört oder für die eigenständige Projektnutzung gedacht ist.
 
 ### Tool-Zugriff
 - **MUSS [MUST]** ein `tools`-Feld im Frontmatter deklarieren, wenn der Agent eingeschränkt werden soll; das Feld nur dann weglassen, wenn der Agent tatsächlich die volle Tool-Oberfläche benötigt
@@ -43,11 +52,14 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - **KANN [MAY]** bei Bedarf einen Schwester-Ordner `agents/<name>/` für unterstützende Dateien haben
 
 ### Laufzeit-Ablageort (konsumierendes Projekt)
-- **MUSS [MUST]** von Claude Code aus einem der Standard-Orte ladbar sein:
+Der Laufzeit-Ablageort richtet sich nach dem deklarierten `distribution`:
+
+- Bei `distribution: plugin` **MUSS [MUST]** der Agent aus dem dafür vorgesehenen Agents-Pfad des Plugins ladbar sein, sobald das Plugin im konsumierenden Projekt installiert ist. Er **DARF NICHT [MUST NOT]** erfordern, dass die Datei manuell nach `.claude/agents/` oder `~/.claude/agents/` kopiert wird, um zu funktionieren.
+- Bei `distribution: project` **MUSS [MUST]** der Agent von Claude Code aus einem der folgenden Orte ladbar sein:
   - `.claude/agents/<name>.md` — projektbezogene Installation
   - `~/.claude/agents/<name>.md` — benutzerbezogene Installation
-  - der dafür vorgesehene Agents-Pfad eines Plugins, wenn er als Teil eines Plugins ausgeliefert wird
-- **DARF NICHT [MUST NOT]** einen bestimmten Installationsort voraussetzen; alle internen Referenzen bleiben relativ zur Agent-Datei oder zum Projekt, auf dem der Agent operiert
+
+In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absoluten Installationsort voraussetzen; alle internen Referenzen bleiben relativ zur Agent-Datei oder zum Projekt, auf dem der Agent operiert.
 
 ### Empfehlungen
 - **SOLLTE [SHOULD]** den System-Prompt mit Rolle und Grenzen des Agents beginnen, dann das erwartete Ausgabeformat, dann die Arbeitsweise
@@ -58,10 +70,12 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 
 ## Akzeptanzkriterien
 - [ ] Quelldatei existiert unter `agents/<name>.md` in claude-shared mit `<name>` in ASCII-Kebab-Case
-- [ ] Agent kann in einem konsumierenden Projekt nach `.claude/agents/<name>.md` (oder `~/.claude/agents/<name>.md`) ausgebracht und über `subagent_type: <name>` dispatcht werden
-- [ ] Frontmatter parst als gültiges YAML und enthält mindestens `name` und `description`
+- [ ] Frontmatter parst als gültiges YAML und enthält mindestens `name`, `description` und `distribution`
 - [ ] `name` im Frontmatter entspricht dem Dateinamen ohne `.md`
 - [ ] `description` benennt konkrete Trigger, die der aufrufende Claude mit Nutzeranfragen abgleichen kann
+- [ ] `distribution` ist exakt `plugin` oder `project` — kein anderer Wert, kein fehlendes Feld
+- [ ] Bei `distribution: plugin` ist der Agent in einem Projekt, in dem das enthaltende Plugin installiert ist, über `subagent_type: <name>` dispatchbar, ohne dass die Datei manuell kopiert werden muss
+- [ ] Bei `distribution: project` ist der Agent nach Ausbringung nach `.claude/agents/<name>.md` oder `~/.claude/agents/<name>.md` über `subagent_type: <name>` dispatchbar, ohne dass ein Plugin erforderlich ist
 - [ ] Ist `tools` gesetzt, sind die gelisteten Tools ausreichend für die angegebene Verantwortlichkeit und enthalten keine ungenutzten Einträge
 - [ ] Rein lesende Agents haben keine Schreib-/Edit-/Ausführungs-Tools in ihrer `tools`-Liste
 - [ ] Agent funktioniert, wenn er in einem nachgelagerten Projekt aufgerufen wird, das keinen claude-shared-spezifischen Kontext enthält
