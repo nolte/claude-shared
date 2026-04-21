@@ -36,17 +36,32 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 4. **Testing** — how the change was verified (commands run, manual steps, screenshots)
 5. **Risk / rollout notes** — risk class, migrations, feature flags, or the literal text `None`
 
-- **MUST** retain every template section in the PR body; sections are never deleted, even when empty
+- **MUST** retain every required template section in the PR body; sections are never deleted, even when empty
 - **MUST NOT** leave Summary, Changes, or Testing empty; Linked issues and Risk / rollout notes **MAY** use the literal text `None`
+- **MAY** add repository-specific sections *below* the five required sections; additional sections **MUST** appear after all five required sections and **MUST NOT** be interleaved between them
 - **SHOULD** use imperative mood in Summary and Changes (`Add …`, `Fix …`, not `Added …`)
 - **SHOULD** link to the relevant spec file under `spec/` when the change implements or modifies a spec
+
+### PR lint workflow
+- **MUST** include a workflow under `.github/workflows/` (e.g. `pr-lint.yml`) that lints PR title and body on the `pull_request` events `opened`, `edited`, `synchronize`, and `ready_for_review`
+- **MUST** register this workflow's job as a required status check for `develop` in `.github/settings.yml`
+- **MUST** fail the check if the PR title does not match the Conventional Commits form `<type>(<scope>)?: <summary>` with `<type>` ∈ {`feat`, `fix`, `chore`, `docs`}
+- **MUST** fail the check if the PR body does not contain all five required section headings in the declared order
+- **MUST** fail the check if Summary, Changes, or Testing is empty or contains only the literal text `None`
+- **MUST NOT** fail the check when the body contains additional repository-specific sections appended after the five required sections, so long as the required sections themselves are present, in order, and non-empty where required
+- **SHOULD** implement the linter as a reusable workflow under `nolte/gh-plumbing` (for example `reusable-pr-lint.yaml`) so every repository inherits one implementation rather than forking local copies that drift
 
 ### CI gate into `develop`
 - **MUST** declare the full set of required status checks for `develop` as code in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension); the GitHub UI is **NOT** an acceptable place to add or remove required checks
 - **MUST** require every declared check to report success before a PR can merge into `develop`
 - **MUST** configure the `automerge.yaml` workflow so it only merges a PR when every required check reports success and the PR is approved
-- **SHOULD** set `enforce_admins: true` for `develop` branch protection so that admin overrides cannot bypass a failing check; any repository that waives this **MUST** record the reason in the repository's `README.md` or an explicit `.github/BRANCH_PROTECTION.md`
+- **MUST** set `enforce_admins: true` for `develop` branch protection so that admin overrides cannot bypass a failing required check; the CI gate has no exception path, and a waiver is not permitted — if a required check is persistently broken, the correct remedy is a PR against `.github/settings.yml` (which itself passes the gate) to remove or replace the check, not a one-off bypass
 - **SHOULD** block merge while any review explicitly requests changes, even after CI becomes green
+
+### Merge strategy
+- **MUST** merge PRs into `develop` using squash-merge; the resulting commit on `develop` is a single commit per PR carrying the Conventional-Commits-compliant PR title as its message
+- **MUST** declare squash-merge as the only enabled merge option in `.github/settings.yml` for repositories following this spec: `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false`
+- **SHOULD** keep the PR title as the default squash-commit message so the `develop` history is a linear stream of Conventional-Commits messages, directly consumable by release-drafter
 
 ### Draft and work-in-progress PRs
 - **SHOULD** open PRs as Draft while work is ongoing and mark them ready for review only once CI is expected to pass and the description is complete
@@ -55,14 +70,14 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 ## Acceptance Criteria
 - [ ] `.github/pull_request_template.md` exists and its section headings match the five headings listed in "PR description structure", in order
 - [ ] `.github/settings.yml` declares required status checks for `develop` (directly or via the `nolte/gh-plumbing` commons extension)
-- [ ] `enforce_admins` is `true` for the `develop` branch protection rule, or a waiver is documented in `README.md` or `.github/BRANCH_PROTECTION.md`
+- [ ] `enforce_admins` is `true` for the `develop` branch protection rule; no waiver mechanism exists in the repository
 - [ ] For the last 10 PRs merged into `develop`, every required status check was green at merge time (spot-check via `gh pr list --state merged --base develop --limit 10 --json number,title,mergedAt,statusCheckRollup`)
 - [ ] For the same 10 PRs, titles match the Conventional Commits form and the `type` corresponds to the branch prefix
 - [ ] The source branches of the same 10 PRs used one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, and the PR title type matched the prefix verbatim
-- [ ] A sample of recent PR bodies shows all five required sections present, with only Linked issues and Risk / rollout notes allowed to contain the literal `None`
+- [ ] A sample of recent PR bodies shows all five required sections present, with only Linked issues and Risk / rollout notes allowed to contain the literal `None`; any repository-specific sections appear *after* the required five, never interleaved
+- [ ] `.github/workflows/pr-lint.yml` (or an equivalently-named workflow) exists and its job is declared as a required status check for `develop` in `.github/settings.yml`
+- [ ] `.github/settings.yml` sets `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` for the repository
+- [ ] The last 10 first-parent commits on `develop` (via `git log --first-parent develop -n 10`) each correspond to exactly one squash-merged PR and carry a Conventional-Commits-compliant message
 
 ## Open Questions
-- Should the squash-merge vs. merge-commit policy for PRs into `develop` be declared here or kept in the branching-model spec?
-- Is `enforce_admins: true` a hard **MUST** across the portfolio, or is case-by-case opt-out via a documented waiver acceptable in perpetuity?
-- Should the PR template section list be strictly identical across the portfolio, or may a repository add repository-specific sections below the five required ones?
-- Do we need an automated linter (e.g. a reusable workflow) that fails a PR whose body or title violates this spec, rather than relying on reviewer discipline?
+- _None at this time; all drafting questions have been resolved._

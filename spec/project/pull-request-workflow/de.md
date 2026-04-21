@@ -36,17 +36,32 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 4. **Testing** — wie die Änderung verifiziert wurde (ausgeführte Befehle, manuelle Schritte, Screenshots)
 5. **Risk / rollout notes** — Risikoklasse, Migrationen, Feature-Flags oder der Literaltext `None`
 
-- **MUSS [MUST]** jeden Template-Abschnitt im PR-Body erhalten; Abschnitte werden niemals entfernt, auch wenn sie leer wären
+- **MUSS [MUST]** jeden erforderlichen Template-Abschnitt im PR-Body erhalten; Abschnitte werden niemals entfernt, auch wenn sie leer wären
 - **DARF NICHT [MUST NOT]** Summary, Changes oder Testing leer lassen; Linked issues und Risk / rollout notes **DÜRFEN [MAY]** den Literaltext `None` verwenden
+- **DARF [MAY]** repo-spezifische Abschnitte *unterhalb* der fünf erforderlichen Abschnitte hinzufügen; zusätzliche Abschnitte **MÜSSEN [MUST]** nach allen fünf Pflichtabschnitten erscheinen und **DÜRFEN NICHT [MUST NOT]** zwischen ihnen eingefügt werden
 - **SOLLTE [SHOULD]** Imperativform in Summary und Changes verwenden (`Add …`, `Fix …`, nicht `Added …`)
 - **SOLLTE [SHOULD]** auf die relevante Spec-Datei unter `spec/` verlinken, wenn die Änderung eine Spec umsetzt oder modifiziert
+
+### PR-Lint-Workflow
+- **MUSS [MUST]** einen Workflow unter `.github/workflows/` enthalten (z. B. `pr-lint.yml`), der PR-Titel und -Body auf den `pull_request`-Events `opened`, `edited`, `synchronize` und `ready_for_review` lintet
+- **MUSS [MUST]** den Job dieses Workflows als erforderlichen Status-Check für `develop` in `.github/settings.yml` registrieren
+- **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Titel nicht der Conventional-Commits-Form `<type>(<scope>)?: <summary>` mit `<type>` ∈ {`feat`, `fix`, `chore`, `docs`} entspricht
+- **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Body nicht alle fünf erforderlichen Abschnittsüberschriften in der festgelegten Reihenfolge enthält
+- **MUSS [MUST]** den Check fehlschlagen lassen, wenn Summary, Changes oder Testing leer ist oder ausschließlich den Literaltext `None` enthält
+- **DARF NICHT [MUST NOT]** den Check fehlschlagen lassen, wenn der Body zusätzliche repo-spezifische Abschnitte enthält, die *nach* den fünf Pflichtabschnitten angehängt sind, solange die Pflichtabschnitte selbst vorhanden, in der richtigen Reihenfolge und an den geforderten Stellen nicht leer sind
+- **SOLLTE [SHOULD]** den Linter als wiederverwendbaren Workflow unter `nolte/gh-plumbing` umsetzen (zum Beispiel `reusable-pr-lint.yaml`), sodass jedes Repository dieselbe Implementierung erbt statt lokaler Kopien, die auseinanderdriften
 
 ### CI-Gate nach `develop`
 - **MUSS [MUST]** die vollständige Menge der erforderlichen Status-Checks für `develop` als Code in `.github/settings.yml` deklarieren (direkt oder via der `nolte/gh-plumbing`-Commons-Extension); das GitHub-UI ist **KEIN** akzeptabler Ort, um erforderliche Checks hinzuzufügen oder zu entfernen
 - **MUSS [MUST]** verlangen, dass jeder deklarierte Check Erfolg meldet, bevor ein PR nach `develop` gemergt werden kann
 - **MUSS [MUST]** den `automerge.yaml`-Workflow so konfigurieren, dass er einen PR nur dann mergt, wenn jeder erforderliche Check Erfolg meldet und der PR freigegeben ist
-- **SOLLTE [SHOULD]** `enforce_admins: true` für die `develop`-Branch-Protection setzen, damit Admin-Overrides keinen fehlschlagenden Check umgehen können; jedes Repository, das davon abweicht, **MUSS [MUST]** den Grund in der `README.md` des Repositorys oder in einer expliziten `.github/BRANCH_PROTECTION.md` dokumentieren
+- **MUSS [MUST]** `enforce_admins: true` für die `develop`-Branch-Protection setzen, damit Admin-Overrides keinen fehlschlagenden erforderlichen Check umgehen können; das CI-Gate hat keinen Ausnahmepfad, und eine Waiver-Regelung ist nicht zulässig — wenn ein erforderlicher Check dauerhaft defekt ist, ist die korrekte Abhilfe ein PR gegen `.github/settings.yml` (der selbst das Gate passiert), der den Check entfernt oder ersetzt, keine einmalige Umgehung
 - **SOLLTE [SHOULD]** den Merge blockieren, solange ein Review ausdrücklich Änderungen anfordert, auch nachdem die CI grün geworden ist
+
+### Merge-Strategie
+- **MUSS [MUST]** PRs mittels Squash-Merge nach `develop` mergen; der resultierende Commit auf `develop` ist ein einziger Commit pro PR, der den Conventional-Commits-konformen PR-Titel als Nachricht trägt
+- **MUSS [MUST]** Squash-Merge als einzige aktivierte Merge-Option in `.github/settings.yml` für Repositories, die dieser Spec folgen, deklarieren: `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false`
+- **SOLLTE [SHOULD]** den PR-Titel als Default-Squash-Commit-Nachricht beibehalten, sodass die `develop`-Historie ein linearer Strom von Conventional-Commits-Nachrichten bleibt, den Release-Drafter direkt verarbeiten kann
 
 ### Draft- und Work-in-Progress-PRs
 - **SOLLTE [SHOULD]** PRs während laufender Arbeit als Draft öffnen und erst dann als bereit für Review markieren, wenn die CI voraussichtlich grün wird und die Beschreibung vollständig ist
@@ -55,14 +70,14 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 ## Akzeptanzkriterien
 - [ ] `.github/pull_request_template.md` existiert, und seine Abschnittsüberschriften stimmen in Reihenfolge und Wortlaut mit den fünf Überschriften in „Struktur der PR-Beschreibung" überein
 - [ ] `.github/settings.yml` deklariert erforderliche Status-Checks für `develop` (direkt oder via der `nolte/gh-plumbing`-Commons-Extension)
-- [ ] `enforce_admins` ist für die Branch-Protection-Regel von `develop` auf `true` gesetzt, oder eine Ausnahme ist in `README.md` oder `.github/BRANCH_PROTECTION.md` dokumentiert
+- [ ] `enforce_admins` ist für die Branch-Protection-Regel von `develop` auf `true` gesetzt; es existiert keine Waiver-Regelung im Repository
 - [ ] Für die letzten 10 nach `develop` gemergten PRs war jeder erforderliche Status-Check zum Merge-Zeitpunkt grün (Stichprobe via `gh pr list --state merged --base develop --limit 10 --json number,title,mergedAt,statusCheckRollup`)
 - [ ] Für dieselben 10 PRs entsprechen die Titel der Conventional-Commits-Form, und `type` entspricht dem Branch-Präfix
 - [ ] Die Quell-Branches derselben 10 PRs verwendeten eines der Präfixe `feat/`, `fix/`, `chore/`, `docs/`, und der Type im PR-Titel entsprach dem Präfix wortgleich
-- [ ] Eine Stichprobe aktueller PR-Bodies zeigt alle fünf erforderlichen Abschnitte; nur Linked issues und Risk / rollout notes dürfen den Literaltext `None` enthalten
+- [ ] Eine Stichprobe aktueller PR-Bodies zeigt alle fünf erforderlichen Abschnitte; nur Linked issues und Risk / rollout notes dürfen den Literaltext `None` enthalten; etwaige repo-spezifische Abschnitte erscheinen *nach* den fünf Pflichtabschnitten, niemals dazwischen
+- [ ] `.github/workflows/pr-lint.yml` (oder ein gleichwertig benannter Workflow) existiert, und sein Job ist in `.github/settings.yml` als erforderlicher Status-Check für `develop` deklariert
+- [ ] `.github/settings.yml` setzt `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` für das Repository
+- [ ] Die letzten 10 First-Parent-Commits auf `develop` (via `git log --first-parent develop -n 10`) entsprechen je genau einem squash-gemergten PR und tragen eine Conventional-Commits-konforme Nachricht
 
 ## Offene Fragen
-- Sollte die Squash-Merge- vs. Merge-Commit-Policy für PRs nach `develop` hier oder im Branching-Modell-Spec festgelegt werden?
-- Ist `enforce_admins: true` ein hartes **MUSS [MUST]** über das gesamte Portfolio oder ist ein fallweiser Opt-out über eine dokumentierte Ausnahme dauerhaft akzeptabel?
-- Sollte die Abschnittsliste des PR-Templates portfolio-weit strikt identisch sein oder darf ein Repository unterhalb der fünf erforderlichen Abschnitte repo-spezifische Abschnitte hinzufügen?
-- Brauchen wir einen automatisierten Linter (z. B. einen Reusable Workflow), der einen PR mit spec-widrigem Body oder Titel scheitern lässt, anstatt auf Reviewer-Disziplin zu setzen?
+- _Keine aktuell; alle Fragen aus der Entwurfsphase sind geklärt._
