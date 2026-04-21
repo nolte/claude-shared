@@ -27,6 +27,12 @@ Pull requests (PRs, equivalent to GitLab merge requests / MRs) are the sole path
 - **MUST** keep a single PR scoped to one logical change; unrelated changes are split into separate PRs
 - **SHOULD** link at least one related issue via `Closes #<n>` or `Refs #<n>` in the description when a tracking issue exists
 
+### Branch freshness
+- **MUST** ensure the feature branch contains every commit of the current `develop` tip before the PR is opened, so the CI run reflects the state that will exist on `develop` after merge; this is achieved by either merging `develop` into the feature branch or rebasing the feature branch onto `develop`
+- **MUST** re-synchronize the feature branch with `develop` whenever `develop` advances while the PR is open, before the PR is moved out of Draft or before automerge is allowed to act; a PR whose branch lags behind `develop` is not considered ready for merge
+- **MUST** enable the GitHub "require branches to be up to date before merging" option for `develop` in `.github/settings.yml` (in `protection.required_status_checks.strict: true`, directly or via the `nolte/gh-plumbing` commons extension), so the platform enforces this precondition in addition to the client-side workflow
+- **MAY** choose rebase or merge to perform the sync; the spec does not prescribe which, but the chosen operation **MUST** leave `develop` fully contained in the feature branch before the PR is opened or re-requested for review
+
 ### PR description structure
 A pull-request template **MUST** exist at `.github/pull_request_template.md` and **MUST** contain the following sections, in this exact order and with these exact headings:
 
@@ -78,6 +84,7 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - [ ] `.github/workflows/pr-lint.yml` (or an equivalently-named workflow) exists and its job is declared as a required status check for `develop` in `.github/settings.yml`
 - [ ] `.github/settings.yml` sets `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` for the repository
 - [ ] The last 10 first-parent commits on `develop` (via `git log --first-parent develop -n 10`) each correspond to exactly one squash-merged PR and carry a Conventional-Commits-compliant message
+- [ ] `.github/settings.yml` sets `required_status_checks.strict: true` for the `develop` branch protection (directly or via the `nolte/gh-plumbing` commons extension) so that GitHub enforces the branch-up-to-date precondition
 
 ## Open Questions
 - _None at this time; all drafting questions have been resolved._

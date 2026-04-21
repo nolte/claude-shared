@@ -1,6 +1,6 @@
 ---
 name: skill-management
-description: Author new Claude Code skills and validate existing ones against the skill-management spec. Invoke when the user says things like "create a new skill", "scaffold a skill for X", "add a skill to this repo", "neuen Skill anlegen", "Skill für X erstellen", "validate this skill", or "check if this skill follows our conventions". Scaffolds the folder under skills/<name>/ (source) or .claude/skills/<name>/ (runtime), writes SKILL.md with valid frontmatter, and audits existing skills for structural compliance with the spec at spec/claude/skill-management/.
+description: Author new Claude Code skills and validate existing ones against the skill-management spec. Invoke when the user says things like "create a new skill", "scaffold a skill for X", "add a skill to this repo", "neuen Skill anlegen", "Skill für X erstellen", "validate this skill", or "check if this skill follows our conventions". Scaffolds the folder under skills/<name>/ inside the claude-shared plugin source tree (distribution happens via the plugin mechanism, not via .claude/skills copies), writes SKILL.md with valid frontmatter, and audits existing skills for structural compliance with the spec at spec/claude/skill-management/.
 ---
 
 # Skill Management
@@ -13,15 +13,17 @@ Detect the user's language and respond in it. Skill files themselves (`SKILL.md`
 
 ## Target location
 
-Before writing, decide where the skill should live:
+This skill is intended to run inside the **claude-shared plugin source tree** (a repo that contains `.claude-plugin/plugin.json` and a top-level `skills/` directory). There, skills always live at `skills/<name>/`. Detection: if `.claude-plugin/plugin.json` exists at the repo root, treat the repo as the source tree and use `skills/<name>/`.
 
-- **claude-shared source tree** (repo contains top-level `skills/` and README referencing "claude-shared"): `skills/<name>/`
-- **Consuming project, project-level**: `.claude/skills/<name>/`
-- **Consuming project, user-level**: `~/.claude/skills/<name>/`
+If you are invoked in a project that is **not** a Claude Code plugin source tree, stop and ask the user whether they want:
+- to author a **project-local** skill under `.claude/skills/<name>/` (outside the `nolte-shared` plugin scope — this spec does not govern it, and the skill will not be shared across projects), or
+- to instead author the skill in the `nolte-shared` repository so it can be distributed via the plugin.
 
-Detection: if the repo root contains `skills/` and a README referencing `claude-shared`, treat it as the source tree and use `skills/<name>/`. Otherwise, ask the user whether to install project-level or user-level. Default to project-level.
+Never create a `.claude/skills/<name>/` entry that duplicates a skill already shipped by the `nolte-shared` plugin, and never set up symlinks or copies to make a plugin skill appear under `.claude/skills/`. Distribution to consuming projects is the plugin mechanism's job — see `spec/claude/skill-management/` for the rules.
 
-After writing to the source tree, remind the user that for Claude Code's `/skills` dialog to show the skill, it must additionally live at one of the runtime locations (typically via symlink from `skills/<name>/` to `.claude/skills/<name>/`).
+After creating a skill in the source tree, remind the user to:
+1. bump the plugin version in `.claude-plugin/plugin.json` (and `.claude-plugin/marketplace.json`) whenever a skill is added, renamed, removed, or its contract materially changes, and
+2. publish a new plugin release so consumers can pick the skill up through the normal marketplace-install / update flow.
 
 ## Operations
 
@@ -51,6 +53,7 @@ Run this checklist against the canonical rules:
 - [ ] No hard-coded absolute paths inside the skill
 - [ ] Supporting assets live inside the skill folder
 - [ ] `SKILL.md` is under roughly 150 lines (soft limit)
+- [ ] Repository that hosts the skill declares `.claude-plugin/plugin.json` and a marketplace entry — i.e. the skill is part of a Claude Code plugin, not a loose `.claude/skills/` copy
 
 Report pass/fail per item. Offer to fix mechanical issues (frontmatter mismatch, absolute paths, missing hard rules section) in place.
 
@@ -60,7 +63,8 @@ Targeted edits to an existing skill — e.g. rewriting a weak `description`, add
 
 ## Hard rules
 
-- Never create a skill at a non-standard path. The only accepted locations are those listed under "Target location".
+- Never create a skill at a non-standard path. Inside a plugin source tree the only accepted location is `skills/<name>/`; everywhere else, stop and ask the user whether to switch to the plugin repository instead.
+- Never distribute a plugin-owned skill by copying it into a consuming project's `.claude/skills/`, by symlinking, or by any other out-of-band path. Distribution is the plugin mechanism's job.
 - Never write a vague `description` like "helps with X" or "for Y tasks". It must enumerate concrete user phrasings so Claude's routing is reliable.
 - Never assume the user's purpose — if triggers aren't stated, ask.
 - When `spec/claude/skill-management/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.

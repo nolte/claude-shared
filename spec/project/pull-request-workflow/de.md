@@ -27,6 +27,12 @@ Pull Requests (PRs, entsprechen GitLab Merge Requests / MRs) sind der einzige We
 - **MUSS [MUST]** einen einzelnen PR auf genau eine logische Änderung begrenzen; unzusammenhängende Änderungen werden in separate PRs aufgeteilt
 - **SOLLTE [SHOULD]** mindestens ein verwandtes Issue via `Closes #<n>` oder `Refs #<n>` in der Beschreibung verlinken, wenn ein Tracking-Issue existiert
 
+### Aktualität des Branches
+- **MUSS [MUST]** sicherstellen, dass der Feature-Branch vor dem Öffnen des PRs jeden Commit des aktuellen `develop`-Tip enthält, damit der CI-Lauf den Zustand widerspiegelt, der nach dem Merge auf `develop` existieren wird; dies wird erreicht, indem `develop` in den Feature-Branch gemergt oder der Feature-Branch auf `develop` rebased wird
+- **MUSS [MUST]** den Feature-Branch erneut mit `develop` synchronisieren, sobald `develop` sich bewegt, während der PR offen ist — und zwar bevor der PR aus dem Draft-Zustand genommen oder Automerge zum Zug gelassen wird; ein PR, dessen Branch hinter `develop` zurückhängt, gilt nicht als merge-bereit
+- **MUSS [MUST]** die GitHub-Option „require branches to be up to date before merging" für `develop` in `.github/settings.yml` aktivieren (via `protection.required_status_checks.strict: true`, direkt oder via der `nolte/gh-plumbing`-Commons-Extension), sodass die Plattform diese Vorbedingung zusätzlich zum clientseitigen Workflow erzwingt
+- **DARF [MAY]** Rebase oder Merge für die Synchronisation verwenden; die Spec schreibt keine der beiden Varianten vor, aber die gewählte Operation **MUSS [MUST]** dazu führen, dass `develop` vor dem Öffnen oder erneuten Review-Request vollständig im Feature-Branch enthalten ist
+
 ### Struktur der PR-Beschreibung
 Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.md` existieren und **MUSS [MUST]** die folgenden Abschnitte in genau dieser Reihenfolge und mit genau diesen Überschriften enthalten:
 
@@ -78,6 +84,7 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - [ ] `.github/workflows/pr-lint.yml` (oder ein gleichwertig benannter Workflow) existiert, und sein Job ist in `.github/settings.yml` als erforderlicher Status-Check für `develop` deklariert
 - [ ] `.github/settings.yml` setzt `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` für das Repository
 - [ ] Die letzten 10 First-Parent-Commits auf `develop` (via `git log --first-parent develop -n 10`) entsprechen je genau einem squash-gemergten PR und tragen eine Conventional-Commits-konforme Nachricht
+- [ ] `.github/settings.yml` setzt `required_status_checks.strict: true` für die Branch-Protection von `develop` (direkt oder via der `nolte/gh-plumbing`-Commons-Extension), sodass GitHub die Branch-Up-to-date-Vorbedingung erzwingt
 
 ## Offene Fragen
 - _Keine aktuell; alle Fragen aus der Entwurfsphase sind geklärt._
