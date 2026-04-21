@@ -39,6 +39,15 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - **SOLLTE [SHOULD]** Lint-, Test- und Docs-Kommandos in der CI über Taskfile-Targets aufrufen, damit lokales Verhalten und CI-Verhalten identisch bleiben
 - **SOLLTE [SHOULD]** CI-Status-Badges für die primären Workflows in der `README.md` anzeigen
 
+### GitHub-Repository-Konfiguration
+- **MUSS [MUST]** GitHub-Repository-Einstellungen — Topics, Beschreibung, Homepage, Branch-Protection, Labels, Mitarbeitende und Merge-Button-Optionen — als Code über `.github/settings.yml` verwalten, konsumiert von der [Probot-Settings-App](https://probot.github.io/apps/settings/)
+- **MUSS [MUST]** die portfolioweiten Defaults über `_extends: nolte/gh-plumbing:.github/commons-settings.yml` erben (die Kurzform `gh-plumbing:.github/commons-settings.yml` ist innerhalb der `nolte`-Organisation gleichwertig) und die per-Repository-Inhalte auf repository-spezifische Felder wie `name`, `description`, `homepage` und `topics` beschränken
+- **MUSS NICHT [MUST NOT]** Repository-Einstellungen manuell über die GitHub-UI pflegen, sobald `.github/settings.yml` vorhanden ist; jede UI-Änderung gilt als Drift und muss in die Datei zurückgeführt werden
+- **MUSS [MUST]** eine `.github/release-drafter.yml` enthalten, die `nolte/gh-plumbing:.github/commons-release-drafter.yml` erweitert, um den Release-Notes-Drafter zu speisen (der zugehörige Workflow wird von der branching-model-Spec beschrieben)
+- **SOLLTE [SHOULD]** eine `.github/boring-cyborg.yml` enthalten, die `nolte/gh-plumbing:.github/commons-boring-cyborg.yml` erweitert, für Newcomer-Onboarding, Auto-Labeling und Reviewer-Zuweisung über die [Boring-Cyborg-App](https://probot.github.io/apps/boring-cyborg/)
+- **SOLLTE [SHOULD]** eine `.github/stale.yml` enthalten, die `nolte/gh-plumbing:.github/commons-stale.yml` erweitert, um inaktive Issues und Pull Requests über die [Stale-App](https://probot.github.io/apps/stale/) zu verwalten
+- **KANN [MAY]** einzelne Schlüssel aus den geerbten `commons-*.yml`-Dateien überschreiben, wenn der Bedarf eines Repositories von den Portfolio-Defaults abweicht; solche Überschreibungen schmal halten und neben der Änderung erklären
+
 ### Dokumentation
 - **MUSS [MUST]** ein `docs/`-Verzeichnis als MkDocs-Quelle enthalten
 - **MUSS [MUST]** eine `mkdocs.yml` im Repository-Wurzelverzeichnis enthalten
@@ -82,6 +91,9 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - [ ] `README.md`, `.gitignore`, `CLAUDE.md`, `renovate.json5` (oder `renovate.json`) und `.pre-commit-config.yaml` existieren im Repository-Wurzelverzeichnis
 - [ ] `.claude/` existiert und enthält mindestens eines von `agents/`, `skills/`, `commands/` oder einer `settings*.json`-Datei
 - [ ] `.github/workflows/` enthält mindestens eine Workflow-Datei
+- [ ] `.github/settings.yml` ist vorhanden und erweitert `nolte/gh-plumbing:.github/commons-settings.yml` (oder die gleichwertige Kurzform)
+- [ ] `.github/release-drafter.yml` ist vorhanden und erweitert `nolte/gh-plumbing:.github/commons-release-drafter.yml`
+- [ ] `.github/boring-cyborg.yml` und `.github/stale.yml` sind vorhanden und erweitern die jeweilige `nolte/gh-plumbing`-commons-Datei
 - [ ] `Taskfile.yml` oder `Taskfile.yaml` ist vorhanden und `task --list` listet Test-, Lint- und Docs-Ziele auf
 - [ ] `docs/` und `mkdocs.yml` existieren und `mkdocs build` läuft fehlerfrei durch
 - [ ] `spec/` existiert im Repository-Wurzelverzeichnis
@@ -93,7 +105,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 
 ## Offene Fragen
 - Soll `LICENSE` für alle öffentlichen Repositories im Portfolio auf **MUSS [MUST]** angehoben werden?
-- Soll die Spec eine Mindest­form für `.github/` vorgeben (Issue-Templates, PR-Template, `CODEOWNERS`)?
+- Soll die Spec zusätzlich Issue-Templates, Pull-Request-Templates und `CODEOWNERS` für `.github/` vorschreiben? Die Probot-Konfiguration (settings, release-drafter, boring-cyborg, stale) ist nun abgedeckt; die Community-Health-Dateien bleiben offen.
 - Ist `renovate.json5` der kanonische Standard, oder soll `renovate.json` gleichwertig akzeptiert bleiben?
 - Sollen Release-Artefakte (Changelogs, Release-Workflows, Versionierungs-Policy) von hier referenziert oder vollständig einer separaten Release-Prozess-Spec überlassen werden?
 - Soll mehrsprachige Dokumentation (`docs/<lang>/`) zum **SOLLTE [SHOULD]** werden, sobald eine zweite Sprache erscheint, oder **KANN [MAY]** bleiben?

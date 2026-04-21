@@ -39,6 +39,15 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - **SHOULD** invoke lint, test, and docs commands from CI through Taskfile targets so local and CI behavior stay identical
 - **SHOULD** produce CI status badges in `README.md` for the primary workflows
 
+### GitHub repository configuration
+- **MUST** manage GitHub repository settings — topics, description, homepage, branch protection, labels, collaborators, and merge-button options — as code via `.github/settings.yml`, consumed by the [Probot Settings app](https://probot.github.io/apps/settings/)
+- **MUST** inherit the portfolio-wide defaults via `_extends: nolte/gh-plumbing:.github/commons-settings.yml` (the short form `gh-plumbing:.github/commons-settings.yml` is equivalent within the `nolte` organization) and keep per-repository content limited to repo-specific fields such as `name`, `description`, `homepage`, and `topics`
+- **MUST NOT** maintain repository settings manually through the GitHub UI once `.github/settings.yml` is present; any UI edit is drift and has to be reconciled back into the file
+- **MUST** include a `.github/release-drafter.yml` extending `nolte/gh-plumbing:.github/commons-release-drafter.yml` to feed the release-notes drafter (the accompanying workflow is specified by the branching-model spec)
+- **SHOULD** include a `.github/boring-cyborg.yml` extending `nolte/gh-plumbing:.github/commons-boring-cyborg.yml` for newcomer onboarding, auto-labeling, and reviewer assignment via the [Boring Cyborg app](https://probot.github.io/apps/boring-cyborg/)
+- **SHOULD** include a `.github/stale.yml` extending `nolte/gh-plumbing:.github/commons-stale.yml` to manage inactive issues and pull requests via the [Stale app](https://probot.github.io/apps/stale/)
+- **MAY** override individual keys from the inherited `commons-*.yml` files when a repository's needs diverge from the portfolio defaults; keep such overrides narrow and explain them alongside the change
+
 ### Documentation
 - **MUST** include a `docs/` directory as the MkDocs source
 - **MUST** include an `mkdocs.yml` at the repository root
@@ -82,6 +91,9 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - [ ] `README.md`, `.gitignore`, `CLAUDE.md`, `renovate.json5` (or `renovate.json`), and `.pre-commit-config.yaml` exist at the repository root
 - [ ] `.claude/` exists and contains at least one of `agents/`, `skills/`, `commands/`, or a `settings*.json` file
 - [ ] `.github/workflows/` contains at least one workflow file
+- [ ] `.github/settings.yml` is present and extends `nolte/gh-plumbing:.github/commons-settings.yml` (or the equivalent short form)
+- [ ] `.github/release-drafter.yml` is present and extends `nolte/gh-plumbing:.github/commons-release-drafter.yml`
+- [ ] `.github/boring-cyborg.yml` and `.github/stale.yml` are present and extend their respective `nolte/gh-plumbing` commons files
 - [ ] `Taskfile.yml` or `Taskfile.yaml` is present and `task --list` enumerates test, lint, and docs targets
 - [ ] `docs/` and `mkdocs.yml` exist, and `mkdocs build` completes without errors
 - [ ] `spec/` exists at the repository root
@@ -93,7 +105,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 
 ## Open Questions
 - Should `LICENSE` be elevated to **MUST** for all public repositories in the portfolio?
-- Should the spec prescribe a minimum `.github/` shape (issue templates, PR template, `CODEOWNERS`)?
+- Should the spec additionally prescribe issue templates, pull-request templates, and `CODEOWNERS` for `.github/`? Probot configuration (settings, release-drafter, boring-cyborg, stale) is now covered; the community-health files remain open.
 - Is `renovate.json5` the canonical default, or should `renovate.json` stay equally acceptable?
 - Should release artifacts (changelogs, release workflows, versioning policy) be referenced from here or left entirely to a separate release-process spec?
 - Should multilingual documentation (`docs/<lang>/`) be a **SHOULD** once a second language appears, or stay **MAY**?
