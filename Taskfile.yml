@@ -20,6 +20,12 @@ tasks:
     cmds:
       - pre-commit run --all-files
 
+  lint:prose:
+    desc: Run Vale prose linter across English-language Markdown
+    cmds:
+      - vale sync
+      - vale --minAlertLevel=error README.md docs/en/ skills/ $(find spec -name 'en.md')
+
   test:
     desc: Run the test suite (placeholder — no runtime tests yet)
     cmds:

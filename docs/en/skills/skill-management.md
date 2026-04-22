@@ -5,7 +5,9 @@ The `skill-management` skill scaffolds and validates Claude Code skills. It live
 ## When to use
 
 - "create a new skill", "scaffold a skill for X", "add a skill to this repo"
+<!-- vale Vale.Spelling = NO -->
 - "neuen Skill anlegen", "Skill für X erstellen"
+<!-- vale Vale.Spelling = YES -->
 - "validate this skill", "check if this skill follows our conventions"
 
 ## Deciding the target location
