@@ -1,3 +1,4 @@
+[Aa]llowlist
 auditable
 [Aa]utomerge
 browsable
@@ -54,6 +55,8 @@ subprojects
 Taskfile
 triages
 [Tt]oolchain
+[Uu]nreviewed
 untracked
 unversioned
+[Uu]pstreamed
 vendoring
