@@ -1,5 +1,6 @@
 [Aa]llowlist
 auditable
+[Aa]utomatable
 [Aa]utomerge
 browsable
 [Cc][Ii]
@@ -54,6 +55,7 @@ subproject
 subprojects
 Taskfile
 triages
+[Tt]riaging
 [Tt]oolchain
 [Uu]nreviewed
 untracked
