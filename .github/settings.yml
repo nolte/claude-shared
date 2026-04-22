@@ -11,6 +11,9 @@ repository:
     - skills
     - agents
     - nolte-shared
+  allow_squash_merge: true
+  allow_merge_commit: false
+  allow_rebase_merge: false
 
 branches:
   - name: develop
@@ -20,10 +23,17 @@ branches:
         dismiss_stale_reviews: false
         require_code_owner_reviews: false
       required_status_checks:
-        strict: false
+        strict: true
         contexts:
           - lint
           - test
           - docs
-      enforce_admins: false
+      enforce_admins: true
+      restrictions: null
+  - name: main
+    protection:
+      required_pull_request_reviews: null
+      required_status_checks: null
+      enforce_admins: true
+      required_linear_history: true
       restrictions: null
