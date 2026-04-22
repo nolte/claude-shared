@@ -17,7 +17,7 @@ Claude Code offers two reusable-capability formats in this plugin: **skills** (a
 - Plugin distribution and marketplace mechanics (covered by those specs)
 - Which specific tools a given agent declares in its `tools` field (a per-agent scope decision, not a portfolio-wide rule)
 - Discovery and catalog rendering in the MkDocs site (covered by `skill-agent-catalog`)
-- The Claude Code runtime's own routing behavior — this spec governs authoring choices, not runtime dispatch
+- The routing behavior of the Claude Code runtime itself — this spec governs authoring choices, not runtime dispatch
 
 ## Requirements
 
