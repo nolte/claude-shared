@@ -7,6 +7,7 @@ Canonical language: `en` · Translations: `de`
 | Topic | Slug | Title (en) | Title (de) | Status | Last updated |
 |---|---|---|---|---|---|
 | claude | agent-management | Claude Agent Authoring | Claude-Agent-Autorenschaft | draft | unversioned |
+| claude | permission-allowlist | Claude Code Permission Allowlist Maintenance | Pflege der Claude-Code-Permission-Allowlist | draft | unversioned |
 | claude | skill-agent-catalog | Claude Skill and Agent Catalog | Claude-Skill- und -Agent-Katalog | draft | unversioned |
 | claude | skill-management | Claude Skill Authoring | Claude-Skill-Autorenschaft | draft | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | unversioned |
