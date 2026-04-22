@@ -120,9 +120,14 @@ Once the PR is merged, offer (do not automatically execute) the following cleanu
 
 - `git checkout develop && git pull --ff-only` — update the local integration branch
 - `git branch -d <feature-branch>` — delete the local feature branch (safe delete; refuses to remove a branch whose commits are not on `develop`)
-- `git push origin --delete <feature-branch>` — delete the remote feature branch (only if the repository's branch-protection does not already auto-delete merged heads)
 
-Never run the destructive `git push origin --delete …` without explicit user confirmation.
+The remote feature branch is handled by the platform per `spec/project/pull-request-workflow/<canonical_language>.md` §Post-merge branch cleanup: `delete_branch_on_merge: true` in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension) lets GitHub remove it automatically right after the squash-merge. Confirm this in step 7 by checking that the remote branch is gone — `gh api repos/<owner>/<repo>/git/refs/heads/<feature-branch>` returns `404`. If the branch is still there, the platform setting is either missing or was enabled only later; in that one-off catch-up case, offer the manual REST call and only act with explicit user confirmation:
+
+```
+gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<feature-branch>
+```
+
+Never run `git push origin --delete …` or `gh api -X DELETE` without explicit user confirmation. Never make remote-branch deletion part of the automatic merge flow — the platform setting is the routine path, manual deletion is only a catch-up.
 
 ## Hard rules
 
@@ -133,4 +138,5 @@ Never run the destructive `git push origin --delete …` without explicit user c
 - **Never** skip the `review` skill delegation. A final review is the cheapest pre-merge gate; only an explicit user override bypasses it.
 - **Never** rebase or merge `develop` into the feature branch silently to fix a lag. Branch-freshness gaps return control to the user, consistent with `pull-request-create`.
 - **Never** poll, sleep, or loop waiting for checks to complete. Report the outstanding state and stop; the user re-invokes the skill when ready.
+- **Never** delete the remote feature branch as part of the automatic merge flow. Post-merge branch cleanup is the platform's job via `delete_branch_on_merge: true`; a manual `gh api -X DELETE` call is only a one-off catch-up and requires explicit user confirmation.
 - When `spec/project/pull-request-workflow/`, `spec/project/branching-model/`, or `spec/project/workflow-health/` disagrees with this skill, the spec wins. Propose a skill update rather than silently diverging.
