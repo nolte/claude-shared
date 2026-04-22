@@ -1,6 +1,6 @@
 ---
 name: pull-request-merge
-description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user says things like "merge den PR", "lande den PR", "führe den draft PR in develop über", "mach den PR ready und merge", "promote the draft PR", "ship the PR", "merge the draft", or "bring the PR over the finish line". Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, hands off to GitHub auto-merge with `--squash`, and verifies the merge commit landed on `develop`.
+description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user says things like "merge den PR", "lande den PR", "führe den draft PR in develop über", "mach den PR ready und merge", "promote the draft PR", "ship the PR", "merge the draft", or "bring the PR over the finish line". Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers auto-merge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`.
 ---
 
 # Pull Request Merge
@@ -9,7 +9,7 @@ Promotes an open draft pull request — typically the one opened by `pull-reques
 
 ## User-language policy
 
-Detect the user's language and respond in it. All `git` and `gh` invocations, as well as labels applied to the PR, remain English so that portfolio automations (release-drafter, boring-cyborg, the `nolte/gh-plumbing` reusable-automerge) stay consistent across repositories.
+Detect the user's language and respond in it. All `git` and `gh` invocations, as well as labels applied to the PR, remain English so that portfolio automation (release-drafter, boring-cyborg, the `nolte/gh-plumbing` reusable-automerge) stays consistent across repositories.
 
 ## Preconditions
 
@@ -81,16 +81,24 @@ gh pr ready <number>
 
 Verify the flip (`gh pr view --json isDraft` returns `false`).
 
-### 6. Hand off to auto-merge
+### 6. Trigger automerge
 
-Enable GitHub native auto-merge with `--squash`:
+Apply the repository label `automerge` so that the `automerge.yaml` workflow (backed by the `nolte/gh-plumbing` reusable-automerge workflow and `pascalgn/automerge-action`) squash-merges the PR as soon as every required status check on the head commit is green and every branch-protection rule for `develop` is satisfied. This is the primary path per `spec/project/pull-request-workflow/<canonical_language>.md` §Automerge trigger protocol.
 
 ```
-gh pr merge <number> --squash --auto
+gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=automerge"
 ```
+
+(`gh pr edit <number> --add-label automerge` is equivalent on most repositories, but sometimes fails with a deprecated-Projects GraphQL warning where Projects Classic is still enabled; the REST call avoids that noise.)
+
+- The `automerge` label must exist in the repository (collected via `gh label list` in step 1) and the PR must already be non-draft (step 5). Applying the label on a red or pending head commit is a spec violation — re-verify checks in step 4 before this step.
+- **Fallback (MAY path)**: if the repository does not ship the `automerge.yaml` workflow or lacks the `automerge` label, fall back to GitHub native auto-merge and report the missing automation to the user as a portfolio gap to close via `.github/settings.yml`:
+
+  ```
+  gh pr merge <number> --squash --auto
+  ```
 
 - `--squash` is mandatory per `spec/project/pull-request-workflow/<canonical_language>.md` (`allow_squash_merge: true` is the only enabled merge option).
-- `--auto` lets GitHub merge as soon as required checks are green and branch protection is satisfied. It works alongside the `nolte/gh-plumbing` reusable-automerge workflow; whichever completes the merge first wins.
 - Never pass `--admin`. There is no admin-override path — `enforce_admins: true` on `develop` has no exception per the pull-request-workflow spec.
 - Never pass `--merge` or `--rebase`. Those merge strategies are explicitly disabled in `.github/settings.yml` for repositories under this spec.
 
@@ -111,7 +119,7 @@ Report back to the user: PR URL, merged-at timestamp, merge commit SHA on `origi
 Once the PR is merged, offer (do not automatically execute) the following cleanup to the user:
 
 - `git checkout develop && git pull --ff-only` — update the local integration branch
-- `git branch -d <feature-branch>` — delete the local feature branch (safe delete; refuses to drop unmerged work)
+- `git branch -d <feature-branch>` — delete the local feature branch (safe delete; refuses to remove a branch whose commits are not on `develop`)
 - `git push origin --delete <feature-branch>` — delete the remote feature branch (only if the repository's branch-protection does not already auto-delete merged heads)
 
 Never run the destructive `git push origin --delete …` without explicit user confirmation.
