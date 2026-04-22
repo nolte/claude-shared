@@ -72,6 +72,11 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - **MUST** declare squash-merge as the only enabled merge option in `.github/settings.yml` for repositories following this spec: `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false`
 - **SHOULD** keep the PR title as the default squash-commit message so the `develop` history is a linear stream of Conventional-Commits messages, directly consumable by release-drafter
 
+### Post-merge branch cleanup
+- **MUST** set `delete_branch_on_merge: true` in `.github/settings.yml` — directly or via the `nolte/gh-plumbing` commons extension — so that GitHub deletes the feature branch on the remote once its PR is merged into `develop`; merged branches **MUST NOT** linger on the remote
+- **SHOULD** rely on the platform setting rather than on client-side `--delete-branch` flags passed to `gh pr merge`; when automerge handles the merge, only the platform setting fires, so the platform is the authoritative path
+- **MAY** delete residual remote branches manually via `gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<branch>` as a one-off catch-up when the platform setting was enabled only later — not as a routine operation
+
 ### Draft and work-in-progress PRs
 - **SHOULD** open PRs as Draft while work is ongoing and mark them ready for review only once CI is expected to pass and the description is complete
 - **MUST NOT** mark a PR ready for review when any required section of the description is missing or empty in violation of the rules above
@@ -111,6 +116,7 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - [ ] For the same 10 PRs, no force-push appears in the branch history between leaving Draft and merge (spot-check via `gh api repos/<owner>/<repo>/pulls/<number>/commits` — no rewritten commits after the PR was ready for review)
 - [ ] In repositories that provide a `Taskfile.yml` with a `lint` target or a `.pre-commit-config.yaml`, a spot-check of recent PRs shows that the first push of the head commit that was merged did not introduce a CI `lint` regression that local tooling would have caught
 - [ ] The `automerge.yaml` workflow is configured so that the reusable automerge workflow only merges when every required status check on the head commit is green and every review-related branch-protection rule on `develop` is satisfied, regardless of whether `required_approving_review_count` is 0 or higher
+- [ ] `.github/settings.yml` sets `delete_branch_on_merge: true` for the repository (directly or via the `nolte/gh-plumbing` commons extension), and a spot-check of `git branch -r` shows no merged-PR feature branches lingering on the remote beyond the automation window
 
 ## Open Questions
 - _None at this time; all drafting questions have been resolved._
