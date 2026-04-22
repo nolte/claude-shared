@@ -72,6 +72,11 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - **MUSS [MUST]** Squash-Merge als einzige aktivierte Merge-Option in `.github/settings.yml` für Repositories, die dieser Spec folgen, deklarieren: `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false`
 - **SOLLTE [SHOULD]** den PR-Titel als Default-Squash-Commit-Nachricht beibehalten, sodass die `develop`-Historie ein linearer Strom von Conventional-Commits-Nachrichten bleibt, den Release-Drafter direkt verarbeiten kann
 
+### Aufräumen der Branches nach dem Merge
+- **MUSS [MUST]** `delete_branch_on_merge: true` in `.github/settings.yml` setzen — direkt oder via der `nolte/gh-plumbing`-Commons-Extension — damit GitHub den Feature-Branch auf der Remote löscht, sobald der zugehörige PR nach `develop` gemergt wurde; gemergte Branches **DÜRFEN NICHT [MUST NOT]** auf der Remote verbleiben
+- **SOLLTE [SHOULD]** auf die Platform-Einstellung statt auf clientseitige `--delete-branch`-Flags bei `gh pr merge` setzen; wenn der Automerge den Merge ausführt, greift nur die Platform-Einstellung, also ist sie der verbindliche Weg
+- **DARF [MAY]** verbleibende Remote-Branches manuell via `gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<branch>` entfernen, wenn die Platform-Einstellung erst nachträglich aktiviert wurde und historische Branches übrig sind — das ist ein einmaliger Nachholvorgang, kein Routinebetrieb
+
 ### Draft- und Work-in-Progress-PRs
 - **SOLLTE [SHOULD]** PRs während laufender Arbeit als Draft öffnen und erst dann als bereit für Review markieren, wenn die CI voraussichtlich grün wird und die Beschreibung vollständig ist
 - **DARF NICHT [MUST NOT]** einen PR als bereit für Review markieren, wenn ein erforderlicher Beschreibungsabschnitt entgegen den obigen Regeln fehlt oder leer ist
@@ -111,6 +116,7 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - [ ] Für dieselben 10 PRs erscheint zwischen Verlassen des Draft-Status und Merge kein Force-Push im Branch-Verlauf (Stichprobe via `gh api repos/<owner>/<repo>/pulls/<number>/commits` — keine umgeschriebenen Commits, nachdem der PR als ready-for-review markiert wurde)
 - [ ] In Repositories mit `Taskfile.yml`-`lint`-Target oder `.pre-commit-config.yaml` zeigt eine Stichprobe aktueller PRs, dass der erste Push des gemergten Head-Commits keine CI-`lint`-Regression eingeführt hat, die lokales Tooling abgefangen hätte
 - [ ] Der `automerge.yaml`-Workflow ist so konfiguriert, dass der reusable Automerge-Workflow nur mergt, wenn jeder erforderliche Status-Check auf dem Head-Commit grün ist und jede Review-bezogene Branch-Protection-Regel für `develop` erfüllt ist — unabhängig davon, ob `required_approving_review_count` 0 oder höher ist
+- [ ] `.github/settings.yml` setzt `delete_branch_on_merge: true` für das Repository (direkt oder via der `nolte/gh-plumbing`-Commons-Extension), und eine Stichprobe via `git branch -r` zeigt keine gemergten PR-Feature-Branches, die über das Automations-Fenster hinaus auf der Remote verbleiben
 
 ## Offene Fragen
 - _Keine aktuell; alle Fragen aus der Entwurfsphase sind geklärt._
