@@ -11,3 +11,19 @@ repository:
     - skills
     - agents
     - nolte-shared
+
+branches:
+  - name: develop
+    protection:
+      required_pull_request_reviews:
+        required_approving_review_count: 0
+        dismiss_stale_reviews: false
+        require_code_owner_reviews: false
+      required_status_checks:
+        strict: false
+        contexts:
+          - lint
+          - test
+          - docs
+      enforce_admins: false
+      restrictions: null
