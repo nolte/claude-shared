@@ -22,9 +22,9 @@ Pull Requests (PRs, entsprechen GitLab Merge Requests / MRs) sind der einzige We
 
 ### PR-Rahmenbedingungen
 - **MUSS [MUST]** `develop` als Basis-Branch adressieren
-- **MUSS [MUST]** aus einem Branch stammen, dessen Name mit einem der Präfixe `feat/`, `fix/`, `chore/` oder `docs/` beginnt (wie im Branching-Modell-Spec festgelegt)
-- **MUSS [MUST]** einen PR-Titel in Conventional-Commits-Form `<type>(<scope>)?: <summary>` verwenden, wobei `<type>` wortgleich dem Branch-Präfix entspricht (Präfix `feat/` → Type `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`); eine Übersetzung oder Aliasbildung ist nicht zulässig
-- **MUSS [MUST]** einen einzelnen PR auf genau eine logische Änderung begrenzen; unzusammenhängende Änderungen werden in separate PRs aufgeteilt
+- **MUSS [MUST]** aus einem Branch stammen, dessen Name mit einem der Präfixe `feat/`, `fix/`, `chore/`, `docs/` oder `exp/` beginnt (wie im Branching-Modell-Spec festgelegt)
+- **MUSS [MUST]** einen PR-Titel in Conventional-Commits-Form `<type>(<scope>)?: <summary>` verwenden, wobei `<type>` wortgleich dem Branch-Präfix entspricht (Präfix `feat/` → Type `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`, `exp/` → `exp`); eine Übersetzung oder Aliasbildung ist nicht zulässig
+- **MUSS [MUST]** einen einzelnen PR auf genau eine logische Änderung begrenzen; unzusammenhängende Änderungen werden in separate PRs aufgeteilt — die einzige Ausnahme ist ein `exp/`-PR, der **DARF [MAY]** lose verwandte explorative Änderungen bündeln, die sich eine Iterations-Zeitspanne teilen, weil genau dies der Zweck des im Branching-Modell-Spec deklarierten experimentellen Branch-Typs ist
 - **SOLLTE [SHOULD]** mindestens ein verwandtes Issue via `Closes #<n>` oder `Refs #<n>` in der Beschreibung verlinken, wenn ein Tracking-Issue existiert
 
 ### Aktualität des Branches
@@ -51,7 +51,7 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 ### PR-Lint-Workflow
 - **MUSS [MUST]** einen Workflow unter `.github/workflows/` enthalten (z. B. `pr-lint.yml`), der PR-Titel und -Body auf den `pull_request`-Events `opened`, `edited`, `synchronize` und `ready_for_review` lintet
 - **MUSS [MUST]** den Job dieses Workflows als erforderlichen Status-Check für `develop` in `.github/settings.yml` registrieren
-- **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Titel nicht der Conventional-Commits-Form `<type>(<scope>)?: <summary>` mit `<type>` ∈ {`feat`, `fix`, `chore`, `docs`} entspricht
+- **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Titel nicht der Conventional-Commits-Form `<type>(<scope>)?: <summary>` mit `<type>` ∈ {`feat`, `fix`, `chore`, `docs`, `exp`} entspricht
 - **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Body nicht alle fünf erforderlichen Abschnittsüberschriften in der festgelegten Reihenfolge enthält
 - **MUSS [MUST]** den Check fehlschlagen lassen, wenn Summary, Changes oder Testing leer ist oder ausschließlich den Literaltext `None` enthält
 - **DARF NICHT [MUST NOT]** den Check fehlschlagen lassen, wenn der Body zusätzliche repo-spezifische Abschnitte enthält, die *nach* den fünf Pflichtabschnitten angehängt sind, solange die Pflichtabschnitte selbst vorhanden, in der richtigen Reihenfolge und an den geforderten Stellen nicht leer sind
@@ -79,7 +79,7 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - [ ] `enforce_admins` ist für die Branch-Protection-Regel von `develop` auf `true` gesetzt; es existiert keine Waiver-Regelung im Repository
 - [ ] Für die letzten 10 nach `develop` gemergten PRs war jeder erforderliche Status-Check zum Merge-Zeitpunkt grün (Stichprobe via `gh pr list --state merged --base develop --limit 10 --json number,title,mergedAt,statusCheckRollup`)
 - [ ] Für dieselben 10 PRs entsprechen die Titel der Conventional-Commits-Form, und `type` entspricht dem Branch-Präfix
-- [ ] Die Quell-Branches derselben 10 PRs verwendeten eines der Präfixe `feat/`, `fix/`, `chore/`, `docs/`, und der Type im PR-Titel entsprach dem Präfix wortgleich
+- [ ] Die Quell-Branches derselben 10 PRs verwendeten eines der Präfixe `feat/`, `fix/`, `chore/`, `docs/`, `exp/`, und der Type im PR-Titel entsprach dem Präfix wortgleich
 - [ ] Eine Stichprobe aktueller PR-Bodies zeigt alle fünf erforderlichen Abschnitte; nur Linked issues und Risk / rollout notes dürfen den Literaltext `None` enthalten; etwaige repo-spezifische Abschnitte erscheinen *nach* den fünf Pflichtabschnitten, niemals dazwischen
 - [ ] `.github/workflows/pr-lint.yml` (oder ein gleichwertig benannter Workflow) existiert, und sein Job ist in `.github/settings.yml` als erforderlicher Status-Check für `develop` deklariert
 - [ ] `.github/settings.yml` setzt `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` für das Repository

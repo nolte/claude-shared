@@ -22,9 +22,9 @@ Pull requests (PRs, equivalent to GitLab merge requests / MRs) are the sole path
 
 ### PR preconditions
 - **MUST** target `develop` as the base branch
-- **MUST** originate from a branch whose name starts with one of the prefixes `feat/`, `fix/`, `chore/`, or `docs/` (as declared by the branching-model spec)
-- **MUST** use a PR title in Conventional Commits form `<type>(<scope>)?: <summary>`, where `<type>` is literally identical to the branch prefix (prefix `feat/` → type `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`); no translation or aliasing is permitted
-- **MUST** keep a single PR scoped to one logical change; unrelated changes are split into separate PRs
+- **MUST** originate from a branch whose name starts with one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, or `exp/` (as declared by the branching-model spec)
+- **MUST** use a PR title in Conventional Commits form `<type>(<scope>)?: <summary>`, where `<type>` is literally identical to the branch prefix (prefix `feat/` → type `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`, `exp/` → `exp`); no translation or aliasing is permitted
+- **MUST** keep a single PR scoped to one logical change; unrelated changes are split into separate PRs — the sole exception is an `exp/` PR, which **MAY** bundle loosely related exploratory changes that share an iteration time frame, because that is the whole purpose of the experimental branch type declared in the branching-model spec
 - **SHOULD** link at least one related issue via `Closes #<n>` or `Refs #<n>` in the description when a tracking issue exists
 
 ### Branch freshness
@@ -51,7 +51,7 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 ### PR lint workflow
 - **MUST** include a workflow under `.github/workflows/` (e.g. `pr-lint.yml`) that lints PR title and body on the `pull_request` events `opened`, `edited`, `synchronize`, and `ready_for_review`
 - **MUST** register this workflow's job as a required status check for `develop` in `.github/settings.yml`
-- **MUST** fail the check if the PR title does not match the Conventional Commits form `<type>(<scope>)?: <summary>` with `<type>` ∈ {`feat`, `fix`, `chore`, `docs`}
+- **MUST** fail the check if the PR title does not match the Conventional Commits form `<type>(<scope>)?: <summary>` with `<type>` ∈ {`feat`, `fix`, `chore`, `docs`, `exp`}
 - **MUST** fail the check if the PR body does not contain all five required section headings in the declared order
 - **MUST** fail the check if Summary, Changes, or Testing is empty or contains only the literal text `None`
 - **MUST NOT** fail the check when the body contains additional repository-specific sections appended after the five required sections, so long as the required sections themselves are present, in order, and non-empty where required
@@ -79,7 +79,7 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - [ ] `enforce_admins` is `true` for the `develop` branch protection rule; no waiver mechanism exists in the repository
 - [ ] For the last 10 PRs merged into `develop`, every required status check was green at merge time (spot-check via `gh pr list --state merged --base develop --limit 10 --json number,title,mergedAt,statusCheckRollup`)
 - [ ] For the same 10 PRs, titles match the Conventional Commits form and the `type` corresponds to the branch prefix
-- [ ] The source branches of the same 10 PRs used one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, and the PR title type matched the prefix verbatim
+- [ ] The source branches of the same 10 PRs used one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, `exp/`, and the PR title type matched the prefix verbatim
 - [ ] A sample of recent PR bodies shows all five required sections present, with only Linked issues and Risk / rollout notes allowed to contain the literal `None`; any repository-specific sections appear *after* the required five, never interleaved
 - [ ] `.github/workflows/pr-lint.yml` (or an equivalently-named workflow) exists and its job is declared as a required status check for `develop` in `.github/settings.yml`
 - [ ] `.github/settings.yml` sets `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` for the repository
