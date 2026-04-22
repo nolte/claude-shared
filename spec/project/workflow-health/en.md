@@ -56,7 +56,7 @@ The hands-on implementation work of a workflow fix — editing the broken artifa
 
 - **MUST** dispatch the implementation work of a remediation to the most specialized available Claude Agent via `Agent(subagent_type=<name>)` (as governed by the `agent-management` spec), when at least one agent's `description` matches the triage classification or the concrete failing artifact (workflow YAML, Renovate pin bump, secret rotation, test defect, documentation build, etc.)
 - **MUST NOT** have the dispatching Claude perform specialized remediation work itself when a matching specialized agent exists; the generalist triages, dispatches, and verifies the result — it does not replace the specialized agent
-- **MUST** treat a recurring failure class for which no specialized agent exists as a portfolio gap: either author a new agent per the `agent-management` spec (`distribution: plugin` when the pattern recurs across repositories, `distribution: project` when the pattern is repository-local) or extend an existing agent's `description` so future failures of the same class route to it automatically
+- **MUST** treat a failure class that has recurred three or more times without a matching specialized agent as a portfolio gap requiring action: either author a new agent per the `agent-management` spec (`distribution: plugin` when the pattern recurs across repositories, `distribution: project` when the pattern is repository-local) or extend an existing agent's `description` so future failures of the same class route to it automatically; failure classes with fewer than three recurrences **SHOULD** be tracked as candidates for the same treatment
 - **SHOULD** prefer a plugin-distributed agent (`distribution: plugin`) over a project-local agent for remediation patterns that recur across the portfolio, so the remediation expertise travels with the `nolte-shared` plugin rather than being copied per repository
 - **SHOULD** record in the fix PR's **Risk / rollout notes** section (alongside the triage classification, per the `pull-request-workflow` spec) which specialized agent produced the fix, or note that no matching specialized agent exists and a generalist handled it — this makes portfolio-wide coverage gaps visible
 - **MAY** chain multiple specialized agents in sequence when a single remediation spans responsibilities (for example: a workflow-YAML-fix agent to correct syntax, then the `pull-request-create` agent to open the fix PR); each agent in the chain obeys its own declared `tools` scope
@@ -64,7 +64,8 @@ The hands-on implementation work of a workflow fix — editing the broken artifa
 
 ### Upstream (`nolte/gh-plumbing`) drift
 - **MUST** treat a new release of `nolte/gh-plumbing` as a candidate bump, not an automatic one; the bump is performed by updating the pinned tag in every affected `uses:` line and letting the standard PR gate validate the result
-- **SHOULD** rely on Renovate to propose the tag bump as a PR; the Renovate PR itself goes through the gate like any other change and must not be auto-merged unless every required check is green
+- **SHOULD** rely on Renovate to propose the tag bump as a PR; the Renovate PR itself goes through the gate like any other change
+- **MUST NOT** enable Renovate auto-merge for `nolte/gh-plumbing` tag bumps even when every required check is green — a human acknowledgement is the portfolio-wide rollback signal for a reusable-workflow change, and its cost (seconds) is less than the cost of a reusable-workflow defect fanning out to every consumer repository; other Renovate auto-merge rules **MAY** continue unchanged for non-`nolte/gh-plumbing` packages
 - **MUST NOT** skip the PR step for a version bump of `nolte/gh-plumbing` references just because "it's only a tag change"; the gate exists to catch exactly this class of breakage
 
 ### Probot app availability
@@ -73,13 +74,22 @@ The hands-on implementation work of a workflow fix — editing the broken artifa
 
 ### Flake handling
 - **MUST** identify a run as a flake only on reproducible evidence — a re-run of the same commit SHA with no code change returns green and no upstream infra signal explains the first failure
-- **SHOULD** track known flakes in a repository-visible artifact (a `FLAKES.md`, a dedicated GitHub Issue with a `flake` label, or an equivalent) so patterns are visible rather than absorbed silently into the re-run loop
+- **MUST** track known flakes in a repository-visible artifact so patterns are visible rather than absorbed silently into the re-run loop; the portfolio-wide default is a `FLAKES.md` at the repository root, and a dedicated set of GitHub Issues labelled `flake` is accepted as an equivalent when the repository already centralizes tracking in Issues
+- **MUST NOT** maintain both forms (`FLAKES.md` and a `flake`-labelled Issue set) for the same repository — one or the other is authoritative, chosen consciously and linked from `CLAUDE.md` or `README.md`
 - **SHOULD** treat a flake that trips a required check in more than roughly one in ten runs as a defect rather than a transient — at that rate the flake blocks merges materially and deserves a real fix, not a tracking entry
 
 ### Time expectations
 - **SHOULD** acknowledge a failed required check on `develop` within one business day of the failure appearing and have a fix PR open within two business days
 - **SHOULD** acknowledge a failed release-flow workflow on `main` (for example `release-cd-refresh-master.yml`) with higher urgency than a `develop` failure, because it blocks the next release from presenting correctly
 - **MAY** extend these windows when the repository is explicitly on low-maintenance status, provided that status is declared in `README.md` or `CLAUDE.md` so future readers understand why red checks linger
+
+### Third-party required checks
+Required status checks on `develop` may include providers that are not GitHub Actions workflows — SaaS code-quality bots, security scanners, coverage reporters, signed-commit verifiers. The same operational rules apply.
+
+- **MUST** apply the triage classifications and the remediation path of this spec to third-party required status checks the same way as to GitHub Actions workflows — the PR gate, the no-override rule, the pinned-tag discipline (where analogous), and the specialized-agent dispatch all apply identically
+- **MUST** declare any removal or deactivation of a third-party required check as a PR against `.github/settings.yml`, not as a change made through the provider's own UI alone; UI-only changes are drift and have to be reconciled back into the file
+- **MUST** treat an outage of a third-party check provider as `infra / transient` for triage purposes, not as `defect`
+- **MAY** use the provider's own "disable check" mechanism in place of an `on:`-trigger restriction (which does not apply outside Actions) when pausing a **non-required** third-party check; a tracking Issue with an owner and re-enablement criterion is still required, exactly as for Actions workflows
 
 ### Auditing
 - **SHOULD** periodically review `gh run list --status failure --branch develop --limit 20` and `gh run list --status failure --branch main --limit 20` to detect a backlog of unresolved failures that slipped past notifications
@@ -92,18 +102,14 @@ The hands-on implementation work of a workflow fix — editing the broken artifa
 - [ ] No workflow file in `.github/workflows/` contains `continue-on-error: true` on a step or job that belongs to the required-checks set declared in `.github/settings.yml`
 - [ ] Every `uses: nolte/gh-plumbing/.github/workflows/...` reference in `.github/workflows/` resolves to a release tag (matches `@v[0-9]+`), not to a branch name
 - [ ] For the last 10 PRs that touch `.github/workflows/` or pin bumps of `nolte/gh-plumbing`, every one was merged through the standard PR flow (squash-merge, required checks green, no admin override)
+- [ ] The repository's Renovate configuration does not auto-merge `nolte/gh-plumbing` tag bumps — either no auto-merge rule applies to that dependency, or the rule explicitly excludes `nolte/gh-plumbing`
+- [ ] If the repository declares any third-party required status check for `develop`, its removal or deactivation is reflected in `.github/settings.yml`, not only in the provider's UI
 - [ ] For the last 10 workflow-fix PRs, the **Risk / rollout notes** section names the triage classification (`defect`, `flake`, `infra`, `stale pin`, `secret drift`, or `other` with a short note)
 - [ ] For the same 10 workflow-fix PRs, the **Risk / rollout notes** section names either the specialized Claude Agent that produced the fix (via `Agent(subagent_type=…)`) or records that no matching specialized agent exists and a generalist handled it
 - [ ] When a failure class has recurred three or more times and been handled by a generalist each time, either a specialized agent now exists in the plugin (per the `agent-management` spec) or an open Issue tracks its creation with a named owner
 - [ ] Any temporarily-disabled workflow (restricted `on:` triggers, commented job, disabled in the Actions UI) is accompanied by a tracking Issue naming an owner and a re-enablement criterion; no required workflow appears in this state
-- [ ] A known-flake register exists in the repository (`FLAKES.md`, a `flake`-labelled Issue set, or equivalent) whenever at least one flake has been observed and acknowledged; the register is referenced from `CLAUDE.md` or `README.md` so it is discoverable
+- [ ] A known-flake register exists in the repository — `FLAKES.md` at the repository root or a `flake`-labelled Issue set, but not both — whenever at least one flake has been observed and acknowledged; the register is referenced from `CLAUDE.md` or `README.md` so it is discoverable
 - [ ] `.github/settings.yml` still declares the full required-checks set for `develop` as code; no required check has been silently dropped to work around a persistent failure
 
 ## Open Questions
-- Should the one-/two-business-day acknowledgement windows be softened to **MAY** for solo-maintained repositories, or stay **SHOULD** across the portfolio?
-- Should the flake register be standardized on a single artifact (`FLAKES.md`, Issue label, or Linear ticket) rather than left to per-repo choice?
-- Should Renovate's auto-merge be explicitly forbidden for `nolte/gh-plumbing` tag bumps (even when checks are green) so that tag rollouts are always human-acknowledged, or is green-CI enough?
-- Should this spec prescribe a portfolio-wide dashboard (an organization-level GitHub Actions view, a `gh` aggregation script) for cross-repository failure visibility, or leave monitoring to per-repo notifications?
-- How does this spec interact with third-party required checks (e.g. a SaaS code-quality bot) that are not GitHub Actions workflows — are they in scope for the same triage/remediation rules, or only Actions workflows?
-- Should this spec maintain an explicit mapping from triage classification (`defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`) to a preferred specialized agent, or leave routing to the dispatching Claude's judgment from each agent's `description`?
-- Is there a minimum frequency threshold (three recurrences? five?) for when an absent specialized agent becomes a **MUST** to author rather than a **SHOULD**?
+- _None at this time; all drafting questions have been resolved._
