@@ -23,7 +23,10 @@ Repositories in diesem Portfolio verwenden `main` als reinen Präsentations-Bran
 - **MUSS [MUST]** `develop` als Integrations-Branch festlegen, auf dem alle Feature-Arbeit per Pull Request landet
 - **MUSS [MUST]** `main` als Release-Präsentations-Branch festlegen, der das zuletzt veröffentlichte GitHub Release widerspiegelt
 - **MUSS NICHT [MUST NOT]** manuelle Commits, Pushes oder Merges direkt auf `main` zulassen; der Branch wird ausschließlich durch die Release-Automatisierung beschrieben
-- **MUSS [MUST]** Feature-Branches mit einem der Präfixe `feat/`, `fix/`, `chore/` oder `docs/` benennen und in ihrem Pull Request auf `develop` zielen; diese Präfixe sind identisch mit den in PR-Titeln verwendeten Conventional-Commits-Types, sodass Branch-Name und Commit-Type ohne Übersetzung zueinander passen
+- **MUSS [MUST]** Feature-Branches mit einem der Präfixe `feat/`, `fix/`, `chore/`, `docs/` oder `exp/` benennen und in ihrem Pull Request auf `develop` zielen; diese Präfixe sind identisch mit den in PR-Titeln verwendeten Conventional-Commits-Types, sodass Branch-Name und Commit-Type ohne Übersetzung zueinander passen
+- **SOLLTE [SHOULD]** den `exp/`-Präfix für experimentelle oder iterations-scoped Arbeit reservieren, die lose verwandte Exploration bündelt; ein `exp/`-Branch hat eine explizit begrenzte Lebensdauer, und sein Merge wird als Wegwerf-Integration behandelt, nicht als stabile Feature-, Fix-, Chore- oder Dokumentationsänderung
+- **SOLLTE [SHOULD]** `exp/`-Branches entweder mit einem Kalenderwochen-Marker (`exp/YYYY-WW-<thema>`, zum Beispiel `exp/2026-W17-skill-agent-split`) oder einem monoton steigenden Zähler (`exp/NNN-<thema>`, zum Beispiel `exp/003-skill-agent-split`) benennen, damit Iterationen sich chronologisch sortieren; der Thema-Teil folgt derselben Kebab-Case-Regel wie jeder andere Branch-Präfix
+- **SOLLTE [SHOULD]** `exp`-PR-Titel aus den benutzerseitigen Release Notes ausschließen — entweder durch Mapping auf eine versteckte Kategorie in `.github/release-drafter.yml` (direkt oder über die `nolte/gh-plumbing:.github/commons-release-drafter.yml`-Extension) oder indem der `exp`-Type komplett aus den konfigurierten Kategorien herausgehalten wird; experimentelle Arbeit ist kein ausgeliefertes Feature und darf nicht als solches erscheinen
 
 ### Branch-Protection
 - **MUSS [MUST]** alle Branch-Protection-Regeln als Code in `.github/settings.yml` deklarieren (direkt oder über `_extends: nolte/gh-plumbing:.github/commons-settings.yml`) und über die [Probot-Settings-App](https://probot.github.io/apps/settings/) synchronisieren; Protection-Regeln **MUSS NICHT [MUST NOT]** ad-hoc über die GitHub-UI konfiguriert werden
@@ -62,7 +65,8 @@ Das Repository **SOLLTE [SHOULD]** außerdem enthalten, wo anwendbar:
 - [ ] `.github/workflows/automerge.yaml` ist vorhanden und ruft den wiederverwendbaren Automerge-Workflow aus `nolte/gh-plumbing` auf
 - [ ] Der HEAD von `main` entspricht einem veröffentlichten GitHub-Release-Tag (`git tag --points-at main` liefert einen Release-Tag zurück)
 - [ ] Zwischen zwei aufeinanderfolgenden Releases gibt es keine menschlich erzeugten Commits auf `main` — nur Commits, die der Refresh-Workflow eingebracht hat
-- [ ] Feature-Branches im Repository verwenden einen der Präfixe `feat/`, `fix/`, `chore/`, `docs/`
+- [ ] Feature-Branches im Repository verwenden einen der Präfixe `feat/`, `fix/`, `chore/`, `docs/`, `exp/`
+- [ ] Wenn `.github/release-drafter.yml` vorhanden ist, landet der `exp`-Type entweder in einer nicht benutzerseitigen Kategorie oder ist aus den konfigurierten Kategorien ausgeschlossen, sodass experimentelle PRs nicht als ausgelieferte Features erscheinen
 - [ ] Wenn MkDocs verwendet wird, ist `.github/workflows/release-cd-deliver-docs.yml` vorhanden und löst auf `release: [published]` aus
 
 ## Offene Fragen

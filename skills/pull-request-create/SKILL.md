@@ -18,7 +18,7 @@ Before running any git or `gh` command, confirm:
 - Current working directory is inside a git repository.
 - A default / integration branch named `develop` exists on the remote (`git ls-remote --heads origin develop`). If the repo still uses `main` as the integration branch, stop and report — this skill targets the branching-model spec's `develop` convention.
 - `gh` is authenticated (`gh auth status`) and the remote resolves to a GitHub repository.
-- The current branch is **not** `develop` or `main`, and its name starts with one of the allowed prefixes: `feat/`, `fix/`, `chore/`, `docs/`. Otherwise stop and ask the user to rename or switch branches.
+- The current branch is **not** `develop` or `main`, and its name starts with one of the allowed prefixes: `feat/`, `fix/`, `chore/`, `docs/`, `exp/`. Otherwise stop and ask the user to rename or switch branches.
 
 ## Operations
 
@@ -55,7 +55,7 @@ If the branch has already been pushed, a rebase will require `git push --force-w
 
 ### 3. Build the PR title
 
-Derive the Conventional-Commits type from the branch prefix (`feat/` → `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`). No aliasing is permitted.
+Derive the Conventional-Commits type from the branch prefix (`feat/` → `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`, `exp/` → `exp`). No aliasing is permitted.
 
 Format: `<type>(<scope>)?: <summary>`
 
