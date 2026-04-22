@@ -50,6 +50,7 @@ The following `##` headings **MUST** appear, in the order given, whenever the un
 6. **`## License`** — **MUST** appear for any repository that ships a `LICENSE` file. Links to the `LICENSE` file and names the SPDX identifier and copyright holder.
 
 ### Optional sections
+- **MAY** include a `## Features` section between `## Purpose` and `## Usage` when the feature list is load-bearing for consumer decisions (for example CLIs with many commands, plugins exposing multiple skills, integrations with a large supported-device matrix); when features fit into two or three bullets, they **SHOULD** stay inside `## Purpose` instead of getting their own section
 - **MAY** include a `## Documentation` section pointing to the published MkDocs site when `docs/` is more than a handful of pages; for smaller `docs/` folders, link from within `## Usage` instead
 - **MAY** include a `## Contributing` section pointing to `CONTRIBUTING.md` or to the portfolio-wide contribution conventions; **MUST NOT** duplicate contributor content that belongs in `CLAUDE.md`
 - **MAY** include a `## Notes` or `## Caveats` subsection inside `## Usage` for non-obvious gotchas, when a separate top-level section would be overkill
@@ -89,9 +90,5 @@ The following `##` headings **MUST** appear, in the order given, whenever the un
 - [ ] Total README length is at most around 200 lines, excluding code blocks
 
 ## Open Questions
-- Should the tagline have a hard character limit (for example 280 characters, so it fits as a social-card description), or stay free-form within the sentence-count guidance?
-- Is there a need for a dedicated `## Features` section between `## Purpose` and `## Usage` for repositories where the feature list is load-bearing (CLIs, plugins with many commands), or should features stay inside `## Purpose`?
-- Should a machine-readable front-matter block (YAML) be added for automated extraction of tagline, homepage, topics — or is `.github/settings.yml` the canonical source for that metadata?
-- Should this spec prescribe a section for "Support / Contact" separately, or is the GitHub issues link (implicit from the repository URL) sufficient?
-- Should repositories that ship an end-user artifact (HACS integrations, CLIs with binary releases) additionally require a `## Installation` section split from `## Usage`?
-- How should this spec treat repositories that intentionally have no consumers beyond the maintainer (personal dotfiles, experiments) — are they exempt, or do they still follow the skeleton?
+- Should repositories that ship an end-user artifact (HACS integrations, CLIs with binary releases) additionally require a `## Installation` section split from `## Usage`, or does a single `## Usage` with `###` subsections cover both cases adequately?
+- How should this spec treat repositories that intentionally have no consumers beyond the maintainer (personal dotfiles, experiments) — are they exempt, or do they still follow the skeleton and simply omit sections that have no meaningful content?

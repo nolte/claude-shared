@@ -22,7 +22,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 ## Requirements
 
 ### Top-level files
-- **MUST** include a `README.md` at the repository root with project intro, feature overview, quickstart, and pointers to full documentation
+- **MUST** include a `README.md` at the repository root with project intro, feature overview, quickstart, and pointers to full documentation; the internal structure of that file (required sections, ordering, badges, cross-repository links) is governed by the `readme-structure` spec
 - **MUST** include a `.gitignore`
 - **MUST** include a `CLAUDE.md` that documents AI-assisted development conventions, architecture hints, and command entry points for the repository
 - **MUST** include a `renovate.json5` (preferred) or `renovate.json` that `extends` the portfolio-wide preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>`, pinned to a release tag (for example `#v1.1.12`), so Renovate configuration stays aligned across the portfolio; per-repository overrides **SHOULD** stay narrow (typically package-grouping or automerge rules)

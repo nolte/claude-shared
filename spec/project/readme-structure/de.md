@@ -21,6 +21,8 @@ Die Referenzimplementierung ist die `README.md` dieses Repositories selbst. Sie 
 - Runbooks nur für Beitragende — diese gehören in `CLAUDE.md` oder `docs/`
 - Badge-Katalog jenseits der CI-Status-Konvention (Shields für Lizenzen, Downloads usw. sind optional und hier nicht vorgeschrieben)
 - Übersetzungen der README selbst — die README ist aus Portfolio-Konsistenzgründen nur auf Englisch; mehrsprachiger Inhalt lebt unter `docs/<lang>/`
+- Maschinenlesbares README-Front-Matter (YAML-Kopfblöcke) — `.github/settings.yml`, vorgeschrieben durch die `project-structure`-Spec, ist die kanonische Quelle für Repository-Metadaten (Beschreibung, Homepage, Topics)
+- Ein eigener „Support"- oder „Contact"-Abschnitt — die GitHub-Repository-URL (Issues-Tab, Discussions-Tab) ist der implizite und ausreichende Support-Kanal für jedes Portfolio-Repository
 
 ## Anforderungen
 
@@ -33,6 +35,7 @@ Die Referenzimplementierung ist die `README.md` dieses Repositories selbst. Sie 
 - **MUSS [MUST]** mit einer einzigen obersten Überschrift (`# <repo-name>`) beginnen, die exakt dem GitHub-Repository-Namen entspricht
 - **MUSS [MUST]** CI-Status-Badges für jeden Workflow rendern, der Merges auf den Default-Branch gated, unmittelbar unter der `H1` platziert, ein Badge pro Zeile oder gruppiert in einer Zeile
 - **MUSS [MUST]** einen ein- bis dreisätzigen Teaser unter den Badges enthalten, der angibt, *was dieses Repository ist* und *für wen es gedacht ist*, ohne Marketing-Sprache
+- **SOLLTE [SHOULD]** den Teaser bei höchstens 280 Zeichen halten (ohne Markdown-Link-Syntax), damit er zugleich als Social-Card-Beschreibung und als `description`-Feld in `.github/settings.yml` taugt
 - **SOLLTE [SHOULD]** primäre Eigennamen im Teaser (zum Beispiel „Claude Code", „Home Assistant", „Vale") bei erster Nennung auf ihre kanonische Upstream-Dokumentation verlinken
 - **KANN [MAY]** Nicht-CI-Badges (Lizenz, neuestes Release, Paketindex) enthalten, wenn sie einer Konsumentin materiell helfen zu entscheiden, ob sie das Repository nutzt
 
@@ -47,6 +50,7 @@ Die folgenden `##`-Überschriften **MÜSSEN [MUST]** in der angegebenen Reihenfo
 6. **`## License`** — **MUSS [MUST]** für jedes Repository erscheinen, das eine `LICENSE`-Datei ausliefert. Verlinkt die `LICENSE`-Datei und nennt die SPDX-Kennung sowie den Rechteinhaber.
 
 ### Optionale Abschnitte
+- **KANN [MAY]** einen `## Features`-Abschnitt zwischen `## Purpose` und `## Usage` enthalten, wenn die Feature-Liste für Konsumentenentscheidungen tragend ist (zum Beispiel CLIs mit vielen Befehlen, Plugins mit mehreren Skills, Integrationen mit einer großen Matrix unterstützter Geräte); wenn Features in zwei oder drei Bullets passen, **SOLLTEN [SHOULD]** sie innerhalb von `## Purpose` bleiben statt einen eigenen Abschnitt zu bekommen
 - **KANN [MAY]** einen `## Documentation`-Abschnitt enthalten, der auf die veröffentlichte MkDocs-Seite verweist, wenn `docs/` mehr als eine Handvoll Seiten umfasst; bei kleineren `docs/`-Ordnern wird stattdessen innerhalb von `## Usage` verlinkt
 - **KANN [MAY]** einen `## Contributing`-Abschnitt enthalten, der auf `CONTRIBUTING.md` oder auf die portfolioweiten Beitragsregeln verweist; **DARF NICHT [MUST NOT]** Beitragsinhalte duplizieren, die in `CLAUDE.md` gehören
 - **KANN [MAY]** einen `## Notes`- oder `## Caveats`-Unterabschnitt innerhalb von `## Usage` für nicht offensichtliche Stolpersteine enthalten, wenn ein eigener Top-Level-Abschnitt überdimensioniert wäre
@@ -86,9 +90,5 @@ Die folgenden `##`-Überschriften **MÜSSEN [MUST]** in der angegebenen Reihenfo
 - [ ] Die Gesamt-READM-Länge liegt bei höchstens etwa 200 Zeilen, Codeblöcke ausgenommen
 
 ## Offene Fragen
-- Sollte der Teaser ein hartes Zeichenlimit haben (zum Beispiel 280 Zeichen, damit er als Social-Card-Beschreibung passt), oder innerhalb der Satz-Anzahl-Richtlinie frei bleiben?
-- Braucht es einen eigenen `## Features`-Abschnitt zwischen `## Purpose` und `## Usage` für Repositories, bei denen die Feature-Liste tragend ist (CLIs, Plugins mit vielen Befehlen), oder sollen Features innerhalb von `## Purpose` bleiben?
-- Sollte ein maschinenlesbarer Front-Matter-Block (YAML) für die automatisierte Extraktion von Teaser, Homepage, Topics ergänzt werden — oder ist `.github/settings.yml` die kanonische Quelle für diese Metadaten?
-- Sollte diese Spec einen eigenen Abschnitt für „Support / Contact" vorschreiben, oder genügt der GitHub-Issues-Link (implizit aus der Repository-URL)?
-- Sollten Repositories, die ein Endanwender-Artefakt ausliefern (HACS-Integrationen, CLIs mit Binär-Releases), zusätzlich einen `## Installation`-Abschnitt verlangen, der von `## Usage` getrennt ist?
-- Wie soll diese Spec mit Repositories umgehen, die absichtlich keine Konsumentinnen jenseits des Maintainers haben (persönliche Dotfiles, Experimente) — sind sie ausgenommen, oder folgen sie dem Grundgerüst trotzdem?
+- Sollten Repositories, die ein Endanwender-Artefakt ausliefern (HACS-Integrationen, CLIs mit Binär-Releases), zusätzlich einen `## Installation`-Abschnitt verlangen, der von `## Usage` getrennt ist, oder deckt ein einzelnes `## Usage` mit `###`-Unterabschnitten beide Fälle ausreichend ab?
+- Wie soll diese Spec mit Repositories umgehen, die absichtlich keine Konsumentinnen jenseits des Maintainers haben (persönliche Dotfiles, Experimente) — sind sie ausgenommen, oder folgen sie dem Grundgerüst trotzdem und lassen Abschnitte ohne sinnvollen Inhalt einfach weg?
