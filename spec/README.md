@@ -16,4 +16,5 @@ Canonical language: `en` · Translations: `de`
 | project | prose-style | Prose Style | Textstil | draft | unversioned |
 | project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | unversioned |
 | project | readme-structure | Repository README Structure | Repository-README-Struktur | draft | unversioned |
+| project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | unversioned |
