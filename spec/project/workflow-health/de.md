@@ -56,7 +56,7 @@ Die eigentliche Implementierungsarbeit einer Workflow-Behebung — das Bearbeite
 
 - **MUSS [MUST]** die Implementierungsarbeit einer Behebung per `Agent(subagent_type=<name>)` (wie in der `agent-management`-Spezifikation geregelt) an den spezialisiertesten verfügbaren Claude-Agent delegieren, wenn die `description` mindestens eines Agents der Triage-Klassifikation oder dem konkreten defekten Artefakt (Workflow-YAML, Renovate-Pin-Bump, Secret-Rotation, Test-Defect, Dokumentations-Build usw.) entspricht
 - **DARF NICHT [MUST NOT]** den delegierenden Claude selbst spezialisierte Behebungsarbeit ausführen lassen, wenn ein passender spezialisierter Agent existiert; der Generalist triagiert, delegiert und prüft das Ergebnis — er ersetzt den spezialisierten Agent nicht
-- **MUSS [MUST]** eine wiederkehrende Fehlerklasse, für die kein spezialisierter Agent existiert, als Portfolio-Lücke behandeln: entweder einen neuen Agent gemäß `agent-management`-Spezifikation autoren (`distribution: plugin`, wenn das Muster über Repositories hinweg wiederkehrt; `distribution: project`, wenn es repository-lokal ist) oder die `description` eines bestehenden Agents erweitern, sodass künftige Fehler derselben Klasse automatisch dorthin geroutet werden
+- **MUSS [MUST]** eine Fehlerklasse, die drei oder mehr Male ohne passenden spezialisierten Agent wiedergekehrt ist, als handlungsbedürftige Portfolio-Lücke behandeln: entweder einen neuen Agent gemäß `agent-management`-Spezifikation autoren (`distribution: plugin`, wenn das Muster über Repositories hinweg wiederkehrt; `distribution: project`, wenn es repository-lokal ist) oder die `description` eines bestehenden Agents erweitern, sodass künftige Fehler derselben Klasse automatisch dorthin geroutet werden; Fehlerklassen mit weniger als drei Wiederholungen **SOLLTEN [SHOULD]** als Kandidaten für dieselbe Behandlung nachgehalten werden
 - **SOLLTE [SHOULD]** einem Plugin-verteilten Agent (`distribution: plugin`) den Vorzug vor einem Projekt-lokalen Agent geben für Behebungsmuster, die portfolio-weit wiederkehren, sodass die Behebungsexpertise mit dem `nolte-shared`-Plugin reist und nicht pro Repository kopiert wird
 - **SOLLTE [SHOULD]** im Abschnitt **Risk / rollout notes** des Fix-PRs (neben der Triage-Klassifikation, gemäß `pull-request-workflow`-Spezifikation) festhalten, welcher spezialisierte Agent den Fix erzeugt hat, oder vermerken, dass kein passender spezialisierter Agent existiert und ein Generalist die Arbeit übernommen hat — das macht portfolio-weite Abdeckungslücken sichtbar
 - **KANN [MAY]** mehrere spezialisierte Agents verketten, wenn eine einzelne Behebung verschiedene Verantwortlichkeiten umspannt (zum Beispiel: ein Workflow-YAML-Fix-Agent zur Syntax-Korrektur, dann der `pull-request-create`-Agent zum Öffnen des Fix-PRs); jeder Agent in der Kette hält sich an seinen eigenen deklarierten `tools`-Scope
@@ -64,7 +64,8 @@ Die eigentliche Implementierungsarbeit einer Workflow-Behebung — das Bearbeite
 
 ### Upstream-Drift (`nolte/gh-plumbing`)
 - **MUSS [MUST]** einen neuen Release von `nolte/gh-plumbing` als Bump-Kandidaten behandeln, nicht als automatischen Bump; der Bump erfolgt durch Aktualisierung des gepinnten Tags in jeder betroffenen `uses:`-Zeile, und das reguläre PR-Gate validiert das Ergebnis
-- **SOLLTE [SHOULD]** Renovate nutzen, um den Tag-Bump als PR vorzuschlagen; der Renovate-PR selbst durchläuft das Gate wie jede andere Änderung und darf nur auto-gemergt werden, wenn jeder Required-Check grün ist
+- **SOLLTE [SHOULD]** Renovate nutzen, um den Tag-Bump als PR vorzuschlagen; der Renovate-PR selbst durchläuft das Gate wie jede andere Änderung
+- **DARF NICHT [MUST NOT]** Renovate-Auto-Merge für `nolte/gh-plumbing`-Tag-Bumps aktivieren, selbst wenn jeder Required-Check grün ist — die menschliche Bestätigung ist das portfolio-weite Rollback-Signal für eine Reusable-Workflow-Änderung, und ihr Aufwand (Sekunden) liegt unter den Kosten eines Reusable-Workflow-Defects, der in jedes Consumer-Repository fan-out; andere Renovate-Auto-Merge-Regeln **KÖNNEN [MAY]** für Nicht-`nolte/gh-plumbing`-Pakete unverändert weiterbestehen
 - **DARF NICHT [MUST NOT]** den PR-Schritt für einen Version-Bump von `nolte/gh-plumbing`-Referenzen überspringen, nur weil „es nur eine Tag-Änderung ist"; das Gate existiert genau, um diese Klasse von Brüchen abzufangen
 
 ### Verfügbarkeit der Probot-Apps
@@ -73,13 +74,22 @@ Die eigentliche Implementierungsarbeit einer Workflow-Behebung — das Bearbeite
 
 ### Umgang mit Flakes
 - **MUSS [MUST]** einen Lauf nur dann als Flake einstufen, wenn der Nachweis reproduzierbar ist — ein Re-Run desselben Commit-SHAs ohne Code-Änderung wird grün, und kein Upstream-Infrastruktursignal erklärt den ersten Fehlschlag
-- **SOLLTE [SHOULD]** bekannte Flakes in einem im Repository sichtbaren Artefakt führen (`FLAKES.md`, ein dediziertes GitHub-Issue mit Label `flake` oder Äquivalent), sodass Muster sichtbar sind, anstatt stillschweigend in die Re-Run-Schleife absorbiert zu werden
+- **MUSS [MUST]** bekannte Flakes in einem im Repository sichtbaren Artefakt führen, sodass Muster sichtbar sind und nicht stillschweigend in die Re-Run-Schleife absorbiert werden; der portfolio-weite Default ist eine `FLAKES.md` im Repository-Root, und eine dedizierte Menge von GitHub-Issues mit Label `flake` ist als Äquivalent zulässig, wenn das Repository Tracking ohnehin in Issues zentralisiert
+- **DARF NICHT [MUST NOT]** beide Formen (`FLAKES.md` und eine Issue-Menge mit Label `flake`) für dasselbe Repository gleichzeitig pflegen — eine der beiden ist autoritativ, wird bewusst gewählt und aus `CLAUDE.md` oder `README.md` heraus verlinkt
 - **SOLLTE [SHOULD]** einen Flake, der einen Required-Check in mehr als rund einem von zehn Läufen stolpern lässt, als Defect und nicht als Transient behandeln — bei dieser Rate blockiert der Flake Merges material und verdient einen echten Fix statt eines Tracking-Eintrags
 
 ### Zeitliche Erwartungen
 - **SOLLTE [SHOULD]** einen fehlgeschlagenen Required-Check auf `develop` innerhalb eines Werktags nach Auftreten zur Kenntnis nehmen und innerhalb von zwei Werktagen einen Fix-PR geöffnet haben
 - **SOLLTE [SHOULD]** einen fehlgeschlagenen Release-Flow-Workflow auf `main` (zum Beispiel `release-cd-refresh-master.yml`) mit höherer Dringlichkeit behandeln als einen `develop`-Fehler, weil er die korrekte Präsentation des nächsten Release blockiert
 - **KANN [MAY]** diese Fenster ausdehnen, wenn das Repository explizit auf Low-Maintenance-Status steht, sofern dieser Status in `README.md` oder `CLAUDE.md` erklärt wird, damit spätere Lesende verstehen, warum rote Checks verbleiben
+
+### Drittanbieter-Required-Checks
+Required-Status-Checks auf `develop` können auch Anbieter umfassen, die keine GitHub-Actions-Workflows sind — SaaS-Code-Quality-Bots, Security-Scanner, Coverage-Reporter, Signed-Commit-Verifizierer. Dieselben operativen Regeln gelten.
+
+- **MUSS [MUST]** die Triage-Klassifikationen und den Behebungspfad dieser Spezifikation auf Drittanbieter-Required-Status-Checks genauso anwenden wie auf GitHub-Actions-Workflows — das PR-Gate, die No-Override-Regel, die Pinned-Tag-Disziplin (soweit analog anwendbar) und die Delegation an spezialisierte Agents gelten identisch
+- **MUSS [MUST]** jede Entfernung oder Deaktivierung eines Drittanbieter-Required-Checks als PR gegen `.github/settings.yml` deklarieren, nicht als Änderung ausschließlich über die UI des Anbieters; UI-only-Änderungen sind Drift und müssen in die Datei zurückgeführt werden
+- **MUSS [MUST]** einen Ausfall eines Drittanbieter-Check-Providers für die Triage als `infra / transient` einstufen, nicht als `defect`
+- **KANN [MAY]** den „Check deaktivieren"-Mechanismus des Anbieters anstelle einer `on:`-Trigger-Einschränkung (die außerhalb von Actions nicht anwendbar ist) nutzen, wenn ein **nicht erforderlicher** Drittanbieter-Check pausiert werden soll; ein Tracking-Issue mit verantwortlicher Person und Wiederaktivierungs-Kriterium ist weiterhin erforderlich, genau wie bei Actions-Workflows
 
 ### Auditing
 - **SOLLTE [SHOULD]** regelmäßig `gh run list --status failure --branch develop --limit 20` und `gh run list --status failure --branch main --limit 20` prüfen, um einen Rückstau unbehobener Fehler zu erkennen, die an den Benachrichtigungen vorbeigerutscht sind
@@ -92,18 +102,14 @@ Die eigentliche Implementierungsarbeit einer Workflow-Behebung — das Bearbeite
 - [ ] Keine Workflow-Datei unter `.github/workflows/` enthält `continue-on-error: true` an einem Step oder Job, der zur in `.github/settings.yml` deklarierten Required-Checks-Menge gehört
 - [ ] Jede `uses: nolte/gh-plumbing/.github/workflows/...`-Referenz unter `.github/workflows/` löst sich auf einen Release-Tag auf (passt zu `@v[0-9]+`), nicht auf einen Branch-Namen
 - [ ] Die letzten 10 PRs, die `.github/workflows/` oder Pin-Bumps von `nolte/gh-plumbing` berühren, wurden jeweils über den regulären PR-Flow gemergt (Squash-Merge, Required-Checks grün, kein Admin-Override)
+- [ ] Die Renovate-Konfiguration des Repositories mergt `nolte/gh-plumbing`-Tag-Bumps nicht automatisch — entweder greift keine Auto-Merge-Regel für diese Dependency, oder die Regel schließt `nolte/gh-plumbing` explizit aus
+- [ ] Wenn das Repository einen Drittanbieter-Required-Status-Check für `develop` deklariert, spiegelt `.github/settings.yml` dessen Entfernung oder Deaktivierung wider, nicht ausschließlich die UI des Anbieters
 - [ ] Für die letzten 10 Workflow-Fix-PRs benennt der Abschnitt **Risk / rollout notes** die Triage-Klassifikation (`defect`, `flake`, `infra`, `stale pin`, `secret drift` oder `other` mit Kurznotiz)
 - [ ] Für dieselben 10 Workflow-Fix-PRs benennt der Abschnitt **Risk / rollout notes** entweder den spezialisierten Claude-Agent, der den Fix erzeugt hat (per `Agent(subagent_type=…)`), oder vermerkt, dass kein passender spezialisierter Agent existiert und ein Generalist die Arbeit übernommen hat
 - [ ] Wenn eine Fehlerklasse drei oder mehr Male wiedergekehrt ist und jedes Mal von einem Generalisten behandelt wurde, existiert entweder mittlerweile ein spezialisierter Agent im Plugin (gemäß `agent-management`-Spezifikation) oder ein offenes Issue verfolgt seine Erstellung mit benannter verantwortlicher Person
 - [ ] Jeder vorübergehend deaktivierte Workflow (eingeschränkte `on:`-Trigger, auskommentierter Job, in der Actions-UI deaktiviert) ist von einem Tracking-Issue begleitet, das eine verantwortliche Person und ein Wiederaktivierungs-Kriterium benennt; kein Required-Workflow befindet sich in diesem Zustand
-- [ ] Ein Register bekannter Flakes existiert im Repository (`FLAKES.md`, ein Set von Issues mit Label `flake` oder Äquivalent), sobald mindestens ein Flake beobachtet und anerkannt wurde; das Register ist aus `CLAUDE.md` oder `README.md` heraus verlinkt und damit auffindbar
+- [ ] Ein Register bekannter Flakes existiert im Repository — entweder `FLAKES.md` im Repository-Root oder ein Set von Issues mit Label `flake`, aber nicht beides — sobald mindestens ein Flake beobachtet und anerkannt wurde; das Register ist aus `CLAUDE.md` oder `README.md` heraus verlinkt und damit auffindbar
 - [ ] `.github/settings.yml` deklariert weiterhin die vollständige Required-Checks-Menge für `develop` als Code; kein Required-Check wurde stillschweigend entfernt, um einen dauerhaften Fehler zu umgehen
 
 ## Offene Fragen
-- Sollen die Ein-/Zwei-Werktage-Fenster für die Kenntnisnahme für solo gepflegte Repositories auf **KANN [MAY]** abgesenkt werden oder portfolio-weit **SOLLTE [SHOULD]** bleiben?
-- Soll das Flake-Register auf ein einziges Artefakt standardisiert werden (`FLAKES.md`, Issue-Label oder Linear-Ticket), anstatt der Wahl pro Repository überlassen zu bleiben?
-- Soll Renovate-Auto-Merge für `nolte/gh-plumbing`-Tag-Bumps (selbst bei grünen Checks) ausdrücklich verboten werden, damit Tag-Rollouts stets durch einen Menschen bestätigt werden, oder genügt grüne CI?
-- Soll diese Spezifikation ein portfolio-weites Dashboard (eine organisationsweite GitHub-Actions-Ansicht, ein `gh`-Aggregationsskript) für repositoryübergreifende Fehlersicht vorschreiben, oder bleibt Monitoring eine pro-Repo-Aufgabe über Benachrichtigungen?
-- Wie verhält sich diese Spezifikation zu Drittanbieter-Required-Checks (z. B. einem SaaS-Code-Quality-Bot), die keine GitHub-Actions-Workflows sind — gelten dieselben Triage-/Behebungsregeln auch für sie, oder nur für Actions-Workflows?
-- Soll diese Spezifikation eine explizite Zuordnung von Triage-Klassifikation (`defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`) zu einem bevorzugten spezialisierten Agent pflegen, oder bleibt das Routing dem Urteil des delegierenden Claude aus der jeweiligen `description` jedes Agents überlassen?
-- Gibt es eine Mindesthäufigkeit (drei Wiederholungen? fünf?), ab der das Anlegen eines fehlenden spezialisierten Agents zu einer **MUSS [MUST]**-Anforderung wird, statt eine **SOLLTE [SHOULD]** zu bleiben?
+- _Derzeit keine; alle Entwurfsfragen sind geklärt._
