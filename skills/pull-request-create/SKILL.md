@@ -51,7 +51,7 @@ If the command exits non-zero, `develop` is **not** fully contained in the featu
 3. Execute the chosen operation (`git merge origin/develop` or `git rebase origin/develop`). If conflicts arise, stop and hand control back to the user — do not attempt automatic resolution.
 4. After a successful sync, re-run `git merge-base --is-ancestor origin/develop HEAD` to verify; only then continue.
 
-If the branch has already been pushed, a rebase will require `git push --force-with-lease`. Confirm explicitly with the user before force-pushing, and **never** use plain `--force`.
+If the branch has already been pushed, a rebase will require `git push --force-with-lease`. Confirm explicitly with the user before force-pushing, and **never** use plain `--force`. If the branch is visible through an **open non-draft PR**, the pull-request-workflow spec §Fix-forward on red checks requires that the rebase force-push be documented in a PR comment; post a short comment naming the lag that was resolved and the new head commit SHA after the force-push completes.
 
 ### 3. Build the PR title
 
@@ -99,7 +99,17 @@ Rules for the body:
 
 Derive section content from the commit log, file list, and diff collected in step 1. Present the drafted title and body back to the user and iterate until they approve.
 
-### 5. Push and create the PR
+### 5. Verify local lint before push
+
+Before invoking any `git push` in the next step, run the repository's local lint target so prose-, format-, or YAML-level failures are caught locally rather than by the CI `lint` job. This is a **MUST** per `spec/project/pull-request-workflow/<canonical_language>.md` §Pre-push verification whenever the repository ships a `Taskfile.yml` with a `lint` target **or** a `.pre-commit-config.yaml`.
+
+```
+task lint
+```
+
+If neither tool is present, fall back to whatever equivalent linting the repository provides. Do not intentionally push a commit that is known to fail locally and rely on CI to report it.
+
+### 6. Push and create the PR
 
 Once the title and body are approved, and only then:
 
@@ -124,6 +134,9 @@ If `gh pr create` fails because a PR already exists for this branch, switch to `
 - **Never** target `main` as the base branch. The integration branch is `develop`.
 - **Never** invent a Conventional-Commits type that disagrees with the branch prefix. If the branch is `feat/foo`, the type is `feat` — no translation.
 - **Never** leave Summary, Changes, or Testing empty or equal to `None`. Stop and ask the user for content instead.
-- **Never** silently force-push. Use `--force-with-lease` and only after explicit user confirmation.
+- **Never** silently force-push. Use `--force-with-lease` and only after explicit user confirmation; on an open non-draft PR, also document the rebase in a PR comment per pull-request-workflow §Fix-forward on red checks.
+- **Never** amend a commit that has already been pushed. When iterating on an open PR to fix a red required check, push a **new** commit (fix-forward); `git commit --amend` after the push is prohibited by pull-request-workflow §Fix-forward on red checks because it destroys review context and breaks comment anchoring.
+- **Never** mark a PR as ready for review while a required status check is red or pending on the head commit. Keep the PR as Draft (or return it to Draft) until every required check on the head commit is green.
+- **Never** trigger merge (applying the `automerge` label or running `gh pr merge` manually) based on a status that no longer reflects the current head commit. The green signal must originate from the most recent commit on the branch.
 - **Never** skip presenting the drafted title and body to the user before invoking `gh pr create`. `gh pr create` is an externally-visible action and requires confirmation.
 - When `spec/project/pull-request-workflow/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.
