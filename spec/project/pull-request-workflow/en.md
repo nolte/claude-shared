@@ -10,6 +10,9 @@ Pull requests (PRs, equivalent to GitLab merge requests / MRs) are the sole path
 - No PR reaches `develop` unless every required CI check has reported success
 - Preconditions (branch naming, target branch, title form) are fully declared in code and enforceable via branch protection
 - Humans and AI agents authoring PRs against these repositories produce artifacts that match the same standard without per-repo onboarding
+- Authors and AI agents catch prose, format, and YAML errors locally before pushing, so CI feedback loops are reserved for logic failures that only CI can surface
+- Red required checks are resolved fix-forward on the same branch, preserving review context and ensuring automerge only reacts to the current head commit
+- Automerge triggering is explicit (label + non-draft) so humans and automation agree on when a PR is ready to merge
 
 ## Non-Goals
 - Target-branch policy and release flow (covered by the branching-model spec)
@@ -60,7 +63,7 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 ### CI gate into `develop`
 - **MUST** declare the full set of required status checks for `develop` as code in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension); the GitHub UI is **NOT** an acceptable place to add or remove required checks
 - **MUST** require every declared check to report success before a PR can merge into `develop`
-- **MUST** configure the `automerge.yaml` workflow so it only merges a PR when every required check reports success and the PR is approved
+- **MUST** configure the `automerge.yaml` workflow so it merges a PR only when every required status check on the PR's head commit reports success and every review-related protection rule configured for `develop` (for example `required_approving_review_count` or Code Owner reviews) is satisfied; the workflow **MUST NOT** bypass any protection rule, and repositories that do not require approving reviews (`required_approving_review_count: 0`) still merge only once every required status check on the head commit is green
 - **MUST** set `enforce_admins: true` for `develop` branch protection so that admin overrides cannot bypass a failing required check; the CI gate has no exception path, and a waiver is not permitted — if a required check is persistently broken, the correct remedy is a PR against `.github/settings.yml` (which itself passes the gate) to remove or replace the check, not a one-off bypass
 - **SHOULD** block merge while any review explicitly requests changes, even after CI becomes green
 
@@ -72,6 +75,24 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 ### Draft and work-in-progress PRs
 - **SHOULD** open PRs as Draft while work is ongoing and mark them ready for review only once CI is expected to pass and the description is complete
 - **MUST NOT** mark a PR ready for review when any required section of the description is missing or empty in violation of the rules above
+
+### Pre-push verification
+- **MUST** run the repository's local lint target (`task lint`) on the feature branch before pushing a new commit to a PR branch, whenever the repository provides a `Taskfile.yml` with a `lint` target **or** a `.pre-commit-config.yaml`; the CI `lint` check exists as a backstop, not as the primary place to discover prose-style, YAML, or formatting errors
+- **SHOULD** run the equivalent local lint tooling before every push even when neither a Taskfile `lint` target nor a pre-commit configuration is present, using whatever linting the repository provides
+- **MUST** resolve every local lint failure before pushing; intentionally pushing a commit that is known to fail locally and relying on CI to report it is a spec violation
+
+### Fix-forward on red checks
+- **MUST** resolve a red required status check by pushing a new commit to the same branch; amending a commit that was already pushed (`git commit --amend` after the push) is not permitted because it destroys review context and breaks comment anchoring
+- **MUST NOT** use `git push --force` or `git push --force-with-lease` on a branch that is visible through an open non-draft PR, except when the force-push is explicitly part of a rebase onto the advanced `develop` tip (as required by §Branch freshness) and the author documents the rebase in a PR comment
+- **MUST** move the PR back to Draft (or keep it as Draft) while any required check is red or while a fix is in flight; the PR is only taken out of Draft once the required checks on the head commit are green again and the body still satisfies §PR description structure
+- **MUST NOT** trigger merge (applying the `automerge` label or running `gh pr merge` manually) based on a status that no longer reflects the current head commit; the green signal must originate from the most recent commit on the branch
+
+### Automerge trigger protocol
+- **MUST** trigger automerge by applying the repository label `automerge` to the PR; the `automerge.yaml` workflow is driven by this label through the `nolte/gh-plumbing` reusable automerge workflow and does not act on unlabeled PRs
+- **MUST** mark the PR as ready for review (not Draft) before applying the label or before the action is expected to merge; the reusable automerge workflow ignores Draft PRs by design
+- **MUST** ensure every required status check on the head commit is green before applying the label; applying it on a red or pending head leaves the PR queued for automerge without progress and is misleading to reviewers
+- **SHOULD** remove the `automerge` label when the author decides to pause auto-merge (for example to wait for additional review) and re-apply it when ready, rather than leaving the label on a PR that is no longer intended to auto-merge
+- **MAY** use `gh pr merge --squash` manually instead of the label-driven automerge workflow when repository policy allows a maintainer to merge directly; the merge strategy (§Merge strategy) still applies
 
 ## Acceptance Criteria
 - [ ] `.github/pull_request_template.md` exists and its section headings match the five headings listed in "PR description structure", in order
@@ -85,6 +106,11 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - [ ] `.github/settings.yml` sets `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` for the repository
 - [ ] The last 10 first-parent commits on `develop` (via `git log --first-parent develop -n 10`) each correspond to exactly one squash-merged PR and carry a Conventional-Commits-compliant message
 - [ ] `.github/settings.yml` sets `required_status_checks.strict: true` for the `develop` branch protection (directly or via the `nolte/gh-plumbing` commons extension) so that GitHub enforces the branch-up-to-date precondition
+- [ ] For the last 10 PRs merged into `develop`, no PR was moved out of Draft while a required status check was red or pending on the head commit (spot-check via PR timeline events)
+- [ ] For the same 10 PRs, the `automerge` label was only present on PRs that were already marked ready for review; the label did not persist on PRs later withdrawn from auto-merge
+- [ ] For the same 10 PRs, no force-push appears in the branch history between leaving Draft and merge (spot-check via `gh api repos/<owner>/<repo>/pulls/<number>/commits` — no rewritten commits after the PR was ready for review)
+- [ ] In repositories that provide a `Taskfile.yml` with a `lint` target or a `.pre-commit-config.yaml`, a spot-check of recent PRs shows that the first push of the head commit that was merged did not introduce a CI `lint` regression that local tooling would have caught
+- [ ] The `automerge.yaml` workflow is configured so that the reusable automerge workflow only merges when every required status check on the head commit is green and every review-related branch-protection rule on `develop` is satisfied, regardless of whether `required_approving_review_count` is 0 or higher
 
 ## Open Questions
 - _None at this time; all drafting questions have been resolved._
