@@ -10,6 +10,9 @@ Pull Requests (PRs, entsprechen GitLab Merge Requests / MRs) sind der einzige We
 - Kein PR erreicht `develop`, solange nicht jeder erforderliche CI-Check Erfolg gemeldet hat
 - Rahmenbedingungen (Branch-Benennung, Ziel-Branch, Titelform) sind vollständig als Code deklariert und über Branch-Protection erzwingbar
 - Menschen und KI-Agenten, die PRs gegen diese Repositories erstellen, erzeugen Artefakte, die ohne repo-spezifisches Onboarding demselben Standard entsprechen
+- Autor:innen und KI-Agenten fangen Prosa-, Format- und YAML-Fehler lokal ab, bevor sie pushen, damit CI-Rückkopplung echten Logikfehlern vorbehalten bleibt, die nur die CI überhaupt zeigen kann
+- Rote erforderliche Checks werden per fix-forward auf derselben Branch behoben; das erhält den Review-Kontext und stellt sicher, dass Automerge ausschließlich auf den aktuellen Head-Commit reagiert
+- Automerge-Auslösung ist explizit (Label + nicht Draft), damit Mensch und Automatisierung sich einig sind, wann ein PR merge-bereit ist
 
 ## Nicht-Ziele
 - Ziel-Branch-Policy und Release-Flow (abgedeckt durch das Branching-Modell-Spec)
@@ -60,7 +63,7 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 ### CI-Gate nach `develop`
 - **MUSS [MUST]** die vollständige Menge der erforderlichen Status-Checks für `develop` als Code in `.github/settings.yml` deklarieren (direkt oder via der `nolte/gh-plumbing`-Commons-Extension); das GitHub-UI ist **KEIN** akzeptabler Ort, um erforderliche Checks hinzuzufügen oder zu entfernen
 - **MUSS [MUST]** verlangen, dass jeder deklarierte Check Erfolg meldet, bevor ein PR nach `develop` gemergt werden kann
-- **MUSS [MUST]** den `automerge.yaml`-Workflow so konfigurieren, dass er einen PR nur dann mergt, wenn jeder erforderliche Check Erfolg meldet und der PR freigegeben ist
+- **MUSS [MUST]** den `automerge.yaml`-Workflow so konfigurieren, dass er einen PR nur dann mergt, wenn jeder erforderliche Status-Check auf dem Head-Commit des PRs Erfolg meldet und jede Review-bezogene Protection-Regel für `develop` (zum Beispiel `required_approving_review_count` oder Code-Owner-Reviews) erfüllt ist; der Workflow **DARF NICHT [MUST NOT]** eine Protection-Regel umgehen, und Repositories ohne Approval-Pflicht (`required_approving_review_count: 0`) mergen ebenfalls erst, wenn jeder erforderliche Status-Check auf dem Head-Commit grün ist
 - **MUSS [MUST]** `enforce_admins: true` für die `develop`-Branch-Protection setzen, damit Admin-Overrides keinen fehlschlagenden erforderlichen Check umgehen können; das CI-Gate hat keinen Ausnahmepfad, und eine Waiver-Regelung ist nicht zulässig — wenn ein erforderlicher Check dauerhaft defekt ist, ist die korrekte Abhilfe ein PR gegen `.github/settings.yml` (der selbst das Gate passiert), der den Check entfernt oder ersetzt, keine einmalige Umgehung
 - **SOLLTE [SHOULD]** den Merge blockieren, solange ein Review ausdrücklich Änderungen anfordert, auch nachdem die CI grün geworden ist
 
@@ -72,6 +75,24 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 ### Draft- und Work-in-Progress-PRs
 - **SOLLTE [SHOULD]** PRs während laufender Arbeit als Draft öffnen und erst dann als bereit für Review markieren, wenn die CI voraussichtlich grün wird und die Beschreibung vollständig ist
 - **DARF NICHT [MUST NOT]** einen PR als bereit für Review markieren, wenn ein erforderlicher Beschreibungsabschnitt entgegen den obigen Regeln fehlt oder leer ist
+
+### Vor-dem-Push-Prüfung
+- **MUSS [MUST]** das lokale Lint-Target des Repositories (`task lint`) auf dem Feature-Branch ausführen, bevor ein neuer Commit auf eine PR-Branch gepusht wird, sofern das Repository ein `Taskfile.yml` mit `lint`-Target **oder** eine `.pre-commit-config.yaml` bereitstellt; der CI-`lint`-Check ist ein Rückfallnetz, nicht der primäre Ort zum Entdecken von Prosa-, YAML- oder Format-Fehlern
+- **SOLLTE [SHOULD]** auch ohne Taskfile-`lint`-Target und ohne pre-commit-Konfiguration vor jedem Push das äquivalente Lint-Werkzeug des Repositories lokal ausführen
+- **MUSS [MUST]** jeden lokalen Lint-Fehler beheben, bevor gepusht wird; einen bekannt fehlschlagenden Commit bewusst zu pushen und die CI als Meldekanal zu nutzen, ist ein Spec-Verstoß
+
+### Fix-forward bei roten Checks
+- **MUSS [MUST]** einen roten erforderlichen Status-Check durch einen neuen Commit auf dieselbe Branch beheben; das nachträgliche Amenden eines bereits gepushten Commits (`git commit --amend` nach dem Push) ist nicht zulässig, weil es den Review-Kontext zerstört und Kommentar-Anker bricht
+- **DARF NICHT [MUST NOT]** `git push --force` oder `git push --force-with-lease` auf einer Branch nutzen, die über einen offenen Nicht-Draft-PR sichtbar ist, außer der Force-Push ist expliziter Teil eines Rebase auf den fortgeschrittenen `develop`-Kopf (wie in §Aktualität des Branches gefordert) und der/die Autor:in dokumentiert den Rebase in einem PR-Kommentar
+- **MUSS [MUST]** den PR auf Draft zurücksetzen (bzw. im Draft belassen), solange ein erforderlicher Check rot ist oder ein Fix unterwegs ist; der PR wird erst wieder aus dem Draft genommen, wenn die erforderlichen Checks auf dem Head-Commit grün sind und der Body weiterhin §Struktur der PR-Beschreibung erfüllt
+- **DARF NICHT [MUST NOT]** einen Merge (Anhängen des `automerge`-Labels oder manuelles `gh pr merge`) auf Basis eines Status auslösen, der nicht mehr den aktuellen Head-Commit widerspiegelt; das Grün-Signal muss vom jüngsten Commit der Branch stammen
+
+### Automerge-Auslösungsprotokoll
+- **MUSS [MUST]** den Automerge durch Anhängen des Repository-Labels `automerge` am PR auslösen; der `automerge.yaml`-Workflow wird über dieses Label durch den reusable Workflow aus `nolte/gh-plumbing` getrieben und greift nicht auf ungelabelten PRs
+- **MUSS [MUST]** den PR als ready-for-review markieren (nicht mehr Draft), bevor das Label angeheftet wird bzw. bevor die Action einen Merge durchführen soll; der reusable Automerge-Workflow ignoriert Draft-PRs by design
+- **MUSS [MUST]** sicherstellen, dass jeder erforderliche Status-Check auf dem Head-Commit grün ist, bevor das Label angeheftet wird; wird das Label auf einem roten oder pending-Head gesetzt, verbleibt der PR in der Automerge-Warteschlange ohne Fortschritt und wirkt irreführend auf Reviewer
+- **SOLLTE [SHOULD]** das `automerge`-Label entfernen, wenn der/die Autor:in den Auto-Merge pausieren möchte (zum Beispiel um auf zusätzlichen Review zu warten), und es erneut anhängen, sobald wieder merge-bereit — statt das Label an einem PR zu belassen, der nicht mehr automatisch mergen soll
+- **DARF [MAY]** manuelles `gh pr merge --squash` statt des Label-getriebenen Automerge-Workflows nutzen, wenn die Repository-Policy dem/der Maintainer:in direktes Mergen erlaubt; die Merge-Strategie (§Merge-Strategie) gilt weiterhin
 
 ## Akzeptanzkriterien
 - [ ] `.github/pull_request_template.md` existiert, und seine Abschnittsüberschriften stimmen in Reihenfolge und Wortlaut mit den fünf Überschriften in „Struktur der PR-Beschreibung" überein
@@ -85,6 +106,11 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - [ ] `.github/settings.yml` setzt `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` für das Repository
 - [ ] Die letzten 10 First-Parent-Commits auf `develop` (via `git log --first-parent develop -n 10`) entsprechen je genau einem squash-gemergten PR und tragen eine Conventional-Commits-konforme Nachricht
 - [ ] `.github/settings.yml` setzt `required_status_checks.strict: true` für die Branch-Protection von `develop` (direkt oder via der `nolte/gh-plumbing`-Commons-Extension), sodass GitHub die Branch-Up-to-date-Vorbedingung erzwingt
+- [ ] Für die letzten 10 nach `develop` gemergten PRs wurde kein PR aus dem Draft geholt, während ein erforderlicher Status-Check auf dem Head-Commit rot oder pending war (Stichprobe über die PR-Timeline-Events)
+- [ ] Für dieselben 10 PRs war das `automerge`-Label nur auf PRs vorhanden, die bereits als ready-for-review markiert waren; das Label verblieb nicht auf PRs, die später aus dem Auto-Merge zurückgezogen wurden
+- [ ] Für dieselben 10 PRs erscheint zwischen Verlassen des Draft-Status und Merge kein Force-Push im Branch-Verlauf (Stichprobe via `gh api repos/<owner>/<repo>/pulls/<number>/commits` — keine umgeschriebenen Commits, nachdem der PR als ready-for-review markiert wurde)
+- [ ] In Repositories mit `Taskfile.yml`-`lint`-Target oder `.pre-commit-config.yaml` zeigt eine Stichprobe aktueller PRs, dass der erste Push des gemergten Head-Commits keine CI-`lint`-Regression eingeführt hat, die lokales Tooling abgefangen hätte
+- [ ] Der `automerge.yaml`-Workflow ist so konfiguriert, dass der reusable Automerge-Workflow nur mergt, wenn jeder erforderliche Status-Check auf dem Head-Commit grün ist und jede Review-bezogene Branch-Protection-Regel für `develop` erfüllt ist — unabhängig davon, ob `required_approving_review_count` 0 oder höher ist
 
 ## Offene Fragen
 - _Keine aktuell; alle Fragen aus der Entwurfsphase sind geklärt._
