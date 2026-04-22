@@ -40,6 +40,7 @@ Probot
 READMEs
 rebase
 rebasing
+Renovate
 [Rr]epo
 rollout
 [Rr]outable
@@ -51,6 +52,7 @@ subfolders
 subproject
 subprojects
 Taskfile
+triages
 [Tt]oolchain
 untracked
 unversioned
