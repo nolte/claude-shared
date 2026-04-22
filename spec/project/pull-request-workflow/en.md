@@ -24,7 +24,7 @@ Pull requests (PRs, equivalent to GitLab merge requests / MRs) are the sole path
 - **MUST** target `develop` as the base branch
 - **MUST** originate from a branch whose name starts with one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, or `exp/` (as declared by the branching-model spec)
 - **MUST** use a PR title in Conventional Commits form `<type>(<scope>)?: <summary>`, where `<type>` is literally identical to the branch prefix (prefix `feat/` → type `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`, `exp/` → `exp`); no translation or aliasing is permitted
-- **MUST** keep a single PR scoped to one logical change; unrelated changes are split into separate PRs — the sole exception is an `exp/` PR, which **MAY** bundle loosely related exploratory changes that share an iteration timeframe, because that is the whole purpose of the experimental branch type declared in the branching-model spec
+- **MUST** keep a single PR scoped to one logical change; unrelated changes are split into separate PRs — the sole exception is an `exp/` PR, which **MAY** bundle loosely related exploratory changes that share an iteration time frame, because that is the whole purpose of the experimental branch type declared in the branching-model spec
 - **SHOULD** link at least one related issue via `Closes #<n>` or `Refs #<n>` in the description when a tracking issue exists
 
 ### Branch freshness
