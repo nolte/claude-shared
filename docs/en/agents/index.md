@@ -1,6 +1,6 @@
 # Agents
 
-Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the claude-shared source tree they will live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md` — or bundled inside the `nolte-shared` plugin.
+Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the claude-shared source tree they will live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`: or bundled inside the `nolte-shared` plugin.
 
 !!! note "Status"
     At the moment this repository contains **no** maintained agent definitions yet. The specification ([Agent Authoring](../specs/agent-management.md)) is ready though, so new agents can be built straight against the rules.
@@ -12,7 +12,7 @@ An agent is a single Markdown file with YAML frontmatter and a system prompt in 
 ```markdown
 ---
 name: <kebab-case-name>
-description: Concrete triggers ("use when …") — not abstract capabilities.
+description: Concrete triggers ("use when …"): not abstract capabilities.
 tools: [Read, Grep, Glob]   # optional, principle of least authority
 model: sonnet               # optional
 ---

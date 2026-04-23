@@ -8,7 +8,7 @@ This page summarizes the specification at `spec/claude/agent-management/en.md` (
 
 The claude-shared repository collects reusable Claude Code skills and agents. An agent has two lives: a **source form** here (`agents/`) and a **runtime form** in a consuming project (`.claude/agents/` or `~/.claude/agents/`) where Claude Code loads it and the `Agent` tool dispatches via `subagent_type`.
 
-Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality — reuse becomes fragile and routing unreliable.
+Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality—reuse becomes fragile and routing unreliable.
 
 ## Goals and Non-Goals
 
@@ -34,10 +34,10 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 - **MUST** be a single Markdown file `<name>.md` in ASCII kebab-case
 - **MUST** include YAML frontmatter with `name` and `description`
 - **MUST** set `name` to match the filename without `.md`
-- **MUST** write a `description` naming concrete triggers ("use when …") — not abstract capabilities
+- **MUST** write a `description` naming concrete triggers ("use when …"): not abstract capabilities
 - **MUST** include a system prompt in the body scoped to a single responsibility and stating its output shape
 - **MUST** keep frontmatter and system prompt in English (token efficiency)
-- **MUST** be self-contained — supporting assets in `agents/<name>/`
+- **MUST** be self-contained—supporting assets in `agents/<name>/`
 
 ### Tool access
 
@@ -62,7 +62,7 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 - **SHOULD** order the system prompt: role/boundaries → output format → procedure
 - **SHOULD** state explicitly whether the agent writes code or only researches
 - **SHOULD** keep the system prompt under ~200 lines
-- **SHOULD** list positive triggers and — when overlap is likely — negative cases in `description`
+- **SHOULD** list positive triggers and—when overlap is likely—negative cases in `description`
 
 ## Acceptance Criteria
 
@@ -81,7 +81,7 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 
 - Should the filename match the `subagent_type` string exactly?
 - Do agents need version/compatibility metadata?
-- Where is the boundary between skill and agent?
+- Where's the boundary between skill and agent?
 - Should agents declare delegation targets?
 - Is there a shared reporting convention (structured vs. free-form)?
 

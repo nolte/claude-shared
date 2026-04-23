@@ -3,12 +3,12 @@
 Status: draft
 
 ## Context
-GitHub Actions workflows gate every path through the portfolio: pull-request merges (`pr-lint.yml`, CI), release drafting (`release-drafter.yml`), `main` refresh on release (`release-cd-refresh-master.yml`), documentation delivery (`release-cd-deliver-docs.yml`), and optional packaging workflows. When any of them starts failing and the failure is not caught, merges stall, releases do not ship, and `main` drifts away from the last published tag. Existing specs declare **which** workflows must exist (`branching-model`), **where** they live and how they are pinned (`project-structure`), and **what they gate** for PRs (`pull-request-workflow`). None of them declares the **operational process** that keeps those workflows reliably green and responds when they turn red. This spec fills that gap so that workflow failures are observed, classified, and fixed through the same PR gate as any other change — never silenced, never bypassed.
+GitHub Actions workflows gate every path through the portfolio: pull-request merges (`pr-lint.yml`, CI), release drafting (`release-drafter.yml`), `main` refresh on release (`release-cd-refresh-master.yml`), documentation delivery (`release-cd-deliver-docs.yml`), and optional packaging workflows. When any of them starts failing and the failure isn't caught, merges stall, releases don't ship, and `main` drifts away from the last published tag. Existing specs declare **which** workflows must exist (`branching-model`), **where** they live and how they're pinned (`project-structure`), and **what they gate** for PRs (`pull-request-workflow`). None of them declares the **operational process** that keeps those workflows reliably green and responds when they turn red. This spec fills that gap so that workflow failures are observed, classified, and fixed through the same PR gate as any other change—never silenced, never bypassed.
 
 ## Goals
-- A failing workflow run on `develop` or `main` is never silently ignored — every failure is either fixed, explicitly disabled with an owner, or classified as a known transient and tracked
-- Every remediation flows through the standard pull-request path (`fix/` branch, Conventional-Commits title, required checks green) — there is no admin-override shortcut
-- Root-cause triage happens before re-runs — a red workflow is never "fixed" by clicking "Re-run" until it happens to pass
+- A failing workflow run on `develop` or `main` is never silently ignored—every failure is either fixed, explicitly disabled with an owner, or classified as a known transient and tracked
+- Every remediation flows through the standard pull-request path (`fix/` branch, Conventional-Commits title, required checks green): there is no admin-override shortcut
+- Root-cause triage happens before re-runs—a red workflow is never "fixed" by clicking "Re-run" until it happens to pass
 - Upstream drift (broken tags in `nolte/gh-plumbing`, changed reusable workflows) is surfaced and resolved by bumping the pin, not by unpinning
 - The process is identical across repositories so humans and AI agents can respond to a failure without per-repo onboarding
 
@@ -16,7 +16,7 @@ GitHub Actions workflows gate every path through the portfolio: pull-request mer
 - Which workflows must exist in a repository (covered by the `branching-model` and `project-structure` specs)
 - PR description structure and CI-gating mechanics (covered by the `pull-request-workflow` spec)
 - The internal content of any specific workflow file (job steps, matrix strategy, caching)
-- Incidents caused entirely outside the repository — GitHub Actions platform outages, Probot app downtime, registry outages — beyond the observation that they must be ruled out before attributing a failure to code
+- Incidents caused entirely outside the repository—GitHub Actions platform outages, Probot app downtime, registry outages—beyond the observation that they must be ruled out before attributing a failure to code
 - Release-artifact contents, changelog generation, versioning policy
 - Test-authoring conventions or flake-root-cause analysis of any specific test (this spec prescribes only that flakes are tracked)
 
@@ -25,58 +25,58 @@ GitHub Actions workflows gate every path through the portfolio: pull-request mer
 ### Visibility and detection
 - **MUST** surface the status of every workflow declared as a required status check on `develop` via a CI badge in `README.md`, as already mandated by the `readme-structure` spec; the badge set **MUST** match the required-checks set declared in `.github/settings.yml`
 - **MUST** keep GitHub's default workflow-failure notifications enabled for at least one maintainer of the repository, or route notifications to a portfolio-wide channel that a maintainer monitors
-- **SHOULD** treat a red required status check on `develop` as a merge-flow incident — further merges into `develop` are blocked by branch protection anyway, so the remedy is to fix the failure, not to waive the check
+- **SHOULD** treat a red required status check on `develop` as a merge-flow incident—further merges into `develop` are blocked by branch protection anyway, so the remedy is to fix the failure, not to waive the check
 - **SHOULD** treat a red workflow on `main` (for example a failing `release-cd-refresh-master.yml` run) as a release-integrity incident, because `main` is release-presentation per the `branching-model` spec and drift from the latest release tag is a bug
 
 ### Triage before remediation
 - **MUST**, on the first failure of a previously-green workflow, classify the root cause before any re-run into exactly one of:
-  1. **defect** — code or configuration change in this repository broke the workflow
-  2. **flake** — same commit SHA passes on re-run with no code change and no infrastructure signal
-  3. **infra / transient** — upstream provider outage, registry 5xx, rate-limit, network; reproducible only in a narrow time window
-  4. **stale pin** — a `nolte/gh-plumbing` (or other reusable-workflow) tag pinned in this repository no longer matches the expected contract; newer tag exists with the fix
-  5. **secret / credential drift** — a token, deploy key, or OIDC trust expired or was rotated
-  6. **other** — explicitly labelled, with a short note in the fix PR explaining why it does not fit the five categories
+  1. **defect**: code or configuration change in this repository broke the workflow
+  2. **flake**: same commit SHA passes on re-run with no code change and no infrastructure signal
+  3. **infra / transient**: upstream provider outage, registry 5xx, rate-limit, network; reproducible only in a narrow time window
+  4. **stale pin**: a `nolte/gh-plumbing` (or other reusable-workflow) tag pinned in this repository no longer matches the expected contract; newer tag exists with the fix
+  5. **secret / credential drift**: a token, deploy key, or OIDC trust expired or was rotated
+  6. **other**: explicitly labelled, with a short note in the fix PR explaining why it doesn't fit the five categories
 - **MUST NOT** re-run a failed workflow more than once without a recorded triage classification; repeated blind re-runs are drift
 - **MUST** capture the classification in the eventual fix PR's **Risk / rollout notes** section (per the `pull-request-workflow` spec) so failure patterns are visible across PR history
 - **MAY** open a tracking GitHub Issue for non-urgent follow-up (documentation of a known flake, a planned upstream bump) instead of an immediate fix PR, provided the Issue names an owner
 
 ### Remediation path
-- **MUST** route every workflow fix through the standard pull-request path declared by the `pull-request-workflow` spec — `fix/` branch prefix, Conventional-Commits title (type `fix`), all required checks green before merge
+- **MUST** route every workflow fix through the standard pull-request path declared by the `pull-request-workflow` spec: `fix/` branch prefix, Conventional-Commits title (type `fix`), all required checks green before merge
 - **MUST NOT** bypass branch protection to merge a workflow fix; `enforce_admins: true` on `develop` (mandated by the `pull-request-workflow` spec) has no exception path, and a persistently-broken required check is remedied by a PR against `.github/settings.yml`, not by an admin override
-- **MUST** fix the root cause rather than masking it — the following patterns are prohibited as remediation:
+- **MUST** fix the root cause rather than masking it—the following patterns are prohibited as remediation:
   - adding `continue-on-error: true` to a required-check job to turn a red job green
   - moving a failing job out of the required-checks set in `.github/settings.yml` without opening an Issue that tracks its re-inclusion and names an owner
-  - repointing a `nolte/gh-plumbing` reusable-workflow reference from a release tag to a branch (e.g. `@main`) to pick up an unreleased fix
+  - repointing a `nolte/gh-plumbing` reusable-workflow reference from a release tag to a branch (for example `@main`) to pick up an unreleased fix
   - commenting out assertion steps or swallowing non-zero exit codes inside a workflow step
 - **MUST** keep every `uses: nolte/gh-plumbing/.github/workflows/...` reference pinned to a release tag (per the `project-structure` and `branching-model` specs) even while remediating; if the currently-pinned tag is broken, the fix is to bump to a newer tag
-- **MAY** temporarily disable a broken **non-required** workflow by restricting its `on:` triggers or by disabling it in the Actions UI, provided a tracking Issue is opened the same day naming an owner and a target re-enablement criterion; temporarily disabling a **required** workflow is not permitted — the required-checks set is the source of truth
+- **MAY** temporarily disable a broken **non-required** workflow by restricting its `on:` triggers or by disabling it in the Actions UI, provided a tracking Issue is opened the same day naming an owner and a target re-enablement criterion; temporarily disabling a **required** workflow isn't permitted—the required-checks set is the source of truth
 
 ### Specialized-agent dispatch for remediation
-The hands-on implementation work of a workflow fix — editing the broken artifact, bumping a pin, rotating a secret, authoring the fix PR — is delegated to the most specialized Claude Agent available. The generalist Claude's responsibility is classification and dispatch, not hands-on editing.
+The hands-on implementation work of a workflow fix—editing the broken artifact, bumping a pin, rotating a secret, authoring the fix PR—is delegated to the most specialized Claude Agent available. The generalist Claude's responsibility is classification and dispatch, not hands-on editing.
 
 - **MUST** dispatch the implementation work of a remediation to the most specialized available Claude Agent via `Agent(subagent_type=<name>)` (as governed by the `agent-management` spec), when at least one agent's `description` matches the triage classification or the concrete failing artifact (workflow YAML, Renovate pin bump, secret rotation, test defect, documentation build, etc.)
-- **MUST NOT** have the dispatching Claude perform specialized remediation work itself when a matching specialized agent exists; the generalist triages, dispatches, and verifies the result — it does not replace the specialized agent
+- **MUST NOT** have the dispatching Claude perform specialized remediation work itself when a matching specialized agent exists; the generalist triages, dispatches, and verifies the result—it doesn't replace the specialized agent
 - **MUST** treat a failure class that has recurred three or more times without a matching specialized agent as a portfolio gap requiring action: either author a new agent per the `agent-management` spec (`distribution: plugin` when the pattern recurs across repositories, `distribution: project` when the pattern is repository-local) or extend an existing agent's `description` so future failures of the same class route to it automatically; failure classes with fewer than three recurrences **SHOULD** be tracked as candidates for the same treatment
 - **SHOULD** prefer a plugin-distributed agent (`distribution: plugin`) over a project-local agent for remediation patterns that recur across the portfolio, so the remediation expertise travels with the `nolte-shared` plugin rather than being copied per repository
-- **SHOULD** record in the fix PR's **Risk / rollout notes** section (alongside the triage classification, per the `pull-request-workflow` spec) which specialized agent produced the fix, or note that no matching specialized agent exists and a generalist handled it — this makes portfolio-wide coverage gaps visible
+- **SHOULD** record in the fix PR's **Risk / rollout notes** section (alongside the triage classification, per the `pull-request-workflow` spec) which specialized agent produced the fix, or note that no matching specialized agent exists and a generalist handled it—this makes portfolio-wide coverage gaps visible
 - **MAY** chain multiple specialized agents in sequence when a single remediation spans responsibilities (for example: a workflow-YAML-fix agent to correct syntax, then the `pull-request-create` agent to open the fix PR); each agent in the chain obeys its own declared `tools` scope
-- **MUST NOT** permit a dispatched specialized agent to bypass any gate from this spec or the `pull-request-workflow` spec — the agent ships its change through the same `fix/` PR flow, with all required checks green and no admin override
+- **MUST NOT** permit a dispatched specialized agent to bypass any gate from this spec or the `pull-request-workflow` spec—the agent ships its change through the same `fix/` PR flow, with all required checks green and no admin override
 
 ### Upstream (`nolte/gh-plumbing`) drift
 - **MUST** treat a new release of `nolte/gh-plumbing` as a candidate bump, not an automatic one; the bump is performed by updating the pinned tag in every affected `uses:` line and letting the standard PR gate validate the result
 - **SHOULD** rely on Renovate to propose the tag bump as a PR; the Renovate PR itself goes through the gate like any other change
-- **MUST NOT** enable Renovate auto-merge for `nolte/gh-plumbing` tag bumps even when every required check is green — a human acknowledgement is the portfolio-wide rollback signal for a reusable-workflow change, and its cost (seconds) is less than the cost of a reusable-workflow defect fanning out to every consumer repository; other Renovate auto-merge rules **MAY** continue unchanged for non-`nolte/gh-plumbing` packages
+- **MUST NOT** enable Renovate automerge for `nolte/gh-plumbing` tag bumps even when every required check is green—a human acknowledgement is the portfolio-wide rollback signal for a reusable-workflow change, and its cost (seconds) is less than the cost of a reusable-workflow defect fanning out to every consumer repository; other Renovate automerge rules **MAY** continue unchanged for non-`nolte/gh-plumbing` packages
 - **MUST NOT** skip the PR step for a version bump of `nolte/gh-plumbing` references just because "it's only a tag change"; the gate exists to catch exactly this class of breakage
 
 ### Probot app availability
-- **SHOULD**, before attributing a failure of `release-drafter.yml`, settings-sync, or label-sync to code, verify that the underlying Probot apps (`settings`, `release-drafter`, `boring-cyborg`, `stale`) are still installed on the repository — the `project-structure-apply` audit checks this
+- **SHOULD**, before attributing a failure of `release-drafter.yml`, settings-sync, or label-sync to code, verify that the underlying Probot apps (`settings`, `release-drafter`, `boring-cyborg`, `stale`) are still installed on the repository—the `project-structure-apply` audit checks this
 - **MUST** treat "Probot app uninstalled" as a configuration-drift incident distinct from a code defect; the fix is to re-authorize the app, not to change repository code
 
 ### Flake handling
-- **MUST** identify a run as a flake only on reproducible evidence — a re-run of the same commit SHA with no code change returns green and no upstream infra signal explains the first failure
+- **MUST** identify a run as a flake only on reproducible evidence—a re-run of the same commit SHA with no code change returns green and no upstream infra signal explains the first failure
 - **MUST** track known flakes in a repository-visible artifact so patterns are visible rather than absorbed silently into the re-run loop; the portfolio-wide default is a `FLAKES.md` at the repository root, and a dedicated set of GitHub Issues labelled `flake` is accepted as an equivalent when the repository already centralizes tracking in Issues
-- **MUST NOT** maintain both forms (`FLAKES.md` and a `flake`-labelled Issue set) for the same repository — one or the other is authoritative, chosen consciously and linked from `CLAUDE.md` or `README.md`
-- **SHOULD** treat a flake that trips a required check in more than roughly one in ten runs as a defect rather than a transient — at that rate the flake blocks merges materially and deserves a real fix, not a tracking entry
+- **MUST NOT** maintain both forms (`FLAKES.md` and a `flake`-labelled Issue set) for the same repository—one or the other is authoritative, chosen consciously and linked from `CLAUDE.md` or `README.md`
+- **SHOULD** treat a flake that trips a required check in more than roughly one in ten runs as a defect rather than a transient—at that rate the flake blocks merges materially and deserves a real fix, not a tracking entry
 
 ### Time expectations
 - **SHOULD** acknowledge a failed required check on `develop` within one business day of the failure appearing and have a fix PR open within two business days
@@ -84,12 +84,12 @@ The hands-on implementation work of a workflow fix — editing the broken artifa
 - **MAY** extend these windows when the repository is explicitly on low-maintenance status, provided that status is declared in `README.md` or `CLAUDE.md` so future readers understand why red checks linger
 
 ### Third-party required checks
-Required status checks on `develop` may include providers that are not GitHub Actions workflows — SaaS code-quality bots, security scanners, coverage reporters, signed-commit verifiers. The same operational rules apply.
+Required status checks on `develop` may include providers that aren't GitHub Actions workflows—SaaS code-quality bots, security scanners, coverage reporters, signed-commit verifiers. The same operational rules apply.
 
-- **MUST** apply the triage classifications and the remediation path of this spec to third-party required status checks the same way as to GitHub Actions workflows — the PR gate, the no-override rule, the pinned-tag discipline (where analogous), and the specialized-agent dispatch all apply identically
+- **MUST** apply the triage classifications and the remediation path of this spec to third-party required status checks the same way as to GitHub Actions workflows—the PR gate, the no-override rule, the pinned-tag discipline (where analogous), and the specialized-agent dispatch all apply identically
 - **MUST** declare any removal or deactivation of a third-party required check as a PR against `.github/settings.yml`, not as a change made through the provider's own UI alone; UI-only changes are drift and have to be reconciled back into the file
 - **MUST** treat an outage of a third-party check provider as `infra / transient` for triage purposes, not as `defect`
-- **MAY** use the provider's own "disable check" mechanism in place of an `on:`-trigger restriction (which does not apply outside Actions) when pausing a **non-required** third-party check; a tracking Issue with an owner and re-enablement criterion is still required, exactly as for Actions workflows
+- **MAY** use the provider's own "disable check" mechanism in place of an `on:`-trigger restriction (which doesn't apply outside Actions) when pausing a **non-required** third-party check; a tracking Issue with an owner and re-enablement criterion is still required, exactly as for Actions workflows
 
 ### Auditing
 - **SHOULD** periodically review `gh run list --status failure --branch develop --limit 20` and `gh run list --status failure --branch main --limit 20` to detect a backlog of unresolved failures that slipped past notifications
@@ -97,18 +97,18 @@ Required status checks on `develop` may include providers that are not GitHub Ac
 
 ## Acceptance Criteria
 - [ ] `README.md` CI badges cover every workflow listed as a required status check for `develop` in `.github/settings.yml`; the two sets match exactly
-- [ ] `gh run list --status failure --branch develop --limit 20` shows no failed run older than two business days that is not either (a) superseded by a green run on a later SHA or (b) covered by an open `fix/` PR
+- [ ] `gh run list --status failure --branch develop --limit 20` shows no failed run older than two business days that isn't either (a) superseded by a green run on a later SHA or (b) covered by an open `fix/` PR
 - [ ] `gh run list --status failure --branch main --limit 20` shows no failed run of a release-flow workflow without either a resolution commit on `develop` or an open tracking Issue
 - [ ] No workflow file in `.github/workflows/` contains `continue-on-error: true` on a step or job that belongs to the required-checks set declared in `.github/settings.yml`
 - [ ] Every `uses: nolte/gh-plumbing/.github/workflows/...` reference in `.github/workflows/` resolves to a release tag (matches `@v[0-9]+`), not to a branch name
 - [ ] For the last 10 PRs that touch `.github/workflows/` or pin bumps of `nolte/gh-plumbing`, every one was merged through the standard PR flow (squash-merge, required checks green, no admin override)
-- [ ] The repository's Renovate configuration does not auto-merge `nolte/gh-plumbing` tag bumps — either no auto-merge rule applies to that dependency, or the rule explicitly excludes `nolte/gh-plumbing`
+- [ ] The repository's Renovate configuration doesn't automerge `nolte/gh-plumbing` tag bumps—either no automerge rule applies to that dependency, or the rule explicitly excludes `nolte/gh-plumbing`
 - [ ] If the repository declares any third-party required status check for `develop`, its removal or deactivation is reflected in `.github/settings.yml`, not only in the provider's UI
 - [ ] For the last 10 workflow-fix PRs, the **Risk / rollout notes** section names the triage classification (`defect`, `flake`, `infra`, `stale pin`, `secret drift`, or `other` with a short note)
 - [ ] For the same 10 workflow-fix PRs, the **Risk / rollout notes** section names either the specialized Claude Agent that produced the fix (via `Agent(subagent_type=…)`) or records that no matching specialized agent exists and a generalist handled it
 - [ ] When a failure class has recurred three or more times and been handled by a generalist each time, either a specialized agent now exists in the plugin (per the `agent-management` spec) or an open Issue tracks its creation with a named owner
 - [ ] Any temporarily-disabled workflow (restricted `on:` triggers, commented job, disabled in the Actions UI) is accompanied by a tracking Issue naming an owner and a re-enablement criterion; no required workflow appears in this state
-- [ ] A known-flake register exists in the repository — `FLAKES.md` at the repository root or a `flake`-labelled Issue set, but not both — whenever at least one flake has been observed and acknowledged; the register is referenced from `CLAUDE.md` or `README.md` so it is discoverable
+- [ ] A known-flake register exists in the repository: `FLAKES.md` at the repository root or a `flake`-labelled Issue set, but not both—whenever at least one flake has been observed and acknowledged; the register is referenced from `CLAUDE.md` or `README.md` so it's discoverable
 - [ ] `.github/settings.yml` still declares the full required-checks set for `develop` as code; no required check has been silently dropped to work around a persistent failure
 
 ## Open Questions

@@ -1,6 +1,6 @@
 ---
 name: pull-request-create
-description: Create a GitHub pull request that conforms to the repository's pull-request-workflow spec. Invoke when the user says things like "erstelle einen PR", "mach einen Pull Request auf", "open a PR", "create a pull request", "draft a PR description", "PR-Beschreibung nach Spec", "create a merge request", or "push branch and open PR". Verifies the feature branch is synchronized with develop, composes a Conventional-Commits title and the five-section body (Summary, Changes, Linked issues, Testing, Risk / rollout notes), auto-links any touched spec files under spec/, confirms with the user, and runs `gh pr create`.
+description: Create a GitHub pull request that conforms to the repository's pull-request-workflow spec. Invoke when the user asks to open a PR, create a pull request, draft a PR description, create a merge request, or push the branch and open a PR. Also handles equivalent German-language requests. Verifies the feature branch is synchronized with develop, composes a Conventional-Commits title and the five-section body (Summary, Changes, Linked issues, Testing, Risk / rollout notes), autolinks any touched spec files under spec/, confirms with the user, and runs the GitHub CLI PR creation command.
 ---
 
 # Pull Request Create
@@ -16,21 +16,21 @@ Detect the user's language and respond in it. The PR title and body, commit mess
 Before running any git or `gh` command, confirm:
 
 - Current working directory is inside a git repository.
-- A default / integration branch named `develop` exists on the remote (`git ls-remote --heads origin develop`). If the repo still uses `main` as the integration branch, stop and report — this skill targets the branching-model spec's `develop` convention.
+- A default / integration branch named `develop` exists on the remote (`git ls-remote --heads origin develop`). If the repo still uses `main` as the integration branch, stop and report—this skill targets the branching-model spec's `develop` convention.
 - `gh` is authenticated (`gh auth status`) and the remote resolves to a GitHub repository.
-- The current branch is **not** `develop` or `main`, and its name starts with one of the allowed prefixes: `feat/`, `fix/`, `chore/`, `docs/`, `exp/`. Otherwise stop and ask the user to rename or switch branches.
+- The current branch **isn't** `develop` or `main`, and its name starts with one of the allowed prefixes: `feat/`, `fix/`, `chore/`, `docs/`, `exp/`. Otherwise stop and ask the user to rename or switch branches.
 
 ## Operations
 
 ### 1. Collect change context
 
-Run these in parallel to understand what the PR covers — never skip this step, since the PR body depends on it:
+Run these in parallel to understand what the PR covers—never skip this step, since the PR body depends on it:
 
-- `git status --porcelain` — detect uncommitted changes.
-- `git fetch origin develop` — refresh the local view of the integration branch.
-- `git log --oneline origin/develop..HEAD` — list commits that will be part of the PR.
-- `git diff --name-only origin/develop...HEAD` — list files touched.
-- `git diff origin/develop...HEAD` — inspect the actual change (may be large; sample if needed).
+- `git status --porcelain`: detect uncommitted changes.
+- `git fetch origin develop`: refresh the local view of the integration branch.
+- `git log --oneline origin/develop..HEAD`: list commits that will be part of the PR.
+- `git diff --name-only origin/develop...HEAD`: list files touched.
+- `git diff origin/develop...HEAD`: inspect the actual change (may be large; sample if needed).
 
 If `git status` shows uncommitted changes, stop and ask the user whether to commit, stash, or abort. Never create a PR with a dirty working tree.
 
@@ -42,13 +42,13 @@ The feature branch **MUST** contain every commit of the current `develop` tip be
 git merge-base --is-ancestor origin/develop HEAD
 ```
 
-If the command exits non-zero, `develop` is **not** fully contained in the feature branch. In that case:
+If the command exits non-zero, `develop` **isn't** fully contained in the feature branch. In that case:
 
 1. Report the lag to the user: number of commits the branch is behind (`git rev-list --count HEAD..origin/develop`).
-2. Ask the user whether to synchronize via **merge** or **rebase** — the spec permits either; the default recommendation is:
-   - **rebase** when the branch is local-only or has not yet been pushed (clean history).
+2. Ask the user whether to synchronize via **merge** or **rebase**: the spec permits either; the default recommendation is:
+   - **rebase** when the branch is local-only or hasn't yet been pushed (clean history).
    - **merge** when the branch has already been pushed and potentially reviewed (preserves review anchors).
-3. Execute the chosen operation (`git merge origin/develop` or `git rebase origin/develop`). If conflicts arise, stop and hand control back to the user — do not attempt automatic resolution.
+3. Execute the chosen operation (`git merge origin/develop` or `git rebase origin/develop`). If conflicts arise, stop and hand control back to the user—don't attempt automatic resolution.
 4. After a successful sync, re-run `git merge-base --is-ancestor origin/develop HEAD` to verify; only then continue.
 
 If the branch has already been pushed, a rebase will require `git push --force-with-lease`. Confirm explicitly with the user before force-pushing, and **never** use plain `--force`. If the branch is visible through an **open non-draft PR**, the pull-request-workflow spec §Fix-forward on red checks requires that the rebase force-push be documented in a PR comment; post a short comment naming the lag that was resolved and the new head commit SHA after the force-push completes.
@@ -92,7 +92,7 @@ Render exactly these five sections, in this order, with these exact headings:
 Rules for the body:
 
 - Never remove a section, even when empty. Only **Linked issues** and **Risk / rollout notes** may contain the literal text `None`.
-- **Summary**, **Changes**, and **Testing** must not be empty and must not contain only `None` — if the user cannot fill them in, stop and ask.
+- **Summary**, **Changes**, and **Testing** must not be empty and must not contain only `None`: if the user can't fill them in, stop and ask.
 - Use imperative mood in Summary and Changes (`Add …`, not `Added …`).
 - If the diff touches any file under `spec/`, append a `Refs spec/<path>` line in **Linked issues** for each touched spec topic (deduplicated by `<area>/<slug>/`), unless the user explicitly declines.
 - Repository-specific sections **may** be appended *after* the five required sections, never interleaved.
@@ -107,7 +107,7 @@ Before invoking any `git push` in the next step, run the repository's local lint
 task lint
 ```
 
-If neither tool is present, fall back to whatever equivalent linting the repository provides. Do not intentionally push a commit that is known to fail locally and rely on CI to report it.
+If neither tool is present, fall back to whatever equivalent linting the repository provides. Don't intentionally push a commit that's known to fail locally and rely on CI to report it.
 
 ### 6. Push and create the PR
 
@@ -123,16 +123,16 @@ Once the title and body are approved, and only then:
    )"
    ```
 
-3. Default to `--draft` when the branch has not yet been reviewed or when CI has not yet run; the user can flip it to ready once the first CI pass is green. The spec says draft is `SHOULD` while work is ongoing.
+3. Default to `--draft` when the branch hasn't yet been reviewed or when CI hasn't yet run; the user can flip it to ready once the first CI pass is green. The spec says draft is `SHOULD` while work is ongoing.
 4. After `gh pr create` succeeds, report the PR URL back to the user.
 
 If `gh pr create` fails because a PR already exists for this branch, switch to `gh pr edit` to update the existing PR's title and body instead of creating a new one.
 
 ## Hard rules
 
-- **Never** open a PR whose feature branch does not contain `origin/develop`'s tip. The branch-freshness check is mandatory, not advisory.
+- **Never** open a PR whose feature branch doesn't contain `origin/develop`'s tip. The branch-freshness check is mandatory, not advisory.
 - **Never** target `main` as the base branch. The integration branch is `develop`.
-- **Never** invent a Conventional-Commits type that disagrees with the branch prefix. If the branch is `feat/foo`, the type is `feat` — no translation.
+- **Never** invent a Conventional-Commits type that disagrees with the branch prefix. If the branch is `feat/foo`, the type is `feat`: no translation.
 - **Never** leave Summary, Changes, or Testing empty or equal to `None`. Stop and ask the user for content instead.
 - **Never** silently force-push. Use `--force-with-lease` and only after explicit user confirmation; on an open non-draft PR, also document the rebase in a PR comment per pull-request-workflow §Fix-forward on red checks.
 - **Never** amend a commit that has already been pushed. When iterating on an open PR to fix a red required check, push a **new** commit (fix-forward); `git commit --amend` after the push is prohibited by pull-request-workflow §Fix-forward on red checks because it destroys review context and breaks comment anchoring.
