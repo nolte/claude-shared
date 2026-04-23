@@ -12,6 +12,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-management | Claude Skill Authoring | Claude-Skill-Autorenschaft | draft | unversioned |
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | unversioned |
+| project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | unversioned |
 | project | prose-style | Prose Style | Textstil | draft | unversioned |
 | project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | unversioned |
