@@ -45,7 +45,7 @@ Reload changes during a session with:
 
 ## Verify the plugin loaded
 
-After startup, `/skills` should list entries from this repo (e.g. `nolte-shared:spec`, `nolte-shared:skill-management`). If something is missing, check:
+After startup, `/skills` should list entries from this repo (for example `nolte-shared:spec`, `nolte-shared:skill-management`). If something is missing, check:
 
 1. `.claude-plugin/plugin.json` is valid JSON
 2. Each folder contains `skills/<name>/SKILL.md` with valid frontmatter

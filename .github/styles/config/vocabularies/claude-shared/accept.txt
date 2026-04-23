@@ -1,5 +1,11 @@
 [Aa]llowlist
 auditable
+[Bb]ackend
+[Ff]rontend
+[Aa]utoallow(s|ed|ing)?
+[Aa]utofix(es|ed|ing)?
+[Aa]utoload(s|ed|ing)?
+[Aa]utolink(s|ed|ing)?
 [Aa]utomatable
 [Aa]utomerge
 browsable
@@ -10,6 +16,7 @@ CLIs
 config
 configs
 cron
+deduplicate
 deduplicated
 dispatchable
 Dockerfile
@@ -17,6 +24,7 @@ Dockerfiles
 docstring
 docstrings
 [Dd]ogfooding
+[Dd]otfiles
 formatter
 formatters
 [Ff]rontmatter
@@ -27,6 +35,7 @@ hotfixes
 invocable
 lowercased
 MkDocs
+[Mm]onorepo(s)?
 MRs
 [Nn]amespace
 namespaced
@@ -44,6 +53,7 @@ rebase
 rebasing
 Renovate
 [Rr]epo
+[Rr]epointing
 rollout
 [Rr]outable
 runbook
@@ -54,6 +64,7 @@ subfolders
 subproject
 subprojects
 Taskfile
+Taskfiles
 triages
 [Tt]riaging
 [Tt]oolchain

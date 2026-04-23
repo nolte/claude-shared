@@ -4,11 +4,11 @@ The `skill-management` skill scaffolds and validates Claude Code skills. It live
 
 ## When to use
 
-- "create a new skill", "scaffold a skill for X", "add a skill to this repo"
+- "create a new skill," "scaffold a skill for X," "add a skill to this repo"
 <!-- vale Vale.Spelling = NO -->
-- "neuen Skill anlegen", "Skill für X erstellen"
+- "neuen Skill anlegen," "Skill für X erstellen"
 <!-- vale Vale.Spelling = YES -->
-- "validate this skill", "check if this skill follows our conventions"
+- "validate this skill," "check if this skill follows our conventions"
 
 ## Deciding the target location
 
@@ -20,7 +20,7 @@ Before writing, the skill picks where to place the new files:
 | Consuming project, project-level | `.claude/skills/<name>/` |
 | Consuming project, user-level | `~/.claude/skills/<name>/` |
 
-After writing into the source tree, the skill reminds you that the `/skills` dialog additionally needs a runtime location — typically via symlink from `skills/<name>/` to `.claude/skills/<name>/`.
+After writing into the source tree, the skill reminds you that the `/skills` dialog additionally needs a runtime location—typically via symlink from `skills/<name>/` to `.claude/skills/<name>/`.
 
 ## Operations
 
@@ -29,7 +29,7 @@ After writing into the source tree, the skill reminds you that the `/skills` dia
 1. Collect from the user: **Purpose**, **Triggers** (at least three concrete phrasings), **Name** (ASCII kebab-case).
 2. Check the target path doesn't already exist.
 3. Write `SKILL.md` with frontmatter (`name`, `description`) and a short body (purpose, language policy, operations, hard rules).
-4. Create subfolders (`templates/`, `references/`, `examples/`) only when actually needed — no empty placeholders.
+4. Create subfolders (`templates/`, `references/`, `examples/`) only when actually needed—no empty placeholders.
 5. Confirm in the user's language with the created paths.
 
 ### 2. Validate
@@ -46,7 +46,7 @@ Checklist the skill runs:
 - [ ] Supporting assets live inside the skill folder
 - [ ] `SKILL.md` under roughly 150 lines (soft limit)
 
-Pass/fail per item. Mechanical issues (frontmatter mismatch, absolute paths, missing hard-rules section) can be auto-fixed on request.
+Pass/fail per item. Mechanical issues (frontmatter mismatch, absolute paths, missing hard-rules section) can be autofixed on request.
 
 ### 3. Revise
 
@@ -55,8 +55,8 @@ Targeted edits to an existing skill: sharpen a weak `description`, add a Hard Ru
 ## Hard rules
 
 - Never scaffold at a non-standard path.
-- Never write a vague `description` like "helps with X".
-- Never assume the user's intent — if triggers aren't stated, ask.
+- Never write a vague `description` like "helps with X."
+- Never assume the user's intent—if triggers aren't stated, ask.
 - When the spec disagrees with this skill's instructions, the spec wins; propose updating the skill rather than silently diverging.
 - Never leave a skill half-written.
 

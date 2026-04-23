@@ -12,9 +12,9 @@ Software teams usually want a consistent baseline when working with Claude Code:
 
 This repository provides a single source for:
 
-- **Agents** — specialized sub-agents with focused tool access and instructions (e.g. code reviewers, explorers, planners).
-- **Skills** — reusable slash commands and workflows invoked via the `Skill` tool.
-- **Conventions** — shared guidance (CLAUDE.md snippets, prompt fragments) that projects can compose into their own setup.
+- **Agents**: specialized sub-agents with focused tool access and instructions (for example code reviewers, explorers, planners).
+- **Skills**: reusable slash commands and workflows invoked via the `Skill` tool.
+- **Conventions**: shared guidance (`CLAUDE.md` snippets, prompt fragments) that projects can compose into their own setup.
 
 ## Usage
 
@@ -35,7 +35,7 @@ For local testing without the marketplace flow, load the plugin directly from a 
 claude --plugin-dir /path/to/claude-shared
 ```
 
-Plugin skills are namespaced by plugin name — e.g. `/nolte-shared:spec`, `/nolte-shared:skill-management`.
+Plugin skills are namespaced by plugin name—for example `/nolte-shared:spec`, `/nolte-shared:skill-management`.
 
 ### Work on the plugin itself (dogfooding)
 
@@ -49,9 +49,9 @@ Use `/reload-plugins` to pick up changes during a session without restarting.
 
 ### Notes
 
-- **Self-hosted marketplace source**: The plugin entry in `marketplace.json` uses `"source": "."` (relative path). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It does not work if a downstream user points directly at the raw `marketplace.json` over HTTP.
+- **Self-hosted marketplace source**: The plugin entry in `marketplace.json` uses `"source": .""` (relative path). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
 - **Contact**: No email is published in `plugin.json` or `marketplace.json`. Use the GitHub repository (`https://github.com/nolte/claude-shared`) for issues and contact.
-- **Dogfooding requires `--plugin-dir .`**: There is no auto-load for a plugin that lives in the same repository Claude Code is launched from. Without the flag, `/skills` in this repo will not list the bundled skills.
+- **Dogfooding requires `--plugin-dir .`**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from. Without the flag, `/skills` in this repo won't list the bundled skills.
 
 ## Structure
 
@@ -74,14 +74,14 @@ Conventions for authoring skills and agents are defined in `spec/claude/skill-ma
 
 This plugin is part of a small portfolio of shared foundations. The specs in `spec/project/` reference these repositories directly, and downstream projects are expected to pin them:
 
-- [`nolte/gh-plumbing`](https://github.com/nolte/gh-plumbing) — shared GitHub plumbing: reusable Actions workflows (release-drafter, automerge, `main` fast-forward on release, MkDocs publishing) and a commons `settings.yml` extended via the Probot Settings app. Anchors the branching-model and PR-workflow specs.
-- [`nolte/vale-style`](https://github.com/nolte/vale-style) — canonical Vale prose-style package: shared vocabularies (including language-scoped ones like `technical-de/`) and rules that repositories compose with Microsoft + RedHat styles. Anchors the prose-style spec.
-- [`nolte/taskfiles`](https://github.com/nolte/taskfiles) — shared [Task](https://taskfile.dev) include snippets (for example `taskfile-include-mkdocs.yaml`, `taskfile-include-pre-commit.yaml`) that downstream `Taskfile.yml`s pull in via `TASK_COLLECTION_BASE`, so MkDocs and pre-commit wiring stays uniform across repositories.
+- [`nolte/gh-plumbing`](https://github.com/nolte/gh-plumbing): shared GitHub plumbing: reusable Actions workflows (release-drafter, automerge, `main` fast-forward on release, MkDocs publishing) and a commons `settings.yml` extended via the Probot Settings app. Anchors the branching-model and PR-workflow specs.
+- [`nolte/vale-style`](https://github.com/nolte/vale-style): canonical Vale prose-style package: shared vocabularies (including language-scoped ones like `technical-de/`) and rules that repositories compose with Microsoft + RedHat styles. Anchors the prose-style spec.
+- [`nolte/taskfiles`](https://github.com/nolte/taskfiles): shared [Task](https://taskfile.dev) include snippets (for example `taskfile-include-mkdocs.yaml`, `taskfile-include-pre-commit.yaml`) that downstream `Taskfile.yml`s pull in via `TASK_COLLECTION_BASE`, so MkDocs and pre-commit wiring stays uniform across repositories.
 
 ## Status
 
-Early stage — the repository currently serves as the anchor point for consolidating agents and skills that were previously scattered across individual projects.
+Early stage—the repository currently serves as the anchor point for consolidating agents and skills that were previously scattered across individual projects.
 
 ## License
 
-[MIT](LICENSE) — Copyright (c) 2026 nolte.
+[MIT](LICENSE): Copyright (c) 2026 nolte.

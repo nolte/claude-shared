@@ -4,7 +4,7 @@ Once the plugin is loaded, its skills appear as slash commands in the Claude Cod
 
 ## Invoking skills
 
-Skills are invocable by name — with or without the plugin prefix:
+Skills are invocable by name—with or without the plugin prefix:
 
 ```
 /nolte-shared:spec
@@ -17,12 +17,12 @@ They also appear under `/skills` where Tab-completion works.
 
 | Skill | Purpose | Typical triggers |
 |-------|---------|-----------------|
-| [`skill-management`](../skills/skill-management.md) | Scaffold new skills; validate existing ones against the spec | "create a new skill", "scaffold a skill for X", "validate this skill" |
-| [`spec`](../skills/spec.md) | Write, translate, index and drift-check multilingual specs | "write a spec for X", "is X already covered?", "regenerate the index" |
+| [`skill-management`](../skills/skill-management.md) | Scaffold new skills; validate existing ones against the spec | "create a new skill," "scaffold a skill for X," "validate this skill" |
+| [`spec`](../skills/spec.md) | Write, translate, index and drift-check multilingual specs | "write a spec for X," "is X already covered?," "regenerate the index" |
 
 ## Response language
 
-Skill files themselves are kept in English (token efficiency). Claude detects the user's language from their message and responds in that language — German in gets German out.
+Skill files themselves are kept in English (token efficiency). Claude detects the user's language from their message and responds in that language—German in gets German out.
 
 ## Namespace collisions
 
@@ -32,4 +32,4 @@ If a project ships its own skill of the same name, the plugin version remains re
 
 - [Skill Management](../skills/skill-management.md) in depth
 - [Spec skill](../skills/spec.md) in depth
-- [Specifications](../specs/index.md) — the authoring rules
+- [Specifications](../specs/index.md): the authoring rules

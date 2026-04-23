@@ -1,9 +1,9 @@
 # Development
 
-This section is for contributors working on the `claude-shared` repository itself — adding new skills, new agents, or maintaining the specifications.
+This section is for contributors working on the `claude-shared` repository itself—adding new skills, new agents, or maintaining the specifications.
 
-- [Project Structure](projektstruktur.md) — where things live and why
-- [Contributing](beitragen.md) — workflow, conventions, commits
+- [Project Structure](projektstruktur.md): where things live and why
+- [Contributing](beitragen.md): workflow, conventions, commits
 
 ## Dogfooding
 
@@ -22,4 +22,4 @@ Before writing a new skill or agent, read the relevant specification:
 - [Skill Authoring](../specs/skill-management.md)
 - [Agent Authoring](../specs/agent-management.md)
 
-Create new skills through the [Skill Management](../skills/skill-management.md) skill itself — that guarantees conformance.
+Create new skills through the [Skill Management](../skills/skill-management.md) skill itself—that guarantees conformance.
