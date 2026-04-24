@@ -5,25 +5,25 @@ Status: draft
 ## Context
 <!-- Why does this spec exist? What problem, user need, or constraint drives it? -->
 
-The `agent-management` spec defines how an agent is *authored* — filename, YAML frontmatter (`name`, `description`, `distribution`), tool scoping, system-prompt shape, source and runtime locations. What it does not define is how an agent is *reviewed*: which rules a reviewer checks, in which order, and what deliverable the review leaves behind. Without a shared review procedure, two reviewers of the same agent produce incomparable results, the `skill-vs-agent` rationale rule erodes silently, tool-scope drift accumulates without being caught, and plugin developers consuming the review output cannot script against a stable shape. This spec defines the binding review procedure for agents in the `nolte-shared` plugin; it points at `agent-management` and `skill-vs-agent` as the authoritative sources of findings, and hands the output-format contract to `review-plan`. An agent review produces exactly one `review-plan` artifact under `.audits/agent-review/<agent-name>.md`; once every item is processed the plan is deleted, leaving its git history as the audit trail.
+The `agent-management` spec defines how an agent is *authored*: filename, YAML frontmatter (`name`, `description`, `distribution`), tool scoping, system-prompt shape, source and runtime locations. What it doesn't define is how an agent is *reviewed*: which rules a reviewer checks, in which order, and what deliverable the review leaves behind. Without a shared review procedure, two reviewers of the same agent produce incomparable results, the `skill-vs-agent` rationale rule erodes silently, tool-scope drift accumulates without being caught, and plugin developers consuming the review output can't script against a stable shape. This spec defines the binding review procedure for agents in the `nolte-shared` plugin; it points at `agent-management` and `skill-vs-agent` as the authoritative sources of findings, and hands the output-format contract to `review-plan`. An agent review produces exactly one `review-plan` artifact under `.audits/agent-review/<agent-name>.md`; once every item is processed the plan is deleted, leaving its git history as the audit trail.
 
 ## Goals
 <!-- What this spec aims to achieve. Bullet points, outcome-oriented. -->
 - Every agent review applies the same set of checks derived from `agent-management` and `skill-vs-agent`, in the same order, with the same severity mapping
-- Review output is a `review-plan` artifact — parseable, actionable, and traceable back to a specific spec requirement per finding
+- Review output is a `review-plan` artifact—parseable, actionable, and traceable back to a specific spec requirement per finding
 - Agent authors can run the review on their own work before proposing it, and a reviewer (human or LLM) can run it later with identical results on the same source tree
 - Plugin developers can script against the review output (parse plan files, gate merges on open `BLOCKER`s, count open reviews) without modelling per-reviewer conventions
-- The review enforces agent-specific invariants that do not apply to skills — minimal `tools` scoping, read-only agents rejecting write/edit/execution tools, `distribution` declared exactly once, no Skill-tool dispatch inside the agent body — so they do not quietly regress over time
+- The review enforces agent-specific invariants that don't apply to skills—minimal `tools` scoping, read-only agents rejecting write/edit/execution tools, `distribution` declared exactly once, no Skill-tool dispatch inside the agent body—so they don't quietly regress over time
 
 ## Non-Goals
 <!-- Explicitly out of scope. Prevents creep. -->
-- Defining what an agent *is* on disk — `agent-management` owns that
-- Deciding whether a capability should have been a skill or an agent in the first place — `skill-vs-agent` owns that; this spec only checks that the choice has been *documented*
-- Prescribing the output file format — `review-plan` owns that
-- Reviewing skills — `skill-review` covers that with symmetric structure
-- Replacing quarterly portfolio-wide reconciliation — `spec-drift-audit` owns that
-- Linter and markdown-style checks already enforced by `task lint` / Vale / pre-commit hooks — those stay with their own tooling
-- Runtime or behavioral correctness of the agent (whether dispatching the agent actually produces the claimed report shape when invoked) — this spec reviews the **authored artifact**, not a live execution
+- Defining what an agent *is* on disk: `agent-management` owns that
+- Deciding whether a capability should have been a skill or an agent in the first place: `skill-vs-agent` owns that; this spec only checks that the choice has been *documented*
+- Prescribing the output file format: `review-plan` owns that
+- Reviewing skills: `skill-review` covers that with symmetric structure
+- Replacing quarterly portfolio-wide reconciliation: `spec-drift-audit` owns that
+- Linter and markdown-style checks already enforced by `task lint` / Vale / pre-commit hooks—those stay with their own tooling
+- Runtime or behavioral correctness of the agent (whether dispatching the agent actually produces the claimed report shape when invoked)—this spec reviews the **authored artifact**, not a live execution
 
 ## Requirements
 <!-- Use RFC 2119 keywords: MUST, SHOULD, MAY. One atomic requirement per bullet. -->
@@ -47,10 +47,10 @@ The `agent-management` spec defines how an agent is *authored* — filename, YAM
   - Filename matches `<name>.md` in ASCII kebab-case
   - `name` in frontmatter equals the filename without `.md`
   - `description` names concrete triggers (positive triggers at minimum; negative triggers SHOULD be present when overlap with other artifacts is plausible)
-  - `distribution` is exactly `plugin` or `project` — no other value, no missing field
+  - `distribution` is exactly `plugin` or `project`: no other value, no missing field
   - `tools` is either absent (full tool surface justified in body) or scoped to the minimum set needed for the stated responsibility
-  - Read-only agents (agents whose stated responsibility is research, review, audit, or reporting) have **no** write, edit, or execution tools — the presence of any of Edit, Write, Bash, NotebookEdit in a read-only agent's `tools` list is a `BLOCKER`
-  - Agent body does **not** invoke the Skill tool on behalf of the user — detected by grepping the body for `Skill(`, `Skill tool`, or equivalent dispatch phrasings; any match is a `BLOCKER` per `skill-vs-agent`
+  - Read-only agents (agents whose stated responsibility is research, review, audit, or reporting) have **no** write, edit, or execution tools—the presence of any of Edit, Write, Bash, NotebookEdit in a read-only agent's `tools` list is a `BLOCKER`
+  - Agent body **never** invokes the Skill tool on behalf of the user—detected by grepping the body for `Skill(`, `Skill tool`, or equivalent dispatch phrasings; any match is a `BLOCKER` per `skill-vs-agent`
   - No hard-coded absolute paths in the body or in sibling assets
   - Frontmatter and system-prompt content are in English, regardless of the conversation language in which the agent was authored
 
@@ -64,13 +64,13 @@ The `agent-management` spec defines how an agent is *authored* — filename, YAM
 ### Checks derived from `skill-vs-agent`
 
 - **MUST** confirm the agent body contains a **rationale section** that names at least one decisive dimension for the agent-over-skill choice; its absence is a `BLOCKER`
-- **SHOULD** verify that at least one counter-dimension is named when the decision was a close call — absence is a `SUGGESTION`, not a `BLOCKER`, consistent with the SHOULD formulation in `skill-vs-agent`
+- **SHOULD** verify that at least one counter-dimension is named when the decision was a close call—absence is a `SUGGESTION`, not a `BLOCKER`, consistent with the SHOULD formulation in `skill-vs-agent`
 - **MUST** run a duplicate-capability check: grep every other `agents/*.md` and `skills/*/SKILL.md` `description` line for semantic overlap; any plausible overlap produces a `WARNING` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing
 
 ### Tool-scope checks
 
-- **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure — tools declared but not used are `WARNING` findings (dead permission)
-- **MUST** verify, for every tool the agent body clearly needs, that it is declared in `tools` — tools used but not declared are `BLOCKER` findings (the agent will fail to run)
+- **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure—tools declared but not used are `WARNING` findings (dead permission)
+- **MUST** verify, for every tool the agent body clearly needs, that it's declared in `tools`: tools used but not declared are `BLOCKER` findings (the agent will fail to run)
 - **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents; an agent using `Bash` for operations a dedicated tool covers gets a `WARNING` unless the body justifies the choice
 
 ### Prompt-structure checks
@@ -84,17 +84,17 @@ The `agent-management` spec defines how an agent is *authored* — filename, YAM
 
 ### Review procedure
 
-- **MUST** begin by reading the canonical `agent-management`, `skill-vs-agent`, and `review-plan` specs before producing any finding; findings without an anchor in one of those specs are not valid output of this procedure
+- **MUST** begin by reading the canonical `agent-management`, `skill-vs-agent`, and `review-plan` specs before producing any finding; findings without an anchor in one of those specs aren't valid output of this procedure
 - **MUST** produce findings in this order: frontmatter → description/triggers → distribution → model → tools/scope → prompt structure → rationale section → referenced assets → duplicate-prevention check → INFO observations
 - **MUST** emit exactly one `review-plan` file at `.audits/agent-review/<agent-name>.md`; the reviewer **MUST** follow every lifecycle rule from `review-plan`, including the single-plan-per-target invariant and the deletion-commit message format
 - **SHOULD** embed, in the plan's `## Scope` section, the git SHAs of the spec versions applied so a later re-review can tell whether findings may have become outdated by a spec revision
-- **MAY** fold purely stylistic observations (Vale, markdown linting) into `INFO` findings when they aid the author, but **MUST NOT** promote them to `WARNING` or `BLOCKER` — those stay with their own tooling
+- **MAY** fold purely stylistic observations (Vale, markdown linting) into `INFO` findings when they aid the author, but **MUST NOT** promote them to `WARNING` or `BLOCKER`: those stay with their own tooling
 
 ### Relationship to other specs
 
-- **MUST** reference `review-plan` for the output format; do not restate its requirements here
+- **MUST** reference `review-plan` for the output format; don't restate its requirements here
 - **MUST NOT** re-specify anything already covered by `agent-management` or `skill-vs-agent`; when this spec and one of those diverge, the authoring spec wins and this spec is the one that needs updating
-- **SHOULD**, when the agent under review is dispatched by a named skill, trigger a companion `skill-review` for that skill only if the skill has not been reviewed against its current source revision — record the decision in the plan's `## Scope` so downstream actors know whether the dispatching skill has been covered
+- **SHOULD**, when the agent under review is dispatched by a named skill, trigger a companion `skill-review` for that skill only if the skill hasn't been reviewed against its current source revision—record the decision in the plan's `## Scope` so downstream actors know whether the dispatching skill has been covered
 
 ## Acceptance Criteria
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
@@ -104,19 +104,19 @@ The `agent-management` spec defines how an agent is *authored* — filename, YAM
 - [ ] No agent in `agents/` invokes the Skill tool on behalf of the user; a grep for `Skill(` across all agent body files returns zero matches
 - [ ] No read-only agent in `agents/` declares `Edit`, `Write`, `Bash`, or `NotebookEdit` in its `tools` list
 - [ ] No two agents in `agents/` share an equivalent capability statement, verified by a spot-check of every plan's duplicate-prevention finding
-- [ ] Every declared tool in every agent's `tools` list is used at least once in the agent's body; every tool used in the body is declared — both directions pass spot-check
+- [ ] Every declared tool in every agent's `tools` list is used at least once in the agent's body; every tool used in the body is declared—both directions pass spot-check
 - [ ] Every agent in `agents/` whose frontmatter pins a `model` has a rationale for that choice stated in the system prompt or in an adjacent comment
 - [ ] No open plan under `.audits/agent-review/` carries a prompt-structure-order finding at `BLOCKER` severity without citing a corresponding MUST rule in `agent-management`
 - [ ] Every agent in `agents/` whose `tools` list includes `Edit`, `Write`, `Bash`, or `NotebookEdit` documents the goals and preconditions of those write effects in its system prompt
 - [ ] Every open plan under `.audits/agent-review/` conforms to `review-plan`'s four-section structure and YAML frontmatter
 - [ ] The `agent-management` spec's acceptance criteria cross-reference this spec for the review side of its authoring rules
-- [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(agent-review): close <agent> — <counts>` exactly
+- [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(agent-review): close <agent>—<counts>` exactly
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
 - Should the duplicate-prevention check read skill descriptions from `skills/*/SKILL.md` in the same repository only, or should it also query the MkDocs-rendered catalog across installed plugins when a consumer reviews a downstream copy?
-- How is "read-only agent" detected mechanically — by the verbs in the `description` (review, audit, research, lint, report), by an explicit `read-only: true` flag in frontmatter that does not yet exist, or by a human judgement captured in the plan's `## Scope`?
+- How's "read-only agent" detected mechanically—by the verbs in the `description` (review, audit, research, lint, report), by an explicit `read-only: true` flag in frontmatter that doesn't yet exist, or by a human judgement captured in the plan's `## Scope`?
 - Should the tools-used-vs-tools-declared check tolerate the case where a tool appears only in an example section of the body and not in the procedure itself, or is example-only usage a sign of dead permission?
-- When `distribution: project` is declared, should the review verify anything beyond the value itself — for example that the agent does not reference plugin-co-located assets, which would break project-level use?
-- Should reviewing an agent whose `description` names negative triggers also verify those negatives actually exclude the named cases — and if so, how is that verified without running the agent?
-- How does this spec invocation interact with `audience-review` — the first agent in the portfolio — since reviewing a review-agent is a recursion case worth explicit handling: is the first-ever plan written by the review or by a human, and how is the recursion terminated?
+- When `distribution: project` is declared, should the review verify anything beyond the value itself—for example that the agent doesn't reference plugin-co-located assets, which would break project-level use?
+- Should reviewing an agent whose `description` names negative triggers also verify those negatives actually exclude the named cases—and if so, how's that verified without running the agent?
+- How does this spec invocation interact with `audience-review`: the first agent in the portfolio—since reviewing a review-agent is a recursion case worth explicit handling: is the first-ever plan written by the review or by a human, and how's the recursion terminated?

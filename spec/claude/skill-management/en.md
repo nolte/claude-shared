@@ -34,7 +34,7 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 ### Distribution
 - **MUST** reach consuming projects exclusively via the Claude Code plugin mechanism—the plugin is installed from the marketplace entry, and Claude Code discovers the skill from the plugin's `skills/<name>/` path
 - **MUST NOT** be distributed by copying the folder into a consuming project's `.claude/skills/<name>/`, by symlinking, by vendoring, or by any other out-of-band path; such copies drift from the source and defeat the point of a shared plugin
-- **MUST NOT** manually bump the plugin version in `.claude-plugin/plugin.json` or the corresponding marketplace entry as part of a PR that adds, renames, removes, or materially changes a skill; the version is derived from the published GitHub Release tag and updated on the default branch exclusively by the release workflow — see `release-automation` §Plugin manifest alignment for the mechanism
+- **MUST NOT** manually bump the plugin version in `.claude-plugin/plugin.json` or the corresponding marketplace entry as part of a PR that adds, renames, removes, or materially changes a skill; the version is derived from the published GitHub Release tag and updated on the default branch exclusively by the release workflow—see `release-automation` §Plugin manifest alignment for the mechanism
 - **MAY** coexist in a consuming project alongside project-local skills under that project's own `.claude/skills/`; such project-local skills are outside the scope of this spec and **MUST NOT** reuse a name already owned by the `nolte-shared` plugin
 
 ### Runtime discovery (consuming project)
