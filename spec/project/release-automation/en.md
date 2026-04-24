@@ -26,6 +26,7 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 - Versioning policy (semver major/minor/patch derivation)—inherited from `release-drafter` configuration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
 - hotfix flow (release from `main` back to `develop`)—tracked as an Open Question on `branching-model` and out of scope here.
 - Deprecating the manual `gh release edit --draft=false` path entirely; the manual path remains a documented fallback for incident response when the workflow itself is broken.
+- Prescribing which ecosystems are included in the portfolio convention table for §Version-bearing files; the table grows as repos of new types enter the portfolio, each addition being a minor spec amendment rather than a new spec.
 
 ## Requirements
 
@@ -49,21 +50,72 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 - **SHOULD** support a `dry_run: true` input on `workflow_dispatch` that performs every validation step but stops short of the actual `--draft=false` call
 - **SHOULD** fail explicitly (non-zero exit, actionable message) when `release-cd-refresh-master.yml` is absent or disabled, because publishing without the downstream refresh would leave `main` out of sync with the latest release
 
-### Plugin manifest alignment
+### Version-bearing files
 
-- **MUST**, for repositories that ship a Claude Code plugin (`.claude-plugin/plugin.json` present), update the `version` field of `.claude-plugin/plugin.json`: and of `.claude-plugin/marketplace.json` where the entry exists—so it matches the release tag being published, and commit that change to `develop` with a conventional-commits subject `chore(release): <tag>`; the commit **MUST** land before the `--draft=false` call so the published release's target SHA includes the aligned manifest
-- **MUST NOT** leave a published release whose tag differs from the `version` field declared in `.claude-plugin/plugin.json` at the release's target SHA; any drift is a publish-blocking condition the workflow has to surface before flipping the draft
-- **MUST NOT** accept a manually pre-bumped manifest in the branch state being published; if the `version` field already matches the target tag at workflow start, the workflow **MUST** verify that match was produced by a prior `chore(release):` commit by this same workflow and otherwise refuse to publish, because the skill-authoring specs (`skill-management`) forbid skill-change PRs from touching the version
-- **SHOULD** perform the manifest update inside the reusable `reusable-release-publish.yml` so consumers inherit the behavior without repeating it per repository
-- **SHOULD** derive the value written into the `version` field from the tag by stripping a leading `v` if the repository's existing `version` convention omits it, matching whatever the current manifest already uses—the workflow **MUST NOT** silently rewrite the convention
-- **MAY** skip the `marketplace.json` update when the repository doesn't publish a marketplace entry
+A *version-bearing file* is a file tracked in git whose content declares, at a well-defined location, the current release version of the project. Every such file must equal the published release tag at the release's target SHA. Repositories may have zero, one, or many such files.
+
+**Portfolio convention table.** The default version-bearing files per repo type are:
+
+| Repo type | File | Selector | Value transform |
+|---|---|---|---|
+| Claude Code plugin | `.claude-plugin/plugin.json` | `$.version` | strip leading `v` if repo convention omits it |
+| Claude Code plugin | `.claude-plugin/marketplace.json` | `$.metadata.version` and `$.plugins[].version` | strip leading `v` if repo convention omits it |
+| Python package | `pyproject.toml` | `[project].version` | strip leading `v` if repo convention omits it |
+| Node.js package | `package.json` | `$.version` | strip leading `v` if repo convention omits it |
+| HACS integration | `custom_components/<name>/manifest.json` | `$.version` | strip leading `v` if repo convention omits it |
+
+- **MUST** treat this table as the default set for any repo whose type matches one of the listed rows; no repo-level declaration is needed to opt in.
+- **MUST** declare the full version-bearing file list at `.github/release-automation.yml` when a repo deviates from its ecosystem's convention (extra files, different selectors, an additional repo-local file that holds the version). The declared list replaces the default, not extends it—explicit is better than implicit.
+- **MAY** have no version-bearing files at all (for example, pure git-tag-based versioning like Go modules); the §Version-bearing file alignment verification step treats zero declared files as nothing to align.
+- **MUST NOT** add a repo-type row to this table without a corresponding amendment PR to this spec; ad-hoc conventions drift the portfolio.
+
+Selectors use JSONPath-style notation for JSON and YAML files, TOML-path notation for TOML files. The value transform is applied to the tag before the value is written or compared: `strip leading v if repo convention omits it` means `v0.1.1` becomes `0.1.1` only when the existing file value lacks the `v` prefix; if the file already uses a `v` prefix the tag is written verbatim.
+
+### Version-bearing file alignment
+
+Every published release **MUST** land on a commit whose tree has every version-bearing file (§Version-bearing files) equal to the target tag under its value transform. The alignment commit **MUST** use the Conventional-Commits subject `chore(release): <tag>` and **MUST** land on `develop` before the `--draft=false` call.
+
+The alignment happens via one of two equivalent paths. Both paths produce the same end state; they differ only in which credential creates the commit.
+
+#### Primary path: Workflow-driven
+
+Applicable when the workflow has access to a credential that bypasses `develop`'s branch protection (a GitHub App installation token, or a PAT designated as a bypass actor). Not yet usable in this portfolio: the App/PAT is provisioned via `nolte/gh-plumbing` (same portfolio-level remediation as `spec/project/workflow-health/` §Known platform constraints).
+
+- **MUST** read the version-bearing file list (default from §Version-bearing files, or the list declared at `.github/release-automation.yml` when the repo deviates) and update each file to the target tag under its transform
+- **MUST** commit the aggregate update as `chore(release): <tag>` on `develop`, authored by the bypass credential
+- **MUST** push the commit to `develop` via the bypass credential, respecting `enforce_admins: true` (the bypass is declared, not stolen)
+- **MUST NOT** be enabled in a repository until the portfolio App/PAT is installed and `.github/settings.yml` explicitly names the credential as a bypass actor; otherwise the push fails and the fallback path **MUST** be used
+
+#### Fallback path: Operator-driven
+
+Applicable when only `GITHUB_TOKEN` is available and `develop` is fully protected (the current portfolio default).
+
+- **MUST** be executed by a maintainer opening a PR titled `chore(release): <tag>` that updates every version-bearing file to the target tag
+- **MUST** pass every required status check declared for `develop` in `.github/settings.yml`
+- **MUST** be squash-merged via the GitHub UI by the maintainer, **not** via the `automerge` label; an `automerge`-label merge is authenticated with `GITHUB_TOKEN` and breaks the release-drafter cascade per `spec/project/workflow-health/` §Known platform constraints
+- **MUST** be followed by a `workflow_dispatch` of `release-publish.yml`; the workflow detects that the manifest is already aligned, skips its own commit step, realigns `target_commitish` on the draft, and flips `draft: false`
+
+#### Pre-publish verification (both paths)
+
+- **MUST** verify before `--draft=false` that every version-bearing file at the draft's target SHA equals the target tag under its transform; any drift is a publish-blocking condition the workflow surfaces and refuses to proceed
+- **MUST** accept a pre-aligned file if-and-only-if the last commit touching that file on `develop` has a subject that **starts with** `chore(release): <tag>`; this allows the `(#N)` suffix GitHub appends on squash-merge, so a fallback-path squash-merge commit with subject `chore(release): v0.1.1 (#21)` passes the check
+- **MUST** reject any other pre-aligned state as a forbidden manual bump; the skill-authoring spec (`spec/claude/skill-management/`) forbids feature PRs from touching the version field, so the only acceptable pre-alignment sources are a prior run of the primary path or a fallback-path `chore(release): <tag>` PR merge
+- **SHOULD** implement the verification inside the reusable `reusable-release-publish.yml` so consumers inherit the behavior without repeating it per repository
+- **SHOULD** derive the value written into (primary path) or compared against (both paths) the version field from the tag by stripping a leading `v` if the repository's existing convention omits it, matching whatever the current file already uses; the workflow **MUST NOT** silently rewrite the convention
 
 ### Permissions and protection
 
 - **MUST** run with `contents: write` and nothing broader; specifically **MUST NOT** request `actions: write`, `pull-requests: write`, or `id-token: write` unless explicitly justified in the workflow comments
 - **MUST NOT** bypass `main` branch protection; the workflow's job is to publish a release, which then triggers `release-cd-refresh-master.yml`: the existing workflow already has the proper scoped permission to update `main`
-- **MUST NOT** use a personal access token; `GITHUB_TOKEN` is the only acceptable credential
-- **MUST** recognize that a `release: published` event emitted by this workflow under `GITHUB_TOKEN` doesn't cascade to `release-cd-refresh-master.yml` as a new workflow run—this is deterministic GitHub Actions platform behavior, classified under `spec/project/workflow-health/` §Known platform constraints; the remediation lives upstream in `nolte/gh-plumbing` (authenticate the publish step with an App token or PAT so the event is user-initiated), not in this workflow, and any interim `main`-refresh workaround is documented per that spec's guidance
+- **MUST** use `GITHUB_TOKEN` on the fallback path (the workflow only needs read + release-edit permissions in that mode); **MUST** use the portfolio App installation token (or designated PAT) on the primary path, per §Version-bearing file alignment
+- **MUST NOT** use a PAT that isn't explicitly declared as a branch-protection bypass actor in `.github/settings.yml`; undeclared PATs bypass audit trails
+- **MUST** recognize that a `release: published` event emitted by this workflow under `GITHUB_TOKEN` doesn't cascade to `release-cd-refresh-master.yml` as a new workflow run: deterministic GitHub Actions platform behavior, classified under `spec/project/workflow-health/` §Known platform constraints; the same App-token remediation that enables the primary path above also lifts this cascade constraint, so both are solved by a single portfolio-level fix in `nolte/gh-plumbing`
+
+### Release notes categorization
+
+- **MUST** exclude `chore(release): <tag>` commits and PRs from `release-drafter` categorization so a release draft doesn't list its own version-alignment PR as a changelog entry
+- **MUST** implement the exclusion portfolio-wide in `nolte/gh-plumbing:.github/commons-release-drafter.yml` (title-pattern exclusion or a label convention the drafter config filters out), not per-repo
+- **SHOULD** align the exclusion with any existing Conventional-Commits filter already in the commons drafter config so the rule pattern stays consistent
 
 ### Relationship to other specs
 
@@ -90,7 +142,9 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 - [ ] After a successful publish run, `gh run list --workflow=release-cd-refresh-master.yml --limit 1` shows a run started within 5 minutes of the publish run, confirming the downstream refresh fired; if it didn't start, the publish is considered incomplete and **MUST** be triaged under `workflow-health`
 - [ ] `branching-model` §Local release operation has been updated to name `release-publish.yml` as the primary path and `gh release edit <tag> --draft=false` as a fallback
 - [ ] The last three published releases in any repository adopting this spec were produced by the `release-publish.yml` workflow, verifiable via `gh run list --workflow=release-publish.yml --limit 10`
-- [ ] For every published release of a plugin-shipping repository, `.claude-plugin/plugin.json` at the release's target SHA has a `version` field equal to the release tag under the repository's existing convention (with or without the `v` prefix, consistent with the manifest's prior value), and the `chore(release): <tag>` commit that produced that alignment is present on `develop` before the publish run
+- [ ] For every published release of a repository that declares version-bearing files (per §Version-bearing files default or override), each declared file at the release's target SHA equals the release tag under its declared transform, and a `chore(release): <tag>` commit on `develop` produced that alignment before the publish run, whether via the primary or fallback path
+- [ ] For the last three published releases on any repo adopting this spec, the `chore(release): <tag>` commit subject on `develop` (as viewed via `git log -1 --pretty=%s`) starts with `chore(release): <tag>`, confirming the guard's prefix-match acceptance criterion handles both primary-path commits and fallback-path squash-merges with `(#N)` suffix
+- [ ] `nolte/gh-plumbing:.github/commons-release-drafter.yml` excludes `chore(release): <tag>` commits or PRs from release-notes categorization (§Release notes categorization)
 - [ ] No published release in the adoption window has a `release-drafter` draft that remained after publish (confirming the workflow consumed the intended draft rather than creating a parallel one)
 
 ## Open Questions
@@ -102,3 +156,7 @@ None at this time—all initial drafting questions were resolved during this spe
 - **Multi-draft behavior**: fail with actionable message unless the dispatcher passes a `tag` input; no "newest-wins" heuristic.
 - **`branching-model` integration**: in-place edit of §Release flow + §Local release operation; no new dedicated section.
 - **Post-publish sanity checks**: encoded as Acceptance Criteria (`isDraft: false` and `release-cd-refresh-master.yml` run within 5 minutes), not as SHOULDs.
+- **Two-path alignment**: primary (workflow-driven with bypass credential) vs fallback (operator PR + UI squash-merge); both paths land the same `chore(release): <tag>` commit shape. Primary is the portfolio target; fallback is the operative path today until the portfolio App/PAT ships via `nolte/gh-plumbing`.
+- **Override config path**: `.github/release-automation.yml` for repos that deviate from the §Version-bearing files default; consistent with other `.github/*.yml` portfolio configs.
+- **Portfolio convention table scope**: full list (Claude plugin, Python, Node, HACS) documents portfolio vision; rows grow organically as new ecosystems enter via minor spec amendments.
+- **Pre-bump guard**: prefix-match on `chore(release): <tag>`, accepting the `(#N)` suffix GitHub appends on squash-merge.
