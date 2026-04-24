@@ -40,6 +40,18 @@ GitHub Actions workflows gate every path through the portfolio: pull-request mer
 - **MUST** capture the classification in the eventual fix PR's **Risk / rollout notes** section (per the `pull-request-workflow` spec) so failure patterns are visible across PR history
 - **MAY** open a tracking GitHub Issue for non-urgent follow-up (documentation of a known flake, a planned upstream bump) instead of an immediate fix PR, provided the Issue names an owner
 
+### Known platform constraints
+
+GitHub Actions intentionally doesn't trigger downstream workflow runs from events produced by a step authenticated with `GITHUB_TOKEN`, with the exception of `workflow_dispatch` and `repository_dispatch`. This is a deterministic platform behavior, not a transient failure, and it has to be planned for rather than triaged on each occurrence.
+
+- **MUST** classify as a known platform constraint (triage tag `infra`) any downstream workflow failing to fire because its triggering event was produced by a `GITHUB_TOKEN`-authenticated step elsewhere in the portfolio's automation chain. Relevant chains observed to date:
+  - `release-drafter.yml` (trigger: `push: develop`) doesn't fire when the push to `develop` was produced by an `automerge.yaml` squash-merge authenticated with `GITHUB_TOKEN`
+  - `release-cd-refresh-master.yml` (trigger: `release: published`) doesn't fire when the publish step was produced by `release-publish.yml` authenticated with `GITHUB_TOKEN`
+  - Any other chain where one workflow's output event is another workflow's input trigger and the producer uses `GITHUB_TOKEN`
+- **MUST** remediate this constraint at the portfolio level—in the `nolte/gh-plumbing` reusable workflows—rather than in each consumer repository, because the constraint applies uniformly to every consumer of those reusable workflows. The acceptable remediation is to authenticate the downstream-triggering step with a credential whose events GitHub considers user-initiated (a GitHub App installation token or a PAT with appropriate scopes), not `GITHUB_TOKEN`.
+- **MUST NOT** work around this constraint by replacing `GITHUB_TOKEN` with a personal PAT directly in a consumer repository's workflow—the fix belongs upstream in the reusable, so every consumer benefits from one correctly-scoped credential instead of a per-repository PAT collection.
+- **SHOULD** document any interim workaround a repository uses (a user-authored commit to re-fire `release-drafter`, a manual fast-forward of `main` to catch up a missed `release-cd-refresh-master.yml` run, a manual `workflow_dispatch` if the downstream workflow provides one) as a short note in `README.md`, with a reference to the upstream `nolte/gh-plumbing` tracking issue.
+
 ### Remediation path
 - **MUST** route every workflow fix through the standard pull-request path declared by the `pull-request-workflow` spec: `fix/` branch prefix, Conventional-Commits title (type `fix`), all required checks green before merge
 - **MUST NOT** bypass branch protection to merge a workflow fix; `enforce_admins: true` on `develop` (mandated by the `pull-request-workflow` spec) has no exception path, and a persistently-broken required check is remedied by a PR against `.github/settings.yml`, not by an admin override

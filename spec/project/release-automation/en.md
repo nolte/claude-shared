@@ -63,6 +63,7 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 - **MUST** run with `contents: write` and nothing broader; specifically **MUST NOT** request `actions: write`, `pull-requests: write`, or `id-token: write` unless explicitly justified in the workflow comments
 - **MUST NOT** bypass `main` branch protection; the workflow's job is to publish a release, which then triggers `release-cd-refresh-master.yml`: the existing workflow already has the proper scoped permission to update `main`
 - **MUST NOT** use a personal access token; `GITHUB_TOKEN` is the only acceptable credential
+- **MUST** recognize that a `release: published` event emitted by this workflow under `GITHUB_TOKEN` doesn't cascade to `release-cd-refresh-master.yml` as a new workflow run—this is deterministic GitHub Actions platform behavior, classified under `spec/project/workflow-health/` §Known platform constraints; the remediation lives upstream in `nolte/gh-plumbing` (authenticate the publish step with an App token or PAT so the event is user-initiated), not in this workflow, and any interim `main`-refresh workaround is documented per that spec's guidance
 
 ### Relationship to other specs
 

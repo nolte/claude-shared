@@ -40,6 +40,18 @@ GitHub-Actions-Workflows kontrollieren jeden Weg durch das Portfolio: Pull-Reque
 - **MUSS [MUST]** die Klassifikation im Abschnitt **Risk / rollout notes** des späteren Fix-PRs festhalten (gemäß `pull-request-workflow`-Spezifikation), sodass Fehlermuster über die PR-Historie hinweg sichtbar werden
 - **KANN [MAY]** statt eines sofortigen Fix-PRs ein Tracking-Issue für eine nicht-dringende Nachverfolgung (Dokumentation eines bekannten Flakes, ein geplanter Upstream-Bump) anlegen, sofern das Issue eine verantwortliche Person benennt
 
+### Bekannte Plattform-Einschränkungen
+
+GitHub Actions löst absichtlich keine Downstream-Workflow-Runs aus, wenn das auslösende Event von einem Schritt stammt, der mit `GITHUB_TOKEN` authentifiziert ist — mit Ausnahme von `workflow_dispatch` und `repository_dispatch`. Das ist deterministisches Plattformverhalten, keine transiente Störung, und muss eingeplant statt bei jedem Auftreten einzeln triagiert werden.
+
+- **MUSS [MUST]** jeden Downstream-Workflow, der nicht feuert, weil sein Trigger-Event von einem `GITHUB_TOKEN`-authentifizierten Schritt in der Automations-Kette erzeugt wurde, als bekannte Plattform-Einschränkung einordnen (Triage-Tag `infra`). Bisher beobachtete Ketten:
+  - `release-drafter.yml` (Trigger: `push: develop`) feuert nicht, wenn der Push auf `develop` durch einen `automerge.yaml`-Squash-Merge mit `GITHUB_TOKEN` produziert wurde
+  - `release-cd-refresh-master.yml` (Trigger: `release: published`) feuert nicht, wenn der Publish-Schritt durch `release-publish.yml` mit `GITHUB_TOKEN` ausgeführt wurde
+  - Jede weitere Kette, in der das Output-Event eines Workflows das Trigger-Event eines anderen ist und der Erzeuger `GITHUB_TOKEN` benutzt
+- **MUSS [MUST]** die Behebung dieser Einschränkung auf Portfolio-Ebene — in den Reusable-Workflows von `nolte/gh-plumbing` — erfolgen, nicht in jedem Konsumenten-Repository, weil die Einschränkung einheitlich für jeden Konsumenten dieser Reusables gilt. Zulässige Remediation: den downstream-auslösenden Schritt mit einem Credential authentifizieren, dessen Events GitHub als user-initiiert einstuft (Installation-Token einer GitHub-App oder PAT mit passenden Scopes), nicht `GITHUB_TOKEN`.
+- **DARF NICHT [MUST NOT]** diese Einschränkung umgehen werden, indem in einem Konsumenten-Workflow `GITHUB_TOKEN` durch ein persönliches PAT ersetzt wird — der Fix gehört stromaufwärts ins Reusable, damit jeder Konsument von einem korrekt gescopten Credential profitiert und nicht jedes Repo seine eigene PAT-Sammlung pflegt.
+- **SOLLTE [SHOULD]** jede Übergangs-Behelfslösung, die ein Repository anwendet (user-authored Commit, um `release-drafter` neu zu feuern, manuelles Fast-Forward von `main` nach verpasstem `release-cd-refresh-master.yml`-Run, manueller `workflow_dispatch`, falls der Downstream-Workflow einen anbietet), als Kurznotiz in `README.md` dokumentieren, mit Verweis auf das zugehörige Tracking-Issue in `nolte/gh-plumbing`.
+
 ### Behebungspfad
 - **MUSS [MUST]** jede Workflow-Behebung über den regulären, in der `pull-request-workflow`-Spezifikation deklarierten Pull-Request-Pfad führen — Branch-Präfix `fix/`, Conventional-Commits-Titel (Type `fix`), alle erforderlichen Checks vor dem Merge grün
 - **DARF NICHT [MUST NOT]** Branch-Protection umgehen, um einen Workflow-Fix zu mergen; `enforce_admins: true` auf `develop` (aus der `pull-request-workflow`-Spezifikation) hat keinen Ausnahmepfad, und ein dauerhaft defekter Required-Check wird durch einen PR gegen `.github/settings.yml` behoben, nicht durch einen Admin-Override
