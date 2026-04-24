@@ -50,8 +50,13 @@ Dokumentation, Spezifikationen, READMEs, Release-Notes und sonstiges menschenles
 - **SOLLTE [SHOULD]** die finalen Release-Notes vor der Veröffentlichung gegen Vale prüfen, damit der veröffentlichte Changelog keine Prosa-Verstöße in die Öffentlichkeit trägt
 
 ### Mehrsprachige Texte
-- **MUSS [MUST]** die gemeinsame Vale-Konfiguration auf jede im Repository vorhandene Sprachvariante anwenden – ein fehlender Sprachordner ist keine Ausrede, das Linting zu überspringen
-- **MUSS [MUST]** sprachspezifische Einträge (zum Beispiel nur deutsche Begriffe) in einem sprachgebundenen Vokabular innerhalb desselben `nolte/vale-style`-Pakets halten (zum Beispiel `vocabularies/technical-de/`) – niemals in einem separaten Paket, einem repository-lokalen Override oder gemischt in ein sprachübergreifendes gemeinsames Vokabular
+- **MUSS [MUST]** Vale ausschließlich auf englischsprachig verfassten Inhalt anwenden; Dateien, die in einer anderen Sprache als Englisch verfasst sind, **DÜRFEN NICHT [MUST NOT]** in den Vale-Lint-Scope aufgenommen werden
+- **MUSS [MUST]** den englischsprachigen Lint-Scope sowohl in den `.vale.ini`-Format-Abschnitten als auch im Taskfile-Ziel `lint:prose` definieren, damit lokale Läufe und CI denselben Scope anwenden; der Scope deckt ausschließlich endnutzer-gerichtete Prosa ab – typische englische Pfade sind `README.md`, `docs/en/` und die kanonische Sprachdatei jeder Spec, wenn Englisch kanonisch ist (`spec/<topic>/<slug>/en.md`)
+- **DARF NICHT [MUST NOT]** Pfade in den Lint-Scope aufnehmen, die nicht-englischen Inhalt halten: `docs/de/`, `spec/<topic>/<slug>/de.md`, `*.de.md` und jeder entsprechende nicht-englische Pfad bleibt außerhalb von Vale
+- **DARF NICHT [MUST NOT]** LLM-Instruktions-Artefakte in den Lint-Scope aufnehmen – `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, `agents/*.md` und jedes vergleichbare plugin-seitige Claude-Code-Artefakt bleibt außerhalb von Vale; diese Dateien sind Tool-Autor-zu-LLM-Instruktionen, keine endnutzer-gerichtete Prosa, und Microsoft-Style-Regeln für Endnutzer-Texte erzeugen auf ihnen Rauschen statt Signal
+- **MUSS [MUST]** jede Datei im Vale-Scope frei von nicht-englischer Prosa halten – Fließtext, YAML-Frontmatter-Felder, Inline-Kommentare, zitierte Beispiel-Strings – denn Vale kann Sprachgrenzen innerhalb einer gescopten Datei nicht erkennen und markiert fremde Wörter als Rechtschreibfehler
+- **SOLLTE [SHOULD]** signifikante englische Dokumentation in eine parallele nicht-englische Datei unter `docs/de/` oder `spec/<topic>/<slug>/de.md` spiegeln, damit Lesende dieser Sprache sie nutzen können; diese Dateien werden ohne Vale-Checks verfasst und gepflegt und dürfen ihr eigenes natives Vokabular verwenden
+- **DARF NICHT [MUST NOT]** ein sprachgebundenes Vokabular (zum Beispiel `vocabularies/technical-de/`) in `nolte/vale-style` als Behelfslösung für sprachgemischte Dateien innerhalb des Vale-Scopes einführen; die kanonische Lösung für eine nicht-englische Passage in einer gescopten Datei ist, die Passage in eine sprachgebundene Datei außerhalb des Scopes zu verschieben, und nicht, Vale Fremdvokabular beizubringen
 
 ## Akzeptanzkriterien
 - [ ] `.vale.ini` existiert im Repository-Wurzelverzeichnis (oder an der Dokumentationswurzel) und verweist auf ein gepinntes `nolte/vale-style`-Release
@@ -63,6 +68,9 @@ Dokumentation, Spezifikationen, READMEs, Release-Notes und sonstiges menschenles
 - [ ] Jeder in einer jüngeren Änderung eingeführte Fachbegriff erscheint in einem PR oder einem jüngeren Release von `nolte/vale-style`, nicht nur im Downstream-Repository
 - [ ] Jede KI-gestützte Texterzeugungs-Operation prüft den Output vor Abschluss gegen die Vale-Konfiguration des Repositories
 - [ ] Pull-Request-Beschreibungen und GitHub-Release-Notes bestehen Vale auf dem konfigurierten `MinAlertLevel` unter derselben Konfiguration wie die Markdown-Dokumentation des Repositories
+- [ ] Der konfigurierte Vale-Lint-Scope enthält keine Dateien, die in einer anderen Sprache als Englisch verfasst sind; `docs/de/`, `spec/<topic>/<slug>/de.md` und jede `*.de.md` sind ausdrücklich nicht im Scope
+- [ ] Der konfigurierte Vale-Lint-Scope enthält keine LLM-Instruktions-Artefakte; `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**` und `agents/*.md` sind ausdrücklich nicht im Scope
+- [ ] Keine Datei im englischsprachigen Scope enthält irgendwo nicht-englische Prosa – weder im Fließtext, im YAML-Frontmatter, in Inline-Kommentaren noch in zitierten Beispielen; Vale auf `error`-Stufe bestätigt dies
 
 ## Offene Fragen
 - _Keine – alle vorherigen offenen Punkte sind geklärt. Der Drift-Audit zwischen repository-lokalen Vokabularen und dem gepinnten `nolte/vale-style`-Release wird über einen dedizierten Claude-Skill abgedeckt statt über einen periodischen CI-Cron erzwungen._

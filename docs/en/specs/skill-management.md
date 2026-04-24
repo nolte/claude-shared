@@ -11,7 +11,7 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - **Source form** in this repository: `skills/<name>/`
 - **Runtime form** in a consuming project: `.claude/skills/<name>/` or `~/.claude/skills/<name>/`
 
-Without a consistent shape, skills drift in naming, trigger descriptions, and internal structure — reuse becomes fragile and maintenance harder.
+Without a consistent shape, skills drift in naming, trigger descriptions, and internal structure—reuse becomes fragile and maintenance harder.
 
 ## Goals and Non-Goals
 
@@ -38,7 +38,7 @@ Without a consistent shape, skills drift in naming, trigger descriptions, and in
 - **MUST** set `name` to match the folder name exactly
 - **MUST** write a `description` that names concrete user triggers, not abstract capabilities
 - **MUST** keep instructions in `SKILL.md` in English for token efficiency
-- **MUST** be self-contained — supporting assets live inside the skill folder
+- **MUST** be self-contained—supporting assets live inside the skill folder
 
 ### Locations
 
@@ -65,7 +65,7 @@ Source: `skills/<name>/` in claude-shared. Runtime: `.claude/skills/<name>/`, `~
 
 - Should the folder name be required to match the user-facing slash-command name?
 - Do skills need version or compatibility metadata?
-- Where is the boundary between a skill and an agent?
+- Where's the boundary between a skill and an agent?
 - Is there a maximum nesting depth for supporting subfolders?
 
 ## Full text

@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Shared Claude Code skills and agents for consistent development workflows across projects.",
-    "version": "0.1.0"
+    "version": "0.1.1"
   },
   "plugins": [
     {
       "name": "nolte-shared",
       "source": ".",
       "description": "Shared Claude Code skills and agents for consistent development workflows across projects.",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ]
 }

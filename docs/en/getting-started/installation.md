@@ -1,6 +1,6 @@
 # Installation
 
-`claude-shared` is packaged as a single Claude Code plugin named **`nolte-shared`**. The plugin manifest lives at `.claude-plugin/plugin.json`, skills under `skills/<name>/`, agents (once added) under `agents/<name>.md`.
+`claude-shared` is packaged as a single Claude Code plugin named **`nolte-shared`**. The plugin manifest lives at `.claude-plugin/plugin.json`, the marketplace descriptor at `.claude-plugin/marketplace.json`, skills under `skills/<name>/`, agents under `agents/<name>.md`.
 
 ## Prerequisites
 
@@ -9,7 +9,14 @@
 
 ## Load in a downstream project
 
-Until a `marketplace.json` is published, load the plugin directly from a local path:
+Add this repository as a marketplace and install the plugin:
+
+```bash
+/plugin marketplace add nolte/claude-shared
+/plugin install nolte-shared@nolte-shared
+```
+
+For local testing without the marketplace flow, load the plugin directly from a local path:
 
 ```bash
 claude --plugin-dir /path/to/claude-shared
@@ -45,7 +52,7 @@ Reload changes during a session with:
 
 ## Verify the plugin loaded
 
-After startup, `/skills` should list entries from this repo (e.g. `nolte-shared:spec`, `nolte-shared:skill-management`). If something is missing, check:
+After startup, `/skills` should list entries from this repo (for example `nolte-shared:spec`, `nolte-shared:skill-management`). If something is missing, check:
 
 1. `.claude-plugin/plugin.json` is valid JSON
 2. Each folder contains `skills/<name>/SKILL.md` with valid frontmatter

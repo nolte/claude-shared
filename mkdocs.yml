@@ -84,7 +84,6 @@ plugins:
             Entwicklung: Development
             Projektstruktur: Project Structure
             Beitragen: Contributing
-            Changelog: Changelog
 
 markdown_extensions:
   - abbr
@@ -148,4 +147,3 @@ nav:
       - de/development/index.md
       - Projektstruktur: de/development/projektstruktur.md
       - Beitragen: de/development/beitragen.md
-  - Changelog: de/changelog/index.md

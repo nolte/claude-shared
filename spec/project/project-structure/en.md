@@ -22,10 +22,10 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 ## Requirements
 
 ### Top-level files
-- **MUST** include a `README.md` at the repository root with project intro, feature overview, quickstart, and pointers to full documentation
+- **MUST** include a `README.md` at the repository root with project intro, feature overview, quickstart, and pointers to full documentation; the internal structure of that file (required sections, ordering, badges, cross-repository links) is governed by the `readme-structure` spec
 - **MUST** include a `.gitignore`
 - **MUST** include a `CLAUDE.md` that documents AI-assisted development conventions, architecture hints, and command entry points for the repository
-- **MUST** include a `renovate.json5` (preferred) or `renovate.json` configuring automated dependency updates
+- **MUST** include a `renovate.json5` (preferred) or `renovate.json` that `extends` the portfolio-wide preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>`, pinned to a release tag (for example `#v1.1.12`), so Renovate configuration stays aligned across the portfolio; per-repository overrides **SHOULD** stay narrow (typically package-grouping or automerge rules)
 - **MUST** include a `.pre-commit-config.yaml` pinning linters and formatters relevant to the stack
 - **SHOULD** include a `LICENSE` file at the root when the repository is published or intended for redistribution
 
@@ -39,12 +39,20 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - **SHOULD** invoke lint, test, and docs commands from CI through Taskfile targets so local and CI behavior stay identical
 - **SHOULD** produce CI status badges in `README.md` for the primary workflows
 
+### Release and documentation workflows
+The `nolte/gh-plumbing` portfolio ships reusable workflows for release management and documentation delivery. The `branching-model` spec lists the release-management workflows in full and makes three of them mandatory. This spec additionally surfaces the documentation and packaging companions so that a project-structure audit catches them even when the branching-model spec is read in isolation.
+
+- **MUST** include the release-management workflows mandated by the `branching-model` spec: `.github/workflows/release-drafter.yml`, `.github/workflows/release-cd-refresh-master.yml`, and `.github/workflows/automerge.yaml`, each wired to the corresponding reusable workflow under `nolte/gh-plumbing/.github/workflows/`
+- **SHOULD** include `.github/workflows/release-cd-deliver-docs.yml`: triggered on `release: [published]` and invoking `nolte/gh-plumbing/.github/workflows/reusable-mkdocs.yaml`: whenever `mkdocs.yml` is present, so documentation is republished on every release
+- **MAY** include a repository-specific packaging workflow (for example a `release.yml` that patches `manifest.json`, builds a ZIP, and uploads it via `gh release upload`) triggered on `release: [published]` when the repository ships a delivery artifact such as an HACS integration
+- **SHOULD** pin every reusable-workflow reference to a tag (for example `@v1.1.12`) rather than a moving branch, so release-pipeline behavior stays reproducible
+
 ### GitHub repository configuration
-- **MUST** manage GitHub repository settings — topics, description, homepage, branch protection, labels, collaborators, and merge-button options — as code via `.github/settings.yml`, consumed by the [Probot Settings app](https://probot.github.io/apps/settings/)
+- **MUST** manage GitHub repository settings—topics, description, homepage, branch protection, labels, collaborators, and merge-button options—as code via `.github/settings.yml`, consumed by the [Probot Settings app](https://probot.github.io/apps/settings/)
 - **MUST** inherit the portfolio-wide defaults via `_extends: nolte/gh-plumbing:.github/commons-settings.yml` (the short form `gh-plumbing:.github/commons-settings.yml` is equivalent within the `nolte` organization) and keep per-repository content limited to repo-specific fields such as `name`, `description`, `homepage`, and `topics`
 - **MUST NOT** maintain repository settings manually through the GitHub UI once `.github/settings.yml` is present; any UI edit is drift and has to be reconciled back into the file
 - **MUST** include a `.github/release-drafter.yml` extending `nolte/gh-plumbing:.github/commons-release-drafter.yml` to feed the release-notes drafter (the accompanying workflow is specified by the branching-model spec)
-- **SHOULD** include a `.github/boring-cyborg.yml` extending `nolte/gh-plumbing:.github/commons-boring-cyborg.yml` for newcomer onboarding, auto-labeling, and reviewer assignment via the [Boring Cyborg app](https://probot.github.io/apps/boring-cyborg/)
+- **SHOULD** include a `.github/boring-cyborg.yml` extending `nolte/gh-plumbing:.github/commons-boring-cyborg.yml` for newcomer onboarding, automatic labeling, and reviewer assignment via the [Boring Cyborg app](https://probot.github.io/apps/boring-cyborg/)
 - **SHOULD** include a `.github/stale.yml` extending `nolte/gh-plumbing:.github/commons-stale.yml` to manage inactive issues and pull requests via the [Stale app](https://probot.github.io/apps/stale/)
 - **MAY** override individual keys from the inherited `commons-*.yml` files when a repository's needs diverge from the portfolio defaults; keep such overrides narrow and explain them alongside the change
 
@@ -69,6 +77,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
   - `src/` for a single-component library or service
   - `src/<component>/` per subproject in a multi-component repository (for example `src/backend/`, `src/frontend/`, `src/knowledge-service/`)
   - `custom_components/<name>/` for a Home Assistant custom integration
+  - `.claude-plugin/` together with `skills/<name>/` (and optionally `agents/<name>.md`) for a Claude Code plugin repository, where prompt and skill content is the primary deliverable and no runtime source exists
 - **MUST NOT** keep primary source files loose at the repository root; only tooling configs, metadata, and small scripts may live there
 - **MAY** include a `scripts/` and/or `tools/` folder for repository-local automation helpers
 
@@ -89,8 +98,12 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 
 ## Acceptance Criteria
 - [ ] `README.md`, `.gitignore`, `CLAUDE.md`, `renovate.json5` (or `renovate.json`), and `.pre-commit-config.yaml` exist at the repository root
+- [ ] `renovate.json5` (or `renovate.json`) extends `github>nolte/gh-plumbing//renovate-configs/common#<tag>` pinned to a release tag, not a moving branch
 - [ ] `.claude/` exists and contains at least one of `agents/`, `skills/`, `commands/`, or a `settings*.json` file
 - [ ] `.github/workflows/` contains at least one workflow file
+- [ ] `.github/workflows/` contains `release-drafter.yml`, `release-cd-refresh-master.yml`, and `automerge.yaml`, each wired to the matching `nolte/gh-plumbing` reusable workflow
+- [ ] If `mkdocs.yml` is present, `.github/workflows/release-cd-deliver-docs.yml` exists and triggers on `release: [published]`
+- [ ] Every `uses: nolte/gh-plumbing/.github/workflows/...` reference in `.github/workflows/` is pinned to a release tag, not a moving branch
 - [ ] `.github/settings.yml` is present and extends `nolte/gh-plumbing:.github/commons-settings.yml` (or the equivalent short form)
 - [ ] `.github/release-drafter.yml` is present and extends `nolte/gh-plumbing:.github/commons-release-drafter.yml`
 - [ ] `.github/boring-cyborg.yml` and `.github/stale.yml` are present and extend their respective `nolte/gh-plumbing` commons files
@@ -98,7 +111,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - [ ] `docs/` and `mkdocs.yml` exist, and `mkdocs build` completes without errors
 - [ ] `spec/` exists at the repository root
 - [ ] `tests/` exists and contains at least one test
-- [ ] Primary source lives under `src/`, `src/<component>/`, or `custom_components/<name>/` — not loose at the root
+- [ ] Primary source lives under `src/`, `src/<component>/`, `custom_components/<name>/`, or `.claude-plugin/` + `skills/<name>/`: not loose at the root
 - [ ] If `.env.example` is present, a literal `.env` entry appears in `.gitignore`
 - [ ] If `hacs.json` is present, `custom_components/<domain>/` exists and matches the HA integration domain
 - [ ] CI status badges for the primary workflows appear near the top of `README.md`
@@ -110,3 +123,4 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - Should release artifacts (changelogs, release workflows, versioning policy) be referenced from here or left entirely to a separate release-process spec?
 - Should multilingual documentation (`docs/<lang>/`) be a **SHOULD** once a second language appears, or stay **MAY**?
 - Is there a canonical minimum Taskfile target set beyond test/lint/docs (for example `setup`, `ci`, `release`)?
+- Should `tests/` be softened from **MUST** to **SHOULD** for Claude Code plugin repositories that ship only prompt/skill content and carry no runtime code?

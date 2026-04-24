@@ -3,7 +3,7 @@
 Status: draft
 
 ## Kontext
-Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents, die von nachgelagerten Projekten genutzt werden. Ein Skill hat zwei Ausprägungen: eine **Quell-Form** in diesem Repository (unter `skills/`) und eine **Laufzeit-Form** in einem konsumierenden Projekt (unter `.claude/skills/` oder `~/.claude/skills/`), aus der Claude Code den Skill tatsächlich lädt. Ohne einheitliche Form driften Skills in Benennung, Trigger-Beschreibungen und interner Struktur auseinander, was Wiederverwendung brüchig und Wartung aufwendiger macht. Diese Spezifikation definiert, wie neue Skills erstellt werden, wo sie in beiden Formen liegen und woran sich bestehende Skills halten müssen.
+Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents, die von nachgelagerten Projekten genutzt werden. Ein Skill hat zwei Ausprägungen: eine **Quell-Form** in diesem Repository (unter `skills/`) und eine **Laufzeit-Form** in einem konsumierenden Projekt, aus der Claude Code den Skill tatsächlich lädt. Der einzige unterstützte Verteilungsweg für die Laufzeit ist der Claude-Code-Plugin-Mechanismus: Dieses Repository ist selbst ein Claude-Code-Plugin (`.claude-plugin/plugin.json` plus Marketplace-Eintrag), und konsumierende Projekte erhalten Skills, indem sie das Plugin installieren. Ohne einheitliche Form und einen einzigen Verteilungspfad driften Skills in Benennung, Trigger-Beschreibungen und interner Struktur auseinander, und Konsumenten landen bei ad-hoc Kopien oder Symlinks, die mit der Zeit divergieren. Diese Spezifikation definiert, wie neue Skills erstellt werden, wie sie verteilt werden und woran sich bestehende Skills halten müssen.
 
 ## Ziele
 - Jeder Skill hat dieselbe vorhersehbare Form auf der Festplatte
@@ -12,9 +12,9 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - Autoren haben eine klare Checkliste und ein Template als Startpunkt
 
 ## Nicht-Ziele
-- Plugin-Paketierung und -Verteilung (separat behandelt)
-- Einrichtung nachgelagerter Projekte und `.claude/`-Konfiguration
+- Einrichtung nachgelagerter Projekte und `.claude/`-Konfiguration jenseits der Plugin-Installation
 - Vorgabe konkreter Skill-Inhalte jenseits struktureller Regeln
+- Die konkrete Marketplace- / Plugin-Installations-UX von Claude Code (wird von Claude Code selbst verantwortet, nicht von diesem Repository)
 
 ## Anforderungen
 
@@ -26,16 +26,36 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - **MUSS [MUST]** eine `description` schreiben, die konkrete Nutzer-Trigger benennt statt abstrakter Fähigkeiten, damit Claude zuverlässig über den Aufruf entscheiden kann
 - **MUSS [MUST]** Anweisungen innerhalb von `SKILL.md` aus Token-Effizienzgründen auf Englisch halten; der Skill darf Claude weiterhin anweisen, dem Nutzer in dessen Sprache zu antworten
 - **MUSS [MUST]** in sich geschlossen sein — unterstützende Artefakte (Templates, Referenzen, Beispiele) liegen innerhalb des Skill-Ordners
+- **KANN [MAY]** ein optionales `tags`-Feld im YAML-Frontmatter enthalten: eine Liste von kleingeschriebenen ASCII-Kebab-Case-Strings, jeder ≤30 Zeichen, mit höchstens 5 Einträgen; Tags liefern thematische Gruppierung, damit Katalog (`skill-agent-catalog`) und Peer-Cluster-Abgleich (`skill-vs-agent` §Portfolio-weite Konsistenz) nach Thema durchstöbert werden können
+
+### Tag-Vokabular
+- **SOLLTE [SHOULD]** einen Begriff aus dem Starter-Vokabular unten bevorzugen, wenn einer passt, damit Artefakte desselben funktionalen Clusters denselben Tag-String teilen
+- **KANN [MAY]** einen neuen Tag einführen, der der obigen Normalisierungsregel folgt, wenn kein Starter-Begriff passt; Wildwuchs vermeiden, indem bei vertretbarer Passung ein bestehender Tag wiederverwendet wird
+
+Starter-Vokabular:
+- `pull-request` — PR-Autoring, Labeling, Landen
+- `review` — Spec-, Skill-, Agent- oder PR-Level-Review
+- `audit` — Drift-, Compliance-, Vokabular-, Dependency-Audits
+- `scaffolding` — Projektstruktur, Katalog-Verdrahtung, Skill-/Agent-Scaffolding
+- `prose` — Vale-Style-Kuratierung, Schreibhilfe, Dokumentations-Prosa
+- `audience` — Audience-Identifikation und daraus folgende Doku-Gestaltung
+- `release` — Release-Automation, Changelogs, Versionierung
+- `quality-gate` — Lint, Typecheck, Test
+- `dependency` — CVE-Scans, Lizenz-Compliance, Lockfile-Hygiene
 
 ### Quell-Ablageort (Repository claude-shared)
-- **MUSS [MUST]** im Quellbaum von claude-shared unter `skills/<name>/` liegen, damit er kopiert, symlinkt oder für die Verteilung in ein Plugin gebündelt werden kann
+- **MUSS [MUST]** im Quellbaum von claude-shared unter `skills/<name>/` liegen
+- **MUSS [MUST]** als Bestandteil des `nolte-shared`-Claude-Code-Plugins ausgeliefert werden, das über `.claude-plugin/plugin.json` und `.claude-plugin/marketplace.json` in diesem Repository deklariert ist; kein Skill in diesem Repository existiert außerhalb des Plugin-Scopes
 
-### Laufzeit-Ablageort (konsumierendes Projekt)
-- **MUSS [MUST]** von Claude Code aus einem der Standard-Orte ladbar sein:
-  - `.claude/skills/<name>/` — projektbezogene Installation
-  - `~/.claude/skills/<name>/` — benutzerbezogene Installation
-  - der dafür vorgesehene Skills-Pfad eines Plugins, wenn er als Teil eines Plugins ausgeliefert wird
-- **DARF NICHT [MUST NOT]** einen bestimmten Installationsort voraussetzen; alle internen Pfade bleiben relativ zum Skill-Ordner und funktionieren an jedem der genannten Orte
+### Verteilung
+- **MUSS [MUST]** konsumierende Projekte ausschließlich über den Claude-Code-Plugin-Mechanismus erreichen — das Plugin wird über den Marketplace-Eintrag installiert, und Claude Code findet den Skill aus dem `skills/<name>/`-Pfad des Plugins heraus
+- **DARF NICHT [MUST NOT]** durch Kopieren in das `.claude/skills/<name>/`-Verzeichnis eines konsumierenden Projekts, durch Symlink, durch Vendoring oder auf irgendeinem anderen Out-of-Band-Pfad verteilt werden; solche Kopien driften gegenüber der Quelle und untergraben den Sinn eines geteilten Plugins
+- **DARF NICHT [MUST NOT]** die Plugin-Version in `.claude-plugin/plugin.json` oder im zugehörigen Marketplace-Eintrag manuell als Teil eines PRs erhöhen, der einen Skill hinzufügt, umbenennt, entfernt oder seinen Vertrag wesentlich ändert; die Version wird vom veröffentlichten GitHub-Release-Tag abgeleitet und ausschließlich durch den Release-Workflow auf dem Default-Branch aktualisiert — siehe `release-automation` §Abgleich versionstragender Dateien für den Mechanismus (einschließlich des Fallback Paths, bei dem ein Maintainer einen dedizierten `chore(release): <tag>`-PR eröffnet)
+- **DARF [MAY]** in einem konsumierenden Projekt neben projektlokalen Skills unter dessen eigenem `.claude/skills/` koexistieren; solche projektlokalen Skills liegen außerhalb des Scopes dieser Spec und **DÜRFEN NICHT [MUST NOT]** einen Namen wiederverwenden, der bereits im `nolte-shared`-Plugin belegt ist
+
+### Laufzeit-Auffindbarkeit (konsumierendes Projekt)
+- **MUSS [MUST]** von Claude Code aus dem Plugin-Skills-Pfad geladen werden, sobald das Plugin installiert ist; der Skill erscheint dem Nutzer als `nolte-shared:<name>`
+- **DARF NICHT [MUST NOT]** irgendeinen spezifischen absoluten oder projekt-relativen Laufzeit-Pfad voraussetzen; alle internen Pfade bleiben relativ zum Skill-Ordner und funktionieren überall dort, wo Claude Code das Plugin entpackt oder einbindet
 
 ### Empfehlungen
 - **SOLLTE [SHOULD]** einen Abschnitt „Hard rules" enthalten, der Invarianten auflistet, die niemals gebrochen werden dürfen
@@ -46,13 +66,17 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 
 ## Akzeptanzkriterien
 - [ ] Quellordner existiert unter `skills/<name>/` in claude-shared mit `<name>` in ASCII-Kebab-Case
-- [ ] Skill kann in einem konsumierenden Projekt nach `.claude/skills/<name>/` (oder `~/.claude/skills/<name>/`) ausgebracht werden und wird von Claude Code von dort geladen
+- [ ] Repository enthält eine gültige `.claude-plugin/plugin.json` und `.claude-plugin/marketplace.json`, die diesen Skill als Teil des `nolte-shared`-Plugins bereitstellen
+- [ ] Skill ist in einem konsumierenden Projekt allein durch Installation des `nolte-shared`-Plugins aus dem Marketplace auffindbar — kein manuelles Kopieren oder Symlinken nach `.claude/skills/` ist nötig oder zulässig
+- [ ] Die Plugin-Version in `.claude-plugin/plugin.json` entspricht dem zuletzt veröffentlichten GitHub-Release-Tag (gepflegt gemäß `release-automation` §Abgleich versionstragender Dateien, nicht durch Skill-Änderungs-PRs); kein Diff am `version`-Feld erscheint in einem PR, dessen alleiniger Zweck das Hinzufügen, Umbenennen oder Entfernen eines Skills ist
 - [ ] `SKILL.md` parst mit gültigem YAML-Frontmatter, das `name` und `description` enthält
 - [ ] `name` im Frontmatter entspricht dem Ordnernamen
 - [ ] `description` nennt die konkreten Nutzer-Formulierungen, die den Skill auslösen sollen
-- [ ] Skill funktioniert in einem nachgelagerten Projekt, das keinen claude-shared-spezifischen Kontext enthält
+- [ ] Falls `tags` im Frontmatter deklariert ist, ist jeder Eintrag ein kleingeschriebener ASCII-Kebab-Case-String ≤30 Zeichen, und die Liste enthält höchstens 5 Einträge
+- [ ] Skill funktioniert in einem nachgelagerten Projekt, das keinen claude-shared-spezifischen Kontext enthält, geladen über das Plugin
 - [ ] Keine hartkodierten absoluten Pfade; alle internen Pfade sind relativ zum Skill-Ordner oder zum Projekt, auf dem der Skill operiert
 - [ ] Falls der Skill Dateien schreibt, sind Zielorte und Vorbedingungen dokumentiert
+- [ ] Das Review eines einzelnen Skills gegen diese Spec folgt `spec/claude/skill-review/`; die Review-Ausgabe entspricht `spec/claude/review-plan/` und liegt unter `.audits/skill-review/<name>.md`
 
 ## Offene Fragen
 - Soll der Ordnername verpflichtend einem etwaigen nutzerseitigen Slash-Command-Namen entsprechen, oder dürfen sie abweichen?

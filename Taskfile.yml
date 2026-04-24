@@ -15,6 +15,28 @@ tasks:
       - task -l
     silent: true
 
+  lint:
+    desc: Run pre-commit across all files
+    cmds:
+      - pre-commit run --all-files
+
+  lint:prose:
+    desc: Run Vale prose linter across English-language Markdown
+    cmds:
+      - vale sync
+      - vale --minAlertLevel=error README.md docs/en/ $(find spec -name 'en.md')
+
+  test:
+    desc: Run the test suite (placeholder — no runtime tests yet)
+    cmds:
+      - echo "no tests yet"
+    silent: true
+
+  docs:
+    desc: Build the MkDocs site
+    cmds:
+      - mkdocs build --strict
+
   plugin:reload:
     desc: Start Claude Code with this repo loaded as a plugin (dogfooding)
     cmds:

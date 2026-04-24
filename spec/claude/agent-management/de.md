@@ -29,6 +29,22 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - **MUSS [MUST]** im Markdown-Körper einen System-Prompt enthalten, der den Agent auf genau eine Verantwortlichkeit eingrenzt und die erwartete Ausgabeform benennt
 - **MUSS [MUST]** Frontmatter- und System-Prompt-Inhalte aus Token-Effizienzgründen auf Englisch halten; der Agent darf dennoch angewiesen werden, dem Nutzer in dessen Sprache zu antworten
 - **MUSS [MUST]** in sich geschlossen sein — unterstützende Artefakte (Referenzen, Beispiele, Prompt-Bausteine) liegen neben der Agent-Datei in einem Schwester-Ordner `agents/<name>/` und werden über relative Pfade referenziert
+- **KANN [MAY]** ein optionales `tags`-Feld im YAML-Frontmatter enthalten: eine Liste von kleingeschriebenen ASCII-Kebab-Case-Strings, jeder ≤30 Zeichen, mit höchstens 5 Einträgen; Tags liefern thematische Gruppierung, damit Katalog (`skill-agent-catalog`) und Peer-Cluster-Abgleich (`skill-vs-agent` §Portfolio-weite Konsistenz) nach Thema durchstöbert werden können
+
+### Tag-Vokabular
+- **SOLLTE [SHOULD]** einen Begriff aus dem Starter-Vokabular unten bevorzugen, wenn einer passt, damit Artefakte desselben funktionalen Clusters denselben Tag-String teilen
+- **KANN [MAY]** einen neuen Tag einführen, der der obigen Normalisierungsregel folgt, wenn kein Starter-Begriff passt; Wildwuchs vermeiden, indem bei vertretbarer Passung ein bestehender Tag wiederverwendet wird
+
+Starter-Vokabular:
+- `pull-request` — PR-Autoring, Labeling, Landen
+- `review` — Spec-, Skill-, Agent- oder PR-Level-Review
+- `audit` — Drift-, Compliance-, Vokabular-, Dependency-Audits
+- `scaffolding` — Projektstruktur, Katalog-Verdrahtung, Skill-/Agent-Scaffolding
+- `prose` — Vale-Style-Kuratierung, Schreibhilfe, Dokumentations-Prosa
+- `audience` — Audience-Identifikation und daraus folgende Doku-Gestaltung
+- `release` — Release-Automation, Changelogs, Versionierung
+- `quality-gate` — Lint, Typecheck, Test
+- `dependency` — CVE-Scans, Lizenz-Compliance, Lockfile-Hygiene
 
 ### Distribution
 Ein Agent wird für genau eine von zwei Auslieferungsformen angelegt. Die Wahl wird vorab getroffen und im Feld `distribution` festgehalten:
@@ -73,6 +89,7 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 - [ ] Frontmatter parst als gültiges YAML und enthält mindestens `name`, `description` und `distribution`
 - [ ] `name` im Frontmatter entspricht dem Dateinamen ohne `.md`
 - [ ] `description` benennt konkrete Trigger, die der aufrufende Claude mit Nutzeranfragen abgleichen kann
+- [ ] Falls `tags` im Frontmatter deklariert ist, ist jeder Eintrag ein kleingeschriebener ASCII-Kebab-Case-String ≤30 Zeichen, und die Liste enthält höchstens 5 Einträge
 - [ ] `distribution` ist exakt `plugin` oder `project` — kein anderer Wert, kein fehlendes Feld
 - [ ] Bei `distribution: plugin` ist der Agent in einem Projekt, in dem das enthaltende Plugin installiert ist, über `subagent_type: <name>` dispatchbar, ohne dass die Datei manuell kopiert werden muss
 - [ ] Bei `distribution: project` ist der Agent nach Ausbringung nach `.claude/agents/<name>.md` oder `~/.claude/agents/<name>.md` über `subagent_type: <name>` dispatchbar, ohne dass ein Plugin erforderlich ist
@@ -81,6 +98,7 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 - [ ] Agent funktioniert, wenn er in einem nachgelagerten Projekt aufgerufen wird, das keinen claude-shared-spezifischen Kontext enthält
 - [ ] Keine hartkodierten absoluten Pfade; alle internen Referenzen sind relativ zur Agent-Datei oder zum Projekt, auf dem sie operiert
 - [ ] Schreibt der Agent Dateien oder verursacht Seiteneffekte, sind Ziele und Vorbedingungen im System-Prompt dokumentiert
+- [ ] Das Review eines einzelnen Agents gegen diese Spec folgt `spec/claude/agent-review/`; die Review-Ausgabe entspricht `spec/claude/review-plan/` und liegt unter `.audits/agent-review/<name>.md`
 
 ## Offene Fragen
 - Soll der Dateiname (und damit `name`) exakt dem `subagent_type`-String entsprechen, oder ist eine Mapping-Schicht erlaubt?

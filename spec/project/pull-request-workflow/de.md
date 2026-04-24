@@ -10,6 +10,9 @@ Pull Requests (PRs, entsprechen GitLab Merge Requests / MRs) sind der einzige We
 - Kein PR erreicht `develop`, solange nicht jeder erforderliche CI-Check Erfolg gemeldet hat
 - Rahmenbedingungen (Branch-Benennung, Ziel-Branch, Titelform) sind vollständig als Code deklariert und über Branch-Protection erzwingbar
 - Menschen und KI-Agenten, die PRs gegen diese Repositories erstellen, erzeugen Artefakte, die ohne repo-spezifisches Onboarding demselben Standard entsprechen
+- Autor:innen und KI-Agenten fangen Prosa-, Format- und YAML-Fehler lokal ab, bevor sie pushen, damit CI-Rückkopplung echten Logikfehlern vorbehalten bleibt, die nur die CI überhaupt zeigen kann
+- Rote erforderliche Checks werden per fix-forward auf derselben Branch behoben; das erhält den Review-Kontext und stellt sicher, dass Automerge ausschließlich auf den aktuellen Head-Commit reagiert
+- Automerge-Auslösung ist explizit (Label + nicht Draft), damit Mensch und Automatisierung sich einig sind, wann ein PR merge-bereit ist
 
 ## Nicht-Ziele
 - Ziel-Branch-Policy und Release-Flow (abgedeckt durch das Branching-Modell-Spec)
@@ -22,10 +25,16 @@ Pull Requests (PRs, entsprechen GitLab Merge Requests / MRs) sind der einzige We
 
 ### PR-Rahmenbedingungen
 - **MUSS [MUST]** `develop` als Basis-Branch adressieren
-- **MUSS [MUST]** aus einem Branch stammen, dessen Name mit einem der Präfixe `feat/`, `fix/`, `chore/` oder `docs/` beginnt (wie im Branching-Modell-Spec festgelegt)
-- **MUSS [MUST]** einen PR-Titel in Conventional-Commits-Form `<type>(<scope>)?: <summary>` verwenden, wobei `<type>` wortgleich dem Branch-Präfix entspricht (Präfix `feat/` → Type `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`); eine Übersetzung oder Aliasbildung ist nicht zulässig
-- **MUSS [MUST]** einen einzelnen PR auf genau eine logische Änderung begrenzen; unzusammenhängende Änderungen werden in separate PRs aufgeteilt
+- **MUSS [MUST]** aus einem Branch stammen, dessen Name mit einem der Präfixe `feat/`, `fix/`, `chore/`, `docs/` oder `exp/` beginnt (wie im Branching-Modell-Spec festgelegt)
+- **MUSS [MUST]** einen PR-Titel in Conventional-Commits-Form `<type>(<scope>)?: <summary>` verwenden, wobei `<type>` wortgleich dem Branch-Präfix entspricht (Präfix `feat/` → Type `feat`, `fix/` → `fix`, `chore/` → `chore`, `docs/` → `docs`, `exp/` → `exp`); eine Übersetzung oder Aliasbildung ist nicht zulässig
+- **MUSS [MUST]** einen einzelnen PR auf genau eine logische Änderung begrenzen; unzusammenhängende Änderungen werden in separate PRs aufgeteilt — die einzige Ausnahme ist ein `exp/`-PR, der **DARF [MAY]** lose verwandte explorative Änderungen bündeln, die sich eine Iterations-Zeitspanne teilen, weil genau dies der Zweck des im Branching-Modell-Spec deklarierten experimentellen Branch-Typs ist
 - **SOLLTE [SHOULD]** mindestens ein verwandtes Issue via `Closes #<n>` oder `Refs #<n>` in der Beschreibung verlinken, wenn ein Tracking-Issue existiert
+
+### Aktualität des Branches
+- **MUSS [MUST]** sicherstellen, dass der Feature-Branch vor dem Öffnen des PRs jeden Commit des aktuellen `develop`-Tip enthält, damit der CI-Lauf den Zustand widerspiegelt, der nach dem Merge auf `develop` existieren wird; dies wird erreicht, indem `develop` in den Feature-Branch gemergt oder der Feature-Branch auf `develop` rebased wird
+- **MUSS [MUST]** den Feature-Branch erneut mit `develop` synchronisieren, sobald `develop` sich bewegt, während der PR offen ist — und zwar bevor der PR aus dem Draft-Zustand genommen oder Automerge zum Zug gelassen wird; ein PR, dessen Branch hinter `develop` zurückhängt, gilt nicht als merge-bereit
+- **MUSS [MUST]** die GitHub-Option „require branches to be up to date before merging" für `develop` in `.github/settings.yml` aktivieren (via `protection.required_status_checks.strict: true`, direkt oder via der `nolte/gh-plumbing`-Commons-Extension), sodass die Plattform diese Vorbedingung zusätzlich zum clientseitigen Workflow erzwingt
+- **DARF [MAY]** Rebase oder Merge für die Synchronisation verwenden; die Spec schreibt keine der beiden Varianten vor, aber die gewählte Operation **MUSS [MUST]** dazu führen, dass `develop` vor dem Öffnen oder erneuten Review-Request vollständig im Feature-Branch enthalten ist
 
 ### Struktur der PR-Beschreibung
 Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.md` existieren und **MUSS [MUST]** die folgenden Abschnitte in genau dieser Reihenfolge und mit genau diesen Überschriften enthalten:
@@ -45,7 +54,7 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 ### PR-Lint-Workflow
 - **MUSS [MUST]** einen Workflow unter `.github/workflows/` enthalten (z. B. `pr-lint.yml`), der PR-Titel und -Body auf den `pull_request`-Events `opened`, `edited`, `synchronize` und `ready_for_review` lintet
 - **MUSS [MUST]** den Job dieses Workflows als erforderlichen Status-Check für `develop` in `.github/settings.yml` registrieren
-- **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Titel nicht der Conventional-Commits-Form `<type>(<scope>)?: <summary>` mit `<type>` ∈ {`feat`, `fix`, `chore`, `docs`} entspricht
+- **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Titel nicht der Conventional-Commits-Form `<type>(<scope>)?: <summary>` mit `<type>` ∈ {`feat`, `fix`, `chore`, `docs`, `exp`} entspricht
 - **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Body nicht alle fünf erforderlichen Abschnittsüberschriften in der festgelegten Reihenfolge enthält
 - **MUSS [MUST]** den Check fehlschlagen lassen, wenn Summary, Changes oder Testing leer ist oder ausschließlich den Literaltext `None` enthält
 - **DARF NICHT [MUST NOT]** den Check fehlschlagen lassen, wenn der Body zusätzliche repo-spezifische Abschnitte enthält, die *nach* den fünf Pflichtabschnitten angehängt sind, solange die Pflichtabschnitte selbst vorhanden, in der richtigen Reihenfolge und an den geforderten Stellen nicht leer sind
@@ -54,7 +63,7 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 ### CI-Gate nach `develop`
 - **MUSS [MUST]** die vollständige Menge der erforderlichen Status-Checks für `develop` als Code in `.github/settings.yml` deklarieren (direkt oder via der `nolte/gh-plumbing`-Commons-Extension); das GitHub-UI ist **KEIN** akzeptabler Ort, um erforderliche Checks hinzuzufügen oder zu entfernen
 - **MUSS [MUST]** verlangen, dass jeder deklarierte Check Erfolg meldet, bevor ein PR nach `develop` gemergt werden kann
-- **MUSS [MUST]** den `automerge.yaml`-Workflow so konfigurieren, dass er einen PR nur dann mergt, wenn jeder erforderliche Check Erfolg meldet und der PR freigegeben ist
+- **MUSS [MUST]** den `automerge.yaml`-Workflow so konfigurieren, dass er einen PR nur dann mergt, wenn jeder erforderliche Status-Check auf dem Head-Commit des PRs Erfolg meldet und jede Review-bezogene Protection-Regel für `develop` (zum Beispiel `required_approving_review_count` oder Code-Owner-Reviews) erfüllt ist; der Workflow **DARF NICHT [MUST NOT]** eine Protection-Regel umgehen, und Repositories ohne Approval-Pflicht (`required_approving_review_count: 0`) mergen ebenfalls erst, wenn jeder erforderliche Status-Check auf dem Head-Commit grün ist
 - **MUSS [MUST]** `enforce_admins: true` für die `develop`-Branch-Protection setzen, damit Admin-Overrides keinen fehlschlagenden erforderlichen Check umgehen können; das CI-Gate hat keinen Ausnahmepfad, und eine Waiver-Regelung ist nicht zulässig — wenn ein erforderlicher Check dauerhaft defekt ist, ist die korrekte Abhilfe ein PR gegen `.github/settings.yml` (der selbst das Gate passiert), der den Check entfernt oder ersetzt, keine einmalige Umgehung
 - **SOLLTE [SHOULD]** den Merge blockieren, solange ein Review ausdrücklich Änderungen anfordert, auch nachdem die CI grün geworden ist
 
@@ -63,9 +72,32 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - **MUSS [MUST]** Squash-Merge als einzige aktivierte Merge-Option in `.github/settings.yml` für Repositories, die dieser Spec folgen, deklarieren: `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false`
 - **SOLLTE [SHOULD]** den PR-Titel als Default-Squash-Commit-Nachricht beibehalten, sodass die `develop`-Historie ein linearer Strom von Conventional-Commits-Nachrichten bleibt, den Release-Drafter direkt verarbeiten kann
 
+### Aufräumen der Branches nach dem Merge
+- **MUSS [MUST]** `delete_branch_on_merge: true` in `.github/settings.yml` setzen — direkt oder via der `nolte/gh-plumbing`-Commons-Extension — damit GitHub den Feature-Branch auf der Remote löscht, sobald der zugehörige PR nach `develop` gemergt wurde; gemergte Branches **DÜRFEN NICHT [MUST NOT]** auf der Remote verbleiben
+- **SOLLTE [SHOULD]** auf die Platform-Einstellung statt auf clientseitige `--delete-branch`-Flags bei `gh pr merge` setzen; wenn der Automerge den Merge ausführt, greift nur die Platform-Einstellung, also ist sie der verbindliche Weg
+- **DARF [MAY]** verbleibende Remote-Branches manuell via `gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<branch>` entfernen, wenn die Platform-Einstellung erst nachträglich aktiviert wurde und historische Branches übrig sind — das ist ein einmaliger Nachholvorgang, kein Routinebetrieb
+
 ### Draft- und Work-in-Progress-PRs
 - **SOLLTE [SHOULD]** PRs während laufender Arbeit als Draft öffnen und erst dann als bereit für Review markieren, wenn die CI voraussichtlich grün wird und die Beschreibung vollständig ist
 - **DARF NICHT [MUST NOT]** einen PR als bereit für Review markieren, wenn ein erforderlicher Beschreibungsabschnitt entgegen den obigen Regeln fehlt oder leer ist
+
+### Vor-dem-Push-Prüfung
+- **MUSS [MUST]** das lokale Lint-Target des Repositories (`task lint`) auf dem Feature-Branch ausführen, bevor ein neuer Commit auf eine PR-Branch gepusht wird, sofern das Repository ein `Taskfile.yml` mit `lint`-Target **oder** eine `.pre-commit-config.yaml` bereitstellt; der CI-`lint`-Check ist ein Rückfallnetz, nicht der primäre Ort zum Entdecken von Prosa-, YAML- oder Format-Fehlern
+- **SOLLTE [SHOULD]** auch ohne Taskfile-`lint`-Target und ohne pre-commit-Konfiguration vor jedem Push das äquivalente Lint-Werkzeug des Repositories lokal ausführen
+- **MUSS [MUST]** jeden lokalen Lint-Fehler beheben, bevor gepusht wird; einen bekannt fehlschlagenden Commit bewusst zu pushen und die CI als Meldekanal zu nutzen, ist ein Spec-Verstoß
+
+### Fix-forward bei roten Checks
+- **MUSS [MUST]** einen roten erforderlichen Status-Check durch einen neuen Commit auf dieselbe Branch beheben; das nachträgliche Amenden eines bereits gepushten Commits (`git commit --amend` nach dem Push) ist nicht zulässig, weil es den Review-Kontext zerstört und Kommentar-Anker bricht
+- **DARF NICHT [MUST NOT]** `git push --force` oder `git push --force-with-lease` auf einer Branch nutzen, die über einen offenen Nicht-Draft-PR sichtbar ist, außer der Force-Push ist expliziter Teil eines Rebase auf den fortgeschrittenen `develop`-Kopf (wie in §Aktualität des Branches gefordert) und der/die Autor:in dokumentiert den Rebase in einem PR-Kommentar
+- **MUSS [MUST]** den PR auf Draft zurücksetzen (bzw. im Draft belassen), solange ein erforderlicher Check rot ist oder ein Fix unterwegs ist; der PR wird erst wieder aus dem Draft genommen, wenn die erforderlichen Checks auf dem Head-Commit grün sind und der Body weiterhin §Struktur der PR-Beschreibung erfüllt
+- **DARF NICHT [MUST NOT]** einen Merge (Anhängen des `automerge`-Labels oder manuelles `gh pr merge`) auf Basis eines Status auslösen, der nicht mehr den aktuellen Head-Commit widerspiegelt; das Grün-Signal muss vom jüngsten Commit der Branch stammen
+
+### Automerge-Auslösungsprotokoll
+- **MUSS [MUST]** den Automerge durch Anhängen des Repository-Labels `automerge` am PR auslösen; der `automerge.yaml`-Workflow wird über dieses Label durch den reusable Workflow aus `nolte/gh-plumbing` getrieben und greift nicht auf ungelabelten PRs
+- **MUSS [MUST]** den PR als ready-for-review markieren (nicht mehr Draft), bevor das Label angeheftet wird bzw. bevor die Action einen Merge durchführen soll; der reusable Automerge-Workflow ignoriert Draft-PRs by design
+- **MUSS [MUST]** sicherstellen, dass jeder erforderliche Status-Check auf dem Head-Commit grün ist, bevor das Label angeheftet wird; wird das Label auf einem roten oder pending-Head gesetzt, verbleibt der PR in der Automerge-Warteschlange ohne Fortschritt und wirkt irreführend auf Reviewer
+- **SOLLTE [SHOULD]** das `automerge`-Label entfernen, wenn der/die Autor:in den Auto-Merge pausieren möchte (zum Beispiel um auf zusätzlichen Review zu warten), und es erneut anhängen, sobald wieder merge-bereit — statt das Label an einem PR zu belassen, der nicht mehr automatisch mergen soll
+- **DARF [MAY]** manuelles `gh pr merge --squash` statt des Label-getriebenen Automerge-Workflows nutzen, wenn die Repository-Policy dem/der Maintainer:in direktes Mergen erlaubt; die Merge-Strategie (§Merge-Strategie) gilt weiterhin
 
 ## Akzeptanzkriterien
 - [ ] `.github/pull_request_template.md` existiert, und seine Abschnittsüberschriften stimmen in Reihenfolge und Wortlaut mit den fünf Überschriften in „Struktur der PR-Beschreibung" überein
@@ -73,11 +105,18 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - [ ] `enforce_admins` ist für die Branch-Protection-Regel von `develop` auf `true` gesetzt; es existiert keine Waiver-Regelung im Repository
 - [ ] Für die letzten 10 nach `develop` gemergten PRs war jeder erforderliche Status-Check zum Merge-Zeitpunkt grün (Stichprobe via `gh pr list --state merged --base develop --limit 10 --json number,title,mergedAt,statusCheckRollup`)
 - [ ] Für dieselben 10 PRs entsprechen die Titel der Conventional-Commits-Form, und `type` entspricht dem Branch-Präfix
-- [ ] Die Quell-Branches derselben 10 PRs verwendeten eines der Präfixe `feat/`, `fix/`, `chore/`, `docs/`, und der Type im PR-Titel entsprach dem Präfix wortgleich
+- [ ] Die Quell-Branches derselben 10 PRs verwendeten eines der Präfixe `feat/`, `fix/`, `chore/`, `docs/`, `exp/`, und der Type im PR-Titel entsprach dem Präfix wortgleich
 - [ ] Eine Stichprobe aktueller PR-Bodies zeigt alle fünf erforderlichen Abschnitte; nur Linked issues und Risk / rollout notes dürfen den Literaltext `None` enthalten; etwaige repo-spezifische Abschnitte erscheinen *nach* den fünf Pflichtabschnitten, niemals dazwischen
 - [ ] `.github/workflows/pr-lint.yml` (oder ein gleichwertig benannter Workflow) existiert, und sein Job ist in `.github/settings.yml` als erforderlicher Status-Check für `develop` deklariert
 - [ ] `.github/settings.yml` setzt `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` für das Repository
 - [ ] Die letzten 10 First-Parent-Commits auf `develop` (via `git log --first-parent develop -n 10`) entsprechen je genau einem squash-gemergten PR und tragen eine Conventional-Commits-konforme Nachricht
+- [ ] `.github/settings.yml` setzt `required_status_checks.strict: true` für die Branch-Protection von `develop` (direkt oder via der `nolte/gh-plumbing`-Commons-Extension), sodass GitHub die Branch-Up-to-date-Vorbedingung erzwingt
+- [ ] Für die letzten 10 nach `develop` gemergten PRs wurde kein PR aus dem Draft geholt, während ein erforderlicher Status-Check auf dem Head-Commit rot oder pending war (Stichprobe über die PR-Timeline-Events)
+- [ ] Für dieselben 10 PRs war das `automerge`-Label nur auf PRs vorhanden, die bereits als ready-for-review markiert waren; das Label verblieb nicht auf PRs, die später aus dem Auto-Merge zurückgezogen wurden
+- [ ] Für dieselben 10 PRs erscheint zwischen Verlassen des Draft-Status und Merge kein Force-Push im Branch-Verlauf (Stichprobe via `gh api repos/<owner>/<repo>/pulls/<number>/commits` — keine umgeschriebenen Commits, nachdem der PR als ready-for-review markiert wurde)
+- [ ] In Repositories mit `Taskfile.yml`-`lint`-Target oder `.pre-commit-config.yaml` zeigt eine Stichprobe aktueller PRs, dass der erste Push des gemergten Head-Commits keine CI-`lint`-Regression eingeführt hat, die lokales Tooling abgefangen hätte
+- [ ] Der `automerge.yaml`-Workflow ist so konfiguriert, dass der reusable Automerge-Workflow nur mergt, wenn jeder erforderliche Status-Check auf dem Head-Commit grün ist und jede Review-bezogene Branch-Protection-Regel für `develop` erfüllt ist — unabhängig davon, ob `required_approving_review_count` 0 oder höher ist
+- [ ] `.github/settings.yml` setzt `delete_branch_on_merge: true` für das Repository (direkt oder via der `nolte/gh-plumbing`-Commons-Extension), und eine Stichprobe via `git branch -r` zeigt keine gemergten PR-Feature-Branches, die über das Automations-Fenster hinaus auf der Remote verbleiben
 
 ## Offene Fragen
 - _Keine aktuell; alle Fragen aus der Entwurfsphase sind geklärt._

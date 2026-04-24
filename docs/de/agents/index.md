@@ -1,9 +1,20 @@
 # Agents
 
-Agents sind spezialisierte Sub-Agents mit fokussiertem Tool-Zugriff und System-Prompt. Claude ruft sie über das `Agent`-Tool mit `subagent_type: <name>` auf. Im Quellbaum von `claude-shared` sollen sie unter `agents/<name>.md` liegen, zur Laufzeit unter `.claude/agents/<name>.md` oder `~/.claude/agents/<name>.md` — oder als Teil des `nolte-shared`-Plugins.
+Agents sind spezialisierte Sub-Agents mit fokussiertem Tool-Zugriff und System-Prompt. Claude ruft sie über das `Agent`-Tool mit `subagent_type: <name>` auf. Im Quellbaum von `claude-shared` liegen sie unter `agents/<name>.md`, zur Laufzeit unter `.claude/agents/<name>.md` oder `~/.claude/agents/<name>.md` — oder als Teil des `nolte-shared`-Plugins.
 
-!!! note "Status"
-    Zum aktuellen Zeitpunkt enthält das Repository **noch keine** gepflegten Agent-Definitionen. Die Spezifikation ([Agent-Autorenschaft](../specs/agent-management.md)) ist aber fertig, sodass neue Agents direkt gegen die Regeln gebaut werden können.
+## Enthaltene Agents
+
+| Agent | Zweck |
+|-------|-------|
+| `claude-plugin-developer` | Entwirft spec-konforme Plugin-Skills und -Agents für `nolte-shared` |
+| `audience-doc-author` | Erzeugt oder überarbeitet zielgruppengetriebene Dokumentation gegen ein vorhandenes Audience-Artefakt |
+| `audience-review` | Reviewt Audience-Artefakte aus `audience-identify` (nur lesend) |
+| `spec-readiness-reviewer` | Prüft Specs auf Widersprüche, Audience-Fit und Requirement-vs-Acceptance-Vollständigkeit |
+| `docs-freshness-checker` | Auditiert MkDocs-Dokumentation auf Sprach-Parität, tote Links, stale Pfadverweise, ADR-Hygiene |
+| `prose-vale-curator` | Pflegt Prosa Vale-konform, ohne technische Aussagen zu verändern |
+| `png-to-transparent-svg` | Wandelt PNGs mit eingebranntem Karomuster in SVGs mit echter Alpha-Transparenz |
+
+Alle Agents folgen derselben Spezifikation ([Agent-Autorenschaft](../specs/agent-management.md)). Kanonische Quelle pro Agent: `agents/<name>.md` im Quellbaum.
 
 ## Form eines Agents
 

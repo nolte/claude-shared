@@ -1,9 +1,20 @@
 # Agents
 
-Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the claude-shared source tree they will live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md` — or bundled inside the `nolte-shared` plugin.
+Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the claude-shared source tree they live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, or bundled inside the `nolte-shared` plugin.
 
-!!! note "Status"
-    At the moment this repository contains **no** maintained agent definitions yet. The specification ([Agent Authoring](../specs/agent-management.md)) is ready though, so new agents can be built straight against the rules.
+## Bundled agents
+
+| Agent | Purpose |
+|-------|---------|
+| `claude-plugin-developer` | Drafts spec-conforming plugin skills and agents for `nolte-shared` |
+| `audience-doc-author` | Drafts or refines audience-driven documentation against an existing audience artifact |
+| `audience-review` | Reviews audience artifacts produced by `audience-identify` (read-only) |
+| `spec-readiness-reviewer` | Audits specs for contradictions, audience fit, and Requirement-vs-Acceptance completeness |
+| `docs-freshness-checker` | Audits MkDocs documentation for language parity, dead links, stale path references, ADR hygiene |
+| `prose-vale-curator` | Curates prose to pass Vale without altering technical claims |
+| `png-to-transparent-svg` | Converts a PNG image with baked-in checkerboard transparency into an SVG file with real alpha |
+
+All agents follow the same specification ([Agent Authoring](../specs/agent-management.md)). Canonical source per agent: `agents/<name>.md` in the source tree.
 
 ## Agent anatomy
 
@@ -12,7 +23,7 @@ An agent is a single Markdown file with YAML frontmatter and a system prompt in 
 ```markdown
 ---
 name: <kebab-case-name>
-description: Concrete triggers ("use when …") — not abstract capabilities.
+description: Concrete triggers ("use when …"): not abstract capabilities.
 tools: [Read, Grep, Glob]   # optional, principle of least authority
 model: sonnet               # optional
 ---

@@ -22,10 +22,10 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 ## Anforderungen
 
 ### Top-Level-Dateien
-- **MUSS [MUST]** eine `README.md` im Repository-Wurzelverzeichnis enthalten mit Projektvorstellung, Feature-Übersicht, Quickstart und Verweisen auf die vollständige Dokumentation
+- **MUSS [MUST]** eine `README.md` im Repository-Wurzelverzeichnis enthalten mit Projektvorstellung, Feature-Übersicht, Quickstart und Verweisen auf die vollständige Dokumentation; die innere Struktur dieser Datei (Pflicht-Abschnitte, Reihenfolge, Badges, Cross-Repository-Links) wird von der `readme-structure`-Spec geregelt
 - **MUSS [MUST]** eine `.gitignore` enthalten
 - **MUSS [MUST]** eine `CLAUDE.md` enthalten, die KI-gestützte Entwicklungs­konventionen, Architektur-Hinweise und Kommando-Einstiegspunkte des Repositories dokumentiert
-- **MUSS [MUST]** eine `renovate.json5` (bevorzugt) oder `renovate.json` für automatisierte Abhängigkeits-Updates enthalten
+- **MUSS [MUST]** eine `renovate.json5` (bevorzugt) oder `renovate.json` enthalten, die das portfolioweite Preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>` erweitert — an einen Release-Tag gepinnt (zum Beispiel `#v1.1.12`) —, damit die Renovate-Konfiguration portfolio­übergreifend konsistent bleibt; per-Repository-Überschreibungen **SOLLTEN [SHOULD]** schmal gehalten werden (typischerweise Package-Gruppierungen oder Automerge-Regeln)
 - **MUSS [MUST]** eine `.pre-commit-config.yaml` enthalten, die für den Stack relevante Linter und Formatter fixiert
 - **SOLLTE [SHOULD]** eine `LICENSE`-Datei im Wurzelverzeichnis enthalten, wenn das Repository veröffentlicht oder zur Weiterverbreitung gedacht ist
 
@@ -38,6 +38,14 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - **MUSS [MUST]** eine `Taskfile.yml` (oder `Taskfile.yaml`) im Repository-Wurzelverzeichnis enthalten, die reproduzierbare Kommandos mindestens für Test-, Lint- und Docs-Ziele bereitstellt
 - **SOLLTE [SHOULD]** Lint-, Test- und Docs-Kommandos in der CI über Taskfile-Targets aufrufen, damit lokales Verhalten und CI-Verhalten identisch bleiben
 - **SOLLTE [SHOULD]** CI-Status-Badges für die primären Workflows in der `README.md` anzeigen
+
+### Release- und Dokumentations-Workflows
+Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Release-Management und Dokumentations-Auslieferung. Die `branching-model`-Spec listet die Release-Management-Workflows vollständig auf und macht drei davon verpflichtend. Diese Spec hebt zusätzlich die Dokumentations- und Packaging-Begleiter hervor, damit ein Projektstruktur-Audit sie auch dann erkennt, wenn die branching-model-Spec isoliert betrachtet wird.
+
+- **MUSS [MUST]** die Release-Management-Workflows enthalten, die die `branching-model`-Spec vorschreibt: `.github/workflows/release-drafter.yml`, `.github/workflows/release-cd-refresh-master.yml` und `.github/workflows/automerge.yaml`, jeweils verkabelt mit dem entsprechenden wiederverwendbaren Workflow unter `nolte/gh-plumbing/.github/workflows/`
+- **SOLLTE [SHOULD]** `.github/workflows/release-cd-deliver-docs.yml` enthalten — getriggert auf `release: [published]` und aufrufend `nolte/gh-plumbing/.github/workflows/reusable-mkdocs.yaml` —, sobald `mkdocs.yml` vorhanden ist, damit die Dokumentation mit jedem Release neu veröffentlicht wird
+- **KANN [MAY]** einen repository-spezifischen Packaging-Workflow enthalten (zum Beispiel eine `release.yml`, die `manifest.json` patcht, ein ZIP baut und via `gh release upload` hochlädt), getriggert auf `release: [published]`, wenn das Repository ein Auslieferungs-Artefakt wie eine HACS-Integration verschifft
+- **SOLLTE [SHOULD]** jede Referenz auf einen wiederverwendbaren Workflow an einen Tag pinnen (zum Beispiel `@v1.1.12`) statt an einen beweglichen Branch, damit das Release-Pipeline-Verhalten reproduzierbar bleibt
 
 ### GitHub-Repository-Konfiguration
 - **MUSS [MUST]** GitHub-Repository-Einstellungen — Topics, Beschreibung, Homepage, Branch-Protection, Labels, Mitarbeitende und Merge-Button-Optionen — als Code über `.github/settings.yml` verwalten, konsumiert von der [Probot-Settings-App](https://probot.github.io/apps/settings/)
@@ -69,6 +77,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
   - `src/` für eine Einzweck-Bibliothek oder einen Einzweck-Dienst
   - `src/<component>/` je Teilprojekt in einem mehrteiligen Repository (zum Beispiel `src/backend/`, `src/frontend/`, `src/knowledge-service/`)
   - `custom_components/<name>/` für eine Home-Assistant-Custom-Integration
+  - `.claude-plugin/` zusammen mit `skills/<name>/` (und optional `agents/<name>.md`) für ein Claude-Code-Plugin-Repository, bei dem Prompt- und Skill-Inhalte das primäre Lieferobjekt sind und kein Runtime-Quellcode existiert
 - **MUSS NICHT [MUST NOT]** primäre Quellcode-Dateien lose im Repository-Wurzelverzeichnis halten; dort dürfen nur Tooling-Konfigurationen, Metadaten und kleine Skripte liegen
 - **KANN [MAY]** einen `scripts/`- und/oder `tools/`-Ordner für repository-lokale Automatisierungs-Helfer enthalten
 
@@ -89,8 +98,12 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 
 ## Akzeptanzkriterien
 - [ ] `README.md`, `.gitignore`, `CLAUDE.md`, `renovate.json5` (oder `renovate.json`) und `.pre-commit-config.yaml` existieren im Repository-Wurzelverzeichnis
+- [ ] `renovate.json5` (oder `renovate.json`) erweitert `github>nolte/gh-plumbing//renovate-configs/common#<tag>`, gepinnt an einen Release-Tag und nicht an einen beweglichen Branch
 - [ ] `.claude/` existiert und enthält mindestens eines von `agents/`, `skills/`, `commands/` oder einer `settings*.json`-Datei
 - [ ] `.github/workflows/` enthält mindestens eine Workflow-Datei
+- [ ] `.github/workflows/` enthält `release-drafter.yml`, `release-cd-refresh-master.yml` und `automerge.yaml`, jeweils verkabelt mit dem passenden wiederverwendbaren `nolte/gh-plumbing`-Workflow
+- [ ] Wenn `mkdocs.yml` vorhanden ist, existiert `.github/workflows/release-cd-deliver-docs.yml` und triggert auf `release: [published]`
+- [ ] Jede `uses: nolte/gh-plumbing/.github/workflows/...`-Referenz in `.github/workflows/` ist an einen Release-Tag gepinnt, nicht an einen beweglichen Branch
 - [ ] `.github/settings.yml` ist vorhanden und erweitert `nolte/gh-plumbing:.github/commons-settings.yml` (oder die gleichwertige Kurzform)
 - [ ] `.github/release-drafter.yml` ist vorhanden und erweitert `nolte/gh-plumbing:.github/commons-release-drafter.yml`
 - [ ] `.github/boring-cyborg.yml` und `.github/stale.yml` sind vorhanden und erweitern die jeweilige `nolte/gh-plumbing`-commons-Datei
@@ -98,7 +111,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - [ ] `docs/` und `mkdocs.yml` existieren und `mkdocs build` läuft fehlerfrei durch
 - [ ] `spec/` existiert im Repository-Wurzelverzeichnis
 - [ ] `tests/` existiert und enthält mindestens einen Test
-- [ ] Primärer Quellcode liegt unter `src/`, `src/<component>/` oder `custom_components/<name>/` — nicht lose im Wurzelverzeichnis
+- [ ] Primärer Quellcode liegt unter `src/`, `src/<component>/`, `custom_components/<name>/` oder `.claude-plugin/` + `skills/<name>/` — nicht lose im Wurzelverzeichnis
 - [ ] Wenn eine `.env.example` vorhanden ist, erscheint ein wörtlicher `.env`-Eintrag in der `.gitignore`
 - [ ] Wenn eine `hacs.json` vorhanden ist, existiert `custom_components/<domain>/` und stimmt mit der HA-Integrations-Domain überein
 - [ ] CI-Status-Badges für die primären Workflows erscheinen am oberen Rand der `README.md`
@@ -110,3 +123,4 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - Sollen Release-Artefakte (Changelogs, Release-Workflows, Versionierungs-Policy) von hier referenziert oder vollständig einer separaten Release-Prozess-Spec überlassen werden?
 - Soll mehrsprachige Dokumentation (`docs/<lang>/`) zum **SOLLTE [SHOULD]** werden, sobald eine zweite Sprache erscheint, oder **KANN [MAY]** bleiben?
 - Gibt es ein kanonisches Mindest-Set an Taskfile-Targets über Test/Lint/Docs hinaus (zum Beispiel `setup`, `ci`, `release`)?
+- Soll `tests/` für Claude-Code-Plugin-Repositories, die nur Prompt-/Skill-Inhalte ausliefern und keinen Runtime-Code enthalten, von **MUSS [MUST]** auf **SOLLTE [SHOULD]** abgeschwächt werden?

@@ -1,6 +1,6 @@
 # Installation
 
-`claude-shared` ist als einzelnes Claude-Code-Plugin namens **`nolte-shared`** gepackt. Das Plugin-Manifest liegt unter `.claude-plugin/plugin.json`, Skills unter `skills/<name>/`, Agents (sobald vorhanden) unter `agents/<name>.md`.
+`claude-shared` ist als einzelnes Claude-Code-Plugin namens **`nolte-shared`** gepackt. Das Plugin-Manifest liegt unter `.claude-plugin/plugin.json`, die Marketplace-Beschreibung unter `.claude-plugin/marketplace.json`, Skills unter `skills/<name>/`, Agents unter `agents/<name>.md`.
 
 ## Voraussetzungen
 
@@ -9,7 +9,14 @@
 
 ## In einem nachgelagerten Projekt laden
 
-Solange keine `marketplace.json` veröffentlicht ist, lädst du das Plugin direkt aus einem lokalen Pfad:
+Repository als Marketplace hinzufügen und Plugin installieren:
+
+```bash
+/plugin marketplace add nolte/claude-shared
+/plugin install nolte-shared@nolte-shared
+```
+
+Für lokales Testen ohne Marketplace-Flow lädst du das Plugin direkt aus einem lokalen Pfad:
 
 ```bash
 claude --plugin-dir /path/to/claude-shared
