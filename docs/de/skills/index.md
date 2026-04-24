@@ -6,8 +6,20 @@ Skills sind wiederverwendbare Workflows, die Claude Code über das `Skill`-Tool 
 
 | Skill | Beschreibung |
 |-------|--------------|
-| [Skill-Management](skill-management.md) | Neue Skills anlegen und bestehende gegen die Spec validieren |
-| [Spec](spec.md) | Mehrsprachige Spezifikationen verwalten (DE/EN), Drift erkennen, Index pflegen |
+| [`spec`](spec.md) | Mehrsprachige Spezifikationen verwalten (DE/EN), Drift erkennen, Index pflegen |
+| [`skill-management`](skill-management.md) | Skills unter `skills/<name>/` anlegen oder überarbeiten |
+| `skill-review` | Skill gegen die Autoren-Spec auditieren; Findings als Review-Plan persistieren |
+| `agent-review` | Agent gegen die Autoren-Spec auditieren; Findings als Review-Plan persistieren |
+| `pull-request-create` | PR nach `pull-request-workflow`-Spec eröffnen |
+| `pull-request-merge` | Offenen Draft-PR auf `develop` promoten, Labels + Gates anwenden |
+| `quality-gate` | Lint + Typecheck + Tests parallel ausführen, Ergebnisse tabellieren |
+| `dependency-audit` | Abhängigkeiten auf bekannte CVEs (optional Lizenzen) prüfen |
+| `project-structure-apply` | Repo gegen die `project-structure`-Spec auditieren und fehlende Artefakte scaffolden |
+| `skill-agent-catalog-apply` | MkDocs-Katalog für alle Skills und Agents eines Plugin-Repos einrichten |
+| `vocab-drift-audit` | Repo-lokales Vale-Vocabulary gegen den gepinnten `nolte/vale-style`-Release diffen |
+| `audience-identify` | Zielgruppen eines Bounded Contexts identifizieren und als Artefakt ablegen |
+
+Detailseiten existieren aktuell für `skill-management` und `spec`; weitere werden nachgezogen. Die autoritative Quelle pro Skill ist jeweils `skills/<name>/SKILL.md` im Quellbaum.
 
 ## Struktur eines Skills
 

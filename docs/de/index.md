@@ -20,7 +20,7 @@ flowchart LR
 | **Plugin-Name** | `nolte-shared` |
 | **Slash-Namespace** | `/nolte-shared:<skill>` |
 | **Quellbaum Skills** | `skills/<name>/` |
-| **Quellbaum Agents** | `agents/<name>.md` (geplant) |
+| **Quellbaum Agents** | `agents/<name>.md` |
 | **Spezifikationen** | `spec/claude/<topic>/<lang>.md` |
 | **Status** | Frühphase — Inhalte werden konsolidiert |
 
@@ -38,6 +38,6 @@ flowchart LR
 
 - [Erste Schritte](getting-started/index.md) — Plugin laden und eigene Skills nutzen
 - [Skills](skills/index.md) — Überblick der mitgelieferten Skills
-- [Agents](agents/index.md) — Überblick geplanter und vorhandener Agents
+- [Agents](agents/index.md) — Überblick der mitgelieferten Agents
 - [Spezifikationen](specs/index.md) — verbindliche Regeln für Autoren
 - [Entwicklung](development/index.md) — am Repository selbst arbeiten

@@ -1,0 +1,208 @@
+# Interim local implementation of spec/project/release-automation/.
+# Migrate to nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml
+# once that reusable workflow ships.
+
+name: Release Publish
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Draft tag to publish. Required when multiple drafts are open."
+        required: false
+        type: string
+      dry_run:
+        description: "Validate only; do not flip draft -> published."
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: release-publish
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      TAG_INPUT: ${{ inputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify downstream refresh workflow is present
+        run: |
+          if [[ ! -f .github/workflows/release-cd-refresh-master.yml ]]; then
+            echo "::error::release-cd-refresh-master.yml is missing; publishing would leave main stale."
+            exit 1
+          fi
+
+      - name: Identify release-drafter draft
+        id: draft
+        run: |
+          set -euo pipefail
+          drafts=$(gh api "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+            --jq '[.[] | select(.draft==true) | {tag: .tag_name, id: .id, created: .created_at, target: .target_commitish, name: .name, body: .body}]')
+          count=$(jq 'length' <<<"$drafts")
+
+          if [[ "$count" -eq 0 ]]; then
+            echo "::error::No draft release exists. release-drafter has produced nothing to publish."
+            exit 1
+          fi
+
+          if [[ -n "${TAG_INPUT:-}" ]]; then
+            match=$(jq -c --arg t "$TAG_INPUT" '[.[] | select(.tag==$t)]' <<<"$drafts")
+            if [[ $(jq 'length' <<<"$match") -ne 1 ]]; then
+              echo "::error::Input tag '$TAG_INPUT' did not match exactly one open draft."
+              jq -r '.[] | "  \(.tag)  created=\(.created)  target=\(.target)"' <<<"$drafts"
+              exit 1
+            fi
+            chosen=$(jq -c '.[0]' <<<"$match")
+          else
+            if [[ "$count" -gt 1 ]]; then
+              echo "::error::Multiple open drafts. Pass 'tag' input to disambiguate."
+              jq -r '.[] | "  \(.tag)  created=\(.created)  target=\(.target)"' <<<"$drafts"
+              exit 1
+            fi
+            chosen=$(jq -c '.[0]' <<<"$drafts")
+          fi
+
+          {
+            echo "tag=$(jq -r '.tag' <<<"$chosen")"
+            echo "id=$(jq -r '.id' <<<"$chosen")"
+            echo "created=$(jq -r '.created' <<<"$chosen")"
+            echo "target=$(jq -r '.target' <<<"$chosen")"
+            echo "name=$(jq -r '.name' <<<"$chosen")"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo 'body<<DRAFT_BODY_EOF'
+            jq -r '.body' <<<"$chosen"
+            echo 'DRAFT_BODY_EOF'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Verify draft target is reachable from develop
+        env:
+          TARGET: ${{ steps.draft.outputs.target }}
+        run: |
+          set -euo pipefail
+          if [[ "$TARGET" == "develop" ]]; then
+            exit 0
+          fi
+          if ! git merge-base --is-ancestor "$TARGET" origin/develop; then
+            echo "::error::Draft target '$TARGET' is not reachable from develop."
+            exit 1
+          fi
+
+      - name: Derive manifest version from tag
+        id: version
+        env:
+          TAG: ${{ steps.draft.outputs.tag }}
+        run: |
+          set -euo pipefail
+          current=$(jq -r '.version' .claude-plugin/plugin.json)
+          if [[ "$current" =~ ^v ]]; then
+            new="$TAG"
+          else
+            new="${TAG#v}"
+          fi
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          echo "new=$new" >> "$GITHUB_OUTPUT"
+
+      # Guard against a manually pre-bumped manifest: if plugin.json already
+      # equals the target version, the match MUST come from a prior
+      # chore(release) commit produced by this workflow, not from a hand-bump
+      # in a skill PR (forbidden by spec/claude/skill-management).
+      - name: Reject pre-bumped manifest
+        env:
+          CURRENT: ${{ steps.version.outputs.current }}
+          NEW: ${{ steps.version.outputs.new }}
+          TAG: ${{ steps.draft.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if [[ "$CURRENT" == "$NEW" ]]; then
+            last=$(git log -1 --pretty=%s -- .claude-plugin/plugin.json)
+            if [[ "$last" != "chore(release): $TAG" && "$last" != "chore(release): $NEW" ]]; then
+              echo "::error::plugin.json is already at $NEW but the last commit touching it is '$last', not a chore(release) from this workflow."
+              exit 1
+            fi
+          fi
+
+      - name: Render job summary
+        env:
+          TAG: ${{ steps.draft.outputs.tag }}
+          NAME: ${{ steps.draft.outputs.name }}
+          CREATED: ${{ steps.draft.outputs.created }}
+          BODY: ${{ steps.draft.outputs.body }}
+          CURRENT: ${{ steps.version.outputs.current }}
+          NEW: ${{ steps.version.outputs.new }}
+        run: |
+          {
+            echo "## release-publish"
+            echo ""
+            echo "- Tag: \`$TAG\`"
+            echo "- Title: $NAME"
+            echo "- Draft created_at: $CREATED"
+            echo "- Triggered by: @${{ github.triggering_actor }}"
+            echo "- Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+            echo "- Manifest version: \`$CURRENT\` → \`$NEW\`"
+            echo "- Dry run: ${{ inputs.dry_run }}"
+            echo ""
+            echo "### Release body"
+            echo ""
+            echo "$BODY"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit manifest alignment
+        if: ${{ !inputs.dry_run }}
+        env:
+          TAG: ${{ steps.draft.outputs.tag }}
+          NEW: ${{ steps.version.outputs.new }}
+          CURRENT: ${{ steps.version.outputs.current }}
+        run: |
+          set -euo pipefail
+          if [[ "$CURRENT" == "$NEW" ]]; then
+            echo "Manifest already at $NEW from an earlier chore(release) commit; nothing to commit."
+            exit 0
+          fi
+          tmp=$(mktemp)
+          jq --arg v "$NEW" '.version = $v' .claude-plugin/plugin.json > "$tmp" && mv "$tmp" .claude-plugin/plugin.json
+          if [[ -f .claude-plugin/marketplace.json ]]; then
+            tmp=$(mktemp)
+            jq --arg v "$NEW" '
+              (if .metadata then .metadata.version = $v else . end)
+              | (if (.plugins // null | type) == "array" then .plugins |= map(.version = $v) else . end)
+            ' .claude-plugin/marketplace.json > "$tmp" && mv "$tmp" .claude-plugin/marketplace.json
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .claude-plugin/plugin.json
+          [[ -f .claude-plugin/marketplace.json ]] && git add .claude-plugin/marketplace.json
+          git commit -m "chore(release): $TAG"
+          git push origin develop
+
+      - name: Realign draft target with new develop HEAD
+        if: ${{ !inputs.dry_run }}
+        env:
+          DRAFT_ID: ${{ steps.draft.outputs.id }}
+        run: |
+          set -euo pipefail
+          new_sha=$(git rev-parse HEAD)
+          gh api -X PATCH "repos/${GITHUB_REPOSITORY}/releases/${DRAFT_ID}" \
+            -f target_commitish="$new_sha" >/dev/null
+
+      - name: Publish draft
+        if: ${{ !inputs.dry_run }}
+        env:
+          TAG: ${{ steps.draft.outputs.tag }}
+        run: gh release edit "$TAG" --draft=false
+
+      - name: Dry-run notice
+        if: ${{ inputs.dry_run }}
+        run: echo "::notice::dry_run=true — validation complete; draft was not flipped."

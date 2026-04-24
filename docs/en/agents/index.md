@@ -1,9 +1,20 @@
 # Agents
 
-Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the claude-shared source tree they will live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`: or bundled inside the `nolte-shared` plugin.
+Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the claude-shared source tree they live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, or bundled inside the `nolte-shared` plugin.
 
-!!! note "Status"
-    This repository currently ships four maintained agents: `claude-plugin-developer` (drafts spec-conforming plugin skills and agents), `audience-doc-author` (generates audience-driven documentation against the relevant doc-type spec), `audience-review` (reviews audience artifacts produced by `audience-identify`), and `prose-vale-curator` (curates prose to pass Vale while preserving technical claims). Further agents follow the same specification ([Agent Authoring](../specs/agent-management.md)).
+## Bundled agents
+
+| Agent | Purpose |
+|-------|---------|
+| `claude-plugin-developer` | Drafts spec-conforming plugin skills and agents for `nolte-shared` |
+| `audience-doc-author` | Drafts or refines audience-driven documentation against an existing audience artifact |
+| `audience-review` | Reviews audience artifacts produced by `audience-identify` (read-only) |
+| `spec-readiness-reviewer` | Audits specs for contradictions, audience fit, and Requirement-vs-Acceptance completeness |
+| `docs-freshness-checker` | Audits MkDocs documentation for language parity, dead links, stale path references, ADR hygiene |
+| `prose-vale-curator` | Curates prose to pass Vale without altering technical claims |
+| `png-to-transparent-svg` | Converts a PNG image with baked-in checkerboard transparency into an SVG file with real alpha |
+
+All agents follow the same specification ([Agent Authoring](../specs/agent-management.md)). Canonical source per agent: `agents/<name>.md` in the source tree.
 
 ## Agent anatomy
 
