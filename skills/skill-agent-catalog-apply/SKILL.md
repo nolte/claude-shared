@@ -18,10 +18,15 @@ Detect the user's language from their message and respond in it. Generated file 
 Before doing anything:
 
 1. Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
-2. Confirm the repository is a Claude Code plugin (`.claude-plugin/plugin.json` exists). The catalog is a plugin-scope concern; bail if this file is absent.
+2. Detect the operating mode per the spec's *Operating modes* section:
+   - If `.claude-plugin/plugin.json` exists at the repo root, the repo is operating in **plugin mode**. The local plugin will be one of the catalog's source roots.
+   - If `.claude-plugin/plugin.json` is absent, the repo is operating in **consumer mode**. The catalog will only expose external plugin source roots; no local plugin is added.
+
+   Report the detected mode explicitly in the audit output so the user knows which rule set applies. Do not bail purely because `.claude-plugin/plugin.json` is absent; consumer mode is a first-class supported shape.
 3. Confirm an `mkdocs.yml` exists at the repo root. If not, stop and tell the user to run `project-structure-apply` first (which is responsible for scaffolding MkDocs itself).
 4. Locate `spec/claude/skill-agent-catalog/` in the current repo or via the `nolte-shared` plugin. If neither is reachable, stop and ask the user which spec source to use.
-5. Check for uncommitted changes in `mkdocs.yml`, the docs requirements file, and any existing generator hook path. If the tree is dirty there, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
+5. In consumer mode, ask the user which external plugin source roots should appear in the catalog before proposing any changes (for example local clones of `nolte-shared`, other nolte plugins, or third-party plugins). Require at least one; the catalog is meaningless with an empty source list.
+6. Check for uncommitted changes in `mkdocs.yml`, the docs requirements file, and any existing generator hook path. If the tree is dirty there, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
 
 ## Operations
 
@@ -34,7 +39,7 @@ Read the spec's Acceptance Criteria and classify each item as `pass`, `missing`,
 | `mkdocs.yml` declares `mkdocs-gen-files` | Parse `plugins:` list; look for `gen-files` entry. |
 | `mkdocs.yml` declares `mkdocs-literate-nav` | Look for `literate-nav` in `plugins:`. |
 | Plugin source roots are configured | Look under `plugins.gen-files.scripts` or the extension config for a structure pairing local paths with public repo URLs (spec §Generation mechanism). |
-| The local plugin is one of the configured roots | The local path `.` (or `skills/` + `agents/`) with the repo's own `https://github.com/<owner>/<repo>` URL must be present. |
+| Source roots match the detected mode | In plugin mode, the local path `.` (or `skills/` + `agents/`) with the repo's own `https://github.com/<owner>/<repo>` URL must be present. In consumer mode, at least one external source root must be present and no local-plugin entry should be declared. |
 | Skills and Agents navigation sections exist | Inspect `nav:` for stable top-level entries. Literate-nav `SUMMARY.md` files produced by the generator also satisfy this. |
 | Tag index page exists | Either declared in `nav:` or generated as `docs/tags.md`. |
 | Generated markdown is **not** committed | Run `git ls-files docs/skills/ docs/agents/ docs/tags.md 2>/dev/null` — any hits are drift (generated pages must not be git-tracked). |
@@ -65,7 +70,9 @@ Preserve every other plugin the repo already declares; only add what's missing. 
 
 #### 2.2 Configure plugin source roots
 
-The spec's "plugin source roots" are the (local path, public repo URL) pairs the generator reads. Store the list in a sibling YAML file so `mkdocs.yml` stays compact, and have the generator load it:
+The spec's "plugin source roots" are the (local path, public repo URL) pairs the generator reads. Store the list in a sibling YAML file so `mkdocs.yml` stays compact, and have the generator load it.
+
+**Plugin mode** — the local plugin MUST be the first entry; additional external plugins MAY follow:
 
 ```yaml
 # docs/catalog-sources.yml
@@ -78,7 +85,22 @@ sources:
     branch: main
 ```
 
-The local plugin **MUST** always be present as one of the sources. Adding further plugins (as consumer projects do) is done by extending this file — no generator-code change needed.
+**Consumer mode** — no local entry; each source is an external plugin (local clone path, installed plugin path, or submodule):
+
+```yaml
+# docs/catalog-sources.yml
+sources:
+  - name: nolte-shared
+    local: ../claude-shared    # a sibling checkout or vendored path
+    repo_url: https://github.com/nolte/claude-shared
+    branch: main
+  - name: other-plugin
+    local: vendor/other-plugin
+    repo_url: https://github.com/acme/other-plugin
+    branch: main
+```
+
+In either mode, extending the source list later (adding more external plugins) is a pure data change — no generator-code change needed.
 
 #### 2.3 Write the generator hook
 
@@ -127,13 +149,14 @@ After applying changes, run `task docs` (or `mkdocs build --strict` when no Task
 
 Report the verification outcome. If the build fails, surface the offending file per the spec's error-handling rule and don't claim success.
 
-### 4. Cross-plugin reuse
+### 4. Adding further source roots later
 
-When a consumer project (a repository that depends on `nolte-shared` but is itself a different plugin, or a product repo embedding multiple plugins) asks to wire the catalog in with **additional plugin source roots**:
+Both plugin-mode repos (which want to catalog *additional* plugins alongside their own) and consumer-mode repos (which only ever reference external plugins) evolve by extending `docs/catalog-sources.yml`:
 
 - Edit `docs/catalog-sources.yml` to add entries for each extra plugin (local clone path or installed plugin path + repo URL + branch).
 - Don't fork or modify the generator hook — the data-driven sources list is enough.
 - If the extra plugin doesn't live at a local checkout yet, stop and ask the user where it is; don't guess.
+- In plugin mode, never demote the local plugin out of the sources list while adding externals — it stays the first entry (see Hard rules).
 
 ## Output shape
 
@@ -166,7 +189,8 @@ After the audit step, produce a single report:
 - **Never** bump the plugin version in `.claude-plugin/plugin.json` as part of this skill's changes (per `release-automation`, the version is set by the release workflow).
 - **Never** translate artifact metadata or body at generation time. The spec says artifact content is rendered verbatim; only the surrounding chrome (section titles, intro text) is localised elsewhere.
 - **Never** duplicate `nolte-shared` as a source root when the current repo is itself `nolte-shared`; it's the local plugin, and the sources file already has it.
-- **Always** make the local plugin the first entry in the sources list so its catalog appears first in the navigation.
+- **Never** declare a local-plugin entry in consumer mode. Consumer-mode repos do not ship skills or agents of their own; adding a `local: .` source there would try to walk paths that don't exist.
+- **Always**, in plugin mode, make the local plugin the first entry in the sources list so its catalog appears first in the navigation. In consumer mode, order external sources as the user requests them and default to alphabetical by `name` if unspecified.
 - **Always** fail the docs build (via the generator hook) on malformed frontmatter rather than silently skipping. Broken catalogs defeat the whole point.
 - **Always** point at the spec file in generated docstrings and in every reported drift item, so future readers follow the same rules.
 

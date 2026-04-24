@@ -5,6 +5,14 @@ Status: draft
 ## Context
 This repository ships reusable Claude Code skills and agents as the `nolte-shared` plugin, and the published MkDocs site is the discovery surface for both this plugin and any other Claude Code plugins consumed alongside it. The `skill-management` and `agent-management` specs define the on-disk shape of these artifacts, but consumers need a browsable catalog to see what's available, what each artifact does, and when Claude will invoke it. Today such a catalog would have to be maintained by hand and would drift whenever a skill or agent is added, renamed, or reworked. This spec defines how the MkDocs documentation site exposes an always-current catalog of skills and agents—generated from the very source files that already govern them, across this plugin and any additional plugins configured into the docs build. It's the foundation for generating the corresponding documentation objects.
 
+### Operating modes
+The catalog applies to two kinds of repositories:
+
+- **Plugin mode**: the repository is itself a Claude Code plugin (indicated by a top-level `.claude-plugin/plugin.json`). The local plugin's own `skills/` and `agents/` folders are one of the catalog's source roots; additional plugin source roots may be added alongside.
+- **Consumer mode**: the repository isn't a Claude Code plugin itself. It hosts an MkDocs site that catalogs one or more *external* plugins (for example plugins the repository depends on or vendors in). There's no local plugin source root; all roots are external.
+
+Every requirement in this spec applies to both modes unless explicitly qualified as "in plugin mode," or "in consumer mode."
+
 ## Goals
 - A single browsable catalog inside the MkDocs site that lists every skill and every agent shipped by this plugin and by any further plugins configured into the docs build
 - Catalog content is derived from the source files (skill `SKILL.md`, agent `<name>.md`): no hand-maintained copy
@@ -24,7 +32,9 @@ This repository ships reusable Claude Code skills and agents as the `nolte-share
 ### Scope of the catalog
 - **MUST** include exactly one catalog entry per skill folder under any configured plugin source root that contains a valid `SKILL.md`
 - **MUST** include exactly one catalog entry per agent file (`<name>.md`) under any configured plugin source root
-- **MUST** discover skills and agents from every plugin source root configured for the catalog generator; the local `claude-shared` plugin (its own `skills/` and `agents/` folders) is one such root and **MUST** always be present
+- **MUST** discover skills and agents from every plugin source root configured for the catalog generator
+- **MUST**, in plugin mode, include the local plugin (its own `skills/` and `agents/` folders) as one of the configured source roots
+- **MUST**, in consumer mode, configure at least one external plugin source root; the catalog isn't useful when no sources are declared
 - **MUST NOT** include skills or agents that don't conform to the `skill-management` / `agent-management` structure; malformed entries **MUST** fail the docs build rather than be silently omitted
 
 ### Content of a catalog entry
@@ -70,7 +80,8 @@ This repository ships reusable Claude Code skills and agents as the `nolte-share
 - [ ] Adding a new skill or agent in any configured plugin source root requires no manual edit to `docs/` or `mkdocs.yml` for the entry to appear
 - [ ] Removing a skill or agent removes the corresponding catalog page on the next `task docs` run
 - [ ] `mkdocs.yml` declares `mkdocs-gen-files` and `mkdocs-literate-nav` and configures the list of plugin source roots (each pairing a local path with a public repository URL)
-- [ ] The local `claude-shared` plugin appears as one of the configured plugin source roots
+- [ ] In plugin mode, the local plugin appears as one of the configured plugin source roots
+- [ ] In consumer mode, at least one external plugin source root is configured
 - [ ] No generated catalog markdown is committed under `docs/`
 - [ ] A skill or agent with invalid frontmatter causes `task docs` to fail with an error that names the offending file and its plugin source root
 - [ ] Catalog entries appear in deterministic alphabetical order by `name` within each plugin group of each section

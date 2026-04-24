@@ -5,6 +5,14 @@ Status: draft
 ## Kontext
 Dieses Repository liefert wiederverwendbare Claude-Code-Skills und -Agents als Plugin `nolte-shared` aus, und die veröffentlichte MkDocs-Seite ist die Entdeckungs-Oberfläche sowohl für dieses Plugin als auch für jedes andere Claude-Code-Plugin, das daneben konsumiert wird. Die Specs `skill-management` und `agent-management` definieren die Datei-Struktur dieser Artefakte, aber Konsumenten brauchen einen durchstöberbaren Katalog, um zu sehen, was verfügbar ist, was jedes Artefakt tut und wann Claude es aufruft. Heute müsste ein solcher Katalog von Hand gepflegt werden und würde jedes Mal veralten, sobald ein Skill oder Agent hinzugefügt, umbenannt oder überarbeitet wird. Diese Spezifikation legt fest, wie die MkDocs-Dokumentation einen stets aktuellen Katalog von Skills und Agents präsentiert — generiert aus genau den Quelldateien, die diese Artefakte ohnehin regeln, und das über dieses Plugin sowie alle weiteren in den Doku-Build konfigurierten Plugins hinweg. Sie ist die Grundlage für das Generieren der entsprechenden Dokumentations-Objekte.
 
+### Betriebsmodi
+Der Katalog gilt für zwei Arten von Repositories:
+
+- **Plugin-Modus** — das Repository ist selbst ein Claude-Code-Plugin (erkennbar an einer `.claude-plugin/plugin.json` im Wurzelverzeichnis). Die eigenen `skills/`- und `agents/`-Ordner des lokalen Plugins sind eine der Quell-Wurzeln des Katalogs; zusätzliche Plugin-Quell-Wurzeln können daneben konfiguriert werden.
+- **Konsumenten-Modus** — das Repository ist selbst kein Claude-Code-Plugin. Es betreibt eine MkDocs-Seite, die einen oder mehrere *externe* Plugins kataloguiert (z. B. Plugins, von denen das Repository abhängt oder die es als Abhängigkeit führt). Es gibt keine lokale Plugin-Quell-Wurzel; alle Wurzeln sind extern.
+
+Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklich mit „im Plugin-Modus" oder „im Konsumenten-Modus" qualifiziert ist.
+
 ## Ziele
 - Ein einziger durchstöberbarer Katalog in der MkDocs-Seite, der jeden Skill und jeden Agent dieses Plugins sowie weiterer in den Doku-Build konfigurierter Plugins auflistet
 - Katalog-Inhalt wird aus den Quelldateien (Skill-`SKILL.md`, Agent-`<name>.md`) abgeleitet — keine Handkopie
@@ -24,7 +32,9 @@ Dieses Repository liefert wiederverwendbare Claude-Code-Skills und -Agents als P
 ### Umfang des Katalogs
 - **MUSS [MUST]** pro Skill-Ordner mit gültiger `SKILL.md` unter jeder konfigurierten Plugin-Quell-Wurzel genau einen Katalog-Eintrag enthalten
 - **MUSS [MUST]** pro Agent-Datei (`<name>.md`) unter jeder konfigurierten Plugin-Quell-Wurzel genau einen Katalog-Eintrag enthalten
-- **MUSS [MUST]** Skills und Agents aus jeder für den Katalog-Generator konfigurierten Plugin-Quell-Wurzel entdecken; das lokale `claude-shared`-Plugin (mit eigenen `skills/`- und `agents/`-Ordnern) ist eine solche Wurzel und **MUSS [MUST]** immer enthalten sein
+- **MUSS [MUST]** Skills und Agents aus jeder für den Katalog-Generator konfigurierten Plugin-Quell-Wurzel entdecken
+- **MUSS [MUST]** im Plugin-Modus das lokale Plugin (mit eigenen `skills/`- und `agents/`-Ordnern) als eine der konfigurierten Quell-Wurzeln enthalten
+- **MUSS [MUST]** im Konsumenten-Modus mindestens eine externe Plugin-Quell-Wurzel konfigurieren; der Katalog ist ohne deklarierte Quellen nicht sinnvoll
 - **DARF NICHT [MUST NOT]** Skills oder Agents enthalten, die nicht der `skill-management`- / `agent-management`-Struktur entsprechen; fehlerhafte Einträge **MÜSSEN [MUST]** den Doku-Build scheitern lassen, statt stillschweigend weggelassen zu werden
 
 ### Inhalt eines Katalog-Eintrags
@@ -70,7 +80,8 @@ Dieses Repository liefert wiederverwendbare Claude-Code-Skills und -Agents als P
 - [ ] Das Hinzufügen eines neuen Skills oder Agents in einer beliebigen konfigurierten Plugin-Quell-Wurzel erfordert keine manuelle Änderung an `docs/` oder `mkdocs.yml`, damit der Eintrag erscheint
 - [ ] Das Entfernen eines Skills oder Agents entfernt beim nächsten `task docs`-Lauf die entsprechende Katalog-Seite
 - [ ] `mkdocs.yml` deklariert `mkdocs-gen-files` und `mkdocs-literate-nav` und konfiguriert die Liste der Plugin-Quell-Wurzeln (jeweils ein lokaler Pfad gepaart mit einer öffentlichen Repository-URL)
-- [ ] Das lokale `claude-shared`-Plugin erscheint als eine der konfigurierten Plugin-Quell-Wurzeln
+- [ ] Im Plugin-Modus erscheint das lokale Plugin als eine der konfigurierten Plugin-Quell-Wurzeln
+- [ ] Im Konsumenten-Modus ist mindestens eine externe Plugin-Quell-Wurzel konfiguriert
 - [ ] Kein generiertes Katalog-Markdown ist unter `docs/` eingecheckt
 - [ ] Ein Skill oder Agent mit ungültiger Frontmatter lässt `task docs` mit einer Fehlermeldung scheitern, die die Datei und ihre Plugin-Quell-Wurzel benennt
 - [ ] Katalog-Einträge erscheinen innerhalb jeder Plugin-Gruppe jedes Abschnitts in deterministischer, alphabetischer Reihenfolge nach `name`
