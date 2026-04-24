@@ -116,9 +116,15 @@ jobs:
           echo "new=$new" >> "$GITHUB_OUTPUT"
 
       # Guard against a manually pre-bumped manifest: if plugin.json already
-      # equals the target version, the match MUST come from a prior
-      # chore(release) commit produced by this workflow, not from a hand-bump
-      # in a skill PR (forbidden by spec/claude/skill-management).
+      # equals the target version, the match MUST come from a chore(release)
+      # commit (primary-path workflow commit OR fallback-path chore(release):
+      # <tag> PR squash-merge), not from a hand-bump in a skill PR (forbidden
+      # by spec/claude/skill-management).
+      #
+      # Prefix-match on "chore(release): <TAG>" accepts both:
+      #   - primary path commit subject:        "chore(release): v0.1.1"
+      #   - fallback path squash-merge subject: "chore(release): v0.1.1 (#21)"
+      # per spec/project/release-automation §Pre-publish verification.
       - name: Reject pre-bumped manifest
         env:
           CURRENT: ${{ steps.version.outputs.current }}
@@ -128,8 +134,8 @@ jobs:
           set -euo pipefail
           if [[ "$CURRENT" == "$NEW" ]]; then
             last=$(git log -1 --pretty=%s -- .claude-plugin/plugin.json)
-            if [[ "$last" != "chore(release): $TAG" && "$last" != "chore(release): $NEW" ]]; then
-              echo "::error::plugin.json is already at $NEW but the last commit touching it is '$last', not a chore(release) from this workflow."
+            if [[ "$last" != "chore(release): $TAG"* && "$last" != "chore(release): $NEW"* ]]; then
+              echo "::error::plugin.json is already at $NEW but the last commit touching it is '$last', which does not start with 'chore(release): $TAG'. Open a chore(release): $TAG PR that bumps the manifest and squash-merge it via the GitHub UI (not automerge) before dispatching this workflow again."
               exit 1
             fi
           fi
@@ -159,6 +165,17 @@ jobs:
             echo "$BODY"
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # Alignment is either already done (fallback path: a prior
+      # chore(release): <TAG> PR has been squash-merged on develop, so
+      # CURRENT == NEW) or still pending (primary path: workflow commits
+      # with a bypass credential). On the fallback path this step is a
+      # no-op; on the primary path this step performs the commit+push.
+      #
+      # In this repository the primary path is not yet enabled (no App/PAT
+      # with enforce_admins bypass is provisioned via nolte/gh-plumbing),
+      # so the CURRENT != NEW branch below would fail on GH006 "Protected
+      # branch update failed". Fail fast with a spec-aware error instead
+      # of the raw git error, so the operator knows exactly what to do.
       - name: Commit manifest alignment
         if: ${{ !inputs.dry_run }}
         env:
@@ -171,21 +188,8 @@ jobs:
             echo "Manifest already at $NEW from an earlier chore(release) commit; nothing to commit."
             exit 0
           fi
-          tmp=$(mktemp)
-          jq --arg v "$NEW" '.version = $v' .claude-plugin/plugin.json > "$tmp" && mv "$tmp" .claude-plugin/plugin.json
-          if [[ -f .claude-plugin/marketplace.json ]]; then
-            tmp=$(mktemp)
-            jq --arg v "$NEW" '
-              (if .metadata then .metadata.version = $v else . end)
-              | (if (.plugins // null | type) == "array" then .plugins |= map(.version = $v) else . end)
-            ' .claude-plugin/marketplace.json > "$tmp" && mv "$tmp" .claude-plugin/marketplace.json
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .claude-plugin/plugin.json
-          [[ -f .claude-plugin/marketplace.json ]] && git add .claude-plugin/marketplace.json
-          git commit -m "chore(release): $TAG"
-          git push origin develop
+          echo "::error::Manifest is at $CURRENT, target is $NEW. This workflow cannot commit directly to a protected develop branch (primary path requires a bypass credential that is not yet provisioned in this portfolio). Open a PR titled 'chore(release): $TAG' that bumps the manifest to $NEW, squash-merge it via the GitHub UI (not automerge), then re-dispatch this workflow. Per spec/project/release-automation §Version-bearing file alignment §Fallback path."
+          exit 1
 
       - name: Realign draft target with new develop HEAD
         if: ${{ !inputs.dry_run }}
