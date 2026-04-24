@@ -28,4 +28,4 @@ Canonical language: `en` · Translations: `de`
 | project | release-notes-audience-analysis | Release Notes Audience Analysis | Zielgruppenanalyse für Release Notes | draft | 2026-04-24 |
 | project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | 2026-04-23 |
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | unversioned |
-| project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-23 |
+| project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |

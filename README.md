@@ -85,6 +85,8 @@ Use `/reload-plugins` to pick up changes during a session without restarting.
 - **Self-hosted marketplace source**: The plugin entry in `marketplace.json` uses `"source": "."` (relative path). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
 - **Contact**: No email is published in `plugin.json` or `marketplace.json`. Use the GitHub repository (`https://github.com/nolte/claude-shared`) for issues and contact.
 - **Dogfooding requires `--plugin-dir .`**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from. Without the flag, `/skills` in this repo won't list the bundled skills.
+- **Workflow cascade constraint**: GitHub Actions doesn't cascade workflow runs from events produced by a `GITHUB_TOKEN`-authenticated step. In this repo that means `release-drafter.yml` doesn't fire after an `automerge.yaml` squash-merge, and `release-cd-refresh-master.yml` doesn't fire after a `release-publish.yml` publish. The constraint is documented in `spec/project/workflow-health/` §Known platform constraints; the portfolio-level fix lives in `nolte/gh-plumbing`. Until that ships, a user-authored commit re-fires `release-drafter`, and `main` is fast-forwarded manually after a publish.
+- **Changelog**: The authoritative per-release content lives on the [GitHub Releases page](https://github.com/nolte/claude-shared/releases); no Markdown changelog is kept in git.
 
 ## Structure
 
