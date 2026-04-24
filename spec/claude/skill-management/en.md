@@ -26,6 +26,22 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - **MUST** write a `description` that names concrete user triggers, not abstract capabilities, so Claude can reliably decide when to invoke
 - **MUST** keep instructions inside `SKILL.md` in English for token efficiency; the skill may still instruct Claude to respond to the user in the user's language
 - **MUST** be self-contained—any supporting assets (templates, references, examples) live inside the skill folder
+- **MAY** include an optional `tags` field in YAML frontmatter: a list of lowercase ASCII kebab-case strings, each ≤30 characters, with no more than 5 entries; tags provide thematic grouping so the catalog (`skill-agent-catalog`) and peer-cluster lookups (`skill-vs-agent` §Portfolio-wide consistency) can browse by topic
+
+### Tag vocabulary
+- **SHOULD** prefer a term from the starter vocabulary below when one applies, so artifacts in the same functional cluster share the same tag string
+- **MAY** introduce a new tag that follows the normalization rule above when no starter term fits; avoid proliferation by reusing an existing tag whenever the fit is reasonable
+
+Starter vocabulary:
+- `pull-request` — PR authoring, labeling, landing
+- `review` — spec-, skill-, agent-, or PR-level review
+- `audit` — drift, compliance, vocabulary, dependency audits
+- `scaffolding` — project-structure, catalog wiring, skill/agent scaffolding
+- `prose` — Vale-style curation, writing guidance, documentation prose
+- `audience` — audience identification and downstream doc shaping
+- `release` — release-automation, changelogs, versioning
+- `quality-gate` — lint, typecheck, test
+- `dependency` — CVE scans, license compliance, lockfile hygiene
 
 ### Source location (claude-shared repository)
 - **MUST** live at `skills/<name>/` in the claude-shared source tree
@@ -56,6 +72,7 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - [ ] `SKILL.md` parses with valid YAML frontmatter containing `name` and `description`
 - [ ] `name` in frontmatter equals the folder name
 - [ ] `description` mentions the concrete user phrasings that should trigger the skill
+- [ ] If `tags` is declared in frontmatter, every entry is a lowercase ASCII kebab-case string ≤30 characters and the list contains at most 5 entries
 - [ ] Skill works when invoked in a downstream project that doesn't contain claude-shared-specific context, loaded through the plugin
 - [ ] No hard-coded absolute paths; all internal paths are relative to the skill folder or the project the skill operates on
 - [ ] If the skill writes files, the target locations and preconditions are documented

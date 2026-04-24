@@ -78,6 +78,7 @@ Every candidate capability is evaluated along the dimensions below. Each dimensi
 ### Portfolio-wide consistency
 - **MUST**, when a capability class recurs across three or more consuming repositories, ship it as a plugin-level artifact rather than as project-local copies; this threshold is aligned with the `workflow-health` spec's three-recurrence trigger for specialized-agent authoring, and the decision rule above still determines whether the plugin-level artifact is a skill or an agent
 - **SHOULD** align a new artifact with the artifact type used by existing peers in the same functional cluster (PR management, audit, lint, release tooling): when every existing peer is a skill, the new one is a skill unless a dimension forces the other way
+- **SHOULD** use the optional `tags` field (per `skill-management` / `agent-management`) as the machine-checkable signal for peer-cluster membership — artifacts sharing a tag form a cluster in the catalog's tag index, so cluster alignment is verifiable from frontmatter rather than relying on name similarity
 - **MAY** propose reclassification of an existing artifact (skill → agent or vice versa) when repeated usage reveals the initial choice was wrong; such a reclassification is a breaking change for consumers and **MUST** be shipped as a new artifact plus a deprecation note on the old one, never as a silent format flip
 
 ## Acceptance Criteria
