@@ -20,6 +20,10 @@ env/
 # Task runner cache
 .task/
 
+# Spec-drift audits — quarterly artifacts are local-only; findings convert to issues/PRs
+.audits/2026-Q*/
+.audits/202[0-9]-Q[1-4]/
+
 # Vale — style packages fetched by `vale sync` (keep repo-local vocab)
 .github/styles/*
 !.github/styles/config/

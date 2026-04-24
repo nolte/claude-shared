@@ -3,7 +3,7 @@
 Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the claude-shared source tree they will live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`: or bundled inside the `nolte-shared` plugin.
 
 !!! note "Status"
-    At the moment this repository contains **no** maintained agent definitions yet. The specification ([Agent Authoring](../specs/agent-management.md)) is ready though, so new agents can be built straight against the rules.
+    This repository currently ships four maintained agents: `claude-plugin-developer` (drafts spec-conforming plugin skills and agents), `audience-doc-author` (generates audience-driven documentation against the relevant doc-type spec), `audience-review` (reviews audience artifacts produced by `audience-identify`), and `prose-vale-curator` (curates prose to pass Vale while preserving technical claims). Further agents follow the same specification ([Agent Authoring](../specs/agent-management.md)).
 
 ## Agent anatomy
 

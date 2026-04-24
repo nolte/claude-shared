@@ -1,11 +1,11 @@
 ---
 name: skill-management
-description: Author new Claude Code skills and validate existing ones against the skill-management spec. Invoke when the user asks to create a new skill, scaffold a skill for a given purpose, add a skill to this repo, validate a skill, or check that a skill follows project conventions. Also handles equivalent German-language requests. Scaffolds the folder under skills/<name>/ inside the claude-shared plugin source tree (distribution happens via the plugin mechanism, not via .claude/skills copies), writes SKILL.md with valid frontmatter, and audits existing skills for structural compliance with the spec at spec/claude/skill-management/.
+description: Author or revise Claude Code skills in the nolte-shared plugin source tree. Invoke when the user asks to create a new skill, scaffold a skill for a given purpose, add a skill to this repo, or revise the authoring shape of an existing skill (rewriting a weak description, adding a Hard rules section, trimming overly long instructions). Also handles equivalent German-language requests. Scaffolds the folder under skills/<name>/ (distribution happens via the plugin mechanism, not via .claude/skills copies) and writes SKILL.md with valid frontmatter. Do NOT use for reviewing or auditing an existing skill against the spec — that produces a persistent, spec-cited review plan and belongs to `skill-review`. Do NOT bump the plugin version in a skill-change PR — `release-automation` owns that via the release workflow.
 ---
 
 # Skill Management
 
-Scaffolds and validates Claude Code skills. Applies the rules from `spec/claude/skill-management/<canonical_language>.md` when that spec is present in the current project; otherwise falls back to the conventions embedded here.
+Scaffolds and revises Claude Code skills. Applies the authoring rules from `spec/claude/skill-management/<canonical_language>.md` when that spec is present in the current project; otherwise falls back to the conventions embedded here. Review of an existing skill against the spec is a separate concern — invoke `skill-review` for that; it produces a persistent plan under `.audits/skill-review/` that this skill does not.
 
 ## User-language policy
 
@@ -21,9 +21,7 @@ If you're invoked in a project that's **not** a Claude Code plugin source tree, 
 
 Never create a `.claude/skills/<name>/` entry that duplicates a skill already shipped by the `nolte-shared` plugin, and never set up symlinks or copies to make a plugin skill appear under `.claude/skills/`. Distribution to consuming projects is the plugin mechanism's job—see `spec/claude/skill-management/` for the rules.
 
-After creating a skill in the source tree, remind the user to:
-1. bump the plugin version in `.claude-plugin/plugin.json` (and `.claude-plugin/marketplace.json`) whenever a skill is added, renamed, removed, or its contract materially changes, and
-2. publish a new plugin release so consumers can pick the skill up through the normal marketplace-install / update flow.
+After creating a skill in the source tree, remind the user that a new plugin release is needed so consumers can pick the skill up through the normal marketplace-install / update flow. The release workflow (see `release-automation` §Plugin manifest alignment) writes the version into `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` automatically at publish time — do **not** bump the version in the skill-creation PR, that is explicitly forbidden by the updated `skill-management` spec.
 
 ## Operations
 
@@ -40,26 +38,13 @@ After creating a skill in the source tree, remind the user to:
 4. Create subfolders (`templates/`, `references/`, `examples/`) only if the user actually needs them. Don't scaffold empty placeholders.
 5. Confirm in the user's language with the created paths and the follow-up needed for runtime discovery.
 
-### 2. Validate a skill
+### 2. Revise
 
-Run this checklist against the canonical rules:
+Targeted edits to an existing skill — for example rewriting a weak `description`, adding a Hard rules section, trimming overly long instructions, moving long-form content into `templates/` or `references/`. After a revise, invoke `skill-review` to verify the revised skill still conforms to the spec; this skill does not perform its own validation pass.
 
-- [ ] Folder name is ASCII kebab-case
-- [ ] `SKILL.md` exists at folder root
-- [ ] Frontmatter parses; contains `name` and `description`
-- [ ] `name` equals folder name
-- [ ] `description` enumerates concrete user triggers (not abstract capabilities)
-- [ ] Instructions body is in English
-- [ ] No hard-coded absolute paths inside the skill
-- [ ] Supporting assets live inside the skill folder
-- [ ] `SKILL.md` is under roughly 150 lines (soft limit)
-- [ ] Repository that hosts the skill declares `.claude-plugin/plugin.json` and a marketplace entry, meaning the skill is part of a Claude Code plugin, not a loose `.claude/skills/` copy
+### Review / audit
 
-Report pass/fail per item. Offer to fix mechanical issues (frontmatter mismatch, absolute paths, missing hard rules section) in place.
-
-### 3. Revise
-
-Targeted edits to an existing skill—for example rewriting a weak `description`, adding a Hard rules section, trimming overly long instructions. Always re-run validation after a revise operation.
+Out of scope. Invoke `skill-review` — it applies every MUST / SHOULD / MAY from `spec/claude/skill-management/` and `spec/claude/skill-vs-agent/`, maps findings to severities (BLOCKER / WARNING / SUGGESTION / INFO), and writes a persistent plan to `.audits/skill-review/<name>.md` per `spec/claude/review-plan/`.
 
 ## Hard rules
 

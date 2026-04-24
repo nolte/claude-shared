@@ -33,7 +33,7 @@ This repository ships reusable Claude Code skills and agents as the `nolte-share
 - **MUST** include the `distribution` field for agents (`plugin` or `project`)
 - **MUST** label each entry with the source plugin it comes from (for example `nolte-shared`)
 - **MUST** link to the source file in the originating plugin's repository on its main branch; the link base URL is configured per plugin source root (for example `https://github.com/nolte/claude-shared/blob/main/...`)
-- **MUST** render any `tags` declared in the artifact's frontmatter as visible tags on the entry page
+- **MUST** render any `tags` declared in the artifact's frontmatter as visible tags on the entry page; `tags` are normalized per `skill-management` / `agent-management` (lowercase ASCII kebab-case, ≤30 characters, ≤5 entries)
 - **SHOULD** render the body of `SKILL.md` (or the agent system-prompt markdown) as the page's main content so authors' instructions are visible to readers
 - **MAY** surface supporting assets by listing sibling files under `skills/<name>/` or `agents/<name>/` (for example `templates/`, `references/`, `examples/`)
 
@@ -53,6 +53,7 @@ This repository ships reusable Claude Code skills and agents as the `nolte-share
 
 ### Multilingual behavior
 - **MUST** render artifact metadata (`name`, `description`, `distribution`, `tags`, body) as-is from the source frontmatter; for artifacts shipped by this repository this is English by the `skill-management` / `agent-management` rule, while external plugins are rendered verbatim regardless of their own language conventions
+- **MUST** treat `tags` as identifiers, not prose: they're rendered in their canonical lowercase ASCII kebab-case form (per `skill-management` / `agent-management`) and never translated, case-folded, or otherwise rewritten between docs languages
 - **SHOULD** localize only the surrounding chrome—section titles, intro paragraphs, navigation labels, the tag-index header—into each configured docs language (`docs/en/`, `docs/de/`)
 - **MUST NOT** translate artifact metadata or body at generation time; translations of those fields are out of scope
 
@@ -76,7 +77,6 @@ This repository ships reusable Claude Code skills and agents as the `nolte-share
 - [ ] A tag index page exists and links to every artifact that declares the tag
 
 ## Open Questions
-- Should `skill-management` and `agent-management` be amended to standardize the optional `tags` field (allowed values, normalization, length limits) so tag-based browsing stays predictable across plugins?
 - Should versions of skills and agents (history, changelogs) appear in the catalog, or is the git history sufficient?
 - If translations of an artifact body are ever desired, where do they live—a parallel `skills/<name>/docs/<lang>.md`, or separately curated pages under `docs/<lang>/`?
 - How are plugin source roots configured exactly—inline in `mkdocs.yml` under the `gen-files` plugin config, or in a sibling YAML file referenced from there?

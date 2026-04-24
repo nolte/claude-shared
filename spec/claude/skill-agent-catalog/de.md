@@ -33,7 +33,7 @@ Dieses Repository liefert wiederverwendbare Claude-Code-Skills und -Agents als P
 - **MUSS [MUST]** für Agents das `distribution`-Feld (`plugin` oder `project`) anzeigen
 - **MUSS [MUST]** jeden Eintrag mit dem Quell-Plugin kennzeichnen, aus dem er stammt (z. B. `nolte-shared`)
 - **MUSS [MUST]** auf die Quelldatei im Repository des jeweiligen Plugins (Branch `main`) verlinken; die Basis-URL des Links wird pro Plugin-Quell-Wurzel konfiguriert (z. B. `https://github.com/nolte/claude-shared/blob/main/...`)
-- **MUSS [MUST]** etwaige im Frontmatter deklarierte `tags` als sichtbare Tags auf der Eintrags-Seite rendern
+- **MUSS [MUST]** etwaige im Frontmatter deklarierte `tags` als sichtbare Tags auf der Eintrags-Seite rendern; `tags` sind gemäß `skill-management` / `agent-management` normalisiert (kleingeschriebenes ASCII-Kebab-Case, ≤30 Zeichen, ≤5 Einträge)
 - **SOLLTE [SHOULD]** den Body von `SKILL.md` (bzw. das System-Prompt-Markdown des Agents) als Hauptinhalt der Seite rendern, damit die Autoren-Anweisungen für Leser sichtbar sind
 - **KANN [MAY]** begleitende Assets auflisten, indem die Schwester-Dateien unter `skills/<name>/` bzw. `agents/<name>/` angezeigt werden (z. B. `templates/`, `references/`, `examples/`)
 
@@ -53,6 +53,7 @@ Dieses Repository liefert wiederverwendbare Claude-Code-Skills und -Agents als P
 
 ### Mehrsprachiges Verhalten
 - **MUSS [MUST]** Artefakt-Metadaten (`name`, `description`, `distribution`, `tags`, Body) so wie sie sind aus dem Quell-Frontmatter rendern; für Artefakte aus diesem Repository ist das laut `skill-management`- / `agent-management`-Regel Englisch, externe Plugins werden unabhängig von ihren eigenen Sprachkonventionen wortgetreu wiedergegeben
+- **MUSS [MUST]** `tags` als Identifier behandeln, nicht als Prosa: sie werden in ihrer kanonischen kleingeschriebenen ASCII-Kebab-Case-Form gerendert (gemäß `skill-management` / `agent-management`) und niemals zwischen Doku-Sprachen übersetzt, groß-/kleinbuchstabig verändert oder anderweitig umgeschrieben
 - **SOLLTE [SHOULD]** nur die rahmenden Elemente — Abschnittstitel, Intro-Absätze, Navigations-Labels, der Header des Tag-Index — in die jeweils konfigurierte Doku-Sprache (`docs/en/`, `docs/de/`) lokalisieren
 - **DARF NICHT [MUST NOT]** Artefakt-Metadaten oder -Body beim Generieren übersetzen; Übersetzungen dieser Felder sind außerhalb des Scope
 
@@ -76,7 +77,6 @@ Dieses Repository liefert wiederverwendbare Claude-Code-Skills und -Agents als P
 - [ ] Eine Tag-Index-Seite existiert und verlinkt auf jedes Artefakt, das den Tag deklariert
 
 ## Offene Fragen
-- Sollen `skill-management` und `agent-management` ergänzt werden, um das optionale `tags`-Feld zu standardisieren (erlaubte Werte, Normalisierung, Längenlimits), damit Tag-basiertes Browsen über Plugins hinweg vorhersagbar bleibt?
 - Sollen Versionen von Skills und Agents (Historie, Changelogs) im Katalog erscheinen oder reicht die Git-Historie?
 - Falls Übersetzungen eines Artefakt-Bodys gewünscht sein sollten: wo leben sie — in einer parallelen `skills/<name>/docs/<lang>.md` oder als separat gepflegte Seiten unter `docs/<lang>/`?
 - Wie genau werden Plugin-Quell-Wurzeln konfiguriert — inline in `mkdocs.yml` unter der `gen-files`-Plugin-Konfiguration oder in einer Schwester-YAML-Datei, die von dort referenziert wird?

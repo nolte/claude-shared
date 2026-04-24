@@ -1,0 +1,66 @@
+---
+name: audience-identify
+description: Run the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produce an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", "Zielgruppen für dieses Modul/Projekt/Paket ermitteln", "wer sind die Konsumenten/Nutzer von X", "Stakeholder-Identifikation für X", "Zielgruppenanalyse vor README/SLA/Threat-Model", or "Audience-Liste aufsetzen". Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context.
+---
+
+# Audience Identification Skill
+
+Operationalizes the methodology from `spec/project/audience-identification/` so a bounded context (module, service, library, project) gets a reviewable audience list instead of one author's private guesswork.
+
+## User-language policy
+
+- Detect the user's language from their message and reply in that language.
+- The written audience artifact uses the surrounding repository's primary language (English by default, unless the repo's existing docs show otherwise — follow the precedent).
+- The five relationship-category labels stay consistent with the spec (canonical EN version wins).
+
+## Precondition
+
+Before any operation, verify that `spec/project/audience-identification/<canonical_language>.md` is reachable in the current project. If the spec is missing, stop and tell the user the methodology spec is the input to this skill — without it there is no authoritative list of requirements to run against. Do not improvise a replacement.
+
+## Operations
+
+### 1. `run` — produce an audience artifact
+
+Interactive walk-through. Do not batch — surface each step to the user and let them correct before moving on.
+
+1. **Declare the bounded context in writing.** Prompt for: what the context *is*, where its boundaries run, and what is explicitly outside. Block progress until this is captured. The spec forbids listing audiences before the context is written.
+2. **Locate the artifact.** Ask where the output should live. Offer the three patterns the spec leaves open — README section, dedicated `AUDIENCES.md` next to the context, or an ADR — and, before proposing a new pattern, check whether the repository already has precedent (grep for `AUDIENCES.md`, existing "Audiences" / "Intended consumers" sections). Follow the precedent rather than inventing a new location.
+3. **Enumerate audiences category by category**, in this order, asking the user per category:
+   - Direct consumers
+   - Operators
+   - Contributors / maintainers
+   - Governing parties
+   - Indirect audiences
+
+   If a category does not apply, record `none` with a reason — the spec requires this, not a silent omission.
+4. **Capture per audience**: short label, relationship category, interaction surface (API / CLI / config / docs / dashboard / incident channel / …), what the audience expects or needs, and any open question or assumption. Missing information is captured as an open question, not invented.
+5. **Tag each audience** as `confirmed` (validated with a real representative or authoritative source) or `assumed` (author inference). Never set `confirmed` without the user saying so explicitly.
+6. **Rank by criticality** (primary / secondary / peripheral) where the user can express it. Skip silently if the user cannot rank yet — record as open question.
+7. **Offer optional subdivisions** (geography, organizational unit, tenancy) only when the user says they change the expected deliverable. Do not add them by default.
+8. **Write the artifact** at the chosen location, using the template at `templates/audiences.template.md`. Confirm the path back to the user in their language.
+
+### 2. `validate` — audit an existing artifact
+
+Run this checklist against a given audience artifact path:
+
+- [ ] Bounded context is declared in writing before any audience entry
+- [ ] All five relationship categories are addressed (or explicitly marked `none` with reason)
+- [ ] Every entry has label, category, interaction surface, expectation, and an open-questions field (even if empty)
+- [ ] Every entry carries a `confirmed` or `assumed` tag
+- [ ] Criticality ranking is present or openly marked as unresolved
+- [ ] Artifact lives next to the context it describes (not in a central registry)
+
+Report pass/fail per item. Offer to fix mechanical gaps (missing tags, missing category placeholders) in place. Do not invent `confirmed` tags or missing audiences while fixing.
+
+### 3. `revisit` — update after a scope change
+
+Triggered when the user signals a material scope change (new public API, new deployment target, new regulated data class, new stakeholder). Re-run operation 1 steps 1–7 as a diff against the existing artifact: show which entries stay, which need re-validation, which become irrelevant. Persist the result only after the user accepts each diff item.
+
+## Hard rules
+
+- Never list audiences before the bounded context is declared in writing — this is the load-bearing rule of the underlying spec.
+- Never set an audience to `confirmed` without the user explicitly saying so. `assumed` is always the safe default.
+- Never invent audience entries, expectations, or interaction surfaces. Missing information is recorded as an open question, not filled in from plausibility.
+- Never silently pick a new artifact location pattern if the repository already has one — follow the precedent.
+- Never produce a partial artifact. Either all five categories are addressed (with `none` + reason where applicable) or the write is deferred until they are.
+- When `spec/project/audience-identification/` disagrees with this skill, the spec wins. Propose updating this skill rather than diverging silently.

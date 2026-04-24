@@ -51,8 +51,9 @@ Documentation, specifications, READMEs, release notes, and other human-readable 
 
 ### Multilingual text
 - **MUST** scope Vale to English-authored content only; files authored in any language other than English **MUST NOT** be included in Vale's lint scope
-- **MUST** define the English-only lint scope in both the `.vale.ini` format sections and the Taskfile `lint:prose` target so local and CI apply the same scope; typical English paths are `README.md`, `docs/en/`, `skills/*/SKILL.md` (authored in English per the `skill-management` spec), and each spec's canonical-language file where English is canonical (`spec/<topic>/<slug>/en.md`)
+- **MUST** define the English-only lint scope in both the `.vale.ini` format sections and the Taskfile `lint:prose` target so local and CI apply the same scope; the scope covers end-user-facing prose only—typical English paths are `README.md`, `docs/en/`, and each spec's canonical-language file where English is canonical (`spec/<topic>/<slug>/en.md`)
 - **MUST NOT** include any path that holds non-English content in the lint scope: `docs/de/`, `spec/<topic>/<slug>/de.md`, `*.de.md`, and any equivalent non-English path stays outside Vale
+- **MUST NOT** include LLM-instruction artifacts in the lint scope: `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, `agents/*.md`, and any equivalent plugin-authored Claude Code artifact stays outside Vale; these files are tool-author-to-LLM instructions, not end-user prose, and applying Microsoft-style end-user-writing rules to them produces noise rather than signal
 - **MUST** keep every file that's in Vale's scope free of non-English prose (body text, YAML frontmatter fields, inline comments, quoted example strings) because Vale can't distinguish language boundaries inside a scoped file and will flag foreign words as spelling errors
 - **SHOULD** mirror significant English documentation into a parallel non-English file under `docs/de/` or `spec/<topic>/<slug>/de.md` for readers of that language; those files are authored and maintained without Vale checks and are free to use their own native vocabulary
 - **MUST NOT** introduce a language-scoped vocabulary (for example `vocabularies/technical-de/`) into `nolte/vale-style` as a workaround for mixed-language files inside Vale's scope; the canonical remediation for a non-English passage in a scoped file is to move the passage into a language-scoped file outside the scope, not to teach Vale foreign vocabulary
@@ -68,6 +69,7 @@ Documentation, specifications, READMEs, release notes, and other human-readable 
 - [ ] Any AI-assisted text generation operation verifies the output against the repository's Vale configuration before the task is treated as done
 - [ ] Pull-request descriptions and GitHub Release notes pass Vale at the configured `MinAlertLevel` under the same configuration as the repository's Markdown documentation
 - [ ] Vale's configured lint scope contains no files authored in a language other than English; `docs/de/`, `spec/<topic>/<slug>/de.md`, and any `*.de.md` are explicitly absent from the scope
+- [ ] Vale's configured lint scope contains no LLM-instruction artifacts; `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, and `agents/*.md` are explicitly absent from the scope
 - [ ] No English-scoped file contains non-English prose anywhere in its body, YAML frontmatter, inline comments, or quoted examples; Vale at `error` level confirms this
 
 ## Open Questions
