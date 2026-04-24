@@ -34,7 +34,7 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 ### Distribution
 - **MUST** reach consuming projects exclusively via the Claude Code plugin mechanism—the plugin is installed from the marketplace entry, and Claude Code discovers the skill from the plugin's `skills/<name>/` path
 - **MUST NOT** be distributed by copying the folder into a consuming project's `.claude/skills/<name>/`, by symlinking, by vendoring, or by any other out-of-band path; such copies drift from the source and defeat the point of a shared plugin
-- **MUST** bump the plugin version in `.claude-plugin/plugin.json` (and the corresponding marketplace entry) whenever a skill is added, renamed, removed, or materially changes its contract, so consumers can pin a compatible version
+- **MUST NOT** manually bump the plugin version in `.claude-plugin/plugin.json` or the corresponding marketplace entry as part of a PR that adds, renames, removes, or materially changes a skill; the version is derived from the published GitHub Release tag and updated on the default branch exclusively by the release workflow — see `release-automation` §Plugin manifest alignment for the mechanism
 - **MAY** coexist in a consuming project alongside project-local skills under that project's own `.claude/skills/`; such project-local skills are outside the scope of this spec and **MUST NOT** reuse a name already owned by the `nolte-shared` plugin
 
 ### Runtime discovery (consuming project)
@@ -52,13 +52,14 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - [ ] Source folder exists at `skills/<name>/` in claude-shared with `<name>` in ASCII kebab-case
 - [ ] Repository contains a valid `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` that expose this skill as part of the `nolte-shared` plugin
 - [ ] Skill is discoverable in a consuming project solely by installing the `nolte-shared` plugin from the marketplace—no manual copy or symlink into `.claude/skills/` is needed or permitted
-- [ ] Plugin version in `.claude-plugin/plugin.json` has been bumped relative to the previous release whenever a skill is added, renamed, removed, or its contract materially changes
+- [ ] Plugin version in `.claude-plugin/plugin.json` equals the latest published GitHub Release tag (maintained by the release workflow per `release-automation` §Plugin manifest alignment, not by skill-change PRs); no diff to the `version` field appears in any PR whose sole purpose is adding, renaming, or removing a skill
 - [ ] `SKILL.md` parses with valid YAML frontmatter containing `name` and `description`
 - [ ] `name` in frontmatter equals the folder name
 - [ ] `description` mentions the concrete user phrasings that should trigger the skill
 - [ ] Skill works when invoked in a downstream project that doesn't contain claude-shared-specific context, loaded through the plugin
 - [ ] No hard-coded absolute paths; all internal paths are relative to the skill folder or the project the skill operates on
 - [ ] If the skill writes files, the target locations and preconditions are documented
+- [ ] Reviewing an individual skill against this spec follows `spec/claude/skill-review/`; review output conforms to `spec/claude/review-plan/` and lives under `.audits/skill-review/<name>.md`
 
 ## Open Questions
 - Should the folder name be required to match any user-facing slash-command name, or may they differ?

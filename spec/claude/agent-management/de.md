@@ -81,6 +81,7 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 - [ ] Agent funktioniert, wenn er in einem nachgelagerten Projekt aufgerufen wird, das keinen claude-shared-spezifischen Kontext enthält
 - [ ] Keine hartkodierten absoluten Pfade; alle internen Referenzen sind relativ zur Agent-Datei oder zum Projekt, auf dem sie operiert
 - [ ] Schreibt der Agent Dateien oder verursacht Seiteneffekte, sind Ziele und Vorbedingungen im System-Prompt dokumentiert
+- [ ] Das Review eines einzelnen Agents gegen diese Spec folgt `spec/claude/agent-review/`; die Review-Ausgabe entspricht `spec/claude/review-plan/` und liegt unter `.audits/agent-review/<name>.md`
 
 ## Offene Fragen
 - Soll der Dateiname (und damit `name`) exakt dem `subagent_type`-String entsprechen, oder ist eine Mapping-Schicht erlaubt?

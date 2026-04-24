@@ -34,7 +34,7 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 ### Verteilung
 - **MUSS [MUST]** konsumierende Projekte ausschließlich über den Claude-Code-Plugin-Mechanismus erreichen — das Plugin wird über den Marketplace-Eintrag installiert, und Claude Code findet den Skill aus dem `skills/<name>/`-Pfad des Plugins heraus
 - **DARF NICHT [MUST NOT]** durch Kopieren in das `.claude/skills/<name>/`-Verzeichnis eines konsumierenden Projekts, durch Symlink, durch Vendoring oder auf irgendeinem anderen Out-of-Band-Pfad verteilt werden; solche Kopien driften gegenüber der Quelle und untergraben den Sinn eines geteilten Plugins
-- **MUSS [MUST]** die Plugin-Version in `.claude-plugin/plugin.json` (und im zugehörigen Marketplace-Eintrag) erhöhen, sobald ein Skill hinzugefügt, umbenannt oder entfernt wird oder sich sein Vertrag wesentlich ändert, damit Konsumenten eine kompatible Version pinnen können
+- **DARF NICHT [MUST NOT]** die Plugin-Version in `.claude-plugin/plugin.json` oder im zugehörigen Marketplace-Eintrag manuell als Teil eines PRs erhöhen, der einen Skill hinzufügt, umbenennt, entfernt oder seinen Vertrag wesentlich ändert; die Version wird vom veröffentlichten GitHub-Release-Tag abgeleitet und ausschließlich durch den Release-Workflow auf dem Default-Branch aktualisiert — siehe `release-automation` §Plugin-Manifest-Abgleich für den Mechanismus
 - **DARF [MAY]** in einem konsumierenden Projekt neben projektlokalen Skills unter dessen eigenem `.claude/skills/` koexistieren; solche projektlokalen Skills liegen außerhalb des Scopes dieser Spec und **DÜRFEN NICHT [MUST NOT]** einen Namen wiederverwenden, der bereits im `nolte-shared`-Plugin belegt ist
 
 ### Laufzeit-Auffindbarkeit (konsumierendes Projekt)
@@ -52,13 +52,14 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - [ ] Quellordner existiert unter `skills/<name>/` in claude-shared mit `<name>` in ASCII-Kebab-Case
 - [ ] Repository enthält eine gültige `.claude-plugin/plugin.json` und `.claude-plugin/marketplace.json`, die diesen Skill als Teil des `nolte-shared`-Plugins bereitstellen
 - [ ] Skill ist in einem konsumierenden Projekt allein durch Installation des `nolte-shared`-Plugins aus dem Marketplace auffindbar — kein manuelles Kopieren oder Symlinken nach `.claude/skills/` ist nötig oder zulässig
-- [ ] Die Plugin-Version in `.claude-plugin/plugin.json` wurde gegenüber der Vorgänger-Version erhöht, sobald ein Skill hinzugefügt, umbenannt oder entfernt wurde oder sich sein Vertrag wesentlich geändert hat
+- [ ] Die Plugin-Version in `.claude-plugin/plugin.json` entspricht dem zuletzt veröffentlichten GitHub-Release-Tag (gepflegt durch den Release-Workflow gemäß `release-automation` §Plugin-Manifest-Abgleich, nicht durch Skill-Änderungs-PRs); kein Diff am `version`-Feld erscheint in einem PR, dessen alleiniger Zweck das Hinzufügen, Umbenennen oder Entfernen eines Skills ist
 - [ ] `SKILL.md` parst mit gültigem YAML-Frontmatter, das `name` und `description` enthält
 - [ ] `name` im Frontmatter entspricht dem Ordnernamen
 - [ ] `description` nennt die konkreten Nutzer-Formulierungen, die den Skill auslösen sollen
 - [ ] Skill funktioniert in einem nachgelagerten Projekt, das keinen claude-shared-spezifischen Kontext enthält, geladen über das Plugin
 - [ ] Keine hartkodierten absoluten Pfade; alle internen Pfade sind relativ zum Skill-Ordner oder zum Projekt, auf dem der Skill operiert
 - [ ] Falls der Skill Dateien schreibt, sind Zielorte und Vorbedingungen dokumentiert
+- [ ] Das Review eines einzelnen Skills gegen diese Spec folgt `spec/claude/skill-review/`; die Review-Ausgabe entspricht `spec/claude/review-plan/` und liegt unter `.audits/skill-review/<name>.md`
 
 ## Offene Fragen
 - Soll der Ordnername verpflichtend einem etwaigen nutzerseitigen Slash-Command-Namen entsprechen, oder dürfen sie abweichen?

@@ -81,6 +81,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [ ] Agent works when invoked in a downstream project that doesn't contain claude-shared-specific context
 - [ ] No hard-coded absolute paths; all internal references are relative to the agent file or the project it operates on
 - [ ] If the agent writes files or performs side effects, the targets and preconditions are documented in the system prompt
+- [ ] Reviewing an individual agent against this spec follows `spec/claude/agent-review/`; review output conforms to `spec/claude/review-plan/` and lives under `.audits/agent-review/<name>.md`
 
 ## Open Questions
 - Should the filename (and thus `name`) match the `subagent_type` string exactly, or is a mapping layer allowed?
