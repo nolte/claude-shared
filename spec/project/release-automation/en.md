@@ -1,0 +1,103 @@
+# Release Automation
+
+Status: draft
+
+## Context
+
+The `branching-model` spec defines **how** releases propagate once published (`release-drafter` maintains a draft, a human publishes it, `release-cd-refresh-master.yml` fast-forwards `main`). What it currently leaves manual is the **Draft → Published** step itself: §Local release operation requires an operator to run `gh release edit <tag> --draft=false` (or click *Publish* in the web UI).
+
+That manual step is the last non-automated link in the release chain and is the root cause of `spec-drift-audit` 2026-Q2 Finding #3 — `v0.1.1` sits as Draft on `claude-shared`, so `main` HEAD cannot be aligned with a published release. The portfolio-wide decision is **not** to promote releases manually to fix the audit finding; instead, this spec defines the automated promotion process, and the finding resolves once the automation has cut a real release.
+
+This spec fills the gap between `release-drafter` (builds and maintains the draft) and `release-cd-refresh-master.yml` (reacts to `release: [published]`): the workflow that flips `draft: true → false` on demand, under guardrails, without a human CLI keystroke on the tag.
+
+## Goals
+
+- The Draft → Published transition happens through a reviewable, reproducible workflow — not through an operator editing a release via CLI or web UI.
+- The human stays in the loop for the **decision** to release (when, what version), but the mechanics (publish call, tag handling, error checking) are codified.
+- The automation refuses to publish anything it did not receive from `release-drafter`, closing off the hand-crafted-tag failure mode already forbidden by `branching-model` §Local release operation.
+- The process is portfolio-reusable: implemented once as a reusable workflow under `nolte/gh-plumbing`, consumed by every repository that follows `branching-model`.
+- Spec-drift-audit `main`-alignment criteria become satisfiable by triggering the workflow, not by running `gh` commands directly against the tag.
+
+## Non-Goals
+
+- Publishing artifacts to external registries (npm, PyPI, container registries, HACS ZIP uploads) — those stay with repository-specific `release: [published]` packaging workflows as `project-structure` describes.
+- Binary builds, signing, SBOM generation.
+- Release-notes content generation — that remains `release-drafter`'s responsibility, fed by Conventional-Commits PR titles.
+- Versioning policy (SemVer major/minor/patch derivation) — inherited from `release-drafter` configuration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
+- Hotfix flow (release from `main` back to `develop`) — tracked as an Open Question on `branching-model` and out of scope here.
+- Deprecating the manual `gh release edit --draft=false` path entirely; the manual path remains a documented fallback for incident response when the workflow itself is broken.
+
+## Requirements
+
+### Workflow existence and trigger
+
+- **MUST** provide a dedicated workflow (canonical name: `.github/workflows/release-publish.yml`) that performs the Draft → Published transition; the publish step **MUST NOT** live inside `release-drafter.yml` or any other workflow whose primary responsibility is a different release phase
+- **MUST** expose `workflow_dispatch` as a trigger so the release decision is a deliberate human action, auditable via GitHub's workflow-run history
+- **MUST NOT** trigger on `push`, `pull_request`, `schedule`, or `release: [created]` in the baseline specification; additional triggers **MAY** be added per repository only when a dedicated Open Question has been resolved for that repository
+- **MUST**, once `nolte/gh-plumbing` ships it, consume the reusable workflow at `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml` — flat path, sibling to `reusable-release-drafter.yml` and `reusable-release-cd-refresh-master.yml` so the portfolio's reusable-naming convention stays consistent; until that reusable exists, a local implementation that satisfies the Requirements below is acceptable and **MUST** be migrated on the reusable's first availability
+- **MUST** pin any `nolte/gh-plumbing` reference to a release tag (matching the `project-structure` and `workflow-health` pinning rules)
+- **SHOULD** declare a `concurrency` block (`group: release-publish`, `cancel-in-progress: false`) so two overlapping dispatches queue rather than racing on the `--draft=false` API call
+
+### Operational contract
+
+- **MUST** operate exclusively on a release that is currently in `draft: true` state and whose body was written by `release-drafter` — identified by matching the release tag to the most recent draft produced on `develop`
+- **MUST** refuse to publish when no `release-drafter` draft exists, or when the draft's tag does not correspond to a commit reachable from `develop`
+- **MUST** accept an optional `tag` input on `workflow_dispatch`; when multiple `release-drafter` drafts are open, the workflow **MUST** fail with an actionable message that lists all open drafts unless `tag` is provided, and **MUST** then publish only the draft whose tag exactly matches the input (no "newest wins" heuristic)
+- **MUST NOT** create a new tag, rewrite an existing tag, or tolerate an out-of-band `git tag` + `git push --tags` sequence as a release source; the tag that the `release-drafter` draft carries is the tag that gets published, and any release whose tag did not originate from the drafter **MUST** be rejected — this closes the failure mode already forbidden by `branching-model` §Local release operation and observed historically as tag/release-name drift across the portfolio
+- **MUST NOT** alter the release body inside this workflow; body edits, if needed, **MUST** happen before the run via `gh release edit <tag>` (title/body/tag adjustments per `branching-model` §Local release operation) or via `release-drafter` re-runs
+- **MUST** surface the target tag, title, and a diff summary of the body in the workflow run output so the human triggerer can verify before the irreversible step
+- **SHOULD** support a `dry_run: true` input on `workflow_dispatch` that performs every validation step but stops short of the actual `--draft=false` call
+- **SHOULD** fail explicitly (non-zero exit, actionable message) when `release-cd-refresh-master.yml` is absent or disabled, because publishing without the downstream refresh would leave `main` out of sync with the latest release
+
+### Plugin manifest alignment
+
+- **MUST**, for repositories that ship a Claude Code plugin (`.claude-plugin/plugin.json` present), update the `version` field of `.claude-plugin/plugin.json` — and of `.claude-plugin/marketplace.json` where the entry exists — so it matches the release tag being published, and commit that change to `develop` with a conventional-commits subject `chore(release): <tag>`; the commit **MUST** land before the `--draft=false` call so the published release's target SHA includes the aligned manifest
+- **MUST NOT** leave a published release whose tag differs from the `version` field declared in `.claude-plugin/plugin.json` at the release's target SHA; any drift is a publish-blocking condition the workflow has to surface before flipping the draft
+- **MUST NOT** accept a manually pre-bumped manifest in the branch state being published; if the `version` field already matches the target tag at workflow start, the workflow **MUST** verify that match was produced by a prior `chore(release):` commit by this same workflow and otherwise refuse to publish, because the skill-authoring specs (`skill-management`) forbid skill-change PRs from touching the version
+- **SHOULD** perform the manifest update inside the reusable `reusable-release-publish.yml` so consumers inherit the behavior without repeating it per repository
+- **SHOULD** derive the value written into the `version` field from the tag by stripping a leading `v` if the repository's existing `version` convention omits it, matching whatever the current manifest already uses — the workflow **MUST NOT** silently rewrite the convention
+- **MAY** skip the `marketplace.json` update when the repository does not publish a marketplace entry
+
+### Permissions and protection
+
+- **MUST** run with `contents: write` and nothing broader; specifically **MUST NOT** request `actions: write`, `pull-requests: write`, or `id-token: write` unless explicitly justified in the workflow comments
+- **MUST NOT** bypass `main` branch protection; the workflow's job is to publish a release, which then triggers `release-cd-refresh-master.yml` — the existing workflow already has the proper scoped permission to update `main`
+- **MUST NOT** use a personal access token; `GITHUB_TOKEN` is the only acceptable credential
+
+### Relationship to other specs
+
+- **MUST** update `branching-model` §Release flow and §Local release operation by in-place edits — no new dedicated §Automated release promotion section — so that: (a) the automated workflow is named as the primary Draft → Published path, and (b) the manual `gh release edit --draft=false` sequence is explicitly labeled a fallback for incident response
+- **MUST NOT** re-specify anything already covered by `branching-model` (tag origin, `main` refresh, workflow pinning) — reference instead
+- **SHOULD** resolve the Open Question in `project-structure` (line 124 at the time of writing) by cross-linking from `project-structure` §Release and documentation workflows into this spec
+
+### Observability and audit
+
+- **MUST** emit the tag name, the triggerer's GitHub username, the workflow run URL, and the `release-drafter` draft's `created_at` timestamp to the job summary, so post-release audits can trace the publish back through this workflow
+- **SHOULD** append a one-line entry to the repository's audit-trail surface (if a convention emerges — currently not standardized); until then, GitHub's native run history is the audit source
+- **MUST** make `gh run list --workflow=release-publish.yml` the canonical CLI for inspecting recent publish activity — analogous to the `release-drafter.yml` and `release-cd-refresh-master.yml` inspection commands in `branching-model` §Local release operation
+
+## Acceptance Criteria
+
+- [ ] `.github/workflows/release-publish.yml` exists in every repository that has `release-drafter.yml` and `release-cd-refresh-master.yml`
+- [ ] The workflow declares `on: workflow_dispatch:` and does not declare `push`, `pull_request`, or `schedule` triggers
+- [ ] The workflow's top-level or job-level `permissions:` block requests `contents: write` and no broader scope
+- [ ] The workflow either `uses:` `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml@<tag>` or is a temporary local implementation with a tracked migration Issue
+- [ ] Any `uses: nolte/gh-plumbing/...` reference is pinned to a release tag, not a moving branch
+- [ ] The workflow refuses to run (visible failure in the run log) when invoked while no `release-drafter` draft is open
+- [ ] A `dry_run: true` dispatch input is present and performs validation without flipping `draft: false`
+- [ ] After a successful publish run, `gh release view <tag> --json isDraft` returns `{"isDraft": false}` for the published tag
+- [ ] After a successful publish run, `gh run list --workflow=release-cd-refresh-master.yml --limit 1` shows a run started within 5 minutes of the publish run, confirming the downstream refresh fired; if it did not start, the publish is considered incomplete and **MUST** be triaged under `workflow-health`
+- [ ] `branching-model` §Local release operation has been updated to name `release-publish.yml` as the primary path and `gh release edit <tag> --draft=false` as a fallback
+- [ ] The last three published releases in any repository adopting this spec were produced by the `release-publish.yml` workflow, verifiable via `gh run list --workflow=release-publish.yml --limit 10`
+- [ ] For every published release of a plugin-shipping repository, `.claude-plugin/plugin.json` at the release's target SHA has a `version` field equal to the release tag under the repository's existing convention (with or without the `v` prefix, consistent with the manifest's prior value), and the `chore(release): <tag>` commit that produced that alignment is present on `develop` before the publish run
+- [ ] No published release in the adoption window has a `release-drafter` draft that remained after publish (confirming the workflow consumed the intended draft rather than creating a parallel one)
+
+## Open Questions
+
+None at this time — all initial drafting questions were resolved during this spec's authoring. For traceability, the decisions are:
+
+- **Triggers**: limited to `workflow_dispatch`; label-based and scheduled triggers are out of scope (additional attack surface; conflicts with "human decides when to ship").
+- **Canonical reusable path**: `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml`, flat path consistent with the existing `reusable-release-drafter.yml` / `reusable-release-cd-refresh-master.yml` naming.
+- **Multi-draft behavior**: fail with actionable message unless the dispatcher passes a `tag` input; no "newest-wins" heuristic.
+- **`branching-model` integration**: in-place edit of §Release flow + §Local release operation; no new dedicated section.
+- **Post-publish sanity checks**: encoded as Acceptance Criteria (`isDraft: false` and `release-cd-refresh-master.yml` run within 5 minutes), not as SHOULDs.

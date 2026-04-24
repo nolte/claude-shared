@@ -1,0 +1,110 @@
+# Review Plan Artifact
+
+Status: draft
+
+## Context
+<!-- Why does this spec exist? What problem, user need, or constraint drives it? -->
+
+Reviews of Claude Code artifacts — a skill against `skill-management`, an agent against `agent-management`, future review types — need to produce a result that another actor (the author, a reviewer, a follow-up agent, a calling skill) can process step by step. If every reviewer invents a private result shape, consuming actors have to reverse-engineer the format per review, plugin developers cannot script against the output, and findings get lost between runs. This spec defines a single, reusable on-disk artifact — the *review plan* — that any review procedure in the `nolte-shared` plugin emits. The plan is actionable, self-contained, lives in the repository under `.audits/`, is worked off item by item, and is removed once every item has been addressed. Its git history is the lasting audit trail; the file itself is transient.
+
+## Goals
+<!-- What this spec aims to achieve. Bullet points, outcome-oriented. -->
+- Every review in the plugin produces the same structural output shape so plugin developers, authors, and follow-up automation can parse and process it without format negotiation
+- Every finding is an **actionable checkbox item**: reading one item tells the worker what is wrong, where, how to fix it, and how to verify the fix
+- A plan is **self-contained** — it carries enough context (target, specs applied, bounded scope, revision) that a new actor can pick it up without re-running the review
+- The plan's **lifecycle is explicit**: create fresh per review, commit, work off, remove once fully processed — no accumulation of stale plans, no partially consumed plans lingering silently
+- The audit trail survives plan deletion: every create / update / remove is a commit, so `git log --follow` on a removed plan reconstructs what was reviewed and how it was closed
+
+## Non-Goals
+<!-- Explicitly out of scope. Prevents creep. -->
+- Defining the review **criteria** for any specific artifact type — `skill-review`, `agent-review`, and any future review spec own that
+- Prescribing **who** or **what** processes the plan (human, Claude in the main conversation, a dedicated agent, CI automation) — the plan is a format, not a pipeline
+- Versioning plans across time — one plan per (target, review-type) at a time; a rerun **replaces** the plan rather than revising it
+- Long-lived audit registers — this spec's plans are disposable; use `spec-drift-audit` artifacts when a permanent per-quarter audit record is needed
+- Continuous-integration reporting formats (SARIF, JUnit, …) — the plan is a human- and LLM-friendly markdown file, not a CI result interchange format
+
+## Requirements
+<!-- Use RFC 2119 keywords: MUST, SHOULD, MAY. One atomic requirement per bullet. -->
+
+### File location and naming
+
+- **MUST** live under `.audits/<review-type>/<target-slug>.md`, where:
+  - `<review-type>` is the review spec slug (for example `skill-review`, `agent-review`)
+  - `<target-slug>` is an ASCII kebab-case derivation of the reviewed artifact's identifier (for a skill: the skill name; for an agent: the agent name)
+- **MUST NOT** include a timestamp or sequence number in the filename — there is exactly **one** plan per (review-type, target) at any moment; a rerun overwrites the existing plan
+- **MUST** keep `.audits/` checked into git (not `.gitignore`-d), so plans are visible in pull-request diffs and the review trail is shared
+- **SHOULD**, when the reviewed artifact lives outside the current repository (for example reviewing a plugin consumer's copy of a skill), record the absolute or repo-relative path of the target in the frontmatter `target` field, while the filename still uses only the slug
+
+### Frontmatter
+
+- **MUST** begin with YAML frontmatter containing at minimum:
+  - `review-type` — the review spec slug (string)
+  - `target` — the path (repo-relative) of the reviewed artifact
+  - `target-kind` — the artifact type: `skill`, `agent`, or a future classifier
+  - `specs-applied` — a YAML list of spec slugs with the canonical-version git SHA or tag that the review ran against
+  - `repo-revision` — the git SHA of the target repository at review time
+  - `created` — ISO-8601 date the plan was produced
+  - `status` — one of `open`, `in-progress`, `complete`, `superseded`
+- **MUST** update `status` to `in-progress` on the first item check-off, to `complete` when every item is either `- [x]` or a tracked follow-up, and to `superseded` when a rerun replaces the plan before completion
+- **MUST NOT** invent values; if a field cannot be read from source (for example no git SHA because the target is not yet committed), the value is `unknown` — not a guess
+
+### Plan body structure
+
+- **MUST** include these sections, in this order, each with the exact heading:
+  1. `## Scope` — one paragraph naming the target, what was reviewed (frontmatter, body, examples, …), and what was explicitly out of scope
+  2. `## Summary` — bullet counts per severity (`BLOCKER`, `WARNING`, `SUGGESTION`, `INFO`) plus a single-line go/no-go statement
+  3. `## Findings` — the actionable list; one subsection per severity present
+  4. `## Processing log` — append-only, one line per item closure, capturing what was done and by whom
+- **MUST** keep section headings in English even when the surrounding project's documentation language is not English, so downstream tooling can grep them deterministically
+
+### Findings format
+
+- **MUST** express every finding as a markdown checkbox item in `## Findings` with the structure:
+
+  ```
+  - [ ] [<spec-slug>.<requirement-shorthand>] <one-line statement of what is wrong>.
+        Where: <file:line or section reference>.
+        Fix: <concrete action — one line>.
+        Verify: <how to confirm the fix — one line>.
+  ```
+
+  The four labeled lines (`Where`, `Fix`, `Verify`, and the opening statement) **MUST** all be present. If a field genuinely does not apply, write `n/a` with one word of reason rather than omitting the line
+- **MUST** group findings under severity subsections `### BLOCKER`, `### WARNING`, `### SUGGESTION`, `### INFO`, in that order; omit a subsection only when it has zero items
+- **MUST** cite the originating spec requirement in the bracketed prefix so a worker can trace every finding back to a specific MUST / SHOULD / MAY; inventions without a spec citation are not valid findings
+- **SHOULD** order items inside a severity section by affected area (frontmatter → body → tools → examples) so a worker can address related items together
+- **MAY** annotate a finding with a trailing `→ deferred: <issue-url>` when the worker decides the item is real but out-of-scope for the current plan cycle; deferred items still count as closed for lifecycle purposes but carry the link so the tracked issue becomes the new home
+
+### Lifecycle
+
+- **MUST** be created fresh per review invocation; a rerun against the same target **MUST** overwrite the existing plan in a single commit and set the prior plan's `status` to `superseded` in the overwriting commit message, never edit the old plan into the new one
+- **MUST** have items marked `- [x]` only when both the fix has landed and the `Verify` step has been executed; partial fixes stay `- [ ]`
+- **MUST** append one line to `## Processing log` per closure, in the shape: `YYYY-MM-DD — <item-shorthand> — <action taken> — <verified by>`
+- **MUST NOT** delete the plan file while any `- [ ]` `BLOCKER` remains open; `WARNING` / `SUGGESTION` / `INFO` items **MAY** be deferred to tracked issues to unblock deletion
+- **MUST** delete the plan file when every item is either `- [x]` or carries a `→ deferred: <url>` annotation; the deletion commit message **MUST** be `review(<review-type>): close <target> — <B>B/<W>W/<S>S/<I>I` (counts of BLOCKER, WARNING, SUGGESTION, INFO at creation time), so the git log is the searchable audit trail
+- **SHOULD**, when the plan is deleted, also close any tracked issues referenced by deferred items if the underlying fix has landed elsewhere — the plan's deletion commit names those issues in its body
+
+### Relationship to other specs
+
+- **MUST** reference this spec from every review spec that produces a plan (`skill-review`, `agent-review`, and any future review type) — the review spec owns the criteria, this spec owns the artifact shape
+- **MUST NOT** be used as the output of `spec-drift-audit`; that spec persists a quarterly audit record that is not meant to be deleted on processing completion
+- **SHOULD**, when a review agent (for example `audience-review`) emits a report in the main conversation, still persist the structured plan to `.audits/<review-type>/<target>.md` so the processing contract is consistent regardless of who ran the review
+
+## Acceptance Criteria
+<!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
+- [ ] `.audits/` exists in the repository and is tracked by git (not listed in `.gitignore`)
+- [ ] Every plan file under `.audits/` parses as valid markdown with YAML frontmatter containing `review-type`, `target`, `target-kind`, `specs-applied`, `repo-revision`, `created`, `status`
+- [ ] Every plan file contains the four required sections (`## Scope`, `## Summary`, `## Findings`, `## Processing log`) with those exact English headings
+- [ ] Every finding in a plan uses the four-line structure (opening statement + `Where` / `Fix` / `Verify`) and cites a spec requirement in the bracketed prefix
+- [ ] No plan file exists with an open `- [ ]` `BLOCKER` item and `status: complete`
+- [ ] Every plan deletion in `git log` is accompanied by a commit message matching `review(<review-type>): close <target> — <counts>` so the audit trail is searchable
+- [ ] At most one plan file exists per (`review-type`, `target`) pair at any commit — a rerun replaces rather than accumulates
+- [ ] The `skill-review` and `agent-review` specs both reference this spec as the authoritative output format
+
+## Open Questions
+<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
+- Should a plan's `## Processing log` capture the actor identity (human username, Claude session, agent type) as structured fields, or is free-form sufficient for the current scale?
+- Is there a need for a `.audits/` index file that enumerates open plans, or is `ls .audits/**/*.md` adequate?
+- Should plan filenames include the review-type prefix in the basename as well (`skill-review-<target>.md`) for flatter `ls` views, or is the subdirectory grouping preferable?
+- When a review target is renamed mid-cycle, is the plan file renamed (and the filename change commit notes the move) or regenerated from scratch?
+- Does this spec need to prescribe a maximum plan age beyond which an open plan is considered stale and either reprocessed or explicitly superseded?
+- How does plan lifecycle interact with repositories that forbid direct pushes to `develop` — does the plan land on the same PR as the fix it describes, or as a separate earlier PR?
