@@ -36,15 +36,15 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - **MAY** introduce a new tag that follows the normalization rule above when no starter term fits; avoid proliferation by reusing an existing tag whenever the fit is reasonable
 
 Starter vocabulary:
-- `pull-request` — PR authoring, labeling, landing
-- `review` — spec-, skill-, agent-, or PR-level review
-- `audit` — drift, compliance, vocabulary, dependency audits
-- `scaffolding` — project-structure, catalog wiring, skill/agent scaffolding
-- `prose` — Vale-style curation, writing guidance, documentation prose
-- `audience` — audience identification and downstream doc shaping
-- `release` — release-automation, changelogs, versioning
-- `quality-gate` — lint, typecheck, test
-- `dependency` — CVE scans, license compliance, lockfile hygiene
+- `pull-request`: PR authoring, labeling, landing
+- `review`: spec-, skill-, agent-, or PR-level review
+- `audit`: drift, compliance, vocabulary, dependency audits
+- `scaffolding`: project-structure, catalog wiring, skill/agent scaffolding
+- `prose`: Vale-style curation, writing guidance, documentation prose
+- `audience`: audience identification and downstream doc shaping
+- `release`: release-automation, changelogs, versioning
+- `quality-gate`: lint, typecheck, test
+- `dependency`: CVE scans, license compliance, lockfile hygiene
 
 ### Distribution
 An agent is authored for exactly one of two delivery forms. The choice is made up front and written into the `distribution` field:

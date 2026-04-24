@@ -3,20 +3,20 @@
 Status: draft
 
 ## Context
-Every portfolio repository that ships documentation does so through MkDocs, typically in a bilingual layout (`docs/en/` and `docs/de/`) with Architecture Decision Records, user guides, and references back into `spec/`, `src/`, and other repo roots. Those documents drift: renames in the codebase break links, one language tree lags the other, ADRs acquire `TODO` markers that nobody revisits, and the MkDocs build still passes because it doesn't treat dead relative links or content-parity gaps as errors. Contributors don't notice the drift until a reader complains, a release blurb links to a moved page, or a search returns two mutually contradictory guides. This spec defines the freshness practice: what categories of drift count, how they are classified, when the audit runs, and how the findings turn into action. It complements `spec/project/spec-drift-audit/` (spec-versus-implementation) and `spec/project/prose-style/` (Vale-driven prose correctness) by owning the surface those two don't — the drift of the documentation itself against the state of the repository and against its counterpart language tree.
+Every portfolio repository that ships documentation does so through MkDocs, typically in a bilingual layout (`docs/en/` and `docs/de/`) with Architecture Decision Records, user guides, and references back into `spec/`, `src/`, and other repo roots. Those documents drift: renames in the codebase break links, one language tree lags the other, ADRs acquire `TODO` markers that nobody revisits, and the MkDocs build still passes because it doesn't treat dead relative links or content-parity gaps as errors. Contributors don't notice the drift until a reader complains, a release blurb links to a moved page, or a search returns two mutually contradictory guides. This spec defines the freshness practice: what categories of drift count, how they're classified, when the audit runs, and how the findings turn into action. It complements `spec/project/spec-drift-audit/` (spec-versus-implementation) and `spec/project/prose-style/` (Vale-driven prose correctness) by owning the surface those two don't—the drift of the documentation itself against the state of the repository and against its counterpart language tree.
 
 ## Goals
 - Every repository with MkDocs documentation runs a freshness audit at documented triggers, covering every portable category of drift
 - The audit is read-only and produces a severity-sorted report; fixes are a deliberate, separate step
 - Findings are classified by a shared severity scale so a broken internal link is treated the same across the portfolio
 - Bilingual repositories track language parity as a first-class concern; single-language repositories aren't penalised for not having one
-- The audit is clearly distinct from Vale prose linting, from MkDocs's own build, and from spec-drift — each concern owns its own surface
+- The audit is clearly distinct from Vale prose linting, from MkDocs's own build, and from spec-drift—each concern owns its own surface
 
 ## Non-Goals
 - Checking external links (anything `http://` or `https://`): the tradeoffs around rate limits, flakiness, geoblocking, and false positives belong in a different tool
 - Prose linting, vocabulary consistency, or style-guide enforcement: that's `spec/project/prose-style/` + `prose-vale-curator`
 - Rendering validation: MkDocs itself (`mkdocs build --strict` in CI) is the authoritative check that the site renders
-- Declaring the on-disk shape of MkDocs (i18n plugin choice, theme, nav structure) — those are per-repository decisions, and the audit adapts to what `mkdocs.yml` declares
+- Declaring the on-disk shape of MkDocs (i18n plugin choice, theme, nav structure)—those are per-repository decisions, and the audit adapts to what `mkdocs.yml` declares
 - Defining operational details of the agent that implements the audit (`agents/docs-freshness-checker.md`): those can evolve without a spec change
 
 ## Requirements
@@ -30,7 +30,7 @@ Every portfolio repository that ships documentation does so through MkDocs, typi
 ### Categories of drift
 The audit **MUST** classify every finding into exactly one of these categories:
 
-- **Internal-link rot**: a relative markdown link whose target doesn't exist on disk. Anchors are resolved strictly — the file must exist; the anchor target inside the file is a `SHOULD` check, not a `MUST`, because anchor detection is fragile across themes.
+- **Internal-link rot**: a relative markdown link whose target doesn't exist on disk. Anchors are resolved strictly—the file must exist; the anchor target inside the file is a `SHOULD` check, not a `MUST`, because anchor detection is fragile across themes.
 - **Cross-tree reference rot**: a link from the docs into `spec/`, `src/`, `scripts/`, `docker/`, `helm/`, `tests/`, `tools/` whose target path no longer exists in the working tree.
 - **Language-parity gap**: in a bilingual (or multilingual) repository, a relative path that exists in one configured language tree but is missing in another.
 - **Content-staleness delta**: in a multilingual repository, counterpart files whose last-commit timestamps diverge beyond a threshold (default 30 days) or whose sizes diverge beyond 2×; these are spot-checked on the N most recently modified files per tree rather than checked exhaustively.
@@ -44,7 +44,7 @@ Additional categories **MAY** be added by a repository when its documentation ne
 - **MUST** adopt the following severity scale:
   - **critical**: internal-link rot, cross-tree reference rot, ADR status inconsistency that breaks a supersedes chain; response window: before the next release
   - **warning**: language-parity gap, stale marker inside an ADR whose status is `accepted`, ADR index drift, content-staleness delta > 90 days; response window: within the current quarter
-  - **info**: stale marker inside ordinary prose, content-staleness delta 30 – 90 days, ADR without a declared status (treat as info, not critical — the ADR is still readable); response window: best effort
+  - **info**: stale marker inside ordinary prose, content-staleness delta 30–90 days, ADR without a declared status (treat as info, not critical—the ADR is still readable); response window: best effort
 - **MUST NOT** downgrade a severity on local judgement alone; disagreement with the classification belongs in an explicit waiver recorded in the audit artifact
 
 ### Triggers and cadence
@@ -55,7 +55,7 @@ Additional categories **MAY** be added by a repository when its documentation ne
 
 ### Read-only discipline
 - **MUST** be read-only: the audit reports findings, and fixes are a separate, opt-in step taken by an author (or a different agent)
-- **MUST NOT** modify, create, or delete any file during the audit — not even in a "safe" way like fixing a typo in a broken link
+- **MUST NOT** modify, create, or delete any file during the audit—not even in a "safe" way like fixing a typo in a broken link
 - **MUST NOT** hit the network; external-link validation is out of scope (see §Non-Goals)
 - **MUST NOT** translate, rephrase, or otherwise alter content across language trees; the audit reports parity gaps, not closes them
 

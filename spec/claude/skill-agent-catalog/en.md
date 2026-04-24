@@ -53,7 +53,7 @@ This repository ships reusable Claude Code skills and agents as the `nolte-share
 
 ### Multilingual behavior
 - **MUST** render artifact metadata (`name`, `description`, `distribution`, `tags`, body) as-is from the source frontmatter; for artifacts shipped by this repository this is English by the `skill-management` / `agent-management` rule, while external plugins are rendered verbatim regardless of their own language conventions
-- **MUST** treat `tags` as identifiers, not prose: they are rendered in their canonical lowercase ASCII kebab-case form (per `skill-management` / `agent-management`) and never translated, case-folded, or otherwise rewritten between docs languages
+- **MUST** treat `tags` as identifiers, not prose: they're rendered in their canonical lowercase ASCII kebab-case form (per `skill-management` / `agent-management`) and never translated, case-folded, or otherwise rewritten between docs languages
 - **SHOULD** localize only the surrounding chrome—section titles, intro paragraphs, navigation labels, the tag-index header—into each configured docs language (`docs/en/`, `docs/de/`)
 - **MUST NOT** translate artifact metadata or body at generation time; translations of those fields are out of scope
 
