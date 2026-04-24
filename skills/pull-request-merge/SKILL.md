@@ -104,7 +104,9 @@ gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=automerg
 
 ### 7. Verify the merge landed
 
-Confirm that the PR reached `MERGED` state and `origin/develop` advanced:
+The `automerge.yaml` workflow exits `SUCCESS` even when `pascalgn/automerge-action`'s internal `mergeResult` is `merge_failed` (for example when the reusable workflow's `MERGE_METHOD` default doesn't match the repo's allowed strategy, or when the `uses:` tag points to a pre-fix version of `nolte/gh-plumbing`). A green check rollup is **not** proof the merge happened. Verify in two passes:
+
+**7a. Confirm PR and `develop` state directly.**
 
 ```
 gh pr view <number> --json state,mergedAt,mergeCommit,url
@@ -112,7 +114,22 @@ git fetch origin develop
 git log --oneline -1 origin/develop
 ```
 
-Report back to the user: PR URL, merged-at timestamp, merge commit SHA on `origin/develop`, and the labels that were applied. If the PR isn't yet in `MERGED` state because automerge is still waiting on checks, report the outstanding checks and tell the user the merge will complete automatically—don't poll or sleep.
+If `state == MERGED` and `mergeCommit.oid` appears on `origin/develop`, report back and proceed to step 8. If `state == OPEN` and at least one required check is still running, report the outstanding checks and stop—the merge will complete automatically, don't poll or sleep.
+
+**7b. Audit the automerge workflow when the PR is `OPEN` with all required checks green and the `automerge` label applied.** The most recent `automerge.yaml` run on the head SHA is suspect—treat its `SUCCESS` conclusion as unverified until the logs say otherwise:
+
+```
+RUN_ID=$(gh run list --workflow automerge.yaml --commit <head_sha> \
+  --limit 1 --json databaseId --jq '.[0].databaseId')
+JOB_ID=$(gh api repos/<owner>/<repo>/actions/runs/$RUN_ID/jobs \
+  --jq '.jobs[0].id')
+gh api repos/<owner>/<repo>/actions/jobs/$JOB_ID/logs \
+  | grep -E "mergeResult: 'merge_failed'|Failed to merge PR" || true
+```
+
+If the logs contain `mergeResult: 'merge_failed'` or `Failed to merge PR: …`, this is a **`workflow-health` incident, not a retryable label-apply**. Do not re-apply the `automerge` label and do not re-run the workflow blindly. Classify per `spec/project/workflow-health/<canonical_language>.md`; the common cause here is **`stale pin`**—the `uses:` tag in `.github/workflows/automerge.yaml` points to a version of `reusable-automerge.yaml` that precedes the relevant fix (e.g. the `MERGE_METHOD: squash` override). Surface the log excerpt and the bump target to the user, and hand off the pin bump as a separate PR per the workflow-health spec.
+
+Report back: PR URL, merged-at timestamp, merge commit SHA on `origin/develop`, the labels that were applied, and—if 7b caught a silent no-op—the workflow-health classification and the remediation the user needs to take next.
 
 ### 8. Clean up local state
 
@@ -138,5 +155,6 @@ Never run `git push origin --delete …` or `gh api -X DELETE` without explicit 
 - **Never** skip the `review` skill delegation. A final review is the cheapest pre-merge gate; only an explicit user override bypasses it.
 - **Never** rebase or merge `develop` into the feature branch silently to fix a lag. Branch-freshness gaps return control to the user, consistent with `pull-request-create`.
 - **Never** poll, sleep, or loop waiting for checks to complete. Report the outstanding state and stop; the user re-invokes the skill when ready.
+- **Never** treat the `automerge.yaml` workflow's `SUCCESS` conclusion as proof the merge happened. `pascalgn/automerge-action` exits 0 on `mergeResult: 'merge_failed'`. Always confirm `state == MERGED` on the PR itself (step 7a), and when the PR is still open with green checks, audit the action's logs for `merge_failed` (step 7b) before declaring the merge complete.
 - **Never** delete the remote feature branch as part of the automatic merge flow. Post-merge branch cleanup is the platform's job via `delete_branch_on_merge: true`; a manual `gh api -X DELETE` call is only a one-off catch-up and requires explicit user confirmation.
 - When `spec/project/pull-request-workflow/`, `spec/project/branching-model/`, or `spec/project/workflow-health/` disagrees with this skill, the spec wins. Propose a skill update rather than silently diverging.
