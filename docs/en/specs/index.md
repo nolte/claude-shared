@@ -4,12 +4,12 @@ The specifications under `spec/` define the binding rules for skill and agent au
 
 ## Existing specs
 
-The authoritative, always-current list lives in [`spec/README.md`](https://github.com/nolte/claude-shared/blob/develop/spec/README.md) and is maintained by the [Spec skill](../skills/spec.md) — it lists every spec with topic, slug, language titles, status and last-update date.
+The authoritative, always-current list lives in [`spec/README.md`](https://github.com/nolte/claude-shared/blob/develop/spec/README.md) and is maintained by the [Spec skill](../skills/spec.md); it lists every spec with topic, slug, language titles, status and last-update date.
 
 Rough map for orientation:
 
-- **`spec/claude/`** — rules for authors of skills and agents (includes `skill-management`, `agent-management`, `skill-vs-agent`, `skill-review`, `agent-review`, `skill-agent-catalog`, `permission-allowlist`, `review-plan`)
-- **`spec/project/`** — rules for project and release conventions (includes `project-structure`, `pull-request-workflow`, `branching-model`, `release-automation`, `release-notes-audience-analysis`, `quality-gate`, `dependency-audit`, `workflow-health`, `docs-freshness`, `readme-structure`, `prose-style`, `spec-drift-audit`, `spec-readiness`, `audience-identification`, `continuous-improvement`)
+- **`spec/claude/`**: rules for authors of skills and agents (includes `skill-management`, `agent-management`, `skill-vs-agent`, `skill-review`, `agent-review`, `skill-agent-catalog`, `permission-allowlist`, `review-plan`)
+- **`spec/project/`**: rules for project and release conventions (includes `project-structure`, `pull-request-workflow`, `branching-model`, `release-automation`, `release-notes-audience-analysis`, `quality-gate`, `dependency-audit`, `workflow-health`, `docs-freshness`, `readme-structure`, `prose-style`, `spec-drift-audit`, `spec-readiness`, `audience-identification`, `continuous-improvement`)
 
 Detail pages in this documentation currently exist for `skill-management` and `agent-management`; more are being added.
 

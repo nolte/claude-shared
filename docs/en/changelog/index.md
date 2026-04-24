@@ -2,7 +2,7 @@
 
 The authoritative release history lives on the [GitHub Releases page](https://github.com/nolte/claude-shared/releases); this changelog summarizes the headlines per version.
 
-## 0.2.0 (in preparation — first published release)
+## 0.2.0 (in preparation: First published release)
 
 ### Highlights
 
@@ -26,7 +26,7 @@ The authoritative release history lives on the [GitHub Releases page](https://gi
 
 `skill-vs-agent`, `skill-review`, `agent-review`, `review-plan`, `skill-agent-catalog`, `permission-allowlist`, `pull-request-workflow`, `branching-model`, `release-automation`, `release-notes-audience-analysis`, `project-structure`, `quality-gate`, `dependency-audit`, `workflow-health`, `docs-freshness`, `readme-structure`, `prose-style`, `spec-drift-audit`, `spec-readiness`, `audience-identification`, `continuous-improvement`
 
-## 0.1.0 (unreleased — bootstrap)
+## 0.1.0 (unreleased: Bootstrap)
 
 ### Plugin
 
