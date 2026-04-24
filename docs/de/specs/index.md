@@ -4,12 +4,14 @@ Die Spezifikationen unter `spec/` definieren die verbindlichen Regeln für Autor
 
 ## Vorhandene Specs
 
-| Topic | Slug | Titel (DE) | Titel (EN) | Status |
-|-------|------|-----------|-----------|--------|
-| claude | [agent-management](agent-management.md) | Claude-Agent-Autorenschaft | Claude Agent Authoring | draft |
-| claude | [skill-management](skill-management.md) | Claude-Skill-Autorenschaft | Claude Skill Authoring | draft |
+Die autoritative, vom [Spec-Skill](../skills/spec.md) gepflegte Liste liegt in [`spec/README.md`](https://github.com/nolte/claude-shared/blob/develop/spec/README.md) — dort stehen alle Specs mit Topic, Slug, Sprachtiteln, Status und letztem Update-Datum.
 
-Der aktuelle Stand des Indexes wird von `spec/README.md` geführt und durch den Spec-Skill aktualisiert.
+Grober Schnitt zur Orientierung:
+
+- **`spec/claude/`** — Regeln für Autoren von Skills und Agents (u. a. `skill-management`, `agent-management`, `skill-vs-agent`, `skill-review`, `agent-review`, `skill-agent-catalog`, `permission-allowlist`, `review-plan`)
+- **`spec/project/`** — Regeln für Projekt- und Release-Konventionen (u. a. `project-structure`, `pull-request-workflow`, `branching-model`, `release-automation`, `release-notes-audience-analysis`, `quality-gate`, `dependency-audit`, `workflow-health`, `docs-freshness`, `readme-structure`, `prose-style`, `spec-drift-audit`, `spec-readiness`, `audience-identification`, `continuous-improvement`)
+
+Detailseiten in dieser Doku existieren aktuell für `skill-management` und `agent-management`; weitere werden nachgezogen.
 
 ## RFC-2119-Konventionen
 

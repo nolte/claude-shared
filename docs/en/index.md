@@ -20,7 +20,7 @@ flowchart LR
 | **Plugin name** | `nolte-shared` |
 | **Slash namespace** | `/nolte-shared:<skill>` |
 | **Skills source** | `skills/<name>/` |
-| **Agents source** | `agents/<name>.md` (planned) |
+| **Agents source** | `agents/<name>.md` |
 | **Specifications** | `spec/claude/<topic>/<lang>.md` |
 | **Status** | Early stage—content being consolidated |
 
@@ -38,6 +38,6 @@ flowchart LR
 
 - [Getting Started](getting-started/index.md): load the plugin and use the skills
 - [Skills](skills/index.md): overview of bundled skills
-- [Agents](agents/index.md): overview of planned and existing agents
+- [Agents](agents/index.md): overview of bundled agents
 - [Specifications](specs/index.md): authoring rules
 - [Development](development/index.md): work on this repository
