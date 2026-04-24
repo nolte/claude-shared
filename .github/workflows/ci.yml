@@ -20,7 +20,7 @@ jobs:
     env:
       # Pinned to match the asdf-managed local version; the prose-style spec
       # requires local and CI to produce identical alerts. Bump in lock-step.
-      VALE_VERSION: "3.0.1"
+      VALE_VERSION: "3.14.1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
