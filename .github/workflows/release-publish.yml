@@ -92,7 +92,7 @@ jobs:
           TARGET: ${{ steps.draft.outputs.target }}
         run: |
           set -euo pipefail
-          if [[ "$TARGET" == "develop" ]]; then
+          if [[ "$TARGET" == "develop" || "$TARGET" == "refs/heads/develop" ]]; then
             exit 0
           fi
           if ! git merge-base --is-ancestor "$TARGET" origin/develop; then
