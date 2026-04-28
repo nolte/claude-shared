@@ -52,7 +52,7 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
   - Read-only-Agents (Agents, deren deklarierte Verantwortung Research, Review, Audit oder Reporting ist) haben **keine** Write-, Edit- oder Execution-Tools — das Vorhandensein von Edit, Write, Bash, NotebookEdit in der `tools`-Liste eines Read-only-Agents ist ein `BLOCKER`
   - Agent-Body ruft das Skill-Tool **nicht** im Namen des Nutzers — erkannt durch Grep im Body nach `Skill(`, `Skill tool` oder äquivalenten Dispatch-Phrasen; jeder Treffer ist ein `BLOCKER` gemäß `skill-vs-agent`
   - Keine hartcodierten absoluten Pfade im Body oder in Geschwister-Assets
-  - Frontmatter- und System-Prompt-Inhalt sind in Englisch, unabhängig von der Konversationssprache, in der der Agent autoriert wurde
+  - Frontmatter-Feldnamen und Werte technischer Bezeichner (`name`, `distribution`, `tools`, `model`, `tags`) sind in Englisch; der `description`-Wert und der System-Prompt-Body folgen `agent-management.Struktur` — standardmäßig Englisch, mit Projektsprachen-Ausnahme für `distribution: project`-Agents, deren konsumierendes Projekt eine nicht-englische Dokumentationssprache deklariert und sie für Agent-Prosa autorisiert. Verifiziere die Projekt-Autorisierung (typischerweise `CLAUDE.md`) bevor ein ansonsten als `BLOCKER` zu wertender Befund auf `INFO` heruntergestuft wird
 
 ### Modell-Wahl-Checks
 
