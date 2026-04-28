@@ -27,7 +27,9 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - **MUST** write a `description` that names concrete user-facing triggers and task shapes ("use when the user asks X," "invoke for Y") rather than abstract capabilities, so the calling Claude can reliably decide when to dispatch
 - **MUST** set `distribution` to exactly one of `plugin` or `project`, declaring the intended delivery form (see "Distribution" below); the author chooses this consciously at creation time and changes it only by re-authoring the agent for the new form
 - **MUST** contain a system prompt in the markdown body that scopes the agent to a single responsibility and states its expected output shape
-- **MUST** keep frontmatter and system-prompt content in English for token efficiency; the agent may still be instructed to respond to the user in the user's language
+- **MUST** keep frontmatter field names and technical identifier values in English: `name`, `distribution`, `tools` entries, `model`, and `tags` entries stay English regardless of the project's documentation language
+- **SHOULD** keep the `description` value and the system-prompt body in English for token efficiency and portability across teams; agents authored with `distribution: project` for a project that declares a non-English documentation language in its root-level convention file (typically `CLAUDE.md`) **MAY** instead author the `description` and the body in the project's primary documentation language. Agents authored with `distribution: plugin` **MUST** stay English-only in description and body because they ship across multiple downstream projects with possibly different languages
+- The agent **MAY** still be instructed to respond to the user in the user's language regardless of where the body is authored
 - **MUST** be self-contained—any supporting assets (references, examples, prompt fragments) live alongside the agent file in a sibling folder `agents/<name>/` and are referenced by relative path
 - **MAY** include an optional `tags` field in YAML frontmatter: a list of lowercase ASCII kebab-case strings, each ≤30 characters, with no more than 5 entries; tags provide thematic grouping so the catalog (`skill-agent-catalog`) and peer-cluster lookups (`skill-vs-agent` §Portfolio-wide consistency) can browse by topic
 
@@ -98,6 +100,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [ ] Agent works when invoked in a downstream project that doesn't contain claude-shared-specific context
 - [ ] No hard-coded absolute paths; all internal references are relative to the agent file or the project it operates on
 - [ ] If the agent writes files or performs side effects, the targets and preconditions are documented in the system prompt
+- [ ] Frontmatter field names and technical identifier values (`name`, `distribution`, `tools`, `model`, `tags`) are English; `description` and the system-prompt body are English by default, unless the agent declares `distribution: project` and the consuming project's root-level convention file (typically `CLAUDE.md`) declares a non-English documentation language and authorizes that language for agent prose
 - [ ] Reviewing an individual agent against this spec follows `spec/claude/agent-review/`; review output conforms to `spec/claude/review-plan/` and lives under `.audits/agent-review/<name>.md`
 
 ## Open Questions

@@ -52,7 +52,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
   - Read-only agents (agents whose stated responsibility is research, review, audit, or reporting) have **no** write, edit, or execution tools—the presence of any of Edit, Write, Bash, NotebookEdit in a read-only agent's `tools` list is a `BLOCKER`
   - Agent body **never** invokes the Skill tool on behalf of the user—detected by grepping the body for `Skill(`, `Skill tool`, or equivalent dispatch phrasings; any match is a `BLOCKER` per `skill-vs-agent`
   - No hard-coded absolute paths in the body or in sibling assets
-  - Frontmatter and system-prompt content are in English, regardless of the conversation language in which the agent was authored
+  - Frontmatter field names and technical identifier values (`name`, `distribution`, `tools`, `model`, `tags`) are English; the `description` value and the system-prompt body comply with `agent-management.Structure` — English by default, with a project-language exception for `distribution: project` agents whose consuming project declares a non-English documentation language and authorizes it for agent prose. Verify the project authorization (typically `CLAUDE.md`) is present before downgrading what would otherwise be a `BLOCKER` to `INFO`
 
 ### Model-choice checks
 
