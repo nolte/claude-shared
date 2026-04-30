@@ -3,6 +3,7 @@ auditable
 [Bb]ackend
 [Ff]rontend
 [Aa]utoallow(s|ed|ing)?
+[Aa]utodetect(s|ed|ing|ion)?
 [Aa]utofix(es|ed|ing)?
 [Aa]utoload(s|ed|ing)?
 [Aa]utolink(s|ed|ing)?
