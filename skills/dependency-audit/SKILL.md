@@ -1,6 +1,7 @@
 ---
 name: dependency-audit
 description: Scan the current project's dependency tree for known vulnerabilities (CVEs) and, when requested, license-compliance issues. Detects project kind from `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` for Python and `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` for Node, runs the appropriate auditors, and produces a severity-sorted report with direct vs transitive attribution. Invoke when the user asks to "audit dependencies," "run a CVE scan," "check for vulnerable packages," "check license compliance," "run pip-audit," "run npm audit," or equivalent German-language requests ("Abhängigkeiten auditieren," "CVE-Scan durchführen," "Lizenz-Compliance prüfen"). Also handles a pre-PR / pre-release dependency gate. Don't use for upgrading dependencies (that's an author's decision) or for writing Renovate configs (that's `project-structure-apply`).
+tags: [dependency]
 ---
 
 # Dependency Audit

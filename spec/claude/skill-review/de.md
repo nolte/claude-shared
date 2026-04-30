@@ -56,10 +56,27 @@ Die `skill-management`-Spec definiert, wie ein Skill *erstellt* wird — On-Disk
 
 - **MUSS [MUST]** bestätigen, dass Frontmatter und System-Prompt-Inhalt in Englisch sind, unabhängig von der Konversationssprache, in der der Skill autoriert wurde; jeder nicht-englische Frontmatter- oder Body-Inhalt ist ein `BLOCKER` (die Antwort-Sprache zur Laufzeit ist eine Runtime-Wahl, im Body dokumentiert, und fällt nicht unter diese Regel)
 
+### Checks aus externer Skill-Struktur-Validierung
+
+- **MUSS [MUST]** einen externen Skill-Struktur-Validator laufen lassen, der `SKILL.md`-Frontmatter, Body-Form und Erreichbarkeit referenzierter Assets prüft, bevor der Plan emittiert wird; Anthropics `skills-ref`-CLI ist das kanonische Beispiel, die Anforderung ist aber nicht an ein bestimmtes Binary gebunden
+- **MUSS [MUST]** jeden vom Validator gemeldeten Fehler auf ein `BLOCKER`-Finding und jede Warnung auf ein `WARNING`-Finding mappen und die Regel-Kennung des Validators im eckigen Klammerpräfix gemäß `review-plan` zitieren
+- **MUSS [MUST]** im `## Scope`-Abschnitt des Plans festhalten, welcher Validator und welche Version verwendet wurden, damit ein späteres Re-Review Validator-Drift genauso erkennen kann wie Spec-Drift
+- **MUSS NICHT [MUST NOT]** diesen Check mit der Begründung überspringen, dass andere Checks in dieser Spec bereits überlappende Bereiche abdecken; der externe Validator läuft zusätzlich zu den spec-abgeleiteten Checks, weil er strukturelle Probleme fängt, die einem spec-lesenden Reviewer entgehen können
+- **KANN [MAY]** ein einzelnes Validator-Finding nur dann unterdrücken, wenn ein expliziter Override im `## Scope` des Plans mit einer einzeiligen Begründung festgehalten wird, die in einer anderen Spec oder einer dokumentierten Projektentscheidung verankert ist
+
+### Checks aus Skill-Creation-Best-Practices
+
+Spiegelt die Autoren-Anforderungen aus `skill-management` §„Autoren-Qualität" (gemäß <https://agentskills.io/skill-creation/best-practices>); den Upstream-Regel-Slug zitieren, wenn ein Finding eine konkrete Regel pinnt.
+
+- **MUSS [MUST]** verifizieren, dass `SKILL.md` unter 500 Zeilen und 5.000 Tokens liegt; Überschreitung ist ein `BLOCKER`
+- **MUSS [MUST]** verifizieren, dass jedes unter `references/` / `templates/` / `assets/` / `scripts/` referenzierte Asset eine Lade-Trigger-Formulierung in `SKILL.md` trägt („Read X when Y", „use template Z for output Q"); ungetriggerte Referenzen sind ein `WARNING`
+- **SOLLTE [SHOULD]** auf einen **Gotchas**-Abschnitt prüfen, wenn der Skill gegen eine nicht-offensichtliche Umgebung arbeitet; das Fehlen ist ein `WARNING`, sofern der Skill klar gegen eine solche Umgebung arbeitet, ansonsten ein `SUGGESTION`
+- **SOLLTE [SHOULD]** Menü-ohne-Default-Formulierungen (mehrere gleichwertige Optionen ohne einen designierten Default) und Einzel-Antwort-Deklarationen dort, wo wiederverwendbare Prozeduren passen würden, flaggen; beide sind `SUGGESTION`s
+
 ### Review-Prozedur
 
 - **MUSS [MUST]** damit beginnen, die kanonischen Specs `skill-management`, `skill-vs-agent` und `review-plan` zu lesen, bevor ein Finding erzeugt wird; Findings ohne Anker in einer dieser Specs sind keine gültige Ausgabe dieser Prozedur
-- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: Frontmatter → Description/Trigger → System-Prompt-Body → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → INFO-Beobachtungen
+- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: externe-Validator-Findings → Frontmatter → Description/Trigger → System-Prompt-Body → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → Best-Practices-Checks → INFO-Beobachtungen
 - **MUSS [MUST]** genau eine `review-plan`-Datei unter `.audits/skill-review/<skill-name>.md` emittieren; der Reviewer **MUSS [MUST]** jede Lifecycle-Regel aus `review-plan` befolgen, einschließlich der Single-Plan-pro-Ziel-Invariante und des Löschungs-Commit-Message-Formats
 - **SOLLTE [SHOULD]** im `## Scope`-Abschnitt des Plans die Git-SHAs der angewandten Spec-Versionen einbetten, damit ein späteres Re-Review erkennen kann, ob Findings durch eine Spec-Revision veraltet sein könnten
 - **KANN [MAY]** rein stilistische Beobachtungen (Vale, Markdown-Linting) als `INFO`-Findings aufnehmen, wenn sie dem Autor helfen, **MUSS NICHT [MUST NOT]** sie aber zu `WARNING` oder `BLOCKER` erheben — die bleiben bei ihrem eigenen Tooling
@@ -79,6 +96,8 @@ Die `skill-management`-Spec definiert, wie ein Skill *erstellt* wird — On-Disk
 - [ ] Jeder offene Plan unter `.audits/skill-review/` entspricht der Vier-Abschnitts-Struktur und dem YAML-Frontmatter aus `review-plan`
 - [ ] Die Abnahmekriterien der `skill-management`-Spec verweisen für die Review-Seite ihrer Autoren-Regeln auf diese Spec
 - [ ] Eine Stichprobe von drei geschlossenen Plan-Löschungen in `git log` zeigt exakt das Commit-Message-Format `review(skill-review): close <skill> — <counts>`
+- [ ] Jeder Plan unter `.audits/skill-review/` hält fest, welcher externe Skill-Struktur-Validator und welche Version gefahren wurde, und kein Plan schließt mit einem ungelösten vom Validator gemeldeten `BLOCKER`
+- [ ] Jeder Plan unter `.audits/skill-review/` führt die Best-Practices-Checks aus §„Checks aus Skill-Creation-Best-Practices" gegen den Ziel-Skill aus
 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
@@ -88,3 +107,4 @@ Die `skill-management`-Spec definiert, wie ein Skill *erstellt* wird — On-Disk
 - Wenn der zu reviewende Skill von einem Template oder Asset abhängt, das noch nicht existiert: Ist das Finding ein `BLOCKER` (gebrochene Referenz) oder ein `WARNING` (Template vor Merge zu ergänzen)?
 - Wie wird diese Spec aufgerufen — als `review`-Skill aus der Hauptkonversation, als Sub-Agent vergleichbar mit `audience-review` oder beides? Der Output ist in beiden Fällen derselbe Plan, aber der Einstiegspunkt beeinflusst, ob das Review automatisch persistiert
 - Soll das Review eines Skills auch verifizieren, dass die `description`-Trigger des Skills nicht mit einem Runtime-Slash-Command oder einem Claude-Code-Built-in-Command überlappen, und wenn ja gegen welche autoritative Liste?
+- Wo lebt das Validator-Pinning (welche Version als Ground Truth gilt) — in dieser Spec, in `skill-management` oder in der Tooling-Konfiguration des Repositories?

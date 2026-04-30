@@ -1,11 +1,19 @@
 ---
 name: audience-identify
 description: Run the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produce an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", "Zielgruppen für dieses Modul/Projekt/Paket ermitteln", "wer sind die Konsumenten/Nutzer von X", "Stakeholder-Identifikation für X", "Zielgruppenanalyse vor README/SLA/Threat-Model", or "Audience-Liste aufsetzen". Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context.
+tags: [audience]
 ---
 
 # Audience Identification Skill
 
 Operationalizes the methodology from `spec/project/audience-identification/` so a bounded context (module, service, library, project) gets a reviewable audience list instead of one author's private guesswork.
+
+## Why this is a skill, not an agent
+
+- **Mid-flow interactivity is the contract** — every category enumeration step ("who are the operators?", "any indirect audiences?") is a per-step user dialogue; the spec explicitly forbids batched output and requires confirmation per category.
+- **Persistent on-disk artifact** — the resulting audience list lives next to the bounded context (README section, `AUDIENCES.md`, or ADR) and is read by downstream specs (`readme-structure`, future SLA / threat-model specs); a skill owns persistent state, an agent returns a structured report and forgets.
+- **`confirmed` vs `assumed` tagging requires the user in the loop** — the spec mandates that `confirmed` only be set after explicit user statement; an agent's isolated context can't gather that signal interactively.
+- Counter-dimension considered: a narrow agent prompt could sharpen the relationship-category vocabulary, but the load-bearing dimension here is interactivity, not output specialization — skill wins.
 
 ## User-language policy
 

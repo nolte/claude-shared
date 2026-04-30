@@ -59,10 +59,20 @@ Starter-Vokabular:
 
 ### Empfehlungen
 - **SOLLTE [SHOULD]** einen Abschnitt „Hard rules" enthalten, der Invarianten auflistet, die niemals gebrochen werden dürfen
-- **SOLLTE [SHOULD]** `SKILL.md` etwa unter 150 Zeilen halten; längere Inhalte in referenzierte Dateien auslagern
-- **SOLLTE [SHOULD]** unterstützende Dateien in konventionelle Unterordner legen: `templates/`, `references/`, `examples/`
+- **SOLLTE [SHOULD]** `SKILL.md` als weiches Ziel etwa unter 150 Zeilen halten; längere Inhalte in referenzierte Dateien auslagern
+- **SOLLTE [SHOULD]** unterstützende Dateien in konventionelle Unterordner legen: `templates/` (oder `assets/`), `references/`, `examples/`, `scripts/`
 - **KANN [MAY]** Beispiel-Nutzer-Prompts und erwartetes Verhalten in `examples/` enthalten
 - **KANN [MAY]** ein kleines Konfigurationsschema enthalten, falls der Skill projektbezogene Konfiguration benötigt
+
+### Autoren-Qualität (gemäß Anthropic-Skill-Creation-Best-Practices)
+
+Folgt der öffentlichen Leitlinie unter <https://agentskills.io/skill-creation/best-practices>; den Source-Slug zitieren, wenn ein Finding eine konkrete Regel pinnt.
+
+- **MUSS [MUST]** `SKILL.md` unter 500 Zeilen und 5.000 Tokens halten (Upstream-Hard-Cap); Inhalte darüber **MUSS** in `references/`, `templates/`/`assets/` oder `scripts/` ausgelagert werden und **MUSS** eine explizite Lade-Trigger-Formulierung („Read X when Y", „use template Z for output Q") in `SKILL.md` tragen, damit Progressive Disclosure wie vorgesehen funktioniert
+- **SOLLTE [SHOULD]** einen **Gotchas**-Abschnitt enthalten, der konkrete Korrekturen zu nicht-offensichtlichen Umgebungs-Fakten auflistet, die der Agent sonst falsch annehmen würde; das ist unterschiedlich vom **Hard rules**-Abschnitt (Invarianten) und von generischen Ratschlägen
+- **SOLLTE [SHOULD]** die Spezifität der Anweisungen an die Fragilität der Aufgabe anpassen (Freiheit plus *Warum* für flexible Aufgaben; präskriptiv für fragile oder sequenzielle Operationen), **einen klaren Default vorgeben** statt eines Menüs gleichwertiger Optionen und **Prozeduren statt Deklarationen bevorzugen** (vermitteln, wie eine Problemklasse anzugehen ist, nicht was für eine konkrete Instanz produziert werden soll)
+- **SOLLTE [SHOULD]** den Skill auf realer Expertise verankern — aus einer praktischen Aufgabe extrahieren oder aus projekt-spezifischen Artefakten synthetisieren (Runbooks, Code-Review-Kommentare, Versionsgeschichte, reale Fehlerfälle) statt allein aus generischer LLM-Ausgabe
+- **KANN [MAY]** wiederverwendbare Skripte in `scripts/` bündeln, wenn Iteration zeigt, dass der Agent dieselbe Logik in jedem Lauf neu erfindet, und **KANN** einen **Validation-Loop**- oder **Plan-Validate-Execute**-Unterabschnitt ergänzen, wenn der Skill Batch- oder destruktive Operationen ausführt
 
 ## Akzeptanzkriterien
 - [ ] Quellordner existiert unter `skills/<name>/` in claude-shared mit `<name>` in ASCII-Kebab-Case
@@ -77,6 +87,7 @@ Starter-Vokabular:
 - [ ] Keine hartkodierten absoluten Pfade; alle internen Pfade sind relativ zum Skill-Ordner oder zum Projekt, auf dem der Skill operiert
 - [ ] Falls der Skill Dateien schreibt, sind Zielorte und Vorbedingungen dokumentiert
 - [ ] Das Review eines einzelnen Skills gegen diese Spec folgt `spec/claude/skill-review/`; die Review-Ausgabe entspricht `spec/claude/review-plan/` und liegt unter `.audits/skill-review/<name>.md`
+- [ ] Jede `SKILL.md` ist unter 500 Zeilen und 5.000 Tokens, und jedes referenzierte Asset unter `references/` / `templates/` / `assets/` / `scripts/` ist mit einer expliziten Lade-Trigger-Formulierung in `SKILL.md` gepaart
 
 ## Offene Fragen
 - Soll der Ordnername verpflichtend einem etwaigen nutzerseitigen Slash-Command-Namen entsprechen, oder dürfen sie abweichen?
