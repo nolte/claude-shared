@@ -19,6 +19,7 @@ Canonical language: `en` · Translations: `de`
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | 2026-04-23 |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | unversioned |
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | unversioned |
+| project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | 2026-04-23 |
 | project | prose-style | Prose Style | Textstil | draft | 2026-04-24 |
 | project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | 2026-04-23 |
