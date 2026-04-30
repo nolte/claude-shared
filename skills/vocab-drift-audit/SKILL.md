@@ -1,11 +1,19 @@
 ---
 name: vocab-drift-audit
 description: Audit repository-local Vale vocabularies against the pinned upstream release of nolte/vale-style to detect drift. Invoke when the user asks to audit the Vale vocabulary, check for vocabulary drift, diff the local vocab against nolte/vale-style, or review whether local Vale terms can be retired. Also handles equivalent German-language requests. Reports local entries that are already accepted upstream (should be deleted) and local entries that aren't yet upstream (should be PR'd to nolte/vale-style).
+tags: [audit]
 ---
 
 # Vocab Drift Audit
 
 Operationalises the MUST rule in `spec/project/prose-style/<canonical_language>.md`: "once the upstream change is released, the local entry MUST be removed and the pinned `nolte/vale-style` release MUST be bumped." Apply the prose-style spec's rules when it's present in the current project; otherwise, fall back to the conventions described here.
+
+## Why this is a skill, not an agent
+
+- **Output flows back into the main conversation** — the diff report (duplicates to remove, upstream PR candidates) is the input to follow-up actions the user authorises in the same turn (delete local entries, draft an upstream PR, bump the pinned tag).
+- **Interactivity guards against destructive defaults** — the skill never deletes accepted-locally entries or bumps the pin without explicit user confirmation; that gating is core to the contract and would be lost in an agent's fire-and-forget shape.
+- **Orchestration role** — typical use is one step inside a "tidy the prose tooling before a release" flow that may chain into `pull-request-create` for the upstream contribution; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
+- Counter-dimension considered: an agent with `Bash`-only tool restriction could perform the read-only diff equally well, but the report-then-mutate split would force a second hop for the follow-up actions — keeping the whole flow in one skill is simpler.
 
 ## User-language policy
 

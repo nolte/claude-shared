@@ -1,11 +1,19 @@
 ---
 name: skill-management
 description: Author or revise Claude Code skills in the nolte-shared plugin source tree. Invoke when the user asks to create a new skill, scaffold a skill for a given purpose, add a skill to this repo, or revise the authoring shape of an existing skill (rewriting a weak description, adding a Hard rules section, trimming overly long instructions). Also handles equivalent German-language requests. Scaffolds the folder under skills/<name>/ (distribution happens via the plugin mechanism, not via .claude/skills copies) and writes SKILL.md with valid frontmatter. Do NOT use for reviewing or auditing an existing skill against the spec — that produces a persistent, spec-cited review plan and belongs to `skill-review`. Do NOT bump the plugin version in a skill-change PR — `release-automation` owns that via the release workflow.
+tags: [scaffolding]
 ---
 
 # Skill Management
 
 Scaffolds and revises Claude Code skills. Applies the authoring rules from `spec/claude/skill-management/<canonical_language>.md` when that spec is present in the current project; otherwise falls back to the conventions embedded here. Review of an existing skill against the spec is a separate concern — invoke `skill-review` for that; it produces a persistent plan under `.audits/skill-review/` that this skill does not.
+
+## Why this is a skill, not an agent
+
+- **Mid-flow interactivity** — collecting purpose, triggers, and name from the user, plus per-step confirmation when files get written, is interactive by nature; an agent's fire-and-forget contract would lose those checkpoints.
+- **Output flows back into the main conversation** — the created folder, the proposed `SKILL.md`, and the follow-up "remember to release the plugin" reminder are all part of the user's working context; isolating them in an agent's structured-report boundary would obscure the path-by-path approval the skill requires.
+- **Orchestrator role** — this skill is one step in a broader "ship a new capability" flow that often chains into `pull-request-create`; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
+- Counter-dimension considered: a narrower system prompt focused purely on YAML-frontmatter generation could sharpen the output, but the high-impact part is the human conversation about triggers and naming, not the YAML mechanics — interactivity wins.
 
 ## User-language policy
 

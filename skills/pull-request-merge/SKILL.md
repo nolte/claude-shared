@@ -1,11 +1,19 @@
 ---
 name: pull-request-merge
 description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`.
+tags: [pull-request]
 ---
 
 # Pull Request Merge
 
 Promotes an open draft pull request (typically the one opened by `pull-request-create`) to a merged state on `develop`. This skill is the counterpart to `pull-request-create`: that skill opens the PR; this skill lands it. It honors `spec/project/pull-request-workflow/<canonical_language>.md`, `spec/project/branching-model/<canonical_language>.md`, and `spec/project/workflow-health/<canonical_language>.md` end-to-end: `enforce_admins: true` is respected, `--squash` is the only merge strategy, and failing required checks route to workflow-health triage rather than to a waiver.
+
+## Why this is a skill, not an agent
+
+- **Externally-visible mutations gate on user confirmation** — flipping draft → ready, applying the `automerge` label, and (in the fallback path) calling `gh pr merge --squash --auto` all act on a shared GitHub PR; mid-flow user gating is core to the contract and would be lost in an agent's fire-and-forget shape.
+- **Orchestrator that chains other skills** — this skill dispatches `review` and (conditionally) `security-review` mid-flow, then conditionally hands off to `workflow-health` triage on failure; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
+- **Wait mode requires visible status updates per round** — bounded polling for required-check completion has a hard "every wait round produces a visible status line" rule, which only works inside a skill that stays in the main conversation.
+- Counter-dimension considered: a tool-restricted agent (read + a single `gh` Bash) could perform the verification half (steps 1, 4, 7) cleanly, but the externally-visible-mutation half (steps 5, 6) needs the user in the loop — keeping the whole flow in one skill is simpler than a forced split.
 
 ## User-language policy
 

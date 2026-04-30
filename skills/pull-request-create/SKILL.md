@@ -1,11 +1,19 @@
 ---
 name: pull-request-create
 description: Create a GitHub pull request that conforms to the repository's pull-request-workflow spec. Invoke when the user asks to open a PR, create a pull request, draft a PR description, create a merge request, or push the branch and open a PR. Also handles equivalent German-language requests. Verifies the feature branch is synchronized with develop, composes a Conventional-Commits title and the five-section body (Summary, Changes, Linked issues, Testing, Risk / rollout notes), autolinks any touched spec files under spec/, confirms with the user, and runs the GitHub CLI PR creation command.
+tags: [pull-request]
 ---
 
 # Pull Request Create
 
 Creates a GitHub pull request that conforms to `spec/project/pull-request-workflow/<canonical_language>.md` when that spec is present in the current project. If the spec is absent, the rules embedded in this skill still apply as the baseline.
+
+## Why this is a skill, not an agent
+
+- **Externally-visible action requires explicit confirmation** — `gh pr create` opens a PR that other humans see; the spec mandates presenting the title and body to the user and iterating until approval before invoking it. That gate is core to the contract.
+- **Mid-flow interactivity** — branch-freshness resolution (rebase vs merge), force-push confirmation, and the title/body iteration are per-step user dialogues an agent's structured-report shape can't carry.
+- **Output flows back into the main conversation** — the diffed PR body, the touched-spec autolinks, and the resulting PR URL all live in the user's working context; isolating them behind an agent boundary would obscure the iterative drafting.
+- Counter-dimension considered: a narrower agent could sharpen Conventional-Commits-title generation, but the load-bearing dimension here is the externally-visible-action gating, not title-prose quality — skill wins.
 
 ## User-language policy
 

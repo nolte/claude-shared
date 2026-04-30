@@ -1,11 +1,19 @@
 ---
 name: project-structure-apply
 description: Audit a repository against spec/project/project-structure/<canonical_language>.md and scaffold or patch any missing artefacts—README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, MkDocs setup, .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Also verifies that the Probot apps (settings, boring-cyborg, stale) backing those YAML files are actually installed on the GitHub repository via the GitHub API. Invoke when the user asks to audit the project structure, apply the project-structure spec, scaffold missing GitHub configs, add .github/settings.yml, generate release-drafter config, bring this repo in line with project-structure, check that Probot apps are installed, or add missing project configs. Also handles equivalent German-language requests.
+tags: [scaffolding]
 ---
 
 # Project Structure Apply
 
 Audits and repairs a repository so it matches the Repository Project Structure spec at `spec/project/project-structure/<canonical_language>.md`. The skill both reports findings and—with explicit per-item user consent—writes the missing files in place.
+
+## Why this is a skill, not an agent
+
+- **Per-item user approval is the contract** — every scaffolded file (`.github/settings.yml`, `Taskfile.yml`, `renovate.json5`, …) is written only with explicit per-change confirmation; the audit is read-only and the apply step is a sequence of approvals an agent's fire-and-forget shape can't carry.
+- **Output flows back into the main conversation** — the audit table, the per-item proposals, and the GitHub-App-installation status all surface in the conversation so the user can decide; isolating them in a structured-report boundary would obscure the per-file approval surface.
+- **Network-side calls require user gating** — Probot-app installation checks read GitHub API state, but app installation itself is intentionally a human-approved action; mid-flow interactivity is load-bearing here.
+- Counter-dimension considered: a narrower agent could specialize on file-template generation and gain on context-window protection, but the high-impact part is the per-item approval dialogue, not the boilerplate; skill wins.
 
 When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path, or from the `nolte/claude-shared` repository). Never invent requirements that aren't in the spec.
 
