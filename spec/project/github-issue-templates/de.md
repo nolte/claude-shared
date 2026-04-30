@@ -80,15 +80,15 @@ Bug-Reports und Feature-Requests teilen sich denselben Speichermechanismus (`.gi
 
 - **MUSS [MUST]** auf jedem Template eine Suchen-vor-Anlegen-Bestätigung enthalten (ein einzelner Pflicht-`checkboxes`-Eintrag, der auf den Issue-Tracker verweist).
 - **SOLLTE [SHOULD]** jedes Template unter zehn Komponenten halten; längere Formulare senken die Abschlussrate.
-- **KANN [MAY]** den Issue-Titel über den Top-Level-Schlüssel `title:` des Forms vorbelegen, wenn der Projekttyp eine strikte Titel-Konvention hat (zum Beispiel `[bug] <area>: <summary>` oder `[feat] `).
+- **KANN [MAY]** den Issue-Titel über den Top-Level-Schlüssel `title:` des Forms vorbelegen, wenn der Projekttyp eine strikte Titel-Konvention hat (zum Beispiel `[bug] <area>: <summary>` oder `[feat] <summary>`).
 
-#### Bug-Reports — bewusst streng
+#### Bug-Reports: Bewusst streng
 
 - **MUSS [MUST]** jedes Feld, das Triager vor jeder Aktion brauchen, mit `validations: required: true` markieren.
 - **SOLLTE NICHT [SHOULD NOT]** ein Freitext-"additional context"-Feld als einziges strukturiertes Feld haben — mindestens ein strukturiertes Feld pro Template muss triage-kritische Daten erfassen.
 - **KANN [MAY]** `dropdown` und `checkboxes` großzügig nutzen, um konkrete operative Auswahlen (Installationsmethode, Runtime, OS) aufzuzählen, damit Triage über die Werte filtern kann.
 
-#### Feature-Requests — bewusst nachgiebig
+#### Feature-Requests: Bewusst nachgiebig
 
 Ein Feature-Request kommt oft als halbgegorener Gedanke an, der Raum für Diskussion und Verfeinerung braucht, bevor er sich auf eine Form festlegt. Strikte Pflichtfeld-Gates schrecken vom Einreichen ab und erzwingen frühzeitige Festlegung auf eine Lösung; die Spec biased Feature-Templates daher in Richtung Offenheit:
 
