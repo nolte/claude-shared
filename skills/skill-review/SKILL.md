@@ -1,6 +1,7 @@
 ---
 name: skill-review
 description: Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/<skill-name>.md. Invoke when the user asks "review this skill", "audit skills/<name>", "check whether this skill is spec-compliant", "skill review for <name>", "prüfe diesen Skill", "Skill-Review für X", "Audit von skills/<name>", or "ist dieser Skill spec-konform". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for <name>", "schließe den Skill-Review-Plan". Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill).
+tags: [review]
 ---
 
 # Skill Review Skill
@@ -46,11 +47,12 @@ Interactive. Confirm each decision with the user before acting on it.
    - If its `status` is `complete`, tell the user and ask whether to rerun (which will overwrite — per `review-plan` one-plan-per-target invariant).
 3. **Narrow scope if the user asks.** The user may request "frontmatter only", "rationale only", etc. Record the narrowing verbatim — it goes into the plan's `## Scope`.
 4. **Read the review surface** in this order: `SKILL.md` (frontmatter + body), every file referenced by relative path from `SKILL.md`, sibling `agents/<name>.md` the skill dispatches to (if any). Stop if a referenced file is missing — that is already a finding to record, but note the broken reference before walking further.
-5. **Apply the checks from `spec/claude/skill-review/`**, in the spec's declared order: frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → INFO observations. For the duplicate check, `Grep` the `description:` line of every other `skills/*/SKILL.md` and `agents/*.md` for semantic overlap with the target — keyword hits are candidates, not verdicts; read each candidate and judge.
-6. **Map severities.** MUST failure → `BLOCKER`, SHOULD failure → `WARNING`, applicable MAY → `SUGGESTION`, observation without a rule → `INFO`. Do not promote Vale/markdown-style observations above `INFO` — they stay with their own tooling.
-7. **Draft the plan** from `templates/plan.template.md`, filling every field. The frontmatter `repo-revision` is `git rev-parse HEAD` (or `unknown` if the repo is clean but detached / untracked). `created` is today's ISO date.
-8. **Write the plan** to `.audits/skill-review/<name>.md`. Confirm the path back to the user. Do **not** mark any item `- [x]` on creation — everything starts open.
-9. **Stage and commit** the plan only if the user asks; otherwise leave it as a working-tree change so the user can review before committing.
+5. **Run the external skill-structure validator** over `skills/<name>/SKILL.md`. The canonical example is Anthropic's `skills-ref` CLI, but the requirement isn't bound to a specific binary — accept any validator that checks frontmatter, body shape, and referenced-asset reachability. Capture the validator's name, version, and the full set of reported errors and warnings; map errors to `BLOCKER` and warnings to `WARNING` per `skill-review` §Checks derived from external skill-structure validation, citing each rule identifier in the bracketed prefix. If the validator isn't provisioned in the current repository, record an explicit override in the plan's `## Scope` with a one-line justification anchored in another spec or a documented project decision rather than silently skipping the check.
+6. **Apply the checks from `spec/claude/skill-review/`**, in the spec's declared order: external-validator findings → frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → best-practices checks → INFO observations. For the duplicate check, `Grep` the `description:` line of every other `skills/*/SKILL.md` and `agents/*.md` for semantic overlap with the target — keyword hits are candidates, not verdicts; read each candidate and judge. The best-practices checks come from `skill-review` §"Checks derived from skill-creation best practices" and verify the 500-line / 5,000-token cap, load-trigger phrases for referenced assets, the optional Gotchas section, and the defaults-not-menus / procedures-over-declarations style.
+7. **Map severities.** MUST failure → `BLOCKER`, SHOULD failure → `WARNING`, applicable MAY → `SUGGESTION`, observation without a rule → `INFO`. External-validator findings carry their own mapping (error → `BLOCKER`, warning → `WARNING`) per `skill-review` §Checks derived from external skill-structure validation. Do not promote Vale/markdown-style observations above `INFO` — they stay with their own tooling.
+8. **Draft the plan** from `templates/plan.template.md`, filling every field. The frontmatter `repo-revision` is `git rev-parse HEAD` (or `unknown` if the repo is clean but detached / untracked). `created` is today's ISO date. In `## Scope`, populate the `Validator:` line with the name and version captured in step 5; if step 5 recorded an override instead, write `Validator: override — <justification>` in place of the version.
+9. **Write the plan** to `.audits/skill-review/<name>.md`. Confirm the path back to the user. Do **not** mark any item `- [x]` on creation — everything starts open.
+10. **Stage and commit** the plan only if the user asks; otherwise leave it as a working-tree change so the user can review before committing.
 
 ### 2. `update <skill-name>` — check off processed items
 
@@ -75,6 +77,8 @@ When the user reports "I fixed items 3 and 5":
 ## Output — plan shape
 
 Reference `spec/claude/review-plan/<canonical>.md` for the authoritative format. Never restate its rules in the plan itself. The template at `templates/plan.template.md` is the starting point. Every finding uses the four-line structure (statement + `Where` / `Fix` / `Verify`) and cites a spec requirement in the bracketed prefix — inventions without a citation are rejected at draft time.
+
+See `examples/walkthrough.md` for an end-to-end transcript covering the create, update, defer, and close turns.
 
 ## Hard rules
 

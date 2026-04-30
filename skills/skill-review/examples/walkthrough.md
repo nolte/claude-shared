@@ -17,10 +17,11 @@ Expected skill behavior (`run`):
 3. Existing-plan check — no file at `.audits/skill-review/audience-identify.md`, so proceed.
 4. Narrow-scope ask — "voller Review", none.
 5. Read the review surface: `SKILL.md`, sibling `templates/`, any referenced asset.
-6. Apply checks in order (frontmatter → triggers → body → rationale → assets → duplicate-prevention → INFO).
-7. Write the plan.
+6. Run the external skill-structure validator (`skills-ref` is the canonical example) and capture name/version plus reported findings; if the validator isn't provisioned in the current repo, record an explicit `Validator: override — …` line in `## Scope` instead of silently skipping.
+7. Apply checks in order (external-validator findings → frontmatter → triggers → body → rationale → assets → duplicate-prevention → INFO).
+8. Write the plan.
 
-Expected plan path: `.audits/skill-review/audience-identify.md`, populated per `templates/plan.template.md`, with frontmatter fields filled from git state (`repo-revision`, `created`), severity counts in `## Summary`, one subsection per occurring severity in `## Findings`.
+Expected plan path: `.audits/skill-review/audience-identify.md`, populated per `templates/plan.template.md`, with frontmatter fields filled from git state (`repo-revision`, `created`), the `Validator:` line in `## Scope`, severity counts in `## Summary`, one subsection per occurring severity in `## Findings`.
 
 ## Turn 2 — user reports partial fix
 

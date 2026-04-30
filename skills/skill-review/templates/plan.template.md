@@ -22,6 +22,8 @@ status: open
 
 Target: `skills/{{skill-name}}/` ({{SKILL.md + referenced-files-summary}}).
 Specs applied: `skill-management`, `skill-vs-agent`, `review-plan`, `skill-review` (revisions recorded in frontmatter).
+Validator: {{validator-name}}@{{validator-version}}
+<!-- If the external skill-structure validator isn't provisioned in this repository, replace the line above with: "Validator: override — <one-line justification anchored in another spec or a documented project decision>" per `skill-review` §Checks derived from external skill-structure validation. -->
 Narrowing: {{none | frontmatter-only | rationale-only | …}}.
 Explicitly out of scope: runtime behavior of the skill, Vale/markdown style (handled by `task lint`), dispatched agents beyond confirming the orchestration direction.
 
