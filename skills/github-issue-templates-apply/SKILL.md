@@ -30,6 +30,8 @@ Before doing anything:
 
 ## Operations
 
+Operations 3 to 5 form a stacked Plan-validate-execute cycle: Operation 3 self-validates the working set against the strictness profile before disclosure, Operation 4 surfaces the plan for explicit user confirmation, and Operation 5 writes atomically with rollback on partial failure. Operation 6 closes the loop on re-runs by detecting drift instead of silently overwriting.
+
 ### 1. Detect project type
 
 Walk the spec's six derivation signals in order; stop at the first match. Read these files via the standard read tools, never via heuristics on filenames alone:
