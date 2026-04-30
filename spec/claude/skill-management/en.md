@@ -68,10 +68,10 @@ Starter vocabulary:
 
 Tracks the public guidance at <https://agentskills.io/skill-creation/best-practices>; cite the source slug when a finding pins a specific rule.
 
-- **MUST** keep `SKILL.md` under 500 lines and 5,000 tokens (the upstream hard cap); content beyond that **MUST** move into `references/`, `templates/`/`assets/`, or `scripts/` and **MUST** carry an explicit load-trigger phrase ("Read X when Y", "use template Z for output Q") in `SKILL.md` so progressive disclosure works as designed
+- **MUST** keep `SKILL.md` under 500 lines and 5,000 tokens (the upstream hard cap); content beyond that **MUST** move into `references/`, `templates/`/`assets/`, or `scripts/` and **MUST** carry an explicit load-trigger phrase ("Read X when Y," "use template Z for output Q") in `SKILL.md` so progressive disclosure works as designed
 - **SHOULD** include a **Gotchas** section listing concrete corrections to non-obvious environment facts the agent would otherwise get wrong; this is distinct from the **Hard rules** section (invariants) and from generic advice
 - **SHOULD** match specificity to fragility (give the agent freedom plus the *why* for flexible tasks; be prescriptive for fragile or sequential operations), **provide a clear default** rather than a menu of equal options, and **favor procedures over declarations** (teach how to approach a class of problem, not what to produce for one instance)
-- **SHOULD** ground the skill in real expertise — extract from a hands-on task or synthesize from project-specific artifacts (runbooks, code-review comments, version history, failure cases) rather than from generic LLM output alone
+- **SHOULD** ground the skill in real expertise—extract from a hands-on task or synthesize from project-specific artifacts (runbooks, code-review comments, version history, failure cases) rather than from generic LLM output alone
 - **MAY** bundle reusable scripts in `scripts/` when iteration shows the agent re-inventing the same logic each run, and **MAY** add a **Validation loop** or **Plan-validate-execute** subsection when the skill performs batch or destructive operations
 
 ## Acceptance Criteria

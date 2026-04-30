@@ -69,7 +69,7 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 Mirrors the authoring requirements added to `skill-management` §"Authoring quality" (per <https://agentskills.io/skill-creation/best-practices>); cite the upstream rule slug when a finding pins one.
 
 - **MUST** verify `SKILL.md` is under 500 lines and 5,000 tokens; over-cap is a `BLOCKER`
-- **MUST** verify every asset referenced under `references/` / `templates/` / `assets/` / `scripts/` carries a load-trigger phrase in `SKILL.md` ("Read X when Y", "use template Z for output Q"); un-triggered references are a `WARNING`
+- **MUST** verify every asset referenced under `references/` / `templates/` / `assets/` / `scripts/` carries a load-trigger phrase in `SKILL.md` ("Read X when Y," "use template Z for output Q"); un-triggered references are a `WARNING`
 - **SHOULD** check for a **Gotchas** section when the skill operates against a non-obvious environment; absence is a `WARNING` only when the skill clearly addresses such an environment, otherwise a `SUGGESTION`
 - **SHOULD** flag menu-without-default phrasing (multiple equal-weight options without one designated default) and one-shot declarations where reusable procedures fit; both are `SUGGESTION`s
 

@@ -11,6 +11,7 @@ auditable
 browsable
 [Cc][Ii]
 [Cc]laude
+Anthropic's
 CLI
 CLIs
 config
@@ -112,3 +113,5 @@ typecheck(s|ed|ing)?
 geoblocking
 severities
 unparseable
+validator(s|'s)?
+reachability
