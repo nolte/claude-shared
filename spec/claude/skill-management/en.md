@@ -59,10 +59,20 @@ Starter vocabulary:
 
 ### Recommendations
 - **SHOULD** include a "Hard rules" section listing invariants that must never be broken
-- **SHOULD** keep `SKILL.md` under roughly 150 lines; move long-form content into referenced files
-- **SHOULD** place supporting files in conventional subfolders: `templates/`, `references/`, `examples/`
+- **SHOULD** keep `SKILL.md` under roughly 150 lines as a soft target; move long-form content into referenced files
+- **SHOULD** place supporting files in conventional subfolders: `templates/` (or `assets/`), `references/`, `examples/`, `scripts/`
 - **MAY** include example user prompts and expected behavior in `examples/`
 - **MAY** include a small config schema when the skill requires per-project configuration
+
+### Authoring quality (per Anthropic skill-creation best practices)
+
+Tracks the public guidance at <https://agentskills.io/skill-creation/best-practices>; cite the source slug when a finding pins a specific rule.
+
+- **MUST** keep `SKILL.md` under 500 lines and 5,000 tokens (the upstream hard cap); content beyond that **MUST** move into `references/`, `templates/`/`assets/`, or `scripts/` and **MUST** carry an explicit load-trigger phrase ("Read X when Y", "use template Z for output Q") in `SKILL.md` so progressive disclosure works as designed
+- **SHOULD** include a **Gotchas** section listing concrete corrections to non-obvious environment facts the agent would otherwise get wrong; this is distinct from the **Hard rules** section (invariants) and from generic advice
+- **SHOULD** match specificity to fragility (give the agent freedom plus the *why* for flexible tasks; be prescriptive for fragile or sequential operations), **provide a clear default** rather than a menu of equal options, and **favor procedures over declarations** (teach how to approach a class of problem, not what to produce for one instance)
+- **SHOULD** ground the skill in real expertise — extract from a hands-on task or synthesize from project-specific artifacts (runbooks, code-review comments, version history, failure cases) rather than from generic LLM output alone
+- **MAY** bundle reusable scripts in `scripts/` when iteration shows the agent re-inventing the same logic each run, and **MAY** add a **Validation loop** or **Plan-validate-execute** subsection when the skill performs batch or destructive operations
 
 ## Acceptance Criteria
 - [ ] Source folder exists at `skills/<name>/` in claude-shared with `<name>` in ASCII kebab-case
@@ -77,6 +87,7 @@ Starter vocabulary:
 - [ ] No hard-coded absolute paths; all internal paths are relative to the skill folder or the project the skill operates on
 - [ ] If the skill writes files, the target locations and preconditions are documented
 - [ ] Reviewing an individual skill against this spec follows `spec/claude/skill-review/`; review output conforms to `spec/claude/review-plan/` and lives under `.audits/skill-review/<name>.md`
+- [ ] Every skill's `SKILL.md` is under 500 lines and 5,000 tokens, and every referenced asset under `references/` / `templates/` / `assets/` / `scripts/` is paired with an explicit load-trigger phrase in `SKILL.md`
 
 ## Open Questions
 - Should the folder name be required to match any user-facing slash-command name, or may they differ?

@@ -56,10 +56,27 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 
 - **MUST** confirm that frontmatter and system-prompt content are in English, regardless of the conversation language in which the skill was authored; any non-English frontmatter or body content is a `BLOCKER` (the user-facing response language is a runtime choice documented inside the body and isn't covered by this rule)
 
+### Checks derived from external skill-structure validation
+
+- **MUST** run an external skill-structure validator that checks `SKILL.md` frontmatter, body shape, and referenced-asset reachability before emitting the plan; Anthropic's `skills-ref` CLI is the canonical example, but the requirement isn't bound to a specific binary
+- **MUST** map any error reported by the validator to a `BLOCKER` finding and any warning to a `WARNING` finding, citing the validator's rule identifier in the bracketed prefix per `review-plan`
+- **MUST** record in the plan's `## Scope` section which validator and which version was used, so a later re-review can detect validator drift the same way it detects spec drift
+- **MUST NOT** skip this check on the grounds that other checks in this spec already cover overlapping ground; the external validator runs in addition to the spec-derived checks because it catches structural issues a spec-reading reviewer can miss
+- **MAY** suppress an individual validator finding only by recording an explicit override in the plan's `## Scope` with a one-line justification anchored in another spec or a documented project decision
+
+### Checks derived from skill-creation best practices
+
+Mirrors the authoring requirements added to `skill-management` §"Authoring quality" (per <https://agentskills.io/skill-creation/best-practices>); cite the upstream rule slug when a finding pins one.
+
+- **MUST** verify `SKILL.md` is under 500 lines and 5,000 tokens; over-cap is a `BLOCKER`
+- **MUST** verify every asset referenced under `references/` / `templates/` / `assets/` / `scripts/` carries a load-trigger phrase in `SKILL.md` ("Read X when Y", "use template Z for output Q"); un-triggered references are a `WARNING`
+- **SHOULD** check for a **Gotchas** section when the skill operates against a non-obvious environment; absence is a `WARNING` only when the skill clearly addresses such an environment, otherwise a `SUGGESTION`
+- **SHOULD** flag menu-without-default phrasing (multiple equal-weight options without one designated default) and one-shot declarations where reusable procedures fit; both are `SUGGESTION`s
+
 ### Review procedure
 
 - **MUST** begin by reading the canonical `skill-management`, `skill-vs-agent`, and `review-plan` specs before producing any finding; findings without an anchor in one of those specs aren't valid output of this procedure
-- **MUST** produce findings in this order: frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → INFO observations
+- **MUST** produce findings in this order: external-validator findings → frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → best-practices checks → INFO observations
 - **MUST** emit exactly one `review-plan` file at `.audits/skill-review/<skill-name>.md`; the reviewer **MUST** follow every lifecycle rule from `review-plan`, including the single-plan-per-target invariant and the deletion-commit message format
 - **SHOULD** embed, in the plan's `## Scope` section, the git SHA of the spec versions applied so a later re-review can tell whether findings may have become outdated by a spec revision
 - **MAY** fold purely stylistic observations (Vale, markdown linting) into `INFO` findings when they aid the author, but **MUST NOT** promote them to `WARNING` or `BLOCKER`: those stay with their own tooling
@@ -79,6 +96,8 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 - [ ] Every open plan under `.audits/skill-review/` conforms to `review-plan`'s four-section structure and YAML frontmatter
 - [ ] The `skill-management` spec's acceptance criteria cross-reference this spec for the review side of its authoring rules
 - [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(skill-review): close <skill>—<counts>` exactly
+- [ ] Every plan under `.audits/skill-review/` records the external skill-structure validator and version that was run, and no plan closes with an unresolved validator-reported `BLOCKER`
+- [ ] Every plan under `.audits/skill-review/` runs the best-practices checks from §"Checks derived from skill-creation best practices" against the target skill
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
@@ -88,3 +107,4 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 - When the skill under review depends on a template or asset file that doesn't yet exist, is the finding a `BLOCKER` (broken reference) or a `WARNING` (template to be added before merge)?
 - How's this spec invoked—as a `review` skill run from the main conversation, as a sub-agent comparable to `audience-review`, or both? The output is the same plan either way, but the entry point affects whether the review persists automatically.
 - Should reviewing a skill also verify that the skill's `description` triggers don't overlap with a runtime slash command or a Claude Code built-in command, and if so against which authoritative list?
+- Where does the validator pin (which version is treated as ground truth) live—in this spec, in `skill-management`, or in repository tooling configuration?
