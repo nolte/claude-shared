@@ -53,6 +53,7 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - **MUST** manage GitHub repository settings—topics, description, homepage, branch protection, labels, collaborators, and merge-button options—as code via `.github/settings.yml`, consumed by the [Probot Settings app](https://probot.github.io/apps/settings/)
 - **MUST** inherit the portfolio-wide defaults via `_extends: nolte/gh-plumbing:.github/commons-settings.yml` (the short form `gh-plumbing:.github/commons-settings.yml` is equivalent within the `nolte` organization) and keep per-repository content limited to repo-specific fields such as `name`, `description`, `homepage`, and `topics`
 - **MUST NOT** maintain repository settings manually through the GitHub UI once `.github/settings.yml` is present; any UI edit is drift and has to be reconciled back into the file
+- **MUST** keep every label `description` in `.github/settings.yml` (and in any `commons-settings.yml` it inherits from) at **100 characters or fewer** — GitHub's labels API rejects longer descriptions with HTTP 422 `description is too long (maximum is 100 characters)`, at which point the Probot Settings App silently skips that one label and the rest of the sync run completes without surfacing the failure. Observed on 2026-05-01 in `nolte/gh-plumbing`: a 117-character description on the `release` label kept it from being created in the live repo while the other 19 labels of the same sync run landed successfully
 - **MUST** include a `.github/release-drafter.yml` extending `nolte/gh-plumbing:.github/commons-release-drafter.yml` to feed the release-notes drafter (the accompanying workflow is specified by the branching-model spec)
 - **SHOULD** include a `.github/boring-cyborg.yml` extending `nolte/gh-plumbing:.github/commons-boring-cyborg.yml` for newcomer onboarding, automatic labeling, and reviewer assignment via the [Boring Cyborg app](https://probot.github.io/apps/boring-cyborg/)
 - **SHOULD** include a `.github/stale.yml` extending `nolte/gh-plumbing:.github/commons-stale.yml` to manage inactive issues and pull requests via the [Stale app](https://probot.github.io/apps/stale/)
@@ -108,6 +109,7 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - [ ] If `mkdocs.yml` is present, `.github/workflows/release-cd-deliver-docs.yml` exists and triggers on `release: [published]`
 - [ ] Every `uses: nolte/gh-plumbing/.github/workflows/...` reference in `.github/workflows/` is pinned to a release tag, not a moving branch
 - [ ] `.github/settings.yml` is present and extends `nolte/gh-plumbing:.github/commons-settings.yml` (or the equivalent short form)
+- [ ] Every label `description` field in `.github/settings.yml` and the inherited `commons-settings.yml` is 100 characters or fewer
 - [ ] `.github/release-drafter.yml` is present and extends `nolte/gh-plumbing:.github/commons-release-drafter.yml`
 - [ ] `.github/boring-cyborg.yml` and `.github/stale.yml` are present and extend their respective `nolte/gh-plumbing` commons files
 - [ ] `Taskfile.yml` or `Taskfile.yaml` is present and `task --list` enumerates test, lint, and docs targets
