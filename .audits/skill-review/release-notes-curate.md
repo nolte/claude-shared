@@ -13,7 +13,7 @@ specs-applied:
     revision: "38f4fc010a020aac3da9ae8465d49889d5146f39"
 repo-revision: "7f68d7e09576a9a51a04e5f78d4e76e6f6123c54"
 created: "2026-05-01"
-status: open
+status: in-progress
 ---
 
 # Skill Review: release-notes-curate
@@ -42,7 +42,7 @@ Next concrete action: add an explicit anti-trigger against `audience-doc-author`
 
 ### WARNING
 
-- [ ] [skill-vs-agent.duplicate-prevention] The agent `audience-doc-author` (path `agents/audience-doc-author.md`) lists "draft release notes per our audience analysis" as an explicit use-case, while this skill curates release-drafter draft bodies derived from the audience artefact. Capabilities are not equivalent (the agent drafts a doc artefact from scratch and returns text + coverage map; this skill operates on an *existing* GitHub release draft, wraps the augmentation in stable markers, and writes back via `gh release edit --notes`), so the `skill-vs-agent` §"Duplicate prevention" MUST-NOT bar (no two artefacts with equivalent capabilities) is not violated. However, the SHOULD bar ("when the boundary is genuinely blurry between an existing artifact and a proposed new one, propose a merge, a rename, or a clearer split as part of the authoring PR—never silently ship a third overlapping artifact") asks for the boundary to be made explicit, and the current `description` lists anti-triggers against `release-publish-trigger`, `audience-identify`, `github-issue-templates-apply`, and `pull-request-workflow` but **not** against `audience-doc-author`. A reporter saying "draft release notes for this repo" could plausibly route to either side without the explicit guard.
+- [x] [skill-vs-agent.duplicate-prevention] The agent `audience-doc-author` (path `agents/audience-doc-author.md`) lists "draft release notes per our audience analysis" as an explicit use-case, while this skill curates release-drafter draft bodies derived from the audience artefact. Capabilities are not equivalent (the agent drafts a doc artefact from scratch and returns text + coverage map; this skill operates on an *existing* GitHub release draft, wraps the augmentation in stable markers, and writes back via `gh release edit --notes`), so the `skill-vs-agent` §"Duplicate prevention" MUST-NOT bar (no two artefacts with equivalent capabilities) is not violated. However, the SHOULD bar ("when the boundary is genuinely blurry between an existing artifact and a proposed new one, propose a merge, a rename, or a clearer split as part of the authoring PR—never silently ship a third overlapping artifact") asks for the boundary to be made explicit, and the current `description` lists anti-triggers against `release-publish-trigger`, `audience-identify`, `github-issue-templates-apply`, and `pull-request-workflow` but **not** against `audience-doc-author`. A reporter saying "draft release notes for this repo" could plausibly route to either side without the explicit guard.
       Where: `skills/release-notes-curate/SKILL.md` line 3 (frontmatter `description` field), specifically the trailing "Don't use to ..." sentence.
       Fix: append one anti-trigger phrase to the `description`'s "Don't use ..." sentence — for example "to draft release notes from scratch outside of an existing release-drafter draft (that's `audience-doc-author`)". Optionally add a one-paragraph cross-reference in the SKILL body (e.g. inside the User-language policy block or as a new "Boundary with `audience-doc-author`" subsection) explaining that `audience-doc-author` drafts text artefacts and this skill operates on an existing release draft via `gh release edit --notes`.
       Verify: `grep -i 'audience-doc-author' skills/release-notes-curate/SKILL.md` returns at least one hit; conceptually, a re-read of the `description` makes the routing decision unambiguous.
@@ -61,3 +61,4 @@ Next concrete action: add an explicit anti-trigger against `audience-doc-author`
 ## Processing log
 
 <!-- Append one line per item closure: YYYY-MM-DD — <item-shorthand> — <action taken> — verified: <method> -->
+2026-05-01 — duplicate-prevention.audience-doc-author — appended anti-trigger phrase to the skill's `description` ("to draft release notes from scratch outside of an existing release-drafter draft (that's the `audience-doc-author` agent — this skill operates only on an *existing* draft via `gh release edit --notes`)") — verified: `grep -i 'audience-doc-author' skills/release-notes-curate/SKILL.md` returns the new anti-trigger line.
