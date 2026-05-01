@@ -27,6 +27,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - **MUST** include a `.gitignore`
 - **MUST** include a `CLAUDE.md` that documents AI-assisted development conventions, architecture hints, and command entry points for the repository
 - **MUST** include a `renovate.json5` (preferred) or `renovate.json` that `extends` the portfolio-wide preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>`, pinned to a release tag (for example `#v1.1.12`), so Renovate configuration stays aligned across the portfolio; per-repository overrides **SHOULD** stay narrow (typically package-grouping or automerge rules)
+- **MUST** have the Renovate GitHub App (<https://github.com/apps/renovate>) installed on the repository so that the `renovate.json5` configuration above actually drives dependency updates; without the app, the config file is inert and no PRs or Dependency-Dashboard issues are produced. The same Probot-style installation pattern applies as for `settings` / `boring-cyborg` / `stale`, and the install action is human-only
 - **MUST** include a `.pre-commit-config.yaml` pinning linters and formatters relevant to the stack
 - **SHOULD** include a `LICENSE` file at the root when the repository is published or intended for redistribution
 
@@ -100,6 +101,7 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 ## Acceptance Criteria
 - [ ] `README.md`, `.gitignore`, `CLAUDE.md`, `renovate.json5` (or `renovate.json`), and `.pre-commit-config.yaml` exist at the repository root
 - [ ] `renovate.json5` (or `renovate.json`) extends `github>nolte/gh-plumbing//renovate-configs/common#<tag>` pinned to a release tag, not a moving branch
+- [ ] The Renovate GitHub App (slug `renovate`) is installed on the repository, verifiable via the App's repository selection, the presence of an open or closed Dependency-Dashboard issue, the presence of `app/renovate-bot`-authored PRs, or the Mend Renovate dashboard at `https://developer.mend.io/github/<owner>/<repo>`
 - [ ] `.claude/` exists and contains at least one of `agents/`, `skills/`, `commands/`, or a `settings*.json` file
 - [ ] `.github/workflows/` contains at least one workflow file
 - [ ] `.github/workflows/` contains `release-drafter.yml`, `release-cd-refresh-master.yml`, and `automerge.yaml`, each wired to the matching `nolte/gh-plumbing` reusable workflow

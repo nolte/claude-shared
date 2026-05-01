@@ -1,6 +1,6 @@
 ---
 name: project-structure-apply
-description: Audit a repository against spec/project/project-structure/<canonical_language>.md and scaffold or patch any missing artefacts—README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, MkDocs setup, .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Also verifies that the Probot apps (settings, boring-cyborg, stale) backing those YAML files are actually installed on the GitHub repository via the GitHub API. Invoke when the user asks to audit the project structure, apply the project-structure spec, scaffold missing GitHub configs, add .github/settings.yml, generate release-drafter config, bring this repo in line with project-structure, check that Probot apps are installed, or add missing project configs. Also handles equivalent German-language requests.
+description: Audit a repository against spec/project/project-structure/<canonical_language>.md and scaffold or patch any missing artefacts—README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, MkDocs setup, .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Also verifies that the GitHub Apps backing those configs (the Probot apps `settings`, `boring-cyborg`, `stale` plus the Renovate app for `renovate.json5`) are actually installed on the repository via the GitHub API; for Renovate, additionally points at the Mend Renovate dashboard when the App is installed but no Renovate activity is visible. Invoke when the user asks to audit the project structure, apply the project-structure spec, scaffold missing GitHub configs, add .github/settings.yml, generate release-drafter config, bring this repo in line with project-structure, check that Probot or Renovate apps are installed, diagnose why Renovate isn't producing PRs, or add missing project configs. Also handles equivalent German-language requests.
 tags: [scaffolding]
 ---
 
@@ -41,18 +41,27 @@ Walk through the spec's Acceptance Criteria one item at a time and classify each
 
 Report the findings grouped by spec area: Top-level files, Claude integration, CI and automation, GitHub repository configuration, Documentation, Specifications, Tests, Source layout, Home Assistant, Containerization. Audit is read-only—never autofix during audit.
 
-### 2. Probot app installation check
+### 2. GitHub App installation check
 
-The Probot-backed YAML files (`.github/settings.yml`, `.github/boring-cyborg.yml`, `.github/stale.yml`) only take effect once the matching GitHub Apps are installed on the repository. Release Drafter runs as a GitHub Action per the branching-model spec, so it's **not** part of this check.
+The Probot-backed YAML files (`.github/settings.yml`, `.github/boring-cyborg.yml`, `.github/stale.yml`) only take effect once the matching GitHub Apps are installed on the repository. The same is true for the Renovate App: a `renovate.json5` config is inert without the Renovate App installed on the repo. Release Drafter runs as a GitHub Action per the branching-model spec, so it's **not** part of this check.
 
-For the three Probot apps, verify installation via `gh api`: cross-reference the `app_slug` values `settings`, `boring-cyborg`, and `stale` against the installations accessible to the authenticated user or owning organization:
+Apps to verify:
+
+| Slug | Backing config | Install page |
+|---|---|---|
+| `settings` | `.github/settings.yml` | `https://github.com/apps/settings` |
+| `boring-cyborg` | `.github/boring-cyborg.yml` | `https://github.com/apps/boring-cyborg` |
+| `stale` | `.github/stale.yml` | `https://github.com/apps/stale` |
+| `renovate` | `renovate.json5` (or `renovate.json`) | `https://github.com/apps/renovate` |
+
+Verify installation via `gh api`: cross-reference the slugs above against the installations accessible to the authenticated user or owning organization:
 
 1. Resolve `<owner>/<repo>` from `git remote get-url origin`.
 2. Determine whether the owner is a user or an org: `gh api "/users/<owner>" --jq '.type'` returns `User` or `Organization`.
 3. List installations:
    - Org: `gh api "/orgs/<owner>/installations" --paginate --jq '.installations[] | {slug: .app_slug, id: .id, scope: .repository_selection}'`
    - User: `gh api /user/installations --paginate --jq '.installations[] | {slug: .app_slug, id: .id, scope: .repository_selection}'`
-4. For each expected slug (`settings`, `boring-cyborg`, `stale`):
+4. For each expected slug (see table above):
    - If no entry with that slug exists → **app not installed**.
    - If the entry's `repository_selection` is `all` → **installed and has access**.
    - If `repository_selection` is `selected` → verify the repo is in the installation's repository list:
@@ -60,11 +69,13 @@ For the three Probot apps, verify installation via `gh api`: cross-reference the
      - User: `gh api "/user/installations/<id>/repositories" --paginate --jq '.repositories[].full_name'`
      - Grep for `^<owner>/<repo>$`. If missing → **installed at the owner level but not granted access to this repo**.
 
-Only run this check for Probot YAML files the audit classified as **pass**: warning that the `settings` app is missing makes no sense when `.github/settings.yml` doesn't even exist yet.
+Only run this check for the configs the audit classified as **pass**: warning that the `renovate` app is missing makes no sense when no `renovate.json(5)` exists yet, and warning about `settings` makes no sense when `.github/settings.yml` doesn't exist either.
 
 Handle API-permission errors gracefully: if `gh api` returns 403 or 404 for the installations endpoint, the token lacks scope (typically `admin:org` for org installations or `read:user` for user installations). Stop the installation check, report which scope is missing, and point the user at `https://github.com/<owner>/settings/installations` (user) or `https://github.com/organizations/<owner>/settings/installations` (org) to verify manually.
 
-Never attempt to *install* an app programmatically—app installation is intentionally a human-approved action. The skill only reports the status and links to the app's install page (`https://github.com/apps/settings`, `https://github.com/apps/boring-cyborg`, `https://github.com/apps/stale`).
+For Renovate specifically, when the App is reported installed but no Renovate activity is visible (no Onboarding-PR, no Dependency-Dashboard issue, no `app/renovate-bot` PRs), point the user at the Mend Renovate dashboard `https://developer.mend.io/github/<owner>/<repo>` to inspect Renovate's run logs — the App being installed and the App actually running on the repo are two separate states, and the Mend dashboard is the only authoritative source of run-level diagnostics from outside the App's own logs.
+
+Never attempt to *install* an app programmatically — app installation is intentionally a human-approved action. The skill only reports the status and links to the app's install page from the table above.
 
 ### 3. Apply
 
