@@ -8,6 +8,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 ## Goals
 - Every new git repository has a predictable top-level layout that humans and AI agents can navigate without per-project discovery
 - Common tooling (pre-commit, Renovate, MkDocs, Taskfile) is wired in consistently and in the same locations
+- Dependency hygiene is automated portfolio-wide: every repository runs Renovate against the shared `nolte/gh-plumbing` preset so security and version updates land as PRs without per-repository configuration drift, and Renovate is therefore an essential part of every project rather than an optional add-on
 - Claude Code integration (`CLAUDE.md`, `.claude/`) is present from day one
 - The shape scales from a single-purpose repository to a multi-component monorepo without reorganization
 - Local developer commands and CI invocations run through the same entry points

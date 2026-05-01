@@ -8,6 +8,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 ## Ziele
 - Jedes neue Git-Repository hat ein vorhersagbares Top-Level-Layout, durch das sich Menschen und KI-Agenten ohne projektspezifische Entdeckung orientieren können
 - Gemeinsames Tooling (pre-commit, Renovate, MkDocs, Taskfile) ist konsistent und an denselben Stellen eingebunden
+- Abhängigkeits-Hygiene ist portfolioweit automatisiert: jedes Repository setzt Renovate gegen das gemeinsame `nolte/gh-plumbing`-Preset ein, sodass Security- und Versions-Updates als PRs ankommen, ohne dass die Renovate-Konfiguration pro Repository abdriftet — Renovate ist damit ein elementarer Bestandteil jedes Projekts und kein optionales Add-on
 - Claude-Code-Integration (`CLAUDE.md`, `.claude/`) ist vom ersten Tag an vorhanden
 - Die Form skaliert von einem Einzweck-Repository bis zum mehrteiligen Monorepo, ohne reorganisiert werden zu müssen
 - Lokale Entwicklerkommandos und CI-Aufrufe laufen über dieselben Einstiegspunkte
