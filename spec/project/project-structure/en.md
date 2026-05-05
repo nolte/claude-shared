@@ -81,7 +81,7 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
   - `src/<component>/` per subproject in a multi-component repository (for example `src/backend/`, `src/frontend/`, `src/knowledge-service/`)
   - `custom_components/<name>/` for a Home Assistant custom integration
   - `.claude-plugin/` together with `skills/<name>/` (and optionally `agents/<name>.md`) for a Claude Code plugin repository, where prompt and skill content is the primary deliverable and no runtime source exists
-  - `playbooks/`, `roles/`, `inventory/` (plus optionally `group_vars/` and `host_vars/`) alongside `ansible.cfg` and `requirements.yml` at the repository root for an Ansible bootstrap or provisioning repository, where configuration and automation code is the primary deliverable and no runtime source exists; Ansible's standard conventions can't be wrapped under a `src/` shell without breaking `ansible-playbook`'s default role and inventory discovery
+  - `playbooks/`, `roles/`, and an inventory tree (`inventory/` for a single environment, or `inventories/<env>/` per environment per `spec/ansible/playbook-development/`) plus optional `group_vars/` and `host_vars/`, alongside `ansible.cfg` and `requirements.yml` at the repository root for an Ansible bootstrap or provisioning repository, where configuration and automation code is the primary deliverable and no runtime source exists; Ansible's standard conventions can't be wrapped under a `src/` shell without breaking `ansible-playbook`'s default role and inventory discovery
 - **MUST NOT** keep primary source files loose at the repository root; only tooling configs, metadata, and small scripts may live there; the Ansible variant above is a deliberate exception to this rule
 - **MAY** include a `scripts/` and/or `tools/` folder for repository-local automation helpers
 
@@ -125,7 +125,7 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - [ ] `docs/` and `mkdocs.yml` exist, and `mkdocs build` completes without errors
 - [ ] `spec/` exists at the repository root
 - [ ] `tests/` exists and contains at least one test
-- [ ] Primary source lives under `src/`, `src/<component>/`, `custom_components/<name>/`, `.claude-plugin/` + `skills/<name>/`, **or** the repository is an Ansible bootstrap / provisioning repository with `playbooks/`, `roles/`, and `inventory/` at the root; not loose at the root
+- [ ] Primary source lives under `src/`, `src/<component>/`, `custom_components/<name>/`, `.claude-plugin/` + `skills/<name>/`, **or** the repository is an Ansible bootstrap / provisioning repository with `playbooks/`, `roles/`, and an inventory tree (`inventory/` or `inventories/<env>/`) at the root; not loose at the root
 - [ ] If the repository contains Python source code (`*.py` files, `custom_components/<name>/`, or `pyproject.toml`), a `requirements.txt` is present at the repository root or under each `src/<component>/` that ships Python code
 - [ ] If the repository contains Python source code, a `pyproject.toml` exists at the repository root (single-component) or under each `src/<component>/` (multi-component) and declares `[build-system]`, project metadata, and any Python tooling configuration in use
 - [ ] If the repository contains Python source code, `.gitignore` excludes the local virtual-environment directory (for example `.venv/`)
