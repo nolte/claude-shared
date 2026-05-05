@@ -18,7 +18,7 @@ Referenzen:
 - Inventar-Daten, Secrets und Ausführungslogik sind sauber getrennt, damit dasselbe Playbook ohne Code-Änderungen über Umgebungen hinweg läuft
 - Idempotenz und `check_mode`-Tauglichkeit sind für jeden Play Pflicht, sodass Reruns und Dry-Runs verlässliche Diagnose-Werkzeuge sind
 - CI gated Lint-, Syntax- und Dry-Run-Fehler, bevor eine Änderung einen Host erreicht
-- Rollen werden als versionierte, gepinnte Abhängigkeiten konsumiert; niemals in ein Playbook-Repository eingelegt
+- Rollen werden als versionierte, gepinnte Abhängigkeiten konsumiert; niemals in ein Playbook-Repository eingelegt — außer im Profil *single-environment-bootstrap* (siehe §Repository-Profile), wo Rollen device-spezifische Konfiguration kodieren, die nicht woanders wiederverwendet wird
 
 ## Nicht-Ziele
 - Rollen-interne Konventionen (Variablen-Namespacing, `defaults/` vs `vars/`, Molecule-Szenarien, Galaxy-Publishing) — abgedeckt durch `spec/ansible/role-development/`
@@ -30,9 +30,15 @@ Referenzen:
 ## Anforderungen
 
 ### Repository-Layout
-- **MUSS [MUST]** ein Playbook-Repository mindestens organisieren mit `ansible.cfg` (projektlokal; niemals von der `~/.ansible.cfg` der Benutzerin abhängen), `requirements.yml` (deklariert alle konsumierten Rollen und Collections), `inventories/<env>/hosts.yml` plus `inventories/<env>/group_vars/` und `inventories/<env>/host_vars/` je Umgebung (`production`, `staging`, `dev`) sowie `playbooks/` mit einer Playbook-Datei je Orchestrierungs-Ziel (zum Beispiel `playbooks/bootstrap.yml`, `playbooks/deploy.yml`)
+- **MUSS [MUST]** ein Playbook-Repository gemäß dem aktiven *Repository-Profil* organisieren (siehe unten) und in jedem Profil enthalten: `ansible.cfg` (projektlokal; niemals von der `~/.ansible.cfg` der Benutzerin abhängen), `requirements.yml` (deklariert alle konsumierten Rollen und Collections) sowie `playbooks/` mit einer Playbook-Datei je Orchestrierungs-Ziel (zum Beispiel `playbooks/bootstrap.yml`, `playbooks/deploy.yml`)
 - **MUSS NICHT [MUST NOT]** Inventar-, group_vars- oder host_vars-Daten in `playbooks/` oder in einer Rolle ablegen; der Inventar-Baum ist die einzige Heimat von host- und gruppen-bezogenen Daten
-- **SOLLTE [SHOULD]** eine `README.md` im Repository-Wurzelverzeichnis enthalten, die die verfügbaren Playbooks, die unterstützten Umgebungen und das Einstiegs-Kommando je Playbook auflistet
+- **SOLLTE [SHOULD]** eine `README.md` im Repository-Wurzelverzeichnis enthalten, die die verfügbaren Playbooks, die unterstützten Umgebungen (oder das einzelne Ziel-Gerät im Bootstrap-Profil) und das Einstiegs-Kommando je Playbook auflistet
+
+### Repository-Profile
+Ein Playbook-Repository **MUSS [MUST]** sich als genau eines der zwei Profile unten deklarieren. Die Wahl steuert das Inventar-Layout (§Inventar-Konventionen) und ob Inline-Rollen erlaubt sind (§Dependency-Konsum). Im Zweifel: Default *multi-environment-fleet*.
+
+- **multi-environment-fleet** (Default) — Flotten, Dienste oder Geräte, die mehrere Umgebungen bedienen (`production`, `staging`, `dev`). Inventar liegt unter `inventories/<env>/hosts.yml` plus `inventories/<env>/group_vars/` und `inventories/<env>/host_vars/` je Umgebung. Rollen **MÜSSEN [MUST]** über `requirements.yml` kommen; kein Top-Level-`roles/`. Auf dieses Profil sind alle übrigen Anforderungen dieser Spec standardmäßig zugeschnitten.
+- **single-environment-bootstrap** — ein Repository, dessen einziger Zweck das Bootstrappen genau einer konkreten Maschine oder einer kleinen festen Flotte *identischer* Geräte ist (zum Beispiel ein Reachy Mini oder vier identische Edge-Sensoren), ohne Erwartung, in ein Multi-Environment-Deployment hineinzuwachsen. Inventar liegt unter `inventory/hosts.yml` plus `inventory/group_vars/` und `inventory/host_vars/` (kein `<env>`-Segment). Inline-`roles/<name>/`-Verzeichnisse sind **nur** für device-spezifische Konfiguration erlaubt, die von keinem anderen Repository wiederverwendet wird; sobald ein zweites Repository dieselbe Rolle konsumieren würde, **MUSS [MUST]** die Rolle in ihr eigenes Rollen-Repo gemäß `spec/ansible/role-development/` extrahiert und über `requirements.yml` konsumiert werden. Alle übrigen Anforderungen dieser Spec (Idempotenz, Secrets-Behandlung, Naming/Tagging, Linting, CI-Gates) gelten unverändert.
 
 ### Python-Toolchain
 - **MUSS [MUST]** `ansible-core` und jeden Python-Helfer der Toolchain (`ansible-lint`, `yamllint`, zugehörige Plugins) innerhalb einer projektlokalen Python-Virtual-Environment installieren — gemäß `spec/project/project-structure/` §Python-Entwicklung; niemals auf eine systemweite oder user-globale Ansible-Installation verlassen
@@ -45,8 +51,9 @@ Referenzen:
 - **SOLLTE [SHOULD]** `--diff` in jedem Dry-Run-Aufruf einschließen, damit Reviewer sehen, was sich ändern würde
 
 ### Inventar-Konventionen
-- **MUSS [MUST]** statische YAML-Inventare (`inventories/<env>/hosts.yml`) für stabile Infrastruktur bevorzugen
-- **MUSS [MUST]** Variablen strikt scopen: host-spezifische Werte in `host_vars/<host>.yml`, gruppen-geteilte Werte in `group_vars/<group>.yml`, umgebungs-geteilte Defaults in `group_vars/all.yml`
+- **MUSS [MUST]** statische YAML-Inventare bevorzugen — `inventories/<env>/hosts.yml` im Profil *multi-environment-fleet*, `inventory/hosts.yml` im Profil *single-environment-bootstrap* — für stabile Infrastruktur
+- **MUSS [MUST]** Variablen strikt scopen: host-spezifische Werte in `host_vars/<host>.yml`, gruppen-geteilte Werte in `group_vars/<group>.yml`, umgebungs-geteilte Defaults in `group_vars/all.yml` (im Profil *single-environment-bootstrap* gelten die `all.yml`-Defaults weiterhin, einfach auf der Ebene der einen Umgebung)
+- **MUSS [MUST]** die Verzeichnisse `group_vars/` und `host_vars/` **neben der Inventar-Datei** ablegen, nicht im Repository-Wurzelverzeichnis: Ansible löst diese Verzeichnisse relativ zur Inventar-Quelle (oder zum Playbook-Verzeichnis) auf, und ein Top-Level-`group_vars/` wird stillschweigend ignoriert, wenn das Playbook unter `playbooks/` liegt
 - **MUSS NICHT [MUST NOT]** inventar-gebundene Variablen in Playbook-`vars:`-Blöcken deklarieren; playbook-lokales `vars:` ist Helfer-Werten innerhalb eines Plays vorbehalten
 - **KANN [MAY]** ein dynamisches Inventory-Plugin verwenden, wenn die Host-Aufzählung aus einer Quelle der Wahrheit kommen muss (Cloud, CMDB, Home Assistant); die Plugin-Version über die konsumierende Collection in `requirements.yml` pinnen
 
@@ -71,7 +78,7 @@ Referenzen:
 ### Dependency-Konsum
 - **MUSS [MUST]** jede von den Playbooks genutzte Rolle und Collection in `requirements.yml` deklarieren
 - **MUSS [MUST]** jede Galaxy- oder Git-Quelle an einen Release-Tag pinnen (zum Beispiel `version: 1.4.0` für Galaxy, `version: v1.4.0` für Git) — niemals `master` / `main` oder einen beweglichen Branch
-- **MUSS NICHT [MUST NOT]** eine Rolle in das Playbook-Repository einlegen (kein Top-Level-`roles/`-Ordner, der Galaxy-Rollen verschattet); wiederverwendbare Einheiten leben in ihrem eigenen Rollen-Repo gemäß `spec/ansible/role-development/`
+- **MUSS NICHT [MUST NOT]** eine Rolle in ein *multi-environment-fleet*-Repository einlegen (kein Top-Level-`roles/`-Ordner, der Galaxy-Rollen verschattet); wiederverwendbare Einheiten leben in ihrem eigenen Rollen-Repo gemäß `spec/ansible/role-development/`. Das Profil *single-environment-bootstrap* **KANN [MAY]** device-spezifische Rollen inline unter Top-Level-`roles/<name>/` halten gemäß §Repository-Profile; sobald eine solche Rolle von einem zweiten Repository konsumiert wird, **MUSS [MUST]** sie extrahiert werden
 - **SOLLTE [SHOULD]** Abhängigkeiten in einen projektlokalen Pfad installieren (`ansible.cfg` `roles_path`, `collections_path`), damit jedes Repo in sich geschlossen ist
 
 ### Linting
@@ -88,13 +95,15 @@ Referenzen:
 - Für rollen-interne Konventionen (Galaxy-Verzeichnislayout, `meta/argument_specs.yml`, `defaults/` vs `vars/`, Molecule, Galaxy-Publishing) siehe [`spec/ansible/role-development/`](../role-development/de.md)
 
 ## Akzeptanzkriterien
-- [ ] Repository enthält `ansible.cfg`, `requirements.yml`, `inventories/<env>/hosts.yml` plus `group_vars/` und `host_vars/` für mindestens eine Umgebung sowie einen `playbooks/`-Ordner mit einer oder mehreren Playbook-Dateien
+- [ ] Repository deklariert sein Profil (multi-environment-fleet oder single-environment-bootstrap) in `README.md` oder `CLAUDE.md`
+- [ ] Repository enthält `ansible.cfg`, `requirements.yml`, einen `playbooks/`-Ordner mit einer oder mehreren Playbook-Dateien sowie den zum deklarierten Profil passenden Inventar-Baum: `inventories/<env>/hosts.yml` plus `group_vars/` und `host_vars/` für mindestens eine Umgebung (multi-environment-fleet) oder `inventory/hosts.yml` plus `inventory/group_vars/` und `inventory/host_vars/` (single-environment-bootstrap)
+- [ ] `group_vars/` und `host_vars/` liegen neben der Inventar-Datei (unter `inventories/<env>/` oder `inventory/`), nicht im Repository-Wurzelverzeichnis
 - [ ] `requirements.txt` pinnt `ansible-core` (und etwaige Collection-seitige Python-Deps); `requirements-dev.txt` pinnt `ansible-lint` und `yamllint`
 - [ ] CI ruft denselben Installations-Pfad auf, den auch lokale Taskfile-Targets nutzen, sodass Entwicklungs-Workstation und CI denselben Einstiegspunkt teilen
 - [ ] Keine getrackte Datei unter `inventories/`, `playbooks/`, `group_vars/` oder `host_vars/` enthält ein Klartext-Geheimnis; jedes Geheimnis ist vault-verschlüsselt oder stammt aus einem externen Store
 - [ ] Vault-Password-Datei (typische Namen `.vault-pass`, `vault_password_file`) ist nicht getrackt und in `.gitignore` gelistet
 - [ ] Jeder Eintrag in `requirements.yml` pinnt eine Galaxy- oder Git-Quelle an einen Release-Tag, nicht an einen beweglichen Branch
-- [ ] Kein Top-Level-`roles/`-Verzeichnis verschattet Galaxy-Rollen; alle Rollen kommen über `requirements.yml`
+- [ ] In einem *multi-environment-fleet*-Repository verschattet kein Top-Level-`roles/`-Verzeichnis Galaxy-Rollen; alle Rollen kommen über `requirements.yml`. In einem *single-environment-bootstrap*-Repository ist jede Inline-Rolle unter `roles/<name>/` device-spezifisch und wird von keinem anderen Repository konsumiert
 - [ ] Jeder Play und jeder Task in `playbooks/` hat ein `name:`-Feld
 - [ ] Jeder Play konvergiert beim zweiten Lauf gegen denselben Host mit null geänderten Tasks
 - [ ] CI führt `ansible-lint`, `yamllint`, `ansible-playbook --syntax-check` und `ansible-playbook --check --diff` gegen ein Test-Inventar aus; alle vier sind Pflicht für den Merge
@@ -102,6 +111,7 @@ Referenzen:
 - [ ] Kein Playbook-`vars:`-Block definiert eine Variable neu, die bereits im `defaults/main.yml` einer konsumierten Rolle existiert
 
 ## Offene Fragen
+- Soll das Profil *single-environment-bootstrap* in eine eigene dedizierte Spec (`spec/ansible/edge-device-bootstrap/`) ausgelagert werden, sobald ein zweites Repository es übernimmt — oder als Profil innerhalb dieser Spec bleiben?
 - Soll das Dry-Run-Diff-Artefakt portfolio­weit standardisiert sein (Dateiformat, Aufbewahrung), oder bleibt es jeder Repo-Diskretion überlassen?
 - Soll `sops`-Integration von **KANN [MAY]** auf **SOLLTE [SHOULD]** angehoben werden, sobald ein portfolio­weites Muster (kustomize-artiger Key-Store) entsteht?
 - Soll es eine portfolio­weite Mindestversion von Ansible / `ansible-core` geben, oder bleibt sie pro Repo?

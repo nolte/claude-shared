@@ -18,7 +18,7 @@ References:
 - Inventory data, secrets, and execution logic are cleanly separated so the same playbook can run across environments without code changes
 - Reruns and `check_mode` dry-runs report zero changes against a converged host, so they're reliable diagnostic tools
 - CI gates lint, syntax, and dry-run failures before any change reaches a host
-- Roles are consumed as versioned, pinned dependencies; never copied directly into a playbook repository
+- Roles are consumed as versioned, pinned dependencies; never copied directly into a playbook repository, except in the *single-environment-bootstrap* profile (see §Repository profiles), where roles encode device-specific configuration that isn't reused elsewhere
 
 ## Non-Goals
 - Role-internal conventions (variable name prefixing, `defaults/` vs `vars/`, Molecule scenarios, Galaxy publishing); covered by `spec/ansible/role-development/`
@@ -30,9 +30,15 @@ References:
 ## Requirements
 
 ### Repository layout
-- **MUST** organize a playbook repository with at least `ansible.cfg` (project-local; never depend on the user's `~/.ansible.cfg`), `requirements.yml` (declares all consumed roles and collections), `inventories/<env>/hosts.yml` plus `inventories/<env>/group_vars/` and `inventories/<env>/host_vars/` per environment (`production`, `staging`, `dev`), and `playbooks/` with one playbook file per orchestration target (for example `playbooks/bootstrap.yml`, `playbooks/deploy.yml`)
+- **MUST** organize a playbook repository per the active *Repository profile* (see below), and in any profile include `ansible.cfg` (project-local; never depend on the user's `~/.ansible.cfg`), `requirements.yml` (declares all consumed roles and collections), and `playbooks/` with one playbook file per orchestration target (for example `playbooks/bootstrap.yml`, `playbooks/deploy.yml`)
 - **MUST NOT** keep inventory, `group_vars`, or `host_vars` data inside `playbooks/` or any role; the inventory tree is the single home of host- and group-scoped data
-- **SHOULD** include a `README.md` at the repository root that lists the available playbooks, the supported environments, and the entry-point command per playbook
+- **SHOULD** include a `README.md` at the repository root that lists the available playbooks, the supported environments (or the single target device, in the bootstrap profile), and the entry-point command per playbook
+
+### Repository profiles
+A playbook repository **MUST** declare itself as exactly one of the two profiles below. The choice governs the inventory layout (§Inventory conventions) and whether inline roles are allowed (§Dependency consumption). When in doubt, default to *multi-environment-fleet*.
+
+- **multi-environment-fleet** (default) — fleets, services, or devices that span multiple environments (`production`, `staging`, `dev`). Inventory lives at `inventories/<env>/hosts.yml` plus `inventories/<env>/group_vars/` and `inventories/<env>/host_vars/` per environment. Roles **MUST** arrive via `requirements.yml`; no top-level `roles/`. Every other requirement in this spec defaults to this profile.
+- **single-environment-bootstrap** — a repository whose entire purpose is to bootstrap exactly one concrete machine, or a small fixed fleet of *identical* devices (for example one Reachy Mini, or four identical edge sensors), with no expectation of growing into multi-environment deployment. Inventory lives at `inventory/hosts.yml` plus `inventory/group_vars/` and `inventory/host_vars/` (no `<env>` segment). Inline `roles/<name>/` directories are permitted **only** for device-specific configuration that isn't reused by any other repository; the moment a second repository would consume the same role, the role **MUST** be extracted into its own role repo per `spec/ansible/role-development/` and consumed via `requirements.yml`. All other requirements of this spec (idempotency, secrets handling, naming and tagging, linting, CI gates) apply unchanged.
 
 ### Python toolchain
 - **MUST** install `ansible-core` and every Python helper used by the toolchain (`ansible-lint`, `yamllint`, related plugins) inside a project-local Python virtual environment per `spec/project/project-structure/` §Python development; never rely on a system-wide or user-global Ansible install
@@ -45,8 +51,9 @@ References:
 - **SHOULD** include `--diff` in every dry-run invocation so reviewers see what would change
 
 ### Inventory conventions
-- **MUST** prefer static YAML inventories (`inventories/<env>/hosts.yml`) for stable infrastructure
-- **MUST** scope variables strictly: host-specific values in `host_vars/<host>.yml`, group-shared values in `group_vars/<group>.yml`, environment-shared defaults in `group_vars/all.yml`
+- **MUST** prefer static YAML inventories — `inventories/<env>/hosts.yml` in the *multi-environment-fleet* profile, `inventory/hosts.yml` in the *single-environment-bootstrap* profile — for stable infrastructure
+- **MUST** scope variables strictly: host-specific values in `host_vars/<host>.yml`, group-shared values in `group_vars/<group>.yml`, environment-shared defaults in `group_vars/all.yml` (in the *single-environment-bootstrap* profile, the `all.yml` defaults still apply, simply at the single-environment level)
+- **MUST** place the `group_vars/` and `host_vars/` directories **next to the inventory file**, not at the repository root: Ansible resolves these directories relative to the inventory source (or the playbook directory), and a top-level `group_vars/` is silently ignored when the playbook lives under `playbooks/`
 - **MUST NOT** declare inventory-bound variables in playbook `vars:` blocks; playbook-local `vars:` is reserved for play-internal helpers
 - **MAY** use a dynamic inventory plugin when host enumeration must come from a source of truth (cloud, CMDB, Home Assistant); pin the plugin version via the consuming collection in `requirements.yml`
 
@@ -71,7 +78,7 @@ References:
 ### Dependency consumption
 - **MUST** declare every role and collection used by the playbooks in `requirements.yml`
 - **MUST** pin every Galaxy or Git source to a release tag (for example `version: 1.4.0` for Galaxy, `version: v1.4.0` for Git); never `master` / `main` or a moving branch
-- **MUST NOT** inline a role into the playbook repository (no top-level `roles/` folder shadowing Galaxy roles); reusable units live in their own role repo per `spec/ansible/role-development/`
+- **MUST NOT** inline a role into a *multi-environment-fleet* repository (no top-level `roles/` folder shadowing Galaxy roles); reusable units live in their own role repo per `spec/ansible/role-development/`. The *single-environment-bootstrap* profile **MAY** keep device-specific roles inline under top-level `roles/<name>/` per §Repository profiles; once such a role is consumed by a second repository it **MUST** be extracted
 - **SHOULD** install dependencies into a project-local path (`ansible.cfg` `roles_path`, `collections_path`) so each repo is self-contained
 
 ### Linting
@@ -88,13 +95,15 @@ References:
 - For role-internal conventions (Galaxy directory layout, `meta/argument_specs.yml`, `defaults/` vs `vars/`, Molecule, Galaxy publishing), see [`spec/ansible/role-development/`](../role-development/en.md)
 
 ## Acceptance Criteria
-- [ ] Repository contains `ansible.cfg`, `requirements.yml`, `inventories/<env>/hosts.yml` plus `group_vars/` and `host_vars/` for at least one environment, and a `playbooks/` folder with one or more playbook files
+- [ ] Repository declares its profile (multi-environment-fleet or single-environment-bootstrap) in `README.md` or `CLAUDE.md`
+- [ ] Repository contains `ansible.cfg`, `requirements.yml`, a `playbooks/` folder with one or more playbook files, and the inventory tree appropriate for its declared profile: `inventories/<env>/hosts.yml` plus `group_vars/` and `host_vars/` for at least one environment (multi-environment-fleet), or `inventory/hosts.yml` plus `inventory/group_vars/` and `inventory/host_vars/` (single-environment-bootstrap)
+- [ ] `group_vars/` and `host_vars/` live next to the inventory file (under `inventories/<env>/` or `inventory/`), not at the repository root
 - [ ] `requirements.txt` pins `ansible-core` (and any collection-side Python dependencies); `requirements-dev.txt` pins `ansible-lint` and `yamllint`
 - [ ] CI invokes the same install path that local Taskfile targets use, so developer workstation and CI share one entry point
 - [ ] No tracked file under `inventories/`, `playbooks/`, `group_vars/`, or `host_vars/` contains a secret in plain text; every secret is vault-encrypted or sourced from an external store
 - [ ] Vault-password file (typical names `.vault-pass`, `vault_password_file`) isn't tracked and is listed in `.gitignore`
 - [ ] Every entry in `requirements.yml` pins a Galaxy or Git source to a release tag, not a moving branch
-- [ ] No top-level `roles/` directory shadows Galaxy roles; all roles arrive via `requirements.yml`
+- [ ] In a *multi-environment-fleet* repository, no top-level `roles/` directory shadows Galaxy roles; all roles arrive via `requirements.yml`. In a *single-environment-bootstrap* repository, every inline role under `roles/<name>/` is device-specific and not consumed by any other repository
 - [ ] Every play and every task in `playbooks/` has a `name:` field
 - [ ] Every play converges with zero changed tasks on a second run against the same host
 - [ ] CI runs `ansible-lint`, `yamllint`, `ansible-playbook --syntax-check`, and `ansible-playbook --check --diff` against a test inventory; all four are required for merge
@@ -102,6 +111,7 @@ References:
 - [ ] No playbook `vars:` block redefines a variable that already exists in any consumed role's `defaults/main.yml`
 
 ## Open Questions
+- Should the *single-environment-bootstrap* profile graduate into its own dedicated spec (`spec/ansible/edge-device-bootstrap/`) once a second repository adopts it, or remain a profile inside this spec?
 - Should the dry-run diff artifact be standardized (file format, retention) across the portfolio, or left to per-repo discretion?
 - Should `sops` integration be elevated from **MAY** to **SHOULD** once a portfolio-wide pattern (kustomize-style key store) emerges?
 - Should there be a portfolio-wide minimum Ansible / `ansible-core` version, or stay per-repo?
