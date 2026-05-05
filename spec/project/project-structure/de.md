@@ -81,7 +81,8 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
   - `src/<component>/` je Teilprojekt in einem mehrteiligen Repository (zum Beispiel `src/backend/`, `src/frontend/`, `src/knowledge-service/`)
   - `custom_components/<name>/` für eine Home-Assistant-Custom-Integration
   - `.claude-plugin/` zusammen mit `skills/<name>/` (und optional `agents/<name>.md`) für ein Claude-Code-Plugin-Repository, bei dem Prompt- und Skill-Inhalte das primäre Lieferobjekt sind und kein Runtime-Quellcode existiert
-- **MUSS NICHT [MUST NOT]** primäre Quellcode-Dateien lose im Repository-Wurzelverzeichnis halten; dort dürfen nur Tooling-Konfigurationen, Metadaten und kleine Skripte liegen
+  - `playbooks/`, `roles/`, `inventory/` (sowie optional `group_vars/` und `host_vars/`) zusammen mit `ansible.cfg` und `requirements.yml` im Repository-Wurzelverzeichnis für ein Ansible-Bootstrap- bzw. Provisioning-Repository, dessen primäres Lieferobjekt Konfigurations- und Automatisierungs-Code ist und das keinen Runtime-Quellcode enthält; die Ansible-Standardkonventionen lassen sich nicht in eine `src/`-Hülle umpacken, ohne die Default-Rollen- und Inventory-Suche von `ansible-playbook` zu brechen
+- **MUSS NICHT [MUST NOT]** primäre Quellcode-Dateien lose im Repository-Wurzelverzeichnis halten; dort dürfen nur Tooling-Konfigurationen, Metadaten und kleine Skripte liegen; die Ansible-Variante ist eine bewusste Ausnahme von dieser Regel
 - **KANN [MAY]** einen `scripts/`- und/oder `tools/`-Ordner für repository-lokale Automatisierungs-Helfer enthalten
 
 ### Python-Entwicklung (optional)
@@ -124,7 +125,7 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - [ ] `docs/` und `mkdocs.yml` existieren und `mkdocs build` läuft fehlerfrei durch
 - [ ] `spec/` existiert im Repository-Wurzelverzeichnis
 - [ ] `tests/` existiert und enthält mindestens einen Test
-- [ ] Primärer Quellcode liegt unter `src/`, `src/<component>/`, `custom_components/<name>/` oder `.claude-plugin/` + `skills/<name>/` — nicht lose im Wurzelverzeichnis
+- [ ] Primärer Quellcode liegt unter `src/`, `src/<component>/`, `custom_components/<name>/`, `.claude-plugin/` + `skills/<name>/`, **oder** das Repository ist ein Ansible-Bootstrap-/Provisioning-Repository mit `playbooks/`, `roles/` und `inventory/` im Wurzelverzeichnis; nicht lose im Wurzelverzeichnis
 - [ ] Wenn das Repository Python-Quellcode enthält (`*.py`-Dateien, `custom_components/<name>/` oder `pyproject.toml`), ist eine `requirements.txt` im Repository-Wurzelverzeichnis oder unter jeder Python-führenden `src/<component>/` vorhanden
 - [ ] Wenn das Repository Python-Quellcode enthält, existiert eine `pyproject.toml` im Repository-Wurzelverzeichnis (Einzweck) oder unter jeder `src/<component>/` (mehrteilig) und deklariert `[build-system]`, Projekt-Metadaten und alle verwendete Python-Tooling-Konfiguration
 - [ ] Wenn das Repository Python-Quellcode enthält, schließt `.gitignore` das lokale Virtual-Environment-Verzeichnis (zum Beispiel `.venv/`) aus
