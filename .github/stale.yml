@@ -1,1 +1,1 @@
-_extends: nolte/gh-plumbing:.github/commons-stale.yml
+_extends: nolte/gh-plumbing:.github/commons-stale.yml@v1.1.15
