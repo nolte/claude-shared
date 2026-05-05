@@ -59,7 +59,7 @@ Candidate sources:
   - paths under `spec/` → candidates `area:spec`, `spec`
   - paths under `skills/` → candidates `area:skill`, `skills`
   - paths under `agents/` → candidates `area:agent`, `agents`
-  - paths under `.github/workflows/` or `.github/settings.yml` → candidates `area:ci`, `ci`, `github-actions`
+  - paths under `.github/workflows/` or `.github/settings.yml` → candidates `cicd`
   - paths under `docs/` or `mkdocs.yml` → candidates `area:docs`, `documentation`
   - paths under `.claude/`, `.claude-plugin/`, or `CLAUDE.md` → candidates `area:claude`, `claude-code`
 
