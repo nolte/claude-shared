@@ -84,6 +84,14 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - **MUST NOT** keep primary source files loose at the repository root; only tooling configs, metadata, and small scripts may live there
 - **MAY** include a `scripts/` and/or `tools/` folder for repository-local automation helpers
 
+### Python development (optional)
+- **MUST** install and run all Python project dependencies inside a project-local Python virtual environment (`venv`) — system-wide or user-global installation of project dependencies is not permitted, regardless of whether the venv is created via `python -m venv`, `uv venv`, `virtualenv`, or an equivalent tool
+- **MUST** keep the venv directory (typically `.venv/`) out of version control by listing it in `.gitignore`
+- **MUST** include a `pyproject.toml` (at the repository root for a single-component repository, or under each `src/<component>/` for a multi-component repository) declaring `[build-system]`, project metadata (`name`, `version`, `license`, `authors`, `classifiers`, `urls`), and Python tooling configuration (`[tool.ruff]`, `[tool.pytest.ini_options]`, and similar) — `pyproject.toml` carries distribution metadata and tooling configuration, while runtime dependencies remain in `requirements.txt` (see below) so the two files do not overlap
+- **MUST** track direct runtime dependencies in a `requirements.txt`, located at the repository root for a single-component repository or under `src/<component>/requirements.txt` per component in a multi-component repository; the runtime install set is sourced from `requirements.txt`, not from a `[project.dependencies]` block in `pyproject.toml`
+- **SHOULD** track development- and test-only dependencies separately in a `requirements-dev.txt` (or `src/<component>/requirements-dev.txt`) so that production installs do not pull in tooling
+- **SHOULD** wire Taskfile targets (for example `task install`, `task test`, `task lint`) so they create or use the project-local venv and install via `pip install -r requirements.txt` (and `requirements-dev.txt` where applicable), so local and CI execution share one entry point
+
 ### Home Assistant integrations (optional)
 - **MAY** include a `hacs.json` at the repository root when the repository ships an HA custom integration
 - **MUST** place integration code in `custom_components/<domain>/` using the integration's lowercase ASCII HA domain as the folder name when `hacs.json` is present
@@ -117,6 +125,9 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - [ ] `spec/` exists at the repository root
 - [ ] `tests/` exists and contains at least one test
 - [ ] Primary source lives under `src/`, `src/<component>/`, `custom_components/<name>/`, or `.claude-plugin/` + `skills/<name>/`: not loose at the root
+- [ ] If the repository contains Python source code (`*.py` files, `custom_components/<name>/`, or `pyproject.toml`), a `requirements.txt` is present at the repository root or under each `src/<component>/` that ships Python code
+- [ ] If the repository contains Python source code, a `pyproject.toml` exists at the repository root (single-component) or under each `src/<component>/` (multi-component) and declares `[build-system]`, project metadata, and any Python tooling configuration in use
+- [ ] If the repository contains Python source code, `.gitignore` excludes the local virtual-environment directory (for example `.venv/`)
 - [ ] If `.env.example` is present, a literal `.env` entry appears in `.gitignore`
 - [ ] If `hacs.json` is present, `custom_components/<domain>/` exists and matches the HA integration domain
 - [ ] CI status badges for the primary workflows appear near the top of `README.md`

@@ -84,6 +84,14 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - **MUSS NICHT [MUST NOT]** primäre Quellcode-Dateien lose im Repository-Wurzelverzeichnis halten; dort dürfen nur Tooling-Konfigurationen, Metadaten und kleine Skripte liegen
 - **KANN [MAY]** einen `scripts/`- und/oder `tools/`-Ordner für repository-lokale Automatisierungs-Helfer enthalten
 
+### Python-Entwicklung (optional)
+- **MUSS [MUST]** alle Python-Projekt-Abhängigkeiten innerhalb einer projektlokalen Python-Virtual-Environment (`venv`) installieren und ausführen — systemweite oder user-globale Installation von Projekt-Abhängigkeiten ist nicht erlaubt, unabhängig davon, ob das venv über `python -m venv`, `uv venv`, `virtualenv` oder ein gleichwertiges Werkzeug erzeugt wird
+- **MUSS [MUST]** das venv-Verzeichnis (typischerweise `.venv/`) aus der Versionskontrolle heraushalten, indem es in der `.gitignore` gelistet ist
+- **MUSS [MUST]** eine `pyproject.toml` enthalten (im Repository-Wurzelverzeichnis bei einem Einzweck-Repository oder unter jeder `src/<component>/` in einem mehrteiligen Repository), die `[build-system]`, Projekt-Metadaten (`name`, `version`, `license`, `authors`, `classifiers`, `urls`) und Python-Tooling-Konfiguration (`[tool.ruff]`, `[tool.pytest.ini_options]` und Ähnliches) deklariert — `pyproject.toml` trägt Distributions-Metadaten und Tooling-Konfiguration, während Laufzeit-Abhängigkeiten in `requirements.txt` (siehe unten) verbleiben, damit sich die beiden Dateien nicht überlappen
+- **MUSS [MUST]** direkte Laufzeit-Abhängigkeiten in einer `requirements.txt` pflegen — im Repository-Wurzelverzeichnis bei einem Einzweck-Repository oder unter `src/<component>/requirements.txt` je Komponente in einem mehrteiligen Repository; das Laufzeit-Installationsset wird aus `requirements.txt` bezogen, nicht aus einem `[project.dependencies]`-Block in `pyproject.toml`
+- **SOLLTE [SHOULD]** Entwicklungs- und nur-für-Tests-Abhängigkeiten getrennt in einer `requirements-dev.txt` (bzw. `src/<component>/requirements-dev.txt`) führen, damit Produktiv-Installationen kein Tooling mitziehen
+- **SOLLTE [SHOULD]** Taskfile-Targets (zum Beispiel `task install`, `task test`, `task lint`) so verkabeln, dass sie das projektlokale venv erzeugen oder nutzen und über `pip install -r requirements.txt` (sowie `requirements-dev.txt`, sofern zutreffend) installieren, damit lokale und CI-Ausführung denselben Einstiegspunkt teilen
+
 ### Home-Assistant-Integrationen (optional)
 - **KANN [MAY]** eine `hacs.json` im Repository-Wurzelverzeichnis enthalten, wenn das Repository eine HA-Custom-Integration ausliefert
 - **MUSS [MUST]** Integrations­code in `custom_components/<domain>/` ablegen und dabei die lowercase-ASCII-HA-Domain der Integration als Ordnernamen verwenden, wenn `hacs.json` vorhanden ist
@@ -117,6 +125,9 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - [ ] `spec/` existiert im Repository-Wurzelverzeichnis
 - [ ] `tests/` existiert und enthält mindestens einen Test
 - [ ] Primärer Quellcode liegt unter `src/`, `src/<component>/`, `custom_components/<name>/` oder `.claude-plugin/` + `skills/<name>/` — nicht lose im Wurzelverzeichnis
+- [ ] Wenn das Repository Python-Quellcode enthält (`*.py`-Dateien, `custom_components/<name>/` oder `pyproject.toml`), ist eine `requirements.txt` im Repository-Wurzelverzeichnis oder unter jeder Python-führenden `src/<component>/` vorhanden
+- [ ] Wenn das Repository Python-Quellcode enthält, existiert eine `pyproject.toml` im Repository-Wurzelverzeichnis (Einzweck) oder unter jeder `src/<component>/` (mehrteilig) und deklariert `[build-system]`, Projekt-Metadaten und alle verwendete Python-Tooling-Konfiguration
+- [ ] Wenn das Repository Python-Quellcode enthält, schließt `.gitignore` das lokale Virtual-Environment-Verzeichnis (zum Beispiel `.venv/`) aus
 - [ ] Wenn eine `.env.example` vorhanden ist, erscheint ein wörtlicher `.env`-Eintrag in der `.gitignore`
 - [ ] Wenn eine `hacs.json` vorhanden ist, existiert `custom_components/<domain>/` und stimmt mit der HA-Integrations-Domain überein
 - [ ] CI-Status-Badges für die primären Workflows erscheinen am oberen Rand der `README.md`
