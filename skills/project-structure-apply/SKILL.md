@@ -39,7 +39,7 @@ Walk through the spec's Acceptance Criteria one item at a time and classify each
 - **missing**: file or folder absent.
 - **drift**: present but diverges from the spec (wrong `_extends:` target, stale content, etc.).
 
-Report the findings grouped by spec area: Top-level files, Claude integration, CI and automation, GitHub repository configuration, Documentation, Specifications, Tests, Source layout, Home Assistant, Containerization. Audit is read-only—never autofix during audit.
+Report the findings grouped by spec area: Top-level files, Claude integration, CI and automation, GitHub repository configuration, Documentation, Specifications, Tests, Source layout, Python development, Home Assistant, Containerization. Audit is read-only—never autofix during audit.
 
 ### 2. GitHub App installation check
 
@@ -100,6 +100,7 @@ For each **missing** or **drift** item the audit surfaced, confirm with the user
 - **`spec/` / `tests/`**: create as empty directories with a single `.gitkeep` only when the repo truly has nothing to move there yet.
 - **Source layout**: if primary source is loose at the repository root, **never** move files silently. Report the drift and ask the user how to proceed.
 - **`.gitignore`**: ensure `.env` is listed whenever `.env.example` exists in the tree.
+- **Python development**: when the repository contains Python source (`*.py` files, `custom_components/<name>/`, or `pyproject.toml`), scaffold a minimal `pyproject.toml` at the repository root for a single-component repo or under each Python-bearing `src/<component>/` for a multi-component repo, declaring `[build-system]`, project metadata (`name`, `version`, `license`, `authors`, `classifiers`, `urls`), and any Python tooling configuration the repo uses (`[tool.ruff]`, `[tool.pytest.ini_options]`, and similar); also scaffold a stub `requirements.txt` at the same location for the runtime install set; and ensure `.gitignore` excludes the local virtual-environment directory (`.venv/`). Keep the responsibility split strict — `pyproject.toml` carries distribution metadata and tooling configuration, `requirements.txt` carries the runtime dependency set; never duplicate runtime deps into `[project.dependencies]`. Never create or activate a venv from the skill — venv creation is an explicit developer action; the spec only requires the repository layout to support one. When the repo already has a `requirements.txt` but tracks dev/test tooling alongside runtime, surface this as drift and ask whether to split into a separate `requirements-dev.txt`; never split silently. When the repo has a `pyproject.toml` whose `[project.dependencies]` shadows or replaces `requirements.txt`, surface this as drift; never silently rewrite either file.
 - **README badges**: insert CI status badges for workflows present under `.github/workflows/` near the top of `README.md`.
 
 After every successful write, re-run the single affected audit check so the user sees the item flip to **pass**. Never batch silent writes—each change requires explicit approval.
