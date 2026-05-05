@@ -6,6 +6,8 @@ Canonical language: `en` · Translations: `de`
 
 | Topic | Slug | Title (en) | Title (de) | Status | Last updated |
 |---|---|---|---|---|---|
+| ansible | playbook-development | Ansible Playbook Development Best Practices | Best Practices für die Ansible-Playbook-Entwicklung | draft | unversioned |
+| ansible | role-development | Ansible Role Development Best Practices | Best Practices für die Ansible-Rollen-Entwicklung | draft | unversioned |
 | claude | agent-management | Claude Agent Authoring | Claude-Agent-Autorenschaft | draft | 2026-04-24 |
 | claude | agent-review | Claude Agent Review | Claude-Agent-Review | draft | 2026-04-24 |
 | claude | permission-allowlist | Claude Code Permission Allowlist Maintenance | Pflege der Claude-Code-Permission-Allowlist | draft | 2026-04-23 |
