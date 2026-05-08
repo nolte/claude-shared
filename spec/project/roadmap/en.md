@@ -4,7 +4,7 @@ Status: draft
 
 ## Context
 
-Readers: repo maintainers of hobby-scale nolte projects who invoke the `roadmap-init`, `roadmap-refine`, and `roadmap-planner` skills, plus the implementors authoring those skills against this schema.
+Readers: repo maintainers of hobby-scale nolte projects who invoke the `roadmap-init`, `roadmap-refine`, and `roadmap-planner` skills, plus the implementing authors writing those skills against this schema.
 
 The nolte portfolio is built largely from hobby-scale projects. Sprint cadence, available capacity, and even whether a project is currently active all vary widely from week to week. Existing specs cover individual delivery mechanics (`release-automation`, `release-skill-layer`, `quality-gate`) and reflective rituals (`continuous-improvement`, which explicitly opts out of sprint cadence), but nothing yet defines **what work is queued, why it matters, and in which order it should be executed**. This spec introduces that planning layer as a markdown artefact pair under `project/` in the target repo, intentionally lightweight enough for a hobby project yet structured enough that consuming Claude skills (`roadmap-init`, `roadmap-refine`, `roadmap-planner`) and the sibling specs (`sprint`, `feature`, `release-artifact`) can read and write it deterministically. The roadmap is a stepping-stone document: it ties every queued item back to a project outcome so that capacity is always spent on something the end user values.
 
@@ -14,13 +14,13 @@ The nolte portfolio is built largely from hobby-scale projects. Sprint cadence, 
 - Specify a stable per-item schema (frontmatter-anchored fields) so that consuming skills can parse, mutate, and re-render items without hand-rolling a parser per skill.
 - Specify a mandatory detail-level convention (`fine` for the next two sprints, `coarse` or `backlog` beyond that) so that planning effort is spent where it pays off and farther-out items aren't over-specified prematurely.
 - Tie every roadmap item to at least one outcome from `goals.md` so that prioritisation conversations always have an answer to "for whom does this matter."
-- Stay portfolio-reusable: every project type the portfolio supports (Claude plugin, Python application, Python library, Node / TypeScript, CLI tool, documentation-only — same taxonomy as `github-issue-templates-apply`) can adopt the layout without per-type schema variations.
+- Stay portfolio-reusable: every project type the portfolio supports (Claude plugin, Python application, Python library, Node / TypeScript, CLI tool, documentation-only, the same taxonomy as `github-issue-templates-apply`) can adopt the layout without per-type schema variations.
 
 ## Non-Goals
 
 - Defining sprint mechanics, feature schema, or release-artefact rules. Each of those is owned by its own sibling spec (`sprint`, `feature`, `release-artifact`); this spec only declares relationships, not internals.
 - Replacing project-management tooling (Jira, Linear, GitHub Projects). The roadmap is a markdown artefact under version control, not a ticket store; cross-references to issue trackers are allowed but never authoritative.
-- Mandating a time axis. Sprint duration is explicitly variable per the sibling `sprint` spec, so the roadmap does not carry start/end dates per item; it carries an ordering and a coarse-to-fine detail gradient instead.
+- Mandating a time axis. Sprint duration is explicitly variable per the sibling `sprint` spec, so the roadmap doesn't carry start/end dates per item; it carries an ordering and a coarse-to-fine detail gradient instead.
 - Substituting `continuous-improvement`. That spec runs on event- and calendar-driven audits, not on sprint cadence, and remains the authority for retrospective process change.
 - Substituting `audience-identification`. Outcomes in `goals.md` are derived from the audience artefact when one exists; this spec consumes that artefact, never invents audiences inline.
 
@@ -35,24 +35,24 @@ The nolte portfolio is built largely from hobby-scale projects. Sprint cadence, 
 
 ### `goals.md` shape
 
-- **MUST** open with a single-paragraph **Vision** section that states what the project is and who it is for, in the project's primary language.
+- **MUST** open with a single-paragraph **Vision** section that states what the project is and who it's for, in the project's primary language.
 - **MUST** carry an **Outcomes** section listing one or more outcomes. Every outcome **MUST** have a stable identifier (`O-<n>`, monotonically assigned, never reused) and a one-sentence description phrased as an end-user benefit.
-- **MUST** trace each outcome back to an audience entry from the repo's audience artefact (typically `AUDIENCES.md` per `audience-identification`); when the repo has no audience artefact, `audience-identify` **MUST** be dispatched before writing outcomes—the dispatch is mandatory, not discretionary, because outcomes whose audience is invented inline cannot serve a real reader.
+- **MUST** trace each outcome back to an audience entry from the repo's audience artefact (typically `AUDIENCES.md` per `audience-identification`); when the repo has no audience artefact, `audience-identify` **MUST** be dispatched before writing outcomes—the dispatch is mandatory, not discretionary, because outcomes whose audience is invented inline can't serve a real reader.
 - **MUST NOT** invent audience entries inline; missing audiences are a blocker for outcome authoring, not a hint to fabricate.
 
 ### `roadmap.md` shape and per-item schema
 
 - **MUST** structure the roadmap as a flat ordered list (top-to-bottom is highest-to-lowest priority) of roadmap items. Items **MAY** be grouped under level-2 phase headings (for example `## Phase 1 — Foundations`) when phases help reading; phases are optional and carry no schema beyond the heading text.
-- **MUST** represent every roadmap item as the following three-part shape, in this order: (a) a level-3 markdown heading naming the item (typically `### <id> — <title>`); (b) immediately followed by a fenced YAML code block (` ```yaml … ``` `) carrying the schema fields below, in the declared order; (c) immediately followed by the free-text body whose required depth is gated by `detail` (see below). The heading-plus-YAML-block pair identifies the item to consuming skills; the body is for human reading. A standalone document-level YAML frontmatter (`---` at the top of `roadmap.md`) is **not** how items are represented—each item carries its own inline YAML code block.
+- **MUST** represent every roadmap item as the following three-part shape, in this order: (a) a level-3 markdown heading naming the item (typically a `###` heading whose text reads `<id>` followed by an em-dash and the `<title>`, as illustrated in the concrete-shape example below); (b) immediately followed by a fenced YAML code block (` ```yaml … ``` `) carrying the schema fields below, in the declared order; (c) immediately followed by the free-text body whose required depth is gated by `detail` (see below). The heading-plus-YAML-block pair identifies the item to consuming skills; the body is for human reading. A standalone document-level YAML frontmatter (`---` at the top of `roadmap.md`) is **not** how items are represented; each item carries its own inline YAML code block.
 - **MUST** carry the following fields in the per-item YAML block, in this order:
-  - `id` (string, required) — pattern `R-<n>`, monotonically assigned, never reused;
-  - `title` (string, required) — one-line summary in the project's primary language;
-  - `detail` (enum, required) — one of `fine`, `coarse`, `backlog`;
-  - `outcomes` (list of outcome IDs, required, non-empty) — every entry **MUST** match an `O-<n>` from `goals.md`;
-  - `target_sprint` (integer or null, required, may be null) — the sprint number this item is currently queued for; the field **MUST** appear in the YAML block even when null, so item parsers can rely on a stable key set;
-  - `status` (enum, required) — one of `proposed`, `active`, `done`, `cancelled`.
+  - `id` (string, required): pattern `R-<n>`, monotonically assigned, never reused;
+  - `title` (string, required): one-line summary in the project's primary language;
+  - `detail` (enum, required): one of `fine`, `coarse`, `backlog`;
+  - `outcomes` (list of outcome IDs, required, non-empty): every entry **MUST** match an `O-<n>` from `goals.md`;
+  - `target_sprint` (integer or null, required, may be null): the sprint number this item is currently queued for; the field **MUST** appear in the YAML block even when null, so item parsers can rely on a stable key set;
+  - `status` (enum, required): one of `proposed`, `active`, `done`, `cancelled`.
 - **MUST** follow each YAML block with a free-text body whose required depth is gated by `detail`:
-  - `fine`: a paragraph stating the user-visible change and a checklist of intended features (titles only — actual feature schema lives in the `feature` spec);
+  - `fine`: a paragraph stating the user-visible change and a checklist of intended features (titles only; actual feature schema lives in the `feature` spec);
   - `coarse`: one or two sentences describing the intent;
   - `backlog`: a single sentence is enough.
 - **MUST NOT** carry effort estimates, dates, or assignment fields; those belong to the consuming sprint and feature artefacts.
@@ -98,7 +98,7 @@ End users authenticate via the new SSO provider in under three steps; the legacy
 
 - **MUST** transition `status` only along these paths: `proposed → active`, `active → done`, `proposed → cancelled`, `active → cancelled`. Direct `proposed → done` is forbidden because every done item must have been actively worked on; `cancelled → *` is forbidden because cancelled items are archival.
 - **MUST** mark an item `active` no later than the moment one of its features enters `in_progress` per the `feature` spec; the consuming skill (`sprint-execute` when it advances a feature) is the canonical enforcement point.
-- **MUST** mark an item `done` only when every feature it spawned is `done` **and** the corresponding sprint has reached `closed` (specifically `closed`, not `cancelled`); a sprint that closed without picking up every spawned feature blocks the item from `done` until the remaining features are re-targeted. A sprint that reaches `cancelled` from any stage **MUST NOT** advance any roadmap item to `done` even when every feature in it is individually `done`, because cancellation means no deployable artefact materialised the value statement; in that case the roadmap item's pending features **MUST** be re-targeted to a new sprint and the item remains `active` until that successor sprint reaches `closed`.
+- **MUST** mark an item `done` only when every feature it spawned is `done` **and** the corresponding sprint has reached `closed` (specifically `closed`, not `cancelled`); a sprint that closed without picking up every spawned feature blocks the item from `done` until the remaining features are re-targeted. A sprint that reaches `cancelled` from any stage **MUST NOT** advance any roadmap item to `done` even when every individual feature in the sprint reached `done`, because cancellation means no deployable artefact materialised the value statement; in that case the roadmap item's pending features **MUST** be re-targeted to a new sprint and the item remains `active` until that successor sprint reaches `closed`.
 
 ### Phases
 

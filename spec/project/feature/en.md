@@ -4,9 +4,9 @@ Status: draft
 
 ## Context
 
-Readers: repo maintainers of hobby-scale nolte projects who invoke the `feature-decompose`, `sprint-execute`, and `sprint-review` skills (the latter two read features but do not own them), plus the `feature-consistency-reviewer` agent, plus the implementors authoring those skills and the agent against this schema.
+Readers: repo maintainers of hobby-scale nolte projects who invoke the `feature-decompose`, `sprint-execute`, and `sprint-review` skills (the latter two read features but don't own them), plus the `feature-consistency-reviewer` agent, plus the implementing authors writing those skills and the agent against this schema.
 
-The sibling `roadmap` spec defines what work is queued and why; the sibling `sprint` spec defines how work is grouped and shipped. Between them sits the unit of execution: a feature. A feature in the nolte portfolio is a markdown-tracked, sprint-bound, roadmap-linked piece of user-visible change. It is the smallest object that carries acceptance criteria, the smallest object that consuming Claude skills (`feature-decompose`, `sprint-execute`, the `feature-consistency-reviewer` agent) operate on, and the smallest object whose state machine is observable from the sprint level. This spec defines the on-disk shape, the schema, the lifecycle, and — uniquely on this layer — a **mandatory consistency check** against existing features and existing source code before a new feature is considered ready: hobby-scale projects accumulate latent overlap quickly, and an authoring layer that doesn't surface that overlap will let it grow unchecked.
+The sibling `roadmap` spec defines what work is queued and why; the sibling `sprint` spec defines how work is grouped and shipped. Between them sits the unit of execution: a feature. A feature in the nolte portfolio is a markdown-tracked, sprint-bound, roadmap-linked piece of user-visible change. It's the smallest object that carries acceptance criteria, the smallest object that consuming Claude skills (`feature-decompose`, `sprint-execute`, the `feature-consistency-reviewer` agent) operate on, and the smallest object whose state machine is observable from the sprint level. This spec defines the on-disk shape, the schema, the lifecycle, and—uniquely on this layer—a **mandatory consistency check** against existing features and existing source code before a new feature is considered ready: hobby-scale projects accumulate latent overlap quickly, and an authoring layer that doesn't surface that overlap will let it grow unchecked.
 
 ## Goals
 
@@ -20,11 +20,11 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 ## Non-Goals
 
 - Defining roadmap, sprint, or release-artefact internals. Each is owned by its own sibling spec; this spec only declares the feature-side surface and the cross-references it carries.
-- Replacing test frameworks. Acceptance criteria reference tests, manual demo steps, or skill invocations; the feature spec does not run them, only enumerates and tracks them.
+- Replacing test frameworks. Acceptance criteria reference tests, manual demo steps, or skill invocations; the feature spec doesn't run them, only enumerates and tracks them.
 - Mandating a specific implementation language or framework. The spec is about authoring and tracking shape, not about how the feature is built.
 - Substituting the `audience-identification` or audience-doc-author tooling. Feature documentation for end users belongs to the doc-author surface; the feature markdown is an internal planning artefact.
 - Substituting `continuous-improvement`, `spec-drift-audit`, or `spec-readiness`. Those govern process and spec hygiene; this spec governs feature artefact hygiene.
-- Replacing the `feature-consistency-reviewer` agent's logic. The agent's investigation surface (which paths to read, how to assess overlap) is its own concern; this spec only mandates **that** the check happens and **what** is recorded.
+- Replacing the `feature-consistency-reviewer` agent's logic. The agent's investigation surface (which paths to read, how to assess overlap) is its own concern; this spec only mandates **whether** the check happens and **which findings** get recorded.
 
 ## Requirements
 
@@ -38,25 +38,25 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 ### Frontmatter schema
 
 - **MUST** open the file with a YAML frontmatter fence carrying the following fields, in this order:
-  - `id` (string, required) — pattern `F-<n>`, monotonically assigned across the project, never reused;
-  - `title` (string, required) — one-line summary in the project's primary language;
-  - `status` (enum, required) — one of `draft`, `ready`, `in_progress`, `done`, `cancelled`;
-  - `roadmap_item` (string, required) — the `R-<n>` ID this feature decomposes; **MUST** match an entry in `project/roadmap.md`;
-  - `sprint` (integer or null, required) — the sprint number this feature is scheduled for; null while the feature is `draft` and during `ready` for as long as the feature has not been adopted by a sprint. The field transitions from null to non-null when, and only when, the feature is added to a sprint's `features` list per `spec/project/sprint/`; the canonical write authority is `sprint-plan` (when scheduling ahead of activation) or `sprint-execute` (when picking the feature up mid-active-sprint), each of which **MUST** write `feature.sprint = N` in the same operation that adds `feature.id` to `sprints/N.features`. The field **MUST NOT** be set by hand or by any other skill, and the bidirectional invariant (feature side ↔ sprint side) is the canonical check;
-  - `created` (ISO date, required) — date the feature file was first written; never edited after creation;
-  - `ended` (ISO date or null, required) — date the feature reached either `done` or `cancelled` (both terminal states share this field, hence the neutral name); null until the feature terminates;
-  - `verifies_sprint_value` (string or null, required) — the acceptance-criterion identifier (`acceptance-<n>`) on this feature that, when checked, directly verifies the sprint's `value_statement`; non-null on at most one feature per sprint, null otherwise. The sibling `sprint` spec mandates that **at least one** feature in any closing sprint carries a non-null value here; combined with the at-most-one bound enforced feature-side (see §Acceptance-criteria contract and AC line below), the net constraint is exactly one. The write authority is `feature-decompose` (when the verifying criterion is identified at decomposition time) or `sprint-plan` (when the verifying criterion is reassigned during planning); the field **MUST** be non-null on exactly one feature per sprint **before** that sprint transitions to `review`;
-  - `consistency_check` (object, required) — see §Consistency-check schema below.
-- **MUST NOT** include effort estimates, points, or assignment fields beyond what is declared above; lints flag unknown keys.
+  - `id` (string, required)—pattern `F-<n>`, monotonically assigned across the project, never reused;
+  - `title` (string, required)—one-line summary in the project's primary language;
+  - `status` (enum, required)—one of `draft`, `ready`, `in_progress`, `done`, `cancelled`;
+  - `roadmap_item` (string, required)—the `R-<n>` ID this feature decomposes; **MUST** match an entry in `project/roadmap.md`;
+  - `sprint` (integer or null, required)—the sprint number this feature is scheduled for; null while the feature is `draft` and during `ready` while the feature hasn't yet been adopted by a sprint. The field transitions from null to non-null when, and only when, the feature is added to a sprint's `features` list per `spec/project/sprint/`; the canonical write authority is `sprint-plan` (when scheduling ahead of activation) or `sprint-execute` (when picking the feature up mid-active-sprint), each of which **MUST** write `feature.sprint = N` in the same operation that adds `feature.id` to `sprints/N.features`. The field **MUST NOT** be set by hand or by any other skill, and the bidirectional invariant (feature side ↔ sprint side) is the canonical check;
+  - `created` (ISO date, required)—date the feature file was first written; never edited after creation;
+  - `ended` (ISO date or null, required)—date the feature reached either `done` or `cancelled` (both terminal states share this field, hence the neutral name); null until the feature terminates;
+  - `verifies_sprint_value` (string or null, required)—the acceptance-criterion identifier (`acceptance-<n>`) on this feature that, when checked, directly verifies the sprint's `value_statement`; non-null on at most one feature per sprint, null otherwise. The sibling `sprint` spec mandates that **at least one** feature in any closing sprint carries a non-null value here; combined with the at-most-one bound enforced feature-side (see §Acceptance-criteria contract and AC line below), the net constraint is exactly one. The write authority is `feature-decompose` (when the verifying criterion is identified at decomposition time) or `sprint-plan` (when the verifying criterion is reassigned during planning); the field **MUST** be non-null on exactly one feature per sprint **before** that sprint transitions to `review`;
+  - `consistency_check` (object, required)—see §Consistency-check schema below.
+- **MUST NOT** include effort estimates, points, or assignment fields beyond what's declared above; lints flag unknown keys.
 
 ### Body sections
 
 - **MUST** carry the following level-2 sections in this order, even when empty (skills depend on stable section headings):
-  - `## Description` — one to three paragraphs describing the user-visible change; written in the project's primary language; phrased from the end-user perspective when possible.
-  - `## Acceptance criteria` — checklist of testable, individually checkable conditions; see §Acceptance-criteria contract for the per-item shape.
-  - `## Test hooks` — explicit list of which tests, skills, or manual demo steps validate which acceptance criteria. Each entry **MUST** carry three components: (a) the `acceptance-<n>` identifier it pins to; (b) the verification mechanism (test path, skill name, CLI command, or manual procedure); (c) a status token from the closed vocabulary `pending` (not yet executed), `passing` (executed and successful), `skipped` (intentionally not executed for this run with rationale), or `failing` (executed and unsuccessful). Format: `- **acceptance-<n>** — <mechanism> — `<status>``. A hook is "resolved" for the lifecycle gate (see §Lifecycle and gates) only when its status is `passing` or `skipped`.
-  - `## Consistency notes` — populated by the consistency check (see §Consistency check); summarises the agent's findings and the resolution chosen for each finding.
-  - `## Risks` — known unknowns, blockers, or mitigations; **MAY** be empty for low-risk features.
+  - `## Description`: one to three paragraphs describing the user-visible change; written in the project's primary language; phrased from the end-user perspective when possible.
+  - `## Acceptance criteria`: checklist of testable, individually checkable conditions; see §Acceptance-criteria contract for the per-item shape.
+  - `## Test hooks`: explicit list of which tests, skills, or manual demo steps validate which acceptance criteria. Each entry **MUST** carry three components: (a) the `acceptance-<n>` identifier it pins to; (b) the verification mechanism (test path, skill name, CLI command, or manual procedure); (c) a status token from the closed vocabulary `pending` (not yet executed), `passing` (executed and successful), `skipped` (intentionally not executed for this run with rationale), or `failing` (executed and unsuccessful). Format: `- **acceptance-<n>** — <mechanism> — <status>`. A hook is "resolved" for the lifecycle gate (see §Lifecycle and gates) only when its status is `passing` or `skipped`.
+  - `## Consistency notes`: populated by the consistency check (see §Consistency check); summarises the agent's findings and the resolution chosen for each finding.
+  - `## Risks`: known unknowns, blockers, or workarounds; **MAY** be empty for low-risk features.
 - **MAY** carry additional level-2 sections (`## Open questions`, `## References`) when the feature genuinely needs them; **MUST NOT** alter the order of the required sections to accommodate optional ones.
 
 ### Acceptance-criteria contract
@@ -69,14 +69,14 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 
 ### Consistency check
 
-- **MUST** perform a consistency check before a feature transitions from `draft` to `ready`. The canonical performer is the `feature-consistency-reviewer` agent (per `spec/claude/agent-management/`); until that agent ships, an operator-driven manual pass following the same investigation surface and the same recording shape **MAY** satisfy this requirement, **provided** the manual pass is recorded with `agent_version: manual-<YYYY-MM-DD>` in `consistency_check` and the `## Consistency notes` section names the operator who performed it. Once the agent ships, the manual fallback **MUST** be removed and any feature that subsequently relies on it is a workflow-health finding. The check (whether agent or manual) reviews:
+- **MUST** perform a consistency check before a feature transitions from `draft` to `ready`. The canonical performer is the `feature-consistency-reviewer` agent (per `spec/claude/agent-management/`); until that agent ships, an operator-driven manual pass following the same investigation surface and the same recording shape **MAY** satisfy this requirement, **provided** the manual pass is recorded with `agent_version: manual-<YYYY-MM-DD>` in `consistency_check` and the `## Consistency notes` section names the operator who performed it. Once the agent ships, the manual fallback **MUST** be removed and any feature that subsequently relies on the fallback constitutes a workflow-health finding. The check (whether agent or manual) reviews:
   - the existing feature corpus under `project/features/` for overlapping or contradicting features;
   - the existing source-code surface (the project's primary source roots, identified by repo conventions) for already-implemented behaviour that the new feature would re-implement;
   - the spec corpus under `spec/` for prior decisions that constrain this feature.
 - **MUST** record the agent's findings on the feature in the `## Consistency notes` body section and as a structured `consistency_check` frontmatter object with these fields:
-  - `performed_at` (ISO date, required) — when the check ran;
-  - `agent_version` (string, optional) — agent identifier so re-runs can be diffed;
-  - `findings` (list, required) — each finding with `kind` (`overlap`, `duplication`, `drift`, `prior-art`, `clean`), `target` (file path or feature ID it relates to), and `resolution` (`merge-into <id>`, `supersede <id>`, `split-out <ids>`, `proceed`, `revisit-after <event>`).
+  - `performed_at` (ISO date, required)—when the check ran;
+  - `agent_version` (string, optional)—agent identifier so re-runs can be compared;
+  - `findings` (list, required)—each finding with `kind` (`overlap`, `duplication`, `drift`, `prior-art`, `clean`), `target` (file path or feature ID it relates to), and `resolution` (`merge-into <id>`, `supersede <id>`, `split-out <ids>`, `proceed`, `revisit-after <event>`).
 - **MUST** treat any finding with `kind: overlap` or `kind: duplication` as a blocker for the `draft → ready` transition unless its `resolution` is `proceed` with an explicit one-paragraph rationale in `## Consistency notes`.
 - **MUST** re-run the consistency check when, while the feature is in `ready` or `in_progress`, any of the following occur: the `## Description` section is changed by more than typo-level wording, an acceptance criterion is added or its core wording (excluding the checkbox state) is altered, the `roadmap_item` or `sprint` frontmatter field is changed, or a feature with overlapping scope is added or removed elsewhere in `project/features/`. The re-run **MUST** preserve historical findings (append a new `findings` block dated by `performed_at`, don't overwrite). Cosmetic edits (typo fixes, formatting, link target normalisation, the bullet checkbox flipping for an existing acceptance criterion) **MUST NOT** trigger a re-run.
 
@@ -86,13 +86,13 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 - **MUST** require, before `draft → ready`: a non-empty `## Description`, at least one acceptance-criterion bullet, a populated `consistency_check` frontmatter, and a populated `## Consistency notes` section.
 - **MUST** require, before `ready → in_progress`: a non-null `sprint` value matching either the currently `active` sprint or the lowest-numbered `planned` sprint per the sibling `sprint` spec, and the feature listed in that sprint's `features` field. When the matched sprint is `planned`, `sprint-execute` automatically promotes it to `active` as a side effect of this transition (per `sprint` §Lifecycle); when another sprint is already `active`, the transition is rejected.
 - **MUST** require, before `in_progress → done`: every acceptance criterion checked, every test hook resolved (status `passing` or `skipped` per §Body sections), and the feature's sprint either `active` or `review`.
-- **MAY** transition to `cancelled` at any point before `done`; the transition **MUST** carry a one-paragraph rationale, placed in `## Risks` when the feature was cancelled before the consistency check ran (status `draft` at cancellation), and in `## Consistency notes` when the feature was cancelled at or after `ready` because the consistency check or a later finding revealed the feature should not be built.
+- **MAY** transition to `cancelled` at any point before `done`; the transition **MUST** carry a one-paragraph rationale, placed in `## Risks` when the feature was cancelled before the consistency check ran (status `draft` at cancellation), and in `## Consistency notes` when the feature was cancelled at or after `ready` because the consistency check or a later finding revealed the feature shouldn't be built.
 
 ### Roadmap, sprint, and source linkage
 
-- **MUST** ensure `roadmap_item` resolves to an `R-<n>` declared in `project/roadmap.md`; a feature with no roadmap link is invalid even when the originating motivation is "internal hardening" — declare a roadmap item for the hardening intent first.
+- **MUST** ensure `roadmap_item` resolves to an `R-<n>` declared in `project/roadmap.md`; a feature with no roadmap link is invalid even when the originating motivation is "internal hardening"—declare a roadmap item for the hardening intent first.
 - **MUST** ensure that, when `sprint` is non-null, the referenced sprint file's `features` frontmatter list contains this feature's `id`; the back-reference is bidirectional and validated on every sprint and feature change.
-- **MUST** allow `## Test hooks` to point at source paths, test paths, or skill names; the spec does not constrain which mechanism a hook chooses, only that the mechanism is named explicitly so the consistency check can locate prior art.
+- **MUST** allow `## Test hooks` to point at source paths, test paths, or skill names; the spec doesn't constrain which mechanism a hook chooses, only that the mechanism is named explicitly so the consistency check can locate prior art.
 - **MAY** carry references to external issues (GitHub issues, project boards) in `## Description` or `## References`; those references are documentation, never authoritative.
 
 ### Hobby-scale variability
@@ -119,7 +119,7 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 
 ## Open Questions
 
-- Should the consistency check produce a separate audit file under `.audits/feature-consistency/<slug>.md` (mirroring `skill-review` and `agent-review`) instead of inlining the findings, so re-runs are diffable as separate documents? Inline is simpler today; revisit if findings outgrow the section.
+- Should the consistency check produce a separate audit file under `.audits/feature-consistency/<slug>.md` (mirroring `skill-review` and `agent-review`) instead of recording the findings inline, so re-runs can be compared as separate documents? Inline is simpler today; revisit if findings outgrow the section.
 - How does the spec interact with cross-feature dependencies (`F-7 needs F-3 first`)? A frontmatter list (`depends_on: [F-3]`) is the obvious shape, but a hobby-scale project usually expresses dependency by sprint ordering; revisit if a real chain appears.
 - Should features that are pure documentation (a how-to page, a runbook) follow the same lifecycle, or get a lighter shape? Same shape for now; project-type-specific lightening is a future concern if doc-only features dominate a real project.
 - Should the consistency-check frontmatter object eventually move to a separate file once `findings` lists exceed a reasonable size, or stay inline indefinitely? Inline is sufficient at hobby scale; defer.

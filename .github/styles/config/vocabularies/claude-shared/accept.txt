@@ -117,3 +117,6 @@ severities
 unparseable
 validator(s|'s)?
 reachability
+enum(s)?
+Jira
+stderr
