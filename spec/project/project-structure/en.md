@@ -93,6 +93,13 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - **SHOULD** track development- and test-only dependencies separately in a `requirements-dev.txt` (or `src/<component>/requirements-dev.txt`) so that production installs don't pull in tooling
 - **SHOULD** wire Taskfile targets (for example `task install`, `task test`, `task lint`) so they create or use the project-local virtual environment and install via `pip install -r requirements.txt` (and `requirements-dev.txt` where applicable), so local and CI execution share one entry point
 
+### Requirements file format (optional, applies when `requirements*.txt` exist)
+These rules apply to every `requirements.txt` and `requirements-dev.txt` written under this spec, and exist so that scaffolding and drift checks can validate the file structure—not just its presence.
+
+- **MUST** list every dependency on its own line with an explicit version specifier (for example `pkg>=1.2`, `pkg==1.2.3`, or `pkg~=1.2`); bare package names without a specifier aren't permitted because they let transitive resolution drift silently across installs
+- **MUST NOT** chain `requirements-dev.txt` to `requirements.txt` via a `-r requirements.txt` (or equivalent `--requirement`) directive; the Taskfile pattern in the section above installs both files independently, so the chain is redundant, hides the dev-only contract, and silently follows a stale runtime list when one accidentally lands
+- **MAY** use `#` comment lines for headers, rationale, or upstream-tracking pointers; a comment-only `requirements.txt` is permitted as a temporary placeholder when no runtime dependency has been published yet (for example, an SDK still pre-release), but the placeholder **MUST** be replaced with real entries as soon as the first runtime dependency lands
+
 ### Home Assistant integrations (optional)
 - **MAY** include a `hacs.json` at the repository root when the repository ships an HA custom integration
 - **MUST** place integration code in `custom_components/<domain>/` using the integration's lowercase ASCII HA domain as the folder name when `hacs.json` is present
@@ -129,6 +136,8 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - [ ] If the repository contains Python source code (`*.py` files, `custom_components/<name>/`, or `pyproject.toml`), a `requirements.txt` is present at the repository root or under each `src/<component>/` that ships Python code
 - [ ] If the repository contains Python source code, a `pyproject.toml` exists at the repository root (single-component) or under each `src/<component>/` (multi-component) and declares `[build-system]`, project metadata, and any Python tooling configuration in use
 - [ ] If the repository contains Python source code, `.gitignore` excludes the local virtual-environment directory (for example `.venv/`)
+- [ ] If `requirements.txt` or `requirements-dev.txt` is present, every non-comment, non-blank line carries a version specifier (no bare package names)
+- [ ] If `requirements-dev.txt` is present, it does not contain a `-r requirements.txt` (or `--requirement`) directive
 - [ ] If `.env.example` is present, a literal `.env` entry appears in `.gitignore`
 - [ ] If `hacs.json` is present, `custom_components/<domain>/` exists and matches the HA integration domain
 - [ ] CI status badges for the primary workflows appear near the top of `README.md`

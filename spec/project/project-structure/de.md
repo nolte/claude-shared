@@ -93,6 +93,13 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - **SOLLTE [SHOULD]** Entwicklungs- und nur-für-Tests-Abhängigkeiten getrennt in einer `requirements-dev.txt` (bzw. `src/<component>/requirements-dev.txt`) führen, damit Produktiv-Installationen kein Tooling mitziehen
 - **SOLLTE [SHOULD]** Taskfile-Targets (zum Beispiel `task install`, `task test`, `task lint`) so verkabeln, dass sie das projektlokale Virtual-Environment erzeugen oder nutzen und über `pip install -r requirements.txt` (sowie `requirements-dev.txt`, sofern zutreffend) installieren, damit lokale und CI-Ausführung denselben Einstiegspunkt teilen
 
+### Format der Requirements-Dateien (optional, gilt sofern `requirements*.txt` vorhanden ist)
+Diese Regeln gelten für jede `requirements.txt` und `requirements-dev.txt`, die unter dieser Spec geschrieben werden, und existieren, damit Scaffolding und Drift-Prüfungen die Datei-Struktur validieren können — nicht nur ihre Existenz.
+
+- **MUSS [MUST]** jede Abhängigkeit auf einer eigenen Zeile mit explizitem Versions-Spezifizierer auflisten (zum Beispiel `pkg>=1.2`, `pkg==1.2.3` oder `pkg~=1.2`); reine Paketnamen ohne Spezifizierer sind nicht erlaubt, weil sie transitive Auflösung still über Installationen hinweg driften lassen
+- **MUSS NICHT [MUST NOT]** `requirements-dev.txt` über eine `-r requirements.txt`-Direktive (oder das gleichwertige `--requirement`) an `requirements.txt` anketten; das Taskfile-Muster aus dem Abschnitt oben installiert beide Dateien unabhängig, sodass die Verkettung redundant ist, den Dev-only-Vertrag verwischt und einer versehentlich veralteten Runtime-Liste still folgt
+- **KANN [MAY]** `#`-Kommentarzeilen für Header, Begründungen oder Upstream-Tracking-Verweise verwenden; eine ausschließlich aus Kommentaren bestehende `requirements.txt` ist als temporärer Platzhalter zulässig, solange noch keine Laufzeit-Abhängigkeit publiziert ist (zum Beispiel ein SDK vor seinem Release), aber der Platzhalter **MUSS [MUST]** durch echte Einträge ersetzt werden, sobald die erste Laufzeit-Abhängigkeit gelandet ist
+
 ### Home-Assistant-Integrationen (optional)
 - **KANN [MAY]** eine `hacs.json` im Repository-Wurzelverzeichnis enthalten, wenn das Repository eine HA-Custom-Integration ausliefert
 - **MUSS [MUST]** Integrations­code in `custom_components/<domain>/` ablegen und dabei die lowercase-ASCII-HA-Domain der Integration als Ordnernamen verwenden, wenn `hacs.json` vorhanden ist
@@ -129,6 +136,8 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - [ ] Wenn das Repository Python-Quellcode enthält (`*.py`-Dateien, `custom_components/<name>/` oder `pyproject.toml`), ist eine `requirements.txt` im Repository-Wurzelverzeichnis oder unter jeder Python-führenden `src/<component>/` vorhanden
 - [ ] Wenn das Repository Python-Quellcode enthält, existiert eine `pyproject.toml` im Repository-Wurzelverzeichnis (Einzweck) oder unter jeder `src/<component>/` (mehrteilig) und deklariert `[build-system]`, Projekt-Metadaten und alle verwendete Python-Tooling-Konfiguration
 - [ ] Wenn das Repository Python-Quellcode enthält, schließt `.gitignore` das lokale Virtual-Environment-Verzeichnis (zum Beispiel `.venv/`) aus
+- [ ] Wenn `requirements.txt` oder `requirements-dev.txt` vorhanden ist, trägt jede Nicht-Kommentar- und Nicht-Leerzeile einen Versions-Spezifizierer (keine reinen Paketnamen)
+- [ ] Wenn `requirements-dev.txt` vorhanden ist, enthält es keine `-r requirements.txt`-Direktive (oder `--requirement`-Direktive)
 - [ ] Wenn eine `.env.example` vorhanden ist, erscheint ein wörtlicher `.env`-Eintrag in der `.gitignore`
 - [ ] Wenn eine `hacs.json` vorhanden ist, existiert `custom_components/<domain>/` und stimmt mit der HA-Integrations-Domain überein
 - [ ] CI-Status-Badges für die primären Workflows erscheinen am oberen Rand der `README.md`
