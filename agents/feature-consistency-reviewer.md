@@ -69,7 +69,7 @@ The source-code surface is what makes context budget real; bound the scan delibe
 
 Return a single report in this exact structure. The structured findings list at the top is the load-bearing output the parent skill copies into the feature's frontmatter; the prose underneath is for the operator who records the resolution.
 
-```
+````
 # Feature Consistency Review
 
 ## Scope
@@ -113,7 +113,7 @@ findings:
 - Populate the feature's `## Consistency notes` body section with the **Discussion** prose; for any finding whose `kind` is `overlap` or `duplication` and whose `resolution` is `proceed`, expand the rationale to a full paragraph in `## Consistency notes` per `spec/project/feature/<canonical_language>.md` §Consistency check.
 - Decide the resolution for each finding; when the chosen resolution differs from the agent's proposal, record the chosen one and keep the agent's proposal as part of the audit trail.
 - The `draft → ready` transition is blocked while any finding with `kind: overlap` or `kind: duplication` lacks a non-`proceed` resolution or a `proceed` resolution without a paragraph rationale.
-```
+````
 
 When the review surfaces zero findings of any other kind, emit exactly one finding with `kind: clean`, `target: n/a`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
 
