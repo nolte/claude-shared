@@ -27,6 +27,7 @@ Mermaid rendert text-beschriebene Diagramme inline in MkDocs Material über die 
 
 ### MkDocs-Setup
 - **MUSS [MUST]** in `mkdocs.yml` unter `markdown_extensions` `pymdownx.superfences` mit einem Custom-Fence für Mermaid konfigurieren:
+
   ```yaml
   markdown_extensions:
     - pymdownx.superfences:
@@ -35,6 +36,7 @@ Mermaid rendert text-beschriebene Diagramme inline in MkDocs Material über die 
             class: mermaid
             format: !!python/name:pymdownx.superfences.fence_code_format
   ```
+
 - **MUSS [MUST]** `pymdown-extensions` in `docs/requirements.txt` (oder dem äquivalenten Doku-Installationsset) mit einem expliziten Versions-Spezifizierer gemäß `spec/project/project-structure/` „Format der Requirements-Dateien" listen
 - **MUSS [MUST]** `mkdocs-material` als konfiguriertes Theme behalten; das Mermaid-Rendering basiert auf der in Material eingebauten JavaScript-Brücke, die die Mermaid-Runtime bei Bedarf nachlädt
 - **MUSS NICHT [MUST NOT]** ein separates Mermaid-MkDocs-Plugin (zum Beispiel `mkdocs-mermaid2-plugin`) ergänzen; Materials native superfences-basierte Integration ist Portfolio-Standard, ein zweites Plugin verdoppelt nur die Runtime

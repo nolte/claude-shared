@@ -112,6 +112,7 @@ subroot(s)?
 typecheck(s|ed|ing)?
 [Vv]itest
 geoblocking
+Graphviz
 severities
 unparseable
 validator(s|'s)?

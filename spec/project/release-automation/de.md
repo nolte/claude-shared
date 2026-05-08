@@ -122,6 +122,7 @@ Anwendbar, wenn nur `GITHUB_TOKEN` zur Verfügung steht und `develop` vollständ
 - **MUSS [MUST]** `branching-model` §Release flow und §Local release operation durch In-Place-Edits aktualisieren — kein neuer dedizierter §Automated-release-promotion-Abschnitt — sodass: (a) der automatisierte Workflow als primärer Draft → Published-Pfad genannt wird und (b) die manuelle `gh release edit --draft=false`-Sequenz explizit als Fallback für Incident-Response gekennzeichnet ist
 - **DARF NICHT [MUST NOT]** neu spezifizieren, was bereits in `branching-model` abgedeckt ist (Tag-Herkunft, `main`-Refresh, Workflow-Pinning) — stattdessen referenzieren
 - **SOLLTE [SHOULD]** die Open Question in `project-structure` (zur Zeit Zeile 124) durch eine Querverlinkung aus `project-structure` §Release and documentation workflows in diese Spec auflösen
+- **MUSS [MUST]** von `release-artifact` als Autorität für den Übergang Draft → Veröffentlicht querreferenziert werden. `release-artifact` §Dispatch-Grenze zur Release-Maschinerie leitet sprint-seitige Artefakt-Validierungs-Ergebnisse in den Workflow weiter, den diese Spec regiert; die Grenze ist einseitig (diese Spec ist die untere Schicht, `release-artifact` ist die obere), und die konsumierende Spec **DARF NICHT [MUST NOT]** eine hier deklarierte Regel neu definieren
 
 ### Beobachtbarkeit und Audit
 

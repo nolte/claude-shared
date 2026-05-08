@@ -37,6 +37,7 @@ Repositories in this portfolio use `main` as a presentation-only branch that alw
 ### Release flow
 - **MUST** cut GitHub Releases from tags created on the `develop` branch—release-drafter maintains the draft as PRs land
 - **MUST** flip the draft to a published GitHub Release through `release-publish.yml` as the primary Draft → Published path, gated by the pre-publish verification declared in `spec/project/release-automation/`; running `gh release edit <tag> --draft=false` directly is a documented fallback for incident response only, when `release-publish.yml` is itself broken
+- **MAY** be dispatched by sprint-side closure: the sibling specs `release-artifact` §Dispatch boundary to release machinery and `release-skill-layer` define an optional, operator-opt-in chain in which `sprint-review` invokes `release-notes-curate` (for body curation) and `release-publish-trigger` (which dispatches the workflow declared above). The dispatch boundary is one-way—this spec governs the workflow itself, the sprint-side specs govern the trigger conditions—and the consuming specs **MUST NOT** redefine any rule declared here
 - **MUST** update `main` exclusively through the release workflow on `release: [published]`
 - **MUST** derive `main` content mechanically from the release; editing files directly on `main` is a bug
 - **SHOULD** keep the default pull-request base set to `develop`, not `main`

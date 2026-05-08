@@ -21,6 +21,7 @@ Canonical language: `en` · Translations: `de`
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | 2026-04-23 |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | unversioned |
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | unversioned |
+| project | feature | Project Feature | Projekt-Feature | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | 2026-05-01 |
@@ -28,9 +29,12 @@ Canonical language: `en` · Translations: `de`
 | project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | 2026-04-23 |
 | project | quality-gate | Quality Gate | Quality-Gate | draft | unversioned |
 | project | readme-structure | Repository README Structure | Repository-README-Struktur | draft | 2026-04-23 |
+| project | release-artifact | Project Release Artifact | Projekt-Release-Artefakt | draft | unversioned |
 | project | release-automation | Release Automation | Release-Automation | draft | 2026-04-24 |
 | project | release-notes-audience-analysis | Release Notes Audience Analysis | Zielgruppenanalyse für Release Notes | draft | 2026-04-24 |
 | project | release-skill-layer | Local Release Skill Layer | Lokale Release-Skill-Schicht | draft | unversioned |
+| project | roadmap | Project Roadmap | Projekt-Roadmap | draft | unversioned |
 | project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | 2026-04-23 |
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | unversioned |
+| project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |

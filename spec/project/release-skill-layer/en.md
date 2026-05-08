@@ -95,6 +95,7 @@ Two existing specs frame how releases work in the portfolio. `release-automation
 - **MUST** allow Skill A to run independently of Skill B (curation without publish) and Skill B to run on a draft that hasn't been augmented (publish without curation). Neither skill is a precondition of the other in the spec; the operator decides the order.
 - **SHOULD**, when Skill B detects a draft without a `release-skill-layer:project-context-start` marker, surface a non-blocking note offering to dispatch Skill A first; the operator MAY proceed without curation.
 - **MAY** chain Skill A → Skill B in a single operator request when the operator says "curate and publish"; the chain is two sequential skill invocations, not a third combined skill.
+- **MUST** be discoverable as the dispatch target of `release-artifact` §Dispatch boundary to release machinery: when sprint-review at sprint closure decides to publish, it dispatches the two skills defined here, not the underlying `release-publish.yml` workflow directly. The relationship is one-way (this spec is the lower layer, `release-artifact` is the higher), and the consuming spec **MUST NOT** redefine any rule declared here. `release-artifact` is the authority for which sprint state triggers the dispatch and how the operator-opt-in is recorded.
 
 ## Acceptance Criteria
 

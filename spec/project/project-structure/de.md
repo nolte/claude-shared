@@ -70,6 +70,14 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - **SOLLTE [SHOULD]** `spec/` nach Themen-Unterordnern organisieren (zum Beispiel `req/`, `nfr/`, `ui-nfr/`, `style-guides/`, `knowledge/`), sobald mehr als eine Handvoll Specs existieren
 - **KANN [MAY]** die Konvention des mehrsprachigen Spec-Skills (`<slug>/<lang>.md`) wiederverwenden, wenn das Projekt übersetzte Specs benötigt
 
+### Projekt-Planungsartefakte (optional)
+Das Portfolio führt Roadmap-, Sprint-, Feature- und Release-Artefakt-Datensätze als versionskontrolliertes Markdown unter einem Top-Level-Verzeichnis `project/`, sobald das Repository die Claude-getriebene Planungssuite nutzt (`roadmap-init`, `sprint-plan`, `feature-decompose` sowie die Skills `sprint-execute` / `sprint-review`, die diese Artefakte lesen). Die innere Form der einzelnen Artefakte ist jeweils durch eine eigene Spec geregelt (`roadmap`, `sprint`, `feature`, `release-artifact`); diese Spec deklariert nur das Verzeichnis-Layout, in dem sie liegen — damit ein Projektstruktur-Audit die Planungs-Oberfläche auch dann erkennt, wenn die genannten Skills noch nicht gelaufen sind.
+
+- **KANN [MAY]** ein Top-Level-Verzeichnis `project/` für die Planungs-Artefakte enthalten; das Fehlen ist zulässig für Repositories, die die Planungs-Suite nicht nutzen
+- **MUSS [MUST]**, wenn `project/` vorhanden ist, die Dateien wie folgt organisieren: `project/roadmap.md` (die Queue), `project/goals.md` (Vision plus Outcomes), `project/sprints/<NNNN>-<slug>.md` (eine Datei pro Sprint), `project/features/<slug>.md` (eine Datei pro Feature) und — sofern Out-of-Band-Releases auftreten — `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` plus ein regeneriertes `project/release-artifacts/out-of-band/INDEX.md`; die jeweilige Datei-Form wird von den Specs `roadmap`, `sprint`, `feature` und `release-artifact` geregelt
+- **MUSS NICHT [MUST NOT]** den `project/`-Baum unter `docs/` oder ein anderes Unterverzeichnis schachteln; die Planungs-Oberfläche ist ein Top-Level-Orientierungspunkt, parallel zu `spec/` und `tests/`
+- **MUSS NICHT [MUST NOT]** hier Regeln neu definieren, die von den Specs `roadmap`, `sprint`, `feature` oder `release-artifact` deklariert werden; dieser Abschnitt ist ausschließlich Layout
+
 ### Tests
 - **MUSS [MUST]** ein `tests/`-Verzeichnis im Repository-Wurzelverzeichnis enthalten
 - **SOLLTE [SHOULD]** die Struktur des Quellbaums innerhalb von `tests/` spiegeln
@@ -140,6 +148,7 @@ Diese Regeln gelten für jede `requirements.txt` und `requirements-dev.txt`, die
 - [ ] Wenn `requirements-dev.txt` vorhanden ist, enthält es keine `-r requirements.txt`-Direktive (oder `--requirement`-Direktive)
 - [ ] Wenn eine `.env.example` vorhanden ist, erscheint ein wörtlicher `.env`-Eintrag in der `.gitignore`
 - [ ] Wenn eine `hacs.json` vorhanden ist, existiert `custom_components/<domain>/` und stimmt mit der HA-Integrations-Domain überein
+- [ ] Wenn `project/` vorhanden ist, liegen die Planungs-Artefakte unter dem Layout `project/roadmap.md`, `project/goals.md`, `project/sprints/<NNNN>-<slug>.md`, `project/features/<slug>.md` oder `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` (mit `project/release-artifacts/out-of-band/INDEX.md`, sofern mindestens ein Out-of-Band-Eintrag existiert); geschachtelte oder alternative Orte schlagen die Validierung fehl
 - [ ] CI-Status-Badges für die primären Workflows erscheinen am oberen Rand der `README.md`
 
 ## Offene Fragen
