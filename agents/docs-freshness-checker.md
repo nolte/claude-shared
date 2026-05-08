@@ -1,6 +1,6 @@
 ---
 name: docs-freshness-checker
-description: Audit the MkDocs documentation of the current repository for freshness — multi-language parity between configured language trees (for example `docs/en/` vs `docs/de/`), dead internal markdown links, stale references to paths under `spec/` / `src/` / other repo roots, ADR index completeness and status hygiene, and TODO / placeholder markers. Read-only: produces a severity-sorted report and never edits files. Use when the user asks to "check the docs for drift," "run a freshness audit on the docs," "find dead links in the documentation," "check DE/EN parity," "prep the docs for a release," or equivalent German-language requests ("Doku auf Aktualität prüfen," "tote Links in der Doku finden," "DE/EN-Parität prüfen"). Don't use for writing or updating documentation (that's an author's task) and don't use for vocabulary / Vale linting (that's `prose-vale-curator`).
+description: Audit the MkDocs documentation of the current repository for freshness — multi-language parity between configured language trees (for example `docs/en/` vs `docs/de/`), dead internal markdown links, stale references to paths under `spec/` / `src/` / other repo roots, ADR index completeness and status hygiene, Mermaid `diagram-source: derived` drift (source's last-commit timestamp newer than the hosting markdown), and TODO / placeholder markers. Read-only: produces a severity-sorted report and never edits files. Use when the user asks to "check the docs for drift," "run a freshness audit on the docs," "find dead links in the documentation," "check DE/EN parity," "prep the docs for a release," or equivalent German-language requests ("Doku auf Aktualität prüfen," "tote Links in der Doku finden," "DE/EN-Parität prüfen"). Don't use for writing or updating documentation (that's an author's task) and don't use for vocabulary / Vale linting (that's `prose-vale-curator`).
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet
@@ -29,6 +29,7 @@ You **do**:
 - Check ADR indices against the actual ADR files on disk when ADRs are configured.
 - Flag stale markers: `TODO`, `FIXME`, `XXX`, `TBD`, `coming soon`, `placeholder`, `Lorem ipsum`, and equivalents.
 - Check references from docs into other repo roots (`spec/`, `src/`, `scripts/`, `docker/`, `helm/`) and flag paths that don't exist anymore.
+- Detect Mermaid diagram-source drift on every Mermaid block annotated with `<!-- diagram-source: derived — <path> -->` per `spec/project/mermaid-diagrams/`: the source has been modified more recently than the hosting markdown.
 - Produce one severity-sorted report. Nothing else.
 
 You **don't**:
@@ -104,7 +105,22 @@ For each language tree that contains an `adr/` folder:
 - **Status hygiene**: `Grep` each ADR for `status:` (frontmatter) or `**Status**:` (body heading). Flag ADRs with no declared status, or with a non-standard status value. Accepted status values: `proposed`, `accepted`, `superseded`, `deprecated`, `rejected`.
 - **Supersedes chain consistency**: when an ADR body declares `Supersedes: ADR-NNN`, confirm that the named ADR exists and has status `superseded` (not `accepted`). Chain breaks → finding.
 
-### Phase 6: Stale markers
+### Phase 6: Mermaid diagram-source drift
+
+Per `spec/project/mermaid-diagrams/`, every Mermaid fence in the docs carries an HTML comment immediately above the fence in one of two shapes:
+
+- `<!-- diagram-source: user-described — <one-line summary> -->` — hand-authored, no machine-readable source. **Skip** these; freshness can't be measured against text.
+- `<!-- diagram-source: derived — <path or identifier of the source structure> -->` — derived from a named artefact. **Check** these.
+
+For every `derived` annotation:
+
+1. Extract the source path: everything after the literal `derived —` separator (em-dash plus space) and before the closing `-->`, trimmed. Multiple sources may be listed in one comment, separated by commas; check each independently.
+2. Verify the source path resolves on disk. If it doesn't, that's a finding (`Mermaid diagram-source missing`) and the source's freshness can't be checked.
+3. When the source resolves, compare `git log -1 --format=%cs -- <source>` against `git log -1 --format=%cs -- <markdown-file>`. If the source's last-commit date is strictly later than the markdown's, flag a `Mermaid diagram-source drift` finding.
+
+This phase doesn't redraw the diagram and doesn't cross into the authoring surface — that's `mermaid-diagrams-apply`'s job. The check is purely a drift detector.
+
+### Phase 7: Stale markers
 
 `Grep` every `*.md` under the docs dir for:
 
@@ -116,12 +132,12 @@ coming soon | placeholder | Lorem ipsum |
 
 Record each hit as a finding with its file and line. This is lowest severity unless the same marker appears inside an ADR declared `accepted` (which elevates it to medium).
 
-### Phase 7: Classification and reporting
+### Phase 8: Classification and reporting
 
 Assign severity per finding:
 
-- **critical**: broken internal link, broken cross-tree reference, ADR status inconsistency that breaks a supersedes chain.
-- **warning**: language parity gap (missing file on one side), stale-marker inside an accepted ADR, ADR index drift, content-staleness spot-check > 90 days.
+- **critical**: broken internal link, broken cross-tree reference, ADR status inconsistency that breaks a supersedes chain, Mermaid `diagram-source: derived` annotation whose named source path doesn't exist on disk (the diagram has lost its origin entirely).
+- **warning**: language parity gap (missing file on one side), stale-marker inside an accepted ADR, ADR index drift, content-staleness spot-check > 90 days, Mermaid `diagram-source: derived` drift (source's last-commit date strictly later than the hosting markdown's).
 - **info**: stale marker in ordinary prose, content-staleness spot-check 30–90 days, ADR without declared status (treat as info rather than critical — the ADR is still readable).
 
 Cap per-category listings at 15 entries and summarise the remainder with a count.
@@ -146,6 +162,7 @@ Return a single report:
 | Cross-tree references | … | … | … |
 | Language parity | … | … | … |
 | ADR hygiene | … | … | … |
+| Mermaid diagrams | … | … | … |
 | Stale markers | … | … | … |
 | **Total** | **…** | **…** | **…** |
 
@@ -162,6 +179,10 @@ Return a single report:
 - `<adr file>` declares `Supersedes: ADR-NNN` but ADR-NNN has status `<status>`
 - …
 
+### Mermaid diagram-source missing
+- `<markdown path>:<line>` — `derived` annotation names `<source path>` which doesn't resolve on disk
+- …
+
 ## Warning
 ### Language parity gaps
 - `<relative path>` exists in `<lang-A>` but missing in `<lang-B>`
@@ -174,6 +195,10 @@ Return a single report:
 ### ADR index drift
 - `<adr file>` present on disk but missing from `<adr index path>`
 - `<adr index path>` references `<adr file>` which doesn't exist on disk
+- …
+
+### Mermaid diagram-source drift
+- `<markdown path>:<line>` — source `<source path>` was committed `<source date>`, hosting markdown was committed `<markdown date>` (delta: <days>)
 - …
 
 ### Stale markers in accepted ADRs
@@ -197,6 +222,7 @@ Return a single report:
 - ADRs scanned: <count per language>
 - Internal links checked: <count>
 - Cross-tree references checked: <count>
+- Mermaid `derived` blocks checked: <count> (skipped `user-described`: <count>)
 
 ## Caller follow-ups
 - Fix critical findings before the next release.

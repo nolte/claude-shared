@@ -81,6 +81,7 @@ plugins:
             Spezifikationen: Specifications
             Skill-Autorenschaft: Skill Authoring
             Agent-Autorenschaft: Agent Authoring
+            Planning-Suite: Planning Suite
             Entwicklung: Development
             Projektstruktur: Project Structure
             Beitragen: Contributing
@@ -143,6 +144,7 @@ nav:
       - de/specs/index.md
       - Skill-Autorenschaft: de/specs/skill-management.md
       - Agent-Autorenschaft: de/specs/agent-management.md
+  - Planning-Suite: de/planning-suite.md
   - Entwicklung:
       - de/development/index.md
       - Projektstruktur: de/development/projektstruktur.md
