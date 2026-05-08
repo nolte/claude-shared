@@ -24,6 +24,7 @@ Detect the user's language and respond in it. The mission file's `mission_statem
 Before any drafting work:
 
 - Confirm the working directory is the target project root (`git rev-parse --is-inside-work-tree`).
+- Confirm `git` is reachable in `PATH`; the `## Source` audit trail in operation 4 captures the audience artefact's last-commit SHA via `git log` and the mission write fails without it.
 - Confirm `project/mission.md` does **not** yet exist. If it does, stop and tell the user this skill is first-write only — `mission-revise` owns edits.
 - Confirm `project/goals.md` exists and parses (Vision section plus `O-<n>` outcomes per the sibling `roadmap` spec). If absent or empty, stop and ask the user to author goals first; outcomes are an input to mission Relevant, not something this skill invents.
 - Confirm the audience artefact exists at the location declared by `audience-identification` (typically `AUDIENCES.md`). If absent, dispatch `audience-identify` first; the spec forbids inventing audiences inline.

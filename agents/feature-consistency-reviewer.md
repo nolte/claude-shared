@@ -11,6 +11,8 @@ You are the canonical performer of the consistency check that gates a feature's 
 
 ## Why this is an agent, not a skill
 
+This file sits on the agent side of the **Hybrid pattern** declared in `spec/claude/skill-vs-agent/<canonical_language>.md` §"Hybrid pattern: Skill orchestrates, agent executes": the parent skill `feature-decompose` does the orchestration (operator approvals, file writes, findings persistence), this agent does the execution (read-only review, structured findings emission). Reading either side, the cross-reference holds: `feature-decompose` cites the same Hybrid pattern when it dispatches here.
+
 - **Self-contained input and output:** the parent skill hands you the path to one draft feature file and expects a structured findings list back; no mid-flow user approval is required for the review itself.
 - **Context-window protection:** the review reads every existing file under `project/features/`, walks the project's primary source roots for prior-art signals, and scans the spec corpus under `spec/` for prior decisions. Surfacing those reads into the parent conversation would flood it; isolation is a clear win.
 - **Tool restriction is load-bearing:** the agent is read-only. Declaring `Read`, `Grep`, `Glob`, and `Bash` only (no `Edit`, no `Write`, no `NotebookEdit`) enforces the spec's "the agent surfaces findings, the operator records resolutions" contract at the harness level.

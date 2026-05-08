@@ -101,12 +101,20 @@ feature is malformed.
    `roadmap_item`, and the slug. The agent reviews the existing feature
    corpus under `project/features/`, the project's primary source roots,
    and the spec corpus under `spec/`, and returns a `findings` array.
-2. **Manual fallback** (only when the agent isn't reachable): walk the
-   same investigation surface yourself — read every existing feature's
-   frontmatter and `## Description`, scan the project's primary source
-   roots for already-implemented behaviour, and grep `spec/` for prior
-   decisions that constrain the new feature. Capture findings in the same
-   shape the agent would emit.
+2. **Manual fallback (deprecated, transitional only).** The
+   `feature-consistency-reviewer` agent ships with this skill — under
+   normal conditions the dispatch in step 1 succeeds and the fallback
+   isn't reached. The fallback exists exclusively for repos whose
+   plugin runtime predates the agent's availability: when step 1 can't
+   resolve the agent at all, walk the same investigation surface
+   yourself — read every existing feature's frontmatter and
+   `## Description`, scan the project's primary source roots for
+   already-implemented behaviour, and grep `spec/` for prior decisions
+   that constrain the new feature. Capture findings in the same shape
+   the agent would emit. Acceptance of this path **MUST** be explicit:
+   ask the operator before proceeding, and surface the runtime version
+   gap so they know the right long-term fix is upgrading the plugin
+   runtime, not normalising the manual pass.
 3. **Persist findings on the feature** in two places:
    - **Frontmatter** — populate the `consistency_check` object with
      `performed_at: <ISO date>`, `agent_version: <agent-id>` (or
@@ -129,9 +137,13 @@ feature is malformed.
    decomposition for that feature; record the choice and skip writing the
    redundant file.
 5. **Record the manual-pass author** in `## Consistency notes` when
-   `agent_version` starts with `manual-`. Once the agent ships, remove
-   this fallback path from the skill — its presence after agent
-   availability is itself a workflow-health finding per the spec.
+   `agent_version` starts with `manual-`. The fallback is already
+   deprecated as of the commit that ships this skill alongside the
+   `feature-consistency-reviewer` agent. Every manual pass on a repo
+   whose plugin runtime can resolve the agent is a workflow-health
+   finding per `spec/project/feature/` §Consistency check; the right
+   resolution is to upgrade the plugin runtime and rerun the check via
+   the agent path.
 
 ## Hard rules
 

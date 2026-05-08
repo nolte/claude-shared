@@ -79,7 +79,6 @@ Steps:
 1. Read the sprint file. Diff the `features` frontmatter list against the `## Features` body bullets (each bullet is expected to link to `project/features/<slug>.md` and show the feature's current status).
 2. **Refuse partial updates.** If the user's request mutates only the body or only the frontmatter, stop and report; the body and the frontmatter list **MUST** be updated in the same operation per `spec/project/sprint/` §Roadmap and feature linkage.
 3. Apply the requested addition or removal to both surfaces atomically. When adding a feature mid-sprint, also set the feature file's `sprint` field to this sprint's number (and check that no other sprint already references it). When removing, clear the feature file's `sprint` field (set to null).
-4. Refuse the operation entirely while `status: active` if it changes the sprint's `value_statement`; that field is frozen after activation per `spec/project/sprint/` §Roadmap and feature linkage. The recovery path is `cancelled` plus a fresh sprint, owned by `sprint-review`.
 
 ### E. Decline transitions outside this skill's scope
 
@@ -87,7 +86,8 @@ The following requests are **out of scope** for this skill:
 
 - `active → review` and any subsequent transition — owned by `sprint-review`.
 - Cancelling a sprint at any stage — `sprint-review` writes the cancellation rationale per `spec/project/sprint/` §Hobby-scale variability.
-- Mutating `value_statement`, `roadmap_items`, or `artifact_ref` on a sprint that's already `active` — refuse and hand back. `roadmap_items` may be edited only while `planned` (per `sprint-plan`); `artifact_ref` is `sprint-review`'s authority at closure.
+- Mutating `value_statement` on a sprint that's already `active` — refuse and hand back. The field is frozen after activation per `spec/project/sprint/` §Roadmap and feature linkage; the recovery path is `cancelled` plus a fresh sprint, owned by `sprint-review`.
+- Mutating `roadmap_items` or `artifact_ref` on a sprint that's already `active` — refuse and hand back. `roadmap_items` may be edited only while `planned` (per `sprint-plan`); `artifact_ref` is `sprint-review`'s authority at closure.
 
 When the user asks for any of the above, stop and surface the correct skill to invoke instead.
 
