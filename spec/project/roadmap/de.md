@@ -50,6 +50,7 @@ Das nolte-Portfolio besteht überwiegend aus Hobby-Projekten. Sprint-Kadenz, ver
   - `detail` (Enum, verpflichtend) — einer von `fine`, `coarse`, `backlog`;
   - `outcomes` (Liste von Outcome-IDs, verpflichtend, nicht leer) — jeder Eintrag **MUSS [MUST]** ein `O-<n>` aus `goals.md` matchen;
   - `target_sprint` (Integer oder null, verpflichtend, darf null sein) — Sprint-Nummer, für die das Item momentan vorgesehen ist; das Feld **MUSS [MUST]** im YAML-Block erscheinen, auch wenn null, damit Item-Parser auf einen stabilen Schlüsselsatz vertrauen können;
+  - `mvp` (Boolean, verpflichtend) — `true` markiert das Item als Teil des MVP-Scopes (Pflicht für die Erfüllung der Projektmission), `false` markiert es als Post-MVP (optional, explizit benannt, damit die Grenze sichtbar bleibt). Der Ort des Felds in diesem Schema gehört dieser Spec; die Semantik des Felds, das Stabilisierungs-Gate und die Audit-Regeln rund um Flag-Wechsel gehören der Geschwister-Spec `mission` — siehe `spec/project/mission/<canonical_language>.md`. Repositories ohne `project/mission.md` **KÖNNEN [MAY]** `mvp: false` auf jedem Item tragen oder die Datei vollständig weglassen; sobald eine Mission-Datei existiert, **MUSS [MUST]** jedes Roadmap-Item das Feld tragen;
   - `status` (Enum, verpflichtend) — einer von `proposed`, `active`, `done`, `cancelled`.
 - **MUSS [MUST]** jedem YAML-Block einen Freitext-Body folgen lassen, dessen Pflicht-Tiefe vom `detail`-Wert abhängt:
   - `fine`: ein Absatz, der die für den Nutzer sichtbare Änderung beschreibt, plus eine Checkliste der vorgesehenen Features (nur Titel — das tatsächliche Feature-Schema lebt in der Spec `feature`);
@@ -68,6 +69,7 @@ title: Replace the legacy auth flow
 detail: fine
 outcomes: [O-1, O-4]
 target_sprint: 7
+mvp: true
 status: proposed
 ```
 
@@ -113,7 +115,7 @@ End users authenticate via the new SSO provider in under three steps; the legacy
 
 - [ ] `project/roadmap.md` und `project/goals.md` existieren im Repo-Root jedes adoptierenden Projekts; verschachtelte oder alternative Orte schlagen die Validierung.
 - [ ] `goals.md` öffnet mit einem Vision-Absatz und einem Outcomes-Abschnitt, in dem jedes Outcome eine `O-<n>`-ID und eine einzeilige Endnutzer-Vorteils-Beschreibung trägt.
-- [ ] Jedes Roadmap-Item in `roadmap.md` trägt eine Level-3-Markdown-Überschrift, unmittelbar gefolgt von einem fenced YAML-Codeblock (` ```yaml … ``` `) mit den sechs Schema-Feldern (`id`, `title`, `detail`, `outcomes`, `target_sprint`, `status`) in der festgelegten Reihenfolge, unmittelbar gefolgt vom Freitext-Body; `target_sprint` ist immer vorhanden, mit dem literalen Wert `null`, wenn das Item ungeplant ist.
+- [ ] Jedes Roadmap-Item in `roadmap.md` trägt eine Level-3-Markdown-Überschrift, unmittelbar gefolgt von einem fenced YAML-Codeblock (` ```yaml … ``` `) mit den sieben Schema-Feldern (`id`, `title`, `detail`, `outcomes`, `target_sprint`, `mvp`, `status`) in der festgelegten Reihenfolge, unmittelbar gefolgt vom Freitext-Body; `target_sprint` ist immer vorhanden, mit dem literalen Wert `null`, wenn das Item ungeplant ist, und `mvp` ist als Boolean immer vorhanden, sobald das Repository eine `project/mission.md` trägt.
 - [ ] Die `outcomes`-Liste jedes Roadmap-Items löst auf: jeder Eintrag matcht ein in `goals.md` definiertes `O-<n>`; Lints schlagen sonst fehl.
 - [ ] Kein Roadmap-Item, dessen `target_sprint` auf den aktuellen oder nächsten Sprint zeigt, trägt einen anderen `detail`-Wert als `fine`; `roadmap-refine` meldet bei Bruch dieser Invariante eine Verletzung.
 - [ ] Kein `proposed`-Item geht direkt nach `done`; die einzigen erlaubten Übergänge sind `proposed → active → done`, `proposed → cancelled` und `active → cancelled`.

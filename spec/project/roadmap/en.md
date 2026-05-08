@@ -50,6 +50,7 @@ The nolte portfolio is built largely from hobby-scale projects. Sprint cadence, 
   - `detail` (enum, required): one of `fine`, `coarse`, `backlog`;
   - `outcomes` (list of outcome IDs, required, non-empty): every entry **MUST** match an `O-<n>` from `goals.md`;
   - `target_sprint` (integer or null, required, may be null): the sprint number this item is currently queued for; the field **MUST** appear in the YAML block even when null, so item parsers can rely on a stable key set;
+  - `mvp` (boolean, required): `true` marks the item as part of the MVP scope (mandatory for fulfilling the project's mission), `false` marks it as post-MVP (optional, named explicitly so the boundary stays visible). The field's location in this schema is owned by this spec; the field's semantics, the stabilisation gate, and the audit rules around flag flips are owned by the sibling `mission` spec—see `spec/project/mission/<canonical_language>.md`. Repositories without a `project/mission.md` **MAY** carry `mvp: false` on every item or omit the file entirely; once a mission file exists, every roadmap item **MUST** carry the field;
   - `status` (enum, required): one of `proposed`, `active`, `done`, `cancelled`.
 - **MUST** follow each YAML block with a free-text body whose required depth is gated by `detail`:
   - `fine`: a paragraph stating the user-visible change and a checklist of intended features (titles only; actual feature schema lives in the `feature` spec);
@@ -68,6 +69,7 @@ title: Replace the legacy auth flow
 detail: fine
 outcomes: [O-1, O-4]
 target_sprint: 7
+mvp: true
 status: proposed
 ```
 
@@ -113,7 +115,7 @@ End users authenticate via the new SSO provider in under three steps; the legacy
 
 - [ ] `project/roadmap.md` and `project/goals.md` exist at the repo root of every adopting project; nested or alternative locations fail validation.
 - [ ] `goals.md` opens with a Vision paragraph and an Outcomes section where every outcome has an `O-<n>` ID and a one-sentence end-user benefit description.
-- [ ] Every roadmap item in `roadmap.md` carries a level-3 markdown heading immediately followed by a fenced YAML code block (` ```yaml … ``` `) with the six schema fields (`id`, `title`, `detail`, `outcomes`, `target_sprint`, `status`) in the declared order, immediately followed by the free-text body; `target_sprint` is always present, with the literal value `null` when the item is unscheduled.
+- [ ] Every roadmap item in `roadmap.md` carries a level-3 markdown heading immediately followed by a fenced YAML code block (` ```yaml … ``` `) with the seven schema fields (`id`, `title`, `detail`, `outcomes`, `target_sprint`, `mvp`, `status`) in the declared order, immediately followed by the free-text body; `target_sprint` is always present, with the literal value `null` when the item is unscheduled, and `mvp` is always present as a boolean once the repository carries a `project/mission.md`.
 - [ ] Every roadmap item's `outcomes` list resolves: each entry matches an `O-<n>` defined in `goals.md`; lints fail otherwise.
 - [ ] No roadmap item with `target_sprint` equal to the current or next sprint carries `detail` other than `fine`; `roadmap-refine` raises a violation when this invariant is broken.
 - [ ] No `proposed` item moves directly to `done`; the only allowed transitions are `proposed → active → done`, `proposed → cancelled`, and `active → cancelled`.
