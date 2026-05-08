@@ -112,7 +112,11 @@ subroot(s)?
 typecheck(s|ed|ing)?
 [Vv]itest
 geoblocking
+Graphviz
 severities
 unparseable
 validator(s|'s)?
 reachability
+enum(s)?
+Jira
+stderr

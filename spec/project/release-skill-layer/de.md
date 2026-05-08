@@ -95,6 +95,7 @@ Zwei bestehende Specs rahmen den Release-Ablauf im Portfolio ein. `release-autom
 - **MUSS [MUST]** zulassen, dass Skill A unabhängig von Skill B läuft (Curation ohne Publish) und Skill B auf einem Draft läuft, der nicht angereichert wurde (Publish ohne Curation). Keiner der beiden Skills ist eine Precondition des anderen in dieser Spec; der Operator entscheidet die Reihenfolge.
 - **SOLLTE [SHOULD]**, wenn Skill B einen Draft ohne `release-skill-layer:project-context-start`-Marker erkennt, einen non-blocking Hinweis zeigen und anbieten, Skill A zuerst zu dispatchen; der Operator **KANN [MAY]** ohne Curation fortfahren.
 - **KANN [MAY]** Skill A → Skill B in einer einzelnen Operator-Anfrage verketten, wenn der Operator "kuratieren und publishen" sagt; die Kette sind zwei sequenzielle Skill-Aufrufe, kein dritter kombinierter Skill.
+- **MUSS [MUST]** als Dispatch-Ziel von `release-artifact` §Dispatch-Grenze zur Release-Maschinerie auffindbar sein: wenn `sprint-review` beim Sprint-Abschluss entscheidet zu veröffentlichen, dispatcht es die beiden hier definierten Skills, nicht den darunterliegenden `release-publish.yml`-Workflow direkt. Die Beziehung ist einseitig (diese Spec ist die untere Schicht, `release-artifact` ist die obere), und die konsumierende Spec **DARF NICHT [MUST NOT]** eine hier deklarierte Regel neu definieren. `release-artifact` ist die Autorität dafür, welcher Sprint-Zustand den Dispatch auslöst und wie das Operator-Opt-in festgehalten wird.
 
 ## Acceptance Criteria
 

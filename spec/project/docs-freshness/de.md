@@ -34,6 +34,7 @@ Das Audit **MUSS** jeden Befund in genau eine dieser Kategorien klassifizieren:
 - **Cross-Tree-Referenz-Rot**: ein Link aus den Docs nach `spec/`, `src/`, `scripts/`, `docker/`, `helm/`, `tests/`, `tools/`, dessen Zielpfad im Arbeitsbaum nicht mehr existiert.
 - **Sprach-Paritäts-Lücke**: in einem zweisprachigen (oder mehrsprachigen) Repository ein relativer Pfad, der in einem konfigurierten Sprachbaum existiert, aber in einem anderen fehlt.
 - **Inhalts-Staleness-Delta**: in einem mehrsprachigen Repository Gegenpart-Dateien, deren letzte Commit-Zeitstempel über eine Schwelle (Standard 30 Tage) divergieren oder deren Größen um mehr als 2× divergieren; diese werden an den N jüngst geänderten Dateien pro Baum stichprobenhaft geprüft, nicht erschöpfend.
+- **Mermaid-Diagramm-Quell-Drift**: ein Mermaid-Block in der Doku, annotiert mit `<!-- diagram-source: derived — <pfad> -->` (gemäß `spec/project/mermaid-diagrams/`), dessen genanntes Quell-Artefakt einen jüngeren Last-Commit-Zeitstempel hat als die Markdown-Datei, die den Block enthält — die Quelle hat sich geändert, das Diagramm wurde aber nicht neu gezeichnet. Der Detektor vergleicht `git log -1 --format=%cs -- <quelle>` und `git log -1 --format=%cs -- <markdown-datei>`; `user-described`-Blöcke werden nicht geprüft, da sie keine maschinenlesbare Quelle haben.
 - **ADR-Index-Drift**: eine ADR-Datei auf der Disk, die nicht vom zugehörigen `adr/index.md` referenziert wird, oder ein `adr/index.md`-Eintrag, dessen Datei nicht existiert.
 - **ADR-Status-Hygiene**: ein ADR, dessen deklarierter Status nicht einer von `proposed`, `accepted`, `superseded`, `deprecated`, `rejected` ist; oder eine `Supersedes: ADR-NNN`-Referenz, die auf ein ADR zeigt, dessen Status noch `accepted` ist.
 - **Stale-Marker**: Vorkommen von `TODO`, `FIXME`, `XXX`, `TBD`, `coming soon`, `placeholder`, `Lorem ipsum` (und ihre deutschen Entsprechungen) in der Dokumentation; die Klassifikation hängt vom Kontext ab (ADR vs. Prosa).
@@ -43,7 +44,7 @@ Zusätzliche Kategorien **DÜRFEN** von einem Repository hinzugefügt werden, we
 ### Schweregrad-Klassifikation
 - **MUSS** die folgende Schweregrad-Skala übernehmen:
   - **critical**: Interner-Link-Rot, Cross-Tree-Referenz-Rot, ADR-Status-Inkonsistenz, die eine Supersedes-Kette bricht; Reaktionsfenster: vor dem nächsten Release
-  - **warning**: Sprach-Paritäts-Lücke, Stale-Marker in einem ADR mit Status `accepted`, ADR-Index-Drift, Inhalts-Staleness-Delta > 90 Tage; Reaktionsfenster: innerhalb des laufenden Quartals
+  - **warning**: Sprach-Paritäts-Lücke, Stale-Marker in einem ADR mit Status `accepted`, ADR-Index-Drift, Inhalts-Staleness-Delta > 90 Tage, Mermaid-Diagramm-Quell-Drift; Reaktionsfenster: innerhalb des laufenden Quartals
   - **info**: Stale-Marker in gewöhnlicher Prosa, Inhalts-Staleness-Delta 30 – 90 Tage, ADR ohne deklarierten Status (als Info, nicht kritisch, behandeln — das ADR ist weiterhin lesbar); Reaktionsfenster: best effort
 - **DARF NICHT** einen Schweregrad allein auf Basis lokaler Einschätzung absenken; Abweichung von der Klassifikation gehört in eine explizite Waiver-Notiz, festgehalten im Audit-Artefakt
 

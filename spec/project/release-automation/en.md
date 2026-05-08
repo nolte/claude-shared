@@ -122,6 +122,7 @@ Applicable when only `GITHUB_TOKEN` is available and `develop` is fully protecte
 - **MUST** update `branching-model` §Release flow and §Local release operation by in-place edits—no new dedicated §Automated release promotion section—so that: (a) the automated workflow is named as the primary Draft → Published path, and (b) the manual `gh release edit --draft=false` sequence is explicitly labeled a fallback for incident response
 - **MUST NOT** re-specify anything already covered by `branching-model` (tag origin, `main` refresh, workflow pinning)—reference instead
 - **SHOULD** resolve the Open Question in `project-structure` (line 124 at the time of writing) by cross-linking from `project-structure` §Release and documentation workflows into this spec
+- **MUST** be cross-referenced by `release-artifact` as the authority for the Draft → Published transition. `release-artifact` §Dispatch boundary to release machinery routes sprint-side artefact validation outcomes into the workflow this spec governs; the boundary is one-way (this spec is the lower layer, `release-artifact` is the higher one), and the consuming spec **MUST NOT** redefine any rule declared here
 
 ### Observability and audit
 

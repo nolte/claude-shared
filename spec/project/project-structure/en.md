@@ -70,6 +70,14 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - **SHOULD** organize `spec/` by topic subfolder (for example `req/`, `nfr/`, `ui-nfr/`, `style-guides/`, `knowledge/`) once more than a handful of specs exist
 - **MAY** reuse the multilingual spec skill convention (`<slug>/<lang>.md`) when the project needs translated specifications
 
+### Project planning artefacts (optional)
+The portfolio tracks roadmap, sprint, feature, and release-artefact records as version-controlled markdown under a top-level `project/` directory when the repository runs the Claude-driven planning suite (`roadmap-init`, `sprint-plan`, `feature-decompose`, and the `sprint-execute` / `sprint-review` skills that read those artefacts). The internal shape of each artefact is governed by its own spec (`roadmap`, `sprint`, `feature`, `release-artifact`); this spec only declares the directory layout that hosts them, so a project-structure audit recognises the planning surface even when those skills haven't yet run.
+
+- **MAY** include a top-level `project/` directory holding the planning artefacts; absence is permitted for repositories that don't run the planning suite
+- **MUST**, when `project/` is present, organise files as `project/roadmap.md` (the queue), `project/goals.md` (vision plus outcomes), `project/sprints/<NNNN>-<slug>.md` (one file per sprint), `project/features/<slug>.md` (one file per feature), and (when out-of-band releases occur) `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` plus a regenerated `project/release-artifacts/out-of-band/INDEX.md`; the per-file shape is governed by the `roadmap`, `sprint`, `feature`, and `release-artifact` specs respectively
+- **MUST NOT** nest the `project/` tree under `docs/` or any other subdirectory; the planning surface is a top-level orientation point, parallel to `spec/` and `tests/`
+- **MUST NOT** redefine here any rule declared by the `roadmap`, `sprint`, `feature`, or `release-artifact` specs; this section is layout-only
+
 ### Tests
 - **MUST** include a `tests/` directory at the repository root
 - **SHOULD** mirror the shape of the source tree inside `tests/`
@@ -92,6 +100,13 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - **MUST** track direct runtime dependencies in a `requirements.txt`, located at the repository root for a single-component repository or under `src/<component>/requirements.txt` per component in a multi-component repository; the runtime install set is sourced from `requirements.txt`, not from a `[project.dependencies]` block in `pyproject.toml`
 - **SHOULD** track development- and test-only dependencies separately in a `requirements-dev.txt` (or `src/<component>/requirements-dev.txt`) so that production installs don't pull in tooling
 - **SHOULD** wire Taskfile targets (for example `task install`, `task test`, `task lint`) so they create or use the project-local virtual environment and install via `pip install -r requirements.txt` (and `requirements-dev.txt` where applicable), so local and CI execution share one entry point
+
+### Requirements file format (optional, applies when `requirements*.txt` exist)
+These rules apply to every `requirements.txt` and `requirements-dev.txt` written under this spec, and exist so that scaffolding and drift checks can validate the file structure—not just its presence.
+
+- **MUST** list every dependency on its own line with an explicit version specifier (for example `pkg>=1.2`, `pkg==1.2.3`, or `pkg~=1.2`); bare package names without a specifier aren't permitted because they let transitive resolution drift silently across installs
+- **MUST NOT** chain `requirements-dev.txt` to `requirements.txt` via a `-r requirements.txt` (or equivalent `--requirement`) directive; the Taskfile pattern in the section above installs both files independently, so the chain is redundant, hides the dev-only contract, and silently follows a stale runtime list when one accidentally lands
+- **MAY** use `#` comment lines for headers, rationale, or upstream-tracking pointers; a comment-only `requirements.txt` is permitted as a temporary placeholder when no runtime dependency has been published yet (for example, an SDK still pre-release), but the placeholder **MUST** be replaced with real entries as soon as the first runtime dependency lands
 
 ### Home Assistant integrations (optional)
 - **MAY** include a `hacs.json` at the repository root when the repository ships an HA custom integration
@@ -129,8 +144,11 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - [ ] If the repository contains Python source code (`*.py` files, `custom_components/<name>/`, or `pyproject.toml`), a `requirements.txt` is present at the repository root or under each `src/<component>/` that ships Python code
 - [ ] If the repository contains Python source code, a `pyproject.toml` exists at the repository root (single-component) or under each `src/<component>/` (multi-component) and declares `[build-system]`, project metadata, and any Python tooling configuration in use
 - [ ] If the repository contains Python source code, `.gitignore` excludes the local virtual-environment directory (for example `.venv/`)
+- [ ] If `requirements.txt` or `requirements-dev.txt` is present, every non-comment, non-blank line carries a version specifier (no bare package names)
+- [ ] If `requirements-dev.txt` is present, it doesn't contain a `-r requirements.txt` (or `--requirement`) directive
 - [ ] If `.env.example` is present, a literal `.env` entry appears in `.gitignore`
 - [ ] If `hacs.json` is present, `custom_components/<domain>/` exists and matches the HA integration domain
+- [ ] If `project/` is present, planning artefacts live under the layout `project/roadmap.md`, `project/goals.md`, `project/sprints/<NNNN>-<slug>.md`, `project/features/<slug>.md`, or `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` (with `project/release-artifacts/out-of-band/INDEX.md` when at least one out-of-band entry exists); nested or alternative locations fail validation
 - [ ] CI status badges for the primary workflows appear near the top of `README.md`
 
 ## Open Questions
