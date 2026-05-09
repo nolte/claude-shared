@@ -16,8 +16,6 @@ consistency_check:
       resolution: proceed
 ---
 
-# Mission statement published
-
 ## Description
 
 The `claude-shared` repository carries a complete, spec-compliant `project/mission.md` so the plugin proves it can dogfood its own planning-suite specs end to end. The mission statement names what the plugin is and for whom (the audiences from `AUDIENCES.md`), references the outcomes from `project/goals.md`, and pins its measurability to a concrete acceptance criterion on this feature. A reader walking the repo's `project/` tree finds an example of the planning suite they can directly model their own adoption against.
