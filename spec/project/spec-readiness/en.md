@@ -93,8 +93,8 @@ Specifications under `spec/<topic>/<slug>/` are the source of truth for downstre
 - [ ] Every spec in the portfolio with a non-empty `## Requirements` or `## Acceptance Criteria` section has at least one readiness-audit entry in the repository's audit history since this spec was introduced, or a documented exception
 - [ ] No spec with unresolved Critical readiness findings has been promoted out of `Status: draft` since this spec was introduced—either the finding is resolved, or the promotion is blocked, or a waiver is recorded in the audit artifact
 - [ ] The audit artifact for any readiness run records the scope (spec slugs audited), the Git revision audited, the per-spec severity counts, and the full finding list
-- [ ] No cross-spec contradiction between two specs that are both promoted out of draft remains in the most recent audit without a documented resolution
-- [ ] The agent `agents/spec-readiness-reviewer.md` produces findings that map 1-to-1 onto the three dimensions and the severity scale declared here, so audit artifacts can be generated mechanically
+- [ ] No cross-spec contradiction between two specs that are both promoted out of draft remains in the most recent audit without a documented resolution—either the contradiction is resolved in the source specs or a waiver is recorded in the audit artifact's `## Processing log` per `spec/claude/review-plan/` §Severity scale
+- [ ] The agent `agents/spec-readiness-reviewer.md` produces findings that map 1-to-1 onto the three dimensions and the canonical severity scale this spec cites (defined in `spec/claude/review-plan/` §Severity scale), so audit artifacts can be generated mechanically
 - [ ] No audit run in any repository modified any spec file; the read-only discipline holds in practice, not just in this spec
 - [ ] Readiness-audit artifacts for single-spec promotion runs conform to the `review-plan` artifact format, so they're consumable by the same review-closure machinery as skill- and agent-review
 

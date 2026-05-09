@@ -1,6 +1,6 @@
 ---
 name: permission-allowlist-maintain
-description: Curate the committed `.claude/settings.json` `permissions.allow` list of the current repository per `spec/claude/permission-allowlist/`. Proposes additions sourced from the `fewer-permission-prompts` built-in or from the user, applies the spec's three-condition selection criteria (frequent + read-only + not-already-autoallowed), rejects forbidden pattern classes (interpreter wildcards, task-runner wildcards, mutation-capable `gh`/`git` wildcards), and routes every change through the standard pull-request flow. Invoke when the user asks "tidy the permission allowlist", "add `Bash(task lint)` to the allowlist", "review `.claude/settings.json` against the spec", "prune dead allowlist entries", or equivalent German-language requests ("Allowlist aufräumen", "Permission-Liste pflegen", "Allowlist gegen Spec prüfen"). Don't use to edit `.claude/settings.local.json` (developer-owned, out of scope per spec) or `~/.claude/settings.json` (user-global, out of scope); don't use to add permission scopes outside `permissions.allow` (the broader `update-config` skill owns that surface).
+description: Curate the committed `.claude/settings.json` `permissions.allow` list of the current repository per `spec/claude/permission-allowlist/`. Proposes additions sourced from the `fewer-permission-prompts` built-in or from the user, applies the spec's three-condition selection criteria (frequent + read-only + not-already-autoallowed), rejects forbidden pattern classes (interpreter wildcards, task-runner wildcards, mutation-capable `gh`/`git` wildcards), and routes every change through the standard pull-request flow. Invoke when the user asks "tidy the permission allowlist", "add `Bash(task lint)` to the allowlist", "review `.claude/settings.json` against the spec", or "prune dead allowlist entries." Also handles equivalent German-language requests. Don't use to edit `.claude/settings.local.json` (developer-owned, out of scope per spec) or `~/.claude/settings.json` (user-global, out of scope); don't use to add permission scopes outside `permissions.allow` (the broader `update-config` skill owns that surface).
 tags: [permissions, claude-code, allowlist]
 ---
 
@@ -10,10 +10,10 @@ Implements `spec/claude/permission-allowlist/` for the repository's committed `.
 
 ## Why this is a skill, not an agent
 
-- **Per-entry user approval is the contract** — every candidate triggers a small dialogue (accept verbatim, narrow the pattern, reject with reason); the spec's §Selection criteria explicitly forbids batched insertion.
-- **Externally-visible mutations need user gating** — `.claude/settings.json` lands in a PR that affects every contributor's confirmation prompts; the change is reviewed publicly, so the curator's mid-flow approvals are part of the contract.
-- **Orchestrator pattern (per `skill-vs-agent`)** — candidate discovery is delegated to `fewer-permission-prompts` and the eventual PR is opened via `pull-request-create`; the skill stays in the main thread to chain those tools.
-- Counter-dimension considered: a narrow agent could specialise on pattern-narrowing (turning `Bash(git fetch --tags --prune)` into `Bash(git fetch *)`), but the load-bearing dimension is interactivity, not output specialisation — skill wins.
+- **Per-entry user approval is the contract.** Every candidate triggers a small dialogue (accept verbatim, narrow the pattern, reject with reason); the spec's §Selection criteria explicitly forbids batched insertion.
+- **Externally-visible mutations need user gating.** `.claude/settings.json` lands in a PR that affects every contributor's confirmation prompts; the change is reviewed publicly, so the curator's mid-flow approvals are part of the contract.
+- **Orchestrator pattern (per `skill-vs-agent`).** Candidate discovery is delegated to `fewer-permission-prompts` and the eventual PR is opened via `pull-request-create`; the skill stays in the main thread to chain those tools.
+- Counter-dimension considered: a narrow agent could specialise on pattern-narrowing (turning `Bash(git fetch --tags --prune)` into `Bash(git fetch *)`), but the load-bearing dimension is interactivity, not output specialisation—skill wins.
 
 ## User-language policy
 
@@ -24,7 +24,7 @@ Detect the user's language and respond in it. The committed `.claude/settings.js
 Before any edit:
 
 - Confirm the working directory is a git repository, the current branch isn't `develop` or `main`, and `git status --porcelain` is clean (or the only dirty path is `.claude/settings.json` itself).
-- Confirm `spec/claude/permission-allowlist/<canonical_language>.md` is reachable. If missing, stop and report — without it the selection criteria are ad-hoc; this skill is the spec's implementer, not its replacement.
+- Confirm `spec/claude/permission-allowlist/<canonical_language>.md` is reachable. If missing, stop and report—without it the selection criteria are ad-hoc; this skill is the spec's implementer, not its replacement.
 - Confirm `.claude/settings.json` exists (per the spec's AC #1) or scaffold it with an empty `permissions.allow` array if the user explicitly asks the skill to create the file from scratch. Never create it silently.
 - Verify `.gitignore` doesn't list `.claude/settings.json` itself (the file is committed); it MAY list `.claude/settings.local.json` (which is developer-owned).
 
@@ -34,7 +34,7 @@ Before any edit:
 
 Read `.claude/settings.json` and parse `permissions.allow`. Surface the current entries to the user as a numbered list so the rest of the dialogue can reference them by index.
 
-If `permissions.allow` is missing or empty, ask the user for the seed set explicitly — never invent entries from "common defaults".
+If `permissions.allow` is missing or empty, ask the user for the seed set explicitly. Never invent entries from "common defaults."
 
 ### 2. Gather candidates
 
@@ -73,7 +73,7 @@ Per §Selection criteria's SHOULD: prefer the exact form over the prefix form. I
 
 Edit the file in place, preserving JSON formatting (two-space indent matches the portfolio default). Show the diff to the user. Re-run a JSON parse to verify the file is still valid.
 
-For removals (an entry no longer used), capture the user's stated reason — the spec mandates the reason in the eventual commit message. Common reasons: "upstreamed into the Claude Code autoallow list", "command no longer used since X migrated to Y".
+For removals (an entry no longer used), capture the user's stated reason. The spec mandates the reason in the eventual commit message. Common reasons: "upstreamed into the Claude Code autoallow list," "command no longer used since X migrated to Y."
 
 ### 7. Hand off to the PR flow
 
@@ -90,22 +90,22 @@ The actual merge is `pull-request-merge`'s job, not this skill's.
 
 ## Hard rules
 
-- **Never** edit `.claude/settings.local.json` or `~/.claude/settings.json` — both are developer-owned and out of scope per the spec's §Non-Goals.
-- **Never** insert a forbidden pattern (interpreter wildcards, task-runner wildcards, mutation-capable `gh` / `git` wildcards) — even when the user asks. Counter-propose the narrowest exact form.
+- **Never** edit `.claude/settings.local.json` or `~/.claude/settings.json`. Both are developer-owned and out of scope per the spec's §Non-Goals.
+- **Never** insert a forbidden pattern (interpreter wildcards, task-runner wildcards, mutation-capable `gh` / `git` wildcards)—even when the user asks. Counter-propose the narrowest exact form.
 - **Never** copy a broad pattern from `.claude/settings.local.json` or `~/.claude/settings.json` into the committed `.claude/settings.json` without re-evaluating it against the three selection criteria; the spec's §Relationship to settings.local.json forbids the silent promotion.
-- **Never** insert a pattern that undermines `pull-request-workflow` §Automerge trigger protocol or §CI gate into develop — `Bash(gh pr merge *)` and equivalents stay rejected even with operator override.
-- **Never** commit `.claude/settings.json` directly to `develop` or `main` — every change goes through the standard PR flow.
-- **Never** silently re-format the file beyond the change you're making — preserve unrelated entries verbatim, keep the existing indent, don't reorder unrelated keys.
-- **Always** state the removal reason in the commit message when pruning entries — the spec mandates it.
-- **Always** verify the file parses as valid JSON after the edit; a syntactically broken `.claude/settings.json` makes the harness fall back to "prompt for everything", which is worse than the original state.
+- **Never** insert a pattern that undermines `pull-request-workflow` §Automerge trigger protocol or §CI gate into develop. `Bash(gh pr merge *)` and equivalents stay rejected even with operator override.
+- **Never** commit `.claude/settings.json` directly to `develop` or `main`. Every change goes through the standard PR flow.
+- **Never** silently re-format the file beyond the change you're making—preserve unrelated entries verbatim, keep the existing indent, don't reorder unrelated keys.
+- **Always** state the removal reason in the commit message when pruning entries—the spec mandates it.
+- **Always** verify the file parses as valid JSON after the edit; a syntactically broken `.claude/settings.json` makes the harness fall back to "prompt for everything," which is worse than the original state.
 - When `spec/claude/permission-allowlist/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
 
 ## Gotchas
 
-Per `spec/claude/skill-management/` §Gotchas — concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
+Per `spec/claude/skill-management/` §Gotchas—concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
 
 - **`fewer-permission-prompts` is a Claude Code built-in, not a plugin skill.** It lives in the harness, not under `skills/`. When dispatching it, use the Skill tool with the literal name `fewer-permission-prompts` (no plugin prefix). If the harness rejects the dispatch (older Claude Code versions don't ship it), fall back to operator-supplied candidates and report the gap.
-- **`.claude/settings.json` is read at session start** — adding an entry doesn't take effect for the running session, only for future sessions. Don't expect the post-edit prompt to disappear immediately; the user has to restart Claude Code (or open a fresh session) to see the new allowlist behaviour.
-- **The Probot Settings App doesn't manage `.claude/settings.json`.** The file is repository-content, not GitHub repository settings — Probot operates on `.github/settings.yml`, not on `.claude/`. Don't conflate the two surfaces; an outage of the Settings App has no bearing on the allowlist's effect.
-- **Renovate ignores `.claude/settings.json` by default.** No automated bump exists for the patterns; drift is human-detected (the `fewer-permission-prompts` skill is the proposer, this skill is the curator). Don't expect a Renovate PR for "newer Claude Code autoallow list" — the autoallow list isn't versioned at the repository level.
+- **`.claude/settings.json` is read at session start.** Adding an entry doesn't take effect for the running session, only for future sessions. Don't expect the post-edit prompt to disappear immediately; the user has to restart Claude Code (or open a fresh session) to see the new allowlist behaviour.
+- **The Probot Settings App doesn't manage `.claude/settings.json`.** The file is repository-content, not GitHub repository settings—Probot operates on `.github/settings.yml`, not on `.claude/`. Don't conflate the two surfaces; an outage of the Settings App has no bearing on the allowlist's effect.
+- **Renovate ignores `.claude/settings.json` by default.** No automated bump exists for the patterns; drift is human-detected (the `fewer-permission-prompts` skill is the proposer, this skill is the curator). Don't expect a Renovate PR for "newer Claude Code autoallow list"—the autoallow list isn't versioned at the repository level.
 - **Removing an entry never breaks past sessions.** A removal-only commit is safe to merge anytime; the entry simply moves back to the per-prompt confirmation flow. The spec still requires the removal reason in the commit message so future readers see the trajectory.

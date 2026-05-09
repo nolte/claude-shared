@@ -93,8 +93,8 @@ Spezifikationen unter `spec/<topic>/<slug>/` sind die Quelle der Wahrheit für n
 - [ ] Jede Spec im Portfolio mit nicht-leerer `## Requirements`- oder `## Acceptance Criteria`-Sektion hat seit Einführung dieser Spec mindestens einen Reife-Audit-Eintrag in der Audit-Historie des Repositorys, oder eine dokumentierte Ausnahme
 - [ ] Keine Spec mit unerledigten `Critical`-Reife-Befunden ist seit Einführung dieser Spec aus `Status: draft` befördert worden — entweder ist der Befund gelöst, oder die Beförderung ist blockiert, oder eine Waiver-Notiz ist im Audit-Artefakt festgehalten
 - [ ] Das Audit-Artefakt jedes Reife-Laufs hält Scope (auditierte Spec-Slugs), auditierte Git-Revision, Schweregrad-Zählungen pro Spec und die vollständige Befundliste fest
-- [ ] Kein Cross-Spec-Widerspruch zwischen zwei Specs, die beide aus Draft befördert wurden, bleibt im jüngsten Audit ohne dokumentierte Auflösung stehen
-- [ ] Der Agent `agents/spec-readiness-reviewer.md` erzeugt Befunde, die 1-zu-1 auf die drei hier deklarierten Dimensionen und die Schweregrad-Skala abbilden, damit Audit-Artefakte mechanisch erzeugt werden können
+- [ ] Kein Cross-Spec-Widerspruch zwischen zwei Specs, die beide aus Draft befördert wurden, bleibt im jüngsten Audit ohne dokumentierte Auflösung stehen — entweder ist der Widerspruch in den Quell-Specs gelöst, oder eine Waiver-Notiz ist im `## Processing log` des Audit-Artefakts laut `spec/claude/review-plan/` §Severity scale festgehalten
+- [ ] Der Agent `agents/spec-readiness-reviewer.md` erzeugt Befunde, die 1-zu-1 auf die drei hier deklarierten Dimensionen und die kanonische Schweregrad-Skala abbilden, die diese Spec zitiert (definiert in `spec/claude/review-plan/` §Severity scale), damit Audit-Artefakte mechanisch erzeugt werden können
 - [ ] Kein Audit-Lauf in irgendeinem Repository hat eine Spec-Datei modifiziert; die Read-only-Disziplin hält in der Praxis, nicht nur in dieser Spec
 - [ ] Reife-Audit-Artefakte für Einzel-Spec-Beförderungsläufe entsprechen dem `review-plan`-Artefaktformat, damit sie von derselben Review-Closure-Mechanik wie Skill- und Agent-Review konsumierbar sind
 

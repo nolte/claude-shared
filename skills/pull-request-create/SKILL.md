@@ -10,10 +10,10 @@ Creates a GitHub pull request that conforms to `spec/project/pull-request-workfl
 
 ## Why this is a skill, not an agent
 
-- **Externally-visible action requires explicit confirmation** — `gh pr create` opens a PR that other humans see; the spec mandates presenting the title and body to the user and iterating until approval before invoking it. That gate is core to the contract.
-- **Mid-flow interactivity** — branch-freshness resolution (rebase vs merge), force-push confirmation, and the title/body iteration are per-step user dialogues an agent's structured-report shape can't carry.
-- **Output flows back into the main conversation** — the diffed PR body, the touched-spec autolinks, and the resulting PR URL all live in the user's working context; isolating them behind an agent boundary would obscure the iterative drafting.
-- Counter-dimension considered: a narrower agent could sharpen Conventional-Commits-title generation, but the load-bearing dimension here is the externally-visible-action gating, not title-prose quality — skill wins.
+- **Externally-visible action requires explicit confirmation.** `gh pr create` opens a PR that other humans see; the spec mandates presenting the title and body to the user and iterating until approval before invoking it. That gate is core to the contract.
+- **Mid-flow interactivity.** Branch-freshness resolution (rebase vs merge), force-push confirmation, and the title/body iteration are per-step user dialogues an agent's structured-report shape can't carry.
+- **Output flows back into the main conversation.** The diffed PR body, the touched-spec autolinks, and the resulting PR URL all live in the user's working context; isolating them behind an agent boundary would obscure the iterative drafting.
+- Counter-dimension considered: a narrower agent could sharpen Conventional-Commits-title generation, but the load-bearing dimension here is the externally-visible-action gating, not title-prose quality; skill wins.
 
 ## User-language policy
 
@@ -151,9 +151,9 @@ If `gh pr create` fails because a PR already exists for this branch, switch to `
 
 ## Gotchas
 
-Per `spec/claude/skill-management/` §Gotchas — concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
+Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
 
 - **`gh pr edit --add-label` can fail on Projects-Classic-deprecation noise.** Repos with Projects Classic still enabled return a `GraphQL: Projects (classic) is being deprecated` warning that the CLI treats as an error, even when the label edit itself would have succeeded. Prefer `gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=<label>"` for label application; it bypasses the GraphQL `projectCards` path entirely.
 - **`gh pr view` warnings land on stderr, JSON on stdout.** When piping `gh pr view --json …` into a parser, the deprecation warning appears on stderr but the JSON on stdout still parses cleanly; when piping into another `gh` call without splitting streams, the warning may be conflated with the result. Always read state via `gh pr view --json <fields>` and route stderr to a separate log when scripting.
-- **Branch-freshness check needs a fresh fetch first.** `git merge-base --is-ancestor origin/develop HEAD` is only meaningful after `git fetch origin develop` — otherwise the local `origin/develop` ref can be stale and the skill reports the branch as fresh when develop has moved. The fetch is part of the freshness contract, not a setup detail.
+- **Branch-freshness check needs a fresh fetch first.** `git merge-base --is-ancestor origin/develop HEAD` is only meaningful after `git fetch origin develop`; otherwise the local `origin/develop` ref can be stale and the skill reports the branch as fresh when develop has moved. The fetch is part of the freshness contract, not a setup detail.
 - **`task lint`'s prose hook can fail locally on missing Vale-style trust** (the underlying `task lint:prose` includes a remote `taskfile-include-pre-commit.yaml` that prompts for trust on first run). The CI run usually has the trust pre-granted; locally, a one-time `task --yes lint` resolves the prompt. Don't treat a local `vale-prose` red as a CI failure when direct `vale --minAlertLevel=error <files>` reports clean.

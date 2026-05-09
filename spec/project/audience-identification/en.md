@@ -41,7 +41,7 @@ Software modules and projects are consumed, operated, constrained, or observed b
 - **MUST** tag every audience as `confirmed` (validated with a real representative or an authoritative source) or `assumed` (inferred by the author)
 - **MUST** produce the audience list before downstream artifacts that claim an audience are written (README "intended consumers," SLAs, threat models, …), so those artifacts can reference it rather than restate it
 - **SHOULD** rank audiences by criticality to the success of the context (primary / secondary / peripheral)
-- **SHOULD** store the audience artifact at `AUDIENCES.md` at the root of the bounded context as the canonical default; for small modules or sub-contexts where a stand-alone file is overkill, a README section ("## Audiences" or "## Intended consumers") or an ADR is an acceptable alternative. Whichever location is chosen, the artifact lives **alongside** the context it describes—not in a central registry—so consuming specs (`mission`, `roadmap`, `release-notes-audience-analysis`, `release-skill-layer`, and tooling like `github-issue-templates-apply`) can locate it deterministically
+- **SHOULD** store the audience artifact at `AUDIENCES.md` at the root of the bounded context as the canonical default; for small modules or sub-contexts where a stand-alone file is overkill, a README section ("## Audiences" or "## Intended consumers") or an ADR is an acceptable alternative. Whichever location is chosen, the artifact lives **alongside** the context it describes—not in a central registry—so consuming specs (for example `mission`, `roadmap`, `release-notes-audience-analysis`, `release-skill-layer`, and tooling like `github-issue-templates-apply`) can locate it deterministically; the list isn't exhaustive, and `spec-drift-audit` is the canonical detector for newly-added consumers that cite the artefact
 - **SHOULD** revisit the audience list whenever the context's scope materially changes—new public API, new deployment target, new regulated data class, new stakeholder
 - **MAY** link each audience entry to the specs, docs, or SLAs produced for it, so coverage is visible
 - **MAY** subdivide audiences further by geography, organizational unit, or tenancy when such distinctions change the expected deliverable
@@ -54,6 +54,7 @@ Software modules and projects are consumed, operated, constrained, or observed b
 - [ ] Every audience entry distinguishes `confirmed` from `assumed`
 - [ ] The bounded context is declared in writing before any audience is listed
 - [ ] The `spec-drift-audit` skill can flag a module whose documented audiences no longer match its actual interaction surface
+- [ ] Every stand-alone bounded context that has produced an audience artifact ships it as `AUDIENCES.md` at the context root, OR the chosen alternative location (a README section "## Audiences" / "## Intended consumers" or an ADR) is justified by the context's small size or by pre-existing repo precedent. Verifiable by `find . -name AUDIENCES.md -not -path './node_modules/*' -not -path './.venv/*'` plus a grep of README files for the section headings
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
