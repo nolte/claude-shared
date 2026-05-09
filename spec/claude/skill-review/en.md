@@ -66,12 +66,53 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 
 ### Checks derived from skill-creation best practices
 
-Mirrors the authoring requirements added to `skill-management` §"Authoring quality" (per <https://agentskills.io/skill-creation/best-practices>); cite the upstream rule slug when a finding pins one.
+Mirrors the authoring requirements added to `skill-management` §"Authoring quality" (per <https://agentskills.io/skill-creation/best-practices> and <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>); cite the upstream rule slug when a finding pins one.
 
 - **MUST** verify `SKILL.md` is under 500 lines and 5,000 tokens; over-cap is a `BLOCKER`
 - **MUST** verify every asset referenced under `references/` / `templates/` / `assets/` / `scripts/` carries a load-trigger phrase in `SKILL.md` ("Read X when Y," "use template Z for output Q"); un-triggered references are a `WARNING`
 - **SHOULD** check for a **Gotchas** section when the skill operates against a non-obvious environment; absence is a `WARNING` only when the skill clearly addresses such an environment, otherwise a `SUGGESTION`
 - **SHOULD** flag menu-without-default phrasing (multiple equal-weight options without one designated default) and one-shot declarations where reusable procedures fit; both are `SUGGESTION`s
+
+### Checks derived from frontmatter validation (Anthropic platform limits)
+
+Mirrors `skill-management` §"Frontmatter validation"; cite the originating rule when a finding pins one.
+
+- **MUST** verify `name` is 1–64 characters, lowercase ASCII letters/digits/hyphens only, doesn't start or end with `-`, and contains no `--`; any violation is a `BLOCKER`
+- **MUST** verify neither `name` nor any other frontmatter value contains the reserved tokens `anthropic` or `claude`; a violation is a `BLOCKER` (the upstream platform validator rejects the skill)
+- **MUST** verify neither `name` nor `description` contains XML tags; a violation is a `BLOCKER`
+- **MUST** verify `description` is non-empty and ≤1024 characters; over-cap or empty is a `BLOCKER`
+- **MUST** verify `description` is written in **third person**: presence of `I `, `you `, `we `, or other non-third-person markers in description text is a `BLOCKER`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))
+- **MUST** verify `description` names both *what the skill does* and *when to use it*; absence of trigger phrases is a `WARNING` (skill becomes hard to discover)
+- **SHOULD**, when `when_to_use` is set, verify combined `description` + `when_to_use` text stays under 1,536 characters; over-cap is a `WARNING` (runtime truncates and typically eats the trigger phrases)
+- **SHOULD** verify the skill name follows a consistent form across this plugin (gerund preferred; verb-noun acceptable; mixed forms within one repository are a `SUGGESTION`-grade smell)
+- **MUST** flag generic names (`helper`, `utils`, `tools`, `documents`, `data`, `files`) as `BLOCKER`s; they defeat skill discovery
+
+### Checks derived from progressive disclosure & file references
+
+Mirrors `skill-management` §"Progressive disclosure & file references"; cite the originating rule when a finding pins one.
+
+- **MUST** verify file references inside `SKILL.md` are at most one level deep (no `SKILL.md` → `A.md` → `B.md` chains); a chain is a `WARNING` (Claude tends to partial-read nested references)
+- **MUST** verify every supporting file longer than 100 lines opens with a table of contents; absence is a `WARNING`
+- **MUST** verify every script reference makes execution intent explicit ("Run X to …" vs. "See X for the algorithm of …"); ambiguous wording is a `WARNING`
+- **MUST** verify every path in `SKILL.md` and supporting files uses forward slashes; backslash paths are a `BLOCKER` on Unix
+- **MUST** verify every MCP-tool reference uses the fully qualified `ServerName:tool_name` form; bare tool names are a `WARNING`
+- **MUST** flag time-sensitive information not enclosed in an `## Old patterns` section; "use the new API after August 2025" inline is a `WARNING`
+
+### Checks derived from runtime & lifecycle
+
+Mirrors `skill-management` §"Runtime & lifecycle awareness"; cite the originating rule when a finding pins one.
+
+- **MUST** verify the skill body holds up as **standing instructions for the rest of the session**; one-time-step phrasing ("now do X", "as a first step …") that would lose its meaning after compaction is a `WARNING`. Citation: skill content stays in context across turns and is not re-read ([R4](#references))
+- **SHOULD** estimate the token-count of `SKILL.md` (rough: 4 chars per token) and flag a `SUGGESTION` if the skill body exceeds 5,000 tokens since auto-compaction will silently truncate everything beyond that mark on re-attach ([R4](#references))
+- **SHOULD** verify `allowed-tools`, when present, expresses a deliberate pre-approval contract documented in the body (so a future maintainer understands what the skill granted itself); silent `allowed-tools` declarations are a `SUGGESTION`
+- **SHOULD** verify `disable-model-invocation: true` skills are not also referenced by any subagent's `skills:` preload list (they would be silently skipped at runtime with only a debug-log warning) ([R4](#references))
+
+### Checks derived from evaluation discipline
+
+Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule when a finding pins one.
+
+- **SHOULD** verify the skill has at least three evaluation scenarios (input prompt, optional input files, expected behavior) under `examples/` or a sibling folder; absence is a `SUGGESTION` for new skills, a `WARNING` for skills that have been edited more than three times since the last evaluation ([R3](#references))
+- **MAY** record an `INFO` finding when no evidence of multi-model testing exists (no comment, no example output, no test rubric mentioning Haiku / Sonnet / Opus) ([R3](#references))
 
 ### Review procedure
 
@@ -98,6 +139,18 @@ Mirrors the authoring requirements added to `skill-management` §"Authoring qual
 - [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(skill-review): close <skill>—<counts>` exactly
 - [ ] Every plan under `.audits/skill-review/` records the external skill-structure validator and version that was run, and no plan closes with an unresolved validator-reported `BLOCKER`
 - [ ] Every plan under `.audits/skill-review/` runs the best-practices checks from §"Checks derived from skill-creation best practices" against the target skill
+- [ ] Every plan under `.audits/skill-review/` runs the frontmatter-validation, progressive-disclosure, runtime-lifecycle, and evaluation-discipline checks newly added to this spec, citing `skill-management` §<section> as the rule anchor
+
+## References
+
+Sources for the additional checks above. Cite the relevant entry in finding bracketed prefixes when a check pins a specific upstream rule.
+
+- [R1] Skill management spec (this plugin) — `spec/claude/skill-management/`
+- [R2] Skill vs. agent decision (this plugin) — `spec/claude/skill-vs-agent/`
+- [R3] Skill authoring best practices, Anthropic platform docs — <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
+- [R4] Extend Claude with skills, Claude Code docs — <https://code.claude.com/docs/en/skills>
+- [R5] Best practices for skill creators, agentskills.io — <https://agentskills.io/skill-creation/best-practices>
+- [R6] Agent Skills, formal specification — <https://agentskills.io/specification>
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->

@@ -51,9 +51,18 @@ Jede Kandidat-Capability wird entlang der folgenden Dimensionen bewertet. Jede D
 ### Hybrid-Muster: Skill orchestriert, Agent führt aus
 - **MUSS [MUST]** Implementierungsarbeit, die innerhalb eines umfassenderen Workflows sitzt, als `skill → Agent(subagent_type=<agent>)` modellieren statt als monolithischen Skill, sobald mindestens ein Agent-seitiges Kriterium (Kontext-Fenster-Schutz, Parallelität, Tool-Einschränkung, Spezialisierung) auf den Implementierungsschritt zutrifft
 - **DARF NICHT [MUST NOT]** dieses Muster umkehren — ein Agent **DARF NICHT [MUST NOT]** das Skill-Tool im Namen des Users aufrufen, weil Agents in einem isolierten Subagent-Kontext laufen und keinen stabilen Weg haben, Skill-seitige Interaktivität an die Elternkonversation zurückzuspiegeln
+- **DARF NICHT [MUST NOT]** voraussetzen, dass ein Agent einen weiteren Subagent spawnen kann — Claude-Code-Subagents **können keine anderen Subagents spawnen** ([R1](#referenzen)). Der Skill bleibt die einzige Ebene, auf der Fan-out passiert; ein Agent, der Sub-Arbeit braucht, faltet sie entweder in den eigenen Kontext oder gibt die Kontrolle an den aufrufenden Skill zurück
 - **SOLLTE [SHOULD]** die Rolle des Skills auf Orchestrierung, User-Interaktion und Validierung der Agent-Ausgabe beschränken; der Agent übernimmt das direkte Lesen, Bearbeiten oder Recherchieren
 - **SOLLTE [SHOULD]** mehrere Agents sequenziell aus einem Skill verketten, wenn die Verantwortlichkeiten sich natürlich aufteilen (zum Beispiel: ein YAML-Fix-Agent, dann ein Git-Commit-Agent, dann der `pull-request-create`-Skill — einen weiteren Skill aus einem Skill im selben Thread aufzurufen ist zulässig)
 - Der Abschnitt „Specialized-agent dispatch for remediation" der `workflow-health`-Spezifikation ist die kanonische portfolio-weite Instanz dieses Musters; Änderungen an diesem Abschnitt **MÜSSEN [MUST]** mit der hier deklarierten Regel konsistent bleiben
+
+### Geforkte Skills: eine dritte Option, kein viertes Artefakt
+
+Claude Code unterstützt, einen Skill selbst in einem isolierten Subagent-Kontext laufen zu lassen, indem `context: fork` plus `agent: <type>` im Frontmatter des Skills gesetzt werden ([R2](#referenzen)). Der Body des Skills wird zum Prompt, der den geforkten Subagent treibt; die eigene Tool-Oberfläche des Skills wird durch die Tools und das Modell des genannten Agent-Typs ersetzt. Dies ist die **Inverse** zum `skills:`-Preload-Feld eines Subagents — beide ergeben dieselbe Komposition über unterschiedliche Eigentümerschaft.
+
+- **DARF [MAY]** eine Capability als Skill mit `context: fork` ausliefern statt als separate Agent-Datei, wenn die Capability natürlich **single-shot ist, in den Subagent-Isolations-Vertrag passt UND** sonst Orchestrierungslogik duplizieren würde, die ein bestehender Skill bereits besitzt
+- **DARF NICHT [MUST NOT]** `context: fork` als Weg behandeln, um die Skill-vs-Agent-Regel zu umgehen — die Wahl wird weiterhin von der Tabelle der Entscheidungsdimensionen geregelt; der Fork ändert nur, *wie* ein gewählter Skill ausgeführt wird, nicht ob die Capability überhaupt ein Skill hätte sein sollen
+- **SOLLTE [SHOULD]**, bei der Wahl zwischen „neuer Agent" und „bestehender Skill bekommt einen `context: fork`-Modus", letzteres nur dann bevorzugen, wenn der neue Modus nicht-triviale Logik mit dem bestehenden Verhalten des Skills teilt; sonst bleibt der neue Agent ein separates Artefakt, und die Entscheidungsregel von `skill-vs-agent` greift normal
 
 ### Duplikat-Vermeidung
 - **DARF NICHT [MUST NOT]** einen Skill und einen Agent ausliefern, die innerhalb des `nolte-shared`-Plugins gleichwertige Capabilities bereitstellen; genau ein Artefakt pro Capability ist das Invariant
@@ -89,6 +98,16 @@ Jede Kandidat-Capability wird entlang der folgenden Dimensionen bewertet. Jede D
 - [ ] Für jede Capability, die in drei oder mehr Consumer-Repositories wiederkehrt, existiert genau ein `nolte-shared`-Artefakt (Skill oder Agent), das sie abdeckt
 - [ ] Jede Reklassifizierung eines bestehenden Artefakts (Skill ↔ Agent) wird als neues Artefakt plus Deprecation-Hinweis auf dem alten ausgeliefert, nie als In-place-Format-Wechsel
 - [ ] Der Abschnitt „Specialized-agent dispatch for remediation" der `workflow-health`-Spezifikation bleibt mit der hier deklarierten Hybrid-Muster-Regel konsistent; künftige Divergenzen werden zugunsten dieser Spezifikation aufgelöst
+- [ ] Kein Agent in diesem Plugin versucht, einen weiteren Subagent zu spawnen (verifizierbar durch Grep auf Agent-Bodies nach `Agent(`, `subagent_type` oder äquivalenten Dispatch-Formulierungen)
+- [ ] Jeder Skill, der `context: fork` deklariert, dokumentiert in seinem Rationalen-Abschnitt, warum die Fork-Variante einer Schwester-Agent-Datei vorzuziehen ist
+- [ ] Die Tabelle der Entscheidungsdimensionen ist konsistent mit der offiziellen Anthropic-Anleitung dazu, wann die Haupt-Konversation gegenüber einem Subagent zu wählen ist ([R3](#referenzen)); Divergenzen werden zugunsten dieser Spezifikation aufgelöst, aber in `## Offene Fragen` erläutert
+
+## Referenzen
+
+- [R1] Create custom subagents, Claude-Code-Doku (Subagents können keine Subagents spawnen) — <https://code.claude.com/docs/en/sub-agents>
+- [R2] Extend Claude with skills, Claude-Code-Doku (`context: fork`) — <https://code.claude.com/docs/en/skills>
+- [R3] Building Effective AI Agents, Anthropic Engineering — <https://www.anthropic.com/research/building-effective-agents>
+- [R4] Equipping agents for the real world with Agent Skills, Anthropic Engineering, 2025-10-16 — <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>
 
 ## Offene Fragen
 - Soll diese Spezifikation eine Mindeststruktur für den „Rationalen-Abschnitt" festlegen (mindestens zwei benannte Dimensionen, mindestens eine Gegendimension), um Audits mechanisch durchführbar zu machen, oder reicht die aktuelle Messlatte „mindestens eine entscheidende Dimension" aus?

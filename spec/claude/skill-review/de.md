@@ -66,12 +66,53 @@ Die `skill-management`-Spec definiert, wie ein Skill *erstellt* wird — On-Disk
 
 ### Checks aus Skill-Creation-Best-Practices
 
-Spiegelt die Autoren-Anforderungen aus `skill-management` §„Autoren-Qualität" (gemäß <https://agentskills.io/skill-creation/best-practices>); den Upstream-Regel-Slug zitieren, wenn ein Finding eine konkrete Regel pinnt.
+Spiegelt die Autoren-Anforderungen aus `skill-management` §„Autoren-Qualität" (gemäß <https://agentskills.io/skill-creation/best-practices> und <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>); den Upstream-Regel-Slug zitieren, wenn ein Finding eine konkrete Regel pinnt.
 
 - **MUSS [MUST]** verifizieren, dass `SKILL.md` unter 500 Zeilen und 5.000 Tokens liegt; Überschreitung ist ein `BLOCKER`
 - **MUSS [MUST]** verifizieren, dass jedes unter `references/` / `templates/` / `assets/` / `scripts/` referenzierte Asset eine Lade-Trigger-Formulierung in `SKILL.md` trägt („Read X when Y", „use template Z for output Q"); ungetriggerte Referenzen sind ein `WARNING`
 - **SOLLTE [SHOULD]** auf einen **Gotchas**-Abschnitt prüfen, wenn der Skill gegen eine nicht-offensichtliche Umgebung arbeitet; das Fehlen ist ein `WARNING`, sofern der Skill klar gegen eine solche Umgebung arbeitet, ansonsten ein `SUGGESTION`
 - **SOLLTE [SHOULD]** Menü-ohne-Default-Formulierungen (mehrere gleichwertige Optionen ohne einen designierten Default) und Einzel-Antwort-Deklarationen dort, wo wiederverwendbare Prozeduren passen würden, flaggen; beide sind `SUGGESTION`s
+
+### Checks aus Frontmatter-Validierung (Anthropic-Plattform-Limits)
+
+Spiegelt `skill-management` §„Frontmatter-Validierung"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
+
+- **MUSS [MUST]** verifizieren, dass `name` 1–64 Zeichen hat, nur ASCII-Kleinbuchstaben/-Ziffern/-Bindestriche, nicht mit `-` beginnt oder endet und kein `--` enthält; jede Verletzung ist ein `BLOCKER`
+- **MUSS [MUST]** verifizieren, dass weder `name` noch ein anderer Frontmatter-Wert die reservierten Tokens `anthropic` oder `claude` enthält; eine Verletzung ist ein `BLOCKER` (der Upstream-Plattform-Validator weist den Skill ab)
+- **MUSS [MUST]** verifizieren, dass weder `name` noch `description` XML-Tags enthält; eine Verletzung ist ein `BLOCKER`
+- **MUSS [MUST]** verifizieren, dass `description` nicht-leer und ≤1024 Zeichen ist; Über-Cap oder leer ist ein `BLOCKER`
+- **MUSS [MUST]** verifizieren, dass `description` in der **dritten Person** verfasst ist: das Vorkommen von `I `, `you `, `we ` oder anderen Nicht-Dritte-Person-Markern im Description-Text ist ein `BLOCKER`. Zitat: `skill-management` §Frontmatter-Validierung, abgeleitet aus den Upstream-Plattform-Best-Practices ([R5](#referenzen))
+- **MUSS [MUST]** verifizieren, dass `description` sowohl *was der Skill tut* als auch *wann er einzusetzen ist* benennt; das Fehlen von Trigger-Phrasen ist ein `WARNING` (Skill wird schwer auffindbar)
+- **SOLLTE [SHOULD]**, wenn `when_to_use` gesetzt ist, verifizieren, dass kombinierter Text aus `description` + `when_to_use` unter 1.536 Zeichen bleibt; Über-Cap ist ein `WARNING` (Laufzeit kürzt und trifft typischerweise die Trigger-Phrasen)
+- **SOLLTE [SHOULD]** verifizieren, dass der Skill-Name einer konsistenten Form über das Plugin folgt (Gerundium bevorzugt; Verb-Substantiv akzeptabel; gemischte Formen innerhalb eines Repositorys sind ein `SUGGESTION`-würdiger Smell)
+- **MUSS [MUST]** generische Namen (`helper`, `utils`, `tools`, `documents`, `data`, `files`) als `BLOCKER` flaggen; sie unterminieren Skill-Discovery
+
+### Checks aus Progressive Disclosure und Datei-Referenzen
+
+Spiegelt `skill-management` §„Progressive Disclosure und Datei-Referenzen"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
+
+- **MUSS [MUST]** verifizieren, dass Datei-Referenzen innerhalb von `SKILL.md` maximal eine Ebene tief sind (keine `SKILL.md` → `A.md` → `B.md`-Ketten); eine Kette ist ein `WARNING` (Claude tendiert zu Partial-Reads bei verschachtelten Referenzen)
+- **MUSS [MUST]** verifizieren, dass jede Hilfsdatei länger als 100 Zeilen mit einem Inhaltsverzeichnis beginnt; das Fehlen ist ein `WARNING`
+- **MUSS [MUST]** verifizieren, dass jede Skript-Referenz die Ausführungs-Absicht explizit macht („Run X to …" vs. „See X for the algorithm of …"); mehrdeutige Formulierung ist ein `WARNING`
+- **MUSS [MUST]** verifizieren, dass jeder Pfad in `SKILL.md` und Hilfsdateien Forward-Slashes verwendet; Backslash-Pfade sind unter Unix ein `BLOCKER`
+- **MUSS [MUST]** verifizieren, dass jeder MCP-Tool-Verweis die voll qualifizierte `ServerName:tool_name`-Form nutzt; nackte Tool-Namen sind ein `WARNING`
+- **MUSS [MUST]** zeitabhängige Informationen, die nicht in einem `## Old patterns`-Abschnitt eingeschlossen sind, flaggen; „use the new API after August 2025" inline ist ein `WARNING`
+
+### Checks aus Laufzeit und Lifecycle
+
+Spiegelt `skill-management` §„Laufzeit- und Lifecycle-Bewusstsein"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
+
+- **MUSS [MUST]** verifizieren, dass der Skill-Body als **Standing Instructions für die restliche Session** trägt; Einmal-Schritt-Formulierungen („now do X", „as a first step …"), die nach Compaction ihre Bedeutung verlieren, sind ein `WARNING`. Zitat: Skill-Inhalt bleibt über Turns im Kontext und wird nicht erneut gelesen ([R4](#referenzen))
+- **SOLLTE [SHOULD]** die Token-Anzahl von `SKILL.md` schätzen (grob: 4 Zeichen pro Token) und ein `SUGGESTION` flaggen, wenn der Skill-Body 5.000 Tokens überschreitet, da Auto-Compaction beim Re-Attach alles jenseits dieser Marke stillschweigend kürzt ([R4](#referenzen))
+- **SOLLTE [SHOULD]** verifizieren, dass `allowed-tools`, sofern vorhanden, einen bewussten, im Body dokumentierten Pre-Approval-Vertrag ausdrückt (damit ein späterer Maintainer versteht, was sich der Skill selbst gewährt hat); stille `allowed-tools`-Deklarationen sind ein `SUGGESTION`
+- **SOLLTE [SHOULD]** verifizieren, dass Skills mit `disable-model-invocation: true` nicht zugleich von der `skills:`-Preload-Liste eines Subagents referenziert werden (sie würden zur Laufzeit stillschweigend übersprungen, mit nur einer Debug-Log-Warnung) ([R4](#referenzen))
+
+### Checks aus Evaluations-Disziplin
+
+Spiegelt `skill-management` §„Evaluations-Disziplin"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
+
+- **SOLLTE [SHOULD]** verifizieren, dass der Skill mindestens drei Evaluations-Szenarien (Eingabe-Prompt, optionale Eingabe-Dateien, erwartetes Verhalten) unter `examples/` oder einem benachbarten Ordner hat; das Fehlen ist ein `SUGGESTION` für neue Skills, ein `WARNING` für Skills, die seit der letzten Evaluation mehr als drei Edits hatten ([R3](#referenzen))
+- **KANN [MAY]** ein `INFO`-Finding aufnehmen, wenn keine Evidenz für Multi-Modell-Tests existiert (kein Kommentar, kein Beispiel-Output, kein Test-Rubric, das Haiku / Sonnet / Opus erwähnt) ([R3](#referenzen))
 
 ### Review-Prozedur
 
@@ -98,6 +139,18 @@ Spiegelt die Autoren-Anforderungen aus `skill-management` §„Autoren-Qualität
 - [ ] Eine Stichprobe von drei geschlossenen Plan-Löschungen in `git log` zeigt exakt das Commit-Message-Format `review(skill-review): close <skill> — <counts>`
 - [ ] Jeder Plan unter `.audits/skill-review/` hält fest, welcher externe Skill-Struktur-Validator und welche Version gefahren wurde, und kein Plan schließt mit einem ungelösten vom Validator gemeldeten `BLOCKER`
 - [ ] Jeder Plan unter `.audits/skill-review/` führt die Best-Practices-Checks aus §„Checks aus Skill-Creation-Best-Practices" gegen den Ziel-Skill aus
+- [ ] Jeder Plan unter `.audits/skill-review/` führt die in dieser Spec neu hinzugefügten Frontmatter-Validierungs-, Progressive-Disclosure-, Laufzeit-Lifecycle- und Evaluations-Disziplin-Checks aus und zitiert `skill-management` §<Section> als Regel-Anker
+
+## Referenzen
+
+Quellen für die zusätzlichen Checks oben. Bei Findings, die eine konkrete Upstream-Regel pinnen, im eckigen Klammerpräfix den passenden Eintrag zitieren.
+
+- [R1] Skill-Management-Spezifikation (dieses Plugin) — `spec/claude/skill-management/`
+- [R2] Skill-vs-Agent-Entscheidung (dieses Plugin) — `spec/claude/skill-vs-agent/`
+- [R3] Skill authoring best practices, Anthropic-Plattform-Doku — <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
+- [R4] Extend Claude with skills, Claude-Code-Doku — <https://code.claude.com/docs/en/skills>
+- [R5] Best practices for skill creators, agentskills.io — <https://agentskills.io/skill-creation/best-practices>
+- [R6] Agent Skills, formale Spezifikation — <https://agentskills.io/specification>
 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->

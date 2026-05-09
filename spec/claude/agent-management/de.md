@@ -57,13 +57,48 @@ Ein Agent wird für genau eine von zwei Auslieferungsformen angelegt. Die Wahl w
 Jeder Agent deklariert diese Absicht, damit Autoren, Reviewer und Konsumenten aus der Datei selbst erkennen, ob er zu einem Plugin-Bundle gehört oder für die eigenständige Projektnutzung gedacht ist.
 
 ### Tool-Zugriff
-- **MUSS [MUST]** ein `tools`-Feld im Frontmatter deklarieren, wenn der Agent eingeschränkt werden soll; das Feld nur dann weglassen, wenn der Agent tatsächlich die volle Tool-Oberfläche benötigt
+- **MUSS [MUST]** ein `tools`-Feld im Frontmatter deklarieren, wenn der Agent eingeschränkt werden soll; das Feld nur dann weglassen, wenn der Agent tatsächlich die volle Tool-Oberfläche benötigt — **`tools` wegzulassen erteilt implizit jedes vom Aufrufer geerbte Tool**, das ist eine Permission-Sprawl-Falle, kein sicherer Default ([R1](#referenzen), [R3](#referenzen))
 - **MUSS [MUST]** `tools` auf die minimal notwendige Menge für die Verantwortlichkeit des Agents beschränken (Prinzip der minimalen Rechte); rein lesende Agents **DÜRFEN NICHT [MUST NOT]** Schreib-, Edit- oder Ausführungs-Tools erhalten
 - **SOLLTE [SHOULD]** dedizierte Tools (`Read`, `Grep`, `Glob`, `Edit`) gegenüber `Bash`-Äquivalenten bevorzugen, wenn beides möglich wäre
+- **KANN [MAY]** stattdessen `disallowedTools` (Denylist, subtraktiv gegen das geerbte Set) deklarieren, wenn der Agent die meisten Tools behalten, aber eine kleine spezifische Teilmenge verlieren soll — sind beide Felder gesetzt, wendet die Laufzeit zuerst `disallowedTools` an und löst danach `tools` gegen den verbliebenen Pool auf, sodass ein in beiden Listen genanntes Tool entfernt wird ([R1](#referenzen))
 
 ### Modell-Wahl
-- **KANN [MAY]** ein `model`-Feld im Frontmatter deklarieren (`opus`, `sonnet`, `haiku`), wenn der Agent einen klaren Kosten-/Qualitäts-Abwägungsfall hat; ohne Feld wird das Modell des Aufrufers übernommen
+- **KANN [MAY]** ein `model`-Feld im Frontmatter deklarieren; erlaubte Werte gemäß Claude Code sind ein Modell-Alias (`sonnet`, `opus`, `haiku`), eine vollständige Modell-ID (z. B. `claude-opus-4-7`, `claude-sonnet-4-6`) oder das Literal `inherit` ([R1](#referenzen))
+- **Der Default ist `inherit`**, nicht ein konkretes Modell — fehlt das Feld, läuft der Agent auf dem Modell des Aufrufers. Das ist für Cost-Auditing relevant: Ein „kein-`model`"-Agent erbt weiterhin, was der Aufrufer bezahlt; nur ein expliziter Alias pinnt den Kostenvertrag
 - **SOLLTE [SHOULD]** ein fixiertes `model` im System-Prompt oder in einem Kommentar begründen, damit spätere Leser verstehen, warum es festgelegt wurde
+- **KANN [MAY]** die Laufzeit-Auflösungsreihenfolge (`CLAUDE_CODE_SUBAGENT_MODEL`-Env-Var → Per-Invocation-`model`-Parameter → Frontmatter-`model` → Modell des Aufrufers) nutzen, wenn ein Operator pro Session überschreiben will ([R1](#referenzen))
+
+### Optionale Claude-Code-Frontmatter-Felder
+
+Über `name`, `description`, `tools` und `model` hinaus erkennt Claude Code zusätzliche Felder. Autoren **DÜRFEN** diese verwenden, wenn sie zutreffen; Reviewer **MÜSSEN** unbekannte Felder, die nicht in dieser Liste stehen, als Authoring-Smell flaggen.
+
+- `disallowedTools` — Denylist von Tools, die aus dem geerbten oder angegebenen Set subtrahiert werden ([R1](#referenzen))
+- `permissionMode` — einer aus `default`, `acceptEdits`, `auto`, `dontAsk`, `bypassPermissions`, `plan`. **Wird für Plugin-distribuierte Agents ignoriert**, siehe „Plugin-Verteilungs-Sicherheits-Constraints" unten ([R1](#referenzen))
+- `maxTurns` — begrenzt, wie viele Agentic-Turns der Subagent ausführt, bevor er stoppt ([R1](#referenzen))
+- `skills` — Liste von Skill-Namen zum **Vorab-Laden in den Subagent-Kontext beim Start**; der vollständige Skill-Inhalt wird injiziert, nicht nur die Description, sodass der Subagent die Regeln im Scope hat, ohne Discovery-Kosten. Skills mit `disable-model-invocation: true` können nicht vorab geladen werden — Claude Code überspringt sie und protokolliert eine Warnung ([R1](#referenzen))
+- `mcpServers` — MCP-Server, die nur diesem Subagent zur Verfügung stehen; unterstützt Inline-Definitionen und String-Referenzen auf bereits konfigurierte Server. **Wird für Plugin-distribuierte Agents ignoriert** ([R1](#referenzen))
+- `hooks` — Lifecycle-Hooks, die auf diesen Subagent beschränkt sind. **Wird für Plugin-distribuierte Agents ignoriert** ([R1](#referenzen))
+- `memory` — `user`, `project` oder `local`; gibt dem Subagent ein persistentes Verzeichnis über Sessions hinweg. Wenn gesetzt, werden Read/Write/Edit automatisch aktiviert und der System-Prompt wird um Memory-Kuratierungs-Anweisungen ergänzt ([R1](#referenzen))
+- `background` — `true`, um stets als Background-Task zu laufen; die Laufzeit genehmigt benötigte Permissions vor dem Start vorab und lehnt alles, was nicht vorab genehmigt wurde, automatisch ab ([R1](#referenzen))
+- `effort` — `low` / `medium` / `high` / `xhigh` / `max`; überschreibt das Session-Effort-Level für diesen Subagent ([R1](#referenzen))
+- `isolation: worktree` — lässt den Subagent in einem temporären Git-Worktree laufen, sodass dessen Datei-Bearbeitungen den Hauptcheckout nicht berühren; der Worktree wird aufgeräumt, wenn der Subagent keine Änderungen vornimmt ([R1](#referenzen))
+- `color` — Anzeigefarbe in der Task-Liste (`red`, `blue`, `green`, `yellow`, `purple`, `orange`, `pink`, `cyan`) ([R1](#referenzen))
+- `initialPrompt` — wird als erster User-Turn vorangestellt, wenn dieser Agent als Main-Session via `--agent` läuft ([R1](#referenzen))
+
+### Plugin-Verteilungs-Sicherheits-Constraints
+
+Aus Sicherheitsgründen **ignoriert Claude Code stillschweigend** die Frontmatter-Felder `hooks`, `mcpServers` und `permissionMode`, wenn ein Agent aus einem Plugin geladen wird (also hier mit `distribution: plugin` autoriert) ([R1](#referenzen)). Diese Felder trotzdem zu autorieren, führt spätere Leser in die Irre und schafft Audit-Drift; deshalb verschärft diese Spezifikation den Constraint:
+
+- **DARF NICHT [MUST NOT]**, wenn `distribution: plugin` deklariert ist, `hooks`, `mcpServers` oder `permissionMode` im Frontmatter setzen — die Laufzeit ignoriert sie, und ein späterer Leser hat kein Signal, „bewusst weggelassen" von „stillschweigend verworfen" zu unterscheiden
+- **DARF [MAY]**, wenn `distribution: project` deklariert ist, eines dieser Felder frei verwenden; der Constraint betrifft ausschließlich plugin-distribuierte Agents
+- **SOLLTE [SHOULD]**, wenn ein Agent `hooks`, `mcpServers` oder `permissionMode` tatsächlich braucht, ihn entweder von Beginn an als `distribution: project` autorieren oder im Body explizit notieren, dass die Plugin-Form diese Features opfert, und den Workaround für Plugin-Konsumenten dokumentieren (z. B. die Anweisung, die Agent-Datei nach `.claude/agents/` zu kopieren, um die Felder zurückzugewinnen)
+
+### Subagent-Grenzen (Claude-Code-Laufzeit)
+
+- **DARF NICHT [MUST NOT]** voraussetzen, dass ein Agent einen weiteren Subagent spawnen kann — Claude-Code-Subagents **können keine anderen Subagents spawnen** ([R1](#referenzen)). Das einzig unterstützte Pattern für genestete Orchestrierung bleibt *Skill orchestriert, Agent führt aus* (geregelt durch `skill-vs-agent`); der Skill bleibt im Haupt-Thread und kann Agents sequenziell oder parallel dispatchen
+- **DARF NICHT [MUST NOT]** das Skill-Tool aus dem Body eines Agents heraus aufrufen, um Skill-förmige Arbeit an die Eltern-Konversation zurück zu delegieren — der Agent läuft in einem isolierten Kontext-Fenster und hat keinen stabilen Kanal für Skill-Level-Interaktivität ([R3](#referenzen) und `skill-vs-agent` §Hybrid-Muster)
+- **KANN [MAY]**, wenn der Agent von Claude **proaktiv** aufgegriffen werden soll (ohne dass der Nutzer ihn explizit nennt), die Phrase **„use proactively"** im `description`-Feld enthalten; die Laufzeit behandelt diese Phrase als Opt-in-Signal für proaktive Delegation ([R1](#referenzen)). Umgekehrt: Soll der Agent nur laufen, wenn der Nutzer ihn explizit nennt, **DARF** „use proactively" **NICHT [MUST NOT]** in `description` stehen
+- **SOLLTE [SHOULD]** für jeden Agent **Single-Responsibility-Design** anwenden: ein klares Ziel, eine Eingabeform, eine Ausgabeform, eine Übergaberegel. Agents, die mehrere Verantwortlichkeiten zusammenmischen (Review + Fix, Audit + Remediation), regredieren schnell, weil das dispatchierende Claude die Description nicht zuverlässig auf eine Anfrage abbilden kann ([R6](#referenzen))
 
 ### Quell-Ablageort (Repository claude-shared)
 - **MUSS [MUST]** im Quellbaum von claude-shared unter `agents/<name>.md` liegen, damit er kopiert, symlinkt oder für die Verteilung in ein Plugin gebündelt werden kann
@@ -102,6 +137,21 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 - [ ] Schreibt der Agent Dateien oder verursacht Seiteneffekte, sind Ziele und Vorbedingungen im System-Prompt dokumentiert
 - [ ] Frontmatter-Feldnamen und Werte technischer Bezeichner (`name`, `distribution`, `tools`, `model`, `tags`) sind in Englisch; `description` und der System-Prompt-Body sind standardmäßig Englisch — es sei denn, der Agent deklariert `distribution: project` und die Wurzel-Konventionsdatei (typischerweise `CLAUDE.md`) des konsumierenden Projekts deklariert eine nicht-englische Dokumentationssprache und autorisiert sie für Agent-Prosa
 - [ ] Das Review eines einzelnen Agents gegen diese Spec folgt `spec/claude/agent-review/`; die Review-Ausgabe entspricht `spec/claude/review-plan/` und liegt unter `.audits/agent-review/<name>.md`
+- [ ] Kein als `distribution: plugin` deklarierter Agent setzt eines der Felder `hooks`, `mcpServers`, `permissionMode` im Frontmatter (diese Felder werden für plugin-distribuierte Agents von der Laufzeit stillschweigend verworfen)
+- [ ] Kein Agent-Body invokiert einen weiteren Subagent über das Agent-Tool oder eine äquivalente Dispatch-Formulierung (Subagents können in Claude Code keine Subagents spawnen)
+- [ ] Jeder Agent, dessen `description` die Phrase „use proactively" enthält, rechtfertigt tatsächlich proaktive Delegation; Agents, die nur auf explizite Nutzeranfrage laufen sollen, **DÜRFEN** die Phrase **NICHT** enthalten
+- [ ] Jeder Agent, der `model` auf einen anderen Wert als `inherit` pinnt, begründet das Pin entweder im System-Prompt oder trägt einen Kommentar mit der Kosten-/Qualitäts-Abwägung
+- [ ] Die Verantwortlichkeit jedes Agents ist eine einzelne — ein Ziel, eine Eingabeform, eine Ausgabeform; ein Agent, dessen `description` als „X und Y" oder „X plus Z" liest, ist aufgeteilt oder hat eine dokumentierte Begründung für die Verschmelzung
+- [ ] Sind `tools` und `disallowedTools` beide deklariert, erscheint kein Tool in beiden Listen, und das aufgelöste Set (deny-then-allow) ist nicht leer
+
+## Referenzen
+
+- [R1] Create custom subagents, Claude-Code-Doku — <https://code.claude.com/docs/en/sub-agents>
+- [R2] Agent Skills, formale Spezifikation (für Cross-Format-Abgleich) — <https://agentskills.io/specification>
+- [R3] Skill-vs-Agent-Entscheidung (dieses Plugin) — `spec/claude/skill-vs-agent/`
+- [R4] Building Effective AI Agents, Anthropic Engineering — <https://www.anthropic.com/research/building-effective-agents>
+- [R5] Equipping agents for the real world with Agent Skills, Anthropic Engineering, 2025-10-16 — <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>
+- [R6] Best practices for Claude Code subagents, PubNub Engineering — <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
 
 ## Offene Fragen
 - Soll der Dateiname (und damit `name`) exakt dem `subagent_type`-String entsprechen, oder ist eine Mapping-Schicht erlaubt?

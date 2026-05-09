@@ -71,7 +71,29 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 
 - **MUSS [MUST]** für jedes in `tools` deklarierte Werkzeug verifizieren, dass der Agent-Body dieses Werkzeug in seiner Prozedur nachweislich benutzt — deklarierte, aber nicht genutzte Tools sind `WARNING`-Findings (tote Berechtigung)
 - **MUSS [MUST]** für jedes Werkzeug, das der Agent-Body klar benötigt, verifizieren, dass es in `tools` deklariert ist — genutzte, aber nicht deklarierte Tools sind `BLOCKER`-Findings (der Agent wird nicht laufen)
+- **MUSS [MUST]** verifizieren, dass der Agent das `tools`-Feld nicht **unbeabsichtigt weglässt**: Ein fehlendes `tools`-Feld erteilt die geerbte volle Tool-Oberfläche — das ist Permission-Sprawl. Wenn die Verantwortlichkeit des Agents „research" / „review" / „audit" / „report" ist und `tools` fehlt, ist das ein `BLOCKER`; bei jedem anderen Agent ist das Fehlen ein `WARNING`, sofern der Body das Erben aller Tools nicht ausdrücklich begründet ([R5](#referenzen), [R6](#referenzen))
 - **SOLLTE [SHOULD]** dedizierte Tools (`Read`, `Grep`, `Glob`, `Edit`) gegenüber `Bash`-Äquivalenten bevorzugen; ein Agent, der `Bash` für Operationen nutzt, die ein dediziertes Tool abdeckt, bekommt ein `WARNING`, sofern der Body die Wahl nicht begründet
+- **MUSS [MUST]**, wenn `tools` und `disallowedTools` beide deklariert sind, verifizieren, dass kein Tool-Name in beiden Listen erscheint (die Laufzeit wendet zuerst Deny an, dann Allow, sodass ein doppelt gelistetes Tool stillschweigend entfernt wird) und dass das aufgelöste Set nicht leer ist; jede Bedingung ist ein `WARNING`
+
+### Plugin-Verteilungs-Constraint-Checks
+
+Spiegelt `agent-management` §„Plugin-Verteilungs-Sicherheits-Constraints"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
+
+- **MUSS [MUST]** verifizieren, wenn `distribution: plugin` deklariert ist, dass das Frontmatter `hooks`, `mcpServers` oder `permissionMode` **nicht** setzt; jedes dieser Felder ist ein `BLOCKER` (die Laufzeit ignoriert sie für Plugin-Agents stillschweigend, und der Autor wird in die Irre geführt zu glauben, sie seien aktiv) ([R5](#referenzen))
+- **MUSS [MUST]**, wenn `distribution: project` deklariert ist, diese Felder als gültig akzeptieren; ihr Vorhandensein ist für project-distribuierte Agents **kein** Finding
+- **SOLLTE [SHOULD]**, wenn ein Agent `distribution: plugin` deklariert UND der Body Verhalten beschreibt, das offensichtlich `hooks` / `mcpServers` / `permissionMode` benötigt (z. B. „dieser Agent installiert einen PreToolUse-Hook", „dieser Agent verbindet sich mit eigenem MCP-Server", „dieser Agent läuft im Plan-Modus"), ein `WARNING` flaggen, auch wenn die Felder fehlen — Beschreibung und Distribution sind inkonsistent
+
+### Subagent-Grenzen-Checks
+
+Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hybrid-Muster"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
+
+- **MUSS [MUST]** verifizieren, dass der Agent-Body **niemals** einen weiteren Subagent dispatched — den Body greppen nach `Agent(`, `subagent_type`, `Task(` oder äquivalenten Dispatch-Formulierungen; jeder Treffer ist ein `BLOCKER` (Claude-Code-Subagents können keine Subagents spawnen) ([R5](#referenzen))
+- **MUSS [MUST]** verifizieren, dass der Agent-Body **niemals** das Skill-Tool im Namen des Users invokiert — den Body greppen nach `Skill(`, `Skill tool` oder äquivalenten Skill-Dispatch-Formulierungen; jeder Treffer ist ein `BLOCKER` gemäß `skill-vs-agent`
+
+### Description-Qualität und proaktive-Delegation-Absicht
+
+- **MUSS [MUST]** verifizieren, wenn die `description` die Phrase „use proactively" (oder das Äquivalent „use this proactively", „should be used proactively", „invoke proactively") enthält, dass die Verantwortlichkeit des Agents tatsächlich rechtfertigt, dass Claude ihn ohne explizite Nutzeraufforderung anbietet — Anzeichen, dass der Check besteht: Der Agent löst eine Problemklasse, die der Nutzer wahrscheinlich nicht explizit benennt (Security-Review bei jedem PR, Audit bei jedem Commit). Anzeichen, dass der Check scheitert: Der Agent hat destruktive Seiteneffekte, benötigt Credentials oder geht Verpflichtungen mit externen Systemen ein. Eine „proactively"-Behauptung an einem destruktiven oder credential-tragenden Agent ist ein `BLOCKER` ([R5](#referenzen))
+- **SOLLTE [SHOULD]** verifizieren, wenn der Agent klare Überlappung mit einem anderen bestehenden Artefakt (Skill oder Agent) hat, dass die `description` die Überlappung als **negativen Trigger** benennt („don't use for X, use the `<peer>` agent / skill instead"); das Fehlen des Negativs ist ein `WARNING` ([R5](#referenzen))
 
 ### Prompt-Struktur-Checks
 
@@ -111,6 +133,21 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 - [ ] Jeder offene Plan unter `.audits/agent-review/` entspricht der Vier-Abschnitts-Struktur und dem YAML-Frontmatter aus `review-plan`
 - [ ] Die Abnahmekriterien der `agent-management`-Spec verweisen für die Review-Seite ihrer Autoren-Regeln auf diese Spec
 - [ ] Eine Stichprobe von drei geschlossenen Plan-Löschungen in `git log` zeigt exakt das Commit-Message-Format `review(agent-review): close <agent> — <counts>`
+- [ ] Kein Plan unter `.audits/agent-review/` schließt mit einem ungelösten `BLOCKER` für `distribution: plugin`-Agents, die `hooks`, `mcpServers` oder `permissionMode` deklarieren
+- [ ] Jeder Plan unter `.audits/agent-review/` führt die Subagent-Grenzen-Checks (kein Agent-Spawning, kein Skill-Tool-Aufruf) gegen den Ziel-Agent aus
+- [ ] Jeder Plan unter `.audits/agent-review/` führt den Proaktive-Delegation-Absicht-Check gegen jeden Agent aus, dessen `description` „use proactively" oder eine äquivalente Phrase enthält
+- [ ] Kein Agent lässt das `tools`-Feld weg, während er eine Research- / Review- / Audit- / Report-Verantwortlichkeit deklariert (null `BLOCKER` auf dem neuen Permission-Sprawl-Check)
+
+## Referenzen
+
+Quellen für die zusätzlichen Checks oben. Bei Findings, die eine konkrete Upstream-Regel pinnen, im eckigen Klammerpräfix den passenden Eintrag zitieren.
+
+- [R1] Agent-Management-Spezifikation (dieses Plugin) — `spec/claude/agent-management/`
+- [R2] Skill-vs-Agent-Entscheidung (dieses Plugin) — `spec/claude/skill-vs-agent/`
+- [R3] Skill-Management-Spezifikation (dieses Plugin, für Cross-Format-Abgleich) — `spec/claude/skill-management/`
+- [R4] Review-Plan-Spezifikation (Output-Format) — `spec/claude/review-plan/`
+- [R5] Create custom subagents, Claude-Code-Doku — <https://code.claude.com/docs/en/sub-agents>
+- [R6] Best practices for Claude Code subagents, PubNub Engineering — <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->

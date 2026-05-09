@@ -71,7 +71,29 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 
 - **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure—tools declared but not used are `WARNING` findings (dead permission)
 - **MUST** verify, for every tool the agent body clearly needs, that it's declared in `tools`: tools used but not declared are `BLOCKER` findings (the agent will fail to run)
+- **MUST** verify the agent **does not omit** the `tools` field unintentionally: an absent `tools` field grants the inherited full tool surface, which is permission sprawl. If the agent's responsibility is "research" / "review" / "audit" / "report" and `tools` is absent, that's a `BLOCKER`; for any other agent the absence is a `WARNING` unless the body explicitly justifies inheriting all tools ([R5](#references), [R6](#references))
 - **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents; an agent using `Bash` for operations a dedicated tool covers gets a `WARNING` unless the body justifies the choice
+- **MUST** verify, when both `tools` and `disallowedTools` are declared, that no tool name appears in both lists (the runtime applies deny then allow, so a double-listed tool is silently removed) and that the resolved set is non-empty; either condition is a `WARNING`
+
+### Plugin-distribution constraint checks
+
+Mirrors `agent-management` §"Plugin-distribution security constraints"; cite the originating rule when a finding pins one.
+
+- **MUST** verify, when `distribution: plugin` is declared, that the frontmatter does **not** set `hooks`, `mcpServers`, or `permissionMode`; any of those fields is a `BLOCKER` (the runtime silently ignores them for plugin agents and the author is being misled into thinking they're active) ([R5](#references))
+- **MUST**, when `distribution: project` is declared, accept those fields as valid; their presence is **not** a finding for project-distributed agents
+- **SHOULD**, when an agent declares `distribution: plugin` AND its body describes behavior that obviously requires `hooks` / `mcpServers` / `permissionMode` (e.g. "this agent installs a PreToolUse hook", "this agent connects to its own MCP server", "this agent runs in plan mode"), flag a `WARNING` even if the fields are absent—the description and the distribution are inconsistent
+
+### Subagent-boundary checks
+
+Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybrid pattern"; cite the originating rule when a finding pins one.
+
+- **MUST** verify the agent body **never** dispatches another subagent—grep the body for `Agent(`, `subagent_type`, `Task(`, or equivalent dispatch phrasings; any match is a `BLOCKER` (Claude Code subagents cannot spawn subagents) ([R5](#references))
+- **MUST** verify the agent body **never** invokes the Skill tool on behalf of the user—grep the body for `Skill(`, `Skill tool`, or equivalent skill-dispatch phrasings; any match is a `BLOCKER` per `skill-vs-agent`
+
+### Description quality and proactive-delegation intent
+
+- **MUST** verify, when the `description` contains the phrase "use proactively" (or the equivalent "use this proactively", "should be used proactively", "invoke proactively"), that the agent's responsibility actually warrants Claude offering it without explicit user request—signs a check passes: the agent solves a class of problem the user is unlikely to name explicitly (security review on every PR, audit on every commit). Signs the check fails: the agent has destructive side effects, requires credentials, or makes commitments to external systems. A "proactively" claim on a destructive or credential-bearing agent is a `BLOCKER` ([R5](#references))
+- **SHOULD** verify, when the agent has clear overlap with another existing artifact (skill or agent), that `description` names the overlap as a **negative trigger** ("don't use for X, use the `<peer>` agent / skill instead"); absence of the negative is a `WARNING` ([R5](#references))
 
 ### Prompt-structure checks
 
@@ -111,6 +133,21 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 - [ ] Every open plan under `.audits/agent-review/` conforms to `review-plan`'s four-section structure and YAML frontmatter
 - [ ] The `agent-management` spec's acceptance criteria cross-reference this spec for the review side of its authoring rules
 - [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(agent-review): close <agent>—<counts>` exactly
+- [ ] No plan under `.audits/agent-review/` closes with an unresolved `BLOCKER` for `distribution: plugin` agents declaring `hooks`, `mcpServers`, or `permissionMode`
+- [ ] Every plan under `.audits/agent-review/` runs the subagent-boundary checks (no agent-spawning, no Skill-tool invocation) against the target agent
+- [ ] Every plan under `.audits/agent-review/` runs the proactive-delegation-intent check against any agent whose `description` contains "use proactively" or an equivalent phrase
+- [ ] No agent omits the `tools` field while declaring a research / review / audit / report responsibility (zero `BLOCKER`s on the new permission-sprawl check)
+
+## References
+
+Sources for the additional checks above. Cite the relevant entry in finding bracketed prefixes when a check pins a specific upstream rule.
+
+- [R1] Agent management spec (this plugin) — `spec/claude/agent-management/`
+- [R2] Skill vs. agent decision (this plugin) — `spec/claude/skill-vs-agent/`
+- [R3] Skill management spec (this plugin, for cross-format alignment) — `spec/claude/skill-management/`
+- [R4] Review plan spec (output format) — `spec/claude/review-plan/`
+- [R5] Create custom subagents, Claude Code docs — <https://code.claude.com/docs/en/sub-agents>
+- [R6] Best practices for Claude Code subagents, PubNub Engineering — <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
