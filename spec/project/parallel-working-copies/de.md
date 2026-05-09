@@ -1,6 +1,7 @@
 # Parallele Working Copies
 
 Status: draft
+Implementierung: documentary-only — die MUSS-Regeln in dieser Spec sind Verhaltenskonventionen der Mitwirkenden (Worktree-Pfade, Lebenszyklus, Uncommitteter-Änderungs-Transfer, Claude-Code-Session-Scoping). Der §Notes-on-coverage-Absatz listet bereits auf, welche MUSS-Regeln post-hoc beobachtbare Acceptance Criteria haben und welche reine Konvention sind; kein aufrufbarer Claude-Code-Skill oder -Agent in diesem Plugin erzwingt die Regeln. Durchsetzung erfolgt durch menschliche und KI-Agent-Praxis, mit `git worktree list --porcelain`-Checks, die die beobachtbare Teilmenge der ACs unterstützen.
 
 ## Context
 Ein einzelnes primäres Checkout eines Repositories kann jeweils nur einen Branch tragen. Sobald ein Mitwirkender (Mensch oder KI-Agent) zwei oder mehr Feature-Branches parallel vorantreiben möchte — zum Beispiel das Verfassen einer Spec auf `feat/parallel-working-copies`, während ein lang laufender Build auf `feat/mermaid-diagrams` läuft — zerstört ein In-Place-Branchwechsel den Working Tree desjenigen Branches, der pausiert wird: uncommittete Änderungen kollidieren, Build-Outputs werden ungültig, IDE-Indizes geraten ins Schleudern, und jegliches Tooling, das den cwd zwischengespeichert hat (Claude-Code-Sessions, Sprachserver, Watcher), muss neu hochfahren.

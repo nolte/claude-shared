@@ -1,6 +1,7 @@
 # Parallel Working Copies
 
 Status: draft
+Implementation: documentary-only—the MUSTs in this spec are contributor-behaviour conventions (worktree paths, lifecycle, uncommitted-change transfer, Claude Code session scoping). The §Notes-on-coverage paragraph already lists which MUSTs have post-hoc-observable Acceptance Criteria and which are convention-only; no callable Claude Code skill or agent in this plugin enforces the rules. Enforcement is by human and AI-agent practice, with `git worktree list --porcelain` checks supporting the observable subset of ACs.
 
 ## Context
 A single primary checkout of a repository can hold only one branch at a time. As soon as a contributor (human or AI agent) wants to advance two or more feature branches in parallel (for example, drafting a spec on `feat/parallel-working-copies` while a long-running build runs on `feat/mermaid-diagrams`), switching branches in place destroys the working tree of whichever branch is paused: uncommitted edits collide, build outputs invalidate, IDE indexes thrash, and any tooling that has cached the cwd (Claude Code sessions, language servers, watchers) is forced to re-bootstrap.

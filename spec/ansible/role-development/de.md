@@ -1,6 +1,7 @@
 # Best Practices für die Ansible-Rollen-Entwicklung
 
 Status: draft
+Implementierung: documentary-only — Ansible-Automation liegt außerhalb des Scopes des `nolte-shared`-Plugins; diese Spec ist portfolioweite Leitlinie für Repositories, die Ansible-Rollen ausliefern, aber kein Claude-Code-Skill und kein Agent in diesem Plugin operationalisiert sie. Rollen-Autor:innen konsumieren die Spec per Verweis und wenden sie über ihr eigenes Ansible-Tooling (`ansible-galaxy`, `ansible-lint`, Molecule) an.
 
 ## Kontext
 Ansible-Rollen sind die wiederverwendbaren Einheiten, die ein Playbook-Repository über `requirements.yml` konsumiert. Sie kapseln idempotente Zustands-Logik für eine fokussierte Verantwortlichkeit (nginx installieren, SSH härten, ein Basis-OS bootstrappen), damit dieselbe Logik über Umgebungen und Projekte hinweg wiederverwendet werden kann. Diese Spec definiert die Best-Practice-Baseline für die *Rollen-Schicht* — Galaxy-konformes Verzeichnislayout, Rollen-Schnittstelle (Argument-Specs, Metadaten, Abhängigkeiten), Variablen-Hygiene, Idempotenz, Naming, Tests mit Molecule, Linting, semantische Versionierung und Galaxy-Publishing. Die konsumierende *Playbook-Schicht* wird von [`spec/ansible/playbook-development/`](../playbook-development/de.md) geregelt; diese Spec wiederholt orchestrierungs-bezogene Konventionen (Inventar, Vault, CI-Dry-Run) bewusst nicht.

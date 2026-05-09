@@ -1,6 +1,7 @@
 # Best Practices für die Ansible-Playbook-Entwicklung
 
 Status: draft
+Implementierung: documentary-only — Ansible-Automation liegt außerhalb des Scopes des `nolte-shared`-Plugins; diese Spec ist portfolioweite Leitlinie für Repositories, die Ansible-Automation ausliefern, aber kein Claude-Code-Skill und kein Agent in diesem Plugin operationalisiert sie. Repositories, die die Konventionen übernehmen, konsumieren die Spec per Verweis und wenden sie über ihr eigenes Ansible-Tooling (`ansible-playbook`, `ansible-lint`, Molecule) an.
 
 ## Kontext
 Ansible-Playbooks sind die ausführende Schicht, die wiederverwendbare Rollen und Collections gegen ein Inventar von Ziel-Hosts orchestriert. Im nolte-Portfolio dienen sie unter anderem dem reproduzierbaren Bereitstellen von Linux-Geräten — vom Server bis zur Edge-Hardware auf Raspberry-Pi-Klasse. Diese Spec definiert die Best-Practice-Baseline für die *Playbook-Schicht* — Repository-Layout, Inventar-Hygiene, Vault- und Secrets-Behandlung, Tagging-Disziplin, Variablen-Precedence, Dependency-Konsum und CI-Gating. Die *Rollen-Schicht* (die wiederverwendbaren Einheiten, konsumiert via `requirements.yml`) wird von [`spec/ansible/role-development/`](../role-development/de.md) geregelt; diese Spec wiederholt rollen-interne Konventionen bewusst nicht.

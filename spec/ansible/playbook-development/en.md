@@ -1,6 +1,7 @@
 # Ansible Playbook Development Best Practices
 
 Status: draft
+Implementation: documentary-only—Ansible automation lives outside the `nolte-shared` plugin scope; this spec is portfolio-wide guidance for repositories that ship Ansible automation, but no Claude Code skill or agent in this plugin operationalises it. Repos that adopt the conventions consume the spec by reference and apply it through their own Ansible tooling (`ansible-playbook`, `ansible-lint`, Molecule).
 
 ## Context
 Ansible playbooks are the executable layer that orchestrates reusable roles and collections against an inventory of target hosts. Across the nolte portfolio they bootstrap and maintain Linux devices ranging from servers to Raspberry-Pi-class edge hardware. This spec defines the best-practice baseline for the *playbook layer*: repository layout, inventory hygiene, vault and secrets handling, tagging discipline, variable precedence, dependency consumption, and CI gating. The *role layer* (the reusable units consumed via `requirements.yml`) is governed by [`spec/ansible/role-development/`](../role-development/en.md), and this spec deliberately doesn't repeat role-internal conventions.
