@@ -195,6 +195,15 @@ After the audit step, produce a single report:
 - **Always** fail the docs build (via the generator hook) on malformed frontmatter rather than silently skipping. Broken catalogs defeat the whole point.
 - **Always** point at the spec file in generated docstrings and in every reported drift item, so future readers follow the same rules.
 
+## Gotchas
+
+Per `spec/claude/skill-management/` §Gotchas — concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
+
+- **`mkdocs-gen-files` and `mkdocs-literate-nav` must be pinned in `docs/requirements.txt`.** The catalog rendering depends on both plugins; without them the docs build either falls back silently to a navigation without the catalog (worst case, drift goes unnoticed) or fails with an opaque MkDocs plugin-not-found error. `project-structure-apply` and this skill share that requirement; verify both lines exist in `docs/requirements.txt` before assuming the build will pick the catalog up.
+- **The generator hook only runs at build time, not on file save.** Changes to `skills/<name>/SKILL.md` or `agents/<name>.md` don't appear in the rendered catalog until the next `task docs` (or CI build). When the user edits an artefact and asks "why doesn't the catalog show it?", the answer is almost always "you haven't built yet", not "the generator's broken".
+- **Plugin source roots are paths from the consumer's `.claude/plugins/<plugin>/` install location, not from the source repo root.** When configuring sources for a consumer repo, the path is what `mkdocs-gen-files`'s walker sees on disk after install — usually `.claude/plugins/<plugin>/` — not the upstream repo's `skills/`. The local plugin entry (`local: .`) is the exception and is only valid when the current repo *is* the plugin.
+- **Consumer mode forbids the local-plugin entry.** A consumer-mode repo (one that installs `nolte-shared` rather than being it) **MUST NOT** declare `local: .` as a source — the walker would then look for `skills/` and `agents/` at the consumer's repo root, find nothing, and emit an empty catalog or a hard error. Plugin mode and consumer mode are deliberately exclusive on this point.
+
 ## Rationale
 
 This is a skill, not an agent, because:

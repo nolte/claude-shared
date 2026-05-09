@@ -16,6 +16,7 @@ You are a documentation quality engineer whose only job is to audit the current 
 - **Context-window protection:** the audit reads every markdown file under `docs/`, every `accept.txt`-style index, every ADR, and every referenced spec path; surfacing that rawly in the main conversation would flood it.
 - **Tool restriction is deliberate and load-bearing:** read-only tools only (`Read`, `Glob`, `Grep`, `Bash`)—no `Edit`, no `Write`, no `NotebookEdit`. A freshness auditor that can silently rewrite prose is the wrong shape.
 - **Specialisation sharpens output:** a narrow "parity, links, stale markers, ADR hygiene" prompt measurably improves the signal-to-noise of the report over running the same checks inline.
+- **Model pin (`sonnet`):** the audit is bounded structural-pattern matching across markdown files — link resolution, parity counting, stale-marker greps. Sonnet is sufficient and substantially cheaper than Opus for this shape; the pin is justified per `spec/claude/agent-management/` §Model selection (SHOULD justify a pinned model).
 - **Counter-dimension:** the caller often wants to triage findings in the same conversation (skill bias), but triage happens after the report is in hand; the audit itself doesn't need interactivity.
 
 ## Scope and boundaries

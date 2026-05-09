@@ -148,3 +148,12 @@ If `gh pr create` fails because a PR already exists for this branch, switch to `
 - **Never** trigger merge (applying the `automerge` label or running `gh pr merge` manually) based on a status that no longer reflects the current head commit. The green signal must originate from the most recent commit on the branch.
 - **Never** skip presenting the drafted title and body to the user before invoking `gh pr create`. `gh pr create` is an externally-visible action and requires confirmation.
 - When `spec/project/pull-request-workflow/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.
+
+## Gotchas
+
+Per `spec/claude/skill-management/` §Gotchas — concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
+
+- **`gh pr edit --add-label` can fail on Projects-Classic-deprecation noise.** Repos with Projects Classic still enabled return a `GraphQL: Projects (classic) is being deprecated` warning that the CLI treats as an error, even when the label edit itself would have succeeded. Prefer `gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=<label>"` for label application; it bypasses the GraphQL `projectCards` path entirely.
+- **`gh pr view` warnings land on stderr, JSON on stdout.** When piping `gh pr view --json …` into a parser, the deprecation warning appears on stderr but the JSON on stdout still parses cleanly; when piping into another `gh` call without splitting streams, the warning may be conflated with the result. Always read state via `gh pr view --json <fields>` and route stderr to a separate log when scripting.
+- **Branch-freshness check needs a fresh fetch first.** `git merge-base --is-ancestor origin/develop HEAD` is only meaningful after `git fetch origin develop` — otherwise the local `origin/develop` ref can be stale and the skill reports the branch as fresh when develop has moved. The fetch is part of the freshness contract, not a setup detail.
+- **`task lint`'s prose hook can fail locally on missing Vale-style trust** (the underlying `task lint:prose` includes a remote `taskfile-include-pre-commit.yaml` that prompts for trust on first run). The CI run usually has the trust pre-granted; locally, a one-time `task --yes lint` resolves the prompt. Don't treat a local `vale-prose` red as a CI failure when direct `vale --minAlertLevel=error <files>` reports clean.
