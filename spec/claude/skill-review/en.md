@@ -12,7 +12,7 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 - Every skill review applies the same set of checks derived from `skill-management` and `skill-vs-agent`, in the same order, with the same severity mapping
 - Review output is a `review-plan` artifact—parseable, actionable, and traceable back to a specific spec requirement per finding
 - Skill authors can run the review on their own work before proposing it, and a reviewer (human or LLM) can run it later with identical results on the same source tree
-- Plugin developers can script against the review output (parse plan files, gate merges on open `BLOCKER`s, count open reviews) without having to model per-reviewer conventions
+- Plugin developers can script against the review output (parse plan files, gate merges on open `Critical`s, count open reviews) without having to model per-reviewer conventions
 - The review distinguishes **authoring-spec compliance** (`skill-management` rules) from **decision-rule compliance** (`skill-vs-agent` rationale) without conflating the two into a single pass/fail
 
 ## Non-Goals
@@ -39,27 +39,27 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 
 - **MUST** run a check for every MUST / SHOULD / MAY rule in the canonical `skill-management` spec, producing one finding per failed check with the originating rule cited in the bracketed prefix per `review-plan`
 - **MUST** map severity as follows and **MUST NOT** deviate without a documented exception:
-  - A failed MUST → `BLOCKER`
-  - A failed SHOULD → `WARNING`
-  - A failed MAY that the skill clearly would benefit from → `SUGGESTION`
-  - An observation that no rule covers but that a future reviewer would want to know → `INFO`
+  - A failed MUST → `Critical`
+  - A failed SHOULD → `Warning`
+  - A failed MAY that the skill clearly would benefit from → `Suggestion`
+  - An observation that no rule covers but that a future reviewer would want to know → `Info`
 - **MUST** explicitly cover these high-impact areas even when the corresponding rule in `skill-management` is expressed only as a SHOULD: frontmatter field presence (`name`, `description`), description-contains-concrete-triggers, absence of hard-coded absolute paths in referenced assets, existence of every template the skill references
-- **SHOULD** flag as `INFO` any part of the skill body that could be factored into a sibling file to keep the main prompt under the soft length target named in `skill-management`
+- **SHOULD** flag as `Info` any part of the skill body that could be factored into a sibling file to keep the main prompt under the soft length target named in `skill-management`
 
 ### Checks derived from `skill-vs-agent`
 
-- **MUST** confirm the skill body contains a **rationale section** that names at least one decisive dimension for the skill-over-agent choice; its absence is a `BLOCKER`
+- **MUST** confirm the skill body contains a **rationale section** that names at least one decisive dimension for the skill-over-agent choice; its absence is a `Critical`
 - **MUST** verify the skill doesn't dispatch the Skill tool on behalf of an agent (not applicable in this direction, but the reverse direction—a skill calling an agent via the Agent tool—is expected and isn't a finding)
-- **MUST** run a duplicate-capability check: grep every other `skills/*/SKILL.md` and `agents/*.md` `description` line for semantic overlap; any plausible overlap produces a `WARNING` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing
+- **MUST** run a duplicate-capability check: grep every other `skills/*/SKILL.md` and `agents/*.md` `description` line for semantic overlap; any plausible overlap produces a `Warning` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing
 
 ### Checks derived from the multilingual-template default
 
-- **MUST** confirm that frontmatter and system-prompt content are in English, regardless of the conversation language in which the skill was authored; any non-English frontmatter or body content is a `BLOCKER` (the user-facing response language is a runtime choice documented inside the body and isn't covered by this rule)
+- **MUST** confirm that frontmatter and system-prompt content are in English, regardless of the conversation language in which the skill was authored; any non-English frontmatter or body content is a `Critical` (the user-facing response language is a runtime choice documented inside the body and isn't covered by this rule)
 
 ### Checks derived from external skill-structure validation
 
 - **MUST** run an external skill-structure validator that checks `SKILL.md` frontmatter, body shape, and referenced-asset reachability before emitting the plan; Anthropic's `skills-ref` CLI is the canonical example, but the requirement isn't bound to a specific binary
-- **MUST** map any error reported by the validator to a `BLOCKER` finding and any warning to a `WARNING` finding, citing the validator's rule identifier in the bracketed prefix per `review-plan`
+- **MUST** map any error reported by the validator to a `Critical` finding and any warning to a `Warning` finding, citing the validator's rule identifier in the bracketed prefix per `review-plan`
 - **MUST** record in the plan's `## Scope` section which validator and which version was used, so a later re-review can detect validator drift the same way it detects spec drift
 - **MUST NOT** skip this check on the grounds that other checks in this spec already cover overlapping ground; the external validator runs in addition to the spec-derived checks because it catches structural issues a spec-reading reviewer can miss
 - **MAY** suppress an individual validator finding only by recording an explicit override in the plan's `## Scope` with a one-line justification anchored in another spec or a documented project decision
@@ -68,51 +68,51 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 
 Mirrors the authoring requirements added to `skill-management` §"Authoring quality" (per <https://agentskills.io/skill-creation/best-practices> and <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>); cite the upstream rule slug when a finding pins one.
 
-- **MUST** verify `SKILL.md` is under 500 lines and 5,000 tokens; over-cap is a `BLOCKER`
-- **MUST** verify every asset referenced under `references/` / `templates/` / `assets/` / `scripts/` carries a load-trigger phrase in `SKILL.md` ("Read X when Y," "use template Z for output Q"); un-triggered references are a `WARNING`
-- **SHOULD** check for a **Gotchas** section when the skill operates against a non-obvious environment; absence is a `WARNING` only when the skill clearly addresses such an environment, otherwise a `SUGGESTION`
-- **SHOULD** flag menu-without-default phrasing (multiple equal-weight options without one designated default) and one-shot declarations where reusable procedures fit; both are `SUGGESTION`s
+- **MUST** verify `SKILL.md` is under 500 lines and 5,000 tokens; over-cap is a `Critical`
+- **MUST** verify every asset referenced under `references/` / `templates/` / `assets/` / `scripts/` carries a load-trigger phrase in `SKILL.md` ("Read X when Y," "use template Z for output Q"); un-triggered references are a `Warning`
+- **SHOULD** check for a **Gotchas** section when the skill operates against a non-obvious environment; absence is a `Warning` only when the skill clearly addresses such an environment, otherwise a `Suggestion`
+- **SHOULD** flag menu-without-default phrasing (multiple equal-weight options without one designated default) and one-shot declarations where reusable procedures fit; both are `Suggestion`s
 
 ### Checks derived from frontmatter validation (Anthropic platform limits)
 
 Mirrors `skill-management` §"Frontmatter validation"; cite the originating rule when a finding pins one.
 
-- **MUST** verify `name` is 1–64 characters, lowercase ASCII letters/digits/hyphens only, doesn't start or end with `-`, and contains no `--`; any violation is a `BLOCKER`
-- **MUST** verify neither `name` nor any other frontmatter value contains the reserved tokens `anthropic` or `claude`; a violation is a `BLOCKER` (the upstream platform validator rejects the skill)
-- **MUST** verify neither `name` nor `description` contains XML tags; a violation is a `BLOCKER`
-- **MUST** verify `description` is non-empty and ≤1024 characters; over-cap or empty is a `BLOCKER`
-- **MUST** verify `description` is written in **third person**: presence of `I `, `you `, `we `, or other non-third-person markers in description text is a `BLOCKER`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))
-- **MUST** verify `description` names both *what the skill does* and *when to use it*; absence of trigger phrases is a `WARNING` (skill becomes hard to discover)
-- **SHOULD**, when `when_to_use` is set, verify combined `description` + `when_to_use` text stays under 1,536 characters; over-cap is a `WARNING` (runtime truncates and typically eats the trigger phrases)
-- **SHOULD** verify the skill name follows a consistent form across this plugin (gerund preferred; verb-noun acceptable; mixed forms within one repository are a `SUGGESTION`-grade smell)
-- **MUST** flag generic names (`helper`, `utils`, `tools`, `documents`, `data`, `files`) as `BLOCKER`s; they defeat skill discovery
+- **MUST** verify `name` is 1–64 characters, lowercase ASCII letters/digits/hyphens only, doesn't start or end with `-`, and contains no `--`; any violation is a `Critical`
+- **MUST** verify neither `name` nor any other frontmatter value contains the reserved tokens `anthropic` or `claude`; a violation is a `Critical` (the upstream platform validator rejects the skill)
+- **MUST** verify neither `name` nor `description` contains XML tags; a violation is a `Critical`
+- **MUST** verify `description` is non-empty and ≤1024 characters; over-cap or empty is a `Critical`
+- **MUST** verify `description` is written in **third person**: presence of `I `, `you `, `we `, or other non-third-person markers in description text is a `Critical`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))
+- **MUST** verify `description` names both *what the skill does* and *when to use it*; absence of trigger phrases is a `Warning` (skill becomes hard to discover)
+- **SHOULD**, when `when_to_use` is set, verify combined `description` + `when_to_use` text stays under 1,536 characters; over-cap is a `Warning` (runtime truncates and typically eats the trigger phrases)
+- **SHOULD** verify the skill name follows a consistent form across this plugin (gerund preferred; verb-noun acceptable; mixed forms within one repository are a `Suggestion`-grade smell)
+- **MUST** flag generic names (`helper`, `utils`, `tools`, `documents`, `data`, `files`) as `Critical`s; they defeat skill discovery
 
 ### Checks derived from progressive disclosure & file references
 
 Mirrors `skill-management` §"Progressive disclosure & file references"; cite the originating rule when a finding pins one.
 
-- **MUST** verify file references inside `SKILL.md` are at most one level deep (no `SKILL.md` → `A.md` → `B.md` chains); a chain is a `WARNING` (Claude tends to partial-read nested references)
-- **MUST** verify every supporting file longer than 100 lines opens with a table of contents; absence is a `WARNING`
-- **MUST** verify every script reference makes execution intent explicit ("Run X to …" vs. "See X for the algorithm of …"); ambiguous wording is a `WARNING`
-- **MUST** verify every path in `SKILL.md` and supporting files uses forward slashes; backslash paths are a `BLOCKER` on Unix
-- **MUST** verify every MCP-tool reference uses the fully qualified `ServerName:tool_name` form; bare tool names are a `WARNING`
-- **MUST** flag time-sensitive information not enclosed in an `## Old patterns` section; "use the new API after August 2025" inline is a `WARNING`
+- **MUST** verify file references inside `SKILL.md` are at most one level deep (no `SKILL.md` → `A.md` → `B.md` chains); a chain is a `Warning` (Claude tends to partial-read nested references)
+- **MUST** verify every supporting file longer than 100 lines opens with a table of contents; absence is a `Warning`
+- **MUST** verify every script reference makes execution intent explicit ("Run X to …" vs. "See X for the algorithm of …"); ambiguous wording is a `Warning`
+- **MUST** verify every path in `SKILL.md` and supporting files uses forward slashes; backslash paths are a `Critical` on Unix
+- **MUST** verify every MCP-tool reference uses the fully qualified `ServerName:tool_name` form; bare tool names are a `Warning`
+- **MUST** flag time-sensitive information not enclosed in an `## Old patterns` section; "use the new API after August 2025" inline is a `Warning`
 
 ### Checks derived from runtime & lifecycle
 
 Mirrors `skill-management` §"Runtime & lifecycle awareness"; cite the originating rule when a finding pins one.
 
-- **MUST** verify the skill body holds up as **standing instructions for the rest of the session**; one-time-step phrasing ("now do X", "as a first step …") that would lose its meaning after compaction is a `WARNING`. Citation: skill content stays in context across turns and is not re-read ([R4](#references))
-- **SHOULD** estimate the token-count of `SKILL.md` (rough: 4 chars per token) and flag a `SUGGESTION` if the skill body exceeds 5,000 tokens since auto-compaction will silently truncate everything beyond that mark on re-attach ([R4](#references))
-- **SHOULD** verify `allowed-tools`, when present, expresses a deliberate pre-approval contract documented in the body (so a future maintainer understands what the skill granted itself); silent `allowed-tools` declarations are a `SUGGESTION`
+- **MUST** verify the skill body holds up as **standing instructions for the rest of the session**; one-time-step phrasing ("now do X", "as a first step …") that would lose its meaning after compaction is a `Warning`. Citation: skill content stays in context across turns and is not re-read ([R4](#references))
+- **SHOULD** estimate the token-count of `SKILL.md` (rough: 4 chars per token) and flag a `Suggestion` if the skill body exceeds 5,000 tokens since auto-compaction will silently truncate everything beyond that mark on re-attach ([R4](#references))
+- **SHOULD** verify `allowed-tools`, when present, expresses a deliberate pre-approval contract documented in the body (so a future maintainer understands what the skill granted itself); silent `allowed-tools` declarations are a `Suggestion`
 - **SHOULD** verify `disable-model-invocation: true` skills are not also referenced by any subagent's `skills:` preload list (they would be silently skipped at runtime with only a debug-log warning) ([R4](#references))
 
 ### Checks derived from evaluation discipline
 
 Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule when a finding pins one.
 
-- **SHOULD** verify the skill has at least three evaluation scenarios (input prompt, optional input files, expected behavior) under `examples/` or a sibling folder; absence is a `SUGGESTION` for new skills, a `WARNING` for skills that have been edited more than three times since the last evaluation ([R3](#references))
-- **MAY** record an `INFO` finding when no evidence of multi-model testing exists (no comment, no example output, no test rubric mentioning Haiku / Sonnet / Opus) ([R3](#references))
+- **SHOULD** verify the skill has at least three evaluation scenarios (input prompt, optional input files, expected behavior) under `examples/` or a sibling folder; absence is a `Suggestion` for new skills, a `Warning` for skills that have been edited more than three times since the last evaluation ([R3](#references))
+- **MAY** record an `Info` finding when no evidence of multi-model testing exists (no comment, no example output, no test rubric mentioning Haiku / Sonnet / Opus) ([R3](#references))
 
 ### Review procedure
 
@@ -120,7 +120,7 @@ Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule 
 - **MUST** produce findings in this order: external-validator findings → frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → best-practices checks → INFO observations
 - **MUST** emit exactly one `review-plan` file at `.audits/skill-review/<skill-name>.md`; the reviewer **MUST** follow every lifecycle rule from `review-plan`, including the single-plan-per-target invariant and the deletion-commit message format
 - **SHOULD** embed, in the plan's `## Scope` section, the git SHA of the spec versions applied so a later re-review can tell whether findings may have become outdated by a spec revision
-- **MAY** fold purely stylistic observations (Vale, markdown linting) into `INFO` findings when they aid the author, but **MUST NOT** promote them to `WARNING` or `BLOCKER`: those stay with their own tooling
+- **MAY** fold purely stylistic observations (Vale, markdown linting) into `Info` findings when they aid the author, but **MUST NOT** promote them to `Warning` or `Critical`: those stay with their own tooling
 
 ### Relationship to other specs
 
@@ -132,12 +132,12 @@ Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule 
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
 - [ ] A worked example exists applying this review procedure to one skill in `nolte-shared` (for instance `audience-identify`) and producing a conforming plan under `.audits/skill-review/`
 - [ ] Every skill in `skills/` has been reviewed against the current `skill-management` revision at least once since this spec was adopted, verifiable by either an open plan under `.audits/skill-review/` or a closing commit in `git log` matching the `review-plan` deletion pattern
-- [ ] No skill in `skills/` lacks a rationale section; running the rationale-section check across all skills produces zero `BLOCKER`s
+- [ ] No skill in `skills/` lacks a rationale section; running the rationale-section check across all skills produces zero `Critical`s
 - [ ] No two skills in `skills/` share an equivalent capability statement, verified by a spot-check of every plan's duplicate-prevention finding
 - [ ] Every open plan under `.audits/skill-review/` conforms to `review-plan`'s four-section structure and YAML frontmatter
 - [ ] The `skill-management` spec's acceptance criteria cross-reference this spec for the review side of its authoring rules
 - [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(skill-review): close <skill>—<counts>` exactly
-- [ ] Every plan under `.audits/skill-review/` records the external skill-structure validator and version that was run, and no plan closes with an unresolved validator-reported `BLOCKER`
+- [ ] Every plan under `.audits/skill-review/` records the external skill-structure validator and version that was run, and no plan closes with an unresolved validator-reported `Critical`
 - [ ] Every plan under `.audits/skill-review/` runs the best-practices checks from §"Checks derived from skill-creation best practices" against the target skill
 - [ ] Every plan under `.audits/skill-review/` runs the frontmatter-validation, progressive-disclosure, runtime-lifecycle, and evaluation-discipline checks newly added to this spec, citing `skill-management` §<section> as the rule anchor
 
@@ -157,7 +157,7 @@ Sources for the additional checks above. Cite the relevant entry in finding brac
 - Should the duplicate-prevention check read agent descriptions from `agents/*.md` in the same repository only, or should it also query the MkDocs-rendered catalog across installed plugins when a consumer reviews a downstream copy?
 - Does the review distinguish "new skill being proposed" from "existing skill being revised"? The same requirements apply to both, but the severity of a duplicate-capability finding differs (blocker vs. warning) depending on whether the peer pre-exists or is being introduced alongside.
 - Should the rationale-section check also validate that at least one *counter-dimension* is named, per `skill-vs-agent`'s SHOULD rule, or is the current "at least one decisive dimension" bar sufficient for skill review?
-- When the skill under review depends on a template or asset file that doesn't yet exist, is the finding a `BLOCKER` (broken reference) or a `WARNING` (template to be added before merge)?
+- When the skill under review depends on a template or asset file that doesn't yet exist, is the finding a `Critical` (broken reference) or a `Warning` (template to be added before merge)?
 - How's this spec invoked—as a `review` skill run from the main conversation, as a sub-agent comparable to `audience-review`, or both? The output is the same plan either way, but the entry point affects whether the review persists automatically.
 - Should reviewing a skill also verify that the skill's `description` triggers don't overlap with a runtime slash command or a Claude Code built-in command, and if so against which authoritative list?
 - Where does the validator pin (which version is treated as ground truth) live—in this spec, in `skill-management`, or in repository tooling configuration?

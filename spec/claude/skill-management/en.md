@@ -93,7 +93,7 @@ Tracks the public guidance at <https://agentskills.io/skill-creation/best-practi
 - **MUST**, when referencing MCP tools from skill prose, use fully qualified `ServerName:tool_name` syntax (`BigQuery:bigquery_schema`, not `bigquery_schema`); without the server prefix the runtime fails to locate the tool when multiple MCP servers are present ([R2](#references))
 - **MAY** bundle reusable scripts in `scripts/` when iteration shows the agent re-inventing the same logic each run, and **MAY** add a **Validation loop** or **Plan-validate-execute** subsection when the skill performs batch or destructive operations ([R2](#references), [R4](#references))
 - **SHOULD**, when bundling scripts, **solve don't punt**—the script handles its own error cases (missing file → create with default; permission denied → fall back gracefully) instead of failing and leaving Claude to recover ([R2](#references))
-- **SHOULD** justify every configuration constant the script declares; "voodoo constants" (`TIMEOUT = 47`, `RETRIES = 5`) without an inline comment explaining the value are a `WARNING`-grade authoring smell ([R2](#references))
+- **SHOULD** justify every configuration constant the script declares; "voodoo constants" (`TIMEOUT = 47`, `RETRIES = 5`) without an inline comment explaining the value are a `Warning`-grade authoring smell ([R2](#references))
 - **MUST**, in any prose that mentions a script, make the **execution intent explicit**: write either "Run `analyze_form.py` to extract fields" (execute) or "See `analyze_form.py` for the field extraction algorithm" (read as reference); ambiguity here causes Claude to make the wrong choice and waste tokens ([R2](#references))
 
 ### Progressive disclosure & file references
