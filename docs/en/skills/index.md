@@ -21,6 +21,8 @@ Skills are reusable workflows Claude Code invokes via the `Skill` tool. In the c
 | `skill-agent-catalog-apply` | Wire up the MkDocs catalog that lists every skill and agent in a plugin repo |
 | `mermaid-diagrams-apply` | Audit the MkDocs Mermaid setup against the `mermaid-diagrams` spec and emit spec-compliant diagrams |
 | `vocab-drift-audit` | Diff repository-local Vale vocabulary against the pinned `nolte/vale-style` release |
+| `workflow-health-triage` | Triage a failing GitHub Actions workflow per `workflow-health` spec; classify, dispatch a specialised agent, route the fix through the standard PR flow |
+| `permission-allowlist-maintain` | Curate the committed `.claude/settings.json` `permissions.allow` list per `permission-allowlist` spec; user-gated per-entry approval |
 | `audience-identify` | Identify the audiences of a bounded context and write a reviewable audience artifact |
 | `mission-define` | First-write `project/mission.md` walking SMART one letter at a time |
 | `mission-revise` | Edit `project/mission.md` and flip `mvp_status` lifecycle per the `mission` spec |
