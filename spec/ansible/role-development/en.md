@@ -1,6 +1,7 @@
 # Ansible Role Development Best Practices
 
 Status: draft
+Implementation: documentary-only—Ansible automation lives outside the `nolte-shared` plugin scope; this spec is portfolio-wide guidance for repositories that ship Ansible roles, but no Claude Code skill or agent in this plugin operationalises it. Role authors consume the spec by reference and apply it through their own Ansible tooling (`ansible-galaxy`, `ansible-lint`, Molecule).
 
 ## Context
 Ansible roles are the reusable units that a playbook repository consumes via `requirements.yml`. They encapsulate idempotent state-management logic for a focused responsibility (install `nginx`, harden SSH, bootstrap a base OS) so the same logic can be reused across environments and projects. This spec defines the best-practice baseline for the *role layer*: Galaxy-conformant directory layout, role interface (argument specs, metadata, dependencies), variable hygiene, idempotent behaviour, naming, testing with Molecule, linting, semantic versioning, and Galaxy publishing. The consuming *playbook layer* is governed by [`spec/ansible/playbook-development/`](../playbook-development/en.md), and this spec deliberately doesn't repeat orchestration-level conventions (inventory, vault, CI dry-run).

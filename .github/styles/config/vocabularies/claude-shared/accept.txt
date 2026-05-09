@@ -142,3 +142,7 @@ closeable
 subtasks
 backlink
 README's
+vtracer
+[Vv]ectoris(e|er|ers|ing|ed)?
+[Pp]NG(s|'s)?
+Midjourney
