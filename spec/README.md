@@ -37,6 +37,7 @@ Canonical language: `en` · Translations: `de`
 | project | release-skill-layer | Local Release Skill Layer | Lokale Release-Skill-Schicht | draft | unversioned |
 | project | roadmap | Project Roadmap | Projekt-Roadmap | draft | unversioned |
 | project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | 2026-04-23 |
+| project | spec-driven-development | Spec-Driven Development | Spezifikations-getriebene Entwicklung | draft | unversioned |
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | unversioned |
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |
