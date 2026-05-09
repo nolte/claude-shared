@@ -8,7 +8,7 @@ auditable
 [Aa]utoload(s|ed|ing)?
 [Aa]utolink(s|ed|ing)?
 [Aa]utomatable
-[Aa]utomerge
+[Aa]utomerge[ds]?
 browsable
 [Cc][Ii]
 [Cc]laude
@@ -53,7 +53,6 @@ Probot
 READMEs
 rebase
 rebasing
-Renovate
 [Rr]epo
 [Rr]epointing
 rollout
@@ -75,7 +74,7 @@ untracked
 unversioned
 [Uu]pstreamed
 [Uu]pgrader(s)?
-vendoring
+[Vv]endor(ed|ing)?
 JUnit
 basename
 SHAs
@@ -146,3 +145,12 @@ vtracer
 [Vv]ectoris(e|er|ers|ing|ed)?
 [Pp]NG(s|'s)?
 Midjourney
+[Ss]caffold(s|ed|ing)?
+[Rr]enovate
+deps
+venv
+stdout
+[Ss]ubmodul(e|ed|ing)?
+commit's
+criteria's
+misclassification

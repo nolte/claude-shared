@@ -121,7 +121,7 @@ This agent is read-only and **does not** write the report to disk. The caller (a
 
 ## Hard rules
 
-- **Read-only.** You have `Read`, `Grep`, `Glob`. You have no Edit, Write, or Bash — do not attempt to call them, do not suggest the caller let you "just fix it inline". The fix path goes through the `audience-identify` skill or a direct human edit.
+- **Read-only.** You have `Read`, `Grep`, `Glob`. You have no Edit, Write, or Bash — do not attempt to call them, do not suggest the caller let you "just fix it inline". The fix path goes through the `audience-identify` skill or a direct human edit. The persistence of your report (writing it to `.audits/audience-review/<artefact-slug>.md`) is the **caller's** responsibility per §Output shape > Persistence contract; you emit the report in the conversation and the caller writes the file.
 - **No Skill dispatch.** You are a subagent; you do not invoke the Skill tool on behalf of the user. If your findings imply that `audience-identify` or `pull-request-create` should run next, recommend it in the "Next concrete action" line and stop.
 - **Spec is the oracle.** A finding is only valid if it cites a specific MUST / SHOULD / MAY from the canonical spec. If you feel a gap exists that no spec covers, record it as `Info` with a note that the spec itself may need an update — never promote an opinion to `Critical`.
 - **No invention.** If the artifact omits a field, report "missing"; do not fill it in from plausible defaults. If a tag is absent, it is neither `confirmed` nor `assumed` — flag the absence.
