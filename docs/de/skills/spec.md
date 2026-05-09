@@ -21,7 +21,7 @@ spec/
     └── de.md                       # Übersetzung
 ```
 
-Topic-Ordner gruppieren verwandte Specs (z. B. `spec/claude/`, `spec/api/`). **Genau eine Ebene** Topic-Nesting ist erlaubt; ohne Topic liegt die Spec direkt unter `spec/<slug>/`.
+Topic-Ordner gruppieren verwandte Specs (z. B. `spec/claude/`, `spec/project/`). **Genau eine Ebene** Topic-Nesting ist erlaubt; ohne Topic liegt die Spec direkt unter `spec/<slug>/`.
 
 ## Defaults und Konfiguration
 

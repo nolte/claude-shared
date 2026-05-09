@@ -122,3 +122,9 @@ Jira
 stderr
 [Bb]oolean
 achievability
+[Ww]orktree(s|'s)?
+cwd
+reflog
+devcontainer
+teardown
+rebases

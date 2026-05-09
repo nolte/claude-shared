@@ -12,9 +12,12 @@ Skills are reusable workflows Claude Code invokes via the `Skill` tool. In the c
 | `agent-review` | Audit an existing agent against the authoring spec; persist findings as a review plan |
 | `pull-request-create` | Open a PR that conforms to the `pull-request-workflow` spec |
 | `pull-request-merge` | Promote an open draft PR to merged on `develop`, applying labels and workflow gates |
+| `release-notes-curate` | Augment the open release-drafter draft with a project-context section (per `release-skill-layer`) |
+| `release-publish-trigger` | Validate pre-publish gates and dispatch `release-publish.yml` for the open draft on `develop` |
 | `quality-gate` | Run lint + typecheck + tests in parallel and tabulate the results |
 | `dependency-audit` | Scan dependencies for known CVEs (optionally licenses) |
 | `project-structure-apply` | Audit the repo against the `project-structure` spec and scaffold missing artefacts |
+| `github-issue-templates-apply` | Scaffold or update `.github/ISSUE_TEMPLATE/` per the `github-issue-templates` spec |
 | `skill-agent-catalog-apply` | Wire up the MkDocs catalog that lists every skill and agent in a plugin repo |
 | `vocab-drift-audit` | Diff repository-local Vale vocabulary against the pinned `nolte/vale-style` release |
 | `audience-identify` | Identify the audiences of a bounded context and write a reviewable audience artifact |
