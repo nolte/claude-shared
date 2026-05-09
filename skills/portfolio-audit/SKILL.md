@@ -40,11 +40,7 @@ If the active repository is neither, stop and ask the user whether to switch to 
 
 Runs the cross-repository capability audit per `spec/portfolio/portfolio-management/` §Portfolio audit.
 
-1. **Detect Portfolio-Member set** — query the GitHub API for the active set of public, non-archived repositories under `nolte`:
-   ```
-   gh api orgs/nolte/repos --paginate --jq '.[] | select(.archived==false and .private==false) | .name'
-   ```
-   Cross-check each repository for an opt-out marker (`portfolio: excluded` at the top of `CLAUDE.md`); excluded repositories drop out of the audit set with their rationale recorded.
+1. **Detect Portfolio-Member set** — query the GitHub API for the active set of public, non-archived repositories under `nolte` via `gh api orgs/nolte/repos --paginate --jq '.[] | select(.archived==false and .private==false) | .name'`. Cross-check each repository for an opt-out marker (`portfolio: excluded` at the top of `CLAUDE.md`); excluded repositories drop out of the audit set with their rationale recorded.
 2. **Collect per-repository manifests** — dispatch the `portfolio-manifest-collector` agent (a read-only specialist; if it doesn't exist yet, this skill stops and asks the user to author it via `agent-management`) with the resolved Portfolio-Member set. The agent fetches each repository's `project/portfolio.yml` (or reports its absence) and returns a structured summary: declared capabilities, audiences, peer references, missing-manifest list. Manifest contents stay in the agent's context, not in this skill's.
 3. **Run the four checks against the collected summary**:
    - **Manifest presence**: every Portfolio-Member repository ships a `project/portfolio.yml` or has the opt-out marker. Missing manifests on opted-in repositories are `Warning` findings.
