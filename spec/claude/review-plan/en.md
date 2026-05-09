@@ -48,11 +48,24 @@ Reviews of Claude Code artifacts—a skill against `skill-management`, an agent 
 - **MUST** update `status` to `in-progress` on the first item check-off, to `complete` when every item is either `- [x]` or a tracked follow-up, and to `superseded` when a rerun replaces the plan before completion
 - **MUST NOT** invent values; if a field can't be read from source (for example no git SHA because the target isn't yet committed), the value is `unknown`: not a guess
 
+### Severity scale
+
+This section is the single canonical source for severity vocabulary across every audit, review, and readiness artefact in the portfolio. Other specs (for example `spec/project/spec-readiness/`) **MUST** reference this section rather than redefining their own scale.
+
+- **MUST** classify every finding into exactly one of these four severity levels, in Title Case, in this order of decreasing impact:
+  - **Critical**: violates a MUST in the source spec, or directly blocks promotion / merge of the reviewed artefact (load-bearing Open Question on a pre-promotion run, ghost reference to a non-existent spec, MUST↔MUST contradiction across two specs both already promoted)
+  - **Warning**: violates a SHOULD in the source spec, or names real ambiguity / drift / coverage gap that a careful reader can still navigate around but should be resolved before the next release
+  - **Suggestion**: identifies a MAY-class opportunity, a stylistic improvement, or a one-line fix that elevates the artefact without being violation-class
+  - **Info**: an observation, a deliberate-design acknowledgement, an infrastructure-dependent note, or a cross-reference back to a finding that's already tracked elsewhere; no action required
+- **MUST NOT** invent additional severity levels (no `BLOCKER`, no `MAJOR/MINOR`, no `P0/P1/P2`); reviewers who feel another level is needed propose a spec amendment, not a local extension
+- **MUST** use these labels verbatim—Title Case, no abbreviations, no upper-case variants—in `## Summary` counts, `## Findings` subsection headings, and any per-finding annotation, so downstream tooling can grep them deterministically
+- **MUST NOT** downgrade a severity on local judgement alone; disagreement with the classification is a documented waiver recorded in the plan's `## Processing log`, not a silent reclassification
+
 ### Plan body structure
 
 - **MUST** include these sections, in this order, each with the exact heading:
   1. `## Scope`: one paragraph naming the target, what was reviewed (frontmatter, body, examples, …), and what was explicitly out of scope
-  2. `## Summary`: bullet counts per severity (`BLOCKER`, `WARNING`, `SUGGESTION`, `INFO`) plus a single-line go/no-go statement
+  2. `## Summary`: bullet counts per severity (`Critical`, `Warning`, `Suggestion`, `Info`) plus a single-line go/no-go statement
   3. `## Findings`: the actionable list; one subsection per severity present
   4. `## Processing log`: append-only, one line per item closure, capturing what was done and by whom
 - **MUST** keep section headings in English even when the surrounding project's documentation language isn't English, so downstream tooling can grep them deterministically
@@ -69,7 +82,7 @@ Reviews of Claude Code artifacts—a skill against `skill-management`, an agent 
   ```
 
   The four labeled lines (`Where`, `Fix`, `Verify`, and the opening statement) **MUST** all be present. If a field genuinely doesn't apply, write `n/a` with one word of reason rather than omitting the line
-- **MUST** group findings under severity subsections `### BLOCKER`, `### WARNING`, `### SUGGESTION`, `### INFO`, in that order; omit a subsection only when it has zero items
+- **MUST** group findings under severity subsections `### Critical`, `### Warning`, `### Suggestion`, `### Info`, in that order; omit a subsection only when it has zero items
 - **MUST** cite the originating spec requirement in the bracketed prefix so a worker can trace every finding back to a specific MUST / SHOULD / MAY; inventions without a spec citation aren't valid findings
 - **SHOULD** order items inside a severity section by affected area (frontmatter → body → tools → examples) so a worker can address related items together
 - **MAY** annotate a finding with a trailing `→ deferred: <issue-url>` when the worker decides the item is real but out-of-scope for the current plan cycle; deferred items still count as closed for lifecycle purposes but carry the link so the tracked issue becomes the new home
@@ -79,8 +92,8 @@ Reviews of Claude Code artifacts—a skill against `skill-management`, an agent 
 - **MUST** be created fresh per review invocation; a rerun against the same target **MUST** overwrite the existing plan in a single commit and set the prior plan's `status` to `superseded` in the overwriting commit message, never edit the old plan into the new one
 - **MUST** have items marked `- [x]` only when both the fix has landed and the `Verify` step has been executed; partial fixes stay `- [ ]`
 - **MUST** append one line to `## Processing log` per closure, in the shape: `YYYY-MM-DD—<item-shorthand>—<action taken>—<verified by>`
-- **MUST NOT** delete the plan file while any `- [ ]` `BLOCKER` remains open; `WARNING` / `SUGGESTION` / `INFO` items **MAY** be deferred to tracked issues to unblock deletion
-- **MUST** delete the plan file when every item is either `- [x]` or carries a `→ deferred: <url>` annotation; the deletion commit message **MUST** be `review(<review-type>): close <target>—<B>B/<W>W/<S>S/<I>I` (counts of BLOCKER, WARNING, SUGGESTION, INFO at creation time), so the git log is the searchable audit trail
+- **MUST NOT** delete the plan file while any `- [ ]` `Critical` remains open; `Warning` / `Suggestion` / `Info` items **MAY** be deferred to tracked issues to unblock deletion
+- **MUST** delete the plan file when every item is either `- [x]` or carries a `→ deferred: <url>` annotation; the deletion commit message **MUST** be `review(<review-type>): close <target>—<C>C/<W>W/<S>S/<I>I` (counts of Critical, Warning, Suggestion, Info at creation time), so the git log is the searchable audit trail
 - **SHOULD**, when the plan is deleted, also close any tracked issues referenced by deferred items if the underlying fix has landed elsewhere—the plan's deletion commit names those issues in its body
 
 ### Relationship to other specs
@@ -95,7 +108,7 @@ Reviews of Claude Code artifacts—a skill against `skill-management`, an agent 
 - [ ] Every plan file under `.audits/` parses as valid markdown with YAML frontmatter containing `review-type`, `target`, `target-kind`, `specs-applied`, `repo-revision`, `created`, `status`
 - [ ] Every plan file contains the four required sections (`## Scope`, `## Summary`, `## Findings`, `## Processing log`) with those exact English headings
 - [ ] Every finding in a plan uses the four-line structure (opening statement + `Where` / `Fix` / `Verify`) and cites a spec requirement in the bracketed prefix
-- [ ] No plan file exists with an open `- [ ]` `BLOCKER` item and `status: complete`
+- [ ] No plan file exists with an open `- [ ]` `Critical` item and `status: complete`
 - [ ] Every plan deletion in `git log` is accompanied by a commit message matching `review(<review-type>): close <target>—<counts>` so the audit trail is searchable
 - [ ] At most one plan file exists per (`review-type`, `target`) pair at any commit—a rerun replaces rather than accumulates
 - [ ] The `skill-review` and `agent-review` specs both reference this spec as the authoritative output format
