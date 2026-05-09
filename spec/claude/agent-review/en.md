@@ -12,7 +12,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 - Every agent review applies the same set of checks derived from `agent-management` and `skill-vs-agent`, in the same order, with the same severity mapping
 - Review output is a `review-plan` artifact—parseable, actionable, and traceable back to a specific spec requirement per finding
 - Agent authors can run the review on their own work before proposing it, and a reviewer (human or LLM) can run it later with identical results on the same source tree
-- Plugin developers can script against the review output (parse plan files, gate merges on open `BLOCKER`s, count open reviews) without modelling per-reviewer conventions
+- Plugin developers can script against the review output (parse plan files, gate merges on open `Critical`s, count open reviews) without modelling per-reviewer conventions
 - The review enforces agent-specific invariants that don't apply to skills—minimal `tools` scoping, read-only agents rejecting write/edit/execution tools, `distribution` declared exactly once, no Skill-tool dispatch inside the agent body—so they don't quietly regress over time
 
 ## Non-Goals
@@ -39,48 +39,70 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 
 - **MUST** run a check for every MUST / SHOULD / MAY rule in the canonical `agent-management` spec, producing one finding per failed check with the originating rule cited in the bracketed prefix per `review-plan`
 - **MUST** map severity as follows and **MUST NOT** deviate without a documented exception:
-  - A failed MUST → `BLOCKER`
-  - A failed SHOULD → `WARNING`
-  - A failed MAY that the agent clearly would benefit from → `SUGGESTION`
-  - An observation that no rule covers but that a future reviewer would want to know → `INFO`
+  - A failed MUST → `Critical`
+  - A failed SHOULD → `Warning`
+  - A failed MAY that the agent clearly would benefit from → `Suggestion`
+  - An observation that no rule covers but that a future reviewer would want to know → `Info`
 - **MUST** specifically verify these agent-only invariants, each as its own check:
   - Filename matches `<name>.md` in ASCII kebab-case
   - `name` in frontmatter equals the filename without `.md`
   - `description` names concrete triggers (positive triggers at minimum; negative triggers SHOULD be present when overlap with other artifacts is plausible)
   - `distribution` is exactly `plugin` or `project`: no other value, no missing field
   - `tools` is either absent (full tool surface justified in body) or scoped to the minimum set needed for the stated responsibility
-  - Read-only agents (agents whose stated responsibility is research, review, audit, or reporting) have **no** write, edit, or execution tools—the presence of any of Edit, Write, Bash, NotebookEdit in a read-only agent's `tools` list is a `BLOCKER`
-  - Agent body **never** invokes the Skill tool on behalf of the user—detected by grepping the body for `Skill(`, `Skill tool`, or equivalent dispatch phrasings; any match is a `BLOCKER` per `skill-vs-agent`
+  - Read-only agents (agents whose stated responsibility is research, review, audit, or reporting) have **no** write, edit, or execution tools—the presence of any of Edit, Write, Bash, NotebookEdit in a read-only agent's `tools` list is a `Critical`
+  - Agent body **never** invokes the Skill tool on behalf of the user—detected by grepping the body for `Skill(`, `Skill tool`, or equivalent dispatch phrasings; any match is a `Critical` per `skill-vs-agent`
   - No hard-coded absolute paths in the body or in sibling assets
-  - Frontmatter field names and technical identifier values (`name`, `distribution`, `tools`, `model`, `tags`) are English; the `description` value and the system-prompt body comply with `agent-management.Structure`: English by default, with a project-language exception for `distribution: project` agents whose consuming project declares a non-English documentation language and authorizes it for agent prose. Verify the project authorization (typically `CLAUDE.md`) is present before downgrading what would otherwise be a `BLOCKER` to `INFO`
+  - Frontmatter field names and technical identifier values (`name`, `distribution`, `tools`, `model`, `tags`) are English; the `description` value and the system-prompt body comply with `agent-management.Structure`: English by default, with a project-language exception for `distribution: project` agents whose consuming project declares a non-English documentation language and authorizes it for agent prose. Verify the project authorization (typically `CLAUDE.md`) is present before downgrading what would otherwise be a `Critical` to `Info`
 
 ### Model-choice checks
 
-- **MUST** verify, when the frontmatter declares a `model` field, that its value is exactly one of `opus`, `sonnet`, or `haiku` per `agent-management`; any other value is a `BLOCKER`
-- **MUST** verify, when a `model` is pinned, that the system prompt or an accompanying comment states a rationale for the choice; its absence is a `WARNING`, reflecting the SHOULD in `agent-management`
-- **SHOULD** run a plausibility check on the pinned `model`: a read-only or reporting agent pinned to `opus` without a stated rationale produces a `SUGGESTION`; a complex audit or planning agent pinned to `haiku` without a stated rationale produces a `SUGGESTION`
-- **MAY** record an `INFO` finding when the `model` field is absent, noting that the agent inherits the caller's model per `agent-management`
+- **MUST** verify, when the frontmatter declares a `model` field, that its value is exactly one of `opus`, `sonnet`, or `haiku` per `agent-management`; any other value is a `Critical`
+- **MUST** verify, when a `model` is pinned, that the system prompt or an accompanying comment states a rationale for the choice; its absence is a `Warning`, reflecting the SHOULD in `agent-management`
+- **SHOULD** run a plausibility check on the pinned `model`: a read-only or reporting agent pinned to `opus` without a stated rationale produces a `Suggestion`; a complex audit or planning agent pinned to `haiku` without a stated rationale produces a `Suggestion`
+- **MAY** record an `Info` finding when the `model` field is absent, noting that the agent inherits the caller's model per `agent-management`
 
 ### Checks derived from `skill-vs-agent`
 
-- **MUST** confirm the agent body contains a **rationale section** that names at least one decisive dimension for the agent-over-skill choice; its absence is a `BLOCKER`
-- **SHOULD** verify that at least one counter-dimension is named when the decision was a close call—absence is a `SUGGESTION`, not a `BLOCKER`, consistent with the SHOULD formulation in `skill-vs-agent`
-- **MUST** run a duplicate-capability check: grep every other `agents/*.md` and `skills/*/SKILL.md` `description` line for semantic overlap; any plausible overlap produces a `WARNING` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing
+- **MUST** confirm the agent body contains a **rationale section** that names at least one decisive dimension for the agent-over-skill choice; its absence is a `Critical`
+- **SHOULD** verify that at least one counter-dimension is named when the decision was a close call—absence is a `Suggestion`, not a `Critical`, consistent with the SHOULD formulation in `skill-vs-agent`
+- **MUST** run a duplicate-capability check: grep every other `agents/*.md` and `skills/*/SKILL.md` `description` line for semantic overlap; any plausible overlap produces a `Warning` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing
 
 ### Tool-scope checks
 
-- **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure—tools declared but not used are `WARNING` findings (dead permission)
-- **MUST** verify, for every tool the agent body clearly needs, that it's declared in `tools`: tools used but not declared are `BLOCKER` findings (the agent will fail to run)
-- **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents; an agent using `Bash` for operations a dedicated tool covers gets a `WARNING` unless the body justifies the choice
+- **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure—tools declared but not used are `Warning` findings (dead permission)
+- **MUST** verify, for every tool the agent body clearly needs, that it's declared in `tools`: tools used but not declared are `Critical` findings (the agent will fail to run)
+- **MUST** verify the agent **doesn't omit** the `tools` field unintentionally: an absent `tools` field grants the inherited full tool surface, which is permission sprawl. If the agent's responsibility is "research" / "review" / "audit" / "report" and `tools` is absent, that's a `Critical`; for any other agent the absence is a `Warning` unless the body explicitly justifies inheriting all tools ([R5](#references), [R6](#references))
+- **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents; an agent using `Bash` for operations a dedicated tool covers gets a `Warning` unless the body justifies the choice
+- **MUST** verify, when both `tools` and `disallowedTools` are declared, that no tool name appears in both lists (the runtime applies deny then allow, so a double-listed tool is silently removed) and that the resolved set is non-empty; either condition is a `Warning`
+
+### Plugin-distribution constraint checks
+
+Mirrors `agent-management` §"Plugin-distribution security constraints"; cite the originating rule when a finding pins one.
+
+- **MUST** verify, when `distribution: plugin` is declared, that the frontmatter **doesn't** set `hooks`, `mcpServers`, or `permissionMode`; any of those fields is a `Critical` (the runtime silently ignores them for plugin agents and the author is being misled into thinking they're active) ([R5](#references))
+- **MUST**, when `distribution: project` is declared, accept those fields as valid; their presence **isn't** a finding for project-distributed agents
+- **SHOULD**, when an agent declares `distribution: plugin` AND its body describes behavior that obviously requires `hooks` / `mcpServers` / `permissionMode` (for example "this agent installs a PreToolUse hook," "this agent connects to its own MCP server," "this agent runs in plan mode"), flag a `Warning` even if the fields are absent—the description and the distribution are inconsistent
+
+### Subagent-boundary checks
+
+Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybrid pattern"; cite the originating rule when a finding pins one.
+
+- **MUST** verify the agent body **never** dispatches another subagent—grep the body for `Agent(`, `subagent_type`, `Task(`, or equivalent dispatch phrasings; any match is a `Critical` (Claude Code subagents can't spawn subagents) ([R5](#references))
+- **MUST** verify the agent body **never** invokes the Skill tool on behalf of the user—grep the body for `Skill(`, `Skill tool`, or equivalent skill-dispatch phrasings; any match is a `Critical` per `skill-vs-agent`
+
+### Description quality and proactive-delegation intent
+
+- **MUST** verify, when the `description` contains the phrase "use proactively" (or the equivalent "use this proactively," "should be used proactively," "invoke proactively"), that the agent's responsibility actually warrants Claude offering it without explicit user request—signs a check passes: the agent solves a class of problem the user is unlikely to name explicitly (security review on every PR, audit on every commit). Signs the check fails: the agent has destructive side effects, requires credentials, or makes commitments to external systems. A "proactively" claim on a destructive or credential-bearing agent is a `Critical` ([R5](#references))
+- **SHOULD** verify, when the agent has clear overlap with another existing artifact (skill or agent), that `description` names the overlap as a **negative trigger** ("don't use for X, use the `<peer>` agent / skill instead"); absence of the negative is a `Warning` ([R5](#references))
 
 ### Prompt-structure checks
 
-- **MUST** verify that the system prompt scopes the agent to a single responsibility per the MUST in `agent-management`; absence is a `BLOCKER`
-- **MUST** verify that the system prompt names the expected output shape per the MUST in `agent-management`; absence is a `BLOCKER`
-- **MUST** verify that the system prompt opens with the agent's role and boundaries, then the expected output format, then the working method per the SHOULD in `agent-management`; deviation is a `WARNING`
-- **MUST** verify that the system prompt explicitly declares whether the agent writes code or only researches per the SHOULD in `agent-management`; absence is a `WARNING`
-- **SHOULD** flag agent bodies that exceed the soft length target named in `agent-management` (~200 lines) without factoring supporting material into `agents/<name>/` sibling files as a `WARNING`, reflecting the SHOULD in `agent-management`
-- **SHOULD** verify, when the agent is authored to write files or cause side effects (its `tools` list includes any of `Edit`, `Write`, `Bash`, or `NotebookEdit`), that the system prompt documents the goals and preconditions of those effects per the `agent-management` acceptance criterion; absence is a `WARNING`
+- **MUST** verify that the system prompt scopes the agent to a single responsibility per the MUST in `agent-management`; absence is a `Critical`
+- **MUST** verify that the system prompt names the expected output shape per the MUST in `agent-management`; absence is a `Critical`
+- **MUST** verify that the system prompt opens with the agent's role and boundaries, then the expected output format, then the working method per the SHOULD in `agent-management`; deviation is a `Warning`
+- **MUST** verify that the system prompt explicitly declares whether the agent writes code or only researches per the SHOULD in `agent-management`; absence is a `Warning`
+- **SHOULD** flag agent bodies that exceed the soft length target named in `agent-management` (~200 lines) without factoring supporting material into `agents/<name>/` sibling files as a `Warning`, reflecting the SHOULD in `agent-management`
+- **SHOULD** verify, when the agent is authored to write files or cause side effects (its `tools` list includes any of `Edit`, `Write`, `Bash`, or `NotebookEdit`), that the system prompt documents the goals and preconditions of those effects per the `agent-management` acceptance criterion; absence is a `Warning`
 
 ### Review procedure
 
@@ -88,7 +110,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 - **MUST** produce findings in this order: frontmatter → description/triggers → distribution → model → tools/scope → prompt structure → rationale section → referenced assets → duplicate-prevention check → INFO observations
 - **MUST** emit exactly one `review-plan` file at `.audits/agent-review/<agent-name>.md`; the reviewer **MUST** follow every lifecycle rule from `review-plan`, including the single-plan-per-target invariant and the deletion-commit message format
 - **SHOULD** embed, in the plan's `## Scope` section, the git SHAs of the spec versions applied so a later re-review can tell whether findings may have become outdated by a spec revision
-- **MAY** fold purely stylistic observations (Vale, markdown linting) into `INFO` findings when they aid the author, but **MUST NOT** promote them to `WARNING` or `BLOCKER`: those stay with their own tooling
+- **MAY** fold purely stylistic observations (Vale, markdown linting) into `Info` findings when they aid the author, but **MUST NOT** promote them to `Warning` or `Critical`: those stay with their own tooling
 
 ### Relationship to other specs
 
@@ -100,17 +122,32 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
 - [ ] A worked example exists applying this review procedure to one agent in `nolte-shared` (for instance `audience-review`) and producing a conforming plan under `.audits/agent-review/`
 - [ ] Every agent in `agents/` has been reviewed against the current `agent-management` revision at least once since this spec was adopted, verifiable by either an open plan under `.audits/agent-review/` or a closing commit in `git log` matching the `review-plan` deletion pattern
-- [ ] No agent in `agents/` lacks a rationale section; running the rationale-section check across all agents produces zero `BLOCKER`s
+- [ ] No agent in `agents/` lacks a rationale section; running the rationale-section check across all agents produces zero `Critical`s
 - [ ] No agent in `agents/` invokes the Skill tool on behalf of the user; a grep for `Skill(` across all agent body files returns zero matches
 - [ ] No read-only agent in `agents/` declares `Edit`, `Write`, `Bash`, or `NotebookEdit` in its `tools` list
 - [ ] No two agents in `agents/` share an equivalent capability statement, verified by a spot-check of every plan's duplicate-prevention finding
 - [ ] Every declared tool in every agent's `tools` list is used at least once in the agent's body; every tool used in the body is declared—both directions pass spot-check
 - [ ] Every agent in `agents/` whose frontmatter pins a `model` has a rationale for that choice stated in the system prompt or in an adjacent comment
-- [ ] No open plan under `.audits/agent-review/` carries a prompt-structure-order finding at `BLOCKER` severity without citing a corresponding MUST rule in `agent-management`
+- [ ] No open plan under `.audits/agent-review/` carries a prompt-structure-order finding at `Critical` severity without citing a corresponding MUST rule in `agent-management`
 - [ ] Every agent in `agents/` whose `tools` list includes `Edit`, `Write`, `Bash`, or `NotebookEdit` documents the goals and preconditions of those write effects in its system prompt
 - [ ] Every open plan under `.audits/agent-review/` conforms to `review-plan`'s four-section structure and YAML frontmatter
 - [ ] The `agent-management` spec's acceptance criteria cross-reference this spec for the review side of its authoring rules
 - [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(agent-review): close <agent>—<counts>` exactly
+- [ ] No plan under `.audits/agent-review/` closes with an unresolved `Critical` for `distribution: plugin` agents declaring `hooks`, `mcpServers`, or `permissionMode`
+- [ ] Every plan under `.audits/agent-review/` runs the subagent-boundary checks (no agent-spawning, no Skill-tool invocation) against the target agent
+- [ ] Every plan under `.audits/agent-review/` runs the proactive-delegation-intent check against any agent whose `description` contains "use proactively" or an equivalent phrase
+- [ ] No agent omits the `tools` field while declaring a research / review / audit / report responsibility (zero `Critical`s on the new permission-sprawl check)
+
+## References
+
+Sources for the additional checks above. Cite the relevant entry in finding bracketed prefixes when a check pins a specific upstream rule.
+
+- [R1] Agent management spec (this plugin): `spec/claude/agent-management/`
+- [R2] Skill vs. agent decision (this plugin): `spec/claude/skill-vs-agent/`
+- [R3] Skill management spec (this plugin, for cross-format alignment): `spec/claude/skill-management/`
+- [R4] Review plan spec (output format): `spec/claude/review-plan/`
+- [R5] Create custom subagents, Claude Code docs: <https://code.claude.com/docs/en/sub-agents>
+- [R6] Best practices for Claude Code subagents, PubNub Engineering: <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
