@@ -25,6 +25,7 @@ Canonical language: `en` · Translations: `de`
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
+| project | parallel-working-copies | Parallel Working Copies | Parallele Working Copies | draft | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | 2026-05-01 |
 | project | prose-style | Prose Style | Textstil | draft | 2026-04-24 |
 | project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | 2026-04-23 |

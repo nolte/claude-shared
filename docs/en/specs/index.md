@@ -9,7 +9,7 @@ The authoritative, always-current list lives in [`spec/README.md`](https://githu
 Rough map for orientation:
 
 - **`spec/claude/`**: rules for authors of skills and agents (includes `skill-management`, `agent-management`, `skill-vs-agent`, `skill-review`, `agent-review`, `skill-agent-catalog`, `permission-allowlist`, `review-plan`)
-- **`spec/project/`**: rules for project and release conventions (includes `project-structure`, `pull-request-workflow`, `branching-model`, `release-automation`, `release-notes-audience-analysis`, `quality-gate`, `dependency-audit`, `workflow-health`, `docs-freshness`, `readme-structure`, `prose-style`, `spec-drift-audit`, `spec-readiness`, `audience-identification`, `continuous-improvement`)
+- **`spec/project/`**: rules for project and release conventions (includes `project-structure`, `github-issue-templates`, `pull-request-workflow`, `parallel-working-copies`, `branching-model`, `release-automation`, `release-artifact`, `release-skill-layer`, `release-notes-audience-analysis`, `quality-gate`, `dependency-audit`, `workflow-health`, `docs-freshness`, `mermaid-diagrams`, `readme-structure`, `prose-style`, `spec-drift-audit`, `spec-readiness`, `audience-identification`, `mission`, `roadmap`, `sprint`, `feature`, `continuous-improvement`)
 
 Detail pages in this documentation currently exist for `skill-management` and `agent-management`; more are being added.
 

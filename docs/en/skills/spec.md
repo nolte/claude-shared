@@ -21,7 +21,7 @@ spec/
     └── de.md                       # translation
 ```
 
-Topic folders group related specs (for example `spec/claude/`, `spec/api/`). **Exactly one level** of topic nesting is allowed; without a topic, a spec lives directly under `spec/<slug>/`.
+Topic folders group related specs (for example `spec/claude/`, `spec/project/`). **Exactly one level** of topic nesting is allowed; without a topic, a spec lives directly under `spec/<slug>/`.
 
 ## Defaults and configuration
 
