@@ -124,3 +124,12 @@ When the user has finished approving changes, re-run Operations 1 and 2 end-to-e
 - **Never** attempt to install a GitHub App programmatically. Report the install status and link to the app's marketplace page so a human can approve the install.
 - When `spec/project/project-structure/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.
 - When the Probot app installation check can't run because the token lacks scope, report that explicitly: **never** treat an API error as "app is installed."
+
+## Gotchas
+
+Per `spec/claude/skill-management/` §Gotchas — concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
+
+- **Probot Settings App sync isn't atomic with `.github/settings.yml` edits.** A repository can carry `delete_branch_on_merge: true` in the file and the platform still leaves merged feature branches behind, because the Settings App pulls on its own webhook cadence. After a `settings.yml` edit, expect a manual catch-up on the first one or two merges and surface that to the user instead of treating the file's intent as the platform's actual state.
+- **Token scope for the installation check is `read:user` (user-owned repos) or `admin:org` (org-owned).** A `gh api /user/installations` call returning HTTP 403 means the token lacks the scope, **not** that the apps aren't installed. Route the user at `https://github.com/<owner>/settings/installations` (user) or `https://github.com/organizations/<owner>/settings/installations` (org) for manual verification rather than reporting "apps missing".
+- **Renovate App installed ≠ Renovate App active.** A repository can have the Renovate App granted access and still produce zero PRs and zero Dependency-Dashboard issues — the App's own runs are queued separately on Mend's side. When the install check passes but no Renovate activity is visible, point the user at `https://developer.mend.io/github/<owner>/<repo>` rather than re-checking the App permissions.
+- **Renovate config file naming is `renovate.json5` by default in this portfolio**, but Renovate also reads `renovate.json` and `.renovaterc` and a few other variants. When auditing, check for the active variant first; when scaffolding for a new repo, default to `renovate.json5` per `spec/project/project-structure/`.

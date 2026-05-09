@@ -59,8 +59,8 @@ If the caller hasn't supplied a one-sentence capability statement, name, and the
 4. **Draft the files** following the applicable `*-management` spec to the letter:
    - Kebab-case name; `name` frontmatter matches filename or folder
    - `description` lists concrete user triggers (positive and—where overlap is likely—negative); user-facing artifacts state "Also handles equivalent German-language requests" rather than enumerating German phrasings inline
-   - Skills: include a "Hard rules" section if invariants exist; keep `SKILL.md` under roughly 150 lines
-   - Agents: include a short rationale section in the body; keep the system prompt under roughly 200 lines; declare `distribution` and a minimal `tools` list
+   - Skills: include a "Hard rules" section if invariants exist. **`SKILL.md` MUST stay under 500 lines and 5,000 tokens** per `spec/claude/skill-management/` §SKILL.md size — the upstream hard cap that keeps the skill compaction-survivable; content beyond that **MUST** move into `references/` / `templates/` / `assets/` / `scripts/` with an explicit load-trigger phrase ("Read X when Y", "use template Z for output Q") in `SKILL.md`. A soft target of ≤150 lines is preferable when the content fits, but the 500-line / 5,000-token bar is the actual constraint
+   - Agents: include a short rationale section in the body; declare `distribution` and a minimal `tools` list per `spec/claude/agent-management/` §Tool access (read-only agents **MUST NOT** receive write/edit/execution tools; prefer `Read`/`Grep`/`Glob`/`Edit` over `Bash` when both work). A soft target of ≤200 lines for the system prompt body is preferable for readability, but `agent-management` declares no hard cap, so the upstream skill cap doesn't apply
    - All frontmatter and body content in English
 5. **Self-audit** against every acceptance-criteria checkbox in the applicable specs. For each unchecked box, either fix the draft or annotate in your final report why it can't be satisfied.
 6. **Lint** when you've touched prose or YAML: run `task lint`. Report failures verbatim; don't silence rules.
