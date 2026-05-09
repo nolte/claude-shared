@@ -1,0 +1,63 @@
+# Spec-Driven Development
+
+Status: draft
+
+## Context
+
+The portfolio already carries a substantial spec corpus under `spec/project/` and `spec/claude/`. Each individual spec governs a topic—branching model, pull-request workflow, skill authoring, planning suite, release automation—and downstream skills, agents, and CI configuration draw from it. What's not yet axiomatically declared is **why specs exist at all and what their relationship to implementation is**. Without that declaration, the portfolio drifts toward a "code-first, spec-as-after-the-fact-documentation" posture: implementation decisions accumulate in Claude Code prompts, ad-hoc conversations, or commit-message rationale, and the spec corpus turns into a snapshot of past intent rather than the living foundation of present practice.
+
+This spec fixes the meta-principle: **every development action in this portfolio is driven by a specification.** The spec exists before the change, the change references the spec it implements, and where reality and spec disagree, the resolution is either a code change that re-aligns implementation to spec or a spec revision that captures the new reality—never silent code drift.
+
+The principle rests on four pillars:
+
+1. **Traceability**: every implementation decision resolves back to a concrete MUST/SHOULD/MAY in a versioned spec under `spec/`.
+2. **Reproducibility**: the same spec, applied against a comparable repository, produces the same shape—independent of the operator or the Claude Code session that ran it.
+3. **Transparency**: decision-grounding lives in `spec/`-tracked markdown under git, not in ephemeral prompts, undocumented chat history, or oral agreement.
+4. **Continuous improvement**: every audit finding, defect, or operational friction lands as either a code change implementing an existing spec or a spec revision capturing the changed reality—never as code change without a spec anchor.
+
+This principle is the axiomatic precondition that the existing process specs (`continuous-improvement`, `spec-drift-audit`, `spec-readiness`, `pull-request-workflow`, `skill-management`, `agent-management`) operate on. The planning suite (`mission`, `roadmap`, `feature`, `sprint`) is itself spec-driven by construction—every artefact under `project/` cites the spec that governs it. This document makes that latent contract explicit and load-bearing.
+
+## Goals
+
+- Anchor every implementation change in this portfolio to a versioned specification, so traceability holds across every commit, PR, and release without exception.
+- Keep decision rationale out of ephemeral surfaces (Claude Code prompts, chat transcripts, oral agreements) and inside `spec/`-tracked markdown that survives session boundaries and tool churn.
+- Treat the existing process specs (`continuous-improvement`, `spec-drift-audit`, `spec-readiness`, `pull-request-workflow`, `skill-management`, `agent-management`) as operational consequences of this principle, not as competitors to it.
+- Make the spec the authority and the prompt the implementation: a Claude Code prompt may help a contributor find or apply the spec, but it never overrides the spec when the two disagree.
+- Anchor every executable plugin asset (every `skills/<name>/SKILL.md` and every `agents/<name>.md`) to the spec it implements, so the plugin's behaviour is itself traceable to written intent.
+- Ensure that the planning suite (`mission`, `roadmap`, `feature`, `sprint`) and every future portfolio capability inherits the same spec-anchor contract automatically by being authored under `spec/` first.
+
+## Non-Goals
+
+- Replacing `continuous-improvement` (the audit-and-dispatch process), `spec-drift-audit` (the spec-versus-implementation reconciliation), or `spec-readiness` (the per-spec quality gate). This spec declares what those three presuppose; it doesn't redo them.
+- Prescribing a spec-format convention beyond what the `spec` skill and `templates/spec.template.md` already govern. Six sections (Context, Goals, Non-Goals, Requirements, Acceptance Criteria, Open Questions), RFC 2119 keywords, EN-canonical with translations—all that stays delegated.
+- Demanding that a fully written spec exist before the first prototype line of code. Exploration via the `exp/`-branch prefix in `branching-model` remains permitted; the spec-anchor obligation kicks in at promotion time, not at exploration time.
+- Replacing architectural decision records (ADRs). The `docs-freshness` spec governs ADR shape and lifecycle separately; spec-driven development is the umbrella norm under which ADRs and specs both live.
+- Mandating any particular tool to enforce spec anchoring. Automation can come later (an `spec-anchor-lint` skill, a CI check); this spec defines the rule, not its enforcement mechanism.
+
+## Requirements
+
+- **MUST** anchor every change to runtime code, CI configuration, plugin assets (`skills/`, `agents/`, `.claude-plugin/`), or repository documentation to an existing spec the change implements, or be itself a spec revision. A change that satisfies neither path is a workflow-health finding per `spec/project/workflow-health/`.
+- **MUST**, when a pull request touches implementation paths (anything outside `spec/`), carry at least one `Refs spec/<topic>/<slug>/` line in its **Linked issues** section per `spec/project/pull-request-workflow/`. The spec's existing automatic Refs rule already applies to PRs that touch `spec/`-tracked files; this spec extends the obligation to PRs that touch implementation, so every PR—not just spec PRs—is anchored.
+- **MUST** route every new specification through the `spec` skill so that the duplicate check, EN-canonical-plus-translation pairing, and `spec/README.md` index regeneration happen consistently. A spec written without that path is a `spec-drift-audit` finding regardless of how good its content is.
+- **MUST** cite, in every `skills/<name>/SKILL.md` and every `agents/<name>.md`, at least one spec the artefact implements—either inside the YAML frontmatter `description` field or in the body text. Skills and agents that don't trace back to a spec are a `spec-drift-audit` finding; the absence is itself drift, not an exception.
+- **MUST NOT** treat any Claude Code prompt—system prompt, slash-command argument, ad-hoc chat instruction, agent prompt—as the authoritative source of an implementation decision. The prompt may quote, summarise, or help locate the spec, but the spec is the standing answer. When prompt and spec disagree, the spec wins; the prompt is updated, not the spec.
+- **SHOULD** route every audit finding (from `spec-drift-audit`, `workflow-health`, `quality-gate`, `docs-freshness`, or manual observation) into one of exactly two outcomes: a code change that implements the existing spec, or a spec revision that records the new reality. A third path—code change without spec touch—is itself a workflow-health finding.
+- **MAY** keep an `exp/`-branch (per `branching-model`) without a spec anchor while exploration is open. At promotion to `feat/`, `fix/`, `chore/`, or `docs/`, the branch **MUST** either reference an existing spec or be accompanied by a parallel spec revision; promoting an `exp/` branch with neither is forbidden.
+- **MUST** apply this principle recursively to itself: this spec is authored through the `spec` skill, follows `templates/spec.template.md`, and references the skill's hard rules. Future revisions of this spec follow the same path; no out-of-band edits.
+
+## Acceptance Criteria
+
+- [ ] Every pull request landed on `develop` after this spec's adoption that touches implementation paths carries at least one `Refs spec/<path>` line in its body's **Linked issues** section.
+- [ ] Every `skills/<name>/SKILL.md` and every `agents/<name>.md` in the repository cites at least one spec it implements—verifiable by `grep -l "spec/" skills/*/SKILL.md agents/*.md` returning every file.
+- [ ] No audit finding is closed by a PR that neither implements an existing spec nor revises one; PRs that try to close findings with a third-path edit fail review.
+- [ ] No `exp/`-branch is merged directly into `develop`; promotion to `feat/`/`fix/`/`chore/`/`docs/` happens first and the spec-anchor obligation is satisfied at that point.
+- [ ] This spec carries, in its `## Open Questions` section, a verifiable cross-reference to the `spec` skill (`skills/spec/SKILL.md`) and to `templates/spec.template.md` so the recursion claim is auditable.
+- [ ] Every spec under `spec/` was authored through the `spec` skill—verifiable by absence of orphaned spec folders that bypass the index regeneration step (every entry in `spec/README.md` resolves and every spec folder appears in the index).
+- [ ] No Claude Code prompt artefact under `.claude/` or under skill `description` fields contradicts a published spec; the `spec-drift-audit` skill is the canonical detector for the contradiction.
+
+## Open Questions
+
+- Automated enforcement of the spec-anchor rule for PR bodies and skill/agent frontmatter isn't yet wired. A future `spec-anchor-lint` skill (or an extension of `pull-request-workflow`'s body validator) would close the loop. Until then, the rule is operator-enforced and `spec-drift-audit` catches the long-tail.
+- Cosmetic edits—typo fixes, em-dash lint repairs, Vale-driven prose cleanups—technically fall under the MUST in Requirement #1, but in practice carry no semantic change. Proposed reading: such fixes implement the `prose-style` spec (or whichever spec the lint rule originates from), so the spec-anchor is implicit. This spec leaves the explicit naming of the implicit anchor to a follow-up revision once the boundary is observed in practice.
+- Renovate PRs (`dependencies`-bumps) ship without human authoring and without an explicit `Refs spec/` line. Proposed reading: the Renovate workflow implicitly references the `dependency-audit` and `project-structure` specs that govern pinning strategy and audit cadence, so the resulting PRs satisfy the rule without modifying the body. This spec records the proposal but doesn't yet harden the body template Renovate produces.
+- The recursive self-application clause in Requirement #8 names `skills/spec/SKILL.md` and `templates/spec.template.md` as the immediate ancestors. Whether the principle extends to the `claude-plugin-developer` agent (which authors skills and agents from the spec) and to the `pull-request-create` skill (which writes the PR bodies that carry `Refs` lines) is a self-application question deferred until those tools' behaviour stabilises.
