@@ -81,7 +81,7 @@ Mirrors `skill-management` §"Frontmatter validation"; cite the originating rule
 - **MUST** verify neither `name` nor any other frontmatter value contains the reserved tokens `anthropic` or `claude`; a violation is a `Critical` (the upstream platform validator rejects the skill)
 - **MUST** verify neither `name` nor `description` contains XML tags; a violation is a `Critical`
 - **MUST** verify `description` is non-empty and ≤1024 characters; over-cap or empty is a `Critical`
-- **MUST** verify `description` is written in **third person**: presence of `I `, `you `, `we `, or other non-third-person markers in description text is a `Critical`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))
+- **MUST** verify `description` is written in **third person**: presence of the pronouns "I", "you", or "we" (or other non-third-person markers) in the description text is a `Critical`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))
 - **MUST** verify `description` names both *what the skill does* and *when to use it*; absence of trigger phrases is a `Warning` (skill becomes hard to discover)
 - **SHOULD**, when `when_to_use` is set, verify combined `description` + `when_to_use` text stays under 1,536 characters; over-cap is a `Warning` (runtime truncates and typically eats the trigger phrases)
 - **SHOULD** verify the skill name follows a consistent form across this plugin (gerund preferred; verb-noun acceptable; mixed forms within one repository are a `Suggestion`-grade smell)

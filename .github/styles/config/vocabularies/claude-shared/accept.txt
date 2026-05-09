@@ -128,3 +128,11 @@ reflog
 devcontainer
 teardown
 rebases
+[Ss]ubagent(s|'s)?
+[Pp]reload(s|ed|ing)?
+agentic
+gerund
+kebab
+[Dd]enylist
+prepended
+runtimes
