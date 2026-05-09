@@ -48,11 +48,24 @@ Reviews von Claude-Code-Artefakten — ein Skill gegen `skill-management`, ein A
 - **MUSS [MUST]** `status` beim ersten Abhaken eines Punktes auf `in-progress` setzen, auf `complete`, wenn jeder Punkt entweder `- [x]` oder ein getrackter Follow-up ist, und auf `superseded`, wenn ein Re-Run den Plan vor Abschluss ersetzt
 - **MUSS NICHT [MUST NOT]** Werte erfinden; wenn ein Feld nicht aus der Quelle gelesen werden kann (z. B. kein Git-SHA, weil das Ziel noch nicht committed ist), lautet der Wert `unknown` — keine Vermutung
 
+### Schweregrad-Skala
+
+Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabular über jedes Audit-, Review- und Reife-Artefakt im Portfolio hinweg. Andere Specs (zum Beispiel `spec/project/spec-readiness/`) **MÜSSEN [MUST]** auf diesen Abschnitt verweisen, statt eine eigene Skala zu definieren.
+
+- **MUSS [MUST]** jedes Finding in genau eine dieser vier Schweregrad-Stufen einordnen, in Title Case, in dieser Reihenfolge abnehmender Auswirkung:
+  - **Critical**: verletzt ein MUST in der Quell-Spec oder blockiert direkt die Beförderung / das Mergen des reviewten Artefakts (tragende Open Question in einem Pre-Promotion-Lauf, Geist-Referenz auf eine nicht existierende Spec, MUST↔MUST-Widerspruch zwischen zwei bereits beförderten Specs)
+  - **Warning**: verletzt ein SHOULD in der Quell-Spec oder benennt reale Mehrdeutigkeit / Drift / Abdeckungslücke, die ein sorgfältiger Leser noch umgehen kann, die aber vor dem nächsten Release behoben werden sollte
+  - **Suggestion**: identifiziert eine MAY-Klassen-Gelegenheit, eine stilistische Verbesserung oder einen Ein-Zeilen-Fix, der das Artefakt aufwertet, ohne Verletzungs-Klasse zu sein
+  - **Info**: eine Beobachtung, eine bewusste Design-Anerkennung, eine infrastruktur-abhängige Notiz oder ein Querverweis zurück auf ein anderswo bereits getracktes Finding; keine Aktion erforderlich
+- **MUSS NICHT [MUST NOT]** zusätzliche Schweregrad-Stufen erfinden (kein `BLOCKER`, kein `MAJOR/MINOR`, kein `P0/P1/P2`); Reviewer, die eine weitere Stufe für nötig halten, schlagen eine Spec-Änderung vor, keine lokale Erweiterung
+- **MUSS [MUST]** diese Labels wortwörtlich verwenden — Title Case, keine Abkürzungen, keine Großbuchstaben-Varianten — in `## Summary`-Zählungen, `## Findings`-Unter-Abschnitts-Überschriften und jeder finding-bezogenen Annotation, damit nachgelagerte Tools sie deterministisch grepen können
+- **MUSS NICHT [MUST NOT]** einen Schweregrad allein auf Basis lokaler Einschätzung absenken; Abweichung von der Klassifikation ist eine dokumentierte Waiver-Notiz im `## Processing log` des Plans, keine stille Re-Klassifikation
+
 ### Plan-Körper-Struktur
 
 - **MUSS [MUST]** diese Abschnitte in dieser Reihenfolge mit exakt diesen Überschriften enthalten:
   1. `## Scope` — ein Absatz, der das Ziel nennt, was reviewt wurde (Frontmatter, Body, Beispiele, …) und was explizit außerhalb lag
-  2. `## Summary` — Bullet-Zählungen pro Schweregrad (`BLOCKER`, `WARNING`, `SUGGESTION`, `INFO`) plus eine Einzeiler-Go/No-Go-Aussage
+  2. `## Summary` — Bullet-Zählungen pro Schweregrad (`Critical`, `Warning`, `Suggestion`, `Info`) plus eine Einzeiler-Go/No-Go-Aussage
   3. `## Findings` — die abarbeitbare Liste; ein Unter-Abschnitt pro vorhandenem Schweregrad
   4. `## Processing log` — append-only, eine Zeile pro geschlossenem Punkt, die festhält, was getan wurde und von wem
 - **MUSS [MUST]** die Abschnittsüberschriften auch dann in Englisch halten, wenn die Dokumentationssprache des umgebenden Projekts nicht Englisch ist, damit nachgelagerte Tools sie deterministisch grepen können
@@ -69,7 +82,7 @@ Reviews von Claude-Code-Artefakten — ein Skill gegen `skill-management`, ein A
   ```
 
   Die vier beschrifteten Zeilen (`Where`, `Fix`, `Verify` und der einleitende Satz) **MÜSSEN [MUST]** alle vorhanden sein. Wenn ein Feld wirklich nicht zutrifft, schreibe `n/a` mit einem Wort Begründung, statt die Zeile wegzulassen
-- **MUSS [MUST]** Findings unter den Schweregrad-Unter-Abschnitten `### BLOCKER`, `### WARNING`, `### SUGGESTION`, `### INFO` gruppieren, in dieser Reihenfolge; einen Unter-Abschnitt nur weglassen, wenn er null Einträge hat
+- **MUSS [MUST]** Findings unter den Schweregrad-Unter-Abschnitten `### Critical`, `### Warning`, `### Suggestion`, `### Info` gruppieren, in dieser Reihenfolge; einen Unter-Abschnitt nur weglassen, wenn er null Einträge hat
 - **MUSS [MUST]** die auslösende Spec-Anforderung im eckigen Klammerpräfix zitieren, damit eine verarbeitende Instanz jedes Finding auf ein konkretes MUST / SHOULD / MAY zurückführen kann; Erfindungen ohne Spec-Zitat sind keine gültigen Findings
 - **SOLLTE [SHOULD]** Einträge innerhalb eines Schweregrad-Abschnitts nach betroffenem Bereich sortieren (Frontmatter → Body → Tools → Beispiele), damit verwandte Einträge zusammen adressiert werden können
 - **KANN [MAY]** ein Finding mit einem abschließenden `→ deferred: <issue-url>` annotieren, wenn die verarbeitende Instanz entscheidet, dass der Punkt echt aber außerhalb des aktuellen Plan-Zyklus ist; vertagte Einträge zählen für den Lebenszyklus als geschlossen, tragen aber den Link, sodass das getrackte Issue zur neuen Heimat wird
@@ -79,8 +92,8 @@ Reviews von Claude-Code-Artefakten — ein Skill gegen `skill-management`, ein A
 - **MUSS [MUST]** pro Review-Aufruf frisch erzeugt werden; ein Re-Run gegen dasselbe Ziel **MUSS [MUST]** den bestehenden Plan in einem einzigen Commit überschreiben und den `status` des vorherigen Plans in der Commit-Message des Überschreibens auf `superseded` setzen — niemals den alten Plan in den neuen editieren
 - **MUSS [MUST]** Einträge nur dann als `- [x]` markieren, wenn sowohl der Fix gelandet ist als auch der `Verify`-Schritt ausgeführt wurde; Teil-Fixes bleiben `- [ ]`
 - **MUSS [MUST]** pro Schließung eine Zeile an `## Processing log` anhängen, in der Form: `YYYY-MM-DD — <item-shorthand> — <getätigte Aktion> — <verifiziert von>`
-- **MUSS NICHT [MUST NOT]** die Plan-Datei löschen, solange ein offener `- [ ]` `BLOCKER` besteht; `WARNING` / `SUGGESTION` / `INFO`-Einträge **KÖNNEN [MAY]** auf getrackte Issues vertagt werden, um das Löschen zu ermöglichen
-- **MUSS [MUST]** die Plan-Datei löschen, wenn jeder Eintrag entweder `- [x]` ist oder eine `→ deferred: <url>`-Annotation trägt; die Commit-Message der Löschung **MUSS [MUST]** `review(<review-type>): close <target> — <B>B/<W>W/<S>S/<I>I` lauten (Zählungen von BLOCKER, WARNING, SUGGESTION, INFO zum Zeitpunkt der Erzeugung), sodass das Git-Log der durchsuchbare Audit-Trail ist
+- **MUSS NICHT [MUST NOT]** die Plan-Datei löschen, solange ein offener `- [ ]` `Critical` besteht; `Warning` / `Suggestion` / `Info`-Einträge **KÖNNEN [MAY]** auf getrackte Issues vertagt werden, um das Löschen zu ermöglichen
+- **MUSS [MUST]** die Plan-Datei löschen, wenn jeder Eintrag entweder `- [x]` ist oder eine `→ deferred: <url>`-Annotation trägt; die Commit-Message der Löschung **MUSS [MUST]** `review(<review-type>): close <target> — <C>C/<W>W/<S>S/<I>I` lauten (Zählungen von Critical, Warning, Suggestion, Info zum Zeitpunkt der Erzeugung), sodass das Git-Log der durchsuchbare Audit-Trail ist
 - **SOLLTE [SHOULD]** beim Löschen des Plans auch getrackte Issues schließen, auf die vertagte Einträge verweisen, sofern der zugrundeliegende Fix anderswo gelandet ist — die Commit-Message der Löschung benennt diese Issues in ihrem Body
 
 ### Bezug zu anderen Specs
@@ -95,7 +108,7 @@ Reviews von Claude-Code-Artefakten — ein Skill gegen `skill-management`, ein A
 - [ ] Jede Plan-Datei unter `.audits/` parst als gültiges Markdown mit YAML-Frontmatter, das `review-type`, `target`, `target-kind`, `specs-applied`, `repo-revision`, `created`, `status` enthält
 - [ ] Jede Plan-Datei enthält die vier Pflicht-Abschnitte (`## Scope`, `## Summary`, `## Findings`, `## Processing log`) mit genau diesen englischen Überschriften
 - [ ] Jedes Finding in einem Plan verwendet die vier-Zeilen-Struktur (einleitender Satz + `Where` / `Fix` / `Verify`) und zitiert eine Spec-Anforderung im eckigen Klammerpräfix
-- [ ] Keine Plan-Datei existiert mit offenem `- [ ]` `BLOCKER` und `status: complete`
+- [ ] Keine Plan-Datei existiert mit offenem `- [ ]` `Critical` und `status: complete`
 - [ ] Jede Plan-Löschung in `git log` wird von einer Commit-Message begleitet, die `review(<review-type>): close <target> — <counts>` entspricht, sodass der Audit-Trail durchsuchbar ist
 - [ ] Pro (`review-type`, `target`) existiert zu jedem Commit höchstens eine Plan-Datei — ein Re-Run ersetzt statt zu akkumulieren
 - [ ] Die Specs `skill-review` und `agent-review` verweisen beide auf diese Spec als autoritatives Output-Format

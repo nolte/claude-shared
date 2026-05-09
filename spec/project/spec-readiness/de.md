@@ -29,41 +29,44 @@ Spezifikationen unter `spec/<topic>/<slug>/` sind die Quelle der Wahrheit für n
 - **DARF** einen Lauf auf eine einzelne Spec oder ein einzelnes Topic einschränken, wenn der Auslöser selbst eng ist (zum Beispiel ein PR, der eine Spec ändert)
 
 ### Dimension 1 — Widerspruchs-Erkennung
-- **MUSS** als kritisch flaggen: ein MUST-/MUST-NOT-Paar innerhalb derselben Spec, das dasselbe Subjekt betrifft, aber entgegengesetzte Anforderungen deklariert
-- **MUSS** als kritisch flaggen: ein MUST in Spec A, das nicht gleichzeitig mit einem MUST in Spec B gelten kann; Paare, die von Scope-Ausschnitten abhängen, werden gelöst, indem der Ausschnitt explizit gemacht wird, nicht indem der Widerspruch ignoriert wird
-- **MUSS** als Warnung flaggen: ein MUST-vs.-SHOULD-Paar innerhalb derselben Spec, das in entgegengesetzte Richtungen zeigt; das MUST gewinnt immer, aber das SHOULD ist für Leser irreführend und ist ein Befund
-- **MUSS** als Warnung flaggen: ein Ziel, das einem Nicht-Ziel derselben Spec direkt widerspricht (zum Beispiel ein Ziel, das Ausgaben impliziert, die die Nicht-Ziele ausdrücklich ausschließen)
-- **SOLLTE** als Info flaggen: Ketten von Abschwächung (ein MAY, das ein SHOULD effektiv umkehrt, das bereits konditional war), wenn sie das Regel-Set für einen Leser undurchsichtig machen
+- **MUSS** als `Critical` flaggen: ein MUST-/MUST-NOT-Paar innerhalb derselben Spec, das dasselbe Subjekt betrifft, aber entgegengesetzte Anforderungen deklariert
+- **MUSS** als `Critical` flaggen: ein MUST in Spec A, das nicht gleichzeitig mit einem MUST in Spec B gelten kann; Paare, die von Scope-Ausschnitten abhängen, werden gelöst, indem der Ausschnitt explizit gemacht wird, nicht indem der Widerspruch ignoriert wird
+- **MUSS** als `Warning` flaggen: ein MUST-vs.-SHOULD-Paar innerhalb derselben Spec, das in entgegengesetzte Richtungen zeigt; das MUST gewinnt immer, aber das SHOULD ist für Leser irreführend und ist ein Befund
+- **MUSS** als `Warning` flaggen: ein Ziel, das einem Nicht-Ziel derselben Spec direkt widerspricht (zum Beispiel ein Ziel, das Ausgaben impliziert, die die Nicht-Ziele ausdrücklich ausschließen)
+- **SOLLTE** als `Info` flaggen: Ketten von Abschwächung (ein MAY, das ein SHOULD effektiv umkehrt, das bereits konditional war), wenn sie das Regel-Set für einen Leser undurchsichtig machen
 - **DARF** pro Befund eine Lösungsrichtung vorschlagen — eine Regel verstärken, die andere abschwächen, den Scope aufteilen — ohne die finale Wahl vorzuschreiben
 - **DARF NICHT** einen Widerspruch auf Basis von Prosa allein deklarieren, wenn kein RFC-2119-Verb im Spiel ist; reine Prosa-Inkonsistenzen sind Prosa-Lint-Anliegen, keine Reife-Anliegen
 
 ### Dimension 2 — Audience-Fit
 - **MUSS** die impliziten Leser jeder Spec aus ihrer Prosa ableiten (typische Sets: Implementor\:innen, Reviewer\:innen, Tooling-Autor\:innen, Release-Manager\:innen, Product-Owner\:innen, Betreiber\:innen); die Ableitung ist Beobachtung, keine Audience-Analyse auf leerem Blatt
 - **MUSS** prüfen, dass es für jede abgeleitete Audience Inhalte gibt, auf die sie handeln kann — Anforderungen für Implementor\:innen, Akzeptanzkriterien für Reviewer\:innen, schnittstellen-seitige MUSTs für Tooling-Autor\:innen, sichtbar gemachte Open Questions für Product-Owner\:innen
-- **MUSS** als Warnung flaggen: eine Spec, deren Audience nicht ableitbar ist („für wen ist das geschrieben?") oder deren Anforderungen die Entscheidungen der abgeleiteten Audience nicht adressieren
-- **SOLLTE** ein existierendes `audience-identify`-Artefakt querverweisen, wenn das Modul der Spec eines hat; wenn die Spec eine Audience anspricht, die das Artefakt nennt, die Anforderungen der Spec diese aber nicht bedienen, ist der Befund eine Warnung, nicht kritisch
-- **SOLLTE** als Info flaggen: eine Spec, deren Audience implizit, aber nur mit Aufwand ableitbar ist; die Lösung ist meist ein einzeiliger „Leser:"-Hinweis, kein Umbau
+- **MUSS** als `Warning` flaggen: eine Spec, deren Audience nicht ableitbar ist („für wen ist das geschrieben?") oder deren Anforderungen die Entscheidungen der abgeleiteten Audience nicht adressieren
+- **SOLLTE** ein existierendes `audience-identify`-Artefakt querverweisen, wenn das Modul der Spec eines hat; wenn die Spec eine Audience anspricht, die das Artefakt nennt, die Anforderungen der Spec diese aber nicht bedienen, ist der Befund `Warning`, nicht `Critical`
+- **SOLLTE** als `Info` flaggen: eine Spec, deren Audience implizit, aber nur mit Aufwand ableitbar ist; die Lösung ist meist ein einzeiliger „Leser:"-Hinweis, kein Umbau
 - **DARF** `audience-identify` als Folge-Werkzeug nennen, wenn das Modul der Spec kein Audience-Artefakt hat und das Reife-Audit Audiences nicht zuverlässig ableiten kann
 - **DARF NICHT** Audience-Artefakte als Teil dieses Audits erstellen oder schreiben; das ist außerhalb des Geltungsbereichs (siehe §Abgrenzung)
 
 ### Dimension 3 — Fachliche Vollständigkeit
-- **MUSS** verifizieren, dass jede Anforderung mindestens ein Akzeptanzkriterium hat, das testbar ist (messbares Ergebnis, beobachtbarer Zustand oder durchsetzbares Gate) — eine Anforderung ohne testbares AK ist eine Warnung
-- **MUSS** verifizieren, dass jedes Akzeptanzkriterium auf eine Anforderung oder ein Ziel zurückführbar ist — ein verwaistes AK (nicht an eine Anforderung oder ein Ziel bindbar) ist eine Warnung
-- **MUSS** jede Open Question als entweder **tragend** (Implementierung oder nachgelagerte Arbeit kann nicht verantwortlich ohne Antwort fortfahren) oder **Ablage-Liste** (nice-to-have-Verfeinerung, nachgelagerte Arbeit kann mit einem vernünftigen Default fortfahren) klassifizieren; eine tragende OQ in einer Spec, die zur Beförderung erwogen wird, ist ein kritischer Befund
-- **MUSS** als kritisch flaggen: jede Referenz von Spec A auf Spec B, bei der Spec B nicht existiert oder existiert, aber nicht die Sektion enthält, die die Referenz impliziert
-- **SOLLTE** als Warnung flaggen: jedes Ziel ohne mindestens eine passende Anforderung — ein Ziel, das die Spec dann nie operationalisiert, ist ein irreführendes Versprechen
-- **SOLLTE** als Info flaggen: wenn der Scope einer Spec mehrdeutig ist und keine Nicht-Ziele-Sektion ihn einschneidet; die Lösung ist meist, drei bis fünf explizite Nicht-Ziele hinzuzufügen
-- **DARF** als Info flaggen: Akzeptanzkriterien, die prinzipiell testbar sind, aber Infrastruktur benötigen, die das Portfolio noch nicht hat; das sind keine Blocker, warnen aber Konsument\:innen
+- **MUSS** verifizieren, dass jede Anforderung mindestens ein Akzeptanzkriterium hat, das testbar ist (messbares Ergebnis, beobachtbarer Zustand oder durchsetzbares Gate) — eine Anforderung ohne testbares AK ist `Warning`
+- **MUSS** verifizieren, dass jedes Akzeptanzkriterium auf eine Anforderung oder ein Ziel zurückführbar ist — ein verwaistes AK (nicht an eine Anforderung oder ein Ziel bindbar) ist `Warning`
+- **MUSS** jede Open Question als entweder **tragend** (Implementierung oder nachgelagerte Arbeit kann nicht verantwortlich ohne Antwort fortfahren) oder **Ablage-Liste** (nice-to-have-Verfeinerung, nachgelagerte Arbeit kann mit einem vernünftigen Default fortfahren) klassifizieren; eine tragende OQ in einer Spec, die zur Beförderung erwogen wird, ist ein `Critical`-Befund
+- **MUSS** als `Critical` flaggen: jede Referenz von Spec A auf Spec B, bei der Spec B nicht existiert oder existiert, aber nicht die Sektion enthält, die die Referenz impliziert
+- **SOLLTE** als `Warning` flaggen: jedes Ziel ohne mindestens eine passende Anforderung — ein Ziel, das die Spec dann nie operationalisiert, ist ein irreführendes Versprechen
+- **SOLLTE** als `Info` flaggen: wenn der Scope einer Spec mehrdeutig ist und keine Nicht-Ziele-Sektion ihn einschneidet; die Lösung ist meist, drei bis fünf explizite Nicht-Ziele hinzuzufügen
+- **DARF** als `Info` flaggen: Akzeptanzkriterien, die prinzipiell testbar sind, aber Infrastruktur benötigen, die das Portfolio noch nicht hat; das sind keine `Critical`-Klasse, warnen aber Konsument\:innen
 
 ### Schweregrad-Skala
-- **MUSS** diese drei Schweregrad-Stufen übernehmen und über alle drei Dimensionen konsistent verwenden:
-  - **critical**: direkter MUST-/MUST-NOT-Widerspruch innerhalb oder zwischen Specs; tragende Open Question in einer zur Beförderung erwogenen Spec; Referenz auf eine nicht existierende Spec-Sektion; Cross-Spec-Widerspruch zwischen zwei akzeptierten Specs
-  - **warning**: MUST-vs.-SHOULD-Widerspruch; nicht identifizierbare Audience; abgeleitete Audience, deren Bedürfnisse nicht adressiert werden; Ziel ohne passende Anforderung; Anforderung ohne testbares Akzeptanzkriterium; verwaistes Akzeptanzkriterium
-  - **info**: Abschwächungsketten-Undurchsichtigkeit; implizite, aber ableitbare Audience; mehrdeutiger Scope ohne Nicht-Ziele; AK, das noch-nicht-portfolio-vorhandene Infrastruktur verlangt
+- **MUSS** die kanonische Vier-Stufen-Schweregrad-Skala aus `spec/claude/review-plan/<canonical_language>.md` §Severity scale verwenden: `Critical` / `Warning` / `Suggestion` / `Info`, in Title Case
+- **MUSS** Reife-Befunde gemäß den in §Dimension 1, 2 und 3 dokumentierten Mustern auf die Skala abbilden:
+  - **Critical**: direkter MUST-/MUST-NOT-Widerspruch innerhalb oder zwischen Specs; tragende Open Question in einer zur Beförderung erwogenen Spec; Referenz auf eine nicht existierende Spec-Sektion; Cross-Spec-Widerspruch zwischen zwei akzeptierten Specs
+  - **Warning**: MUST-vs.-SHOULD-Widerspruch; nicht identifizierbare Audience; abgeleitete Audience, deren Bedürfnisse nicht adressiert werden; Ziel ohne passende Anforderung; Anforderung ohne testbares Akzeptanzkriterium; verwaistes Akzeptanzkriterium
+  - **Info**: Abschwächungsketten-Undurchsichtigkeit; implizite, aber ableitbare Audience; mehrdeutiger Scope ohne Nicht-Ziele; AK, das noch-nicht-portfolio-vorhandene Infrastruktur verlangt
+- **DARF** den `Suggestion`-Bucket aus der kanonischen Skala befüllen, wenn ein Befund einen Ein-Zeilen-Fix oder eine stilistische Verbesserung benennt, die nicht zu den drei Reife-Mustern oben passt; Reife-Audits produzieren typischerweise nur `Critical` / `Warning` / `Info`, der Bucket existiert in der kanonischen Skala und bleibt verfügbar
+- **DARF NICHT** zusätzliche Schweregrad-Stufen jenseits der kanonischen vier erfinden; Konsistenz über audit-erzeugende Specs hinweg ist der einzige Grund, warum diese Skala in `review-plan` lebt statt pro Spec neu definiert zu werden
 - **DARF NICHT** einen Schweregrad allein auf Basis lokaler Einschätzung absenken; Abweichung von der Klassifikation ist eine dokumentierte Waiver-Notiz im Audit-Artefakt, keine stille Re-Klassifikation
 
 ### Auslöser
-- **MUSS** vor jeder Beförderung einer Spec aus `Status: draft` heraus laufen; eine Spec mit unerledigten kritischen Reife-Befunden **DARF NICHT** befördert werden, bis diese Befunde gelöst oder ausdrücklich verzichtet sind
+- **MUSS** vor jeder Beförderung einer Spec aus `Status: draft` heraus laufen; eine Spec mit unerledigten `Critical`-Reife-Befunden **DARF NICHT** befördert werden, bis diese Befunde gelöst oder ausdrücklich verzichtet sind
 - **MUSS** mindestens einmal pro Kalenderquartal für jede Spec laufen, deren Status noch `draft` ist — Drafts, die ohne Neubewertung altern, driften
 - **SOLLTE** als Same-Merge- oder Folge-Teilaudit laufen, wenn ein PR eine Spec ändert (neues MUST, geändertes AK, neuer Scope); der Teilaudit-Scope entspricht den im PR berührten Specs
 - **DARF** portfolioweit auf derselben Kadenz wie `spec-drift-audit` laufen — die beiden sind komplementäre Quartals-Durchgänge und können sich das Audit-Ritual teilen, ohne sich den Scope zu teilen
@@ -88,7 +91,7 @@ Spezifikationen unter `spec/<topic>/<slug>/` sind die Quelle der Wahrheit für n
 
 ## Akzeptanzkriterien
 - [ ] Jede Spec im Portfolio mit nicht-leerer `## Requirements`- oder `## Acceptance Criteria`-Sektion hat seit Einführung dieser Spec mindestens einen Reife-Audit-Eintrag in der Audit-Historie des Repositorys, oder eine dokumentierte Ausnahme
-- [ ] Keine Spec mit unerledigten kritischen Reife-Befunden ist seit Einführung dieser Spec aus `Status: draft` befördert worden — entweder ist der Befund gelöst, oder die Beförderung ist blockiert, oder eine Waiver-Notiz ist im Audit-Artefakt festgehalten
+- [ ] Keine Spec mit unerledigten `Critical`-Reife-Befunden ist seit Einführung dieser Spec aus `Status: draft` befördert worden — entweder ist der Befund gelöst, oder die Beförderung ist blockiert, oder eine Waiver-Notiz ist im Audit-Artefakt festgehalten
 - [ ] Das Audit-Artefakt jedes Reife-Laufs hält Scope (auditierte Spec-Slugs), auditierte Git-Revision, Schweregrad-Zählungen pro Spec und die vollständige Befundliste fest
 - [ ] Kein Cross-Spec-Widerspruch zwischen zwei Specs, die beide aus Draft befördert wurden, bleibt im jüngsten Audit ohne dokumentierte Auflösung stehen
 - [ ] Der Agent `agents/spec-readiness-reviewer.md` erzeugt Befunde, die 1-zu-1 auf die drei hier deklarierten Dimensionen und die Schweregrad-Skala abbilden, damit Audit-Artefakte mechanisch erzeugt werden können
