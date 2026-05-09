@@ -136,3 +136,9 @@ kebab
 [Dd]enylist
 prepended
 runtimes
+[Ii]nspectable
+closeable
+[Ii]nvokable
+subtasks
+backlink
+README's
