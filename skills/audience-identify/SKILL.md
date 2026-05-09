@@ -11,7 +11,7 @@ Operationalizes the methodology from `spec/project/audience-identification/` so 
 ## Why this is a skill, not an agent
 
 - **Mid-flow interactivity is the contract** — every category enumeration step ("who are the operators?", "any indirect audiences?") is a per-step user dialogue; the spec explicitly forbids batched output and requires confirmation per category.
-- **Persistent on-disk artifact** — the resulting audience list lives next to the bounded context (README section, `AUDIENCES.md`, or ADR) and is read by downstream specs (`readme-structure`, future SLA / threat-model specs); a skill owns persistent state, an agent returns a structured report and forgets.
+- **Persistent on-disk artifact** — the resulting audience list lives next to the bounded context. Per `spec/project/audience-identification/` §Artifact location, the canonical default is `AUDIENCES.md` at the root of the bounded context; a README section ("## Audiences" or "## Intended consumers") or an ADR remains an acceptable alternative for small or sub-module contexts. The artifact is read by downstream specs (`mission`, `roadmap`, `release-notes-audience-analysis`, `release-skill-layer`, `readme-structure`, future SLA / threat-model specs); a skill owns persistent state, an agent returns a structured report and forgets.
 - **`confirmed` vs `assumed` tagging requires the user in the loop** — the spec mandates that `confirmed` only be set after explicit user statement; an agent's isolated context can't gather that signal interactively.
 - Counter-dimension considered: a narrow agent prompt could sharpen the relationship-category vocabulary, but the load-bearing dimension here is interactivity, not output specialization — skill wins.
 
@@ -32,7 +32,7 @@ Before any operation, verify that `spec/project/audience-identification/<canonic
 Interactive walk-through. Do not batch — surface each step to the user and let them correct before moving on.
 
 1. **Declare the bounded context in writing.** Prompt for: what the context *is*, where its boundaries run, and what is explicitly outside. Block progress until this is captured. The spec forbids listing audiences before the context is written.
-2. **Locate the artifact.** Ask where the output should live. Offer the three patterns the spec leaves open — README section, dedicated `AUDIENCES.md` next to the context, or an ADR — and, before proposing a new pattern, check whether the repository already has precedent (grep for `AUDIENCES.md`, existing "Audiences" / "Intended consumers" sections). Follow the precedent rather than inventing a new location.
+2. **Locate the artifact.** Default to `AUDIENCES.md` at the root of the bounded context — that's the canonical default per `spec/project/audience-identification/` §Artifact location. Before proposing it, check whether the repository already has precedent (grep for `AUDIENCES.md`, existing "Audiences" / "Intended consumers" sections in READMEs, audience-related ADRs); when precedent uses a README section or ADR for the same context size, follow the precedent rather than fragmenting the artifact location. Surface README section and ADR as legitimate alternatives only when the context is small enough that a stand-alone `AUDIENCES.md` would be overkill, or when established repo precedent already lives there.
 3. **Enumerate audiences category by category**, in this order, asking the user per category:
    - Direct consumers
    - Operators

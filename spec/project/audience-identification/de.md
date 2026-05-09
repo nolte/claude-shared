@@ -21,7 +21,7 @@ Software-Module und Projekte werden von mehreren Zielgruppen konsumiert, betrieb
 - Vorgaben, wie mit identifizierten Zielgruppen kommuniziert wird
 - Erzeugen einer dauerhaften, organisationsweiten Master-Zielgruppenliste (diese Spec gilt pro Kontext, nicht pro Organisation)
 - Threat Modeling — Zielgruppen fließen dort ein, sind aber nicht mit Angreifern gleichzusetzen
-- Festlegen, in welchem Artefakt-Format (README-Abschnitt, eigene Datei, ADR, …) die Zielgruppenliste lebt; das ist eine Umsetzungsentscheidung der anwendenden Specs
+- Vorschreiben eines einzigen Artefakt-Formats für jeden Kontext. Der kanonische Default für einen eigenständigen bounded context ist `AUDIENCES.md` an dessen Wurzel (siehe Anforderungen §Artefakt-Ort), aber kleine oder Sub-Modul-Kontexte **DÜRFEN** die Liste in einen README-Abschnitt oder einen ADR einbetten; diese Spec ratifiziert den Default, verbietet die Alternativen aber nicht
 
 ## Anforderungen
 <!-- RFC-2119-Schlüsselwörter verwenden: MUST, SHOULD, MAY. Eine atomare Anforderung pro Bullet. -->
@@ -41,7 +41,7 @@ Software-Module und Projekte werden von mehreren Zielgruppen konsumiert, betrieb
 - **MUSS [MUST]** jede Zielgruppe als `confirmed` (mit realer Vertretung oder belastbarer Quelle validiert) oder `assumed` (vom Autor angenommen) kennzeichnen
 - **MUSS [MUST]** die Zielgruppenliste erzeugen, bevor nachgelagerte Artefakte geschrieben werden, die eine Zielgruppe beanspruchen (README "intended consumers", SLAs, Threat Models, …), damit diese darauf verweisen statt sie neu zu formulieren
 - **SOLLTE [SHOULD]** Zielgruppen nach Kritikalität für den Erfolg des Kontexts ordnen (primär / sekundär / peripher)
-- **SOLLTE [SHOULD]** das Zielgruppen-Artefakt neben dem beschriebenen Kontext ablegen (Modul-README, projektweite `docs/audiences.md`, ADR, …) statt in einem zentralen Register
+- **SOLLTE [SHOULD]** das Zielgruppen-Artefakt unter `AUDIENCES.md` an der Wurzel des bounded context als kanonischen Default ablegen; für kleine Module oder Sub-Kontexte, in denen eine eigenständige Datei überdimensioniert ist, sind ein README-Abschnitt („## Zielgruppen" oder „## Intended consumers") oder ein ADR akzeptable Alternativen. An welchem Ort auch immer das Artefakt liegt, es lebt **neben** dem Kontext, den es beschreibt — nicht in einem zentralen Register —, damit konsumierende Specs (`mission`, `roadmap`, `release-notes-audience-analysis`, `release-skill-layer` und Tooling wie `github-issue-templates-apply`) es deterministisch finden können
 - **SOLLTE [SHOULD]** die Zielgruppenliste erneut prüfen, sobald sich der Scope des Kontexts wesentlich ändert — neue öffentliche API, neues Deployment-Target, neue regulierte Datenklasse, neuer Stakeholder
 - **KANN [MAY]** jeden Zielgruppen-Eintrag auf die für ihn erzeugten Specs, Docs oder SLAs verlinken, damit Abdeckung sichtbar wird
 - **KANN [MAY]** Zielgruppen zusätzlich nach Geografie, Organisationseinheit oder Mandantenzuordnung unterteilen, wenn solche Unterschiede das erwartete Liefergut verändern
@@ -57,7 +57,6 @@ Software-Module und Projekte werden von mehreren Zielgruppen konsumiert, betrieb
 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Soll das Zielgruppen-Artefakt auf eine dedizierte Datei (z. B. `AUDIENCES.md`) standardisiert werden oder Abschnitt in bestehenden Artefakten (README, ADR) bleiben?
 - Gibt es eine minimale Kontextgröße, unterhalb der dieses Verfahren übertrieben ist (z. B. ein 50-Zeilen-internes Utility)?
 - Gilt diese Spec portfolioweit oder nur für Repositories, die sich explizit dazu entscheiden?
 - Wie wird eine Zielgruppenliste versioniert — pro Release, pro wesentlicher API-Änderung oder fortlaufend über Git-Historie?
