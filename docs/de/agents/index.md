@@ -13,6 +13,7 @@ Agents sind spezialisierte Sub-Agents mit fokussiertem Tool-Zugriff und System-P
 | `docs-freshness-checker` | Auditiert MkDocs-Dokumentation auf Sprach-Parität, tote Links, stale Pfadverweise, ADR-Hygiene |
 | `prose-vale-curator` | Pflegt Prosa Vale-konform, ohne technische Aussagen zu verändern |
 | `png-to-transparent-svg` | Wandelt PNGs mit eingebranntem Karomuster in SVGs mit echter Alpha-Transparenz |
+| `feature-consistency-reviewer` | Prüft ein draft-Feature gegen Feature-Korpus, Source-Roots und Spec-Bestand auf Überlappung, Duplikation, Drift und Prior Art |
 
 Alle Agents folgen derselben Spezifikation ([Agent-Autorenschaft](../specs/agent-management.md)). Kanonische Quelle pro Agent: `agents/<name>.md` im Quellbaum.
 

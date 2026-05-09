@@ -19,8 +19,18 @@ Skills sind wiederverwendbare Workflows, die Claude Code über das `Skill`-Tool 
 | `project-structure-apply` | Repo gegen die `project-structure`-Spec auditieren und fehlende Artefakte scaffolden |
 | `github-issue-templates-apply` | `.github/ISSUE_TEMPLATE/` nach der `github-issue-templates`-Spec scaffolden oder aktualisieren |
 | `skill-agent-catalog-apply` | MkDocs-Katalog für alle Skills und Agents eines Plugin-Repos einrichten |
+| `mermaid-diagrams-apply` | MkDocs-Mermaid-Setup gegen die `mermaid-diagrams`-Spec auditieren und Diagramme spec-konform einfügen |
 | `vocab-drift-audit` | Repo-lokales Vale-Vocabulary gegen den gepinnten `nolte/vale-style`-Release diffen |
 | `audience-identify` | Zielgruppen eines Bounded Contexts identifizieren und als Artefakt ablegen |
+| `mission-define` | Erstes Schreiben von `project/mission.md` mit SMART-Vertrag pro Buchstabe |
+| `mission-revise` | `project/mission.md` editieren plus `mvp_status`-Lifecycle-Flips per `mission`-Spec |
+| `roadmap-init` | `project/goals.md` und `project/roadmap.md` initial scaffolden (Vision plus Outcomes plus leere Queue) |
+| `roadmap-refine` | Detail-Level-Invariante in `project/roadmap.md` durchsetzen, Verstöße strukturiert melden |
+| `roadmap-planner` | Roadmap-Items hinzufügen, promovieren, neu zuordnen; `mvp`-Flag flippen |
+| `feature-decompose` | Roadmap-Item in `project/features/<slug>.md` zerlegen, Konsistenzcheck via `feature-consistency-reviewer` |
+| `sprint-plan` | `project/sprints/<NNNN>-<slug>.md` mit `value_statement` und `verifies_sprint_value` anlegen |
+| `sprint-execute` | Sprint-Lifecycle treiben: `planned → active`, Feature-Übergänge, `last_commit` aktualisieren |
+| `sprint-review` | Sprint mit Artefakt-Validation schließen, optional Release-Skill-Layer chainen |
 
 Detailseiten existieren aktuell für `skill-management` und `spec`; weitere werden nachgezogen. Die autoritative Quelle pro Skill ist jeweils `skills/<name>/SKILL.md` im Quellbaum.
 

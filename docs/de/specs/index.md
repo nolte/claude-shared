@@ -9,7 +9,7 @@ Die autoritative, vom [Spec-Skill](../skills/spec.md) gepflegte Liste liegt in [
 Grober Schnitt zur Orientierung:
 
 - **`spec/claude/`** — Regeln für Autoren von Skills und Agents (u. a. `skill-management`, `agent-management`, `skill-vs-agent`, `skill-review`, `agent-review`, `skill-agent-catalog`, `permission-allowlist`, `review-plan`)
-- **`spec/project/`** — Regeln für Projekt- und Release-Konventionen (u. a. `project-structure`, `github-issue-templates`, `pull-request-workflow`, `parallel-working-copies`, `branching-model`, `release-automation`, `release-artifact`, `release-skill-layer`, `release-notes-audience-analysis`, `quality-gate`, `dependency-audit`, `workflow-health`, `docs-freshness`, `mermaid-diagrams`, `readme-structure`, `prose-style`, `spec-drift-audit`, `spec-readiness`, `audience-identification`, `mission`, `roadmap`, `sprint`, `feature`, `continuous-improvement`)
+- **`spec/project/`** — Regeln für Projekt- und Release-Konventionen (u. a. `project-structure`, `github-issue-templates`, `pull-request-workflow`, `parallel-working-copies`, `branching-model`, `release-automation`, `release-artifact`, `release-skill-layer`, `release-notes-audience-analysis`, `quality-gate`, `dependency-audit`, `workflow-health`, `docs-freshness`, `mermaid-diagrams`, `readme-structure`, `prose-style`, `spec-drift-audit`, `spec-driven-development`, `spec-readiness`, `audience-identification`, `mission`, `roadmap`, `sprint`, `feature`, `continuous-improvement`)
 
 Detailseiten in dieser Doku existieren aktuell für `skill-management` und `agent-management`; weitere werden nachgezogen.
 
