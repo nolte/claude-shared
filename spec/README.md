@@ -16,6 +16,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-management | Claude Skill Authoring | Claude-Skill-Autorenschaft | draft | 2026-04-24 |
 | claude | skill-review | Claude Skill Review | Claude-Skill-Review | draft | 2026-04-24 |
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | 2026-04-23 |
+| portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | unversioned |
 | project | audience-identification | Audience Identification | Zielgruppen-Identifikation | draft | 2026-04-24 |
 | project | branching-model | Branching Model | Branching-Modell | draft | 2026-04-23 |
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | 2026-04-23 |
