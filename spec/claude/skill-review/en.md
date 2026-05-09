@@ -81,7 +81,7 @@ Mirrors `skill-management` §"Frontmatter validation"; cite the originating rule
 - **MUST** verify neither `name` nor any other frontmatter value contains the reserved tokens `anthropic` or `claude`; a violation is a `Critical` (the upstream platform validator rejects the skill)
 - **MUST** verify neither `name` nor `description` contains XML tags; a violation is a `Critical`
 - **MUST** verify `description` is non-empty and ≤1024 characters; over-cap or empty is a `Critical`
-- **MUST** verify `description` is written in **third person**: presence of the pronouns "I", "you", or "we" (or other non-third-person markers) in the description text is a `Critical`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))
+- **MUST** verify `description` is written in **third person**: presence of the pronouns "I," "you," or "we" (or other non-third-person markers) in the description text is a `Critical`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))
 - **MUST** verify `description` names both *what the skill does* and *when to use it*; absence of trigger phrases is a `Warning` (skill becomes hard to discover)
 - **SHOULD**, when `when_to_use` is set, verify combined `description` + `when_to_use` text stays under 1,536 characters; over-cap is a `Warning` (runtime truncates and typically eats the trigger phrases)
 - **SHOULD** verify the skill name follows a consistent form across this plugin (gerund preferred; verb-noun acceptable; mixed forms within one repository are a `Suggestion`-grade smell)
@@ -102,10 +102,10 @@ Mirrors `skill-management` §"Progressive disclosure & file references"; cite th
 
 Mirrors `skill-management` §"Runtime & lifecycle awareness"; cite the originating rule when a finding pins one.
 
-- **MUST** verify the skill body holds up as **standing instructions for the rest of the session**; one-time-step phrasing ("now do X", "as a first step …") that would lose its meaning after compaction is a `Warning`. Citation: skill content stays in context across turns and is not re-read ([R4](#references))
-- **SHOULD** estimate the token-count of `SKILL.md` (rough: 4 chars per token) and flag a `Suggestion` if the skill body exceeds 5,000 tokens since auto-compaction will silently truncate everything beyond that mark on re-attach ([R4](#references))
+- **MUST** verify the skill body holds up as **standing instructions for the rest of the session**; one-time-step phrasing ("now do X," "as a first step …") that would lose its meaning after compaction is a `Warning`. Citation: skill content stays in context across turns and isn't re-read ([R4](#references))
+- **SHOULD** estimate the token-count of `SKILL.md` (rough: 4 chars per token) and flag a `Suggestion` if the skill body exceeds 5,000 tokens since automatic compaction will silently truncate everything beyond that mark on re-attach ([R4](#references))
 - **SHOULD** verify `allowed-tools`, when present, expresses a deliberate pre-approval contract documented in the body (so a future maintainer understands what the skill granted itself); silent `allowed-tools` declarations are a `Suggestion`
-- **SHOULD** verify `disable-model-invocation: true` skills are not also referenced by any subagent's `skills:` preload list (they would be silently skipped at runtime with only a debug-log warning) ([R4](#references))
+- **SHOULD** verify `disable-model-invocation: true` skills aren't also referenced by any subagent's `skills:` preload list (they would be silently skipped at runtime with only a debug-log warning) ([R4](#references))
 
 ### Checks derived from evaluation discipline
 
@@ -145,12 +145,12 @@ Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule 
 
 Sources for the additional checks above. Cite the relevant entry in finding bracketed prefixes when a check pins a specific upstream rule.
 
-- [R1] Skill management spec (this plugin) — `spec/claude/skill-management/`
-- [R2] Skill vs. agent decision (this plugin) — `spec/claude/skill-vs-agent/`
-- [R3] Skill authoring best practices, Anthropic platform docs — <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
-- [R4] Extend Claude with skills, Claude Code docs — <https://code.claude.com/docs/en/skills>
-- [R5] Best practices for skill creators, agentskills.io — <https://agentskills.io/skill-creation/best-practices>
-- [R6] Agent Skills, formal specification — <https://agentskills.io/specification>
+- [R1] Skill management spec (this plugin): `spec/claude/skill-management/`
+- [R2] Skill vs. agent decision (this plugin): `spec/claude/skill-vs-agent/`
+- [R3] Skill authoring best practices, Anthropic platform docs: <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
+- [R4] Extend Claude with skills, Claude Code docs: <https://code.claude.com/docs/en/skills>
+- [R5] Best practices for skill creators, agentskills.io: <https://agentskills.io/skill-creation/best-practices>
+- [R6] Agent Skills, formal specification: <https://agentskills.io/specification>
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->

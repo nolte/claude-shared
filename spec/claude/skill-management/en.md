@@ -36,11 +36,11 @@ Tracks the formal Agent Skills specification ([R1](#references)) and Anthropic's
 - **MUST NOT** use the reserved words `anthropic` or `claude` as the value of `name`, anywhere in `name`, or in any other frontmatter value, per the upstream platform validator
 - **MUST NOT** include XML tags inside the `name` or `description` values
 - **MUST** keep `description` non-empty and **MUST NOT** exceed 1024 characters
-- **MUST** write `description` in **third person** ("Generates …", "Reviews …"), never first or second person ("I help …", "You can use this to …"), because the description is injected into Claude's system prompt and inconsistent point-of-view degrades skill discovery ([R2](#references))
-- **MUST** include in `description` both *what the skill does* and *when to use it*—two halves of the discovery contract; pure capability statements without trigger phrases fail the discovery half
+- **MUST** write `description` in **third person** ("Generates …," "Reviews …"), never first or second person ("I help …," "You can use this to …"), because the description is injected into Claude's system prompt and inconsistent point-of-view degrades skill discovery ([R2](#references))
+- **MUST** include in `description` both *what the skill does* and *when to use it*, the two halves of the discovery contract; pure capability statements without trigger phrases fail the discovery half
 - **SHOULD**, when also using Claude Code's optional `when_to_use` field ([R3](#references)), keep the combined `description` + `when_to_use` text under 1,536 characters; the runtime truncates anything beyond that cap and the truncation typically eats the trigger phrases
-- **SHOULD** prefer the **gerund form** for the skill name (verb + `-ing`: `processing-pdfs`, `analyzing-spreadsheets`, `managing-databases`) per Anthropic's published convention; verb-noun (`process-pdfs`) and noun phrases (`pdf-processing`) are acceptable alternatives, mixed forms across one repository are not ([R2](#references))
-- **MUST NOT** use vague or generic names: `helper`, `utils`, `tools`, `documents`, `data`, `files`—they defeat discovery because Claude can't tell what the skill does from its name alone ([R2](#references))
+- **SHOULD** prefer the **gerund form** for the skill name (verb + `-ing`: `processing-pdfs`, `analyzing-spreadsheets`, `managing-databases`) per Anthropic's published convention; verb-noun (`process-pdfs`) and noun phrases (`pdf-processing`) are acceptable alternatives, mixed forms across one repository aren't ([R2](#references))
+- **MUST NOT** use vague or generic names like `helper`, `utils`, `tools`, `documents`, `data`, or `files`; they defeat discovery because Claude can't tell what the skill does from its name alone ([R2](#references))
 
 ### Tag vocabulary
 - **SHOULD** prefer a term from the starter vocabulary below when one applies, so artifacts in the same functional cluster share the same tag string
@@ -88,11 +88,11 @@ Tracks the public guidance at <https://agentskills.io/skill-creation/best-practi
 - **SHOULD** ground the skill in real expertise—extract from a hands-on task or synthesize from project-specific artifacts (runbooks, code-review comments, version history, failure cases) rather than from generic LLM output alone ([R4](#references))
 - **SHOULD** apply the **Default assumption: Claude is already very smart** test before adding any explanatory paragraph—challenge each piece of content with "Does Claude really need this explanation? Does this paragraph justify its token cost?" and cut content that fails the test ([R2](#references))
 - **SHOULD** use **consistent terminology** throughout the skill: pick one term for each concept ("API endpoint" vs. "URL" vs. "API route") and stick to it; mixed terminology measurably degrades instruction-following ([R2](#references))
-- **MUST NOT** include time-sensitive information that will become wrong (e.g. "before August 2025, use the old API"); historical context belongs inside an explicit `## Old patterns` collapsible section, never inline ([R2](#references))
+- **MUST NOT** include time-sensitive information that will become wrong (for example "before August 2025, use the old API"); historical context belongs inside an explicit `## Old patterns` collapsible section, never inline ([R2](#references))
 - **MUST** use forward-slash paths (`scripts/helper.py`, `references/guide.md`) in every reference inside the skill, never Windows-style backslashes—Unix paths work everywhere; Windows-style paths break on Unix ([R2](#references))
 - **MUST**, when referencing MCP tools from skill prose, use fully qualified `ServerName:tool_name` syntax (`BigQuery:bigquery_schema`, not `bigquery_schema`); without the server prefix the runtime fails to locate the tool when multiple MCP servers are present ([R2](#references))
 - **MAY** bundle reusable scripts in `scripts/` when iteration shows the agent re-inventing the same logic each run, and **MAY** add a **Validation loop** or **Plan-validate-execute** subsection when the skill performs batch or destructive operations ([R2](#references), [R4](#references))
-- **SHOULD**, when bundling scripts, **solve don't punt**—the script handles its own error cases (missing file → create with default; permission denied → fall back gracefully) instead of failing and leaving Claude to recover ([R2](#references))
+- **SHOULD**, when bundling scripts, **solve don't punt**: the script handles its own error cases (missing file → create with default; permission denied → fall back gracefully) instead of failing and leaving Claude to recover ([R2](#references))
 - **SHOULD** justify every configuration constant the script declares; "voodoo constants" (`TIMEOUT = 47`, `RETRIES = 5`) without an inline comment explaining the value are a `Warning`-grade authoring smell ([R2](#references))
 - **MUST**, in any prose that mentions a script, make the **execution intent explicit**: write either "Run `analyze_form.py` to extract fields" (execute) or "See `analyze_form.py` for the field extraction algorithm" (read as reference); ambiguity here causes Claude to make the wrong choice and waste tokens ([R2](#references))
 
@@ -102,7 +102,7 @@ Skills are loaded in three stages by Claude—metadata at startup (~100 tokens p
 
 - **MUST** keep file references inside `SKILL.md` **at most one level deep**: `SKILL.md` → `references/foo.md` is fine; `SKILL.md` → `references/foo.md` → `references/bar.md` is forbidden, because Claude tends to use partial reads (`head -100`) on nested references and then misses content ([R2](#references))
 - **MUST** include a **table of contents** at the top of any reference file longer than 100 lines, so partial-read previews still surface the file's full scope ([R2](#references))
-- **MUST**, every time `SKILL.md` references a supporting file, name **what the file contains** and **when to load it** (e.g. "Read `references/api-errors.md` if the API returns a non-200 status code"); generic "see `references/` for details" defeats progressive disclosure because Claude has no signal for *when* to load ([R2](#references), [R4](#references))
+- **MUST**, every time `SKILL.md` references a supporting file, name **what the file contains** and **when to load it** (for example "Read `references/api-errors.md` if the API returns a non-200 status code"); generic "see `references/` for details" defeats progressive disclosure because Claude has no signal for *when* to load ([R2](#references), [R4](#references))
 - **SHOULD** organize supporting files by **domain** when the skill spans multiple subjects (`reference/finance.md`, `reference/sales.md`, `reference/product.md`), so each user query loads only the relevant slice ([R2](#references))
 - **SHOULD** keep skill scope to a **single coherent unit of work** (function-level coherence): a skill that "queries the database and formats the results" is one unit; a skill that "queries the database, formats the results, and administers the database" is two units that should be split ([R4](#references))
 
@@ -110,19 +110,19 @@ Skills are loaded in three stages by Claude—metadata at startup (~100 tokens p
 
 Skills shipped by this plugin run inside Claude Code; understanding the runtime contract avoids authoring mistakes that surface only at session-time.
 
-- **MUST** write the body so its content holds up as **standing instructions for the rest of the session**, not as one-time steps: once a skill is invoked, its rendered `SKILL.md` content enters the conversation as a single message and stays there for the rest of the session—Claude Code does **not** re-read the file on later turns ([R3](#references))
-- **MUST** survive auto-compaction: after the conversation is compacted, Claude Code re-attaches the most recent invocation of each skill keeping only the **first 5,000 tokens** of each, with a combined re-attached budget of **25,000 tokens** across all invoked skills; SKILL.md content beyond the 5,000-token mark is silently dropped ([R3](#references)). The 5,000-token authoring cap and the 5,000-token re-attach window are not coincidental—the skill is designed to survive compaction whole only if it stays under that limit
-- **MAY** declare any of the optional Claude Code-specific frontmatter fields ([R3](#references)) when they apply: `when_to_use`, `argument-hint`, `arguments`, `disable-model-invocation`, `user-invocable`, `allowed-tools`, `model`, `effort`, `context: fork`, `agent`, `hooks`, `paths`, `shell`. These extend the formal Agent Skills spec ([R1](#references)) but are not portable to non-Claude-Code runtimes
-- **MUST** treat `allowed-tools` as a **permission grant** (pre-approved tool calls when the skill is active), not as a tool restriction; it does not narrow what the skill can call—it widens what runs without prompting the user. Project-level skills with `allowed-tools` only take effect after the user accepts workspace trust ([R3](#references))
-- **MUST**, when setting `disable-model-invocation: true` for a skill that should only run on explicit user request, accept the consequence that the skill cannot be **preloaded into subagents** via a subagent's `skills:` field—Claude Code skips disabled skills there and logs a warning ([R3](#references))
-- **MAY** declare a `model` override on a skill (`model: opus`, `model: haiku`, `model: inherit`); the override applies for the rest of the current turn and is **not saved to settings**—the session model resumes on the next prompt ([R3](#references))
+- **MUST** write the body so its content holds up as **standing instructions for the rest of the session**, not as one-time steps: once a skill is invoked, its rendered `SKILL.md` content enters the conversation as a single message and stays there for the rest of the session—Claude Code **never** re-reads the file on later turns ([R3](#references))
+- **MUST** survive automatic compaction: after the conversation is compacted, Claude Code re-attaches the most recent invocation of each skill keeping only the **first 5,000 tokens** of each, with a combined re-attached budget of **25,000 tokens** across all invoked skills; SKILL.md content beyond the 5,000-token mark is silently dropped ([R3](#references)). The 5,000-token authoring cap and the 5,000-token re-attach window aren't coincidental—the skill is designed to survive compaction whole only if it stays under that limit
+- **MAY** declare any of the optional Claude Code-specific frontmatter fields ([R3](#references)) when they apply: `when_to_use`, `argument-hint`, `arguments`, `disable-model-invocation`, `user-invocable`, `allowed-tools`, `model`, `effort`, `context: fork`, `agent`, `hooks`, `paths`, `shell`. These extend the formal Agent Skills spec ([R1](#references)) but aren't portable to non-Claude-Code runtimes
+- **MUST** treat `allowed-tools` as a **permission grant** (pre-approved tool calls when the skill is active), not as a tool restriction; it doesn't narrow what the skill can call—it widens what runs without prompting the user. Project-level skills with `allowed-tools` only take effect after the user accepts workspace trust ([R3](#references))
+- **MUST**, when setting `disable-model-invocation: true` for a skill that should only run on explicit user request, accept the consequence that the skill can't be **preloaded into subagents** via a subagent's `skills:` field—Claude Code skips disabled skills there and logs a warning ([R3](#references))
+- **MAY** declare a `model` override on a skill (`model: opus`, `model: haiku`, `model: inherit`); the override applies for the rest of the current turn and **isn't saved to settings**, so the session model resumes on the next prompt ([R3](#references))
 - **MAY** use `context: fork` together with `agent: <type>` to run the skill in a forked subagent context (skill content becomes the prompt, the named agent type provides tools and model). This is the **inverse** of a subagent's `skills:` preload field; both arrive at the same composition through different ownership ([R3](#references)). When to choose it over an `agents/<name>.md` file is governed by `skill-vs-agent`
 
 ### Evaluation discipline
 
 - **SHOULD** **build evaluations before extensive documentation**: identify gaps by running Claude on representative tasks without the skill, document the specific failures, then write only the instructions that close those gaps ([R2](#references))
 - **SHOULD** ship at least **three evaluation scenarios** per non-trivial skill (input prompt, optional input files, expected behavior) under `examples/` or a sibling location, so iteration is grounded in observable behavior rather than authoring intuition ([R2](#references))
-- **SHOULD** **test the skill against every model the skill is intended to be used with**—Haiku, Sonnet, and Opus; what works for Opus may not provide enough guidance for Haiku, and what's clear for Haiku may over-explain for Opus ([R2](#references))
+- **SHOULD** **test the skill against every model the skill is intended to be used with**, namely Haiku, Sonnet, and Opus; what works for Opus may not provide enough guidance for Haiku, and what's clear for Haiku may over-explain for Opus ([R2](#references))
 - **MAY** validate skill structure with the upstream `skills-ref` reference validator (`skills-ref validate ./skills/<name>`) before opening a PR; the validator catches frontmatter and naming issues this spec doesn't enumerate exhaustively ([R1](#references))
 
 ## Acceptance Criteria
@@ -151,12 +151,12 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 
 ## References
 
-- [R1] Agent Skills, formal specification — <https://agentskills.io/specification>
-- [R2] Skill authoring best practices, Anthropic platform docs — <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
-- [R3] Extend Claude with skills, Claude Code docs — <https://code.claude.com/docs/en/skills>
-- [R4] Best practices for skill creators, agentskills.io — <https://agentskills.io/skill-creation/best-practices>
-- [R5] Equipping agents for the real world with Agent Skills, Anthropic engineering, 2025-10-16 — <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>
-- [R6] anthropics/skills (canonical Anthropic skill repository) — <https://github.com/anthropics/skills>
+- [R1] Agent Skills, formal specification: <https://agentskills.io/specification>
+- [R2] Skill authoring best practices, Anthropic platform docs: <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
+- [R3] Extend Claude with skills, Claude Code docs: <https://code.claude.com/docs/en/skills>
+- [R4] Best practices for skill creators, agentskills.io: <https://agentskills.io/skill-creation/best-practices>
+- [R5] Equipping agents for the real world with Agent Skills, Anthropic engineering, 2025-10-16: <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>
+- [R6] anthropics/skills (canonical Anthropic skill repository): <https://github.com/anthropics/skills>
 
 ## Open Questions
 - Should the folder name be required to match any user-facing slash-command name, or may they differ?

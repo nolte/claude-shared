@@ -71,7 +71,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 
 - **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure—tools declared but not used are `Warning` findings (dead permission)
 - **MUST** verify, for every tool the agent body clearly needs, that it's declared in `tools`: tools used but not declared are `Critical` findings (the agent will fail to run)
-- **MUST** verify the agent **does not omit** the `tools` field unintentionally: an absent `tools` field grants the inherited full tool surface, which is permission sprawl. If the agent's responsibility is "research" / "review" / "audit" / "report" and `tools` is absent, that's a `Critical`; for any other agent the absence is a `Warning` unless the body explicitly justifies inheriting all tools ([R5](#references), [R6](#references))
+- **MUST** verify the agent **doesn't omit** the `tools` field unintentionally: an absent `tools` field grants the inherited full tool surface, which is permission sprawl. If the agent's responsibility is "research" / "review" / "audit" / "report" and `tools` is absent, that's a `Critical`; for any other agent the absence is a `Warning` unless the body explicitly justifies inheriting all tools ([R5](#references), [R6](#references))
 - **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents; an agent using `Bash` for operations a dedicated tool covers gets a `Warning` unless the body justifies the choice
 - **MUST** verify, when both `tools` and `disallowedTools` are declared, that no tool name appears in both lists (the runtime applies deny then allow, so a double-listed tool is silently removed) and that the resolved set is non-empty; either condition is a `Warning`
 
@@ -79,20 +79,20 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 
 Mirrors `agent-management` §"Plugin-distribution security constraints"; cite the originating rule when a finding pins one.
 
-- **MUST** verify, when `distribution: plugin` is declared, that the frontmatter does **not** set `hooks`, `mcpServers`, or `permissionMode`; any of those fields is a `Critical` (the runtime silently ignores them for plugin agents and the author is being misled into thinking they're active) ([R5](#references))
-- **MUST**, when `distribution: project` is declared, accept those fields as valid; their presence is **not** a finding for project-distributed agents
-- **SHOULD**, when an agent declares `distribution: plugin` AND its body describes behavior that obviously requires `hooks` / `mcpServers` / `permissionMode` (e.g. "this agent installs a PreToolUse hook", "this agent connects to its own MCP server", "this agent runs in plan mode"), flag a `Warning` even if the fields are absent—the description and the distribution are inconsistent
+- **MUST** verify, when `distribution: plugin` is declared, that the frontmatter **doesn't** set `hooks`, `mcpServers`, or `permissionMode`; any of those fields is a `Critical` (the runtime silently ignores them for plugin agents and the author is being misled into thinking they're active) ([R5](#references))
+- **MUST**, when `distribution: project` is declared, accept those fields as valid; their presence **isn't** a finding for project-distributed agents
+- **SHOULD**, when an agent declares `distribution: plugin` AND its body describes behavior that obviously requires `hooks` / `mcpServers` / `permissionMode` (for example "this agent installs a PreToolUse hook," "this agent connects to its own MCP server," "this agent runs in plan mode"), flag a `Warning` even if the fields are absent—the description and the distribution are inconsistent
 
 ### Subagent-boundary checks
 
 Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybrid pattern"; cite the originating rule when a finding pins one.
 
-- **MUST** verify the agent body **never** dispatches another subagent—grep the body for `Agent(`, `subagent_type`, `Task(`, or equivalent dispatch phrasings; any match is a `Critical` (Claude Code subagents cannot spawn subagents) ([R5](#references))
+- **MUST** verify the agent body **never** dispatches another subagent—grep the body for `Agent(`, `subagent_type`, `Task(`, or equivalent dispatch phrasings; any match is a `Critical` (Claude Code subagents can't spawn subagents) ([R5](#references))
 - **MUST** verify the agent body **never** invokes the Skill tool on behalf of the user—grep the body for `Skill(`, `Skill tool`, or equivalent skill-dispatch phrasings; any match is a `Critical` per `skill-vs-agent`
 
 ### Description quality and proactive-delegation intent
 
-- **MUST** verify, when the `description` contains the phrase "use proactively" (or the equivalent "use this proactively", "should be used proactively", "invoke proactively"), that the agent's responsibility actually warrants Claude offering it without explicit user request—signs a check passes: the agent solves a class of problem the user is unlikely to name explicitly (security review on every PR, audit on every commit). Signs the check fails: the agent has destructive side effects, requires credentials, or makes commitments to external systems. A "proactively" claim on a destructive or credential-bearing agent is a `Critical` ([R5](#references))
+- **MUST** verify, when the `description` contains the phrase "use proactively" (or the equivalent "use this proactively," "should be used proactively," "invoke proactively"), that the agent's responsibility actually warrants Claude offering it without explicit user request—signs a check passes: the agent solves a class of problem the user is unlikely to name explicitly (security review on every PR, audit on every commit). Signs the check fails: the agent has destructive side effects, requires credentials, or makes commitments to external systems. A "proactively" claim on a destructive or credential-bearing agent is a `Critical` ([R5](#references))
 - **SHOULD** verify, when the agent has clear overlap with another existing artifact (skill or agent), that `description` names the overlap as a **negative trigger** ("don't use for X, use the `<peer>` agent / skill instead"); absence of the negative is a `Warning` ([R5](#references))
 
 ### Prompt-structure checks
@@ -142,12 +142,12 @@ Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybri
 
 Sources for the additional checks above. Cite the relevant entry in finding bracketed prefixes when a check pins a specific upstream rule.
 
-- [R1] Agent management spec (this plugin) — `spec/claude/agent-management/`
-- [R2] Skill vs. agent decision (this plugin) — `spec/claude/skill-vs-agent/`
-- [R3] Skill management spec (this plugin, for cross-format alignment) — `spec/claude/skill-management/`
-- [R4] Review plan spec (output format) — `spec/claude/review-plan/`
-- [R5] Create custom subagents, Claude Code docs — <https://code.claude.com/docs/en/sub-agents>
-- [R6] Best practices for Claude Code subagents, PubNub Engineering — <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
+- [R1] Agent management spec (this plugin): `spec/claude/agent-management/`
+- [R2] Skill vs. agent decision (this plugin): `spec/claude/skill-vs-agent/`
+- [R3] Skill management spec (this plugin, for cross-format alignment): `spec/claude/skill-management/`
+- [R4] Review plan spec (output format): `spec/claude/review-plan/`
+- [R5] Create custom subagents, Claude Code docs: <https://code.claude.com/docs/en/sub-agents>
+- [R6] Best practices for Claude Code subagents, PubNub Engineering: <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->

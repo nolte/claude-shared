@@ -51,12 +51,12 @@ Every candidate capability is evaluated along the dimensions below. Each dimensi
 ### Hybrid pattern: Skill orchestrates, agent executes
 - **MUST** model implementation work that sits inside a broader workflow as `skill → Agent(subagent_type=<agent>)` rather than as a monolithic skill whenever at least one agent-side criterion (context-window protection, parallelism, tool restriction, specialization) applies to the implementation step
 - **MUST NOT** invert this pattern—an agent **MUST NOT** invoke the Skill tool on behalf of the user, because agents run in an isolated subagent context and have no stable way to surface skill-level interactivity back to the parent conversation
-- **MUST NOT** assume an agent can spawn a further subagent—Claude Code subagents **cannot spawn other subagents** ([R1](#references)). The skill remains the only level at which fan-out happens; an agent that needs sub-work either folds the work into its own context or returns control to the calling skill
+- **MUST NOT** assume an agent can spawn a further subagent—Claude Code subagents **can't spawn other subagents** ([R1](#references)). The skill remains the only level at which fan-out happens; an agent that needs sub-work either folds the work into its own context or returns control to the calling skill
 - **SHOULD** keep the skill's role limited to orchestration, user interaction, and validation of the agent's output; the agent does the hands-on reading, editing, or researching
 - **SHOULD** chain multiple agents sequentially from a skill when the responsibilities split naturally (for example: a YAML-fix agent, then a git-commit agent, then the `pull-request-create` skill—calling another skill from a skill in the same thread is allowed)
 - The `workflow-health` spec's "Specialized-agent dispatch for remediation" subsection is the canonical portfolio-level instance of this pattern; changes to that subsection **MUST** stay consistent with the rule declared here
 
-### Forked skills: a third option, not a fourth artifact
+### Forked skills: A third option, not a fourth artifact
 
 Claude Code supports running a skill itself in an isolated subagent context by setting `context: fork` plus `agent: <type>` in the skill's frontmatter ([R2](#references)). The skill's body becomes the prompt that drives the forked subagent; the skill's own tool surface is replaced by the named agent type's tools and model. This is the **inverse** of a subagent's `skills:` preload field—both arrive at the same composition through different ownership.
 
@@ -104,10 +104,10 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 
 ## References
 
-- [R1] Create custom subagents, Claude Code docs (subagents cannot spawn subagents) — <https://code.claude.com/docs/en/sub-agents>
-- [R2] Extend Claude with skills, Claude Code docs (`context: fork`) — <https://code.claude.com/docs/en/skills>
-- [R3] Building Effective AI Agents, Anthropic engineering — <https://www.anthropic.com/research/building-effective-agents>
-- [R4] Equipping agents for the real world with Agent Skills, Anthropic engineering, 2025-10-16 — <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>
+- [R1] Create custom subagents, Claude Code docs (subagents can't spawn subagents): <https://code.claude.com/docs/en/sub-agents>
+- [R2] Extend Claude with skills, Claude Code docs (`context: fork`): <https://code.claude.com/docs/en/skills>
+- [R3] Building Effective AI Agents, Anthropic engineering: <https://www.anthropic.com/research/building-effective-agents>
+- [R4] Equipping agents for the real world with Agent Skills, Anthropic engineering, 2025-10-16: <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>
 
 ## Open Questions
 - Should this spec declare a minimum "rationale section" structure (at least two named dimensions, at least one counter-dimension) to make audits mechanical, or is the current "at least one decisive dimension" bar sufficient?
