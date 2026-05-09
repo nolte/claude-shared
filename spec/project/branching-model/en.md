@@ -71,7 +71,7 @@ The repository **SHOULD** also include, where applicable:
 - [ ] There are no human-authored commits on `main` between two consecutive releases—only commits introduced by the refresh workflow
 - [ ] Feature branches in the repository use one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, `exp/`
 - [ ] If `.github/release-drafter.yml` is present, the `exp` type either lands in a non-user-facing category or is excluded from the configured categories, so experimental PRs don't surface as shipped features
-- [ ] If MkDocs is used, `.github/workflows/release-cd-deliver-docs.yml` is present and triggers on `release: [published]`
+- [ ] If MkDocs is used **and** `.github/workflows/release-cd-deliver-docs.yml` is shipped, the workflow triggers on `release: [published]` (the workflow itself is SHOULD, per Requirements §Required GitHub workflows; this AC checks its trigger when present, not its presence)
 
 ## Open Questions
 - How should emergency hotfixes be handled—branch off `main`, merge back to both `main` and `develop`, or always cycle through `develop` plus a new patch release?

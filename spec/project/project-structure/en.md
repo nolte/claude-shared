@@ -42,9 +42,9 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 - **SHOULD** produce CI status badges in `README.md` for the primary workflows
 
 ### Release and documentation workflows
-The `nolte/gh-plumbing` portfolio ships reusable workflows for release management and documentation delivery. The `branching-model` spec lists the release-management workflows in full and makes three of them mandatory. This spec additionally surfaces the documentation and packaging companions so that a project-structure audit catches them even when the branching-model spec is read in isolation.
+The `nolte/gh-plumbing` portfolio ships reusable workflows for release management and documentation delivery. `spec/project/branching-model/` §Required GitHub workflows is the canonical source for the mandatory list (currently four workflows). This spec additionally surfaces the documentation and packaging companions so that a project-structure audit catches them even when the branching-model spec is read in isolation, but it never restates the list itself—changes to the mandatory set happen in `branching-model`, never here.
 
-- **MUST** include the release-management workflows mandated by the `branching-model` spec: `.github/workflows/release-drafter.yml`, `.github/workflows/release-cd-refresh-master.yml`, and `.github/workflows/automerge.yaml`, each wired to the corresponding reusable workflow under `nolte/gh-plumbing/.github/workflows/`
+- **MUST** include every release-management workflow mandated by `spec/project/branching-model/` §Required GitHub workflows, each wired to the corresponding reusable workflow under `nolte/gh-plumbing/.github/workflows/`. The current set is `release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, and `automerge.yaml`; the authoritative enumeration lives in `branching-model`
 - **SHOULD** include `.github/workflows/release-cd-deliver-docs.yml`: triggered on `release: [published]` and invoking `nolte/gh-plumbing/.github/workflows/reusable-mkdocs.yaml`: whenever `mkdocs.yml` is present, so documentation is republished on every release
 - **MAY** include a repository-specific packaging workflow (for example a `release.yml` that patches `manifest.json`, builds a ZIP, and uploads it via `gh release upload`) triggered on `release: [published]` when the repository ships a delivery artifact such as an HACS integration
 - **SHOULD** pin every reusable-workflow reference to a tag (for example `@v1.1.12`) rather than a moving branch, so release-pipeline behavior stays reproducible
@@ -129,8 +129,8 @@ These rules apply to every `requirements.txt` and `requirements-dev.txt` written
 - [ ] The Renovate GitHub App (slug `renovate`) is installed on the repository, verifiable via the App's repository selection, the presence of an open or closed Dependency-Dashboard issue, the presence of `app/renovate-bot`-authored PRs, or the Mend Renovate dashboard at `https://developer.mend.io/github/<owner>/<repo>`
 - [ ] `.claude/` exists and contains at least one of `agents/`, `skills/`, `commands/`, or a `settings*.json` file
 - [ ] `.github/workflows/` contains at least one workflow file
-- [ ] `.github/workflows/` contains `release-drafter.yml`, `release-cd-refresh-master.yml`, and `automerge.yaml`, each wired to the matching `nolte/gh-plumbing` reusable workflow
-- [ ] If `mkdocs.yml` is present, `.github/workflows/release-cd-deliver-docs.yml` exists and triggers on `release: [published]`
+- [ ] `.github/workflows/` contains every workflow listed in `spec/project/branching-model/` §Required GitHub workflows (currently `release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`), each wired to the matching `nolte/gh-plumbing` reusable workflow
+- [ ] If `mkdocs.yml` is present **and** `.github/workflows/release-cd-deliver-docs.yml` is shipped, the workflow triggers on `release: [published]` (the workflow itself is SHOULD per Requirements §Release and documentation workflows; this AC checks its trigger when present, not its presence)
 - [ ] Every `uses: nolte/gh-plumbing/.github/workflows/...` reference in `.github/workflows/` is pinned to a release tag, not a moving branch
 - [ ] `.github/settings.yml` is present and extends `nolte/gh-plumbing:.github/commons-settings.yml` (or the equivalent short form)
 - [ ] Every label `description` field in `.github/settings.yml` and the inherited `commons-settings.yml` is 100 characters or fewer

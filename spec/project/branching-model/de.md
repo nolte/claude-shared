@@ -71,7 +71,7 @@ Das Repository **SOLLTE [SHOULD]** außerdem enthalten, wo anwendbar:
 - [ ] Zwischen zwei aufeinanderfolgenden Releases gibt es keine menschlich erzeugten Commits auf `main` — nur Commits, die der Refresh-Workflow eingebracht hat
 - [ ] Feature-Branches im Repository verwenden einen der Präfixe `feat/`, `fix/`, `chore/`, `docs/`, `exp/`
 - [ ] Wenn `.github/release-drafter.yml` vorhanden ist, landet der `exp`-Type entweder in einer nicht benutzerseitigen Kategorie oder ist aus den konfigurierten Kategorien ausgeschlossen, sodass experimentelle PRs nicht als ausgelieferte Features erscheinen
-- [ ] Wenn MkDocs verwendet wird, ist `.github/workflows/release-cd-deliver-docs.yml` vorhanden und löst auf `release: [published]` aus
+- [ ] Wenn MkDocs verwendet wird **und** `.github/workflows/release-cd-deliver-docs.yml` ausgeliefert ist, löst der Workflow auf `release: [published]` aus (der Workflow selbst ist SHOULD, gemäß Anforderungen §Erforderliche GitHub-Workflows; dieses AK prüft den Trigger im Vorhandenseinsfall, nicht das Vorhandensein selbst)
 
 ## Offene Fragen
 - Wie sollen Notfall-Hotfixes behandelt werden — Branch ab `main`, Merge zurück nach `main` und `develop`, oder immer über `develop` plus neues Patch-Release?
