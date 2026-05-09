@@ -33,7 +33,7 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 Tracks the formal Agent Skills specification ([R1](#references)) and Anthropic's published validation rules ([R2](#references)); cite the source slug when a finding pins a specific limit.
 
 - **MUST** keep `name` between 1 and 64 characters, contain only lowercase ASCII letters, digits, and hyphens, **MUST NOT** start or end with a hyphen, and **MUST NOT** contain consecutive hyphens (`--`)
-- **MUST NOT** use the reserved words `anthropic` or `claude` as the value of `name`, anywhere in `name`, or in any other frontmatter value, per the upstream platform validator
+- **MUST NOT** use the reserved words `anthropic` or `claude` as the value of `name` or anywhere within `name`, per the upstream platform validator. The reserved-word rule **applies only to `name`**: descriptive fields like `description` may legitimately mention `claude` (for example "Claude Code skill for X") and many existing skills do, so restricting `description` would force unnatural circumlocutions ("the assistant" / "the agent runtime") without any platform-validator gain
 - **MUST NOT** include XML tags inside the `name` or `description` values
 - **MUST** keep `description` non-empty and **MUST NOT** exceed 1024 characters
 - **MUST** write `description` in **third person** ("Generates …," "Reviews …"), never first or second person ("I help …," "You can use this to …"), because the description is injected into Claude's system prompt and inconsistent point-of-view degrades skill discovery ([R2](#references))
@@ -147,7 +147,7 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - [ ] Every script reference makes execution intent explicit ("Run X to …" vs. "See X for the algorithm of …")
 - [ ] All paths in `SKILL.md` and supporting files use forward slashes
 - [ ] No skill in `skills/` references an MCP tool without the `ServerName:tool_name` qualifier
-- [ ] No `SKILL.md` declares `name` or other frontmatter values containing the reserved tokens `anthropic` or `claude`
+- [ ] No `SKILL.md` declares a `name` containing the reserved tokens `anthropic` or `claude`; other frontmatter fields (`description`, `tags`, `when_to_use`, etc.) MAY mention these terms
 
 ## References
 

@@ -33,7 +33,7 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 Folgt der formalen Agent-Skills-Spezifikation ([R1](#referenzen)) und den von Anthropic veröffentlichten Validierungsregeln ([R2](#referenzen)); den Source-Slug zitieren, wenn ein Finding eine konkrete Grenze pinnt.
 
 - **MUSS [MUST]** `name` zwischen 1 und 64 Zeichen halten, nur ASCII-Kleinbuchstaben, Ziffern und Bindestriche enthalten, **DARF NICHT [MUST NOT]** mit einem Bindestrich beginnen oder enden und **DARF NICHT [MUST NOT]** aufeinanderfolgende Bindestriche (`--`) enthalten
-- **DARF NICHT [MUST NOT]** die reservierten Wörter `anthropic` oder `claude` als Wert von `name`, an irgendeiner Stelle innerhalb von `name` oder in einem anderen Frontmatter-Wert verwenden, gemäß Upstream-Plattform-Validator
+- **DARF NICHT [MUST NOT]** die reservierten Wörter `anthropic` oder `claude` als Wert von `name` oder an irgendeiner Stelle innerhalb von `name` verwenden, gemäß Upstream-Plattform-Validator. Die Reserved-Word-Regel **gilt ausschließlich für `name`**: Beschreibende Felder wie `description` dürfen `claude` legitim erwähnen (z. B. „Claude Code skill for X"), und viele bestehende Skills tun das — eine Einschränkung von `description` würde unnatürliche Umschreibungen erzwingen („der Assistent" / „die Agent-Laufzeit") ohne Mehrgewinn beim Plattform-Validator
 - **DARF NICHT [MUST NOT]** XML-Tags innerhalb der `name`- oder `description`-Werte enthalten
 - **MUSS [MUST]** `description` nicht-leer halten und **DARF NICHT [MUST NOT]** 1024 Zeichen überschreiten
 - **MUSS [MUST]** `description` in der **dritten Person** verfassen („Generates …", „Reviews …"), niemals in erster oder zweiter Person („I help …", „You can use this to …"), weil die Description in den System-Prompt von Claude injiziert wird und uneinheitliche Sprachperson die Skill-Discovery messbar verschlechtert ([R2](#referenzen))
@@ -147,7 +147,7 @@ Die in diesem Plugin ausgelieferten Skills laufen in Claude Code; das Verständn
 - [ ] Jede Skript-Referenz macht die Ausführungs-Absicht explizit („Run X to …" vs. „See X for the algorithm of …")
 - [ ] Alle Pfade in `SKILL.md` und Hilfsdateien verwenden Forward-Slashes
 - [ ] Kein Skill in `skills/` referenziert ein MCP-Tool ohne den `ServerName:tool_name`-Qualifier
-- [ ] Keine `SKILL.md` deklariert `name` oder andere Frontmatter-Werte, die die reservierten Tokens `anthropic` oder `claude` enthalten
+- [ ] Keine `SKILL.md` deklariert einen `name`, der die reservierten Tokens `anthropic` oder `claude` enthält; andere Frontmatter-Felder (`description`, `tags`, `when_to_use` etc.) DÜRFEN diese Begriffe erwähnen
 
 ## Referenzen
 
