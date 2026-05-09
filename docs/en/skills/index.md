@@ -19,8 +19,18 @@ Skills are reusable workflows Claude Code invokes via the `Skill` tool. In the c
 | `project-structure-apply` | Audit the repo against the `project-structure` spec and scaffold missing artefacts |
 | `github-issue-templates-apply` | Scaffold or update `.github/ISSUE_TEMPLATE/` per the `github-issue-templates` spec |
 | `skill-agent-catalog-apply` | Wire up the MkDocs catalog that lists every skill and agent in a plugin repo |
+| `mermaid-diagrams-apply` | Audit the MkDocs Mermaid setup against the `mermaid-diagrams` spec and emit spec-compliant diagrams |
 | `vocab-drift-audit` | Diff repository-local Vale vocabulary against the pinned `nolte/vale-style` release |
 | `audience-identify` | Identify the audiences of a bounded context and write a reviewable audience artifact |
+| `mission-define` | First-write `project/mission.md` walking SMART one letter at a time |
+| `mission-revise` | Edit `project/mission.md` and flip `mvp_status` lifecycle per the `mission` spec |
+| `roadmap-init` | Scaffold initial `project/goals.md` and `project/roadmap.md` (Vision plus Outcomes plus empty queue) |
+| `roadmap-refine` | Enforce the detail-level invariant in `project/roadmap.md` with structured violation reports |
+| `roadmap-planner` | Add, promote, re-target roadmap items; flip the `mvp` flag |
+| `feature-decompose` | Decompose a roadmap item into `project/features/<slug>.md` with `feature-consistency-reviewer` dispatch |
+| `sprint-plan` | Create `project/sprints/<NNNN>-<slug>.md` with `value_statement` and `verifies_sprint_value` |
+| `sprint-execute` | Drive the sprint lifecycle: `planned → active`, feature transitions, `last_commit` updates |
+| `sprint-review` | Close a sprint with artefact validation, optionally chain into the release skill layer |
 
 Detail pages currently exist for `skill-management` and `spec`; more are being added. The authoritative source per skill is `skills/<name>/SKILL.md` in the source tree.
 
