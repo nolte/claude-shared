@@ -1,7 +1,7 @@
 ---
 name: workflow-health-triage
 description: "Triages a failing GitHub Actions workflow run on `develop` or `main` per `spec/project/workflow-health/`. Classifies the failure into one of `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`, dispatches the most specialised Claude agent that matches the classification, records the classification plus the dispatched agent's name in the eventual fix PR's Risk / rollout notes, and verifies the standard `fix/`-PR flow. Invoke when the user asks to \"triage this red workflow\", \"classify this CI failure\", or equivalent German-language requests. Don't use to silence checks via `continue-on-error` shortcuts or by removing required-checks entries (forbidden by spec); don't use to bypass branch protection (`enforce_admins` on develop has no exception path); don't use to merge a fix PR (use `pull-request-merge`)."
-tags: [workflow-health, triage, ci]
+tags: [audit, pull-request]
 ---
 
 # Workflow Health Triage

@@ -1,7 +1,7 @@
 ---
 name: permission-allowlist-maintain
 description: "Curates the committed `.claude/settings.json` `permissions.allow` list of the current repository per `spec/claude/permission-allowlist/`. Proposes additions sourced from the `fewer-permission-prompts` built-in or from the user, applies the spec's three-condition selection criteria (frequent + read-only + not-already-autoallowed), rejects forbidden pattern classes (interpreter wildcards, task-runner wildcards, mutation-capable `gh`/`git` wildcards), and routes every change through the standard pull-request flow. Invoke when the user asks to \"tidy the permission allowlist\", \"add `Bash(task lint)` to the allowlist\", \"review `.claude/settings.json`\", or equivalent German-language requests. Don't use to edit `.claude/settings.local.json` or `~/.claude/settings.json` (out of scope per spec)."
-tags: [permissions, claude-code, allowlist]
+tags: [scaffolding, audit]
 ---
 
 # Permission Allowlist Maintain
