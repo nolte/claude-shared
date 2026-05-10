@@ -33,7 +33,7 @@ Explicitly out of scope: runtime behavior of the agent, Vale/markdown style (han
 - Info: {{I}}
 
 Go/no-go: {{PASS | FAIL | CONDITIONAL — <condition>}}
-Next concrete action: {{one-liner — typically "author addresses BLOCKERs in <area>"}}
+Next concrete action: {{one-liner — typically "author addresses Critical findings in <area>"}}
 
 ## Findings
 
