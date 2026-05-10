@@ -151,6 +151,13 @@ feature is malformed.
    resolution is to upgrade the plugin runtime and rerun the check via
    the agent path.
 
+## Gotchas
+
+- **The `feature-consistency-reviewer` agent has no shell access** (per `agent-management` §Tool access — read-only invariant). The dispatching call from this skill **MUST** confirm the working tree is a git repository (`git rev-parse --is-inside-work-tree`) and pass the short SHA (`git rev-parse --short HEAD`) as a dispatch argument; the agent uses the SHA to populate `agent_version` in its findings report. Skipping this step and dispatching anyway produces an `agent_version: unknown` field in every consistency-check result.
+- **The manual-fallback path is deprecated, not removed.** When the agent dispatch in Operation 2 step 1 fails because the plugin runtime predates the agent's release, the operator can still walk the investigation surface manually — but the skill **MUST** ask explicit permission before falling back, and the resulting `consistency_check` block carries `agent: manual-<YYYY-MM-DD>` instead of an agent name. Auditing later that bypasses surface as if it were a regular agent run mis-attributes the resolution decisions.
+- **`verifies_sprint_value` is a feature-side invariant, not a sprint-side one.** At most one feature per sprint carries a non-null `verifies_sprint_value`; setting it on two features in the same sprint is a hard violation per `spec/project/feature/` §Frontmatter schema. The skill defaults the field to `null` on every new feature; the operator opts in explicitly when authoring or when `sprint-plan` reassigns the verifier.
+- **The `R-<n>` and `F-<n>` ID counters are monotonic across the project's lifetime, never reused** even after deletion. Deriving the next ID from "max existing ID + 1" without checking the git history's deleted IDs would silently re-use a retired ID. The skill reads the highest existing ID under `project/features/` plus the highest deleted ID from `git log` before assigning.
+
 ## Hard rules
 
 - **Never** transition a feature past `status: draft`. Only `sprint-plan`

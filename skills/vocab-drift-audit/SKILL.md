@@ -67,6 +67,14 @@ StylesPath: <value>
 
 The "Latest release" line comes from `gh api repos/nolte/vale-style/releases/latest --jq .tag_name`. If it differs from the pin, flag it but don't bump automatically.
 
+## Gotchas
+
+- **`vale sync` populates `.vale-styles/` (or whatever `StylesPath` resolves to) at build time.** The audit reads from the actual `accept.txt` files on disk, not from the upstream tag in `.vale.ini`'s `Packages:` block. When the local `vale sync` ran against an old pin, the audit reflects the old pin's vocabulary — re-run `vale sync` before the audit if the local pin matches but the local files look stale.
+- **Repository-local vocabularies live under `styles/` / `nolte-styles/` / `config/vocabularies/`** depending on the repo. The audit walks every directory configured in `.vale.ini`'s `StylesPath` plus the `Packages:` cache; assuming a single canonical location misses entries. Read `.vale.ini` first and enumerate every path the audit touches.
+- **An entry that's "already accepted upstream" depends on the upstream tag pin, not on the latest upstream release.** The audit compares against the pinned upstream tag's `accept.txt` snapshot — bumping the pin is a separate operator decision, not part of this audit. The "delete locally" recommendation only fires when the entry exists at the *currently pinned* upstream tag.
+- **Regex entries in `accept.txt` need careful comparison.** Two entries may match the same string but be different patterns (`pip-?audit` vs. `pip ?audit`); the audit treats them as distinct entries even when their match-set overlaps. Don't recommend deletion just because the upstream regex has wider coverage; the operator decides whether the wider regex makes the local one redundant.
+- **The `## Old patterns` section in `accept.txt` is a graveyard, not active scope.** Some vocabularies use a section to keep historical-but-no-longer-active terms; the audit skips that section by convention. Verify the per-vocabulary convention in the repository's curation spec when it exists; otherwise the agent treats every line as active and may flag legitimate retired entries.
+
 ## Hard rules
 
 - Never modify files without explicit user confirmation. This skill reports; mutations are a follow-up step the user approves.

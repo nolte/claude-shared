@@ -91,6 +91,14 @@ The following requests are **out of scope** for this skill:
 
 When the user asks for any of the above, stop and surface the correct skill to invoke instead.
 
+## Gotchas
+
+- **The at-most-one-active-sprint invariant is the most common operator stumbling block.** Trying to start a feature whose sprint is `planned` while a different sprint is already `active` is forbidden — the skill refuses with a verbatim error naming the conflicting sprint. Operators routinely expect "starting a feature on sprint N+1 should auto-close sprint N"; the spec deliberately doesn't allow that auto-promotion path. Close the active sprint via `sprint-review` first, then start the next.
+- **`last_commit` is updated only when a feature reaches `done`.** A feature transitioning `ready → in_progress` doesn't bump `last_commit`; a sprint mid-progress can have a stale `last_commit` between feature completions. Don't read `last_commit` as "most recent commit on this branch" — read it as "commit at which the most recent feature in this sprint was marked done."
+- **The `## Features` body list and the `features` frontmatter array are kept in lockstep by Operation D.** Mutating only one surface is a partial-write failure mode; `sprint-execute` refuses partial mutations and the operator has to update both atomically.
+- **Acceptance criteria and test hooks are gated separately** for the `in_progress → done` transition. Operation C confirms both: every acceptance-criterion checkbox is checked AND every test hook reports `passing` or `skipped`. A skill or test hook still in `pending` blocks the transition even when the criteria are visually checked off.
+- **Roadmap-item promotion to `status: active`** is a side effect of the first feature transitioning to `in_progress` for that roadmap item. The skill writes the promotion silently (no operator dialogue), but the operator should be aware that a `proposed` roadmap item flips to `active` the first time a tied feature starts work.
+
 ## Hard rules
 
 - **Never** allow two sprints to be `active` simultaneously. The at-most-one-active-sprint invariant is non-negotiable per `spec/project/sprint/` §Lifecycle; on conflict, refuse the offending feature transition and surface the conflicting sprint to the user.

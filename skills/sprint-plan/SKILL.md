@@ -121,6 +121,14 @@ Diff the planned file content back to the user before writing. Confirm:
 
 Only write the file once the user approves. Report back: the path written, the sprint number, the named verifying feature's `id` plus `acceptance-<n>`.
 
+## Gotchas
+
+- **`value_statement` must avoid operator-internal verbs.** "Refactor the release pipeline" reads as internal work; "Operators run a single command to ship a release" is the user-visible value the spec demands. The skill's heuristic flags imperative-form verbs that don't name a user benefit and asks the operator to rephrase before write.
+- **The `## Features` body list and the `features` frontmatter array MUST stay in lockstep.** `sprint-execute` enforces the bidirectional invariant later, but this skill creates the initial pair; an asymmetric write (only frontmatter, only body) leaves the sprint malformed and blocks subsequent `sprint-execute` runs.
+- **`verifies_sprint_value` lives on a feature, not on the sprint.** The sprint frontmatter names which feature carries the verifier (`verifies_sprint_value: F-<n>:acceptance-<m>`); the feature carries the actual `verifies_sprint_value: acceptance-<m>` field per the feature spec. Authoring the verifier in the sprint frontmatter without setting it on the feature side leaves the cross-reference half-broken.
+- **Sprint numbers are monotonic, never reused.** The skill resolves the next sprint number by reading the highest existing `<NNNN>` under `project/sprints/` plus the highest deleted number from `git log -- project/sprints/`. A retired sprint number isn't available for reuse, even after a `cancelled` sprint.
+- **At most one sprint is `active` at a time.** Creating a `planned` sprint while another is `active` is fine (planned sprints are queue items, not active commitments). The at-most-one invariant only applies to `status: active`; this skill writes `status: planned` and lets `sprint-execute` perform the `planned → active` promotion when the operator starts the first feature.
+
 ## Hard rules
 
 - **Never** reuse a sprint number from a `cancelled` or `closed` sprint. Numbers are strictly monotonic per `spec/project/sprint/` §Directory layout and file shape.
