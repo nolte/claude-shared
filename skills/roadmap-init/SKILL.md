@@ -27,7 +27,7 @@ Before any write:
 
 - The current working directory is inside a git repository.
 - `project/goals.md` and `project/roadmap.md` **do not yet exist**. If either file is already present, stop and direct the user to `roadmap-planner` (for additions) or `roadmap-refine` (for invariant enforcement) instead of overwriting.
-- The repo's audience artefact (typically `AUDIENCES.md`, or whichever location the project's `audience-identification` adoption uses) exists and is non-empty. When it does not, dispatch the `audience-identify` skill before writing outcomes — the spec mandates this dispatch, and outcome authoring is blocked until it completes.
+- The repo's audience artefact (typically `AUDIENCES.md`, or whichever location the project's `audience-identification` adoption uses) exists and is non-empty. When the artefact is missing or empty, dispatch the `audience-identify` skill and pause this skill until the user signals the artefact is ready; resume by re-reading it from disk. The spec mandates this dispatch, and outcome authoring is blocked until it completes.
 - `project/mission.md` may or may not exist; this skill does not require it. Mission authoring is owned by a separate skill family.
 
 ## Operations
@@ -35,7 +35,7 @@ Before any write:
 ### 1. Resolve the audience artefact
 
 1. Locate the audience artefact (search for `AUDIENCES.md` at the repo root and inside `docs/`; check the README for an "Audiences" or "Intended consumers" section). If precedent exists, use it.
-2. If no audience artefact is found, dispatch `audience-identify` and pause this skill until the user returns. Do not invent audiences inline; the spec is explicit that fabricated audiences are a blocker, not a hint.
+2. When no audience artefact is found, dispatch `audience-identify` and pause this skill; resume only after the user signals the artefact is ready. Do not invent audiences inline; the spec is explicit that fabricated audiences are a blocker, not a hint.
 3. Read the resolved audience artefact and capture the audience identifiers (short labels). The outcomes drafted in step 2 cite these identifiers; an outcome that cannot be tied back to a confirmed or assumed audience entry is rejected.
 4. When `audience-identify` was dispatched in step 2, resume only after the user signals the audience artefact is ready; do not poll. Re-read the artefact from disk on resume — never trust a stale in-memory copy.
 

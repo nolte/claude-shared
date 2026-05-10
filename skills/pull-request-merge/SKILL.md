@@ -112,7 +112,7 @@ gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=automerg
 
 ### 7. Verify the merge landed
 
-The `automerge.yaml` workflow exits `SUCCESS` even when `pascalgn/automerge-action`'s internal `mergeResult` is `merge_failed` (for example when the reusable workflow's `MERGE_METHOD` default doesn't match the repo's allowed strategy, or when the `uses:` tag points to a pre-fix version of `nolte/gh-plumbing`). A green check rollup is **not** proof the merge happened. Verify in two passes:
+The `automerge.yaml` workflow exits `SUCCESS` even when `pascalgn/automerge-action`'s internal `mergeResult` is `merge_failed` (for example when the reusable workflow's `MERGE_METHOD` default doesn't match the repo's allowed strategy, or when the `uses:` tag points to a `nolte/gh-plumbing` version that lacks the `MERGE_METHOD: squash` override). A green check rollup is **not** proof the merge happened. Verify in two passes:
 
 **7a. Confirm PR and `develop` state directly.**
 
@@ -124,7 +124,7 @@ git log --oneline -1 origin/develop
 
 If `state == MERGED` and `mergeCommit.oid` appears on `origin/develop`, report back and proceed to step 8. If `state == OPEN` and at least one required check is still running, the default behavior is to report the outstanding checks and stop—the merge will complete automatically once `pascalgn/automerge-action` sees green required checks. When the user opts in to **wait mode** (see "Wait mode" below), re-check `gh pr view --json state,mergedAt,mergeCommit` at the configured interval (≥60s) until `state == MERGED` or the configured wall-clock timeout (≤15min) is reached. On timeout, stop and report the still-`OPEN` state plus the most recent `gh pr checks` snapshot.
 
-**7b. Audit the automerge workflow when the PR is `OPEN` with all required checks green and the `automerge` label applied.** The most recent `automerge.yaml` run on the head SHA is suspect—treat its `SUCCESS` conclusion as unverified until the logs say otherwise:
+**7b. Audit the automerge workflow when the PR is `OPEN` with all required checks green and the `automerge` label applied.** The most recent `automerge.yaml` run on the head SHA is suspect—treat its `SUCCESS` conclusion as unverified until the logs say otherwise. Run the following commands (execute, not read-as-reference) to surface the workflow's internal `mergeResult`:
 
 ```
 RUN_ID=$(gh run list --workflow automerge.yaml --commit <head_sha> \
@@ -135,7 +135,7 @@ gh api repos/<owner>/<repo>/actions/jobs/$JOB_ID/logs \
   | grep -E "mergeResult: 'merge_failed'|Failed to merge PR" || true
 ```
 
-If the logs contain `mergeResult: 'merge_failed'` or `Failed to merge PR: …`, this is a **`workflow-health` incident, not a retryable label-apply**. Do not re-apply the `automerge` label and do not re-run the workflow blindly. Classify per `spec/project/workflow-health/<canonical_language>.md`; the common cause here is **`stale pin`**—the `uses:` tag in `.github/workflows/automerge.yaml` points to a version of `reusable-automerge.yaml` that precedes the relevant fix (e.g. the `MERGE_METHOD: squash` override). Surface the log excerpt and the bump target to the user, and hand off the pin bump as a separate PR per the workflow-health spec.
+If the logs contain `mergeResult: 'merge_failed'` or `Failed to merge PR: …`, this is a **`workflow-health` incident, not a retryable label-apply**. Do not re-apply the `automerge` label and do not re-run the workflow blindly. Classify per `spec/project/workflow-health/<canonical_language>.md`; the common cause here is **`stale pin`**—the `uses:` tag in `.github/workflows/automerge.yaml` points to a `reusable-automerge.yaml` version that lacks the necessary override (typically `MERGE_METHOD: squash`). Surface the log excerpt and the bump target to the user, and hand off the pin bump as a separate PR per the workflow-health spec.
 
 Report back: PR URL, merged-at timestamp, merge commit SHA on `origin/develop`, the labels that were applied, and—if 7b caught a silent no-op—the workflow-health classification and the remediation the user needs to take next.
 
