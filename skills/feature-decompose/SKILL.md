@@ -98,9 +98,15 @@ feature is malformed.
 
 1. **Dispatch the `feature-consistency-reviewer` agent** with the draft
    frontmatter and body assembled in step 3 of Operation 1, the resolved
-   `roadmap_item`, and the slug. The agent reviews the existing feature
-   corpus under `project/features/`, the project's primary source roots,
-   and the spec corpus under `spec/`, and returns a `findings` array.
+   `roadmap_item`, the slug, and a short git revision identifier
+   (`git rev-parse --short HEAD` from the dispatching skill — the agent
+   has no shell access by design and can't compute this itself). The
+   agent reviews the existing feature corpus under `project/features/`,
+   the project's primary source roots, and the spec corpus under `spec/`,
+   and returns a `findings` array. Confirm the working tree is a git
+   repository (`git rev-parse --is-inside-work-tree`) before invoking
+   the agent — that precondition has moved from the agent to here when
+   the agent's `tools` list dropped `Bash`.
 2. **Manual fallback (deprecated, transitional only).** The
    `feature-consistency-reviewer` agent ships with this skill — under
    normal conditions the dispatch in step 1 succeeds and the fallback
