@@ -24,6 +24,7 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - **MUST** be authored as a single markdown file named `<name>.md` where `<name>` is ASCII kebab-case
 - **MUST** include YAML frontmatter with the fields `name`, `description`, and `distribution`
 - **MUST** set `name` to match the filename without the `.md` suffix
+- **MUST NOT** use the reserved words `anthropic` or `claude` as the value of `name` or anywhere within `name`, per the upstream platform validator. The same narrow-exception clause from `skill-management` §Frontmatter validation applies: an agent whose primary responsibility is authoring or maintaining a Claude Code or Anthropic platform surface (for example a `claude-plugin-developer` agent) **MAY** waive the ban when the agent body carries a `## Reserved-token rationale` section that names the platform surface
 - **MUST** write a `description` that names concrete user-facing triggers and task shapes ("use when the user asks X," "invoke for Y") rather than abstract capabilities, so the calling Claude can reliably decide when to dispatch
 - **MUST** set `distribution` to exactly one of `plugin` or `project`, declaring the intended delivery form (see "Distribution" below); the author chooses this consciously at creation time and changes it only by re-authoring the agent for the new form
 - **MUST** contain a system prompt in the markdown body that scopes the agent to a single responsibility and states its expected output shape
