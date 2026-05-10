@@ -67,7 +67,7 @@ Steps:
 1. Read the feature file. Confirm `status: in_progress`. Confirm every acceptance-criterion checkbox in `## Acceptance criteria` is checked, and every `## Test hooks` entry has status `passing` or `skipped` (per `spec/project/feature/` §Lifecycle and gates). Stop and report any unchecked criterion or `pending` / `failing` hook.
 2. Confirm the sprint named by the feature's `sprint` field is `active` or `review` per `spec/project/feature/` §Lifecycle and gates.
 3. Set `status: done` and `ended: <today's ISO date>` on the feature.
-4. **Update the sprint's `last_commit`.** Resolve the most recent commit SHA on the current branch (`git rev-parse HEAD`) and write it to the sprint's `last_commit` frontmatter field. This is the canonical write authority for that field per `spec/project/sprint/` §Frontmatter schema; `last_commit` anchors the artefact ancestry check that `sprint-review` runs at closure.
+4. **Update the sprint's `last_commit`.** Run `git rev-parse HEAD` to resolve the most recent commit SHA on the current branch, then write the result to the sprint's `last_commit` frontmatter field. This is the canonical write authority for that field per `spec/project/sprint/` §Frontmatter schema; `last_commit` anchors the artefact ancestry check that `sprint-review` runs at closure.
 5. Surface the updated sprint state to the user: features remaining `in_progress`, `last_commit` SHA, and a hint that `sprint-review` becomes invokable when every feature in the sprint is `done`.
 
 ### D. Sync `## Features` body bullets with `features` frontmatter
