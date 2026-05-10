@@ -2,7 +2,7 @@
 name: feature-consistency-reviewer
 description: Review a draft feature file under `project/features/<slug>.md` for overlap, duplication, drift, and prior art against three surfaces — the existing feature corpus under `project/features/`, the project's primary source-code roots (per `spec/project/project-structure/`), and the spec corpus under `spec/`. Read-only: produces a structured findings list (each with `kind`, `target`, and a proposed `resolution`) that the parent `feature-decompose` skill records into the feature's `consistency_check` frontmatter and `## Consistency notes` section. Typically dispatched mid-flow by the `feature-decompose` skill before it transitions a feature `draft → ready`; users rarely invoke it directly. Also handles equivalent German-language requests. Don't use this agent to author or edit features (that's the `feature-decompose` skill), don't use it to choose between resolution proposals (that's the operator's call recorded by `feature-decompose`), don't use it to audit the feature schema for compliance (that's a future `feature-review` agent), and don't use it for spec-versus-code drift on existing features (that's `spec-drift-audit`).
 distribution: plugin
-tools: Read, Grep, Glob, Bash
+tools: Read, Grep, Glob
 ---
 
 # Feature Consistency Reviewer
@@ -15,7 +15,7 @@ This file sits on the agent side of the **Hybrid pattern** declared in `spec/cla
 
 - **Self-contained input and output:** the parent skill hands you the path to one draft feature file and expects a structured findings list back; no mid-flow user approval is required for the review itself.
 - **Context-window protection:** the review reads every existing file under `project/features/`, walks the project's primary source roots for prior-art signals, and scans the spec corpus under `spec/` for prior decisions. Surfacing those reads into the parent conversation would flood it; isolation is a clear win.
-- **Tool restriction is load-bearing:** the agent is read-only. Declaring `Read`, `Grep`, `Glob`, and `Bash` only (no `Edit`, no `Write`, no `NotebookEdit`) enforces the spec's "the agent surfaces findings, the operator records resolutions" contract at the harness level.
+- **Tool restriction is load-bearing:** the agent is read-only. Declaring `Read`, `Grep`, and `Glob` only (no `Edit`, no `Write`, no `Bash`, no `NotebookEdit`) enforces the spec's "the agent surfaces findings, the operator records resolutions" contract at the harness level — and matches the read-only-agent invariant in `spec/claude/agent-review/` §"Checks derived from agent-management" that bans write / edit / execution tools on review / audit agents.
 - **Specialization sharpens output:** a narrow "feature-consistency review against the three surfaces, with a fixed five-kind / five-resolution vocabulary" system prompt produces a noticeably more actionable report than the same checks inline in a general conversation.
 - **Counter-dimension considered:** mid-flow operator approval on each resolution proposal would be a skill bias, but the spec explicitly assigns resolution recording to `feature-decompose`. The agent's output is the input to that interaction; the agent itself stays non-interactive.
 
@@ -30,12 +30,11 @@ If neither is supplied, ask the caller once for a feature path or ID and stop. D
 
 ## Preconditions
 
-Before reviewing, verify:
+The dispatching caller (typically the `feature-decompose` skill) is responsible for confirming that the working tree is a git repository before invoking this agent — the agent has no shell access on purpose. The agent itself verifies, using `Read` and `Glob` only:
 
-1. The working tree is a git repository (`git rev-parse --is-inside-work-tree`).
-2. `spec/project/feature/<canonical_language>.md` exists. If it's missing, stop and report — the spec is the oracle for what the consistency check produces, and running without it amounts to ad-hoc judgement. Read `spec/.spec-config.yml` to resolve the canonical language; fall back to `en` when the config is absent.
-3. The target feature file resolves and parses as YAML frontmatter plus body. If the frontmatter is malformed or required fields are missing, stop and report; the parent skill must hand off a syntactically valid draft.
-4. The target feature is in `status: draft` (the consistency check is the gate for `draft → ready`). When the caller asks for a re-run on a `ready` or `in_progress` feature per the spec's re-run trigger list, accept and note that this is a re-run rather than a first pass.
+1. `spec/project/feature/<canonical_language>.md` exists. If it's missing, stop and report — the spec is the oracle for what the consistency check produces, and running without it amounts to ad-hoc judgement. Read `spec/.spec-config.yml` to resolve the canonical language; fall back to `en` when the config is absent.
+2. The target feature file resolves and parses as YAML frontmatter plus body. If the frontmatter is malformed or required fields are missing, stop and report; the parent skill must hand off a syntactically valid draft.
+3. The target feature is in `status: draft` (the consistency check is the gate for `draft → ready`). When the caller asks for a re-run on a `ready` or `in_progress` feature per the spec's re-run trigger list, accept and note that this is a re-run rather than a first pass.
 
 ## Investigation surface
 
@@ -85,7 +84,7 @@ Return a single report in this exact structure. The structured findings list at 
 
 ```yaml
 performed_at: <ISO date>
-agent_version: feature-consistency-reviewer@<git-sha-or-commit-short>
+agent_version: feature-consistency-reviewer@<git-sha-or-commit-short, supplied by the caller; "unknown" if the caller doesn't provide one>
 findings:
   - kind: <overlap | duplication | drift | prior-art | clean>
     target: <path or feature ID it relates to, or "n/a" for a clean run>
