@@ -17,8 +17,8 @@ Claude Code zeigt sie außerdem unter `/skills` an. Von dort lassen sie sich mit
 
 | Skill | Zweck | Typische Trigger |
 |-------|-------|-----------------|
-| [`skill-management`](../skills/skill-management.md) | Neue Skills anlegen, bestehende gegen die Spec validieren | "neuen Skill anlegen", "Skill für X erstellen", "validate this skill" |
-| [`spec`](../skills/spec.md) | Mehrsprachige Spezifikationen schreiben, übersetzen, indizieren, auf Drift prüfen | "schreib eine Spec für X", "ist X schon abgedeckt?", "Index neu bauen" |
+| [`skill-management`](../skills/nolte-shared/skill-management.md) | Neue Skills anlegen, bestehende gegen die Spec validieren | "neuen Skill anlegen", "Skill für X erstellen", "validate this skill" |
+| [`spec`](../skills/nolte-shared/spec.md) | Mehrsprachige Spezifikationen schreiben, übersetzen, indizieren, auf Drift prüfen | "schreib eine Spec für X", "ist X schon abgedeckt?", "Index neu bauen" |
 
 ## Antwortsprache
 
@@ -30,6 +30,6 @@ Trägt ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version e
 
 ## Nächste Schritte
 
-- [Skill-Management](../skills/skill-management.md) im Detail
-- [Spec-Skill](../skills/spec.md) im Detail
+- [Skill-Management](../skills/nolte-shared/skill-management.md) im Detail
+- [Spec-Skill](../skills/nolte-shared/spec.md) im Detail
 - [Spezifikationen](../specs/index.md) — verbindliche Autoren-Regeln

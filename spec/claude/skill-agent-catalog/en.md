@@ -48,10 +48,11 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - **MAY** surface supporting assets by listing sibling files under `skills/<name>/` or `agents/<name>/` (for example `templates/`, `references/`, `examples/`)
 
 ### Generation mechanism
-- **MUST** generate catalog pages at docs-build time from the source files; **MUST NOT** commit generated catalog markdown back into `docs/`
-- **MUST** be driven by `mkdocs-gen-files` together with `mkdocs-literate-nav`, both declared in `mkdocs.yml`
+- **MUST** generate catalog pages from the source files; **MUST NOT** commit generated catalog markdown back into `docs/`
+- **MUST** wire catalog navigation through `mkdocs-literate-nav` declared in `mkdocs.yml`
+- **MUST** invoke a catalog generator that produces the per-artifact pages, per-section index pages, per-section `SUMMARY.md` files for literate-nav, and the tag index. The generator **MAY** be a `mkdocs-gen-files` plugin script OR a standalone pre-build step (for example a Taskfile target invoked before `mkdocs build`) that writes physical files under `docs/<lang>/<section>/`. The pre-build form is the recommended choice whenever the repo also uses `mkdocs-static-i18n` with `docs_structure: folder`, because `mkdocs-static-i18n` 1.3.x discards files whose `abs_src_path` is not under `docs_dir` and therefore silently drops every page emitted by `mkdocs-gen-files`
 - **MUST** read plugin source roots from a configured list—each entry pairing the local source path with the public repository URL used for source links—so additional plugins can be added without changing generator code
-- **MUST** expose catalog generation through `task docs` so local builds and CI produce identical output
+- **MUST** expose catalog generation through `task docs` so local builds and CI produce identical output; in the pre-build form this is wired by declaring the generator step as a Taskfile dependency of the docs task
 - **MUST NOT** require a separate manual "regenerate catalog" step outside the normal docs build
 
 ### Navigation and layout
@@ -79,7 +80,8 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - [ ] Each catalog page contains a direct link to the source file on the originating plugin's main-branch repository URL
 - [ ] Adding a new skill or agent in any configured plugin source root requires no manual edit to `docs/` or `mkdocs.yml` for the entry to appear
 - [ ] Removing a skill or agent removes the corresponding catalog page on the next `task docs` run
-- [ ] `mkdocs.yml` declares `mkdocs-gen-files` and `mkdocs-literate-nav` and configures the list of plugin source roots (each pairing a local path with a public repository URL)
+- [ ] `mkdocs.yml` declares `mkdocs-literate-nav`, and a configured list of plugin source roots (each pairing a local path with a public repository URL) is read by the catalog generator
+- [ ] The catalog generator is either declared as a `mkdocs-gen-files` script in `mkdocs.yml` or wired into `task docs` as a standalone pre-build step
 - [ ] In plugin mode, the local plugin appears as one of the configured plugin source roots
 - [ ] In consumer mode, at least one external plugin source root is configured
 - [ ] No generated catalog markdown is committed under `docs/`
@@ -91,3 +93,4 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - Should versions of skills and agents (history, changelogs) appear in the catalog, or is the git history sufficient?
 - If translations of an artifact body are ever desired, where do they live—a parallel `skills/<name>/docs/<lang>.md`, or separately curated pages under `docs/<lang>/`?
 - How are plugin source roots configured exactly—inline in `mkdocs.yml` under the `gen-files` plugin config, or in a sibling YAML file referenced from there?
+- How should this spec evolve once `mkdocs-static-i18n` upstream supports files emitted by `mkdocs-gen-files`? As of May 2026 (`mkdocs-static-i18n` 1.3.1) those files are silently dropped in `reconfigure.py` because their `abs_src_path` is outside `docs_dir`, which forces the pre-build form whenever folder-strategy i18n is in use.

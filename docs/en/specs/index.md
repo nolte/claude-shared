@@ -1,10 +1,10 @@
 # Specifications
 
-The specifications under `spec/` define the binding rules for skill and agent authors. They're **multilingual**: canonical in English, translated to German, kept structurally and semantically in sync via the [Spec skill](../skills/spec.md).
+The specifications under `spec/` define the binding rules for skill and agent authors. They're **multilingual**: canonical in English, translated to German, kept structurally and semantically in sync via the [Spec skill](../skills/nolte-shared/spec.md).
 
 ## Existing specs
 
-The authoritative, always-current list lives in [`spec/README.md`](https://github.com/nolte/claude-shared/blob/develop/spec/README.md) and is maintained by the [Spec skill](../skills/spec.md); it lists every spec with topic, slug, language titles, status and last-update date.
+The authoritative, always-current list lives in [`spec/README.md`](https://github.com/nolte/claude-shared/blob/develop/spec/README.md) and is maintained by the [Spec skill](../skills/nolte-shared/spec.md); it lists every spec with topic, slug, language titles, status and last-update date.
 
 Rough map for orientation:
 
@@ -25,4 +25,4 @@ Normative statements use RFC 2119 keywords. Translations keep the English form a
 
 ## Contributing to specs
 
-New spec or change? Always go through the [Spec skill](../skills/spec.md): that's the only way canonical, translations and index stay in sync. Direct edits to translations are the single most common drift source and will be flagged at the next drift check.
+New spec or change? Always go through the [Spec skill](../skills/nolte-shared/spec.md): that's the only way canonical, translations and index stay in sync. Direct edits to translations are the single most common drift source and will be flagged at the next drift check.

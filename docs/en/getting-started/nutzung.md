@@ -17,8 +17,8 @@ They also appear under `/skills` where Tab-completion works.
 
 | Skill | Purpose | Typical triggers |
 |-------|---------|-----------------|
-| [`skill-management`](../skills/skill-management.md) | Scaffold new skills; validate existing ones against the spec | "create a new skill," "scaffold a skill for X," "validate this skill" |
-| [`spec`](../skills/spec.md) | Write, translate, index and drift-check multilingual specs | "write a spec for X," "is X already covered?," "regenerate the index" |
+| [`skill-management`](../skills/nolte-shared/skill-management.md) | Scaffold new skills; validate existing ones against the spec | "create a new skill," "scaffold a skill for X," "validate this skill" |
+| [`spec`](../skills/nolte-shared/spec.md) | Write, translate, index and drift-check multilingual specs | "write a spec for X," "is X already covered?," "regenerate the index" |
 
 ## Response language
 
@@ -30,6 +30,6 @@ If a project ships its own skill of the same name, the plugin version remains re
 
 ## Next
 
-- [Skill Management](../skills/skill-management.md) in depth
-- [Spec skill](../skills/spec.md) in depth
+- [Skill Management](../skills/nolte-shared/skill-management.md) in depth
+- [Spec skill](../skills/nolte-shared/spec.md) in depth
 - [Specifications](../specs/index.md): the authoring rules

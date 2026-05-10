@@ -48,10 +48,11 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - **KANN [MAY]** begleitende Assets auflisten, indem die Schwester-Dateien unter `skills/<name>/` bzw. `agents/<name>/` angezeigt werden (z. B. `templates/`, `references/`, `examples/`)
 
 ### Generierungs-Mechanismus
-- **MUSS [MUST]** Katalog-Seiten beim Doku-Build aus den Quelldateien erzeugen; **DARF NICHT [MUST NOT]** generiertes Katalog-Markdown nach `docs/` committen
-- **MUSS [MUST]** mit `mkdocs-gen-files` zusammen mit `mkdocs-literate-nav` arbeiten, beide in `mkdocs.yml` deklariert
+- **MUSS [MUST]** Katalog-Seiten aus den Quelldateien erzeugen; **DARF NICHT [MUST NOT]** generiertes Katalog-Markdown nach `docs/` committen
+- **MUSS [MUST]** die Katalog-Navigation über `mkdocs-literate-nav` verdrahten, deklariert in `mkdocs.yml`
+- **MUSS [MUST]** einen Katalog-Generator aufrufen, der die Einzelseiten je Artefakt, die Abschnitts-Index-Seiten, die `SUMMARY.md`-Dateien je Abschnitt (für literate-nav) und den Tag-Index erzeugt. Der Generator **KANN [MAY]** ein `mkdocs-gen-files`-Plugin-Skript ODER ein eigenständiger Pre-Build-Schritt sein (z. B. ein Taskfile-Target, das vor `mkdocs build` aufgerufen wird), der physische Dateien unter `docs/<lang>/<section>/` schreibt. Die Pre-Build-Form ist die empfohlene Wahl, sobald das Repository zusätzlich `mkdocs-static-i18n` mit `docs_structure: folder` einsetzt, weil `mkdocs-static-i18n` 1.3.x Dateien verwirft, deren `abs_src_path` nicht unter `docs_dir` liegt — und damit jede von `mkdocs-gen-files` emittierte Seite stillschweigend fallen lässt
 - **MUSS [MUST]** Plugin-Quell-Wurzeln aus einer konfigurierten Liste lesen — jeder Eintrag paart einen lokalen Quellpfad mit der öffentlichen Repository-URL, die für Quell-Links genutzt wird —, damit zusätzliche Plugins ohne Generator-Code-Änderung hinzugefügt werden können
-- **MUSS [MUST]** die Katalog-Generierung über `task docs` verfügbar machen, damit lokale Builds und CI identische Ausgabe produzieren
+- **MUSS [MUST]** die Katalog-Generierung über `task docs` verfügbar machen, damit lokale Builds und CI identische Ausgabe produzieren; in der Pre-Build-Form wird das verdrahtet, indem der Generator-Schritt als Taskfile-Abhängigkeit des Doku-Tasks deklariert wird
 - **DARF NICHT [MUST NOT]** einen separaten manuellen „Katalog neu generieren"-Schritt außerhalb des normalen Doku-Builds verlangen
 
 ### Navigation und Layout
@@ -79,7 +80,8 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - [ ] Jede Katalog-Seite enthält einen direkten Link auf die Quelldatei unter der Main-Branch-Repository-URL des jeweiligen Plugins
 - [ ] Das Hinzufügen eines neuen Skills oder Agents in einer beliebigen konfigurierten Plugin-Quell-Wurzel erfordert keine manuelle Änderung an `docs/` oder `mkdocs.yml`, damit der Eintrag erscheint
 - [ ] Das Entfernen eines Skills oder Agents entfernt beim nächsten `task docs`-Lauf die entsprechende Katalog-Seite
-- [ ] `mkdocs.yml` deklariert `mkdocs-gen-files` und `mkdocs-literate-nav` und konfiguriert die Liste der Plugin-Quell-Wurzeln (jeweils ein lokaler Pfad gepaart mit einer öffentlichen Repository-URL)
+- [ ] `mkdocs.yml` deklariert `mkdocs-literate-nav`, und eine konfigurierte Liste der Plugin-Quell-Wurzeln (jeweils ein lokaler Pfad gepaart mit einer öffentlichen Repository-URL) wird vom Katalog-Generator gelesen
+- [ ] Der Katalog-Generator ist entweder als `mkdocs-gen-files`-Skript in `mkdocs.yml` deklariert oder als eigenständiger Pre-Build-Schritt in `task docs` verdrahtet
 - [ ] Im Plugin-Modus erscheint das lokale Plugin als eine der konfigurierten Plugin-Quell-Wurzeln
 - [ ] Im Konsumenten-Modus ist mindestens eine externe Plugin-Quell-Wurzel konfiguriert
 - [ ] Kein generiertes Katalog-Markdown ist unter `docs/` eingecheckt
@@ -91,3 +93,4 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - Sollen Versionen von Skills und Agents (Historie, Changelogs) im Katalog erscheinen oder reicht die Git-Historie?
 - Falls Übersetzungen eines Artefakt-Bodys gewünscht sein sollten: wo leben sie — in einer parallelen `skills/<name>/docs/<lang>.md` oder als separat gepflegte Seiten unter `docs/<lang>/`?
 - Wie genau werden Plugin-Quell-Wurzeln konfiguriert — inline in `mkdocs.yml` unter der `gen-files`-Plugin-Konfiguration oder in einer Schwester-YAML-Datei, die von dort referenziert wird?
+- Wie sollte sich diese Spec weiterentwickeln, sobald `mkdocs-static-i18n` upstream Dateien unterstützt, die von `mkdocs-gen-files` emittiert werden? Stand Mai 2026 (`mkdocs-static-i18n` 1.3.1) werden solche Dateien in `reconfigure.py` stillschweigend verworfen, weil ihr `abs_src_path` außerhalb von `docs_dir` liegt — was die Pre-Build-Form erzwingt, sobald die Folder-Strategy-i18n genutzt wird.

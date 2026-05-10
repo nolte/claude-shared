@@ -3,8 +3,8 @@
 ## Workflow
 
 1. **Spec zuerst lesen** — Skill oder Agent folgt immer einer geltenden Spezifikation.
-2. **Skill/Agent anlegen** — nutze den [Skill-Management](../skills/skill-management.md)-Skill. Er scaffolden ASCII-Kebab-Case-Ordner, schreibt valides Frontmatter und verhindert typische Fehler.
-3. **Spec anpassen, wenn nötig** — über den [Spec-Skill](../skills/spec.md). Niemals Übersetzungen direkt bearbeiten; der Kanon (EN) ist die Wahrheit, alles andere wird aus ihm regeneriert.
+2. **Skill/Agent anlegen** — nutze den [Skill-Management](../skills/nolte-shared/skill-management.md)-Skill. Er scaffolden ASCII-Kebab-Case-Ordner, schreibt valides Frontmatter und verhindert typische Fehler.
+3. **Spec anpassen, wenn nötig** — über den [Spec-Skill](../skills/nolte-shared/spec.md). Niemals Übersetzungen direkt bearbeiten; der Kanon (EN) ist die Wahrheit, alles andere wird aus ihm regeneriert.
 4. **Validieren lassen** — `skill-management` im Validierungsmodus. Mechanische Defekte (Frontmatter-Mismatch, absolute Pfade, fehlende Hard-Rules) werden angeboten zu fixen.
 5. **Index aktualisieren** — nach Änderungen an Specs: `spec/README.md` via Spec-Skill regenerieren.
 

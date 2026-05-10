@@ -55,4 +55,4 @@ description: Konkrete Trigger-Phrasen, nicht abstrakte Fähigkeiten.
 ---
 ```
 
-Details zu Regeln und Akzeptanzkriterien: [Skill-Autorenschaft](../specs/skill-management.md).
+Details zu Regeln und Akzeptanzkriterien: [Skill-Autorenschaft](../../specs/skill-management.md).

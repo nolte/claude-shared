@@ -55,4 +55,4 @@ description: Concrete trigger phrases, not abstract capabilities.
 ---
 ```
 
-Full rules and acceptance criteria: [Skill Authoring](../specs/skill-management.md).
+Full rules and acceptance criteria: [Skill Authoring](../../specs/skill-management.md).

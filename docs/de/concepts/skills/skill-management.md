@@ -1,6 +1,6 @@
 # Skill-Management
 
-Der Skill `skill-management` gerüstet und validiert Claude-Code-Skills. Er liegt unter `skills/skill-management/SKILL.md` und folgt der Spezifikation [Skill-Autorenschaft](../specs/skill-management.md).
+Der Skill `skill-management` gerüstet und validiert Claude-Code-Skills. Er liegt unter `skills/skill-management/SKILL.md` und folgt der Spezifikation [Skill-Autorenschaft](../../specs/skill-management.md).
 
 ## Wann einsetzen
 
@@ -61,4 +61,4 @@ Gezielte Edits an bestehenden Skills: `description` schärfen, Hard-Rules-Abschn
 ## Quellen
 
 - Skill-Datei: `skills/skill-management/SKILL.md`
-- Spezifikation: [`spec/claude/skill-management/`](../specs/skill-management.md)
+- Spezifikation: [`spec/claude/skill-management/`](../../specs/skill-management.md)
