@@ -125,7 +125,7 @@ The single-shot default exists because the prompt-cache TTL is 5 min; unbounded 
 - `pascalgn/automerge-action` (used by some `release-publish.yml` implementations downstream) exits 0 even on `mergeResult: 'merge_failed'`. A green `release-publish.yml` run is **not** proof the publish happened. Always re-verify `gh release view <tag> --json isDraft` after a `success` conclusion.
 - The `tag` input is mandatory because `release-automation` forbids the workflow's "newest wins" heuristic. Even when only one draft is open, this skill passes `-f tag=<tag>` explicitly.
 - A red required check on `develop`'s tip blocks publish but is not always recoverable by re-running. The triage path is `workflow-health`, not "retry until green."
-- `release-cd-refresh-master.yml` should fire automatically after `release-publish.yml` succeeds. When it doesn't fire (the known-platform-constraint case where `release: published` from `GITHUB_TOKEN` doesn't cascade to a fresh workflow run, per `workflow-health` §Known platform constraints), surface this and route to manual fast-forward of `main` per `branching-model` §Local release operation.
+- `release-cd-refresh-master.yml` should fire automatically after `release-publish.yml` succeeds. When it doesn't fire (the known-platform-constraint case where `release: published` from `GITHUB_TOKEN` doesn't cascade to a fresh workflow run, per `workflow-health` §Known platform constraints), surface this and route to manual fast-forward of `main` per `branching-model` §Release flow.
 - The skill never runs `gh release edit --draft=false` even as a fallback — that flag is reserved for incident response and remains a manual operator action documented in `release-automation` §Non-Goals.
 
 ## Hard rules
