@@ -114,6 +114,14 @@ Triggered when step 3 fails unrecoverably (the underlying release pipeline is br
 3. Re-target every roadmap item still pointing at the cancelled sprint (`target_sprint`) per `spec/project/roadmap/` §Sprint and feature linkage: clear to `null` or point at a `planned` successor. Roadmap items **MUST NOT** advance to `done` from a `cancelled` sprint even when every feature is individually `done`; the items remain `active` until a successor sprint reaches `closed`.
 4. Surface the cancelled sprint summary to the user, naming the rationale and the re-targeting outcome.
 
+## Gotchas
+
+- **`artifact_ref` validation is per-project-type.** The skill reads the project type from `project/portfolio.yml` (or, when absent, from heuristic detection) and applies the matching artifact-ref shape from the release-artifact spec: a Claude plugin sprint expects a published-release tag, a Python library expects a PyPI version, a documentation-only project expects a deployed-docs commit SHA, and so on. A wrong project-type detection produces a misleading "artifact_ref invalid" refusal. The skill surfaces the detected type before validating so the operator can override.
+- **`active → review` is reversible** (a failed artifact validation can route back to `active`); `review → closed` and `review → cancelled` are NOT. The skill warns explicitly before either terminal transition and requires verbatim operator confirmation.
+- **The `verifies_sprint_value` acceptance criterion is the load-bearing closure gate.** When the named criterion isn't checked on the carrying feature, the skill refuses `closed` and routes to `cancelled` (with a clear rationale paragraph) — operators sometimes try to argue the criterion "was achieved differently"; the spec is strict that the named criterion is the audit trail, not a related observation.
+- **Optional chaining into `release-notes-curate` and `release-publish-trigger` is operator-opt-in.** Defaulting to chain leads to surprise releases; the skill stays explicit about each chain hop and records the operator's opt-in verbatim in `## Review notes`.
+- **Cancelled sprints leave a value-delivery gap that the next sprint must explain.** When the skill cancels a sprint, the unfinished features need re-targeting (typically to the next sprint or back to the roadmap queue). The skill surfaces the affected feature IDs and asks where each one lands; nothing is silently re-targeted.
+
 ## Hard rules
 
 - **Never** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id> draft=false`, or any other path that flips the draft state outside `release-publish.yml`. The rule comes from `spec/project/release-automation/`, `spec/project/release-skill-layer/`, and `spec/project/release-artifact/` §Dispatch boundary to release machinery and is non-negotiable here too. The only acceptable publish path is dispatching `release-publish-trigger`.

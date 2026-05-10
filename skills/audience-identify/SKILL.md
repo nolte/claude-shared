@@ -74,6 +74,14 @@ Report pass/fail per item. Offer to fix mechanical gaps (missing tags, missing c
 
 Triggered when the user signals a material scope change (new public API, new deployment target, new regulated data class, new stakeholder). Re-run operation 1 steps 1–7 as a diff against the existing artifact: show which entries stay, which need re-validation, which become irrelevant. Persist the result only after the user accepts each diff item.
 
+## Gotchas
+
+- **Never set `confirmed` on the operator's behalf.** The spec's `confirmed` vs. `assumed` distinction is load-bearing for downstream consumers (mission, roadmap, release-notes-audience-analysis). `confirmed` requires the operator to explicitly state "yes, I've validated this with a real representative or an authoritative source." `assumed` is the safe default; the skill never silently promotes an `assumed` audience to `confirmed` even when the operator describes them confidently.
+- **The artifact location follows existing repo precedent, not a fixed default.** The spec names `AUDIENCES.md` at the bounded-context root as the canonical default, but a repo that already uses a README section ("## Audiences" / "## Intended consumers") or an ADR for the same context should keep that location. The skill greps for precedent before proposing a new location; introducing a new location pattern in a repo that already has a different one fragments the audience surface across the codebase.
+- **All five relationship categories must be addressed, not "all that apply."** Direct consumers, operators, contributors / maintainers, governing parties, indirect audiences — each one is either populated or explicitly recorded as `none` with a one-line reason. Silently omitting a category is a spec violation; `none` is a valid answer that proves the category was considered.
+- **Optional subdivisions add cost, not always value.** Geography, organizational unit, and tenancy subdivisions only get added when they materially change the expected deliverable. A "European users" subdivision is valuable only if it changes the artefact's content for that subgroup; otherwise it's noise that downstream consumers have to disregard. Default to no subdivisions.
+- **The German trigger phrases ship in the body, not the description.** The frontmatter `description` is English-only per `agent-management` §Structure (plugin-distributed). German operator-voice triggers like "Zielgruppen für dieses Modul ermitteln" live in the body's `## German trigger phrases` section so they remain greppable inside an open conversation; routing on the frontmatter alone misses them.
+
 ## Hard rules
 
 - Never list audiences before the bounded context is declared in writing — this is the load-bearing rule of the underlying spec.

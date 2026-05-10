@@ -54,6 +54,14 @@ Targeted edits to an existing skill — for example rewriting a weak `descriptio
 
 Out of scope. Invoke `skill-review` — it applies every MUST / SHOULD / MAY from `spec/claude/skill-management/` and `spec/claude/skill-vs-agent/`, maps findings to severities (Critical / Warning / Suggestion / Info), and writes a persistent plan to `.audits/skill-review/<name>.md` per `spec/claude/review-plan/`.
 
+## Gotchas
+
+- **The plugin tree is detected by `.claude-plugin/plugin.json`**, not by `skills/` folder presence. A repository with `skills/` but no `plugin.json` isn't a Claude Code plugin source tree; the skill refuses to scaffold there and routes the operator to `project-structure-apply` first.
+- **Never bump `version` in `.claude-plugin/plugin.json` from this skill.** Plugin versioning is owned exclusively by the release workflow (per `release-automation` §Version-bearing files); a skill-change PR that touches the version field will conflict with the release workflow's own update. The release workflow runs from `develop` after the alignment commit lands.
+- **The `## Reserved-token rationale` exception** added to `skill-management` §Frontmatter validation in 2026-Q2 is a `nolte-shared` plugin-specific narrowing — the upstream Anthropic platform validator rejects names containing `claude` / `anthropic` regardless. When scaffolding for a project that submits skills through Anthropic's intake path (rather than the `nolte-shared` plugin marketplace), don't apply the exception. The local `scripts/validate_skills.py` validator honours it, but the upstream one doesn't.
+- **`description` length is measured in characters, not bytes.** The 1024-character cap counts grapheme clusters; multi-byte UTF-8 sequences (German umlauts, em-dashes) count as one character each, not as their byte length. `len(description)` in Python and the local validator both use the character count; don't surprise the operator with a "1024-byte cap" framing.
+- **Folder name and `name` frontmatter MUST match exactly.** A typo in either is a `Critical` per spec. The skill verifies the match before any write; renaming a skill is a coordinated rename of the folder, the frontmatter, and every cross-reference (`grep -RIn '<old-name>' spec/ skills/ agents/ docs/ project/`).
+
 ## Hard rules
 
 - Never create a skill at a non-standard path. Inside a plugin source tree the only accepted location is `skills/<name>/`; everywhere else, stop and ask the user whether to switch to the plugin repository instead.
