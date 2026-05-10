@@ -59,18 +59,18 @@ Confirm the chosen class with the user before proceeding—at minimum for `defec
 
 ### 3. Dispatch the most specialised available agent
 
-Match the classification (and the failing artefact, if relevant) to the closest available agent under `agents/`:
+The set of available agents changes over time; never freeze a snapshot of "which agents exist" inside this skill body. Resolve the dispatch target dynamically each invocation:
 
-- `stale pin` of a `nolte/gh-plumbing` reusable → no specialised agent in this plugin yet (per `agent-management` §Plugin-distribution security constraints, this is a plugin-level gap to track); fall back to generalist editing
-- `secret drift` → no specialised agent in this plugin yet; the work happens outside Claude (operator rotates the credential), the skill produces only the fix PR that re-references the rotated credential
-- `defect` in a workflow YAML file → currently no `workflow-yaml-fixer` agent; fall back to generalist editing
-- `defect` in spec / skill / agent files → the `claude-plugin-developer` agent owns spec-conformant authoring; dispatch with `Agent(subagent_type="nolte-shared:claude-plugin-developer")`
-- `defect` in documentation → the `audience-doc-author` agent for docs that target a specific audience; otherwise generalist
-- `flake` → no fix needed by an agent; the work is recording the flake in `FLAKES.md` (or the `flake`-labelled Issue set, whichever the repository uses) plus a tracking PR. Generalist handles this.
+1. **Resolve the candidate set.** `Glob` `agents/*.md` (plus `~/.claude/agents/*.md` for the project-distributed half), then `Read` the `description:` line of every candidate. Build a (`name`, `description`) table; the table is the runtime inventory.
+2. **Match classification to candidate.** Walk the candidates and pick the one whose `description` most closely matches the (classification, failing-artefact-area) pair: a `defect` in a markdown spec/skill/agent file maps to whichever agent's description names "spec-conformant authoring" or the equivalent; a `defect` in a workflow YAML maps to whichever agent's description names "workflow YAML" or "GitHub Actions"; a documentation `defect` maps to whichever agent names an audience-targeted documentation responsibility; and so on. The match is on the description's stated responsibility, not on the agent's name.
+3. **Recognise the no-fix classifications.** `flake` and `secret drift` produce no agent dispatch by design — the work is documenting the flake in the project's flake registry (`FLAKES.md` or the `flake`-labelled issue set, whichever the repository uses) for `flake`, or rotating the credential outside Claude for `secret drift`. The skill produces only the fix PR that re-references the rotated credential.
+4. **No match is a portfolio gap.** When the candidate walk produces no plausible match and the failure class has occurred three or more times historically (use `gh run list --status failure --branch develop --limit 50` plus a quick grep to estimate), surface this as a portfolio gap per `spec/project/workflow-health/` §Specialised-agent dispatch — the user is asked whether to author a new agent (via `claude-plugin-developer`) before the fix PR opens. When a match exists, dispatch with `Agent(subagent_type="<plugin>:<agent>")` and pass the classification, the run URL, the failing-step excerpt, and the fix-PR-title hint. Wait for the agent's report.
 
-When **no matching specialised agent exists** and the failure class has occurred three or more times historically (use `gh run list --status failure --branch develop --limit 50` plus a quick grep to estimate), surface this as a portfolio gap per `spec/project/workflow-health/` §Specialised-agent dispatch—the user is asked whether to author a new agent (via `claude-plugin-developer`) before the fix PR opens.
+The dynamic-lookup design means a new specialised agent that lands in `agents/` becomes dispatchable immediately, without a coordinated edit to this skill — and a renamed or removed agent stops being a target the next time the skill runs, with no stale snapshot to mislead the dispatch.
 
-When a matching specialised agent does exist, dispatch with `Agent(subagent_type="<plugin>:<agent>")` and pass the classification, the run URL, the failing-step excerpt, and the fix-PR-title hint. Wait for the agent's report.
+#### Old patterns
+
+Earlier revisions of this skill enumerated specific agent names inline (for example `workflow-yaml-fixer`, `claude-plugin-developer`, `audience-doc-author`) as the dispatch table. That snapshot rotted whenever a new agent landed or an existing one renamed; the runtime-Glob design above replaces it. The historical mapping is preserved here only so a reader who recognises the prior wording can spot the transition: `defect` in workflow YAML used to fall back to generalist (no matching agent), `defect` in spec / skill / agent files used to dispatch `claude-plugin-developer`, `defect` in documentation used to dispatch `audience-doc-author`. Use the runtime lookup above instead of this snapshot.
 
 ### 4. Verify the fix PR carries the audit trail
 
