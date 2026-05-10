@@ -17,6 +17,15 @@ env/
 # MkDocs build output
 /site/
 
+# Generated skill and agent catalog (see scripts/docs/gen_catalog.py).
+# Per spec/claude/skill-agent-catalog/: MUST NOT commit generated catalog markdown.
+/docs/de/skills/
+/docs/de/agents/
+/docs/en/skills/
+/docs/en/agents/
+/docs/de/tags.md
+/docs/en/tags.md
+
 # Task runner cache
 .task/
 
