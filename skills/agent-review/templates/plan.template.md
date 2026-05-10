@@ -27,38 +27,38 @@ Explicitly out of scope: runtime behavior of the agent, Vale/markdown style (han
 
 ## Summary
 
-- BLOCKER: {{B}}
-- WARNING: {{W}}
-- SUGGESTION: {{S}}
-- INFO: {{I}}
+- Critical: {{B}}
+- Warning: {{W}}
+- Suggestion: {{S}}
+- Info: {{I}}
 
 Go/no-go: {{PASS | FAIL | CONDITIONAL — <condition>}}
 Next concrete action: {{one-liner — typically "author addresses BLOCKERs in <area>"}}
 
 ## Findings
 
-### BLOCKER
+### Critical
 
 - [ ] [{{spec-slug}}.{{requirement-shorthand}}] {{one-line statement of what is wrong}}.
       Where: {{file:line or section reference}}.
       Fix: {{concrete action — one line}}.
       Verify: {{how to confirm the fix — one line}}.
 
-### WARNING
+### Warning
 
 - [ ] [{{spec-slug}}.{{requirement-shorthand}}] {{…}}.
       Where: {{…}}.
       Fix: {{…}}.
       Verify: {{…}}.
 
-### SUGGESTION
+### Suggestion
 
 - [ ] [{{spec-slug}}.{{requirement-shorthand}}] {{…}}.
       Where: {{…}}.
       Fix: {{…}}.
       Verify: {{…}}.
 
-### INFO
+### Info
 
 - [ ] [{{spec-slug}}.{{requirement-shorthand}}] {{…}}.
       Where: {{…}}.

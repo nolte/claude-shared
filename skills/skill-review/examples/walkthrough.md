@@ -18,7 +18,7 @@ Expected skill behavior (`run`):
 4. Narrow-scope ask — "voller Review", none.
 5. Read the review surface: `SKILL.md`, sibling `templates/`, any referenced asset.
 6. Run the external skill-structure validator (`skills-ref` is the canonical example) and capture name/version plus reported findings; if the validator isn't provisioned in the current repo, record an explicit `Validator: override — …` line in `## Scope` instead of silently skipping.
-7. Apply checks in order (external-validator findings → frontmatter → triggers → body → rationale → assets → duplicate-prevention → INFO).
+7. Apply checks in order (external-validator findings → frontmatter → triggers → body → rationale → assets → duplicate-prevention → Info).
 8. Write the plan.
 
 Expected plan path: `.audits/skill-review/audience-identify.md`, populated per `templates/plan.template.md`, with frontmatter fields filled from git state (`repo-revision`, `created`), the `Validator:` line in `## Scope`, severity counts in `## Summary`, one subsection per occurring severity in `## Findings`.
@@ -41,7 +41,7 @@ Expected skill behavior (`update`):
 4. Flip frontmatter `status` from `open` to `in-progress` (first closure).
 5. Show the diff — do **not** commit.
 
-## Turn 3 — user defers a remaining SUGGESTION
+## Turn 3 — user defers a remaining Suggestion
 
 > "Item 5 ist eine Idee für später, mach ein Issue draus."
 
@@ -58,13 +58,13 @@ Expected skill behavior (`update`, deferral path):
 Expected skill behavior (`close`):
 
 1. Read `.audits/skill-review/audience-identify.md`.
-2. Verify no `- [ ]` `BLOCKER` remains. Lower-severity items must each be either `- [x]` or carry a `→ deferred:` annotation. Refuse and report if any BLOCKER is still open.
-3. Read the creation-time counts from `## Summary` (not current state) — for example `2B/3W/1S/0I`.
+2. Verify no `- [ ]` `Critical` remains. Lower-severity items must each be either `- [x]` or carry a `→ deferred:` annotation. Refuse and report if any Critical is still open.
+3. Read the creation-time counts from `## Summary` (not current state) — for example `2C/3W/1S/0I`.
 4. Delete the plan file.
 5. Compose the deletion commit:
 
    ```
-   review(skill-review): close audience-identify — 2B/3W/1S/0I
+   review(skill-review): close audience-identify — 2C/3W/1S/0I
 
    Deferred: https://github.com/<owner>/<repo>/issues/<n>
    Reviewed at repo-revision: <sha-from-frontmatter>
@@ -76,7 +76,7 @@ Expected skill behavior (`close`):
 
 ```text
 $ git log --oneline -- .audits/skill-review/audience-identify.md
-<new-sha> review(skill-review): close audience-identify — 2B/3W/1S/0I
+<new-sha> review(skill-review): close audience-identify — 2C/3W/1S/0I
 <sha-3>   review(skill-review): update audience-identify progress (defer #42)
 <sha-2>   review(skill-review): mark items 2,4 closed
 <sha-1>   review(skill-review): open plan for audience-identify
@@ -89,4 +89,4 @@ The plan file is absent at HEAD, but the history tells the full story: when it w
 - Does not run the reviewed skill (`audience-identify`) — review targets the artifact, never live behavior.
 - Does not bump `.claude-plugin/plugin.json` — the release workflow owns that per `release-automation` §Plugin manifest alignment.
 - Does not dispatch a sub-agent — the reading volume is bounded, so the skill reads specs and target inline.
-- Does not edit `spec/claude/skill-management/` when a finding would be better resolved by a spec change — it flags the `INFO` case and leaves the spec edit to a follow-up via the `spec` skill.
+- Does not edit `spec/claude/skill-management/` when a finding would be better resolved by a spec change — it flags the `Info` case and leaves the spec edit to a follow-up via the `spec` skill.

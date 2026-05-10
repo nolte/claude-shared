@@ -50,14 +50,14 @@ Interactive. Confirm each decision with the user before acting on it.
 4. **Read the review surface** in this order: YAML frontmatter → markdown body (role, output format, procedure, rationale) → every file under `agents/<name>/` referenced from the body. A missing referenced file is a finding, not a stop.
 5. **Apply the checks from `spec/claude/agent-review/`**, in the spec's declared order:
    1. Frontmatter fields: `name` matches filename, `description` names concrete triggers, `distribution` is exactly `plugin` or `project`.
-   2. `tools` scoping: declared-vs-used bidirectional check (declared-unused → `WARNING`, used-undeclared → `BLOCKER`), read-only-agent invariant (if the `description` verbs are review / audit / research / lint / report, `tools` must NOT contain `Edit`, `Write`, `Bash`, or `NotebookEdit` → otherwise `BLOCKER`).
+   2. `tools` scoping: declared-vs-used bidirectional check (declared-unused → `Warning`, used-undeclared → `Critical`), read-only-agent invariant (if the `description` verbs are review / audit / research / lint / report, `tools` must NOT contain `Edit`, `Write`, `Bash`, or `NotebookEdit` → otherwise `Critical`).
    3. System-prompt body: single responsibility, output shape stated, no hard-coded absolute paths, English-only frontmatter and body.
-   4. No-Skill-dispatch check: `Grep` the body for `Skill(`, `Skill tool`, or equivalent phrasings → any match is a `BLOCKER` per `skill-vs-agent`.
-   5. Rationale section: at least one decisive dimension named → absence is `BLOCKER`; at least one counter-dimension named → absence is `SUGGESTION`.
+   4. No-Skill-dispatch check: `Grep` the body for `Skill(`, `Skill tool`, or equivalent phrasings → any match is a `Critical` per `skill-vs-agent`.
+   5. Rationale section: at least one decisive dimension named → absence is `Critical`; at least one counter-dimension named → absence is `Suggestion`.
    6. Referenced assets exist.
    7. Duplicate-prevention: `Grep` the `description:` line of every other `agents/*.md` and `skills/*/SKILL.md` for semantic overlap with the target — keyword hits are candidates, not verdicts; read each candidate and judge.
-   8. INFO observations for body-length or asset-factoring opportunities.
-6. **Map severities.** MUST failure → `BLOCKER`, SHOULD failure → `WARNING`, applicable MAY → `SUGGESTION`, observation without a rule → `INFO`. Never promote Vale / markdown-style observations above `INFO`.
+   8. Info observations for body-length or asset-factoring opportunities.
+6. **Map severities.** MUST failure → `Critical`, SHOULD failure → `Warning`, applicable MAY → `Suggestion`, observation without a rule → `Info`. The severity vocabulary itself is fixed by `spec/claude/review-plan/` §Severity scale — Title Case, no abbreviations, no portfolio-local extensions. Never promote Vale / markdown-style observations above `Info`.
 7. **Draft the plan** from `templates/plan.template.md`, filling every field. `repo-revision` is `git rev-parse HEAD` (or `unknown`). `created` is today's ISO date.
 8. **Write the plan** to `.audits/agent-review/<name>.md`. Confirm the path back to the user. Do not mark any item `- [x]` on creation.
 9. **Stage and commit** only if the user asks; otherwise leave as a working-tree change.
@@ -76,10 +76,10 @@ When the user reports closures:
 ### 3. `close <agent-name>` — delete the plan after full processing
 
 1. **Read** `.audits/agent-review/<name>.md`.
-2. **Refuse if any open `- [ ]` `BLOCKER` remains.** `WARNING` / `SUGGESTION` / `INFO` may be closed via `→ deferred: <issue-url>`. Offer to help open tracking issues if missing.
+2. **Refuse if any open `- [ ]` `Critical` remains.** `Warning` / `Suggestion` / `Info` may be closed via `→ deferred: <issue-url>`. Offer to help open tracking issues if missing.
 3. **Count findings at creation time** per severity (from `## Summary`, not current state).
 4. **Delete the plan file.**
-5. **Compose the deletion commit message** exactly: `review(agent-review): close <agent-name> — <B>B/<W>W/<S>S/<I>I` in the subject; body lists deferred-issue URLs and the `repo-revision`. No hook bypass, no signing skip.
+5. **Compose the deletion commit message** exactly: `review(agent-review): close <agent-name>—<C>C/<W>W/<S>S/<I>I` in the subject; body lists deferred-issue URLs and the `repo-revision`. No hook bypass, no signing skip.
 6. **Run the commit only if the user confirms.** Show the message first.
 
 ## Output — plan shape
@@ -89,10 +89,10 @@ Reference `spec/claude/review-plan/<canonical>.md` for the authoritative format.
 ## Hard rules
 
 - **One plan per target.** A rerun supersedes; never edit a previous run's plan into a new one.
-- **No finding without a spec citation.** Real issues that no `agent-management` / `skill-vs-agent` rule covers are recorded as `INFO` with a note that the spec may need to grow — never promoted to `WARNING` / `BLOCKER`.
-- **Never delete a plan with an open BLOCKER.** `WARNING` / `SUGGESTION` / `INFO` may be deferred; `BLOCKER` must land or be downgraded (which requires a spec change, not a reviewer's choice).
+- **No finding without a spec citation.** Real issues that no `agent-management` / `skill-vs-agent` rule covers are recorded as `Info` with a note that the spec may need to grow — never promoted to `Warning` / `Critical`.
+- **Never delete a plan with an open Critical.** `Warning` / `Suggestion` / `Info` may be deferred; `Critical` must land or be downgraded (which requires a spec change, not a reviewer's choice).
 - **No invention in frontmatter.** Unknown git SHA → `unknown`. Missing reference → the finding describes the gap.
 - **English section headings, English commit messages.** Prose inside findings may follow the user's language; the structural contract stays English-only.
 - **No cross-target batching.** One agent per plan, one plan per run. For "review all agents", loop and emit one plan each.
 - **This skill reviews the agent artifact, not its live behavior.** Do not dispatch the agent under review to see what it does — out of scope and risks side effects.
-- **Tool-scope check is bidirectional and strict.** Declared-but-unused is a `WARNING`; used-but-undeclared is a `BLOCKER` (the agent will fail to run). Do not soften either side.
+- **Tool-scope check is bidirectional and strict.** Declared-but-unused is a `Warning`; used-but-undeclared is a `Critical` (the agent will fail to run). Do not soften either side.
