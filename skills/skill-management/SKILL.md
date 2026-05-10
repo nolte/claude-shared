@@ -52,7 +52,7 @@ Targeted edits to an existing skill — for example rewriting a weak `descriptio
 
 ### Review / audit
 
-Out of scope. Invoke `skill-review` — it applies every MUST / SHOULD / MAY from `spec/claude/skill-management/` and `spec/claude/skill-vs-agent/`, maps findings to severities (BLOCKER / WARNING / SUGGESTION / INFO), and writes a persistent plan to `.audits/skill-review/<name>.md` per `spec/claude/review-plan/`.
+Out of scope. Invoke `skill-review` — it applies every MUST / SHOULD / MAY from `spec/claude/skill-management/` and `spec/claude/skill-vs-agent/`, maps findings to severities (Critical / Warning / Suggestion / Info), and writes a persistent plan to `.audits/skill-review/<name>.md` per `spec/claude/review-plan/`.
 
 ## Hard rules
 
