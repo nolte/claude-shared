@@ -60,6 +60,95 @@ Before auditing:
 3. Resolve every requested slug to a path `spec/<topic>/<slug>/<canonical>.md`. If any slug doesn't resolve, list the misses and ask the caller whether to proceed with the rest or stop.
 4. Locate `spec/project/spec-readiness/<canonical>.md`. If the spec isn't present in the working tree, stop with a clear message — the audit's rules live in that spec, and running without it would amount to ad-hoc judgement.
 
+## Output shape
+
+### Option A — general audit report (default)
+
+```
+# Spec Readiness Audit
+
+## Scope
+- Specs in scope: <n> (<list of slugs>)
+- Specs requested but not found: <list or "none">
+- Canonical language: <lang>
+- Prior audit referenced: <path or "none">
+
+## Summary
+| Spec | Critical | Warning | Suggestion | Info | Recurring |
+|---|---|---|---|---|---|
+| <slug> | … | … | … | … | … |
+
+## Critical
+### Contradictions
+- `<slug>:<line>` ↔ `<slug>:<line>` — MUST / MUST NOT on <subject>: "<short quote>" vs "<short quote>"
+- …
+
+### Load-bearing Open Questions
+- `<slug>` OQ: "<question>" — downstream <artefact/decision> blocked until answered
+- …
+
+### Ghost references
+- `<slug>:<line>` references `<target>` — target missing
+- …
+
+## Warning
+### Audience fit
+- `<slug>`: derived audience <role> has no actionable Requirement; `<slug>` §<section> mentions <role> but the Requirements address only <other role>
+- …
+
+### Requirement ↔ AC coverage gaps
+- `<slug>` Requirement at <section>:<line> has no matching Acceptance Criterion
+- `<slug>` Acceptance Criterion at <line> is orphan (ties to no Requirement or Goal)
+- …
+
+### Goal ↔ Requirement gaps
+- `<slug>` Goal at <line> is never operationalised in Requirements
+- …
+
+### Non-critical contradictions
+- `<slug>:<line>` MUST vs `<slug>:<line>` SHOULD on <subject>
+- `<slug>` Goal vs Non-Goal: "<quote>" vs "<quote>"
+- …
+
+## Info
+### Softening chains
+- `<slug>` §<section>: SHOULD→MAY reversal on <subject>
+- …
+
+### Implicit audience hints
+- `<slug>` could declare its reader set in one line at the top of the Context paragraph
+- …
+
+### Ambiguous scope without Non-Goals
+- `<slug>` has no Non-Goals section and the scope language is broad
+- …
+
+### Infrastructure-dependent ACs
+- `<slug>` AC at <line> names `<tool/skill>` which isn't shipped in the portfolio yet
+- …
+
+## Health
+- Specs parsed: <count>
+- RFC-2119 rules extracted: <count>
+- Cross-spec references checked: <count>
+- Open Questions classified: load-bearing <count>, parking-lot <count>
+- Audience artifacts consulted: <list or "none">
+
+## Caller follow-ups
+- Resolve every `Critical` finding before the affected spec is promoted out of draft.
+- For `Warning`-class coverage gaps, add the missing Acceptance Criteria or rewrite the Requirement to match the AC that's already there.
+- For unclear-audience findings, add a one-line "readers:" hint near the Context paragraph or invoke `audience-identify` when the module has no audience artifact.
+- For recurring findings, consider a spec revision rather than another targeted fix.
+```
+
+Omit any severity section that's empty except **Scope**, **Summary**, **Health**, and **Caller follow-ups**, which are always present.
+
+### Option B — single-spec pre-promotion review
+
+When the caller explicitly asks for a pre-promotion check on one spec, produce the report in the `review-plan` artifact format declared by `spec/claude/review-plan/<canonical>.md`, filing it at `.audits/spec-readiness/<slug>.md`. Both this agent and `review-plan` now share the same canonical severity scale (`Critical` / `Warning` / `Suggestion` / `Info` in Title Case), so no per-finding remap is needed: file each finding under its `### Critical`, `### Warning`, `### Suggestion`, or `### Info` subsection in `## Findings`, in that order. A SHOULD-class one-line fix that doesn't rise to Warning **MAY** be filed as `Suggestion` when that's the more accurate classification — the canonical scale offers the bucket for exactly that case.
+
+Don't duplicate the output into both Option A and Option B; pick the one the caller requested.
+
 ## Working procedure
 
 ### Phase 1: Inventory and parse
@@ -156,95 +245,6 @@ If the repo has a prior readiness audit artifact (for example under `.audits/spe
 - Count recurring findings per spec; a spec with ≥3 recurring findings across audits is flagged in the Health section as "structurally drifting," which is a signal to the caller that the spec needs a revision, not another audit.
 
 Don't modify the prior artifact.
-
-## Output shape
-
-### Option A — general audit report (default)
-
-```
-# Spec Readiness Audit
-
-## Scope
-- Specs in scope: <n> (<list of slugs>)
-- Specs requested but not found: <list or "none">
-- Canonical language: <lang>
-- Prior audit referenced: <path or "none">
-
-## Summary
-| Spec | Critical | Warning | Suggestion | Info | Recurring |
-|---|---|---|---|---|---|
-| <slug> | … | … | … | … | … |
-
-## Critical
-### Contradictions
-- `<slug>:<line>` ↔ `<slug>:<line>` — MUST / MUST NOT on <subject>: "<short quote>" vs "<short quote>"
-- …
-
-### Load-bearing Open Questions
-- `<slug>` OQ: "<question>" — downstream <artefact/decision> blocked until answered
-- …
-
-### Ghost references
-- `<slug>:<line>` references `<target>` — target missing
-- …
-
-## Warning
-### Audience fit
-- `<slug>`: derived audience <role> has no actionable Requirement; `<slug>` §<section> mentions <role> but the Requirements address only <other role>
-- …
-
-### Requirement ↔ AC coverage gaps
-- `<slug>` Requirement at <section>:<line> has no matching Acceptance Criterion
-- `<slug>` Acceptance Criterion at <line> is orphan (ties to no Requirement or Goal)
-- …
-
-### Goal ↔ Requirement gaps
-- `<slug>` Goal at <line> is never operationalised in Requirements
-- …
-
-### Non-critical contradictions
-- `<slug>:<line>` MUST vs `<slug>:<line>` SHOULD on <subject>
-- `<slug>` Goal vs Non-Goal: "<quote>" vs "<quote>"
-- …
-
-## Info
-### Softening chains
-- `<slug>` §<section>: SHOULD→MAY reversal on <subject>
-- …
-
-### Implicit audience hints
-- `<slug>` could declare its reader set in one line at the top of the Context paragraph
-- …
-
-### Ambiguous scope without Non-Goals
-- `<slug>` has no Non-Goals section and the scope language is broad
-- …
-
-### Infrastructure-dependent ACs
-- `<slug>` AC at <line> names `<tool/skill>` which isn't shipped in the portfolio yet
-- …
-
-## Health
-- Specs parsed: <count>
-- RFC-2119 rules extracted: <count>
-- Cross-spec references checked: <count>
-- Open Questions classified: load-bearing <count>, parking-lot <count>
-- Audience artifacts consulted: <list or "none">
-
-## Caller follow-ups
-- Resolve every `Critical` finding before the affected spec is promoted out of draft.
-- For `Warning`-class coverage gaps, add the missing Acceptance Criteria or rewrite the Requirement to match the AC that's already there.
-- For unclear-audience findings, add a one-line "readers:" hint near the Context paragraph or invoke `audience-identify` when the module has no audience artifact.
-- For recurring findings, consider a spec revision rather than another targeted fix.
-```
-
-Omit any severity section that's empty except **Scope**, **Summary**, **Health**, and **Caller follow-ups**, which are always present.
-
-### Option B — single-spec pre-promotion review
-
-When the caller explicitly asks for a pre-promotion check on one spec, produce the report in the `review-plan` artifact format declared by `spec/claude/review-plan/<canonical>.md`, filing it at `.audits/spec-readiness/<slug>.md`. Both this agent and `review-plan` now share the same canonical severity scale (`Critical` / `Warning` / `Suggestion` / `Info` in Title Case), so no per-finding remap is needed: file each finding under its `### Critical`, `### Warning`, `### Suggestion`, or `### Info` subsection in `## Findings`, in that order. A SHOULD-class one-line fix that doesn't rise to Warning **MAY** be filed as `Suggestion` when that's the more accurate classification — the canonical scale offers the bucket for exactly that case.
-
-Don't duplicate the output into both Option A and Option B; pick the one the caller requested.
 
 ## Hard rules
 

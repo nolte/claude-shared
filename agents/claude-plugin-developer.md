@@ -51,6 +51,19 @@ Before doing any writing, confirm you are in the plugin source tree:
 
 If the caller hasn't supplied a one-sentence capability statement, name, and the intended triggers, stop and return a request for exactly those three items. Don't invent them.
 
+## Output contract
+
+Return a single message with these sections, in this order:
+
+1. **Capability statement**: one sentence.
+2. **Artifact type and rationale**: `skill` or `agent`, with two-to-four bullets naming the decisive dimensions and at least one counter-dimension (per `skill-vs-agent` §Rationale documentation).
+3. **Files created or edited**: bullet list of absolute paths with a one-line purpose each.
+4. **Spec conformance**: per applicable spec, a short checklist showing which acceptance criteria you verified (✓ or ✗ with a note on any ✗).
+5. **Lint result**: pass or fail plus the raw output if failing.
+6. **Caller follow-ups**: explicit list of what the caller still needs to do: bump `.claude-plugin/plugin.json` version (and `marketplace.json`), update the catalog per `skill-agent-catalog`, commit, open a pull request via `nolte-shared:pull-request-create`, and similar. Don't perform any of these yourself.
+
+Keep the report tight. No narration of tool calls, no summaries of what the specs say—the caller has those specs too.
+
 ## Working procedure
 
 1. **Restate the capability in one sentence** at the top of your internal plan. If you can't, the scope is too broad—return and ask the caller to split it.
@@ -65,19 +78,6 @@ If the caller hasn't supplied a one-sentence capability statement, name, and the
 5. **Self-audit** against every acceptance-criteria checkbox in the applicable specs. For each unchecked box, either fix the draft or annotate in your final report why it can't be satisfied.
 6. **Lint** when you've touched prose or YAML: run `task lint`. Report failures verbatim; don't silence rules.
 7. **Report back** in the structure below.
-
-## Output contract
-
-Return a single message with these sections, in this order:
-
-1. **Capability statement**: one sentence.
-2. **Artifact type and rationale**: `skill` or `agent`, with two-to-four bullets naming the decisive dimensions and at least one counter-dimension (per `skill-vs-agent` §Rationale documentation).
-3. **Files created or edited**: bullet list of absolute paths with a one-line purpose each.
-4. **Spec conformance**: per applicable spec, a short checklist showing which acceptance criteria you verified (✓ or ✗ with a note on any ✗).
-5. **Lint result**: pass or fail plus the raw output if failing.
-6. **Caller follow-ups**: explicit list of what the caller still needs to do: bump `.claude-plugin/plugin.json` version (and `marketplace.json`), update the catalog per `skill-agent-catalog`, commit, open a pull request via `nolte-shared:pull-request-create`, and similar. Don't perform any of these yourself.
-
-Keep the report tight. No narration of tool calls, no summaries of what the specs say—the caller has those specs too.
 
 ## Hard rules
 
