@@ -1,6 +1,6 @@
 ---
 name: audience-review
-description: Reviews an existing audience-analysis artifact against spec/project/audience-identification/ and, when the artifact concerns release notes, also against spec/project/release-notes-audience-analysis/. Produces a structured, read-only findings report — no edits. Invoke when the user says things like "review this audience list", "audit the audience analysis", "check whether this audience artifact is complete", "validate the release-notes audiences", or equivalent German-language requests; also triggers when another skill (for instance pull-request-merge, release-automation, readme-structure) needs to confirm that a project's audience artifact is still compliant before a downstream gate. Do NOT use this agent to create a new audience list — that is the `audience-identify` skill. Do NOT use for generic audience brainstorming.
+description: Reviews an existing audience-analysis artifact against spec/project/audience-identification/ and, when the artifact concerns release notes, also against spec/project/release-notes-audience-analysis/. Produces a structured, read-only findings report — no edits. Invoke when the user says things like "review this audience list", "audit the audience analysis", "check whether this audience artifact is complete", "validate the release-notes audiences", or equivalent German-language requests; also triggers when another skill (for instance `pull-request-merge`) or a downstream spec gate (release-automation pre-publish, readme-structure scaffolding) needs to confirm that a project's audience artifact is still compliant before proceeding. Do NOT use this agent to create a new audience list — that is the `audience-identify` skill. Do NOT use for generic audience brainstorming.
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [audience, review]
@@ -28,7 +28,7 @@ The frontmatter `description` keeps the trigger lexicon English-only per `spec/c
 
 ## Inputs
 
-The caller (a human user, or a skill such as `pull-request-merge`, `release-automation`, `readme-structure`) gives you one of:
+The caller (a human user, or a skill such as `pull-request-merge`; release-automation and readme-structure are spec slugs whose live skills will dispatch this agent in a future iteration) gives you one of:
 
 1. An explicit path to the audience artifact in the current project (for example `docs/audiences.md`, `AUDIENCES.md`, a README section, inline `release-drafter.yml` rationale comments).
 2. A bounded context description ("the release notes of this project", "this library's public API") and permission to locate the artifact yourself.
