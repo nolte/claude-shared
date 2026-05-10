@@ -32,6 +32,16 @@ tasks:
       - echo "no tests yet"
     silent: true
 
+  validate:skills:
+    desc: |
+      Validate every skill and agent frontmatter against the structural rules
+      from spec/claude/skill-management/ and spec/claude/agent-management/.
+      Stop-gap for the upstream skills-ref CLI named in spec/claude/skill-review/
+      §"Checks derived from external skill-structure validation"; exits non-zero
+      on any Critical-grade finding.
+    cmds:
+      - python3 scripts/validate_skills.py
+
   docs:
     desc: Build the MkDocs site
     cmds:
