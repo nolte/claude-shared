@@ -133,7 +133,7 @@ def parse_frontmatter(text: str) -> dict | None:
     return out
 
 
-def check_name(name: str | None, target: str, kind: str, expected_basename: str) -> list[Finding]:
+def check_name(name: str | None, target: str, kind: str, expected_basename: str, body: str = "") -> list[Finding]:
     findings: list[Finding] = []
     if not name:
         findings.append(Finding("Critical", target, f"{kind}-management.frontmatter-name-missing",
@@ -149,8 +149,17 @@ def check_name(name: str | None, target: str, kind: str, expected_basename: str)
         findings.append(Finding("Critical", target, f"{kind}-management.frontmatter-name-double-hyphen",
                                 f"`name` `{name}` contains consecutive hyphens"))
     if any(t in name.lower() for t in RESERVED_TOKENS):
-        findings.append(Finding("Critical", target, f"{kind}-management.frontmatter-name-reserved",
-                                f"`name` `{name}` contains a reserved token (`anthropic` / `claude`)"))
+        # Narrow exception per `skill-management` §Frontmatter validation /
+        # `agent-management` §Structure: artefacts whose primary
+        # responsibility targets the Claude / Anthropic platform surface
+        # MAY waive the ban when the body carries a
+        # `## Reserved-token rationale` section.
+        if "## Reserved-token rationale" in body:
+            findings.append(Finding("Info", target, f"{kind}-management.frontmatter-name-reserved-exception",
+                                    f"`name` `{name}` contains a reserved token; exception accepted via `## Reserved-token rationale` section in body"))
+        else:
+            findings.append(Finding("Critical", target, f"{kind}-management.frontmatter-name-reserved",
+                                    f"`name` `{name}` contains a reserved token (`anthropic` / `claude`)"))
     if name.lower() in GENERIC_NAMES:
         findings.append(Finding("Critical", target, f"{kind}-management.frontmatter-name-generic",
                                 f"`name` `{name}` is in the generic-names blocklist (defeats discovery)"))
@@ -231,6 +240,12 @@ def check_distribution(distribution: str | None, target: str) -> list[Finding]:
     return []
 
 
+def _split_body(text: str) -> str:
+    """Return the markdown body (everything after the closing `---` of the frontmatter)."""
+    parts = text.split("---", 2)
+    return parts[2] if len(parts) >= 3 else text
+
+
 def check_skill(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix()
     text = path.read_text(encoding="utf-8")
@@ -238,8 +253,9 @@ def check_skill(path: Path) -> list[Finding]:
     if fm is None:
         return [Finding("Critical", rel, "skill-management.frontmatter-missing", "no YAML frontmatter")]
     expected_name = path.parent.name
+    body = _split_body(text)
     findings = []
-    findings += check_name(fm.get("name"), rel, "skill", expected_name)
+    findings += check_name(fm.get("name"), rel, "skill", expected_name, body)
     findings += check_description(fm.get("description"), rel, "skill")
     findings += check_tags(fm.get("tags"), rel, "skill")
     findings += check_when_to_use(fm.get("description"), fm.get("when_to_use"), rel, "skill")
@@ -253,8 +269,9 @@ def check_agent(path: Path) -> list[Finding]:
     if fm is None:
         return [Finding("Critical", rel, "agent-management.frontmatter-missing", "no YAML frontmatter")]
     expected_name = path.stem
+    body = _split_body(text)
     findings = []
-    findings += check_name(fm.get("name"), rel, "agent", expected_name)
+    findings += check_name(fm.get("name"), rel, "agent", expected_name, body)
     findings += check_description(fm.get("description"), rel, "agent")
     findings += check_tags(fm.get("tags"), rel, "agent")
     findings += check_distribution(fm.get("distribution"), rel)
