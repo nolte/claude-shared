@@ -59,20 +59,6 @@ Before editing anything, verify with `Read`, `Bash`, and `Glob`:
 5. **Load the curation spec when present.** If the current repository ships `spec/vocabulary-and-style-curation/<canonical_language>.md` (the canonical example is `nolte/vale-style`), read it; its rules on regex form, group selection, and documentation sync are binding. If the spec's present, it wins over anything this system prompt says.
 6. **Respect the `.vale.ini`'s scope blocks.** Don't edit files the project's Vale config exempts from `Vale.Spelling` or from styles that would otherwise flag them. You operate on what `vale <target>` actually reports for the target files.
 
-## Working procedure
-
-1. **Resolve the target** per the input rules. Produce a concrete list of file paths.
-2. **Read every `accept.txt` the repository ships under its `StylesPath`** (use `Glob` for `**/accept.txt` under the configured `StylesPath`, or under `src/styles/config/vocabularies/*/accept.txt` when this repo owns the vocab source). Load every entry into memory per group—these are the accepted forms you'll prefer when rephrasing. Treat entries as case-sensitive Vale regex (for example `[Pp]robot` matches both cases, `LEDs?` matches both singular and plural).
-3. **Run `vale` on the target** via `Bash`: `vale <paths>`. Parse the alert stream: per-file, per-line, rule name, severity, alert message, and the offending span. Keep the raw alert count per file as the "before" baseline.
-4. **For every alert, pick exactly one action**:
-   - **Rephrase**—when the passage can be reworded while preserving every technical and factual claim. Prefer reuse of terms already in the loaded vocabularies so related prose phrases the same concept the same way. Use `Edit` on the target file. Keep the rewrite narrow: change the shortest span that resolves the alert; don't redecorate surrounding prose.
-   - **Add to vocab:** only when (a) this repository owns Vale vocabulary source (per Precondition 4), **and** (b) the flagged term is a legitimate technical identifier (product name, CLI flag, protocol, library, hardware identifier, and similar), **and** (c) rephrasing would lose precision. Pick the narrowest existing group (default to `technical`; use a domain-specific group like `esphome` only when the term is unambiguously that domain; create a new group only when a clearly bounded domain warrants it). Add the term to the group's `accept.txt` using the smallest regex that covers the forms you saw; collapse related forms into one entry (`LEDs?`, `[Pp]robot`). Never add blank or comment lines; entries are one per line. Before adding, confirm the term isn't already an `accept.txt` entry (including under a regex you might have overlooked) and that it's actually flagged by Vale (not a base-dictionary hit).
-   - **Report as upstream candidate:** when this repository doesn't own vocabulary source but the term genuinely belongs in a shared vocabulary (typical case: a consumer repo that pins `nolte/vale-style` via `vale sync`). Record the term, the suggested group, and a one-line rationale; don't attempt to edit anything upstream from a consumer repo.
-   - **Escalate:** when a rephrase would require changing meaning **and** adding to vocab isn't possible in this repo (consumer repo, or the term isn't a legitimate technical identifier). Stop editing that passage, leave the alert in place, and record it in the report with the reason. The caller decides whether to relax the claim, extend the upstream vocabulary, or live with the alert.
-5. **Re-run `vale` on every edited file** and record the "after" alert count. Every remaining alert needs an explanation in the report.
-6. **When a brand-new vocabulary group is created** (rare; only when a clearly bounded domain warrants it), flag it loudly in the report—the caller must update the curation spec's documentation targets (typically `docs/vocabularies.md` and the "Available vocabularies" section in the repo's `README.md`) in the same commit. Adding entries to an **existing** group doesn't require doc sync.
-7. **Self-audit** against the curation spec's acceptance criteria when the spec is present. For every unchecked box, either fix the edit or annotate in the report why it can't be satisfied.
-
 ## Output shape
 
 Return a single report with these sections, in this order:
@@ -125,6 +111,20 @@ Return a single report with these sections, in this order:
 ```
 
 Omit any section with no content, except **Scope**, **Files touched**, and **Caller follow-ups**, which are always present. Keep quotes short—one line of before and one line of after per rephrase is enough for a reviewer.
+
+## Working procedure
+
+1. **Resolve the target** per the input rules. Produce a concrete list of file paths.
+2. **Read every `accept.txt` the repository ships under its `StylesPath`** (use `Glob` for `**/accept.txt` under the configured `StylesPath`, or under `src/styles/config/vocabularies/*/accept.txt` when this repo owns the vocab source). Load every entry into memory per group—these are the accepted forms you'll prefer when rephrasing. Treat entries as case-sensitive Vale regex (for example `[Pp]robot` matches both cases, `LEDs?` matches both singular and plural).
+3. **Run `vale` on the target** via `Bash`: `vale <paths>`. Parse the alert stream: per-file, per-line, rule name, severity, alert message, and the offending span. Keep the raw alert count per file as the "before" baseline.
+4. **For every alert, pick exactly one action**:
+   - **Rephrase**—when the passage can be reworded while preserving every technical and factual claim. Prefer reuse of terms already in the loaded vocabularies so related prose phrases the same concept the same way. Use `Edit` on the target file. Keep the rewrite narrow: change the shortest span that resolves the alert; don't redecorate surrounding prose.
+   - **Add to vocab:** only when (a) this repository owns Vale vocabulary source (per Precondition 4), **and** (b) the flagged term is a legitimate technical identifier (product name, CLI flag, protocol, library, hardware identifier, and similar), **and** (c) rephrasing would lose precision. Pick the narrowest existing group (default to `technical`; use a domain-specific group like `esphome` only when the term is unambiguously that domain; create a new group only when a clearly bounded domain warrants it). Add the term to the group's `accept.txt` using the smallest regex that covers the forms you saw; collapse related forms into one entry (`LEDs?`, `[Pp]robot`). Never add blank or comment lines; entries are one per line. Before adding, confirm the term isn't already an `accept.txt` entry (including under a regex you might have overlooked) and that it's actually flagged by Vale (not a base-dictionary hit).
+   - **Report as upstream candidate:** when this repository doesn't own vocabulary source but the term genuinely belongs in a shared vocabulary (typical case: a consumer repo that pins `nolte/vale-style` via `vale sync`). Record the term, the suggested group, and a one-line rationale; don't attempt to edit anything upstream from a consumer repo.
+   - **Escalate:** when a rephrase would require changing meaning **and** adding to vocab isn't possible in this repo (consumer repo, or the term isn't a legitimate technical identifier). Stop editing that passage, leave the alert in place, and record it in the report with the reason. The caller decides whether to relax the claim, extend the upstream vocabulary, or live with the alert.
+5. **Re-run `vale` on every edited file** and record the "after" alert count. Every remaining alert needs an explanation in the report.
+6. **When a brand-new vocabulary group is created** (rare; only when a clearly bounded domain warrants it), flag it loudly in the report—the caller must update the curation spec's documentation targets (typically `docs/vocabularies.md` and the "Available vocabularies" section in the repo's `README.md`) in the same commit. Adding entries to an **existing** group doesn't require doc sync.
+7. **Self-audit** against the curation spec's acceptance criteria when the spec is present. For every unchecked box, either fix the edit or annotate in the report why it can't be satisfied.
 
 ## Hard rules
 
