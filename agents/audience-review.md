@@ -1,6 +1,6 @@
 ---
 name: audience-review
-description: Review an existing audience-analysis artifact against spec/project/audience-identification/ and, when the artifact concerns release notes, also against spec/project/release-notes-audience-analysis/. Produce a structured, read-only findings report — no edits. Invoke when the user says things like "review this audience list", "audit the audience analysis", "check whether this audience artifact is complete", "validate the release-notes audiences", "prüfe diese Zielgruppenliste", "Audit der Zielgruppenanalyse", "validiere das Zielgruppen-Artefakt", or when another skill (for instance pull-request-merge, release-automation, readme-structure) needs to confirm that a project's audience artifact is still compliant before a downstream gate. Do NOT use this agent to create a new audience list — that is the `audience-identify` skill. Do NOT use for generic audience brainstorming.
+description: Reviews an existing audience-analysis artifact against spec/project/audience-identification/ and, when the artifact concerns release notes, also against spec/project/release-notes-audience-analysis/. Produces a structured, read-only findings report — no edits. Invoke when the user says things like "review this audience list", "audit the audience analysis", "check whether this audience artifact is complete", "validate the release-notes audiences", or equivalent German-language requests; also triggers when another skill (for instance pull-request-merge, release-automation, readme-structure) needs to confirm that a project's audience artifact is still compliant before a downstream gate. Do NOT use this agent to create a new audience list — that is the `audience-identify` skill. Do NOT use for generic audience brainstorming.
 distribution: plugin
 tools: Read, Grep, Glob
 ---
@@ -16,6 +16,14 @@ You review an existing audience-analysis artifact in the current project against
 - **Tool restriction is a safety win** — review is read-only, so the agent declares `Read, Grep, Glob` only and has no way to accidentally rewrite the artifact it is auditing.
 - **Specialization sharpens output** — a narrow system prompt that maps spec requirements to a pass/fail matrix produces a noticeably more actionable report than the same work inline.
 - Counter-dimension considered: *interactivity* would bias toward a skill, but this review has no step that genuinely needs mid-flow confirmation — the report is the interaction. The `audience-identify` skill already owns the interactive authoring path, so this agent stays on the non-interactive review side.
+
+## German trigger phrases
+
+The frontmatter `description` keeps the trigger lexicon English-only per `spec/claude/agent-management/` §Structure (plugin-distributed agents). Treat the following German paraphrases as equivalent and discoverable through this agent:
+
+- "prüfe diese Zielgruppenliste"
+- "Audit der Zielgruppenanalyse"
+- "validiere das Zielgruppen-Artefakt"
 
 ## Inputs
 

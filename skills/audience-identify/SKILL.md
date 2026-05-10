@@ -1,6 +1,6 @@
 ---
 name: audience-identify
-description: Run the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produce an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", "Zielgruppen für dieses Modul/Projekt/Paket ermitteln", "wer sind die Konsumenten/Nutzer von X", "Stakeholder-Identifikation für X", "Zielgruppenanalyse vor README/SLA/Threat-Model", or "Audience-Liste aufsetzen". Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context.
+description: Runs the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produces an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", or equivalent German-language requests. Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context.
 tags: [audience]
 ---
 
@@ -20,6 +20,16 @@ Operationalizes the methodology from `spec/project/audience-identification/` so 
 - Detect the user's language from their message and reply in that language.
 - The written audience artifact uses the surrounding repository's primary language (English by default, unless the repo's existing docs show otherwise — follow the precedent).
 - The five relationship-category labels stay consistent with the spec (canonical EN version wins).
+
+## German trigger phrases
+
+The frontmatter `description` keeps the trigger lexicon English-only per `spec/claude/skill-management/` §Structure (plugin-distributed skills). Treat the following German paraphrases as equivalent and discoverable through this skill:
+
+- "Zielgruppen für dieses Modul/Projekt/Paket ermitteln"
+- "wer sind die Konsumenten/Nutzer von X"
+- "Stakeholder-Identifikation für X"
+- "Zielgruppenanalyse vor README/SLA/Threat-Model"
+- "Audience-Liste aufsetzen"
 
 ## Precondition
 
