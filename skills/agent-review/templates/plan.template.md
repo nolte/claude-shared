@@ -27,7 +27,7 @@ Explicitly out of scope: runtime behavior of the agent, Vale/markdown style (han
 
 ## Summary
 
-- Critical: {{B}}
+- Critical: {{C}}
 - Warning: {{W}}
 - Suggestion: {{S}}
 - Info: {{I}}
