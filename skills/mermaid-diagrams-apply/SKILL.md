@@ -1,35 +1,19 @@
 ---
 name: mermaid-diagrams-apply
 description: >-
-  Audit and apply the MkDocs Mermaid setup of the current repository against
-  `spec/project/mermaid-diagrams/<canonical_language>.md`, and help an author
-  add a single Mermaid diagram—either hand-described or derived from an
-  existing structure—without violating the spec. Wires up `pymdownx.superfences`
-  with the Mermaid `custom_fences` block in `mkdocs.yml`, ensures
-  `pymdown-extensions` is pinned in `docs/requirements.txt` per the
-  project-structure "Requirements file format" rules, and refuses to install
-  `mkdocs-mermaid2-plugin` (Material's native bridge is the portfolio standard).
-  When drafting a diagram, picks the type from the supported catalog
-  (`flowchart`, `C4Component`, `classDiagram`, `sequenceDiagram`, `erDiagram`),
-  prepends the mandatory `<!-- diagram-source ... -->` marker (either
-  user-described with a one-line summary, or derived with a path pointer),
-  and emits English-only labels even inside `docs/de/`. When auditing, scans
-  every Mermaid block under the configured `docs_dir` and flags missing source
-  markers, missing `flowchart` direction headers, inline styling, `gitGraph`
-  usage, type-vs-use-case mismatches, non-English labels, and derived-source
-  drift (source's last-commit timestamp newer than the hosting markdown).
-  Invoke when the user asks to "wire up Mermaid in this repo", "scaffold
-  Mermaid for MkDocs", "audit Mermaid setup", "draft a flowchart for the
-  plugin manifest", "derive a dependency diagram from pyproject.toml", "audit
-  Mermaid blocks in the docs against the spec", or equivalent German-language
-  requests ("Mermaid in diesem Repo einrichten", "Mermaid-Setup auditieren",
-  "Diagramm aus pyproject.toml ableiten", "Flowchart für das Plugin-Manifest
-  erzeugen", "Mermaid-Blöcke gegen die Spec auditieren"). Don't use for
-  general MkDocs scaffolding (that's `project-structure-apply`), for spec
-  authoring (that's the `nolte-shared:spec` skill), for running the
-  docs-freshness audit itself (that's the `docs-freshness-checker` agent),
-  or for diagrams outside Mermaid (PlantUML, Graphviz, draw.io aren't
-  covered by the spec).
+  Audits and applies the MkDocs Mermaid setup of the current repository
+  against `spec/project/mermaid-diagrams/<canonical_language>.md`, and helps
+  an author add a single Mermaid diagram (hand-described or derived). Wires
+  up `pymdownx.superfences`, pins `pymdown-extensions`, refuses
+  `mkdocs-mermaid2-plugin`. Picks the diagram type from the supported catalog
+  and prepends the mandatory `<!-- diagram-source ... -->` marker. Audits
+  flag missing source markers, missing direction headers, inline styling,
+  `gitGraph` usage, non-English labels, and derived-source drift. Invoke
+  when the user asks to "wire up Mermaid", "audit Mermaid setup", "draft a
+  flowchart", or equivalent German-language requests. Don't use for general
+  MkDocs scaffolding (use `project-structure-apply`), spec authoring (use
+  `spec`), the docs-freshness audit (use `docs-freshness-checker`), or
+  non-Mermaid diagrams.
 tags: [scaffolding, audit]
 ---
 
