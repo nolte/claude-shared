@@ -60,6 +60,13 @@ HTML_TAG_NAMES = {
 XML_TAG_RE = re.compile(r"<(/?)([a-z][a-z0-9]*)(\s[^>]*)?/?>")
 FORBIDDEN_PRONOUNS_RE = re.compile(r"\b(I|you|your|yours|yourself|we|our|ours|us)\b")
 
+# Strip text inside double-quoted spans (`"..."`) before applying the
+# third-person check. Quoted spans are user-trigger phrases or sample
+# operator-voice quotes, not author voice; the spec rule bans first /
+# second person in *author voice* only (per
+# `agentskills.io/skill-creation/best-practices`).
+QUOTED_SPAN_RE = re.compile(r'"[^"]*"')
+
 
 @dataclass
 class Finding:
@@ -170,10 +177,14 @@ def check_description(desc: str | None, target: str, kind: str) -> list[Finding]
             findings.append(Finding("Critical", target, f"{kind}-management.frontmatter-description-xml",
                                     f"`description` contains an HTML tag (`{m.group(0)}`)"))
             break  # one finding per description is enough
-    pron_match = FORBIDDEN_PRONOUNS_RE.search(desc)
+    # Apply the third-person check on author-voice text only: strip every
+    # double-quoted span (operator-voice trigger phrases, sample requests)
+    # before the search so quoted `I`/`you`/`our` does not fire.
+    author_voice = QUOTED_SPAN_RE.sub(" ", desc)
+    pron_match = FORBIDDEN_PRONOUNS_RE.search(author_voice)
     if pron_match:
         findings.append(Finding("Critical", target, f"{kind}-management.frontmatter-description-third-person",
-                                f"`description` contains the non-third-person token `{pron_match.group(0)}`"))
+                                f"`description` contains the non-third-person token `{pron_match.group(0)}` in author voice"))
     return findings
 
 
