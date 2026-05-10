@@ -9,6 +9,7 @@
 Repository state at invocation:
 
 ```
+
 .
 ├── .claude-plugin/
 │   └── plugin.json
@@ -25,20 +26,24 @@ Repository state at invocation:
 ├── mkdocs.yml
 ├── Taskfile.yml
 └── spec/claude/skill-agent-catalog/en.md
+
 ```
 
 `.claude-plugin/plugin.json` (excerpt):
 
 ```json
+
 {
   "name": "example-plugin",
   "version": "0.4.2"
 }
+
 ```
 
 `mkdocs.yml` (excerpt — base MkDocs setup already scaffolded by `project-structure-apply`, but **no** catalog plugins yet):
 
 ```yaml
+
 site_name: example-plugin
 theme:
   name: material
@@ -46,12 +51,15 @@ plugins:
   - search
 nav:
   - Home: index.md
+
 ```
 
 `docs/requirements.txt`:
 
 ```
+
 mkdocs-material==9.5.*
+
 ```
 
 `Taskfile.yml` already has a `docs` target that runs `mkdocs build --strict`.
@@ -73,13 +81,17 @@ No `scripts/docs/gen_catalog.py`, no `docs/catalog-sources.yml`, no generated `d
 3. **Propose changes** — present each as a separate per-item approval (do not bundle):
    - Patch `mkdocs.yml` to add `gen-files` (pointing at `scripts/docs/gen_catalog.py`) and `literate-nav` plugins, preserving the existing `search` entry.
    - Create `docs/catalog-sources.yml` with the local plugin as the **first** entry:
+
      ```yaml
+
      sources:
        - name: example-plugin
          local: .
          repo_url: https://github.com/<owner>/example-plugin
          branch: main
+
      ```
+
      Resolve `<owner>` from `git remote get-url origin`; if unresolvable, ask the user.
    - Create `scripts/docs/gen_catalog.py` honouring every "must" in §2.3 (fail on bad frontmatter, emit `SUMMARY.md` files, deterministic ordering, link back to the source repo at the configured branch, render `tags.md`). Hook docstring points at `spec/claude/skill-agent-catalog/en.md`.
    - Append `mkdocs-gen-files`, `mkdocs-literate-nav`, and `pyyaml` to `docs/requirements.txt` (pinned to a minor range).

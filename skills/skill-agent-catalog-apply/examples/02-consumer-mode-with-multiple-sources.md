@@ -9,6 +9,7 @@
 Repository state at invocation (a downstream consumer that uses Claude Code plugins but doesn't ship its own):
 
 ```
+
 .
 ├── docs/
 │   ├── requirements.txt
@@ -22,6 +23,7 @@ Repository state at invocation (a downstream consumer that uses Claude Code plug
 │       └── agents/
 ├── ../claude-shared/       # sibling checkout of nolte-shared
 └── spec/claude/skill-agent-catalog/en.md
+
 ```
 
 Notably **absent**: `.claude-plugin/plugin.json`. This repo is not a plugin itself.
@@ -29,6 +31,7 @@ Notably **absent**: `.claude-plugin/plugin.json`. This repo is not a plugin itse
 `mkdocs.yml` (excerpt):
 
 ```yaml
+
 site_name: example-consumer
 theme:
   name: material
@@ -37,13 +40,16 @@ plugins:
   - awesome-pages
 nav:
   - Home: index.md
+
 ```
 
 `docs/requirements.txt`:
 
 ```
+
 mkdocs-material==9.5.*
 mkdocs-awesome-pages-plugin==2.9.*
+
 ```
 
 Working tree is clean. There is no `skills/` or `agents/` directory at the repo root.
@@ -56,7 +62,9 @@ Working tree is clean. There is no `skills/` or `agents/` directory at the repo 
 4. **Propose changes** (per-item approval):
    - Patch `mkdocs.yml` to add `gen-files` (pointing at `scripts/docs/gen_catalog.py`) and `literate-nav`, keeping `search` and `awesome-pages` in place.
    - Create `docs/catalog-sources.yml` with **two** external entries and **no** `local: .`:
+
      ```yaml
+
      sources:
        - name: acme-plugin
          local: vendor/acme-plugin
@@ -66,7 +74,9 @@ Working tree is clean. There is no `skills/` or `agents/` directory at the repo 
          local: ../claude-shared
          repo_url: https://github.com/nolte/claude-shared
          branch: main
+
      ```
+
      Default ordering is alphabetical by `name` (spec §"Always" rule for consumer mode); confirm with the user before writing if they want a different order.
    - Create `scripts/docs/gen_catalog.py` that walks both source roots, reads `<source.local>/skills/*/SKILL.md` and `<source.local>/agents/*.md` for each, groups output by `name`, and links back to each source's `repo_url` + `branch`.
    - Append `mkdocs-gen-files`, `mkdocs-literate-nav`, and `pyyaml` to `docs/requirements.txt`.

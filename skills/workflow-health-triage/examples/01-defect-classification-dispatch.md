@@ -13,9 +13,13 @@ Repository state when the skill is invoked:
 - `spec/project/workflow-health/en.md` — present (canonical), declares the six classifications and §Specialised-agent dispatch contract.
 - `.github/workflows/docs.yml` — required check on `develop`, conclusion `failure`, failing step is `Build MkDocs site`.
 - `gh run view 9988111222 --log-failed` excerpt:
+
   ```
+
   ERROR    -  Config value 'nav': Reference to non-existent file 'skills/workflow-health-triage/SKILL.md'
+
   ```
+
 - `git log --oneline -1 <headSha>` resolves to commit `feat(skills): rename workflow-health-triage SKILL frontmatter`, which renamed `skills/workflow-health-triage/skill.md` → `skills/workflow-health-triage/SKILL.md` casing-only.
 - `agents/` directory contains (at runtime — exact set is discovered, not hard-coded):
   - `agents/claude-plugin-developer.md` with `description:` mentioning *"spec-conformant authoring and revision of Claude Code skills, agents, and plugin manifest files"*.

@@ -21,16 +21,20 @@ and `git status --porcelain` is empty.
 `git log --oneline origin/develop..HEAD`:
 
 ```
+
 a1b2c3d fix(pull-request-create): refuse empty Summary section
 e4f5g6h test(pull-request-create): cover empty-Summary refusal
+
 ```
 
 `git diff --name-only origin/develop...HEAD`:
 
 ```
+
 skills/pull-request-create/SKILL.md
 spec/project/pull-request-workflow/en.md
 spec/project/pull-request-workflow/de.md
+
 ```
 
 `git merge-base --is-ancestor origin/develop HEAD` exits `0` (branch
@@ -62,10 +66,14 @@ No open PR exists for this branch yet.
      "Cover refusal path with test").
    - **Linked issues** — autolinked **both** the touched spec topic
      and the touched skill, deduplicated by `<area>/<slug>/`:
+
      ```
+
      Refs spec/project/pull-request-workflow/
      Refs skills/pull-request-create/
+
      ```
+
      No `Closes #N` since the operator did not name a tracking issue.
    - **Testing** — names the command run (`task test -- pull-request-create`)
      and the manual smoke step.

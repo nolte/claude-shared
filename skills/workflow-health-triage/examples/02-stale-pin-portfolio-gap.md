@@ -13,13 +13,17 @@ Repository state when the skill is invoked:
 - `spec/project/workflow-health/en.md` — present, declares `stale pin` as one of the six classes and the §Specialised-agent dispatch contract (including the "three-or-more historical occurrences ⇒ portfolio gap" rule).
 - `.github/workflows/automerge.yaml` — required check on `develop`. The file `uses:` `nolte/gh-plumbing/.github/workflows/automerge.yaml@v1.4.0`, and a newer tag `v1.6.2` exists upstream that fixes the `MERGE_METHOD` default to honour repo-allowed strategies.
 - `gh run view 9988222333 --log-failed` excerpt:
+
   ```
+
   ::group::Merge PR
   Failed to merge PR: ...
   mergeResult: 'merge_failed'
   ::endgroup::
   Run completed (exit 0)
+
   ```
+
   (The `pascalgn/automerge-action` exits 0 even on `mergeResult: 'merge_failed'` — see the SKILL's *Gotchas* section.)
 - `git log --oneline -1 <headSha>` resolves to a squash-merge commit on `develop` whose diff doesn't touch `automerge.yaml` — confirming the failure is in the reusable, not in the consumer's code.
 - `gh run list --status failure --branch develop --limit 50 | grep -c automerge` returns `4` — the historical-occurrence threshold is met.

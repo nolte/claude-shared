@@ -16,9 +16,13 @@ Repository state when the skill is invoked:
   - First run (run id `9988333444`): conclusion `failure`, failing step `pytest tests/integration/test_eventual_consistency.py::test_settle_within_2s` with timeout-after-2s assertion.
   - Second run (same `headSha`, run id `9988333445`, triggered manually as a re-run): conclusion `success`, same step passes in 1.1s.
 - `gh run view 9988333444 --log-failed` excerpt:
+
   ```
+
   AssertionError: expected settled within 2.0s, got 2.04s (margin 0.04s)
+
   ```
+
 - `git log --oneline -1 <headSha>` shows a docs-only commit (`docs(roadmap): refine R-12 wording`). The diff doesn't touch `tests/`, doesn't touch `tests.yml`, doesn't touch any application code under test.
 - No GitHub status incident, no rate-limit or 5xx in the failed-step log, no token / OIDC error — `infra` and `secret drift` are excluded.
 - `FLAKES.md` exists at the repo root and is the project's flake registry (entries shaped as `## <test id>` blocks with run links and a one-line root-cause hypothesis).

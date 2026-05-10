@@ -23,18 +23,22 @@ earlier WIP push.
 `git log --oneline origin/develop..HEAD`:
 
 ```
+
 9988aa1 feat(release-skill-layer): add release-publish-trigger skill scaffold
 77ee22b feat(release-skill-layer): wire publish-trigger into plugin manifest
 55cc33d docs(release-skill-layer): add EN+DE spec for the publish-trigger skill
+
 ```
 
 `git diff --name-only origin/develop...HEAD`:
 
 ```
+
 skills/release-publish-trigger/SKILL.md
 .claude-plugin/plugin.json
 spec/project/release-skill-layer/en.md
 spec/project/release-skill-layer/de.md
+
 ```
 
 `git merge-base --is-ancestor origin/develop HEAD` exits `0`. The
@@ -62,9 +66,13 @@ repository ships a `Taskfile.yml` with a `lint` target and a
    - **Linked issues** — exactly one `Refs spec/<area>/<slug>/` line
      per touched spec topic (deduplicated by area/slug, **not** by
      filename — `en.md` and `de.md` collapse to a single entry):
+
      ```
+
      Refs spec/project/release-skill-layer/
+
      ```
+
      No `Closes #N` since the operator did not name a tracking issue.
    - **Testing** — names `task test -- release-publish-trigger`, the
      plugin-manifest validation command, and the manual `gh workflow
