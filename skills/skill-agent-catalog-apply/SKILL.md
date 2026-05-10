@@ -1,7 +1,7 @@
 ---
 name: skill-agent-catalog-apply
 description: "Wires up the MkDocs skill-and-agent catalog in the current Claude Code plugin repository per spec/claude/skill-agent-catalog/<canonical_language>.md. Audits the MkDocs config against the spec, scaffolds or patches the gen-files + literate-nav plugin configuration, writes the generator hook that walks every configured plugin source root, adds the Python dependencies to the project's docs requirements, and verifies that `task docs` produces Skills and Agents sections in the built navigation. Invoke when the user asks to \"apply the skill-agent-catalog spec\", \"wire up the catalog generator\", \"scaffold the skills/agents navigation\", or \"add another plugin source root\". Also handles equivalent German-language requests and checking whether a wired catalog is still in sync. Don't use for authoring individual skills/agents (use `skill-management`) or for general docs scaffolding (use `project-structure-apply`)."
-tags: [scaffolding]
+tags: [scaffolding, audit]
 ---
 
 # Skill and Agent Catalog Apply

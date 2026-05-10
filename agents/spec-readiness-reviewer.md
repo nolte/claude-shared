@@ -4,6 +4,7 @@ description: Audit one or more specifications under `spec/<topic>/<slug>/` for d
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet
+tags: [review, audit]
 ---
 
 # Spec Readiness Reviewer

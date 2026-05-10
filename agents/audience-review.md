@@ -3,6 +3,7 @@ name: audience-review
 description: Reviews an existing audience-analysis artifact against spec/project/audience-identification/ and, when the artifact concerns release notes, also against spec/project/release-notes-audience-analysis/. Produces a structured, read-only findings report — no edits. Invoke when the user says things like "review this audience list", "audit the audience analysis", "check whether this audience artifact is complete", "validate the release-notes audiences", or equivalent German-language requests; also triggers when another skill (for instance pull-request-merge, release-automation, readme-structure) needs to confirm that a project's audience artifact is still compliant before a downstream gate. Do NOT use this agent to create a new audience list — that is the `audience-identify` skill. Do NOT use for generic audience brainstorming.
 distribution: plugin
 tools: Read, Grep, Glob
+tags: [audience, review]
 ---
 
 # Audience Review Agent

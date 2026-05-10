@@ -4,6 +4,7 @@ description: Convert a PNG that uses a baked-in checkerboard (or single-color) b
 distribution: plugin
 tools: Read, Write, Bash, Glob
 model: sonnet
+tags: [scaffolding]
 ---
 
 # PNG to Transparent SVG

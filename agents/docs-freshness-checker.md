@@ -4,6 +4,7 @@ description: Audit the MkDocs documentation of the current repository for freshn
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet
+tags: [audit, prose]
 ---
 
 # Documentation Freshness Checker
