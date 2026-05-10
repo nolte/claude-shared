@@ -71,7 +71,7 @@ For each requested flip:
 
 ### C. Revise after `mvp_status: stabilised` (rationale-required path)
 
-When the current `mvp_status` is `stabilised` and operation A or B mutates the statement, audiences, verification, or time_bound, the spec **MUST**ates a one-paragraph rationale in `## Source` because the change redefines what the stabilised MVP was for.
+When the current `mvp_status` is `stabilised` and operation A or B mutates the statement, audiences, verification, or time_bound, the spec **mandates** a one-paragraph rationale in `## Source` because the change redefines what the stabilised MVP was for.
 
 - Block the write until the user supplies the rationale paragraph.
 - Append the paragraph to `## Source` with today's ISO date and a short heading like `### Revision rationale (<date>)`.

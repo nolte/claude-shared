@@ -36,7 +36,7 @@ The spec defines the resolution exactly; this skill **MUST** follow it without l
 1. **Current sprint** — the sprint whose `status` is `active` per `spec/project/sprint/`. At most one sprint per project carries `active`. When no sprint is `active`, fall back to the **lowest-numbered** sprint whose `status` is `planned`. When no sprint is `planned`, fall back to the **highest-numbered** sprint whose `status` is `closed`. When the project has only `cancelled` sprints, treat the current sprint as undefined and report the gap; the invariant cannot be checked, so emit a single non-violation diagnostic and exit zero.
 2. **Next sprint** — the lowest-numbered sprint whose `status` is `planned` and whose `number` is strictly greater than the current sprint's `number`. When no such sprint exists, treat the next sprint as undefined and only enforce the invariant against the current sprint.
 
-Echo both resolved values back to the user before walking items so the operator sees the assumption the skill is auditing against:
+When the skill runs, it echoes both resolved values back to the user before walking items so the operator sees the assumption the skill is auditing against:
 
 ```
 Current sprint: 0007 (active)
@@ -81,17 +81,17 @@ For each violation, in roadmap order, propose a fix to the user **one item at a 
    - **Retarget the sprint** — change `target_sprint` to a later sprint. Refuse to do this directly; dispatch `roadmap-planner` so cross-references (outcome resolution, sprint resolution) are validated end-to-end.
    - **Drop the sprint anchor** — set `target_sprint: null` so the item drops back to unscheduled. Direct edit is acceptable here because no cross-reference materially changes.
 3. Apply the chosen fix in-place inside `project/roadmap.md`. Refuse partial writes that would leave the file in a half-fixed state — when the user changes their mind mid-walk, revert to the pre-walk file and exit non-zero.
-4. After every individual fix, re-resolve current and next sprint numbers from disk in case the operator changed sprint state in parallel.
+4. On every individual-fix completion, the skill re-resolves current and next sprint numbers from disk in case the operator changed sprint state in parallel.
 
 When the user wants to accept all violations and just record the audit without fixing, refuse: this skill is the canonical enforcement point and writing the queue back unchanged after a violation would defeat its contract. Direct the user to either fix the items or dispatch `roadmap-planner` for non-trivial restructuring.
 
 ### 5. Final report
 
-After the walk:
+On run completion, the skill reports:
 
-- Show the count of violations found, fixed, deferred, and skipped.
-- Show the final exit code (zero only when no violations remain after the walk).
-- When violations remain (the user deferred a fix), keep the exit code non-zero so calling automation sees the failure.
+- The count of violations found, fixed, deferred, and skipped.
+- The final exit code (zero only when no violations remain after the walk).
+- When violations remain (the user deferred a fix), the skill keeps the exit code non-zero so calling automation sees the failure.
 
 ## Hard rules
 
