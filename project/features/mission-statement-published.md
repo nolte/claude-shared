@@ -1,9 +1,9 @@
 ---
 id: F-1
 title: Mission statement published
-status: draft
+status: in_progress
 roadmap_item: R-1
-sprint: null
+sprint: 1
 created: 2026-05-09
 ended: null
 verifies_sprint_value: acceptance-1
@@ -22,19 +22,19 @@ The `claude-shared` repository carries a complete, spec-compliant `project/missi
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** `project/mission.md` exists with all eight required frontmatter fields (`mission_statement`, `relevant_outcomes`, `audiences`, `verifies_via`, `time_bound`, `mvp_status`, `created`, `revised_at`) and the four required level-2 sections (`Statement`, `Audiences`, `Verification`, `Source`) in the declared order per `spec/project/mission/`.
-- [ ] **acceptance-2** Every audience identifier in the `mission.md` `audiences` frontmatter resolves to an entry in `AUDIENCES.md`, and every audience listed in frontmatter has a tailored paragraph in the `## Audiences` body section.
-- [ ] **acceptance-3** `relevant_outcomes` is non-empty and references at least one `O-<n>` outcome defined in `project/goals.md`.
-- [ ] **acceptance-4** `verifies_via` resolves to a feature file under `project/features/` whose declared `acceptance-<n>` identifier exists on that feature.
-- [ ] **acceptance-5** `time_bound` is one of `{ kind: outcome, ref: O-<n> }` or `{ kind: mvp_completion }`; no calendar-date or free-text deadline is present.
+- [x] **acceptance-1** `project/mission.md` exists with all eight required frontmatter fields (`mission_statement`, `relevant_outcomes`, `audiences`, `verifies_via`, `time_bound`, `mvp_status`, `created`, `revised_at`) and the four required level-2 sections (`Statement`, `Audiences`, `Verification`, `Source`) in the declared order per `spec/project/mission/`.
+- [x] **acceptance-2** Every audience identifier in the `mission.md` `audiences` frontmatter resolves to an entry in `AUDIENCES.md`, and every audience listed in frontmatter has a tailored paragraph in the `## Audiences` body section.
+- [x] **acceptance-3** `relevant_outcomes` is non-empty and references at least one `O-<n>` outcome defined in `project/goals.md`.
+- [x] **acceptance-4** `verifies_via` resolves to a feature file under `project/features/` whose declared `acceptance-<n>` identifier exists on that feature.
+- [x] **acceptance-5** `time_bound` is one of `{ kind: outcome, ref: O-<n> }` or `{ kind: mvp_completion }`; no calendar-date or free-text deadline is present.
 
 ## Test hooks
 
-- **acceptance-1** — manual: open `project/mission.md` and verify the eight frontmatter keys plus four section headings are present in the declared order — `pending`
-- **acceptance-2** — manual: extract `audiences` from `mission.md` frontmatter and `## Audiences` paragraphs; cross-reference every identifier against `AUDIENCES.md` — `pending`
-- **acceptance-3** — manual: extract `relevant_outcomes` from `mission.md`; grep `project/goals.md` for each `O-<n>` and confirm the outcome exists — `pending`
-- **acceptance-4** — manual: parse `verifies_via` (pattern `<feature-id>:acceptance-<n>`); confirm `project/features/<slug>.md` exists with the named acceptance-criterion identifier — `pending`
-- **acceptance-5** — manual: parse `time_bound` from frontmatter; assert the `kind` is one of `outcome` or `mvp_completion`, and that no ISO date or natural-language deadline appears — `pending`
+- **acceptance-1** — manual: open `project/mission.md` and verify the eight frontmatter keys plus four section headings are present in the declared order — `passing`
+- **acceptance-2** — manual: extract `audiences` from `mission.md` frontmatter and `## Audiences` paragraphs; cross-reference every identifier against `AUDIENCES.md` — `passing`
+- **acceptance-3** — manual: extract `relevant_outcomes` from `mission.md`; grep `project/goals.md` for each `O-<n>` and confirm the outcome exists — `passing`
+- **acceptance-4** — manual: parse `verifies_via` (pattern `<feature-id>:acceptance-<n>`); confirm `project/features/<slug>.md` exists with the named acceptance-criterion identifier — `passing`
+- **acceptance-5** — manual: parse `time_bound` from frontmatter; assert the `kind` is one of `outcome` or `mvp_completion`, and that no ISO date or natural-language deadline appears — `passing`
 
 ## Consistency notes
 
