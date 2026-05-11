@@ -10,14 +10,15 @@ Do not add audiences without first declaring the bounded context below.
 
 **What this context *is***:
 
-- The repository `nolte/claude-shared`, published as the Claude Code plugin `nolte-shared` (version 0.2.0) via the plugin marketplace.
+- The repository `nolte/claude-shared`, published as the Claude Code plugin `nolte-shared` (currently `0.1.2` in `.claude-plugin/plugin.json`) via the plugin marketplace.
 - It bundles reusable **skills** (`skills/<name>/SKILL.md`), **agents** (`agents/<name>.md`) and **specs** (`spec/`, EN-canonical, partly with DE translations) for portfolio-wide use.
 - It also contains the MkDocs documentation setup (`docs/`, bilingual) and the Taskfile-based automation.
 
 **Where the boundaries run**:
 
-- External surfaces: the plugin manifest + marketplace entry (install path), the slash commands (e.g. `/nolte-shared:spec`), the agent definitions, and the published MkDocs site.
+- External surfaces: the plugin manifest + marketplace entry (install path), the slash commands (e.g. `/nolte-shared:spec`), the agent definitions, and the published MkDocs site (including the auto-generated skill / agent catalog under `docs/<lang>/skills/` and `docs/<lang>/agents/` and the `docs/lifecycle.md` development-lifecycle page).
 - The repo itself, the `develop`/`main` branches, and the CI workflows are part of the context.
+- The planning-suite artefacts under `project/` (`mission.md`, `goals.md`, `roadmap.md`, `features/`, `sprints/`) are internal surface — they describe how the plugin governs its own evolution and are read by downstream specs that reference the planning suite (`mission`, `roadmap`, `sprint`, `feature`, `release-skill-layer`).
 
 **What is explicitly *outside***:
 
@@ -37,7 +38,7 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
 - **Downstream Claude Code users in portfolio projects** — _category_: direct-consumer · _surface_: plugin slash commands (e.g. `/nolte-shared:spec`, `/nolte-shared:skill-management`, `/nolte-shared:pull-request-create`) and sub-agents · _expects_: consistent, spec-compliant workflows without per-repo reimplementation; stable command names; reproducible outputs · _status_: `assumed` · _criticality_: primary
   - Open questions: Which repos / which people are using this plugin in practice today?
 
-- **Plugin author dogfooding inside this repo** — _category_: direct-consumer · _surface_: `claude --plugin-dir .`, `/reload-plugins`, local skill invocation while developing · _expects_: changes to skills/agents/specs become callable immediately without reinstall; skills also function against this repo itself (e.g. running `audience-identify` on `nolte-shared`) · _status_: `assumed` · _criticality_: primary
+- **Plugin author dogfooding inside this repo** — _category_: direct-consumer · _surface_: `claude --plugin-dir .`, `/reload-plugins`, local skill invocation while developing; planning-suite skills (`/nolte-shared:mission-define`, `/nolte-shared:mission-revise`, `/nolte-shared:roadmap-init`, `/nolte-shared:roadmap-planner`, `/nolte-shared:roadmap-refine`, `/nolte-shared:sprint-plan`, `/nolte-shared:sprint-execute`, `/nolte-shared:sprint-review`, `/nolte-shared:feature-decompose`, `/nolte-shared:audience-identify`) applied to `claude-shared` itself, mutating `project/mission.md`, `project/goals.md`, `project/roadmap.md`, `project/features/`, `project/sprints/`, and `AUDIENCES.md` in-repo · _expects_: changes to skills/agents/specs become callable immediately without reinstall; skills also function against this repo itself (e.g. running `audience-identify` on `nolte-shared`); the planning-suite-on-self loop stays self-consistent across spec revisions · _status_: `confirmed` (validated by the plugin author dogfooding through sprint 0001 on 2026-05-11) · _criticality_: primary
   - Open questions: none
 
 ### Operators
@@ -54,7 +55,7 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
   - Open questions: Should Claude Code appear explicitly as a contributor in downstream language, or implicitly via "maintainer who uses Claude"?
 
 - **External contributors via pull request** — _category_: contributor · _surface_: GitHub forks, PRs against `develop`, issue tracker · _expects_: clear contribution entry points (README, `CLAUDE.md`, spec layout); the PR workflow via `/nolte-shared:pull-request-create` is followable without insider knowledge; generated config files stay EN for portfolio consistency · _status_: `assumed` · _criticality_: peripheral
-  - Open questions: Is this repo actively open to external contributions, or de facto single-maintainer? No `CONTRIBUTING.md` currently exists at the root.
+  - Open questions: Is this repo actively open to external contributions, or de facto single-maintainer? `CONTRIBUTING.md` is now present at the repo root.
 
 ### Governing parties
 
@@ -71,7 +72,7 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
 
 ## Open questions (cross-cutting)
 
-- No audience is tagged `confirmed` yet — none has been validated against a real representative or an authoritative source. All entries remain `assumed` until such validation happens.
+- Only "Plugin author dogfooding inside this repo" is tagged `confirmed` so far (validated by the author's first end-to-end dogfood sprint on 2026-05-11). All other entries remain `assumed` until they are validated against a real representative or an authoritative source.
 - A versioning and communication policy for breaking spec changes is not yet defined; it affects the governing-party (portfolio anchors) and indirect (other portfolio repos) audiences simultaneously.
 - The distinction between "other portfolio repos as passive convention consumers" (Indirect) and "downstream projects as plugin users" (Direct) needs a concrete check per repo the next time this artifact is revisited.
 
@@ -83,3 +84,5 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
 - The repo accepts its first external PR, or publishes a `CONTRIBUTING.md`.
 - A new governing constraint appears (legal, security, compliance) that the current single-entry governing-party category no longer covers.
 - `spec/project/audience-identification/` moves out of `draft` status or materially changes its requirements.
+- The planning suite under `project/` materially changes its scope (new top-level artefact kind, change in how `mission`, `goals`, `roadmap`, `features`, or `sprints` are produced or consumed).
+- The auto-generated skill / agent catalog under `docs/<lang>/skills/` and `docs/<lang>/agents/` changes its public navigation structure, source-root set, or rendering output in a way that affects how downstream readers locate artefacts.
