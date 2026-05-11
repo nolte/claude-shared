@@ -61,3 +61,12 @@ jobs:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - run: task --yes docs
+      - name: Verify committed catalog is fresh
+        # Per spec/claude/skill-agent-catalog/ §Generation mechanism: the
+        # repo commits the catalog (because reusable-mkdocs.yaml@v1.1.12
+        # bypasses `task docs`); this step fails when the committed tree
+        # has drifted from a fresh re-generation.
+        run: |
+          git diff --exit-code \
+            docs/de/skills docs/de/agents docs/de/tags.md \
+            docs/en/skills docs/en/agents docs/en/tags.md
