@@ -1,11 +1,11 @@
 ---
 id: F-1
 title: Mission statement published
-status: in_progress
+status: done
 roadmap_item: R-1
 sprint: 1
 created: 2026-05-09
-ended: null
+ended: 2026-05-11
 verifies_sprint_value: acceptance-1
 consistency_check:
   performed_at: 2026-05-09

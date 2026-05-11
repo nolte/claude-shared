@@ -5,7 +5,7 @@ started: 2026-05-11
 ended: null
 value_statement: "Consumers of the nolte-shared plugin can read claude-shared itself as a working reference adopter of the planning-suite specs, with all four artefacts (goals, roadmap, features, mission) plus a closed end-to-end sprint visible at HEAD."
 artifact_ref: null
-last_commit: null
+last_commit: 9ee8805903d85efc273a8c70cbe781d95c9d3add
 roadmap_items: [R-1]
 features: [F-1]
 ---
@@ -16,7 +16,7 @@ Deliver to consumers of the `nolte-shared` plugin a working reference adoption o
 
 ## Features
 
-- [F-1](../features/mission-statement-published.md) — status: in_progress
+- [F-1](../features/mission-statement-published.md) — status: done
 
 ## Out of scope
 
