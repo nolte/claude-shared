@@ -2,18 +2,17 @@
 
 _Create, translate, index, deduplicate, and drift-check multilingual specifications stored under the project's spec/ folder. Invoke when the user wants to write a new spec, update or translate an existing one, check whether a requirement is already covered, regenerate the spec index, or verify that translations are still in sync with the canonical version. Supports writing the request in any configured language; specs on disk always exist in all configured languages, with one canonical source and the rest as translations kept strictly in sync._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/spec/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/spec/SKILL.md)
 
 ---
 
-# Multilingual Spec Skill
+## Multilingual Spec Skill
 
 Manages specifications inside a project's `spec/` folder. Layout: one folder per spec, one file per language. Specs may optionally be grouped under a one-level topic folder.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Mid-flow interactivity is the contract** — duplicate-check confirmation ("extend existing, supersede, or proceed as new?"), translation review, slug-rename gates, and drift-resolution choices are all per-step user dialogues; an agent's fire-and-forget contract would lose them.
 - **Persistent on-disk artifact is the deliverable** — every operation writes spec files (canonical + translations) under `spec/[<topic>/]<slug>/<lang>.md` in pairs and may also regenerate `spec/README.md`; skills own persistent state.
@@ -31,7 +30,7 @@ spec/
 
 Topic folders group related specs (for example `spec/api/`, `spec/claude/`). Only one level of topic nesting is allowed. Without a topic, specs live directly under `spec/<slug>/`.
 
-## Defaults
+### Defaults
 
 - Canonical language: `en`
 - Translations: `de`
@@ -47,21 +46,21 @@ spec_root: spec
 
 If the file is missing, use the defaults. Create it on the first `create` operation so downstream projects have a visible extension point.
 
-## User-language policy
+### User-language policy
 
 - Detect the user's language from their message and reply in that language.
 - Spec files on disk always exist in every configured language. The canonical file is authoritative; translations must mirror it semantically.
 - If the user describes a feature in a non-canonical language, still produce the canonical version first, then translate.
 
-## Slug and topic rules
+### Slug and topic rules
 
 - **Slug**: ASCII kebab-case, derived from the canonical EN title. Example: user says "Benutzer-Authentifizierung" → canonical title "User Authentication" → slug `user-authentication`.
 - **Topic** (optional): ASCII kebab-case, chosen to group related specs. Use an existing topic if one fits; otherwise propose a new one to the user before creating it.
 - Slugs and topics are stable. Renaming is a conscious operation—confirm with the user before moving folders.
 
-## Operations
+### Operations
 
-### 1. Create
+#### 1. Create
 
 1. Take the user's description (any language).
 2. **Duplicate check first** (see operation 5). If clear overlap exists, stop and ask: extend existing, supersede, or proceed as new. Show candidate paths.
@@ -71,7 +70,7 @@ If the file is missing, use the defaults. Create it on the first `create` operat
 6. Regenerate `spec/README.md` (operation 4).
 7. Confirm in the user's language with relative paths.
 
-### 2. Update / prevent drift
+#### 2. Update / prevent drift
 
 - The canonical version is the only source of truth.
 - If the user edits the canonical version: regenerate every translation from it.
@@ -80,7 +79,7 @@ If the file is missing, use the defaults. Create it on the first `create` operat
   - (b) discard the translation edit and regenerate from the canonical.
 - After any update operation, all language files for that spec must match structurally and semantically.
 
-### 3. Drift check
+#### 3. Drift check
 
 - For every spec folder, compare each translation to the canonical:
   - Same headings in the same order
@@ -88,7 +87,7 @@ If the file is missing, use the defaults. Create it on the first `create` operat
   - Same requirement IDs / ordering
 - Report mismatches. Offer to regenerate the affected translations from the canonical.
 
-### 4. Regenerate index
+#### 4. Regenerate index
 
 - Write `spec/README.md` with a table:
   - Slug | Title (per language) | Status | Last updated
@@ -96,7 +95,7 @@ If the file is missing, use the defaults. Create it on the first `create` operat
 - `Last updated` uses `git log -1 --format=%cs -- <canonical file>`. If the file is untracked, use `unversioned`.
 - Don't invent values—if something can't be read, mark it `unknown`.
 
-### 5. Coverage / duplicate check
+#### 5. Coverage / duplicate check
 
 Can be invoked standalone ("is X already covered?") or as step 2 of create.
 
@@ -108,7 +107,7 @@ Can be invoked standalone ("is X already covered?") or as step 2 of create.
    - which partially cover it and the specific gap,
    - none, if no overlap.
 
-## Template maintenance
+### Template maintenance
 
 The starter template at `templates/spec.template.md` is deliberately minimal. Every time this skill is used for a non-trivial spec, briefly assess fitness:
 
@@ -117,7 +116,7 @@ The starter template at `templates/spec.template.md` is deliberately minimal. Ev
 
 Don't silently modify the template. Surface the proposal to the user and let them decide.
 
-## Hard rules
+### Hard rules
 
 - Canonical and translation files are always created and updated **together**. Never leave a spec with only one language file on disk.
 - After any operation that touches spec content, translations must be in sync with the canonical—no drift, ever.

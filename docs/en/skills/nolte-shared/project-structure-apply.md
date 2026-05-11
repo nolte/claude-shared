@@ -2,18 +2,17 @@
 
 _Audits a repository against spec/project/project-structure/<canonical_language>.md and scaffolds or patches missing artefacts: README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, MkDocs setup, .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, `stale`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `scaffolding`
 - **Source:** [skills/project-structure-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/project-structure-apply/SKILL.md)
 
 ---
 
-# Project Structure Apply
+## Project Structure Apply
 
 Audits and repairs a repository so it matches the Repository Project Structure spec at `spec/project/project-structure/<canonical_language>.md`. The skill both reports findings and—with explicit per-item user consent—writes the missing files in place.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Per-item user approval is the contract.** Every scaffolded file (`.github/settings.yml`, `Taskfile.yml`, `renovate.json5`, …) is written only with explicit per-change confirmation; the audit is read-only and the apply step is a sequence of approvals an agent's fire-and-forget shape can't carry.
 - **Output flows back into the main conversation.** The audit table, the per-item proposals, and the GitHub-App-installation status all surface in the conversation so the user can decide; isolating them in a structured-report boundary would obscure the per-file approval surface.
@@ -22,11 +21,11 @@ Audits and repairs a repository so it matches the Repository Project Structure s
 
 When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path, or from the `nolte/claude-shared` repository). Never invent requirements that aren't in the spec.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. Generated file contents (`.github/*.yml`, `Taskfile.yml`, `CLAUDE.md`, `renovate.json5`, workflow YAML, and equivalents) are always written in English so automation and cross-project consistency stay predictable. Comments inside generated files are English as well.
 
-## Preconditions
+### Preconditions
 
 Before doing anything:
 
@@ -34,9 +33,9 @@ Before doing anything:
 - Locate a `spec/project/project-structure/` folder—either in the target repo or via the nolte-shared plugin. If neither is reachable, stop and ask the user which spec source to use.
 - Check for uncommitted changes in paths the skill may touch (`.github/`, `docs/`, `spec/`, `tests/`, root configs). If the tree is dirty in those paths, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
 
-## Operations
+### Operations
 
-### 1. Audit
+#### 1. Audit
 
 Walk through the spec's Acceptance Criteria one item at a time and classify each as:
 
@@ -46,7 +45,7 @@ Walk through the spec's Acceptance Criteria one item at a time and classify each
 
 Report the findings grouped by spec area: Top-level files, Claude integration, CI and automation, GitHub repository configuration, Documentation, Specifications, Project planning artefacts, Tests, Source layout, Python development, Home Assistant, Containerization. Audit is read-only—never autofix during audit.
 
-### 2. GitHub App installation check
+#### 2. GitHub App installation check
 
 The Probot-backed YAML files (`.github/settings.yml`, `.github/boring-cyborg.yml`, `.github/stale.yml`) only take effect once the matching GitHub Apps are installed on the repository. The same is true for the Renovate App: a `renovate.json5` config is inert without the Renovate App installed on the repo. Release Drafter runs as a GitHub Action per the branching-model spec, so it's **not** part of this check.
 
@@ -82,7 +81,7 @@ For Renovate specifically, when the App is reported installed but no Renovate ac
 
 Never attempt to *install* an app programmatically. App installation is intentionally a human-approved action. The skill only reports the status and links to the app's install page from the table above.
 
-### 3. Apply
+#### 3. Apply
 
 For each **missing** or **drift** item the audit surfaced, confirm with the user per item (group-level "apply all in this group" is fine when the user asks for it). For each approved item:
 
@@ -113,11 +112,11 @@ For each **missing** or **drift** item the audit surfaced, confirm with the user
 
 After every successful write, re-run the single affected audit check so the user sees the item flip to **pass**. Never batch silent writes—each change requires explicit approval.
 
-### 4. Re-audit
+#### 4. Re-audit
 
 When the user has finished approving changes, re-run Operations 1 and 2 end-to-end and present a fresh grouped summary. Items still **missing**, **drift**, or with an uninstalled Probot app must be called out so the user knows what remains and why (for example, a deliberately deferred scaffold or a pending app install).
 
-## Hard rules
+### Hard rules
 
 - **Never** overwrite an existing file without explicit per-item confirmation. Merge into existing YAML or JSON configs rather than replacing them wholesale.
 - **Never** manage repository settings through the GitHub UI or `gh repo edit`. `.github/settings.yml` is the source of truth, driven by the Probot Settings app.
@@ -130,7 +129,7 @@ When the user has finished approving changes, re-run Operations 1 and 2 end-to-e
 - When `spec/project/project-structure/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.
 - When the Probot app installation check can't run because the token lacks scope, report that explicitly: **never** treat an API error as "app is installed."
 
-## Gotchas
+### Gotchas
 
 Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
 

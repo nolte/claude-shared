@@ -2,7 +2,6 @@
 
 Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
-
 ## `audience`
 
 - [audience-doc-author](agents/nolte-shared/audience-doc-author.md) — nolte-shared

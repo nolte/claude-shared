@@ -2,29 +2,28 @@
 
 _Revises an existing `project/mission.md` per spec/project/mission/<canonical_language>.md. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests (\"Mission überarbeiten\", \"mvp_status umstellen\", \"die Mission ist stabilisiert\"). Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/mission-revise/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/mission-revise/SKILL.md)
 
 ---
 
-# Mission Revise
+## Mission Revise
 
 Edits an existing `project/mission.md` against `spec/project/mission/<canonical_language>.md` (canonical language: English). The spec is the authority for legal lifecycle transitions and the stabilisation gate; this skill enforces them mechanically and writes the resulting diff with explicit user confirmation.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Persistent on-disk artefact** — every revision mutates a versioned markdown file consuming skills (`mission-define` for first-write, future audits, the roadmap's `mvp` semantics) read; an agent would lose the persistent-state contract.
 - **Per-step user gating drives the lifecycle** — `mvp_status` flips are explicit operator decisions per the spec, never silently inferred from satisfying the conditions; the spec mandates that the operator confirm the flip after the skill has shown the satisfied conditions, so an agent's structured-report shape can't carry the gate.
 - **Output flows back into the main conversation** — the stabilisation-gate verification (which roadmap items are still open, which sprint closed last, whether a subsequent sprint has held) is itself useful conversational context; isolating it behind an agent boundary would obscure the operator decision the skill exists to support.
 - Counter-dimension considered: a narrow agent could specialise on parsing roadmap and sprint frontmatter for the gate check and gain on context-window protection, but the load-bearing dimension is the per-step approval dialogue around each mutation, not parser sharpness — skill wins.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. Mission-file content (`mission_statement`, audience paragraphs, prose) stays in the project's primary language (follow the existing file's precedent). Frontmatter keys, enum values, audience identifiers, outcome IDs, and feature-acceptance references stay in their canonical English form. The rationale paragraph required after stabilisation **MUST** be written in the same language as the rest of `## Source`.
 
-## Preconditions
+### Preconditions
 
 Before any revision:
 
@@ -33,11 +32,11 @@ Before any revision:
 - Confirm the audience artefact and `project/goals.md` are still reachable, since revisions to `audiences` or `relevant_outcomes` resolve against them.
 - Read `project/roadmap.md` and the contents of `project/sprints/` so operations 2 and 3 can verify cross-spec invariants (`mvp: true` item statuses, sprint lifecycle, mission-closing sprint, subsequent-sprint condition).
 
-## Operations
+### Operations
 
 Ask the user which operation they intend; offer the three branches below.
 
-### A. Revise the statement, audiences, verification, or time_bound
+#### A. Revise the statement, audiences, verification, or time_bound
 
 Walk through the field(s) the user wants to change, one at a time:
 
@@ -49,7 +48,7 @@ Walk through the field(s) the user wants to change, one at a time:
 
 After every accepted change: update `revised_at` to today's ISO date; never edit `created`. If `mvp_status` is currently `stabilised`, route the operation through branch C below before writing.
 
-### B. Flip `mvp_status`
+#### B. Flip `mvp_status`
 
 Legal transitions, per the spec:
 
@@ -74,7 +73,7 @@ For each requested flip:
 4. **For `stabilised → in_progress` (regression)** — record which MVP item re-opened and on what date in `## Source` so the audit trail is unbroken. Post-MVP items already in `status: active` at the moment of the revert **MAY** finish per the spec; don't touch them. Surface to the user that no new post-MVP item may start until stabilisation is restored.
 5. After the flip is confirmed: update `mvp_status`, update `revised_at` to today's ISO date, and append a one-line entry to `## Source` (date, transition, evidence summary).
 
-### C. Revise after `mvp_status: stabilised` (rationale-required path)
+#### C. Revise after `mvp_status: stabilised` (rationale-required path)
 
 When the current `mvp_status` is `stabilised` and operation A or B mutates the statement, audiences, verification, or time_bound, the spec **mandates** a one-paragraph rationale in `## Source` because the change redefines what the stabilised MVP was for.
 
@@ -84,11 +83,11 @@ When the current `mvp_status` is `stabilised` and operation A or B mutates the s
 
 A bare `mvp_status: stabilised → in_progress` regression flip from operation B does not by itself trigger this branch (the regression is recorded in `## Source` per branch B step 4 above); branch C applies when the *content* of the mission is being mutated while `mvp_status` is `stabilised`.
 
-### Final write
+#### Final write
 
 For every operation: present the diff (frontmatter delta plus body delta) back to the user, iterate until approval, then write `project/mission.md` in place. Never write a partial file; either every spec invariant holds or the write is deferred.
 
-## Gotchas
+### Gotchas
 
 - The "one full subsequent sprint" check looks for the sprint whose `number` is `MVP-closing-sprint-number + 1`, **not** simply the most recently closed sprint. If sprints have been opened out of order, walk by `number`, not by `ended` date.
 - A `cancelled` subsequent sprint **only** counts toward stabilisation when its `## Review notes` rationale states the cancellation was unrelated to MVP work. Read the rationale; never assume.
@@ -96,7 +95,7 @@ For every operation: present the diff (frontmatter delta plus body delta) back t
 - A regression flip (`stabilised → in_progress`) does **not** automatically halt post-MVP roadmap items already in `status: active` — the spec lets in-flight work finish. The skill only blocks **new** post-MVP starts via the audit trail; never edit roadmap-item status from this skill.
 - Branch C's rationale paragraph is required even for tiny revisions (a typo fix in the statement) once `mvp_status: stabilised` — the spec is intentionally strict because every post-stabilisation revision redefines what stabilisation meant.
 
-## Hard rules
+### Hard rules
 
 - **Never** create `project/mission.md` from scratch. This skill is edit-only; first-write is `mission-define`'s job.
 - **Never** infer a `mvp_status` flip silently from satisfied conditions. The flip is always an explicit operator decision.

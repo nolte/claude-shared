@@ -2,29 +2,28 @@
 
 _Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per spec/project/release-skill-layer/<canonical_language>.md §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check on develop is SUCCESS, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or equivalent German-language requests._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `release`
 - **Quelle:** [skills/release-publish-trigger/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/release-publish-trigger/SKILL.md)
 
 ---
 
-# Release Publish Trigger
+## Release Publish Trigger
 
 Operationalises `spec/project/release-skill-layer/<canonical_language>.md` §"Skill B — Release publish trigger": validates every `release-automation` §Pre-publish verification gate locally, then dispatches `release-publish.yml` via `gh workflow run`. The workflow remains the audit-trail point for the Draft → Published transition; this skill is the local pre-flight plus dispatch.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Externally-visible mutation gates on user confirmation** — `gh workflow run release-publish.yml` triggers an external publish chain (release published → `release-cd-refresh-master.yml` → `main` fast-forward → packaging workflows); mid-flow operator gating is core to the contract and would be lost in an agent's fire-and-forget shape.
 - **Output flows back into the main conversation** — the gate-by-gate validation report, the dispatch URL, and the post-dispatch status all surface in the conversation so the operator can decide.
 - **Orchestrator that routes to other skills on failure** — red required checks route to `workflow-health` triage; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
 - Counter-dimension considered: a tool-restricted agent (read + a single `gh` Bash) could perform the verification half cleanly, but the dispatch decision needs the operator in the loop and the skill stays in the conversation to surface the run URL and follow-up status — keeping the whole flow in one skill is simpler than a forced split.
 
-## User-language policy
+### User-language policy
 
 Detect the operator's language and respond in it. All `git`, `gh api`, and `gh workflow run` invocations stay English so that `release-publish.yml`'s job summary, `release-drafter`'s draft body, and downstream automation stay consistent across the portfolio.
 
-## Preconditions
+### Preconditions
 
 Before doing anything:
 
@@ -33,40 +32,40 @@ Before doing anything:
 - Locate `spec/project/release-skill-layer/` and `spec/project/release-automation/` — either in the target repo or via the `nolte-shared` plugin install path. Stop and ask if neither is reachable.
 - Confirm the repo's default branch (`gh repo view --json defaultBranchRef --jq .defaultBranchRef.name`) is the integration branch the spec applies to (typically `develop`).
 
-## Operations
+### Operations
 
 Operations 2 to 4 form a Plan-validate-execute cycle: Operation 2 walks every pre-publish gate, Operation 3 surfaces the validated state for explicit operator confirmation, and Operation 4 dispatches `release-publish.yml`. Operation 5 verifies the dispatch landed and reports the run URL without polling to completion (unless wait mode is opted in).
 
-### 1. Resolve the open draft
+#### 1. Resolve the open draft
 
 - Run `gh release list --json isDraft,tagName,targetCommitish,createdAt,name`.
 - Filter to drafts whose `targetCommitish` equals the default branch.
 - **Refuse and report** when zero drafts match (operator should run `release-drafter.yml` first) or when more than one matches without an explicit `--tag` argument from the operator (no "newest wins" heuristic, per `release-automation` §Operational contract).
 
-### 2. Validate every pre-publish gate
+#### 2. Validate every pre-publish gate
 
 Walk these gates in order. **The skill MUST NOT proceed past a failed gate**; surface the gate name, the failure detail, and the remediation path.
 
-#### 2a. Draft tag reachable from develop
+##### 2a. Draft tag reachable from develop
 
 - `git fetch origin develop`.
 - Resolve the draft's `targetCommitish` SHA.
 - Run `git merge-base --is-ancestor <target-sha> origin/develop`.
 - **Failure**: the draft is stale relative to `develop`. Remediation: re-run `release-drafter.yml` to refresh the draft target.
 
-#### 2b. Version-bearing files aligned
+##### 2b. Version-bearing files aligned
 
 - Read the version-bearing file list per `release-automation` §Version-bearing files: the default table by repo type, or the override at `.github/release-automation.yml` when the repo declares one.
 - For every declared file, read the value at the `target-sha` (`git show <target-sha>:<path>` plus the spec's selector) and compare against the target tag under the file's value transform (typically "strip leading `v`" if the existing convention omits it).
 - **Failure**: any file whose value does not equal the target tag under transform. Remediation: open a `chore(release): <tag>` PR (fallback path) or wait for the workflow-driven primary path to land its alignment commit.
 
-#### 2c. Alignment commit present
+##### 2c. Alignment commit present
 
 - Identify the most recent commit on `develop` that touched any version-bearing file: `git log -1 --pretty=%s --follow -- <path>`.
 - Verify the subject prefix starts with `chore(release): <tag>` (the prefix-match accepts the `(#N)` suffix GitHub appends on squash-merge, per `release-automation` §Pre-publish verification).
 - **Failure**: no `chore(release): <tag>` commit on the path. Remediation: same as 2b.
 
-#### 2d. Required status checks SUCCESS on develop tip
+##### 2d. Required status checks SUCCESS on develop tip
 
 - Read the required check list from `.github/settings.yml` (`branches[name=develop].protection.required_status_checks.contexts`).
 - For the develop tip SHA, query `gh api repos/<owner>/<repo>/commits/<sha>/check-runs` and confirm every required context appears with `conclusion=success`.
@@ -74,12 +73,12 @@ Walk these gates in order. **The skill MUST NOT proceed past a failed gate**; su
   - red checks → route to `workflow-health` triage (classify as `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`); never retry the dispatch blindly.
   - pending checks → stop and ask the operator to wait, or opt in to wait mode (see "Wait mode" below).
 
-#### 2e. Workflow file present
+##### 2e. Workflow file present
 
 - Confirm `.github/workflows/release-publish.yml` exists in the repo.
 - **Failure**: the operator should adopt `release-automation` first; this skill stops and reports.
 
-### 3. Disclose the validated state and confirm
+#### 3. Disclose the validated state and confirm
 
 Before dispatch, surface to the operator as a single block:
 
@@ -91,7 +90,7 @@ Before dispatch, surface to the operator as a single block:
 
 Block the dispatch until the operator confirms.
 
-### 4. Dispatch
+#### 4. Dispatch
 
 On confirmation:
 
@@ -99,7 +98,7 @@ On confirmation:
 - When the operator opts in to `--dry-run`, dispatch with `-f dry_run=true` so the workflow validates without flipping `draft: false`.
 - **Never** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id>` with `draft=false`, or any other body that flips the draft state from this skill. The workflow is the only path.
 
-### 5. Verify the dispatch landed
+#### 5. Verify the dispatch landed
 
 Immediately after `gh workflow run` returns:
 
@@ -113,7 +112,7 @@ After the run completes (single-shot or wait mode):
 - On `conclusion=success`: confirm with the operator that the release is now published (`gh release view <tag> --json isDraft` returns `{"isDraft": false}`) and that `release-cd-refresh-master.yml` has started a downstream run (`gh run list --workflow=release-cd-refresh-master.yml --limit 1`); both checks are part of `release-automation`'s acceptance criteria.
 - On `conclusion=failure`: do **not** retry. Route to `workflow-health` triage — classify per `spec/project/workflow-health/`. The most common cause is a `merge_failed` from `pascalgn/automerge-action` when `release-publish.yml` itself uses `automerge-action`; check the run logs for `mergeResult: 'merge_failed'` per `pull-request-merge` step 7b and route as a stale-pin incident if so.
 
-## Wait mode
+### Wait mode
 
 Activated by `--wait` or unambiguous operator phrasing. Caps mirror `pull-request-merge`:
 
@@ -125,7 +124,7 @@ Activated by `--wait` or unambiguous operator phrasing. Caps mirror `pull-reques
 
 The single-shot default exists because the prompt-cache TTL is 5 min; unbounded polling burns the cache. Caps balance: short waits stay cache-warm, long waits accept one cache miss but never balloon.
 
-## Gotchas
+### Gotchas
 
 - `pascalgn/automerge-action` (used by some `release-publish.yml` implementations downstream) exits 0 even on `mergeResult: 'merge_failed'`. A green `release-publish.yml` run is **not** proof the publish happened. Always re-verify `gh release view <tag> --json isDraft` after a `success` conclusion.
 - The `tag` input is mandatory because `release-automation` forbids the workflow's "newest wins" heuristic. Even when only one draft is open, this skill passes `-f tag=<tag>` explicitly.
@@ -133,7 +132,7 @@ The single-shot default exists because the prompt-cache TTL is 5 min; unbounded 
 - `release-cd-refresh-master.yml` should fire automatically after `release-publish.yml` succeeds. When it doesn't fire (the known-platform-constraint case where `release: published` from `GITHUB_TOKEN` doesn't cascade to a fresh workflow run, per `workflow-health` §Known platform constraints), surface this and route to manual fast-forward of `main` per `branching-model` §Release flow.
 - The skill never runs `gh release edit --draft=false` even as a fallback — that flag is reserved for incident response and remains a manual operator action documented in `release-automation` §Non-Goals.
 
-## Hard rules
+### Hard rules
 
 - Never dispatch when any pre-publish gate fails. Failures route to `workflow-health` triage.
 - Never call `gh release edit --draft=false`, `gh api -X PATCH .../releases/<id>` with `draft=false`, or any other body that flips the draft state. The workflow is the only publish path.

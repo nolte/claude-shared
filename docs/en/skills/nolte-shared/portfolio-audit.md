@@ -2,35 +2,34 @@
 
 _Audits, renders, and bootstraps the cross-repository capability portfolio across `nolte/*` per `spec/portfolio/portfolio-management/`. Audit collects per-repo `project/portfolio.yml` manifests, detects capability duplicates, surfaces gaps (broken peer references, spec-demanded gaps, copy-paste smells), and writes a Findings-Report under `.audits/portfolio/` with Critical / Warning / Suggestion / Info severities. Render regenerates the aggregated inventory under `docs/<lang>/portfolio/`. Bootstrap creates a repository's first `project/portfolio.yml`. Invoke when the user asks to \"audit the portfolio\", \"check for portfolio duplicates\", \"render the portfolio inventory\", or equivalent German-language requests. Don't use to consolidate duplicates (operator opens cross-repo PRs) or to author new capabilities._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `audit`
 - **Source:** [skills/portfolio-audit/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/portfolio-audit/SKILL.md)
 
 ---
 
-# Portfolio Audit
+## Portfolio Audit
 
 Implements the `spec/portfolio/portfolio-management/` mechanics as a Claude Code skill in the `nolte-shared` plugin. Three operations: **Audit** (the primary path, the reason the spec exists), **Render** (regenerate the docs-site portfolio inventory), and **Bootstrap** (help a single repository author its first `project/portfolio.yml`).
 
-## Why this is one skill, not three
+### Why this is one skill, not three
 
 `spec/claude/skill-management/` §"Coherent units" generally favors one operation per skill. This skill bundles three operations because they share the same inputs (the per-repository `project/portfolio.yml` manifests collected via the GitHub API), the same domain vocabulary (capabilities, audiences, peers, ownership, portfolio scope), and the same output conventions (`review-plan`-format severities, the rendered inventory under `docs/<lang>/portfolio/`). Splitting them upfront would force three skills to re-implement the same manifest-collection plumbing and cross-validate the same vocabulary.
 
 If any of the three operations grows complex enough to need its own dedicated review surface — for example if "Render" sprouts a templating engine or "Bootstrap" needs an interactive multi-turn audience-mapping flow — split it into a sibling skill (`portfolio-inventory-render`, `portfolio-bootstrap`) at that point, leaving "Audit" as the canonical `portfolio-audit`. The three operations below are deliberately structured to be split-friendly: each has its own preconditions, its own output artefact, and no shared mid-flow state.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Mid-flow user confirmation on duplicate-resolution choices.** The Audit operation surfaces duplicate candidates and gap-class findings; deciding which repository owns a contested capability, or whether a copy-paste smell warrants a new shared capability, is a per-step user dialogue. An agent's fire-and-forget shape would lose those checkpoints.
 - **Persistent on-disk artefacts as deliverables.** Audit writes `.audits/portfolio/<YYYY-MM-DD>.md`. Render writes `docs/<lang>/portfolio/*.md`. Bootstrap writes `project/portfolio.yml` in the consuming repository. Skills own persistent state.
 - **Context-window-protective inline manifest collection.** Audit fetches and parses each Portfolio-Member's `project/portfolio.yml` itself via `gh api` and discards the raw YAML once a structured per-repository summary (declared capabilities, audiences, peer references) is in hand, so the main conversation stays focused on synthesis rather than the raw manifest dump. (A read-only sibling agent could absorb the manifest collection in the future to further isolate the read volume; that's tracked as an evolution path, not as a precondition for this skill to run.)
 - **Counter-dimension considered**: a tool-restricted agent could perform the Audit operation cleanly in isolation, but Render and Bootstrap both write user-visible files in the active checkout and benefit from staying in the main conversation; bundling all three behind one skill is simpler than splitting Audit out.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. Manifest content (`project/portfolio.yml`), the rendered inventory under `docs/<lang>/portfolio/`, and the Findings-Report under `.audits/portfolio/` follow the canonical conventions of their target files: YAML stays English, rendered docs follow the existing per-language docs-tree, the Findings-Report uses English for headings (per `review-plan`) but the body may be written in the user's language.
 
-## Detection: am I in the right repository?
+### Detection: am I in the right repository?
 
 This skill operates in two roles depending on the active repository:
 
@@ -39,9 +38,9 @@ This skill operates in two roles depending on the active repository:
 
 If the active repository is neither, stop and ask the user whether to switch to `claude-shared` for Audit / Render or to a Portfolio-Member repository for Bootstrap.
 
-## Operations
+### Operations
 
-### 1. Audit (primary path)
+#### 1. Audit (primary path)
 
 Runs the cross-repository capability audit per `spec/portfolio/portfolio-management/` §Portfolio audit.
 
@@ -63,7 +62,7 @@ Runs the cross-repository capability audit per `spec/portfolio/portfolio-managem
 
 Audit operation **never** consolidates duplicates, never deletes capabilities, never opens PRs against Portfolio-Member repositories. It identifies and reports; the operator (or a future remediation skill) acts.
 
-### 2. Render (regenerate the inventory docs)
+#### 2. Render (regenerate the inventory docs)
 
 Regenerates the aggregated portfolio inventory pages under `claude-shared/docs/<lang>/portfolio/` from the same manifests collected in Audit.
 
@@ -77,7 +76,7 @@ Regenerates the aggregated portfolio inventory pages under `claude-shared/docs/<
 
 Render operation **never** modifies the source-of-truth manifests, never edits the spec, never publishes the docs (publication is the existing `task docs` / MkDocs pipeline's job).
 
-### 3. Bootstrap (initial portfolio.yml for one repository)
+#### 3. Bootstrap (initial portfolio.yml for one repository)
 
 Helps a single Portfolio-Member repository author its first `project/portfolio.yml` interactively.
 
@@ -95,7 +94,7 @@ Helps a single Portfolio-Member repository author its first `project/portfolio.y
 
 Bootstrap operation **never** modifies `project/mission.md`, `project/roadmap.md`, or the audience artefact — those are owned by their own dedicated skills and authoring flows. If the user discovers during Bootstrap that their mission or audience list needs updating first, this skill stops and routes them to the appropriate skill.
 
-## Reference: spec anchors
+### Reference: spec anchors
 
 This skill implements rules declared in `spec/portfolio/portfolio-management/`. Read those rules when in doubt:
 
@@ -109,7 +108,7 @@ This skill implements rules declared in `spec/portfolio/portfolio-management/`. 
 
 When the spec disagrees with this skill's instructions, the spec wins. Propose a skill update rather than silently diverging.
 
-## Hard rules
+### Hard rules
 
 - Never modify a Portfolio-Member repository's `project/portfolio.yml` from this skill; only Bootstrap writes it on first authoring, and only inside the active checkout. Cross-repository edits go through ordinary PR flows in the target repository, not through this skill.
 - Never consolidate duplicate capabilities automatically, never mark a capability `status: deprecated` from the audit side, never open a PR against another Portfolio-Member repository. The audit identifies and reports; the operator acts.

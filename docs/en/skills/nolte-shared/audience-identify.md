@@ -2,31 +2,30 @@
 
 _Runs the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produces an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", or equivalent German-language requests. Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `audience`
 - **Source:** [skills/audience-identify/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/audience-identify/SKILL.md)
 
 ---
 
-# Audience Identification Skill
+## Audience Identification Skill
 
 Operationalizes the methodology from `spec/project/audience-identification/` so a bounded context (module, service, library, project) gets a reviewable audience list instead of one author's private guesswork.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Mid-flow interactivity is the contract** — every category enumeration step ("who are the operators?", "any indirect audiences?") is a per-step user dialogue; the spec explicitly forbids batched output and requires confirmation per category.
 - **Persistent on-disk artifact** — the resulting audience list lives next to the bounded context. Per `spec/project/audience-identification/` §Artifact location, the canonical default is `AUDIENCES.md` at the root of the bounded context; a README section ("## Audiences" or "## Intended consumers") or an ADR remains an acceptable alternative for small or sub-module contexts. The artifact is read by downstream specs (`mission`, `roadmap`, `release-notes-audience-analysis`, `release-skill-layer`, `readme-structure`, future SLA / threat-model specs); a skill owns persistent state, an agent returns a structured report and forgets.
 - **`confirmed` vs `assumed` tagging requires the user in the loop** — the spec mandates that `confirmed` only be set after explicit user statement; an agent's isolated context can't gather that signal interactively.
 - Counter-dimension considered: a narrow agent prompt could sharpen the relationship-category vocabulary, but the load-bearing dimension here is interactivity, not output specialization — skill wins.
 
-## User-language policy
+### User-language policy
 
 - Detect the user's language from their message and reply in that language.
 - The written audience artifact uses the surrounding repository's primary language (English by default, unless the repo's existing docs show otherwise — follow the precedent).
 - The five relationship-category labels stay consistent with the spec (canonical EN version wins).
 
-## German trigger phrases
+### German trigger phrases
 
 The frontmatter `description` keeps the trigger lexicon English-only per `spec/claude/skill-management/` §Structure (plugin-distributed skills). Treat the following German paraphrases as equivalent and discoverable through this skill:
 
@@ -36,13 +35,13 @@ The frontmatter `description` keeps the trigger lexicon English-only per `spec/c
 - "Zielgruppenanalyse vor README/SLA/Threat-Model"
 - "Audience-Liste aufsetzen"
 
-## Precondition
+### Precondition
 
 Before any operation, verify that `spec/project/audience-identification/<canonical_language>.md` is reachable in the current project. If the spec is missing, stop and tell the user the methodology spec is the input to this skill — without it there is no authoritative list of requirements to run against. Do not improvise a replacement.
 
-## Operations
+### Operations
 
-### 1. `run` — produce an audience artifact
+#### 1. `run` — produce an audience artifact
 
 Interactive walk-through. Do not batch — surface each step to the user and let them correct before moving on.
 
@@ -62,7 +61,7 @@ Interactive walk-through. Do not batch — surface each step to the user and let
 7. **Offer optional subdivisions** (geography, organizational unit, tenancy) only when the user says they change the expected deliverable. Do not add them by default.
 8. **Write the artifact** at the chosen location, using the template at `templates/audiences.template.md`. Confirm the path back to the user in their language.
 
-### 2. `validate` — audit an existing artifact
+#### 2. `validate` — audit an existing artifact
 
 Run this checklist against a given audience artifact path:
 
@@ -75,11 +74,11 @@ Run this checklist against a given audience artifact path:
 
 Report pass/fail per item. Offer to fix mechanical gaps (missing tags, missing category placeholders) in place. Do not invent `confirmed` tags or missing audiences while fixing.
 
-### 3. `revisit` — update after a scope change
+#### 3. `revisit` — update after a scope change
 
 Triggered when the user signals a material scope change (new public API, new deployment target, new regulated data class, new stakeholder). Re-run operation 1 steps 1–7 as a diff against the existing artifact: show which entries stay, which need re-validation, which become irrelevant. Persist the result only after the user accepts each diff item.
 
-## Gotchas
+### Gotchas
 
 - **Never set `confirmed` on the operator's behalf.** The spec's `confirmed` vs. `assumed` distinction is load-bearing for downstream consumers (mission, roadmap, release-notes-audience-analysis). `confirmed` requires the operator to explicitly state "yes, I've validated this with a real representative or an authoritative source." `assumed` is the safe default; the skill never silently promotes an `assumed` audience to `confirmed` even when the operator describes them confidently.
 - **The artifact location follows existing repo precedent, not a fixed default.** The spec names `AUDIENCES.md` at the bounded-context root as the canonical default, but a repo that already uses a README section ("## Audiences" / "## Intended consumers") or an ADR for the same context should keep that location. The skill greps for precedent before proposing a new location; introducing a new location pattern in a repo that already has a different one fragments the audience surface across the codebase.
@@ -87,7 +86,7 @@ Triggered when the user signals a material scope change (new public API, new dep
 - **Optional subdivisions add cost, not always value.** Geography, organizational unit, and tenancy subdivisions only get added when they materially change the expected deliverable. A "European users" subdivision is valuable only if it changes the artefact's content for that subgroup; otherwise it's noise that downstream consumers have to disregard. Default to no subdivisions.
 - **The German trigger phrases ship in the body, not the description.** The frontmatter `description` is English-only per `agent-management` §Structure (plugin-distributed). German operator-voice triggers like "Zielgruppen für dieses Modul ermitteln" live in the body's `## German trigger phrases` section so they remain greppable inside an open conversation; routing on the frontmatter alone misses them.
 
-## Hard rules
+### Hard rules
 
 - Never list audiences before the bounded context is declared in writing — this is the load-bearing rule of the underlying spec.
 - Never set an audience to `confirmed` without the user explicitly saying so. `assumed` is always the safe default.

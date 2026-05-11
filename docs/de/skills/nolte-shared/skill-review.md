@@ -2,32 +2,31 @@
 
 _Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/<skill-name>.md. Invoke when the user asks "review this skill", "audit skills/<name>", "check whether this skill is spec-compliant", "skill review for <name>", "prüfe diesen Skill", "Skill-Review für X", "Audit von skills/<name>", or "ist dieser Skill spec-konform". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for <name>", "schließe den Skill-Review-Plan". Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill)._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `review`
 - **Quelle:** [skills/skill-review/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/skill-review/SKILL.md)
 
 ---
 
-# Skill Review Skill
+## Skill Review Skill
 
 Operationalizes `spec/claude/skill-review/` — reviews one Claude Code skill against its authoring specs and persists the result as a processable plan under `.audits/skill-review/`. The plan is the deliverable; the skill is the procedure that produces and, later, retires it.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Mid-flow interactivity** — scope confirmation (which skill, narrowed aspect?) and item-closure decisions happen with the user in the loop; an agent's fire-and-forget contract would lose that.
 - **Persistent on-disk output is the contract** — the `review-plan` artifact under `.audits/` must survive past the current turn and be worked off incrementally; skills own persistent state, agents return structured reports.
 - **Orchestrator of specs + (potentially) dispatches agents** — this skill may chain to `pull-request-create` in the same thread after the plan is closed; the skill-orchestrates-agent-executes pattern (see `skill-vs-agent`) defaults the orchestrator to skill form.
 - Counter-dimension considered: *context-window impact* from reading three specs plus the target skill would bias toward an agent, but the read volume is bounded (each spec is one file, the target skill is one folder) and the user wants visibility into progress — inline reading wins.
 
-## User-language policy
+### User-language policy
 
 - Detect the user's language from their message and reply in that language.
 - The **plan file** uses English section headings (`## Scope`, `## Summary`, `## Findings`, `## Processing log`) regardless of conversation language — this is a `review-plan` requirement so downstream tooling can grep deterministically.
 - Finding prose (the one-line statement, `Where`, `Fix`, `Verify`) may follow the conversation language.
 - Commit messages produced by this skill stay in English for portfolio consistency.
 
-## Preconditions
+### Preconditions
 
 Before any operation, verify with `Read` that these files exist in the current repository:
 
@@ -40,9 +39,9 @@ Before any operation, verify with `Read` that these files exist in the current r
 
 Also verify `.audits/` exists and is tracked by git (`git ls-files .audits/.gitkeep` or an existing plan). If absent, create `.audits/skill-review/.gitkeep` as part of the first plan write so the folder is not lost.
 
-## Operations
+### Operations
 
-### 1. `run <skill-name>` — produce a review plan
+#### 1. `run <skill-name>` — produce a review plan
 
 Interactive. Confirm each decision with the user before acting on it.
 
@@ -59,7 +58,7 @@ Interactive. Confirm each decision with the user before acting on it.
 9. **Write the plan** to `.audits/skill-review/<name>.md`. Confirm the path back to the user. Do **not** mark any item `- [x]` on creation — everything starts open.
 10. **Stage and commit** the plan only if the user asks; otherwise leave it as a working-tree change so the user can review before committing.
 
-### 2. `update <skill-name>` — check off processed items
+#### 2. `update <skill-name>` — check off processed items
 
 When the user reports "I fixed items 3 and 5":
 
@@ -70,7 +69,7 @@ When the user reports "I fixed items 3 and 5":
 5. **Flip `status`** to `in-progress` on the first closure, if it was `open`.
 6. **Do not commit automatically** — show the diff and let the user commit.
 
-### 3. `close <skill-name>` — delete the plan after full processing
+#### 3. `close <skill-name>` — delete the plan after full processing
 
 1. **Read** `.audits/skill-review/<name>.md`.
 2. **Refuse if any open `- [ ]` `Critical` remains.** `Warning` / `Suggestion` / `Info` items may be closed via `→ deferred: <issue-url>` annotation on the item, per `review-plan`. Offer to help the user open the tracking issues if they are missing.
@@ -79,13 +78,13 @@ When the user reports "I fixed items 3 and 5":
 5. **Compose the deletion commit message** exactly: `review(skill-review): close <skill-name>—<C>C/<W>W/<S>S/<I>I` in the subject, and in the body list any deferred-issue URLs the plan referenced plus the `repo-revision` the review was taken at. Do not bypass hooks; do not skip signing.
 6. **Run the commit only if the user confirms.** Show the message first.
 
-## Output — plan shape
+### Output — plan shape
 
 Reference `spec/claude/review-plan/<canonical>.md` for the authoritative format. Never restate its rules in the plan itself. The template at `templates/plan.template.md` is the starting point. Every finding uses the four-line structure (statement + `Where` / `Fix` / `Verify`) and cites a spec requirement in the bracketed prefix — inventions without a citation are rejected at draft time.
 
 See `examples/walkthrough.md` for an end-to-end transcript covering the create, update, defer, and close turns.
 
-## Hard rules
+### Hard rules
 
 - **One plan per target.** A rerun supersedes; never edit a previous run's plan into a new one.
 - **No finding without a spec citation.** If an issue is real but no `skill-management` / `skill-vs-agent` rule covers it, record it as `Info` with a note that the spec itself may need to grow — never promote an opinion to `Warning` or `Critical`.

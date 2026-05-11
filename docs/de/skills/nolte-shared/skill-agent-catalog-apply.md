@@ -2,24 +2,23 @@
 
 _Wires up the MkDocs skill-and-agent catalog in the current Claude Code plugin repository per spec/claude/skill-agent-catalog/<canonical_language>.md. Audits the MkDocs config against the spec, scaffolds or patches the gen-files + literate-nav plugin configuration, writes the generator hook that walks every configured plugin source root, adds the Python dependencies to the project's docs requirements, and verifies that `task docs` produces Skills and Agents sections in the built navigation. Invoke when the user asks to \"apply the skill-agent-catalog spec\", \"wire up the catalog generator\", \"scaffold the skills/agents navigation\", or \"add another plugin source root\". Also handles equivalent German-language requests and checking whether a wired catalog is still in sync. Don't use for authoring individual skills/agents (use `skill-management`) or for general docs scaffolding (use `project-structure-apply`)._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `scaffolding`, `audit`
 - **Quelle:** [skills/skill-agent-catalog-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/skill-agent-catalog-apply/SKILL.md)
 
 ---
 
-# Skill and Agent Catalog Apply
+## Skill and Agent Catalog Apply
 
 Operationalises `spec/claude/skill-agent-catalog/<canonical_language>.md` inside the current repository. The skill audits the current catalog wiring, proposes the concrete file-level changes the spec requires, and—with explicit per-change user consent—applies them.
 
 When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent requirements that don't appear in the spec.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language from their message and respond in it. Generated file contents (`mkdocs.yml`, the `docs_gen_*` Python hook, `docs-requirements.txt` / `pyproject.toml` extras) are always written in English so portfolio-wide automation stays predictable.
 
-## Preconditions
+### Preconditions
 
 Before doing anything:
 
@@ -34,9 +33,9 @@ Before doing anything:
 5. In consumer mode, ask the user which external plugin source roots should appear in the catalog before proposing any changes (for example local clones of `nolte-shared`, other nolte plugins, or third-party plugins). Require at least one; the catalog is meaningless with an empty source list.
 6. Check for uncommitted changes in `mkdocs.yml`, the docs requirements file, and any existing generator hook path. If the tree is dirty there, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
 
-## Operations
+### Operations
 
-### 1. Audit
+#### 1. Audit
 
 Read the spec's Acceptance Criteria and classify each item as `pass`, `missing`, or `drift`:
 
@@ -54,11 +53,11 @@ Read the spec's Acceptance Criteria and classify each item as `pass`, `missing`,
 
 Report findings grouped by spec section: Navigation, Generation mechanism, Source roots, Dependencies, Git hygiene. Audit is read-only.
 
-### 2. Propose and apply changes
+#### 2. Propose and apply changes
 
 For every `missing` or `drift` item, draft the exact change and ask the user to approve it before writing. Don't bundle unrelated changes into a single approval step; the user decides per item.
 
-#### 2.1 Add the MkDocs plugins
+##### 2.1 Add the MkDocs plugins
 
 Patch `mkdocs.yml` to declare the two plugins. Typical shape:
 
@@ -74,14 +73,14 @@ plugins:
 
 Preserve every other plugin the repo already declares; only add what's missing. If `gen-files` is already present but points at a different script, report the drift and ask whether to merge scripts or replace.
 
-#### 2.2 Configure plugin source roots
+##### 2.2 Configure plugin source roots
 
 The spec's "plugin source roots" are the (local path, public repo URL) pairs the generator reads. Store the list in a sibling YAML file so `mkdocs.yml` stays compact, and have the generator load it.
 
 **Plugin mode**: the local plugin MUST be the first entry; additional external plugins MAY follow:
 
 ```yaml
-# docs/catalog-sources.yml
+## docs/catalog-sources.yml
 sources:
   - name: nolte-shared         # plugin name, used as the group label
     local: .                   # path relative to the repo root
@@ -94,7 +93,7 @@ sources:
 **Consumer mode**: no local entry; each source is an external plugin (local clone path, installed plugin path, or submodule):
 
 ```yaml
-# docs/catalog-sources.yml
+## docs/catalog-sources.yml
 sources:
   - name: nolte-shared
     local: ../claude-shared    # a sibling checkout or vendored path
@@ -108,7 +107,7 @@ sources:
 
 In either mode, extending the source list later (adding more external plugins) is a pure data change; no generator-code change needed.
 
-#### 2.3 Write the generator hook
+##### 2.3 Write the generator hook
 
 Create `scripts/docs/gen_catalog.py`. The hook walks every configured source root, reads each skill's `SKILL.md` and each agent's `<name>.md`, parses the frontmatter, and emits catalog pages via `mkdocs_gen_files.open(...)`. Key behaviours the hook **must** honour per the spec:
 
@@ -122,7 +121,7 @@ Create `scripts/docs/gen_catalog.py`. The hook walks every configured source roo
 
 Include a concise docstring on the hook summarising what it does and pointing at the spec. Don't duplicate spec rules as comments scattered across the code; keep the hook readable and let the spec be the source of truth.
 
-#### 2.4 Add the dependencies
+##### 2.4 Add the dependencies
 
 Add `mkdocs-gen-files` and `mkdocs-literate-nav` to whichever docs-deps location the repo already uses:
 
@@ -132,18 +131,18 @@ Add `mkdocs-gen-files` and `mkdocs-literate-nav` to whichever docs-deps location
 
 Also add `pyyaml` if the hook uses YAML (likely, since it loads `catalog-sources.yml`) and it isn't already present.
 
-#### 2.5 Ensure git hygiene
+##### 2.5 Ensure git hygiene
 
 If `docs/skills/`, `docs/agents/`, or `docs/tags.md` is currently git-tracked, the catalog was generated-then-committed in the past. Offer to `git rm --cached` those paths and add matching entries to `.gitignore`:
 
 ```
-# Generated by scripts/docs/gen_catalog.py — do not commit
+## Generated by scripts/docs/gen_catalog.py — do not commit
 /docs/skills/
 /docs/agents/
 /docs/tags.md
 ```
 
-### 3. Verify
+#### 3. Verify
 
 After applying changes, run `task docs` (or `mkdocs build --strict` when no Taskfile target exists) and confirm:
 
@@ -155,7 +154,7 @@ After applying changes, run `task docs` (or `mkdocs build --strict` when no Task
 
 Report the verification outcome. If the build fails, surface the offending file per the spec's error-handling rule and don't claim success.
 
-### 4. Adding further source roots later
+#### 4. Adding further source roots later
 
 Both plugin-mode repos (which want to catalog *additional* plugins alongside their own) and consumer-mode repos (which only ever reference external plugins) evolve by extending `docs/catalog-sources.yml`:
 
@@ -164,22 +163,22 @@ Both plugin-mode repos (which want to catalog *additional* plugins alongside the
 - If the extra plugin doesn't live at a local checkout yet, stop and ask the user for its location; don't guess.
 - In plugin mode, never demote the local plugin out of the sources list while adding externals; it stays the first entry (see Hard rules).
 
-## Output shape
+### Output shape
 
 After the audit step, produce a single report:
 
 ```
-# Skill and Agent Catalog Apply — <repo>
+## Skill and Agent Catalog Apply — <repo>
 
-## Audit
+### Audit
 | Spec item | Status | Evidence |
 | … | pass / missing / drift | <one line> |
 
-## Proposed changes
+### Proposed changes
 1. <change>; file: <path>, rationale: <one line>
 2. …
 
-## Verification (after apply)
+### Verification (after apply)
 - task docs: <pass / fail>
 - site/skills: <count> pages
 - site/agents: <count> pages
@@ -187,7 +186,7 @@ After the audit step, produce a single report:
 - git status on docs/: <clean / dirty, list offenders>
 ```
 
-## Hard rules
+### Hard rules
 
 - **Never** apply changes without explicit per-item user approval. The audit is read-only; writes are a separate, opt-in step.
 - **Never** commit generated catalog markdown back into `docs/`. Emission happens at build time via `mkdocs-gen-files`; the `site/` build output is gitignored.
@@ -200,7 +199,7 @@ After the audit step, produce a single report:
 - **Always** fail the docs build (via the generator hook) on malformed frontmatter rather than silently skipping. Broken catalogs defeat the whole point.
 - **Always** point at the spec file in generated docstrings and in every reported drift item, so future readers follow the same rules.
 
-## Gotchas
+### Gotchas
 
 Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
 
@@ -209,7 +208,7 @@ Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvio
 - **Plugin source roots in `docs/catalog-sources.yml` are repo-relative paths, not install paths.** In plugin mode the entry is `local: .` (the current repo *is* the plugin). In consumer mode the entry points at where the plugin's repo content actually lives on disk relative to the docs build, typically `local: ../claude-shared` for a sibling checkout, or a vendored or submoduled subdirectory. `mkdocs-gen-files` resolves the path at build time relative to the `mkdocs.yml` location; the runtime `.claude/plugins/<plugin>/` install path is for skill discovery at session-start, not for docs generation.
 - **Consumer mode forbids the local-plugin entry.** A consumer-mode repo (one that installs `nolte-shared` rather than being it) **MUST NOT** declare `local: .` as a source; the walker would then look for `skills/` and `agents/` at the consumer's repo root, find nothing, and emit an empty catalog or a hard error. Plugin mode and consumer mode are deliberately exclusive on this point.
 
-## Rationale
+### Rationale
 
 This is a skill, not an agent, because:
 
@@ -219,7 +218,7 @@ This is a skill, not an agent, because:
 - **Counter-dimension (context-window)**: the verification step (running `task docs` and reading the build output) has a mild context-window impact, but it's bounded and fits in the main conversation.
 - **Counter-dimension (parallelism / tool restriction)**: writing `scripts/docs/gen_catalog.py` is a self-contained Python-authoring task that an agent could plausibly own with a narrower tool surface (`Read`, `Write`, `Glob`). The reason it stays in the skill: the file write is one of several per-item approvals in a single apply cycle, so splitting it out would add a dispatch boundary without removing the surrounding interactivity.
 
-### Boundary against `project-structure-apply`
+#### Boundary against `project-structure-apply`
 
 This skill follows the same orchestrator-pattern precedent as `project-structure-apply`, but the two own non-overlapping surfaces and **MUST NOT** be merged:
 

@@ -2,18 +2,17 @@
 
 _Audits and applies the MkDocs Mermaid setup of the current repository against `spec/project/mermaid-diagrams/<canonical_language>.md`, and helps an author add a single Mermaid diagram (hand-described or derived). Wires up `pymdownx.superfences`, pins `pymdown-extensions`, refuses `mkdocs-mermaid2-plugin`. Picks the diagram type from the supported catalog and prepends the mandatory `<!-- diagram-source ... -->` marker. Audits flag missing source markers, missing direction headers, inline styling, `gitGraph` usage, non-English labels, and derived-source drift. Invoke when the user asks to "wire up Mermaid", "audit Mermaid setup", "draft a flowchart", or equivalent German-language requests. Don't use for general MkDocs scaffolding (use `project-structure-apply`), spec authoring (use `spec`), the docs-freshness audit (use `docs-freshness-checker`), or non-Mermaid diagrams._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `scaffolding`, `audit`
 - **Quelle:** [skills/mermaid-diagrams-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/mermaid-diagrams-apply/SKILL.md)
 
 ---
 
-# Mermaid Diagrams Apply
+## Mermaid Diagrams Apply
 
 Audits and repairs a repository so its MkDocs Mermaid setup, its existing diagrams, and any newly authored diagram match the Mermaid Diagrams spec at `spec/project/mermaid-diagrams/<canonical_language>.md`. The skill both reports findings (read-only audit) and—with explicit per-item user consent—writes the missing or fixed pieces in place.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Per-block user approval is the contract**: every Mermaid block emitted (or fixed) is shown to the user before it lands; the audit is read-only and the apply step is a sequence of approvals an agent's fire-and-forget shape can't carry.
 - **Output flows back into the main conversation**: the audit table, the per-finding fix proposals, and the diagram drafts surface inline so the user can redirect the type choice or the source pointer; isolating that in a structured-report boundary would obscure the per-block approval surface.
@@ -22,7 +21,7 @@ Audits and repairs a repository so its MkDocs Mermaid setup, its existing diagra
 
 When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path, or from the `nolte/claude-shared` repository). Never invent requirements that aren't in the spec.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. Generated content is split:
 
@@ -30,7 +29,7 @@ Detect the user's language and respond in it. Generated content is split:
 - **Surrounding prose** (heading, lead-in sentence, `<!-- diagram-source: ... -->` comment summary) follows the language of the markdown file the diagram is added to.
 - **Generated config snippets** (`mkdocs.yml` keys, `docs/requirements.txt` entries) are English regardless of conversation language.
 
-## Preconditions
+### Preconditions
 
 Before doing anything:
 
@@ -40,9 +39,9 @@ Before doing anything:
 - Read `mkdocs.yml`'s `docs_dir` (default `docs/`) and any configured language trees; the audit's scope is everything under that path.
 - Check for uncommitted changes in `mkdocs.yml`, `docs/`, and `docs/requirements.txt`. If the tree is dirty there, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
 
-## Operations
+### Operations
 
-### 1. Setup audit
+#### 1. Setup audit
 
 Walk through the spec's "MkDocs setup" requirements one item at a time and classify each as:
 
@@ -59,7 +58,7 @@ Items to check:
 - `theme.name` is `material`.
 - `plugins:` doesn't contain `mkdocs-mermaid2-plugin` or any other Mermaid-only plugin.
 
-### 2. Setup apply
+#### 2. Setup apply
 
 After the audit, walk findings one at a time. For each one, propose the minimal fix and ask for confirmation before writing:
 
@@ -70,11 +69,11 @@ After the audit, walk findings one at a time. For each one, propose the minimal 
 
 After every successful write, re-run only the affected check so the user sees the item flip to **pass**. Never batch silent writes.
 
-### 3. Diagram authoring
+#### 3. Diagram authoring
 
 Add a single Mermaid diagram to a markdown file under `docs_dir`. Two source modes:
 
-#### user-described
+##### user-described
 
 1. Ask for: the conceptual structure to visualize (one or two sentences), the target markdown file path (must already exist), the diagram type from the catalog (`flowchart` / `C4Component` / `classDiagram` / `sequenceDiagram` / `erDiagram`).
 2. Validate the type matches the structure: dependency / pipeline → `flowchart`; component / portfolio → `C4Component`; type-or-schema hierarchy → `classDiagram`; runtime workflow with actors → `sequenceDiagram`; data structure with cardinality → `erDiagram`. If the user-picked type doesn't fit, propose the catalog-fitting type and explain.
@@ -82,7 +81,7 @@ Add a single Mermaid diagram to a markdown file under `docs_dir`. Two source mod
 4. For `flowchart`, default direction to `LR` for dependency / pipeline diagrams and `TB` for architecture overviews; always declare the direction explicitly on the first line.
 5. Show the full proposed insertion to the user. Only write after explicit approval.
 
-#### derived
+##### derived
 
 1. Ask for: the target markdown file path, the source artifact (one of the recognized derivation sources from the spec). The source must be a real path in the repo.
 2. Read the source artifact and extract nodes/edges:
@@ -97,7 +96,7 @@ Add a single Mermaid diagram to a markdown file under `docs_dir`. Two source mod
 4. Same direction-default and labeling rules as user-described.
 5. Show the proposed insertion and the source-to-node mapping. Only write after explicit approval.
 
-### 4. Diagram audit
+#### 4. Diagram audit
 
 Scan every markdown file under `docs_dir`, locate Mermaid fences (` ```mermaid `), and report findings classified by category:
 
@@ -112,11 +111,11 @@ Scan every markdown file under `docs_dir`, locate Mermaid fences (` ```mermaid `
 
 For each finding, propose the minimal fix and ask for confirmation. Never write without approval. For derived-drift findings, the fix is "redraft the block from the current source"—route back to operation 3's derived mode.
 
-### 5. Re-audit
+#### 5. Re-audit
 
 When the user has finished approving changes, re-run operations 1 and 4 end-to-end and present a fresh grouped summary. Items still **missing**, **drift**, or with an open finding must be called out so the user knows what remains and why.
 
-## Gotchas
+### Gotchas
 
 - **`pymdownx.superfences` may already exist** without the Mermaid `custom_fence`. Merge into the existing block; don't add a second `pymdownx.superfences` entry—MkDocs will silently use only one and the merge order is undefined.
 - **`!!python/name:pymdownx.superfences.fence_code_format`** is a YAML constructor tag. Some YAML loaders (notably plain `yaml.safe_load`) reject it. When reading `mkdocs.yml`, treat it as a string for the purpose of detection rather than parsing it.
@@ -126,7 +125,7 @@ When the user has finished approving changes, re-run operations 1 and 4 end-to-e
 - **Trailing whitespace inside `<!-- diagram-source: ... -->`**: the marker is detected by exact prefix match. A trailing space before `-->` doesn't break the comment but breaks naive grep-based scanners; trim before writing.
 - **`docs/requirements.txt` may not exist** even when MkDocs is configured—some repos rely on a `pyproject.toml` `[project.optional-dependencies.docs]` group. Ask the user where the docs install set lives before scaffolding a new `docs/requirements.txt`.
 
-## Hard rules
+### Hard rules
 
 - **Never** install or scaffold a Mermaid-only MkDocs plugin (`mkdocs-mermaid2-plugin` or any equivalent). Material's native superfences-based bridge is the portfolio standard, and a second plugin only duplicates the runtime.
 - **Never** write a pre-rendered SVG or PNG diagram under `docs/assets/` (or any other directory) as a substitute for the Mermaid source. Rendering stays strictly client-side; the Mermaid source in markdown is the single point of truth.

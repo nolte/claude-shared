@@ -2,30 +2,29 @@
 
 _Run the project's lint + typecheck + test gate in parallel, tabulate the results, and call out exactly which checks failed so the caller can triage before a commit, a PR, or a release. Prefers repository-declared Taskfile targets (`task lint`, `task test`, `task typecheck`, `task check`) when they exist so project conventions and ignore lists are honoured; otherwise detects and runs the native tooling directly (ruff, pytest, eslint, tsc, vitest, go test, cargo test, and similar). Invoke when the user asks to "run the quality gate," "run lint and tests," "make sure CI will pass," "run all checks before I commit," or equivalent German-language requests ("Quality-Gate ausführen," "vor dem Commit prüfen," "Linting und Tests laufen lassen"). Don't use for security/CVE scanning (that's `dependency-audit`) and don't use for documentation builds (those are a separate concern)._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `quality-gate`
 - **Source:** [skills/quality-gate/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/quality-gate/SKILL.md)
 
 ---
 
-# Quality Gate
+## Quality Gate
 
 Run every lint, typecheck, and test step the project declares, in parallel, and report the outcome as a single table. This skill doesn't fix failures—it surfaces them with enough detail that the caller knows what to fix.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language from their message and respond in it. The result table uses English column headers so the output stays diffable; prose around the table is localised.
 
-## Inputs
+### Inputs
 
 - **Repo root**: default is the current working directory.
 - **Scope override** (optional): caller may restrict the run to a named subset — "lint only," "tests only," "typecheck only," "fast" (lint + typecheck, skip tests).
 - **Subroot filter** (optional): in a monorepo, caller may name a subroot (`backend/`, `frontend/`, `packages/foo/`) to scope the run.
 
-## Operation
+### Operation
 
-### Step 1: Prefer Taskfile targets
+#### Step 1: Prefer Taskfile targets
 
 If the repo root has `Taskfile.yml` or `Taskfile.yaml`, enumerate the declared targets:
 
@@ -49,7 +48,7 @@ Rules for picking targets:
 
 Record every chosen target in the report so the caller can see what ran.
 
-### Step 2: Detect native tooling (fallback)
+#### Step 2: Detect native tooling (fallback)
 
 For any category not covered by a Taskfile target, detect the tooling from the manifests:
 
@@ -69,7 +68,7 @@ Detection rules:
 
 If a category has no detectable tooling and no Taskfile target, record it as `skipped: no tooling detected` rather than claiming pass.
 
-### Step 3: Run checks in parallel
+#### Step 3: Run checks in parallel
 
 Issue every chosen command in a single parallel batch. Each command **must** end with `; echo "EXIT:$?"` so the exit code survives through redirects and shell wrappers. Honour these timeouts:
 
@@ -79,7 +78,7 @@ Issue every chosen command in a single parallel batch. Each command **must** end
 
 If a command times out, report it as `timeout` in the status column—don't retry.
 
-### Step 4: Parse each result
+#### Step 4: Parse each result
 
 For every check, capture:
 
@@ -95,7 +94,7 @@ Project-local conventions that the skill **must** honour when the Taskfile targe
 
 When running tools directly (Step 2 fallback), **don't** add project-local ignores the skill doesn't know about. Report the raw tool output and let the caller decide.
 
-### Step 5: Render the result table
+#### Step 5: Render the result table
 
 ```
 | Check | Status | Runner | Details |
@@ -109,13 +108,13 @@ The **Runner** column shows exactly what was invoked — the Taskfile target nam
 
 Below the table, for every `fail` or `timeout` row, append a one-paragraph excerpt from the captured output (≤10 lines, fenced in a code block). Group excerpts by check.
 
-### Step 6: Overall verdict
+#### Step 6: Overall verdict
 
 - **All `pass`**: one-line green summary (`Quality gate passed — N checks green.`).
 - **Any `fail` / `timeout`**: red summary naming the failed checks and pointing at the excerpts below the table.
 - **Any `skipped: no tooling detected`**: mention them explicitly in the summary so the caller can decide whether they're acceptable (a pure-Python repo genuinely has no frontend lint) or a misconfiguration (missing `ruff` config).
 
-## Hard rules
+### Hard rules
 
 - **Never** fix failures automatically. This skill surfaces them; fixing is a separate step the caller owns.
 - **Never** run checks sequentially when parallel execution is possible and the project doesn't explicitly forbid it. Parallel is the default so feedback is fast.
@@ -126,7 +125,7 @@ Below the table, for every `fail` or `timeout` row, append a one-paragraph excer
 - **Always** report exactly what was invoked in the **Runner** column so the caller can reproduce any failure locally.
 - **Always** include enough of the failure output (≤10 lines per failing check) that the caller doesn't need to re-run to triage.
 
-## Rationale
+### Rationale
 
 This is a skill, not an agent, because:
 

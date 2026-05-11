@@ -2,7 +2,6 @@
 
 Auto-generated catalog of every agent discovered across the configured plugin source roots. Content is taken verbatim from each agent markdown file.
 
-
 ## nolte-shared
 
 - [`audience-doc-author`](nolte-shared/audience-doc-author.md) — Draft or refine an audience-tailored documentation artifact (README, release notes, or any other doc type whose governing spec lives under spec/project/) against an existing audience artifact produced by the nolte-shared:audience-identify skill. Use when the user says "write the README for this module to its audiences," "draft release notes per our audience analysis," "refactor this doc to actually serve audience X," or "generate audience-driven documentation of type Y." Also handles equivalent German-language requests. Don't use without an existing audience artifact (dispatch audience-identify first); don't use for plugin skills or agents (that's claude-plugin-developer); don't use for spec authoring (that's the nolte-shared:spec skill). Returns the drafted or edited document, an audience-to-content coverage map, any unresolved gaps, and a short caller checklist.

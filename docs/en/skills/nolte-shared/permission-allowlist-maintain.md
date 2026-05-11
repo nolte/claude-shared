@@ -2,29 +2,28 @@
 
 _Curates the committed `.claude/settings.json` `permissions.allow` list of the current repository per `spec/claude/permission-allowlist/`. Proposes additions sourced from the `fewer-permission-prompts` built-in or from the user, applies the spec's three-condition selection criteria (frequent + read-only + not-already-autoallowed), rejects forbidden pattern classes (interpreter wildcards, task-runner wildcards, mutation-capable `gh`/`git` wildcards), and routes every change through the standard pull-request flow. Invoke when the user asks to \"tidy the permission allowlist\", \"add `Bash(task lint)` to the allowlist\", \"review `.claude/settings.json`\", or equivalent German-language requests. Don't use to edit `.claude/settings.local.json` or `~/.claude/settings.json` (out of scope per spec)._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `scaffolding`, `audit`
 - **Source:** [skills/permission-allowlist-maintain/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/permission-allowlist-maintain/SKILL.md)
 
 ---
 
-# Permission Allowlist Maintain
+## Permission Allowlist Maintain
 
 Implements `spec/claude/permission-allowlist/` for the repository's committed `.claude/settings.json`. The skill is the curator: it gathers candidates, applies the spec's selection criteria with the user, and routes the resulting change through the standard PR flow. The candidate-discovery half is delegated to the `fewer-permission-prompts` Claude Code built-in (the spec's documented proposer); the decision to accept, narrow, or reject lives here.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Per-entry user approval is the contract.** Every candidate triggers a small dialogue (accept verbatim, narrow the pattern, reject with reason); the spec's §Selection criteria explicitly forbids batched insertion.
 - **Externally-visible mutations need user gating.** `.claude/settings.json` lands in a PR that affects every contributor's confirmation prompts; the change is reviewed publicly, so the curator's mid-flow approvals are part of the contract.
 - **Orchestrator pattern (per `skill-vs-agent`).** Candidate discovery is delegated to `fewer-permission-prompts` and the eventual PR is opened via `pull-request-create`; the skill stays in the main thread to chain those tools.
 - Counter-dimension considered: a narrow agent could specialise on pattern-narrowing (turning `Bash(git fetch --tags --prune)` into `Bash(git fetch *)`), but the load-bearing dimension is interactivity, not output specialisation—skill wins.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. The committed `.claude/settings.json` content (pattern strings, JSON keys) and the resulting PR title/body stay English so that portfolio automation (Probot Settings App context, label-sync, PR-body validators) parses them deterministically.
 
-## Preconditions
+### Preconditions
 
 Before any edit:
 
@@ -33,15 +32,15 @@ Before any edit:
 - Confirm `.claude/settings.json` exists (per the spec's AC #1) or scaffold it with an empty `permissions.allow` array if the user explicitly asks the skill to create the file from scratch. Never create it silently.
 - Verify `.gitignore` doesn't list `.claude/settings.json` itself (the file is committed); it MAY list `.claude/settings.local.json` (which is developer-owned).
 
-## Operations
+### Operations
 
-### 1. Load the current allowlist
+#### 1. Load the current allowlist
 
 Read `.claude/settings.json` and parse `permissions.allow`. Surface the current entries to the user as a numbered list so the rest of the dialogue can reference them by index.
 
 If `permissions.allow` is missing or empty, ask the user for the seed set explicitly. Never invent entries from "common defaults."
 
-### 2. Gather candidates
+#### 2. Gather candidates
 
 Two source paths:
 
@@ -50,7 +49,7 @@ Two source paths:
 
 Don't proceed past this step if the user can't articulate why they want each candidate; the spec's first selection criterion ("documented as frequently occurring in a defensible sample") is operator-judged, not skill-judged.
 
-### 3. Apply the spec's selection criteria per candidate
+#### 3. Apply the spec's selection criteria per candidate
 
 For every candidate, walk the three conditions from `spec/claude/permission-allowlist/` §Selection criteria explicitly with the user:
 
@@ -60,7 +59,7 @@ For every candidate, walk the three conditions from `spec/claude/permission-allo
 
 Drop the candidate at the first failed condition; record the rejection reason for the PR body.
 
-### 4. Reject forbidden pattern classes outright
+#### 4. Reject forbidden pattern classes outright
 
 Independently of the three criteria, the spec's §Scope and location lists forbidden patterns:
 
@@ -70,17 +69,17 @@ Independently of the three criteria, the spec's §Scope and location lists forbi
 
 A user request that asks for one of these patterns gets a hard "no" with the spec citation, not a softened narrower form. The skill's job is to propose the narrowest exact form (`Bash(task lint)`, `Bash(gh pr view --json *)`) when the user really needs the capability.
 
-### 5. Narrow the surviving candidates
+#### 5. Narrow the surviving candidates
 
 Per §Selection criteria's SHOULD: prefer the exact form over the prefix form. If the user has only ever observed one variant of `git fetch` (`Bash(git fetch)`), don't expand it to `Bash(git fetch *)` until flag variance is also observed. Walk this with the user candidate-by-candidate.
 
-### 6. Apply the change to `.claude/settings.json`
+#### 6. Apply the change to `.claude/settings.json`
 
 Edit the file in place, preserving JSON formatting (two-space indent matches the portfolio default). Show the diff to the user. Re-run a JSON parse to verify the file is still valid.
 
 For removals (an entry no longer used), capture the user's stated reason. The spec mandates the reason in the eventual commit message. Common reasons: "upstreamed into the Claude Code autoallow list," "command no longer used since X migrated to Y."
 
-### 7. Hand off to the PR flow
+#### 7. Hand off to the PR flow
 
 The change ships through the standard pull-request flow per the spec's §Authoring flow integration:
 
@@ -93,7 +92,7 @@ Dispatch `nolte-shared:pull-request-create` for the PR creation; the user confir
 
 The actual merge is `pull-request-merge`'s job, not this skill's.
 
-## Hard rules
+### Hard rules
 
 - **Never** edit `.claude/settings.local.json` or `~/.claude/settings.json`. Both are developer-owned and out of scope per the spec's §Non-Goals.
 - **Never** insert a forbidden pattern (interpreter wildcards, task-runner wildcards, mutation-capable `gh` / `git` wildcards)—even when the user asks. Counter-propose the narrowest exact form.
@@ -105,7 +104,7 @@ The actual merge is `pull-request-merge`'s job, not this skill's.
 - **Always** verify the file parses as valid JSON after the edit; a syntactically broken `.claude/settings.json` makes the harness fall back to "prompt for everything," which is worse than the original state.
 - When `spec/claude/permission-allowlist/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
 
-## Gotchas
+### Gotchas
 
 Per `spec/claude/skill-management/` §Gotchas—concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
 

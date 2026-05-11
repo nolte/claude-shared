@@ -2,29 +2,28 @@
 
 _Decompose a roadmap item (R-<n>) into one or more `project/features/<slug>.md` files conforming to spec/project/feature/<canonical_language>.md. Invoke when the user asks to decompose a roadmap item, break down R-<n> into features, draft features for a roadmap entry, scaffold a feature file, plan features for the next sprint, or write a new feature against the feature spec. Also handles equivalent German-language requests. Walks the operator through title, description, three-to-seven testable acceptance criteria, and test hooks per feature; identifies which feature carries `verifies_sprint_value`; and dispatches the `feature-consistency-reviewer` agent (or records a manual fallback pass) before allowing the new feature to leave `draft`. Do NOT use to transition feature status (`ready → in_progress` or `in_progress → done`) — that is owned by `sprint-execute` and `sprint-review`. Do NOT use to author roadmap items, sprints, or the mission file._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `scaffolding`
 - **Source:** [skills/feature-decompose/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/feature-decompose/SKILL.md)
 
 ---
 
-# Feature Decompose
+## Feature Decompose
 
 Decomposes one roadmap item into one or more feature files at `project/features/<slug>.md` per `spec/project/feature/<canonical_language>.md`. This skill is the only authoring surface in the feature lifecycle that creates feature files; later status transitions belong to `sprint-execute` and `sprint-review`.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Mid-flow agent dispatch is the contract** — the spec mandates a consistency check via the `feature-consistency-reviewer` agent before `draft → ready`; the orchestrator that dispatches an agent is always a skill per `spec/claude/skill-vs-agent/` §Hybrid pattern.
 - **Per-feature operator approval** — title, description, acceptance criteria, test hooks, and the `verifies_sprint_value` choice each require user confirmation; an agent's structured-report shape can't carry those checkpoints.
 - **Persistent on-disk artefact under iterative drafting** — feature files live next to the roadmap and sprint corpus and are mutated again later by other skills; the iterative drafting (consistency findings → resolutions → final write) flows back into the main conversation naturally.
 - Counter-dimension considered: a narrower agent prompt could sharpen acceptance-criterion phrasing, but the load-bearing dimensions here are mid-flow agent dispatch and per-step operator approval — skill wins.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. Feature files themselves (frontmatter, body sections, identifiers) are written in the **project's primary language** as declared by the consuming repo's root convention file (typically `CLAUDE.md`); when no primary language is declared, English is the default. Frontmatter field names, identifiers (`F-<n>`, `R-<n>`, `acceptance-<n>`), and the closed-vocabulary status tokens (`pending`, `passing`, `skipped`, `failing`) stay English regardless of prose language.
 
-## Preconditions
+### Preconditions
 
 Before any write, confirm:
 
@@ -35,9 +34,9 @@ Before any write, confirm:
 - The `feature-consistency-reviewer` agent is reachable in the current plugin runtime, **or** the operator explicitly acknowledges the manual-fallback path and provides a manual-pass identifier of the form `manual-<YYYY-MM-DD>` (per `spec/project/feature/` §Consistency check). The fallback is permitted only until the agent ships; once the agent is reachable, refuse to fall back.
 - The next free `F-<n>` ID is determinable by reading the highest existing ID under `project/features/`; never reuse a retired ID.
 
-## Operations
+### Operations
 
-### 1. Decompose
+#### 1. Decompose
 
 The decomposition produces N ≥ 1 features for the given roadmap item; the
 operator decides N.
@@ -94,7 +93,7 @@ operator decides N.
    `in_progress → done` are owned by `sprint-plan`, `sprint-execute`, and
    `sprint-review` respectively — not by this skill.
 
-### 2. Run the consistency check
+#### 2. Run the consistency check
 
 Mandatory before the feature file is written with `status: draft` AND a
 populated `consistency_check` frontmatter object. The check is what allows a
@@ -156,14 +155,14 @@ feature is malformed.
    resolution is to upgrade the plugin runtime and rerun the check via
    the agent path.
 
-## Gotchas
+### Gotchas
 
 - **The `feature-consistency-reviewer` agent has no shell access** (per `agent-management` §Tool access — read-only invariant). The dispatching call from this skill **MUST** confirm the working tree is a git repository (`git rev-parse --is-inside-work-tree`) and pass the short SHA (`git rev-parse --short HEAD`) as a dispatch argument; the agent uses the SHA to populate `agent_version` in its findings report. Skipping this step and dispatching anyway produces an `agent_version: unknown` field in every consistency-check result.
 - **The manual-fallback path is deprecated, not removed.** When the agent dispatch in Operation 2 step 1 fails because the plugin runtime predates the agent's release, the operator can still walk the investigation surface manually — but the skill **MUST** ask explicit permission before falling back, and the resulting `consistency_check` block carries `agent: manual-<YYYY-MM-DD>` instead of an agent name. Auditing later that bypasses surface as if it were a regular agent run mis-attributes the resolution decisions.
 - **`verifies_sprint_value` is a feature-side invariant, not a sprint-side one.** At most one feature per sprint carries a non-null `verifies_sprint_value`; setting it on two features in the same sprint is a hard violation per `spec/project/feature/` §Frontmatter schema. The skill defaults the field to `null` on every new feature; the operator opts in explicitly when authoring or when `sprint-plan` reassigns the verifier.
 - **The `R-<n>` and `F-<n>` ID counters are monotonic across the project's lifetime, never reused** even after deletion. Deriving the next ID from "max existing ID + 1" without checking the git history's deleted IDs would silently re-use a retired ID. The skill reads the highest existing ID under `project/features/` plus the highest deleted ID from `git log` before assigning.
 
-## Hard rules
+### Hard rules
 
 - **Never** transition a feature past `status: draft`. Only `sprint-plan`
   (`draft → ready` after a `sprint` value is assigned) and `sprint-execute` /

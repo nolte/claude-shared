@@ -2,30 +2,29 @@
 
 _Scan the current project's dependency tree for known vulnerabilities (CVEs) and, when requested, license-compliance issues. Detects project kind from `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` for Python and `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` for Node, runs the appropriate auditors, and produces a severity-sorted report with direct vs transitive attribution. Invoke when the user asks to "audit dependencies," "run a CVE scan," "check for vulnerable packages," "check license compliance," "run pip-audit," "run npm audit," or equivalent German-language requests ("Abhängigkeiten auditieren," "CVE-Scan durchführen," "Lizenz-Compliance prüfen"). Also handles a pre-PR / pre-release dependency gate. Don't use for upgrading dependencies (that's an author's decision) or for writing Renovate configs (that's `project-structure-apply`)._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `dependency`
 - **Quelle:** [skills/dependency-audit/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/dependency-audit/SKILL.md)
 
 ---
 
-# Dependency Audit
+## Dependency Audit
 
 Run a CVE and optional license audit against every dependency manifest the current project ships, and produce a single severity-sorted report. This skill reports and recommends; it never upgrades, pins, or removes dependencies on its own.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language from their message and respond in it. The report itself uses English section headings (so downstream tooling can parse it reliably); prose around the report is localised.
 
-## Inputs
+### Inputs
 
 - **Repo root**: default is the current working directory.
 - **License audit toggle**: opt-in via the caller ("also check licenses," "include license compliance"). Off by default because it's slower and often needs an allowlist the project doesn't yet declare.
 - **Severity floor**: defaults to `low` (report every finding). Caller may narrow to `medium` or `high` to de-noise pre-release gates.
 
-## Operation
+### Operation
 
-### Step 1: Detect project kind
+#### Step 1: Detect project kind
 
 Look in the repo root and obvious subroots (`backend/`, `frontend/`, `packages/*`, `apps/*`):
 
@@ -42,7 +41,7 @@ If the project has no detectable manifest, stop and report clearly. Don't guess.
 
 Record every subroot where a manifest was found; audits run per subroot so the report can attribute findings.
 
-### Step 2: Prefer Taskfile targets when they exist
+#### Step 2: Prefer Taskfile targets when they exist
 
 If the repo has a `Taskfile.yml` (or `Taskfile.yaml`) at the root, check for existing audit-named targets before invoking auditors directly:
 
@@ -54,7 +53,7 @@ When a target exists and it wraps the same auditor you'd otherwise run, invoke i
 
 If no matching target exists, call the auditor directly.
 
-### Step 3: Run auditors
+#### Step 3: Run auditors
 
 Run every detected auditor per subroot. Use `--json` / equivalent machine-readable output where available; fall back to text when necessary.
 
@@ -65,7 +64,7 @@ Run every detected auditor per subroot. Use `--json` / equivalent machine-readab
 
 Record per finding: `package`, `installed_version`, `advisory_id` (GHSA/CVE/PYSEC), `severity` (`critical` / `high` / `medium` / `low` / `unknown`), `path` (direct or transitive), `fixed_in`, `summary_url`.
 
-### Step 4 (optional): Run a license audit
+#### Step 4 (optional): Run a license audit
 
 Only when the caller asked for it:
 
@@ -80,19 +79,19 @@ Compare the discovered licenses against the project's allowlist. Locations to ch
 
 If no allowlist exists, flag every non-permissive license (GPL / AGPL / LGPL / SSPL / unknown) as `review`, not as failure. Don't invent a policy.
 
-### Step 5: Render the report
+#### Step 5: Render the report
 
 ```
-# Dependency Audit
+## Dependency Audit
 
 Scope: <repo root>, <n> manifests across <m> subroots
 Severity floor: <level>
 License audit: <on|off>
 Auditors run: <list>
 
-## Findings (sorted: critical → high → medium → low)
+### Findings (sorted: critical → high → medium → low)
 
-### <severity> — <count>
+#### <severity> — <count>
 - **<package>@<installed_version>** (subroot: <path>, path: direct|transitive via <parent>)
   - Advisory: <GHSA / CVE / PYSEC id> — <short summary>
   - Fixed in: <version range or "no fix yet">
@@ -100,11 +99,11 @@ Auditors run: <list>
 
 (repeat per finding)
 
-## License review
+### License review
 <only when license audit was requested>
 - **<package>@<version>**: <license> — <review reason>
 
-## Health
+### Health
 - Total findings: <n> (critical: <x>, high: <y>, medium: <z>, low: <w>)
 - Python manifests audited: <list>
 - Node manifests audited: <list>
@@ -114,7 +113,7 @@ Auditors run: <list>
 
 Sort findings by severity first, then package name alphabetically, so diffs of the rendered report stay stable across runs.
 
-### Step 6: Offer follow-up actions
+#### Step 6: Offer follow-up actions
 
 Don't execute these without explicit confirmation:
 
@@ -122,7 +121,7 @@ Don't execute these without explicit confirmation:
 - For findings without a fix yet: offer to add the advisory to the auditor's ignore list with a `valid-until` date (for example the `--ignore-vuln` argument of `pip-audit` wired into a Taskfile target) so the gate stays meaningful.
 - For license `review` entries: offer to draft an `.license-allowlist.txt` with the accepted licenses the user names.
 
-## Gotchas
+### Gotchas
 
 - **`pip-audit` and `npm audit` exit codes don't agree on what counts as a finding.** `pip-audit` exits non-zero on any vulnerability; `npm audit` exits non-zero only when the vulnerability is at or above its `--audit-level` threshold (default `low`). When the skill aggregates per-ecosystem results, treat exit-code parsing as a fallback signal; the JSON output is the source of truth.
 - **`pnpm audit` and `yarn audit` use different JSON shapes than `npm audit`.** A naïve "parse `npm audit --json`" pipeline misses both. Detect the package manager from the lockfile (`pnpm-lock.yaml` / `yarn.lock` / `package-lock.json`) before choosing the audit invocation; don't fall back silently to `npm audit` against a `pnpm`-managed project, because the result will be a clean report based on a missing `node_modules/` instead of a real audit.
@@ -130,7 +129,7 @@ Don't execute these without explicit confirmation:
 - **License-compliance scanners pull from external metadata** (PyPI / npm registry); a transient registry outage produces a false "no findings" report rather than a clear error. Re-run on transient HTTP 5xx; only report `clean` when the run reached the registry successfully.
 - **Direct vs transitive attribution requires the lockfile.** Without the lockfile, the audit can only flag the surface that the manifest declares; transitive vulnerabilities don't surface. The skill stops and reports when no lockfile is present rather than producing a misleading direct-only report.
 
-## Hard rules
+### Hard rules
 
 - **Never** modify dependency manifests, lockfiles, or ignore lists without explicit user confirmation. This skill reports; mutations are a follow-up step.
 - **Never** upgrade dependencies autonomously, even when a fix version is obvious. That's an author decision with test-suite consequences.
@@ -141,7 +140,7 @@ Don't execute these without explicit confirmation:
 - **Always** attribute every finding to the subroot whose manifest caused it, so consumers with monorepos can act on the right team / package.
 - **Always** sort findings deterministically (severity then package name) so the report diffs cleanly.
 
-## Rationale
+### Rationale
 
 This is a skill, not an agent, because:
 

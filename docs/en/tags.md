@@ -2,7 +2,6 @@
 
 Cross-reference: each tag links to every skill and agent that declares it.
 
-
 ## `audience`
 
 - [audience-doc-author](agents/nolte-shared/audience-doc-author.md) — nolte-shared

@@ -2,29 +2,28 @@
 
 _Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `pull-request`
 - **Quelle:** [skills/pull-request-merge/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/pull-request-merge/SKILL.md)
 
 ---
 
-# Pull Request Merge
+## Pull Request Merge
 
 Promotes an open draft pull request (typically the one opened by `pull-request-create`) to a merged state on `develop`. This skill is the counterpart to `pull-request-create`: that skill opens the PR; this skill lands it. It honors `spec/project/pull-request-workflow/<canonical_language>.md`, `spec/project/branching-model/<canonical_language>.md`, and `spec/project/workflow-health/<canonical_language>.md` end-to-end: `enforce_admins: true` is respected, `--squash` is the only merge strategy, and failing required checks route to workflow-health triage rather than to a waiver.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Externally-visible mutations gate on user confirmation** — flipping draft → ready, applying the `automerge` label, and (in the fallback path) calling `gh pr merge --squash --auto` all act on a shared GitHub PR; mid-flow user gating is core to the contract and would be lost in an agent's fire-and-forget shape.
 - **Orchestrator that chains other skills** — this skill dispatches `review` and (conditionally) `security-review` mid-flow, then conditionally hands off to `workflow-health` triage on failure; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
 - **Wait mode requires visible status updates per round** — bounded polling for required-check completion has a hard "every wait round produces a visible status line" rule, which only works inside a skill that stays in the main conversation.
 - Counter-dimension considered: a tool-restricted agent (read + a single `gh` Bash) could perform the verification half (steps 1, 4, 7) cleanly, but the externally-visible-mutation half (steps 5, 6) needs the user in the loop — keeping the whole flow in one skill is simpler than a forced split.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. All `git` and `gh` invocations, as well as labels applied to the PR, remain English so that portfolio automation (release-drafter, boring-cyborg, the `nolte/gh-plumbing` reusable-automerge) stays consistent across repositories.
 
-## Preconditions
+### Preconditions
 
 Before running any `git` or `gh` command, confirm:
 
@@ -34,9 +33,9 @@ Before running any `git` or `gh` command, confirm:
 - Working tree is clean (`git status --porcelain` returns no lines). Uncommitted changes block the skill; commit, stash, or hand back to the user.
 - The feature branch contains `origin/develop`'s tip (`git fetch origin develop && git merge-base --is-ancestor origin/develop HEAD`). If the branch lags, report the lag and hand back to the user; the skill doesn't silently rebase or merge `develop` into the feature branch.
 
-## Operations
+### Operations
 
-### 1. Inspect the PR and environment
+#### 1. Inspect the PR and environment
 
 Run in parallel:
 
@@ -47,13 +46,13 @@ Run in parallel:
 
 Confirm the PR is open, draft, targets `develop`, and reports `mergeable: MERGEABLE`. If `mergeable: CONFLICTING`, stop and hand back to the user—conflicts are resolved in the working tree, not by this skill.
 
-### 2. Delegate pre-merge review
+#### 2. Delegate pre-merge review
 
 Invoke the `review` skill with the PR number so it performs a final review of the diff (`Skill(skill="review")`). Wait for its report. If the review raises any blocking finding, surface it to the user verbatim and stop—don't flip the draft or merge until the user resolves the finding or explicitly overrides it.
 
 If the diff touches a security-sensitive path—any of `.github/workflows/`, `.github/settings.yml`, `**/*.sh`, files that contain `secret` / `token` / `password` references, auth or signing code—additionally invoke the `security-review` skill. Block on any blocking finding from that skill the same way.
 
-### 3. Derive and apply labels
+#### 3. Derive and apply labels
 
 Build a candidate label set and intersect it with the labels that actually exist in the repository (collected in step 1). **Never create a new label**; a candidate label that doesn't exist is reported as a portfolio gap to close via `.github/settings.yml` (directly or via `nolte/gh-plumbing:.github/commons-settings.yml`), not silently added.
 
@@ -76,7 +75,7 @@ gh pr edit <number> --add-label <label1> --add-label <label2> …
 
 Report the labels that were applied and any candidates that were skipped because no matching label existed.
 
-### 4. Verify required checks
+#### 4. Verify required checks
 
 Re-run `gh pr checks <number>` after the label edit. Require **every** required status check declared for `develop` in `.github/settings.yml` to report `SUCCESS`. Three outcomes:
 
@@ -84,7 +83,7 @@ Re-run `gh pr checks <number>` after the label edit. Require **every** required 
 - **At least one pending** → default behavior is to report the pending checks and stop; the user reruns the skill once checks complete. When the user opts in to **wait mode** (see "Wait mode" below), re-check the same `gh pr checks` call at the configured interval (≥60s) until every required check is green or the configured wall-clock timeout (≤15min) is reached. On timeout, stop and report the still-pending checks just like the default path. **Polling is permitted only inside wait mode**; outside wait mode, the no-poll rule still applies.
 - **At least one failed** → don't flip draft and don't merge, even in wait mode. Hand off to the `workflow-health` triage flow documented in `spec/project/workflow-health/<canonical_language>.md`: classify the failure (`defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`) and route the fix through a separate PR. Never retry the merge by re-running failed checks blindly—that's drift per the workflow-health spec.
 
-### 5. Flip draft → ready
+#### 5. Flip draft → ready
 
 Once every required check is green:
 
@@ -94,7 +93,7 @@ gh pr ready <number>
 
 Verify the flip (`gh pr view --json isDraft` returns `false`).
 
-### 6. Trigger automerge
+#### 6. Trigger automerge
 
 Apply the repository label `automerge` so that the `automerge.yaml` workflow (backed by the `nolte/gh-plumbing` reusable-automerge workflow and `pascalgn/automerge-action`) squash-merges the PR as soon as every required status check on the head commit is green and every branch-protection rule for `develop` is satisfied. This is the primary path per `spec/project/pull-request-workflow/<canonical_language>.md` §Automerge trigger protocol.
 
@@ -115,7 +114,7 @@ gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=automerg
 - Never pass `--admin`. There is no admin-override path: `enforce_admins: true` on `develop` has no exception per the pull-request-workflow spec.
 - Never pass `--merge` or `--rebase`. Those merge strategies are explicitly disabled in `.github/settings.yml` for repositories under this spec.
 
-### 7. Verify the merge landed
+#### 7. Verify the merge landed
 
 The `automerge.yaml` workflow exits `SUCCESS` even when `pascalgn/automerge-action`'s internal `mergeResult` is `merge_failed` (for example when the reusable workflow's `MERGE_METHOD` default doesn't match the repo's allowed strategy, or when the `uses:` tag points to a `nolte/gh-plumbing` version that lacks the `MERGE_METHOD: squash` override). A green check rollup is **not** proof the merge happened. Verify in two passes:
 
@@ -144,7 +143,7 @@ If the logs contain `mergeResult: 'merge_failed'` or `Failed to merge PR: …`, 
 
 Report back: PR URL, merged-at timestamp, merge commit SHA on `origin/develop`, the labels that were applied, and—if 7b caught a silent no-op—the workflow-health classification and the remediation the user needs to take next.
 
-### 8. Clean up local state
+#### 8. Clean up local state
 
 Once the PR is merged, offer (don't automatically execute) the following cleanup to the user:
 
@@ -159,11 +158,11 @@ gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<feature-branch>
 
 Never run `git push origin --delete …` or `gh api -X DELETE` without explicit user confirmation. Never make remote-branch deletion part of the automatic merge flow—the platform setting is the routine path, manual deletion is only a catch-up.
 
-## Wait mode
+### Wait mode
 
 The skill is single-shot by default: when step 4 finds pending checks or step 7a finds the PR still `OPEN`, the skill reports and stops; the user re-invokes once GitHub is in the next state. **Wait mode** is an opt-in that lets the skill wait for state transitions inside a single invocation, bounded by hard caps (interval ≥60s, wall-clock ≤15 min, ≤10 retries per wait point, visible status line per round, failure short-circuits to workflow-health). Read `references/wait-mode.md` when the user opts in via `--wait` or an unambiguous "wait until X" instruction in the prompt — the reference covers activation, every cap with its rationale, the per-step implementation pattern (step 4 vs. step 7a), and the prompt-cache trade-off that justifies the bounds.
 
-## Hard rules
+### Hard rules
 
 - **Never** flip a draft to ready while any required check is pending or failing. Failures route to the `workflow-health` triage flow, not to a waiver.
 - **Never** pass `--admin` to `gh pr merge`. `enforce_admins: true` on `develop` has no exception path.

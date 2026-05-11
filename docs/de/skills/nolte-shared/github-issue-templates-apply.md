@@ -2,29 +2,28 @@
 
 _Apply spec/project/github-issue-templates/<canonical_language>.md to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests ("Issue-Templates für dieses Repo erzeugen", "GitHub-Issue-Forms anlegen", "Bug- und Feature-Template scaffolden", "spec github-issue-templates anwenden"). Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`)._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/github-issue-templates-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/github-issue-templates-apply/SKILL.md)
 
 ---
 
-# GitHub Issue Templates Apply
+## GitHub Issue Templates Apply
 
 Operationalises `spec/project/github-issue-templates/<canonical_language>.md` against a target repository: classifies the project type, reads or produces the audience artefact, derives the triage-question set, and writes `.github/ISSUE_TEMPLATE/*.yml` plus `config.yml` as GitHub Issue Forms — atomically and only after explicit user confirmation of the derivation.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Per-template user approval is the contract** — the spec mandates that the derivation (project type, audiences, chosen templates, project-specific fields) is surfaced and confirmed before any file is written; an agent's fire-and-forget shape would lose that gate.
 - **Output flows back into the main conversation** — the project-type classification, the chosen field set per template, and the drift report on re-runs all surface in the conversation so the user can correct them; isolating them in a structured-report boundary would obscure the per-decision approval surface.
 - **Orchestrator role** — when no audience artefact exists, this skill dispatches the `audience-identify` skill before generating templates; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
 - Counter-dimension considered: a narrow YAML-form-generator agent could specialise on Issue Forms syntax, but the load-bearing dimension is the multi-step approval dialogue (project type → audience → chosen templates → fields → write), not the YAML mechanics — skill wins.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. Generated `.github/ISSUE_TEMPLATE/*.yml` and `config.yml` content (including comments inside the YAML) is always written in **English**, regardless of the repo's documentation language — the GitHub issue UI is English-only in practice and translating template strings makes them mismatch the surrounding chrome. The spec's "Storage and format" requirements pin this rule.
 
-## Preconditions
+### Preconditions
 
 Before doing anything:
 
@@ -33,11 +32,11 @@ Before doing anything:
 - Check for uncommitted changes under `.github/ISSUE_TEMPLATE/`. If dirty, report and ask whether to stash, commit, or abort — never overwrite uncommitted work.
 - Verify that `pull-request-workflow` is in scope for PR-template authoring and that this skill stays away from `.github/pull_request_template.md`, `CODEOWNERS`, `SECURITY.md`, `SUPPORT.md`, and `.github/DISCUSSION_TEMPLATE/`.
 
-## Operations
+### Operations
 
 Operations 3 to 5 form a stacked Plan-validate-execute cycle: Operation 3 self-validates the working set against the strictness profile before disclosure, Operation 4 surfaces the plan for explicit user confirmation, and Operation 5 writes atomically with rollback on partial failure. Operation 6 closes the loop on re-runs by detecting drift instead of silently overwriting.
 
-### 1. Detect project type
+#### 1. Detect project type
 
 Walk the spec's six derivation signals in order; stop at the first match. Read these files via the standard read tools, never via heuristics on filenames alone:
 
@@ -54,7 +53,7 @@ Edge handling:
 - **Hardware-touching applications** (cameras, sensors, robotics, embedded — for example `kamerplanter`): in addition to the Python-application bundle, the spec requires hardware fields (model, firmware). Detect via the presence of references to hardware libraries (`gphoto2`, `picamera2`, `pyserial`, `RPi.GPIO`, `smbus`, `pyudev`) in `pyproject.toml` / `requirements*.txt` or via the user's confirmation.
 - **Unknown** — if no signal matches, stop and ask the user to declare the project type explicitly. Never proceed with a generic fallback set.
 
-### 2. Resolve audience profile
+#### 2. Resolve audience profile
 
 The spec requires an identified *reporter* audience and *triager* audience before fields are derived.
 
@@ -62,7 +61,7 @@ The spec requires an identified *reporter* audience and *triager* audience befor
 - If no artefact exists or it doesn't cover reporters and triagers, dispatch the `audience-identify` skill to produce one before continuing. Do not invent audiences inline; the spec forbids it.
 - When the artefact exists but is older than the most recent material change to the repo (new public API, new deployment target, new regulated data class), prompt the user to run `audience-identify` in `revisit` mode before continuing — stale audiences silently invalidate the derived field set.
 
-### 3. Derive templates and fields
+#### 3. Derive templates and fields
 
 For each baseline template plus any project-type-specific extras, list the questions a triager will ask within the first five minutes after the issue arrives. Those questions become required Issue Forms fields.
 
@@ -86,7 +85,7 @@ Always include a single required search-before-filing acknowledgement at the top
 
 Before moving to step 4, run a self-validation pass against the working set: count required fields per template, confirm the substantive required input on `feature_request.yml` is a `textarea`, and confirm no closed-taxonomy field is `required: true` on the feature template. If any of these fails, fix the working set; do not surface a non-conforming plan to the user.
 
-### 4. Disclose the plan and confirm
+#### 4. Disclose the plan and confirm
 
 Before writing any file, surface the derivation to the user as a single block:
 
@@ -99,7 +98,7 @@ Before writing any file, surface the derivation to the user as a single block:
 
 Block writing until the user confirms — either "apply all" or per-template approval. Do not write a partial set on partial approval; the spec mandates an atomic apply (see Hard rules).
 
-### 5. Apply
+#### 5. Apply
 
 When the user has confirmed, write `.github/ISSUE_TEMPLATE/` in a single operation:
 
@@ -113,7 +112,7 @@ When the user has confirmed, write `.github/ISSUE_TEMPLATE/` in a single operati
 
 Atomicity: hold every file write until the full set is ready, then write them in one batch. If any single write fails, roll back by deleting the partially written files so the directory never lands in a half-configured state.
 
-### 6. Re-audit and drift detection
+#### 6. Re-audit and drift detection
 
 Re-running the skill on a repo that already has templates **MUST** detect drift, not silently overwrite:
 
@@ -127,7 +126,7 @@ Present the diff and ask per-item ("apply", "skip", "skip and remember"). After 
 
 A clean re-run on a conformant repo MUST produce no diff.
 
-## Gotchas
+### Gotchas
 
 - The GitHub issue UI is English-only in practice. Even when the repo's docs are in another language, the templates stay English; mixing languages produces visibly inconsistent forms (translated form labels next to English chrome).
 - `blank_issues_enabled` defaults to `true` when the key is absent. Always write the key explicitly, even when setting it to `true`, so the intent is visible and the `config.yml` survives audits.
@@ -140,7 +139,7 @@ A clean re-run on a conformant repo MUST produce no diff.
 - `render: shell` (and `render: python`, `render: javascript`, …) only takes effect on `textarea`; on `input` it is silently ignored.
 - `contact_links` is a flat list under `config.yml`'s top level — not nested under any template. Putting it inside a `body:` block makes the chooser drop it without an error message.
 
-## Hard rules
+### Hard rules
 
 - Never write any file under `.github/ISSUE_TEMPLATE/` without first surfacing the full derivation (project type, audiences, templates, fields, labels, assignees) to the user and getting an explicit confirmation.
 - Never leave `.github/ISSUE_TEMPLATE/` in a half-configured state — apply is atomic. On any single-file failure, roll back the partial set.

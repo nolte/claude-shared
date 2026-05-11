@@ -2,29 +2,28 @@
 
 _Augments the open release-drafter draft on develop with project-context-aware sections per spec/project/release-skill-layer/<canonical_language>.md §\"Skill A — Draft notes curation\". Reads the project's audience artefact, derives a section bundle from the detected project type, wraps the augmentation in stable HTML-comment markers so re-runs update in place, and writes the body back via `gh release edit <tag> --notes`. Invoke when the user asks to \"curate the release notes\", \"augment the draft release with project context\", \"shape the release notes for this repo\", or equivalent German-language requests. Don't use to publish the release (use `release-publish-trigger`), to identify audiences (use `audience-identify`), to draft notes from scratch (use the `audience-doc-author` agent), or to scaffold issue / PR templates (use `github-issue-templates-apply`)._
 
-
 - **Plugin:** `nolte-shared`
 - **Tags:** `release`
 - **Source:** [skills/release-notes-curate/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/release-notes-curate/SKILL.md)
 
 ---
 
-# Release Notes Curate
+## Release Notes Curate
 
 Operationalises `spec/project/release-skill-layer/<canonical_language>.md` §"Skill A — Draft notes curation" against a target repository: classifies the project type, reads the audience artefact, derives a project-context section bundle, wraps it in stable markers below the `release-drafter` body, and writes back via `gh release edit --notes`. Idempotent on re-runs.
 
-## Why this is a skill, not an agent
+### Why this is a skill, not an agent
 
 - **Per-write user approval is the contract** — the spec mandates a disclose-and-confirm gate before any `gh release edit --notes`, because the body is externally visible on the GitHub release page; an agent's fire-and-forget shape would lose that gate.
 - **Output flows back into the main conversation** — the project-type classification, the section bundle preview, and the diff between existing and augmented body all surface in the conversation so the operator can correct the augmentation before commit.
 - **Orchestrator role** — when no audience artefact exists, this skill dispatches `audience-identify` first; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
 - Counter-dimension considered: a narrow Markdown-formatter agent could specialise on section composition, but the load-bearing dimension is the multi-step approval dialogue (project type → audience → bundle → diff → write), not the prose mechanics — skill wins.
 
-## User-language policy
+### User-language policy
 
 Detect the user's language and respond in it. The release notes themselves stay in **English**, regardless of the repo's documentation language — the GitHub release UI is English-only in practice and translated section headings would mismatch the surrounding chrome.
 
-## Preconditions
+### Preconditions
 
 Before doing anything:
 
@@ -33,11 +32,11 @@ Before doing anything:
 - Locate `spec/project/release-skill-layer/` — either in the target repo or, when absent, via the `nolte-shared` plugin install path. Stop and ask which spec source to use if neither is reachable.
 - Confirm the repo ships `release-drafter.yml` and `release-publish.yml` per `branching-model` and `release-automation`. If `release-drafter.yml` is missing, the operator should adopt `release-automation` first; this skill stops and reports.
 
-## Operations
+### Operations
 
 Operations 4 to 6 form a stacked Plan-validate-execute cycle: Operation 4 self-validates the bundle against the audience artefact and the spec's content rules before disclosure, Operation 5 surfaces the planned diff for explicit operator confirmation, and Operation 6 writes via `gh release edit --notes` and verifies the marker pair survived the round-trip. Operation 7 closes the loop on re-runs by detecting in-place updates instead of duplicating the augmentation block.
 
-### 1. Resolve the open draft
+#### 1. Resolve the open draft
 
 - Run `gh release list --json isDraft,tagName,targetCommitish,createdAt,name`.
 - Filter to entries where `isDraft == true` and `targetCommitish` equals the repo's default branch (`gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` — typically `develop`).
@@ -46,7 +45,7 @@ Operations 4 to 6 form a stacked Plan-validate-execute cycle: Operation 4 self-v
   - more than one draft matches: list all candidate tags and ask which one to operate on (the spec forbids a "newest wins" heuristic);
   - the draft's tag isn't reachable from the default branch tip (`git merge-base --is-ancestor <draft-target-sha> origin/develop`): the draft is stale relative to `develop`, the operator should re-run `release-drafter.yml` first.
 
-### 2. Detect project type
+#### 2. Detect project type
 
 Walk the same six derivation signals used by `github-issue-templates-apply`, in order; stop at the first match. Read the files via the standard read tools — never via filename heuristics alone:
 
@@ -61,7 +60,7 @@ When `.github/release-skill-layer.yml` declares an explicit `project_type:` valu
 
 When no signal matches, stop and ask the operator to declare the project type manually. Never proceed with a generic fallback bundle.
 
-### 3. Resolve audience artefact
+#### 3. Resolve audience artefact
 
 The spec requires that every section the skill writes traces back to an audience need.
 
@@ -71,7 +70,7 @@ The spec requires that every section the skill writes traces back to an audience
 
 The skill **MUST NOT** invent audience entries inline. Missing audiences become an `## Open questions` note inside the augmentation block, not fabricated content.
 
-### 4. Derive the project-context bundle
+#### 4. Derive the project-context bundle
 
 Read `references/project-bundles.md` for the canonical section bundle per project type. Bundles are starting points; the audience artefact may motivate further sections or trim listed sections that no audience needs.
 
@@ -87,7 +86,7 @@ Attribute every entry to a concrete commit SHA, PR number, or touched path so re
 
 **Self-validation pass** before moving to step 5: count required sections vs the audience artefact's primary audiences; verify every primary audience maps to at least one section; if a gap exists, record it in the augmentation block's `## Open questions` subsection rather than fabricating coverage.
 
-### 5. Build the augmentation block
+#### 5. Build the augmentation block
 
 Compose the augmentation in this exact shape, between the markers:
 
@@ -96,23 +95,23 @@ Compose the augmentation in this exact shape, between the markers:
 
 ---
 
-## Project context
+### Project context
 
-### Audiences served
+#### Audiences served
 
 - **<Primary audience 1>** → addressed by §<section-name>(s)
 - **<Primary audience 2>** → addressed by §<section-name>(s)
 
-### <Section 1 from bundle>
+#### <Section 1 from bundle>
 
 - <entry attributed to commit SHA / PR # / path>
 - <…>
 
-### <Section 2 from bundle>
+#### <Section 2 from bundle>
 
 - <…>
 
-### Open questions
+#### Open questions
 
 - <gap noted during step 4 self-validation, when applicable>
 
@@ -121,7 +120,7 @@ Compose the augmentation in this exact shape, between the markers:
 
 Place the block **below** the `release-drafter` Conventional-Commits sections, separated by a horizontal rule (`---`). Skip the `## Audiences served` subsection when no primary audience is recorded; skip `## Open questions` when no gap was detected.
 
-### 6. Disclose, confirm, write
+#### 6. Disclose, confirm, write
 
 Before any write, surface to the operator:
 
@@ -138,7 +137,7 @@ On confirmation:
 - **Never** call `gh release edit --draft=false` from this skill — that path belongs to `release-publish-trigger` and `release-publish.yml`.
 - Re-read the draft body via `gh release view <tag> --json body` and verify exactly one `<!-- release-skill-layer:project-context-start -->` and one `<!-- release-skill-layer:project-context-end -->` marker remain. Refuse to declare success otherwise.
 
-### 7. Re-run drift detection
+#### 7. Re-run drift detection
 
 When the skill is re-invoked on a draft that already carries the marker pair:
 
@@ -149,7 +148,7 @@ When the skill is re-invoked on a draft that already carries the marker pair:
 
 A clean re-run on an already-curated draft with no new commits MUST produce no diff.
 
-## Gotchas
+### Gotchas
 
 - The release UI is English-only in practice. Even when the repo's docs are German, release notes stay English.
 - `release-drafter` re-runs after Skill A may overwrite the body. The marker pair should survive because `release-drafter` only generates Conventional-Commits sections above the divider, but the spec's open question on this stays open until verified against `nolte/gh-plumbing`'s `reusable-release-drafter.yml`. If a re-run is detected to have stripped the markers, the skill simply re-applies the augmentation and reports the loss as an open `workflow-health` item.
@@ -157,7 +156,7 @@ A clean re-run on an already-curated draft with no new commits MUST produce no d
 - `gh release edit --draft=false` is a separate flag from `--notes` and is the publish operation. This skill never sets it, even by accident: refuse the operation if any code path would compose `--draft=false`.
 - The marker comment text is the **contract** with re-runs and any other tooling that may inspect the body. Never change the marker strings; never wrap them in additional whitespace; never duplicate them.
 
-## Hard rules
+### Hard rules
 
 - Never write to a release outside the open `release-drafter` draft on the default branch.
 - Never call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id>` with `draft=false`, or any other body that flips the draft state from this skill.
