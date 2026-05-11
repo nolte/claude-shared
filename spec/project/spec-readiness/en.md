@@ -29,41 +29,44 @@ Specifications under `spec/<topic>/<slug>/` are the source of truth for downstre
 - **MAY** narrow a run to a single spec or a single topic when the trigger is itself narrow (for example a PR that changes one spec)
 
 ### Dimension 1—Contradiction detection
-- **MUST** flag as critical any MUST / MUST NOT pair inside the same spec that covers the same subject but declares opposite requirements
-- **MUST** flag as critical any MUST in spec A that can't simultaneously hold with a MUST in spec B; pairs that depend on scope carve-outs are resolved by making the carve-out explicit, not by ignoring the contradiction
-- **MUST** flag as warning any MUST versus SHOULD pair inside the same spec that points in opposite directions; the MUST always wins, but the SHOULD is misleading to readers and is a finding
-- **MUST** flag as warning any Goal that directly contradicts a Non-Goal inside the same spec (for example a goal implying outputs that the non-goals explicitly disclaim)
-- **SHOULD** flag as info chains of softening (a MAY that effectively reverses a SHOULD which was already conditional) when they make the rule-set opaque to a reader
+- **MUST** flag as Critical any MUST / MUST NOT pair inside the same spec that covers the same subject but declares opposite requirements
+- **MUST** flag as Critical any MUST in spec A that can't simultaneously hold with a MUST in spec B; pairs that depend on scope carve-outs are resolved by making the carve-out explicit, not by ignoring the contradiction
+- **MUST** flag as Warning any MUST versus SHOULD pair inside the same spec that points in opposite directions; the MUST always wins, but the SHOULD is misleading to readers and is a finding
+- **MUST** flag as Warning any Goal that directly contradicts a Non-Goal inside the same spec (for example a goal implying outputs that the non-goals explicitly disclaim)
+- **SHOULD** flag as Info chains of softening (a MAY that effectively reverses a SHOULD which was already conditional) when they make the rule-set opaque to a reader
 - **MAY** propose a resolution direction per finding—strengthen one rule, weaken the other, split the scope—without prescribing the final choice
 - **MUST NOT** declare a contradiction based on prose alone when no RFC-2119 verb is in play; plain prose inconsistencies are prose-lint concerns, not readiness concerns
 
 ### Dimension 2—Audience fit
 - **MUST** derive each spec's implicit readers from its prose (typical sets: implementers, reviewers, tooling authors, release managers, product owners, operators); the derivation is observation, not a blank-sheet audience analysis
 - **MUST** check that for every derived audience there is content the audience can act on—Requirements for implementers, Acceptance Criteria for reviewers, interface-level MUSTs for tooling authors, Open Questions surfaced for product owners
-- **MUST** flag as warning a spec whose audience can't be derived ("who is this written for?") or whose Requirements don't address the derived audience's decisions
-- **SHOULD** cross-reference an existing `audience-identify` artifact when the spec's module has one; if the spec addresses an audience the artifact names but the spec's Requirements don't meet it, the finding is a warning, not critical
-- **SHOULD** flag as info a spec whose audience is implicit but derivable only with effort; the fix is usually a one-line "readers:" hint, not a restructure
+- **MUST** flag as Warning a spec whose audience can't be derived ("who is this written for?") or whose Requirements don't address the derived audience's decisions
+- **SHOULD** cross-reference an existing `audience-identify` artifact when the spec's module has one; if the spec addresses an audience the artifact names but the spec's Requirements don't meet it, the finding is a Warning, not Critical
+- **SHOULD** flag as Info a spec whose audience is implicit but derivable only with effort; the fix is usually a one-line "readers:" hint, not a restructure
 - **MAY** point at `audience-identify` as the follow-up tool when a spec's module has no audience artifact and the readiness audit can't derive audiences confidently
 - **MUST NOT** create or author audience artifacts as part of this audit; that's out of scope (see §Delimitation)
 
 ### Dimension 3—Domain completeness
-- **MUST** verify that every Requirement has at least one Acceptance Criterion that's testable (measurable outcome, observable state, or enforceable gate)—a Requirement without a testable AC is a warning
-- **MUST** verify that every Acceptance Criterion traces back to a Requirement or a Goal—an orphan AC (can't be tied to any Requirement or Goal) is a warning
-- **MUST** classify every Open Question as either **load-bearing** (implementation or downstream work can't responsibly proceed without an answer) or **parking-lot** (nice-to-have refinement, downstream can proceed with a reasonable default); a load-bearing OQ in a spec that's being considered for promotion is a critical finding
-- **MUST** flag as critical any reference from spec A to spec B where spec B doesn't exist, or exists but doesn't contain the section the reference implies
-- **SHOULD** flag as warning every Goal without at least one matching Requirement—a Goal the spec then never operationalises is a misleading promise
-- **SHOULD** flag as info when the scope of a spec is ambiguous and no Non-Goals section carves it; the fix is usually adding three to five explicit non-goals
-- **MAY** flag as info Acceptance Criteria that are testable in principle but require infrastructure the portfolio doesn't yet have; these aren't blockers, but they warn consumers
+- **MUST** verify that every Requirement has at least one Acceptance Criterion that's testable (measurable outcome, observable state, or enforceable gate)—a Requirement without a testable AC is a Warning
+- **MUST** verify that every Acceptance Criterion traces back to a Requirement or a Goal—an orphan AC (can't be tied to any Requirement or Goal) is a Warning
+- **MUST** classify every Open Question as either **load-bearing** (implementation or downstream work can't responsibly proceed without an answer) or **parking-lot** (nice-to-have refinement, downstream can proceed with a reasonable default); a load-bearing OQ in a spec that's being considered for promotion is a Critical finding
+- **MUST** flag as Critical any reference from spec A to spec B where spec B doesn't exist, or exists but doesn't contain the section the reference implies
+- **SHOULD** flag as Warning every Goal without at least one matching Requirement—a Goal the spec then never operationalises is a misleading promise
+- **SHOULD** flag as Info when the scope of a spec is ambiguous and no Non-Goals section carves it; the fix is usually adding three to five explicit non-goals
+- **MAY** flag as Info Acceptance Criteria that are testable in principle but require infrastructure the portfolio doesn't yet have; these aren't Critical-class, but they warn consumers
 
 ### Severity scale
-- **MUST** adopt these three severity levels and use them consistently across all three dimensions:
-  - **critical**: direct MUST / MUST NOT contradiction inside or across specs; load-bearing Open Question in a spec being considered for promotion; reference to a non-existent spec section; cross-spec contradiction between two accepted specs
-  - **warning**: MUST vs SHOULD contradiction; unidentifiable audience; derived audience whose needs aren't addressed; Goal without a matching Requirement; Requirement without a testable Acceptance Criterion; orphan Acceptance Criterion
-  - **info**: softening-chain opacity; implicit but derivable audience; ambiguous scope with no Non-Goals; AC that requires not-yet-portfolio infrastructure
+- **MUST** use the canonical four-level severity scale defined in `spec/claude/review-plan/<canonical_language>.md` §Severity scale: `Critical` / `Warning` / `Suggestion` / `Info`, in Title Case
+- **MUST** map readiness findings to the scale per the patterns documented in §Dimension 1, 2, and 3 above:
+  - **Critical**: direct MUST / MUST NOT contradiction inside or across specs; load-bearing Open Question in a spec being considered for promotion; reference to a non-existent spec section; cross-spec contradiction between two accepted specs
+  - **Warning**: MUST vs SHOULD contradiction; unidentifiable audience; derived audience whose needs aren't addressed; Goal without a matching Requirement; Requirement without a testable Acceptance Criterion; orphan Acceptance Criterion
+  - **Info**: softening-chain opacity; implicit but derivable audience; ambiguous scope with no Non-Goals; AC that requires not-yet-portfolio infrastructure
+- **MAY** populate the `Suggestion` bucket from the canonical scale when a finding identifies a one-line fix or stylistic improvement that doesn't fit the three readiness patterns above; readiness audits typically produce only `Critical` / `Warning` / `Info`, but the bucket exists in the canonical scale and remains available
+- **MUST NOT** invent additional severity levels beyond the canonical four; consistency across audit-producing specs is the single reason this scale lives in `review-plan` rather than being redefined per spec
 - **MUST NOT** downgrade a severity on local judgement alone; disagreement with the classification is a documented waiver recorded in the audit artifact, not a silent reclassification
 
 ### Triggers
-- **MUST** run before promoting any spec out of `Status: draft`; a spec with unresolved critical readiness findings **MUST NOT** be promoted until those findings are resolved or explicitly waived
+- **MUST** run before promoting any spec out of `Status: draft`; a spec with unresolved Critical readiness findings **MUST NOT** be promoted until those findings are resolved or explicitly waived
 - **MUST** run at least once per calendar quarter for every spec whose status is still `draft`; drafts that age without reassessment drift
 - **SHOULD** run as a same-merge or follow-up partial audit when a PR modifies a spec (new MUST, modified AC, new scope); the partial audit scope matches the PR's touched specs
 - **MAY** run across the entire portfolio on the same cadence as `spec-drift-audit`; the two are complementary quarterly passes and can share the audit ritual without sharing scope
@@ -88,10 +91,10 @@ Specifications under `spec/<topic>/<slug>/` are the source of truth for downstre
 
 ## Acceptance Criteria
 - [ ] Every spec in the portfolio with a non-empty `## Requirements` or `## Acceptance Criteria` section has at least one readiness-audit entry in the repository's audit history since this spec was introduced, or a documented exception
-- [ ] No spec with unresolved critical readiness findings has been promoted out of `Status: draft` since this spec was introduced—either the finding is resolved, or the promotion is blocked, or a waiver is recorded in the audit artifact
+- [ ] No spec with unresolved Critical readiness findings has been promoted out of `Status: draft` since this spec was introduced—either the finding is resolved, or the promotion is blocked, or a waiver is recorded in the audit artifact
 - [ ] The audit artifact for any readiness run records the scope (spec slugs audited), the Git revision audited, the per-spec severity counts, and the full finding list
-- [ ] No cross-spec contradiction between two specs that are both promoted out of draft remains in the most recent audit without a documented resolution
-- [ ] The agent `agents/spec-readiness-reviewer.md` produces findings that map 1-to-1 onto the three dimensions and the severity scale declared here, so audit artifacts can be generated mechanically
+- [ ] No cross-spec contradiction between two specs that are both promoted out of draft remains in the most recent audit without a documented resolution—either the contradiction is resolved in the source specs or a waiver is recorded in the audit artifact's `## Processing log` per `spec/claude/review-plan/` §Severity scale
+- [ ] The agent `agents/spec-readiness-reviewer.md` produces findings that map 1-to-1 onto the three dimensions and the canonical severity scale this spec cites (defined in `spec/claude/review-plan/` §Severity scale), so audit artifacts can be generated mechanically
 - [ ] No audit run in any repository modified any spec file; the read-only discipline holds in practice, not just in this spec
 - [ ] Readiness-audit artifacts for single-spec promotion runs conform to the `review-plan` artifact format, so they're consumable by the same review-closure machinery as skill- and agent-review
 

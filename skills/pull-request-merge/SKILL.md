@@ -1,11 +1,19 @@
 ---
 name: pull-request-merge
 description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`.
+tags: [pull-request]
 ---
 
 # Pull Request Merge
 
 Promotes an open draft pull request (typically the one opened by `pull-request-create`) to a merged state on `develop`. This skill is the counterpart to `pull-request-create`: that skill opens the PR; this skill lands it. It honors `spec/project/pull-request-workflow/<canonical_language>.md`, `spec/project/branching-model/<canonical_language>.md`, and `spec/project/workflow-health/<canonical_language>.md` end-to-end: `enforce_admins: true` is respected, `--squash` is the only merge strategy, and failing required checks route to workflow-health triage rather than to a waiver.
+
+## Why this is a skill, not an agent
+
+- **Externally-visible mutations gate on user confirmation** — flipping draft → ready, applying the `automerge` label, and (in the fallback path) calling `gh pr merge --squash --auto` all act on a shared GitHub PR; mid-flow user gating is core to the contract and would be lost in an agent's fire-and-forget shape.
+- **Orchestrator that chains other skills** — this skill dispatches `review` and (conditionally) `security-review` mid-flow, then conditionally hands off to `workflow-health` triage on failure; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
+- **Wait mode requires visible status updates per round** — bounded polling for required-check completion has a hard "every wait round produces a visible status line" rule, which only works inside a skill that stays in the main conversation.
+- Counter-dimension considered: a tool-restricted agent (read + a single `gh` Bash) could perform the verification half (steps 1, 4, 7) cleanly, but the externally-visible-mutation half (steps 5, 6) needs the user in the loop — keeping the whole flow in one skill is simpler than a forced split.
 
 ## User-language policy
 
@@ -51,7 +59,7 @@ Candidate sources:
   - paths under `spec/` → candidates `area:spec`, `spec`
   - paths under `skills/` → candidates `area:skill`, `skills`
   - paths under `agents/` → candidates `area:agent`, `agents`
-  - paths under `.github/workflows/` or `.github/settings.yml` → candidates `area:ci`, `ci`, `github-actions`
+  - paths under `.github/workflows/` or `.github/settings.yml` → candidates `cicd`
   - paths under `docs/` or `mkdocs.yml` → candidates `area:docs`, `documentation`
   - paths under `.claude/`, `.claude-plugin/`, or `CLAUDE.md` → candidates `area:claude`, `claude-code`
 
@@ -68,8 +76,8 @@ Report the labels that were applied and any candidates that were skipped because
 Re-run `gh pr checks <number>` after the label edit. Require **every** required status check declared for `develop` in `.github/settings.yml` to report `SUCCESS`. Three outcomes:
 
 - **All green** → proceed to step 5.
-- **At least one pending** → report the pending checks and stop. The user can rerun this skill once checks complete; don't poll or sleep here.
-- **At least one failed** → don't flip draft and don't merge. Hand off to the `workflow-health` triage flow documented in `spec/project/workflow-health/<canonical_language>.md`: classify the failure (`defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`) and route the fix through a separate PR. Never retry the merge by re-running failed checks blindly—that's drift per the workflow-health spec.
+- **At least one pending** → default behavior is to report the pending checks and stop; the user reruns the skill once checks complete. When the user opts in to **wait mode** (see "Wait mode" below), re-check the same `gh pr checks` call at the configured interval (≥60s) until every required check is green or the configured wall-clock timeout (≤15min) is reached. On timeout, stop and report the still-pending checks just like the default path. **Polling is permitted only inside wait mode**; outside wait mode, the no-poll rule still applies.
+- **At least one failed** → don't flip draft and don't merge, even in wait mode. Hand off to the `workflow-health` triage flow documented in `spec/project/workflow-health/<canonical_language>.md`: classify the failure (`defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`) and route the fix through a separate PR. Never retry the merge by re-running failed checks blindly—that's drift per the workflow-health spec.
 
 ### 5. Flip draft → ready
 
@@ -104,7 +112,7 @@ gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=automerg
 
 ### 7. Verify the merge landed
 
-The `automerge.yaml` workflow exits `SUCCESS` even when `pascalgn/automerge-action`'s internal `mergeResult` is `merge_failed` (for example when the reusable workflow's `MERGE_METHOD` default doesn't match the repo's allowed strategy, or when the `uses:` tag points to a pre-fix version of `nolte/gh-plumbing`). A green check rollup is **not** proof the merge happened. Verify in two passes:
+The `automerge.yaml` workflow exits `SUCCESS` even when `pascalgn/automerge-action`'s internal `mergeResult` is `merge_failed` (for example when the reusable workflow's `MERGE_METHOD` default doesn't match the repo's allowed strategy, or when the `uses:` tag points to a `nolte/gh-plumbing` version that lacks the `MERGE_METHOD: squash` override). A green check rollup is **not** proof the merge happened. Verify in two passes:
 
 **7a. Confirm PR and `develop` state directly.**
 
@@ -114,9 +122,9 @@ git fetch origin develop
 git log --oneline -1 origin/develop
 ```
 
-If `state == MERGED` and `mergeCommit.oid` appears on `origin/develop`, report back and proceed to step 8. If `state == OPEN` and at least one required check is still running, report the outstanding checks and stop—the merge will complete automatically, don't poll or sleep.
+If `state == MERGED` and `mergeCommit.oid` appears on `origin/develop`, report back and proceed to step 8. If `state == OPEN` and at least one required check is still running, the default behavior is to report the outstanding checks and stop—the merge will complete automatically once `pascalgn/automerge-action` sees green required checks. When the user opts in to **wait mode** (see "Wait mode" below), re-check `gh pr view --json state,mergedAt,mergeCommit` at the configured interval (≥60s) until `state == MERGED` or the configured wall-clock timeout (≤15min) is reached. On timeout, stop and report the still-`OPEN` state plus the most recent `gh pr checks` snapshot.
 
-**7b. Audit the automerge workflow when the PR is `OPEN` with all required checks green and the `automerge` label applied.** The most recent `automerge.yaml` run on the head SHA is suspect—treat its `SUCCESS` conclusion as unverified until the logs say otherwise:
+**7b. Audit the automerge workflow when the PR is `OPEN` with all required checks green and the `automerge` label applied.** The most recent `automerge.yaml` run on the head SHA is suspect—treat its `SUCCESS` conclusion as unverified until the logs say otherwise. Run the following commands (execute, not read-as-reference) to surface the workflow's internal `mergeResult`:
 
 ```
 RUN_ID=$(gh run list --workflow automerge.yaml --commit <head_sha> \
@@ -127,7 +135,7 @@ gh api repos/<owner>/<repo>/actions/jobs/$JOB_ID/logs \
   | grep -E "mergeResult: 'merge_failed'|Failed to merge PR" || true
 ```
 
-If the logs contain `mergeResult: 'merge_failed'` or `Failed to merge PR: …`, this is a **`workflow-health` incident, not a retryable label-apply**. Do not re-apply the `automerge` label and do not re-run the workflow blindly. Classify per `spec/project/workflow-health/<canonical_language>.md`; the common cause here is **`stale pin`**—the `uses:` tag in `.github/workflows/automerge.yaml` points to a version of `reusable-automerge.yaml` that precedes the relevant fix (e.g. the `MERGE_METHOD: squash` override). Surface the log excerpt and the bump target to the user, and hand off the pin bump as a separate PR per the workflow-health spec.
+If the logs contain `mergeResult: 'merge_failed'` or `Failed to merge PR: …`, this is a **`workflow-health` incident, not a retryable label-apply**. Do not re-apply the `automerge` label and do not re-run the workflow blindly. Classify per `spec/project/workflow-health/<canonical_language>.md`; the common cause here is **`stale pin`**—the `uses:` tag in `.github/workflows/automerge.yaml` points to a `reusable-automerge.yaml` version that lacks the necessary override (typically `MERGE_METHOD: squash`). Surface the log excerpt and the bump target to the user, and hand off the pin bump as a separate PR per the workflow-health spec.
 
 Report back: PR URL, merged-at timestamp, merge commit SHA on `origin/develop`, the labels that were applied, and—if 7b caught a silent no-op—the workflow-health classification and the remediation the user needs to take next.
 
@@ -146,6 +154,10 @@ gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<feature-branch>
 
 Never run `git push origin --delete …` or `gh api -X DELETE` without explicit user confirmation. Never make remote-branch deletion part of the automatic merge flow—the platform setting is the routine path, manual deletion is only a catch-up.
 
+## Wait mode
+
+The skill is single-shot by default: when step 4 finds pending checks or step 7a finds the PR still `OPEN`, the skill reports and stops; the user re-invokes once GitHub is in the next state. **Wait mode** is an opt-in that lets the skill wait for state transitions inside a single invocation, bounded by hard caps (interval ≥60s, wall-clock ≤15 min, ≤10 retries per wait point, visible status line per round, failure short-circuits to workflow-health). Read `references/wait-mode.md` when the user opts in via `--wait` or an unambiguous "wait until X" instruction in the prompt — the reference covers activation, every cap with its rationale, the per-step implementation pattern (step 4 vs. step 7a), and the prompt-cache trade-off that justifies the bounds.
+
 ## Hard rules
 
 - **Never** flip a draft to ready while any required check is pending or failing. Failures route to the `workflow-health` triage flow, not to a waiver.
@@ -154,7 +166,7 @@ Never run `git push origin --delete …` or `gh api -X DELETE` without explicit 
 - **Never** create a new GitHub label from this skill. Label candidates that don't exist in the repository are reported as a gap, not silently added.
 - **Never** skip the `review` skill delegation. A final review is the cheapest pre-merge gate; only an explicit user override bypasses it.
 - **Never** rebase or merge `develop` into the feature branch silently to fix a lag. Branch-freshness gaps return control to the user, consistent with `pull-request-create`.
-- **Never** poll, sleep, or loop waiting for checks to complete. Report the outstanding state and stop; the user re-invokes the skill when ready.
+- **Never** poll, sleep, or loop waiting for checks to complete **unless the user has opted in to wait mode** (see "Wait mode" below). Outside wait mode, report the outstanding state and stop; the user re-invokes the skill when ready. Inside wait mode, polling is permitted but bounded by the documented retry / interval / timeout caps and **never** silently in the background — every wait round produces a visible status line.
 - **Never** treat the `automerge.yaml` workflow's `SUCCESS` conclusion as proof the merge happened. `pascalgn/automerge-action` exits 0 on `mergeResult: 'merge_failed'`. Always confirm `state == MERGED` on the PR itself (step 7a), and when the PR is still open with green checks, audit the action's logs for `merge_failed` (step 7b) before declaring the merge complete.
 - **Never** delete the remote feature branch as part of the automatic merge flow. Post-merge branch cleanup is the platform's job via `delete_branch_on_merge: true`; a manual `gh api -X DELETE` call is only a one-off catch-up and requires explicit user confirmation.
 - When `spec/project/pull-request-workflow/`, `spec/project/branching-model/`, or `spec/project/workflow-health/` disagrees with this skill, the spec wins. Propose a skill update rather than silently diverging.

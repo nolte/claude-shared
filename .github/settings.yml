@@ -1,4 +1,4 @@
-_extends: nolte/gh-plumbing:.github/commons-settings.yml
+_extends: nolte/gh-plumbing:.github/commons-settings.yml@v1.1.15
 
 repository:
   name: claude-shared
@@ -14,6 +14,11 @@ repository:
   allow_squash_merge: true
   allow_merge_commit: false
   allow_rebase_merge: false
+  # Local override pending an upstream addition in
+  # gh-plumbing:.github/commons-settings.yml. Without this, the platform
+  # leaves merged feature branches behind, forcing a manual cleanup REST
+  # call on every pull-request-merge run (observed across PRs #45, #46, #47).
+  delete_branch_on_merge: true
 
 branches:
   - name: develop

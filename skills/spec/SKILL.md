@@ -1,11 +1,19 @@
 ---
 name: spec
 description: Create, translate, index, deduplicate, and drift-check multilingual specifications stored under the project's spec/ folder. Invoke when the user wants to write a new spec, update or translate an existing one, check whether a requirement is already covered, regenerate the spec index, or verify that translations are still in sync with the canonical version. Supports writing the request in any configured language; specs on disk always exist in all configured languages, with one canonical source and the rest as translations kept strictly in sync.
+tags: [scaffolding]
 ---
 
 # Multilingual Spec Skill
 
 Manages specifications inside a project's `spec/` folder. Layout: one folder per spec, one file per language. Specs may optionally be grouped under a one-level topic folder.
+
+## Why this is a skill, not an agent
+
+- **Mid-flow interactivity is the contract** — duplicate-check confirmation ("extend existing, supersede, or proceed as new?"), translation review, slug-rename gates, and drift-resolution choices are all per-step user dialogues; an agent's fire-and-forget contract would lose them.
+- **Persistent on-disk artifact is the deliverable** — every operation writes spec files (canonical + translations) under `spec/[<topic>/]<slug>/<lang>.md` in pairs and may also regenerate `spec/README.md`; skills own persistent state.
+- **Multilingual sync requires conversational context** — when a translation drifts from the canonical, the skill negotiates the resolution with the user (lift the change, discard the edit) rather than picking silently; that gating only fits in a skill.
+- Counter-dimension considered: translation itself benefits from a narrow specialised prompt, but the load-bearing dimension is the canonical-vs-translation flow control, not the per-string translation quality — skill wins; if translation quality ever needs sharpening, dispatch a translation agent from inside this skill rather than reshaping it.
 
 ```
 spec/

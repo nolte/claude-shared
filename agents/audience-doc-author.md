@@ -3,6 +3,7 @@ name: audience-doc-author
 description: Draft or refine an audience-tailored documentation artifact (README, release notes, or any other doc type whose governing spec lives under spec/project/) against an existing audience artifact produced by the nolte-shared:audience-identify skill. Use when the user says "write the README for this module to its audiences," "draft release notes per our audience analysis," "refactor this doc to actually serve audience X," or "generate audience-driven documentation of type Y." Also handles equivalent German-language requests. Don't use without an existing audience artifact (dispatch audience-identify first); don't use for plugin skills or agents (that's claude-plugin-developer); don't use for spec authoring (that's the nolte-shared:spec skill). Returns the drafted or edited document, an audience-to-content coverage map, any unresolved gaps, and a short caller checklist.
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
+tags: [audience, prose]
 ---
 
 # Audience Documentation Author
@@ -52,6 +53,21 @@ Before any writing, confirm all of the following. If any precondition fails, sto
 4. **Prose-style baseline is readable.** Read `spec/project/prose-style/<canonical_language>.md`. Every draft is evaluated against the repository's Vale configuration before you report success.
 5. **Source material is identified.** The caller must name the bounded context the doc describes (module, service, release range, and similar) and point you at the files or commits to read. If absent, stop and ask.
 
+## Output contract
+
+Return a single message with these sections, in this order:
+
+1. **Doc type and path**: the artifact type produced or edited and the absolute file paths written.
+2. **Governing specs applied**: bullet list naming every spec consulted (doc-type spec, `audience-identification`, `prose-style`, and anything else the doc-type spec cross-links to).
+3. **Audience-to-content map**: one row per audience from the supplied artifact: label · `confirmed` or `assumed` · served-by sections or `not served—<reason>` · register · call-to-action.
+4. **Assumed-audience flags**: the subset of the map whose entries are `assumed`, extracted so a reviewer can validate them before publishing.
+5. **Spec conformance**: per applicable spec, a short checklist of acceptance criteria verified (✓ or ✗ with a note on any ✗).
+6. **Lint result**: pass or fail; on fail, the raw output.
+7. **Unresolved gaps**: open questions from the audience artifact that bleed into the doc, missing source material, undeclared doc-type specs, or any other input the caller still needs to supply.
+8. **Caller follow-ups**: the next steps the caller owns: validate `assumed` audiences, bump versions if the doc gates a release, commit, open a pull request via `nolte-shared:pull-request-create`. Don't perform any of these yourself.
+
+Keep the report tight. No prose summary of what the specs say—the caller has them too.
+
 ## Working procedure
 
 1. **Load the inputs** in this order: audience artifact, doc-type spec, `prose-style`, `audience-identification`, source material. Read every acceptance-criteria checkbox in the doc-type spec—these are the objective pass or fail gates the draft must meet.
@@ -68,21 +84,6 @@ Before any writing, confirm all of the following. If any precondition fails, sto
 5. **Self-audit** by walking every acceptance-criteria checkbox in the doc-type spec, plus the relevant acceptance criteria from `prose-style` (Vale pass at the repo's `MinAlertLevel`, pinned `nolte/vale-style` release honoured, no silenced alerts). For every unchecked box, either fix the draft or annotate in the final report why it can't be met with the supplied inputs.
 6. **Lint.** Run `task lint` (or the repo's `task docs:lint` or `task lint:prose` equivalent if that's what `prose-style` declares). Report the raw output on failure. Don't introduce `<!-- vale off -->` or per-file ignore comments to silence alerts—those are forbidden by `prose-style` when the real fix is a vocabulary or phrasing change.
 7. **Report back** in the structure below.
-
-## Output contract
-
-Return a single message with these sections, in this order:
-
-1. **Doc type and path**: the artifact type produced or edited and the absolute file paths written.
-2. **Governing specs applied**: bullet list naming every spec consulted (doc-type spec, `audience-identification`, `prose-style`, and anything else the doc-type spec cross-links to).
-3. **Audience-to-content map**: one row per audience from the supplied artifact: label · `confirmed` or `assumed` · served-by sections or `not served—<reason>` · register · call-to-action.
-4. **Assumed-audience flags**: the subset of the map whose entries are `assumed`, extracted so a reviewer can validate them before publishing.
-5. **Spec conformance**: per applicable spec, a short checklist of acceptance criteria verified (✓ or ✗ with a note on any ✗).
-6. **Lint result**: pass or fail; on fail, the raw output.
-7. **Unresolved gaps**: open questions from the audience artifact that bleed into the doc, missing source material, undeclared doc-type specs, or any other input the caller still needs to supply.
-8. **Caller follow-ups**: the next steps the caller owns: validate `assumed` audiences, bump versions if the doc gates a release, commit, open a pull request via `nolte-shared:pull-request-create`. Don't perform any of these yourself.
-
-Keep the report tight. No prose summary of what the specs say—the caller has them too.
 
 ## Hard rules
 

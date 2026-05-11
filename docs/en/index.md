@@ -2,6 +2,7 @@
 
 `claude-shared` is a shared foundation of [Claude Code](https://docs.claude.com/en/docs/claude-code) **agents** and **skills**, intended to be reused across multiple projects. It's packaged as the **`nolte-shared`** plugin so teams get the same review habits, coding guidelines and helper workflows everywhere—without rebuilding them in every repository.
 
+<!-- diagram-source: user-described — claude-shared source repo packaged as the nolte-shared plugin, delivering skills/agents/specs to downstream consumer projects -->
 ```mermaid
 flowchart LR
     CS["claude-shared\nsource repo"] -->|"bundled as"| PL["nolte-shared\nplugin"]

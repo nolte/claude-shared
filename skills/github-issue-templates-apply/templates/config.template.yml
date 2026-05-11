@@ -1,0 +1,21 @@
+# Starter template used by the github-issue-templates-apply skill.
+# The skill copies this file to .github/ISSUE_TEMPLATE/config.yml and
+# customises the `contact_links` list and the derivation header below.
+#
+# Derivation record (filled in by the skill on apply / re-run):
+#   project-type: <detected-project-type>
+#   audience-artefact: <path>
+#   audience-fingerprint: <short-id-of-audience-set>
+#   templates: [bug_report.yml, feature_request.yml, ...]
+#   generated: <ISO date>
+blank_issues_enabled: false
+contact_links:
+  # Add Discussions / Security / external-support links here when applicable.
+  # Remove the contact_links key entirely if there are none — an empty list is
+  # not the same as an absent key.
+  # - name: Question
+  #   url: https://github.com/<owner>/<repo>/discussions/new?category=q-a
+  #   about: Ask a question about how to use this project.
+  # - name: Security vulnerability
+  #   url: https://github.com/<owner>/<repo>/security/advisories/new
+  #   about: Report a security vulnerability privately.

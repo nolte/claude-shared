@@ -22,4 +22,4 @@ Bevor ein neuer Skill oder Agent geschrieben wird: die passende Spezifikation le
 - [Skill-Autorenschaft](../specs/skill-management.md)
 - [Agent-Autorenschaft](../specs/agent-management.md)
 
-Neue Skills erstellt du mit dem [Skill-Management](../skills/skill-management.md)-Skill selbst — das garantiert Konformität.
+Neue Skills erstellt du mit dem [Skill-Management](../skills/nolte-shared/skill-management.md)-Skill selbst — das garantiert Konformität.

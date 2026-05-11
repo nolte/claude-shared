@@ -78,12 +78,19 @@ plugins:
             Skill-Management: Skill Management
             Spec: Spec
             Agents: Agents
+            Agents-Übersicht: Agents Overview
+            Konzepte: Concepts
+            Tags: Tags
             Spezifikationen: Specifications
             Skill-Autorenschaft: Skill Authoring
             Agent-Autorenschaft: Agent Authoring
+            Planning-Suite: Planning Suite
             Entwicklung: Development
             Projektstruktur: Project Structure
             Beitragen: Contributing
+
+  - literate-nav:
+      nav_file: SUMMARY.md
 
 markdown_extensions:
   - abbr
@@ -133,16 +140,19 @@ nav:
       - de/getting-started/index.md
       - Installation: de/getting-started/installation.md
       - Nutzung: de/getting-started/nutzung.md
-  - Skills:
-      - de/skills/index.md
-      - Skill-Management: de/skills/skill-management.md
-      - Spec: de/skills/spec.md
-  - Agents:
-      - de/agents/index.md
+  - Skills: de/skills/
+  - Agents: de/agents/
+  - Tags: de/tags.md
+  - Konzepte:
+      - de/concepts/skills/index.md
+      - Skill-Management: de/concepts/skills/skill-management.md
+      - Spec: de/concepts/skills/spec.md
+      - Agents-Übersicht: de/concepts/agents/index.md
   - Spezifikationen:
       - de/specs/index.md
       - Skill-Autorenschaft: de/specs/skill-management.md
       - Agent-Autorenschaft: de/specs/agent-management.md
+  - Planning-Suite: de/planning-suite.md
   - Entwicklung:
       - de/development/index.md
       - Projektstruktur: de/development/projektstruktur.md

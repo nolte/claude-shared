@@ -1,1 +1,1 @@
-_extends: nolte/gh-plumbing:.github/commons-boring-cyborg.yml
+_extends: nolte/gh-plumbing:.github/commons-boring-cyborg.yml@v1.1.15

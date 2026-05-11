@@ -1,6 +1,7 @@
 ---
 name: dependency-audit
 description: Scan the current project's dependency tree for known vulnerabilities (CVEs) and, when requested, license-compliance issues. Detects project kind from `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` for Python and `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` for Node, runs the appropriate auditors, and produces a severity-sorted report with direct vs transitive attribution. Invoke when the user asks to "audit dependencies," "run a CVE scan," "check for vulnerable packages," "check license compliance," "run pip-audit," "run npm audit," or equivalent German-language requests ("Abhängigkeiten auditieren," "CVE-Scan durchführen," "Lizenz-Compliance prüfen"). Also handles a pre-PR / pre-release dependency gate. Don't use for upgrading dependencies (that's an author's decision) or for writing Renovate configs (that's `project-structure-apply`).
+tags: [dependency]
 ---
 
 # Dependency Audit
@@ -115,6 +116,14 @@ Don't execute these without explicit confirmation:
 - For each finding with a `fixed_in` version: suggest the smallest dependency bump that crosses the fix boundary.
 - For findings without a fix yet: offer to add the advisory to the auditor's ignore list with a `valid-until` date (for example the `--ignore-vuln` argument of `pip-audit` wired into a Taskfile target) so the gate stays meaningful.
 - For license `review` entries: offer to draft an `.license-allowlist.txt` with the accepted licenses the user names.
+
+## Gotchas
+
+- **`pip-audit` and `npm audit` exit codes don't agree on what counts as a finding.** `pip-audit` exits non-zero on any vulnerability; `npm audit` exits non-zero only when the vulnerability is at or above its `--audit-level` threshold (default `low`). When the skill aggregates per-ecosystem results, treat exit-code parsing as a fallback signal; the JSON output is the source of truth.
+- **`pnpm audit` and `yarn audit` use different JSON shapes than `npm audit`.** A naïve "parse `npm audit --json`" pipeline misses both. Detect the package manager from the lockfile (`pnpm-lock.yaml` / `yarn.lock` / `package-lock.json`) before choosing the audit invocation; don't fall back silently to `npm audit` against a `pnpm`-managed project, because the result will be a clean report based on a missing `node_modules/` instead of a real audit.
+- **`uv.lock` audits don't have a first-class CLI yet.** When the project uses `uv`, run `pip-audit -r requirements.txt` after exporting (`uv export --no-hashes`); auditing `uv.lock` directly produces no output. Document the export step in the report so the operator knows the audit was a derivative pass.
+- **License-compliance scanners pull from external metadata** (PyPI / npm registry); a transient registry outage produces a false "no findings" report rather than a clear error. Re-run on transient HTTP 5xx; only report `clean` when the run reached the registry successfully.
+- **Direct vs transitive attribution requires the lockfile.** Without the lockfile, the audit can only flag the surface that the manifest declares; transitive vulnerabilities don't surface. The skill stops and reports when no lockfile is present rather than producing a misleading direct-only report.
 
 ## Hard rules
 

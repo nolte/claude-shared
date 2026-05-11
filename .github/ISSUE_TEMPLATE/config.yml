@@ -1,0 +1,17 @@
+# Derivation record (per spec/project/github-issue-templates/):
+#   project-type: claude-code-plugin
+#   detection-signals: .claude-plugin/plugin.json, skills/, agents/
+#   audience-artefact: AUDIENCES.md
+#   audience-fingerprint: 2026-04-30 (assumed-only, no confirmed audiences yet)
+#   templates: [bug_report.yml, feature_request.yml]
+#   generated: 2026-04-30
+#   has_discussions: false (checked via `gh api repos/nolte/claude-shared`)
+blank_issues_enabled: false
+# contact_links is intentionally omitted — Discussions are not enabled on this
+# repository, and SECURITY.md does not exist yet. Add a private security-report
+# link here once a SECURITY.md or a private advisory channel is in place:
+#
+# contact_links:
+#   - name: Security vulnerability
+#     url: https://github.com/nolte/claude-shared/security/advisories/new
+#     about: Report a security vulnerability privately.

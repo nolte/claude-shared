@@ -35,7 +35,9 @@ Repositories in this portfolio use `main` as a presentation-only branch that alw
 - **SHOULD** require linear history on `main` so the fast-forward from release tags stays clean
 
 ### Release flow
-- **MUST** cut GitHub Releases from tags created on the `develop` branch—release-drafter maintains the draft, a human publishes it
+- **MUST** cut GitHub Releases from tags created on the `develop` branch—release-drafter maintains the draft as PRs land
+- **MUST** flip the draft to a published GitHub Release through `release-publish.yml` as the primary Draft → Published path, gated by the pre-publish verification declared in `spec/project/release-automation/`; running `gh release edit <tag> --draft=false` directly is a documented fallback for incident response only, when `release-publish.yml` is itself broken
+- **MAY** be dispatched by sprint-side closure: the sibling specs `release-artifact` §Dispatch boundary to release machinery and `release-skill-layer` define an optional, operator-opt-in chain in which `sprint-review` invokes `release-notes-curate` (for body curation) and `release-publish-trigger` (which dispatches the workflow declared above). The dispatch boundary is one-way—this spec governs the workflow itself, the sprint-side specs govern the trigger conditions—and the consuming specs **MUST NOT** redefine any rule declared here
 - **MUST** update `main` exclusively through the release workflow on `release: [published]`
 - **MUST** derive `main` content mechanically from the release; editing files directly on `main` is a bug
 - **SHOULD** keep the default pull-request base set to `develop`, not `main`
@@ -44,6 +46,7 @@ Repositories in this portfolio use `main` as a presentation-only branch that alw
 The repository **MUST** include the following workflows under `.github/workflows/`, each wired to the corresponding reusable workflow from `nolte/gh-plumbing`:
 
 - **`release-drafter.yml`**: triggers on `push: [develop]`; uses `nolte/gh-plumbing/.github/workflows/reusable-release-drafter.yml` to maintain the draft GitHub Release that collects the next version's changes
+- **`release-publish.yml`**: triggers on `workflow_dispatch` only; uses `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml` to flip the open draft to `draft: false` once the pre-publish gates declared in `spec/project/release-automation/` have all passed; requires `contents: write` permission
 - **`release-cd-refresh-master.yml`**: triggers on `release: [published]`; uses `nolte/gh-plumbing/.github/workflows/reusable-release-cd-refresh-master.yml` with `target_branch: main` to fast-forward `main` to the released commit; requires `contents: write` permission
 - **`automerge.yaml`**: triggers on pull-request / review / check-suite events; uses `nolte/gh-plumbing/.github/workflows/reusable-automerge.yaml` so approved, green pull requests against `develop` merge automatically
 
@@ -53,7 +56,7 @@ The repository **SHOULD** also include, where applicable:
 - Any additional `release: [published]` packaging workflow (for example `release.yml` producing an HACS ZIP) specific to the repository's delivery artifact
 
 ### Workflow integrity
-- **MUST** keep the three required workflows (`release-drafter.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`) in every repository that follows this branching model
+- **MUST** keep the four required workflows (`release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`) in every repository that follows this branching model
 - **SHOULD** pin the `nolte/gh-plumbing` reusable-workflow reference to a tag (for example `@v1.1.12`) rather than a moving branch, so the refresh behavior of `main` is reproducible
 
 ## Acceptance Criteria
@@ -61,13 +64,14 @@ The repository **SHOULD** also include, where applicable:
 - [ ] `main` exists and is branch-protected so that humans can't push directly
 - [ ] Branch-protection rules for `main` and `develop` are declared in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension), not only through the GitHub UI
 - [ ] `.github/workflows/release-drafter.yml` is present and triggers on `push: [develop]`
+- [ ] `.github/workflows/release-publish.yml` is present, declares only `workflow_dispatch` as its trigger, requests `contents: write`, and invokes `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml`
 - [ ] `.github/workflows/release-cd-refresh-master.yml` is present, triggers on `release: [published]`, and sets `target_branch: main`
 - [ ] `.github/workflows/automerge.yaml` is present and invokes the `nolte/gh-plumbing` reusable automerge workflow
 - [ ] The HEAD of `main` corresponds to a published GitHub Release tag (`git tag --points-at main` returns a release tag)
 - [ ] There are no human-authored commits on `main` between two consecutive releases—only commits introduced by the refresh workflow
 - [ ] Feature branches in the repository use one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, `exp/`
 - [ ] If `.github/release-drafter.yml` is present, the `exp` type either lands in a non-user-facing category or is excluded from the configured categories, so experimental PRs don't surface as shipped features
-- [ ] If MkDocs is used, `.github/workflows/release-cd-deliver-docs.yml` is present and triggers on `release: [published]`
+- [ ] If MkDocs is used **and** `.github/workflows/release-cd-deliver-docs.yml` is shipped, the workflow triggers on `release: [published]` (the workflow itself is SHOULD, per Requirements §Required GitHub workflows; this AC checks its trigger when present, not its presence)
 
 ## Open Questions
 - How should emergency hotfixes be handled—branch off `main`, merge back to both `main` and `develop`, or always cycle through `develop` plus a new patch release?

@@ -22,43 +22,45 @@ status: open
 
 Target: `skills/{{skill-name}}/` ({{SKILL.md + referenced-files-summary}}).
 Specs applied: `skill-management`, `skill-vs-agent`, `review-plan`, `skill-review` (revisions recorded in frontmatter).
+Validator: {{validator-name}}@{{validator-version}}
+<!-- If the external skill-structure validator isn't provisioned in this repository, replace the line above with: "Validator: override — <one-line justification anchored in another spec or a documented project decision>" per `skill-review` §Checks derived from external skill-structure validation. -->
 Narrowing: {{none | frontmatter-only | rationale-only | …}}.
 Explicitly out of scope: runtime behavior of the skill, Vale/markdown style (handled by `task lint`), dispatched agents beyond confirming the orchestration direction.
 
 ## Summary
 
-- BLOCKER: {{B}}
-- WARNING: {{W}}
-- SUGGESTION: {{S}}
-- INFO: {{I}}
+- Critical: {{C}}
+- Warning: {{W}}
+- Suggestion: {{S}}
+- Info: {{I}}
 
 Go/no-go: {{PASS | FAIL | CONDITIONAL — <condition>}}
-Next concrete action: {{one-liner — typically "author addresses BLOCKERs in <area>"}}
+Next concrete action: {{one-liner — typically "author addresses Critical findings in <area>"}}
 
 ## Findings
 
-### BLOCKER
+### Critical
 
 - [ ] [{{spec-slug}}.{{requirement-shorthand}}] {{one-line statement of what is wrong}}.
       Where: {{file:line or section reference}}.
       Fix: {{concrete action — one line}}.
       Verify: {{how to confirm the fix — one line}}.
 
-### WARNING
+### Warning
 
 - [ ] [{{spec-slug}}.{{requirement-shorthand}}] {{…}}.
       Where: {{…}}.
       Fix: {{…}}.
       Verify: {{…}}.
 
-### SUGGESTION
+### Suggestion
 
 - [ ] [{{spec-slug}}.{{requirement-shorthand}}] {{…}}.
       Where: {{…}}.
       Fix: {{…}}.
       Verify: {{…}}.
 
-### INFO
+### Info
 
 - [ ] [{{spec-slug}}.{{requirement-shorthand}}] {{…}}.
       Where: {{…}}.

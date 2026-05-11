@@ -34,6 +34,7 @@ The audit **MUST** classify every finding into exactly one of these categories:
 - **Cross-tree reference rot**: a link from the docs into `spec/`, `src/`, `scripts/`, `docker/`, `helm/`, `tests/`, `tools/` whose target path no longer exists in the working tree.
 - **Language-parity gap**: in a bilingual (or multilingual) repository, a relative path that exists in one configured language tree but is missing in another.
 - **Content-staleness delta**: in a multilingual repository, counterpart files whose last-commit timestamps diverge beyond a threshold (default 30 days) or whose sizes diverge beyond 2×; these are spot-checked on the N most recently modified files per tree rather than checked exhaustively.
+- **Mermaid diagram-source drift**: a Mermaid block in the docs annotated with `<!-- diagram-source: derived — <path> -->` (per `spec/project/mermaid-diagrams/`) whose named source artifact has a more recent last-commit timestamp than the markdown file containing the block—the source has changed but the diagram hasn't been redrawn. The detector compares `git log -1 --format=%cs -- <source>` and `git log -1 --format=%cs -- <markdown-file>`; `user-described` blocks aren't checked because they have no machine-readable source.
 - **ADR index drift**: an ADR file on disk that isn't referenced by the corresponding `adr/index.md`, or an `adr/index.md` entry whose file doesn't exist.
 - **ADR status hygiene**: an ADR whose declared status isn't one of `proposed`, `accepted`, `superseded`, `deprecated`, `rejected`; or a `Supersedes: ADR-NNN` reference pointing at an ADR whose status is still `accepted`.
 - **Stale markers**: occurrences of `TODO`, `FIXME`, `XXX`, `TBD`, `coming soon`, `placeholder`, `Lorem ipsum` (and their German counterparts) inside documentation; classification depends on context (ADR vs. prose).
@@ -43,7 +44,7 @@ Additional categories **MAY** be added by a repository when its documentation ne
 ### Severity classification
 - **MUST** adopt the following severity scale:
   - **critical**: internal-link rot, cross-tree reference rot, ADR status inconsistency that breaks a supersedes chain; response window: before the next release
-  - **warning**: language-parity gap, stale marker inside an ADR whose status is `accepted`, ADR index drift, content-staleness delta > 90 days; response window: within the current quarter
+  - **warning**: language-parity gap, stale marker inside an ADR whose status is `accepted`, ADR index drift, content-staleness delta > 90 days, Mermaid diagram-source drift; response window: within the current quarter
   - **info**: stale marker inside ordinary prose, content-staleness delta 30–90 days, ADR without a declared status (treat as info, not critical—the ADR is still readable); response window: best effort
 - **MUST NOT** downgrade a severity on local judgement alone; disagreement with the classification belongs in an explicit waiver recorded in the audit artifact
 
