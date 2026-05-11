@@ -1,0 +1,6 @@
+# mkdocs-literate-nav requires 4-space indent for nested bullets,
+# which conflicts with markdownlint MD007 (default 2). The auto-generated
+# SUMMARY.md files in the catalog tree are owned by scripts/docs/gen_catalog.py
+# and must keep the 4-space form so literate-nav can parse them.
+docs/*/skills/SUMMARY.md
+docs/*/agents/SUMMARY.md

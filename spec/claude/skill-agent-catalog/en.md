@@ -48,7 +48,8 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - **MAY** surface supporting assets by listing sibling files under `skills/<name>/` or `agents/<name>/` (for example `templates/`, `references/`, `examples/`)
 
 ### Generation mechanism
-- **MUST** generate catalog pages from the source files; **MUST NOT** commit generated catalog markdown back into `docs/`
+- **MUST** generate catalog pages from the source files
+- The repository **MUST NOT** commit generated catalog markdown back into `docs/` _unless_ the docs-deploy pipeline (the workflow that produces the GitHub Pages output) bypasses `task docs` / the configured catalog generator and invokes `mkdocs build` directly. In that case the repository **MUST** commit the generated catalog files so the deploy build picks them up from the checkout, AND **MUST** ship a CI freshness check that fails the build when the committed catalog drifts from a fresh re-generation (typical shape: `task docs:catalog && git diff --exit-code docs/<lang>/{skills,agents} docs/<lang>/tags.md`)
 - **MUST** wire catalog navigation through `mkdocs-literate-nav` declared in `mkdocs.yml`
 - **MUST** invoke a catalog generator that produces the per-artifact pages, per-section index pages, per-section `SUMMARY.md` files for literate-nav, and the tag index. The generator **MAY** be a `mkdocs-gen-files` plugin script OR a standalone pre-build step (for example a Taskfile target invoked before `mkdocs build`) that writes physical files under `docs/<lang>/<section>/`. The pre-build form is the recommended choice whenever the repo also uses `mkdocs-static-i18n` with `docs_structure: folder`, because `mkdocs-static-i18n` 1.3.x discards files whose `abs_src_path` isn't under `docs_dir` and therefore silently drops every page emitted by `mkdocs-gen-files`
 - **MUST** read plugin source roots from a configured list—each entry pairing the local source path with the public repository URL used for source links—so additional plugins can be added without changing generator code
@@ -84,7 +85,8 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - [ ] The catalog generator is either declared as a `mkdocs-gen-files` script in `mkdocs.yml` or wired into `task docs` as a standalone pre-build step
 - [ ] In plugin mode, the local plugin appears as one of the configured plugin source roots
 - [ ] In consumer mode, at least one external plugin source root is configured
-- [ ] No generated catalog markdown is committed under `docs/`
+- [ ] Generated catalog markdown isn't committed under `docs/` **unless** the repo's docs-deploy pipeline bypasses `task docs`; in that case the catalog **is** committed and a CI freshness check guards against drift
+- [ ] When the catalog is committed, a CI job runs the catalog generator and fails when its output differs from the committed tree
 - [ ] A skill or agent with invalid frontmatter causes `task docs` to fail with an error that names the offending file and its plugin source root
 - [ ] Catalog entries appear in deterministic alphabetical order by `name` within each plugin group of each section
 - [ ] A tag index page exists and links to every artifact that declares the tag
@@ -94,3 +96,4 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - If translations of an artifact body are ever desired, where do they live—a parallel `skills/<name>/docs/<lang>.md`, or separately curated pages under `docs/<lang>/`?
 - How are plugin source roots configured exactly—inline in `mkdocs.yml` under the `gen-files` plugin config, or in a sibling YAML file referenced from there?
 - How should this spec evolve once `mkdocs-static-i18n` upstream supports files emitted by `mkdocs-gen-files`? As of May 2026 (`mkdocs-static-i18n` 1.3.1) those files are silently dropped in `reconfigure.py` because their `abs_src_path` is outside `docs_dir`, which forces the pre-build form whenever folder-strategy i18n is in use.
+- The docs-deploy detour: should we standardise on bumping the `nolte/gh-plumbing` `reusable-mkdocs.yaml` upstream to call `task docs` instead, so every consumer can stay on the cleaner "no committed catalog" form? The conditional rule above exists because `reusable-mkdocs.yaml@v1.1.12` invokes `mhausenblas/mkdocs-deploy-gh-pages@1.26` directly, which runs `mkdocs build` and never sees `task docs`.

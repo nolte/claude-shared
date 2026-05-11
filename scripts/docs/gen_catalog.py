@@ -323,26 +323,41 @@ def discover_agents(source: SourceRoot) -> list[Artifact]:
     return artefacts
 
 
+_HEADING_RE = re.compile(r"^(#{1,5})(\s)", re.MULTILINE)
+
+
+def _demote_headings(body: str) -> str:
+    """Demote every ATX heading in `body` by one level (H1→H2, H2→H3, …).
+
+    Keeps the catalog page itself owning the single H1 (`# <artifact.name>`),
+    so the rendered page has exactly one H1 — required by markdownlint's MD025
+    and respected by the mkdocs-material page-title heuristic.
+    """
+
+    return _HEADING_RE.sub(lambda m: f"#{m.group(1)}{m.group(2)}", body)
+
+
 def render_page(artifact: Artifact, chrome: dict) -> str:
-    parts: list[str] = []
-    parts.append(f"# {artifact.name}\n")
-    parts.append(f"_{artifact.description}_\n")
-    parts.append("")
-    parts.append(f"- **{chrome['plugin_label']}:** `{artifact.plugin}`")
+    lines: list[str] = []
+    lines.append(f"# {artifact.name}")
+    lines.append("")
+    lines.append(f"_{artifact.description}_")
+    lines.append("")
+    lines.append(f"- **{chrome['plugin_label']}:** `{artifact.plugin}`")
     if artifact.distribution:
-        parts.append(f"- **{chrome['distribution_label']}:** `{artifact.distribution}`")
+        lines.append(f"- **{chrome['distribution_label']}:** `{artifact.distribution}`")
     if artifact.tags:
         tag_list = ", ".join(f"`{t}`" for t in artifact.tags)
-        parts.append(f"- **{chrome['tags_label']}:** {tag_list}")
-    parts.append(
+        lines.append(f"- **{chrome['tags_label']}:** {tag_list}")
+    lines.append(
         f"- **{chrome['source_label']}:** "
         f"[{artifact.source_relpath}]({artifact.source_url})"
     )
-    parts.append("")
-    parts.append("---")
-    parts.append("")
-    parts.append(artifact.body.rstrip() + "\n")
-    return "\n".join(parts)
+    lines.append("")
+    lines.append("---")
+    lines.append("")
+    lines.append(_demote_headings(artifact.body.rstrip()))
+    return "\n".join(lines) + "\n"
 
 
 def group_by_plugin(artefacts: Iterable[Artifact]) -> dict[str, list[Artifact]]:
@@ -378,19 +393,28 @@ def emit_section(
     title_key = f"{section}_title"
     intro_key = f"{section}_intro"
 
-    index_parts = [f"# {chrome[title_key]}\n\n{chrome[intro_key]}\n"]
+    index_lines: list[str] = []
+    index_lines.append(f"# {chrome[title_key]}")
+    index_lines.append("")
+    index_lines.append(chrome[intro_key])
+    index_lines.append("")
     for plugin, items in groups.items():
-        index_parts.append(f"\n## {plugin}\n")
+        index_lines.append(f"## {plugin}")
+        index_lines.append("")
         for art in items:
-            index_parts.append(
+            index_lines.append(
                 f"- [`{art.name}`]({plugin}/{art.name}.md) — {art.description}"
             )
-    write_page(section_dir / "index.md", "\n".join(index_parts) + "\n")
+        index_lines.append("")
+    write_page(section_dir / "index.md", "\n".join(index_lines).rstrip() + "\n")
 
     summary_parts = [f"* [{chrome[title_key]}](index.md)"]
     for plugin, items in groups.items():
         summary_parts.append(f"* {plugin}")
         for art in items:
+            # mkdocs-literate-nav requires 4-space indent for nested bullets;
+            # SUMMARY.md is therefore excluded from markdownlint via
+            # `.markdownlintignore` (the repo-wide MD007 default stays at 2).
             summary_parts.append(f"    * [{art.name}]({plugin}/{art.name}.md)")
     write_page(section_dir / "SUMMARY.md", "\n".join(summary_parts) + "\n")
 
@@ -404,17 +428,23 @@ def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> No
         by_tag[tag].sort(key=lambda a: (a.kind, a.plugin, a.name))
 
     path = DOCS_DIR / lang / "tags.md"
-    parts = [f"# {chrome['tags_title']}\n\n{chrome['tags_intro']}\n"]
+    lines: list[str] = []
+    lines.append(f"# {chrome['tags_title']}")
+    lines.append("")
+    lines.append(chrome['tags_intro'])
+    lines.append("")
     if not by_tag:
-        parts.append(f"\n{chrome['no_tags']}\n")
+        lines.append(chrome['no_tags'])
     else:
         for tag in sorted(by_tag):
-            parts.append(f"\n## `{tag}`\n")
+            lines.append(f"## `{tag}`")
+            lines.append("")
             for art in by_tag[tag]:
                 section = "skills" if art.kind == "skill" else "agents"
                 href = f"{section}/{art.plugin}/{art.name}.md"
-                parts.append(f"- [{art.name}]({href}) — {art.plugin}")
-    write_page(path, "\n".join(parts) + "\n")
+                lines.append(f"- [{art.name}]({href}) — {art.plugin}")
+            lines.append("")
+    write_page(path, "\n".join(lines).rstrip() + "\n")
 
 
 def main() -> int:

@@ -48,7 +48,8 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - **KANN [MAY]** begleitende Assets auflisten, indem die Schwester-Dateien unter `skills/<name>/` bzw. `agents/<name>/` angezeigt werden (z. B. `templates/`, `references/`, `examples/`)
 
 ### Generierungs-Mechanismus
-- **MUSS [MUST]** Katalog-Seiten aus den Quelldateien erzeugen; **DARF NICHT [MUST NOT]** generiertes Katalog-Markdown nach `docs/` committen
+- **MUSS [MUST]** Katalog-Seiten aus den Quelldateien erzeugen
+- Das Repository **DARF [MUST] NICHT** generiertes Katalog-Markdown nach `docs/` committen, _es sei denn_ die Doku-Deploy-Pipeline (der Workflow, der die GitHub-Pages-Ausgabe erzeugt) umgeht `task docs` / den konfigurierten Katalog-Generator und ruft `mkdocs build` direkt auf. In diesem Fall **MUSS [MUST]** das Repository die generierten Katalog-Dateien committen, damit der Deploy-Build sie aus dem Checkout aufnimmt, UND **MUSS [MUST]** einen CI-Frische-Check ausliefern, der den Build scheitern lässt, sobald der committed Katalog vom Ergebnis einer frischen Neu-Generierung abweicht (typische Form: `task docs:catalog && git diff --exit-code docs/<lang>/{skills,agents} docs/<lang>/tags.md`)
 - **MUSS [MUST]** die Katalog-Navigation über `mkdocs-literate-nav` verdrahten, deklariert in `mkdocs.yml`
 - **MUSS [MUST]** einen Katalog-Generator aufrufen, der die Einzelseiten je Artefakt, die Abschnitts-Index-Seiten, die `SUMMARY.md`-Dateien je Abschnitt (für literate-nav) und den Tag-Index erzeugt. Der Generator **KANN [MAY]** ein `mkdocs-gen-files`-Plugin-Skript ODER ein eigenständiger Pre-Build-Schritt sein (z. B. ein Taskfile-Target, das vor `mkdocs build` aufgerufen wird), der physische Dateien unter `docs/<lang>/<section>/` schreibt. Die Pre-Build-Form ist die empfohlene Wahl, sobald das Repository zusätzlich `mkdocs-static-i18n` mit `docs_structure: folder` einsetzt, weil `mkdocs-static-i18n` 1.3.x Dateien verwirft, deren `abs_src_path` nicht unter `docs_dir` liegt — und damit jede von `mkdocs-gen-files` emittierte Seite stillschweigend fallen lässt
 - **MUSS [MUST]** Plugin-Quell-Wurzeln aus einer konfigurierten Liste lesen — jeder Eintrag paart einen lokalen Quellpfad mit der öffentlichen Repository-URL, die für Quell-Links genutzt wird —, damit zusätzliche Plugins ohne Generator-Code-Änderung hinzugefügt werden können
@@ -84,7 +85,8 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - [ ] Der Katalog-Generator ist entweder als `mkdocs-gen-files`-Skript in `mkdocs.yml` deklariert oder als eigenständiger Pre-Build-Schritt in `task docs` verdrahtet
 - [ ] Im Plugin-Modus erscheint das lokale Plugin als eine der konfigurierten Plugin-Quell-Wurzeln
 - [ ] Im Konsumenten-Modus ist mindestens eine externe Plugin-Quell-Wurzel konfiguriert
-- [ ] Kein generiertes Katalog-Markdown ist unter `docs/` eingecheckt
+- [ ] Generiertes Katalog-Markdown ist **nicht** unter `docs/` eingecheckt, **es sei denn** die Doku-Deploy-Pipeline des Repos umgeht `task docs` — dann **ist** der Katalog eingecheckt und ein CI-Frische-Check sichert gegen Drift ab
+- [ ] Wenn der Katalog eingecheckt ist, läuft ein CI-Job, der den Katalog-Generator ausführt und scheitert, sobald seine Ausgabe vom eingecheckten Stand abweicht
 - [ ] Ein Skill oder Agent mit ungültiger Frontmatter lässt `task docs` mit einer Fehlermeldung scheitern, die die Datei und ihre Plugin-Quell-Wurzel benennt
 - [ ] Katalog-Einträge erscheinen innerhalb jeder Plugin-Gruppe jedes Abschnitts in deterministischer, alphabetischer Reihenfolge nach `name`
 - [ ] Eine Tag-Index-Seite existiert und verlinkt auf jedes Artefakt, das den Tag deklariert
@@ -94,3 +96,4 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - Falls Übersetzungen eines Artefakt-Bodys gewünscht sein sollten: wo leben sie — in einer parallelen `skills/<name>/docs/<lang>.md` oder als separat gepflegte Seiten unter `docs/<lang>/`?
 - Wie genau werden Plugin-Quell-Wurzeln konfiguriert — inline in `mkdocs.yml` unter der `gen-files`-Plugin-Konfiguration oder in einer Schwester-YAML-Datei, die von dort referenziert wird?
 - Wie sollte sich diese Spec weiterentwickeln, sobald `mkdocs-static-i18n` upstream Dateien unterstützt, die von `mkdocs-gen-files` emittiert werden? Stand Mai 2026 (`mkdocs-static-i18n` 1.3.1) werden solche Dateien in `reconfigure.py` stillschweigend verworfen, weil ihr `abs_src_path` außerhalb von `docs_dir` liegt — was die Pre-Build-Form erzwingt, sobald die Folder-Strategy-i18n genutzt wird.
+- Der Doku-Deploy-Umweg: sollten wir auf `nolte/gh-plumbing`'s `reusable-mkdocs.yaml` upstream darauf umstellen, dass es `task docs` aufruft, damit alle Konsumenten auf der saubereren „kein eingecheckter Katalog"-Form bleiben können? Die obige Konditional-Regel existiert, weil `reusable-mkdocs.yaml@v1.1.12` `mhausenblas/mkdocs-deploy-gh-pages@1.26` direkt aufruft, das `mkdocs build` startet und `task docs` nie sieht.
