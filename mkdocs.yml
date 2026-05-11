@@ -85,6 +85,7 @@ plugins:
             Skill-Autorenschaft: Skill Authoring
             Agent-Autorenschaft: Agent Authoring
             Planning-Suite: Planning Suite
+            Entwicklungszyklus: Development Lifecycle
             Entwicklung: Development
             Projektstruktur: Project Structure
             Beitragen: Contributing
@@ -153,6 +154,7 @@ nav:
       - Skill-Autorenschaft: de/specs/skill-management.md
       - Agent-Autorenschaft: de/specs/agent-management.md
   - Planning-Suite: de/planning-suite.md
+  - Entwicklungszyklus: de/lifecycle.md
   - Entwicklung:
       - de/development/index.md
       - Projektstruktur: de/development/projektstruktur.md
