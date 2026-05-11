@@ -412,8 +412,10 @@ def emit_section(
     for plugin, items in groups.items():
         summary_parts.append(f"* {plugin}")
         for art in items:
-            # markdownlint MD007 wants 2-space indent for nested bullets.
-            summary_parts.append(f"  * [{art.name}]({plugin}/{art.name}.md)")
+            # mkdocs-literate-nav requires 4-space indent for nested bullets;
+            # SUMMARY.md is therefore excluded from markdownlint via
+            # `.markdownlintignore` (the repo-wide MD007 default stays at 2).
+            summary_parts.append(f"    * [{art.name}]({plugin}/{art.name}.md)")
     write_page(section_dir / "SUMMARY.md", "\n".join(summary_parts) + "\n")
 
 
