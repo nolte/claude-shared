@@ -27,14 +27,14 @@ The pipeline is composed of three already-shipped pieces — the `release-drafte
 - [ ] **acceptance-1** A published (non-draft) GitHub release tag exists on `nolte/claude-shared` for a version greater than `v0.1.1`, with a body produced from the `release-drafter` template; the publish event was caused by `release-publish.yml`, not by a manual `gh release edit --draft=false`.
 - [ ] **acceptance-2** `.github/workflows/ci.yml` carries an `on.workflow_dispatch` trigger; manually dispatching the workflow against `develop` produces a SUCCESS run that satisfies every required status check the branch-protection ruleset names.
 - [ ] **acceptance-3** Running `/nolte-shared:release-publish-trigger` against `develop` HEAD passes every pre-publish gate from `spec/project/release-skill-layer/` §"Skill B — Release publish trigger" and dispatches `release-publish.yml`, with the resulting workflow run reaching `conclusion: success` and flipping the open draft to published.
-- [ ] **acceptance-4** After publication the released tag's version string matches the version declared in both `project/portfolio.yml` and `.claude-plugin/plugin.json`, so consumers reading either manifest see consistent metadata.
+- [x] **acceptance-4** After publication the released tag's version string matches the version declared in `.claude-plugin/plugin.json` and in both `version` fields of `.claude-plugin/marketplace.json` (`metadata.version` and `plugins[0].version`), so consumers reading either manifest see consistent metadata. Closed by PR #95 `chore(release): v0.1.3 (#95)` at `3ccd5da89fa93459e81fff982462818d3a04d4bf` — see `## Consistency notes` for the provenance correction relative to the original wording.
 
 ## Test hooks
 
 - **acceptance-1** — manual: `gh release list --repo nolte/claude-shared --json tagName,isDraft,publishedAt,author` shows a non-draft entry > v0.1.1 whose `author.login` matches the release-publish workflow's bot — `pending`
 - **acceptance-2** — manual: open `.github/workflows/ci.yml` and verify `on.workflow_dispatch`; then `gh workflow run ci.yml --ref develop` and `gh run list --workflow ci.yml --branch develop --limit 1 --json conclusion` shows `conclusion: success` — `pending`
 - **acceptance-3** — skill: invoke `/nolte-shared:release-publish-trigger`; expect "all gates green" plus a dispatched `release-publish.yml` run; `gh run view <id> --json conclusion` shows `success` — `pending`
-- **acceptance-4** — manual: after publish, `gh release view <tag> --json tagName` and grep `project/portfolio.yml` + `.claude-plugin/plugin.json` for the version string; assert all three match — `pending`
+- **acceptance-4** — manual: after publish, `gh release view <tag> --json tagName` and grep `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` for the version string; assert all three occurrences (`plugin.json.version`, `marketplace.json.metadata.version`, `marketplace.json.plugins[0].version`) match the tag — `passing` (verified after PR #95 squash-merge on `develop`; all three read `0.1.3`)
 
 ## Consistency notes
 
@@ -48,7 +48,14 @@ Investigation surfaces, walked from short SHA `d8076ed`:
 
 Result: a single `kind: clean` finding, `resolution: proceed`. The feature is cleared for `draft → ready` once the sprint-side `sprint` field is assigned by `sprint-plan`.
 
+**2026-05-12 — provenance correction and acceptance-4 closure (manual follow-up, no consistency-check re-run):**
+
+acceptance-1's reading on 2026-05-11 implicitly assumed the active pipeline cuts every published release. Investigation on 2026-05-12 shows otherwise: `v0.1.2` (published 2026-05-11 15:50 UTC) was **manually flipped from Draft to Published** — no `release-publish.yml` run exists in the publish window (the last run on that workflow is `24910214461` from 2026-04-24, conclusion `failure`; the last *successful* run is `24910178405`, also from 2026-04-24, which cut `v0.1.1`). Only reactive workflows fired on the resulting `release` event: `release-cd-refresh-master.yml` (run `25681009008`) and `release-cd-deliver-docs.yml`, both at 15:50:32 UTC. The release API's `author: github-actions[bot]` refers to the `release-drafter.yml` run on 2026-05-10 22:02 that created the Draft, not to whoever published it 17 hours later. Consequence for this feature: `v0.1.2` does not retroactively satisfy acceptance-1, and the value-verification therefore requires a fresh pipeline-cut on `v0.1.3` (or later) — that's exactly what sprint 0002 produces.
+
+acceptance-4 is closed by PR #95 (`chore(release): v0.1.3 (#95)` at `3ccd5da89fa93459e81fff982462818d3a04d4bf`): after the squash-merge, all three version-bearing fields read `0.1.3` (`plugin.json.version`, `marketplace.json.metadata.version`, `marketplace.json.plugins[0].version`). The original acceptance-4 wording cited `project/portfolio.yml` as one of the manifests; that file is a capability inventory per `spec/portfolio/portfolio-management/` and carries no `version` field. The corrected wording in `## Acceptance criteria` cites `marketplace.json` instead. The correction does not change the consistency-check finding (still `kind: clean`).
+
 ## Risks
 
 - The pipeline depends on multiple already-shipped workflows; an undetected regression in `release-drafter.yml` or `release-publish.yml` between now and Sprint-2 close could surface only during the actual publish attempt and would block `verifies_sprint_value`.
 - Adding `workflow_dispatch` to `ci.yml` widens the set of triggers any develop-pusher (or scheduled run) can fire. The change is committed in code (not in `.claude/settings.json`), so the impact is bounded; still worth surfacing on the eventual review PR's Risk / rollout notes.
+- `release-publish.yml` has not run since 2026-04-24 (the last successful run cut `v0.1.1`). Four weeks of inactivity is enough for action-version drift, expired secret bindings, or upstream-reusable-workflow changes to have accumulated unnoticed. The first dispatch on `develop` HEAD as part of this feature may surface those failures; per `spec/project/workflow-health/`, that's a triage event (`stale pin` / `infra` / `secret drift`), not a retry-the-skill event.
