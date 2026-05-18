@@ -91,12 +91,14 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 - **MUSS [MUST]** jedes Portfolio-Mitglied behandeln, als erbe es implizit jeden Eintrag aus `portfolio/tech-stack.yml`, dessen `status` zum Audit-Zeitpunkt `active` oder `experimental` ist. Ein Konsumer deklariert geerbte Einträge nicht erneut; sein effektiver Stack ist die Vereinigung von `(globale active/experimental Einträge) minus (Einträge, die der Konsumer mit inherit: false überschreibt) vereint mit (den Additions des Konsumers)`.
 - **SOLLTE [SHOULD]** einen globalen Eintrag von `status: experimental` auf `status: active` befördern, sobald mindestens ein Portfolio-Mitglied ihn über einen geschlossenen Sprint hinweg als geerbten Eintrag ohne `overrides:`-Record getragen hat. Das portfolio-weite Promotion-Kriterium für das Capability-Lifecycle-Vokabular wird unter den Open Questions von `spec/portfolio/portfolio-management/` verfolgt und ist dort nicht entschieden; dieses SOLLTE kodifiziert in der Zwischenzeit den tech-stack-spezifischen Default, damit die Severity-Tabelle in §Portfolio-Audit-Integration experimentell klassifizierte Einträge nicht unbefristet auf `Suggestion` bei fehlenden Signalen festsetzt.
 - **MUSS [MUST]** jeden Eintrag in `tech_stack.overrides[]` als Override-Record strukturieren, der genau drei Felder trägt: `name` (verweisend auf den `name` eines existierenden globalen Eintrags), `inherit` (der **MUSS [MUST]** auf `false` gesetzt sein; das Feld wird zur Lesbarkeit explizit benannt und um Raum für eine zukünftige Opt-in-Semantik zu lassen, ohne die Record-Form zu ändern) und `rationale` (ein nicht-leerer Fließtextsatz):
+
   ```yaml
   overrides:
     - name: mkdocs
       inherit: false
       rationale: "rein statisches Repo; Doku liefert reines Markdown ohne Generator aus"
   ```
+
 - **MUSS [MUST]** einen `tech_stack.overrides[]`-Record ablehnen, dessen `name` sich nicht auf einen existierenden globalen Eintrag auflöst; gebrochene Override-Referenzen sind ein `Warning`-Auditbefund.
 - **DARF NICHT [MUST NOT]** stille Abweichung vom globalen Stack zulassen. Ein Repository, das ein `kind: docs`-Artefakt ausliefert (gerendertes HTML), den globalen `docs`-Eintrag aber nicht erbt und keinen expliziten Override hat, ist ein `Warning`-Auditbefund.
 - **DARF NICHT [MUST NOT]** zulassen, dass `tech_stack.overrides[]` irgendein Feld des geerbten Eintrags ändert, außer ihn zu unterdrücken. Ein Konsumer, der eine andere `version` eines geerbten Eintrags benötigt, setzt den geerbten Eintrag mit `inherit: false` plus Rationale außer Kraft **und** deklariert einen repo-spezifischen Ersatz unter `additions:` mit den gewünschten Feldern.
