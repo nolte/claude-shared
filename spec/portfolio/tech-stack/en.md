@@ -85,7 +85,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
   - `test`: a test runner or framework (`Pytest`, Vitest, Go test).
   - `deploy-target`: a deployment target or distribution channel (Docker image, GitHub Pages, PyPI).
   - `other`: fallback for entries that legitimately don't fit any of the above.
-- **SHOULD** route an `other`-classified entry that persists across two consecutive portfolio audits to a catalog-gap finding (severity `Suggestion`), so the enum is revised before `other` becomes a hidden bucket.
+- **SHOULD** route an `other`-classified entry that persists across two consecutive quarterly portfolio audits or 180 days from first appearance (whichever comes first) to a catalog-gap finding (severity `Suggestion`), so the enum is revised before `other` becomes a hidden bucket. The quarterly-cadence anchor matches the audit-cadence MUST in `spec/portfolio/portfolio-management/` §Portfolio audit.
 
 ### Inheritance semantics
 
@@ -111,7 +111,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - **MUST** classify tech-stack findings using the canonical severity scale from `spec/claude/review-plan/`:
   - `Critical`: a Portfolio-Member ships its own `portfolio/tech-stack.yml` (forbidden duplication); a per-repo `additions:` entry shadows an inherited entry without a corresponding override.
   - `Warning`: an override references a global entry that doesn't exist; a declared entry with `status: active` isn't detected in repo signals; a consumer renders documentation HTML without inheriting the global `docs` entry and without an explicit override. **Rationale-downgrade clause:** a `status: active` entry whose `rationale` field carries an acknowledged-missing-signal marker (as written by the capture skill per `spec/portfolio/tech-stack-discovery/` §Discovery sequence per repository) is downgraded from `Warning` to `Suggestion`.
-  - `Suggestion`: a global entry is `deprecated` and at least one consumer still inherits it after one closed sprint; an `other`-classified entry has persisted across two consecutive audits; an inherited entry with `status: experimental` isn't detected in repo signals (looser threshold than `active`, since experimental entries are explicitly probationary).
+  - `Suggestion`: a global entry is `deprecated` and at least one consumer still inherits it after one closed sprint; an `other`-classified entry has persisted across two consecutive quarterly audits or 180 days from first appearance; an inherited entry with `status: experimental` isn't detected in repo signals (looser threshold than `active`, since experimental entries are explicitly probationary).
   - `Info`: observations that don't yet require action (for example a global entry with `since` younger than one closed sprint; an experimental entry with no consumer pickup yet).
 - **MUST** verify repository signals for at least the following classes:
   - `kind: package-manager`: lockfile or tool-config presence matching the entry's `name` (for example `uv.lock` for `name: uv`).
@@ -128,6 +128,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - **MUST** show each consumer's effective tech-stack: the inherited entries (marked with an "inherited" badge), the consumer's `additions:` (marked with a "repo-specific" badge), and the consumer's `overrides:` (marked with a "suppressed" badge and surfacing the rationale).
 - **MUST** be generated automatically from `portfolio/tech-stack.yml` plus every Portfolio-Member's `project/portfolio.yml`; the rendered files **MUST NOT** be hand-edited.
 - **SHOULD** visualise the kind-distribution across the portfolio with a Mermaid diagram authored per `spec/project/mermaid-diagrams/` (for example a `flowchart` aggregating `kind` counts per repository) so structural outliers (a repo with no `test` entry, a repo with two `language` entries) are visible at a glance. Non-Mermaid chart formats fall outside the portfolio-wide diagram catalog and aren't used here.
+- **SHOULD** include a per-consumer **delta view** alongside the effective-stack view: a compact list of inherited entries the consumer suppressed via `overrides:` (with rationale) and `additions:` the consumer introduced. The delta view sharpens drift awareness; the effective-stack view above remains the default reading order so casual readers don't pay the delta-view cognitive cost.
 
 ### Cross-references with portfolio-management
 
@@ -144,6 +145,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 
 - [ ] `portfolio/tech-stack.yml` exists in the `claude-shared` repository root with at least one entry conforming to §"Entry schema."
 - [ ] `git blame portfolio/tech-stack.yml` shows only maintainer-authored commits; no automated-generation commit appears in its history, verifying the hand-authoring MUST in §"Global tech-stack manifest."
+- [ ] A schema-validation check for `portfolio/tech-stack.yml` runs in CI or pre-commit and rejects malformed entries, kind-enum violations, schema-violating field types, or missing mandatory fields; the check produces zero failures on the current HEAD.
 - [ ] Every active Portfolio-Member's `project/portfolio.yml` carries a top-level `tech_stack:` key (possibly empty), with any `additions:` and `overrides:` conforming to this spec.
 - [ ] Every `tech_stack.overrides[]` record resolves to an existing global entry; running the broken-override-reference check produces zero `Warning` findings.
 - [ ] Every rename or deletion of a global-stack entry surfaces via the broken-override-reference check above within the next audit run; no `Warning`-grade override-reference finding persists beyond the one-closed-sprint rename-coordination window defined in §"Entry schema."
@@ -158,9 +160,4 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 
 ## Open Questions
 
-- Should `version:` accept a structured shape (for example `{ requested: "3.12", actual: "3.12.4", source: "pyproject.toml" }`) instead of free-form text? Structured shape unlocks mechanical version-drift checks, but couples this spec more tightly to per-language conventions.
-- Should `source_of_truth:` become mandatory for selected kinds (especially `language`, `runtime`, `package-manager`) so the audit can mechanically reconcile the declared entry against the repository's canonical configuration files? Mandatory `source_of_truth` raises the authoring bar but tightens the audit's grip on drift.
-- How long may `kind: other` persist before it transitions from `Suggestion` to `Warning`? The current proposal ("across two consecutive audits") is a placeholder; calibration depends on how often the audit runs.
-- Should the global stack carry an explicit `replaces:` field listing entries it deliberately supersedes (for example a transition from `name: poetry` to `name: uv`), so the audit can suggest consumer migrations? Adds curation overhead but improves cross-portfolio coordination.
-- Should `tech_stack:` support a third sub-block `notes:` (per-repository free-form prose) for stack characteristics that don't fit the entry schema (for example "this repo's deploy story is intentionally manual because of regulatory constraints")? Cheap to add, but risks becoming a dumping ground.
-- Should the documentation rendering visualise the **delta** per consumer (which inherited entries were overridden, which additions were introduced) as a first-class view, or only the effective stack? A delta view sharpens drift awareness; an effective-stack view reads more naturally.
+None at this revision. The questions surfaced during the spec-readiness audits were resolved as follows: structured `version:` shape and mandatory `source_of_truth:` for selected kinds are deferred (free-form / optional remain sufficient for the MVP capture flow); the `kind: other` escalation window is calibrated below to "two consecutive quarterly audits or 180 days, whichever comes first"; an explicit `replaces:` field on the global stack isn't added (`deprecated_in_favor_of` already covers the migration cue); a third per-repo `notes:` sub-block isn't added (catch-all-bucket risk); the documentation rendering delta-view is added below as a SHOULD alongside the effective-stack MUST. Future revisions may surface new questions as the capture skill and the portfolio audit land.

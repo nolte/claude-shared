@@ -89,6 +89,8 @@ Ein portfolioweites Tech-Stack-Inventar zahlt den Kurationsaufwand entlang fünf
 - **DARF NICHT [MUST NOT]** einen `tech_stack:`-Block schreiben, bevor der Maintainer mindestens eine Runde des vorgeschlagenen Deltas bestätigt hat; ein leeres `tech_stack: {}` ist ein legitimes Ergebnis und wird erst nach expliziter Bestätigung geschrieben.
 - **SOLLTE [SHOULD]** Einträge, die die Signale nicht stützen, die der Maintainer aber explizit (freihändig) hinzufügt, auffällig markieren und eine ausdrückliche Quittung verlangen, dass das Audit ein `Warning` für das fehlende Signal produzieren wird. Der Skill protokolliert die Quittung im `rationale`-Feld des Eintrags; das Audit liest dann das Rationale und stuft den Befund auf `Suggestion` herab.
 - **KANN [MAY]** Discovery-State (ein Draft-Delta, eine Liste verworfener Kandidaten) für eine einzige Session persistieren, damit der Maintainer pausieren und fortsetzen kann; persistierter State wird nicht in Git eingecheckt.
+- **SOLLTE [SHOULD]** das optionale `version:`-Feld aus dem erkannten Signal vorbefüllen, wenn das Signal eine eindeutige Version trägt (zum Beispiel `pyproject.toml:requires-python` für `kind: language`, name `python`; `package.json:engines.node` für `kind: runtime`, name `node`; ein Tag-Pin in `.tool-versions`). Wenn das Signal mehrdeutig oder abwesend ist, bleibt das Feld leer, statt einen geratenen Wert zu tragen.
+- **KANN [MAY]** ein „Kandidaten-nicht-gewählt"-Protokoll neben dem geschriebenen `tech_stack:`-Block ausgeben, das signal-abgeleitete Kandidaten auflistet, die der Maintainer während der Bestätigung abgelehnt hat, mit einem Ein-Phrasen-Ablehnungsgrund pro Eintrag. Das Protokoll dient ausschließlich audit-lesbarer Drift-Erkennung; es wird nicht ins Repository eingecheckt.
 
 ### Globale Stack-Kuration in `claude-shared`
 
@@ -130,8 +132,4 @@ Ein portfolioweites Tech-Stack-Inventar zahlt den Kurationsaufwand entlang fünf
 
 ## Open Questions
 
-- Sollte die Ermittlungs-Sequenz das `version:`-Feld aus dem erkannten Signal vorbefüllen (beispielsweise `pyproject.toml:requires-python` für `kind: language`, name `python`)? Auto-Befüllung beschleunigt das Schreiben, koppelt diese Spec aber an sprachspezifische Datei-Formate.
-- Sollten `experimental`-Einträge im globalen Stack Opt-out (geerbt, sofern der Konsumer nicht explizit unterdrückt) oder Opt-in (nur geerbt, wenn der Konsumer explizit subskribiert) sein? `spec/portfolio/tech-stack/` setzt das schemaseitig auf „Opt-out"; der Ermittlungs-Fluss dieser Spec folgt diesem Default, aber eine zukünftige Opt-in-Semantik würde verlangen, dass der Discovery-Skill pro `experimental`-Eintrag beim Maintainer rückfragt.
-- Sollte der pro-Repo-Discovery-Skill ein separates „Kandidaten-nicht-gewählt"-Protokoll (audit-lesbar) für Einträge produzieren, die der Maintainer abgelehnt hat? Nützlich für die Drift-Erkennung von portfolio-audit, aber zusätzlicher Speicher-Overhead.
 - Sollte der §Benefits-Abschnitt einen sechsten Bullet für „Release-Notes-Erzeugung" gewinnen, sobald das Portfolio eine Release-Notes-Audience-Analyse gemäß `spec/project/release-notes-audience-analysis/` standardisiert? Heute verfrüht; erneut prüfen, sobald die Pipeline landet.
-- Sollte diese Spec ein Mermaid-Flow-Diagramm der Ermittlungs-Sequenz erhalten (gemäß `spec/project/mermaid-diagrams/`), damit ein Reviewer die Reihenfolge auf einen Blick sieht? Die narrative Form liest sich sauber; ein Diagramm würde Beitragenden helfen, die visuelle Struktur bevorzugen.

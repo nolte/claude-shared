@@ -89,6 +89,8 @@ A portfolio-wide tech-stack inventory pays back the curation overhead along five
 - **MUST NOT** write a `tech_stack:` block until the maintainer has confirmed at least one round of the proposed delta; an empty `tech_stack: {}` is a legitimate outcome and is written only after explicit confirmation.
 - **SHOULD** surface entries the signals don't support but which the maintainer explicitly adds (free-form), and require an explicit acknowledgement that the audit will produce a `Warning` for the missing signal. The skill records the acknowledgement in the entry's `rationale` field; the audit then reads the rationale and downgrades the finding to `Suggestion`.
 - **MAY** persist discovery state (a draft delta, a list of dismissed candidates) for a single session so the maintainer can stop and resume; persisted state isn't checked into git.
+- **SHOULD** pre-populate the optional `version:` field from the detected signal when the signal carries an unambiguous version (for example `pyproject.toml:requires-python` for `kind: language`, name `python`; `package.json:engines.node` for `kind: runtime`, name `node`; a tag pin in `.tool-versions`). When the signal is ambiguous or absent, the field stays blank rather than carrying a guessed value.
+- **MAY** emit a "candidates not picked" log alongside the written `tech_stack:` block, listing signal-derived candidates the maintainer rejected during confirmation, with a one-phrase rejection reason per entry. The log is for audit-readable drift detection only; it doesn't get committed to the repository.
 
 ### Global stack curation in `claude-shared`
 
@@ -130,8 +132,4 @@ A portfolio-wide tech-stack inventory pays back the curation overhead along five
 
 ## Open Questions
 
-- Should the discovery sequence pre-populate the `version:` field from the detected signal (for example reading `pyproject.toml:requires-python` for `kind: language`, name `python`)? Automatic population speeds up authoring but couples this spec to per-language file formats.
-- Should `experimental`-class entries in the global stack be opt-out (inherited unless the consumer explicitly suppresses) or opt-in (only inherited when the consumer explicitly subscribes)? `spec/portfolio/tech-stack/` settles this at "opt-out" for the schema; this spec's discovery flow currently follows that default, but a future opt-in semantic would require the discovery skill to ask the maintainer per `experimental` entry.
-- Should the per-repo discovery skill produce a separate "candidates not picked" log (audit-readable) for entries the maintainer rejected? Useful for portfolio-audit's drift detection, but adds storage overhead.
 - Should the §Benefits section grow a sixth bullet for "release-notes generation" once the portfolio standardises a release-notes audience analysis per `spec/project/release-notes-audience-analysis/`? Premature today; revisit once that pipeline lands.
-- Should this spec gain a Mermaid flow diagram of the discovery sequence (per `spec/project/mermaid-diagrams/`) so a reviewer sees the order at a glance? The narrative form reads cleanly; a diagram would aid contributors who prefer visual structure.
