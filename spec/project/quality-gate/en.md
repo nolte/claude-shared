@@ -13,7 +13,7 @@ Every repository in the portfolio runs lint, type-check, and test commands in so
 - The gate is clearly distinct from continuous CI (`workflow-health`) and from security scanning (`dependency-audit`); each concern owns its own surface
 
 ## Non-Goals
-- Picking the specific linting / typechecking / testing tool for a given language (ruff vs flake8, mypy vs pyright, vitest vs jest): that's a per-repository decision
+- Picking the specific linting / typechecking / testing tool for a given language (ruff vs flake8, mypy vs pyright, Vitest vs jest): that's a per-repository decision
 - Defining the content of any given test suite or lint rule set—those live in the repositories' own configs
 - Replacing CI: the gate is a local-or-invocable pre-check that mirrors what CI will also run; CI remains the source of truth for merge protection
 - Declaring operational details of the skill that implements the gate (`skills/quality-gate/`)—those can evolve without a spec change

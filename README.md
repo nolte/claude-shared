@@ -1,6 +1,6 @@
-# claude-shared
+# `claude-shared`
 
-[![ci](https://github.com/nolte/claude-shared/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/nolte/claude-shared/actions/workflows/ci.yml)
+[![CI](https://github.com/nolte/claude-shared/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/nolte/claude-shared/actions/workflows/ci.yml)
 
 The `ci` workflow bundles the three required status checks that gate `develop`: `lint`, `test`, and `docs`. A green badge means all three passed on the latest `develop` commit.
 

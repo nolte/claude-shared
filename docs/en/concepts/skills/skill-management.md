@@ -16,7 +16,7 @@ Before writing, the skill picks where to place the new files:
 
 | Context | Target path |
 |---------|-------------|
-| claude-shared source tree (top-level `skills/`, README mentions `claude-shared`) | `skills/<name>/` |
+| `claude-shared` source tree (top-level `skills/`, README mentions `claude-shared`) | `skills/<name>/` |
 | Consuming project, project-level | `.claude/skills/<name>/` |
 | Consuming project, user-level | `~/.claude/skills/<name>/` |
 

@@ -1,6 +1,6 @@
 # Agents
 
-Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the claude-shared source tree they live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, or bundled inside the `nolte-shared` plugin.
+Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the `claude-shared` source tree they live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, or bundled inside the `nolte-shared` plugin.
 
 ## Bundled agents
 
@@ -40,7 +40,7 @@ Frontmatter `name` must match the filename without `.md`. Omit `tools` only when
 
 | Context | Path |
 |---------|------|
-| claude-shared source tree | `agents/<name>.md` |
+| `claude-shared` source tree | `agents/<name>.md` |
 | Consuming project, project-level | `.claude/agents/<name>.md` |
 | Consuming project, user-level | `~/.claude/agents/<name>.md` |
 | Delivered via plugin | the plugin's designated agents path |

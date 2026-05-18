@@ -3,12 +3,12 @@
 Status: draft
 
 ## Context
-The claude-shared repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives: a **source** form in this repository (under `skills/`) and a **runtime** form in a consuming project, where Claude Code actually loads it. The only supported runtime-distribution path is the Claude Code plugin mechanism: this repository is itself a Claude Code plugin (`.claude-plugin/plugin.json` plus a marketplace entry), and consuming projects pick up skills by installing the plugin. Without a consistent shape and a single distribution path, skills drift in naming, trigger descriptions, and internal structure, and consumers end up with ad-hoc copies or symlinks that diverge over time. This spec defines how new skills are authored, how they're distributed, and what existing skills must conform to.
+The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives: a **source** form in this repository (under `skills/`) and a **runtime** form in a consuming project, where Claude Code actually loads it. The only supported runtime-distribution path is the Claude Code plugin mechanism: this repository is itself a Claude Code plugin (`.claude-plugin/plugin.json` plus a marketplace entry), and consuming projects pick up skills by installing the plugin. Without a consistent shape and a single distribution path, skills drift in naming, trigger descriptions, and internal structure, and consumers end up with ad-hoc copies or symlinks that diverge over time. This spec defines how new skills are authored, how they're distributed, and what existing skills must conform to.
 
 ## Goals
 - Every skill has the same predictable shape on disk
 - Skills are discoverable by Claude through precise, trigger-oriented descriptions
-- Skills are portable across any project that consumes claude-shared, with no hidden dependencies
+- Skills are portable across any project that consumes `claude-shared`, with no hidden dependencies
 - Authors have a clear checklist and template to start from
 
 ## Non-Goals
@@ -59,8 +59,8 @@ Starter vocabulary:
 - `quality-gate`: lint, typecheck, test
 - `dependency`: CVE scans, license compliance, lockfile hygiene
 
-### Source location (claude-shared repository)
-- **MUST** live at `skills/<name>/` in the claude-shared source tree
+### Source location (`claude-shared` repository)
+- **MUST** live at `skills/<name>/` in the `claude-shared` source tree
 - **MUST** be shipped as part of the `nolte-shared` Claude Code plugin declared by this repository's `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`; no skill in this repository exists outside the plugin scope
 
 ### Distribution
@@ -128,7 +128,7 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - **MAY** validate skill structure with the upstream `skills-ref` reference validator (`skills-ref validate ./skills/<name>`) before opening a PR; the validator catches frontmatter and naming issues this spec doesn't enumerate exhaustively ([R1](#references))
 
 ## Acceptance Criteria
-- [ ] Source folder exists at `skills/<name>/` in claude-shared with `<name>` in ASCII kebab-case
+- [ ] Source folder exists at `skills/<name>/` in `claude-shared` with `<name>` in ASCII kebab-case
 - [ ] Repository contains a valid `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` that expose this skill as part of the `nolte-shared` plugin
 - [ ] Skill is discoverable in a consuming project solely by installing the `nolte-shared` plugin from the marketplace—no manual copy or symlink into `.claude/skills/` is needed or permitted
 - [ ] Plugin version in `.claude-plugin/plugin.json` equals the latest published GitHub Release tag (maintained per `release-automation` §Version-bearing file alignment, not by skill-change PRs); no diff to the `version` field appears in any PR whose sole purpose is adding, renaming, or removing a skill
@@ -136,7 +136,7 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - [ ] `name` in frontmatter equals the folder name
 - [ ] `description` mentions the concrete user phrasings that should trigger the skill
 - [ ] If `tags` is declared in frontmatter, every entry is a lowercase ASCII kebab-case string ≤30 characters and the list contains at most 5 entries
-- [ ] Skill works when invoked in a downstream project that doesn't contain claude-shared-specific context, loaded through the plugin
+- [ ] Skill works when invoked in a downstream project that doesn't contain `claude-shared`-specific context, loaded through the plugin
 - [ ] No hard-coded absolute paths; all internal paths are relative to the skill folder or the project the skill operates on
 - [ ] If the skill writes files, the target locations and preconditions are documented
 - [ ] Reviewing an individual skill against this spec follows `spec/claude/skill-review/`; review output conforms to `spec/claude/review-plan/` and lives under `.audits/skill-review/<name>.md`

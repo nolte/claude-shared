@@ -6,7 +6,7 @@ This page summarizes the specification at `spec/claude/agent-management/en.md` (
 
 ## Context
 
-The claude-shared repository collects reusable Claude Code skills and agents. An agent has two lives: a **source form** here (`agents/`) and a **runtime form** in a consuming project (`.claude/agents/` or `~/.claude/agents/`) where Claude Code loads it and the `Agent` tool dispatches via `subagent_type`.
+The `claude-shared` repository collects reusable Claude Code skills and agents. An agent has two lives: a **source form** here (`agents/`) and a **runtime form** in a consuming project (`.claude/agents/` or `~/.claude/agents/`) where Claude Code loads it and the `Agent` tool dispatches via `subagent_type`.
 
 Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality—reuse becomes fragile and routing unreliable.
 
@@ -73,7 +73,7 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 - [ ] `description` names concrete triggers
 - [ ] If `tools` is set, the list is sufficient and has no unused entries
 - [ ] Read-only agents have no write/edit/execution tools
-- [ ] Agent works without claude-shared-specific context
+- [ ] Agent works without `claude-shared`-specific context
 - [ ] No absolute paths
 - [ ] Side-effect targets and preconditions documented when applicable
 

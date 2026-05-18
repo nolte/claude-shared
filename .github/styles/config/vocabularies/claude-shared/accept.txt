@@ -1,13 +1,9 @@
 agentic
 [Aa]utodetect(s|ed|ing|ion)?
 [Aa]utomerge[ds]?
-[Cc][Ii]
-[Cc]laude
 hotfix
 [Ii]nvokable
 PNGs?('s)?
 prepended
-[Ss]emver
 [Ss]ubagent(s|'s)?
 [Vv]endor(ed|ing)?
-[Vv]itest

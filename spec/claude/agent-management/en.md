@@ -3,13 +3,13 @@
 Status: draft
 
 ## Context
-The claude-shared repository collects reusable Claude Code skills and agents that downstream projects consume. An agent has two lives: a **source** form in this repository (under `agents/`), and a **runtime** form in a consuming project (under `.claude/agents/` or `~/.claude/agents/`) where Claude Code actually loads it and the `Agent` tool dispatches to it via `subagent_type`. Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality, which makes reuse fragile and routing unreliable. This spec defines how new agents are authored, where they live in both forms, and what existing agents must conform to.
+The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. An agent has two lives: a **source** form in this repository (under `agents/`), and a **runtime** form in a consuming project (under `.claude/agents/` or `~/.claude/agents/`) where Claude Code actually loads it and the `Agent` tool dispatches to it via `subagent_type`. Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality, which makes reuse fragile and routing unreliable. This spec defines how new agents are authored, where they live in both forms, and what existing agents must conform to.
 
 ## Goals
 - Every agent has the same predictable shape on disk
 - Agents are routable by Claude through precise, trigger-oriented descriptions
 - Agents have the minimum necessary tool access to do their job
-- Agents are portable across any project that consumes claude-shared, with no hidden dependencies
+- Agents are portable across any project that consumes `claude-shared`, with no hidden dependencies
 - Authors have a clear checklist and template to start from
 
 ## Non-Goals
@@ -102,8 +102,8 @@ For security reasons, Claude Code **silently ignores** the `hooks`, `mcpServers`
 - **MAY**, when the agent is intended to be picked up by Claude **proactively** (without the user naming it explicitly), include the phrase **"use proactively"** in the `description` field; the runtime treats this phrase as an opt-in signal for proactive delegation ([R1](#references)). Conversely, if the agent should only run when the user explicitly names it, **MUST NOT** include "use proactively" in `description`
 - **SHOULD** apply **single-responsibility design** to every agent: one clear goal, one input shape, one output shape, one handoff rule. Agents that conflate multiple responsibilities (review + fix, audit + remediate) regress quickly because the dispatching Claude can't reliably match the description to a request ([R6](#references))
 
-### Source location (claude-shared repository)
-- **MUST** live at `agents/<name>.md` in the claude-shared source tree, so it can be copied, symlinked, or bundled into a plugin for distribution
+### Source location (`claude-shared` repository)
+- **MUST** live at `agents/<name>.md` in the `claude-shared` source tree, so it can be copied, symlinked, or bundled into a plugin for distribution
 - **MAY** have a sibling folder `agents/<name>/` for supporting files when needed
 
 ### Runtime location (consuming project)
@@ -124,7 +124,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - **MAY** include example invocations and expected reports in a sibling `agents/<name>/examples/` folder
 
 ## Acceptance Criteria
-- [ ] Source file exists at `agents/<name>.md` in claude-shared with `<name>` in ASCII kebab-case
+- [ ] Source file exists at `agents/<name>.md` in `claude-shared` with `<name>` in ASCII kebab-case
 - [ ] Frontmatter parses as valid YAML and contains at minimum `name`, `description`, and `distribution`
 - [ ] `name` in frontmatter equals the filename without `.md`
 - [ ] `description` names concrete triggers the calling Claude can match against user requests
@@ -134,7 +134,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [ ] If `distribution: project`, the agent is dispatchable via `subagent_type: <name>` after being deployed to `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, with no plugin required
 - [ ] If `tools` is set, the listed tools are sufficient for the agent's stated responsibility and contain no unused entries
 - [ ] Read-only agents have no write/edit/execution tools in their `tools` list
-- [ ] Agent works when invoked in a downstream project that doesn't contain claude-shared-specific context
+- [ ] Agent works when invoked in a downstream project that doesn't contain `claude-shared`-specific context
 - [ ] No hard-coded absolute paths; all internal references are relative to the agent file or the project it operates on
 - [ ] If the agent writes files or performs side effects, the targets and preconditions are documented in the system prompt
 - [ ] Frontmatter field names and technical identifier values (`name`, `distribution`, `tools`, `model`, `tags`) are English; `description` and the system-prompt body are English by default, unless the agent declares `distribution: project` and the consuming project's root-level convention file (typically `CLAUDE.md`) declares a non-English documentation language and authorizes that language for agent prose

@@ -43,7 +43,7 @@ Two existing specs frame how releases work in the portfolio. `release-automation
 - **MUST** derive project-context sections from the detected project type. Concrete bundles:
   - **Claude Code plugin**: `Skills changed` (added / renamed / removed under `skills/`), `Agents changed` (under `agents/`), `Specs changed` (under `spec/`), `Breaking changes for plugin consumers` (renamed slash commands, removed skills, plugin manifest version bump), `Required plugin re-install` (only when skill / agent artefacts moved or were renamed).
   - **Python application** (with hardware-touching variant per `github-issue-templates-apply` references): `Hardware support` (changes to supported devices, sensors, firmware-version constraints), `Runtime requirements` (Python version, OS, container base image), `Migration notes for operators` (config changes, breaking environment-variable renames).
-  - **Python library**: `API changes`, `Compatibility breaks` (semver-major changes), `Deprecations` (with the deprecation removal target).
+  - **Python library**: `API changes`, `Compatibility breaks` (SemVer-major changes), `Deprecations` (with the deprecation removal target).
   - **Node / TypeScript library or app**: `API changes`, `Compatibility breaks`, `Runtime requirements` (Node version, package-manager version pin) when the package declares them.
   - **CLI tool**: `Command-line changes` (new commands, renamed flags), `Flag deprecations`, `Default-value changes`.
   - **Documentation-only repo**: `Restructured pages` (path moves), `Removed pages`, `New translations`.
