@@ -116,3 +116,18 @@ capabilities:
     peers:
       - claude-shared:portfolio-spec-corpus
     since: 2026-04-24
+
+# Schema for tech_stack: spec/portfolio/tech-stack/ §Per-repository tech-stack block.
+# Inheritance is additive: the entries in portfolio/tech-stack.yml are implicitly
+# inherited unless explicitly overridden below. claude-shared inherits the
+# full global stack (mkdocs, renovate, github-actions, task, vale, pre-commit,
+# markdownlint) and adds Python for the MkDocs build and local scripts.
+tech_stack:
+  additions:
+    - name: python
+      kind: language
+      role: Implementation language for MkDocs plugins, the docs gen-files hook, and any scripts under scripts/.
+      status: active
+      lifecycle: build
+      since: 2026-04-23
+      source_of_truth: docs/requirements.txt

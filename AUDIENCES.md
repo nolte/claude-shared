@@ -84,5 +84,6 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
 - The repo accepts its first external PR, or publishes a `CONTRIBUTING.md`.
 - A new governing constraint appears (legal, security, compliance) that the current single-entry governing-party category no longer covers.
 - `spec/project/audience-identification/` moves out of `draft` status or materially changes its requirements.
+- `spec/portfolio/tech-stack-discovery/` §Audiences materially changes; that spec owns the audience model for the portfolio-wide tech-stack inventory, and additions or removals there propagate back here as new revisit work.
 - The planning suite under `project/` materially changes its scope (new top-level artefact kind, change in how `mission`, `goals`, `roadmap`, `features`, or `sprints` are produced or consumed).
 - The auto-generated skill / agent catalog under `docs/<lang>/skills/` and `docs/<lang>/agents/` changes its public navigation structure, source-root set, or rendering output in a way that affects how downstream readers locate artefacts.

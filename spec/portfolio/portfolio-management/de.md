@@ -47,6 +47,10 @@ Leser: Maintainer von `nolte/*`-Repositories, der Claude-Code-Skill / -Agent, de
 - **MUSS [MUST]** Capability-`name`-Werte stabil halten; Umbenennungen sind explizite Entscheidungen, in der Git-Historie des Manifests nachverfolgt, und **MÜSSEN [MUST]** im selben Koordinations-Fenster mit Peer-Referenzen in anderen Portfolio-Mitglied-Repositories abgestimmt werden.
 - **DARF NICHT [MUST NOT]** eine Capability deklarieren, die das Repository nicht tatsächlich in ausgeliefertem Code, Dokumentation oder Workflows liefert; der Audit verifiziert, dass jede deklarierte Capability mindestens ein entsprechendes Implementierungs-Artefakt (ein Code-Modul, eine Workflow-Datei, eine Doku-Seite oder eine Skill-/Agent-Datei) im Repository hat.
 
+### Tech-Stack-Block
+
+- **MUSS [MUST]** den Top-Level-Key `tech_stack:` in `project/portfolio.yml` vollständig von `spec/portfolio/tech-stack/` definiert ansehen; diese Spec definiert das Feldschema weder neu noch beschränkt sie dessen Sub-Blöcke. Ob der Key für ein gegebenes Portfolio-Mitglied verpflichtend oder weglassbar ist, entscheiden die Adoptionsregeln in der referenzierten Spec, nicht hier. Capability-Einträge und der `tech_stack:`-Block sind orthogonal: Capabilities beantworten *was* das Repository liefert, `tech_stack:` beantwortet *wie* es technisch gebaut ist.
+
 ### Cross-Repository-Duplikat-Erkennung
 
 - **MUSS [MUST]** während jedes Audit-Laufs jede Capability über jedes Manifest jedes Portfolio-Mitglied-Repositorys hinweg vergleichen und jedes Paar von Capabilities, deren `description`-Statements semantisch überlappen (nicht nur Keyword-Überlappung), als **Duplikat-Kandidat** flaggen.

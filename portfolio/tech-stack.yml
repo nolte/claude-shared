@@ -1,0 +1,72 @@
+# Portfolio Tech Stack — single source of truth for portfolio-wide technical
+# building blocks.
+#
+# Schema: spec/portfolio/tech-stack/ §Entry schema
+# Methodology, audiences, and benefits: spec/portfolio/tech-stack-discovery/
+#
+# Hand-authored by the claude-shared maintainer. Automated generation from
+# per-repo manifests is forbidden per §Global tech-stack manifest.
+
+entries:
+  - name: mkdocs
+    kind: docs
+    role: Documentation generator producing the bilingual MkDocs site under docs/.
+    status: active
+    lifecycle: build
+    since: 2026-04-23
+    source_of_truth: mkdocs.yml
+
+  - name: renovate
+    kind: dep-bot
+    role: Automated dependency-update bot extending the nolte/gh-plumbing common preset.
+    status: active
+    lifecycle: development
+    since: 2026-04-23
+    source_of_truth: renovate.json5
+
+  - name: github-actions
+    kind: ci
+    role: Continuous-integration provider running lint, test, docs, release-drafter, and release-publish workflows.
+    status: active
+    lifecycle: build
+    since: 2026-04-23
+    source_of_truth: .github/workflows/
+
+  - name: task
+    kind: build
+    role: Task orchestrator running quality-gate, docs, plugin-reload, and lint targets via a portfolio-wide Taskfile convention.
+    status: active
+    lifecycle: build
+    since: 2026-04-23
+    source_of_truth: Taskfile.yml
+
+  - name: vale
+    kind: lint
+    role: Prose linter using the pinned nolte/vale-style vocabularies and the Microsoft style ruleset.
+    status: active
+    lifecycle: development
+    since: 2026-04-23
+    source_of_truth: .vale.ini
+
+  - name: pre-commit
+    kind: lint
+    role: Pre-commit hook framework wiring trailing-whitespace, end-of-files, yamllint, markdownlint, and Vale checks.
+    status: active
+    lifecycle: development
+    since: 2026-04-23
+    source_of_truth: .pre-commit-config.yaml
+
+  - name: markdownlint
+    kind: lint
+    role: Markdown style linter run via the pre-commit hook framework.
+    status: active
+    lifecycle: development
+    since: 2026-04-23
+    source_of_truth: .pre-commit-config.yaml
+
+notes: |
+  The portfolio standardises on MkDocs for documentation, Renovate as the
+  dependency bot, GitHub Actions for continuous integration, and Task as the
+  build orchestrator. Per-repository extensions (language, runtime,
+  package-manager, deploy-target) belong in each consumer's
+  project/portfolio.yml under tech_stack: rather than here.
