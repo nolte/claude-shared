@@ -34,6 +34,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - Cross-repository runtime dependency tracking. Which deployed service depends on which other deployed service at runtime is a release-pipeline concern; this spec stays at the per-repository declarative level.
 - Migration tooling for consolidating repositories onto a shared stack entry. The audit identifies the deviation; the human-driven consolidation PR is its own work.
 - A formal SAT-style resolver for inheritance conflicts. Inheritance is intentionally shallow (one global layer plus one consumer layer); no transitive multi-repository chains are modelled.
+- Treating portfolio-anchor repositories (`nolte/gh-plumbing`, `nolte/vale-style`, `nolte/taskfiles`) as a special case. An anchor repository carries an ordinary `tech_stack:` block describing how the repository itself is built; what the anchor offers the portfolio (shared workflows, vocabularies, Taskfiles, etc.) is governed by `portfolio-management`'s capability inventory and remains orthogonal to this spec.
 
 ## Requirements
 
@@ -109,7 +110,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - **MUST** extend the `portfolio-audit` skill defined by `spec/portfolio/portfolio-management/` to verify tech-stack consistency in the same audit run that verifies capability consistency; no separate `tech-stack-audit` skill is introduced.
 - **MUST** classify tech-stack findings using the canonical severity scale from `spec/claude/review-plan/`:
   - `Critical`: a Portfolio-Member ships its own `portfolio/tech-stack.yml` (forbidden duplication); a per-repo `additions:` entry shadows an inherited entry without a corresponding override.
-  - `Warning`: an override references a global entry that doesn't exist; a declared entry with `status: active` isn't detected in repo signals; a consumer renders documentation HTML without inheriting the global `docs` entry and without an explicit override.
+  - `Warning`: an override references a global entry that doesn't exist; a declared entry with `status: active` isn't detected in repo signals; a consumer renders documentation HTML without inheriting the global `docs` entry and without an explicit override. **Rationale-downgrade clause:** a `status: active` entry whose `rationale` field carries an acknowledged-missing-signal marker (as written by the capture skill per `spec/portfolio/tech-stack-discovery/` §Discovery sequence per repository) is downgraded from `Warning` to `Suggestion`.
   - `Suggestion`: a global entry is `deprecated` and at least one consumer still inherits it after one closed sprint; an `other`-classified entry has persisted across two consecutive audits; an inherited entry with `status: experimental` isn't detected in repo signals (looser threshold than `active`, since experimental entries are explicitly probationary).
   - `Info`: observations that don't yet require action (for example a global entry with `since` younger than one closed sprint; an experimental entry with no consumer pickup yet).
 - **MUST** verify repository signals for at least the following classes:
@@ -142,6 +143,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 ## Acceptance Criteria
 
 - [ ] `portfolio/tech-stack.yml` exists in the `claude-shared` repository root with at least one entry conforming to §"Entry schema."
+- [ ] `git blame portfolio/tech-stack.yml` shows only maintainer-authored commits; no automated-generation commit appears in its history, verifying the hand-authoring MUST in §"Global tech-stack manifest."
 - [ ] Every active Portfolio-Member's `project/portfolio.yml` carries a top-level `tech_stack:` key (possibly empty), with any `additions:` and `overrides:` conforming to this spec.
 - [ ] Every `tech_stack.overrides[]` record resolves to an existing global entry; running the broken-override-reference check produces zero `Warning` findings.
 - [ ] Every rename or deletion of a global-stack entry surfaces via the broken-override-reference check above within the next audit run; no `Warning`-grade override-reference finding persists beyond the one-closed-sprint rename-coordination window defined in §"Entry schema."
@@ -161,5 +163,4 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - How long may `kind: other` persist before it transitions from `Suggestion` to `Warning`? The current proposal ("across two consecutive audits") is a placeholder; calibration depends on how often the audit runs.
 - Should the global stack carry an explicit `replaces:` field listing entries it deliberately supersedes (for example a transition from `name: poetry` to `name: uv`), so the audit can suggest consumer migrations? Adds curation overhead but improves cross-portfolio coordination.
 - Should `tech_stack:` support a third sub-block `notes:` (per-repository free-form prose) for stack characteristics that don't fit the entry schema (for example "this repo's deploy story is intentionally manual because of regulatory constraints")? Cheap to add, but risks becoming a dumping ground.
-- For repositories whose mission is to *be* a tool used by other Portfolio-Member repositories (for example `nolte/vale-style`, `nolte/gh-plumbing`), do they appear in the consumer's tech-stack inventory as `kind: lint` / `kind: ci` peers, or are inter-Portfolio-Member dependencies captured elsewhere? The answer affects whether `peers:` from `portfolio-management` and `tech_stack:` from this spec overlap.
 - Should the documentation rendering visualise the **delta** per consumer (which inherited entries were overridden, which additions were introduced) as a first-class view, or only the effective stack? A delta view sharpens drift awareness; an effective-stack view reads more naturally.
