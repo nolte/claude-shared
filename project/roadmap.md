@@ -82,6 +82,20 @@ status: proposed
 
 Render and audit the cross-repository capability inventory across `nolte/*` so duplicate or gap-causing capabilities surface portfolio-wide.
 
+### R-7 — Tech-stack capture per repo wired into portfolio inventory
+
+```yaml
+id: R-7
+title: Tech-stack capture per repo wired into portfolio inventory
+detail: backlog
+outcomes: [O-1, O-2, O-3]
+target_sprint: null
+mvp: false
+status: proposed
+```
+
+Capture each repository's tech stack as a two-layer model — a portfolio-wide global stack authored in `claude-shared` itself (e.g. MkDocs as the standard documentation stack, Renovate as the standard dependency-bot) plus per-repository extensions declared in each consumer's `project/portfolio.yml` — driven by a new spec and a Claude Code skill that detects entries from repo signals and confirms them interactively.
+
 ## Phase 4 — Consumer Adoption Proof
 
 ### R-6 — Plugin install path validated against a downstream consumer
