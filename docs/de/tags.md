@@ -40,6 +40,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `quality-gate`
 
+- [cookiecutter-template-author](agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [quality-gate](skills/nolte-shared/quality-gate.md) — nolte-shared
 
 ## `release`
@@ -60,6 +61,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `scaffolding`
 
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
+- [cookiecutter-template-author](agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [png-to-transparent-svg](agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [feature-decompose](skills/nolte-shared/feature-decompose.md) — nolte-shared
 - [github-issue-templates-apply](skills/nolte-shared/github-issue-templates-apply.md) — nolte-shared

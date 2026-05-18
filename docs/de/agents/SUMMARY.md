@@ -3,6 +3,7 @@
     * [audience-doc-author](nolte-shared/audience-doc-author.md)
     * [audience-review](nolte-shared/audience-review.md)
     * [claude-plugin-developer](nolte-shared/claude-plugin-developer.md)
+    * [cookiecutter-template-author](nolte-shared/cookiecutter-template-author.md)
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
     * [feature-consistency-reviewer](nolte-shared/feature-consistency-reviewer.md)
     * [png-to-transparent-svg](nolte-shared/png-to-transparent-svg.md)
