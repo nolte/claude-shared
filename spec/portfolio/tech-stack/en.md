@@ -63,7 +63,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
   - `role`: one prose sentence naming what the entry does for the repository or portfolio.
   - `status`: one of `active`, `experimental`, `deprecated`.
 - **MAY** carry the optional fields:
-  - `version`: free-form string (semver, range, or label). Descriptive only—not enforced and not the place to manage upgrades.
+  - `version`: free-form string (SemVer, range, or label). Descriptive only—not enforced and not the place to manage upgrades.
   - `since`: ISO date when the entry first appeared in the global stack or the repository.
   - `source_of_truth`: a repository-relative path or a portfolio-wide URL pointing at the authoritative declaration (for example `.tool-versions`, `pyproject.toml`, `renovate.json5`).
   - `deprecated_in_favor_of`: when `status: deprecated`, a `name` reference to the replacement entry.

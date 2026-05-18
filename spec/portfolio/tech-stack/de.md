@@ -63,7 +63,7 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
   - `role`: Ein Fließtextsatz, der nennt, was der Eintrag für das Repository oder Portfolio leistet.
   - `status`: Einer von `active`, `experimental`, `deprecated`.
 - **KANN [MAY]** die optionalen Felder tragen:
-  - `version`: Free-Form-String (Semver, Range oder Label). Nur deskriptiv — nicht erzwingend, und nicht der Ort für Upgrade-Verwaltung.
+  - `version`: Free-Form-String (SemVer, Range oder Label). Nur deskriptiv — nicht erzwingend, und nicht der Ort für Upgrade-Verwaltung.
   - `since`: ISO-Datum, wann der Eintrag erstmals im globalen Stack oder im Repository erschien.
   - `source_of_truth`: Ein repo-relativer Pfad oder eine portfolio-weite URL, die auf die autoritative Deklaration zeigt (zum Beispiel `.tool-versions`, `pyproject.toml`, `renovate.json5`).
   - `deprecated_in_favor_of`: Bei `status: deprecated` eine `name`-Referenz auf den Ersatz-Eintrag.
