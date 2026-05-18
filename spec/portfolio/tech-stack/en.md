@@ -41,8 +41,9 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 ### Global tech-stack manifest
 
 - **MUST** locate the portfolio-wide global tech-stack manifest at `portfolio/tech-stack.yml` in the `claude-shared` repository root. The directory `portfolio/` is introduced by this spec and is reserved for portfolio-wide source files that aren't specific to the own project shape of `claude-shared`.
-- **MUST** structure `portfolio/tech-stack.yml` as a single top-level key `entries:` whose value is a list of tech-stack entries each conforming to §"Entry schema" below; the file **MUST NOT** carry per-repository sub-blocks (those live in each consumer's `project/portfolio.yml`).
+- **MUST** structure `portfolio/tech-stack.yml` around a primary top-level key `entries:` whose value is a list of tech-stack entries each conforming to §"Entry schema" below; the file **MUST NOT** carry per-repository sub-blocks (those live in each consumer's `project/portfolio.yml`).
 - **MUST** be hand-authored and committed; the file is the single source of truth for portfolio-wide defaults, never generated from per-repo manifests.
+- **MUST** be validated against this spec's §Entry schema by a CI check or a pre-commit hook that rejects malformed entries, kind-enum violations, schema-violating field types, lifecycle-enum violations, and missing mandatory fields before they reach `develop`. The mechanism is implementation-defined (`Cerberus`, `Pydantic`, `jsonschema`, or a custom validator); the contract is that a non-conformant manifest can't land on `develop`.
 - **MUST NOT** appear in any other repository under `nolte/*`. Only `claude-shared` owns the portfolio-wide global stack, and a Portfolio-Member repository that ships its own copy is a `Critical` audit finding.
 - **MAY** carry a top-level `notes:` field with prose explaining curation conventions (for example "we standardise on Python 3.12 across the portfolio; runtime exceptions are recorded as per-repo overrides").
 
@@ -66,6 +67,11 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
   - `since`: ISO date when the entry first appeared in the global stack or the repository.
   - `source_of_truth`: a repository-relative path or a portfolio-wide URL pointing at the authoritative declaration (for example `.tool-versions`, `pyproject.toml`, `renovate.json5`).
   - `deprecated_in_favor_of`: when `status: deprecated`, a `name` reference to the replacement entry.
+  - `lifecycle`: one of `development`, `build`, `runtime`, or `all`, naming the lifecycle phase in which this entry is active. Definitions:
+    - `development`: active on a contributor's machine while coding; primary value is code-quality, authoring, or developer feedback (linters, formatters, pre-commit hooks, dependency bots that prepare PRs).
+    - `build`: active during a build or CI pipeline run; produces or packages the deployable artefact (compilers, `bundlers`, documentation generators, CI providers, task orchestrators driving the build).
+    - `runtime`: active in the deployed production environment; runs inside the shipped system (application runtimes, databases, deployment targets, production-only frameworks).
+    - `all`: genuinely spans every phase (a programming language used both at build time and at runtime; a tool active pre-commit and in production observability).
   - `rationale`: prose sentence naming why this entry belongs in this layer. Optional at the entry level—but **required** on overrides (see §"Inheritance semantics").
 - **MUST** ensure that every `deprecated_in_favor_of` reference resolves to an entry in the same layer whose `status` isn't itself `deprecated`; chained-deprecation references (entry A points at entry B which is also `deprecated`) are a `Warning` audit finding, since they leave no concrete migration target.
 - **MUST** keep `name` values stable; renames are explicit decisions tracked in the manifest's git history, and a rename of a global entry **MUST** be coordinated with every consumer's `overrides:` referencing it within the same coordination window (one closed sprint at most).

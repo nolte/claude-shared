@@ -128,5 +128,6 @@ tech_stack:
       kind: language
       role: Implementation language for MkDocs plugins, the docs gen-files hook, and any scripts under scripts/.
       status: active
+      lifecycle: build
       since: 2026-04-23
       source_of_truth: docs/requirements.txt

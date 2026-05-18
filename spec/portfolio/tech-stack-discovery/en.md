@@ -48,7 +48,7 @@ Producers author entries—either directly into `portfolio/tech-stack.yml` or in
 
 Direct consumers read the inventory and act on it.
 
-- **`portfolio-audit` skill (automated consumer).** Surface: parsing every Portfolio-Member's `project/portfolio.yml` plus `claude-shared`'s `portfolio/tech-stack.yml`, running the signal verification defined in `spec/portfolio/tech-stack/` §Portfolio audit integration, and emitting Critical / Warning / Suggestion / Info findings per `spec/claude/review-plan/`. Expectation: the inventory parses cleanly and the inheritance contract is unambiguous so the audit doesn't need heuristics. Criticality: primary.
+- **`portfolio-audit` skill (automated consumer).** Surface: parsing every Portfolio-Member's `project/portfolio.yml` plus `claude-shared`'s `portfolio/tech-stack.yml`, running the signal verification defined in `spec/portfolio/tech-stack/` §Portfolio audit integration, and emitting Critical / Warning / Suggestion / Info findings per `spec/claude/review-plan/`. Expectation: the inventory parses cleanly and the inheritance contract is unambiguous so the audit doesn't need heuristics. Criticality: primary. Tech-stack-specific refinement not in `AUDIENCES.md`: this audience is a software capability of the `nolte-shared` plugin, not a human or organisation tracked by `AUDIENCES.md`'s audience categories; the bullet names it explicitly because the audit is the primary automated consumer of the inventory.
 
 - **Downstream Claude Code users in portfolio projects.** Surface: invoking the capture skill in their own repository to author or revise its `tech_stack:` block, plus reading the rendered portfolio inventory under `docs/<lang>/portfolio/`. Expectation: the skill works without per-repo configuration; the inherited entries are immediately visible without manual declaration; the rendered page is a fair representation of the repo's actual stack. Criticality: primary. Maps to AUDIENCES.md → direct consumers → `"Downstream Claude Code users in portfolio projects"`.
 
@@ -91,6 +91,7 @@ A portfolio-wide tech-stack inventory pays back the curation overhead along five
 - **MAY** persist discovery state (a draft delta, a list of dismissed candidates) for a single session so the maintainer can stop and resume; persisted state isn't checked into git.
 - **SHOULD** pre-populate the optional `version:` field from the detected signal when the signal carries an unambiguous version (for example `pyproject.toml:requires-python` for `kind: language`, name `python`; `package.json:engines.node` for `kind: runtime`, name `node`; a tag pin in `.tool-versions`). When the signal is ambiguous or absent, the field stays blank rather than carrying a guessed value.
 - **MAY** emit a "candidates not picked" log alongside the written `tech_stack:` block, listing signal-derived candidates the maintainer rejected during confirmation, with a one-phrase rejection reason per entry. The log is for audit-readable drift detection only; it doesn't get committed to the repository.
+- **SHOULD** propose a `lifecycle:` classification for every entry, derived from `kind:` where the mapping is unambiguous (`test`, `lint`, `dep-bot`, `package-manager` typically map to `development`; `ci`, `build`, `docs` typically map to `build`; `deploy-target` typically maps to `runtime`) and asked of the maintainer when ambiguous (`language`, `runtime`, `framework`, `other` depend on whether the repository ships a service, only build artefacts, or both, so a heuristic guess would mislead). The proposal is presented in the confirmation step above; the maintainer accepts, edits, or skips the field. Skipped is legitimate; the field is optional.
 
 ### Global stack curation in `claude-shared`
 
@@ -113,7 +114,7 @@ A portfolio-wide tech-stack inventory pays back the curation overhead along five
 
 ### Cross-references
 
-- **MUST** be referenced from `spec/portfolio/tech-stack/` (canonical and every translation) with a one-sentence pointer that names this spec as the owner of the discovery methodology, the audience model, and the benefits prose; restating any of the three inside the schema spec is forbidden.
+- **MUST** be referenced from `spec/portfolio/tech-stack/` (canonical and every translation) with a cross-reference (a one-sentence pointer or a short subsection) that names this spec as the owner of the discovery methodology, the audience model, and the benefits prose; restating any of the three inside the schema spec is forbidden.
 - **MUST NOT** redefine any of the entry-schema fields, the `kind` enum, the inheritance contract, or the audit-severity table; those live in `spec/portfolio/tech-stack/` and are imported by reference.
 - **MUST** be referenced from `AUDIENCES.md` under the relevant revisit-trigger when this spec materially changes its §Audiences.
 
