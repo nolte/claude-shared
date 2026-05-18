@@ -5,6 +5,7 @@ agentic
 [Cc]laude
 hotfix
 [Ii]nvokable
+PNGs?('s)?
 prepended
 [Ss]emver
 [Ss]ubagent(s|'s)?
