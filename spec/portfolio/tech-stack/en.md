@@ -66,6 +66,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
   - `source_of_truth`: a repository-relative path or a portfolio-wide URL pointing at the authoritative declaration (for example `.tool-versions`, `pyproject.toml`, `renovate.json5`).
   - `deprecated_in_favor_of`: when `status: deprecated`, a `name` reference to the replacement entry.
   - `rationale`: prose sentence naming why this entry belongs in this layer. Optional at the entry level — but **required** on overrides (see §"Inheritance semantics").
+- **MUST** ensure that every `deprecated_in_favor_of` reference resolves to an entry in the same layer whose `status` is not itself `deprecated`; chained-deprecation references (entry A points at entry B which is also `deprecated`) are a `Warning` audit finding, since they leave no concrete migration target.
 - **MUST** keep `name` values stable; renames are explicit decisions tracked in the manifest's git history, and a rename of a global entry **MUST** be coordinated with every consumer's `overrides:` referencing it within the same coordination window (one closed sprint at most).
 
 ### Kind enum
@@ -88,6 +89,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 ### Inheritance semantics
 
 - **MUST** treat every Portfolio-Member repository as implicitly inheriting every entry from `portfolio/tech-stack.yml` whose `status` is `active` or `experimental` at audit time. A consumer does not re-declare inherited entries; their effective stack is the union of `(global active/experimental entries) minus (entries the consumer overrides with inherit: false) union (the consumer's additions)`.
+- **SHOULD** promote a global entry from `status: experimental` to `status: active` once at least one Portfolio-Member has carried it as an inherited entry across one closed sprint without an `overrides:` record against it. The portfolio-wide promotion criterion for capability lifecycle vocabulary is tracked under `spec/portfolio/portfolio-management/` Open Questions and not settled there; this SHOULD encodes the tech-stack-specific default in the meantime so the §Portfolio audit integration severity table does not leave experimentally-classified entries indefinitely stuck at `Suggestion` for missing signals.
 - **MUST** structure each entry in `tech_stack.overrides[]` as an override record carrying exactly three fields: `name` (referencing an existing global entry's `name`), `inherit` (which **MUST** be set to `false`; the field is named explicitly for readability and to leave room for a future opt-in semantic without re-shaping the record), and `rationale` (a non-empty prose sentence):
   ```yaml
   overrides:
@@ -122,7 +124,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - **MUST** render the global stack as a separate top-level section preceding the per-repository inventory, so a reader can see the portfolio-wide baseline before drilling into specific repositories.
 - **MUST** show each consumer's effective tech-stack: the inherited entries (marked with an "inherited" badge), the consumer's `additions:` (marked with a "repo-specific" badge), and the consumer's `overrides:` (marked with a "suppressed" badge and surfacing the rationale).
 - **MUST** be generated automatically from `portfolio/tech-stack.yml` plus every Portfolio-Member's `project/portfolio.yml`; the rendered files **MUST NOT** be hand-edited.
-- **SHOULD** visualise the kind-distribution per repository (for example a small horizontal-bar chart per repo, or a Mermaid diagram aggregating `kind` across the portfolio per `spec/project/mermaid-diagrams/`) so structural outliers (a repo with no `test` entry, a repo with two `language` entries) are spottable at a glance.
+- **SHOULD** visualise the kind-distribution across the portfolio with a Mermaid diagram authored per `spec/project/mermaid-diagrams/` (for example a `flowchart` aggregating `kind` counts per repository) so structural outliers (a repo with no `test` entry, a repo with two `language` entries) are spottable at a glance. Non-Mermaid chart formats fall outside the portfolio-wide diagram catalog and are not used here.
 
 ### Cross-references with portfolio-management
 
@@ -135,12 +137,14 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - [ ] `portfolio/tech-stack.yml` exists in the `claude-shared` repository root with at least one entry conforming to §"Entry schema".
 - [ ] Every active Portfolio-Member's `project/portfolio.yml` carries a top-level `tech_stack:` key (possibly empty), with any `additions:` and `overrides:` conforming to this spec.
 - [ ] Every `tech_stack.overrides[]` record resolves to an existing global entry; running the broken-override-reference check produces zero `Warning` findings.
+- [ ] Every rename or deletion of a global-stack entry surfaces via the broken-override-reference check above within the next audit run; no `Warning`-grade override-reference finding persists beyond the §Entry schema's one-closed-sprint rename-coordination window.
+- [ ] Every entry with `status: deprecated` carrying `deprecated_in_favor_of` resolves to an entry in the same layer whose `status` is not itself `deprecated`; running the deprecation-chain check produces zero `Warning` findings.
 - [ ] Every `tech_stack.overrides[]` record has a non-empty `rationale`; running the rationale-presence check on overrides produces zero `Warning` findings.
 - [ ] No Portfolio-Member repository other than `claude-shared` ships its own `portfolio/tech-stack.yml`; running the duplicate-global-manifest check produces zero `Critical` findings.
 - [ ] No per-repo `additions:` entry shadows an inherited global entry without a corresponding `overrides:` record; running the shadow-without-override check produces zero `Critical` findings.
 - [ ] For every declared entry whose `kind` is one of the signal-verified classes (`package-manager`, `ci`, `dep-bot`, `docs`, `lint`), the audit detects the matching repository signal; running the signal-presence check produces zero `Warning` findings.
 - [ ] The portfolio-audit skill's spec acceptance criteria gain a tech-stack-coverage check; the resulting audit Findings-Report includes a `## Tech stack` subsection (or equivalent).
-- [ ] `spec/portfolio/portfolio-management/{en,de}.md` carries a one-sentence cross-reference to this spec naming it as the owner of the `tech_stack:` block.
+- [ ] The canonical `spec/portfolio/portfolio-management/en.md` and every existing translation each carry a one-sentence cross-reference to this spec naming it as the owner of the `tech_stack:` block.
 - [ ] The rendered portfolio inventory under `docs/<canonical_language>/portfolio/` includes both a "Global tech stack" section and per-repository tech-stack subsections with inherited/repo-specific/suppressed badges.
 
 ## Open Questions

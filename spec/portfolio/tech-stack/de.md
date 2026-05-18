@@ -66,6 +66,7 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
   - `source_of_truth`: Ein repo-relativer Pfad oder eine portfolio-weite URL, die auf die autoritative Deklaration zeigt (zum Beispiel `.tool-versions`, `pyproject.toml`, `renovate.json5`).
   - `deprecated_in_favor_of`: Bei `status: deprecated` eine `name`-Referenz auf den Ersatz-Eintrag.
   - `rationale`: Fließtextsatz, der begründet, warum dieser Eintrag in diese Schicht gehört. Auf Eintragsebene optional — aber **Pflicht** bei Overrides (siehe §"Vererbungs-Semantik").
+- **MUSS [MUST]** sicherstellen, dass jede `deprecated_in_favor_of`-Referenz sich auf einen Eintrag derselben Schicht auflöst, dessen `status` nicht selbst `deprecated` ist; verkettete Deprecation-Referenzen (Eintrag A zeigt auf Eintrag B, der ebenfalls `deprecated` ist) sind ein `Warning`-Auditbefund, da sie kein konkretes Migrationsziel hinterlassen.
 - **MUSS [MUST]** `name`-Werte stabil halten; Renames sind explizite Entscheidungen, getrackt in der Git-Historie des Manifests, und ein Rename eines globalen Eintrags **MUSS [MUST]** mit den `overrides:` jedes Konsumers, der ihn referenziert, innerhalb desselben Koordinationsfensters (höchstens ein geschlossener Sprint) koordiniert werden.
 
 ### Kind-Enum
@@ -88,6 +89,7 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 ### Vererbungs-Semantik
 
 - **MUSS [MUST]** jedes Portfolio-Mitglied behandeln, als erbe es implizit jeden Eintrag aus `portfolio/tech-stack.yml`, dessen `status` zum Audit-Zeitpunkt `active` oder `experimental` ist. Ein Konsumer deklariert geerbte Einträge nicht erneut; sein effektiver Stack ist die Vereinigung von `(globale active/experimental Einträge) minus (Einträge, die der Konsumer mit inherit: false überschreibt) vereint mit (den Additions des Konsumers)`.
+- **SOLLTE [SHOULD]** einen globalen Eintrag von `status: experimental` auf `status: active` befördern, sobald mindestens ein Portfolio-Mitglied ihn über einen geschlossenen Sprint hinweg als geerbten Eintrag ohne `overrides:`-Record getragen hat. Das portfolio-weite Promotion-Kriterium für das Capability-Lifecycle-Vokabular wird unter den Open Questions von `spec/portfolio/portfolio-management/` verfolgt und ist dort nicht entschieden; dieses SOLLTE kodifiziert in der Zwischenzeit den tech-stack-spezifischen Default, damit die Severity-Tabelle in §Portfolio-Audit-Integration experimentell klassifizierte Einträge nicht unbefristet auf `Suggestion` bei fehlenden Signalen festsetzt.
 - **MUSS [MUST]** jeden Eintrag in `tech_stack.overrides[]` als Override-Record strukturieren, der genau drei Felder trägt: `name` (verweisend auf den `name` eines existierenden globalen Eintrags), `inherit` (der **MUSS [MUST]** auf `false` gesetzt sein; das Feld wird zur Lesbarkeit explizit benannt und um Raum für eine zukünftige Opt-in-Semantik zu lassen, ohne die Record-Form zu ändern) und `rationale` (ein nicht-leerer Fließtextsatz):
   ```yaml
   overrides:
@@ -122,7 +124,7 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 - **MUSS [MUST]** den globalen Stack als separaten Top-Level-Abschnitt vor dem Pro-Repository-Inventar rendern, sodass ein Leser die portfolio-weite Baseline sieht, bevor er in einzelne Repositories abtaucht.
 - **MUSS [MUST]** den effektiven Tech-Stack jedes Konsumers zeigen: die geerbten Einträge (mit „inherited"-Badge), die `additions:` des Konsumers (mit „repo-specific"-Badge) und die `overrides:` des Konsumers (mit „suppressed"-Badge und sichtbarem Rationale).
 - **MUSS [MUST]** automatisch aus `portfolio/tech-stack.yml` plus der `project/portfolio.yml` jedes Portfolio-Mitglieds generiert werden; die gerenderten Dateien **DÜRFEN NICHT [MUST NOT]** handgeändert werden.
-- **SOLLTE [SHOULD]** die Kind-Verteilung pro Repository visualisieren (beispielsweise ein kleines horizontales Balkendiagramm pro Repo oder ein Mermaid-Diagramm, das `kind` portfolio-weit aggregiert, gemäß `spec/project/mermaid-diagrams/`), damit strukturelle Ausreißer (ein Repo ohne `test`-Eintrag, ein Repo mit zwei `language`-Einträgen) auf einen Blick erkennbar sind.
+- **SOLLTE [SHOULD]** die Kind-Verteilung portfolio-weit mit einem Mermaid-Diagramm visualisieren, das gemäß `spec/project/mermaid-diagrams/` erstellt wird (beispielsweise ein `flowchart`, das `kind`-Zählwerte pro Repository aggregiert), damit strukturelle Ausreißer (ein Repo ohne `test`-Eintrag, ein Repo mit zwei `language`-Einträgen) auf einen Blick erkennbar sind. Nicht-Mermaid-Chart-Formate fallen außerhalb des portfolio-weiten Diagramm-Katalogs und werden hier nicht verwendet.
 
 ### Cross-References mit Portfolio-Management
 
@@ -135,12 +137,14 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 - [ ] `portfolio/tech-stack.yml` existiert im Wurzelverzeichnis des `claude-shared`-Repositories mit mindestens einem Eintrag gemäß §"Entry-Schema".
 - [ ] Die `project/portfolio.yml` jedes aktiven Portfolio-Mitglieds trägt einen Top-Level-Key `tech_stack:` (gegebenenfalls leer), wobei `additions:` und `overrides:` dieser Spec entsprechen.
 - [ ] Jeder `tech_stack.overrides[]`-Record löst sich auf einen existierenden globalen Eintrag auf; der Lauf der Broken-Override-Reference-Prüfung produziert null `Warning`-Befunde.
+- [ ] Jeder Rename oder jede Löschung eines globalen Stack-Eintrags wird im nächsten Audit-Lauf über die obige Broken-Override-Reference-Prüfung sichtbar; kein `Warning`-Override-Reference-Befund besteht über das Ein-geschlossener-Sprint-Rename-Koordinationsfenster aus §Entry-Schema hinaus fort.
+- [ ] Jeder Eintrag mit `status: deprecated`, der `deprecated_in_favor_of` trägt, löst sich auf einen Eintrag derselben Schicht auf, dessen `status` nicht selbst `deprecated` ist; der Lauf der Deprecation-Chain-Prüfung produziert null `Warning`-Befunde.
 - [ ] Jeder `tech_stack.overrides[]`-Record hat ein nicht-leeres `rationale`; der Lauf der Rationale-Presence-Prüfung auf Overrides produziert null `Warning`-Befunde.
 - [ ] Kein Portfolio-Mitglied außer `claude-shared` liefert eine eigene `portfolio/tech-stack.yml` aus; der Lauf der Duplicate-Global-Manifest-Prüfung produziert null `Critical`-Befunde.
 - [ ] Kein pro-Repo-`additions:`-Eintrag überdeckt einen geerbten globalen Eintrag ohne entsprechenden `overrides:`-Record; der Lauf der Shadow-Without-Override-Prüfung produziert null `Critical`-Befunde.
 - [ ] Für jeden deklarierten Eintrag, dessen `kind` zu den signal-verifizierten Klassen (`package-manager`, `ci`, `dep-bot`, `docs`, `lint`) gehört, weist das Audit das passende Repository-Signal nach; der Lauf der Signal-Presence-Prüfung produziert null `Warning`-Befunde.
 - [ ] Die Acceptance Criteria des `portfolio-audit`-Skill-Specs gewinnen einen Tech-Stack-Coverage-Check; der resultierende Audit-Findings-Report schließt einen `## Tech stack`-Unterabschnitt (oder Äquivalent) ein.
-- [ ] `spec/portfolio/portfolio-management/{en,de}.md` trägt einen Ein-Satz-Cross-Reference zu dieser Spec, der sie als Eigentümer des `tech_stack:`-Blocks nennt.
+- [ ] Die kanonische `spec/portfolio/portfolio-management/en.md` und jede vorhandene Übersetzung tragen jeweils einen Ein-Satz-Cross-Reference zu dieser Spec, der sie als Eigentümer des `tech_stack:`-Blocks nennt.
 - [ ] Das gerenderte Portfolio-Inventar unter `docs/<canonical_language>/portfolio/` enthält sowohl einen Abschnitt „Global tech stack" als auch pro-Repository-Tech-Stack-Unterabschnitte mit inherited-/repo-specific-/suppressed-Badges.
 
 ## Open Questions
