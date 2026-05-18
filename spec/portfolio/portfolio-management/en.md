@@ -47,6 +47,10 @@ Readers: maintainers of `nolte/*` repositories, the Claude Code skill / agent th
 - **MUST** keep capability `name` values stable; renames are explicit decisions tracked in the manifest's git history and **MUST** be coordinated with peer references in other Portfolio-Member repositories during the same coordination window.
 - **MUST NOT** declare a capability the repository doesn't actually deliver in shipped code, documentation, or workflows; the audit verifies that each declared capability has at least one corresponding implementation artefact (a code module, a workflow file, a doc page, or a skill / agent file) in the repository.
 
+### Tech-stack block
+
+- **MUST** treat `project/portfolio.yml`'s optional top-level `tech_stack:` key as defined entirely by `spec/portfolio/tech-stack/`; this spec neither redefines the field shape nor constrains its sub-blocks. Capability entries and the `tech_stack:` block are orthogonal: capabilities answer *what* the repository delivers, `tech_stack:` answers *how* it is technically built.
+
 ### Cross-repository duplicate detection
 
 - **MUST**, during every audit run, compare every capability across every Portfolio-Member repository's manifest and flag any pair of capabilities whose `description` statements semantically overlap (not just keyword-overlap) as a **duplicate candidate**.
