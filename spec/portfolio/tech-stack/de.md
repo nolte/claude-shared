@@ -151,7 +151,7 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 
 - [ ] `portfolio/tech-stack.yml` existiert im Wurzelverzeichnis des `claude-shared`-Repositories mit mindestens einem Eintrag gemäß §"Entry-Schema".
 - [ ] `git blame portfolio/tech-stack.yml` zeigt nur Maintainer-Commits; kein automatisierter Generierungs-Commit erscheint in der Historie, was das Hand-Authoring-MUSS aus §"Globales Tech-Stack-Manifest" verifiziert.
-- [ ] Eine Schema-Validation-Prüfung für `portfolio/tech-stack.yml` läuft in CI oder pre-commit und weist fehlgeformte Einträge, Kind-Enum-Verletzungen, schema-verletzende Feldtypen oder fehlende Pflichtfelder zurück; die Prüfung produziert null Fehlschläge auf dem aktuellen HEAD.
+- [ ] Eine Schema-Validation-Prüfung für `portfolio/tech-stack.yml` läuft in CI oder pre-commit und weist fehlgeformte Einträge, Kind-Enum-Verletzungen, schema-verletzende Feldtypen, Lifecycle-Enum-Verletzungen und fehlende Pflichtfelder zurück; die Prüfung produziert null Fehlschläge auf dem aktuellen HEAD.
 - [ ] Die `project/portfolio.yml` jedes aktiven Portfolio-Mitglieds trägt einen Top-Level-Key `tech_stack:` (gegebenenfalls leer), wobei `additions:` und `overrides:` dieser Spec entsprechen.
 - [ ] Jeder `tech_stack.overrides[]`-Record löst sich auf einen existierenden globalen Eintrag auf; der Lauf der Broken-Override-Reference-Prüfung produziert null `Warning`-Befunde.
 - [ ] Jeder Rename oder jede Löschung eines globalen Stack-Eintrags wird im nächsten Audit-Lauf über die obige Broken-Override-Reference-Prüfung sichtbar; kein `Warning`-Override-Reference-Befund besteht über das Ein-geschlossener-Sprint-Rename-Koordinationsfenster aus §Entry-Schema hinaus fort.

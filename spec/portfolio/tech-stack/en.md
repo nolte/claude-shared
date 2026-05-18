@@ -151,7 +151,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 
 - [ ] `portfolio/tech-stack.yml` exists in the `claude-shared` repository root with at least one entry conforming to §"Entry schema."
 - [ ] `git blame portfolio/tech-stack.yml` shows only maintainer-authored commits; no automated-generation commit appears in its history, verifying the hand-authoring MUST in §"Global tech-stack manifest."
-- [ ] A schema-validation check for `portfolio/tech-stack.yml` runs in CI or pre-commit and rejects malformed entries, kind-enum violations, schema-violating field types, or missing mandatory fields; the check produces zero failures on the current HEAD.
+- [ ] A schema-validation check for `portfolio/tech-stack.yml` runs in CI or pre-commit and rejects malformed entries, kind-enum violations, schema-violating field types, lifecycle-enum violations, and missing mandatory fields; the check produces zero failures on the current HEAD.
 - [ ] Every active Portfolio-Member's `project/portfolio.yml` carries a top-level `tech_stack:` key (possibly empty), with any `additions:` and `overrides:` conforming to this spec.
 - [ ] Every `tech_stack.overrides[]` record resolves to an existing global entry; running the broken-override-reference check produces zero `Warning` findings.
 - [ ] Every rename or deletion of a global-stack entry surfaces via the broken-override-reference check above within the next audit run; no `Warning`-grade override-reference finding persists beyond the one-closed-sprint rename-coordination window defined in §"Entry schema."
