@@ -64,6 +64,7 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - **MUSS [MUST]** eine `mkdocs.yml` im Repository-Wurzelverzeichnis enthalten
 - **SOLLTE [SHOULD]** die Dokumentation über einen CI-Workflow veröffentlichen (zum Beispiel GitHub Pages)
 - **KANN [MAY]** `docs/` nach Sprache aufteilen (`docs/en/`, `docs/de/`, …), wenn mehrsprachige Dokumentation erforderlich ist
+- **SOLLTE [SHOULD]** die MkDocs-Site gemäß `spec/project/mkdocs-structure/` strukturieren, die die kanonische Navigation, Plugin-Basis, Per-Page-Struktur, i18n-Parität und Erweiterungs-Hooks für projekt-typ-spezifische Specs definiert
 
 ### Spezifikationen
 - **MUSS [MUST]** ein `spec/`-Verzeichnis im Repository-Wurzelverzeichnis für Anforderungen, NFRs, Style Guides und Domänenwissen enthalten
