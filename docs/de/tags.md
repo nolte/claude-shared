@@ -14,6 +14,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
+- [docs-dry-refactor](skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
 - [mermaid-diagrams-apply](skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
 - [mkdocs-structure-apply](skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared
@@ -64,6 +65,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [cookiecutter-template-author](agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [png-to-transparent-svg](agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
+- [docs-dry-refactor](skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
 - [feature-decompose](skills/nolte-shared/feature-decompose.md) — nolte-shared
 - [github-issue-templates-apply](skills/nolte-shared/github-issue-templates-apply.md) — nolte-shared
 - [mermaid-diagrams-apply](skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared

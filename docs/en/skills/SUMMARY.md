@@ -3,6 +3,7 @@
     * [agent-review](nolte-shared/agent-review.md)
     * [audience-identify](nolte-shared/audience-identify.md)
     * [dependency-audit](nolte-shared/dependency-audit.md)
+    * [docs-dry-refactor](nolte-shared/docs-dry-refactor.md)
     * [feature-decompose](nolte-shared/feature-decompose.md)
     * [github-issue-templates-apply](nolte-shared/github-issue-templates-apply.md)
     * [mermaid-diagrams-apply](nolte-shared/mermaid-diagrams-apply.md)
