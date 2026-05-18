@@ -44,7 +44,7 @@ Every GitHub release of a project ships a release-notes document—today typical
   - required detail depth per entry for this audience (one-line summary, linked migration guide, embedded code diff, …)
   - language register (end-user vocabulary, operator vocabulary, developer vocabulary)
   - call-to-action (upgrade command, migration link, deprecation deadline, security-advisory pointer)
-  - machine-readability constraints (stable category names, PR references, CVE IDs, semver labels)
+  - machine-readability constraints (stable category names, PR references, CVE IDs, SemVer labels)
 - **MUST** classify breaking-change and security-disclosure audiences as primary whenever the project's scope can produce either class of change, because release notes are the canonical disclosure channel for both and downgrading those audiences risks undisclosed user impact
 - **MUST** tag each audience as `confirmed` or `assumed` per `audience-identification`; a release-notes audience claimed without evidence (real representative, subscriber signal, automated-consumer detection, referring issue) stays `assumed`
 - **SHOULD** align the project's `release-drafter` category configuration with the identified audiences—every configured category exists because at least one audience needs it, and categories that no audience needs are removed

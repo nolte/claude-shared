@@ -30,7 +30,7 @@ Skills from the plugin are invocable under their namespace:
 ```
 
 !!! tip "Symlink instead of copying"
-    To use claude-shared alongside your own `.claude/` directory, symlink individual skills:
+    To use `claude-shared` alongside your own `.claude/` directory, symlink individual skills:
     ```bash
     ln -s /path/to/claude-shared/skills/<name> .claude/skills/<name>
     ```

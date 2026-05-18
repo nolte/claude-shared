@@ -6,7 +6,7 @@ This page summarizes the specification at `spec/claude/skill-management/en.md` (
 
 ## Context
 
-The claude-shared repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives:
+The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives:
 
 - **Source form** in this repository: `skills/<name>/`
 - **Runtime form** in a consuming project: `.claude/skills/<name>/` or `~/.claude/skills/<name>/`
@@ -19,7 +19,7 @@ Without a consistent shape, skills drift in naming, trigger descriptions, and in
 
 - Every skill has the same predictable shape on disk
 - Skills are discoverable by Claude through precise, trigger-oriented descriptions
-- Skills are portable across any project that consumes claude-shared
+- Skills are portable across any project that consumes `claude-shared`
 - Authors have a clear checklist and template
 
 **Non-Goals**
@@ -42,7 +42,7 @@ Without a consistent shape, skills drift in naming, trigger descriptions, and in
 
 ### Locations
 
-Source: `skills/<name>/` in claude-shared. Runtime: `.claude/skills/<name>/`, `~/.claude/skills/<name>/`, or the plugin path. No hard-coded absolute paths.
+Source: `skills/<name>/` in `claude-shared`. Runtime: `.claude/skills/<name>/`, `~/.claude/skills/<name>/`, or the plugin path. No hard-coded absolute paths.
 
 ### Recommendations
 
@@ -57,7 +57,7 @@ Source: `skills/<name>/` in claude-shared. Runtime: `.claude/skills/<name>/`, `~
 - [ ] `SKILL.md` parses with valid YAML frontmatter (`name`, `description`)
 - [ ] `name` in frontmatter equals the folder name
 - [ ] `description` mentions concrete user phrasings that trigger the skill
-- [ ] Skill works in a downstream project without claude-shared-specific context
+- [ ] Skill works in a downstream project without `claude-shared`-specific context
 - [ ] No hard-coded absolute paths; all internal paths relative to the skill folder
 - [ ] If the skill writes files, target locations and preconditions are documented
 
