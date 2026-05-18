@@ -1,8 +1,13 @@
 agentic
+[Aa]uditability
 [Aa]utodetect(s|ed|ing|ion)?
 [Aa]utomerge[ds]?
+definitionally
+[Dd]ogfooded
 hotfix
 [Ii]nvokable
+maintainer's
+[Mm]ergeable
 PNGs?('s)?
 prepended
 [Ss]ubagent(s|'s)?

@@ -134,6 +134,11 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - **MUST** be referenced from `spec/portfolio/portfolio-management/` (canonical and every translation) with a one-sentence pointer that names this spec as the owner of `tech_stack:`; redefining the field shape inside `portfolio-management` is forbidden.
 - **MUST NOT** require any other field of `project/portfolio.yml` to change. Capability entries are unaffected; audiences are unaffected; peer references are unaffected.
 
+### Cross-references with tech-stack-discovery
+
+- **MUST** treat `spec/portfolio/tech-stack-discovery/` as the owner of the discovery methodology, the audience model, and the benefits prose for the tech-stack inventory; restating any of the three inside this schema spec is forbidden. This spec defines the entry shape, the inheritance contract, the audit-severity table, and the rendering contract; the sibling defines how an entry gets captured, who consumes the resulting inventory, and why the curation overhead pays back.
+- **MUST** stay in sync with `spec/portfolio/tech-stack-discovery/` across revisions: a change to the `kind` enum, the inheritance contract, or the audit-severity table that affects the discovery flow or the audience model triggers a matching revision of the sibling spec in the same coordination window (one closed sprint at most).
+
 ## Acceptance Criteria
 
 - [ ] `portfolio/tech-stack.yml` exists in the `claude-shared` repository root with at least one entry conforming to §"Entry schema."
