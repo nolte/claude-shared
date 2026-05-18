@@ -49,7 +49,7 @@ Leser: Maintainer von `nolte/*`-Repositories, der Claude-Code-Skill / -Agent, de
 
 ### Tech-Stack-Block
 
-- **MUSS [MUST]** den optionalen Top-Level-Key `tech_stack:` in `project/portfolio.yml` vollständig von `spec/portfolio/tech-stack/` definiert ansehen; diese Spec definiert das Feldschema weder neu noch beschränkt sie dessen Sub-Blöcke. Capability-Einträge und der `tech_stack:`-Block sind orthogonal: Capabilities beantworten *was* das Repository liefert, `tech_stack:` beantwortet *wie* es technisch gebaut ist.
+- **MUSS [MUST]** den Top-Level-Key `tech_stack:` in `project/portfolio.yml` vollständig von `spec/portfolio/tech-stack/` definiert ansehen; diese Spec definiert das Feldschema weder neu noch beschränkt sie dessen Sub-Blöcke. Ob der Key für ein gegebenes Portfolio-Mitglied verpflichtend oder weglassbar ist, entscheiden die Adoptionsregeln in der referenzierten Spec, nicht hier. Capability-Einträge und der `tech_stack:`-Block sind orthogonal: Capabilities beantworten *was* das Repository liefert, `tech_stack:` beantwortet *wie* es technisch gebaut ist.
 
 ### Cross-Repository-Duplikat-Erkennung
 

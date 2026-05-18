@@ -88,7 +88,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 ### Inheritance semantics
 
 - **MUST** treat every Portfolio-Member repository as implicitly inheriting every entry from `portfolio/tech-stack.yml` whose `status` is `active` or `experimental` at audit time. A consumer does not re-declare inherited entries; their effective stack is the union of `(global active/experimental entries) minus (entries the consumer overrides with inherit: false) union (the consumer's additions)`.
-- **MUST** structure each entry in `tech_stack.overrides[]` as an override record carrying exactly two fields: `name` (referencing an existing global entry's `name`) and `rationale` (a non-empty prose sentence). The implicit semantic is `inherit: false`; the field is named explicitly for readability and **MUST** be present and set to `false`:
+- **MUST** structure each entry in `tech_stack.overrides[]` as an override record carrying exactly three fields: `name` (referencing an existing global entry's `name`), `inherit` (which **MUST** be set to `false`; the field is named explicitly for readability and to leave room for a future opt-in semantic without re-shaping the record), and `rationale` (a non-empty prose sentence):
   ```yaml
   overrides:
     - name: mkdocs
@@ -105,8 +105,8 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - **MUST** extend the `portfolio-audit` skill defined by `spec/portfolio/portfolio-management/` to verify tech-stack consistency in the same audit run that verifies capability consistency; no separate `tech-stack-audit` skill is introduced.
 - **MUST** classify tech-stack findings using the canonical severity scale from `spec/claude/review-plan/`:
   - `Critical` — a Portfolio-Member ships its own `portfolio/tech-stack.yml` (forbidden duplication); a per-repo `additions:` entry shadows an inherited entry without a corresponding override.
-  - `Warning` — an override references a global entry that does not exist; a declared entry is not detected in repo signals; a consumer renders documentation HTML without inheriting the global `docs` entry and without an explicit override.
-  - `Suggestion` — a global entry is `deprecated` and at least one consumer still inherits it after one closed sprint; an `other`-classified entry has persisted across two consecutive audits.
+  - `Warning` — an override references a global entry that does not exist; a declared entry with `status: active` is not detected in repo signals; a consumer renders documentation HTML without inheriting the global `docs` entry and without an explicit override.
+  - `Suggestion` — a global entry is `deprecated` and at least one consumer still inherits it after one closed sprint; an `other`-classified entry has persisted across two consecutive audits; an inherited entry with `status: experimental` is not detected in repo signals (looser threshold than `active`, since experimental entries are explicitly probationary).
   - `Info` — observations that do not yet require action (for example a global entry with `since` younger than one closed sprint; an experimental entry with no consumer pickup yet).
 - **MUST** verify repository signals for at least the following classes:
   - `kind: package-manager`: lockfile or tool-config presence matching the entry's `name` (for example `uv.lock` for `name: uv`).
@@ -152,4 +152,3 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - Should `tech_stack:` support a third sub-block `notes:` (per-repository free-form prose) for stack characteristics that don't fit the entry schema (for example "this repo's deploy story is intentionally manual because of regulatory constraints")? Cheap to add, but risks becoming a dumping ground.
 - For repositories whose mission is to *be* a tool used by other Portfolio-Member repositories (for example `nolte/vale-style`, `nolte/gh-plumbing`), do they appear in the consumer's tech-stack inventory as `kind: lint` / `kind: ci` peers, or are inter-Portfolio-Member dependencies captured elsewhere? The answer affects whether `peers:` from `portfolio-management` and `tech_stack:` from this spec overlap.
 - Should the documentation rendering visualise the **delta** per consumer (which inherited entries were overridden, which additions were introduced) as a first-class view, or only the effective stack? A delta view sharpens drift awareness; an effective-stack view reads more naturally.
-- Should `experimental` entries in the global stack be opt-in for consumers (only inherited when explicitly listed) instead of inherited by default? The current default — inherit experimental entries — matches the current `portfolio-management` lifecycle vocabulary; opt-in would diverge.

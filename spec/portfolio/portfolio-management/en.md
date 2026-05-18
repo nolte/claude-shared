@@ -49,7 +49,7 @@ Readers: maintainers of `nolte/*` repositories, the Claude Code skill / agent th
 
 ### Tech-stack block
 
-- **MUST** treat `project/portfolio.yml`'s optional top-level `tech_stack:` key as defined entirely by `spec/portfolio/tech-stack/`; this spec neither redefines the field shape nor constrains its sub-blocks. Capability entries and the `tech_stack:` block are orthogonal: capabilities answer *what* the repository delivers, `tech_stack:` answers *how* it is technically built.
+- **MUST** treat `project/portfolio.yml`'s top-level `tech_stack:` key as defined entirely by `spec/portfolio/tech-stack/`; this spec neither redefines the field shape nor constrains its sub-blocks. Whether the key is mandatory or omittable for a given Portfolio-Member is decided by the adoption rules in the referenced spec, not here. Capability entries and the `tech_stack:` block are orthogonal: capabilities answer *what* the repository delivers, `tech_stack:` answers *how* it is technically built.
 
 ### Cross-repository duplicate detection
 
