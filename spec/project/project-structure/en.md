@@ -64,6 +64,7 @@ The `nolte/gh-plumbing` portfolio ships reusable workflows for release managemen
 - **MUST** include an `mkdocs.yml` at the repository root
 - **SHOULD** publish the documentation site via a CI workflow (for example GitHub Pages)
 - **MAY** split `docs/` by language (`docs/en/`, `docs/de/`, …) when multilingual documentation is required
+- **SHOULD** structure the MkDocs site per `spec/project/mkdocs-structure/`, which defines the canonical navigation, plugin baseline, per-page structure, i18n parity, and extension hooks for project-type-specific specs
 
 ### Specifications
 - **MUST** include a `spec/` directory at the repository root for requirements, NFRs, style guides, and domain knowledge
