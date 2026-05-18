@@ -59,7 +59,8 @@ This spec closes that gap. It defines (a) the portfolio-wide MkDocs skeleton—s
 - **MUST** declare `mkdocs-static-i18n` as the i18n plugin with `docs_structure: folder` so the per-language subdirectories under `docs/<lang>/` are the source of truth
 - **MUST** declare `pymdownx.superfences` in `markdown_extensions` (the Mermaid integration governed by `spec/project/mermaid-diagrams/` requires it; declaring it here makes the dependency explicit even when no Mermaid diagram ships yet)
 - **MUST** keep the built-in `search` plugin active (declare it explicitly in the `plugins:` list so an extension spec that re-declares `plugins:` doesn't accidentally drop it)
-- **MUST** pin every plugin (including `mkdocs`, `mkdocs-material`, and `pymdown-extensions`) in the project's Python dependency manifest (`pyproject.toml`, `requirements*.txt`, `uv.lock`, …); no floating versions
+- **MUST** declare `mkdocs-include-markdown-plugin` so the DRY rule in §"Snippet inclusion (DRY)" below has a portfolio-standard implementation; the plugin lets pages include partial or whole content from any file in the repository (Markdown, YAML, code, config), so the docs always quote the current canonical source instead of a frozen copy
+- **MUST** pin every plugin (including `mkdocs`, `mkdocs-material`, `pymdown-extensions`, and `mkdocs-include-markdown-plugin`) in the project's Python dependency manifest (`pyproject.toml`, `requirements*.txt`, `uv.lock`, …); no floating versions
 - **SHOULD** keep the plugin list short; additional plugins are introduced through the **Plugin extension hook** below, not through ad-hoc additions to `mkdocs.yml`
 - **MAY** add `mkdocs-mermaid2-plugin` only when the conditions in `spec/project/mermaid-diagrams/` allow it (the canonical Mermaid stack here is `pymdownx.superfences`)
 
@@ -73,6 +74,17 @@ This spec closes that gap. It defines (a) the portfolio-wide MkDocs skeleton—s
 - **SHOULD** include a `## Sources` section as the page's last section, linking back to the authoritative source (`spec/<path>`, `src/<path>`, an ADR, an external URL) when the page derives from a single source of truth
 - **MAY** declare additional frontmatter keys: `tags` for cross-page lookups, `status` for explicitly marking `draft` / `stable` / `deprecated`, `summary` for a one-line abstract used in section index pages
 - **MUST NOT** invent frontmatter keys with portfolio-wide meaning without proposing them via a spec amendment
+
+### Snippet inclusion (DRY)
+
+- **MUST** factor any content longer than ~3 lines that would otherwise appear verbatim on two or more pages into a single source-of-truth snippet, included via `mkdocs-include-markdown-plugin`. Repetition past that threshold is a violation of the Don't-Repeat-Yourself rule, not a stylistic choice
+- **MAY** source snippets from any file in the repository; there is no mandatory snippet folder. Live source files (`pyproject.toml`, `.github/workflows/ci.yml`, `src/<module>/<file>.py`, `CONTRIBUTING.md`, the current release notes) are first-class snippet sources, because including them ensures the docs always quote the current version of the source rather than a frozen copy
+- **MUST** include partial content from a source file via start/end markers so a future edit to the source doesn't silently shift the included excerpt's bounds; the canonical form is `{% include-markdown "<relative-path>" start="<start-marker>" end="<end-marker>" %}`, and the markers stay in the source as comments adapted to the file's comment syntax (`<!-- … -->` for HTML and Markdown, `# …` for YAML and Python, `// …` for JSON-with-comments, …). A non-existent marker is a build-time error, which is the desired behaviour because it catches drift early
+- **MAY** include a whole file without start/end markers when the entire file is the snippet (typical for a glossary, a CONTRIBUTING excerpt that's already file-scoped, or a small standalone example)
+- **SHOULD** prefer including from the canonical source over duplicating its content into a `docs/_snippets/` shadow file; a dedicated docs-only snippet file exists only when no canonical source-of-truth file already lives in the repo (for example a glossary that's only relevant to the docs)
+- **MUST NOT** copy-paste a paragraph longer than ~3 lines between pages "for editorial freedom"; if the wording must diverge by design, the divergence is a sign the content isn't really shared and should be authored per-page from the start
+- **SHOULD** name start and end marker labels after the content they bracket (`<!-- docs-include-start: lint-job -->`, not `<!-- docs-include-start: section-1 -->`) so a `grep` for the marker name resolves the include trail across the repository
+- **MUST** keep dedicated snippet files (when one exists rather than including from a live source) free of the per-page MUST frontmatter (`title`, `audience`, `last_updated`) since snippets are fragments, not pages; snippet files placed inside `docs/<lang>/` **MUST** live in a folder prefixed with `_` (for example `docs/<lang>/_snippets/`) so MkDocs doesn't render them as standalone pages in the nav
 
 ### Audience targeting
 
@@ -126,6 +138,10 @@ Two declared extension points let project-type-specific specs add to the skeleto
 - [ ] Every top-level nav section in every portfolio repository is one of the seven standard sections (Home, Getting Started, Guides, References, ADRs, Project, plus declared extension sections); a section that isn't listed in the standard set is justified by an active extension spec
 - [ ] Every page under `docs/<lang>/` starts with a single `# H1` matching the nav label and declares frontmatter with `title`, `audience` (one or more IDs from the project's audience artifact), and `last_updated`
 - [ ] Every audience value in every page's frontmatter matches an ID declared in the project's audience artifact (verifiable by `docs-freshness` audit)
+- [ ] `mkdocs.yml` declares `mkdocs-include-markdown-plugin`, and the plugin is pinned in the project's Python dependency manifest
+- [ ] No paragraph longer than ~3 lines appears verbatim on two or more pages; any such repetition is replaced with an include from the canonical source via `{% include-markdown … %}`
+- [ ] Every `{% include-markdown … start="…" end="…" %}` directive resolves successfully at `mkdocs build --strict` time (a non-existent marker fails the build)
+- [ ] Dedicated snippet files (where present) live under a `_`-prefixed folder inside `docs/<lang>/` and lack the per-page frontmatter (`title`, `audience`, `last_updated`)
 - [ ] Every `docs/<lang>/` tree contains the same set of relative paths as every other configured `docs/<lang>/` tree (file-name parity, also verifiable by `docs-freshness`)
 - [ ] `mkdocs build --strict` passes in CI on every pull request, and the project's `task docs` (or equivalent local target) runs the same sequence
 - [ ] Every project-type-specific extension spec that touches MkDocs (`spec/claude/skill-agent-catalog/`, future `cookiecutter-template-docs`, …) declares its added sections (with insertion position and audience), its added plugins (with pin and rationale), and any baseline MUSTs it explicitly relaxes
