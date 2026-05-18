@@ -8,6 +8,7 @@
     * [mermaid-diagrams-apply](nolte-shared/mermaid-diagrams-apply.md)
     * [mission-define](nolte-shared/mission-define.md)
     * [mission-revise](nolte-shared/mission-revise.md)
+    * [mkdocs-structure-apply](nolte-shared/mkdocs-structure-apply.md)
     * [permission-allowlist-maintain](nolte-shared/permission-allowlist-maintain.md)
     * [portfolio-audit](nolte-shared/portfolio-audit.md)
     * [project-structure-apply](nolte-shared/project-structure-apply.md)

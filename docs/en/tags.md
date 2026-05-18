@@ -15,6 +15,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [mermaid-diagrams-apply](skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
+- [mkdocs-structure-apply](skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared
 - [portfolio-audit](skills/nolte-shared/portfolio-audit.md) — nolte-shared
 - [roadmap-refine](skills/nolte-shared/roadmap-refine.md) — nolte-shared
@@ -68,6 +69,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [mermaid-diagrams-apply](skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
 - [mission-define](skills/nolte-shared/mission-define.md) — nolte-shared
 - [mission-revise](skills/nolte-shared/mission-revise.md) — nolte-shared
+- [mkdocs-structure-apply](skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared
 - [project-structure-apply](skills/nolte-shared/project-structure-apply.md) — nolte-shared
 - [roadmap-init](skills/nolte-shared/roadmap-init.md) — nolte-shared
