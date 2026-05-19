@@ -128,14 +128,21 @@ tech_stack:
   additions:
     - name: python
       kind: language
+      group: documentation
       role: Implementation language for MkDocs plugins, the docs gen-files hook, and any scripts under scripts/.
       status: active
       lifecycle: build
       since: 2026-04-23
       source_of_truth: docs/requirements.txt
+      rationale: >-
+        in claude-shared python is only used for the MkDocs build pipeline
+        (catalog generator hook, plugins, validation scripts under scripts/)
+        — not as an application runtime — so it is grouped under
+        documentation rather than language-runtime.
 
     - name: github-pages
       kind: deploy-target
+      group: documentation
       role: Hosts the rendered MkDocs site delivered by the release-cd-deliver-docs.yml workflow.
       status: active
       lifecycle: runtime
@@ -144,6 +151,7 @@ tech_stack:
 
     - name: claude-code-marketplace
       kind: deploy-target
+      group: plugin-platform
       role: Plugin distribution channel; downstream nolte/* repos install nolte-shared by referencing the marketplace manifest.
       status: active
       lifecycle: runtime

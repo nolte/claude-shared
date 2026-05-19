@@ -50,16 +50,17 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 ### Pro-Repository-Tech-Stack-Block
 
 - **MUSS [MUST]** jedes Portfolio-Mitglied verpflichten, in seiner `project/portfolio.yml` einen Top-Level-Key `tech_stack:` zu führen, sobald es diese Spec adoptiert. Der Key **KANN [MAY]** leer sein (`tech_stack: {}`), wenn das Repository den globalen Stack unverändert erbt.
-- **MUSS [MUST]** genau zwei Sub-Blöcke unter `tech_stack:` zulassen: `additions:` (eine Liste vollständiger Einträge gemäß §"Entry-Schema") und `overrides:` (eine Liste von Override-Records gemäß §"Vererbungs-Semantik"). Beide Sub-Blöcke sind einzeln optional; ein leerer `tech_stack:` ist gültig.
+- **MUSS [MUST]** genau drei Sub-Blöcke unter `tech_stack:` zulassen: `additions:` (eine Liste vollständiger Einträge gemäß §"Entry-Schema"), `overrides:` (eine Liste von Override-Records gemäß §"Vererbungs-Semantik") und `regroup:` (eine Liste von Regroup-Records gemäß §"Gruppen-Umklassifizierung" unten). Alle drei Sub-Blöcke sind einzeln optional; ein leerer `tech_stack:` ist gültig.
 - **DARF NICHT [MUST NOT]** einen Eintrag aus dem globalen Stack innerhalb von `additions:` erneut deklarieren, wenn das Repository ihn unverändert nutzt; implizite Vererbung ist der einzige Autorenweg für unveränderte globale Einträge.
 - **MUSS [MUST]** `additions:`-Einträgenamen über die Vereinigung von (globalen Einträgen minus `overrides:` dieses Repos) und (`additions:` dieses Repos) eindeutig halten. Eine repo-spezifische Addition, die einen geerbten Eintrag ohne expliziten Override überdeckt, ist ein `Critical`-Auditbefund.
 - **DARF NICHT [MUST NOT]** einen Tech-Stack-Eintrag deklarieren, den das Repository tatsächlich nicht nutzt; das Audit verifiziert deklarierte Einträge gegen Repository-Signale (zum Beispiel: ein `kind: package-manager`-Eintrag namens `uv` setzt eine `uv.lock` oder einen `[tool.uv]`-Block voraus; ein `kind: ci`-Eintrag namens `github-actions` setzt mindestens eine Workflow-Datei unter `.github/workflows/` voraus).
 
 ### Entry-Schema
 
-- **MUSS [MUST]** jeden Eintrag — ob in `portfolio/tech-stack.yml:entries[]` oder in einer Konsumer-`tech_stack.additions[]` — die vier Pflichtfelder tragen lassen:
+- **MUSS [MUST]** jeden Eintrag — ob in `portfolio/tech-stack.yml:entries[]` oder in einer Konsumer-`tech_stack.additions[]` — die fünf Pflichtfelder tragen lassen:
   - `name`: Kebab-case-Identifier, eindeutig innerhalb seiner Schicht (globale Einträge sind in `portfolio/tech-stack.yml` eindeutig; pro-Repo-Additions sind innerhalb ihrer `additions:`-Liste eindeutig).
   - `kind`: Ein Wert aus dem geschlossenen Enum in §"Kind-Enum" unten.
+  - `group`: Ein Wert aus dem geschlossenen Enum in §"Group-Enum" unten.
   - `role`: Ein Fließtextsatz, der nennt, was der Eintrag für das Repository oder Portfolio leistet.
   - `status`: Einer von `active`, `experimental`, `deprecated`.
 - **KANN [MAY]** die optionalen Felder tragen:
@@ -93,6 +94,20 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
   - `other` — Fallback für Einträge, die legitim in keine der obigen Kategorien passen.
 - **SOLLTE [SHOULD]** einen als `other` klassifizierten Eintrag, der über zwei aufeinanderfolgende Quartals-Portfolio-Audits oder 180 Tage seit Erstanlage (je nachdem was zuerst eintritt) hinweg fortbesteht, als Katalog-Lücken-Befund (Severity `Suggestion`) routen, damit das Enum überarbeitet wird, bevor `other` zu einem versteckten Sammeltopf wird. Der Quartals-Cadence-Anker entspricht dem Audit-Cadence-MUSS in `spec/portfolio/portfolio-management/` §Portfolio-Audit.
 
+### Group-Enum
+
+Das `kind`-Enum ist bewusst feingranular (12 Werte) für Audit-Präzision. Das `group`-Enum ist bewusst grob (5 Werte) für Leser-Orientierung: Ein Beitragender, der das Portfolio-Inventar oder die gerenderte Tech-Stack-Seite scannt, liest zuerst die Gruppe ("wofür ist dieses Tool hier?"), danach das Kind ("welchen Tool-Slot besetzt es genau?"). Die beiden Enums sind orthogonal — `kind` ist eine stabile Eigenschaft des Tools, `group` reflektiert den Zweck, den das tragende Repository mit dem Tool verfolgt.
+
+- **MUSS [MUST]** `group` auf die folgenden fünf Werte beschränken; jeder andere Wert ist ein Parse-Fehler:
+  - `documentation` — Doku-Generatoren, Prosa-Linter, Doku-Deploy-Targets und jedes Tool, das das tragende Repository primär für die Dokumentations-Site nutzt (zum Beispiel eine Sprache, deren einzige Rolle in diesem Repo die Doku-Produktion ist).
+  - `quality` — Code-Linter, Formatter, Test-Runner und Pre-Commit-artige Hook-Frameworks, die Code-Qualität gaten. Auch wenn die unterliegende Technologie sich überschneidet, von `documentation` abgegrenzt: Ein Markdown-Linter, der gegen Doku-Quellen läuft, gehört zu `documentation`; ein Markdown-Linter, der gegen `CONTRIBUTING.md` und Source-Tree-READMEs als Code-Qualitäts-Gate läuft, gehört zu `quality`. Die dominante Nutzung im tragenden Repository entscheidet.
+  - `automation` — CI-Anbieter, Reusable-Workflows, Release-Notes-Drafter, Dependency-Update-Bots und Repo-Governance-Bots (Probot-Apps wie `settings`, `boring-cyborg`, `stale`). Alles, was ohne Beitragenden-Interaktion auf der Plattform läuft.
+  - `build-tooling` — Task-Orchestratoren, Package-Manager und andere Build-Time-Tools, die selbst weder CI noch dokumentations-spezifisch sind. Das Local-Machine- und CI-Machine-Pendant zu `automation`.
+  - `plugin-platform` — Claude Code als Host-Runtime, das Plugin-Framework, das die Form des Repositories definiert, und der Marketplace-Distributionskanal — die Schicht, die spezifisch für Repositories ist, die ein Claude-Code-Plugin ausliefern.
+- **MUSS [MUST]** genau einen `group`-Wert pro Eintrag vergeben; Mehrgruppen-Einträge sind verboten. Wenn zwei Gruppen plausibel sind, gewinnt der dominante Zweck; falls keine Gruppe dominiert, dokumentiert der Maintainer die Entscheidung im `rationale`-Feld des Eintrags.
+- **MUSS [MUST]** `group` als Eigenschaft davon behandeln, wie das tragende Repository den Eintrag nutzt — nicht als Eigenschaft des Tools selbst. Ein Konsumer, der einen geerbten globalen Eintrag für einen anderen Zweck nutzt als der Portfolio-Default, klassifiziert über den unten in §"Gruppen-Umklassifizierung" beschriebenen Mechanismus um, niemals durch stille Neudeklaration unter `additions:`.
+- **SOLLTE [SHOULD]** portfolio-gerenderte Tech-Stack-Seiten primär nach `group` organisieren (ein Abschnitt pro Gruppe, in der oben genannten Reihenfolge), sekundär nach `kind` (Sub-Gruppierung innerhalb einer Gruppe). Das Audit gibt Befunde ebenfalls group-first aus, damit Reviewer nach Zweck statt nach Kind scannen können.
+
 ### Vererbungs-Semantik
 
 - **MUSS [MUST]** jedes Portfolio-Mitglied behandeln, als erbe es implizit jeden Eintrag aus `portfolio/tech-stack.yml`, dessen `status` zum Audit-Zeitpunkt `active` oder `experimental` ist. Ein Konsumer deklariert geerbte Einträge nicht erneut; sein effektiver Stack ist die Vereinigung von `(globale active/experimental Einträge) minus (Einträge, die der Konsumer mit inherit: false überschreibt) vereint mit (den Additions des Konsumers)`.
@@ -111,14 +126,33 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 - **DARF NICHT [MUST NOT]** zulassen, dass `tech_stack.overrides[]` irgendein Feld des geerbten Eintrags ändert, außer ihn zu unterdrücken. Ein Konsumer, der eine andere `version` eines geerbten Eintrags benötigt, setzt den geerbten Eintrag mit `inherit: false` plus Rationale außer Kraft **und** deklariert einen repo-spezifischen Ersatz unter `additions:` mit den gewünschten Feldern.
 - **MUSS [MUST]** einen globalen Eintrag, der auf `status: deprecated` wechselt, weiter als geerbt durch jeden Konsumer behandeln, bis jeder Konsumer ihn entweder überschreibt oder der globale Eintrag in die `deprecated_in_favor_of`-Auflösung übergeht; das Audit erzeugt einen `Suggestion`-Befund für jeden Konsumer, der nach einem geschlossenen Sprint einen deprecated-Eintrag weiterhin erbt.
 
+### Gruppen-Umklassifizierung
+
+`group` ist das einzige Feld, das ein Konsumer auf einem geerbten globalen Eintrag umklassifizieren darf, ohne die `overrides:`-Maschinerie zu benutzen. Der Mechanismus ist ein eigener `tech_stack.regroup:`-Sub-Block, sodass die Umklassifizierung den geerbten Eintrag intakt lässt (jedes andere Feld bleibt portfolio-kuratiert), während die Zweck-Verschiebung explizit gemacht wird.
+
+- **MUSS [MUST]** jeden Eintrag in `tech_stack.regroup[]` als Regroup-Record strukturieren, der genau drei Felder trägt: `name` (verweisend auf den `name` eines existierenden globalen Eintrags), `group` (der neue Group-Wert aus §"Group-Enum") und `rationale` (ein nicht-leerer Fließtextsatz, der begründet, warum die Nutzung in diesem Repository vom Portfolio-Default abweicht):
+
+  ```yaml
+  regroup:
+    - name: python
+      group: documentation
+      rationale: "in diesem Repo wird Python nur für die MkDocs-Build-Pipeline genutzt, nicht als Application-Runtime"
+  ```
+
+- **MUSS [MUST]** einen `tech_stack.regroup[]`-Record ablehnen, dessen `name` sich nicht auf einen existierenden globalen Eintrag auflöst; gebrochene Regroup-Referenzen sind ein `Warning`-Auditbefund (gleiche Severity wie gebrochene Override-Referenzen).
+- **MUSS [MUST]** einen `tech_stack.regroup[]`-Record ablehnen, dessen `group` dem `group` des geerbten globalen Eintrags entspricht; ein No-Op-Regroup ist ein `Warning`-Auditbefund, damit der Maintainer den redundanten Record entfernt.
+- **MUSS [MUST]** auf jedem Regroup-Record ein nicht-leeres `rationale` verlangen; fehlende Rationale ist ein `Warning`-Befund. Die Rationale dokumentiert die pro-Repo-Zweck-Verschiebung, damit ein Leser des gerenderten Inventars versteht, warum dasselbe Tool unter einer anderen Gruppe als im Portfolio-Default erscheint.
+- **DARF NICHT [MUST NOT]** zulassen, dass `tech_stack.regroup[]` irgendein Feld des geerbten Eintrags ändert, außer `group`. Ein Konsumer, der ein anderes `kind`, `role`, `version` oder ein anderes Feld benötigt, nutzt den `overrides:`+repo-spezifischen-`additions:`-Zweischritt aus §"Vererbungs-Semantik".
+- **KANN [MAY]** einen `regroup:`-Record für einen Eintrag tragen, den der Konsumer ebenfalls per `overrides:` unterdrückt hat; diese Kombination ist ein `Warning`-Befund (das Override entfernt den Eintrag bereits, der Regroup ist also toter Code) und fordert den Maintainer auf, einen der beiden Records zu droppen.
+
 ### Portfolio-Audit-Integration
 
 - **MUSS [MUST]** den `portfolio-audit`-Skill, der in `spec/portfolio/portfolio-management/` definiert ist, dahin erweitern, dass er Tech-Stack-Konsistenz im selben Audit-Lauf prüft, in dem er Capability-Konsistenz prüft; kein separater `tech-stack-audit`-Skill wird eingeführt.
 - **MUSS [MUST]** Tech-Stack-Befunde nach der kanonischen Severity-Skala aus `spec/claude/review-plan/` klassifizieren:
-  - `Critical` — ein Portfolio-Mitglied liefert eine eigene `portfolio/tech-stack.yml` aus (verbotene Duplizierung); ein pro-Repo-`additions:`-Eintrag überdeckt einen geerbten Eintrag ohne entsprechenden Override.
-  - `Warning` — ein Override verweist auf einen globalen Eintrag, den es nicht gibt; ein deklarierter Eintrag mit `status: active` ist nicht in Repo-Signalen nachweisbar; ein Konsumer rendert Doku-HTML, ohne den globalen `docs`-Eintrag zu erben und ohne expliziten Override. **Rationale-Downgrade-Klausel:** Ein `status: active`-Eintrag, dessen `rationale`-Feld einen anerkannten „Signal-fehlt"-Marker trägt (wie vom Capture-Skill gemäß `spec/portfolio/tech-stack-discovery/` §Ermittlungs-Sequenz pro Repository geschrieben), wird von `Warning` auf `Suggestion` heruntergestuft.
+  - `Critical` — ein Portfolio-Mitglied liefert eine eigene `portfolio/tech-stack.yml` aus (verbotene Duplizierung); ein pro-Repo-`additions:`-Eintrag überdeckt einen geerbten Eintrag ohne entsprechenden Override; einem Eintrag fehlt das Pflichtfeld `group` (Parse-Fehler gemäß §"Entry-Schema").
+  - `Warning` — ein Override verweist auf einen globalen Eintrag, den es nicht gibt; ein Regroup-Record verweist auf einen globalen Eintrag, den es nicht gibt; das `group` eines Regroup-Records entspricht dem `group` des geerbten Eintrags (No-Op-Regroup); das `rationale` eines Regroup-Records fehlt oder ist leer; ein `regroup:`-Record existiert für einen Eintrag, den derselbe Konsumer per `overrides:` unterdrückt (toter Code); ein deklarierter Eintrag mit `status: active` ist nicht in Repo-Signalen nachweisbar; ein Konsumer rendert Doku-HTML, ohne den globalen `docs`-Eintrag zu erben und ohne expliziten Override. **Rationale-Downgrade-Klausel:** Ein `status: active`-Eintrag, dessen `rationale`-Feld einen anerkannten „Signal-fehlt"-Marker trägt (wie vom Capture-Skill gemäß `spec/portfolio/tech-stack-discovery/` §Ermittlungs-Sequenz pro Repository geschrieben), wird von `Warning` auf `Suggestion` heruntergestuft.
   - `Suggestion` — ein globaler Eintrag ist `deprecated`, und mindestens ein Konsumer erbt ihn nach einem geschlossenen Sprint immer noch; ein als `other` klassifizierter Eintrag besteht über zwei aufeinanderfolgende Quartals-Audits oder 180 Tage seit Erstanlage fort; ein geerbter Eintrag mit `status: experimental` ist nicht in Repo-Signalen nachweisbar (lockerere Schwelle als bei `active`, da Experimental-Einträge ausdrücklich auf Probe stehen).
-  - `Info` — Beobachtungen, die noch keine Handlung erfordern (zum Beispiel ein globaler Eintrag mit `since` jünger als ein geschlossener Sprint; ein experimenteller Eintrag ohne Konsumer-Adoption).
+  - `Info` — Beobachtungen, die noch keine Handlung erfordern (zum Beispiel ein globaler Eintrag mit `since` jünger als ein geschlossener Sprint; ein experimenteller Eintrag ohne Konsumer-Adoption; ein `regroup:`-Record im Repo (signalisiert bewusste pro-Repo-Zweck-Verschiebung, nützlicher Kontext für den Leser)).
 - **MUSS [MUST]** Repository-Signale mindestens für die folgenden Klassen verifizieren:
   - `kind: package-manager`: Lockfile- oder Tool-Config-Präsenz passend zum `name` des Eintrags (zum Beispiel `uv.lock` für `name: uv`).
   - `kind: ci`: Mindestens eine anbieterspezifische Workflow-Datei (zum Beispiel `.github/workflows/*.yml` für `name: github-actions`).
@@ -131,7 +165,8 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 
 - **MUSS [MUST]** das Portfolio-Doku-Rendering, das in `spec/portfolio/portfolio-management/` definiert ist, dahin erweitern, dass es einen Tech-Stack-Abschnitt pro Portfolio-Mitglied einschließt, neben dem Capability-Abschnitt. Render-Ziel: `docs/<canonical_language>/portfolio/` mit Übersetzungen unter jeder weiteren konfigurierten Sprache.
 - **MUSS [MUST]** den globalen Stack als separaten Top-Level-Abschnitt vor dem Pro-Repository-Inventar rendern, sodass ein Leser die portfolio-weite Baseline sieht, bevor er in einzelne Repositories abtaucht.
-- **MUSS [MUST]** den effektiven Tech-Stack jedes Konsumers zeigen: die geerbten Einträge (mit „inherited"-Badge), die `additions:` des Konsumers (mit „repo-specific"-Badge) und die `overrides:` des Konsumers (mit „suppressed"-Badge und sichtbarem Rationale).
+- **MUSS [MUST]** den effektiven Tech-Stack jedes Konsumers zeigen: die geerbten Einträge (mit „inherited"-Badge), die `additions:` des Konsumers (mit „repo-specific"-Badge), die `overrides:` des Konsumers (mit „suppressed"-Badge und sichtbarem Rationale) und die `regroup:`-Records des Konsumers (mit „regrouped"-Badge, sichtbarem Original-Group, neuem Group und Rationale).
+- **MUSS [MUST]** die effektive-Stack-Sicht jedes Konsumers primär nach `group` organisieren (ein Abschnitt pro `documentation`-/`quality`-/`automation`-/`build-tooling`-/`plugin-platform`-Gruppe, in der Reihenfolge aus §"Group-Enum"), sekundär nach `kind` innerhalb jeder Gruppe. Der globale-Stack-Abschnitt oben auf der gerenderten Seite folgt derselben group-first-Ordnung.
 - **MUSS [MUST]** automatisch aus `portfolio/tech-stack.yml` plus der `project/portfolio.yml` jedes Portfolio-Mitglieds generiert werden; die gerenderten Dateien **DÜRFEN NICHT [MUST NOT]** handgeändert werden.
 - **SOLLTE [SHOULD]** die Kind-Verteilung portfolio-weit mit einem Mermaid-Diagramm visualisieren, das gemäß `spec/project/mermaid-diagrams/` erstellt wird (beispielsweise ein `flowchart`, das `kind`-Zählwerte pro Repository aggregiert), damit strukturelle Ausreißer (ein Repo ohne `test`-Eintrag, ein Repo mit zwei `language`-Einträgen) auf einen Blick erkennbar sind. Nicht-Mermaid-Chart-Formate fallen außerhalb des portfolio-weiten Diagramm-Katalogs und werden hier nicht verwendet.
 - **SOLLTE [SHOULD]** zusätzlich zur effektiven-Stack-Sicht eine **Delta-Sicht** pro Konsumer einbinden: eine kompakte Liste der geerbten Einträge, die der Konsumer per `overrides:` unterdrückt hat (mit Rationale), und der `additions:`, die der Konsumer eingeführt hat. Die Delta-Sicht schärft das Drift-Bewusstsein; die effektive-Stack-Sicht oben bleibt die Standard-Leseordnung, damit Gelegenheitsleser den Delta-Sicht-Kognitivaufwand nicht zahlen müssen.
@@ -151,9 +186,11 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 
 - [ ] `portfolio/tech-stack.yml` existiert im Wurzelverzeichnis des `claude-shared`-Repositories mit mindestens einem Eintrag gemäß §"Entry-Schema".
 - [ ] `git blame portfolio/tech-stack.yml` zeigt nur Maintainer-Commits; kein automatisierter Generierungs-Commit erscheint in der Historie, was das Hand-Authoring-MUSS aus §"Globales Tech-Stack-Manifest" verifiziert.
-- [ ] Eine Schema-Validation-Prüfung für `portfolio/tech-stack.yml` läuft in CI oder pre-commit und weist fehlgeformte Einträge, Kind-Enum-Verletzungen, schema-verletzende Feldtypen, Lifecycle-Enum-Verletzungen und fehlende Pflichtfelder zurück; die Prüfung produziert null Fehlschläge auf dem aktuellen HEAD.
-- [ ] Die `project/portfolio.yml` jedes aktiven Portfolio-Mitglieds trägt einen Top-Level-Key `tech_stack:` (gegebenenfalls leer), wobei `additions:` und `overrides:` dieser Spec entsprechen.
+- [ ] Eine Schema-Validation-Prüfung für `portfolio/tech-stack.yml` läuft in CI oder pre-commit und weist fehlgeformte Einträge, Kind-Enum-Verletzungen, Group-Enum-Verletzungen, schema-verletzende Feldtypen, Lifecycle-Enum-Verletzungen und fehlende Pflichtfelder (einschließlich des Pflichtfelds `group`) zurück; die Prüfung produziert null Fehlschläge auf dem aktuellen HEAD.
+- [ ] Jeder Eintrag in `portfolio/tech-stack.yml:entries[]` und jeder Eintrag in jeder `tech_stack.additions[]` eines Portfolio-Mitglieds trägt einen `group`-Wert aus §"Group-Enum"; der Lauf der Group-Presence-Prüfung produziert null `Critical`-Befunde.
+- [ ] Die `project/portfolio.yml` jedes aktiven Portfolio-Mitglieds trägt einen Top-Level-Key `tech_stack:` (gegebenenfalls leer), wobei `additions:`, `overrides:` und `regroup:` dieser Spec entsprechen.
 - [ ] Jeder `tech_stack.overrides[]`-Record löst sich auf einen existierenden globalen Eintrag auf; der Lauf der Broken-Override-Reference-Prüfung produziert null `Warning`-Befunde.
+- [ ] Jeder `tech_stack.regroup[]`-Record löst sich auf einen existierenden globalen Eintrag auf, trägt ein `group` ungleich dem geerbten `group`, trägt ein nicht-leeres `rationale` und ist nicht mit einem `overrides:`-Record für denselben `name` gepaart; der Lauf der Regroup-Validity-Prüfung produziert null `Warning`-Befunde.
 - [ ] Jeder Rename oder jede Löschung eines globalen Stack-Eintrags wird im nächsten Audit-Lauf über die obige Broken-Override-Reference-Prüfung sichtbar; kein `Warning`-Override-Reference-Befund besteht über das Ein-geschlossener-Sprint-Rename-Koordinationsfenster aus §Entry-Schema hinaus fort.
 - [ ] Jeder Eintrag mit `status: deprecated`, der `deprecated_in_favor_of` trägt, löst sich auf einen Eintrag derselben Schicht auf, dessen `status` nicht selbst `deprecated` ist; der Lauf der Deprecation-Chain-Prüfung produziert null `Warning`-Befunde.
 - [ ] Jeder `tech_stack.overrides[]`-Record hat ein nicht-leeres `rationale`; der Lauf der Rationale-Presence-Prüfung auf Overrides produziert null `Warning`-Befunde.
@@ -162,7 +199,7 @@ Leser: Maintainer von `nolte/*`-Repositories, die `project/portfolio.yml` schrei
 - [ ] Für jeden deklarierten Eintrag, dessen `kind` zu den signal-verifizierten Klassen (`package-manager`, `ci`, `dep-bot`, `docs`, `lint`) gehört, weist das Audit das passende Repository-Signal nach; der Lauf der Signal-Presence-Prüfung produziert null `Warning`-Befunde.
 - [ ] Die Acceptance Criteria des `portfolio-audit`-Skill-Specs gewinnen einen Tech-Stack-Coverage-Check; der resultierende Audit-Findings-Report schließt einen `## Tech stack`-Unterabschnitt (oder Äquivalent) ein.
 - [ ] Die kanonische `spec/portfolio/portfolio-management/en.md` und jede vorhandene Übersetzung tragen jeweils einen Ein-Satz-Cross-Reference zu dieser Spec, der sie als Eigentümer des `tech_stack:`-Blocks nennt.
-- [ ] Das gerenderte Portfolio-Inventar unter `docs/<canonical_language>/portfolio/` enthält sowohl einen Abschnitt „Global tech stack" als auch pro-Repository-Tech-Stack-Unterabschnitte mit inherited-/repo-specific-/suppressed-Badges.
+- [ ] Das gerenderte Portfolio-Inventar unter `docs/<canonical_language>/portfolio/` enthält sowohl einen Abschnitt „Global tech stack" als auch pro-Repository-Tech-Stack-Unterabschnitte mit inherited-/repo-specific-/suppressed-/regrouped-Badges, organisiert primär nach `group` und sekundär nach `kind` gemäß §"Dokumentations-Rendering".
 
 ## Open Questions
 

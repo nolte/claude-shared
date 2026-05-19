@@ -10,6 +10,7 @@
 entries:
   - name: mkdocs
     kind: docs
+    group: documentation
     role: Documentation generator producing the bilingual MkDocs site under docs/.
     status: active
     lifecycle: build
@@ -18,6 +19,7 @@ entries:
 
   - name: renovate
     kind: dep-bot
+    group: automation
     role: Automated dependency-update bot extending the nolte/gh-plumbing common preset.
     status: active
     lifecycle: development
@@ -26,6 +28,7 @@ entries:
 
   - name: github-actions
     kind: ci
+    group: automation
     role: Continuous-integration provider running lint, test, docs, release-drafter, and release-publish workflows.
     status: active
     lifecycle: build
@@ -34,6 +37,7 @@ entries:
 
   - name: task
     kind: build
+    group: build-tooling
     role: Task orchestrator running quality-gate, docs, plugin-reload, and lint targets via a portfolio-wide Taskfile convention.
     status: active
     lifecycle: build
@@ -42,6 +46,7 @@ entries:
 
   - name: vale
     kind: lint
+    group: documentation
     role: Prose linter using the pinned nolte/vale-style vocabularies and the Microsoft style ruleset.
     status: active
     lifecycle: development
@@ -50,6 +55,7 @@ entries:
 
   - name: pre-commit
     kind: lint
+    group: quality
     role: Pre-commit hook framework wiring trailing-whitespace, end-of-files, yamllint, markdownlint, and Vale checks.
     status: active
     lifecycle: development
@@ -58,6 +64,7 @@ entries:
 
   - name: markdownlint
     kind: lint
+    group: documentation
     role: Markdown style linter run via the pre-commit hook framework.
     status: active
     lifecycle: development
@@ -66,6 +73,7 @@ entries:
 
   - name: gh-plumbing
     kind: ci
+    group: automation
     role: Portfolio CI/CD anchor providing reusable GitHub Actions workflows
       (mkdocs deploy, release-drafter, automerge, release-cd-refresh-master)
       consumed by every nolte/* repository.
@@ -76,6 +84,7 @@ entries:
 
   - name: release-drafter
     kind: other
+    group: automation
     role: Release-notes drafter that aggregates merged PRs into a draft
       GitHub Release between version cuts, wired via a gh-plumbing reusable
       workflow.
@@ -86,6 +95,7 @@ entries:
 
   - name: probot-settings
     kind: other
+    group: automation
     role: Probot GitHub App that materialises .github/settings.yml (branch
       protection, labels, required checks) onto every nolte/* repository.
     status: active
@@ -95,6 +105,7 @@ entries:
 
   - name: boring-cyborg
     kind: other
+    group: automation
     role: Probot GitHub App that auto-labels PRs by touched paths and
       welcomes first-time contributors per .github/boring-cyborg.yml.
     status: active
@@ -104,6 +115,7 @@ entries:
 
   - name: stale-bot
     kind: other
+    group: automation
     role: Probot GitHub App that closes stale issues and PRs per
       .github/stale.yml.
     status: active
@@ -113,6 +125,7 @@ entries:
 
   - name: claude-code
     kind: runtime
+    group: plugin-platform
     role: Host runtime that loads and executes skills and agents shipped by
       this plugin in contributor and end-user sessions.
     status: active
@@ -122,6 +135,7 @@ entries:
 
   - name: claude-code-plugin
     kind: framework
+    group: plugin-platform
     role: Claude Code plugin shape defining the skills/<name>/SKILL.md and
       agents/<name>.md source layout plus the plugin/marketplace manifests.
     status: active
@@ -138,6 +152,13 @@ notes: |
   Code is the host runtime for the skills and agents this plugin ships;
   claude-code-plugin captures the plugin-shaped repository layout used by
   every nolte/* repository that distributes Claude Code capabilities.
+
+  Each entry carries a group: classification (documentation, quality,
+  automation, build-tooling, plugin-platform) per spec/portfolio/tech-stack/
+  §Group enum so readers can scan by purpose first and by kind second. A
+  consumer whose repo-specific use of a global entry diverges from the
+  portfolio default uses tech_stack.regroup: in its project/portfolio.yml
+  per §Group regrouping; the global default stays curated here.
 
   Per-repository extensions (language, package-manager, deploy-target,
   repo-specific frameworks) belong in each consumer's project/portfolio.yml
