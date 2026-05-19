@@ -35,7 +35,7 @@ Diese Spec schließt diese Lücke. Sie definiert (a) das portfolio-weite MkDocs-
 
 - **MUSS [MUST]** `docs_dir` auf `docs` belassen (der MkDocs-Default), damit konsumierendes Tooling — `docs-freshness`, IDE-Link-Checker, `mkdocs-static-i18n` — sich auf einen einzigen Pfad verlassen kann
 - **MUSS [MUST]** Dokumentation in pro-sprachige Unterverzeichnisse `docs/<lang>/` gliedern, eines pro in `spec/.spec-config.yml` `languages` gelistete Sprache; ein Repo mit nur einer Sprache nutzt trotzdem `docs/<lang>/` (nicht ein flaches `docs/`), damit das Hinzufügen einer zweiten Sprache später eine rein additive Änderung ist
-- **MUSS [MUST]** den On-Disk-Dateibaum strukturell identisch über die konfigurierten Sprach-Trees halten: jede Seite, die in einer Sprache existiert, existiert in jeder anderen konfigurierten Sprache (geprüft vom `docs-freshness`-Paritäts-Audit)
+- **MUSS [MUST]** den On-Disk-Dateibaum strukturell identisch über die konfigurierten Sprach-Trees halten: jede Seite, die in einer Sprache existiert, existiert in jeder anderen konfigurierten Sprache (geprüft vom `docs-freshness`-Paritäts-Audit; symmetrisch erzeugt durch doku-erzeugende Skills und Agents gemäß `spec/project/docs-multilingual-authoring/`)
 - **DARF NICHT [MUST NOT]** Top-Level-Seiten direkt unter `docs/` platzieren (außer dem `index.md`-Fallback des i18n-Plugins, falls die konfigurierte i18n-Strategie eines verlangt); jede Seite gehört zu einem Sprach-Tree
 - **SOLLTE [SHOULD]** Sektions-Ordner (`docs/<lang>/<section>/`) flach halten — höchstens eine weitere Verschachtelungsebene (`docs/<lang>/<section>/<sub>/`) — damit Navigations-Pfade vorhersehbar bleiben
 

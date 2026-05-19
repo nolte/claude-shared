@@ -20,7 +20,7 @@ Die Referenzimplementierung ist die `README.md` dieses Repositories selbst. Sie 
 - Architecture Decision Records, Designdokumente oder Changelogs — separate Artefakte
 - Runbooks nur für Beitragende — diese gehören in `CLAUDE.md` oder `docs/`
 - Badge-Katalog jenseits der CI-Status-Konvention (Shields für Lizenzen, Downloads usw. sind optional und hier nicht vorgeschrieben)
-- Übersetzungen der README selbst — die README ist aus Portfolio-Konsistenzgründen nur auf Englisch; mehrsprachiger Inhalt lebt unter `docs/<lang>/`
+- Übersetzungen der README selbst — die README ist aus Portfolio-Konsistenzgründen nur auf Englisch; mehrsprachiger Inhalt lebt unter `docs/<lang>/` und wird durch `spec/project/docs-multilingual-authoring/` geregelt
 - Maschinenlesbares README-Front-Matter (YAML-Kopfblöcke) — `.github/settings.yml`, vorgeschrieben durch die `project-structure`-Spec, ist die kanonische Quelle für Repository-Metadaten (Beschreibung, Homepage, Topics)
 - Ein eigener „Support"- oder „Contact"-Abschnitt — die GitHub-Repository-URL (Issues-Tab, Discussions-Tab) ist der implizite und ausreichende Support-Kanal für jedes Portfolio-Repository
 
