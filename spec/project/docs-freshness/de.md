@@ -16,7 +16,7 @@ Jedes Portfolio-Repository, das Dokumentation ausliefert, tut das über MkDocs, 
 - Die Prüfung externer Links (alles, was `http://` oder `https://` ist): die Tradeoffs um Rate Limits, Flakiness, Geoblocking und False Positives gehören in ein anderes Werkzeug
 - Prosa-Linting, Vokabular-Konsistenz oder Style-Guide-Durchsetzung: das ist `spec/project/prose-style/` + `prose-vale-curator`
 - Rendering-Validierung: MkDocs selbst (`mkdocs build --strict` in CI) ist die autoritative Prüfung, dass die Site rendert
-- Die Deklaration der On-Disk-Form von MkDocs (i18n-Plugin-Wahl, Theme, Nav-Struktur) — das sind Pro-Repository-Entscheidungen, und das Audit passt sich an das an, was `mkdocs.yml` deklariert
+- Die Deklaration der On-Disk-Form von MkDocs (i18n-Plugin-Wahl, Theme, Nav-Struktur) — das gehört jetzt zu `spec/project/mkdocs-structure/`. Dieses Audit liest `mkdocs.yml`, um zu erkennen, was tatsächlich verdrahtet ist, und prüft dann Konformität gegen die Erwartungen von `mkdocs-structure`; es definiert die Form nicht neu
 - Die Definition operativer Details des Agents, der das Audit implementiert (`agents/docs-freshness-checker.md`): diese können sich ohne Spec-Änderung entwickeln
 
 ## Anforderungen
@@ -38,13 +38,16 @@ Das Audit **MUSS** jeden Befund in genau eine dieser Kategorien klassifizieren:
 - **ADR-Index-Drift**: eine ADR-Datei auf der Disk, die nicht vom zugehörigen `adr/index.md` referenziert wird, oder ein `adr/index.md`-Eintrag, dessen Datei nicht existiert.
 - **ADR-Status-Hygiene**: ein ADR, dessen deklarierter Status nicht einer von `proposed`, `accepted`, `superseded`, `deprecated`, `rejected` ist; oder eine `Supersedes: ADR-NNN`-Referenz, die auf ein ADR zeigt, dessen Status noch `accepted` ist.
 - **Stale-Marker**: Vorkommen von `TODO`, `FIXME`, `XXX`, `TBD`, `coming soon`, `placeholder`, `Lorem ipsum` (und ihre deutschen Entsprechungen) in der Dokumentation; die Klassifikation hängt vom Kontext ab (ADR vs. Prosa).
+- **Track-Frontmatter-Drift**: eine Seite unter `docs/<lang>/` (außerhalb `_`-präfixierter Snippet-Ordner), der der `track`-Frontmatter-Schlüssel fehlt oder deren `track`-Wert nicht `user-docs`, `developer-docs` oder ein Erweiterungs-Wert ist, der von einer projekt-typ-spezifischen Spec deklariert wurde, in die das Repository eingewilligt hat. Bezugnehmend auf `spec/project/docs-audience-tracks/` §Per-Page-Kontrakt.
+- **Content-Mode-Drift**: eine Seite unter `docs/<lang>/` (außerhalb Snippet-Ordnern), der der `content_mode`-Frontmatter-Schlüssel fehlt oder deren `content_mode`-Wert nicht einer aus `tutorial`, `how-to`, `reference`, `explanation`, `troubleshooting`, `glossary`, `meta` oder ein Erweiterungs-Wert einer projekt-typ-spezifischen Spec ist. Mischungs-Verstöße (eine `how-to`-Seite, die ausgedehnte `explanation`-Inhalte ausliefert, eine `reference`-Seite mit eingebetteten Rezepten) werden als `Content-Mode-Mischungs`-Befunde mit Warning-Severity gemeldet — die Erkennung ist ein Reviewer-Urteils-Signal, kein strikter Regex-Match, also listet das Audit Kandidaten-Seiten ohne Auto-Fail.
+- **Audience-Track-Mismatch**: eine Seite, deren `audience`-Frontmatter-Wert auf eine andere Spur abbildet als der `track`-Frontmatter-Wert der Seite, gemäß dem Default-Mapping in `spec/project/docs-audience-tracks/` §Audience-zu-Spur-Mapping (pro Projekt mit dokumentierter Begründung im Audience-Artefakt übersteuerbar).
 
 Zusätzliche Kategorien **DÜRFEN** von einem Repository hinzugefügt werden, wenn seine Dokumentation sie braucht (zum Beispiel ein API-Referenz-vs-Code-Check in einem Repository, das eine OpenAPI-Spec ausliefert), aber die portfolioweiten Kategorien oben sind die Untergrenze.
 
 ### Schweregrad-Klassifikation
 - **MUSS** die folgende Schweregrad-Skala übernehmen:
-  - **critical**: Interner-Link-Rot, Cross-Tree-Referenz-Rot, ADR-Status-Inkonsistenz, die eine Supersedes-Kette bricht; Reaktionsfenster: vor dem nächsten Release
-  - **warning**: Sprach-Paritäts-Lücke, Stale-Marker in einem ADR mit Status `accepted`, ADR-Index-Drift, Inhalts-Staleness-Delta > 90 Tage, Mermaid-Diagramm-Quell-Drift; Reaktionsfenster: innerhalb des laufenden Quartals
+  - **critical**: Interner-Link-Rot, Cross-Tree-Referenz-Rot, ADR-Status-Inkonsistenz, die eine Supersedes-Kette bricht, Track-Frontmatter-Drift mit nicht-erkanntem Wert (statt schlicht fehlend), Content-Mode-Drift mit nicht-erkanntem Wert; Reaktionsfenster: vor dem nächsten Release
+  - **warning**: Sprach-Paritäts-Lücke, Stale-Marker in einem ADR mit Status `accepted`, ADR-Index-Drift, Inhalts-Staleness-Delta > 90 Tage, Mermaid-Diagramm-Quell-Drift, Track-Frontmatter-Drift (fehlender Schlüssel), Content-Mode-Drift (fehlender Schlüssel), Content-Mode-Mischungs-Kandidat, Audience-Track-Mismatch; Reaktionsfenster: innerhalb des laufenden Quartals
   - **info**: Stale-Marker in gewöhnlicher Prosa, Inhalts-Staleness-Delta 30 – 90 Tage, ADR ohne deklarierten Status (als Info, nicht kritisch, behandeln — das ADR ist weiterhin lesbar); Reaktionsfenster: best effort
 - **DARF NICHT** einen Schweregrad allein auf Basis lokaler Einschätzung absenken; Abweichung von der Klassifikation gehört in eine explizite Waiver-Notiz, festgehalten im Audit-Artefakt
 
@@ -78,6 +81,7 @@ Zusätzliche Kategorien **DÜRFEN** von einem Repository hinzugefügt werden, we
 - [ ] Jedes Docs-Freshness-Audit-Artefakt hält den Repo-Root, den `mkdocs.yml`-Pfad, die auditierte Git-Revision und die Kategorien fest, die (nicht) ausgeführt wurden
 - [ ] Kein Audit-Lauf in irgendeinem Repository hat Dokumentation oder eine andere Datei modifiziert; die Read-only-Disziplin des Audits hält in der Praxis, nicht nur in der Spec
 - [ ] Der Agent `agents/docs-freshness-checker.md` erzeugt Ausgaben, die 1-zu-1 auf die hier deklarierten Kategorien und Schweregrade abbilden, damit das Artefakt mechanisch erzeugt werden kann
+- [ ] Das Audit meldet einen `Track-Frontmatter-Drift`-, `Content-Mode-Drift`- oder `Audience-Track-Mismatch`-Befund, sobald eine Doku-Seite unter einem Nicht-Snippet-Ordner den entsprechenden Kontrakt aus `spec/project/docs-audience-tracks/` oder `spec/project/mkdocs-structure/` §Inhalts-Modi (Diátaxis-Ausrichtung) verletzt
 
 ## Offene Fragen
 - Soll die Spec portfolioweit einen einzigen Artefakt-Dateipfad standardisieren (zum Beispiel `docs/audits/docs-freshness.md` mit Quartals-Sektionen), oder bleibt die Freiheit pro Repository?

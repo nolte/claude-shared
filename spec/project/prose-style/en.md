@@ -49,6 +49,25 @@ Documentation, specifications, READMEs, release notes, and other human-readable 
 - **MUST** check pull-request descriptions in CI (for example via a PR-check workflow) at the repository's configured `MinAlertLevel`, failing on `error`-level alerts the same way documentation does
 - **SHOULD** verify the final Release notes body against Vale before the release is published, so the published changelog doesn't carry prose violations into public view
 
+### Voice and tone
+
+The Vale rule sets enforce a mechanical baseline, but the rules below codify the *editorial* posture every authored or AI-generated paragraph must already have **before** Vale runs. The rules below come from the Microsoft Writing Style Guide (Top-10 tips + Brand voice), the Google Developer Documentation Style Guide (Voice and Audience), and the Write the Docs documentation principles; each rule below is supported by at least two of those sources.
+
+- **MUST** write in **active voice** by default; passive voice **MAY** be used only when the actor is genuinely unknown, irrelevant, or when active voice would force an awkward subject (Microsoft Top-10 §Revise weak writing: "Most of the time, start each statement with a verb"; Google Voice and Tone)
+- **MUST** address the reader in the **second person** (`you`, `your`) on every page whose `content_mode` is `tutorial` (which includes quickstart pages per `spec/project/docs-audience-tracks/` §User-docs content contract), `how-to`, or `troubleshooting`; `reference`, `explanation`, and `glossary` pages stay impersonal (Microsoft Top-10 §Project friendliness; Diátaxis tutorials/how-to-guides: "the learner / the reader"; Diátaxis Explanation: "higher and wider perspective" implies a third-person register)
+- **MUST** use **present tense** for system behaviour ("the command returns," not "the command will return") and for instructions ("select," not "you will select"); past tense is reserved for changelog and release-note prose (Microsoft Brand voice; Google Voice)
+- **MUST** use **sentence-case capitalisation** for every heading, list item, button name, and table cell with three or fewer words; title-case ("Like This") is forbidden outside proper nouns and product names (Microsoft Top-10 §When in doubt, don't capitalize: "Never Use Title Capitalization (Like This). Never Ever"; ratified by Vale's Microsoft style)
+- **MUST** front-load the answer or the first command before any background; this is the page-level equivalent of the §Content modes (Diátaxis alignment) framing rule in `spec/project/mkdocs-structure/` (Microsoft Top-10 §Get to the point fast; Google "Clear information first"; WtD Skimmable)
+- **SHOULD** keep paragraphs short (typically three sentences or fewer) and prefer lists for any sequence of three or more parallel items (Microsoft Top-10 §Be brief; WtD Skimmable)
+- **SHOULD** use **contractions** sparingly but consistently per language tree (English documentation uses `you're`, `it's`, `don't`; the German tree retains the unabbreviated forms required by the Microsoft Localization Style Guide for German) (Microsoft Top-10 §Project friendliness; Microsoft Localization Style Guides—German)
+- **SHOULD** open every non-`reference` page with a one- to three-sentence framing paragraph that names the reader's situation (what they have, what they want) before the first H2 (mirrors `spec/project/mkdocs-structure/` §Content modes (Diátaxis alignment))
+- **MUST NOT** ship **idioms, slang, sports metaphors, military metaphors, or culturally specific references** in any English-scoped prose; the prose must read for a global audience whose first language may not be English (Google Voice "No culturally specific references"; Microsoft Bias-Free Communication §Militaristic language)
+- **MUST NOT** ship **gendered generic pronouns** (`he`, `she`, `his`, `hers`, `he/she`); rewrite to second person, plural, or role-based references (Microsoft Bias-Free Communication: "Don't use he, him, his, she, her, or hers in generic references"; Linguistic Society of America Guidelines for Inclusive Language)
+- **MUST NOT** ship **ableist or otherwise non-inclusive phrasing**; in particular, the substitutions in Microsoft's Bias-Free Communication §Don't use terms that may carry unconscious racial bias (`primary` / `subordinate` instead of `master` / `slave`; `stop responding` instead of `hang`; `perimeter network` instead of `DMZ`) are mandatory. The shared Vale vocabulary at `nolte/vale-style` carries the curated replacement list; new inclusive-language substitutions are deposited there per §New terms and phrasings, not in per-repo overrides.
+- **MUST NOT** ship **exclamation marks** outside genuine emphasis (release-note "🎉 Released!" style is allowed in release notes; documentation prose isn't the place) (Google Voice "Avoid exclamation marks")
+- **MUST NOT** ship **emoji** in spec, ADR, or reference prose; emoji **MAY** appear in release notes, README badge rows, and informal blog posts when the project's voice supports it (portfolio convention; not contradicted by upstream style guides)
+- **MAY** use **microcopy patterns** ratified by Microsoft Top-10 (verb-first list items, "you can" pruned away, two-or-three-word headings without end punctuation)
+
 ### Multilingual text
 - **MUST** scope Vale to English-authored content only; files authored in any language other than English **MUST NOT** be included in Vale's lint scope
 - **MUST** define the English-only lint scope in both the `.vale.ini` format sections and the Taskfile `lint:prose` target so local and CI apply the same scope; the scope covers end-user-facing prose only—typical English paths are `README.md`, `docs/en/`, and each spec's canonical-language file where English is canonical (`spec/<topic>/<slug>/en.md`)
@@ -71,6 +90,18 @@ Documentation, specifications, READMEs, release notes, and other human-readable 
 - [ ] Vale's configured lint scope contains no files authored in a language other than English; `docs/de/`, `spec/<topic>/<slug>/de.md`, and any `*.de.md` are explicitly absent from the scope
 - [ ] Vale's configured lint scope contains no LLM-instruction artifacts; `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, and `agents/*.md` are explicitly absent from the scope
 - [ ] No English-scoped file contains non-English prose anywhere in its body, YAML frontmatter, inline comments, or quoted examples; Vale at `error` level confirms this
+- [ ] Authored or AI-generated paragraphs follow the §Voice and tone rules (active voice, second person on instructional pages, present tense, sentence-case headings, front-loaded answer); a reviewer can spot-check any page and find the rules upheld
+- [ ] No English-scoped prose carries gendered generic pronouns (`he`, `she`, `his`, `hers`, `he/she`), militaristic or ableist substitutions ratified by the Microsoft Bias-Free Communication table, exclamation marks outside genuine emphasis, or culturally specific idioms; the shared Vale vocabulary at `nolte/vale-style` flags every known offender at `error` level
+- [ ] The shared Vale vocabulary at `nolte/vale-style` carries Microsoft's bias-free substitutions (`primary` / `subordinate`, `stop responding`, `perimeter network`, …) so a per-repo override isn't needed to enforce them
 
 ## Open Questions
 - _None—all prior open points have been resolved. The drift audit between repository-local vocabularies and the pinned `nolte/vale-style` release is delegated to a dedicated Claude Skill rather than enforced through a periodic CI cron._
+- Should the §Voice and tone rules be automatically enforced via additional Vale rules deposited in `nolte/vale-style` (an active-voice detector, a title-case detector, a gendered-pronoun detector), or do they stay editorial guidance for now? Vale rule authoring is non-trivial and false-positive-prone; defer until enough drift is recorded to justify the rule cost.
+
+## Sources
+<!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->
+- Microsoft Writing Style Guide (learn.microsoft.com/style-guide)—Top-10 tips, Brand voice, Bias-Free Communication, Militaristic language guidance
+- Microsoft Localization Style Guides—German (learn.microsoft.com/de-de/globalization/localization/styleguides)—DACH house-style rules for contractions and forms of address in the German language tree
+- Google Developer Documentation Style Guide (developers.google.com/style)—Voice and Tone, Audience, "Clear information first" framing
+- Write the Docs documentation principles (writethedocs.org/guide)—ARID, Skimmable, Exemplary, Current, Consistent
+- Linguistic Society of America Guidelines for Inclusive Language (linguisticsociety.org)—second-line ratification of the inclusive-pronoun guidance Microsoft sources

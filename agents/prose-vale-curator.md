@@ -103,6 +103,16 @@ Return a single report with these sections, in this order:
 ## Remaining alerts
 <every alert that survived post-edit Vale, with the reason it survived—"escalated: rephrase would change meaning," "out of scope: config change required," and similar>
 
+## Voice-and-tone spot check
+<heuristic findings against `spec/project/prose-style/` §Voice and tone — Vale doesn't cover these MUSTs yet, so the curator reports them inline as Reviewer signals. Empty when no findings.>
+- `<path>:<line>` — passive voice candidate: "<quoted span>" — suggested active rewrite: "<one-line suggestion>"
+- `<path>:<line>` — second-person violation on `tutorial` / `how-to` / `troubleshooting` page: "<quoted span>"
+- `<path>:<line>` — title-case heading: "<quoted heading>" — sentence-case rewrite: "<rewrite>"
+- `<path>:<line>` — gendered generic pronoun (`he`/`she`/`his`/`hers`/`he/she`): "<quoted span>"
+- `<path>:<line>` — militaristic / non-inclusive term (`master`/`slave`/`hang`/`DMZ`/…): "<quoted span>" — suggested replacement per Microsoft Bias-Free Communication: "<term>"
+- `<path>:<line>` — exclamation mark outside genuine emphasis: "<quoted span>"
+- `<path>:<line>` — culturally specific idiom / sport / military metaphor: "<quoted span>"
+
 ## Caller follow-ups
 - Review the rephrases and vocabulary additions.
 - Commit the changes (the agent doesn't commit).
@@ -124,6 +134,15 @@ Omit any section with no content, except **Scope**, **Files touched**, and **Cal
    - **Report as upstream candidate:** when this repository doesn't own vocabulary source but the term genuinely belongs in a shared vocabulary (typical case: a consumer repo that pins `nolte/vale-style` via `vale sync`). Record the term, the suggested group, and a one-line rationale; don't attempt to edit anything upstream from a consumer repo.
    - **Escalate:** when a rephrase would require changing meaning **and** adding to vocab isn't possible in this repo (consumer repo, or the term isn't a legitimate technical identifier). Stop editing that passage, leave the alert in place, and record it in the report with the reason. The caller decides whether to relax the claim, extend the upstream vocabulary, or live with the alert.
 5. **Re-run `vale` on every edited file** and record the "after" alert count. Every remaining alert needs an explanation in the report.
+5a. **Run a Voice-and-tone spot check** against `spec/project/prose-style/` §Voice and tone (the editorial MUSTs that Vale doesn't enforce yet). Surface heuristic findings only — don't rewrite. Heuristics to apply per file:
+   - **Passive voice** — sentences whose verb phrase matches `\b(is|are|was|were|be|been|being)\b\s+\w+ed\b` outside of code blocks; report as candidate, the Reviewer judges the rare legitimate passive use.
+   - **Second-person on instructional pages** — when the page's `content_mode` frontmatter is `tutorial`, `how-to`, or `troubleshooting` (read frontmatter via the same offset-Read approach `docs-freshness-checker` uses), any paragraph that lacks `you` / `your` and the imperative mood is a candidate.
+   - **Sentence-case headings** — any `^#{1,6}\s+` heading where two or more non-leading words start with an uppercase letter and aren't proper nouns / product names (a curated list of allowed proper nouns lives in the loaded `accept.txt` vocabularies; treat that as the whitelist).
+   - **Gendered generic pronouns** — `\b(he|she|his|hers|he/she|s/he)\b` outside of direct quotations.
+   - **Militaristic / non-inclusive terms** — the Microsoft Bias-Free Communication substitution list (`master`, `slave`, `hang` as a verb, `DMZ`, `blacklist`, `whitelist`, …) treated as a curated regex pack; report each hit with the suggested replacement.
+   - **Exclamation marks** — `!` outside fenced code blocks, image captions, and emphasis contexts where the Vale config explicitly allows them.
+   - **Culturally specific idioms / sport / military metaphors** — a curated regex pack (`out of the park`, `slam dunk`, `home run`, `command and control`, `boots on the ground`, `bandwagon`, `silver bullet`, `low-hanging fruit`); flag each hit.
+   Report findings under §"Voice-and-tone spot check" in the output. Do not modify files. The Reviewer or a future Vale rule extension is the resolution path.
 6. **When a brand-new vocabulary group is created** (rare; only when a clearly bounded domain warrants it), flag it loudly in the report—the caller must update the curation spec's documentation targets (typically `docs/vocabularies.md` and the "Available vocabularies" section in the repo's `README.md`) in the same commit. Adding entries to an **existing** group doesn't require doc sync.
 7. **Self-audit** against the curation spec's acceptance criteria when the spec is present. For every unchecked box, either fix the edit or annotate in the report why it can't be satisfied.
 
