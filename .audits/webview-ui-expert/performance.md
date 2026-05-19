@@ -333,6 +333,3 @@ The exact stack under research:
 - **SHOULD** use `sx` only for one-off styles and promote reused styles to `styled()`; avoid object-shape `sx` values that change every render (use CSS variables instead).
 - **MUST** default the Vitest `environment` to `node`; opt files into `happy-dom`/`jsdom` per pragma. **SHOULD** prefer `happy-dom` over `jsdom` when the test only needs basic DOM APIs.
 - **MUST** use Testing Library `findBy*` (or `waitFor`) for async UI assertions; **SHOULD** pass `{ hidden: true }` to `*ByRole` on large trees.
-
-
-
