@@ -29,8 +29,8 @@ Readers: contributors (human and AI agents) doing parallel feature work in this 
 
 ### Path layout
 - **MUST** place every additional worktree outside the primary checkout's directory tree; a worktree path **MUST NOT** be nested under the primary repository directory
-- **SHOULD** name worktrees as a sibling of the primary checkout in the form `<repo>-<short-slug>/` (for example, the primary checkout `~/repos/github/claude-shared/` plus the worktree `~/repos/github/claude-shared-mermaid/`); the `<short-slug>` is a kebab-case abbreviation of the feature, not necessarily identical to the branch name
-- **MAY** instead place worktrees under a centralized layout `~/repos/.worktrees/<repo>/<short-slug>/` when a contributor prefers a single root for all worktrees; mixing both layouts within one machine is permitted but **SHOULD** be avoided per repository
+- **SHOULD** place worktrees under a centralized layout `~/repos/.worktrees/<repo>/<short-slug>/`, where `<repo>` matches the repository name from the `origin` remote and `<short-slug>` is a kebab-case abbreviation of the feature (not necessarily identical to the branch name). The centralized root keeps every parallel working copy on the machine in one predictable place, reduces the chance of accidentally nesting a worktree under another repository, and makes orphan worktrees easy to spot with a single `ls ~/repos/.worktrees/<repo>/`
+- **MAY** instead name worktrees as a sibling of the primary checkout in the form `<repo>-<short-slug>/` (for example, the primary checkout `~/repos/github/claude-shared/` plus the worktree `~/repos/github/claude-shared-mermaid/`) when a contributor prefers per-repository locality over a single centralized root; mixing both layouts within one machine is permitted but **SHOULD** be avoided per repository
 - **MUST NOT** place a worktree path inside another repository's working tree, inside `node_modules/`, inside `.venv/`, or inside any other directory that a tool may delete or rewrite wholesale
 
 ### Branch-to-worktree mapping
