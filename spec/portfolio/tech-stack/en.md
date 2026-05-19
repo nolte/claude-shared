@@ -50,16 +50,17 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 ### Per-repository tech-stack block
 
 - **MUST** require every Portfolio-Member repository's `project/portfolio.yml` to carry a top-level `tech_stack:` key once it adopts this spec. The key **MAY** be empty (`tech_stack: {}`) when the repository inherits the global stack unmodified.
-- **MUST** allow exactly two sub-blocks under `tech_stack:`: `additions:` (a list of full entries per §"Entry schema") and `overrides:` (a list of override records per §"Inheritance semantics"). Both sub-blocks are individually optional; an empty `tech_stack:` is valid.
+- **MUST** allow exactly three sub-blocks under `tech_stack:`: `additions:` (a list of full entries per §"Entry schema"), `overrides:` (a list of override records per §"Inheritance semantics"), and `regroup:` (a list of regroup records per §"Group regrouping" below). All three sub-blocks are individually optional; an empty `tech_stack:` is valid.
 - **MUST NOT** re-declare an entry from the global stack inside `additions:` when the repository merely uses it as-is; implicit inheritance is the only authoring path for unmodified global entries.
 - **MUST** keep `additions:` entry names unique across the union of (global entries minus this repo's `overrides:`) and (this repo's `additions:`). A repo-specific addition that shadows an inherited entry without an explicit override is a `Critical` audit finding.
 - **MUST NOT** declare a tech-stack entry the repository doesn't actually use; the audit verifies declared entries against repository signals (for example: a `kind: package-manager` entry named `uv` requires a `uv.lock` or `[tool.uv]` block; a `kind: ci` entry named `github-actions` requires at least one workflow file under `.github/workflows/`).
 
 ### Entry schema
 
-- **MUST** require each entry—whether in `portfolio/tech-stack.yml:entries[]` or in a consumer's `tech_stack.additions[]`—to carry the four mandatory fields:
+- **MUST** require each entry—whether in `portfolio/tech-stack.yml:entries[]` or in a consumer's `tech_stack.additions[]`—to carry the five mandatory fields:
   - `name`: kebab-case identifier, unique within its layer (global entries are unique across `portfolio/tech-stack.yml`; per-repo additions are unique within their `additions:` list).
   - `kind`: a value from the closed enum defined in §"Kind enum" below.
+  - `group`: a value from the closed enum defined in §"Group enum" below.
   - `role`: one prose sentence naming what the entry does for the repository or portfolio.
   - `status`: one of `active`, `experimental`, `deprecated`.
 - **MAY** carry the optional fields:
@@ -93,6 +94,20 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
   - `other`: fallback for entries that legitimately don't fit any of the above.
 - **SHOULD** route an `other`-classified entry that persists across two consecutive quarterly portfolio audits or 180 days from first appearance (whichever comes first) to a catalog-gap finding (severity `Suggestion`), so the enum is revised before `other` becomes a hidden bucket. The quarterly-cadence anchor matches the audit-cadence MUST in `spec/portfolio/portfolio-management/` §Portfolio audit.
 
+### Group enum
+
+The `kind` enum is intentionally fine-grained (12 values) for audit precision. The `group` enum is intentionally coarse (5 values) for reader orientation: a contributor scanning the portfolio inventory or the rendered tech-stack page reads the group first ("what's this tool here for?"), the kind second ("which specific tool slot does it occupy?"). The two enums are orthogonal: `kind` is a stable property of the tool, `group` reflects the purpose the carrying repository uses the tool for.
+
+- **MUST** restrict `group` to the following five values; any other value is a parse error:
+  - `documentation`: documentation generators, prose linters, doc-deploy targets, and any tool the carrying repository uses primarily for the documentation site (for example a language whose only role in this repo is producing docs).
+  - `quality`: code linters, formatters, test runners, and pre-commit-style hook frameworks gating code quality. Distinct from `documentation` even when the underlying technology overlaps: a markdown linter that runs against doc sources belongs to `documentation`; a markdown linter that runs against `CONTRIBUTING.md` and source-tree READMEs as a code-quality gate belongs to `quality`. The carrying repository's dominant use decides.
+  - `automation`: CI provider, reusable workflows, release-notes drafters, dependency-update bots, and repo-governance bots (Probot apps such as `settings`, `boring-cyborg`, `stale`). Anything that runs without contributor interaction on the platform.
+  - `build-tooling`: task orchestrators, package managers, and other build-time tools that aren't themselves CI or documentation-specific. The local-machine and CI-machine counterpart to `automation`.
+  - `plugin-platform`: Claude Code as host runtime, the plugin framework defining the repository's shape, and the marketplace distribution channel—the layer specific to repositories that ship a Claude Code plugin.
+- **MUST** assign exactly one `group` value per entry; multi-group entries are forbidden. When two groups are plausible, the dominant purpose wins; if no group dominates, the maintainer documents the call in the entry's `rationale` field.
+- **MUST** treat `group` as a property of how the carrying repository uses the entry, not of the tool itself. A consumer that uses an inherited global entry for a different purpose than the portfolio default re-classifies via the §"Group regrouping" mechanism below, never by silently re-declaring the entry under `additions:`.
+- **SHOULD** organize portfolio-rendered tech-stack pages by `group` first (one section per group, in the order above), `kind` second (sub-grouping within a group). The audit emits findings group-first as well so reviewers can scan by purpose rather than by kind.
+
 ### Inheritance semantics
 
 - **MUST** treat every Portfolio-Member repository as implicitly inheriting every entry from `portfolio/tech-stack.yml` whose `status` is `active` or `experimental` at audit time. A consumer doesn't re-declare inherited entries; their effective stack is the union of `(global active/experimental entries) minus (entries the consumer overrides with inherit: false) union (the consumer's additions)`.
@@ -111,14 +126,33 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - **MUST NOT** allow `tech_stack.overrides[]` to alter any field of the inherited entry other than suppressing it. A consumer who needs a different `version` of an inherited entry does so by overriding the inherited entry with `inherit: false` plus a rationale **and** declaring a repo-specific replacement under `additions:` with the desired fields.
 - **MUST** treat a global entry that transitions to `status: deprecated` as still inherited by every consumer until each consumer either overrides it or the global entry transitions to `deprecated_in_favor_of` resolution; the audit emits a `Suggestion` finding for every consumer still inheriting a deprecated entry after one closed sprint.
 
+### Group regrouping
+
+`group` is the single field a consumer is allowed to re-classify on an inherited global entry without using the `overrides:` machinery. The mechanism is a dedicated `tech_stack.regroup:` sub-block so the rename keeps the inherited entry intact (every other field stays portfolio-curated) while making the purpose-shift explicit.
+
+- **MUST** structure each entry in `tech_stack.regroup[]` as a regroup record carrying exactly three fields: `name` (referencing an existing global entry's `name`), `group` (the new group value from §"Group enum"), and `rationale` (a non-empty prose sentence naming why this repository's use of the entry differs from the portfolio default):
+
+  ```yaml
+  regroup:
+    - name: python
+      group: documentation
+      rationale: "in this repo python is only used for the MkDocs build pipeline, not as an application runtime"
+  ```
+
+- **MUST** refuse a `tech_stack.regroup[]` record whose `name` doesn't resolve to an existing global entry; broken regroup references are a `Warning` audit finding (same severity as broken override references).
+- **MUST** refuse a `tech_stack.regroup[]` record whose `group` equals the inherited global entry's `group`; a no-op regroup is a `Warning` audit finding so the maintainer cleans up the redundant record.
+- **MUST** require a non-empty `rationale` on every regroup record; missing rationale is a `Warning` finding. The rationale documents the per-repo purpose shift so a reader of the rendered inventory understands why the same tool appears under a different group than in the portfolio default.
+- **MUST NOT** allow `tech_stack.regroup[]` to alter any field of the inherited entry other than `group`. A consumer who needs a different `kind`, `role`, `version`, or any other field uses the `overrides:` + repo-specific `additions:` two-step from §Inheritance semantics above.
+- **MAY** carry a `regroup:` record for an entry the consumer has also `overrides:`-suppressed; this combination is a `Warning` finding (the override already removes the entry, so the regroup is dead code), prompting the maintainer to drop one of the two records.
+
 ### Portfolio audit integration
 
 - **MUST** extend the `portfolio-audit` skill defined by `spec/portfolio/portfolio-management/` to verify tech-stack consistency in the same audit run that verifies capability consistency; no separate `tech-stack-audit` skill is introduced.
 - **MUST** classify tech-stack findings using the canonical severity scale from `spec/claude/review-plan/`:
-  - `Critical`: a Portfolio-Member ships its own `portfolio/tech-stack.yml` (forbidden duplication); a per-repo `additions:` entry shadows an inherited entry without a corresponding override.
-  - `Warning`: an override references a global entry that doesn't exist; a declared entry with `status: active` isn't detected in repo signals; a consumer renders documentation HTML without inheriting the global `docs` entry and without an explicit override. **Rationale-downgrade clause:** a `status: active` entry whose `rationale` field carries an acknowledged-missing-signal marker (as written by the capture skill per `spec/portfolio/tech-stack-discovery/` §Discovery sequence per repository) is downgraded from `Warning` to `Suggestion`.
+  - `Critical`: a Portfolio-Member ships its own `portfolio/tech-stack.yml` (forbidden duplication); a per-repo `additions:` entry shadows an inherited entry without a corresponding override; an entry is missing its mandatory `group` field (parse error per §"Entry schema").
+  - `Warning`: an override references a global entry that doesn't exist; a regroup record references a global entry that doesn't exist; a regroup record's `group` equals the inherited entry's `group` (no-op regroup); a regroup record's `rationale` is missing or empty; a `regroup:` record exists for an entry the same consumer also suppresses via `overrides:` (dead code); a declared entry with `status: active` isn't detected in repo signals; a consumer renders documentation HTML without inheriting the global `docs` entry and without an explicit override. **Rationale-downgrade clause:** a `status: active` entry whose `rationale` field carries an acknowledged-missing-signal marker (as written by the capture skill per `spec/portfolio/tech-stack-discovery/` §Discovery sequence per repository) is downgraded from `Warning` to `Suggestion`.
   - `Suggestion`: a global entry is `deprecated` and at least one consumer still inherits it after one closed sprint; an `other`-classified entry has persisted across two consecutive quarterly audits or 180 days from first appearance; an inherited entry with `status: experimental` isn't detected in repo signals (looser threshold than `active`, since experimental entries are explicitly probationary).
-  - `Info`: observations that don't yet require action (for example a global entry with `since` younger than one closed sprint; an experimental entry with no consumer pickup yet).
+  - `Info`: observations that don't yet require action (for example a global entry with `since` younger than one closed sprint; an experimental entry with no consumer pickup yet; a `regroup:` record present on the repo (signals deliberate per-repo purpose-shift, useful context for the reader)).
 - **MUST** verify repository signals for at least the following classes:
   - `kind: package-manager`: lockfile or tool-config presence matching the entry's `name` (for example `uv.lock` for `name: uv`).
   - `kind: ci`: at least one provider-specific workflow file (for example `.github/workflows/*.yml` for `name: github-actions`).
@@ -131,7 +165,8 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 
 - **MUST** extend the portfolio documentation rendering defined by `spec/portfolio/portfolio-management/` to include a tech-stack section per Portfolio-Member, alongside the capability section. Rendering target: `docs/<canonical_language>/portfolio/` with translations under every other configured language.
 - **MUST** render the global stack as a separate top-level section preceding the per-repository inventory, so a reader can see the portfolio-wide baseline before drilling into specific repositories.
-- **MUST** show each consumer's effective tech-stack: the inherited entries (marked with an "inherited" badge), the consumer's `additions:` (marked with a "repo-specific" badge), and the consumer's `overrides:` (marked with a "suppressed" badge and surfacing the rationale).
+- **MUST** show each consumer's effective tech-stack: the inherited entries (marked with an "inherited" badge), the consumer's `additions:` (marked with a "repo-specific" badge), the consumer's `overrides:` (marked with a "suppressed" badge and surfacing the rationale), and the consumer's `regroup:` records (marked with a "regrouped" badge surfacing the original group, the new group, and the rationale).
+- **MUST** organize each consumer's effective-stack view by `group` first (one section per `documentation` / `quality` / `automation` / `build-tooling` / `plugin-platform` group, in the order defined in §"Group enum"), and by `kind` second within each group. The global-stack section at the top of the rendered page follows the same group-first ordering.
 - **MUST** be generated automatically from `portfolio/tech-stack.yml` plus every Portfolio-Member's `project/portfolio.yml`; the rendered files **MUST NOT** be hand-edited.
 - **SHOULD** visualise the kind-distribution across the portfolio with a Mermaid diagram authored per `spec/project/mermaid-diagrams/` (for example a `flowchart` aggregating `kind` counts per repository) so structural outliers (a repo with no `test` entry, a repo with two `language` entries) are visible at a glance. Non-Mermaid chart formats fall outside the portfolio-wide diagram catalog and aren't used here.
 - **SHOULD** include a per-consumer **delta view** alongside the effective-stack view: a compact list of inherited entries the consumer suppressed via `overrides:` (with rationale) and `additions:` the consumer introduced. The delta view sharpens drift awareness; the effective-stack view above remains the default reading order so casual readers don't pay the delta-view cognitive cost.
@@ -151,9 +186,11 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 
 - [ ] `portfolio/tech-stack.yml` exists in the `claude-shared` repository root with at least one entry conforming to §"Entry schema."
 - [ ] `git blame portfolio/tech-stack.yml` shows only maintainer-authored commits; no automated-generation commit appears in its history, verifying the hand-authoring MUST in §"Global tech-stack manifest."
-- [ ] A schema-validation check for `portfolio/tech-stack.yml` runs in CI or pre-commit and rejects malformed entries, kind-enum violations, schema-violating field types, lifecycle-enum violations, and missing mandatory fields; the check produces zero failures on the current HEAD.
+- [ ] A schema-validation check for `portfolio/tech-stack.yml` runs in CI or pre-commit and rejects malformed entries, kind-enum violations, group-enum violations, schema-violating field types, lifecycle-enum violations, and missing mandatory fields (including the mandatory `group` field); the check produces zero failures on the current HEAD.
+- [ ] Every entry in `portfolio/tech-stack.yml:entries[]` and every entry in every Portfolio-Member's `tech_stack.additions[]` carries a `group` value from §"Group enum"; running the group-presence check produces zero `Critical` findings.
 - [ ] Every active Portfolio-Member's `project/portfolio.yml` carries a top-level `tech_stack:` key (possibly empty), with any `additions:` and `overrides:` conforming to this spec.
 - [ ] Every `tech_stack.overrides[]` record resolves to an existing global entry; running the broken-override-reference check produces zero `Warning` findings.
+- [ ] Every `tech_stack.regroup[]` record resolves to an existing global entry, carries a `group` value distinct from the inherited entry's `group`, carries a non-empty `rationale`, and isn't paired with an `overrides:` record for the same `name`; running the regroup-validity check produces zero `Warning` findings.
 - [ ] Every rename or deletion of a global-stack entry surfaces via the broken-override-reference check above within the next audit run; no `Warning`-grade override-reference finding persists beyond the one-closed-sprint rename-coordination window defined in §"Entry schema."
 - [ ] Every entry with `status: deprecated` carrying `deprecated_in_favor_of` resolves to an entry in the same layer whose `status` isn't itself `deprecated`; running the deprecation-chain check produces zero `Warning` findings.
 - [ ] Every `tech_stack.overrides[]` record has a non-empty `rationale`; running the rationale-presence check on overrides produces zero `Warning` findings.
@@ -162,7 +199,7 @@ Readers: maintainers of `nolte/*` repositories who author or revise `project/por
 - [ ] For every declared entry whose `kind` is one of the signal-verified classes (`package-manager`, `ci`, `dep-bot`, `docs`, `lint`), the audit detects the matching repository signal; running the signal-presence check produces zero `Warning` findings.
 - [ ] The portfolio-audit skill's spec acceptance criteria gain a tech-stack-coverage check; the resulting audit Findings-Report includes a `## Tech stack` subsection (or equivalent).
 - [ ] The canonical `spec/portfolio/portfolio-management/en.md` and every existing translation each carry a one-sentence cross-reference to this spec naming it as the owner of the `tech_stack:` block.
-- [ ] The rendered portfolio inventory under `docs/<canonical_language>/portfolio/` includes both a "Global tech stack" section and per-repository tech-stack subsections with inherited/repo-specific/suppressed badges.
+- [ ] The rendered portfolio inventory under `docs/<canonical_language>/portfolio/` includes both a "Global tech stack" section and per-repository tech-stack subsections with inherited/repo-specific/suppressed/regrouped badges, organised by `group` first and `kind` second per §"Documentation rendering."
 
 ## Open Questions
 
