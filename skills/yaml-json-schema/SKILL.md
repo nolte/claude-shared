@@ -64,7 +64,7 @@ Before doing anything:
 Bootstrap a brand-new schema in the repository.
 
 1. Ask for: the **slug** (kebab-case, no version suffix — the skill appends `-v1.0`), the **target object** the schema describes (one short noun phrase, used for `title`), the **consuming spec path** (the `Refs spec/<topic>/<slug>/` anchor that goes into `description`), and the **on-disk location** (defaults to `<owner-path>/schemas/` next to the data; the spec forbids `spec/` as a location).
-2. Compose the `$id` URI deterministically: `https://schemas.nolte.dev/<repo>/<topic>/<slug>-v1.0.json`. Read `<repo>` from the `repository` field of the nearest manifest (`pyproject.toml`, `package.json`, `.claude-plugin/plugin.json`) or — when no manifest declares it — from the `origin` remote URL trailing path segment.
+2. Compose the `$id` URI deterministically: `https://github.com/nolte/<repo>/blob/main/<owner-path>/schemas/<slug>-v1.0.schema.yaml`. Read `<repo>` from the `repository` field of the nearest manifest (`pyproject.toml`, `package.json`, `.claude-plugin/plugin.json`) or — when no manifest declares it — from the `origin` remote URL trailing path segment. `<owner-path>` is the repository-relative directory the `schemas/` subdirectory sits under (for example `project/features` for feature frontmatter, `.github/workflows` for workflow inputs); the URI's path after `/blob/main/` matches the file's actual on-disk path.
 3. Draft the file with exactly the ten top-level entries from the spec's §Document skeleton, in the declared order:
    - `$schema: https://json-schema.org/draft/2020-12/schema`
    - `$id: <composed URI>`
@@ -95,12 +95,12 @@ Scan every file matching `**/*.schema.yaml`. For each file, classify each spec r
 Report findings grouped by file, then by spec section. Items the audit checks per file:
 
 - Dialect: `$schema` is the first keyed entry and exactly `https://json-schema.org/draft/2020-12/schema`.
-- Identity: `$id` is the second keyed entry, under `https://schemas.nolte.dev/`, with `-v<major>.<minor>.json` suffix.
+- Identity: `$id` is the second keyed entry, under `https://github.com/nolte/<repo>/blob/main/`, with a `-v<major>.<minor>.schema.yaml` suffix; the URI's path after `/blob/main/` matches the file's repository-relative on-disk path.
 - Skeleton order: the ten top-level entries appear in the spec's declared order; no top-level key outside the allowlist.
 - File layout: filename matches the trailing slug of `$id`; double extension `.schema.yaml`; file lives outside `spec/`.
 - Description anchor: `description` contains the literal substring `Refs spec/`.
 - Property descriptions: every top-level entry under `properties` carries a `description`.
-- `$ref` shape: every `$ref` is either `#/$defs/<Name>` or an absolute `https://schemas.nolte.dev/…` URI; no relative paths, no dialect mix.
+- `$ref` shape: every `$ref` is either `#/$defs/<Name>` or an absolute `https://github.com/nolte/…` URI; no relative paths, no dialect mix.
 - `$defs` naming: every `$defs` entry name is PascalCase; no empty `$defs:` map.
 - Inline duplication: no object shape appears verbatim more than once outside `$defs` (heuristic: structural fingerprint of `type`+`required`+`properties.keys()`).
 - Examples: at least one entry in `examples`; the entry validates against the schema (operation 4).
@@ -181,9 +181,9 @@ When the user has finished approving fixes, re-run operations 2, 4, and 5 end-to
 ## Hard rules
 
 - **Never** emit a schema file without `$schema: https://json-schema.org/draft/2020-12/schema` as the first keyed entry. Other dialects are forbidden by the spec.
-- **Never** emit a schema file without an `$id` URI under `https://schemas.nolte.dev/` as the second keyed entry. A schema with no `$id` is unreferenceable and forbidden by the spec.
+- **Never** emit a schema file without an `$id` URI under `https://github.com/nolte/<repo>/blob/main/` as the second keyed entry, whose path after `/blob/main/` matches the file's repository-relative on-disk location. A schema with no `$id`, or one carrying a non-GitHub namespace, is unreferenceable and forbidden by the spec.
 - **Never** emit a schema whose `description` lacks the literal substring `Refs spec/<topic>/<slug>/`. Traceability to the consuming spec is a MUST.
-- **Never** emit a relative-path `$ref` (`$ref: ../other.schema.yaml#/$defs/Foo`). Only `#/$defs/<Name>` and absolute `https://schemas.nolte.dev/…` URIs are permitted.
+- **Never** emit a relative-path `$ref` (`$ref: ../other.schema.yaml#/$defs/Foo`). Only `#/$defs/<Name>` and absolute `https://github.com/nolte/…` URIs are permitted.
 - **Never** mix dialects within a single schema document. A `$ref` from a 2020-12 schema into a draft-07 schema is forbidden; transcribe the relevant fragment instead.
 - **Never** store a schema under `spec/`. The `spec/` tree is governance-only.
 - **Never** edit a schema in place once its `$id` is referenced from outside its repository by absolute URI. Bump the version (`-v<major>.<minor+1>` or `-v<major+1>.0`) and migrate consumers explicitly.

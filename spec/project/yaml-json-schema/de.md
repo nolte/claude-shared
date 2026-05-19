@@ -32,7 +32,7 @@ Die Spec begrenzt sich bewusst auf **JSON Schema 2020-12 in YAML**. JSON-codiert
 - Eine einzige JSON-Schema-Validator-Implementierung wählen. Die Validator-Wahl (`check-jsonschema`, `ajv-cli`, `python-jsonschema`, `jsonschema-rs`) bleibt eine Pro-Repo-Entscheidung, getrieben vom Sprach-Ökosystem, das das Projekt ohnehin nutzt.
 - Konventionen für OpenAPI-3.x-Schema-Objekte oder AsyncAPI-Schema-Objekte definieren. Diese Formate erben *das meiste* von JSON Schema, weichen aber an bekannten Stellen ab (`nullable`, `discriminator`, `example` vs `examples`) und brauchen eine eigene Spec.
 - `spec/project/feature/` (welche den *Inhalt* von Feature-Frontmatter regiert) durch eine Schema-Spec ersetzen. Diese Spec handelt von Form und Lebenszyklus der Schema-Dateien; die Frontmatter-Spec bleibt verbindlich dafür, *was* Feature-Frontmatter enthält.
-- Eine portfolio-weite Registry kanonischer Schemata festlegen. Eine zukünftige Spec **DARF** häufig geteilte Schemata unter `spec/portfolio/<topic>/schemas/` zentralisieren; diese Spec lässt die Platzierungsentscheidung bewusst lokal beim jeweiligen Repo, bis der Registry-Bedarf konkret ist.
+- Häufig geteilte Schemata in einem portfolio-weiten Registry-Verzeichnis zentralisieren. Die Portfolio-Policy ist Repo-lokale Ablage; repository-übergreifendes Teilen wird durch `$id`-Disziplin und absolute `$ref`-URIs in den GitHub-Pfad des besitzenden Repos gelöst, nicht durch ein gemeinsames Verzeichnis unter `spec/portfolio/<topic>/schemas/`.
 - Code-Generierung aus Schemata vorschreiben (Pydantic-Modelle, TypeScript-Typen, Go-Structs). Generierung ist erlaubt, bleibt aber außerhalb der MUSS/SOLL/DARF-Fläche dieser Spec — das ist eine künftige Spec.
 
 ## Anforderungen
@@ -45,17 +45,17 @@ Die Spec begrenzt sich bewusst auf **JSON Schema 2020-12 in YAML**. JSON-codiert
 
 ### Identität
 
-- **MUSS** `$id` als zweiten Schlüsseleintrag jeder Schema-Datei deklarieren, mit einer absoluten URI unterhalb des `https://schemas.nolte.dev/`-Namensraums nach dem Muster `https://schemas.nolte.dev/<repo>/<topic>/<slug>-v<major>.<minor>.json`. Die URI muss kein veröffentlichtes Artefakt auflösen — JSON Schema behandelt `$id` als logischen Bezeichner, nicht als Fetch-URL — aber die URI **MUSS** im gesamten Portfolio eindeutig sein.
+- **MUSS** `$id` als zweiten Schlüsseleintrag jeder Schema-Datei deklarieren, mit einer absoluten URI unterhalb des `https://github.com/nolte/`-Namensraums nach dem Muster `https://github.com/nolte/<repo>/blob/main/<owner-path>/schemas/<slug>-v<major>.<minor>.schema.yaml`. Die URI spiegelt den Repository-relativen On-Disk-Pfad der Schema-Datei innerhalb des GitHub-gehosteten besitzenden Repositories wider, wodurch sie über das Portfolio hinweg konstruktionsbedingt eindeutig wird. JSON Schema behandelt `$id` als logischen Bezeichner; die URI muss keinen `fetch`-Aufruf auflösen, aber die Datei, auf die die URI zeigt, **MUSS** nach dem Merge auf `main` existieren.
 - **MUSS** das `<minor>`-Segment der `$id` erhöhen, wenn das Schema ein rückwärtskompatibles Feld gewinnt, und das `<major>`-Segment erhöhen, wenn ein vorhandenes Feld umbenannt, entfernt oder sein Typ verengt wird. Schemata ohne versionierte `$id`-Segmente bestehen die Meta-Validierung nicht.
-- **DARF NICHT** eine `$id`-URI über zwei nicht verwandte Schemata hinweg wiederverwenden. Das Muster `…/<topic>/<slug>-v<major>.<minor>.json` reicht aus, um diese Eindeutigkeit zu wahren, solange Autoren diszipliniert bleiben.
-- **SOLLTE** den On-Disk-Dateinamen mit dem letzten Slug-Segment der `$id` matchen, sodass `grep`-Barkeit bestehen bleibt: Ein Schema mit `$id: …/feature-frontmatter-v1.0.json` lebt in `feature-frontmatter-v1.0.schema.yaml`.
+- **DARF NICHT** eine `$id`-URI über zwei nicht verwandte Schemata hinweg wiederverwenden. Das Repo-verwurzelte GitHub-Pfad-Muster (`…/<repo>/blob/main/<owner-path>/schemas/<slug>-v<major>.<minor>.schema.yaml`) macht Eindeutigkeit automatisch, solange keine zwei Schemata denselben Dateinamen im selben On-Disk-Verzeichnis tragen.
+- **SOLLTE** den GitHub-Pfad der `$id` als verbindlich für die On-Disk-Lage des Schemas behandeln: Ein Schema mit `$id: https://github.com/nolte/claude-shared/blob/main/project/features/schemas/feature-frontmatter-v1.0.schema.yaml` lebt genau unter `project/features/schemas/feature-frontmatter-v1.0.schema.yaml` im Repository-Checkout. Das letzte Pfadsegment der URI matched den Dateinamen, sodass `grep` und `gh search` die Datei aus beiden Richtungen finden.
 
 ### Datei-Layout und Endung
 
 - **MUSS** jede Schema-Datei mit der Endung `.schema.yaml` benennen (kleingeschrieben, doppelte Endung). Die doppelte Endung ist das unmissverständliche On-Disk-Signal, dass die Datei ein Schema ist und keine Datendatei. `*.schema.yml` (einfaches `l`) ist verboten — das Portfolio normiert auf `.yaml`.
 - **MUSS** Schemata neben den Daten ablegen, die sie regieren, unter einem `schemas/`-Verzeichnis: `<repo>/<owner-path>/schemas/<slug>-v<major>.<minor>.schema.yaml`. Zum Beispiel `project/features/schemas/feature-frontmatter-v1.0.schema.yaml` oder `.github/workflows/schemas/inputs-v1.0.schema.yaml`.
 - **DARF NICHT** Schemata unter `spec/` ablegen. Der `spec/`-Baum ist Governance-Dokumenten vorbehalten (einschließlich dieser Spec), nicht maschinenlesbaren Schemata, die diese Governance-Dokumente vorschreiben.
-- **DARF** ein Schema in eine portfolio-geteilte Lage heben (`spec/portfolio/<topic>/schemas/`), sobald mehr als ein Repository dasselbe Schema per `$id` importiert. Bis der Bedarf konkret ist, ist die Repo-lokale Ablage der Default.
+- **DARF NICHT** ein Schema in eine portfolio-geteilte Lage heben (`spec/portfolio/<topic>/schemas/`). Repository-übergreifendes Teilen geschieht über `$id`-URI-Disziplin und absolute `$ref` in den GitHub-Pfad des besitzenden Repos; eine Zentralisierung von Schemata unter `spec/portfolio/` würde die Quelle der Wahrheit duplizieren und ist verboten.
 
 ### Dokument-Skelett
 
@@ -90,7 +90,7 @@ Innerhalb von `properties` und innerhalb von `$defs` **MUSS** jedes einzelne Pro
 - **MUSS** ein Sub-Schema in `$defs` herausziehen und per `$ref` referenzieren, sobald dieselbe Form mehr als einmal im selben Schema-Dokument auftaucht. Inline-Duplizierung von Objekt-Schemata ist die häufigste Drift-Ursache über Schema-Dateien hinweg und ist verboten.
 - **MUSS** jeden `$defs`-Eintrag in `PascalCase` benennen (`SemverString`, `ISODate`, `FeatureSlug`). Die Benennung weicht bewusst vom snake_case der `properties` ab, damit ein `$ref`-Leser auf einen Blick erkennt, dass das Ziel eine wiederverwendbare Definition ist, kein Property-Name.
 - **MUSS** `$ref`-Ziele innerhalb desselben Dokuments im JSON-Pointer-Fragment-Format `#/$defs/<Name>` adressieren. Andere Fragment-Formen (`#/properties/foo`, Anchor-basierte Refs ohne `$anchor`) sind verboten.
-- **DARF** ein externes Schema per absoluter `$id`-URI referenzieren (`$ref: https://schemas.nolte.dev/<repo>/<topic>/<slug>-v<major>.<minor>.json`), wenn das externe Schema in einer portfolio-geteilten Lage liegt und seine Datei irgendwo erreichbar committed ist. Die Validator-Konfiguration des konsumierenden Repositories ist dafür zuständig, die URI auf den On-Disk-Dateipfad zu mappen.
+- **DARF** ein externes Schema per absoluter `$id`-URI referenzieren (`$ref: https://github.com/nolte/<repo>/blob/main/<owner-path>/schemas/<slug>-v<major>.<minor>.schema.yaml`), wenn das externe Schema in einem anderen `https://github.com/nolte/`-namensraumigen Repository liegt und seine Datei auf dessen `main`-Branch committed ist. Die Validator-Konfiguration des konsumierenden Repositories ist dafür zuständig, die URI auf einen fetchbaren Dateipfad zu mappen — typischerweise durch Spiegelung der Datei unter einem lokalen `vendor/schemas/`-Verzeichnis oder durch Klonen des besitzenden Repos als Build-Zeit-Abhängigkeit.
 - **DARF NICHT** Relativpfad-`$ref`-Ziele verwenden (`$ref: ../other.schema.yaml#/$defs/Foo`). Relative Pfade brechen in dem Moment, in dem das Schema per `$id` aus einem anderen Working Directory importiert wird.
 
 ### Dokumentation und Auffindbarkeit
@@ -121,20 +121,18 @@ Innerhalb von `properties` und innerhalb von `$defs` **MUSS** jedes einzelne Pro
 
 ## Akzeptanzkriterien
 
-- [ ] Jede Datei im Repository, die `**/*.schema.yaml` matched, deklariert `$schema: https://json-schema.org/draft/2020-12/schema` als ersten Schlüsseleintrag und eine `$id` unterhalb von `https://schemas.nolte.dev/` als zweiten.
+- [ ] Jede Datei im Repository, die `**/*.schema.yaml` matched, deklariert `$schema: https://json-schema.org/draft/2020-12/schema` als ersten Schlüsseleintrag und eine `$id` unterhalb von `https://github.com/nolte/<repo>/blob/main/` als zweiten; der Pfad der URI nach `/blob/main/` matched den tatsächlichen Repository-relativen Pfad der Datei.
 - [ ] Jede `*.schema.yaml`-Datei besteht die JSON-Schema-2020-12-Meta-Validierung über `task lint`; der Lint-Schritt verlässt sich ausdrücklich nicht auf einen Soft-Pass — ein synthetisch defektes Schema im Regressionstest des Gates führt zu Exitcode ungleich Null.
 - [ ] Die `description` jeder `*.schema.yaml`-Datei trägt den Literal-Teilstring `Refs spec/`, der mindestens eine regierende Spec benennt.
 - [ ] Jede Datendatei unter einem als schema-regiert erklärten Pfad validiert im selben Lint-Schritt gegen ihr Schema; die Einführung einer synthetisch ungültigen Datendatei wird erkannt.
 - [ ] Keine `*.schema.yaml`-Datei verwendet Relativpfad-`$ref`-Ziele; `grep -R '\$ref:.*\.\./' -- '**/*.schema.yaml'` liefert leer.
-- [ ] Keine `*.schema.yaml`-Datei mischt Dialekte; jede `$ref` löst entweder auf `#/$defs/…` im gleichen Dokument oder auf eine absolute `https://schemas.nolte.dev/…`-URI auf.
+- [ ] Keine `*.schema.yaml`-Datei mischt Dialekte; jede `$ref` löst entweder auf `#/$defs/…` im gleichen Dokument oder auf eine absolute `https://github.com/nolte/…`-URI auf.
 - [ ] Jedes Property-Sub-Schema innerhalb der obersten `properties` trägt eine `description`; das Meta-Validierungs-Gate scheitert auf fehlenden Descriptions.
 - [ ] Der Skill `nolte-shared:yaml-json-schema` existiert und seine `SKILL.md` zitiert diese Spec per `spec/project/yaml-json-schema/`.
 - [ ] Das README des Repositories (oder ein `schemas/README.md`) zählt jede ausgelieferte `*.schema.yaml`-Datei auf, mit ihrer `$id`, ihrem Title und ihrer konsumierenden Spec.
 
 ## Offene Fragen
 
-- Will das Portfolio eine zentrale, versionierte Registry repository-übergreifender Schemata unter `spec/portfolio/<topic>/schemas/`, oder reicht Repo-lokale Ablage plus `$id`-URI-Disziplin?
-- Soll der `$id`-Namensraum `https://schemas.nolte.dev/` nutzen (Hostname-Platzhalter; noch nicht ausgeliefert) oder einen anderen, und muss der Namensraum überhaupt jemals auf ein reales Artefakt auflösen (zum Beispiel für IDE-Auto-Discovery via `yaml-language-server`)?
 - Soll die Spec `unevaluatedProperties: false` zusätzlich zu `additionalProperties: false` für geschlossene Objekt-Schemata mit `allOf`-Komposition vorschreiben, oder reicht die einfachere Regel, bis Komposition häufig wird?
 - Soll Code-Generierung aus Schemata (Pydantic, TypeScript, Go) in einer Folge-Revision zu einem SOLL werden, und welcher Generator wird der Portfolio-Default?
 - Sollen `*.json`-Schema-Dateien überhaupt zulässig sein (mit denselben `$schema`/`$id`/Skelett-Regeln), oder erzwingt das Portfolio YAML-only-Autoring, selbst wenn ein externer Konsument JSON bevorzugt?
