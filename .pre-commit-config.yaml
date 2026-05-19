@@ -27,6 +27,13 @@ repos:
         types: [markdown]
         pass_filenames: false
 
+      - id: docs-catalog-fresh
+        name: docs:catalog (regenerate skill-agent catalog)
+        entry: scripts/docs/precommit_catalog.sh
+        language: system
+        files: '^(skills/.*/SKILL\.md|agents/.*\.md)$'
+        pass_filenames: false
+
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.42.0
     hooks:
