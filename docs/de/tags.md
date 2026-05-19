@@ -82,3 +82,4 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [sprint-execute](skills/nolte-shared/sprint-execute.md) — nolte-shared
 - [sprint-plan](skills/nolte-shared/sprint-plan.md) — nolte-shared
 - [sprint-review](skills/nolte-shared/sprint-review.md) — nolte-shared
+- [tech-stack-capture](skills/nolte-shared/tech-stack-capture.md) — nolte-shared
