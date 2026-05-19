@@ -1,3 +1,11 @@
+---
+title: Skill-Autorenschaft
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Skill-Autorenschaft
 
 Diese Seite fasst die Spezifikation aus `spec/claude/skill-management/de.md` zusammen. Kanonische Quelle ist `spec/claude/skill-management/en.md`.

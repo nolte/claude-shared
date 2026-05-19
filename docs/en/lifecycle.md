@@ -1,3 +1,11 @@
+---
+title: Development lifecycle
+audience: [maintainer]
+content_mode: explanation
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Development lifecycle
 
 The `nolte-shared` skills and agents are designed to cover the full development lifecycle of a project, from first mission statement to released artefact. This page shows where each artefact fits in.

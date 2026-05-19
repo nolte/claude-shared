@@ -1,3 +1,11 @@
+---
+title: Nutzung
+audience: [maintainer, downstream-user]
+content_mode: how-to
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Nutzung
 
 Sobald das Plugin geladen ist, stehen seine Skills als Slash-Commands im Claude-Code-Prompt bereit. Diese Seite klärt die wichtigsten Aufrufmuster und den Namespace.

@@ -1,3 +1,11 @@
+---
+title: Agents
+audience: [maintainer]
+content_mode: explanation
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Agents
 
 Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the `claude-shared` source tree they live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, or bundled inside the `nolte-shared` plugin.

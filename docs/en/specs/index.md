@@ -1,3 +1,11 @@
+---
+title: Specifications
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Specifications
 
 The specifications under `spec/` define the binding rules for skill and agent authors. They're **multilingual**: canonical in English, translated to German, kept structurally and semantically in sync via the [Spec skill](../skills/nolte-shared/spec.md).

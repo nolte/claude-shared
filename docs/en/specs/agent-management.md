@@ -1,3 +1,11 @@
+---
+title: Agent Authoring
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Agent Authoring
 
 This page summarizes the specification at `spec/claude/agent-management/en.md` (canonical source).

@@ -1,3 +1,11 @@
+---
+title: roadmap-refine
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: generated
+---
+
 # roadmap-refine
 
 _Enforces the detail-level invariant on `project/roadmap.md` per `spec/project/roadmap/` §Detail-level convention. Invoke when the user asks to \"refine the roadmap\", \"check roadmap detail levels\", \"is the roadmap ready for the next sprint\", \"promote roadmap items to fine\", or equivalent German-language requests (\"Roadmap verfeinern\", \"Roadmap-Detailstufen prüfen\"). Resolves the current and next sprint by reading `project/sprints/`, walks every roadmap item, emits a structured violation record on stderr for every item with `target_sprint` equal to the current or next sprint and `detail` other than `fine`, exits non-zero when any violation is open, and walks per-item fix proposals one at a time. Don't use to add items, retarget sprints, or flip MVP flags (use `roadmap-planner`); don't use to scaffold the roadmap from scratch (use `roadmap-init`)._

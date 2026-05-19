@@ -2,5 +2,6 @@ mkdocs>=1.6
 mkdocs-material>=9.5
 mkdocs-static-i18n>=1.2
 mkdocs-literate-nav>=0.6
+mkdocs-include-markdown-plugin>=6.2
 pymdown-extensions>=10.7
 PyYAML>=6.0

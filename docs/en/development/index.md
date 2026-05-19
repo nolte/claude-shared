@@ -1,3 +1,11 @@
+---
+title: Development
+audience: [external-contributor, maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Development
 
 This section is for contributors working on the `claude-shared` repository itself—adding new skills, new agents, or maintaining the specifications.

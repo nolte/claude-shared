@@ -1,3 +1,11 @@
+---
+title: sprint-execute
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: generated
+---
+
 # sprint-execute
 
 _Drive the daily mechanics of an active sprint per the project sprint spec. Invoke when the user asks to start a sprint, start a feature, mark a feature in progress, mark a feature done, sync a sprint's feature list, or update the sprint's last commit. Also handles equivalent German-language requests. Promotes a `planned` sprint to `active` when the first feature starts, drives feature lifecycle transitions (`ready → in_progress`, `in_progress → done`), keeps the `## Features` body list and `features` frontmatter in lockstep, updates `last_commit` whenever a feature reaches `done`, and refuses to start a feature whose sprint isn't this one while another sprint is already `active`._

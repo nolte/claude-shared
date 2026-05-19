@@ -1,3 +1,11 @@
+---
+title: Skill Authoring
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Skill Authoring
 
 This page summarizes the specification at `spec/claude/skill-management/en.md` (canonical source).

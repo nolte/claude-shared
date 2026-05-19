@@ -1,3 +1,11 @@
+---
+title: Installation
+audience: [maintainer, external-contributor]
+content_mode: how-to
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Installation
 
 `claude-shared` ist als einzelnes Claude-Code-Plugin namens **`nolte-shared`** gepackt. Das Plugin-Manifest liegt unter `.claude-plugin/plugin.json`, die Marketplace-Beschreibung unter `.claude-plugin/marketplace.json`, Skills unter `skills/<name>/`, Agents unter `agents/<name>.md`.

@@ -1,3 +1,11 @@
+---
+title: Spec
+audience: [maintainer]
+content_mode: explanation
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Spec
 
 Der Skill `spec` verwaltet mehrsprachige Spezifikationen unterhalb von `spec/`. Pro Spec existiert ein Ordner mit genau einer Datei pro konfigurierter Sprache. Eine Sprache ist **kanonisch**, alle anderen sind strukturell und semantisch synchron gehaltene Übersetzungen.

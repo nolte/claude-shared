@@ -1,4 +1,12 @@
-# claude-shared
+---
+title: Startseite
+audience: [maintainer, downstream-user]
+content_mode: meta
+track: developer-docs
+last_updated: 2026-05-19
+---
+
+# Startseite
 
 `claude-shared` ist eine gemeinsame Basis aus [Claude Code](https://docs.claude.com/en/docs/claude-code)-**Agents** und **Skills**, die über mehrere Projekte hinweg wiederverwendet wird. Paketiert als Plugin **`nolte-shared`**, damit Teams überall dieselben Review-Gewohnheiten, Coding-Richtlinien und Helfer-Workflows nutzen — ohne sie in jedem Repository neu zu bauen.
 

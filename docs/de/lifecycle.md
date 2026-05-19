@@ -1,3 +1,11 @@
+---
+title: Entwicklungszyklus
+audience: [maintainer]
+content_mode: explanation
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Entwicklungszyklus
 
 Die `nolte-shared`-Skills und -Agents decken den vollständigen Entwicklungszyklus eines Projekts ab — vom ersten Mission-Statement bis zum veröffentlichten Release-Artefakt. Diese Seite zeigt, wo jedes Artefakt greift.

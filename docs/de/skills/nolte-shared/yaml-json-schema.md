@@ -1,3 +1,11 @@
+---
+title: yaml-json-schema
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: generated
+---
+
 # yaml-json-schema
 
 _Authors, audits, refactors, and runs validation for YAML-encoded JSON Schema 2020-12 documents in the current repository per `spec/project/yaml-json-schema/<canonical_language>.md`. Bootstraps a new `<slug>-v1.0.schema.yaml` skeleton with the mandatory `$schema`, `$id`, `title`, `description` (carrying a `Refs spec/...` anchor), `type`, `required`, `additionalProperties`, `properties`, `$defs`, and `examples` entries in the spec's declared order. Audits existing `*.schema.yaml` files for dialect drift, missing identity, inline duplicates that belong in `$defs`, relative-path `$ref` targets, and missing property descriptions. Refactors duplicate sub-schemas into `$defs` and rewrites the corresponding `$ref` targets. Runs JSON-Schema-2020-12 meta-validation on every schema file and conformance validation of governed data files against their declared schema. Invoke when the user asks to "scaffold a JSON Schema in YAML", "audit our schemas", "extract a `$defs` entry", "validate this YAML against a schema", or equivalent German-language requests ("YAML-Schema anlegen", "Schemata auditieren", "Daten gegen Schema validieren"). Don't use for OpenAPI / AsyncAPI Schema Objects (out of scope per spec), for JSON-encoded schemas (the spec mandates YAML), for the feature-frontmatter content rules (that's `spec/project/feature/`), or for project-structure scaffolding (use `project-structure-apply`)._

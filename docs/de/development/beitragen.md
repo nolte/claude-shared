@@ -1,3 +1,11 @@
+---
+title: Beitragen
+audience: [external-contributor]
+content_mode: how-to
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Beitragen
 
 ## Workflow

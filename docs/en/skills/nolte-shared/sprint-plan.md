@@ -1,3 +1,11 @@
+---
+title: sprint-plan
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: generated
+---
+
 # sprint-plan
 
 _Create a new sprint file at `project/sprints/<NNNN>-<slug>.md` per the project sprint spec. Invoke when the user asks to plan a sprint, open a sprint, draft the next sprint, schedule a sprint, or pull roadmap items into a sprint. Also handles equivalent German-language requests. Resolves the next monotonic sprint number, walks the value-delivery contract (rejects operator-internal verbs in `value_statement`), pulls in roadmap items whose `target_sprint` matches, populates the `features` list (delegating to `feature-decompose` when decompositions are missing), names the value-verifying feature, and writes the file with `status: planned`._
@@ -83,7 +91,7 @@ Exactly one feature in the sprint **MUST** carry a non-null `verifies_sprint_val
 
 Write the file with this exact shape (frontmatter keys in the declared order from `spec/project/sprint/` §Frontmatter schema):
 
-```markdown
+```text
 ---
 number: <NNNN>
 status: planned
@@ -102,8 +110,8 @@ features: [<F-a>, <F-b>]
 
 ### Features
 
-- [<F-a>](../features/<slug-a>.md) — status: ready
-- [<F-b>](../features/<slug-b>.md) — status: ready
+- [<F-a>](`../features/<slug-a>.md`) — status: ready
+- [<F-b>](`../features/<slug-b>.md`) — status: ready
 
 ### Out of scope
 

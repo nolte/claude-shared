@@ -1,3 +1,11 @@
+---
+title: sprint-review
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: generated
+---
+
 # sprint-review
 
 _Close an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into `release-notes-curate` and `release-publish-trigger` (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably._

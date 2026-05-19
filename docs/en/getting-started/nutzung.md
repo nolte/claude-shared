@@ -1,3 +1,11 @@
+---
+title: Usage
+audience: [maintainer, downstream-user]
+content_mode: how-to
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Usage
 
 Once the plugin is loaded, its skills appear as slash commands in the Claude Code prompt. This page covers the common invocation patterns and the namespace.

@@ -1,3 +1,11 @@
+---
+title: Entwicklung
+audience: [external-contributor, maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Entwicklung
 
 Diese Sektion richtet sich an Mitwirkende, die am `claude-shared`-Repository selbst arbeiten — neue Skills, neue Agents oder Pflege der Spezifikationen.
