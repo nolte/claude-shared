@@ -10,7 +10,7 @@ _Audits, renders, and bootstraps the cross-repository capability portfolio acros
 
 ## Portfolio Audit
 
-Implements the `spec/portfolio/portfolio-management/` mechanics as a Claude Code skill in the `nolte-shared` plugin. Three operations: **Audit** (the primary path, the reason the spec exists), **Render** (regenerate the docs-site portfolio inventory), and **Bootstrap** (help a single repository author its first `project/portfolio.yml`).
+Implements the `spec/portfolio/portfolio-management/` mechanics as a Claude Code skill in the `nolte-shared` plugin, plus the discovery half of `spec/portfolio/tech-stack-discovery/`. Four operations: **Audit** (the primary path, the reason the spec exists), **Render** (regenerate the docs-site portfolio inventory), **Bootstrap** (help a single repository author its first `project/portfolio.yml`), and **Discover tech stack** (run the tech-stack-discovery methodology against a single repository or across the portfolio).
 
 ### Why this is one skill, not three
 
@@ -94,6 +94,21 @@ Helps a single Portfolio-Member repository author its first `project/portfolio.y
 
 Bootstrap operation **never** modifies `project/mission.md`, `project/roadmap.md`, or the audience artefact — those are owned by their own dedicated skills and authoring flows. If the user discovers during Bootstrap that their mission or audience list needs updating first, this skill stops and routes them to the appropriate skill.
 
+#### 4. Discover tech stack
+
+Runs the tech-stack-discovery methodology from `spec/portfolio/tech-stack-discovery/` against a single repository or across every Portfolio-Member repository.
+
+1. **Determine the scope** the user asked for: single-repo (the active checkout, or a user-supplied path) versus portfolio-wide (every Portfolio-Member repository known via the GitHub API).
+2. **For each in-scope repository, read the canonical detection sources** declared in `spec/portfolio/tech-stack-discovery/` (typically `pyproject.toml`, `package.json`, `Taskfile.yml`, `.github/workflows/`, `Dockerfile`, language-specific lockfiles). Don't invent detection sources the spec doesn't sanction.
+3. **Extract the tech-stack signal per layer** the spec defines (language runtime, package manager, build tool, lint stack, test stack, CI runner, deployment target, plugin engines, external services). Report the detected value plus the source path and line.
+4. **Cross-validate against the portfolio baseline** declared in `spec/portfolio/tech-stack/`. Findings shape:
+   - **In-baseline** — the detected value matches what the portfolio baseline ratifies.
+   - **Drift** — the detected value diverges from the baseline (`pyproject.toml` pins a Python version different from the baseline, or a Taskfile uses a different lint target).
+   - **Net-new** — the detected value isn't in the baseline at all (the repository introduces a tool the portfolio hasn't ratified yet).
+5. **Persist the result** under `.audits/tech-stack/<YYYY-Q<n>>.md` (or the per-repo equivalent) — same severity grammar as Audit, same `Caller follow-ups` shape.
+
+Discover-tech-stack is read-only — it doesn't modify the portfolio baseline in `spec/portfolio/tech-stack/`. When the user discovers a net-new tool worth ratifying, this skill stops and routes them to the `spec` skill to propose a baseline extension, rather than silently amending the spec from here.
+
 ### Reference: spec anchors
 
 This skill implements rules declared in `spec/portfolio/portfolio-management/`. Read those rules when in doubt:
@@ -105,6 +120,12 @@ This skill implements rules declared in `spec/portfolio/portfolio-management/`. 
 - §Portfolio audit — defines this skill's required output shape and integration with `continuous-improvement`
 - §Documentation rendering — defines what the rendered inventory under `docs/<lang>/portfolio/` must contain
 - §Decision documentation — defines the `rationale` field requirement and the re-allocation atomic-operation rule
+
+The Discover-tech-stack operation implements `spec/portfolio/tech-stack-discovery/`:
+
+- §Detection sources — defines which on-disk files are canonical signals for which stack layer
+- §Cross-validation against baseline — defines the in-baseline / drift / net-new finding classes against `spec/portfolio/tech-stack/`
+- §Audit persistence — defines the per-repo audit artefact shape under `.audits/tech-stack/`
 
 When the spec disagrees with this skill's instructions, the spec wins. Propose a skill update rather than silently diverging.
 
