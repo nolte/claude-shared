@@ -145,7 +145,7 @@ The skill never silences a meta-validation failure with `--no-fail` or equivalen
 Validate every data file (`*.yaml`, `*.yml`, `*.json`) the skill can associate with a schema. Association is resolved, in order:
 
 1. **Sidecar comment**: a `# yaml-language-server: $schema=<path-or-uri>` line in the first 10 lines of the data file. The skill resolves the path relative to the data file or matches the URI against an `$id` in the repo.
-2. **Refs comment**: a `# Refs schema://<repo>/<topic>/<slug>-v<major>.<minor>.json` line. Same resolution.
+2. **Refs comment**: a `# Refs https://github.com/nolte/<repo>/blob/main/<owner-path>/schemas/<slug>-v<major>.<minor>.schema.yaml` line, matching the `$id` form the spec mandates. Same resolution as the sidecar comment.
 3. **Repo mapping**: a `.schemas-config.yaml` at the repo root with a `mappings:` list of `{path: <glob>, schema: <path-or-id>}` entries.
 
 For each association, run the validator and report **pass** / **fail** / **skipped** with the same semantics as operation 4. Refuse to invent associations; data files with no resolvable schema are reported as **unassociated** rather than silently skipped.
