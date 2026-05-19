@@ -3,6 +3,7 @@
 _Create a GitHub pull request that conforms to the repository's pull-request-workflow spec. Invoke when the user asks to open a PR, create a pull request, draft a PR description, create a merge request, or push the branch and open a PR. Also handles equivalent German-language requests. Verifies the feature branch is synchronized with develop, composes a Conventional-Commits title and the five-section body (Summary, Changes, Linked issues, Testing, Risk / rollout notes), autolinks any touched spec files under spec/, confirms with the user, and runs the GitHub CLI PR creation command._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 5 Review (`review`)
 - **Tags:** `pull-request`
 - **Source:** [skills/pull-request-create/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/pull-request-create/SKILL.md)
 

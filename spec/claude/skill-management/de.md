@@ -27,6 +27,7 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - **MUSS [MUST]** Anweisungen innerhalb von `SKILL.md` aus Token-Effizienzgründen auf Englisch halten; der Skill darf Claude weiterhin anweisen, dem Nutzer in dessen Sprache zu antworten
 - **MUSS [MUST]** in sich geschlossen sein — unterstützende Artefakte (Templates, Referenzen, Beispiele) liegen innerhalb des Skill-Ordners
 - **KANN [MAY]** ein optionales `tags`-Feld im YAML-Frontmatter enthalten: eine Liste von kleingeschriebenen ASCII-Kebab-Case-Strings, jeder ≤30 Zeichen, mit höchstens 5 Einträgen; Tags liefern thematische Gruppierung, damit Katalog (`skill-agent-catalog`) und Peer-Cluster-Abgleich (`skill-vs-agent` §Portfolio-weite Konsistenz) nach Thema durchstöbert werden können
+- **MUSS [MUST]** ein `phase`-Feld im YAML-Frontmatter enthalten, dessen Wert genau ein Identifier aus dem Acht-Werte-Vokabular ist, das in `skill-agent-catalog` §Phasen-Klassifikation deklariert ist (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); der Katalog-Generator lässt den Doku-Build scheitern, wenn `phase` fehlt oder außerhalb des Vokabulars liegt
 
 ### Frontmatter-Validierung (Agent-Skills-Spezifikation und Anthropic-Platform-Limits)
 
@@ -136,6 +137,7 @@ Die in diesem Plugin ausgelieferten Skills laufen in Claude Code; das Verständn
 - [ ] `name` im Frontmatter entspricht dem Ordnernamen
 - [ ] `description` nennt die konkreten Nutzer-Formulierungen, die den Skill auslösen sollen
 - [ ] Falls `tags` im Frontmatter deklariert ist, ist jeder Eintrag ein kleingeschriebener ASCII-Kebab-Case-String ≤30 Zeichen, und die Liste enthält höchstens 5 Einträge
+- [ ] Frontmatter deklariert ein `phase`-Feld, dessen Wert einer von `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release` oder `cross-cutting` ist
 - [ ] Skill funktioniert in einem nachgelagerten Projekt, das keinen claude-shared-spezifischen Kontext enthält, geladen über das Plugin
 - [ ] Keine hartkodierten absoluten Pfade; alle internen Pfade sind relativ zum Skill-Ordner oder zum Projekt, auf dem der Skill operiert
 - [ ] Falls der Skill Dateien schreibt, sind Zielorte und Vorbedingungen dokumentiert

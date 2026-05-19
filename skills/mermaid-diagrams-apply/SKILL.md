@@ -15,6 +15,7 @@ description: >-
   `spec`), the docs-freshness audit (use `docs-freshness-checker`), or
   non-Mermaid diagrams.
 tags: [scaffolding, audit]
+phase: design
 ---
 
 # Mermaid Diagrams Apply

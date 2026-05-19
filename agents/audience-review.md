@@ -4,6 +4,7 @@ description: Reviews an existing audience-analysis artifact against spec/project
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [audience, review]
+phase: plan
 ---
 
 # Audience Review Agent

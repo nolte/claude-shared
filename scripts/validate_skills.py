@@ -85,7 +85,7 @@ def parse_frontmatter(text: str) -> dict | None:
     Hand-rolled to avoid yaml.safe_load tripping on `: ` inside unquoted
     description values. Only handles the keys this validator needs:
     `name`, `description`, `tags`, `distribution`, `tools`, `model`,
-    `when_to_use`. Block scalars (`>-`) are folded.
+    `when_to_use`, `phase`. Block scalars (`>-`) are folded.
     """
     if not text.startswith("---"):
         return None
@@ -95,8 +95,8 @@ def parse_frontmatter(text: str) -> dict | None:
     fm = parts[1]
     out: dict = {}
 
-    # description / name / distribution / model / when_to_use are scalar
-    for key in ("name", "description", "distribution", "model", "when_to_use"):
+    # description / name / distribution / model / when_to_use / phase are scalar
+    for key in ("name", "description", "distribution", "model", "when_to_use", "phase"):
         m = re.search(
             rf'^{key}:\s*(.+?)(?=\n[a-z_-]+:\s|\n---|\Z)',
             fm, re.M | re.S,
@@ -240,6 +240,22 @@ def check_distribution(distribution: str | None, target: str) -> list[Finding]:
     return []
 
 
+# Closed phase vocabulary per spec/claude/skill-agent-catalog/ §Phase classification.
+PHASE_VOCABULARY = frozenset({
+    "vision", "plan", "design", "build", "review", "quality", "close-release", "cross-cutting",
+})
+
+
+def check_phase(phase: str | None, target: str, kind: str) -> list[Finding]:
+    if phase is None or phase == "":
+        return [Finding("Critical", target, f"{kind}-management.frontmatter-phase-missing",
+                        f"frontmatter `phase` is missing; expected one of {sorted(PHASE_VOCABULARY)}")]
+    if phase not in PHASE_VOCABULARY:
+        return [Finding("Critical", target, f"{kind}-management.frontmatter-phase-value",
+                        f"`phase` value `{phase}` is not in the closed vocabulary {sorted(PHASE_VOCABULARY)}")]
+    return []
+
+
 def _split_body(text: str) -> str:
     """Return the markdown body (everything after the closing `---` of the frontmatter)."""
     parts = text.split("---", 2)
@@ -258,6 +274,7 @@ def check_skill(path: Path) -> list[Finding]:
     findings += check_name(fm.get("name"), rel, "skill", expected_name, body)
     findings += check_description(fm.get("description"), rel, "skill")
     findings += check_tags(fm.get("tags"), rel, "skill")
+    findings += check_phase(fm.get("phase"), rel, "skill")
     findings += check_when_to_use(fm.get("description"), fm.get("when_to_use"), rel, "skill")
     return findings
 
@@ -275,6 +292,7 @@ def check_agent(path: Path) -> list[Finding]:
     findings += check_description(fm.get("description"), rel, "agent")
     findings += check_tags(fm.get("tags"), rel, "agent")
     findings += check_distribution(fm.get("distribution"), rel)
+    findings += check_phase(fm.get("phase"), rel, "agent")
     return findings
 
 

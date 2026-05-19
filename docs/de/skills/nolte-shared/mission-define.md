@@ -3,6 +3,7 @@
 _Authors a project's first `project/mission.md` per spec/project/mission/<canonical_language>.md. Invoke when the user says \"define the mission\", \"write project/mission.md\", \"set up the mission file\", \"draft the SMART mission\", or equivalent German-language requests (\"Mission definieren\", \"die SMART-Mission formulieren\", \"Mission-Datei aufsetzen\"). Walks SMART one letter at a time (Specific statement, Measurable verifies_via pointer, Achievable MVP scope, Relevant outcome IDs, Time-bound shape), gathers a per-audience MVP-deliverable paragraph, composes the frontmatter plus the four required body sections (Statement, Audiences, Verification, Source), and writes the file with `mvp_status: defining`. Refuses to run when `project/mission.md` already exists (use `mission-revise`) or when `project/goals.md` or the audience artefact is missing._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 1 Vision (`vision`)
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/mission-define/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/mission-define/SKILL.md)
 

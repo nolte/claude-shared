@@ -3,6 +3,7 @@
 _Audits a repository against spec/project/project-structure/<canonical_language>.md and scaffolds or patches missing artefacts: README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, MkDocs setup, .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, `stale`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/project-structure-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/project-structure-apply/SKILL.md)
 

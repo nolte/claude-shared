@@ -2,6 +2,7 @@
 name: portfolio-audit
 description: "Audits, renders, and bootstraps the cross-repository capability portfolio across `nolte/*` per `spec/portfolio/portfolio-management/`. Audit collects per-repo `project/portfolio.yml` manifests, detects capability duplicates, surfaces gaps (broken peer references, spec-demanded gaps, copy-paste smells), and writes a Findings-Report under `.audits/portfolio/` with Critical / Warning / Suggestion / Info severities. Render regenerates the aggregated inventory under `docs/<lang>/portfolio/`. Bootstrap creates a repository's first `project/portfolio.yml`. Invoke when the user asks to \"audit the portfolio\", \"check for portfolio duplicates\", \"render the portfolio inventory\", or equivalent German-language requests. Don't use to consolidate duplicates (operator opens cross-repo PRs) or to author new capabilities."
 tags: [audit]
+phase: quality
 ---
 
 # Portfolio Audit

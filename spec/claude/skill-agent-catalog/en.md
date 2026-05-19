@@ -16,9 +16,9 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 ## Goals
 - A single browsable catalog inside the MkDocs site that lists every skill and every agent shipped by this plugin and by any further plugins configured into the docs build
 - Catalog content is derived from the source files (skill `SKILL.md`, agent `<name>.md`): no hand-maintained copy
-- Each catalog entry shows the artifact's canonical metadata (`name`, `description`, `distribution` for agents, `tags` when present) and links back to the source on the originating plugin's repository
+- Each catalog entry shows the artifact's canonical metadata (`name`, `description`, `distribution` for agents, `phase`, `tags` when present) and links back to the source on the originating plugin's repository
 - The catalog regenerates as part of the normal `task docs` / `mkdocs build` flow with no extra manual step
-- Readers can tell at a glance which plugin provides which artifact and can browse by tag
+- Readers can tell at a glance which plugin provides which artifact, which delivery-lifecycle phase it belongs to, and they can browse by tag
 - The catalog integrates with the existing multilingual MkDocs layout (`docs/en/`, `docs/de/`) without forcing translation of artifact metadata
 
 ## Non-Goals
@@ -44,8 +44,26 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - **MUST** label each entry with the source plugin it comes from (for example `nolte-shared`)
 - **MUST** link to the source file in the originating plugin's repository on its main branch; the link base URL is configured per plugin source root (for example `https://github.com/nolte/claude-shared/blob/main/...`)
 - **MUST** render any `tags` declared in the artifact's frontmatter as visible tags on the entry page; `tags` are normalized per `skill-management` / `agent-management` (lowercase ASCII kebab-case, ≤30 characters, ≤5 entries)
+- **MUST** render the artifact's `phase` (see "Phase classification" below) as a visible badge on the entry page, using the phase label from the localized chrome
 - **SHOULD** render the body of `SKILL.md` (or the agent system-prompt markdown) as the page's main content so authors' instructions are visible to readers
 - **MAY** surface supporting assets by listing sibling files under `skills/<name>/` or `agents/<name>/` (for example `templates/`, `references/`, `examples/`)
+
+### Phase classification
+Every skill and agent **MUST** declare which phase of the delivery lifecycle it belongs to via a `phase:` frontmatter field. The field is a single lowercase ASCII kebab-case identifier drawn from the closed vocabulary below; no other value is permitted. Authors who genuinely can't pin a single phase use `cross-cutting`.
+
+- **MUST** include a top-level `phase:` field in the YAML frontmatter of every skill (`SKILL.md`) and every agent (`<name>.md`)
+- **MUST** restrict `phase` to exactly one of these eight identifiers (the **phase vocabulary**):
+  - `vision`: frames the project (mission authoring and revision)
+  - `plan`: turns vision into queued work (audience, roadmap, sprint and feature planning)
+  - `design`: authors the conventions, scaffolds, and specifications work depends on
+  - `build`: daily mechanics of an active sprint
+  - `review`: moves change toward `develop` through reviewed pull requests
+  - `quality`: audits, scans, lint/typecheck/test gates, drift detection
+  - `close-release`: sprint closure, release notes, release publishing
+  - `cross-cutting`: genuinely phase-agnostic capabilities used across multiple lifecycle phases (for example image conversion, generic project bootstrap)
+- **MUST** treat `phase` as an identifier, not prose: the value is never translated, case-folded, or rewritten between docs languages
+- **MUST NOT** declare `phase` as a list; a single artifact occupies exactly one phase. Artefacts whose responsibility spans multiple phases either get a more focused split or, when no split is appropriate, are classified as `cross-cutting`
+- **SHOULD**, when authoring a new artifact, pick the **earliest phase** in the lifecycle the artifact is normally invoked in; review and quality artifacts that are themselves invoked from a build-phase skill belong to the artifact's own primary purpose, not to the calling phase
 
 ### Generation mechanism
 - **MUST** generate catalog pages from the source files
@@ -58,9 +76,10 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 
 ### Navigation and layout
 - **MUST** expose the catalog under stable top-level sections in the MkDocs navigation—at minimum a `Skills` section and an `Agents` section
-- **MUST** group entries within each section by source plugin so readers can see at a glance which plugin provides which artifact
-- **MUST** order catalog entries deterministically—alphabetical by `name` within each plugin group—so diffs of the rendered site stay stable
-- **SHOULD** provide an index page per section summarizing every entry (name + description + tags) with links to the detail pages
+- **MUST** group entries within each section **first by phase** (in the canonical phase order listed under "Phase classification": `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`), then by source plugin within each phase, so readers can see at a glance which artifacts apply to each delivery-lifecycle phase
+- **MUST** order catalog entries deterministically—alphabetical by `name` within each plugin sub-group of each phase—so diffs of the rendered site stay stable
+- **MUST** omit a phase heading that has no entries; an empty phase isn't rendered
+- **SHOULD** provide an index page per section summarizing every entry (name + description + phase + tags) with links to the detail pages
 - **SHOULD** provide a tag index that lists every tag across all entries and links to the artifacts that declare it
 
 ### Multilingual behavior
@@ -72,6 +91,7 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 ### Error handling
 - **MUST** fail the docs build when a skill or agent has missing or invalid frontmatter rather than producing a broken catalog
 - **MUST** emit a clear error message that names the offending source file and the plugin source root it came from
+- **MUST** fail the docs build when an artifact's `phase` is missing or isn't in the phase vocabulary, with an error message that names the offending file, the plugin source root, and the value of the rejected `phase`
 
 ## Acceptance Criteria
 - [ ] `task docs` produces a docs site whose navigation contains a Skills section with one page per skill across all configured plugin source roots
@@ -88,7 +108,10 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - [ ] Generated catalog markdown isn't committed under `docs/` **unless** the repo's docs-deploy pipeline bypasses `task docs`; in that case the catalog **is** committed and a CI freshness check guards against drift
 - [ ] When the catalog is committed, a CI job runs the catalog generator and fails when its output differs from the committed tree
 - [ ] A skill or agent with invalid frontmatter causes `task docs` to fail with an error that names the offending file and its plugin source root
-- [ ] Catalog entries appear in deterministic alphabetical order by `name` within each plugin group of each section
+- [ ] Catalog entries appear grouped first by phase (in the canonical phase order) and then alphabetically by `name` within each plugin sub-group of each phase
+- [ ] Every skill and agent declares a `phase` from the closed eight-value vocabulary (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); a missing or out-of-vocabulary `phase` fails `task docs`
+- [ ] Each catalog page displays the artifact's `phase` as a visible badge using the localized chrome label
+- [ ] The Skills and Agents index pages render a per-phase heading (omitting phases with zero entries) above each plugin sub-group
 - [ ] A tag index page exists and links to every artifact that declares the tag
 
 ## Open Questions

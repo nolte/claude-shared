@@ -4,6 +4,7 @@ description: Draft a new Claude Code plugin artifact (skill or agent) for the no
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 tags: [scaffolding, review]
+phase: design
 ---
 
 # Claude Plugin Developer

@@ -16,9 +16,9 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 ## Ziele
 - Ein einziger durchstöberbarer Katalog in der MkDocs-Seite, der jeden Skill und jeden Agent dieses Plugins sowie weiterer in den Doku-Build konfigurierter Plugins auflistet
 - Katalog-Inhalt wird aus den Quelldateien (Skill-`SKILL.md`, Agent-`<name>.md`) abgeleitet — keine Handkopie
-- Jeder Katalog-Eintrag zeigt die kanonischen Metadaten des Artefakts (`name`, `description`, `distribution` bei Agents, `tags` falls vorhanden) und verlinkt zurück auf die Quelle im Repository des jeweiligen Plugins
+- Jeder Katalog-Eintrag zeigt die kanonischen Metadaten des Artefakts (`name`, `description`, `distribution` bei Agents, `phase`, `tags` falls vorhanden) und verlinkt zurück auf die Quelle im Repository des jeweiligen Plugins
 - Der Katalog wird im Rahmen des normalen Ablaufs `task docs` / `mkdocs build` regeneriert — ohne zusätzlichen Handgriff
-- Leser sehen auf einen Blick, welches Plugin welches Artefakt liefert, und können nach Tag stöbern
+- Leser sehen auf einen Blick, welches Plugin welches Artefakt liefert, welcher Lieferprozess-Phase es zuzuordnen ist, und können nach Tag stöbern
 - Der Katalog integriert sich in das bestehende mehrsprachige MkDocs-Layout (`docs/en/`, `docs/de/`), ohne Artefakt-Metadaten übersetzen zu müssen
 
 ## Nicht-Ziele
@@ -44,8 +44,26 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - **MUSS [MUST]** jeden Eintrag mit dem Quell-Plugin kennzeichnen, aus dem er stammt (z. B. `nolte-shared`)
 - **MUSS [MUST]** auf die Quelldatei im Repository des jeweiligen Plugins (Branch `main`) verlinken; die Basis-URL des Links wird pro Plugin-Quell-Wurzel konfiguriert (z. B. `https://github.com/nolte/claude-shared/blob/main/...`)
 - **MUSS [MUST]** etwaige im Frontmatter deklarierte `tags` als sichtbare Tags auf der Eintrags-Seite rendern; `tags` sind gemäß `skill-management` / `agent-management` normalisiert (kleingeschriebenes ASCII-Kebab-Case, ≤30 Zeichen, ≤5 Einträge)
+- **MUSS [MUST]** das `phase`-Feld des Artefakts (siehe „Phasen-Klassifikation" unten) als sichtbares Badge auf der Eintrags-Seite rendern, mit dem Phasen-Label aus dem lokalisierten Chrome
 - **SOLLTE [SHOULD]** den Body von `SKILL.md` (bzw. das System-Prompt-Markdown des Agents) als Hauptinhalt der Seite rendern, damit die Autoren-Anweisungen für Leser sichtbar sind
 - **KANN [MAY]** begleitende Assets auflisten, indem die Schwester-Dateien unter `skills/<name>/` bzw. `agents/<name>/` angezeigt werden (z. B. `templates/`, `references/`, `examples/`)
+
+### Phasen-Klassifikation
+Jeder Skill und jeder Agent **MUSS [MUST]** deklarieren, welcher Phase des Liefer-Lebenszyklus er zugeordnet ist — über ein `phase:`-Frontmatter-Feld. Der Wert ist ein einzelner kleingeschriebener ASCII-Kebab-Case-Identifier aus dem geschlossenen Vokabular unten; kein anderer Wert ist zulässig. Autoren, die wirklich keine einzelne Phase festlegen können, verwenden `cross-cutting`.
+
+- **MUSS [MUST]** ein Top-Level-Feld `phase:` im YAML-Frontmatter jedes Skills (`SKILL.md`) und jedes Agents (`<name>.md`) enthalten
+- **MUSS [MUST]** `phase` auf genau einen dieser acht Identifier beschränken (das **Phasen-Vokabular**):
+  - `vision`: Rahmt das Projekt (Mission-Autoring und -Revision)
+  - `plan`: Macht aus Vision queue-fähige Arbeit (Audience, Roadmap, Sprint- und Feature-Planung)
+  - `design`: Schreibt die Konventionen, Scaffolds und Spezifikationen, auf denen die Arbeit aufbaut
+  - `build`: Tagesgeschäft eines aktiven Sprints
+  - `review`: Bringt Änderungen über reviewte Pull Requests Richtung `develop`
+  - `quality`: Audits, Scans, Lint-/Typecheck-/Test-Gates, Drift-Erkennung
+  - `close-release`: Sprint-Abschluss, Release-Notes, Release-Publishing
+  - `cross-cutting`: Echt phasenagnostische Fähigkeiten, die über mehrere Lebenszyklus-Phasen hinweg genutzt werden (z. B. Bildkonvertierung, generisches Projekt-Bootstrap)
+- **MUSS [MUST]** `phase` als Identifier behandeln, nicht als Prosa: der Wert wird niemals zwischen Doku-Sprachen übersetzt, groß-/kleinbuchstabig verändert oder umgeschrieben
+- **DARF NICHT [MUST NOT]** `phase` als Liste deklarieren; ein einzelnes Artefakt besetzt genau eine Phase. Artefakte, deren Verantwortung mehrere Phasen umspannt, werden entweder feiner gesplittet oder, wenn kein sinnvoller Split möglich ist, als `cross-cutting` klassifiziert
+- **SOLLTE [SHOULD]** bei der Erstellung eines neuen Artefakts die **früheste Phase** im Lebenszyklus wählen, in der das Artefakt regulär aufgerufen wird; Review- und Quality-Artefakte, die selbst von einem Build-Phase-Skill aufgerufen werden, gehören zur primären Aufgabe des Artefakts, nicht zur Phase des Aufrufers
 
 ### Generierungs-Mechanismus
 - **MUSS [MUST]** Katalog-Seiten aus den Quelldateien erzeugen
@@ -58,9 +76,10 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 
 ### Navigation und Layout
 - **MUSS [MUST]** den Katalog unter stabilen Top-Level-Abschnitten in der MkDocs-Navigation sichtbar machen — mindestens einem Abschnitt `Skills` und einem Abschnitt `Agents`
-- **MUSS [MUST]** Einträge innerhalb jedes Abschnitts nach Quell-Plugin gruppieren, sodass Leser auf einen Blick sehen, welches Plugin welches Artefakt liefert
-- **MUSS [MUST]** Katalog-Einträge deterministisch sortieren — alphabetisch nach `name` innerhalb jeder Plugin-Gruppe — damit Diffs der gerenderten Seite stabil bleiben
-- **SOLLTE [SHOULD]** je Abschnitt eine Index-Seite bereitstellen, die jeden Eintrag (Name + Beschreibung + Tags) mit Verweis auf die Detail-Seite zusammenfasst
+- **MUSS [MUST]** Einträge innerhalb jedes Abschnitts **zuerst nach Phase** gruppieren (in der kanonischen Phasen-Reihenfolge aus „Phasen-Klassifikation": `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`), danach nach Quell-Plugin innerhalb jeder Phase, sodass Leser auf einen Blick sehen, welche Artefakte zu welcher Lebenszyklus-Phase gehören
+- **MUSS [MUST]** Katalog-Einträge deterministisch sortieren — alphabetisch nach `name` innerhalb jeder Plugin-Untergruppe jeder Phase — damit Diffs der gerenderten Seite stabil bleiben
+- **MUSS [MUST]** eine Phasen-Überschrift weglassen, die keine Einträge hat; eine leere Phase wird nicht gerendert
+- **SOLLTE [SHOULD]** je Abschnitt eine Index-Seite bereitstellen, die jeden Eintrag (Name + Beschreibung + Phase + Tags) mit Verweis auf die Detail-Seite zusammenfasst
 - **SOLLTE [SHOULD]** einen Tag-Index bereitstellen, der jeden Tag über alle Einträge hinweg auflistet und auf die Artefakte verlinkt, die ihn deklarieren
 
 ### Mehrsprachiges Verhalten
@@ -72,6 +91,7 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 ### Fehlerbehandlung
 - **MUSS [MUST]** den Doku-Build scheitern lassen, wenn ein Skill oder Agent fehlende oder ungültige Frontmatter hat, anstatt einen kaputten Katalog zu produzieren
 - **MUSS [MUST]** eine klare Fehlermeldung ausgeben, die die betroffene Quelldatei und die Plugin-Quell-Wurzel benennt, aus der sie stammt
+- **MUSS [MUST]** den Doku-Build scheitern lassen, wenn `phase` eines Artefakts fehlt oder nicht im Phasen-Vokabular liegt, mit einer Fehlermeldung, die die Datei, die Plugin-Quell-Wurzel und den abgelehnten `phase`-Wert benennt
 
 ## Akzeptanzkriterien
 - [ ] `task docs` erzeugt eine Doku-Seite, deren Navigation einen Abschnitt `Skills` mit einer Seite pro Skill über alle konfigurierten Plugin-Quell-Wurzeln hinweg enthält
@@ -88,7 +108,10 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - [ ] Generiertes Katalog-Markdown ist **nicht** unter `docs/` eingecheckt, **es sei denn** die Doku-Deploy-Pipeline des Repos umgeht `task docs` — dann **ist** der Katalog eingecheckt und ein CI-Frische-Check sichert gegen Drift ab
 - [ ] Wenn der Katalog eingecheckt ist, läuft ein CI-Job, der den Katalog-Generator ausführt und scheitert, sobald seine Ausgabe vom eingecheckten Stand abweicht
 - [ ] Ein Skill oder Agent mit ungültiger Frontmatter lässt `task docs` mit einer Fehlermeldung scheitern, die die Datei und ihre Plugin-Quell-Wurzel benennt
-- [ ] Katalog-Einträge erscheinen innerhalb jeder Plugin-Gruppe jedes Abschnitts in deterministischer, alphabetischer Reihenfolge nach `name`
+- [ ] Katalog-Einträge erscheinen zuerst nach Phase (in der kanonischen Phasen-Reihenfolge) gruppiert und dann alphabetisch nach `name` innerhalb jeder Plugin-Untergruppe jeder Phase
+- [ ] Jeder Skill und Agent deklariert eine `phase` aus dem geschlossenen Acht-Werte-Vokabular (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); eine fehlende oder nicht-vokabel-konforme `phase` lässt `task docs` scheitern
+- [ ] Jede Katalog-Seite zeigt die `phase` des Artefakts als sichtbares Badge mit dem lokalisierten Chrome-Label
+- [ ] Die Index-Seiten von Skills und Agents rendern eine Überschrift pro Phase (Phasen ohne Einträge werden weggelassen) über jeder Plugin-Untergruppe
 - [ ] Eine Tag-Index-Seite existiert und verlinkt auf jedes Artefakt, das den Tag deklariert
 
 ## Offene Fragen

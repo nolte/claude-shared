@@ -4,6 +4,7 @@ description: Draft or refine an audience-tailored documentation artifact (README
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 tags: [audience, prose]
+phase: design
 ---
 
 # Audience Documentation Author

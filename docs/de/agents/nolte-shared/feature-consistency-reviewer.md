@@ -3,6 +3,7 @@
 _Reviews a draft feature file under `project/features/<slug>.md` for overlap, duplication, drift, and prior art against three surfaces — the existing feature corpus under `project/features/`, the project's primary source-code roots (per `spec/project/project-structure/`), and the spec corpus under `spec/`. Read-only: produces a structured findings list (each with `kind`, `target`, and a proposed `resolution`) that the parent `feature-decompose` skill records into the feature's `consistency_check` frontmatter and `## Consistency notes` section. Typically dispatched mid-flow by `feature-decompose` before a feature transitions `draft → ready`; users rarely invoke it directly. Also handles equivalent German-language requests. Don't use to author or edit features (use `feature-decompose`), to choose between resolutions (operator's call), or for spec-versus-code drift on existing features (use `spec-drift-audit`)._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 2 Plan (`plan`)
 - **Distribution:** `plugin`
 - **Tags:** `review`, `audit`
 - **Quelle:** [agents/feature-consistency-reviewer.md](https://github.com/nolte/claude-shared/blob/main/agents/feature-consistency-reviewer.md)

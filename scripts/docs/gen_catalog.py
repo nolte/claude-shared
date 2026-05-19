@@ -38,17 +38,33 @@ DOCS_DIR = REPO_ROOT / "docs"
 SOURCES_FILE = DOCS_DIR / "catalog-sources.yml"
 MKDOCS_FILE = REPO_ROOT / "mkdocs.yml"
 
+# Canonical phase order, declared by spec/claude/skill-agent-catalog/ §Phase classification.
+# Order matters: every renderer uses this sequence so the navigation stays stable.
+PHASE_ORDER: tuple[str, ...] = (
+    "vision",
+    "plan",
+    "design",
+    "build",
+    "review",
+    "quality",
+    "close-release",
+    "cross-cutting",
+)
+PHASE_VOCABULARY: frozenset[str] = frozenset(PHASE_ORDER)
+
 CHROME = {
     "de": {
         "skills_title": "Skills",
         "skills_intro": (
             "Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots. "
-            "Inhalt stammt direkt aus den `SKILL.md`-Frontmattern und -Bodies."
+            "Inhalt stammt direkt aus den `SKILL.md`-Frontmattern und -Bodies. "
+            "Gruppiert nach Phase des Liefer-Lebenszyklus."
         ),
         "agents_title": "Agents",
         "agents_intro": (
             "Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots. "
-            "Inhalt stammt direkt aus den Agent-Markdown-Dateien."
+            "Inhalt stammt direkt aus den Agent-Markdown-Dateien. "
+            "Gruppiert nach Phase des Liefer-Lebenszyklus."
         ),
         "tags_title": "Tags",
         "tags_intro": (
@@ -59,17 +75,30 @@ CHROME = {
         "distribution_label": "Distribution",
         "tags_label": "Tags",
         "plugin_label": "Plugin",
+        "phase_label": "Phase",
+        "phase_labels": {
+            "vision": "1 Vision",
+            "plan": "2 Plan",
+            "design": "3 Design",
+            "build": "4 Build",
+            "review": "5 Review",
+            "quality": "6 Quality",
+            "close-release": "7 Close & Release",
+            "cross-cutting": "8 Cross-cutting",
+        },
     },
     "en": {
         "skills_title": "Skills",
         "skills_intro": (
             "Auto-generated catalog of every skill discovered across the configured plugin source "
-            "roots. Content is taken verbatim from each `SKILL.md` frontmatter and body."
+            "roots. Content is taken verbatim from each `SKILL.md` frontmatter and body. "
+            "Grouped by delivery-lifecycle phase."
         ),
         "agents_title": "Agents",
         "agents_intro": (
             "Auto-generated catalog of every agent discovered across the configured plugin source "
-            "roots. Content is taken verbatim from each agent markdown file."
+            "roots. Content is taken verbatim from each agent markdown file. "
+            "Grouped by delivery-lifecycle phase."
         ),
         "tags_title": "Tags",
         "tags_intro": (
@@ -80,6 +109,17 @@ CHROME = {
         "distribution_label": "Distribution",
         "tags_label": "Tags",
         "plugin_label": "Plugin",
+        "phase_label": "Phase",
+        "phase_labels": {
+            "vision": "1 Vision",
+            "plan": "2 Plan",
+            "design": "3 Design",
+            "build": "4 Build",
+            "review": "5 Review",
+            "quality": "6 Quality",
+            "close-release": "7 Close & Release",
+            "cross-cutting": "8 Cross-cutting",
+        },
     },
 }
 
@@ -105,6 +145,7 @@ class Artifact:
     name: str
     description: str
     distribution: str | None
+    phase: str
     tags: list[str]
     body: str
     source_relpath: str
@@ -222,6 +263,22 @@ def load_languages() -> list[str]:
     return locales
 
 
+def _validate_phase(raw, label: str) -> str:
+    if raw is None or raw == "":
+        raise CatalogError(
+            f"{label}: frontmatter 'phase' is required; "
+            f"expected one of {sorted(PHASE_VOCABULARY)}"
+        )
+    if not isinstance(raw, str):
+        raise CatalogError(f"{label}: frontmatter 'phase' must be a string, not a list")
+    if raw not in PHASE_VOCABULARY:
+        raise CatalogError(
+            f"{label}: frontmatter 'phase' value {raw!r} is not in the closed "
+            f"vocabulary {sorted(PHASE_VOCABULARY)}"
+        )
+    return raw
+
+
 def _normalize_tags(raw, label: str) -> list[str]:
     if raw is None:
         return []
@@ -270,6 +327,7 @@ def discover_skills(source: SourceRoot) -> list[Artifact]:
                 name=str(name),
                 description=str(description),
                 distribution=None,
+                phase=_validate_phase(meta.get("phase"), label),
                 tags=_normalize_tags(meta.get("tags"), label),
                 body=body,
                 source_relpath=f"{source.skills_path}/{entry.name}/SKILL.md",
@@ -313,6 +371,7 @@ def discover_agents(source: SourceRoot) -> list[Artifact]:
                 name=str(name),
                 description=str(description),
                 distribution=str(distribution),
+                phase=_validate_phase(meta.get("phase"), label),
                 tags=_normalize_tags(meta.get("tags"), label),
                 body=body,
                 source_relpath=f"{source.agents_path}/{entry.name}",
@@ -338,12 +397,14 @@ def _demote_headings(body: str) -> str:
 
 
 def render_page(artifact: Artifact, chrome: dict) -> str:
+    phase_label = chrome["phase_labels"][artifact.phase]
     lines: list[str] = []
     lines.append(f"# {artifact.name}")
     lines.append("")
     lines.append(f"_{artifact.description}_")
     lines.append("")
     lines.append(f"- **{chrome['plugin_label']}:** `{artifact.plugin}`")
+    lines.append(f"- **{chrome['phase_label']}:** {phase_label} (`{artifact.phase}`)")
     if artifact.distribution:
         lines.append(f"- **{chrome['distribution_label']}:** `{artifact.distribution}`")
     if artifact.tags:
@@ -360,13 +421,29 @@ def render_page(artifact: Artifact, chrome: dict) -> str:
     return "\n".join(lines) + "\n"
 
 
-def group_by_plugin(artefacts: Iterable[Artifact]) -> dict[str, list[Artifact]]:
-    groups: dict[str, list[Artifact]] = {}
+def group_by_phase_then_plugin(
+    artefacts: Iterable[Artifact],
+) -> dict[str, dict[str, list[Artifact]]]:
+    """Bucket artefacts into ``{phase: {plugin: [Artifact, ...]}}``.
+
+    Outer dict iterates in :data:`PHASE_ORDER`; only phases with at least one
+    artefact appear. Inner dict iterates alphabetically by plugin. Each
+    artefact list is sorted alphabetically by ``name``.
+    """
+
+    by_phase: dict[str, dict[str, list[Artifact]]] = {}
     for art in artefacts:
-        groups.setdefault(art.plugin, []).append(art)
-    for plugin in groups:
-        groups[plugin].sort(key=lambda a: a.name)
-    return dict(sorted(groups.items()))
+        by_phase.setdefault(art.phase, {}).setdefault(art.plugin, []).append(art)
+    ordered: dict[str, dict[str, list[Artifact]]] = {}
+    for phase in PHASE_ORDER:
+        if phase not in by_phase:
+            continue
+        plugins = by_phase[phase]
+        ordered[phase] = {
+            plugin: sorted(plugins[plugin], key=lambda a: a.name)
+            for plugin in sorted(plugins)
+        }
+    return ordered
 
 
 def write_page(path: Path, content: str) -> None:
@@ -385,7 +462,9 @@ def emit_section(
         shutil.rmtree(section_dir)
     section_dir.mkdir(parents=True, exist_ok=True)
 
-    groups = group_by_plugin(artefacts)
+    by_phase = group_by_phase_then_plugin(artefacts)
+    distinct_plugins = {art.plugin for art in artefacts}
+    show_plugin_subgroup = len(distinct_plugins) > 1
 
     for art in artefacts:
         write_page(section_dir / art.plugin / f"{art.name}.md", render_page(art, chrome))
@@ -398,24 +477,38 @@ def emit_section(
     index_lines.append("")
     index_lines.append(chrome[intro_key])
     index_lines.append("")
-    for plugin, items in groups.items():
-        index_lines.append(f"## {plugin}")
+    for phase, plugins in by_phase.items():
+        index_lines.append(f"## {chrome['phase_labels'][phase]}")
         index_lines.append("")
-        for art in items:
-            index_lines.append(
-                f"- [`{art.name}`]({plugin}/{art.name}.md) — {art.description}"
-            )
-        index_lines.append("")
+        for plugin, items in plugins.items():
+            if show_plugin_subgroup:
+                index_lines.append(f"### {plugin}")
+                index_lines.append("")
+            for art in items:
+                index_lines.append(
+                    f"- [`{art.name}`]({plugin}/{art.name}.md) — {art.description}"
+                )
+            index_lines.append("")
     write_page(section_dir / "index.md", "\n".join(index_lines).rstrip() + "\n")
 
     summary_parts = [f"* [{chrome[title_key]}](index.md)"]
-    for plugin, items in groups.items():
-        summary_parts.append(f"* {plugin}")
-        for art in items:
-            # mkdocs-literate-nav requires 4-space indent for nested bullets;
+    for phase, plugins in by_phase.items():
+        summary_parts.append(f"* {chrome['phase_labels'][phase]}")
+        for plugin, items in plugins.items():
+            # mkdocs-literate-nav requires 4-space indent per nesting level;
             # SUMMARY.md is therefore excluded from markdownlint via
             # `.markdownlintignore` (the repo-wide MD007 default stays at 2).
-            summary_parts.append(f"    * [{art.name}]({plugin}/{art.name}.md)")
+            if show_plugin_subgroup:
+                summary_parts.append(f"    * {plugin}")
+                for art in items:
+                    summary_parts.append(
+                        f"        * [{art.name}]({plugin}/{art.name}.md)"
+                    )
+            else:
+                for art in items:
+                    summary_parts.append(
+                        f"    * [{art.name}]({plugin}/{art.name}.md)"
+                    )
     write_page(section_dir / "SUMMARY.md", "\n".join(summary_parts) + "\n")
 
 

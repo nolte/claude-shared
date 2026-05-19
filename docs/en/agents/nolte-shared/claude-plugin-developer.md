@@ -3,6 +3,7 @@
 _Draft a new Claude Code plugin artifact (skill or agent) for the nolte-shared plugin, or refine an existing one, in strict conformance with every spec under spec/claude/. Use when the user says "author a plugin skill," "create a new agent," "draft a spec-compliant skill or agent," "scaffold a plugin capability from the specs," or "build a high-quality nolte-shared skill or agent." Also handles equivalent German-language requests. Don't use for spec authoring itself (that's the nolte-shared:spec skill's job), for pure structural validation without authoring changes (use nolte-shared:skill-management), or for consumer-project .claude/ configuration. Returns the drafted or edited files, the skill-vs-agent rationale, and a short checklist for the caller to finish the release._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Distribution:** `plugin`
 - **Tags:** `scaffolding`, `review`
 - **Source:** [agents/claude-plugin-developer.md](https://github.com/nolte/claude-shared/blob/main/agents/claude-plugin-developer.md)

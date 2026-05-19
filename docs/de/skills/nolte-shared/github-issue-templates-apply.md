@@ -3,6 +3,7 @@
 _Apply spec/project/github-issue-templates/<canonical_language>.md to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests ("Issue-Templates für dieses Repo erzeugen", "GitHub-Issue-Forms anlegen", "Bug- und Feature-Template scaffolden", "spec github-issue-templates anwenden"). Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`)._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/github-issue-templates-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/github-issue-templates-apply/SKILL.md)
 

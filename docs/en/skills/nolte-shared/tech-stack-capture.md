@@ -3,6 +3,7 @@
 _Captures or refreshes the `tech_stack:` block in a Portfolio-Member's `project/portfolio.yml` per `spec/portfolio/tech-stack-discovery/<canonical_language>.md` §Discovery sequence. Probes repo signals (`pyproject.toml`, lockfiles, `Taskfile.yml`, `.github/workflows/`, `renovate.json5`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml`, `.tool-versions`), classifies hits against the closed `kind` (12) and `group` (5) enums from `spec/portfolio/tech-stack/`, compares each candidate against the global stack in `claude-shared:portfolio/tech-stack.yml`, drops inherited matches, and confirms every proposed addition, override, and regroup interactively before writing. Invoke when the user asks to "capture the tech stack", "scaffold a tech_stack block", "refresh the tech_stack section", or equivalent German-language requests ("Tech-Stack erfassen", "tech_stack-Block aktualisieren"). Don't use to author `portfolio/tech-stack.yml` (hand-curated only) or to run signal-verification audits (use `portfolio-audit`)._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`
 - **Source:** [skills/tech-stack-capture/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/tech-stack-capture/SKILL.md)
 

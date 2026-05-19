@@ -3,6 +3,7 @@
 _Close an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into `release-notes-curate` and `release-publish-trigger` (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 7 Close & Release (`close-release`)
 - **Tags:** `scaffolding`, `release`
 - **Source:** [skills/sprint-review/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/sprint-review/SKILL.md)
 
