@@ -28,5 +28,6 @@
     * [sprint-execute](nolte-shared/sprint-execute.md)
     * [sprint-plan](nolte-shared/sprint-plan.md)
     * [sprint-review](nolte-shared/sprint-review.md)
+    * [tech-stack-capture](nolte-shared/tech-stack-capture.md)
     * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)
     * [workflow-health-triage](nolte-shared/workflow-health-triage.md)
