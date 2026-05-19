@@ -25,6 +25,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [skill-agent-catalog-apply](skills/nolte-shared/skill-agent-catalog-apply.md) — nolte-shared
 - [vocab-drift-audit](skills/nolte-shared/vocab-drift-audit.md) — nolte-shared
 - [workflow-health-triage](skills/nolte-shared/workflow-health-triage.md) — nolte-shared
+- [yaml-json-schema](skills/nolte-shared/yaml-json-schema.md) — nolte-shared
 
 ## `dependency`
 
@@ -87,3 +88,8 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [sprint-plan](skills/nolte-shared/sprint-plan.md) — nolte-shared
 - [sprint-review](skills/nolte-shared/sprint-review.md) — nolte-shared
 - [tech-stack-capture](skills/nolte-shared/tech-stack-capture.md) — nolte-shared
+- [yaml-json-schema](skills/nolte-shared/yaml-json-schema.md) — nolte-shared
+
+## `validation`
+
+- [yaml-json-schema](skills/nolte-shared/yaml-json-schema.md) — nolte-shared

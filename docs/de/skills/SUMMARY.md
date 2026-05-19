@@ -33,3 +33,4 @@
     * [tech-stack-capture](nolte-shared/tech-stack-capture.md)
     * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)
     * [workflow-health-triage](nolte-shared/workflow-health-triage.md)
+    * [yaml-json-schema](nolte-shared/yaml-json-schema.md)
