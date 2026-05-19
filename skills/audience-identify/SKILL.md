@@ -51,8 +51,9 @@ Interactive walk-through. Do not batch — surface each step to the user and let
    - Indirect audiences
 
    If a category does not apply, record `none` with a reason — the spec requires this, not a silent omission.
-4. **Capture per audience**: short label, relationship category, interaction surface (API / CLI / config / docs / dashboard / incident channel / …), what the audience expects or needs, and any open question or assumption. Missing information is captured as an open question, not invented.
+4. **Capture per audience**: short label, relationship category, interaction surface (API / CLI / config / docs / dashboard / incident channel / …), what the audience expects or needs, the documentation `track` the audience maps to, and any open question or assumption. Missing information is captured as an open question, not invented.
 5. **Tag each audience** as `confirmed` (validated with a real representative or authoritative source) or `assumed` (author inference). Never set `confirmed` without the user saying so explicitly.
+5a. **Map each audience to a documentation track** — exactly one of `user-docs` or `developer-docs` (or an extension value declared by an active project-type-specific spec) per `spec/project/docs-audience-tracks/` §Audience-to-track mapping. Apply the portfolio-baseline default first and surface it for confirmation: `user` → `user-docs`; `contributor` / `operator` / `release-manager` → `developer-docs`. The operator may override with a one-line rationale recorded inline next to the audience entry. When the repository genuinely doesn't serve one of the two tracks (a library with no end-user surface, an internal-only product with no contributor surface), record an explicit "no audience maps to this track: <reason>" note in the artefact next to the other track's entries.
 6. **Rank by criticality** (primary / secondary / peripheral) where the user can express it. Skip silently if the user cannot rank yet — record as open question.
 7. **Offer optional subdivisions** (geography, organizational unit, tenancy) only when the user says they change the expected deliverable. Do not add them by default.
 8. **Write the artifact** at the chosen location, using the template at `templates/audiences.template.md`. Confirm the path back to the user in their language.
@@ -65,6 +66,8 @@ Run this checklist against a given audience artifact path:
 - [ ] All five relationship categories are addressed (or explicitly marked `none` with reason)
 - [ ] Every entry has label, category, interaction surface, expectation, and an open-questions field (even if empty)
 - [ ] Every entry carries a `confirmed` or `assumed` tag
+- [ ] Every entry carries a `track` field whose value is `user-docs`, `developer-docs`, or an extension value declared by an active project-type-specific spec; entries that override the portfolio-baseline default carry a one-line rationale inline
+- [ ] If the artefact omits one of the two canonical tracks, an explicit "no audience maps to this track: <reason>" note is present and matches the portfolio-baseline omission shape required by `spec/project/mkdocs-structure/` §Audience targeting
 - [ ] Criticality ranking is present or openly marked as unresolved
 - [ ] Artifact lives next to the context it describes (not in a central registry)
 

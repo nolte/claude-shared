@@ -37,9 +37,10 @@ Software modules and projects are consumed, operated, constrained, or observed b
   - the relationship category
   - the interaction surface (API, CLI, config, docs, dashboard, incident channel, …)
   - what the audience expects or needs from the context
+  - the documentation `track` the audience maps to (one of `user-docs` or `developer-docs`, per `spec/project/docs-audience-tracks/` §Audience-to-track mapping); the portfolio-baseline default (`user` → `user-docs`; `contributor` / `operator` / `release-manager` → `developer-docs`) is the starting point and is overridable per project with a recorded one-line rationale
   - any open question or assumption where information is missing
 - **MUST** tag every audience as `confirmed` (validated with a real representative or an authoritative source) or `assumed` (inferred by the author)
-- **MUST** produce the audience list before downstream artifacts that claim an audience are written (README "intended consumers," SLAs, threat models, …), so those artifacts can reference it rather than restate it
+- **MUST** produce the audience list before downstream artifacts that claim an audience are written (READMEs, specs, threat models, release notes, SLAs, documentation tracks per `spec/project/docs-audience-tracks/`, …), so those artifacts can reference it rather than restate it; the documentation-tracks artefact is one of the downstream consumers and the per-audience `track` field is the consuming surface
 - **SHOULD** rank audiences by criticality to the success of the context (primary / secondary / peripheral)
 - **SHOULD** store the audience artifact at `AUDIENCES.md` at the root of the bounded context as the canonical default; for small modules or sub-contexts where a stand-alone file is overkill, a README section ("## Audiences" or "## Intended consumers") or an ADR is an acceptable alternative. Whichever location is chosen, the artifact lives **alongside** the context it describes—not in a central registry—so consuming specs (for example `mission`, `roadmap`, `release-notes-audience-analysis`, `release-skill-layer`, and tooling like `github-issue-templates-apply`) can locate it deterministically; the list isn't exhaustive, and `spec-drift-audit` is the canonical detector for newly-added consumers that cite the artefact
 - **SHOULD** revisit the audience list whenever the context's scope materially changes—new public API, new deployment target, new regulated data class, new stakeholder
@@ -52,6 +53,7 @@ Software modules and projects are consumed, operated, constrained, or observed b
 - [ ] The `readme-structure` spec references this spec where it speaks of "intended consumers"
 - [ ] An audience list produced under this spec contains at least one audience per applicable relationship category, or records "none" with a reason for any category it omits
 - [ ] Every audience entry distinguishes `confirmed` from `assumed`
+- [ ] Every audience entry carries a `track` field whose value is `user-docs` or `developer-docs` (or an extension value declared by a project-type-specific spec); the portfolio-baseline default is applied unless a one-line override rationale is recorded inline
 - [ ] The bounded context is declared in writing before any audience is listed
 - [ ] The `spec-drift-audit` skill can flag a module whose documented audiences no longer match its actual interaction surface
 - [ ] Every stand-alone bounded context that has produced an audience artifact ships it as `AUDIENCES.md` at the context root, OR the chosen alternative location (a README section "## Audiences" / "## Intended consumers" or an ADR) is justified by the context's small size or by pre-existing repo precedent. Verifiable by `find . -name AUDIENCES.md -not -path './node_modules/*' -not -path './.venv/*'` plus a grep of README files for the section headings

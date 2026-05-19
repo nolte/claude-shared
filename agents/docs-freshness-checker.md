@@ -39,6 +39,7 @@ The `agent-review` checks honour this exception when a `## Read-only Bash justif
 You **do**:
 
 - Discover the documentation layout from `mkdocs.yml` (language trees, nav structure, docs dir).
+- Check per-page frontmatter against the `spec/project/mkdocs-structure/` §Per-page structure MUST set (`title`, `audience`, `content_mode`, `track`, `last_updated`) and against the `spec/project/docs-audience-tracks/` §Audience-to-track mapping invariant.
 - Cross-check the configured language trees for parity (which files are present in language A but missing in language B, and vice versa).
 - Spot-check content parity on the N most recently modified files per language (size delta, last-commit delta).
 - Follow every internal markdown link and flag broken targets.
@@ -136,6 +137,34 @@ For every `derived` annotation:
 
 This phase doesn't redraw the diagram and doesn't cross into the authoring surface — that's `mermaid-diagrams-apply`'s job. The check is purely a drift detector.
 
+### Phase 6b: Track and content-mode frontmatter
+
+Per `spec/project/mkdocs-structure/` §Per-page structure (the `track` and `content_mode` MUST keys) and `spec/project/docs-audience-tracks/` §Per-page contract:
+
+For every `*.md` under `docs/<lang>/` that lives **outside** an `_`-prefixed snippet folder (snippet fragments are exempt per `spec/project/mkdocs-structure/` §Snippet inclusion (DRY)):
+
+1. Parse the page's YAML frontmatter (a `Grep` for `^---` plus offset Read of the matching block).
+2. **Track-frontmatter drift** findings:
+   - Missing `track:` key → warning.
+   - `track:` value isn't `user-docs`, `developer-docs`, or an extension value declared by a project-type-specific spec the repository has opted into (detected by the same marker-file mechanism `mkdocs-structure` uses, for example `.claude-plugin/plugin.json` activates extension values from `spec/claude/skill-agent-catalog/` if it ever introduces any) → critical.
+3. **Content-mode drift** findings:
+   - Missing `content_mode:` key → warning.
+   - `content_mode:` value isn't one of `tutorial`, `how-to`, `reference`, `explanation`, `troubleshooting`, `glossary`, `meta`, or an opted-in extension value → critical.
+4. **Content-mode mixing candidates** (warning, Reviewer-judgement signal — never auto-fail):
+   - `how-to` page that contains paragraphs starting with "The reason is", "Conceptually", "Historically", "Why this works" → candidate explanation drift.
+   - `reference` page that contains imperative-verb-first sentences ("Run", "Select", "Open", "Click") outside of explicit `Example:` blocks → candidate how-to drift.
+   - `tutorial` page that contains more than two paragraphs of background prose between consecutive step headings → candidate explanation drift.
+   - `troubleshooting` page that lacks the `symptom` / `cause` / `workaround` / `resolution` vocabulary in headings or strong-emphasis labels → candidate how-to drift.
+   - The detection is heuristic; report the line range and the matched signal, never rewrite.
+
+### Phase 6c: Audience-track consistency
+
+Per `spec/project/docs-audience-tracks/` §Audience-to-track mapping:
+
+1. Load the project's audience artefact (`AUDIENCES.md` at the bounded-context root, the README-section or ADR alternative per `spec/project/audience-identification/`). If the artefact carries `track:` fields on individual audience entries, build an `audience-id → track` map.
+2. If the artefact is missing or carries no per-audience `track` fields, fall back to the portfolio-baseline default: `user` → `user-docs`; `contributor` / `operator` / `release-manager` → `developer-docs`.
+3. For every page that declares both `audience:` and `track:` frontmatter: when one of the `audience:` IDs maps to a different track than the page's `track:` value, emit an `Audience-track mismatch` finding (warning) so a Reviewer can resolve the contradiction deliberately.
+
 ### Phase 7: Stale markers
 
 `Grep` every `*.md` under the docs dir for:
@@ -152,8 +181,8 @@ Record each hit as a finding with its file and line. This is lowest severity unl
 
 Assign severity per finding:
 
-- **critical**: broken internal link, broken cross-tree reference, ADR status inconsistency that breaks a supersedes chain, Mermaid `diagram-source: derived` annotation whose named source path doesn't exist on disk (the diagram has lost its origin entirely).
-- **warning**: language parity gap (missing file on one side), stale-marker inside an accepted ADR, ADR index drift, content-staleness spot-check > 90 days, Mermaid `diagram-source: derived` drift (source's last-commit date strictly later than the hosting markdown's).
+- **critical**: broken internal link, broken cross-tree reference, ADR status inconsistency that breaks a supersedes chain, Mermaid `diagram-source: derived` annotation whose named source path doesn't exist on disk (the diagram has lost its origin entirely), unrecognised `track` value, unrecognised `content_mode` value.
+- **warning**: language parity gap (missing file on one side), stale-marker inside an accepted ADR, ADR index drift, content-staleness spot-check > 90 days, Mermaid `diagram-source: derived` drift (source's last-commit date strictly later than the hosting markdown's), missing `track` frontmatter, missing `content_mode` frontmatter, content-mode mixing candidate, audience-track mismatch.
 - **info**: stale marker in ordinary prose, content-staleness spot-check 30–90 days, ADR without declared status (treat as info rather than critical — the ADR is still readable).
 
 Cap per-category listings at 15 entries and summarise the remainder with a count.
@@ -215,6 +244,24 @@ Return a single report:
 
 ### Mermaid diagram-source drift
 - `<markdown path>:<line>` — source `<source path>` was committed `<source date>`, hosting markdown was committed `<markdown date>` (delta: <days>)
+- …
+
+### Track-frontmatter drift
+- `<path>` — missing `track:` key
+- `<path>` — `track: <value>` not in {user-docs, developer-docs, …opted-in extension values}
+- …
+
+### Content-mode drift
+- `<path>` — missing `content_mode:` key
+- `<path>` — `content_mode: <value>` not in {tutorial, how-to, reference, explanation, troubleshooting, glossary, meta, …opted-in extension values}
+- …
+
+### Content-mode mixing candidates
+- `<path>:<line-range>` — declared `content_mode: <mode>`, signal `<signal>` suggests `<other-mode>` drift
+- …
+
+### Audience-track mismatch
+- `<path>` — `audience: <audience-id>` maps to track `<track-A>`, but page declares `track: <track-B>`
 - …
 
 ### Stale markers in accepted ADRs

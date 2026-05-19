@@ -70,6 +70,8 @@ This spec closes that gap. It defines (a) the portfolio-wide MkDocs skeleton—s
 - **MUST** declare YAML frontmatter at the top of every page with at minimum:
   - `title`: the human-readable page title (matches the H1)
   - `audience`: one or more audience IDs declared in the project's audience artifact (`AUDIENCES.md` or the documented alternative location per `spec/project/audience-identification/`)
+  - `content_mode`: exactly one value from the closed enumeration declared in §Content modes (Diátaxis alignment) (or an explicitly opted-in extension value)
+  - `track`: exactly one of `user-docs` or `developer-docs` (or an explicitly opted-in extension value), per `spec/project/docs-audience-tracks/` §Per-page contract—this key is the audience-track signal that runs orthogonally to `audience` and `content_mode`
   - `last_updated`: ISO-8601 date the content was last revised, or the literal `generated` for pages emitted by a catalog generator
 - **SHOULD** include a `## Sources` section as the page's last section, linking back to the authoritative source (`spec/<path>`, `src/<path>`, an ADR, an external URL) when the page derives from a single source of truth
 - **MAY** declare additional frontmatter keys: `tags` for cross-page lookups, `status` for explicitly marking `draft` / `stable` / `deprecated`, `summary` for a one-line abstract used in section index pages
@@ -83,8 +85,32 @@ This spec closes that gap. It defines (a) the portfolio-wide MkDocs skeleton—s
 - **MAY** include a whole file without start/end markers when the entire file is the snippet (typical for a glossary, a CONTRIBUTING excerpt that's already file-scoped, or a small standalone example)
 - **SHOULD** prefer including from the canonical source over duplicating its content into a `docs/_snippets/` shadow file; a dedicated docs-only snippet file exists only when no canonical source-of-truth file already lives in the repo (for example a glossary that's only relevant to the docs)
 - **MUST NOT** copy-paste a paragraph longer than ~3 lines between pages "for editorial freedom"; if the wording must diverge by design, the divergence is a sign the content isn't really shared and should be authored per-page from the start
+- **MUST NOT** apply this DRY rule across content modes (per §Content modes (Diátaxis alignment)): a `reference` entry, a `how-to` step set, and an `explanation` paragraph that all touch the same topic intentionally cover it from different angles, and the Write the Docs ARID principle ("Accept some Repetition In Documentation") ratifies that mode-bound repetition is a feature, not drift. The ~3-line DRY threshold applies to **verbatim** repetition of the *same* content across pages of the *same* mode; it doesn't force cross-mode pages to collapse into one
 - **SHOULD** name start and end marker labels after the content they bracket (`<!-- docs-include-start: lint-job -->`, not `<!-- docs-include-start: section-1 -->`) so a `grep` for the marker name resolves the include trail across the repository
 - **MUST** keep dedicated snippet files (when one exists rather than including from a live source) free of the per-page MUST frontmatter (`title`, `audience`, `last_updated`) since snippets are fragments, not pages; snippet files placed inside `docs/<lang>/` **MUST** live in a folder prefixed with `_` (for example `docs/<lang>/_snippets/`) so MkDocs doesn't render them as standalone pages in the nav
+
+### Content modes (Diátaxis alignment)
+
+The portfolio adopts the Diátaxis four-mode model (tutorials, how-to guides, reference, explanation) as the canonical content-mode taxonomy, with the Diátaxis-adjacent additions ratified by GitLab's CTRT and The Good Docs Project (troubleshooting, glossary). The seven-section nav skeleton above isn't a Diátaxis re-implementation: sections group pages by *task surface* (where a reader looks), modes describe each individual page's *content posture* (what the reader needs from it). A page declares its mode in frontmatter; the audit surface verifies that mode and mixing rules hold.
+
+- **MUST** declare a `content_mode` frontmatter key on every page under `docs/<lang>/` (snippet fragments under `_`-prefixed folders are exempt per §Snippet inclusion (DRY)) whose value is one of:
+  - `tutorial`: learning-oriented; a guided hands-on path that produces a tangible outcome at every step (Diátaxis: "inspire confidence"; not the place for explanation)
+  - `how-to`: task-oriented; a goal-driven sequence for a reader who already knows the basics (Diátaxis: "problems, not tools"; "no digression, explanation, teaching")
+  - `reference`: information-oriented; "describes, and only describes" the machinery; structured to mirror the machinery; examples illustrate without instructing (Diátaxis Reference)
+  - `explanation`: understanding-oriented; provides context, alternatives, "why"; takes a higher and wider perspective than reference (Diátaxis Explanation; equivalent to GitLab CTRT "Concept")
+  - `troubleshooting`: problem-resolution-oriented; pairs symptoms with workarounds and resolutions (GitLab CTRT; The Good Docs Project Troubleshooting Guide)
+  - `glossary`: terminology-oriented; one-line definitions for domain and technical terms (arc42 §12; The Good Docs Project Glossary)
+  - `meta`: the Home page and per-section index pages that route readers across modes; exempt from the no-mixing rule below
+- **MUST NOT** mix modes within a single page. A `how-to` page **MUST NOT** absorb extended reference dumps or background explanation; a `reference` page **MUST NOT** ship instructional prose or recipes; a `tutorial` page **MUST NOT** be padded with discursive explanation; a `troubleshooting` page **MUST NOT** double as a how-to. Mixing is the most common cause of confusing documentation and is the central anti-pattern Diátaxis (and GitLab's CTRT, and The Good Docs Project) warns against. Link out to the other-mode page instead of inlining.
+- **MUST** use the canonical action vocabulary in `troubleshooting` pages: `workaround` for temporary mitigations, `resolution` (or `resolve`) for permanent fixes, `symptom` for the observable problem, `cause` for the explanation (GitLab Troubleshooting topic type)
+- **SHOULD** open every non-`reference` page with a one- to three-sentence framing paragraph that names the reader's situation (what they have, what they want) before the first H2; the framing is what makes the page skimmable and routable from search (WtD Skimmable; Microsoft Top-10 "Get to the point fast"; Google "Clear information first")
+- **SHOULD** front-load the page with the answer or the first command before any background; background and rationale belong on an `explanation` page that the reader can follow when they want it
+- **SHOULD** keep `reference` pages structured to mirror the artefact they describe (configuration schema → field by field; CLI → command by command; API → endpoint by endpoint) so the structure itself doubles as a lookup index (Diátaxis Reference: "respect the structure of the machinery")
+- **SHOULD** include at least one runnable example per `reference` entry that illustrates without instructing (Diátaxis Reference: "Provide examples to illustrate without instructing"; The Good Docs Project Reference template)
+- **MAY** declare a `prerequisites` frontmatter key on `tutorial` and `how-to` pages listing the assumed knowledge or prior pages a reader needs before this one; the audit surface uses it to verify that prerequisites form a non-cyclic chain (WtD: "Order content cumulatively, covering prerequisites first")
+- **MAY** introduce additional `content_mode` values via a project-type-specific extension spec; the extension **MUST** name the new value, the Diátaxis quadrant or CTRT category it descends from (or explain why it doesn't), and the no-mixing rule that still applies
+
+The `content_mode` value and the nav section a page lives in are independent: the **Getting Started** section is *typically* `tutorial`, **Guides** is *typically* `how-to`, **References** is *typically* `reference`, but the spec doesn't tie modes to sections—a single section may host pages of mixed modes (each individually disciplined per the no-mixing rule), and a single mode may appear in several sections. The audit surface checks that the value is present and valid; it doesn't enforce a section-to-mode lookup.
 
 ### Audience targeting
 
@@ -136,7 +162,11 @@ Two declared extension points let project-type-specific specs add to the skeleto
 - [ ] Every portfolio repository's `mkdocs.yml` declares `mkdocs-material`, `mkdocs-static-i18n` (with `docs_structure: folder`), `pymdownx.superfences`, and the built-in `search` plugin explicitly
 - [ ] Every plugin in `mkdocs.yml` is pinned in the project's Python dependency manifest (no `>=`-style floating versions in the lockfile)
 - [ ] Every top-level nav section in every portfolio repository is one of the seven standard sections (Home, Getting Started, Guides, References, ADRs, Project, plus declared extension sections); a section that isn't listed in the standard set is justified by an active extension spec
-- [ ] Every page under `docs/<lang>/` starts with a single `# H1` matching the nav label and declares frontmatter with `title`, `audience` (one or more IDs from the project's audience artifact), and `last_updated`
+- [ ] Every page under `docs/<lang>/` starts with a single `# H1` matching the nav label and declares frontmatter with `title`, `audience` (one or more IDs from the project's audience artifact), `content_mode` (one of `tutorial`, `how-to`, `reference`, `explanation`, `troubleshooting`, `glossary`, `meta`, or an explicitly opted-in extension value), `track` (one of `user-docs`, `developer-docs`, or an explicitly opted-in extension value), and `last_updated`
+- [ ] `spec/project/docs-freshness/` references this spec as the normative source for the expected nav, plugin baseline, per-page frontmatter contract (including `track` and `content_mode`), and language-tree parity; the `docs-freshness` audit checks against this spec rather than reinventing the expectations
+- [ ] No page mixes content modes in violation of §Content modes (Diátaxis alignment); the `docs-freshness` audit reports a page that, for example, ships extended explanation inside a `how-to` or instructional recipes inside a `reference`
+- [ ] Every `troubleshooting` page uses `symptom` / `cause` / `workaround` / `resolution` as the canonical action vocabulary
+- [ ] Every `reference` page's heading structure mirrors the artefact it describes (one entry per configuration key, CLI command, API endpoint, …) and carries at least one runnable example per entry
 - [ ] Every audience value in every page's frontmatter matches an ID declared in the project's audience artifact (verifiable by `docs-freshness` audit)
 - [ ] `mkdocs.yml` declares `mkdocs-include-markdown-plugin`, and the plugin is pinned in the project's Python dependency manifest
 - [ ] No paragraph longer than ~3 lines appears verbatim on two or more pages; any such repetition is replaced with an include from the canonical source via `{% include-markdown … %}`
@@ -153,3 +183,14 @@ Two declared extension points let project-type-specific specs add to the skeleto
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
 - None at draft time. The seven initial design questions (ADR-section trigger, Project-section opt-in, extension discovery mechanism, audience baseline, source-language descriptor, extension-section cap, Skills/Agents absolute position) were resolved during initial authoring; see the PR that introduces this spec for the rationale of each.
+- Should the `content_mode` no-mixing rule be enforced statically (a marker scan of the page body looking for instructional verbs inside a `reference` page, recipe lists inside an `explanation`, …) or only flagged at audit time as a Reviewer-judgement call? The rule itself is normative; the enforcement mechanism is deferred until the `docs-freshness` audit accumulates enough false-positive cost to decide.
+- Does the `prerequisites` frontmatter key on `tutorial` / `how-to` pages stay optional (`MAY`), or does it harden to `SHOULD` once the audit surface can verify the prerequisite chain is acyclic and reachable?
+
+## Sources
+<!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->
+- Diátaxis Framework (diataxis.fr)—four-mode taxonomy, mixing-as-anti-pattern, mode-by-mode content rules
+- GitLab Documentation Handbook §Topic types (docs.gitlab.com)—CTRT (Concept / Task / Reference / Troubleshooting) taxonomy and the `workaround` / `resolution` vocabulary
+- The Good Docs Project Templates (thegooddocsproject.dev/template)—independent ratification of Tutorial, How-to, Reference, Concept, Quickstart, Glossary, Troubleshooting, Release-notes as canonical content types
+- Write the Docs documentation principles (writethedocs.org/guide)—ARID, Skimmable, Exemplary, Current, Consistent
+- Microsoft Writing Style Guide Top-10 (learn.microsoft.com/style-guide): "Get to the point fast," sentence-case headings, scannability
+- Google Developer Documentation Style Guide (developers.google.com/style)—voice, audience awareness, "clear information first"

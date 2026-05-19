@@ -23,7 +23,9 @@ Canonical language: `en` · Translations: `de`
 | project | audience-identification | Audience Identification | Zielgruppen-Identifikation | draft | 2026-04-24 |
 | project | branching-model | Branching Model | Branching-Modell | draft | 2026-04-23 |
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | 2026-04-23 |
+| project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | unversioned |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | unversioned |
+| project | docs-audience-tracks | Documentation Audience Tracks | Dokumentations-Zielgruppen-Spuren | draft | unversioned |
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | unversioned |
 | project | feature | Project Feature | Projekt-Feature | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |

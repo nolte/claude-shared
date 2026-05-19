@@ -14,11 +14,13 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
+- [docs-audience-tracks-apply](skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
 - [mermaid-diagrams-apply](skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
 - [mkdocs-structure-apply](skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared
 - [portfolio-audit](skills/nolte-shared/portfolio-audit.md) — nolte-shared
+- [readme-structure-apply](skills/nolte-shared/readme-structure-apply.md) — nolte-shared
 - [roadmap-refine](skills/nolte-shared/roadmap-refine.md) — nolte-shared
 - [skill-agent-catalog-apply](skills/nolte-shared/skill-agent-catalog-apply.md) — nolte-shared
 - [vocab-drift-audit](skills/nolte-shared/vocab-drift-audit.md) — nolte-shared
@@ -65,6 +67,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [cookiecutter-template-author](agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [png-to-transparent-svg](agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
+- [docs-audience-tracks-apply](skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
 - [feature-decompose](skills/nolte-shared/feature-decompose.md) — nolte-shared
 - [github-issue-templates-apply](skills/nolte-shared/github-issue-templates-apply.md) — nolte-shared
@@ -74,6 +77,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [mkdocs-structure-apply](skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared
 - [project-structure-apply](skills/nolte-shared/project-structure-apply.md) — nolte-shared
+- [readme-structure-apply](skills/nolte-shared/readme-structure-apply.md) — nolte-shared
 - [roadmap-init](skills/nolte-shared/roadmap-init.md) — nolte-shared
 - [roadmap-planner](skills/nolte-shared/roadmap-planner.md) — nolte-shared
 - [skill-agent-catalog-apply](skills/nolte-shared/skill-agent-catalog-apply.md) — nolte-shared

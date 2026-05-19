@@ -16,13 +16,22 @@ Do not add audiences without first declaring the bounded context below.
 ## Audiences
 
 Each entry: label, relationship category, interaction surface, expectation,
-open questions, `confirmed` or `assumed`, criticality (primary / secondary /
-peripheral). Mark a whole category as `none — <reason>` when it does not apply.
+documentation `track` (`user-docs` or `developer-docs` per
+spec/project/docs-audience-tracks/), open questions, `confirmed` or `assumed`,
+criticality (primary / secondary / peripheral). Mark a whole category as
+`none — <reason>` when it does not apply.
+
+When the repository genuinely doesn't serve one of the two documentation tracks,
+add an explicit `no audience maps to this track: <reason>` note under the
+omitted track header (in the relevant audience-category section below).
+Portfolio-baseline track defaults: `user` → `user-docs`; `contributor` /
+`operator` / `release-manager` → `developer-docs`.
 
 ### Direct consumers
 
 - **{{Label}}** — _category_: direct-consumer · _surface_: {{API / CLI / …}} ·
-  _expects_: {{what they need}} · _status_: `assumed` · _criticality_: {{primary|secondary|peripheral}}
+  _expects_: {{what they need}} · _track_: `{{user-docs|developer-docs}}` ·
+  _status_: `assumed` · _criticality_: {{primary|secondary|peripheral}}
   - Open questions: {{list, or "none"}}
 
 ### Operators
