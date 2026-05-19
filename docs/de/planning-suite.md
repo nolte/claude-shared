@@ -1,3 +1,11 @@
+---
+title: Planning-Suite
+audience: [maintainer]
+content_mode: explanation
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Planning-Suite
 
 Die Planning-Suite ist die Sammlung von Skills und einem Agent, mit der ein Repository die Specs `mission`, `roadmap`, `sprint`, `feature` und `release-artifact` operationalisiert. Diese Seite bündelt die Reihenfolge, in der die Skills typischerweise zum Einsatz kommen, plus eine Karte „welcher Skill schreibt welches Artefakt".

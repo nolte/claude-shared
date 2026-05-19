@@ -1,3 +1,11 @@
+---
+title: Tags
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: generated
+---
+
 # Tags
 
 Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.

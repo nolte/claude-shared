@@ -1,3 +1,11 @@
+---
+title: Skills
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Skills
 
 Skills sind wiederverwendbare Workflows, die Claude Code über das `Skill`-Tool aufruft. Im Quellbaum von `claude-shared` liegen sie unter `skills/<name>/SKILL.md`, zur Laufzeit in einem konsumierenden Projekt unter `.claude/skills/<name>/` oder `~/.claude/skills/<name>/` — oder, wie hier, als Teil des `nolte-shared`-Plugins.

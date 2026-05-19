@@ -93,6 +93,16 @@ plugins:
   - literate-nav:
       nav_file: SUMMARY.md
 
+  - include-markdown:
+      # spec/project/mkdocs-structure/ §Snippet inclusion (DRY) names `{%` / `%}`
+      # as the canonical opening/closing tags, but those collide with verbatim
+      # occurrences of the directive inside skill-body prose that the catalog
+      # generator renders into docs/<lang>/skills/**. We pin custom tags here
+      # so the plugin's regex doesn't fire on doc-examples. See
+      # .audits/docs-catalog-refresh.md §F1 for the proposed spec amendment.
+      opening_tag: "{!"
+      closing_tag: "!}"
+
 markdown_extensions:
   - abbr
   - admonition

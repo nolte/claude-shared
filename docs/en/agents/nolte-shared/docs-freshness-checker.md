@@ -1,3 +1,11 @@
+---
+title: docs-freshness-checker
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: generated
+---
+
 # docs-freshness-checker
 
 _Audit the MkDocs documentation of the current repository for freshness — multi-language parity between configured language trees (for example `docs/en/` vs `docs/de/`), dead internal markdown links, stale references to paths under `spec/` / `src/` / other repo roots, ADR index completeness and status hygiene, Mermaid `diagram-source: derived` drift (source's last-commit timestamp newer than the hosting markdown), and TODO / placeholder markers. Read-only: produces a severity-sorted report and never edits files. Use when the user asks to "check the docs for drift," "run a freshness audit on the docs," "find dead links in the documentation," "check DE/EN parity," "prep the docs for a release," or equivalent German-language requests ("Doku auf Aktualität prüfen," "tote Links in der Doku finden," "DE/EN-Parität prüfen"). Don't use for writing or updating documentation (that's an author's task) and don't use for vocabulary / Vale linting (that's `prose-vale-curator`)._

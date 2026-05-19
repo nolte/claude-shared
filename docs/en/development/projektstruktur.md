@@ -1,3 +1,11 @@
+---
+title: Project Structure
+audience: [external-contributor, maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Project Structure
 
 Current top-level layout:

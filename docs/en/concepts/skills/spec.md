@@ -1,3 +1,11 @@
+---
+title: Spec
+audience: [maintainer]
+content_mode: explanation
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Spec
 
 The `spec` skill manages multilingual specifications under `spec/`. Each spec has its own folder with exactly one file per configured language. One language is **canonical**; the others are translations kept structurally and semantically in sync via this skill.

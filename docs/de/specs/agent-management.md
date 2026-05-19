@@ -1,3 +1,11 @@
+---
+title: Agent-Autorenschaft
+audience: [maintainer]
+content_mode: reference
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Agent-Autorenschaft
 
 Diese Seite fasst die Spezifikation aus `spec/claude/agent-management/de.md` zusammen. Kanonische Quelle ist `spec/claude/agent-management/en.md`.

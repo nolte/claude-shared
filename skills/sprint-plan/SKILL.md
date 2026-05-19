@@ -79,7 +79,7 @@ Exactly one feature in the sprint **MUST** carry a non-null `verifies_sprint_val
 
 Write the file with this exact shape (frontmatter keys in the declared order from `spec/project/sprint/` §Frontmatter schema):
 
-```markdown
+```text
 ---
 number: <NNNN>
 status: planned
@@ -98,8 +98,8 @@ features: [<F-a>, <F-b>]
 
 ## Features
 
-- [<F-a>](../features/<slug-a>.md) — status: ready
-- [<F-b>](../features/<slug-b>.md) — status: ready
+- [<F-a>](`../features/<slug-a>.md`) — status: ready
+- [<F-b>](`../features/<slug-b>.md`) — status: ready
 
 ## Out of scope
 

@@ -1,3 +1,11 @@
+---
+title: Spezifikationen
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Spezifikationen
 
 Die Spezifikationen unter `spec/` definieren die verbindlichen Regeln für Autoren von Skills und Agents. Sie sind **mehrsprachig**: Kanonisch auf Englisch, übersetzt nach Deutsch — strukturell und semantisch synchron gehalten durch den [Spec-Skill](../skills/nolte-shared/spec.md).

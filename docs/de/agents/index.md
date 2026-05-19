@@ -1,3 +1,11 @@
+---
+title: Agents
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: generated
+---
+
 # Agents
 
 Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots. Inhalt stammt direkt aus den Agent-Markdown-Dateien. Gruppiert nach Phase des Liefer-Lebenszyklus.

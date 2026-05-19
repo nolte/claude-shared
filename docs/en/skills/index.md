@@ -1,3 +1,11 @@
+---
+title: Skills
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: generated
+---
+
 # Skills
 
 Auto-generated catalog of every skill discovered across the configured plugin source roots. Content is taken verbatim from each `SKILL.md` frontmatter and body. Grouped by delivery-lifecycle phase.

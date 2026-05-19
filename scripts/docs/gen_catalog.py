@@ -161,6 +161,30 @@ FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n?(.*)\Z", re.DOTALL)
 FRONTMATTER_LINE_RE = re.compile(r"\A([A-Za-z_][A-Za-z0-9_-]*):\s*(.*)\Z")
 TAG_RE = re.compile(r"\A[a-z0-9]+(?:-[a-z0-9]+)*\Z")
 
+# Per spec/project/mkdocs-structure/ §Per-page structure plus
+# spec/project/docs-audience-tracks/ §Per-page contract: every page under
+# docs/<lang>/ MUST declare these five keys. Catalog pages are generator-fixed
+# to track=developer-docs (per skill-agent-catalog Open Question on track
+# defaulting) and use last_updated=generated.
+CATALOG_TRACK = "developer-docs"
+CATALOG_AUDIENCE = "maintainer"
+
+
+def _render_frontmatter(*, title: str, content_mode: str) -> str:
+    """Emit the per-page MUST frontmatter block for a generated catalog page."""
+
+    lines = [
+        "---",
+        f"title: {title}",
+        f"audience: [{CATALOG_AUDIENCE}]",
+        f"content_mode: {content_mode}",
+        f"track: {CATALOG_TRACK}",
+        "last_updated: generated",
+        "---",
+        "",
+    ]
+    return "\n".join(lines)
+
 
 def parse_frontmatter(text: str, file_label: str) -> tuple[dict, str]:
     """Parse the YAML-ish frontmatter block leniently.
@@ -399,6 +423,7 @@ def _demote_headings(body: str) -> str:
 def render_page(artifact: Artifact, chrome: dict) -> str:
     phase_label = chrome["phase_labels"][artifact.phase]
     lines: list[str] = []
+    lines.append(_render_frontmatter(title=artifact.name, content_mode="reference"))
     lines.append(f"# {artifact.name}")
     lines.append("")
     lines.append(f"_{artifact.description}_")
@@ -473,6 +498,7 @@ def emit_section(
     intro_key = f"{section}_intro"
 
     index_lines: list[str] = []
+    index_lines.append(_render_frontmatter(title=chrome[title_key], content_mode="meta"))
     index_lines.append(f"# {chrome[title_key]}")
     index_lines.append("")
     index_lines.append(chrome[intro_key])
@@ -522,6 +548,7 @@ def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> No
 
     path = DOCS_DIR / lang / "tags.md"
     lines: list[str] = []
+    lines.append(_render_frontmatter(title=chrome["tags_title"], content_mode="meta"))
     lines.append(f"# {chrome['tags_title']}")
     lines.append("")
     lines.append(chrome['tags_intro'])

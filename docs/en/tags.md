@@ -1,3 +1,11 @@
+---
+title: Tags
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: generated
+---
+
 # Tags
 
 Cross-reference: each tag links to every skill and agent that declares it.
