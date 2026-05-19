@@ -64,9 +64,84 @@ entries:
     since: 2026-04-23
     source_of_truth: .pre-commit-config.yaml
 
+  - name: gh-plumbing
+    kind: ci
+    role: Portfolio CI/CD anchor providing reusable GitHub Actions workflows
+      (mkdocs deploy, release-drafter, automerge, release-cd-refresh-master)
+      consumed by every nolte/* repository.
+    status: active
+    lifecycle: build
+    since: 2026-05-18
+    source_of_truth: .github/workflows/
+
+  - name: release-drafter
+    kind: other
+    role: Release-notes drafter that aggregates merged PRs into a draft
+      GitHub Release between version cuts, wired via a gh-plumbing reusable
+      workflow.
+    status: active
+    lifecycle: build
+    since: 2026-05-18
+    source_of_truth: .github/release-drafter.yml
+
+  - name: probot-settings
+    kind: other
+    role: Probot GitHub App that materialises .github/settings.yml (branch
+      protection, labels, required checks) onto every nolte/* repository.
+    status: active
+    lifecycle: development
+    since: 2026-05-18
+    source_of_truth: .github/settings.yml
+
+  - name: boring-cyborg
+    kind: other
+    role: Probot GitHub App that auto-labels PRs by touched paths and
+      welcomes first-time contributors per .github/boring-cyborg.yml.
+    status: active
+    lifecycle: development
+    since: 2026-05-18
+    source_of_truth: .github/boring-cyborg.yml
+
+  - name: stale-bot
+    kind: other
+    role: Probot GitHub App that closes stale issues and PRs per
+      .github/stale.yml.
+    status: active
+    lifecycle: development
+    since: 2026-05-18
+    source_of_truth: .github/stale.yml
+
+  - name: claude-code
+    kind: runtime
+    role: Host runtime that loads and executes skills and agents shipped by
+      this plugin in contributor and end-user sessions.
+    status: active
+    lifecycle: all
+    since: 2026-05-18
+    source_of_truth: .claude-plugin/plugin.json
+
+  - name: claude-code-plugin
+    kind: framework
+    role: Claude Code plugin shape defining the skills/<name>/SKILL.md and
+      agents/<name>.md source layout plus the plugin/marketplace manifests.
+    status: active
+    lifecycle: all
+    since: 2026-05-18
+    source_of_truth: .claude-plugin/plugin.json
+
 notes: |
   The portfolio standardises on MkDocs for documentation, Renovate as the
-  dependency bot, GitHub Actions for continuous integration, and Task as the
-  build orchestrator. Per-repository extensions (language, runtime,
-  package-manager, deploy-target) belong in each consumer's
-  project/portfolio.yml under tech_stack: rather than here.
+  dependency bot, GitHub Actions for continuous integration, Task as the
+  build orchestrator, and nolte/gh-plumbing as the source of reusable CI/CD
+  workflows. Release-drafter plus the Probot apps (settings, boring-cyborg,
+  stale) provide repo-governance automation across the portfolio. Claude
+  Code is the host runtime for the skills and agents this plugin ships;
+  claude-code-plugin captures the plugin-shaped repository layout used by
+  every nolte/* repository that distributes Claude Code capabilities.
+
+  Per-repository extensions (language, package-manager, deploy-target,
+  repo-specific frameworks) belong in each consumer's project/portfolio.yml
+  under tech_stack: rather than here. The kind: other entries above are
+  watchlist candidates per spec/portfolio/tech-stack/ §Kind enum: after two
+  consecutive quarterly audits or 180 days, the enum is revised rather than
+  letting other become a hidden bucket.
