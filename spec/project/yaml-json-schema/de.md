@@ -4,6 +4,8 @@ Status: draft
 
 ## Kontext
 
+Leser: Schema-Autoren (das primäre Subjekt jeder MUSS-Regel weiter unten), CI- / Quality-Gate-Maintainer (die Meta-Validierung und Datenkonformität in `task lint` verdrahten) und Schema-Konsumenten quer durchs Portfolio (die `$id`-URIs in eigenen `$ref`-Zielen pinnen).
+
 Über das Portfolio hinweg werden Konfigurationen, Manifeste und strukturierte Datenformate zunehmend durch Schemata beschrieben — Frontmatter-Formen für `project/features/`, der `project/portfolio.yml`-Umschlag pro Repo, GitHub-Actions-Inputs, MkDocs-Plugin-Konfigurationen, eigene Ansible-Inventory-Layouts sowie die JSON-Schema-Descriptoren, die daneben ausgeliefert werden. Die Portfolio-Konvention ist, diese Schemata als **JSON-Schema-2020-12-Dokumente in YAML-Notation** zu führen statt in JSON: YAML trägt Kommentare, unterstützt mehrzeilige Literal-Strings und liest sich für hand-autorisierte Schema-Dokumente besser als das JSON-Pendant.
 
 Ohne verbindliche Konvention driftet hand-autorisiertes Schema-Material entlang mehrerer Achsen: welche `$schema`-Dialekt-URI kanonisch ist, ob `$id` Pflicht ist, wo wiederverwendbare Sub-Schemata leben (inline `properties` vs `$defs` vs separate Dateien), ob Keywords snake_case oder camelCase folgen, ob `examples` und `default`-Werte erhalten bleiben und welchen Validator ein CI-Gate annehmen darf. Isoliert ist die Drift nicht katastrophal, aber im Portfolio-Maßstab wird sie es: Zwei Repositories, die „dasselbe" Objekt beschreiben, landen bei zwei inkompatiblen Schemata, und ein Konsument kann die übergreifende Form nicht erschließen, ohne beide erneut zu lesen.
@@ -31,6 +33,7 @@ Die Spec begrenzt sich bewusst auf **JSON Schema 2020-12 in YAML**. JSON-codiert
 
 - Eine einzige JSON-Schema-Validator-Implementierung wählen. Die Validator-Wahl (`check-jsonschema`, `ajv-cli`, `python-jsonschema`, `jsonschema-rs`) bleibt eine Pro-Repo-Entscheidung, getrieben vom Sprach-Ökosystem, das das Projekt ohnehin nutzt.
 - Konventionen für OpenAPI-3.x-Schema-Objekte oder AsyncAPI-Schema-Objekte definieren. Diese Formate erben *das meiste* von JSON Schema, weichen aber an bekannten Stellen ab (`nullable`, `discriminator`, `example` vs `examples`) und brauchen eine eigene Spec.
+- Schemata als JSON-codierte Dateien (`*.json` oder `*.schema.json`) autorisieren. Die Portfolio-Autorisierungsregel ist YAML-only — `*.schema.yaml` ist die einzige Autorisierungsform, die diese Spec anerkennt. JSON-codierte Schemata bleiben verboten, bis eine eigene Spec sie regiert; nachgelagerte Konsumenten, die ein JSON-Artefakt brauchen, erzeugen es zur Build-Zeit aus der YAML-Quelle via `yq -o json` (oder einer äquivalenten Transformation).
 - `spec/project/feature/` (welche den *Inhalt* von Feature-Frontmatter regiert) durch eine Schema-Spec ersetzen. Diese Spec handelt von Form und Lebenszyklus der Schema-Dateien; die Frontmatter-Spec bleibt verbindlich dafür, *was* Feature-Frontmatter enthält.
 - Häufig geteilte Schemata in einem portfolio-weiten Registry-Verzeichnis zentralisieren. Die Portfolio-Policy ist Repo-lokale Ablage; repository-übergreifendes Teilen wird durch `$id`-Disziplin und absolute `$ref`-URIs in den GitHub-Pfad des besitzenden Repos gelöst, nicht durch ein gemeinsames Verzeichnis unter `spec/portfolio/<topic>/schemas/`.
 - Code-Generierung aus Schemata vorschreiben (Pydantic-Modelle, TypeScript-Typen, Go-Structs). Generierung ist erlaubt, bleibt aber außerhalb der MUSS/SOLL/DARF-Fläche dieser Spec — das ist eine künftige Spec.
@@ -130,12 +133,14 @@ Innerhalb von `properties` und innerhalb von `$defs` **MUSS** jedes einzelne Pro
 - [ ] Jedes Property-Sub-Schema innerhalb der obersten `properties` trägt eine `description`; das Meta-Validierungs-Gate scheitert auf fehlenden Descriptions.
 - [ ] Der Skill `nolte-shared:yaml-json-schema` existiert und seine `SKILL.md` zitiert diese Spec per `spec/project/yaml-json-schema/`.
 - [ ] Das README des Repositories (oder ein `schemas/README.md`) zählt jede ausgelieferte `*.schema.yaml`-Datei auf, mit ihrer `$id`, ihrem Title und ihrer konsumierenden Spec.
+- [ ] Jede `*.schema.yaml`-Datei trägt die zehn Top-Level-Schlüssel aus §Dokument-Skelett in der deklarierten Reihenfolge; der Lint-Schritt weist eine Datei mit einem fehl-geordneten Schlüssel, einem fehlenden Pflicht-Schlüssel oder einem zusätzlichen Top-Level-Schlüssel (zum Beispiel jegliche `x-…`-Erweiterung) mit nicht-null Exit-Code zurück.
+- [ ] Jedes Property-Sub-Schema innerhalb der obersten `properties` trägt entweder ein `type`-Keyword oder eine `oneOf` / `anyOf` / `enum`-Komposition, die die Form einschränkt; Sub-Schemata ohne beides werden vom Lint-Schritt gemeldet (das JSON-Schema-Meta-Schema erzwingt das nicht von sich aus).
+- [ ] Keine `*.schema.yaml`-Datei wird nach ihrem ersten Commit in-place editiert; jede Revision erscheint im Diff als neue Datei `<slug>-v<major>.<minor+1>.schema.yaml` (Minor-Bump) oder `<slug>-v<major+1>.0.schema.yaml` (Major-Bump) neben der vorherigen Datei, und die vorherige Datei wird erst in einem Folge-Commit entfernt, sobald kein Konsument ihre `$id` mehr pinnt.
 
 ## Offene Fragen
 
 - Soll die Spec `unevaluatedProperties: false` zusätzlich zu `additionalProperties: false` für geschlossene Objekt-Schemata mit `allOf`-Komposition vorschreiben, oder reicht die einfachere Regel, bis Komposition häufig wird?
 - Soll Code-Generierung aus Schemata (Pydantic, TypeScript, Go) in einer Folge-Revision zu einem SOLL werden, und welcher Generator wird der Portfolio-Default?
-- Sollen `*.json`-Schema-Dateien überhaupt zulässig sein (mit denselben `$schema`/`$id`/Skelett-Regeln), oder erzwingt das Portfolio YAML-only-Autoring, selbst wenn ein externer Konsument JSON bevorzugt?
 
 ## Referenzen
 

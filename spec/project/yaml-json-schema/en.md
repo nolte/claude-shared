@@ -4,6 +4,8 @@ Status: draft
 
 ## Context
 
+Readers: schema authors (the primary subject of every MUST rule below), CI / quality-gate maintainers (who wire meta-validation and data-conformance into `task lint`), and schema consumers across the portfolio (who pin `$id` URIs in their own `$ref` targets).
+
 Across the portfolio, configuration, manifests, and structured data formats are increasingly described by schemas — frontmatter shapes for `project/features/`, the per-repo `project/portfolio.yml` envelope, GitHub Actions inputs, MkDocs plugin configuration, custom Ansible inventory layouts, and the JSON-Schema descriptors that ship next to them. The portfolio convention is to author those schemas as **JSON Schema 2020-12 documents in YAML notation** rather than in JSON: YAML carries comments, supports multi-line literal strings, and reads better than the JSON equivalent for the size of schema documents authored by hand.
 
 Without a binding convention, hand-authored schema files drift along several axes: which `$schema` dialect URI is canonical, whether `$id` is required, where reusable sub-schemas live (inline `properties` vs `$defs` vs separate files), whether keywords follow snake_case or camelCase, whether examples and `default` values are kept, and which validator a CI gate is allowed to assume. The drift is not catastrophic in isolation but becomes catastrophic across a portfolio: two repositories describing the "same" object end up with two incompatible schemas, and a consumer can't reason about the wider shape without re-reading both.
@@ -31,6 +33,7 @@ The spec deliberately scopes itself to **JSON Schema 2020-12 in YAML**. JSON-enc
 
 - Choosing a single JSON Schema validator implementation. Validator choice (`check-jsonschema`, `ajv-cli`, `python-jsonschema`, `jsonschema-rs`) stays a per-repo decision driven by the language ecosystem the project already uses.
 - Defining OpenAPI 3.x Schema Object or AsyncAPI Schema Object conventions. Those formats inherit *most* of JSON Schema but diverge in well-known ways (`nullable`, `discriminator`, `example` vs `examples`) and need their own spec.
+- Authoring schemas as JSON-encoded files (`*.json` or `*.schema.json`). The portfolio's authoring rule is YAML-only — `*.schema.yaml` is the only authoring form this spec recognises. JSON-encoded schemas remain forbidden until a separate spec governs them; downstream consumers that need a JSON artefact derive it at build time via `yq -o json` (or an equivalent transform) from the YAML source.
 - Replacing `spec/project/feature/` (which governs the *content* of feature frontmatter) with a schema spec. This spec is about the shape and lifecycle of schema files; the frontmatter spec stays authoritative for what feature frontmatter contains.
 - Centralising frequently-shared schemas in a portfolio-wide registry directory. The portfolio policy is repo-local placement; cross-repository sharing is solved through `$id` discipline and absolute `$ref` URIs into the owning repo's GitHub path, not through a shared directory under `spec/portfolio/<topic>/schemas/`.
 - Mandating code-generation from schemas (Pydantic models, TypeScript types, Go structs). Generation is permitted but stays out of this spec's MUST/SHOULD/MAY surface — that's a future spec.
@@ -130,12 +133,14 @@ Inside `properties` and inside `$defs`, every individual property sub-schema MUS
 - [ ] Every property sub-schema inside top-level `properties` carries a `description`; the meta-validation gate fails on missing descriptions.
 - [ ] The `nolte-shared:yaml-json-schema` skill exists and its `SKILL.md` cites this spec by `spec/project/yaml-json-schema/`.
 - [ ] The repository's README (or a `schemas/README.md`) enumerates every shipped `*.schema.yaml` file with its `$id`, title, and consuming spec.
+- [ ] Every `*.schema.yaml` file carries the ten top-level keys from §Document skeleton in the declared order; the lint step rejects a file with an out-of-order key, a missing required key, or an extra top-level key (for example any `x-…` extension) with a non-zero exit code.
+- [ ] Every property sub-schema inside top-level `properties` carries either a `type` keyword or a `oneOf` / `anyOf` / `enum` composition that constrains its shape; sub-schemas with neither are reported by the lint step (the JSON Schema meta-schema does not enforce this on its own).
+- [ ] No `*.schema.yaml` file is edited in place after its first commit; every revision appears in the diff as a new file `<slug>-v<major>.<minor+1>.schema.yaml` (minor bump) or `<slug>-v<major+1>.0.schema.yaml` (major bump) alongside the previous file, and the previous file is removed only in a follow-up commit once no consumer still pins its `$id`.
 
 ## Open Questions
 
 - Should the spec mandate `unevaluatedProperties: false` in addition to `additionalProperties: false` for closed object schemas with `allOf` composition, or is the simpler rule sufficient until composition becomes common?
 - Should code generation from schemas (Pydantic, TypeScript, Go) become a SHOULD in a follow-up revision, and which generator becomes the portfolio default?
-- Should `*.json` schema files be permitted at all (with the same `$schema`/`$id`/skeleton rules), or does the portfolio enforce YAML-only authoring even when an external consumer prefers JSON?
 
 ## References
 
