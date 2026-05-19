@@ -99,7 +99,7 @@ Innerhalb von `properties` und innerhalb von `$defs` **MUSS** jedes einzelne Pro
 ### Dokumentation und Auffindbarkeit
 
 - **MUSS** in der `description` auf oberster Ebene jedes Schemas die konsumierende Spec benennen, mittels des Literal-Teilstrings `Refs spec/<topic>/<slug>/`. Das ist dieselbe `Refs`-Form, die in Pull-Request-Bodies verwendet wird (per `spec/project/pull-request-workflow/`), und holt Schema-Dateien in denselben Traceability-Graphen.
-- **SOLLTE** einen Header-YAML-Kommentarblock (Zeilen, die mit `# ` beginnen) über `$schema` tragen, der den Zweck des Schemas für einen menschlichen Leser zusammenfasst, insbesondere wenn das Schema mehr als ~30 Zeilen umfasst.
+- **SOLLTE** einen Header-YAML-Kommentarblock (Zeilen, die mit `#` und einem Leerzeichen beginnen) über `$schema` tragen, der den Zweck des Schemas für einen menschlichen Leser zusammenfasst, insbesondere wenn das Schema mehr als ~30 Zeilen umfasst.
 - **MUSS** jede Schema-Datei im README des Repositories oder in einem neben den Schemata abgelegten `schemas/README.md` auflisten, sodass ein Leser, der ohne Vorwissen im Repo landet, die Schemata ohne Filesystem-Grep aufzählen kann.
 
 ### Meta-Validierung und Datenvalidierung
