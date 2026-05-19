@@ -107,6 +107,7 @@ The skill returns to the user, in this order:
 5. **Always** read the spec at runtime: prefer the target repo's `spec/project/docs-audience-tracks/<canonical_language>.md`; fall back to the copy shipped by the `nolte-shared` plugin only when the target repo lacks one. Never carry a baked-in copy inside the skill itself.
 6. **Always** verify the build after every write: `mkdocs build --strict` must run green before the operation ends. A red build stops the operation.
 7. **Always** preserve existing frontmatter keys when patching `track:` onto a page that already has `title` / `audience` / `content_mode` / `last_updated`. Add `track:` in its canonical position (between `content_mode` and `last_updated`) without touching the other keys.
+8. **Always** apply content-block scaffolds and frontmatter patches symmetrically across every language tree configured in `spec/.spec-config.yml`'s `languages` list, per `spec/project/docs-multilingual-authoring/` §Authoring protocol. Adding a `track:` key to `docs/<canonical_language>/foo.md` without applying the same patch to every counterpart in `docs/<other_language>/foo.md` is a violation; scaffolding a placeholder block in one language tree without writing the counterpart in every other configured language tree is a violation.
 
 ## Sources
 
