@@ -121,7 +121,9 @@ capabilities:
 # Inheritance is additive: the entries in portfolio/tech-stack.yml are implicitly
 # inherited unless explicitly overridden below. claude-shared inherits the
 # full global stack (mkdocs, renovate, github-actions, task, vale, pre-commit,
-# markdownlint) and adds Python for the MkDocs build and local scripts.
+# markdownlint, gh-plumbing, release-drafter, probot-settings, boring-cyborg,
+# stale-bot, claude-code, claude-code-plugin) and adds Python plus the two
+# deploy targets specific to this repository.
 tech_stack:
   additions:
     - name: python
@@ -131,3 +133,19 @@ tech_stack:
       lifecycle: build
       since: 2026-04-23
       source_of_truth: docs/requirements.txt
+
+    - name: github-pages
+      kind: deploy-target
+      role: Hosts the rendered MkDocs site delivered by the release-cd-deliver-docs.yml workflow.
+      status: active
+      lifecycle: runtime
+      since: 2026-05-18
+      source_of_truth: .github/workflows/release-cd-deliver-docs.yml
+
+    - name: claude-code-marketplace
+      kind: deploy-target
+      role: Plugin distribution channel; downstream nolte/* repos install nolte-shared by referencing the marketplace manifest.
+      status: active
+      lifecycle: runtime
+      since: 2026-05-18
+      source_of_truth: .claude-plugin/marketplace.json
