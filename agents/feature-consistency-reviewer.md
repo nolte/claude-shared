@@ -4,6 +4,7 @@ description: "Reviews a draft feature file under `project/features/<slug>.md` fo
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
+phase: plan
 ---
 
 # Feature Consistency Reviewer

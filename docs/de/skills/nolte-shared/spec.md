@@ -3,6 +3,7 @@
 _Create, translate, index, deduplicate, and drift-check multilingual specifications stored under the project's spec/ folder. Invoke when the user wants to write a new spec, update or translate an existing one, check whether a requirement is already covered, regenerate the spec index, or verify that translations are still in sync with the canonical version. Supports writing the request in any configured language; specs on disk always exist in all configured languages, with one canonical source and the rest as translations kept strictly in sync._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/spec/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/spec/SKILL.md)
 

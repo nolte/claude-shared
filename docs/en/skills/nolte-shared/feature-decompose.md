@@ -3,6 +3,7 @@
 _Decompose a roadmap item (R-<n>) into one or more `project/features/<slug>.md` files conforming to spec/project/feature/<canonical_language>.md. Invoke when the user asks to decompose a roadmap item, break down R-<n> into features, draft features for a roadmap entry, scaffold a feature file, plan features for the next sprint, or write a new feature against the feature spec. Also handles equivalent German-language requests. Walks the operator through title, description, three-to-seven testable acceptance criteria, and test hooks per feature; identifies which feature carries `verifies_sprint_value`; and dispatches the `feature-consistency-reviewer` agent (or records a manual fallback pass) before allowing the new feature to leave `draft`. Do NOT use to transition feature status (`ready → in_progress` or `in_progress → done`) — that is owned by `sprint-execute` and `sprint-review`. Do NOT use to author roadmap items, sprints, or the mission file._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 2 Plan (`plan`)
 - **Tags:** `scaffolding`
 - **Source:** [skills/feature-decompose/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/feature-decompose/SKILL.md)
 

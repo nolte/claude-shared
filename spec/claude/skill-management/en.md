@@ -27,6 +27,7 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 - **MUST** keep instructions inside `SKILL.md` in English for token efficiency; the skill may still instruct Claude to respond to the user in the user's language
 - **MUST** be self-contained—any supporting assets (templates, references, examples) live inside the skill folder
 - **MAY** include an optional `tags` field in YAML frontmatter: a list of lowercase ASCII kebab-case strings, each ≤30 characters, with no more than 5 entries; tags provide thematic grouping so the catalog (`skill-agent-catalog`) and peer-cluster lookups (`skill-vs-agent` §Portfolio-wide consistency) can browse by topic
+- **MUST** include a `phase` field in YAML frontmatter whose value is exactly one identifier from the eight-value vocabulary declared in `skill-agent-catalog` §Phase classification (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); the catalog generator fails the docs build when `phase` is missing or out of vocabulary
 
 ### Frontmatter validation (Agent Skills spec & Anthropic platform limits)
 
@@ -136,6 +137,7 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - [ ] `name` in frontmatter equals the folder name
 - [ ] `description` mentions the concrete user phrasings that should trigger the skill
 - [ ] If `tags` is declared in frontmatter, every entry is a lowercase ASCII kebab-case string ≤30 characters and the list contains at most 5 entries
+- [ ] Frontmatter declares a `phase` field whose value is one of `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, or `cross-cutting`
 - [ ] Skill works when invoked in a downstream project that doesn't contain `claude-shared`-specific context, loaded through the plugin
 - [ ] No hard-coded absolute paths; all internal paths are relative to the skill folder or the project the skill operates on
 - [ ] If the skill writes files, the target locations and preconditions are documented

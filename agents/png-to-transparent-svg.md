@@ -5,6 +5,7 @@ distribution: plugin
 tools: Read, Bash, Glob
 model: sonnet
 tags: [scaffolding]
+phase: cross-cutting
 ---
 
 # PNG to Transparent SVG

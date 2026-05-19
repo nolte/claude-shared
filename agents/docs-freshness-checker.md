@@ -5,6 +5,7 @@ distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet
 tags: [audit, prose]
+phase: quality
 ---
 
 # Documentation Freshness Checker

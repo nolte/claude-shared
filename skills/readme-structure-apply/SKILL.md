@@ -2,6 +2,7 @@
 name: readme-structure-apply
 description: "Audits the repository's `README.md` against spec/project/readme-structure/<canonical_language>.md and, with per-item user approval, scaffolds or patches the file: H1 + tagline, CI badges, the six required `##` sections in the right order (Purpose, Usage / Installation / Getting started, Structure, Related repositories, Status, License), the consumer-first ordering rule, the ≤200-line length budget, the relative-LICENSE-link rule, and the absolute-cross-repo-link rule. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield: no README yet), `patch` (additive fix for an existing README). Invoke when the user asks to apply, audit, scaffold, or patch the README against the spec; also handles equivalent German-language requests. Don't use for page content under `docs/` (use `audience-doc-author`), for the seven-section MkDocs nav (use `mkdocs-structure-apply`), for Vale prose linting (use `prose-vale-curator`), or for the audience artefact itself (use `audience-identify`)."
 tags: [scaffolding, audit]
+phase: design
 ---
 
 # README Structure Apply

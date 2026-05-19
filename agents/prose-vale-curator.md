@@ -4,6 +4,7 @@ description: "Curates prose in the current project so it passes Vale, prefers te
 distribution: plugin
 tools: Read, Edit, Grep, Glob, Bash
 tags: [prose, audit]
+phase: quality
 ---
 
 # Prose Vale Curator

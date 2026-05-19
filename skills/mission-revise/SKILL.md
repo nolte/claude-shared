@@ -2,6 +2,7 @@
 name: mission-revise
 description: "Revises an existing `project/mission.md` per spec/project/mission/<canonical_language>.md. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests (\"Mission überarbeiten\", \"mvp_status umstellen\", \"die Mission ist stabilisiert\"). Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`."
 tags: [scaffolding]
+phase: vision
 ---
 
 # Mission Revise

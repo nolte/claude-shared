@@ -3,6 +3,7 @@
 _Audits a repository against spec/project/docs-audience-tracks/<canonical_language>.md and, with per-item user approval, scaffolds or patches the documentation-tracks layer: per-page `track:` frontmatter on every docs/<lang>/ page, the four required user-docs content blocks (installation, value proposition, audience, use cases) plus the SHOULD blocks (quickstart, troubleshooting), the three required developer-docs content blocks (setup, tech-stack, interfaces) plus the SHOULD blocks (architecture overview, glossary, troubleshooting, contribution flow), and the audience-to-track mapping inside the project's audience artefact. Three operations: `audit` (read-only conformance report), `migrate` (greenfield: add track frontmatter to every page that lacks it, scaffold missing content blocks), `patch` (additive fixes for one finding at a time). Invoke when the user asks to apply, audit, migrate, or patch documentation tracks against the spec; also handles equivalent German-language requests. Don't use for the MkDocs structural skeleton (use `mkdocs-structure-apply`), for the audience artefact itself (use `audience-identify`), for page content authoring (use `audience-doc-author`), for drift detection (use `docs-freshness-checker`), or for `prose` mechanics (use `prose-vale-curator`)._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`
 - **Source:** [skills/docs-audience-tracks-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/docs-audience-tracks-apply/SKILL.md)
 

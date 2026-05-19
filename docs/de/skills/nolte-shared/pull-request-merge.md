@@ -3,6 +3,7 @@
 _Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 5 Review (`review`)
 - **Tags:** `pull-request`
 - **Quelle:** [skills/pull-request-merge/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/pull-request-merge/SKILL.md)
 

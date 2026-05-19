@@ -3,6 +3,7 @@
 _Audits and applies the MkDocs Mermaid setup of the current repository against `spec/project/mermaid-diagrams/<canonical_language>.md`, and helps an author add a single Mermaid diagram (hand-described or derived). Wires up `pymdownx.superfences`, pins `pymdown-extensions`, refuses `mkdocs-mermaid2-plugin`. Picks the diagram type from the supported catalog and prepends the mandatory `<!-- diagram-source ... -->` marker. Audits flag missing source markers, missing direction headers, inline styling, `gitGraph` usage, non-English labels, and derived-source drift. Invoke when the user asks to "wire up Mermaid", "audit Mermaid setup", "draft a flowchart", or equivalent German-language requests. Don't use for general MkDocs scaffolding (use `project-structure-apply`), spec authoring (use `spec`), the docs-freshness audit (use `docs-freshness-checker`), or non-Mermaid diagrams._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`
 - **Source:** [skills/mermaid-diagrams-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/mermaid-diagrams-apply/SKILL.md)
 

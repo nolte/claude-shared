@@ -23,6 +23,7 @@ description: >-
   `spec/project/feature/`), or for project-structure scaffolding (use
   `project-structure-apply`).
 tags: [scaffolding, audit, validation]
+phase: design
 ---
 
 # YAML JSON Schema

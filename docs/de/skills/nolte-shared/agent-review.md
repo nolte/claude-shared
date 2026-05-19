@@ -3,6 +3,7 @@
 _Review a Claude Code agent against spec/claude/agent-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/agent-review/<agent-name>.md. Invoke when the user asks "review this agent", "audit agents/<name>.md", "check whether this agent is spec-compliant", "agent review for <name>", "prüfe diesen Agent", "Agent-Review für X", "Audit von agents/<name>.md", or "ist dieser Agent spec-konform". Also handles closing an existing review plan once every item is addressed — "close the agent review plan for <name>", "schließe den Agent-Review-Plan". Do NOT use for skill review (use skill-review) or for pull-request-level review (`review` skill)._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 5 Review (`review`)
 - **Tags:** `review`
 - **Quelle:** [skills/agent-review/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/agent-review/SKILL.md)
 

@@ -3,6 +3,7 @@
 _Run the project's lint + typecheck + test gate in parallel, tabulate the results, and call out exactly which checks failed so the caller can triage before a commit, a PR, or a release. Prefers repository-declared Taskfile targets (`task lint`, `task test`, `task typecheck`, `task check`) when they exist so project conventions and ignore lists are honoured; otherwise detects and runs the native tooling directly (ruff, pytest, eslint, tsc, vitest, go test, cargo test, and similar). Invoke when the user asks to "run the quality gate," "run lint and tests," "make sure CI will pass," "run all checks before I commit," or equivalent German-language requests ("Quality-Gate ausführen," "vor dem Commit prüfen," "Linting und Tests laufen lassen"). Don't use for security/CVE scanning (that's `dependency-audit`) and don't use for documentation builds (those are a separate concern)._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 6 Quality (`quality`)
 - **Tags:** `quality-gate`
 - **Quelle:** [skills/quality-gate/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/quality-gate/SKILL.md)
 

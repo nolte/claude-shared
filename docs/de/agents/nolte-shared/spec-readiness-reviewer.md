@@ -3,6 +3,7 @@
 _Audits one or more specifications under `spec/<topic>/<slug>/` for downstream readiness along three dimensions — contradictions (intra- and cross-spec), audience fit, and domain completeness (Requirements ↔ Acceptance Criteria coverage, load-bearing Open Questions, ghost references to non-existent specs). Read-only: produces a severity-sorted report, never edits specs. Invoke when the user asks to \"check this spec for contradictions\", \"audit spec readiness before promotion\", \"find gaps in the spec\", \"pre-promotion review of spec X\", or equivalent German-language requests. Don't use for authoring or translating specs (use `spec`), spec-versus-implementation reconciliation (use `spec-drift-audit`), creating an audience artefact from scratch (use `audience-identify`), or prose / vocabulary linting (use `prose-vale-curator`)._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Distribution:** `plugin`
 - **Tags:** `review`, `audit`
 - **Quelle:** [agents/spec-readiness-reviewer.md](https://github.com/nolte/claude-shared/blob/main/agents/spec-readiness-reviewer.md)

@@ -2,6 +2,7 @@
 name: vocab-drift-audit
 description: Audit repository-local Vale vocabularies against the pinned upstream release of nolte/vale-style to detect drift. Invoke when the user asks to audit the Vale vocabulary, check for vocabulary drift, diff the local vocab against nolte/vale-style, or review whether local Vale terms can be retired. Also handles equivalent German-language requests. Reports local entries that are already accepted upstream (should be deleted) and local entries that aren't yet upstream (should be PR'd to nolte/vale-style).
 tags: [audit]
+phase: quality
 ---
 
 # Vocab Drift Audit

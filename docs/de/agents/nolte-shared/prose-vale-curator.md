@@ -3,6 +3,7 @@
 _Curates prose in the current project so it passes Vale, prefers terms from the shipped vocabularies for consistency, and—only inside a repository that owns Vale vocabulary source (for example nolte/vale-style)—extends an `accept.txt` when a term is a legitimate technical identifier that rephrasing would strip of precision. Invoke when the user says \"make this doc Vale-clean\", \"fix the Vale alerts in README.md\", \"rephrase until vale is green\", or equivalent German-language requests. Don't use for net-new documentation (use `audience-doc-author`), for auditing whether local vocabulary entries should be retired or upstreamed (use `vocab-drift-audit`), or for authoring new Vale style rule YAML. Returns edited files, a per-file before/after alert count, a list of rephrases, a list of vocabulary additions, and upstream-candidate terms when the current repo doesn't own the vocabulary source._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 6 Quality (`quality`)
 - **Distribution:** `plugin`
 - **Tags:** `prose`, `audit`
 - **Quelle:** [agents/prose-vale-curator.md](https://github.com/nolte/claude-shared/blob/main/agents/prose-vale-curator.md)

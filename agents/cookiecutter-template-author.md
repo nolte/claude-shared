@@ -4,6 +4,7 @@ description: Scaffold a new Cookiecutter template **for a nolte-spec-conformant 
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch
 tags: [scaffolding, quality-gate]
+phase: cross-cutting
 ---
 
 # Cookiecutter Template Author

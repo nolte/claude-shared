@@ -3,6 +3,7 @@
 _Audits a repository against spec/project/mkdocs-structure/<canonical_language>.md and, with per-item user approval, scaffolds or patches the MkDocs skeleton: per-language docs/<lang>/ tree, seven standard nav sections, plugin baseline (incl. mkdocs-include-markdown-plugin), pinned dep manifest, per-page frontmatter contract. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fixes). Invoke when the user asks to apply, audit, scaffold, or patch MkDocs against the spec; also handles equivalent German-language requests. Don't use for theme/typography decisions (per-repo), page-content authoring (use `audience-doc-author`), DRY refactoring (use `docs-dry-refactor` when present), drift detection (use `docs-freshness-checker`), or catalog generator wiring (use `skill-agent-catalog-apply`; this skill only verifies the catalog extension's MUSTs at the baseline level)._
 
 - **Plugin:** `nolte-shared`
+- **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`
 - **Source:** [skills/mkdocs-structure-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/mkdocs-structure-apply/SKILL.md)
 

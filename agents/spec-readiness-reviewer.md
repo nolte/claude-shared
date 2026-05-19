@@ -5,6 +5,7 @@ distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet
 tags: [review, audit]
+phase: design
 ---
 
 # Spec Readiness Reviewer
