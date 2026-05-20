@@ -69,7 +69,7 @@ The set of available agents changes over time; never freeze a snapshot of "which
 
 The dynamic-lookup design means a new specialised agent that lands in `agents/` becomes dispatchable immediately, without a coordinated edit to this skill — and a renamed or removed agent stops being a target the next time the skill runs, with no stale snapshot to mislead the dispatch.
 
-#### Old patterns
+## Old patterns
 
 Earlier revisions of this skill enumerated specific agent names inline (for example `workflow-yaml-fixer`, `claude-plugin-developer`, `audience-doc-author`) as the dispatch table. That snapshot rotted whenever a new agent landed or an existing one renamed; the runtime-Glob design above replaces it. The historical mapping is preserved here only so a reader who recognises the prior wording can spot the transition: `defect` in workflow YAML used to fall back to generalist (no matching agent), `defect` in spec / skill / agent files used to dispatch `claude-plugin-developer`, `defect` in documentation used to dispatch `audience-doc-author`. Use the runtime lookup above instead of this snapshot.
 

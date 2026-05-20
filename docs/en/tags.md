@@ -41,6 +41,14 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [dependency-audit](skills/nolte-shared/dependency-audit.md) — nolte-shared
 
+## `lifecycle`
+
+- [sprint-execute](skills/nolte-shared/sprint-execute.md) — nolte-shared
+
+## `planning`
+
+- [roadmap-planner](skills/nolte-shared/roadmap-planner.md) — nolte-shared
+
 ## `prose`
 
 - [audience-doc-author](agents/nolte-shared/audience-doc-author.md) — nolte-shared
@@ -91,11 +99,9 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [project-structure-apply](skills/nolte-shared/project-structure-apply.md) — nolte-shared
 - [readme-structure-apply](skills/nolte-shared/readme-structure-apply.md) — nolte-shared
 - [roadmap-init](skills/nolte-shared/roadmap-init.md) — nolte-shared
-- [roadmap-planner](skills/nolte-shared/roadmap-planner.md) — nolte-shared
 - [skill-agent-catalog-apply](skills/nolte-shared/skill-agent-catalog-apply.md) — nolte-shared
 - [skill-management](skills/nolte-shared/skill-management.md) — nolte-shared
 - [spec](skills/nolte-shared/spec.md) — nolte-shared
-- [sprint-execute](skills/nolte-shared/sprint-execute.md) — nolte-shared
 - [sprint-plan](skills/nolte-shared/sprint-plan.md) — nolte-shared
 - [sprint-review](skills/nolte-shared/sprint-review.md) — nolte-shared
 - [tech-stack-capture](skills/nolte-shared/tech-stack-capture.md) — nolte-shared

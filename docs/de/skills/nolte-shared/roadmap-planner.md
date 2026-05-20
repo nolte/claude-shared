@@ -12,7 +12,7 @@ _Adds, retargets, and reshapes roadmap items in `project/roadmap.md` per `spec/p
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
-- **Tags:** `scaffolding`
+- **Tags:** `planning`
 - **Quelle:** [skills/roadmap-planner/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/roadmap-planner/SKILL.md)
 
 ---
