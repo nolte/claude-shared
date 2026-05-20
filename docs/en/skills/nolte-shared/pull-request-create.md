@@ -149,6 +149,12 @@ Once the title and body are approved, and only then:
 
 If `gh pr create` fails because a PR already exists for this branch, switch to `gh pr edit` to update the existing PR's title and body instead of creating a new one.
 
+### Examples
+
+- Read `examples/01-fix-pr-on-feature-branch.md` when opening a `fix`-type PR on a feature branch for the first time.
+- Read `examples/02-feat-pr-with-spec-touch.md` when the PR touches files under `spec/` and the body needs spec autolinks.
+- Read `examples/03-branch-lags-develop.md` when the feature branch lags `origin/develop` and the skill must refuse until the branch is rebased.
+
 ### Hard rules
 
 - **Never** open a PR whose feature branch doesn't contain `origin/develop`'s tip. The branch-freshness check is mandatory, not advisory.

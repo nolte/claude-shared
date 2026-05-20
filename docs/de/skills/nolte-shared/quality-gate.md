@@ -8,7 +8,7 @@ last_updated: generated
 
 # quality-gate
 
-_Run the project's lint + typecheck + test gate in parallel, tabulate the results, and call out exactly which checks failed so the caller can triage before a commit, a PR, or a release. Prefers repository-declared Taskfile targets (`task lint`, `task test`, `task typecheck`, `task check`) when they exist so project conventions and ignore lists are honoured; otherwise detects and runs the native tooling directly (ruff, pytest, eslint, tsc, vitest, go test, cargo test, and similar). Invoke when the user asks to "run the quality gate," "run lint and tests," "make sure CI will pass," "run all checks before I commit," or equivalent German-language requests. Don't use for security/CVE scanning (that's `dependency-audit`) and don't use for documentation builds (those are a separate concern)._
+_Run the project's lint + typecheck + test gate in parallel, tabulate the results, and call out exactly which checks failed so the caller can triage before a commit, a PR, or a release. Prefers repository-declared Taskfile targets (`task lint`, `task test`, `task typecheck`, `task check`) when they exist so project conventions and ignore lists are honoured; otherwise detects and runs the native tooling directly (ruff, pytest, eslint, tsc, vitest, go test, cargo test, and similar). Invoke when the user asks to "run the quality gate," "run lint and tests," "make sure CI will pass," "run all checks before committing," or equivalent German-language requests. Don't use for security/CVE scanning (that's `dependency-audit`) and don't use for documentation builds (those are a separate concern)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
@@ -130,6 +130,12 @@ Below the table, for every `fail` or `timeout` row, append a one-paragraph excer
 - **All `pass`**: one-line green summary (`Quality gate passed — N checks green.`).
 - **Any `fail` / `timeout`**: red summary naming the failed checks and pointing at the excerpts below the table.
 - **Any `skipped: no tooling detected`**: mention them explicitly in the summary so the caller can decide whether they're acceptable (a pure-Python repo genuinely has no frontend lint) or a misconfiguration (missing `ruff` config).
+
+### Examples
+
+- Read `examples/01-task-targets-when-available.md` when Taskfile targets exist and the skill should prefer them over direct tool invocation.
+- Read `examples/02-native-fallback-no-taskfile.md` when no Taskfile is present and the skill must detect and run native tooling directly.
+- Read `examples/03-multi-language-monorepo.md` when the repository has multiple language subroots that each need a separate parallel scan.
 
 ### Hard rules
 

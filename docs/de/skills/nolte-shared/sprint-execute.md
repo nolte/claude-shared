@@ -112,6 +112,12 @@ When the user asks for any of the above, stop and surface the correct skill to i
 - **Acceptance criteria and test hooks are gated separately** for the `in_progress → done` transition. Operation C confirms both: every acceptance-criterion checkbox is checked AND every test hook reports `passing` or `skipped`. A skill or test hook still in `pending` blocks the transition even when the criteria are visually checked off.
 - **Roadmap-item promotion to `status: active`** is a side effect of the first feature transitioning to `in_progress` for that roadmap item. The skill writes the promotion silently (no operator dialogue), but the operator should be aware that a `proposed` roadmap item flips to `active` the first time a tied feature starts work.
 
+### Examples
+
+- Read `examples/01-start-feature-promotes-sprint.md` when starting the first feature in a planned sprint, which also promotes the sprint to `active`.
+- Read `examples/02-mark-feature-done-updates-last-commit.md` when marking a feature `done` and verifying that `last_commit` is updated on the sprint.
+- Read `examples/03-refuse-when-other-sprint-active.md` when a second sprint would become active and the skill must refuse the transition.
+
 ### Hard rules
 
 - **Never** allow two sprints to be `active` simultaneously. The at-most-one-active-sprint invariant is non-negotiable per `spec/project/sprint/` §Lifecycle; on conflict, refuse the offending feature transition and surface the conflicting sprint to the user.

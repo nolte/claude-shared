@@ -101,6 +101,12 @@ On run completion, the skill reports:
 - The final exit code (zero only when no violations remain after the walk).
 - When violations remain (the user deferred a fix), the skill keeps the exit code non-zero so calling automation sees the failure.
 
+## Examples
+
+- Read `examples/01-clean-no-violations.md` when all roadmap items are already spec-compliant and the skill produces a clean report.
+- Read `examples/02-coarse-near-sprint-violation.md` when a near-sprint item is still flagged `coarse` and the skill surfaces the violation.
+- Read `examples/03-walk-fixes-promote-and-retarget.md` when the walk phase fixes a coarse violation by promoting to `fine` and retargeting the item.
+
 ## Hard rules
 
 - **Never** resolve the current or next sprint by any rule other than the one declared in `spec/project/roadmap/` §Detail-level convention and refinement rule. The fallback chain (active → lowest planned → highest closed; next is lowest planned strictly greater than current) is exact and not negotiable.

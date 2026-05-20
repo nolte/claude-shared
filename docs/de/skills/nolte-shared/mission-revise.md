@@ -112,6 +112,12 @@ For every operation: present the diff (frontmatter delta plus body delta) back t
 - A regression flip (`stabilised → in_progress`) does **not** automatically halt post-MVP roadmap items already in `status: active` — the spec lets in-flight work finish. The skill only blocks **new** post-MVP starts via the audit trail; never edit roadmap-item status from this skill.
 - Branch C's rationale paragraph is required even for tiny revisions (a typo fix in the statement) once `mvp_status: stabilised` — the spec is intentionally strict because every post-stabilisation revision redefines what stabilisation meant.
 
+### Examples
+
+- Read `examples/01-revise-statement.md` when revising the mission statement wording while keeping the lifecycle status unchanged.
+- Read `examples/02-flip-mvp-status-to-achieved.md` when flipping `mvp_status` from `in_progress` to `achieved` after all MVP items land.
+- Read `examples/03-stabilisation-gate-blocks.md` when the stabilisation gate blocks a post-MVP revision and you need to see how to handle the refusal.
+
 ### Hard rules
 
 - **Never** create `project/mission.md` from scratch. This skill is edit-only; first-write is `mission-define`'s job.

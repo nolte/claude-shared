@@ -62,6 +62,12 @@ For each **missing** or **drift** item, confirm per item before writing. Scaffol
 
 Re-run Operations 1 and 2 end-to-end after the user finishes approving changes; present a fresh grouped summary calling out any remaining **missing**, **drift**, or uninstalled-app items.
 
+### Examples
+
+- Read `examples/01-fresh-python-app-scaffolding.md` when scaffolding project structure for a new Python application from scratch.
+- Read `examples/02-claude-plugin-github-config.md` when auditing or generating GitHub config files for a Claude plugin repository.
+- Read `examples/03-renovate-app-not-installed.md` when the Renovate App installation check fails and you need to see the expected report shape.
+
 ### Hard rules
 
 - **Never** overwrite an existing file without explicit per-item confirmation. Merge into existing YAML or JSON configs rather than replacing them wholesale.

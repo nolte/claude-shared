@@ -124,6 +124,12 @@ When any check fails, **refuse the write entirely**. Do not produce partial outp
 - **Mission file presence changes the schema.** When `project/mission.md` exists, every roadmap item carries an `mvp: bool` field; when the mission file is absent, the field is silently dropped. Authoring a roadmap item in a mission-less project and later adding the mission flips every item to require a default `mvp: false` — this skill won't backfill silently; the operator runs a follow-up pass with `mission-define` first.
 - **`outcomes` resolution against `goals.md` is strict.** An outcome ID that doesn't exist in `goals.md` blocks the write; there's no "warn-and-continue" mode. When the operator wants a placeholder outcome, they must add the outcome to `goals.md` first via the goals-authoring path; this skill doesn't author outcomes.
 
+### Examples
+
+- Read `examples/01-add-item-target-sprint.md` when adding a new roadmap item and targeting it to a specific sprint.
+- Read `examples/02-flip-mvp-flag-asymmetric.md` when flipping the `mvp` flag on an item and you need to see the asymmetry rules in action.
+- Read `examples/03-retarget-and-promote-detail.md` when retargeting an item to a different sprint and promoting it from `coarse` to `fine` detail.
+
 ### Hard rules
 
 - **Never** invent outcomes, audience entries, or sprint numbers inline. Missing outcomes route to the goals workflow; missing audiences route to `audience-identify`; non-existent sprint numbers are refused.

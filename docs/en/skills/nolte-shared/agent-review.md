@@ -109,6 +109,12 @@ When the user reports closures:
 
 Reference `spec/claude/review-plan/<canonical>.md` for the authoritative format. Never restate its rules in the plan itself. The template at `templates/plan.template.md` is the starting point. Every finding uses the four-line structure (statement + `Where` / `Fix` / `Verify`) and cites a spec requirement in the bracketed prefix.
 
+### Examples
+
+- Read `examples/01-fresh-review.md` when running the first end-to-end `run` on a new agent target.
+- Read `examples/02-update-after-fix.md` when closing individual findings after the author has pushed fixes.
+- Read `examples/03-close-plan.md` when all items are resolved and you are ready to delete the plan.
+
 ### Hard rules
 
 - **One plan per target.** A rerun supersedes; never edit a previous run's plan into a new one.

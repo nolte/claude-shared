@@ -126,6 +126,12 @@ The Discover-tech-stack operation implements `spec/portfolio/tech-stack-discover
 
 When the spec disagrees with this skill's instructions, the spec wins. Propose a skill update rather than silently diverging.
 
+## Examples
+
+- Read `examples/01-audit-detects-duplicate.md` when the audit surfaces a duplicate capability across portfolio members.
+- Read `examples/02-render-inventory-idempotent.md` when re-running the inventory render to verify idempotency.
+- Read `examples/03-bootstrap-new-member.md` when bootstrapping a new portfolio member's `project/portfolio.yml` for the first time.
+
 ## Hard rules
 
 - Never modify a Portfolio-Member repository's `project/portfolio.yml` from this skill; only Bootstrap writes it on first authoring, and only inside the active checkout. Cross-repository edits go through ordinary PR flows in the target repository, not through this skill.

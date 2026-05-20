@@ -108,6 +108,12 @@ Once approved:
 - Outcome IDs and roadmap item IDs share the same monotonicity rule but live in different files; do not cross the streams. `O-1` and `R-1` are independent counters.
 - The spec does not prescribe the Vision heading text. Match whatever convention the project already uses (German repos often title it `# Vision` or `# Zielbild`); the canonical-language wording does not force a translation here.
 
+### Examples
+
+- Read `examples/01-fresh-bootstrap-with-audiences.md` when bootstrapping a fresh `project/goals.md` and `project/roadmap.md` on a project that already has an audience artefact.
+- Read `examples/02-audience-missing-dispatch-identify.md` when the audience artefact is absent and the skill dispatches `audience-identify` first.
+- Read `examples/03-refusal-when-roadmap-exists.md` when `project/roadmap.md` already exists and the skill must refuse to overwrite it.
+
 ### Hard rules
 
 - **Never** invent audience entries inline. When no audience artefact exists, dispatch `audience-identify` first; outcomes whose audience is fabricated cannot serve a real reader.

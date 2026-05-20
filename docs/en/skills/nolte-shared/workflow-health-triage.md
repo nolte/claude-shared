@@ -104,6 +104,12 @@ After the fix PR opens, the skill stops. The actual merge belongs to `pull-reque
 
 Report back the run ID, the classification, the dispatched agent name (or "generalist"), the fix-PR URL, and a one-line "next action: invoke `pull-request-merge` after CI is green".
 
+### Examples
+
+- Read `examples/01-defect-classification-dispatch.md` when triaging a failure that classifies as `defect` and dispatches to a specialised agent.
+- Read `examples/02-stale-pin-portfolio-gap.md` when the failure root-causes to a stale pin in the portfolio plumbing.
+- Read `examples/03-flake-no-fix-record-only.md` when the failure classifies as `flake` and the skill records the classification without opening a fix PR.
+
 ### Hard rules
 
 - **Never** re-run a failed required workflow run more than once before a recorded triage classification exists; the spec calls repeated blind re-runs drift.

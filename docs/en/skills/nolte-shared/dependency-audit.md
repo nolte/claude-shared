@@ -146,6 +146,12 @@ Don't execute these without explicit confirmation:
 - **License-compliance scanners pull from external metadata** (PyPI / npm registry); a transient registry outage produces a false "no findings" report rather than a clear error. Re-run on transient HTTP 5xx; only report `clean` when the run reached the registry successfully.
 - **Direct vs transitive attribution requires the lockfile.** Without the lockfile, the audit can only flag the surface that the manifest declares; transitive vulnerabilities don't surface. The skill stops and reports when no lockfile is present rather than producing a misleading direct-only report.
 
+### Examples
+
+- Read `examples/01-python-pip-audit.md` when running the first audit on a Python project.
+- Read `examples/02-node-pnpm-audit.md` when auditing a Node.js project managed with pnpm.
+- Read `examples/03-multi-ecosystem-monorepo.md` when the repository contains multiple language ecosystems.
+
 ### Hard rules
 
 - **Never** modify dependency manifests, lockfiles, or ignore lists without explicit user confirmation. This skill reports; mutations are a follow-up step.

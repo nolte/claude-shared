@@ -125,6 +125,12 @@ The starter template at `templates/spec.template.md` is deliberately minimal. Ev
 
 Don't silently modify the template. Surface the proposal to the user and let them decide.
 
+### Examples
+
+- Read `examples/01-create-new-spec-multilingual.md` when creating a new spec from scratch in all configured languages simultaneously.
+- Read `examples/02-translate-existing-spec.md` when translating an existing canonical spec into a second language.
+- Read `examples/03-drift-check-translations.md` when checking whether a translation has drifted from the canonical version.
+
 ### Hard rules
 
 - Canonical and translation files are always created and updated **together**. Never leave a spec with only one language file on disk.

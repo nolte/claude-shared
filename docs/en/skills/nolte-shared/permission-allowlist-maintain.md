@@ -101,6 +101,12 @@ Dispatch `nolte-shared:pull-request-create` for the PR creation; the user confir
 
 The actual merge is `pull-request-merge`'s job, not this skill's.
 
+### Examples
+
+- Read `examples/01-add-task-lint-from-fewer-prompts.md` when adding a new allowlist entry sourced from the `fewer-permission-prompts` skill output.
+- Read `examples/02-reject-forbidden-wildcard.md` when the user requests a pattern that the spec forbids (e.g. an interpreter wildcard).
+- Read `examples/03-prune-redundant-entries.md` when pruning entries that are already covered by a broader pattern already in the allowlist.
+
 ### Hard rules
 
 - **Never** edit `.claude/settings.local.json` or `~/.claude/settings.json`. Both are developer-owned and out of scope per the spec's §Non-Goals.

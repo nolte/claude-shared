@@ -152,6 +152,12 @@ feature is malformed.
    resolution is to upgrade the plugin runtime and rerun the check via
    the agent path.
 
+## Examples
+
+- Read `examples/01-single-feature-from-roadmap-item.md` when decomposing a single roadmap item into a feature for the first time.
+- Read `examples/02-split-into-multiple-features.md` when a roadmap item is large enough to warrant multiple features.
+- Read `examples/03-consistency-check-overlap.md` when the consistency checker reports potential overlap with existing features.
+
 ## Gotchas
 
 - **The `feature-consistency-reviewer` agent has no shell access** (per `agent-management` §Tool access — read-only invariant). The dispatching call from this skill **MUST** confirm the working tree is a git repository (`git rev-parse --is-inside-work-tree`) and pass the short SHA (`git rev-parse --short HEAD`) as a dispatch argument; the agent uses the SHA to populate `agent_version` in its findings report. Skipping this step and dispatching anyway produces an `agent_version: unknown` field in every consistency-check result.
