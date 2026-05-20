@@ -8,7 +8,7 @@ last_updated: generated
 
 # audience-identify
 
-_Runs the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produces an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", or equivalent German-language requests. Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context._
+_Runs the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produces an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", or equivalent German-language requests. Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context. Don't use to review an existing audience artifact for compliance (use audience-review)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
