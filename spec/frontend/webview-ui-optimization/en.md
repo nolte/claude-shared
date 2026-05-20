@@ -4,7 +4,7 @@ Status: draft
 
 ## Context
 
-Every browser-hosted UI in the portfolio is built on the same primitives — plain HTML and CSS plus a JavaScript framework rendering into a single DOM — and is ultimately judged by the same five questions: does the first paint arrive fast, is the interaction surface safe, can every user operate it, does it work in every offered language, and does it feel right under the user's finger or pointer? The current reference implementation is the kamerplanter frontend: React 19, TypeScript strict, Vite 8 as the bundler, MUI v9 with Emotion, Redux Toolkit, React Router v7, react-hook-form with Zod, react-i18next, notistack, Recharts, Vitest with `vitest-axe`, served as static assets behind nginx with an `nginx-security-headers.inc` partial. New product features, refactors, and audits all touch this surface, but the rules they must satisfy are scattered across vendor docs, OWASP cheat sheets, WCAG criteria, and ad-hoc team conventions. The cost is twofold: contributors re-derive the same checklists every time, and reviewers cannot tell whether a PR is shippable from the diff alone. This spec collects the rules that govern that surface — load-bearing only, vendor-verified, anchored to ≥2 independent authoritative sources per claim — so the rules apply uniformly across audits, new code, and the `webview-ui-optimize` skill / `webview-ui-expert` agent that consume them.
+Every browser-hosted UI in the portfolio is built on the same primitives—plain HTML and CSS plus a JavaScript framework rendering into a single DOM—and is ultimately judged by the same five questions: does the first paint arrive fast, is the interaction surface safe, can every user operate it, does it work in every offered language, and does it feel right under the user's finger or pointer? The current reference implementation is the kamerplanter frontend: React 19, TypeScript strict, Vite 8 as the bundler, MUI v9 with Emotion, Redux Toolkit, React Router v7, react-hook-form with Zod, react-i18next, notistack, Recharts, Vitest with `vitest-axe`, served as static assets behind nginx with an `nginx-security-headers.inc` partial. New product features, refactors, and audits all touch this surface, but the rules they must satisfy are scattered across vendor docs, OWASP cheat sheets, WCAG criteria, and ad-hoc team conventions. The cost is twofold: contributors re-derive the same checklists every time, and reviewers can't tell whether a PR is shippable from the diff alone. This spec collects the rules that govern that surface—load-bearing only, vendor-verified, anchored to ≥2 independent authoritative sources per claim—so the rules apply uniformly across audits, new code, and the `webview-ui-optimize` skill / `webview-ui-expert` agent that consume them.
 
 ## Goals
 
@@ -16,12 +16,12 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 ## Non-Goals
 
-- Picking a different stack (Vue, Svelte, Angular, Solid) — this spec is for the React/Vite/MUI baseline and would need a sibling spec per stack.
-- Visual / brand-design rules (typography scale, illustration style, voice and tone) — those live in a product design system, not here.
-- Native-shell concerns (Tauri, Electron, iOS WKWebView, Android WebView) — only browser-context optimisation is in scope. "Web-view" in this spec refers to the browser-rendered view, not the native container.
-- Server-side rendering (SSR), Server Components, edge runtimes, or static-site generation — the reference stack ships a CSR SPA behind nginx.
-- Test-suite content (which assertions to write, coverage thresholds) — only test infrastructure relevant to a11y / performance gating is in scope.
-- Release-automation, dependency-upgrade strategy, and CI-pipeline shape — those live in `spec/project/release-automation/`, `spec/project/dependency-audit/`, and `spec/project/workflow-health/`.
+- Picking a different stack (Vue, Svelte, Angular, Solid)—this spec is for the React/Vite/MUI baseline and would need a sibling spec per stack.
+- Visual / brand-design rules (typography scale, illustration style, voice and tone)—those live in a product design system, not here.
+- Native-shell concerns (Tauri, Electron, iOS WKWebView, Android WebView)—only browser-context optimisation is in scope. "Web-view" in this spec refers to the browser-rendered view, not the native container.
+- Server-side rendering (SSR), Server Components, edge runtimes, or static-site generation—the reference stack ships a CSR SPA behind nginx.
+- Test-suite content (which assertions to write, coverage thresholds)—only test infrastructure relevant to a11y / performance gating is in scope.
+- Release-automation, dependency-upgrade strategy, and CI-pipeline shape—those live in `spec/project/release-automation/`, `spec/project/dependency-audit/`, and `spec/project/workflow-health/`.
 
 ## Requirements
 
@@ -35,7 +35,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 #### Critical path and assets
 
 - **MUST** declare `font-display: swap` (or `optional`) on every `@font-face` rule, including MUI-generated typography.
-- **MUST** preload the LCP-critical typography as `<link rel="preload" as="font" type="font/woff2" href="…" crossorigin>` (the `crossorigin` attribute is mandatory — without it the preload is fetched twice).
+- **MUST** preload the LCP-critical typography as `<link rel="preload" as="font" type="font/woff2" href="…" crossorigin>` (the `crossorigin` attribute is mandatory—without it the preload is fetched twice).
 - **SHOULD** set `fetchpriority="high"` on the LCP image (or its `rel="preload" as="image"` link) on routes whose LCP candidate is an image; **MUST NOT** apply it to more than one element per route.
 - **MUST** declare `loading="lazy"` and `decoding="async"` on every off-screen `<img>` and provide intrinsic `width`/`height` (or CSS `aspect-ratio`).
 - **MUST** keep Vite's content-hashed filenames for `/assets/*` output.
@@ -46,7 +46,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 - **MUST** enable the React Compiler (`babel-plugin-react-compiler` 1.x) in the Vite pipeline and wire `eslint-plugin-react-compiler`; manual `useMemo` / `useCallback` / `React.memo` **MUST** be treated as escape hatches only.
 - **MUST** wrap state updates that drive expensive renders (filter changes, tab switches, chart inputs) in `startTransition`; pair the resulting `isPending` with a non-blocking indicator, never with a full-page skeleton.
-- **SHOULD** apply `useDeferredValue` to props feeding `memo()`-wrapped slow children when the source setter cannot be moved inside a transition.
+- **SHOULD** apply `useDeferredValue` to props feeding `memo()`-wrapped slow children when the source setter can't be moved inside a transition.
 - **MUST** code-split routes via React Router v7 lazy route modules and pair every async data boundary with `<Suspense>` + an `<ErrorBoundary>` exposing a Retry action.
 
 #### MUI and Emotion
@@ -79,7 +79,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 #### Content Security Policy and Trusted Types
 
-- **MUST** serve a strict Content Security Policy with a per-response cryptographic nonce on `script-src` plus `'strict-dynamic'`, e.g. `script-src 'nonce-<random>' 'strict-dynamic'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; require-trusted-types-for 'script';`.
+- **MUST** serve a strict Content Security Policy with a per-response cryptographic nonce on `script-src` plus `'strict-dynamic'`, for example `script-src 'nonce-<random>' 'strict-dynamic'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; require-trusted-types-for 'script';`.
 - **MUST NOT** include `'unsafe-inline'` or `'unsafe-eval'` in `script-src`; for `style-src`, prefer a nonce bound to Emotion's `cache.nonce` over `'unsafe-inline'`.
 - **MUST NOT** use host-allowlist CSPs (bypassable via open JSONP endpoints on allowlisted hosts).
 - **MUST** send `require-trusted-types-for 'script'` and a named `trusted-types` policy that pipes any HTML insertion through DOMPurify.
@@ -93,7 +93,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
   - `Referrer-Policy: strict-origin-when-cross-origin` (downgrade to `no-referrer` for routes that carry tokens in the URL).
   - `Cross-Origin-Opener-Policy: same-origin` (`same-origin-allow-popups` only when the SPA opens trusted OAuth popups).
   - `Cross-Origin-Resource-Policy: same-origin` on app-owned assets.
-  - `Permissions-Policy` denying every powerful feature the SPA does not actively use (camera, microphone, geolocation, payment, USB, serial, bluetooth, accelerometer, gyroscope, magnetometer, MIDI, etc.) and opting in to `'self'` only for features genuinely needed.
+  - `Permissions-Policy` denying every powerful feature the SPA doesn't actively use (camera, microphone, geolocation, payment, USB, serial, bluetooth, accelerometer, gyroscope, magnetometer, MIDI, and similar) and opting in to `'self'` only for features genuinely needed.
   - `X-Frame-Options: DENY` as a belt-and-braces fallback to `frame-ancestors 'none'`.
 - **SHOULD** add `Cross-Origin-Embedder-Policy: require-corp` only when the SPA needs cross-origin isolation (SharedArrayBuffer, high-resolution timers); COEP is opt-in because it breaks naïvely embedded resources.
 
@@ -105,7 +105,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 #### Auth, storage, and secrets
 
-- **MUST NOT** store auth tokens (access, refresh, session) in `localStorage`, `sessionStorage`, IndexedDB, or Redux state that is persisted; **MUST** keep tokens in an `HttpOnly; Secure; SameSite=Strict` cookie issued by the backend, OR in memory plus silent refresh against a cookie-protected refresh endpoint.
+- **MUST NOT** store auth tokens (access, refresh, session) in `localStorage`, `sessionStorage`, IndexedDB, or Redux state that's persisted; **MUST** keep tokens in an `HttpOnly; Secure; SameSite=Strict` cookie issued by the backend, OR in memory plus silent refresh against a cookie-protected refresh endpoint.
 - **MUST** configure `redux-persist` (when present) with an explicit `whitelist` of slices that hold non-sensitive UI state only (theme, language, table column order). Encryption-at-rest with a key that ships in the bundle is forbidden.
 - **MUST** treat every `import.meta.env.VITE_*` value as public. API keys, signing secrets, OAuth client secrets, and BFF-bypassing URLs **MUST NOT** be put behind a `VITE_` prefix; **MUST NOT** override `envPrefix` to an empty string.
 - **MUST** set Vite `build.sourcemap` to `false` (or `'hidden'` when error tracking requires symbolication with private upload); **MUST NOT** serve `*.js.map` publicly from nginx, and **SHOULD** block `*.map` at the nginx layer.
@@ -126,7 +126,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 #### Document structure
 
-- **MUST** wrap top-level page regions in semantic HTML5 sectioning elements (`<header>`, `<nav>`, `<main>`, `<footer>`, `<aside>`); each `<nav>` that is not the sole nav **MUST** carry `aria-label` / `aria-labelledby`.
+- **MUST** wrap top-level page regions in semantic HTML5 sectioning elements (`<header>`, `<nav>`, `<main>`, `<footer>`, `<aside>`); each `<nav>` that isn't the sole nav **MUST** carry `aria-label` / `aria-labelledby`.
 - **MUST** render exactly one visible `<h1>` per route and **MUST NOT** skip heading levels.
 - **MUST** keep `<html lang>` and `<html dir>` synchronised with the active i18next language by mutating `document.documentElement.lang` (BCP-47 tag) and `document.documentElement.dir` (via `i18next.dir(lng)`) on every `languageChanged` event.
 - **MUST** mark in-page foreign passages with `lang="…"` on a wrapping element (WCAG 3.1.2).
@@ -136,15 +136,15 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 - **MUST** ship a "skip to main content" link as the first focusable element; visually hidden but focusable, never `display:none`, **MUST** move focus to `<main>` or a `tabindex="-1"` element inside it.
 - **MUST** move focus on every route change to either (a) the main content container with `tabindex="-1"`, or (b) the new `<h1>` with `tabindex="-1"`; **MUST NOT** focus a landmark element or autofocus an arbitrary input.
 - **MUST NOT** set `outline: 0` / `outline: none` without an equivalent replacement; **MUST** use `:focus-visible` for custom focus styling and meet the 3:1 non-text contrast and WCAG 2.4.13 Focus Appearance perimeter rule.
-- **MUST** ensure focus is not obscured by sticky chrome (WCAG 2.4.11): use `scroll-margin-top` / `scroll-padding` equal to the bar height.
+- **MUST** ensure focus isn't obscured by sticky chrome (WCAG 2.4.11): use `scroll-margin-top` / `scroll-padding` equal to the bar height.
 - **MUST NOT** use `tabindex` values greater than `0`; only `0` and `-1` are acceptable.
 
 #### Components
 
-- **MUST** preserve MUI `Dialog` / `Modal` focus-trap, initial-focus, and return-focus defaults: do not set `disableEnforceFocus`, `disableAutoFocus`, or `disableRestoreFocus` for routine dialogs. **MUST** carry `aria-labelledby` referencing the title; **SHOULD** also carry `aria-describedby` for long-form content.
+- **MUST** preserve MUI `Dialog` / `Modal` focus-trap, initial-focus, and return-focus defaults: don't set `disableEnforceFocus`, `disableAutoFocus`, or `disableRestoreFocus` for routine dialogs. **MUST** carry `aria-labelledby` referencing the title; **SHOULD** also carry `aria-describedby` for long-form content.
 - **MUST** label every icon-only `IconButton` with `aria-label` (or visually-hidden text); `<Tooltip>` provides a description, not a name, and **MUST NOT** substitute for the label.
 - **MUST** wire react-hook-form errors with the triple `aria-invalid={!!errors.x}` + `aria-describedby="<error-id>"` + `role="alert"` on the error element.
-- **MUST** generate input IDs via React 19 `useId()` (or MUI's auto-generated IDs) so `<label htmlFor>` and `aria-describedby` resolve stably across renders.
+- **MUST** generate input IDs via React 19 `useId()` (or MUI's generated IDs) so `<label htmlFor>` and `aria-describedby` resolve stably across renders.
 - **MUST** label `@mui/x-tree-view` (`SimpleTreeView` / `RichTreeView`) with `aria-label` or `aria-labelledby`; **MUST NOT** override the built-in WAI-ARIA APG tree keyboard behaviour.
 - **MUST** treat `@mui/x-date-pickers` popup views as Dialogs: all dialog rules apply (labelled-by, focus trap, return-focus); custom `<TextField>` slots **MUST** propagate the picker's ARIA props.
 - **MUST** use a real `<button type="button">` (or MUI `Button` / `IconButton`) for any clickable control; **MUST NOT** attach `onClick` to a `<div>` or `<span>` to fake one.
@@ -158,13 +158,13 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 - **MUST** configure MUI's `palette.contrastThreshold` to `4.5` so palette-derived `contrastText` choices target WCAG 1.4.3 AA (body text 4.5:1); verify custom palettes via WebAIM contrast checker.
 - **MUST** wrap non-essential motion in `@media (prefers-reduced-motion: no-preference)` (opt-out pattern); reduce or remove transitions when the user has expressed a reduce preference.
-- **SHOULD** honour `prefers-color-scheme` for the initial theme when the user has not explicitly chosen one; persisted user choice **MUST** override the OS preference thereafter.
+- **SHOULD** honour `prefers-color-scheme` for the initial theme when the user hasn't explicitly chosen one; persisted user choice **MUST** override the OS preference thereafter.
 - **MUST** keep layout reflow at 320 CSS px viewport width without horizontal scroll (WCAG 1.4.10); inherently 2-D content (tables, charts) **MUST** scroll inside its own container, not the page.
 - **SHOULD** prefer `aria-disabled="true"` over native `disabled` for controls whose disabled state needs an explanation (form gating, paywall) so an associated `aria-describedby` reason remains discoverable.
 
 #### Target size
 
-- **MUST** make every interactive control's tap target at least 24 × 24 CSS pixels (WCAG 2.5.8); **SHOULD** target 44 × 44 CSS pixels on touch-first contexts (Apple HIG / Material Design alignment). Spacing **SHOULD** leave ≥ 8 px between adjacent targets.
+- **MUST** make every interactive control's tap target at least 24 × 24 px (WCAG 2.5.8); **SHOULD** target 44 × 44 px on touch-first contexts (Apple HIG / Material Design alignment). Spacing **SHOULD** leave ≥ 8 px between adjacent targets.
 
 #### Charts
 
@@ -204,7 +204,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 - **MUST** organise translations into one namespace per feature (`auth`, `plants`, `settings`, `common`) and lazy-load namespaces per route via `i18next-resources-to-backend` (Vite dynamic imports) or `i18next-http-backend`.
 - **MUST** pre-bundle the canonical locale plus the active locale; defer the rest as Vite chunks per `(locale, namespace)` pair.
-- **MUST** wrap the React tree in `<Suspense>` so first paint does not show raw keys; `react.useSuspense: true` is the default and **MUST** stay enabled unless every consumer explicitly gates on `ready`.
+- **MUST** wrap the React tree in `<Suspense>` so first paint doesn't show raw keys; `react.useSuspense: true` is the default and **MUST** stay enabled unless every consumer explicitly gates on `ready`.
 - **MUST** wire MUI v9 RTL via `createTheme({ direction: 'rtl' })` AND an Emotion `CacheProvider` whose cache uses `[prefixer, rtlPlugin]` from `@mui/stylis-plugin-rtl` when the active locale is RTL.
 - **MUST** wire MUI-X `LocalizationProvider` with three things in lockstep: dayjs locale (`dayjs.locale('de')`), `adapterLocale="de"`, and `localeText` from `@mui/x-date-pickers/locales`.
 - **MUST** drive dayjs locales as default-export imports and switch them on every `languageChanged` event; bare side-effect imports (`import 'dayjs/locale/de'`) **MUST NOT** appear because some bundlers drop them.
@@ -214,7 +214,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 #### Drift detection
 
 - **MUST** enable an i18next missing-key reporter: `debug: true` and `saveMissing: true` + a `missingKeyHandler` in development; a sampled error-reporter (Sentry / equivalent) in production with `saveMissing: false`.
-- **SHOULD** run a pseudo-locale test (e.g. `i18next-pseudo`) in CI to catch missing keys, truncation, and hard-coded English strings before a real translator sees them.
+- **SHOULD** run a pseudo-locale test (for example `i18next-pseudo`) in CI to catch missing keys, truncation, and hard-coded English strings before a real translator sees them.
 - **MUST** author keys as stable, lowercase, dotted identifiers (`plants.list.empty`); text-as-key is forbidden because every English edit breaks every translation.
 
 ### UX and native feel
@@ -223,11 +223,11 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 - **MUST** pick the feedback indicator by expected wait time:
   - < ≈ 100 ms: no indicator.
-  - 100 ms – 1 s: optimistic / no spinner.
-  - 1 s – 10 s: skeleton screen mirroring the final layout.
+  - 100 ms–1 s: optimistic / no spinner.
+  - 1 s–10 s: skeleton screen mirroring the final layout.
   - > 10 s: determinate progress bar with cancel affordance.
 - **MUST NOT** show a blank screen for more than 300 ms after a navigation; skeletons or `<Suspense>` fallbacks bridge the gap.
-- **MUST** debounce spinner display by 200 – 300 ms so brief loads do not flash a spinner; the chosen project-wide threshold **MUST** be applied consistently.
+- **MUST** debounce spinner display by 200–300 ms so brief loads don't flash a spinner; the chosen project-wide threshold **MUST** be applied consistently.
 - **MUST** build a per-view `<XxxSkeleton/>` that mirrors the final layout (shape, count, rough size); generic shimmer boxes that cause layout shift on hydrate are forbidden.
 
 #### Mutations and recovery
@@ -235,9 +235,9 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 - **SHOULD** apply optimistic UI to low-risk mutations only (favouriting, toggling, reordering, renaming); **MUST NOT** apply it to financial transactions, irreversible deletes without an undo grace period, or anything triggering downstream side effects (email, payment).
 - **SHOULD** prefer an optimistic commit + Undo snackbar over an interruption-style "Are you sure?" dialog for reversible destructive actions; use a real `<Dialog>` only when the action is irreversible or multi-step.
 - **MUST** distinguish error surfaces:
-  - inline error (next to field or component) — form validation, "this card failed to load — retry", missing permission.
-  - snackbar / toast — transient, non-actionable network errors, background save failures.
-  - dialog — state-corrupting failures requiring a decision (session expired).
+  - inline error (next to field or component)—form validation, "this card failed to load—retry," missing permission.
+  - snackbar / toast—transient, non-actionable network errors, background save failures.
+  - dialog—state-corrupting failures requiring a decision (session expired).
 
 #### Snackbar discipline
 
@@ -250,8 +250,8 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 #### Navigation and back behaviour
 
 - **MUST** mount React Router v7 `<ScrollRestoration/>` once at the layout root.
-- **MUST** show a global pending indicator (subtle top-of-layout progress bar) driven by `useNavigation().state` only after a ≥ 200 ms delay so fast navigations do not flash.
-- **MUST NOT** trap the browser Back button: modal close binds ESC and an explicit close button; route guards redirect via `<Navigate replace />` so the guarded URL is not in the back stack twice.
+- **MUST** show a global pending indicator (subtle top-of-layout progress bar) driven by `useNavigation().state` only after a ≥ 200 ms delay so fast navigations don't flash.
+- **MUST NOT** trap the browser Back button: modal close binds ESC and an explicit close button; route guards redirect via `<Navigate replace />` so the guarded URL isn't in the back stack twice.
 - **SHOULD** use `<NavLink prefetch="intent">` for navigation links inside the main shell when running in framework mode; **MUST NOT** use `prefetch="render"` or `prefetch="viewport"` on large lists.
 
 #### Forms
@@ -271,8 +271,8 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 #### Viewport and platform fit
 
 - **MUST** prefer `svh`, `dvh`, `lvh` over `vh` for full-screen layouts:
-  - `svh` for "fill the screen, never hidden under chrome".
-  - `lvh` for "fill the maximally retracted viewport".
+  - `svh` for "fill the screen, never hidden under chrome."
+  - `lvh` for "fill the maximally retracted viewport."
   - `dvh` only when live tracking is essential (rarely on scrolling content).
 - **MUST** apply `env(safe-area-inset-*)` padding on the layout root for notch / home-indicator clearance, with a `max(env(…), <minimum>)` floor; `viewport-fit=cover` **MUST** be set in the viewport meta for safe-area insets to be non-zero.
 
@@ -307,19 +307,19 @@ Every browser-hosted UI in the portfolio is built on the same primitives — pla
 
 ## Open Questions
 
-- Should the spec mandate the React Compiler today (it is stable but ESLint rule maturity varies), or stay at SHOULD pending a portfolio-wide rollout decision?
+- Should the spec mandate the React Compiler today (it's stable but ESLint rule maturity varies), or stay at SHOULD pending a portfolio-wide rollout decision?
 - Should `Cross-Origin-Embedder-Policy: require-corp` move to MUST once cross-origin isolation is wanted for high-resolution timers / `SharedArrayBuffer`, or remain explicitly opt-in given third-party CORP friction?
 - Should the i18n locale-prefix rule be tightened from MUST to MUST-NOT-USE-COOKIE-ONLY, given that some operator setups deliberately keep canonical-language URLs locale-less?
-- Should the spec name a single project-wide spinner-show delay (e.g. 250 ms) or keep the 200 – 300 ms range so individual repositories pick within it consistently?
-- Where exactly does this spec end and `spec/project/dependency-audit/` begin for supply-chain hygiene — the lockfile and `npm audit` rules currently appear in both; should one cross-reference the other?
+- Should the spec name a single project-wide spinner-show delay (for example 250 ms) or keep the 200–300 ms range so individual repositories pick within it consistently?
+- Where exactly does this spec end and `spec/project/dependency-audit/` begin for supply-chain hygiene—the lockfile and `npm audit` rules currently appear in both; should one cross-reference the other?
 - Should React Router v7 framework-mode rules (`<NavLink prefetch="intent">`, route-module file convention) sit in this spec or in a sibling routing-specific spec, given that SPA-mode and framework-mode diverge meaningfully?
 
 ## Sources
 
 Every normative rule above is anchored to the per-domain research notes under `.audits/webview-ui-expert/`, each entry of which cites at least two independent authoritative sources:
 
-- `.audits/webview-ui-expert/performance.md` — 27 practices + 9 anti-patterns (web.dev, react.dev, vitejs.dev, mui.com, redux.js.org, reactrouter.com, react-hook-form.com, MDN, nginx.org, day.js.org, axios-http.com, vitest.dev, RFC 8246).
-- `.audits/webview-ui-expert/security.md` — 28 practices (OWASP Cheat Sheets, MDN, W3C Trusted Types, web.dev, Mozilla HTTP Observatory, vendor docs).
-- `.audits/webview-ui-expert/accessibility.md` — 24 practices (W3C WAI WCAG 2.2, ARIA Authoring Practices Guide, MDN, WebAIM, Deque, A11y Project, vendor docs).
-- `.audits/webview-ui-expert/i18n.md` — 26 practices (W3C i18n WG, Unicode CLDR / TR10, ICU, MDN, Google Search Central, RFC 7231, vendor docs).
-- `.audits/webview-ui-expert/ux.md` — 30 practices (Nielsen Norman Group, web.dev, MDN, W3C, WHATWG, Material Design, Apple HIG, vendor docs).
+- `.audits/webview-ui-expert/performance.md`: 27 practices + 9 anti-patterns (`web.dev`, `react.dev`, `vitejs.dev`, `mui.com`, `redux.js.org`, `reactrouter.com`, `react-hook-form.com`, MDN, `nginx.org`, `day.js.org`, `axios-http.com`, `vitest.dev`, RFC 8246).
+- `.audits/webview-ui-expert/security.md`: 28 practices (OWASP Cheat Sheets, MDN, W3C Trusted Types, `web.dev`, Mozilla HTTP Observatory, vendor docs).
+- `.audits/webview-ui-expert/accessibility.md`: 24 practices (W3C WAI WCAG 2.2, ARIA Authoring Practices Guide, MDN, WebAIM, Deque, A11y Project, vendor docs).
+- `.audits/webview-ui-expert/i18n.md`: 26 practices (W3C i18n WG, Unicode CLDR / TR10, ICU, MDN, Google Search Central, RFC 7231, vendor docs).
+- `.audits/webview-ui-expert/ux.md`: 30 practices (Nielsen Norman Group, `web.dev`, MDN, W3C, WHATWG, Material Design, Apple HIG, vendor docs).

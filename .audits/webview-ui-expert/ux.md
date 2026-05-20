@@ -35,10 +35,10 @@ shaped like the final card / row / chart. Above ~10 s, show a determinate
 progress bar.
 
 Sources:
-- NN/G, *Response Time Limits: Article by Jakob Nielsen* — https://www.nngroup.com/articles/response-times-3-important-limits/
-- NN/G, *Skeleton Screens 101* — https://www.nngroup.com/articles/skeleton-screens/
-- NN/G, *Progress Indicators Make a Slow System Less Insufferable* — https://www.nngroup.com/articles/progress-indicators/
-- NN/G, *Powers of 10: Time Scales in User Experience* — https://www.nngroup.com/articles/powers-of-10-time-scales-in-ux/
+- NN/G, *Response Time Limits: Article by Jakob Nielsen* — <https://www.nngroup.com/articles/response-times-3-important-limits/>
+- NN/G, *Skeleton Screens 101* — <https://www.nngroup.com/articles/skeleton-screens/>
+- NN/G, *Progress Indicators Make a Slow System Less Insufferable* — <https://www.nngroup.com/articles/progress-indicators/>
+- NN/G, *Powers of 10: Time Scales in User Experience* — <https://www.nngroup.com/articles/powers-of-10-time-scales-in-ux/>
 
 ## 2. Skeletons mirror final layout, never generic spinners (verified)
 
@@ -55,9 +55,9 @@ with the same grid / flex structure as the loaded component; render it
 from a `<Suspense fallback={…}>` boundary that wraps that view.
 
 Sources:
-- NN/G, *Skeleton Screens 101* — https://www.nngroup.com/articles/skeleton-screens/
-- MUI, *Skeleton* component docs — https://mui.com/material-ui/react-skeleton/
-- web.dev, *Cumulative Layout Shift (CLS)* — https://web.dev/articles/cls
+- NN/G, *Skeleton Screens 101* — <https://www.nngroup.com/articles/skeleton-screens/>
+- MUI, *Skeleton* component docs — <https://mui.com/material-ui/react-skeleton/>
+- web.dev, *Cumulative Layout Shift (CLS)* — <https://web.dev/articles/cls>
 
 ## 3. React 19 Suspense + Error Boundary pairing (verified)
 
@@ -73,8 +73,8 @@ Pair each `<Suspense>` with an `<ErrorBoundary>` parent. The error boundary
 MUST expose a "Retry" action that resets it (key bump / `resetKeys`).
 
 Sources:
-- React docs, *`<Suspense>`* — https://react.dev/reference/react/Suspense
-- React docs, *React 19 release notes* — https://react.dev/blog/2024/12/05/react-19
+- React docs, *`<Suspense>`* — <https://react.dev/reference/react/Suspense>
+- React docs, *React 19 release notes* — <https://react.dev/blog/2024/12/05/react-19>
 
 ## 4. Use `useTransition` for non-urgent UI updates (verified)
 
@@ -89,8 +89,8 @@ the input stays responsive on every keystroke; pair `isPending` with a
 toolbar-level progress indicator, not a full-page skeleton.
 
 Sources:
-- React docs, *`useTransition`* — https://react.dev/reference/react/useTransition
-- React docs, *React 19 release notes (Actions / async transitions)* — https://react.dev/blog/2024/12/05/react-19
+- React docs, *`useTransition`* — <https://react.dev/reference/react/useTransition>
+- React docs, *React 19 release notes (Actions / async transitions)* — <https://react.dev/blog/2024/12/05/react-19>
 
 ## 5. Optimistic UI for low-risk mutations only (verified)
 
@@ -108,9 +108,9 @@ burst mutations prone to race conditions prefer cache invalidation over
 manual undo. For React 19 client-side optimism, use `useOptimistic`.
 
 Sources:
-- Redux Toolkit, *RTK Query — Manual Cache Updates* — https://redux-toolkit.js.org/rtk-query/usage/manual-cache-updates
-- React docs, *`useOptimistic`* — https://react.dev/reference/react/useOptimistic
-- NN/G, *Skeleton Screens 101* (perceived-speed argument that motivates optimism) — https://www.nngroup.com/articles/skeleton-screens/
+- Redux Toolkit, *RTK Query — Manual Cache Updates* — <https://redux-toolkit.js.org/rtk-query/usage/manual-cache-updates>
+- React docs, *`useOptimistic`* — <https://react.dev/reference/react/useOptimistic>
+- NN/G, *Skeleton Screens 101* (perceived-speed argument that motivates optimism) — <https://www.nngroup.com/articles/skeleton-screens/>
 
 ## 6. Destructive actions: undo affordance over confirmation dialog (verified)
 
@@ -128,9 +128,9 @@ of 5–8 s. The actual server delete fires only after the snackbar dismisses
 (or is committed immediately and undone via RTK Query `patchResult.undo()`).
 
 Sources:
-- Material Design 3, *Snackbar — Guidelines* — https://m3.material.io/components/snackbar/guidelines
-- Material Design 2, *Snackbars* — https://m2.material.io/components/snackbars/
-- notistack, *Basic features* — https://notistack.com/features/basic
+- Material Design 3, *Snackbar — Guidelines* — <https://m3.material.io/components/snackbar/guidelines>
+- Material Design 2, *Snackbars* — <https://m2.material.io/components/snackbars/>
+- notistack, *Basic features* — <https://notistack.com/features/basic>
 
 ## 7. Snackbar discipline: variant semantics, stacking, persistence (verified)
 
@@ -154,9 +154,9 @@ Apply: configure `SnackbarProvider` once at app root with `maxSnack={3}`,
 bottom-centre mobile.
 
 Sources:
-- Material Design 3, *Snackbar — Guidelines* — https://m3.material.io/components/snackbar/guidelines
-- MUI, *Snackbar* — https://mui.com/material-ui/react-snackbar/
-- notistack, *Basic features* / *API reference* — https://notistack.com/features/basic , https://notistack.com/api-reference
+- Material Design 3, *Snackbar — Guidelines* — <https://m3.material.io/components/snackbar/guidelines>
+- MUI, *Snackbar* — <https://mui.com/material-ui/react-snackbar/>
+- notistack, *Basic features* / *API reference* — <https://notistack.com/features/basic> , <https://notistack.com/api-reference>
 
 ## 8. Error recovery: inline first, toast for transient (verified)
 
@@ -176,9 +176,9 @@ recovery; mutations show toast for retryable network errors but inline
 banner above the form for validation; auth expiry uses a blocking dialog.
 
 Sources:
-- W3C / WAI, *ARIA21: Using aria-invalid to Indicate An Error Field* — https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA21
-- W3C / WAI, *Understanding WCAG 3.3.1 Error Identification* — https://www.w3.org/WAI/WCAG21/Understanding/error-identification.html
-- Material Design 3, *Snackbar — Guidelines* — https://m3.material.io/components/snackbar/guidelines
+- W3C / WAI, *ARIA21: Using aria-invalid to Indicate An Error Field* — <https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA21>
+- W3C / WAI, *Understanding WCAG 3.3.1 Error Identification* — <https://www.w3.org/WAI/WCAG21/Understanding/error-identification.html>
+- Material Design 3, *Snackbar — Guidelines* — <https://m3.material.io/components/snackbar/guidelines>
 
 ## 9. Scroll restoration on route change (verified)
 
@@ -193,8 +193,8 @@ string changes on the same pathname (e.g. paginated lists) — otherwise the
 default `location.key` is correct.
 
 Sources:
-- React Router, *`ScrollRestoration`* — https://reactrouter.com/api/components/ScrollRestoration
-- React Router (v6 docs, same component) — https://reactrouter.com/6.30.3/components/scroll-restoration
+- React Router, *`ScrollRestoration`* — <https://reactrouter.com/api/components/ScrollRestoration>
+- React Router (v6 docs, same component) — <https://reactrouter.com/6.30.3/components/scroll-restoration>
 
 ## 10. Focus management on route change (verified)
 
@@ -212,9 +212,9 @@ live region. Do NOT focus the `<body>` (resets context) and do NOT autofocus
 random inputs (steals focus from screen-reader users mid-announcement).
 
 Sources:
-- React Router, *Accessibility — focus management* — https://reactrouter.com/how-to/accessibility
-- W3C / WAI-ARIA, *aria-live live regions* — https://www.w3.org/TR/wai-aria-1.2/#aria-live
-- MDN, *ARIA live regions* — https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions
+- React Router, *Accessibility — focus management* — <https://reactrouter.com/how-to/accessibility>
+- W3C / WAI-ARIA, *aria-live live regions* — <https://www.w3.org/TR/wai-aria-1.2/#aria-live>
+- MDN, *ARIA live regions* — <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/ARIA_Live_Regions>
 
 ## 11. Use `<ScrollRestoration/>` *and* `useNavigation()` for pending UI (verified)
 
@@ -229,9 +229,9 @@ Apply: layout root renders a hidden `<TopProgress/>` that becomes visible
 when `navigation.state !== 'idle'` for >200 ms.
 
 Sources:
-- React Router, *`useNavigation`* — https://reactrouter.com/api/hooks/useNavigation
-- React Router, *Pending UI* — https://reactrouter.com/start/framework/pending-ui
-- NN/G, *Response Time Limits* (1 s flow-of-thought threshold) — https://www.nngroup.com/articles/response-times-3-important-limits/
+- React Router, *`useNavigation`* — <https://reactrouter.com/api/hooks/useNavigation>
+- React Router, *Pending UI* — <https://reactrouter.com/start/framework/pending-ui>
+- NN/G, *Response Time Limits* (1 s flow-of-thought threshold) — <https://www.nngroup.com/articles/response-times-3-important-limits/>
 
 ## 12. Form validation timing: `onTouched` + `onChange` re-validate (verified)
 
@@ -251,10 +251,10 @@ Pair with `zod` resolver and wire `aria-invalid={!!errors.x}` plus
 `aria-describedby="x-error"` on every field.
 
 Sources:
-- react-hook-form, *`useForm`* — https://react-hook-form.com/docs/useform
-- WCAG 3.3.1, *Understanding Error Identification* — https://www.w3.org/WAI/WCAG21/Understanding/error-identification.html
-- W3C ARIA21, *Using aria-invalid to Indicate An Error Field* — https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA21
-- W3C / WAI, *User Notification (forms tutorial)* — https://www.w3.org/WAI/tutorials/forms/notifications/
+- react-hook-form, *`useForm`* — <https://react-hook-form.com/docs/useform>
+- WCAG 3.3.1, *Understanding Error Identification* — <https://www.w3.org/WAI/WCAG21/Understanding/error-identification.html>
+- W3C ARIA21, *Using aria-invalid to Indicate An Error Field* — <https://www.w3.org/WAI/WCAG21/Techniques/aria/ARIA21>
+- W3C / WAI, *User Notification (forms tutorial)* — <https://www.w3.org/WAI/tutorials/forms/notifications/>
 
 ## 13. Error summary above the form for multi-error submits (verified)
 
@@ -271,9 +271,9 @@ the summary is the primary anchor, focus the summary; if single-field
 errors are most common, focus the first invalid field.
 
 Sources:
-- W3C / WAI, *User Notification (Forms tutorial)* — https://www.w3.org/WAI/tutorials/forms/notifications/
-- W3C, *Understanding WCAG 3.3.1 Error Identification* — https://www.w3.org/WAI/WCAG21/Understanding/error-identification.html
-- react-hook-form, *`useForm` — `shouldFocusError`* — https://react-hook-form.com/docs/useform
+- W3C / WAI, *User Notification (Forms tutorial)* — <https://www.w3.org/WAI/tutorials/forms/notifications/>
+- W3C, *Understanding WCAG 3.3.1 Error Identification* — <https://www.w3.org/WAI/WCAG21/Understanding/error-identification.html>
+- react-hook-form, *`useForm` — `shouldFocusError`* — <https://react-hook-form.com/docs/useform>
 
 ## 14. Button states: idle / pending / disabled-with-reason (verified)
 
@@ -293,9 +293,9 @@ Sources:
   not button colour-morphing — colour-only state changes fail WCAG 1.4.1.
 
 Sources:
-- MDN, *`aria-disabled`* — https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-disabled
-- MUI, *Button — loading state* — https://mui.com/material-ui/react-button/
-- W3C, *WCAG 1.4.1 Use of Color* — https://www.w3.org/WAI/WCAG21/Understanding/use-of-color.html
+- MDN, *`aria-disabled`* — <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Attributes/aria-disabled>
+- MUI, *Button — loading state* — <https://mui.com/material-ui/react-button/>
+- W3C, *WCAG 1.4.1 Use of Color* — <https://www.w3.org/WAI/WCAG21/Understanding/use-of-color.html>
 
 ## 15. Theme tokens, not hard-coded colours (verified)
 
@@ -312,9 +312,9 @@ with `theme.applyStyles('dark', { … })`, never with `theme.palette.mode ===
 'dark' ? … : …` conditionals.
 
 Sources:
-- MUI v9, *CSS theme variables — Usage* — https://mui.com/material-ui/customization/css-theme-variables/usage/
-- MUI v9, *Dark mode* — https://mui.com/material-ui/customization/dark-mode/
-- Material Design 3, *Color roles* — https://m3.material.io/styles/color/roles
+- MUI v9, *CSS theme variables — Usage* — <https://mui.com/material-ui/customization/css-theme-variables/usage/>
+- MUI v9, *Dark mode* — <https://mui.com/material-ui/customization/dark-mode/>
+- Material Design 3, *Color roles* — <https://m3.material.io/styles/color/roles>
 
 ## 16. `prefers-color-scheme` with user override + persistence (verified)
 
@@ -333,9 +333,9 @@ MUI's `InitColorSchemeScript` component does exactly this when paired with
 `storageManager`.
 
 Sources:
-- MUI v9, *Dark mode (storageManager, InitColorSchemeScript)* — https://mui.com/material-ui/customization/dark-mode/
-- MDN, *`prefers-color-scheme`* — https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme
-- W3C Media Queries Level 5 — https://www.w3.org/TR/mediaqueries-5/#prefers-color-scheme
+- MUI v9, *Dark mode (storageManager, InitColorSchemeScript)* — <https://mui.com/material-ui/customization/dark-mode/>
+- MDN, *`prefers-color-scheme`* — <https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-color-scheme>
+- W3C Media Queries Level 5 — <https://www.w3.org/TR/mediaqueries-5/#prefers-color-scheme>
 
 ## 17. `prefers-reduced-motion`: opt out, not opt in (verified)
 
@@ -354,9 +354,9 @@ animation is `isAnimationActive={true}` by default; flip to `false` (or to
 a much shorter duration) when reduce-motion is set.
 
 Sources:
-- MDN, *`prefers-reduced-motion`* — https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion
-- MDN, *Using media queries for accessibility* — https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries_for_accessibility
-- W3C WAI, *Animation and Transitions* (vestibular triggers) — https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions.html
+- MDN, *`prefers-reduced-motion`* — <https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion>
+- MDN, *Using media queries for accessibility* — <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_media_queries/Using_media_queries_for_accessibility>
+- W3C WAI, *Animation and Transitions* (vestibular triggers) — <https://www.w3.org/WAI/WCAG21/Understanding/animation-from-interactions.html>
 
 ## 18. `:focus-visible`, not `:focus`, for keyboard focus rings (verified)
 
@@ -373,9 +373,9 @@ ring via the `Mui-focusVisible` class. For custom components, write
 outline-offset: 2px; }`.
 
 Sources:
-- MDN, *`:focus-visible`* — https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible
-- W3C, *C45 — Using CSS `:focus-visible` to provide keyboard focus indication* — https://www.w3.org/WAI/WCAG21/Techniques/css/C45
-- W3C, *WCAG 2.4.7 Focus Visible* — https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html
+- MDN, *`:focus-visible`* — <https://developer.mozilla.org/en-US/docs/Web/CSS/:focus-visible>
+- W3C, *C45 — Using CSS `:focus-visible` to provide keyboard focus indication* — <https://www.w3.org/WAI/WCAG21/Techniques/css/C45>
+- W3C, *WCAG 2.4.7 Focus Visible* — <https://www.w3.org/WAI/WCAG21/Understanding/focus-visible.html>
 
 ## 19. Viewport units: `svh` / `dvh` instead of `vh` (verified)
 
@@ -398,9 +398,9 @@ The same logic applies to `svw`/`dvw`/`lvw` horizontally and the `dvi`/
 the layout root so content never gets cropped by mobile chrome.
 
 Sources:
-- MDN, *`length` — viewport-percentage lengths* — https://developer.mozilla.org/en-US/docs/Web/CSS/length
-- W3C CSS Values and Units Module Level 4, *Viewport-percentage Lengths* — https://www.w3.org/TR/css-values-4/#viewport-relative-lengths
-- web.dev, *The large, small, and dynamic viewport units* — https://web.dev/blog/viewport-units
+- MDN, *`length` — viewport-percentage lengths* — <https://developer.mozilla.org/en-US/docs/Web/CSS/length>
+- W3C CSS Values and Units Module Level 4, *Viewport-percentage Lengths* — <https://www.w3.org/TR/css-values-4/#viewport-relative-lengths>
+- web.dev, *The large, small, and dynamic viewport units* — <https://web.dev/blog/viewport-units>
 
 ## 20. `env(safe-area-inset-*)` on the layout edges (verified)
 
@@ -417,9 +417,9 @@ Apply: layout root gets
 (desktop browsers).
 
 Sources:
-- MDN, *`env()` CSS function* — https://developer.mozilla.org/en-US/docs/Web/CSS/env
-- W3C CSS Environment Variables Module Level 1 — https://drafts.csswg.org/css-env-1/
-- WHATWG / Apple "Designing Websites for iPhone X" (historical, but the source of `safe-area-inset-*`) — https://webkit.org/blog/7929/designing-websites-for-iphone-x/
+- MDN, *`env()` CSS function* — <https://developer.mozilla.org/en-US/docs/Web/CSS/env>
+- W3C CSS Environment Variables Module Level 1 — <https://drafts.csswg.org/css-env-1/>
+- WHATWG / Apple "Designing Websites for iPhone X" (historical, but the source of `safe-area-inset-*`) — <https://webkit.org/blog/7929/designing-websites-for-iphone-x/>
 
 ## 21. Native `<dialog>` with `inert` background, not custom modals (verified)
 
@@ -436,10 +436,10 @@ For tooltips / menus where a dialog is overkill, prefer the **Popover API**
 flagged in Firefox); fall back to MUI `Popover`/`Menu` for older browsers.
 
 Sources:
-- MDN, *`<dialog>` element* — https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog
-- WHATWG HTML Standard, *6.12 The popover attribute* — https://html.spec.whatwg.org/multipage/popover.html
-- W3C WAI-ARIA APG, *Modal Dialog pattern* — https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/
-- MDN, *`inert` global attribute* — https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/inert
+- MDN, *`<dialog>` element* — <https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/dialog>
+- WHATWG HTML Standard, *6.12 The popover attribute* — <https://html.spec.whatwg.org/multipage/popover.html>
+- W3C WAI-ARIA APG, *Modal Dialog pattern* — <https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/>
+- MDN, *`inert` global attribute* — <https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Global_attributes/inert>
 
 ## 22. Responsive charts: `ResponsiveContainer` + fixed `aspect` (verified)
 
@@ -460,9 +460,9 @@ Tooltip UX:
   outside (Recharts default is fine; verify on staging).
 
 Sources:
-- Recharts, *Container components / ResponsiveContainer* — https://recharts.org/en-US/api/ResponsiveContainer
-- Recharts wiki, *Recharts and accessibility* — https://github.com/recharts/recharts/wiki/Recharts-and-accessibility
-- W3C, *WCAG 1.4.10 Reflow* (responsive layout requirement) — https://www.w3.org/WAI/WCAG21/Understanding/reflow.html
+- Recharts, *Container components / ResponsiveContainer* — <https://recharts.org/en-US/api/ResponsiveContainer>
+- Recharts wiki, *Recharts and accessibility* — <https://github.com/recharts/recharts/wiki/Recharts-and-accessibility>
+- W3C, *WCAG 1.4.10 Reflow* (responsive layout requirement) — <https://www.w3.org/WAI/WCAG21/Understanding/reflow.html>
 
 ## 23. i18n loading via Suspense, not blank screen (verified)
 
@@ -481,9 +481,9 @@ the active namespace via `<link rel="preload">` (Vite plugin or manual)
 so the first paint is non-blocking.
 
 Sources:
-- react-i18next docs, *Suspense* — https://react.i18next.com/latest/usesuspense
-- react-i18next, *React Suspense integration* (DeepWiki, citing official source) — https://deepwiki.com/i18next/react-i18next/6.3-react-suspense-integration
-- React docs, *`<Suspense>`* — https://react.dev/reference/react/Suspense
+- react-i18next docs, *Suspense* — <https://react.i18next.com/latest/usesuspense>
+- react-i18next, *React Suspense integration* (DeepWiki, citing official source) — <https://deepwiki.com/i18next/react-i18next/6.3-react-suspense-integration>
+- React docs, *`<Suspense>`* — <https://react.dev/reference/react/Suspense>
 
 ## 24. Vite asset preload hints for above-the-fold critical resources (verified)
 
@@ -500,9 +500,9 @@ Apply: preload the woff2 of the primary UI font; preload the active i18n
 JSON if the locale is known at build time or on first response.
 
 Sources:
-- web.dev, *Preload modules / modulepreload* — https://web.dev/articles/modulepreload
-- MDN, *`<link rel="preload">`* — https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload
-- Vite docs, *Build options — modulepreload polyfill / behaviour* — https://vite.dev/guide/build.html
+- web.dev, *Preload modules / modulepreload* — <https://web.dev/articles/modulepreload>
+- MDN, *`<link rel="preload">`* — <https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes/rel/preload>
+- Vite docs, *Build options — modulepreload polyfill / behaviour* — <https://vite.dev/guide/build.html>
 
 ## 25. CSS scroll snap for predictable carousels / step flows (partial)
 
@@ -519,8 +519,8 @@ edge, and respect `prefers-reduced-motion` by setting `scroll-behavior:
 auto` instead of `smooth` for users who opted out.
 
 Sources:
-- MDN, *CSS scroll snap — basic concepts* — https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_scroll_snap/Basic_concepts
-- W3C CSS Scroll Snap Module Level 1 — https://www.w3.org/TR/css-scroll-snap-1/
+- MDN, *CSS scroll snap — basic concepts* — <https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_scroll_snap/Basic_concepts>
+- W3C CSS Scroll Snap Module Level 1 — <https://www.w3.org/TR/css-scroll-snap-1/>
 
 ## 26. Predictable back behaviour: never trap browser back (verified)
 
@@ -543,10 +543,10 @@ the topmost modal only when its URL representation explicitly added a
 history entry — otherwise let Back navigate routes.
 
 Sources:
-- React Router, *`useNavigate` — `replace` flag* — https://reactrouter.com/api/hooks/useNavigate
-- WHATWG HTML Standard, *Session history* — https://html.spec.whatwg.org/multipage/browsing-the-web.html#session-history
-- NN/G, *User Control and Freedom (Usability Heuristic #3)* — https://www.nngroup.com/articles/user-control-and-freedom/
-- NN/G, *Accidental Dismissal of Overlays* — https://www.nngroup.com/articles/accidental-overlay-dismissal/
+- React Router, *`useNavigate` — `replace` flag* — <https://reactrouter.com/api/hooks/useNavigate>
+- WHATWG HTML Standard, *Session history* — <https://html.spec.whatwg.org/multipage/browsing-the-web.html#session-history>
+- NN/G, *User Control and Freedom (Usability Heuristic #3)* — <https://www.nngroup.com/articles/user-control-and-freedom/>
+- NN/G, *Accidental Dismissal of Overlays* — <https://www.nngroup.com/articles/accidental-overlay-dismissal/>
 
 ## 27. Spinner-show delay to avoid flash (~200–300 ms) (verified)
 
@@ -563,9 +563,9 @@ Pick a single project-wide threshold (e.g. 250 ms) and apply it
 consistently — inconsistency itself feels janky.
 
 Sources:
-- NN/G, *Response Time Limits* — https://www.nngroup.com/articles/response-times-3-important-limits/
-- NN/G, *Skeleton Screens 101* (against sub-second loops) — https://www.nngroup.com/articles/skeleton-screens/
-- web.dev, *INP / responsiveness* (200 ms perception floor) — https://web.dev/articles/inp
+- NN/G, *Response Time Limits* — <https://www.nngroup.com/articles/response-times-3-important-limits/>
+- NN/G, *Skeleton Screens 101* (against sub-second loops) — <https://www.nngroup.com/articles/skeleton-screens/>
+- web.dev, *INP / responsiveness* (200 ms perception floor) — <https://web.dev/articles/inp>
 
 ## 28. Predictive link prefetch via `<NavLink prefetch="intent">` (partial)
 
@@ -582,8 +582,8 @@ do NOT use `prefetch="render"` (prefetches every link on the page — wastes
 bandwidth) or `prefetch="viewport"` for large lists (same problem).
 
 Sources:
-- React Router, *`<NavLink>` — `prefetch`* — https://reactrouter.com/api/components/NavLink
-- React Router, *Pending UI* (intent prefetch in context) — https://reactrouter.com/start/framework/pending-ui
+- React Router, *`<NavLink>` — `prefetch`* — <https://reactrouter.com/api/components/NavLink>
+- React Router, *Pending UI* (intent prefetch in context) — <https://reactrouter.com/start/framework/pending-ui>
 
 ## 29. Live regions for async state announcements (verified)
 
@@ -600,9 +600,9 @@ custom toasts; for inline form-summary banners use `role="alert"` only
 when they appear *after* user action (submit), never on initial render.
 
 Sources:
-- MDN, *ARIA live regions* — https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Guides/Live_regions
-- W3C WAI-ARIA 1.2, *aria-live property* — https://www.w3.org/TR/wai-aria-1.2/#aria-live
-- MDN, *`role="alert"`* — https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/alert_role
+- MDN, *ARIA live regions* — <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Guides/Live_regions>
+- W3C WAI-ARIA 1.2, *aria-live property* — <https://www.w3.org/TR/wai-aria-1.2/#aria-live>
+- MDN, *`role="alert"`* — <https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/alert_role>
 
 ## 30. Minimum tap target ≥44 × 44 CSS px (verified)
 
@@ -619,10 +619,10 @@ Apply: every icon button uses MUI `IconButton` at default size (which is
 44px; min-height: 44px;`. Leave ≥8 px between adjacent targets.
 
 Sources:
-- W3C, *WCAG 2.5.5 Target Size (Enhanced AAA)* — https://www.w3.org/WAI/WCAG21/Understanding/target-size.html
-- W3C, *WCAG 2.5.8 Target Size (Minimum)* — https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html
-- Material Design 2, *Layout — touch target sizes* — https://m2.material.io/design/layout/spacing-methods.html#touch-targets
-- Apple HIG, *Layout (44 pt minimum)* — https://developer.apple.com/design/human-interface-guidelines/layout
+- W3C, *WCAG 2.5.5 Target Size (Enhanced AAA)* — <https://www.w3.org/WAI/WCAG21/Understanding/target-size.html>
+- W3C, *WCAG 2.5.8 Target Size (Minimum)* — <https://www.w3.org/WAI/WCAG22/Understanding/target-size-minimum.html>
+- Material Design 2, *Layout — touch target sizes* — <https://m2.material.io/design/layout/spacing-methods.html#touch-targets>
+- Apple HIG, *Layout (44 pt minimum)* — <https://developer.apple.com/design/human-interface-guidelines/layout>
 
 ---
 

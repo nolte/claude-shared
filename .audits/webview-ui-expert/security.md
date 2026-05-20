@@ -580,24 +580,24 @@ Load-bearing rules for the normative spec:
    `same-origin`, CORP `same-origin`, `Permissions-Policy` denying every
    feature the SPA does not actively use, `X-Frame-Options: DENY` as XFO
    fallback.
-4. **No tokens in Web Storage; no secrets in `VITE_*`.** Tokens live in
+3. **No tokens in Web Storage; no secrets in `VITE_*`.** Tokens live in
    `HttpOnly; Secure; SameSite=Strict` cookies, or in memory + silent
    refresh against a cookie-protected endpoint. `redux-persist` whitelist
    is UI-state only.
-5. **No public source maps**, `build.sourcemap: false` (or `'hidden'`).
+4. **No public source maps**, `build.sourcemap: false` (or `'hidden'`).
    nginx blocks `*.map`.
-6. **Quarantine `dangerouslySetInnerHTML`** behind a Trusted Types policy
+5. **Quarantine `dangerouslySetInnerHTML`** behind a Trusted Types policy
    that runs DOMPurify; lint-forbid elsewhere.
-7. **Validate every user-controlled URL** before `href`, `src`, or
+6. **Validate every user-controlled URL** before `href`, `src`, or
    `navigate()`; allow-list schemes (`https:`, `mailto:`) and origins.
-8. **`rel="noopener noreferrer"`** on every external `target="_blank"`
+7. **`rel="noopener noreferrer"`** on every external `target="_blank"`
    link.
-9. **`autocomplete="new-password"` / `"current-password"` /
+8. **`autocomplete="new-password"` / `"current-password"` /
    `"one-time-code"`** on auth inputs; never blanket `autocomplete="off"`.
-10. **Server-side validation parity** with every Zod schema.
-11. **Supply-chain hygiene:** committed lockfile, `npm ci` in CI,
+9. **Server-side validation parity** with every Zod schema.
+10. **Supply-chain hygiene:** committed lockfile, `npm ci` in CI,
     vulnerability gate on PRs, Renovate enabled.
-12. **Release gate:** Mozilla Observatory grade A or better against the
+11. **Release gate:** Mozilla Observatory grade A or better against the
     deployed origin.
 
 Each rule maps to one or more of the numbered practices above and to two
