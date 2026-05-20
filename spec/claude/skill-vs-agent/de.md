@@ -84,6 +84,12 @@ Claude Code unterstützt, einen Skill selbst in einem isolierten Subagent-Kontex
 - **KANN [MAY]** ein konkretes Schwester-Artefakt als Präzedenz referenzieren (zum Beispiel: „folgt demselben Orchestrator-Muster wie `pull-request-create`")
 - Die Platzierung im Body liegt im Ermessen der Autorin / des Autors; sinnvolle Orte sind direkt unter der obersten Überschrift oder als kurzer Fuß unmittelbar vor den Hard Rules
 
+### Überschrift des Rationalen-Abschnitts
+- **MUSS [MUST]** bei Skills exakt die Überschrift `## Why this is a skill, not an agent` für den Rationalen-Abschnitt verwenden; alternative Formulierungen (beispielsweise `## Rationale (why a skill, not an agent)`, `## Rationale`) sind nicht konform
+- **MUSS [MUST]** bei Agents exakt die Überschrift `## Why this is an agent, not a skill` für den Rationalen-Abschnitt verwenden
+- **KANN [MAY]** zusätzliche Rationalen-Unterüberschriften hinzufügen, wenn ein bestimmter Skill oder Agent eine themenspezifische Rationalen-Dimension besitzt (z. B. ist `## Why this is one skill, not three` als zusätzliche H2 neben der Pflichtüberschrift `## Why this is a skill, not an agent` zulässig), aber die Pflichtüberschrift MUSS vorhanden sein
+- Begründung: eine deterministische Überschrift ermöglicht `grep`-basierte Portfolio-Audits und stellt eine Single Source of Truth für die Abschnitts-Semantik dar
+
 ### Portfolio-weite Konsistenz
 - **MUSS [MUST]** eine Capability-Klasse, die in drei oder mehr Consumer-Repositories wiederkehrt, als Plugin-Level-Artefakt ausliefern statt als projekt-lokale Kopien; dieser Schwellwert ist mit dem Drei-Wiederholungs-Trigger der `workflow-health`-Spezifikation für Specialized-Agent-Autoring abgestimmt, und die obige Entscheidungsregel bestimmt weiterhin, ob das Plugin-Level-Artefakt ein Skill oder ein Agent ist
 - **SOLLTE [SHOULD]** ein neues Artefakt am Artefakt-Typ bestehender Peers desselben funktionalen Clusters (PR-Management, Audit, Lint, Release-Tooling) ausrichten — wenn alle bestehenden Peers Skills sind, ist das neue ein Skill, es sei denn eine Dimension erzwingt den anderen Weg
