@@ -12,7 +12,7 @@ _Drive the daily mechanics of an active sprint per the project sprint spec. Invo
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 4 Build (`build`)
-- **Tags:** `scaffolding`
+- **Tags:** `lifecycle`
 - **Source:** [skills/sprint-execute/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/sprint-execute/SKILL.md)
 
 ---
