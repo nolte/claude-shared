@@ -22,6 +22,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
+- [webview-ui-expert](agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [docs-audience-tracks-apply](skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
 - [mermaid-diagrams-apply](skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
@@ -32,6 +33,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [roadmap-refine](skills/nolte-shared/roadmap-refine.md) — nolte-shared
 - [skill-agent-catalog-apply](skills/nolte-shared/skill-agent-catalog-apply.md) — nolte-shared
 - [vocab-drift-audit](skills/nolte-shared/vocab-drift-audit.md) — nolte-shared
+- [webview-ui-optimize](skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [workflow-health-triage](skills/nolte-shared/workflow-health-triage.md) — nolte-shared
 - [yaml-json-schema](skills/nolte-shared/yaml-json-schema.md) — nolte-shared
 
@@ -68,6 +70,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
+- [webview-ui-expert](agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [agent-review](skills/nolte-shared/agent-review.md) — nolte-shared
 - [skill-review](skills/nolte-shared/skill-review.md) — nolte-shared
 
@@ -96,6 +99,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [sprint-plan](skills/nolte-shared/sprint-plan.md) — nolte-shared
 - [sprint-review](skills/nolte-shared/sprint-review.md) — nolte-shared
 - [tech-stack-capture](skills/nolte-shared/tech-stack-capture.md) — nolte-shared
+- [webview-ui-optimize](skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [yaml-json-schema](skills/nolte-shared/yaml-json-schema.md) — nolte-shared
 
 ## `validation`

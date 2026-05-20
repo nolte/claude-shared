@@ -22,6 +22,7 @@
     * [skill-management](nolte-shared/skill-management.md)
     * [spec](nolte-shared/spec.md)
     * [tech-stack-capture](nolte-shared/tech-stack-capture.md)
+    * [webview-ui-optimize](nolte-shared/webview-ui-optimize.md)
     * [yaml-json-schema](nolte-shared/yaml-json-schema.md)
 * 4 Build
     * [sprint-execute](nolte-shared/sprint-execute.md)
