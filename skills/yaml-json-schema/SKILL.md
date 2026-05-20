@@ -1,27 +1,18 @@
 ---
 name: yaml-json-schema
 description: >-
-  Authors, audits, refactors, and runs validation for YAML-encoded JSON Schema
-  2020-12 documents in the current repository per
-  `spec/project/yaml-json-schema/<canonical_language>.md`. Bootstraps a new
-  `<slug>-v1.0.schema.yaml` skeleton with the mandatory `$schema`, `$id`,
-  `title`, `description` (carrying a `Refs spec/...` anchor), `type`,
-  `required`, `additionalProperties`, `properties`, `$defs`, and `examples`
-  entries in the spec's declared order. Audits existing `*.schema.yaml`
-  files for dialect drift, missing identity, inline duplicates that belong
-  in `$defs`, relative-path `$ref` targets, and missing property
-  descriptions. Refactors duplicate sub-schemas into `$defs` and rewrites
-  the corresponding `$ref` targets. Runs JSON-Schema-2020-12 meta-validation
-  on every schema file and conformance validation of governed data files
-  against their declared schema. Invoke when the user asks to "scaffold a
-  JSON Schema in YAML", "audit our schemas", "extract a `$defs` entry",
-  "validate this YAML against a schema", or equivalent German-language
-  requests ("YAML-Schema anlegen", "Schemata auditieren", "Daten gegen
-  Schema validieren"). Don't use for OpenAPI / AsyncAPI Schema Objects
-  (out of scope per spec), for JSON-encoded schemas (the spec mandates
-  YAML), for the feature-frontmatter content rules (that's
-  `spec/project/feature/`), or for project-structure scaffolding (use
-  `project-structure-apply`).
+  Authors, audits, refactors, and validates YAML-encoded JSON Schema 2020-12
+  documents per `spec/project/yaml-json-schema/`. Scaffolds a new
+  `<slug>-v1.0.schema.yaml` with all mandatory skeleton entries in spec order;
+  audits existing `*.schema.yaml` files for dialect drift, missing identity,
+  inline duplicates, and missing property descriptions; refactors duplicates
+  into `$defs`; runs meta-validation and data-conformance validation. Invoke
+  for: "scaffold a JSON Schema in YAML", "audit our schemas", "extract a
+  `$defs` entry", "validate this YAML against a schema", or German equivalents
+  ("YAML-Schema anlegen", "Schemata auditieren", "Daten gegen Schema
+  validieren"). Skip for: OpenAPI/AsyncAPI Schema Objects, JSON-encoded
+  schemas, feature-frontmatter rules (`spec/project/feature/`), or
+  project-structure scaffolding (`project-structure-apply`).
 tags: [scaffolding, audit, validation]
 phase: design
 ---
@@ -90,8 +81,15 @@ Diff proposed change; classify as minor (backward-compatible) or major (breaking
 
 Re-run operations 2, 4, and 5 end-to-end; present a fresh grouped summary. Call out any remaining `missing`, `drift`, `fail`, or `unassociated` items.
 
+## Examples
+
+- Read `examples/01-meta-validation.md` when running a meta-validation pass for the first time on a new schema.
+- Read `examples/02-data-against-schema.md` when wiring up sidecar-comment-based schema associations for the first time.
+- Read `examples/03-schema-lifecycle.md` when revising an existing schema (minor or major bump).
+
 ## Gotchas
 
+- **Validator precedence**: When multiple validators are installed (`task lint`, `check-jsonschema`, `ajv`, `python -m jsonschema`), the skill uses the first available in that order. A `task lint` target with `check-jsonschema` configured overrides direct `check-jsonschema` invocation; mention which validator ran in the result table so a re-run can detect drift.
 - **YAML 1.1 vs YAML 1.2 booleans**: `Yes`/`No`/`On`/`Off` parse as booleans under YAML 1.1 but as strings under YAML 1.2. Schemas authored under loaders that default to 1.1 (older Ruby tooling) can land with `additionalProperties: No` silently re-typed; emit a YAML 1.2 directive (`%YAML 1.2\n---`) at the top of any file the skill writes to make the version explicit.
 - **`$schema` URI trailing slash**: `https://json-schema.org/draft/2020-12/schema` and `https://json-schema.org/draft/2020-12/schema#` resolve to the same document, but validators compare URIs as strings. The skill always emits the no-fragment form; never append `#`.
 - **`#/$defs/` JSON Pointer escaping**: a `$defs` key containing `~` or `/` must be escaped (`~0`, `~1`) in the `$ref` fragment. The skill rejects `$defs` names containing those characters at authoring time rather than silently emitting escape sequences.
