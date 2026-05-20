@@ -107,7 +107,7 @@ Skills with multiple named operations use a `## Operations` block. This section 
 - **MUST** name each operation with one verb from the closed vocabulary: `audit` (read-only check), `scaffold` (greenfield create), `patch` (additive fix), `apply` (audit + scaffold + patch in one flow), `migrate` (brownfield → conforming), `run` (default verb for skills with one operation), `update` (mutate an existing artefact), `close` (terminate a lifecycle)
 - **MUST NOT** introduce new operation verbs without amending this list
 - **MUST** title sub-operations as `### N. <verb>` (numbered) or `### `<verb>`` (backtick-quoted command); alphabetic letters (`A.`/`B.`/`C.`) and `### Step N` are non-conformant
-- **SHOULD** retain operation names short (single word) and consistent within a skill cluster (e.g. lifecycle skills should align verbs)
+- **SHOULD** retain operation names short (single word) and consistent within a skill cluster (for example, lifecycle skills should align verbs)
 
 ### Progressive disclosure & file references
 
