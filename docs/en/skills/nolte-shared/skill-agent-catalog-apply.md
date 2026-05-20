@@ -207,6 +207,7 @@ After the audit step, produce a single report:
 - **Always**, in plugin mode, make the local plugin the first entry in the sources list so its catalog appears first in the navigation. In consumer mode, order external sources as the user requests them and default to alphabetical by `name` if unspecified.
 - **Always** fail the docs build (via the generator hook) on malformed frontmatter rather than silently skipping. Broken catalogs defeat the whole point.
 - **Always** point at the spec file in generated docstrings and in every reported drift item, so future readers follow the same rules.
+- **Always** emit catalog pages (`docs/<lang>/skills/...`, `docs/<lang>/agents/...`, `docs/<lang>/tags.md` and equivalents) for every language tree configured in `spec/.spec-config.yml`'s `languages` list, per `spec/project/docs-multilingual-authoring/` §Authoring protocol. The generator hook reads `.spec-config.yml` at build time and emits one page per language per artefact; artefact body content (`description`, frontmatter) is rendered verbatim per the rule above, and only the surrounding chrome (section titles, intro text, nav labels) is localised per language.
 
 ### Gotchas
 

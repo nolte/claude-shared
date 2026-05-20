@@ -35,7 +35,7 @@ This spec closes that gap. It defines (a) the portfolio-wide MkDocs skeleton—s
 
 - **MUST** keep `docs_dir` at `docs` (the MkDocs default), so consuming tooling (`docs-freshness`, IDE link-checkers, `mkdocs-static-i18n`) can rely on a single path
 - **MUST** organise documentation into per-language subdirectories `docs/<lang>/`, one per language listed in `spec/.spec-config.yml` `languages`; a repo using only one language still uses `docs/<lang>/` (not a flat `docs/`) so adding a second language later is a pure-additive change
-- **MUST** keep the on-disk file tree structurally identical across configured language trees: every page that exists in one language exists in every other configured language (cross-checked by `docs-freshness` parity audit)
+- **MUST** keep the on-disk file tree structurally identical across configured language trees: every page that exists in one language exists in every other configured language (cross-checked by `docs-freshness` parity audit; produced symmetrically by documentation-authoring skills and agents per `spec/project/docs-multilingual-authoring/`)
 - **MUST NOT** place top-level pages directly under `docs/` (other than the i18n plugin's fallback `index.md` when the configured i18n strategy requires one); every page belongs to a language tree
 - **SHOULD** keep section folders (`docs/<lang>/<section>/`) flat—at most one further nesting level (`docs/<lang>/<section>/<sub>/`)—to keep navigation paths predictable
 

@@ -27,6 +27,7 @@ Canonical language: `en` · Translations: `de`
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | unversioned |
 | project | docs-audience-tracks | Documentation Audience Tracks | Dokumentations-Zielgruppen-Spuren | draft | unversioned |
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | unversioned |
+| project | docs-multilingual-authoring | Multilingual Documentation Authoring | Mehrsprachige Dokumentations-Autorenschaft | draft | unversioned |
 | project | feature | Project Feature | Projekt-Feature | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
