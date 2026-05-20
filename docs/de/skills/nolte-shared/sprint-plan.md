@@ -8,7 +8,7 @@ last_updated: generated
 
 # sprint-plan
 
-_Create a new sprint file at `project/sprints/<NNNN>-<slug>.md` per the project sprint spec. Invoke when the user asks to plan a sprint, open a sprint, draft the next sprint, schedule a sprint, or pull roadmap items into a sprint. Also handles equivalent German-language requests. Resolves the next monotonic sprint number, walks the value-delivery contract (rejects operator-internal verbs in `value_statement`), pulls in roadmap items whose `target_sprint` matches, populates the `features` list (delegating to `feature-decompose` when decompositions are missing), names the value-verifying feature, and writes the file with `status: planned`._
+_Create a new sprint file under project/sprints/ per the project sprint spec. Invoke when the user asks to plan a sprint, open a sprint, draft the next sprint, schedule a sprint, or pull roadmap items into a sprint. Also handles equivalent German-language requests. Resolves the next monotonic sprint number, walks the value-delivery contract (rejects operator-internal verbs in `value_statement`), pulls in roadmap items whose `target_sprint` matches, populates the `features` list (delegating to `feature-decompose` when decompositions are missing), names the value-verifying feature, and writes the file with `status: planned`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
