@@ -114,6 +114,12 @@ Spiegelt `skill-management` §„Evaluations-Disziplin"; die ursprüngliche Rege
 - **SOLLTE [SHOULD]** verifizieren, dass der Skill mindestens drei Evaluations-Szenarien (Eingabe-Prompt, optionale Eingabe-Dateien, erwartetes Verhalten) unter `examples/` oder einem benachbarten Ordner hat; das Fehlen ist ein `Suggestion` für neue Skills, ein `Warning` für Skills, die seit der letzten Evaluation mehr als drei Edits hatten ([R3](#referenzen))
 - **KANN [MAY]** ein `Info`-Finding aufnehmen, wenn keine Evidenz für Multi-Modell-Tests existiert (kein Kommentar, kein Beispiel-Output, kein Test-Rubric, das Haiku / Sonnet / Opus erwähnt) ([R3](#referenzen))
 
+### Checks aus Spec-Driven-Development
+
+- **MUSS [MUST]** einen Spec-Anchor-Check fahren: verifizieren, dass der SKILL.md-Body mindestens eine Referenz auf einen `spec/...`-Pfad enthält. Ein Skill ohne jegliche Spec-Zitation ist ein `Critical`-Finding gemäß MUST aus `spec/project/spec-driven-development/`
+- **KANN [MAY]** diesen Check mit einer dokumentierten Ausnahme im `## Scope`-Abschnitt des Plans unterdrücken, wenn ein Skill ausdrücklich als „implementation-only" klassifiziert ist (z. B. `dependency-audit`, `quality-gate`) — die Unterdrückung selbst muss aber in einer Spec oder einer festgehaltenen Projektentscheidung verankert sein
+- Begründung: Dieser Check operationalisiert das MUST aus Spec-Driven-Development, das bisher nur operator-enforced war
+
 ### Review-Prozedur
 
 - **MUSS [MUST]** damit beginnen, die kanonischen Specs `skill-management`, `skill-vs-agent` und `review-plan` zu lesen, bevor ein Finding erzeugt wird; Findings ohne Anker in einer dieser Specs sind keine gültige Ausgabe dieser Prozedur

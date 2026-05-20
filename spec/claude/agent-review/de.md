@@ -67,6 +67,12 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 - **SOLLTE [SHOULD]** verifizieren, dass mindestens eine Gegen-Dimension benannt ist, wenn die Entscheidung knapp war — Fehlen ist ein `Suggestion`, kein `Critical`, konsistent zur SHOULD-Formulierung in `skill-vs-agent`
 - **MUSS [MUST]** einen Duplikat-Capability-Check fahren: jede andere `agents/*.md` und `skills/*/SKILL.md` `description`-Zeile auf semantische Überlappung grepen; jede plausible Überlappung erzeugt ein `Warning`, das das Peer-Artefakt und die Überlappung benennt, damit der Autor vor dem Landen einen Merge, Rename oder klareren Split vorschlagen kann
 
+### Checks aus Spec-Driven-Development
+
+- **MUSS [MUST]** einen Spec-Anchor-Check fahren: verifizieren, dass der Agent-Body mindestens eine Referenz auf einen `spec/...`-Pfad enthält. Ein Agent ohne jegliche Spec-Zitation ist ein `Critical`-Finding gemäß MUST aus `spec/project/spec-driven-development/`
+- **KANN [MAY]** diesen Check mit einer dokumentierten Ausnahme im `## Scope`-Abschnitt des Plans unterdrücken, wenn ein Agent ausdrücklich als „implementation-only" klassifiziert ist — die Unterdrückung selbst muss aber in einer Spec oder einer festgehaltenen Projektentscheidung verankert sein
+- Begründung: Dieser Check operationalisiert das MUST aus Spec-Driven-Development, das bisher nur operator-enforced war
+
 ### Tool-Scope-Checks
 
 - **MUSS [MUST]** für jedes in `tools` deklarierte Werkzeug verifizieren, dass der Agent-Body dieses Werkzeug in seiner Prozedur nachweislich benutzt — deklarierte, aber nicht genutzte Tools sind `Warning`-Findings (tote Berechtigung)
