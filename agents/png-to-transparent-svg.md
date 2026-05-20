@@ -46,6 +46,41 @@ You **don't**:
 - Commit, push, bump versions, open pull requests, or move files outside the caller's requested output folder.
 - Call the `Skill` tool or dispatch sibling agents (forbidden by `spec/claude/skill-vs-agent/en.md`).
 
+## Output shape
+
+Return a single report with these sections, in this order:
+
+```
+# PNG to Transparent SVG report
+
+## Scope
+- Target: <paths or glob>
+- Output folder: <path or "alongside sources">
+
+## Diagnosis
+- <path>: state=<state>, corners=<r,g,b>, action=<planned action>
+- …
+
+## Cleanup
+- <path>: <pixels removed>/<total> (<percent> %) → <clean png path>
+- …
+
+## Vectorisation
+- <clean png path> → <svg path> (<svg size>)
+- …
+
+## Summary
+| file | original PNG | pixels removed | SVG size | status |
+| … | … | … | … | … |
+
+## Caller follow-ups
+- Review the SVGs for motif integrity (read them with the Read tool or open them in a browser).
+- Commit the generated SVGs if the result is acceptable.
+- For any `warn: low removal` entry, decide whether to retune thresholds or skip.
+```
+
+Omit sections with no content except **Scope**, **Summary**, and **Caller follow-ups**, which are always present.
+
 ## Inputs
 
 The caller gives you one of:
@@ -226,41 +261,6 @@ Produce a final table:
 | Motif edges look frayed | Raise `MIN_BRIGHTNESS` (less aggressive removal); the caller may also need to manually retouch the source PNG. |
 | White halo around the motif | Lower `MIN_BRIGHTNESS` to 190 so the anti-aliasing transition pixels go transparent too. |
 | `status: warn: low removal` | Ask the caller whether the source PNG is actually a fake-transparency case; this agent isn't for real photos. |
-
-## Output shape
-
-Return a single report with these sections, in this order:
-
-```
-# PNG to Transparent SVG report
-
-## Scope
-- Target: <paths or glob>
-- Output folder: <path or "alongside sources">
-
-## Diagnosis
-- <path>: state=<state>, corners=<r,g,b>, action=<planned action>
-- …
-
-## Cleanup
-- <path>: <pixels removed>/<total> (<percent> %) → <clean png path>
-- …
-
-## Vectorisation
-- <clean png path> → <svg path> (<svg size>)
-- …
-
-## Summary
-| file | original PNG | pixels removed | SVG size | status |
-| … | … | … | … | … |
-
-## Caller follow-ups
-- Review the SVGs for motif integrity (read them with the Read tool or open them in a browser).
-- Commit the generated SVGs if the result is acceptable.
-- For any `warn: low removal` entry, decide whether to retune thresholds or skip.
-```
-
-Omit sections with no content except **Scope**, **Summary**, and **Caller follow-ups**, which are always present.
 
 ## Hard rules
 
