@@ -171,6 +171,12 @@ Never run `git push origin --delete …` or `gh api -X DELETE` without explicit 
 
 The skill is single-shot by default: when step 4 finds pending checks or step 7a finds the PR still `OPEN`, the skill reports and stops; the user re-invokes once GitHub is in the next state. **Wait mode** is an opt-in that lets the skill wait for state transitions inside a single invocation, bounded by hard caps (interval ≥60s, wall-clock ≤15 min, ≤10 retries per wait point, visible status line per round, failure short-circuits to workflow-health). Read `references/wait-mode.md` when the user opts in via `--wait` or an unambiguous "wait until X" instruction in the prompt — the reference covers activation, every cap with its rationale, the per-step implementation pattern (step 4 vs. step 7a), and the prompt-cache trade-off that justifies the bounds.
 
+### Examples
+
+- Read `examples/01-clean-merge-via-automerge-label.md` when promoting a ready PR through the automerge label on the first end-to-end run.
+- Read `examples/02-pending-checks-reports-and-stops.md` when required checks are still pending and the skill reports state instead of proceeding.
+- Read `examples/03-wait-mode-with-explicit-flag.md` when the user opts into wait mode via `--wait` and you need to see the polling loop behaviour.
+
 ### Hard rules
 
 - **Never** flip a draft to ready while any required check is pending or failing. Failures route to the `workflow-health` triage flow, not to a waiver.

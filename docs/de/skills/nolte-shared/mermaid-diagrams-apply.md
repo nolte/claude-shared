@@ -134,6 +134,12 @@ When the user has finished approving changes, re-run operations 1 and 4 end-to-e
 - **Trailing whitespace inside `<!-- diagram-source: ... -->`**: the marker is detected by exact prefix match. A trailing space before `-->` doesn't break the comment but breaks naive grep-based scanners; trim before writing.
 - **`docs/requirements.txt` may not exist** even when MkDocs is configured—some repos rely on a `pyproject.toml` `[project.optional-dependencies.docs]` group. Ask the user where the docs install set lives before scaffolding a new `docs/requirements.txt`.
 
+### Examples
+
+- Read `examples/01-wire-up-mkdocs-fresh.md` when wiring Mermaid into a MkDocs project for the first time.
+- Read `examples/02-author-flowchart-from-description.md` when authoring a new flowchart diagram from a user description.
+- Read `examples/03-audit-existing-blocks.md` when auditing existing Mermaid blocks in a docs tree for spec compliance.
+
 ### Hard rules
 
 - **Never** install or scaffold a Mermaid-only MkDocs plugin (`mkdocs-mermaid2-plugin` or any equivalent). Material's native superfences-based bridge is the portfolio standard, and a second plugin only duplicates the runtime.

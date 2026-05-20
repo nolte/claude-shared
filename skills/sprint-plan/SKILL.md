@@ -130,6 +130,12 @@ Only write the file once the user approves. Report back: the path written, the s
 - **Sprint numbers are monotonic, never reused.** The skill resolves the next sprint number by reading the highest existing `<NNNN>` under `project/sprints/` plus the highest deleted number from `git log -- project/sprints/`. A retired sprint number isn't available for reuse, even after a `cancelled` sprint.
 - **At most one sprint is `active` at a time.** Creating a `planned` sprint while another is `active` is fine (planned sprints are queue items, not active commitments). The at-most-one invariant only applies to `status: active`; this skill writes `status: planned` and lets `sprint-execute` perform the `planned → active` promotion when the operator starts the first feature.
 
+## Examples
+
+- Read `examples/01-create-sprint-from-roadmap.md` when creating the first sprint by selecting features from the roadmap queue.
+- Read `examples/02-reject-operator-internal-value.md` when the user proposes a `value_statement` that starts with an operator-internal verb and the skill must refuse.
+- Read `examples/03-dispatch-feature-decompose.md` when a roadmap item lacks a feature file and the skill dispatches `feature-decompose` before continuing.
+
 ## Hard rules
 
 - **Never** reuse a sprint number from a `cancelled` or `closed` sprint. Numbers are strictly monotonic per `spec/project/sprint/` §Directory layout and file shape.

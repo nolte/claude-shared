@@ -153,6 +153,12 @@ A clean re-run on an already-curated draft with no new commits MUST produce no d
 - `gh release edit --draft=false` is a separate flag from `--notes` and is the publish operation. This skill never sets it, even by accident: refuse the operation if any code path would compose `--draft=false`.
 - The marker comment text is the **contract** with re-runs and any other tooling that may inspect the body. Never change the marker strings; never wrap them in additional whitespace; never duplicate them.
 
+## Examples
+
+- Read `examples/01-claude-plugin-bundle.md` when curating release notes for a Claude plugin release bundle.
+- Read `examples/02-python-library-bundle.md` when curating release notes for a Python library with multiple audience tracks.
+- Read `examples/03-rerun-update-in-place.md` when re-running the skill on an existing draft to update the augmentation block in place.
+
 ## Hard rules
 
 - Never write to a release outside the open `release-drafter` draft on the default branch.

@@ -98,6 +98,12 @@ Triggered when the user signals a material scope change (new public API, new dep
 - **Optional subdivisions add cost, not always value.** Geography, organizational unit, and tenancy subdivisions only get added when they materially change the expected deliverable. A "European users" subdivision is valuable only if it changes the artefact's content for that subgroup; otherwise it's noise that downstream consumers have to disregard. Default to no subdivisions.
 - **The German trigger phrases ship in the body, not the description.** The frontmatter `description` is English-only per `agent-management` §Structure (plugin-distributed). German operator-voice triggers like "Zielgruppen für dieses Modul ermitteln" live in the body's `## German trigger phrases` section so they remain greppable inside an open conversation; routing on the frontmatter alone misses them.
 
+### Examples
+
+- Read `examples/01-fresh-bounded-context.md` when starting a new `run` on a context that has no existing audience artifact.
+- Read `examples/02-validate-existing-artifact.md` when running `validate` against an artifact already on disk.
+- Read `examples/03-revisit-after-scope-change.md` when a material scope change triggers a `revisit` operation.
+
 ### Hard rules
 
 - Never list audiences before the bounded context is declared in writing — this is the load-bearing rule of the underlying spec.

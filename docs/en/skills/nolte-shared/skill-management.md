@@ -75,6 +75,12 @@ Out of scope. Invoke `skill-review` — it applies every MUST / SHOULD / MAY fro
 - **`description` length is measured in characters, not bytes.** The 1024-character cap counts grapheme clusters; multi-byte UTF-8 sequences (German umlauts, em-dashes) count as one character each, not as their byte length. `len(description)` in Python and the local validator both use the character count; don't surprise the operator with a "1024-byte cap" framing.
 - **Folder name and `name` frontmatter MUST match exactly.** A typo in either is a `Critical` per spec. The skill verifies the match before any write; renaming a skill is a coordinated rename of the folder, the frontmatter, and every cross-reference (`grep -RIn '<old-name>' spec/ skills/ agents/ docs/ project/`).
 
+### Examples
+
+- Read `examples/01-scaffold-new-skill.md` when scaffolding a brand-new skill from scratch.
+- Read `examples/02-revise-existing-frontmatter.md` when revising frontmatter fields on an already-existing skill.
+- Read `examples/03-route-to-skill-review.md` when the user asks for a skill review and this skill routes them to `skill-review`.
+
 ### Hard rules
 
 - Never create a skill at a non-standard path. Inside a plugin source tree the only accepted location is `skills/<name>/`; everywhere else, stop and ask the user whether to switch to the plugin repository instead.

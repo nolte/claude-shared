@@ -129,6 +129,12 @@ The single-shot default exists because the prompt-cache TTL is 5 min; unbounded 
 - `release-cd-refresh-master.yml` should fire automatically after `release-publish.yml` succeeds. When it doesn't fire (the known-platform-constraint case where `release: published` from `GITHUB_TOKEN` doesn't cascade to a fresh workflow run, per `workflow-health` §Known platform constraints), surface this and route to manual fast-forward of `main` per `branching-model` §Release flow.
 - The skill never runs `gh release edit --draft=false` even as a fallback — that flag is reserved for incident response and remains a manual operator action documented in `release-automation` §Non-Goals.
 
+## Examples
+
+- Read `examples/01-clean-dispatch-all-gates-pass.md` when all pre-publish gates pass and the skill dispatches the release workflow cleanly.
+- Read `examples/02-version-bearing-files-misaligned.md` when version-bearing files are out of sync and the gate blocks dispatch.
+- Read `examples/03-required-checks-red-route-to-workflow-health.md` when a required check on `develop`'s tip is red and triage routes to `workflow-health`.
+
 ## Hard rules
 
 - Never dispatch when any pre-publish gate fails. Failures route to `workflow-health` triage.

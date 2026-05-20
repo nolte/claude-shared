@@ -76,6 +76,12 @@ The "Latest release" line comes from `gh api repos/nolte/vale-style/releases/lat
 - **Regex entries in `accept.txt` need careful comparison.** Two entries may match the same string but be different patterns (`pip-?audit` vs. `pip ?audit`); the audit treats them as distinct entries even when their match-set overlaps. Don't recommend deletion just because the upstream regex has wider coverage; the operator decides whether the wider regex makes the local one redundant.
 - **The `## Old patterns` section in `accept.txt` is a graveyard, not active scope.** Some vocabularies use a section to keep historical-but-no-longer-active terms; the audit skips that section by convention. Verify the per-vocabulary convention in the repository's curation spec when it exists; otherwise the agent treats every line as active and may flag legitimate retired entries.
 
+## Examples
+
+- Read `examples/01-local-entries-now-upstream.md` when local vocabulary entries are already accepted upstream and should be deleted locally.
+- Read `examples/02-local-entries-not-yet-upstream.md` when local entries aren't yet in the upstream vocabulary and need to be PR'd to `nolte/vale-style`.
+- Read `examples/03-pinned-tag-vs-latest-release.md` when the pinned upstream tag differs from the latest release and you need to understand how the comparison is scoped.
+
 ## Hard rules
 
 - Never modify files without explicit user confirmation. This skill reports; mutations are a follow-up step the user approves.

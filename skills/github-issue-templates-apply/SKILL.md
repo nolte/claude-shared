@@ -145,6 +145,12 @@ A clean re-run on a conformant repo MUST produce no diff.
 - `render: shell` (and `render: python`, `render: javascript`, …) only takes effect on `textarea`; on `input` it is silently ignored.
 - `contact_links` is a flat list under `config.yml`'s top level — not nested under any template. Putting it inside a `body:` block makes the chooser drop it without an error message.
 
+## Examples
+
+- Read `examples/01-fresh-scaffold-claude-plugin.md` when scaffolding issue templates for a new Claude plugin project.
+- Read `examples/02-update-existing-templates.md` when re-running the skill to update templates that already exist on disk.
+- Read `examples/03-python-library-project-type.md` when the project type is a Python library and you need to see how project-type inference changes the template set.
+
 ## Hard rules
 
 - Never write any file under `.github/ISSUE_TEMPLATE/` without first surfacing the full derivation (project type, audiences, templates, fields, labels, assignees) to the user and getting an explicit confirmation.

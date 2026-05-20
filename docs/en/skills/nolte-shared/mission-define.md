@@ -100,6 +100,12 @@ After writing, remind the user that the next mission-side operation is `mission-
 - An `mvp: true` flag on a roadmap item without `detail: fine` and a non-null `target_sprint` is a roadmap-side lint violation, not something to silently accept here. Surface it back to the user and ask whether to fix the roadmap first via `roadmap-refine`.
 - The `## Source` audit trail is part of the spec contract, not optional metadata. A first-write without an audience-artefact SHA, a `goals.md` reference, and an authorship line fails validation downstream.
 
+### Examples
+
+- Read `examples/01-fresh-mission-claude-plugin.md` when writing a first `project/mission.md` for a Claude plugin project.
+- Read `examples/02-mission-with-multiple-audiences.md` when the project has multiple distinct audiences that each need a dedicated outcome.
+- Read `examples/03-refusal-when-mission-exists.md` when the user triggers `define` but a `project/mission.md` already exists on disk.
+
 ### Hard rules
 
 - **Never** create `project/mission.md` when one already exists. First-write only.

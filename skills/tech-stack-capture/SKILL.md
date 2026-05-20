@@ -130,6 +130,12 @@ The skill **MAY** emit a "candidates not picked" log alongside the confirmation 
 - **The global manifest is read-only from this skill.** Even when running inside `claude-shared` itself, the skill never modifies `portfolio/tech-stack.yml`. Promoting a repo-specific addition to portfolio-wide is a hand-curated PR against the global manifest, not a skill operation. When the operator asks the skill to "add this to the global stack", stop and route them to a hand-authored PR.
 - **Refresh preserves operator-edited entries that survived a prior round.** When `existing_additions` from step 2 contains entries the current signal probe wouldn't surface (for example a hand-added `kind: deploy-target` entry that doesn't have a signal class), the skill keeps presenting those entries in step 7 with their existing field set so the operator can re-confirm, edit, or drop them. Silently deleting them across a refresh would lose deliberate operator authoring.
 
+## Examples
+
+- Read `examples/01-fresh-capture-empty-additions.md` when running a fresh capture on a project with no existing `tech_stack:` additions.
+- Read `examples/02-refresh-after-dep-bot-swap.md` when refreshing the tech-stack capture after Dependabot or Renovate has swapped a dependency.
+- Read `examples/03-deviation-with-override-and-regroup.md` when the project deviates from the portfolio baseline and you need to see how overrides and regroup records are authored.
+
 ## Hard rules
 
 - Never write `project/portfolio.yml` without an interactive per-entry confirmation round (steps 7) on every addition, override, and regroup. Skipping confirmation violates the MUST in `spec/portfolio/tech-stack-discovery/` §Discovery sequence per repository regardless of whether the result is technically a no-op.

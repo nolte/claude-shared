@@ -123,6 +123,12 @@ Triggered when step 3 fails unrecoverably (the underlying release pipeline is br
 - **Optional chaining into `release-notes-curate` and `release-publish-trigger` is operator-opt-in.** Defaulting to chain leads to surprise releases; the skill stays explicit about each chain hop and records the operator's opt-in verbatim in `## Review notes`.
 - **Cancelled sprints leave a value-delivery gap that the next sprint must explain.** When the skill cancels a sprint, the unfinished features need re-targeting (typically to the next sprint or back to the roadmap queue). The skill surfaces the affected feature IDs and asks where each one lands; nothing is silently re-targeted.
 
+## Examples
+
+- Read `examples/01-clean-close-claude-plugin.md` when closing a sprint cleanly for a Claude plugin project with all features done.
+- Read `examples/02-artifact-validation-fails-cancel.md` when artifact validation fails and the sprint must be cancelled instead of closed.
+- Read `examples/03-chain-into-release-skill-layer.md` when the user opts in to chaining into `release-notes-curate` and `release-publish-trigger` after sprint closure.
+
 ## Hard rules
 
 - **Never** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id> draft=false`, or any other path that flips the draft state outside `release-publish.yml`. The rule comes from `spec/project/release-automation/`, `spec/project/release-skill-layer/`, and `spec/project/release-artifact/` §Dispatch boundary to release machinery and is non-negotiable here too. The only acceptable publish path is dispatching `release-publish-trigger`.

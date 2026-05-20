@@ -183,6 +183,12 @@ After the audit step, produce a single report:
 - git status on docs/: <clean / dirty, list offenders>
 ```
 
+## Examples
+
+- Read `examples/01-plugin-mode-fresh-wireup.md` when wiring up the catalog generator in a plugin-mode repository for the first time.
+- Read `examples/02-consumer-mode-with-multiple-sources.md` when configuring a consumer-mode repository with multiple external plugin sources.
+- Read `examples/03-drift-tracked-catalog-md.md` when the generated catalog markdown has drifted from the current skill/agent set and you need to see how drift is reported and resolved.
+
 ## Hard rules
 
 - **Never** apply changes without explicit per-item user approval. The audit is read-only; writes are a separate, opt-in step.
