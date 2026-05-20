@@ -106,7 +106,7 @@ Skills mit mehreren benannten Operationen verwenden einen `## Operations`-Block.
 - **MUSS [MUST]** `## Operations` (Plural) als Überschrift des Operations-Blocks verwenden; das Singular `## Operation` ist nicht konform
 - **MUSS [MUST]** jede Operation mit einem Verb aus dem geschlossenen Vokabular benennen: `audit` (lesender Check), `scaffold` (Greenfield-Anlage), `patch` (additive Korrektur), `apply` (audit + scaffold + patch in einem Ablauf), `migrate` (Brownfield → konform), `run` (Standard-Verb für Skills mit einer einzigen Operation), `update` (bestehendes Artefakt verändern), `close` (Lifecycle beenden)
 - **DARF NICHT [MUST NOT]** neue Operations-Verben einführen, ohne diese Liste anzupassen
-- **MUSS [MUST]** Teil-Operationen als `### N. <verb>` (nummeriert) oder `### `<verb>`` (Backtick-zitierter Befehl) betiteln; Buchstaben (`A.`/`B.`/`C.`) und `### Step N` sind nicht konform
+- **MUSS [MUST]** Teil-Operationen als `### N. <verb>` (nummeriert) oder als H3-Überschrift gefolgt von einem Backtick-zitierten Befehls-Verb betiteln; Buchstaben (`A.`/`B.`/`C.`) und `### Step N` sind nicht konform
 - **SOLLTE [SHOULD]** Operations-Namen kurz halten (ein Wort) und innerhalb eines Skill-Clusters konsistent wählen (z. B. sollen Lifecycle-Skills ihre Verben aufeinander abstimmen)
 
 ### Progressive Disclosure und Datei-Referenzen
