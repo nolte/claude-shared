@@ -84,6 +84,12 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 - **MAY** reference a specific sibling artifact as precedent (for example: "follows the same orchestrator pattern as `pull-request-create`")
 - The placement within the body is at the author's discretion; sensible locations are directly under the top-level heading or as a short footer just before the hard rules
 
+### Rationale section heading
+- **MUST** for skills use exactly the heading `## Why this is a skill, not an agent` for the rationale section; alternative phrasings (e.g. `## Rationale (why a skill, not an agent)`, `## Rationale`) are non-conformant
+- **MUST** for agents use exactly the heading `## Why this is an agent, not a skill` for the rationale section
+- **MAY** add additional rationale sub-headings if a particular skill or agent has a topic-specific rationale dimension (e.g. `## Why this is one skill, not three` is acceptable as an additional H2 alongside the mandatory `## Why this is a skill, not an agent`), but the mandatory heading MUST be present
+- Rationale: deterministic heading enables `grep`-based portfolio audits, single source of truth for the section semantic
+
 ### Portfolio-wide consistency
 - **MUST**, when a capability class recurs across three or more consuming repositories, ship it as a plugin-level artifact rather than as project-local copies; this threshold is aligned with the `workflow-health` spec's three-recurrence trigger for specialized-agent authoring, and the decision rule above still determines whether the plugin-level artifact is a skill or an agent
 - **SHOULD** align a new artifact with the artifact type used by existing peers in the same functional cluster (PR management, audit, lint, release tooling): when every existing peer is a skill, the new one is a skill unless a dimension forces the other way
