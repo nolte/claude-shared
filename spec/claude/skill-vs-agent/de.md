@@ -85,7 +85,7 @@ Claude Code unterstützt, einen Skill selbst in einem isolierten Subagent-Kontex
 - Die Platzierung im Body liegt im Ermessen der Autorin / des Autors; sinnvolle Orte sind direkt unter der obersten Überschrift oder als kurzer Fuß unmittelbar vor den Hard Rules
 
 ### Überschrift des Rationalen-Abschnitts
-- **MUSS [MUST]** bei Skills exakt die Überschrift `## Why this is a skill, not an agent` für den Rationalen-Abschnitt verwenden; alternative Formulierungen (z. B. `## Rationale (why a skill, not an agent)`, `## Rationale`) sind nicht konform
+- **MUSS [MUST]** bei Skills exakt die Überschrift `## Why this is a skill, not an agent` für den Rationalen-Abschnitt verwenden; alternative Formulierungen (beispielsweise `## Rationale (why a skill, not an agent)`, `## Rationale`) sind nicht konform
 - **MUSS [MUST]** bei Agents exakt die Überschrift `## Why this is an agent, not a skill` für den Rationalen-Abschnitt verwenden
 - **KANN [MAY]** zusätzliche Rationalen-Unterüberschriften hinzufügen, wenn ein bestimmter Skill oder Agent eine themenspezifische Rationalen-Dimension besitzt (z. B. ist `## Why this is one skill, not three` als zusätzliche H2 neben der Pflichtüberschrift `## Why this is a skill, not an agent` zulässig), aber die Pflichtüberschrift MUSS vorhanden sein
 - Begründung: eine deterministische Überschrift ermöglicht `grep`-basierte Portfolio-Audits und stellt eine Single Source of Truth für die Abschnitts-Semantik dar
