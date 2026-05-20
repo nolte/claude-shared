@@ -114,6 +114,12 @@ Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule 
 - **SHOULD** verify the skill has at least three evaluation scenarios (input prompt, optional input files, expected behavior) under `examples/` or a sibling folder; absence is a `Suggestion` for new skills, a `Warning` for skills that have been edited more than three times since the last evaluation ([R3](#references))
 - **MAY** record an `Info` finding when no evidence of multi-model testing exists (no comment, no example output, no test rubric mentioning Haiku / Sonnet / Opus) ([R3](#references))
 
+### Checks derived from spec-driven-development
+
+- **MUST** run a spec-anchor check: verify the SKILL.md body contains at least one reference to a `spec/...` path. A skill without any spec citation is a `Critical` finding per `spec/project/spec-driven-development/` MUST
+- **MAY** suppress this check with a documented exception in the plan's `## Scope` section when a skill is explicitly classified as "implementation-only" (for example, `dependency-audit`, `quality-gate`); but the suppression itself must be anchored in a spec or a recorded project decision
+- Rationale: this check operationalises the MUST from spec-driven-development that has so far been operator-only
+
 ### Review procedure
 
 - **MUST** begin by reading the canonical `skill-management`, `skill-vs-agent`, and `review-plan` specs before producing any finding; findings without an anchor in one of those specs aren't valid output of this procedure
