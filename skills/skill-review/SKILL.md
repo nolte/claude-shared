@@ -1,6 +1,6 @@
 ---
 name: skill-review
-description: Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/<skill-name>.md. Invoke when the user asks "review this skill", "audit skills/<name>", "check whether this skill is spec-compliant", "skill review for <name>", "prüfe diesen Skill", "Skill-Review für X", "Audit von skills/<name>", or "ist dieser Skill spec-konform". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for <name>", "schließe den Skill-Review-Plan". Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill).
+description: Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/ keyed by the target skill's name. Invoke when the user asks "review this skill", "audit a specific skill folder", "check whether this skill is spec-compliant", "skill review for a specific skill", "prüfe diesen Skill", "Skill-Review für X", "Audit von skills/", or "ist dieser Skill spec-konform". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for a specific skill", "schließe den Skill-Review-Plan". Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill).
 tags: [review]
 phase: review
 ---
