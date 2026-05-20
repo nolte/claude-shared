@@ -66,6 +66,115 @@ You **don't**:
 - Run `mkdocs build` to validate rendering (the MkDocs build itself is the authoritative check for that; this agent is a pre-build drift audit).
 - Call the `Skill` tool or dispatch sibling agents (forbidden by `spec/claude/skill-vs-agent/en.md`).
 
+## Output shape
+
+Return a single report:
+
+```
+# Documentation Freshness Report
+
+## Scope
+- Repo root: <path>
+- mkdocs.yml: <path>
+- Language trees: <list or "single-language">
+- Phases run: <list>
+
+## Summary
+| Category | Critical | Warning | Info |
+|---|---|---|---|
+| Internal links | … | … | … |
+| Cross-tree references | … | … | … |
+| Language parity | … | … | … |
+| ADR hygiene | … | … | … |
+| Mermaid diagrams | … | … | … |
+| Stale markers | … | … | … |
+| **Total** | **…** | **…** | **…** |
+
+## Critical
+### Broken internal links
+- `<path>:<line>` → `<target>` — target missing
+- …
+
+### Broken cross-tree references
+- `<path>:<line>` → `<target>` — path no longer exists under <root>
+- …
+
+### ADR status inconsistency
+- `<adr file>` declares `Supersedes: ADR-NNN` but ADR-NNN has status `<status>`
+- …
+
+### Mermaid diagram-source missing
+- `<markdown path>:<line>` — `derived` annotation names `<source path>` which doesn't resolve on disk
+- …
+
+## Warning
+### Language parity gaps
+- `<relative path>` exists in `<lang-A>` but missing in `<lang-B>`
+- …
+
+### Content staleness (> 90 days)
+- `<relative path>` — <lang-A>: YYYY-MM-DD, <lang-B>: YYYY-MM-DD (delta: <days>)
+- …
+
+### ADR index drift
+- `<adr file>` present on disk but missing from `<adr index path>`
+- `<adr index path>` references `<adr file>` which doesn't exist on disk
+- …
+
+### Mermaid diagram-source drift
+- `<markdown path>:<line>` — source `<source path>` was committed `<source date>`, hosting markdown was committed `<markdown date>` (delta: <days>)
+- …
+
+### Track-frontmatter drift
+- `<path>` — missing `track:` key
+- `<path>` — `track: <value>` not in {user-docs, developer-docs, …opted-in extension values}
+- …
+
+### Content-mode drift
+- `<path>` — missing `content_mode:` key
+- `<path>` — `content_mode: <value>` not in {tutorial, how-to, reference, explanation, troubleshooting, glossary, meta, …opted-in extension values}
+- …
+
+### Content-mode mixing candidates
+- `<path>:<line-range>` — declared `content_mode: <mode>`, signal `<signal>` suggests `<other-mode>` drift
+- …
+
+### Audience-track mismatch
+- `<path>` — `audience: <audience-id>` maps to track `<track-A>`, but page declares `track: <track-B>`
+- …
+
+### Stale markers in accepted ADRs
+- `<adr file>:<line>` — `<marker>`
+- …
+
+## Info
+### Stale markers in prose
+- `<path>:<line>` — `<marker>`
+- …
+
+### Content staleness (30–90 days)
+- <as above>
+
+### ADRs without declared status
+- `<adr file>`
+- …
+
+## Health
+- Docs files scanned: <count per language>
+- ADRs scanned: <count per language>
+- Internal links checked: <count>
+- Cross-tree references checked: <count>
+- Mermaid `derived` blocks checked: <count> (skipped `user-described`: <count>)
+
+## Caller follow-ups
+- Fix critical findings before the next release.
+- Decide per parity gap whether to translate, reshape nav, or accept the asymmetry.
+- For ADR index drift, regenerate the index or add the missing entries by hand.
+- For stale markers, either address the TODO or convert it to a tracked issue.
+```
+
+Omit sections with no content except **Scope**, **Summary**, **Health**, and **Caller follow-ups**, which are always present.
+
 ## Inputs
 
 The caller provides:
@@ -195,115 +304,6 @@ Assign severity per finding:
 - **info**: stale marker in ordinary prose, content-staleness spot-check 30–90 days, ADR without declared status (treat as info rather than critical — the ADR is still readable).
 
 Cap per-category listings at 15 entries and summarise the remainder with a count.
-
-## Output shape
-
-Return a single report:
-
-```
-# Documentation Freshness Report
-
-## Scope
-- Repo root: <path>
-- mkdocs.yml: <path>
-- Language trees: <list or "single-language">
-- Phases run: <list>
-
-## Summary
-| Category | Critical | Warning | Info |
-|---|---|---|---|
-| Internal links | … | … | … |
-| Cross-tree references | … | … | … |
-| Language parity | … | … | … |
-| ADR hygiene | … | … | … |
-| Mermaid diagrams | … | … | … |
-| Stale markers | … | … | … |
-| **Total** | **…** | **…** | **…** |
-
-## Critical
-### Broken internal links
-- `<path>:<line>` → `<target>` — target missing
-- …
-
-### Broken cross-tree references
-- `<path>:<line>` → `<target>` — path no longer exists under <root>
-- …
-
-### ADR status inconsistency
-- `<adr file>` declares `Supersedes: ADR-NNN` but ADR-NNN has status `<status>`
-- …
-
-### Mermaid diagram-source missing
-- `<markdown path>:<line>` — `derived` annotation names `<source path>` which doesn't resolve on disk
-- …
-
-## Warning
-### Language parity gaps
-- `<relative path>` exists in `<lang-A>` but missing in `<lang-B>`
-- …
-
-### Content staleness (> 90 days)
-- `<relative path>` — <lang-A>: YYYY-MM-DD, <lang-B>: YYYY-MM-DD (delta: <days>)
-- …
-
-### ADR index drift
-- `<adr file>` present on disk but missing from `<adr index path>`
-- `<adr index path>` references `<adr file>` which doesn't exist on disk
-- …
-
-### Mermaid diagram-source drift
-- `<markdown path>:<line>` — source `<source path>` was committed `<source date>`, hosting markdown was committed `<markdown date>` (delta: <days>)
-- …
-
-### Track-frontmatter drift
-- `<path>` — missing `track:` key
-- `<path>` — `track: <value>` not in {user-docs, developer-docs, …opted-in extension values}
-- …
-
-### Content-mode drift
-- `<path>` — missing `content_mode:` key
-- `<path>` — `content_mode: <value>` not in {tutorial, how-to, reference, explanation, troubleshooting, glossary, meta, …opted-in extension values}
-- …
-
-### Content-mode mixing candidates
-- `<path>:<line-range>` — declared `content_mode: <mode>`, signal `<signal>` suggests `<other-mode>` drift
-- …
-
-### Audience-track mismatch
-- `<path>` — `audience: <audience-id>` maps to track `<track-A>`, but page declares `track: <track-B>`
-- …
-
-### Stale markers in accepted ADRs
-- `<adr file>:<line>` — `<marker>`
-- …
-
-## Info
-### Stale markers in prose
-- `<path>:<line>` — `<marker>`
-- …
-
-### Content staleness (30–90 days)
-- <as above>
-
-### ADRs without declared status
-- `<adr file>`
-- …
-
-## Health
-- Docs files scanned: <count per language>
-- ADRs scanned: <count per language>
-- Internal links checked: <count>
-- Cross-tree references checked: <count>
-- Mermaid `derived` blocks checked: <count> (skipped `user-described`: <count>)
-
-## Caller follow-ups
-- Fix critical findings before the next release.
-- Decide per parity gap whether to translate, reshape nav, or accept the asymmetry.
-- For ADR index drift, regenerate the index or add the missing entries by hand.
-- For stale markers, either address the TODO or convert it to a tracked issue.
-```
-
-Omit sections with no content except **Scope**, **Summary**, **Health**, and **Caller follow-ups**, which are always present.
 
 ## Hard rules
 
