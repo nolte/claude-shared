@@ -99,6 +99,16 @@ Tracks the public guidance at <https://agentskills.io/skill-creation/best-practi
 - **SHOULD** justify every configuration constant the script declares; "voodoo constants" (`TIMEOUT = 47`, `RETRIES = 5`) without an inline comment explaining the value are a `Warning`-grade authoring smell ([R2](#references))
 - **MUST**, in any prose that mentions a script, make the **execution intent explicit**: write either "Run `analyze_form.py` to extract fields" (execute) or "See `analyze_form.py` for the field extraction algorithm" (read as reference); ambiguity here causes Claude to make the wrong choice and waste tokens ([R2](#references))
 
+### Operations vocabulary
+
+Skills with multiple named operations use a `## Operations` block. This section governs the naming and heading form of that block so that skill authors, reviewers, and the sweep tooling share a consistent vocabulary.
+
+- **MUST** use `## Operations` (plural) as the heading for the operations block; singular `## Operation` is non-conformant
+- **MUST** name each operation with one verb from the closed vocabulary: `audit` (read-only check), `scaffold` (greenfield create), `patch` (additive fix), `apply` (audit + scaffold + patch in one flow), `migrate` (brownfield → conforming), `run` (default verb for skills with one operation), `update` (mutate an existing artefact), `close` (terminate a lifecycle)
+- **MUST NOT** introduce new operation verbs without amending this list
+- **MUST** title sub-operations as `### N. <verb>` (numbered) or as a level-3 heading followed by a backtick-quoted command verb; alphabetic letters (`A.`/`B.`/`C.`) and `### Step N` are non-conformant
+- **SHOULD** retain operation names short (single word) and consistent within a skill cluster (for example, lifecycle skills should align verbs)
+
 ### Progressive disclosure & file references
 
 Skills are loaded in three stages by Claude—metadata at startup (~100 tokens per skill), full `SKILL.md` body when triggered, supporting files only when explicitly read ([R5](#references), [R1](#references)). The on-disk shape **MUST** support that loading model.
@@ -106,6 +116,7 @@ Skills are loaded in three stages by Claude—metadata at startup (~100 tokens p
 - **MUST** keep file references inside `SKILL.md` **at most one level deep**: `SKILL.md` → `references/foo.md` is fine; `SKILL.md` → `references/foo.md` → `references/bar.md` is forbidden, because Claude tends to use partial reads (`head -100`) on nested references and then misses content ([R2](#references))
 - **MUST** include a **table of contents** at the top of any reference file longer than 100 lines, so partial-read previews still surface the file's full scope ([R2](#references))
 - **MUST**, every time `SKILL.md` references a supporting file, name **what the file contains** and **when to load it** (for example "Read `references/api-errors.md` if the API returns a non-200 status code"); generic "see `references/` for details" defeats progressive disclosure because Claude has no signal for *when* to load ([R2](#references), [R4](#references))
+- **MUST** carry an explicit load-trigger phrase in `SKILL.md` for every asset under `references/`, `templates/`, `assets/`, `scripts/`, or `examples/`. Pattern: `"Read <relative-path> when <trigger condition>"` or `"See <relative-path> for <specific concern>"` (with an explicit "when" or "for" clause). Implicit references without a load-trigger are non-conformant since Claude won't surface the asset under progressive disclosure.
 - **SHOULD** organize supporting files by **domain** when the skill spans multiple subjects (`reference/finance.md`, `reference/sales.md`, `reference/product.md`), so each user query loads only the relevant slice ([R2](#references))
 - **SHOULD** keep skill scope to a **single coherent unit of work** (function-level coherence): a skill that "queries the database and formats the results" is one unit; a skill that "queries the database, formats the results, and administers the database" is two units that should be split ([R4](#references))
 
