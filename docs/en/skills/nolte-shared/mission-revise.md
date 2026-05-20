@@ -8,7 +8,7 @@ last_updated: generated
 
 # mission-revise
 
-_Revises an existing `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests (\"Mission überarbeiten\", \"mvp_status umstellen\", \"die Mission ist stabilisiert\"). Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`._
+_Revises an existing `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests. Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 1 Vision (`vision`)
@@ -20,6 +20,14 @@ _Revises an existing `project/mission.md` per the canonical-language file under 
 ## Mission Revise
 
 Edits an existing `project/mission.md` against `spec/project/mission/<canonical_language>.md` (canonical language: English). The spec is the authority for legal lifecycle transitions and the stabilisation gate; this skill enforces them mechanically and writes the resulting diff with explicit user confirmation.
+
+### German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Mission überarbeiten"
+- "mvp_status umstellen"
+- "die Mission ist stabilisiert"
 
 ### Why this is a skill, not an agent
 

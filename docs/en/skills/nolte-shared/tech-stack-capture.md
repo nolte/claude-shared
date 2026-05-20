@@ -8,7 +8,7 @@ last_updated: generated
 
 # tech-stack-capture
 
-_Captures or refreshes the `tech_stack:` block in a Portfolio-Member's `project/portfolio.yml` per the canonical-language file under `spec/portfolio/tech-stack-discovery/` §Discovery sequence. Probes repo signals (lockfiles, `Taskfile.yml`, `.github/workflows/`, `renovate.json5`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml`), classifies hits against the closed `kind` (12) and `group` (5) enums from `spec/portfolio/tech-stack/`, compares each candidate against the global stack, drops inherited matches, and confirms every proposed change interactively before writing. Invoke when the user asks to "capture the tech stack", "scaffold a tech_stack block", "refresh the tech_stack section", or equivalent German-language requests ("Tech-Stack erfassen", "tech_stack-Block aktualisieren"). Don't use to author `portfolio/tech-stack.yml` (hand-curated only) or to run signal-verification audits (use `portfolio-audit`)._
+_Captures or refreshes the `tech_stack:` block in a Portfolio-Member's `project/portfolio.yml` per the canonical-language file under `spec/portfolio/tech-stack-discovery/` §Discovery sequence. Probes repo signals (lockfiles, `Taskfile.yml`, `.github/workflows/`, `renovate.json5`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml`), classifies hits against the closed `kind` (12) and `group` (5) enums from `spec/portfolio/tech-stack/`, compares each candidate against the global stack, drops inherited matches, and confirms every proposed change interactively before writing. Invoke when the user asks to "capture the tech stack", "scaffold a tech_stack block", "refresh the tech_stack section", or equivalent German-language requests. Don't use to author `portfolio/tech-stack.yml` (hand-curated only) or to run signal-verification audits (use `portfolio-audit`)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
@@ -20,6 +20,13 @@ _Captures or refreshes the `tech_stack:` block in a Portfolio-Member's `project/
 ## Tech Stack Capture
 
 Drives the §Discovery sequence per repository defined in `spec/portfolio/tech-stack-discovery/<canonical_language>.md` and produces a `tech_stack:` block in `project/portfolio.yml` that conforms to the entry schema, the inheritance contract, the `kind` enum (12 values), the `group` enum (5 values), and the regroup mechanism declared in `spec/portfolio/tech-stack/<canonical_language>.md`. One operation — fresh capture and refresh share the same path because the spec doesn't distinguish them.
+
+### German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Tech-Stack erfassen"
+- "tech_stack-Block aktualisieren"
 
 ### Why this is a skill, not an agent
 

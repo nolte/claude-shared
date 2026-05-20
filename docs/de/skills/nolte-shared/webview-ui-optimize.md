@@ -8,7 +8,7 @@ last_updated: generated
 
 # webview-ui-optimize
 
-_Audits a browser-rendered frontend against the canonical-language file under spec/frontend/webview-ui-optimization/ and, with per-item user approval, patches findings across five domains: Performance, Security, Accessibility (WCAG 2.2 AA), Internationalisation, and UX. Three operations: `audit` (written to `.audits/webview-ui-optimize/`), `patch` (one finding at a time), `expert-review` (dispatches `webview-ui-expert`). Invoke when the user asks to \"audit the frontend\", \"check the UI against the webview-ui spec\", \"optimise for performance / a11y / i18n / UX / security\", \"fix the CSP\", \"wire up vitest-axe\", or equivalent German-language requests (\"Frontend gegen die Spec prüfen\", \"WebView optimieren\", \"a11y-Audit\"). Don't use for brand-design decisions, audience artefact (`audience-identify`), prose linting (`prose-vale-curator`), CVE audits (`dependency-audit`), or release-pipeline (`release-automation`)._
+_Audits a browser-rendered frontend against the canonical-language file under spec/frontend/webview-ui-optimization/ and, with per-item user approval, patches findings across five domains: Performance, Security, Accessibility (WCAG 2.2 AA), Internationalisation, and UX. Three operations: `audit` (written to `.audits/webview-ui-optimize/`), `patch` (one finding at a time), `expert-review` (dispatches `webview-ui-expert`). Invoke when the user asks to \"audit the frontend\", \"check the UI against the webview-ui spec\", \"optimise for performance / a11y / i18n / UX / security\", \"fix the CSP\", \"wire up vitest-axe\", or equivalent German-language requests. Don't use for brand-design decisions, audience artefact (`audience-identify`), prose linting (`prose-vale-curator`), CVE audits (`dependency-audit`), or release-pipeline (`release-automation`)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
@@ -22,6 +22,14 @@ _Audits a browser-rendered frontend against the canonical-language file under sp
 Operationalises `spec/frontend/webview-ui-optimization/<canonical_language>.md` inside the current repository. The skill audits a target frontend against the five-domain rule set (Performance, Security, Accessibility, Internationalisation, UX) and — with explicit per-item user consent — patches one finding at a time. For cross-file reasoning that goes beyond a single rule (a CSP rewrite plus its Vite + Emotion + nginx pipeline; an a11y review of a complex feature), the skill dispatches the `webview-ui-expert` agent for a read-only deep review whose output the skill then feeds back into the per-item approval loop.
 
 When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent rules that don't appear in the spec.
+
+### German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Frontend gegen die Spec prüfen"
+- "WebView optimieren"
+- "a11y-Audit"
 
 ### Rationale (why a skill, not just an agent)
 

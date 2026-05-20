@@ -8,7 +8,7 @@ last_updated: generated
 
 # roadmap-refine
 
-_Enforces the detail-level invariant on `project/roadmap.md` per `spec/project/roadmap/` §Detail-level convention. Invoke when the user asks to \"refine the roadmap\", \"check roadmap detail levels\", \"is the roadmap ready for the next sprint\", \"promote roadmap items to fine\", or equivalent German-language requests (\"Roadmap verfeinern\", \"Roadmap-Detailstufen prüfen\"). Resolves the current and next sprint by reading `project/sprints/`, walks every roadmap item, emits a structured violation record on stderr for every item with `target_sprint` equal to the current or next sprint and `detail` other than `fine`, exits non-zero when any violation is open, and walks per-item fix proposals one at a time. Don't use to add items, retarget sprints, or flip MVP flags (use `roadmap-planner`); don't use to scaffold the roadmap from scratch (use `roadmap-init`)._
+_Enforces the detail-level invariant on `project/roadmap.md` per `spec/project/roadmap/` §Detail-level convention. Invoke when the user asks to \"refine the roadmap\", \"check roadmap detail levels\", \"is the roadmap ready for the next sprint\", \"promote roadmap items to fine\", or equivalent German-language requests. Resolves the current and next sprint by reading `project/sprints/`, walks every roadmap item, emits a structured violation record on stderr for every item with `target_sprint` equal to the current or next sprint and `detail` other than `fine`, exits non-zero when any violation is open, and walks per-item fix proposals one at a time. Don't use to add items, retarget sprints, or flip MVP flags (use `roadmap-planner`); don't use to scaffold the roadmap from scratch (use `roadmap-init`)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
@@ -20,6 +20,13 @@ _Enforces the detail-level invariant on `project/roadmap.md` per `spec/project/r
 ## Roadmap Refine
 
 Enforces the detail-level invariant declared in `spec/project/roadmap/<canonical_language>.md` §Detail-level convention and refinement rule: at any point in time, every roadmap item with `target_sprint` set to the **current sprint** or the **next sprint** carries `detail: fine`. Coarse and backlog items two or more sprints out are fine; promotion to `fine` is the trigger for this skill to pull each affected item into shape.
+
+### German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Roadmap verfeinern"
+- "Roadmap-Detailstufen prüfen"
 
 ### Why this is a skill, not an agent
 
