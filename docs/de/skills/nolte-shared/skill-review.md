@@ -8,7 +8,7 @@ last_updated: generated
 
 # skill-review
 
-_Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/ keyed by the target skill's name. Invoke when the user asks "review this skill", "audit a specific skill folder", "check whether this skill is spec-compliant", "skill review for a specific skill", "prüfe diesen Skill", "Skill-Review für X", "Audit von skills/", or "ist dieser Skill spec-konform". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for a specific skill", "schließe den Skill-Review-Plan". Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill)._
+_Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/ keyed by the target skill's name. Invoke when the user asks "review this skill", "audit a specific skill folder", "check whether this skill is spec-compliant", or "skill review for a specific skill". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for a specific skill". Also handles equivalent German-language requests. Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
@@ -20,6 +20,16 @@ _Review a Claude Code skill against spec/claude/skill-management/ and spec/claud
 ## Skill Review Skill
 
 Operationalizes `spec/claude/skill-review/` — reviews one Claude Code skill against its authoring specs and persists the result as a processable plan under `.audits/skill-review/`. The plan is the deliverable; the skill is the procedure that produces and, later, retires it.
+
+### German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "prüfe diesen Skill"
+- "Skill-Review für X"
+- "Audit von skills/"
+- "ist dieser Skill spec-konform"
+- "schließe den Skill-Review-Plan"
 
 ### Why this is a skill, not an agent
 

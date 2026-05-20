@@ -1,6 +1,6 @@
 ---
 name: docs-freshness-checker
-description: Audit the MkDocs documentation of the current repository for freshness — multi-language parity between configured language trees (for example `docs/en/` vs `docs/de/`), dead internal markdown links, stale references to paths under `spec/` / `src/` / other repo roots, ADR index completeness and status hygiene, Mermaid `diagram-source: derived` drift (source's last-commit timestamp newer than the hosting markdown), and TODO / placeholder markers. Read-only: produces a severity-sorted report and never edits files. Use when the user asks to "check the docs for drift," "run a freshness audit on the docs," "find dead links in the documentation," "check DE/EN parity," "prep the docs for a release," or equivalent German-language requests ("Doku auf Aktualität prüfen," "tote Links in der Doku finden," "DE/EN-Parität prüfen"). Don't use for writing or updating documentation (that's an author's task) and don't use for vocabulary / Vale linting (that's `prose-vale-curator`).
+description: Audit the MkDocs documentation of the current repository for freshness — multi-language parity between configured language trees (for example `docs/en/` vs `docs/de/`), dead internal markdown links, stale references to paths under `spec/` / `src/` / other repo roots, ADR index completeness and status hygiene, Mermaid `diagram-source: derived` drift (source's last-commit timestamp newer than the hosting markdown), and TODO / placeholder markers. Read-only: produces a severity-sorted report and never edits files. Use when the user asks to "check the docs for drift," "run a freshness audit on the docs," "find dead links in the documentation," "check DE/EN parity," "prep the docs for a release," or equivalent German-language requests. Don't use for writing or updating documentation (that's an author's task) and don't use for vocabulary / Vale linting (that's `prose-vale-curator`).
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet
@@ -25,6 +25,14 @@ Permitted `Bash` invocations (exhaustive list — anything outside this set is a
 The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add` / `git commit` / `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation. The body's hard rules reinforce this: the agent is read-only by stated responsibility, and the `Bash` declaration exists exclusively to read git metadata that the audit fundamentally depends on. Without this exception, the agent's core function (date-based parity and drift detection) couldn't ship.
 
 The `agent-review` checks honour this exception when a `## Read-only Bash justification` heading is present in the body and downgrade the would-be `Critical` finding to `Info` for this agent.
+
+## German trigger phrases
+
+This agent also triggers on equivalent German-language requests, including:
+
+- "Doku auf Aktualität prüfen"
+- "tote Links in der Doku finden"
+- "DE/EN-Parität prüfen"
 
 ## Why this is an agent, not a skill
 

@@ -8,7 +8,7 @@ last_updated: generated
 
 # mission-define
 
-_Authors a project's first `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"define the mission\", \"write project/mission.md\", \"set up the mission file\", \"draft the SMART mission\", or equivalent German-language requests (\"Mission definieren\", \"die SMART-Mission formulieren\", \"Mission-Datei aufsetzen\"). Walks SMART one letter at a time (Specific statement, Measurable verifies_via pointer, Achievable MVP scope, Relevant outcome IDs, Time-bound shape), gathers a per-audience MVP-deliverable paragraph, composes the frontmatter plus the four required body sections (Statement, Audiences, Verification, Source), and writes the file with `mvp_status: defining`. Refuses to run when `project/mission.md` already exists (use `mission-revise`) or when `project/goals.md` or the audience artefact is missing._
+_Authors a project's first `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"define the mission\", \"write project/mission.md\", \"set up the mission file\", \"draft the SMART mission\", or equivalent German-language requests. Walks SMART one letter at a time (Specific statement, Measurable verifies_via pointer, Achievable MVP scope, Relevant outcome IDs, Time-bound shape), gathers a per-audience MVP-deliverable paragraph, composes the frontmatter plus the four required body sections (Statement, Audiences, Verification, Source), and writes the file with `mvp_status: defining`. Refuses to run when `project/mission.md` already exists (use `mission-revise`) or when `project/goals.md` or the audience artefact is missing._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 1 Vision (`vision`)
@@ -20,6 +20,14 @@ _Authors a project's first `project/mission.md` per the canonical-language file 
 ## Mission Define
 
 Authors the first-write of `project/mission.md` against `spec/project/mission/<canonical_language>.md` (canonical language: English). The spec is the authority for the on-disk shape; this skill is the interactive front-end that fills it in.
+
+### German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Mission definieren"
+- "die SMART-Mission formulieren"
+- "Mission-Datei aufsetzen"
 
 ### Why this is a skill, not an agent
 

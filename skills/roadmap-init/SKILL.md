@@ -1,6 +1,6 @@
 ---
 name: roadmap-init
-description: Scaffold the project planning pair `project/goals.md` and `project/roadmap.md` for the first time, per `spec/project/roadmap/`. Invoke when the user asks to "set up the roadmap", "initialise project goals", "create goals.md and roadmap.md", "bootstrap the roadmap", "wir brauchen eine Roadmap für dieses Projekt", "lege project/goals.md und project/roadmap.md an", or any equivalent fresh-bootstrap request. Also handles equivalent German-language requests. Verifies the audience artefact exists (and dispatches `audience-identify` when it doesn't), drafts the Vision plus numbered Outcomes in `project/goals.md`, drafts an empty queue plus optional phase headings in `project/roadmap.md`, presents both files for explicit approval, then writes them. Do NOT use to add roadmap items, retarget sprints, or flip MVP flags — that is `roadmap-planner`. Do NOT use to enforce the detail-level invariant — that is `roadmap-refine`.
+description: Scaffold the project planning pair `project/goals.md` and `project/roadmap.md` for the first time, per `spec/project/roadmap/`. Invoke when the user asks to "set up the roadmap", "initialise project goals", "create goals.md and roadmap.md", "bootstrap the roadmap", or any equivalent fresh-bootstrap request. Also handles equivalent German-language requests. Verifies the audience artefact exists (and dispatches `audience-identify` when it doesn't), drafts the Vision plus numbered Outcomes in `project/goals.md`, drafts an empty queue plus optional phase headings in `project/roadmap.md`, presents both files for explicit approval, then writes them. Do NOT use to add roadmap items, retarget sprints, or flip MVP flags — that is `roadmap-planner`. Do NOT use to enforce the detail-level invariant — that is `roadmap-refine`.
 tags: [scaffolding]
 phase: plan
 ---
@@ -8,6 +8,13 @@ phase: plan
 # Roadmap Init
 
 Bootstraps the planning pair declared by `spec/project/roadmap/<canonical_language>.md`: a single `project/goals.md` carrying the Vision and the outcome catalogue, plus a single `project/roadmap.md` carrying an (initially empty) queue. Once both files exist, lifecycle work moves to `roadmap-planner` for adds and edits and to `roadmap-refine` for the detail-level invariant.
+
+## German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "wir brauchen eine Roadmap für dieses Projekt"
+- "lege project/goals.md und project/roadmap.md an"
 
 ## Why this is a skill, not an agent
 

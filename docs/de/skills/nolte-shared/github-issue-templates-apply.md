@@ -8,7 +8,7 @@ last_updated: generated
 
 # github-issue-templates-apply
 
-_Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests ("Issue-Templates für dieses Repo erzeugen", "GitHub-Issue-Forms anlegen", "Bug- und Feature-Template scaffolden", "spec github-issue-templates anwenden"). Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`)._
+_Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
@@ -20,6 +20,15 @@ _Apply the canonical-language file under spec/project/github-issue-templates/ to
 ## GitHub Issue Templates Apply
 
 Operationalises `spec/project/github-issue-templates/<canonical_language>.md` against a target repository: classifies the project type, reads or produces the audience artefact, derives the triage-question set, and writes `.github/ISSUE_TEMPLATE/*.yml` plus `config.yml` as GitHub Issue Forms — atomically and only after explicit user confirmation of the derivation.
+
+### German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Issue-Templates für dieses Repo erzeugen"
+- "GitHub-Issue-Forms anlegen"
+- "Bug- und Feature-Template scaffolden"
+- "spec github-issue-templates anwenden"
 
 ### Why this is a skill, not an agent
 
