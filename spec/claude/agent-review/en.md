@@ -70,7 +70,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 ### Checks derived from spec-driven-development
 
 - **MUST** run a spec-anchor check: verify the agent body contains at least one reference to a `spec/...` path. An agent without any spec citation is a `Critical` finding per `spec/project/spec-driven-development/` MUST
-- **MAY** suppress this check with a documented exception in the plan's `## Scope` section when an agent is explicitly classified as "implementation-only" — suppression must be anchored in a spec or a recorded project decision
+- **MAY** suppress this check with a documented exception in the plan's `## Scope` section when an agent is explicitly classified as "implementation-only"; suppression must be anchored in a spec or a recorded project decision
 - Rationale: this check operationalises the MUST from spec-driven-development that has so far been operator-only
 
 ### Tool-scope checks

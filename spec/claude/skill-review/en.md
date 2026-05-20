@@ -117,7 +117,7 @@ Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule 
 ### Checks derived from spec-driven-development
 
 - **MUST** run a spec-anchor check: verify the SKILL.md body contains at least one reference to a `spec/...` path. A skill without any spec citation is a `Critical` finding per `spec/project/spec-driven-development/` MUST
-- **MAY** suppress this check with a documented exception in the plan's `## Scope` section when a skill is explicitly classified as "implementation-only" (e.g. `dependency-audit`, `quality-gate`) — but the suppression itself must be anchored in a spec or a recorded project decision
+- **MAY** suppress this check with a documented exception in the plan's `## Scope` section when a skill is explicitly classified as "implementation-only" (for example, `dependency-audit`, `quality-gate`); but the suppression itself must be anchored in a spec or a recorded project decision
 - Rationale: this check operationalises the MUST from spec-driven-development that has so far been operator-only
 
 ### Review procedure
