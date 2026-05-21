@@ -65,7 +65,7 @@ The agent **does not**:
 
 The agent returns a single manifest-inventory report. One entry per portfolio-member repository, plus an aggregated overview at the top.
 
-```
+```text
 ## Portfolio Manifest Inventory
 
 Collected: <ISO-8601 timestamp>
