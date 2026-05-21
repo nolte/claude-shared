@@ -52,10 +52,10 @@ Das Marken-Vokabular definiert drei — und nur drei — tragende Farb-Rollen. O
 - **KANN [MAY]** einen `brand-tertiary`-Hue einführen, der per +60°-Hue-Rotation von `brand-primary` mit Chroma 24 und Tone 40 abgeleitet wird — nach der Material-3-Tertiary-Ableitung — wenn Diagramme, Illustrationen oder Marketing tatsächlich eine dritte funktionale Achse brauchen ([Material 3 — Color roles](https://m3.material.io/styles/color/roles), [Material Color Utilities — dynamic color scheme](https://github.com/material-foundation/material-foundation-material-color-utilities))
 - **KANN [MAY]** das echte 180°-Komplement von `brand-primary` ausschließlich als **punktuellen Akzent** nutzen (Einzelelement-Emphasis: Chart-Highlight, Callout-Band, CTA auf einer wenig-gesättigten Fläche). Es DARF NICHT zu Body, Surface, großen flachen Füllungen oder Lauftext heraufgestuft werden
 - **MUSS [MUST]** Vokabular-Hygiene bewahren. Vier Slots sind definiert, und kein anderer Slot-Name ist in Skills, Agents oder nachgelagerter Doku zulässig:
-  - `brand-primary` — einzelner Identitäts-Hue (einer pro Portfolio)
-  - `brand-secondary` — die harmonische Achse, die nach der Regel oben aus Primary abgeleitet wird (`split-complementary` oder `analog`)
-  - `brand-accent` — ausschließlich funktionale Emphasis (CTA, Active-State); darf nicht zu Surface, Body oder großen flachen Füllungen hochgestuft werden
-  - `brand-complement` — echtes 180°-Komplement von Primary, beschränkt auf Chart- und Illustrations-Akzente
+  - `brand-primary`: einzelner Identitäts-Hue (einer pro Portfolio)
+  - `brand-secondary`: die harmonische Achse, die nach der Regel oben aus Primary abgeleitet wird (`split-complementary` oder `analog`)
+  - `brand-accent`: ausschließlich funktionale Emphasis (CTA, Active-State); darf nicht zu Surface, Body oder großen flachen Füllungen hochgestuft werden
+  - `brand-complement`: echtes 180°-Komplement von Primary, beschränkt auf Chart- und Illustrations-Akzente
 
   Skills, Agents und nachgelagerte Doku MÜSSEN diese vier Begriffe mit dieser präzisen Bedeutung verwenden und DÜRFEN KEINEN fünften Farb-Rollen-Begriff einführen ([Vercel Geist — Colors](https://vercel.com/geist/colors), [Supabase — Color usage](https://supabase.com/design-system/docs/color-usage))
 
