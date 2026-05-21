@@ -29,8 +29,11 @@ Repository state when the skill is invoked:
 3. **No blocking issues found.** All required fields are present; no amendment needed.
 
 4. **Update the triage artifact.** Flip `status: open` → `status: closed` in the frontmatter. Append a `close` entry to `## Processing log`:
+
    ```
+
    - 2026-05-21 `close` — cycle closed; 1 dispatched (F2) / 1 gap-closure (F3) / 1 deferred (F1); next review due 2026-Q3 (≈ 2026-09-01)
+
    ```
 
 5. **No additional file changes.** The skill writes only the triage artifact; it does not touch any other file. Staging: `.audits/continuous-improvement/2026-Q2.md` only.
