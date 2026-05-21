@@ -115,3 +115,7 @@ Re-run operations 2, 4, and 5 end-to-end; present a fresh grouped summary. Call 
 - **Never** take on `project-structure-apply` work. If the audit reveals that `schemas/` directories are absent at the structural level, the README is missing entirely, or the Taskfile has no `lint` target, stop and route the user to `project-structure-apply` — don't silently scaffold those out of scope.
 - **Never** modify the spec while applying it. If a real-world need conflicts with `spec/project/yaml-json-schema/`, report it and ask the user to update the spec via the `nolte-shared:spec` skill before proceeding.
 - **Never** invoke this skill on OpenAPI Schema Objects, AsyncAPI Schema Objects, or JSON-encoded JSON Schema documents. Those formats are explicitly out of scope per the spec's §Delimitation.
+
+### Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.

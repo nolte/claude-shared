@@ -128,3 +128,7 @@ When the user asks for any of the above, stop and surface the correct skill to i
 - **Never** transition a sprint past `active` from this skill. `active → review`, `review → closed`, `review → cancelled`, and the cancellation paths from any earlier state are `sprint-review`'s authority.
 - **Never** alter `value_statement` on an `active` sprint. If reality has shifted, the sprint must be cancelled and rescheduled per `spec/project/sprint/` §Roadmap and feature linkage.
 - When `spec/project/sprint/` or `spec/project/feature/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
+
+### Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.

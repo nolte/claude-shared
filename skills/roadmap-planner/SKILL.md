@@ -130,3 +130,7 @@ When any check fails, **refuse the write entirely**. Do not produce partial outp
 - **Never** allow partial writes when end-to-end validation fails. Refuse the whole mutation and report the failing check.
 - **Never** mix shapes on a single write: when `project/mission.md` exists, every item carries `mvp`; when it does not, the file uses a uniform stance (all items omit, or all items carry `mvp: false`). Do not introduce `mvp` on a subset.
 - When `spec/project/roadmap/` (or, for the MVP semantics, `spec/project/mission/`) disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
+
+## Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.

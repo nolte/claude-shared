@@ -90,3 +90,7 @@ The "Latest release" line comes from `gh api repos/nolte/vale-style/releases/lat
 - Never skip a local vocabulary file because it "looks like" an upstream copy. Membership in the upstream set is determined by the fetched upstream content, not by filename heuristics.
 - Keep the report sections in the fixed order (`Duplicates to remove`, `Upstream PR candidates`, `Health`) so downstream consumers can parse it reliably.
 - Don't touch anything outside the prose-style / Vale scope. This skill isn't a general vocabulary linter for other stylers.
+
+## Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.

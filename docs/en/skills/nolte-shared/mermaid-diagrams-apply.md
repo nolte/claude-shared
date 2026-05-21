@@ -153,3 +153,7 @@ When the user has finished approving changes, re-run operations 1 and 4 end-to-e
 - **Never** modify the spec while applying it. If a real-world need conflicts with `spec/project/mermaid-diagrams/`, report it and ask the user to update the spec via the `nolte-shared:spec` skill before proceeding.
 - **Never** edit a Mermaid block in another markdown file as a side-effect of the current operation. Each operation touches one block (or one config file) at a time, with its own approval.
 - **Always** apply a Mermaid block insertion or audit fix symmetrically to every counterpart page across every language tree configured in `spec/.spec-config.yml`'s `languages` list, per `spec/project/docs-multilingual-authoring/` §Authoring protocol. Mermaid sources are language-neutral (the Hard rule above already mandates English-only labels inside the fence), so the same block text is inserted at the same position in every language counterpart in the same operation; the surrounding markdown chrome that introduces or annotates the block is localised per language.
+
+### Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.
