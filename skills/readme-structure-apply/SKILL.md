@@ -104,6 +104,12 @@ The skill returns to the user, in this order:
 6. **Applied edits** (after approval): the absolute path of the written file, plus a per-section diff summary.
 7. **Caller follow-ups**: explicit list — dispatch `audience-doc-author` to fill in `# TODO` body markers, dispatch `prose-vale-curator` to Vale-check the result, route to `audience-identify` if the README needs an audience reference but the artefact doesn't exist, commit the edits, open the PR via `pull-request-create`.
 
+## Gotchas
+
+- **Patch operations must preserve all existing frontmatter and prose**: when adding a missing section or reordering sections in an existing `README.md`, every other section's content must be carried over verbatim — a patch that truncates or omits existing prose is a data-loss bug, not a style issue.
+- **Uncommitted README changes block the operation**: if `README.md` has unstaged or staged-but-uncommitted changes when the skill starts, it stops and asks the user to stash, commit, or abort — never overwrite a dirty file; confirm the precondition check runs before any `Write` or `Edit`.
+- **CI badge URLs must resolve to actual workflow files**: the skill verifies badge URLs against `.github/workflows/`; a badge pointing at a renamed or deleted workflow silently becomes a broken badge in the rendered README — always re-check workflow file existence after any badge addition.
+
 ## Hard rules
 
 1. **Never** author body prose beyond a single placeholder paragraph plus `# TODO` markers. Body authoring is delegated to `audience-doc-author`.

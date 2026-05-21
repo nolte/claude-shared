@@ -119,6 +119,12 @@ Don't silently modify the template. Surface the proposal to the user and let the
 - Read `examples/02-translate-existing-spec.md` when translating an existing canonical spec into a second language.
 - Read `examples/03-drift-check-translations.md` when checking whether a translation has drifted from the canonical version.
 
+## Gotchas
+
+- **`spec/.spec-config.yml` is the authoritative language source**: the canonical language and the full language list come from this file; if it is missing, fall back to `en` / `[en, de]` defaults but create the config on the first `create` operation — guessing language settings from the conversation language will produce wrong canonical paths in multilingual repos.
+- **Canonical file must be written first, translations second**: if a spec is only partially written (canonical exists, translations absent), the repo is in a broken state per the "always together" rule; ensure the write step covers every configured language in a single operation or rolls back entirely.
+- **`git log -1` for `Last updated` requires the file to be tracked**: untracked spec files produce no git log output; the index regeneration step must handle this case by marking `Last updated` as `unversioned` rather than leaving the cell empty or erroring out.
+
 ## Hard rules
 
 - Canonical and translation files are always created and updated **together**. Never leave a spec with only one language file on disk.

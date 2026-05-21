@@ -144,6 +144,12 @@ When the spec disagrees with this skill's instructions, the spec wins. Propose a
 - Read `examples/02-render-inventory-idempotent.md` when re-running the inventory render to verify idempotency.
 - Read `examples/03-bootstrap-new-member.md` when bootstrapping a new portfolio member's `project/portfolio.yml` for the first time.
 
+### Gotchas
+
+- **Bootstrap blocks if `tech-stack-capture` hasn't run yet**: Bootstrap reads `project/mission.md` and the audience artefact as inputs; if neither exists in the target repository, Bootstrap has nothing to derive capabilities from — route the user to `mission-define` and `audience-identify` first rather than proceeding with empty fields.
+- **`gh api` rate limits can stall portfolio-wide manifest collection**: fetching `project/portfolio.yml` for every public non-archived repository in one call sequence can exhaust the GitHub API rate limit for large portfolios — spread calls across turns or check `gh api rate_limit` before starting a full-portfolio Audit.
+- **Findings-Report and rendered inventory must land in `claude-shared`, not in the calling repo**: writing `.audits/portfolio/` or `docs/<lang>/portfolio/` from a non-`claude-shared` working directory is a structural error; confirm `cwd` resolves to the `claude-shared` checkout before any Audit or Render write.
+
 ### Hard rules
 
 - Never modify a Portfolio-Member repository's `project/portfolio.yml` from this skill; only Bootstrap writes it on first authoring, and only inside the active checkout. Cross-repository edits go through ordinary PR flows in the target repository, not through this skill.

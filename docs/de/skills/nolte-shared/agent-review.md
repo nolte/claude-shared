@@ -115,6 +115,12 @@ Reference `spec/claude/review-plan/<canonical>.md` for the authoritative format.
 - Read `examples/02-update-after-fix.md` when closing individual findings after the author has pushed fixes.
 - Read `examples/03-close-plan.md` when all items are resolved and you are ready to delete the plan.
 
+### Gotchas
+
+- **Plan file is local-only until committed**: the `.audits/agent-review/<name>.md` plan survives only in the working tree until the user explicitly commits it; if the session ends or the branch is switched before committing, the plan is silently lost — stage and commit early or remind the user.
+- **Declared-vs-used check requires the current file version**: the bidirectional tools check (declared-unused → `Warning`, used-undeclared → `Critical`) must be run against the on-disk agent file at review time; stale cached reads produce false positives or missed `Critical` findings — always re-read the agent file immediately before running step 5.2.
+- **`spec/.spec-config.yml` must be read first**: `<canonical>` depends on `canonical_language` in that file; skipping the read and defaulting to `en` silently misroutes reviews in repos where the canonical language differs — read the config before resolving any spec path.
+
 ### Hard rules
 
 - **One plan per target.** A rerun supersedes; never edit a previous run's plan into a new one.
