@@ -22,6 +22,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
+- [vocab-drift-scanner](agents/nolte-shared/vocab-drift-scanner.md) — nolte-shared
 - [webview-ui-expert](agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [continuous-improvement-triage](skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
 - [docs-audience-tracks-apply](skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
