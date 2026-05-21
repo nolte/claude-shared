@@ -31,6 +31,7 @@
     * [pull-request-create](nolte-shared/pull-request-create.md)
     * [pull-request-merge](nolte-shared/pull-request-merge.md)
     * [skill-review](nolte-shared/skill-review.md)
+    * [spec-drift-audit](nolte-shared/spec-drift-audit.md)
 * 6 Quality
     * [dependency-audit](nolte-shared/dependency-audit.md)
     * [portfolio-audit](nolte-shared/portfolio-audit.md)
