@@ -1,23 +1,23 @@
 ---
-title: roadmap-planner
+title: roadmap-plan
 audience: [maintainer]
 content_mode: reference
 track: developer-docs
 last_updated: generated
 ---
 
-# roadmap-planner
+# roadmap-plan
 
 _Adds, retargets, and reshapes roadmap items in `project/roadmap.md` per `spec/project/roadmap/` and `spec/project/mission/`. Invoke when the user asks to \"add a roadmap item\", \"queue work for sprint N\", \"promote roadmap item to fine\", \"retarget R-3 to sprint 9\", \"flip MVP on this item\", or equivalent German-language requests. Validates outcome IDs against `goals.md`, validates `target_sprint` against `project/sprints/`, enforces the lifecycle transitions declared in the roadmap and mission specs (including the asymmetric MVP-flag rule: `false→true` allowed before stabilisation, `true→false` forbidden after the item entered `status: active`), and refuses partial writes that would leave inconsistencies. Don't use to scaffold the roadmap from scratch (use `roadmap-init`) or to enforce the detail-level invariant (use `roadmap-refine`)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
 - **Tags:** `planning`
-- **Quelle:** [skills/roadmap-planner/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/roadmap-planner/SKILL.md)
+- **Source:** [skills/roadmap-plan/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/roadmap-plan/SKILL.md)
 
 ---
 
-## Roadmap Planner
+## Roadmap Plan
 
 Mutates the queue in `project/roadmap.md` per `spec/project/roadmap/<canonical_language>.md` and the cross-cutting MVP semantics declared by `spec/project/mission/<canonical_language>.md`. Owns adds, detail promotions, sprint retargets, MVP flips, and lifecycle transitions on existing items. The detail-level invariant is checked here on every write; the wider per-queue audit belongs to `roadmap-refine`.
 

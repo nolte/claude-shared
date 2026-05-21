@@ -6,7 +6,7 @@
     * [audience-identify](nolte-shared/audience-identify.md)
     * [feature-decompose](nolte-shared/feature-decompose.md)
     * [roadmap-init](nolte-shared/roadmap-init.md)
-    * [roadmap-planner](nolte-shared/roadmap-planner.md)
+    * [roadmap-plan](nolte-shared/roadmap-plan.md)
     * [roadmap-refine](nolte-shared/roadmap-refine.md)
     * [sprint-plan](nolte-shared/sprint-plan.md)
 * 3 Design

@@ -25,7 +25,7 @@ graph TD
     aid[audience-identify]
     arev["audience-review (A)"]
     rinit[roadmap-init]
-    rplan[roadmap-planner]
+    rplan[roadmap-plan]
     rref[roadmap-refine]
     splan[sprint-plan]
     fdec[feature-decompose]
@@ -107,7 +107,7 @@ Plan überführt die Outcomes der Mission in konkrete, einem Sprint zugeordnete 
 | [`audience-identify`](skills/nolte-shared/audience-identify.md) | Skill | Audience-Liste des bounded context aufstellen, bevor nachgelagerte Artefakte sie referenzieren. Vorbedingung für `mission-define` und `roadmap-init`. |
 | [`audience-review`](agents/nolte-shared/audience-review.md) | Agent | Ein bestehendes Audience-Artefakt auf Vollständigkeit prüfen, bevor Mission, Roadmap oder Release-Notes darauf aufbauen. |
 | [`roadmap-init`](skills/nolte-shared/roadmap-init.md) | Skill | `project/goals.md` und `project/roadmap.md` beim ersten Mal scaffolden. |
-| [`roadmap-planner`](skills/nolte-shared/roadmap-planner.md) | Skill | Roadmap-Einträge hinzufügen, retargeten oder umformen; MVP-Flag entlang der asymmetrischen Regel umlegen. |
+| [`roadmap-plan`](skills/nolte-shared/roadmap-plan.md) | Skill | Roadmap-Einträge hinzufügen, retargeten oder umformen; MVP-Flag entlang der asymmetrischen Regel umlegen. |
 | [`roadmap-refine`](skills/nolte-shared/roadmap-refine.md) | Skill | Einträge auf Detailstufe `fine` heben, bevor sie in den aktuellen oder nächsten Sprint laufen. |
 | [`sprint-plan`](skills/nolte-shared/sprint-plan.md) | Skill | Nächste Sprint-Datei unter `project/sprints/<NNNN>-<slug>.md` anlegen und passende Roadmap-Einträge einziehen. |
 | [`feature-decompose`](skills/nolte-shared/feature-decompose.md) | Skill | Einen Roadmap-Eintrag in ein oder mehrere `project/features/<slug>.md`-Dateien zerlegen. |

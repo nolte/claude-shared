@@ -3,7 +3,7 @@
 Three items in the audit window violate the invariant. The operator
 walks the fix queue end-to-end: two items are promoted to `fine`
 in-place (the skill drafts the missing body shape and the operator
-accepts), and one item is retargeted via a `roadmap-planner` dispatch.
+accepts), and one item is retargeted via a `roadmap-plan` dispatch.
 The walk re-resolves the sprint window after each individual fix and
 ends with a clean exit.
 
@@ -55,7 +55,7 @@ ends with a clean exit.
 ```
 
 `project/goals.md` resolves `O-1`, `O-2`, `O-3`, `O-4`. `project/mission.md`
-exists. The `roadmap-planner` skill is reachable in the current plugin
+exists. The `roadmap-plan` skill is reachable in the current plugin
 runtime. No item currently targets sprint `9` or `10`.
 
 ## Expected behaviour
@@ -91,7 +91,7 @@ runtime. No item currently targets sprint `9` or `10`.
      (`- [ ] feature: <slug>` bullets) covering the rollout steps.
    - The operator confirms verbatim. The skill flips
      `detail: coarse → fine` in the YAML block and writes the new body
-     in-place. No `roadmap-planner` dispatch (direct edit is the
+     in-place. No `roadmap-plan` dispatch (direct edit is the
      spec-allowed path for promotion).
    - The skill re-resolves the sprint window from disk; `7` / `8`
      unchanged.
@@ -105,11 +105,11 @@ runtime. No item currently targets sprint `9` or `10`.
    - The operator picks **retarget the sprint** to `0010` because
      `R-14` does not fit the sprint-`0008` value-statement.
    - The skill **MUST NOT** edit `target_sprint` directly. It dispatches
-     `roadmap-planner` with the requested change
+     `roadmap-plan` with the requested change
      (`R-14.target_sprint: 8 → 10`), letting the planner validate
      outcome resolution, sprint resolution, and the lifecycle
      constraints declared in the roadmap and mission specs.
-   - `roadmap-planner` returns success with the YAML rewritten.
+   - `roadmap-plan` returns success with the YAML rewritten.
      `R-14`'s `target_sprint` is now `10`; `detail` stays `backlog`
      (allowed because sprint `10` is two out from the current sprint).
    - The skill re-resolves the sprint window; still `7` / `8`.
@@ -126,7 +126,7 @@ runtime. No item currently targets sprint `9` or `10`.
     touched on disk. The diff contains exactly: (a) `R-12` flipped
     from `coarse` to `fine` plus the new body; (b) `R-13` flipped
     from `coarse` to `fine` plus the new body; (c) `R-14`'s
-    `target_sprint` rewritten by `roadmap-planner`. The skill
+    `target_sprint` rewritten by `roadmap-plan`. The skill
     **MUST NOT** demote any `fine` item, and **MUST NOT** flip an
-    `mvp` flag — both are owned by `roadmap-planner` under explicit
+    `mvp` flag — both are owned by `roadmap-plan` under explicit
     user intent only.

@@ -50,7 +50,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `planning`
 
-- [roadmap-planner](skills/nolte-shared/roadmap-planner.md) — nolte-shared
+- [roadmap-plan](skills/nolte-shared/roadmap-plan.md) — nolte-shared
 
 ## `prose`
 

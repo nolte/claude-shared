@@ -30,7 +30,7 @@ flowchart TB
     end
 
     subgraph cycle["Per-sprint cycle"]
-        rp["roadmap-planner"]
+        rp["roadmap-plan"]
         fd["feature-decompose"]
         fcr(["feature-consistency-reviewer"])
         sp["sprint-plan"]
@@ -62,7 +62,7 @@ The stadium shape (`feature-consistency-reviewer`) marks the only agent in the s
 | Mission | `mission-define` | first-writes `project/mission.md`, sets `mvp_status: defining` | `mission` |
 | Mission | `mission-revise` | edits `project/mission.md`, flips `mvp_status` (with stabilisation gate) | `mission` |
 | Per-sprint cycle | `roadmap-refine` | enforces the detail-level invariant; emits violations | `roadmap` |
-| Per-sprint cycle | `roadmap-planner` | adds items, promotes detail, flips `mvp` | `roadmap`, `mission` |
+| Per-sprint cycle | `roadmap-plan` | adds items, promotes detail, flips `mvp` | `roadmap`, `mission` |
 | Per-sprint cycle | `feature-decompose` | writes `project/features/<slug>.md`; dispatches `feature-consistency-reviewer` | `feature` |
 | Per-sprint cycle | `sprint-plan` | writes `project/sprints/<NNNN>-<slug>.md` with `status: planned` | `sprint` |
 | Per-sprint cycle | `sprint-execute` | promotes `planned → active`, drives feature transitions, writes `last_commit` | `sprint`, `feature` |
@@ -92,4 +92,4 @@ Adoption typically begins like this:
 3. Only when a clear deliverable emerges for a concrete audience: invoke `mission-define`.
 4. Per sprint thereafter, only the three sprint skills (`sprint-plan` → `sprint-execute` → `sprint-review`), plus `feature-decompose` as needed.
 
-`roadmap-refine` and `roadmap-planner` are invoked on demand, not every sprint.
+`roadmap-refine` and `roadmap-plan` are invoked on demand, not every sprint.
