@@ -28,4 +28,4 @@ The repository has no audience artefact in any of the precedent locations. The s
    - proceeds with step 2 (Vision + Outcomes draft) of the normal flow.
 8. **Outcome authoring** — every outcome cites an audience identifier resolved from the freshly written artefact; no audience that does not appear in the artefact may be cited.
 9. **Approval and atomic write** — same gate as Example 01: explicit approval of both drafts before any write; both files written together; rollback on partial failure.
-10. **Hand-off message** — same `roadmap-planner` / `roadmap-refine` reminder, plus an explicit note that the audience artefact at `<resolved-path>` is now the source of truth for future outcome additions.
+10. **Hand-off message** — same `roadmap-plan` / `roadmap-refine` reminder, plus an explicit note that the audience artefact at `<resolved-path>` is now the source of truth for future outcome additions.

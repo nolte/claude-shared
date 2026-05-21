@@ -38,8 +38,8 @@ Three sub-scenarios, each of which must trigger the refusal independently:
    - dispatch `audience-identify` (the audience-resolution step never runs because the precondition gate failed first),
    - offer a "merge" or "append" mode (none exists in this skill's contract).
 4. **Routing message** — the refusal message names the offending path(s) and routes the user explicitly:
-   - **For sub-scenario 3a (both present)** — "`project/goals.md` und `project/roadmap.md` existieren bereits. Für neue Roadmap-Einträge oder Sprint-Retargeting nutze `roadmap-planner`. Für die Detail-Level-Invariante nutze `roadmap-refine`."
-   - **For sub-scenario 3b (only `goals.md`)** — names the existing `project/goals.md` path, refuses, and routes the user to `roadmap-planner` (which is also the right entry point to author the missing `project/roadmap.md` against the existing goals).
-   - **For sub-scenario 3c (only `roadmap.md`)** — names the existing `project/roadmap.md` path, refuses, and routes the user to `roadmap-planner` for adding items (with a note that authoring `project/goals.md` retroactively is outside this skill's scope and should be raised with the operator).
+   - **For sub-scenario 3a (both present)** — "`project/goals.md` und `project/roadmap.md` existieren bereits. Für neue Roadmap-Einträge oder Sprint-Retargeting nutze `roadmap-plan`. Für die Detail-Level-Invariante nutze `roadmap-refine`."
+   - **For sub-scenario 3b (only `goals.md`)** — names the existing `project/goals.md` path, refuses, and routes the user to `roadmap-plan` (which is also the right entry point to author the missing `project/roadmap.md` against the existing goals).
+   - **For sub-scenario 3c (only `roadmap.md`)** — names the existing `project/roadmap.md` path, refuses, and routes the user to `roadmap-plan` for adding items (with a note that authoring `project/goals.md` retroactively is outside this skill's scope and should be raised with the operator).
 5. **No partial action** — no file is created, modified, or deleted. The git working tree is unchanged after the refusal.
 6. **No silent override** — the skill never offers a `--force` flag or interactive confirmation to bypass the refusal. The hard rule has no exception path inside this skill; if the user genuinely wants to re-bootstrap, they delete the offending file(s) themselves and re-invoke the skill.

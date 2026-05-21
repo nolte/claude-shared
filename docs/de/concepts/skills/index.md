@@ -36,7 +36,7 @@ Skills sind wiederverwendbare Workflows, die Claude Code über das `Skill`-Tool 
 | `mission-revise` | `project/mission.md` editieren plus `mvp_status`-Lifecycle-Flips per `mission`-Spec |
 | `roadmap-init` | `project/goals.md` und `project/roadmap.md` initial scaffolden (Vision plus Outcomes plus leere Queue) |
 | `roadmap-refine` | Detail-Level-Invariante in `project/roadmap.md` durchsetzen, Verstöße strukturiert melden |
-| `roadmap-planner` | Roadmap-Items hinzufügen, promovieren, neu zuordnen; `mvp`-Flag flippen |
+| `roadmap-plan` | Roadmap-Items hinzufügen, promovieren, neu zuordnen; `mvp`-Flag flippen |
 | `feature-decompose` | Roadmap-Item in `project/features/<slug>.md` zerlegen, Konsistenzcheck via `feature-consistency-reviewer` |
 | `sprint-plan` | `project/sprints/<NNNN>-<slug>.md` mit `value_statement` und `verifies_sprint_value` anlegen |
 | `sprint-execute` | Sprint-Lifecycle treiben: `planned → active`, Feature-Übergänge, `last_commit` aktualisieren |

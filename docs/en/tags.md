@@ -53,7 +53,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 ## `planning`
 
-- [roadmap-planner](skills/nolte-shared/roadmap-planner.md) — nolte-shared
+- [roadmap-plan](skills/nolte-shared/roadmap-plan.md) — nolte-shared
 
 ## `prose`
 

@@ -89,7 +89,7 @@ resolve cleanly. The working tree is clean on `develop`.
    emit a violation record for `R-13` despite its coarse detail —
    the invariant only applies to the current and the next sprint.
 6. **No fix walk.** Because no violation surfaced, the skill skips the
-   per-item fix-proposal phase entirely; no `roadmap-planner` dispatch,
+   per-item fix-proposal phase entirely; no `roadmap-plan` dispatch,
    no in-place edit to `project/roadmap.md`.
 7. **Final report.** The skill reports `0 violations found`,
    `0 fixed`, `0 deferred`, `0 skipped`, and exits with code `0`. The

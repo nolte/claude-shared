@@ -74,7 +74,7 @@ exists. No other items target sprints `7` or `8`.
    canonical paths from the spec: promote to `fine` (skill drafts the
    missing body shape — one paragraph naming the user-visible change
    plus a feature checklist), retarget the sprint via
-   `roadmap-planner` dispatch, or drop the sprint anchor by setting
+   `roadmap-plan` dispatch, or drop the sprint anchor by setting
    `target_sprint: null` directly. The skill does **not** silently
    pick a path.
 7. **Operator defers the fix.** In this scenario the operator says
@@ -87,7 +87,7 @@ exists. No other items target sprints `7` or `8`.
    skill — a deferred fix keeps CI red.
 9. **No file mutation.** `project/roadmap.md` is byte-identical before
    and after the run; `git status` reports a clean working tree.
-10. **No `roadmap-planner` dispatch.** Because the operator deferred
+10. **No `roadmap-plan` dispatch.** Because the operator deferred
     rather than picking the retarget path, no skill-to-skill dispatch
     happens; the violation record is the sole persistent artefact of
     the run (on stderr and in the user's transcript).

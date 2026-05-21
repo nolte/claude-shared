@@ -30,7 +30,7 @@ flowchart TB
     end
 
     subgraph cycle["Per-sprint cycle"]
-        rp["roadmap-planner"]
+        rp["roadmap-plan"]
         fd["feature-decompose"]
         fcr(["feature-consistency-reviewer"])
         sp["sprint-plan"]
@@ -62,7 +62,7 @@ Stadium-Form (`feature-consistency-reviewer`) markiert den einzigen Agent in der
 | Mission | `mission-define` | schreibt erstmals `project/mission.md`, setzt `mvp_status: defining` | `mission` |
 | Mission | `mission-revise` | editiert `project/mission.md`, flippt `mvp_status` (mit Stabilisierungs-Gate) | `mission` |
 | Per-sprint cycle | `roadmap-refine` | enforced Detail-Level-Invariante; emittiert Violations | `roadmap` |
-| Per-sprint cycle | `roadmap-planner` | fügt Items hinzu, promoviert Detail, flippt `mvp` | `roadmap`, `mission` |
+| Per-sprint cycle | `roadmap-plan` | fügt Items hinzu, promoviert Detail, flippt `mvp` | `roadmap`, `mission` |
 | Per-sprint cycle | `feature-decompose` | schreibt `project/features/<slug>.md`; dispatcht `feature-consistency-reviewer` | `feature` |
 | Per-sprint cycle | `sprint-plan` | schreibt `project/sprints/<NNNN>-<slug>.md` mit `status: planned` | `sprint` |
 | Per-sprint cycle | `sprint-execute` | promoviert `planned → active`, treibt Feature-Übergänge, schreibt `last_commit` | `sprint`, `feature` |
@@ -92,4 +92,4 @@ Eine Adoption beginnt typischerweise so:
 3. Erst wenn ein klarer Mehrwert für eine konkrete Audience entsteht: `mission-define` anstoßen.
 4. Pro Sprint dann nur die drei Sprint-Skills (`sprint-plan` → `sprint-execute` → `sprint-review`) plus `feature-decompose` bei Bedarf.
 
-`roadmap-refine` und `roadmap-planner` werden punktuell aufgerufen, nicht in jedem Sprint.
+`roadmap-refine` und `roadmap-plan` werden punktuell aufgerufen, nicht in jedem Sprint.
