@@ -9,6 +9,8 @@ phase: quality
 
 Run every lint, typecheck, and test step the project declares, in parallel, and report the outcome as a single table. This skill doesn't fix failures—it surfaces them with enough detail that the caller knows what to fix.
 
+Implements `spec/project/quality-gate/` — the spec defines the gate composition contract, invocation requirements, and output shape. This skill binds those rules to the on-disk procedure.
+
 ## German trigger phrases
 
 This skill also triggers on equivalent German-language requests, including:
@@ -141,6 +143,7 @@ Below the table, for every `fail` or `timeout` row, append a one-paragraph excer
 - **Always** prefer Taskfile targets over direct tool invocation when a suitable target exists. That keeps project conventions in charge.
 - **Always** report exactly what was invoked in the **Runner** column so the caller can reproduce any failure locally.
 - **Always** include enough of the failure output (≤10 lines per failing check) that the caller doesn't need to re-run to triage.
+- When `spec/project/quality-gate/` and this skill disagree, the spec wins; this skill needs the update.
 
 ## Why this is a skill, not an agent
 
