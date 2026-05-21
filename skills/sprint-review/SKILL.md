@@ -140,3 +140,7 @@ Triggered when step 3 fails unrecoverably (the underlying release pipeline is br
 - **Never** advance a roadmap item to `status: done` from a `cancelled` sprint, even when every feature is individually `done`. Re-target the pending features to a successor sprint instead.
 - **Never** edit any sprint other than the one being reviewed in this run. `sprint-plan` and `sprint-execute` own the other sprints' lifecycles.
 - When `spec/project/sprint/`, `spec/project/release-artifact/`, `spec/project/release-skill-layer/`, or `spec/project/release-automation/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
+
+## Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.
