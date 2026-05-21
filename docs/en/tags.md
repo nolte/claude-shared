@@ -23,6 +23,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [webview-ui-expert](agents/nolte-shared/webview-ui-expert.md) — nolte-shared
+- [continuous-improvement-triage](skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
 - [docs-audience-tracks-apply](skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
 - [mermaid-diagrams-apply](skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
@@ -108,6 +109,10 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [tech-stack-capture](skills/nolte-shared/tech-stack-capture.md) — nolte-shared
 - [webview-ui-optimize](skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [yaml-json-schema](skills/nolte-shared/yaml-json-schema.md) — nolte-shared
+
+## `triage`
+
+- [continuous-improvement-triage](skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
 
 ## `validation`
 
