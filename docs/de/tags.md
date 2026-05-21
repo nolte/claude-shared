@@ -35,6 +35,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [readme-structure-apply](skills/nolte-shared/readme-structure-apply.md) — nolte-shared
 - [roadmap-refine](skills/nolte-shared/roadmap-refine.md) — nolte-shared
 - [skill-agent-catalog-apply](skills/nolte-shared/skill-agent-catalog-apply.md) — nolte-shared
+- [skills-agents-sweep](skills/nolte-shared/skills-agents-sweep.md) — nolte-shared
 - [spec-drift-audit](skills/nolte-shared/spec-drift-audit.md) — nolte-shared
 - [vocab-drift-audit](skills/nolte-shared/vocab-drift-audit.md) — nolte-shared
 - [webview-ui-optimize](skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
