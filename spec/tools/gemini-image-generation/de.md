@@ -43,7 +43,7 @@ Außerdem: Die Modell-ID `gemini-2.5-flash-image` ist in dieser Spec bewusst ver
 - **MUSS [MUST]** den Zielpfad explizit von der Betreiberin verlangen. Kein stilles Default auf das aktuelle Arbeitsverzeichnis.
 - **MUSS [MUST]** das Überschreiben einer existierenden Zieldatei ohne ausdrückliche Bestätigung im selben Aufruf verweigern.
 - **MUSS [MUST]** vor der ersten erfolgreichen Generierung in einer Umgebung einen einmaligen Datenschutzhinweis anzeigen:
-  > „Free-Tier-Prompts und erzeugte Bilder werden von Google zum Trainieren und Verbessern ihrer Modelle verwendet. Übermittle keine vertraulichen oder personenbezogenen Daten. Zum Abschalten muss Billing für diesen API-Key aktiviert werden — siehe https://ai.google.dev/gemini-api/terms."
+  > „Free-Tier-Prompts und erzeugte Bilder werden von Google zum Trainieren und Verbessern ihrer Modelle verwendet. Übermittle keine vertraulichen oder personenbezogenen Daten. Zum Abschalten muss Billing für diesen API-Key aktiviert werden — siehe <https://ai.google.dev/gemini-api/terms>."
   Die Bestätigung MUSS [MUST] unter `$XDG_STATE_HOME/nolte-shared/gemini-image-generation/ack` persistiert werden (Fallback `$HOME/.local/state/nolte-shared/gemini-image-generation/ack`, wenn `XDG_STATE_HOME` nicht gesetzt ist), damit die Betreiberin auf derselben Maschine über Sessions hinweg nicht erneut gefragt wird.
 - **MUSS [MUST]** neben jedes erzeugte Bild eine Sidecar-Metadatendatei `<image>.meta.json` schreiben, die mindestens enthält:
   - `prompt` — der wortgetreu übermittelte Prompt
