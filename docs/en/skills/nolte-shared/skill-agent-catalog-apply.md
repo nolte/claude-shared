@@ -224,7 +224,7 @@ Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvio
 - **Plugin source roots in `docs/catalog-sources.yml` are repo-relative paths, not install paths.** In plugin mode the entry is `local: .` (the current repo *is* the plugin). In consumer mode the entry points at where the plugin's repo content actually lives on disk relative to the docs build, typically `local: ../claude-shared` for a sibling checkout, or a vendored or submoduled subdirectory. `mkdocs-gen-files` resolves the path at build time relative to the `mkdocs.yml` location; the runtime `.claude/plugins/<plugin>/` install path is for skill discovery at session-start, not for docs generation.
 - **Consumer mode forbids the local-plugin entry.** A consumer-mode repo (one that installs `nolte-shared` rather than being it) **MUST NOT** declare `local: .` as a source; the walker would then look for `skills/` and `agents/` at the consumer's repo root, find nothing, and emit an empty catalog or a hard error. Plugin mode and consumer mode are deliberately exclusive on this point.
 
-### Rationale
+### Why this is a skill, not an agent
 
 This is a skill, not an agent, because:
 

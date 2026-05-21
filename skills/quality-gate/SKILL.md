@@ -27,9 +27,9 @@ Detect the user's language from their message and respond in it. The result tabl
 - **Scope override** (optional): caller may restrict the run to a named subset — "lint only," "tests only," "typecheck only," "fast" (lint + typecheck, skip tests).
 - **Subroot filter** (optional): in a monorepo, caller may name a subroot (`backend/`, `frontend/`, `packages/foo/`) to scope the run.
 
-## Operation
+## Operations
 
-### Step 1: Prefer Taskfile targets
+### 1. Prefer Taskfile targets
 
 If the repo root has `Taskfile.yml` or `Taskfile.yaml`, enumerate the declared targets:
 
@@ -53,7 +53,7 @@ Rules for picking targets:
 
 Record every chosen target in the report so the caller can see what ran.
 
-### Step 2: Detect native tooling (fallback)
+### 2. Detect native tooling (fallback)
 
 For any category not covered by a Taskfile target, detect the tooling from the manifests:
 
@@ -73,7 +73,7 @@ Detection rules:
 
 If a category has no detectable tooling and no Taskfile target, record it as `skipped: no tooling detected` rather than claiming pass.
 
-### Step 3: Run checks in parallel
+### 3. Run checks in parallel
 
 Issue every chosen command in a single parallel batch. Each command **must** end with `; echo "EXIT:$?"` so the exit code survives through redirects and shell wrappers. Honour these timeouts:
 
@@ -83,7 +83,7 @@ Issue every chosen command in a single parallel batch. Each command **must** end
 
 If a command times out, report it as `timeout` in the status column—don't retry.
 
-### Step 4: Parse each result
+### 4. Parse each result
 
 For every check, capture:
 
@@ -99,7 +99,7 @@ Project-local conventions that the skill **must** honour when the Taskfile targe
 
 When running tools directly (Step 2 fallback), **don't** add project-local ignores the skill doesn't know about. Report the raw tool output and let the caller decide.
 
-### Step 5: Render the result table
+### 5. Render the result table
 
 ```
 | Check | Status | Runner | Details |
@@ -113,7 +113,7 @@ The **Runner** column shows exactly what was invoked — the Taskfile target nam
 
 Below the table, for every `fail` or `timeout` row, append a one-paragraph excerpt from the captured output (≤10 lines, fenced in a code block). Group excerpts by check.
 
-### Step 6: Overall verdict
+### 6. Overall verdict
 
 - **All `pass`**: one-line green summary (`Quality gate passed — N checks green.`).
 - **Any `fail` / `timeout`**: red summary naming the failed checks and pointing at the excerpts below the table.
@@ -136,7 +136,7 @@ Below the table, for every `fail` or `timeout` row, append a one-paragraph excer
 - **Always** report exactly what was invoked in the **Runner** column so the caller can reproduce any failure locally.
 - **Always** include enough of the failure output (≤10 lines per failing check) that the caller doesn't need to re-run to triage.
 
-## Rationale
+## Why this is a skill, not an agent
 
 This is a skill, not an agent, because:
 
