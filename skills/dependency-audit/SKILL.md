@@ -9,6 +9,8 @@ phase: quality
 
 Run a CVE and optional license audit against every dependency manifest the current project ships, and produce a single severity-sorted report. This skill reports and recommends; it never upgrades, pins, or removes dependencies on its own.
 
+Implements `spec/project/dependency-audit/` — the spec defines the audit scope, severity mapping, and per-language tooling. This skill binds those rules to the on-disk procedure.
+
 ## German trigger phrases
 
 This skill also triggers on equivalent German-language requests, including:
@@ -150,6 +152,7 @@ Don't execute these without explicit confirmation:
 - **Always** prefer a repository-declared Taskfile target over invoking auditors directly, when one exists and wraps the same auditor. This honours any project-specific ignore list the Taskfile applies.
 - **Always** attribute every finding to the subroot whose manifest caused it, so consumers with monorepos can act on the right team / package.
 - **Always** sort findings deterministically (severity then package name) so the report diffs cleanly.
+- When `spec/project/dependency-audit/` and this skill disagree, the spec wins; this skill needs the update.
 
 ## Why this is a skill, not an agent
 
