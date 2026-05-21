@@ -18,6 +18,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 ## `audit`
 
+- [dependency-audit-scanner](agents/nolte-shared/dependency-audit-scanner.md) — nolte-shared
 - [docs-freshness-checker](agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
