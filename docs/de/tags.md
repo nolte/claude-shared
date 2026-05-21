@@ -20,6 +20,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [docs-freshness-checker](agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [portfolio-manifest-collector](agents/nolte-shared/portfolio-manifest-collector.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [webview-ui-expert](agents/nolte-shared/webview-ui-expert.md) — nolte-shared

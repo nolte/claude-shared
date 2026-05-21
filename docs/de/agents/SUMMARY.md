@@ -7,6 +7,8 @@
     * [claude-plugin-developer](nolte-shared/claude-plugin-developer.md)
     * [spec-readiness-reviewer](nolte-shared/spec-readiness-reviewer.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
+* 5 Review
+    * [portfolio-manifest-collector](nolte-shared/portfolio-manifest-collector.md)
 * 6 Quality
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
     * [prose-vale-curator](nolte-shared/prose-vale-curator.md)
