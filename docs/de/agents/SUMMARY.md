@@ -8,6 +8,7 @@
     * [spec-readiness-reviewer](nolte-shared/spec-readiness-reviewer.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 5 Review
+    * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)
     * [vocab-drift-scanner](nolte-shared/vocab-drift-scanner.md)
 * 6 Quality
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
