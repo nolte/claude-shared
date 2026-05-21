@@ -89,6 +89,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [cookiecutter-template-author](agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [png-to-transparent-svg](agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
+- [cookiecutter-template-manage](skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
 - [docs-audience-tracks-apply](skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
 - [feature-decompose](skills/nolte-shared/feature-decompose.md) — nolte-shared

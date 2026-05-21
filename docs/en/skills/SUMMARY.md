@@ -10,6 +10,7 @@
     * [roadmap-refine](nolte-shared/roadmap-refine.md)
     * [sprint-plan](nolte-shared/sprint-plan.md)
 * 3 Design
+    * [cookiecutter-template-manage](nolte-shared/cookiecutter-template-manage.md)
     * [docs-audience-tracks-apply](nolte-shared/docs-audience-tracks-apply.md)
     * [docs-dry-refactor](nolte-shared/docs-dry-refactor.md)
     * [github-issue-templates-apply](nolte-shared/github-issue-templates-apply.md)
