@@ -17,6 +17,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-management | Claude Skill Authoring | Claude-Skill-Autorenschaft | draft | 2026-04-24 |
 | claude | skill-review | Claude Skill Review | Claude-Skill-Review | draft | 2026-04-24 |
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | 2026-04-23 |
+| design | corporate-design-colors | Corporate Design — Color System | Corporate Design — Farbsystem | draft | unversioned |
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | unversioned |
 | portfolio | tech-stack | Portfolio Tech Stack Capture | Portfolio-Tech-Stack-Erfassung | draft | unversioned |
 | portfolio | tech-stack-discovery | Portfolio Tech-Stack Discovery | Portfolio-Tech-Stack-Discovery | draft | unversioned |
