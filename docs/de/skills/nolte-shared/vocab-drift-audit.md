@@ -38,7 +38,7 @@ Detect the user's language from their message and respond in it. The audit repor
 - **Upstream pin**: parsed automatically from `.vale.ini`. Look at the `Packages =` line for a URL of the form `https://github.com/nolte/vale-style/releases/download/<tag>/nolte-styles.zip`; the `<tag>` is the pin. If the URL is missing or the tag is non-semver, stop and report instead of guessing.
 - **Local vocabularies**: every git-tracked `accept.txt` under the repo's Vale `StylesPath` (and under any folder named `vocabularies/` inside the repo). `vale sync`'d files are conventionally gitignored, so git-tracked entries are treated as local overrides.
 
-### Operation
+### Operations
 
 1. **Locate the Vale config.** Read `.vale.ini` from the repo root first, then from common alternative locations (`docs/.vale.ini`, `.github/.vale.ini`). Extract `StylesPath` and the `nolte/vale-style` pin tag. If either is missing, stop with a clear message.
 2. **Collect the upstream vocabulary for that pin.** List the upstream vocabulary directory at the pinned tag via `gh api "repos/nolte/vale-style/contents/src/styles/config/vocabularies?ref=<tag>"` and, for each subdirectory, fetch `accept.txt` at the same ref. Build one set per upstream vocabulary (for example `technical`, `esphome`, `technical-de`).

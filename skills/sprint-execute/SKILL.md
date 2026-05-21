@@ -32,7 +32,7 @@ Before mutating any sprint or feature file, confirm:
 
 This skill performs whichever of the operations below the user's request maps to. Each operation is its own deterministic block; the skill never silently extends one operation into another (no "started a feature, may as well close the sprint while I'm here").
 
-### A. Promote `planned → active`
+### 1. Promote `planned → active`
 
 Triggered as a side effect of the first `ready → in_progress` transition on a feature whose `sprint` field matches a `planned` sprint, or directly when the user explicitly asks to start the sprint.
 
@@ -43,7 +43,7 @@ Steps:
 3. Set `status: active` and `started: <today's ISO date>` in the sprint's frontmatter.
 4. Surface a one-line confirmation to the user: "Starting sprint <NNNN> — <slug>".
 
-### B. Transition a feature `ready → in_progress`
+### 2. Transition a feature `ready → in_progress`
 
 Triggered when the user asks to start a specific feature.
 
@@ -59,7 +59,7 @@ Steps:
 4. Set `status: in_progress` on the feature.
 5. Mark the feature's roadmap item `active` if it's still `proposed` per `spec/project/roadmap/` §Lifecycle.
 
-### C. Transition a feature `in_progress → done`
+### 3. Transition a feature `in_progress → done`
 
 Triggered when the user asks to mark a feature done.
 
@@ -71,7 +71,7 @@ Steps:
 4. **Update the sprint's `last_commit`.** Run `git rev-parse HEAD` to resolve the most recent commit SHA on the current branch, then write the result to the sprint's `last_commit` frontmatter field. This is the canonical write authority for that field per `spec/project/sprint/` §Frontmatter schema; `last_commit` anchors the artefact ancestry check that `sprint-review` runs at closure.
 5. Surface the updated sprint state to the user: features remaining `in_progress`, `last_commit` SHA, and a hint that `sprint-review` becomes invokable when every feature in the sprint is `done`.
 
-### D. Sync `## Features` body bullets with `features` frontmatter
+### 4. Sync `## Features` body bullets with `features` frontmatter
 
 Triggered when the user adds or removes a feature mid-sprint, or when a stale body / frontmatter divergence is detected during another operation.
 
@@ -81,7 +81,7 @@ Steps:
 2. **Refuse partial updates.** If the user's request mutates only the body or only the frontmatter, stop and report; the body and the frontmatter list **MUST** be updated in the same operation per `spec/project/sprint/` §Roadmap and feature linkage.
 3. Apply the requested addition or removal to both surfaces atomically. When adding a feature mid-sprint, also set the feature file's `sprint` field to this sprint's number (and check that no other sprint already references it). When removing, clear the feature file's `sprint` field (set to null).
 
-### E. Decline transitions outside this skill's scope
+### 5. Decline transitions outside this skill's scope
 
 The following requests are **out of scope** for this skill:
 

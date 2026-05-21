@@ -23,7 +23,7 @@ Operationalises `spec/project/mkdocs-structure/<canonical_language>.md` §Snippe
 
 When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent requirements that don't appear in the spec.
 
-### Rationale (why a skill, not an agent)
+### Why this is a skill, not an agent
 
 Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a skill because:
 

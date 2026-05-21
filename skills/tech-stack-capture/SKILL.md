@@ -46,7 +46,7 @@ Before any signal probe, confirm:
 - The global manifest at `claude-shared:portfolio/tech-stack.yml` is reachable. When the active repository is `claude-shared`, read it locally. From any other repo, fetch via `gh api repos/nolte/claude-shared/contents/portfolio/tech-stack.yml --jq .content | base64 -d` and discard the raw content once a structured per-entry summary (name, kind, group, status) is in hand. Network-unreachable global manifests block the skill with an explicit error; don't proceed against a stale local cache without operator acknowledgement.
 - The active repository is on a feature branch (per `spec/project/branching-model/`), not `develop` or `main`. Confirm via `git rev-parse --abbrev-ref HEAD`. Capturing on a protected branch is a structural error and is refused even if file writes would technically succeed.
 
-## Operation: Capture / Refresh
+## Operations
 
 The single operation produces a `tech_stack:` block in `project/portfolio.yml` (creating it on a fresh capture, replacing it on a refresh). Run the eight steps in order; reordering breaks the spec's discovery sequence.
 

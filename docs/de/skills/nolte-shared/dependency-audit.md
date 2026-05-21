@@ -39,9 +39,9 @@ Detect the user's language from their message and respond in it. The report itse
 - **License audit toggle**: opt-in via the caller ("also check licenses," "include license compliance"). Off by default because it's slower and often needs an allowlist the project doesn't yet declare.
 - **Severity floor**: defaults to `low` (report every finding). Caller may narrow to `medium` or `high` to de-noise pre-release gates.
 
-### Operation
+### Operations
 
-#### Step 1: Detect project kind
+#### 1. Detect project kind
 
 Look in the repo root and obvious subroots (`backend/`, `frontend/`, `packages/*`, `apps/*`):
 
@@ -58,7 +58,7 @@ If the project has no detectable manifest, stop and report clearly. Don't guess.
 
 Record every subroot where a manifest was found; audits run per subroot so the report can attribute findings.
 
-#### Step 2: Prefer Taskfile targets when they exist
+#### 2. Prefer Taskfile targets when they exist
 
 If the repo has a `Taskfile.yml` (or `Taskfile.yaml`) at the root, check for existing audit-named targets before invoking auditors directly:
 
@@ -70,7 +70,7 @@ When a target exists and it wraps the same auditor you'd otherwise run, invoke i
 
 If no matching target exists, call the auditor directly.
 
-#### Step 3: Run auditors
+#### 3. Run auditors
 
 Run every detected auditor per subroot. Use `--json` / equivalent machine-readable output where available; fall back to text when necessary.
 
@@ -81,7 +81,7 @@ Run every detected auditor per subroot. Use `--json` / equivalent machine-readab
 
 Record per finding: `package`, `installed_version`, `advisory_id` (GHSA/CVE/PYSEC), `severity` (`critical` / `high` / `medium` / `low` / `unknown`), `path` (direct or transitive), `fixed_in`, `summary_url`.
 
-#### Step 4 (optional): Run a license audit
+#### 4. Run a license audit (optional)
 
 Only when the caller asked for it:
 
@@ -96,7 +96,7 @@ Compare the discovered licenses against the project's allowlist. Locations to ch
 
 If no allowlist exists, flag every non-permissive license (GPL / AGPL / LGPL / SSPL / unknown) as `review`, not as failure. Don't invent a policy.
 
-#### Step 5: Render the report
+#### 5. Render the report
 
 ```
 ## Dependency Audit
@@ -130,7 +130,7 @@ Auditors run: <list>
 
 Sort findings by severity first, then package name alphabetically, so diffs of the rendered report stay stable across runs.
 
-#### Step 6: Offer follow-up actions
+#### 6. Offer follow-up actions
 
 Don't execute these without explicit confirmation:
 
@@ -163,7 +163,7 @@ Don't execute these without explicit confirmation:
 - **Always** attribute every finding to the subroot whose manifest caused it, so consumers with monorepos can act on the right team / package.
 - **Always** sort findings deterministically (severity then package name) so the report diffs cleanly.
 
-### Rationale
+### Why this is a skill, not an agent
 
 This is a skill, not an agent, because:
 
