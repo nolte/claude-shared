@@ -28,6 +28,7 @@
     * [sprint-execute](nolte-shared/sprint-execute.md)
 * 5 Review
     * [agent-review](nolte-shared/agent-review.md)
+    * [continuous-improvement-triage](nolte-shared/continuous-improvement-triage.md)
     * [pull-request-create](nolte-shared/pull-request-create.md)
     * [pull-request-merge](nolte-shared/pull-request-merge.md)
     * [skill-review](nolte-shared/skill-review.md)
