@@ -1,6 +1,6 @@
 ---
 name: dependency-audit
-description: Scan the current project's dependency tree for known vulnerabilities (CVEs) and, when requested, license-compliance issues. Detects project kind from `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` for Python and `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` for Node, runs the appropriate auditors, and produces a severity-sorted report with direct vs transitive attribution. Invoke when the user asks to "audit dependencies," "run a CVE scan," "check for vulnerable packages," "check license compliance," "run pip-audit," "run npm audit," or equivalent German-language requests. Also handles a pre-PR / pre-release dependency gate. Don't use for upgrading dependencies (that's an author's decision) or for writing Renovate configs (that's `project-structure-apply`).
+description: Scan the current project's dependency tree for known vulnerabilities (CVEs) and, when requested, license-compliance issues. Dispatches dependency-audit-scanner agent for the read-only scan step. Detects project kind from `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` for Python and `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` for Node, runs the appropriate auditors, and produces a severity-sorted report with direct vs transitive attribution. Invoke when the user asks to "audit dependencies," "run a CVE scan," "check for vulnerable packages," "check license compliance," "run pip-audit," "run npm audit," or equivalent German-language requests. Also handles a pre-PR / pre-release dependency gate. Don't use for upgrading dependencies (that's an author's decision) or for writing Renovate configs (that's `project-structure-apply`).
 tags: [dependency]
 phase: quality
 ---
@@ -8,6 +8,8 @@ phase: quality
 # Dependency Audit
 
 Run a CVE and optional license audit against every dependency manifest the current project ships, and produce a single severity-sorted report. This skill reports and recommends; it never upgrades, pins, or removes dependencies on its own.
+
+Implements `spec/project/dependency-audit/` — the spec defines the audit scope, severity mapping, and per-language tooling. This skill binds those rules to the on-disk procedure.
 
 ## German trigger phrases
 
@@ -28,6 +30,10 @@ Detect the user's language from their message and respond in it. The report itse
 - **Severity floor**: defaults to `low` (report every finding). Caller may narrow to `medium` or `high` to de-noise pre-release gates.
 
 ## Operations
+
+### 0. Dispatch the read-only scan agent
+
+Dispatch `dependency-audit-scanner` (Agent) for the read-only audit pass: it detects project type, runs the matching auditor (pip-audit / npm audit / etc.), and returns a structured drift report. Wait for its inventory before proceeding to severity-triage and follow-up actions.
 
 ### 1. Detect project kind
 
@@ -150,12 +156,12 @@ Don't execute these without explicit confirmation:
 - **Always** prefer a repository-declared Taskfile target over invoking auditors directly, when one exists and wraps the same auditor. This honours any project-specific ignore list the Taskfile applies.
 - **Always** attribute every finding to the subroot whose manifest caused it, so consumers with monorepos can act on the right team / package.
 - **Always** sort findings deterministically (severity then package name) so the report diffs cleanly.
+- When `spec/project/dependency-audit/` and this skill disagree, the spec wins; this skill needs the update.
 
 ## Why this is a skill, not an agent
 
-This is a skill, not an agent, because:
+This skill follows the hybrid pattern: the read-only scan phase is delegated to the `dependency-audit-scanner` agent (context-window isolation, tool restriction), while orchestration and follow-up actions stay in the skill.
 
 - **Orchestration role**: typical callers run this as one step inside a larger flow (pre-PR gate, release cut, periodic security review); the output flows back into the main conversation so the user can triage.
-- **Context-window impact is low**: the machine-readable auditor output is summarised before the findings reach the main conversation, so context-pollution isn't the deciding dimension.
-- **Interactivity**: the follow-up actions in Step 6 need user approval—bumping a dependency, adding an advisory ignore entry, drafting a license allowlist—so mid-flow interactivity favours the skill side.
-- **Counter-dimension**: a dedicated agent with tool restriction (read + a single `Bash` for the auditors) would also work for the pure scanning half, but the follow-up-action half would then need a second hop; keeping the whole flow in one skill is simpler.
+- **Interactivity**: the follow-up actions in Step 6 need user approval — bumping a dependency, adding an advisory ignore entry, drafting a license allowlist — so mid-flow interactivity favours the skill side.
+- **Hybrid split**: the pure scanning half (detect lockfile, run auditor, normalise JSON) is self-contained and benefits from context-window isolation; the `dependency-audit-scanner` agent handles it. The follow-up-action half stays here so the user can approve each change interactively.

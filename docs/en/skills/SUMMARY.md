@@ -10,6 +10,7 @@
     * [roadmap-refine](nolte-shared/roadmap-refine.md)
     * [sprint-plan](nolte-shared/sprint-plan.md)
 * 3 Design
+    * [cookiecutter-template-manage](nolte-shared/cookiecutter-template-manage.md)
     * [docs-audience-tracks-apply](nolte-shared/docs-audience-tracks-apply.md)
     * [docs-dry-refactor](nolte-shared/docs-dry-refactor.md)
     * [github-issue-templates-apply](nolte-shared/github-issue-templates-apply.md)
@@ -28,9 +29,11 @@
     * [sprint-execute](nolte-shared/sprint-execute.md)
 * 5 Review
     * [agent-review](nolte-shared/agent-review.md)
+    * [continuous-improvement-triage](nolte-shared/continuous-improvement-triage.md)
     * [pull-request-create](nolte-shared/pull-request-create.md)
     * [pull-request-merge](nolte-shared/pull-request-merge.md)
     * [skill-review](nolte-shared/skill-review.md)
+    * [skills-agents-sweep](nolte-shared/skills-agents-sweep.md)
     * [spec-drift-audit](nolte-shared/spec-drift-audit.md)
 * 6 Quality
     * [dependency-audit](nolte-shared/dependency-audit.md)
