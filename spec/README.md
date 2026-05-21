@@ -49,3 +49,4 @@ Canonical language: `en` · Translations: `de`
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | unversioned |
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |
+| tools | gemini-image-generation | Gemini Image Generation (Free-Tier) | Gemini-Bildgenerierung (Free-Tier) | draft | unversioned |
