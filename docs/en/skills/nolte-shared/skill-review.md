@@ -103,6 +103,12 @@ Reference `spec/claude/review-plan/<canonical>.md` for the authoritative format.
 
 See `examples/walkthrough.md` for an end-to-end transcript covering the create, update, defer, and close turns.
 
+### Gotchas
+
+- **`skills-ref` validator is not provisioned in most repos**: the external skill-structure validator (step 5) may not be installed; when it's absent, record an explicit override in the plan's `## Scope` with a one-line justification rather than silently skipping the check — an undocumented skip is itself a `Warning` finding per `skill-review` §Checks derived from external skill-structure validation.
+- **`spec/.spec-config.yml` must be read before resolving any spec path**: `<canonical>` for the four required spec files depends on `canonical_language` in that config; defaulting to `en` without reading the config silently misroutes reviews in repos with a different canonical language.
+- **Plan file is local-only until committed**: `.audits/skill-review/<name>.md` exists only in the working tree until the user commits it; if the session ends before the user stages and commits, the plan is lost — remind the user to commit early or offer to stage immediately after writing.
+
 ### Hard rules
 
 - **One plan per target.** A rerun supersedes; never edit a previous run's plan into a new one.

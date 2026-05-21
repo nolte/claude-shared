@@ -137,6 +137,12 @@ Below the table, for every `fail` or `timeout` row, append a one-paragraph excer
 - Read `examples/02-native-fallback-no-taskfile.md` when no Taskfile is present and the skill must detect and run native tooling directly.
 - Read `examples/03-multi-language-monorepo.md` when the repository has multiple language subroots that each need a separate parallel scan.
 
+### Gotchas
+
+- **Taskfile target may exist but wrap nothing**: `task --list-all` lists a target even if it contains no commands or calls a non-existent dependency; always inspect the target via `task --summary <name>` before relying on its output — an empty or broken target silently produces exit 0.
+- **Tool detection order is not deterministic across repos**: a monorepo may carry both `pyproject.toml` and `package.json` at the root, making the detected lint/test runner ambiguous; always select the runner per the subroot where its manifest lives and document which runner was chosen in the `Runner` column.
+- **Missing Taskfile target for a category is not a failure**: when `task lint` doesn't exist the skill falls through to native tooling — record `skipped: no tooling detected` rather than reporting `fail`; claiming fail without a detected tool is a false positive.
+
 ### Hard rules
 
 - **Never** fix failures automatically. This skill surfaces them; fixing is a separate step the caller owns.

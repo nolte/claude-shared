@@ -107,6 +107,12 @@ On run completion, the skill reports:
 - Read `examples/02-coarse-near-sprint-violation.md` when a near-sprint item is still flagged `coarse` and the skill surfaces the violation.
 - Read `examples/03-walk-fixes-promote-and-retarget.md` when the walk phase fixes a coarse violation by promoting to `fine` and retargeting the item.
 
+## Gotchas
+
+- **Detail-level invariant applies only to current and next sprint items**: items targeted at sprints two or more out are intentionally `coarse` or `backlog` — do not flag them as violations; applying the `fine` requirement beyond the two-sprint horizon is over-enforcement.
+- **Sprint state must be re-read after each per-item fix**: `roadmap-refine` step 4.4 explicitly re-resolves current and next sprint numbers from disk after each fix, because the operator may change sprint state in parallel; using a cached sprint resolution across multiple fix rounds can produce stale violation records.
+- **A missing or empty `project/sprints/` directory is a hard stop, not a skip**: without a resolvable current sprint the invariant cannot be checked; stop and report the gap rather than falling back to wall-clock heuristics or guessing from roadmap content.
+
 ## Hard rules
 
 - **Never** resolve the current or next sprint by any rule other than the one declared in `spec/project/roadmap/` §Detail-level convention and refinement rule. The fallback chain (active → lowest planned → highest closed; next is lowest planned strictly greater than current) is exact and not negotiable.

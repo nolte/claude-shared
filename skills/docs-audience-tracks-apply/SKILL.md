@@ -98,6 +98,12 @@ The skill returns to the user, in this order:
 7. **Build verification**: `mkdocs build --strict` exit code plus a raw output snippet on failure; on success report the build summary line only.
 8. **Caller follow-ups**: explicit list — commit the working-tree edits, dispatch `audience-doc-author` to fill in the placeholder pages' bodies, route to `audience-identify` if the audience artefact needs the `track:` field added through the canonical methodology, open the PR via `pull-request-create`, and similar.
 
+## Gotchas
+
+- **Dirty `docs/` tree blocks the operation**: if uncommitted changes exist in `docs/<lang>/`, the audience artefact, or `mkdocs.yml` when the skill starts, it stops and asks — never assume the tree is clean; always run the precondition check (step 6) before proposing any edits.
+- **Frontmatter race condition when the audience artefact is extended mid-flow**: if the audience artefact gains a new audience entry while a `migrate` is in progress, pages already proposed with the old mapping may be misclassified — re-read the artefact at the start of each per-page approval step when the session spans multiple turns.
+- **Multilingual symmetry is mandatory**: adding `track:` to a page in the canonical language tree without patching every counterpart in every other language tree configured in `spec/.spec-config.yml` is a spec violation (Hard rule 8); always enumerate all configured languages before writing the first page.
+
 ## Hard rules
 
 1. **Never** author the prose body of a content block. The skill creates the *containers* (placeholder pages with frontmatter, the H1, and a single-paragraph stub naming the block's purpose), but never the prose. Block authoring belongs to the `audience-doc-author` agent or the human author.
