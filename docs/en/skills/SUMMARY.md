@@ -37,6 +37,7 @@
     * [spec-drift-audit](nolte-shared/spec-drift-audit.md)
 * 6 Quality
     * [dependency-audit](nolte-shared/dependency-audit.md)
+    * [lektorat-apply](nolte-shared/lektorat-apply.md)
     * [portfolio-audit](nolte-shared/portfolio-audit.md)
     * [quality-gate](nolte-shared/quality-gate.md)
     * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)
