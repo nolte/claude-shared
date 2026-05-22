@@ -139,6 +139,11 @@ Die in diesem Plugin ausgelieferten Skills laufen in Claude Code; das Verständn
 - **SOLLTE [SHOULD]** den Skill **gegen jedes Modell testen, mit dem er eingesetzt werden soll** — Haiku, Sonnet und Opus; was für Opus funktioniert, gibt Haiku evtl. nicht genug Anleitung; was für Haiku klar ist, kann für Opus überflüssig erklären ([R2](#referenzen))
 - **KANN [MAY]** die Skill-Struktur mit dem Upstream-`skills-ref`-Validator validieren (`skills-ref validate ./skills/<name>`), bevor ein PR aufgemacht wird; der Validator fängt Frontmatter- und Naming-Probleme, die diese Spezifikation nicht erschöpfend auflistet ([R1](#referenzen))
 
+### Wiederaufnehmbare Runs
+- **MUSS [MUST]** `resumable: true` im `SKILL.md`-Frontmatter deklarieren, wenn der normale Kontrollfluss des Skills mehr als ein Genehmigungsgate oder mehr als eine benannte interne Phase umfasst, und `spec/claude/resumable-work/` für den On-Disk-Envelope, die Checkpoint-Kadenz, das Re-Invocation-Prompt und den Lebenszyklus befolgen; die tragenden Regeln leben in jener Spec und werden hier nicht dupliziert
+- **MUSS [MUST]** Resume-Support im `description`-Text des Skills erwähnen, wann immer `resumable: true` gesetzt ist, damit Operator:innen, die den Katalog lesen, wissen, welche Workflows sich gefahrlos unterbrechen lassen
+- **SOLLTE NICHT [SHOULD NOT]** `resumable: true` für Einmal-Skills deklarieren, deren komplette Ausführung ein einzelner Bash-Aufruf oder ein einzelner Tool-Call ist, der billig neu startbar ist
+
 ## Akzeptanzkriterien
 - [ ] Quellordner existiert unter `skills/<name>/` in claude-shared mit `<name>` in ASCII-Kebab-Case
 - [ ] Repository enthält eine gültige `.claude-plugin/plugin.json` und `.claude-plugin/marketplace.json`, die diesen Skill als Teil des `nolte-shared`-Plugins bereitstellen

@@ -124,6 +124,11 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 - **SOLLTE [SHOULD]** in der `description` sowohl positive Trigger („einsetzen, wenn…") als auch typische negative Fälle („nicht einsetzen für…") nennen, wenn Überschneidungen mit anderen Agents wahrscheinlich sind
 - **KANN [MAY]** Beispiel-Aufrufe und erwartete Berichte in einem Schwester-Ordner `agents/<name>/examples/` enthalten
 
+### Wiederaufnehmbare Runs
+- **MUSS [MUST]** `resumable: true` im Frontmatter des Agents deklarieren, wenn der Agent intern mehr als eine benannte Phase umspannt, die ein Zwischenartefakt produziert, das die Person bei Unterbrechung sonst verlieren würde, und `spec/claude/resumable-work/` für den On-Disk-Envelope, die Checkpoint-Kadenz, das Re-Invocation-Prompt und den Lebenszyklus befolgen; die tragenden Regeln leben in jener Spec und werden hier nicht dupliziert
+- **MUSS [MUST]** Resume-Support im `description`-Text des Agents erwähnen, wann immer `resumable: true` gesetzt ist, damit der aufrufende Claude entsprechend routen kann
+- **SOLLTE NICHT [SHOULD NOT]** `resumable: true` für Fire-and-Forget-Agents deklarieren, deren Vertrag ein einzelner Read-only-Pass ist, der billig neu startbar ist
+
 ## Akzeptanzkriterien
 - [ ] Quelldatei existiert unter `agents/<name>.md` in claude-shared mit `<name>` in ASCII-Kebab-Case
 - [ ] Frontmatter parst als gültiges YAML und enthält mindestens `name`, `description` und `distribution`

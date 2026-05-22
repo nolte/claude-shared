@@ -139,6 +139,13 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - **SHOULD** **test the skill against every model the skill is intended to be used with**, namely Haiku, Sonnet, and Opus; what works for Opus may not provide enough guidance for Haiku, and what's clear for Haiku may over-explain for Opus ([R2](#references))
 - **MAY** validate skill structure with the upstream `skills-ref` reference validator (`skills-ref validate ./skills/<name>`) before opening a PR; the validator catches frontmatter and naming issues this spec doesn't enumerate exhaustively ([R1](#references))
 
+### Resumable runs
+- **MUST** declare `resumable: true` in `SKILL.md` frontmatter when the skill's normal control flow includes more than one user-approval gate or more than one named internal phase, and follow `spec/claude/resumable-work/` for the on-disk envelope, checkpoint cadence, re-invocation prompt, and lifecycle; the load-bearing rules live in that spec and aren't duplicated here
+- **MUST** mention resume support in the skill's `description` text whenever `resumable: true` is set, so operators reading the catalog know which workflows are safe to interrupt
+<!-- vale Microsoft.Contractions = NO -->
+- **SHOULD NOT** declare `resumable: true` for one-shot skills whose entire execution is a single Bash invocation or single tool call cheap to restart
+<!-- vale Microsoft.Contractions = YES -->
+
 ## Acceptance Criteria
 - [ ] Source folder exists at `skills/<name>/` in `claude-shared` with `<name>` in ASCII kebab-case
 - [ ] Repository contains a valid `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` that expose this skill as part of the `nolte-shared` plugin
