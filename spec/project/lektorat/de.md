@@ -15,7 +15,7 @@ Zwei Designvorgaben prägen die Spec. Erstens ist die Ebene **operativ**, nicht 
 ## Ziele
 
 - Bestehende menschenlesbare Prosa in diesem Repo (und in Konsumenten-Repos, die die Spec übernehmen) lässt sich gegen einen stabilen, benannten Satz redaktioneller Qualitätsdimensionen prüfen und überarbeiten, ohne die Regeln pro Skill neu zu implementieren
-- Skills und Agents, die redaktionelle Arbeit verrichten, unterscheiden drei Operationen — `audit` (read-only), `patch` (Edit pro Befund nach explizitem OK), `revise` (Volldokument-Überarbeitung mit Diff-Review) — und die gewählte Operation ist in ihrer Ausgabe sichtbar
+- Skills und Agents, die redaktionelle Arbeit verrichten, unterscheiden drei Operationen (`audit` für read-only-Inspektion, `patch` für Per-Befund-Edits mit explizitem OK, `revise` für Volldokument-Überarbeitungen mit Diff-Review), und die gewählte Operation ist in ihrer Ausgabe sichtbar
 - Redaktionelle Befunde werden reproduzierbar nach **Severity** klassifiziert (`critical` / `warning` / `suggestion`), sodass ein nachgelagertes Gate (CI, sprint-review, release-publish) entscheiden kann, was blockiert und was beratend ist
 - Lesbarkeits- und Verständlichkeits-Befunde referenzieren **benannte Metriken mit sprach­spezifischen Zielkorridoren**, sodass ein Befund auditierbar ist statt eine stilistische Meinung zu sein
 - Zielgruppen-Fit wird gegen das **Audience-Artefakt** geprüft, das das Repository ohnehin produziert, nicht gegen eine ad-hoc geratene Audience pro Review
@@ -30,7 +30,7 @@ Zwei Designvorgaben prägen die Spec. Erstens ist die Ebene **operativ**, nicht 
 - Synchronisation der Parität zwischen DE- und EN-Fassung desselben Artefakts — das gehört `docs-freshness` (Audit-Zeit-Erkennung) und `docs-multilingual-authoring` (Authoring-Zeit-Verhinderung)
 - Lektorat von Quellcode, Code-Kommentaren, Docstrings, API-Referenz-Texten, generierten Manifesten, generierten Configs oder YAML/JSON-Config-Bodys; die Ebene prüft Prosa **in Markdown** und behandelt umzäunte Code-Blöcke als unantastbar
 - Lektorat von Dateien unter `spec/` — sie folgen dem Übersetzungs-Flow der `spec`-Skill und haben eigene autoritative Drift-Checks; eine Aufnahme hier würde eine zweite Quelle der Wahrheit für Spec-Prosa erzeugen
-- Autorschaft von Vale-Regeln (Active-Voice-Detektor, gendered-pronoun-Detektor, …) — `prose-style` führt das bereits als aufgeschobene Entscheidung und `Lektorat` greift dem nicht vor
+- Autorschaft von Vale-Regeln (Active-Voice-Detektor, gendered-pronoun-Detektor und Ähnliches): `prose-style` führt das bereits als aufgeschobene Entscheidung und `Lektorat` greift dem nicht vor
 - Slack-Nachrichten, Wiki-Seiten, Blog-Posts oder andere Nicht-Markdown-Prosa-Flächen für Menschen — `Lektorat` deckt GitHub-Issue- und Pull-Request-Bodys als bewusste Scope-Erweiterung ab (sie sind nutzersichtbares Markdown, das in Suchmaschinen und Projekt-Historie landet). Anmerkung: `prose-style` §Pull-request descriptions and release notes verlangt bereits Vale-Abdeckung auf EN-PR-Bodys und EN-Release-Note-Bodys; `Lektorat` führt diese Abdeckung dort **nicht** ein, sondern erweitert sie um die D1/D2/D5-Dimensionen und die DE-Pipeline. Befunde aus dem Vale-CI-Gate von `prose-style` werden gemäß §Koordination mit Nachbarspecs per Vale-Regel-ID dedupliziert. Andere Prosa-Flächen bleiben außerhalb des Scopes, bis sie separat spezifiziert sind
 - Ein blockierendes Gate für redaktionelle Befunde der Severity `suggestion`; nur `critical`-Befunde sind gate-tauglich, und selbst dann opt-in pro Repository (siehe offene Fragen)
 
@@ -71,10 +71,10 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 #### D2 — Verständlichkeit
 
 - **MUSS [MUST]** die folgenden Muster als Verständlichkeits-Befunde flaggen:
-  - **Jargon-Last** — ein Fachterm taucht ohne vorherige Definition auf, wobei „Fachterm" alles ist, was nicht im audience-passenden Grundvokabular des Projekts steht (siehe §Audience-Bindung)
-  - **Ungeklärte Abkürzungen** — eine Abkürzung (`SRE`, `RTO`, `CSP`) erscheint ohne Auflösung bei Erstnennung auf der Seite
-  - **Versteckte Vorannahmen** — eine Anweisung oder Aussage hängt von einer früheren Datei, einem Umgebungs­zustand oder einem Werkzeug ab, das auf der aktuellen Seite nicht genannt wird
-  - **Implizite Annahmen** — ein Satz unterstellt Rolle, Tooling oder Background der Leserschaft, ohne es zu sagen (typische Marker: „einfach", „nur", „bekanntlich")
+  - **Jargon-Last**: ein Fachterm taucht ohne vorherige Definition auf, wobei „Fachterm" alles abdeckt, was nicht im audience-passenden Grundvokabular des Projekts steht (siehe §Audience-Bindung)
+  - **Ungeklärte Abkürzungen**: eine Abkürzung (`SRE`, `RTO`, `CSP`) erscheint ohne Auflösung bei Erstnennung auf der Seite
+  - **Versteckte Vorannahmen**: eine Anweisung oder Aussage hängt von einer früheren Datei, einem Umgebungs­zustand oder einem Werkzeug ab, das auf der aktuellen Seite nicht genannt wird
+  - **Implizite Annahmen**: ein Satz unterstellt Rolle, Tooling oder Background der Leserschaft, ohne es zu sagen (typische Marker: „einfach", „nur", „bekanntlich")
 - **MUSS [MUST]** jedes D2-Muster mit der unten genannten Default-Severity klassifizieren und nur über die genannte Regel eskalieren. Das Severity-Bucket-Vokabular `critical` / `warning` / `suggestion` ist in §Severity-Klassifikation definiert; diese Tabelle ist die pro-Muster-Auflösung und das, was Implementierungen anwenden:
 
   | D2-Muster | Default-Severity | Eskalation |
@@ -108,18 +108,18 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 - **MUSS [MUST]** die **deklarierte Audience** eines Artefakts auflösen — aus dem Frontmatter der Seite (`audience`-Key bei MkDocs-Seiten gemäß `docs-audience-tracks`) oder, wenn kein Frontmatter existiert, aus den Artefakt-Typ-Defaults gemäß §Audience-Bindung unten
 - **MUSS [MUST]** das von `audience-identification` produzierte **Audience-Artefakt** aus seinem kanonischen Ort lesen (`AUDIENCES.md` am Root des Bounded Context gemäß `audience-identification` §Anforderungen, oder der dort deklarierte Alternativ-Ort — README-Abschnitt "## Audiences" / "## Intended consumers" oder ein ADR) und es als **autoritative Beschreibung** verwenden, was jede Audience versteht und nicht versteht; `Lektorat` **DARF NICHT [MUST NOT]** Audience-Eigenschaften erfinden, die nicht im Artefakt stehen
 - **MUSS [MUST]** Zielgruppen-Fit-Befunde unter den folgenden Mustern flaggen:
-  - **Register-Mismatch** — eine instruktive Seite für Endnutzer, die operator-internen Jargon verwendet (oder umgekehrt)
-  - **Fehlender audience-pflichtiger Inhalt** — ein Artefakt, dessen deklarierte Audience einen bestimmten Abschnitt erwartet (gemäß den `docs-audience-tracks`-Content-Blöcken), der fehlt oder leer ist
-  - **Falsche-Audience-Inhalt** — ein Abschnitt, der eine Audience adressiert, die die Seite nicht deklariert (typisch: ein contributor-orientierter Anhang auf einem Endnutzer-Quickstart)
+  - **Register-Mismatch**: eine instruktive Seite für Endnutzer, die operator-internen Jargon verwendet (oder umgekehrt)
+  - **Fehlender audience-pflichtiger Inhalt**: ein Artefakt, dessen deklarierte Audience einen bestimmten Abschnitt erwartet (gemäß den `docs-audience-tracks`-Content-Blöcken), der fehlt oder leer ist
+  - **Falsche-Audience-Inhalt**: ein Abschnitt, der eine Audience adressiert, die die Seite nicht deklariert (typisch: ein contributor-orientierter Anhang auf einem Endnutzer-Quickstart)
 - **MUSS [MUST]** Register-Mismatch und fehlenden audience-pflichtigen Inhalt als `critical` klassifizieren für jedes Artefakt, dessen deklarierte Audience eine Nicht-Operator-Audience einschließt (Endnutzer, Kunden, Evaluatoren); eine Dokumentations-Lücke, die ein zahlender Konsument bemerkt, ist kein `suggestion`
 - **DARF NICHT [MUST NOT]** Inhalt umschreiben, um eine **andere** Audience zu treffen als die deklarierte; die Auflösung für einen Falsche-Audience-Abschnitt ist, **ihn dem Operator zur Verschiebung zu flaggen**, nicht ihn still neu zu rahmen
 
 ### Severity-Klassifikation
 
 - **MUSS [MUST]** jeden Befund in genau eine von drei Severitäten klassifizieren:
-  - `critical` — würde gerenderte Bedeutung verändern, ist in einem publizierten Artefakt sichtbar oder verfehlt das Zielgruppen-Fit-Gate oben
-  - `warning` — verfehlt einen benannten Metrik-Korridor, verfehlt eine `prose-style`-MUSS, die nicht in `critical` kippte, oder bricht interne Konsistenz
-  - `suggestion` — qualifiziert eine Heuristik, schlägt eine stilistische Verfeinerung vor oder weitet einen Satz für Klarheit, ohne die Bedeutung zu verändern
+  - `critical`: würde gerenderte Bedeutung verändern, ist in einem publizierten Artefakt sichtbar oder verfehlt das Zielgruppen-Fit-Gate oben
+  - `warning`: verfehlt einen benannten Metrik-Korridor, verfehlt eine `prose-style`-MUSS, die nicht in `critical` kippte, oder bricht interne Konsistenz
+  - `suggestion`: qualifiziert eine Heuristik, schlägt eine stilistische Verfeinerung vor oder weitet einen Satz für Klarheit, ohne die Bedeutung zu verändern
 - **MUSS [MUST]** diese Severity-Namen wörtlich in maschinenlesbarer Ausgabe verwenden (JSON-Keys, Frontmatter-Values, CLI-Exit-Code-Mapping); `info`, `error`, `notice` und ähnliche Synonyme sind **DARF NICHT [MUST NOT]**
 - **MUSS [MUST]** Severity-Klassifikation **dimensions­bewusst** halten: ein D3-Tippfehler in einem publizierten Release-Note ist `critical`, derselbe Tippfehler in einem Markdown-Kommentar als Entwurf ist `warning`, derselbe Tippfehler innerhalb eines Code-Identifiers ist **kein Befund** (außer Scope gemäß §Geltungsbereich)
 
@@ -127,14 +127,14 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 
 Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die Namen unten sind die **einzigen** zulässigen Operationsnamen in maschinenlesbarer Ausgabe.
 
-#### Operation A — `audit`
+#### Operation A: `audit`
 
 - **MUSS [MUST]** **read-only** sein; die Operation **DARF NICHT [MUST NOT]** in ein In-Scope-Artefakt schreiben, **DARF NICHT [MUST NOT]** andere Dateien bearbeiten und **DARF NICHT [MUST NOT]** ein Werkzeug dispatchen, das Repository-Zustand verändert
 - **MUSS [MUST]** einen **strukturierten Befunde-Report** (§Ausgaben) produzieren, sortiert nach Severity (`critical` zuerst, dann `warning`, dann `suggestion`) und innerhalb Severity nach Quellpfad, dann Dimension
 - **MUSS [MUST]** ohne Operator-Interaktion abschließen (keine Mid-Flow-Approvals, keine Rückfragen), sodass die Operation aus CI, pre-commit, sprint-review und release-publish-Gates aufgerufen werden kann
 - **MUSS [MUST]** für denselben Input **deterministisch** sein: ein Re-Run von `audit` auf demselben Artefakt-Satz mit derselben Konfiguration erzeugt dieselben Befunde (Reihenfolge identisch, Severitäten identisch, Metrik-Werte innerhalb ±1 für Float-Berechnungen)
 
-#### Operation B — `patch`
+#### Operation B: `patch`
 
 - **MUSS [MUST]** höchstens **einen Befund** pro Approval-Zyklus auflösen; dem Operator wird der Befund und der vorgeschlagene Edit (als Unified Diff) gezeigt, und er **MUSS [MUST]** zustimmen, bevor der Edit auf Platte landet
 - **MUSS [MUST]** jeden Aspekt des Artefakts, der nicht vom genehmigten Befund abgedeckt ist, erhalten: umliegende Absätze, Frontmatter, Code-Blöcke, Link-Ziele, Heading-IDs, datei-relative Pfade
@@ -142,7 +142,7 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
 - **MUSS [MUST]** einen „skip"- und einen „skip-and-record"-Pfad anbieten, sodass der Operator einen Befund aufschieben oder dauerhaft verwerfen kann; eine notierte Verwerfung wird so persistiert, dass künftige `audit`-Läufe sie nicht erneut surfacen
 - **SOLLTE [SHOULD]** Befunde dem Operator in Severity-Reihenfolge präsentieren, sodass `critical`-Punkte zuerst behandelt werden
 
-#### Operation C — `revise`
+#### Operation C: `revise`
 
 - **MUSS [MUST]** das **gesamte Artefakt** in einem Zug umschreiben und dabei jeden `critical`- und `warning`-Befund auflösen, den der vorherige `audit` produzierte; `suggestion`-Befunde sind optional und **SOLLTEN [SHOULD]** dann adressiert werden, wenn ihre Übernahme den Rewrite-Umfang nicht ausweitet
 - **MUSS [MUST]** einen **Unified Diff** des vorgeschlagenen Voll-Rewrites produzieren und den Rewrite **DARF NICHT [MUST NOT]** auf Platte schreiben, bevor der Operator den Diff explizit genehmigt
@@ -242,11 +242,11 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
 
 - **MUSS [MUST]** `pipeline_metadata.<sprache>` für jede in `language_summary` vertretene Sprache befüllen, deren Pipeline aufgelöst werden konnte; die drei Unterfelder `tool`, `version` und `configured_path` sind sämtlich erforderlich und lasttragend für das Reproduzierbarkeits-Akzeptanzkriterium. Platzhalter-Werte sind verboten — wenn eines der drei nicht auflösbar ist (z. B. die Binary fehlt), wird der entsprechende `pipeline_metadata.<sprache>`-Block **weggelassen** und der Scan-Zustand stattdessen in `inventory_findings` aufgezeichnet (siehe unten)
 - **MUSS [MUST]** jede Infrastruktur-Level-Scan-Bedingung im Array `inventory_findings` surfacen, **niemals** in `findings`. Das `findings`-Array trägt ausschließlich redaktionelle Befunde, klassifiziert nach der closed-Severity-Menge (`critical` / `warning` / `suggestion`) aus §Severity-Klassifikation; `inventory_findings` trägt Vorbedingungen, die einen Teil des Scans verhindert haben. Das `kind`-Feld ist eine geschlossene Aufzählung mit genau diesen fünf Werten:
-  - `vale-unavailable` — Vale-Binary nicht aufrufbar, obwohl englische Dateien im Scope sind; D3/D4-EN-Mechanik wird übersprungen. `file: null`.
-  - `language-pipeline-missing` — deutsche Dateien sind im Scope, aber keine DE-Pipeline-Konfiguration wurde übergeben (oder der konfigurierte Endpoint/die Binary ist nicht aufrufbar); D3 für die betroffene Datei wird übersprungen. `file` benennt die betroffene Datei; pro betroffener Datei ein Eintrag.
-  - `language-ambiguous` — die Sprach-Auflösungs-Prioritätenkette (siehe §Sprach-Handhabung) kann die Datei nicht auflösen; der Operator entscheidet interaktiv. `file` benennt die betroffene Datei.
-  - `content-mode-missing` — die Datei hat keinen `content_mode` in der Caller-übergebenen Map; D1 für diese Datei wird übersprungen (die `meta`-Ausnahme hängt von einem bekannten Mode ab). `file` benennt die betroffene Datei.
-  - `audience-artefact-missing` — der Audience-Artefakt-Pfad löst sich zu nichts auf; D5 wird für jede Datei im Scope übersprungen. `file: null`.
+  - `vale-unavailable`: Vale-Binary nicht aufrufbar, obwohl englische Dateien im Scope sind; D3/D4-EN-Mechanik wird übersprungen. `file: null`.
+  - `language-pipeline-missing`: deutsche Dateien sind im Scope, aber keine DE-Pipeline-Konfiguration wurde übergeben (oder der konfigurierte Endpoint/die Binary ist nicht aufrufbar); D3 für die betroffene Datei wird übersprungen. `file` benennt die betroffene Datei; pro betroffener Datei ein Eintrag.
+  - `language-ambiguous`: die Sprach-Auflösungs-Prioritätenkette (siehe §Sprach-Handhabung) kann die Datei nicht auflösen; der Operator entscheidet interaktiv. `file` benennt die betroffene Datei.
+  - `content-mode-missing`: die Datei hat keinen `content_mode` in der Caller-übergebenen Map; D1 für diese Datei wird übersprungen (die `meta`-Ausnahme hängt von einem bekannten Mode ab). `file` benennt die betroffene Datei.
+  - `audience-artefact-missing`: der Audience-Artefakt-Pfad löst sich zu nichts auf; D5 wird für jede Datei im Scope übersprungen. `file: null`.
 - **DARF NICHT [MUST NOT]** weitere `kind`-Werte ohne vorherige Änderung dieser Spec einführen; ein unbekanntes `kind` in `inventory_findings` ist ein Spec-Konformitäts-Verstoß, kein Erweiterungspunkt
 - **MUSS [MUST]** `id` über Läufe hinweg stabil halten für denselben Befund auf derselben Datei/Zeile/Dimension, sodass eine Verwerfung per `id` aufgezeichnet werden kann
 - **MUSS [MUST]** zusätzlich eine **menschenlesbare** Markdown-Zusammenfassung (severity-sortiert) für den Operator-Review emittieren; JSON ist für Maschinen, Markdown ist für Menschen
@@ -260,7 +260,7 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
 
 ### Skill- und Agent-Aufteilung (Empfehlung)
 
-Die Spec **schreibt** die Implementierungsform **nicht vor**, **SOLLTE [SHOULD]** aber als der folgende Split umgesetzt werden, der dem hybriden Portfolio-Muster entspricht (z.B. `dependency-audit`-Skill + `dependency-audit-scanner`-Agent, `vocab-drift-audit`-Skill + `vocab-drift-scanner`-Agent):
+Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** aber als der folgende Split umgesetzt werden, der dem hybriden Portfolio-Muster entspricht (zum Beispiel `dependency-audit`-Skill + `dependency-audit-scanner`-Agent, `vocab-drift-audit`-Skill + `vocab-drift-scanner`-Agent):
 
 - **`lektorat-apply`-Skill** — User-Facing Einstieg; orchestriert `audit` / `patch` / `revise`; verantwortet alle Operator-Dialoge (Approvals, Verwerfungen, Sprach-Disambiguierung); komponiert die finalen Ausgaben; liest für den Audit-Schritt selbst keine Quelldateien
 - **`lektorat-scanner`-Agent** — Read-only-Scanner; führt D1–D5-Erkennung über ein oder mehrere In-Scope-Artefakte aus; gibt das strukturierte Befunde-Inventar zurück, das die Skill rendert; ediert nie, fragt nie
@@ -326,9 +326,9 @@ Die Spec **schreibt** die Implementierungsform **nicht vor**, **SOLLTE [SHOULD]*
 <!-- Autoritative externe Referenzen, gegen die die obigen Anforderungen geprüft sind. -->
 
 - Flesch, R. (1948). *A new readability yardstick.* Journal of Applied Psychology — Originaldefinition von Flesch Reading Ease.
-- Kincaid, J. P., Fishburne, R. P., Rogers, R. L., Chissom, B. S. (1975). *Derivation of new readability formulas.* — Flesch–Kincaid Grade Level.
-- Bamberger, R., Vanecek, E. (1984). *Lesen — Verstehen — Lernen — Schreiben.* — Definitionen der Wiener-Sachtextformel-Varianten (WSTF).
-- Björnsson, C. H. (1968). *Läsbarkeit.* — LIX-Definition (Läsbarhetsindex); per Lesbarkeits-Forschung übertragbar auf Deutsch.
+- Kincaid, J. P., Fishburne, R. P., Rogers, R. L., Chissom, B. S. (1975). *Derivation of new readability formulas.* Definiert den Flesch–Kincaid Grade Level.
+- Bamberger, R., Vanecek, E. (1984). *Lesen — Verstehen — Lernen — Schreiben.* Definiert die Wiener-Sachtextformel-Varianten (WSTF).
+- Björnsson, C. H. (1968). *Läsbarhet.* Definiert LIX (Läsbarhetsindex); per Lesbarkeits-Forschung übertragbar auf Deutsch.
 - Microsoft Writing Style Guide (learn.microsoft.com/style-guide) — Voice, Tone, Bias-Free Communication; konsumiert via `spec/project/prose-style/`.
 - Microsoft Localization Style Guides — Deutsch (learn.microsoft.com/de-de/globalization/localization/styleguides) — DACH-Konventionen für Kontraktionen und Anredeformen.
 - Google Developer Documentation Style Guide (developers.google.com/style) — Audience- und Voice-Prinzipien; konsumiert via `spec/project/prose-style/`.
