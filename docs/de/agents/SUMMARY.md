@@ -10,6 +10,7 @@
 * 5 Review
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)
     * [lektorat-scanner](nolte-shared/lektorat-scanner.md)
+    * [portfolio-inflight-collector](nolte-shared/portfolio-inflight-collector.md)
     * [portfolio-manifest-collector](nolte-shared/portfolio-manifest-collector.md)
     * [vocab-drift-scanner](nolte-shared/vocab-drift-scanner.md)
 * 6 Quality
