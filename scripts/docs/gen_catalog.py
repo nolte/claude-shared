@@ -517,7 +517,15 @@ def emit_section(
             index_lines.append("")
     write_page(section_dir / "index.md", "\n".join(index_lines).rstrip() + "\n")
 
-    summary_parts = [f"* [{chrome[title_key]}](index.md)"]
+    # mkdocs-literate-nav reads SUMMARY.md as a nav source, but the page is
+    # still a file under docs/<lang>/, so the per-page frontmatter contract
+    # from spec/project/mkdocs-structure/ §Per-page structure and
+    # spec/project/docs-audience-tracks/ §Per-page contract applies. literate-nav
+    # parses the bullet list and leaves the YAML frontmatter alone.
+    summary_parts: list[str] = [
+        _render_frontmatter(title=chrome[title_key], content_mode="meta")
+    ]
+    summary_parts.append(f"* [{chrome[title_key]}](index.md)")
     for phase, plugins in by_phase.items():
         summary_parts.append(f"* {chrome['phase_labels'][phase]}")
         for plugin, items in plugins.items():
