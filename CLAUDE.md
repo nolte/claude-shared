@@ -21,6 +21,7 @@ Plugin skills are namespaced by plugin name — e.g. `/nolte-shared:spec`, `/nol
 
 Local automation runs through `Taskfile.yml`:
 
+- `task setup` — install pre-commit hooks (run once after cloning)
 - `task lint` — pre-commit checks
 - `task test` — test suite (placeholder — no runtime tests yet)
 - `task docs` — build the MkDocs site

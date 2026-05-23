@@ -80,6 +80,14 @@ claude --plugin-dir .
 
 Use `/reload-plugins` to pick up changes during a session without restarting.
 
+Install the [pre-commit](https://pre-commit.com) hooks once after cloning so that the prose-lint and the `docs-catalog-fresh` skill-agent-catalog regeneration hooks fire on every `git commit`:
+
+```bash
+task setup    # alias for: pre-commit install
+```
+
+Without this step the catalog regeneration doesn't run locally; the `Verify committed catalog is fresh` CI gate then catches missing regenerations after-the-fact instead of preventing them.
+
 ### Notes
 
 - **Self-hosted marketplace source**: The plugin entry in `marketplace.json` uses `"source": "."` (relative path). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
