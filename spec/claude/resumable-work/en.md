@@ -46,7 +46,6 @@ Readers: skill and agent authors in `claude-shared`, plus operators who run long
 - **MUST NOT** write resume state outside `.resume/` for this purpose—no `/tmp/...`, no `~/.claude/...`, no `.audits/...`, no committed location inside the repository
 - **MUST NOT** symlink `.resume/` from one worktree to another; per `spec/project/parallel-working-copies/` each worktree maintains its own independent `.resume/`
 
-
 ### Run identity
 - **MUST** assign each new run a unique `run_id` whose suggested form is an ISO 8601 UTC timestamp followed by a short random suffix, joined with a hyphen—for example `20260522T143012Z-a3f9`; the timestamp prefix sorts runs chronologically in a directory listing, the suffix prevents collisions when two runs start in the same second
 - **MUST** embed the `run_id` verbatim in the state file's `run_id:` field, matching the filename stem (without the `.yml` extension)
