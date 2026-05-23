@@ -73,6 +73,7 @@ Every skill and agent **MUST** declare which phase of the delivery lifecycle it 
 - **MUST** read plugin source roots from a configured list—each entry pairing the local source path with the public repository URL used for source links—so additional plugins can be added without changing generator code
 - **MUST** expose catalog generation through `task docs` so local builds and CI produce identical output; in the pre-build form this is wired by declaring the generator step as a Taskfile dependency of the docs task
 - **MUST NOT** require a separate manual "regenerate catalog" step outside the normal docs build
+- **MUST** write the five per-page MUST frontmatter keys (`title`, `audience`, `content_mode`, `track`, `last_updated`) per `spec/project/mkdocs-structure/` §Per-page structure on every generated catalog file (per-artifact page, per-section `index.md`, literate-nav `SUMMARY.md`, tag index). The generator **MUST** fix `track: developer-docs` for every catalog file (rather than reading the value per-artifact from source frontmatter) per `spec/project/docs-audience-tracks/` §Audience-to-track mapping, so the catalog audience stays consistent across source plugins and per-page `track` values don't drift
 
 ### Navigation and layout
 - **MUST** expose the catalog under stable top-level sections in the MkDocs navigation—at minimum a `Skills` section and an `Agents` section
@@ -100,6 +101,7 @@ Every skill and agent **MUST** declare which phase of the delivery lifecycle it 
 - [ ] When an artifact's frontmatter declares `tags`, those tags appear on the catalog page
 - [ ] Each catalog page contains a direct link to the source file on the originating plugin's main-branch repository URL
 - [ ] Adding a new skill or agent in any configured plugin source root requires no manual edit to `docs/` or `mkdocs.yml` for the entry to appear
+- [ ] Every generated catalog file (per-artifact page, per-section `index.md`, literate-nav `SUMMARY.md`, tag index) declares the five-key per-page frontmatter set (`title`, `audience`, `content_mode`, `track`, `last_updated`) per `spec/project/mkdocs-structure/` §Per-page structure; the `track` value is generator-fixed to `developer-docs` per `spec/project/docs-audience-tracks/`
 - [ ] Removing a skill or agent removes the corresponding catalog page on the next `task docs` run
 - [ ] `mkdocs.yml` declares `mkdocs-literate-nav`, and a configured list of plugin source roots (each pairing a local path with a public repository URL) is read by the catalog generator
 - [ ] The catalog generator is either declared as a `mkdocs-gen-files` script in `mkdocs.yml` or wired into `task docs` as a standalone pre-build step
