@@ -1,8 +1,9 @@
 ---
 name: docs-audience-tracks-apply
-description: "Audits a repository against the canonical-language file under spec/project/docs-audience-tracks/ and, with per-item user approval, scaffolds or patches the documentation-tracks layer: per-page `track:` frontmatter across the per-language docs/ tree, required user-docs and developer-docs content blocks, and the audience-to-track mapping in the project's audience artefact. Three operations: `audit` (read-only conformance report), `migrate` (greenfield), `patch` (additive fixes one finding at a time). Invoke when the user asks to apply, audit, migrate, or patch documentation tracks against the spec; also handles equivalent German-language requests. Don't use for the MkDocs skeleton (`mkdocs-structure-apply`), audience artefact (`audience-identify`), page content (`audience-doc-author`), drift detection (`docs-freshness-checker`), or prose mechanics (`prose-vale-curator`)."
+description: "Audits a repository against the canonical-language file under spec/project/docs-audience-tracks/ and, with per-item user approval, scaffolds or patches the documentation-tracks layer: per-page `track:` frontmatter across the per-language docs/ tree, required user-docs and developer-docs content blocks, and the audience-to-track mapping in the project's audience artefact. Three operations: `audit` (read-only conformance report), `migrate` (greenfield), `patch` (additive fixes one finding at a time). Invoke when the user asks to apply, audit, migrate, or patch documentation tracks against the spec; also handles equivalent German-language requests. Don't use for the MkDocs skeleton (`mkdocs-structure-apply`), audience artefact (`audience-identify`), page content (`audience-doc-author`), drift detection (`docs-freshness-checker`), or prose mechanics (`prose-vale-curator`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
+resumable: true
 ---
 
 # Documentation Audience Tracks Apply
@@ -103,6 +104,10 @@ The skill returns to the user, in this order:
 - **Dirty `docs/` tree blocks the operation**: if uncommitted changes exist in `docs/<lang>/`, the audience artefact, or `mkdocs.yml` when the skill starts, it stops and asks — never assume the tree is clean; always run the precondition check (step 6) before proposing any edits.
 - **Frontmatter race condition when the audience artefact is extended mid-flow**: if the audience artefact gains a new audience entry while a `migrate` is in progress, pages already proposed with the old mapping may be misclassified — re-read the artefact at the start of each per-page approval step when the session spans multiple turns.
 - **Multilingual symmetry is mandatory**: adding `track:` to a page in the canonical language tree without patching every counterpart in every other language tree configured in `spec/.spec-config.yml` is a spec violation (Hard rule 8); always enumerate all configured languages before writing the first page.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/docs-audience-tracks-apply/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

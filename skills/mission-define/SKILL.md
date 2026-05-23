@@ -1,8 +1,9 @@
 ---
 name: mission-define
-description: "Authors a project's first `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"define the mission\", \"write project/mission.md\", \"set up the mission file\", \"draft the SMART mission\", or equivalent German-language requests. Walks SMART one letter at a time (Specific statement, Measurable verifies_via pointer, Achievable MVP scope, Relevant outcome IDs, Time-bound shape), gathers a per-audience MVP-deliverable paragraph, composes the frontmatter plus the four required body sections (Statement, Audiences, Verification, Source), and writes the file with `mvp_status: defining`. Refuses to run when `project/mission.md` already exists (use `mission-revise`) or when `project/goals.md` or the audience artefact is missing."
+description: "Authors a project's first `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"define the mission\", \"write project/mission.md\", \"set up the mission file\", \"draft the SMART mission\", or equivalent German-language requests. Walks SMART one letter at a time (Specific statement, Measurable verifies_via pointer, Achievable MVP scope, Relevant outcome IDs, Time-bound shape), gathers a per-audience MVP-deliverable paragraph, composes the frontmatter plus the four required body sections (Statement, Audiences, Verification, Source), and writes the file with `mvp_status: defining`. Refuses to run when `project/mission.md` already exists (use `mission-revise`) or when `project/goals.md` or the audience artefact is missing. Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding]
 phase: vision
+resumable: true
 ---
 
 # Mission Define
@@ -93,6 +94,10 @@ After writing, remind the user that the next mission-side operation is `mission-
 - Read `examples/01-fresh-mission-claude-plugin.md` when writing a first `project/mission.md` for a Claude plugin project.
 - Read `examples/02-mission-with-multiple-audiences.md` when the project has multiple distinct audiences that each need a dedicated outcome.
 - Read `examples/03-refusal-when-mission-exists.md` when the user triggers `define` but a `project/mission.md` already exists on disk.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/mission-define/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

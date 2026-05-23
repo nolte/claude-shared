@@ -1,8 +1,9 @@
 ---
 name: github-issue-templates-apply
-description: Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`).
+description: Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: design
+resumable: true
 ---
 
 # GitHub Issue Templates Apply
@@ -150,6 +151,10 @@ A clean re-run on a conformant repo MUST produce no diff.
 - Read `examples/01-fresh-scaffold-claude-plugin.md` when scaffolding issue templates for a new Claude plugin project.
 - Read `examples/02-update-existing-templates.md` when re-running the skill to update templates that already exist on disk.
 - Read `examples/03-python-library-project-type.md` when the project type is a Python library and you need to see how project-type inference changes the template set.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/github-issue-templates-apply/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

@@ -124,6 +124,13 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - **SHOULD** include in `description` both positive triggers ("use when…") and common negative cases ("don't use for…") when overlap with other agents is likely
 - **MAY** include example invocations and expected reports in a sibling `agents/<name>/examples/` folder
 
+### Resumable runs
+- **MUST** declare `resumable: true` in the agent's frontmatter when the agent internally spans more than one named phase that produces an intermediate artefact the operator would otherwise lose on interruption, and follow `spec/claude/resumable-work/` for the on-disk envelope, checkpoint cadence, re-invocation prompt, and lifecycle; the load-bearing rules live in that spec and aren't duplicated here
+- **MUST** mention resume support in the agent's `description` text whenever `resumable: true` is set, so the calling Claude can route accordingly
+<!-- vale Microsoft.Contractions = NO -->
+- **SHOULD NOT** declare `resumable: true` for fire-and-forget agents whose contract is a single read-only pass cheap to restart
+<!-- vale Microsoft.Contractions = YES -->
+
 ## Acceptance Criteria
 - [ ] Source file exists at `agents/<name>.md` in `claude-shared` with `<name>` in ASCII kebab-case
 - [ ] Frontmatter parses as valid YAML and contains at minimum `name`, `description`, and `distribution`

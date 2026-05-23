@@ -8,7 +8,7 @@ last_updated: generated
 
 # cookiecutter-template-manage
 
-_Manages the lifecycle of a Cookiecutter template: scaffolds a new template or refactors an existing one (with mid-flow user confirmation of variable names and choice defaults), hardens Cookiecutter hooks, and sets up a pytest-cookies test harness. Invoke when the user says "manage a Cookiecutter template lifecycle", "scaffold or refactor a Cookiecutter template (with name + purpose confirmation)", "harden cookiecutter hooks", "set up pytest-cookies harness", "Cookiecutter-Template anlegen", "Cookiecutter-Template überarbeiten", "Cookiecutter-Hook absichern", or "pytest-cookies einrichten". Don't use for plain template consumption (a bare `cookiecutter <url>` call needs no orchestration), generic Python bootstrap, Copier or cruft work, or intentionally diverging templates._
+_Manages the lifecycle of a Cookiecutter template: scaffolds a new template or refactors an existing one (with mid-flow user confirmation of variable names and choice defaults), hardens Cookiecutter hooks, and sets up a pytest-cookies test harness. Invoke when the user says "manage a Cookiecutter template lifecycle", "scaffold or refactor a Cookiecutter template (with name + purpose confirmation)", "harden cookiecutter hooks", "set up pytest-cookies harness", "Cookiecutter-Template anlegen", "Cookiecutter-Template überarbeiten", "Cookiecutter-Hook absichern", or "pytest-cookies einrichten". Don't use for plain template consumption (a bare `cookiecutter <url>` call needs no orchestration), generic Python bootstrap, Copier or cruft work, or intentionally diverging templates. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
@@ -91,6 +91,10 @@ Add or harden a hook, extend the test harness, or add a CI matrix to an existing
 - **One-way decisions (variable rename, choice reorder, hook addition that alters output) are irreversible once the agent writes files** — the confirmation step in every operation is not optional; skipping it risks breaking existing `.cookiecutterrc` files and CI invocations in downstream consumers.
 - **`cookiecutter-template-author` is not a top-level entry point** — it is designed to receive a fully resolved preconditions payload from this skill. Invoking it directly from the main conversation bypasses the variable-name and choice-default approval flow and may produce a template that diverges from the caller's actual intent.
 - **Local bake verification is the agent's responsibility** — this skill does not re-run `cookiecutter --no-input` after the agent returns; trust the agent's bake result. If the agent reports a bake failure, relay the raw error to the user and do not mark the operation complete.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/cookiecutter-template-manage/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

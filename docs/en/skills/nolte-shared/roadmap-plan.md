@@ -8,7 +8,7 @@ last_updated: generated
 
 # roadmap-plan
 
-_Adds, retargets, and reshapes roadmap items in `project/roadmap.md` per `spec/project/roadmap/` and `spec/project/mission/`. Invoke when the user asks to \"add a roadmap item\", \"queue work for sprint N\", \"promote roadmap item to fine\", \"retarget R-3 to sprint 9\", \"flip MVP on this item\", or equivalent German-language requests. Validates outcome IDs against `goals.md`, validates `target_sprint` against `project/sprints/`, enforces the lifecycle transitions declared in the roadmap and mission specs (including the asymmetric MVP-flag rule: `false→true` allowed before stabilisation, `true→false` forbidden after the item entered `status: active`), and refuses partial writes that would leave inconsistencies. Don't use to scaffold the roadmap from scratch (use `roadmap-init`) or to enforce the detail-level invariant (use `roadmap-refine`)._
+_Adds, retargets, and reshapes roadmap items in `project/roadmap.md` per `spec/project/roadmap/` and `spec/project/mission/`. Invoke when the user asks to \"add a roadmap item\", \"queue work for sprint N\", \"promote roadmap item to fine\", \"retarget R-3 to sprint 9\", \"flip MVP on this item\", or equivalent German-language requests. Validates outcome IDs against `goals.md`, validates `target_sprint` against `project/sprints/`, enforces the lifecycle transitions declared in the roadmap and mission specs (including the asymmetric MVP-flag rule: `false→true` allowed before stabilisation, `true→false` forbidden after the item entered `status: active`), and refuses partial writes that would leave inconsistencies. Don't use to scaffold the roadmap from scratch (use `roadmap-init`) or to enforce the detail-level invariant (use `roadmap-refine`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
@@ -129,6 +129,10 @@ When any check fails, **refuse the write entirely**. Do not produce partial outp
 - Read `examples/01-add-item-target-sprint.md` when adding a new roadmap item and targeting it to a specific sprint.
 - Read `examples/02-flip-mvp-flag-asymmetric.md` when flipping the `mvp` flag on an item and you need to see the asymmetry rules in action.
 - Read `examples/03-retarget-and-promote-detail.md` when retargeting an item to a different sprint and promoting it from `coarse` to `fine` detail.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/roadmap-plan/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

@@ -1,8 +1,9 @@
 ---
 name: skills-agents-sweep
-description: Orchestrates a portfolio-wide audit of all skills and agents in the plugin inventory, producing a consolidated sweep report under .audits/skills-agents-sweep/ with cross-cutting findings (boundary conflicts, spec-induced gaps, operations-vocabulary drift, classification errors) and a wave-based implementation roadmap. Invoke when the user asks to "run a portfolio-wide skills and agents sweep audit", "check cross-cutting drift between skills and agents", "consolidate per-artefact reviews into a single sweep report", or "plan a wave-based implementation roadmap for sweep findings". Also handles equivalent German-language requests. Do NOT use for per-artefact reviews (use skill-review or agent-review for those); do NOT use for spec-versus-implementation reconciliation (use spec-drift-audit).
+description: Orchestrates a portfolio-wide audit of all skills and agents in the plugin inventory, producing a consolidated sweep report under .audits/skills-agents-sweep/ with cross-cutting findings (boundary conflicts, spec-induced gaps, operations-vocabulary drift, classification errors) and a wave-based implementation roadmap. Invoke when the user asks to "run a portfolio-wide skills and agents sweep audit", "check cross-cutting drift between skills and agents", "consolidate per-artefact reviews into a single sweep report", or "plan a wave-based implementation roadmap for sweep findings". Also handles equivalent German-language requests. Do NOT use for per-artefact reviews (use skill-review or agent-review for those); do NOT use for spec-versus-implementation reconciliation (use spec-drift-audit). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [audit]
 phase: review
+resumable: true
 ---
 
 # Skills and Agents Sweep Skill
@@ -98,6 +99,10 @@ Read `examples/03-wave-implementation.md` for a worked closure cycle.
 - **Per-artefact reviews are phase 1, not optional.** Cross-cutting findings in phase 2 are only as reliable as the per-artefact plans feeding them. If `skill-review` or `agent-review` plans are missing for any in-scope artefact, record the gap in the report's `## Scope` section.
 - **Cross-cutting analysis covers only what per-artefact reviews cannot.** Do not restate per-artefact findings in the consolidated report body. Cite the plan path; do not reproduce the findings inline.
 - **`spec/.spec-config.yml` must be read before resolving any spec path.** The canonical language for all spec paths depends on `canonical_language` in that config; defaulting to `en` without reading the config silently misroutes in repos with a different canonical language.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/skills-agents-sweep/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

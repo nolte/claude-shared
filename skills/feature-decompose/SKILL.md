@@ -1,8 +1,9 @@
 ---
 name: feature-decompose
-description: Decompose a roadmap item into feature files under project/features/ conforming to the canonical-language file under spec/project/feature/. Invoke when the user asks to decompose a roadmap item, break down a roadmap entry into features, draft features for a roadmap entry, scaffold a feature file, plan features for the next sprint, or write a new feature against the feature spec. Also handles equivalent German-language requests. Walks the operator through title, description, three-to-seven testable acceptance criteria, and test hooks per feature; identifies which feature carries `verifies_sprint_value`; and dispatches the `feature-consistency-reviewer` agent (or records a manual fallback pass) before allowing the new feature to leave `draft`. Do NOT use to transition feature status (`ready → in_progress` or `in_progress → done`) — that is owned by `sprint-execute` and `sprint-review`. Do NOT use to author roadmap items, sprints, or the mission file.
+description: Decompose a roadmap item into feature files under project/features/ conforming to the canonical-language file under spec/project/feature/. Invoke when the user asks to decompose a roadmap item, break down a roadmap entry into features, draft features for a roadmap entry, scaffold a feature file, plan features for the next sprint, or write a new feature against the feature spec. Also handles equivalent German-language requests. Walks the operator through title, description, three-to-seven testable acceptance criteria, and test hooks per feature; identifies which feature carries `verifies_sprint_value`; and dispatches the `feature-consistency-reviewer` agent (or records a manual fallback pass) before allowing the new feature to leave `draft`. Do NOT use to transition feature status (`ready → in_progress` or `in_progress → done`) — that is owned by `sprint-execute` and `sprint-review`. Do NOT use to author roadmap items, sprints, or the mission file. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: plan
+resumable: true
 ---
 
 # Feature Decompose
@@ -164,6 +165,10 @@ feature is malformed.
 - **The manual-fallback path is deprecated, not removed.** When the agent dispatch in Operation 2 step 1 fails because the plugin runtime predates the agent's release, the operator can still walk the investigation surface manually — but the skill **MUST** ask explicit permission before falling back, and the resulting `consistency_check` block carries `agent: manual-<YYYY-MM-DD>` instead of an agent name. Auditing later that bypasses surface as if it were a regular agent run mis-attributes the resolution decisions.
 - **`verifies_sprint_value` is a feature-side invariant, not a sprint-side one.** At most one feature per sprint carries a non-null `verifies_sprint_value`; setting it on two features in the same sprint is a hard violation per `spec/project/feature/` §Frontmatter schema. The skill defaults the field to `null` on every new feature; the operator opts in explicitly when authoring or when `sprint-plan` reassigns the verifier.
 - **The `R-<n>` and `F-<n>` ID counters are monotonic across the project's lifetime, never reused** even after deletion. Deriving the next ID from "max existing ID + 1" without checking the git history's deleted IDs would silently re-use a retired ID. The skill reads the highest existing ID under `project/features/` plus the highest deleted ID from `git log` before assigning.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/feature-decompose/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

@@ -1,8 +1,9 @@
 ---
 name: mkdocs-structure-apply
-description: "Audits a repository against the canonical-language file under spec/project/mkdocs-structure/ and, with per-item user approval, scaffolds or patches the MkDocs skeleton: the per-language docs/ tree, seven standard nav sections, plugin baseline (incl. mkdocs-include-markdown-plugin), pinned dep manifest, per-page frontmatter contract. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fixes). Invoke when the user asks to apply, audit, scaffold, or patch MkDocs against the spec; also handles equivalent German-language requests. Don't use for theme/typography decisions (per-repo), page-content authoring (use `audience-doc-author`), DRY refactoring (use `docs-dry-refactor`), per-page track frontmatter or audience-track content blocks (use `docs-audience-tracks-apply`), drift detection (use `docs-freshness-checker`), or catalog generator wiring (use `skill-agent-catalog-apply`)."
+description: "Audits a repository against the canonical-language file under spec/project/mkdocs-structure/ and, with per-item user approval, scaffolds or patches the MkDocs skeleton: the per-language docs/ tree, seven standard nav sections, plugin baseline (incl. mkdocs-include-markdown-plugin), pinned dep manifest, per-page frontmatter contract. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fixes). Invoke when the user asks to apply, audit, scaffold, or patch MkDocs against the spec; also handles equivalent German-language requests. Don't use for theme/typography decisions (per-repo), page-content authoring (use `audience-doc-author`), DRY refactoring (use `docs-dry-refactor`), per-page track frontmatter or audience-track content blocks (use `docs-audience-tracks-apply`), drift detection (use `docs-freshness-checker`), or catalog generator wiring (use `skill-agent-catalog-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
+resumable: true
 ---
 
 # MkDocs Structure Apply
@@ -75,6 +76,10 @@ The skill returns to the user, in this order:
 6. **Applied edits** (after approval): list of files actually written, with absolute paths.
 7. **Build verification**: `mkdocs build --strict` exit code plus a raw output snippet on failure; on success report the build summary line only.
 8. **Caller follow-ups**: explicit list — commit the working-tree edits, run the proposed `pip install` / `uv pip install` / `poetry add` command to install the new baseline plugins, dispatch `audience-doc-author` to fill in the page content stubs, route to `skill-agent-catalog-apply` when the catalog extension is active and not yet wired, open the PR via `pull-request-create`, and similar.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/mkdocs-structure-apply/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

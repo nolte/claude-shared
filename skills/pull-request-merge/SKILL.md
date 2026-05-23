@@ -1,8 +1,9 @@
 ---
 name: pull-request-merge
-description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`.
+description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [pull-request]
 phase: review
+resumable: true
 ---
 
 # Pull Request Merge
@@ -170,6 +171,10 @@ The skill is single-shot by default: when step 4 finds pending checks or step 7a
 - **`automerge` label must be spelled exactly**: the label name `automerge` is case-sensitive and must already exist in the repository's label set; applying a near-miss (`auto-merge`, `AutoMerge`) creates a new label silently or fails — always verify the label exists via the `gh label list` call in step 1 before applying it.
 - **`automerge.yaml` `SUCCESS` does not mean the merge happened**: `pascalgn/automerge-action` exits 0 even on `mergeResult: 'merge_failed'`; always confirm `state == MERGED` via `gh pr view` (step 7a) and, when the PR stays `OPEN` with green checks, audit the workflow logs for `merge_failed` (step 7b) before declaring completion.
 - **Required checks list is read from `.github/settings.yml`, not from the GitHub UI**: the UI shows all checks; the spec gates only on checks declared as required in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension) — use that file as the authoritative source when deciding whether all required checks are green.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/pull-request-merge/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

@@ -1,8 +1,9 @@
 ---
 name: pull-request-create
-description: Create a GitHub pull request that conforms to the repository's pull-request-workflow spec. Invoke when the user asks to open a PR, create a pull request, draft a PR description, create a merge request, or push the branch and open a PR. Also handles equivalent German-language requests. Verifies the feature branch is synchronized with develop, composes a Conventional-Commits title and the five-section body (Summary, Changes, Linked issues, Testing, Risk / rollout notes), autolinks any touched spec files under spec/, confirms with the user, and runs the GitHub CLI PR creation command.
+description: Create a GitHub pull request that conforms to the repository's pull-request-workflow spec. Invoke when the user asks to open a PR, create a pull request, draft a PR description, create a merge request, or push the branch and open a PR. Also handles equivalent German-language requests. Verifies the feature branch is synchronized with develop, composes a Conventional-Commits title and the five-section body (Summary, Changes, Linked issues, Testing, Risk / rollout notes), autolinks any touched spec files under spec/, confirms with the user, and runs the GitHub CLI PR creation command. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [pull-request]
 phase: review
+resumable: true
 ---
 
 # Pull Request Create
@@ -28,6 +29,7 @@ Before running any git or `gh` command, confirm:
 - A default / integration branch named `develop` exists on the remote (`git ls-remote --heads origin develop`). If the repo still uses `main` as the integration branch, stop and report—this skill targets the branching-model spec's `develop` convention.
 - `gh` is authenticated (`gh auth status`) and the remote resolves to a GitHub repository.
 - The current branch **isn't** `develop` or `main`, and its name starts with one of the allowed prefixes: `feat/`, `fix/`, `chore/`, `docs/`, `exp/`. Otherwise stop and ask the user to rename or switch branches.
+- **Capture the branch name at this point** (`OPERATING_BRANCH=$(git rev-parse --abbrev-ref HEAD)`) and use it as the expected branch for every subsequent mutating step. Per `spec/project/pull-request-workflow/<canonical_language>.md` §Branch identity and collision safeguards, every later `git push`, `git rebase`, `git merge`, or `gh pr ready`/label call **MUST** re-verify `git rev-parse --abbrev-ref HEAD` against `OPERATING_BRANCH` and stop on mismatch. Long sessions, parallel terminals, or worktree switches can move `HEAD` between tool turns; the verification catches that before a force-push lands on the wrong branch.
 
 ## Operations
 
@@ -122,8 +124,12 @@ If neither tool is present, fall back to whatever equivalent linting the reposit
 
 Once the title and body are approved, and only then:
 
-1. If the branch has no upstream, push with `git push -u origin HEAD`. If force-push is required after a rebase, use `git push --force-with-lease` and confirm first.
-2. Create the PR with `gh pr create`, passing the title and body via a HEREDOC so formatting is preserved:
+1. **Re-verify branch identity.** Run `git rev-parse --abbrev-ref HEAD` and confirm it still equals the `OPERATING_BRANCH` captured in Preconditions. On mismatch, stop and report—`HEAD` moved between turns and pushing here would land the commit on the wrong branch.
+2. **Branch-name collision check (first push only).** When the local branch has no upstream yet (`git rev-parse --abbrev-ref HEAD@{upstream}` fails), run **both** `git ls-remote origin "refs/heads/$OPERATING_BRANCH"` and `gh pr list --head "$OPERATING_BRANCH" --state open --json number,title,headRefOid`. If either returns a hit, treat this as a collision per `spec/project/pull-request-workflow/<canonical_language>.md` §Branch identity and collision safeguards:
+   - If a remote branch exists but no PR, surface it and ask the user whether to reuse it (only safe when the remote head is an ancestor of HEAD), force-with-lease over it, or rename the local branch and push to a new name.
+   - If an open PR exists whose title or body describes a different change than the local commit, **stop**. Do not push. Options to surface: (a) reset the PR's remote branch back to its original head if it was accidentally moved, (b) close the PR with an explanatory comment and open a fresh PR on a new branch name, (c) rename the local branch to a unique name. Pushing anyway would silently overwrite the PR's head SHA and create a PR whose description no longer matches its code.
+3. If the branch has no upstream and the collision check passed, push with `git push -u origin HEAD`. If force-push is required after a rebase, use `git push --force-with-lease` and confirm first.
+4. Create the PR with `gh pr create`, passing the title and body via a HEREDOC so formatting is preserved:
 
    ```
    gh pr create --base develop --title "<title>" --body "$(cat <<'EOF'
@@ -132,16 +138,20 @@ Once the title and body are approved, and only then:
    )"
    ```
 
-3. Default to `--draft` when the branch hasn't yet been reviewed or when CI hasn't yet run; the user can flip it to ready once the first CI pass is green. The spec says draft is `SHOULD` while work is ongoing.
-4. After `gh pr create` succeeds, report the PR URL back to the user.
+5. Default to `--draft` when the branch hasn't yet been reviewed or when CI hasn't yet run; the user can flip it to ready once the first CI pass is green. The spec says draft is `SHOULD` while work is ongoing.
+6. After `gh pr create` succeeds, report the PR URL back to the user.
 
-If `gh pr create` fails because a PR already exists for this branch, switch to `gh pr edit` to update the existing PR's title and body instead of creating a new one.
+If `gh pr create` fails because a PR already exists for this branch, the collision check above should already have caught it; if it's reached anyway, switch to `gh pr edit` to update the existing PR's title and body instead of creating a new one—but **only** after confirming the existing PR's title and body describe the same change the user is now opening.
 
 ## Examples
 
 - Read `examples/01-fix-pr-on-feature-branch.md` when opening a `fix`-type PR on a feature branch for the first time.
 - Read `examples/02-feat-pr-with-spec-touch.md` when the PR touches files under `spec/` and the body needs spec autolinks.
 - Read `examples/03-branch-lags-develop.md` when the feature branch lags `origin/develop` and the skill must refuse until the branch is rebased.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/pull-request-create/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 
@@ -154,6 +164,8 @@ If `gh pr create` fails because a PR already exists for this branch, switch to `
 - **Never** mark a PR as ready for review while a required status check is red or pending on the head commit. Keep the PR as Draft (or return it to Draft) until every required check on the head commit is green.
 - **Never** trigger merge (applying the `automerge` label or running `gh pr merge` manually) based on a status that no longer reflects the current head commit. The green signal must originate from the most recent commit on the branch.
 - **Never** skip presenting the drafted title and body to the user before invoking `gh pr create`. `gh pr create` is an externally-visible action and requires confirmation.
+- **Never** push to a remote branch whose attached open PR's title or body describes a different change than the local commit. The platform overwrites the PR's head SHA silently, producing a misleading PR whose description no longer matches its code. The collision check in step 6.2 is mandatory, not advisory.
+- **Never** continue a mutating step (`git push`, `git rebase`, `git merge`, force-with-lease) when `git rev-parse --abbrev-ref HEAD` no longer equals the `OPERATING_BRANCH` captured at the start. `HEAD` movement between tool turns is a real failure mode in long agent sessions and parallel-terminal workflows.
 - When `spec/project/pull-request-workflow/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.
 
 ## Gotchas
@@ -164,3 +176,5 @@ Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvio
 - **`gh pr view` warnings land on stderr, JSON on stdout.** When piping `gh pr view --json …` into a parser, the deprecation warning appears on stderr but the JSON on stdout still parses cleanly; when piping into another `gh` call without splitting streams, the warning may be conflated with the result. Always read state via `gh pr view --json <fields>` and route stderr to a separate log when scripting.
 - **Branch-freshness check needs a fresh fetch first.** `git merge-base --is-ancestor origin/develop HEAD` is only meaningful after `git fetch origin develop`; otherwise the local `origin/develop` ref can be stale and the skill reports the branch as fresh when develop has moved. The fetch is part of the freshness contract, not a setup detail.
 - **`task lint`'s prose hook can fail locally on missing Vale-style trust** (the underlying `task lint:prose` includes a remote `taskfile-include-pre-commit.yaml` that prompts for trust on first run). The CI run usually has the trust pre-granted; locally, a one-time `task --yes lint` resolves the prompt. Don't treat a local `vale-prose` red as a CI failure when direct `vale --minAlertLevel=error <files>` reports clean.
+- **A `git push` to an existing remote branch silently overwrites the head SHA of any PR attached to that branch.** GitHub does **not** warn that the PR's description no longer matches the code; the PR's title and body stay as the original author wrote them while the head and files quietly become whatever was pushed. This is the failure mode the branch-name collision check in step 6.2 prevents. Once it has happened, the only clean recovery is to close the misaligned PR (with a comment) and open a fresh one on a unique branch name—editing the PR title and body in place leaves a confusing audit trail in the comment timeline.
+- **A fresh `git checkout` doesn't guarantee `HEAD` stays put between Bash turns.** Another terminal, an IDE git plugin, an unrelated agent session, or a worktree command can switch the branch underneath the skill. Re-run `git rev-parse --abbrev-ref HEAD` immediately before every mutating step and compare it against the branch name captured in Preconditions; treat any divergence as a stop condition. A "successfully" rebased branch you didn't expect is worse than no rebase at all.
