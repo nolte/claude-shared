@@ -34,7 +34,7 @@ Additionally, the model ID `gemini-2.5-flash-image` is deliberately version-pinn
 ## Requirements
 
 - **MUST** use `gemini-2.5-flash-image` as the only model ID. The model ID is a hard-coded allowlist constant in the implementation, not a free-form parameter.
-- **MUST** call exclusively the Google AI Studio Generative Language endpoint `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent`. Vertex AI endpoints (`*-aiplatform.googleapis.com`) are forbidden.
+- **MUST** call exclusively the Google AI Studio Generative Language endpoint `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent`. Vertex AI endpoints (`*-aiplatform.googleapis.com`) are forbidden. The `v1beta` API version segment is also version-pinned alongside the model ID; a Google promotion to `v1` (or any other version segment) requires a spec revision before the implementation may adopt it. This keeps endpoint-shape changes (request schema, response shape, quota semantics) under the same review gate as model-ID changes.
 - **MUST** read the API key from the environment variable `GEMINI_API_KEY`. No CLI flag, no config file, no prompting the operator to paste a key into the conversation.
 - **MUST** never log, echo, or write the API key—including in error messages, traces, or sidecar files.
 - **MUST** treat HTTP 429 (rate limit / quota exhausted) as a terminal error for the current invocation: surface a clear message that includes the current Free-Tier rate-limit ceiling (so the operator understands what was hit) and exit. Automatic retry is forbidden because each retry burns more Free-Tier quota.
@@ -44,14 +44,14 @@ Additionally, the model ID `gemini-2.5-flash-image` is deliberately version-pinn
 - **MUST** refuse to overwrite an existing target file without explicit operator confirmation in the same invocation. The form of confirmation (CLI flag, interactive prompt, etc.) is implementation-defined.
 - **MUST** present a one-time data-protection notice before the first successful generation in a given environment and require explicit operator acknowledgement before proceeding:
   > "Free-Tier prompts and generated images are used by Google to train and improve their models. Don't submit confidential or personal data. To opt out, enable billing on this API key—see <https://ai.google.dev/gemini-api/terms>."
-  The acknowledgement MUST be persisted at `$XDG_STATE_HOME/nolte-shared/gemini-image-generation/ack` (falling back to `$HOME/.local/state/nolte-shared/gemini-image-generation/ack` when `XDG_STATE_HOME` is unset) so the operator isn't prompted again on the same machine across sessions.
+  The acknowledgement MUST be persisted at `$XDG_STATE_HOME/nolte-shared/gemini-image-generation/ack` (falling back to `$HOME/.local/state/nolte-shared/gemini-image-generation/ack` when `XDG_STATE_HOME` is unset) so the operator isn't prompted again on the same machine across sessions. The acknowledgement file MUST store a SHA-256 hex digest of the exact notice text shown to the operator; when a future spec revision changes the notice text (for example after Google updates the underlying Terms), the stored digest no longer matches the current notice and the operator MUST be re-prompted with the updated text. The digest is the consent's version signal; without it, an old acknowledgement would silently satisfy the MUST against a newer notice the operator never read.
 - **MUST** write a sidecar metadata file next to every generated image, named `<image>.meta.json`, containing at minimum:
-  - `prompt`: the verbatim prompt that was submitted
+  - `prompt`: the verbatim prompt that was submitted—the sidecar mirrors the prompt as-is, so the operator is responsible for the prompt's contents per the data-protection notice above; sensitive material in the prompt lands verbatim in the sidecar
   - `model`: the model ID used (`gemini-2.5-flash-image`)
   - `endpoint`: the full URL called
   - `timestamp`: RFC 3339 UTC timestamp of the response
   - `mime_type`: the MIME type returned by the API
-- **SHOULD** derive the image format from the target file extension (`.png`, `.jpg`, `.webp`) and validate it against the MIME type returned by the API; mismatch is a warning, not a failure.
+- **SHOULD** derive the image format from the target file extension (`.png`, `.jpg`, `.webp`) and validate it against the MIME type returned by the API; mismatch is a warning, not a failure. Warning rather than Failure preserves the response (the image is still written to disk), because the alternative—discarding the response on mismatch—would burn the operator's already-spent Free-Tier quota on a recoverable user error: the operator can rename the file or rerun with a corrected extension without re-paying the per-image quota cost.
 - **SHOULD** emit a friendly setup hint when `GEMINI_API_KEY` is missing, pointing at the [Google AI Studio API-key page](https://aistudio.google.com/apikey) and explaining that Free-Tier requires no billing setup.
 - **MAY** accept an optional `n` parameter for multiple images per call when the model supports it; each image gets its own sidecar (the prompt is duplicated across sidecars by design—this is a known consequence of the per-image-sidecar convention).
 - **MAY** accept an optional seed parameter when the model supports deterministic generation, and record it in the sidecar.
@@ -72,6 +72,8 @@ Additionally, the model ID `gemini-2.5-flash-image` is deliberately version-pinn
 - [ ] A scenario where the target file extension and the returned MIME type disagree produces a warning message but still writes the file.
 - [ ] Every generated image has a `<image>.meta.json` sidecar containing the five required keys.
 - [ ] The sidecar JSON doesn't contain the API key under any field name.
+- [ ] A successful `n>1` invocation (when the implementation supports the optional `n` parameter) writes exactly `n` image files and exactly `n` sidecar files; the `prompt` field is identical across every sidecar produced in that call.
+- [ ] The acknowledgement file at the persisted path contains a SHA-256 hex digest field; rewriting the digest to a non-matching value and re-invoking the implementation triggers the data-protection notice exactly once again (proving the digest is read on every invocation rather than only checked for file existence).
 
 ## Open Questions
 
