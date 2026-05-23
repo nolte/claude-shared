@@ -26,6 +26,7 @@ last_updated: generated
 * 6 Quality
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
     * [prose-vale-curator](nolte-shared/prose-vale-curator.md)
+    * [quality-gate-enforcer](nolte-shared/quality-gate-enforcer.md)
 * 8 Cross-cutting
     * [cookiecutter-template-author](nolte-shared/cookiecutter-template-author.md)
     * [png-to-transparent-svg](nolte-shared/png-to-transparent-svg.md)
