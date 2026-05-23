@@ -30,6 +30,7 @@
 * 5 Review
     * [agent-review](nolte-shared/agent-review.md)
     * [continuous-improvement-triage](nolte-shared/continuous-improvement-triage.md)
+    * [portfolio-inflight-triage](nolte-shared/portfolio-inflight-triage.md)
     * [pull-request-create](nolte-shared/pull-request-create.md)
     * [pull-request-merge](nolte-shared/pull-request-merge.md)
     * [skill-review](nolte-shared/skill-review.md)

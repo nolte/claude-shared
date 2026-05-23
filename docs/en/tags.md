@@ -22,6 +22,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [docs-freshness-checker](agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [lektorat-scanner](agents/nolte-shared/lektorat-scanner.md) — nolte-shared
+- [portfolio-inflight-collector](agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
 - [portfolio-manifest-collector](agents/nolte-shared/portfolio-manifest-collector.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
@@ -35,6 +36,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [mkdocs-structure-apply](skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared
 - [portfolio-audit](skills/nolte-shared/portfolio-audit.md) — nolte-shared
+- [portfolio-inflight-triage](skills/nolte-shared/portfolio-inflight-triage.md) — nolte-shared
 - [readme-structure-apply](skills/nolte-shared/readme-structure-apply.md) — nolte-shared
 - [roadmap-refine](skills/nolte-shared/roadmap-refine.md) — nolte-shared
 - [skill-agent-catalog-apply](skills/nolte-shared/skill-agent-catalog-apply.md) — nolte-shared
