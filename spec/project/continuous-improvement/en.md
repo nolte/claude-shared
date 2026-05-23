@@ -28,6 +28,7 @@ The portfolio already declares **how** specifications and implementation are rec
   - a `workflow-health` triage classification of `defect`, `stale pin`, or `secret / credential drift`
   - a `project-structure-apply` reconciliation gap (missing or diverging artifact)
   - a `vocab-drift-audit` report of locally-added entries that are already upstream, or local entries that should be PR'd upstream
+  - a `portfolio-inflight-triage` Findings-Report entry of `Critical` or `Warning` severity per `spec/portfolio/portfolio-inflight-management/` §Findings-Report shape
   - a `prose-style` or `markdown-formatting` lint failure on a tracked file
   - any manual review finding recorded as a GitHub Issue, commit note, or audit artifact
 - **MUST** also cover ad-hoc findings discovered outside a scheduled audit (a contributor notices drift during unrelated work) once they're captured as a GitHub Issue or tracked remediation PR—capture is the trigger, not the original audit source
