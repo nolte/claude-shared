@@ -101,6 +101,7 @@ audit applies the spec defaults.
    staleness: 9d open, 2d since last reviewer activity
    recommend: /nolte-shared:workflow-health-triage against PR nolte/release-tooling#142
    ```
+
 8. **Per-severity counts confirmed.** The closing message in the
    operator's language reports the path of the new Findings-Report
    (`.audits/portfolio-inflight/2026-05-23.md`), the per-severity
