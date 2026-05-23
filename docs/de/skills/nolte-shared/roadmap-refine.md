@@ -8,7 +8,7 @@ last_updated: generated
 
 # roadmap-refine
 
-_Enforces the detail-level invariant on `project/roadmap.md` per `spec/project/roadmap/` §Detail-level convention. Invoke when the user asks to \"refine the roadmap\", \"check roadmap detail levels\", \"is the roadmap ready for the next sprint\", \"promote roadmap items to fine\", or equivalent German-language requests. Resolves the current and next sprint by reading `project/sprints/`, walks every roadmap item, emits a structured violation record on stderr for every item with `target_sprint` equal to the current or next sprint and `detail` other than `fine`, exits non-zero when any violation is open, and walks per-item fix proposals one at a time. Don't use to add items, retarget sprints, or flip MVP flags (use `roadmap-plan`); don't use to scaffold the roadmap from scratch (use `roadmap-init`)._
+_Enforces the detail-level invariant on `project/roadmap.md` per `spec/project/roadmap/` §Detail-level convention. Invoke when the user asks to \"refine the roadmap\", \"check roadmap detail levels\", \"is the roadmap ready for the next sprint\", \"promote roadmap items to fine\", or equivalent German-language requests. Resolves the current and next sprint by reading `project/sprints/`, walks every roadmap item, emits a structured violation record on stderr for every item with `target_sprint` equal to the current or next sprint and `detail` other than `fine`, exits non-zero when any violation is open, and walks per-item fix proposals one at a time. Don't use to add items, retarget sprints, or flip MVP flags (use `roadmap-plan`); don't use to scaffold the roadmap from scratch (use `roadmap-init`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
@@ -124,6 +124,10 @@ On run completion, the skill reports:
 - **Detail-level invariant applies only to current and next sprint items**: items targeted at sprints two or more out are intentionally `coarse` or `backlog` — do not flag them as violations; applying the `fine` requirement beyond the two-sprint horizon is over-enforcement.
 - **Sprint state must be re-read after each per-item fix**: `roadmap-refine` step 4.4 explicitly re-resolves current and next sprint numbers from disk after each fix, because the operator may change sprint state in parallel; using a cached sprint resolution across multiple fix rounds can produce stale violation records.
 - **A missing or empty `project/sprints/` directory is a hard stop, not a skip**: without a resolvable current sprint the invariant cannot be checked; stop and report the gap rather than falling back to wall-clock heuristics or guessing from roadmap content.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/roadmap-refine/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

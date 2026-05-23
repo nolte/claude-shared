@@ -8,7 +8,7 @@ last_updated: generated
 
 # roadmap-init
 
-_Scaffold the project planning pair `project/goals.md` and `project/roadmap.md` for the first time, per `spec/project/roadmap/`. Invoke when the user asks to "set up the roadmap", "initialise project goals", "create goals.md and roadmap.md", "bootstrap the roadmap", or any equivalent fresh-bootstrap request. Also handles equivalent German-language requests. Verifies the audience artefact exists (and dispatches `audience-identify` when it doesn't), drafts the Vision plus numbered Outcomes in `project/goals.md`, drafts an empty queue plus optional phase headings in `project/roadmap.md`, presents both files for explicit approval, then writes them. Do NOT use to add roadmap items, retarget sprints, or flip MVP flags — that is `roadmap-plan`. Do NOT use to enforce the detail-level invariant — that is `roadmap-refine`._
+_Scaffold the project planning pair `project/goals.md` and `project/roadmap.md` for the first time, per `spec/project/roadmap/`. Invoke when the user asks to "set up the roadmap", "initialise project goals", "create goals.md and roadmap.md", "bootstrap the roadmap", or any equivalent fresh-bootstrap request. Also handles equivalent German-language requests. Verifies the audience artefact exists (and dispatches `audience-identify` when it doesn't), drafts the Vision plus numbered Outcomes in `project/goals.md`, drafts an empty queue plus optional phase headings in `project/roadmap.md`, presents both files for explicit approval, then writes them. Do NOT use to add roadmap items, retarget sprints, or flip MVP flags — that is `roadmap-plan`. Do NOT use to enforce the detail-level invariant — that is `roadmap-refine`. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
@@ -113,6 +113,10 @@ Once approved:
 - Read `examples/01-fresh-bootstrap-with-audiences.md` when bootstrapping a fresh `project/goals.md` and `project/roadmap.md` on a project that already has an audience artefact.
 - Read `examples/02-audience-missing-dispatch-identify.md` when the audience artefact is absent and the skill dispatches `audience-identify` first.
 - Read `examples/03-refusal-when-roadmap-exists.md` when `project/roadmap.md` already exists and the skill must refuse to overwrite it.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/roadmap-init/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

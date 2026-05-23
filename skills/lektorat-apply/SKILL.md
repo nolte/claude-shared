@@ -1,8 +1,9 @@
 ---
 name: lektorat-apply
-description: Reviews existing Markdown prose against the five editorial quality dimensions (readability, comprehensibility, spelling/grammar, writing style, audience-fit) defined in `spec/project/lektorat/`. Distinguishes three operations — `audit` (read-only structured report), `patch` (one finding, one diff, one approval), `revise` (full-artefact rewrite with diff review) — and dispatches the `lektorat-scanner` agent for the read-only detection phase. Invoke when the user asks to "lektoriere README.md", "audit docs for audience-fit", "revise this page with Lektorat", "prüfe diese Doku auf Lesbarkeit", "audit the editorial quality", or equivalent English- or German-language requests. Writes outputs under `.audits/lektorat/<YYYY-MM-DD-HHMM>/`. Don't use to author new prose (use `audience-doc-author`), to curate Vale rules (use `prose-vale-curator`), to lektor `spec/` files (out of scope), or to edit source code, configs, or LLM-instruction artefacts (SKILL.md, agents/*.md).
+description: Reviews existing Markdown prose against the five editorial quality dimensions (readability, comprehensibility, spelling/grammar, writing style, audience-fit) defined in `spec/project/lektorat/`. Distinguishes three operations — `audit` (read-only structured report), `patch` (one finding, one diff, one approval), `revise` (full-artefact rewrite with diff review) — and dispatches the `lektorat-scanner` agent for the read-only detection phase. Invoke when the user asks to "lektoriere README.md", "audit docs for audience-fit", "revise this page with Lektorat", "prüfe diese Doku auf Lesbarkeit", "audit the editorial quality", or equivalent English- or German-language requests. Writes outputs under `.audits/lektorat/<YYYY-MM-DD-HHMM>/`. Don't use to author new prose (use `audience-doc-author`), to curate Vale rules (use `prose-vale-curator`), to lektor `spec/` files (out of scope), or to edit source code, configs, or LLM-instruction artefacts (SKILL.md, agents/*.md). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [prose, audit]
 phase: quality
+resumable: true
 ---
 
 # Lektorat Apply
@@ -116,6 +117,10 @@ Mirrors the audit-trail convention used by `.audits/portfolio/`, `.audits/skill-
 - Read `examples/01-audit-bilingual-repo.md` when running an `audit` across a repository with both DE and EN documentation trees.
 - Read `examples/02-patch-readme-critical.md` when running `patch` on a published top-level artefact (README) with a mix of `critical` and `warning` findings.
 - Read `examples/03-revise-tutorial-page.md` when running `revise` on a tutorial page whose readability metric crosses the corridor and whose voice flips active/passive.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/lektorat-apply/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

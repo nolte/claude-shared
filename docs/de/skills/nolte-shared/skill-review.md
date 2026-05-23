@@ -8,7 +8,7 @@ last_updated: generated
 
 # skill-review
 
-_Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/ keyed by the target skill's name. Invoke when the user asks "review this skill", "audit a specific skill folder", "check whether this skill is spec-compliant", or "skill review for a specific skill". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for a specific skill". Also handles equivalent German-language requests. Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill)._
+_Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/ keyed by the target skill's name. Invoke when the user asks "review this skill", "audit a specific skill folder", "check whether this skill is spec-compliant", or "skill review for a specific skill". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for a specific skill". Also handles equivalent German-language requests. Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
@@ -108,6 +108,10 @@ See `examples/walkthrough.md` for an end-to-end transcript covering the create, 
 - **`skills-ref` validator is not provisioned in most repos**: the external skill-structure validator (step 5) may not be installed; when it's absent, record an explicit override in the plan's `## Scope` with a one-line justification rather than silently skipping the check — an undocumented skip is itself a `Warning` finding per `skill-review` §Checks derived from external skill-structure validation.
 - **`spec/.spec-config.yml` must be read before resolving any spec path**: `<canonical>` for the four required spec files depends on `canonical_language` in that config; defaulting to `en` without reading the config silently misroutes reviews in repos with a different canonical language.
 - **Plan file is local-only until committed**: `.audits/skill-review/<name>.md` exists only in the working tree until the user commits it; if the session ends before the user stages and commits, the plan is lost — remind the user to commit early or offer to stage immediately after writing.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/skill-review/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

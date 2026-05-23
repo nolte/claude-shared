@@ -8,7 +8,7 @@ last_updated: generated
 
 # spec-drift-audit
 
-_Audits every spec under spec/<topic>/<slug>/ against the repository implementation (source code, config, workflows, docs) and produces a traceable audit artifact per spec/project/spec-drift-audit/. Invoke when the user asks to "run the quarterly spec-drift audit", "check spec versus implementation", "spec drift reconciliation", "audit all specs against the repo", "find spec vs code drift", "open the next quarterly audit", or when a spec changes and requires a matching partial audit. Also handles equivalent German-language requests. Do NOT use for continuous CI health checks (use workflow-health-triage), single-spec readiness review (use spec-readiness-reviewer agent), or feature-level code drift on new features (use feature-consistency-reviewer agent within feature-decompose scope)._
+_Audits every spec under spec/<topic>/<slug>/ against the repository implementation (source code, config, workflows, docs) and produces a traceable audit artifact per spec/project/spec-drift-audit/. Invoke when the user asks to "run the quarterly spec-drift audit", "check spec versus implementation", "spec drift reconciliation", "audit all specs against the repo", "find spec vs code drift", "open the next quarterly audit", or when a spec changes and requires a matching partial audit. Also handles equivalent German-language requests. Do NOT use for continuous CI health checks (use workflow-health-triage), single-spec readiness review (use spec-readiness-reviewer agent), or feature-level code drift on new features (use feature-consistency-reviewer agent within feature-decompose scope). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
@@ -103,6 +103,10 @@ Read `examples/03-finding-resolution.md` when working off findings via update an
 - **Partial auditors only cover their slice.** `project-structure-apply` and `vocab-drift-audit` are delegated tools but each covers only one surface. Remaining spec criteria need direct per-criterion evaluation — never assume "dispatched means done".
 - **Artifact location is repository-consistent.** If `docs/audits/` already contains prior artifacts, match the existing naming convention rather than inventing a new one. Check for prior artifacts before writing.
 - **Calendar quarter, not rolling.** Q1 = Jan–Mar, Q2 = Apr–Jun, Q3 = Jul–Sep, Q4 = Oct–Dec. A `2026-Q2` audit covers the April–June window regardless of the actual date within the quarter.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/spec-drift-audit/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

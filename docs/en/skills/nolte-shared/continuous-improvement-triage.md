@@ -8,7 +8,7 @@ last_updated: generated
 
 # continuous-improvement-triage
 
-_Operationalises spec/project/continuous-improvement/ by triaging portfolio audit findings, classifying them against the available specialist catalog, and dispatching hands-on remediation to the most specialised available Claude agent or skill. Invoke when the user asks to \"triage continuous-improvement findings\", \"classify a portfolio-improvement opportunity\", \"dispatch findings to specialised agents\", \"run the quarterly specialist-coverage review\", \"check whether a finding class needs a new specialist\", or equivalent German-language requests. Drives the three-operation loop: audit (periodic specialist-coverage review), update (record decisions and dispatch specialists), close (terminate the triage cycle). Applies the three-recurrence gap-closure rule and records all dispatch decisions in fix-PR Risk / rollout notes. Do not use to perform the hands-on remediation itself—that belongs to the dispatched specialist._
+_Operationalises spec/project/continuous-improvement/ by triaging portfolio audit findings, classifying them against the available specialist catalog, and dispatching hands-on remediation to the most specialised available Claude agent or skill. Invoke when the user asks to \"triage continuous-improvement findings\", \"classify a portfolio-improvement opportunity\", \"dispatch findings to specialised agents\", \"run the quarterly specialist-coverage review\", \"check whether a finding class needs a new specialist\", or equivalent German-language requests. Drives the three-operation loop: audit (periodic specialist-coverage review), update (record decisions and dispatch specialists), close (terminate the triage cycle). Applies the three-recurrence gap-closure rule and records all dispatch decisions in fix-PR Risk / rollout notes. Do not use to perform the hands-on remediation itself—that belongs to the dispatched specialist. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
@@ -117,6 +117,10 @@ Terminate the triage cycle after all decisions are recorded.
 - **Three-recurrence count is per finding *class*, not per repository.** Count generalist-handled occurrences across the whole portfolio. Two recurrences in one repo plus one in another equals three—the threshold is met and plugin distribution is required for any new specialist.
 - **Missing audit trail is a finding.** A merged remediation PR that lacks the required **Risk / rollout notes** fields is not merely a documentation gap; the spec defines it as an in-scope finding to be recorded and remediated in the next cycle.
 - **Pre-threshold early creation requires an explicit justification.** A specialist created before the three-recurrence threshold is valid only when the authoring PR records a high-impact justification (security, release-blocker, or correctness regression). An early-creation without that note is a spec violation—not a saved effort.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/continuous-improvement-triage/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

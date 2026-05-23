@@ -1,8 +1,9 @@
 ---
 name: docs-dry-refactor
-description: "Operationalises spec/project/mkdocs-structure/ §Snippet inclusion (DRY). Detects paragraph duplication across MkDocs pages and, with per-snippet user approval, extracts duplicates into `mkdocs-include-markdown-plugin` includes pointing at a canonical source (preferring a live source file over a dedicated per-language _snippets/ folder). Three operations: `scan` (read-only ranked findings), `propose` (surface canonical source, markers, include directives for a target snippet ID, await approval), `apply` (write markers, replace consumer blocks, verify via `mkdocs build --strict`). Invoke when the user asks to dedupe, DRY-refactor, extract snippets, or factor out duplicated MkDocs content; also handles equivalent German-language requests. Don't use for non-MkDocs markdown trees, single-file snippet authoring, prose linting (`prose-vale-curator`), structural scaffolding (`mkdocs-structure-apply`), or drift detection (`docs-freshness-checker`)."
+description: "Operationalises spec/project/mkdocs-structure/ §Snippet inclusion (DRY). Detects paragraph duplication across MkDocs pages and, with per-snippet user approval, extracts duplicates into `mkdocs-include-markdown-plugin` includes pointing at a canonical source (preferring a live source file over a dedicated per-language _snippets/ folder). Three operations: `scan` (read-only ranked findings), `propose` (surface canonical source, markers, include directives for a target snippet ID, await approval), `apply` (write markers, replace consumer blocks, verify via `mkdocs build --strict`). Invoke when the user asks to dedupe, DRY-refactor, extract snippets, or factor out duplicated MkDocs content; also handles equivalent German-language requests. Don't use for non-MkDocs markdown trees, single-file snippet authoring, prose linting (`prose-vale-curator`), structural scaffolding (`mkdocs-structure-apply`), or drift detection (`docs-freshness-checker`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
+resumable: true
 ---
 
 # Docs DRY Refactor
@@ -108,6 +109,10 @@ The skill returns to the user, in this order:
 6. **Applied edits** (for `apply`): list of files actually written, with absolute paths and the marker comments inserted (one row per file).
 7. **Build verification** (for `apply`): `mkdocs build --strict` exit code; on failure the raw stderr block verbatim plus the revert log.
 8. **Caller follow-ups**: explicit list — commit the working-tree edits, optionally re-run `scan` to surface residual findings, optionally route to `mkdocs-structure-apply audit` to verify §Snippet inclusion (DRY) conformance end-to-end, open the PR via `pull-request-create`. Never bump the plugin version, commit, push, tag, or open PRs from this skill.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/docs-dry-refactor/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

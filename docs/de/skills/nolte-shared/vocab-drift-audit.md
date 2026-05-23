@@ -8,7 +8,7 @@ last_updated: generated
 
 # vocab-drift-audit
 
-_Audit repository-local Vale vocabularies against the pinned upstream release of nolte/vale-style to detect drift. Dispatches vocab-drift-scanner agent for the read-only diff step; follow-up actions (delete entries, bump pin, draft upstream PR) stay user-controlled in this skill. Invoke when the user asks to audit the Vale vocabulary, check for vocabulary drift, diff the local vocab against nolte/vale-style, or review whether local Vale terms can be retired. Also handles equivalent German-language requests. Reports local entries that are already accepted upstream (should be deleted) and local entries that aren't yet upstream (should be PR'd to nolte/vale-style)._
+_Audit repository-local Vale vocabularies against the pinned upstream release of nolte/vale-style to detect drift. Dispatches vocab-drift-scanner agent for the read-only diff step; follow-up actions (delete entries, bump pin, draft upstream PR) stay user-controlled in this skill. Invoke when the user asks to audit the Vale vocabulary, check for vocabulary drift, diff the local vocab against nolte/vale-style, or review whether local Vale terms can be retired. Also handles equivalent German-language requests. Reports local entries that are already accepted upstream (should be deleted) and local entries that aren't yet upstream (should be PR'd to nolte/vale-style). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
@@ -88,6 +88,10 @@ The "Latest release" line comes from `gh api repos/nolte/vale-style/releases/lat
 - Read `examples/01-local-entries-now-upstream.md` when local vocabulary entries are already accepted upstream and should be deleted locally.
 - Read `examples/02-local-entries-not-yet-upstream.md` when local entries aren't yet in the upstream vocabulary and need to be PR'd to `nolte/vale-style`.
 - Read `examples/03-pinned-tag-vs-latest-release.md` when the pinned upstream tag differs from the latest release and you need to understand how the comparison is scoped.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/vocab-drift-audit/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

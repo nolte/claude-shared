@@ -8,7 +8,7 @@ last_updated: generated
 
 # readme-structure-apply
 
-_Audits the repository's `README.md` against the canonical-language file under spec/project/readme-structure/ and, with per-item user approval, scaffolds or patches the file: H1 + tagline, CI badges, six required sections in order (Purpose, Usage, Structure, Related repositories, Status, License), the consumer-first ordering rule, the ≤200-line length budget, and link rules. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fix). Invoke when the user asks to apply, audit, scaffold, or patch the README against the spec; also handles equivalent German-language requests. Don't use for docs/ page content (`audience-doc-author`), MkDocs nav (`mkdocs-structure-apply`), Vale prose linting (`prose-vale-curator`), or the audience artefact (`audience-identify`)._
+_Audits the repository's `README.md` against the canonical-language file under spec/project/readme-structure/ and, with per-item user approval, scaffolds or patches the file: H1 + tagline, CI badges, six required sections in order (Purpose, Usage, Structure, Related repositories, Status, License), the consumer-first ordering rule, the ≤200-line length budget, and link rules. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fix). Invoke when the user asks to apply, audit, scaffold, or patch the README against the spec; also handles equivalent German-language requests. Don't use for docs/ page content (`audience-doc-author`), MkDocs nav (`mkdocs-structure-apply`), Vale prose linting (`prose-vale-curator`), or the audience artefact (`audience-identify`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
@@ -121,6 +121,10 @@ The skill returns to the user, in this order:
 - **Patch operations must preserve all existing frontmatter and prose**: when adding a missing section or reordering sections in an existing `README.md`, every other section's content must be carried over verbatim — a patch that truncates or omits existing prose is a data-loss bug, not a style issue.
 - **Uncommitted README changes block the operation**: if `README.md` has unstaged or staged-but-uncommitted changes when the skill starts, it stops and asks the user to stash, commit, or abort — never overwrite a dirty file; confirm the precondition check runs before any `Write` or `Edit`.
 - **CI badge URLs must resolve to actual workflow files**: the skill verifies badge URLs against `.github/workflows/`; a badge pointing at a renamed or deleted workflow silently becomes a broken badge in the rendered README — always re-check workflow file existence after any badge addition.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/readme-structure-apply/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

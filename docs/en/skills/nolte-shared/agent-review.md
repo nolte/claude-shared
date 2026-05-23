@@ -8,7 +8,7 @@ last_updated: generated
 
 # agent-review
 
-_Review a Claude Code agent against spec/claude/agent-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/agent-review/ keyed by the target agent's name. Invoke when the user asks "review this agent", "audit a specific agent file", "check whether this agent is spec-compliant", or "agent review for a specific agent". Also handles closing an existing review plan once every item is addressed — "close the agent review plan for a specific agent". Also handles equivalent German-language requests. Do NOT use for skill review (use skill-review) or for pull-request-level review (`review` skill)._
+_Review a Claude Code agent against spec/claude/agent-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/agent-review/ keyed by the target agent's name. Invoke when the user asks "review this agent", "audit a specific agent file", "check whether this agent is spec-compliant", or "agent review for a specific agent". Also handles closing an existing review plan once every item is addressed — "close the agent review plan for a specific agent". Also handles equivalent German-language requests. Do NOT use for skill review (use skill-review) or for pull-request-level review (`review` skill). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
@@ -120,6 +120,10 @@ Reference `spec/claude/review-plan/<canonical>.md` for the authoritative format.
 - **Plan file is local-only until committed**: the `.audits/agent-review/<name>.md` plan survives only in the working tree until the user explicitly commits it; if the session ends or the branch is switched before committing, the plan is silently lost — stage and commit early or remind the user.
 - **Declared-vs-used check requires the current file version**: the bidirectional tools check (declared-unused → `Warning`, used-undeclared → `Critical`) must be run against the on-disk agent file at review time; stale cached reads produce false positives or missed `Critical` findings — always re-read the agent file immediately before running step 5.2.
 - **`spec/.spec-config.yml` must be read first**: `<canonical>` depends on `canonical_language` in that file; skipping the read and defaulting to `en` silently misroutes reviews in repos where the canonical language differs — read the config before resolving any spec path.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/agent-review/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

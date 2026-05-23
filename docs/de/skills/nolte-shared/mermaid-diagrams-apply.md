@@ -8,7 +8,7 @@ last_updated: generated
 
 # mermaid-diagrams-apply
 
-_Audits and applies the MkDocs Mermaid setup of the current repository against `spec/project/mermaid-diagrams/<canonical_language>.md`, and helps an author add a single Mermaid diagram (hand-described or derived). Wires up `pymdownx.superfences`, pins `pymdown-extensions`, refuses `mkdocs-mermaid2-plugin`. Picks the diagram type from the supported catalog and prepends the mandatory `<!-- diagram-source ... -->` marker. Audits flag missing source markers, missing direction headers, inline styling, `gitGraph` usage, non-English labels, and derived-source drift. Invoke when the user asks to "wire up Mermaid", "audit Mermaid setup", "draft a flowchart", or equivalent German-language requests. Don't use for general MkDocs scaffolding (use `project-structure-apply`), spec authoring (use `spec`), the docs-freshness audit (use `docs-freshness-checker`), or non-Mermaid diagrams._
+_Audits and applies the MkDocs Mermaid setup of the current repository against `spec/project/mermaid-diagrams/<canonical_language>.md`, and helps an author add a single Mermaid diagram (hand-described or derived). Wires up `pymdownx.superfences`, pins `pymdown-extensions`, refuses `mkdocs-mermaid2-plugin`. Picks the diagram type from the supported catalog and prepends the mandatory `<!-- diagram-source ... -->` marker. Audits flag missing source markers, missing direction headers, inline styling, `gitGraph` usage, non-English labels, and derived-source drift. Invoke when the user asks to "wire up Mermaid", "audit Mermaid setup", "draft a flowchart", or equivalent German-language requests. Don't use for general MkDocs scaffolding (use `project-structure-apply`), spec authoring (use `spec`), the docs-freshness audit (use `docs-freshness-checker`), or non-Mermaid diagrams. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
@@ -139,6 +139,10 @@ When the user has finished approving changes, re-run operations 1 and 4 end-to-e
 - Read `examples/01-wire-up-mkdocs-fresh.md` when wiring Mermaid into a MkDocs project for the first time.
 - Read `examples/02-author-flowchart-from-description.md` when authoring a new flowchart diagram from a user description.
 - Read `examples/03-audit-existing-blocks.md` when auditing existing Mermaid blocks in a docs tree for spec compliance.
+
+### Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/mermaid-diagrams-apply/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

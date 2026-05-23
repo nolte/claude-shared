@@ -1,8 +1,9 @@
 ---
 name: release-notes-curate
-description: "Augments the open release-drafter draft on develop with project-context-aware sections per the canonical-language file under spec/project/release-skill-layer/ §\"Skill A — Draft notes curation\". Reads the project's audience artefact, derives a section bundle from the detected project type, wraps the augmentation in stable HTML-comment markers so re-runs update in place, and writes the body back via `gh release edit` for a release tag. Invoke when the user asks to \"curate the release notes\", \"augment the draft release with project context\", \"shape the release notes for this repo\", or equivalent German-language requests. Don't use to publish the release (use `release-publish-trigger`), to identify audiences (use `audience-identify`), to draft notes from scratch (use the `audience-doc-author` agent), or to scaffold issue / PR templates (use `github-issue-templates-apply`)."
+description: "Augments the open release-drafter draft on develop with project-context-aware sections per the canonical-language file under spec/project/release-skill-layer/ §\"Skill A — Draft notes curation\". Reads the project's audience artefact, derives a section bundle from the detected project type, wraps the augmentation in stable HTML-comment markers so re-runs update in place, and writes the body back via `gh release edit` for a release tag. Invoke when the user asks to \"curate the release notes\", \"augment the draft release with project context\", \"shape the release notes for this repo\", or equivalent German-language requests. Don't use to publish the release (use `release-publish-trigger`), to identify audiences (use `audience-identify`), to draft notes from scratch (use the `audience-doc-author` agent), or to scaffold issue / PR templates (use `github-issue-templates-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [release]
 phase: close-release
+resumable: true
 ---
 
 # Release Notes Curate
@@ -158,6 +159,10 @@ A clean re-run on an already-curated draft with no new commits MUST produce no d
 - Read `examples/01-claude-plugin-bundle.md` when curating release notes for a Claude plugin release bundle.
 - Read `examples/02-python-library-bundle.md` when curating release notes for a Python library with multiple audience tracks.
 - Read `examples/03-rerun-update-in-place.md` when re-running the skill on an existing draft to update the augmentation block in place.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/release-notes-curate/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 
