@@ -49,9 +49,9 @@ Runs the cross-repository in-flight audit per `spec/portfolio/portfolio-inflight
    - **Discussion**: `daysOpen > discussion.maxAge` (default 30d) with `daysSinceLastMaintainerReply == "never"` or beyond the same window.
    Sub-threshold items are excluded per §Stalling thresholds `MUST NOT`. A `Critical` finding may still surface a sub-threshold item when another matrix axis demands it per §Stalling thresholds `SHOULD`.
 
-5. **Derive the four matrix axes** per §Classification and prioritisation for every stalled item. Read `references/matrix-axes-and-report.md` when running this step — it carries the detection MUSTs for `security_relevance`, `release_blocking` (label OR `release-drafter`-draft head-SHA membership), `age_multiplier`, and `cross_repo_blocking` (exact-string scan of other Portfolio-Members' `project/roadmap.md` and `project/sprints/*.md`).
+5. **Derive the four matrix axes** per §Classification and prioritisation for every stalled item. Read `references/matrix-axes-and-report.md` when running this step — it carries the detection MUSTs for all four axes.
 
-6. **Classify into the canonical four severities** per §Classification and prioritisation and `spec/claude/review-plan/` §Severity scale. Read `references/matrix-axes-and-report.md` when running this step — it carries the per-severity mapping rules (`Critical` ← any of `security_relevance`/`release_blocking`/`cross_repo_blocking`; `Warning` ← `age_multiplier > 2×` OR conflicts; `Suggestion` ← `1×–2×` and not blocking; `Info` ← observation-only) and the higher-severity tie-break. Never invent a severity outside the canonical four; `BLOCKER`/`HIGH`/`MEDIUM`/ALL-CAPS variants are forbidden per §Classification and prioritisation `MUST NOT`.
+6. **Classify into the canonical four severities** (`Critical` / `Warning` / `Suggestion` / `Info`) per §Classification and prioritisation and `spec/claude/review-plan/` §Severity scale. Read `references/matrix-axes-and-report.md` when running this step — it carries the per-severity mapping and the higher-severity tie-break.
 
 7. **Attach a recommended specialist** per §Specialist recommendation to every finding:
    - **Match the catalog.** Read every `description` line under `skills/*/SKILL.md` and `agents/*.md`; name the matching slug verbatim (for example `dependency-audit`, `workflow-health-triage`, `feature-decompose`, `pull-request-merge`, `vocab-drift-audit`).
@@ -62,7 +62,7 @@ Runs the cross-repository in-flight audit per `spec/portfolio/portfolio-inflight
 
 8. **Pre-write confirmation — gate (three).** Before any file write, present the per-severity finding counts (`Critical: <n>, Warning: <n>, Suggestion: <n>, Info: <n>`) plus the per-repository counts (top 5 + total). Ask `Write Findings-Report to .audits/portfolio-inflight/<YYYY-MM-DD>.md with these counts? [yes / show-findings / abort]`. On `show-findings`, render the full per-severity list inline and re-ask. On `abort`, stop. On `yes`, proceed.
 
-9. **Write the Findings-Report** at `.audits/portfolio-inflight/<YYYY-MM-DD>.md` in the `claude-shared` repository, conforming to `spec/claude/review-plan/`. Read `references/matrix-axes-and-report.md` when running this step — it carries the frontmatter fields, the four required sections (`## Scope` / `## Summary` / `## Findings` / `## Processing log`), the structure-first-by-severity-then-by-repo-then-by-data-source rule, the per-finding required fields, and the bracketed spec citation rule.
+9. **Write the Findings-Report** at `.audits/portfolio-inflight/<YYYY-MM-DD>.md` in the `claude-shared` repository, conforming to `spec/claude/review-plan/`. Read `references/matrix-axes-and-report.md` when running this step — it carries the frontmatter, the four required sections, the structure rules, and the per-finding format.
 
 10. **Confirm in the user's language** — the path of the new Findings-Report, the per-severity counts, the count of roster-gap findings (if any), and the next step (open the report and triage `Critical` items first via the recommended slash commands; route roster-gap escalations through `continuous-improvement-triage`).
 
@@ -70,19 +70,11 @@ The Run operation **never** closes / merges / deletes / resolves / closes anythi
 
 ## Reference: spec anchors
 
-This skill implements `spec/portfolio/portfolio-inflight-management/`. Read those rules when in doubt:
+This skill implements `spec/portfolio/portfolio-inflight-management/`; read it when in doubt. Sections touched:
 
-- §Portfolio scope — Portfolio-Member set + `portfolio: excluded` and `inflight: skip-<source>` opt-outs
-- §Data sources — the four primary data sources, per-finding identifier `<repo>/<source>/<id>`, exclusionary issue labels, read-only `gh api` constraint
-- §Stalling thresholds — spec defaults, `project/inflight.yml` overrides, no-threshold conflict driver, `SHOULD` allowance for sub-threshold `Critical`
-- §Classification and prioritisation — four matrix axes, severity mapping, detection MUSTs for `release_blocking` and `cross_repo_blocking`, higher-severity tie-break
-- §Specialist recommendation — verbatim slug matching, red-check exclusivity → `workflow-health-triage`, slash-command-verbatim rule, roster-gap recording with `<finding-class-token>` tagging, 3-recurrence escalation, `MUST NOT` auto-dispatch
-- §Audit operation — `MUST` skill (this one), `MUST NOT` agent, `MUST` dispatch `portfolio-inflight-collector`, `MUST` reuse Portfolio-Member-set resolution, on-demand + quarterly cadence, `SHOULD` route to `claude-shared` when invoked elsewhere
-- §Findings-Report shape — `.audits/portfolio-inflight/<YYYY-MM-DD>.md` write path, `review-plan` four-section structure, structure-first-by-severity-then-by-repo-then-by-data-source rule, per-finding required fields, bracketed spec citation, `MUST NOT` raw-body inclusion
-- §Integration with continuous-improvement — recognised audit source, bracketed spec citation, `SHOULD` open tracking issue for `Critical` (operator action), `MAY` carry-forward `Critical`-Persisted across audits
-- §Operator authority — absolute read-only across every Portfolio-Member repo, single write path in `claude-shared`, no mutating `gh api`, dispatch via operator's slash-command invocation
+- §Portfolio scope, §Data sources, §Stalling thresholds, §Classification and prioritisation, §Specialist recommendation, §Audit operation, §Findings-Report shape, §Integration with continuous-improvement, §Operator authority.
 
-This skill also touches `spec/claude/review-plan/` (§Severity scale, §Frontmatter, §Plan body structure, §Findings format — the artefact frame this report MUST conform to) and `spec/project/continuous-improvement/` (§Specialist dispatch and §Portfolio gap closure — the specialist-matching pattern and 3-recurrence escalation rule applied in step 7).
+Also touches `spec/claude/review-plan/` (§Severity scale, §Frontmatter, §Plan body structure, §Findings format — the artefact frame) and `spec/project/continuous-improvement/` (§Specialist dispatch, §Portfolio gap closure — the matching pattern and 3-recurrence rule applied in step 7).
 
 When the spec disagrees with this skill, the spec wins. Propose a skill update rather than silently diverging.
 
