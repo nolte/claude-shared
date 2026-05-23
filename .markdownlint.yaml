@@ -12,3 +12,13 @@
 # (front_matter_title: "^\\s*title\\s*[:=]") wrongly counts as two H1s.
 MD025:
   front_matter_title: ""
+
+# MD024 (no-duplicate-heading): allow duplicate headings across different
+# parent sections, only flag siblings. Audit reports under .audits/
+# follow the spec convention of structuring findings by severity first
+# (`### Critical` / `### Warning` / `### Suggestion` / `### Info`) and
+# then by repository within each severity (`#### nolte/<repo> — <source>`);
+# the same repo can legitimately appear in multiple severities, which
+# the stricter default (siblings_only: false) wrongly flags.
+MD024:
+  siblings_only: true
