@@ -29,6 +29,7 @@ last_updated: generated
     * [project-structure-reviewer](nolte-shared/project-structure-reviewer.md)
     * [prose-vale-curator](nolte-shared/prose-vale-curator.md)
     * [quality-gate-enforcer](nolte-shared/quality-gate-enforcer.md)
+    * [tech-stack-drift-reviewer](nolte-shared/tech-stack-drift-reviewer.md)
 * 8 Cross-cutting
     * [cookiecutter-template-author](nolte-shared/cookiecutter-template-author.md)
     * [png-to-transparent-svg](nolte-shared/png-to-transparent-svg.md)
