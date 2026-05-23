@@ -73,6 +73,7 @@ Jeder Skill und jeder Agent **MUSS [MUST]** deklarieren, welcher Phase des Liefe
 - **MUSS [MUST]** Plugin-Quell-Wurzeln aus einer konfigurierten Liste lesen — jeder Eintrag paart einen lokalen Quellpfad mit der öffentlichen Repository-URL, die für Quell-Links genutzt wird —, damit zusätzliche Plugins ohne Generator-Code-Änderung hinzugefügt werden können
 - **MUSS [MUST]** die Katalog-Generierung über `task docs` verfügbar machen, damit lokale Builds und CI identische Ausgabe produzieren; in der Pre-Build-Form wird das verdrahtet, indem der Generator-Schritt als Taskfile-Abhängigkeit des Doku-Tasks deklariert wird
 - **DARF NICHT [MUST NOT]** einen separaten manuellen „Katalog neu generieren"-Schritt außerhalb des normalen Doku-Builds verlangen
+- **MUSS [MUST]** auf jeder generierten Katalog-Datei (Per-Artefakt-Seite, Per-Sektion-`index.md`, literate-nav-`SUMMARY.md`, Tag-Index) die fünf Per-Page-Pflicht-Frontmatter-Schlüssel (`title`, `audience`, `content_mode`, `track`, `last_updated`) gemäß `spec/project/mkdocs-structure/` §Per-Page-Struktur schreiben. Der Generator **MUSS [MUST]** `track: developer-docs` für jede Katalog-Datei fest setzen (statt den Wert per-Artefakt aus dem Quell-Frontmatter zu lesen) gemäß `spec/project/docs-audience-tracks/` §Audience-zu-Spur-Mapping, damit die Katalog-Audience über die Quell-Plugins hinweg konsistent bleibt und Per-Page-`track`-Werte nicht driften
 
 ### Navigation und Layout
 - **MUSS [MUST]** den Katalog unter stabilen Top-Level-Abschnitten in der MkDocs-Navigation sichtbar machen — mindestens einem Abschnitt `Skills` und einem Abschnitt `Agents`
@@ -113,6 +114,7 @@ Jeder Skill und jeder Agent **MUSS [MUST]** deklarieren, welcher Phase des Liefe
 - [ ] Jede Katalog-Seite zeigt die `phase` des Artefakts als sichtbares Badge mit dem lokalisierten Chrome-Label
 - [ ] Die Index-Seiten von Skills und Agents rendern eine Überschrift pro Phase (Phasen ohne Einträge werden weggelassen) über jeder Plugin-Untergruppe
 - [ ] Eine Tag-Index-Seite existiert und verlinkt auf jedes Artefakt, das den Tag deklariert
+- [ ] Jede generierte Katalog-Datei (Per-Artefakt-Seite, Per-Sektion-`index.md`, literate-nav-`SUMMARY.md`, Tag-Index) deklariert das fünfschlüssige Per-Page-Frontmatter-Set (`title`, `audience`, `content_mode`, `track`, `last_updated`) gemäß `spec/project/mkdocs-structure/` §Per-Page-Struktur; der `track`-Wert ist generator-fixiert auf `developer-docs` gemäß `spec/project/docs-audience-tracks/`
 
 ## Offene Fragen
 - Sollen Versionen von Skills und Agents (Historie, Changelogs) im Katalog erscheinen oder reicht die Git-Historie?
