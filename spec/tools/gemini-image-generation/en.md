@@ -37,12 +37,12 @@ Additionally, the model ID `gemini-2.5-flash-image` is deliberately version-pinn
 - **MUST** call exclusively the Google AI Studio Generative Language endpoint `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent`. Vertex AI endpoints (`*-aiplatform.googleapis.com`) are forbidden.
 - **MUST** read the API key from the environment variable `GEMINI_API_KEY`. No CLI flag, no config file, no prompting the operator to paste a key into the conversation.
 - **MUST** never log, echo, or write the API key—including in error messages, traces, or sidecar files.
-- **MUST** treat HTTP 429 (rate limit / quota exhausted) as a terminal error for the current invocation: surface a clear message to the operator and exit. Automatic retry is forbidden because each retry burns more Free-Tier quota.
+- **MUST** treat HTTP 429 (rate limit / quota exhausted) as a terminal error for the current invocation: surface a clear message that includes the current Free-Tier rate-limit ceiling (so the operator understands what was hit) and exit. Automatic retry is forbidden because each retry burns more Free-Tier quota.
 - **MUST** treat HTTP 401 / 403 (auth failure) as a terminal error with a message that points at `https://aistudio.google.com/apikey`.
 - **MUST** surface an actionable error message and exit with a non-zero code for any failure not covered by the specific HTTP error rules above—including network errors, DNS resolution failures, malformed API responses, filesystem permission errors, and missing parent directories.
 - **MUST** require the operator to specify the target file path explicitly. No silent default to the current working directory.
-- **MUST** refuse to overwrite an existing target file without explicit operator confirmation in the same invocation.
-- **MUST** present a one-time data-protection notice before the first successful generation in a given environment:
+- **MUST** refuse to overwrite an existing target file without explicit operator confirmation in the same invocation. The form of confirmation (CLI flag, interactive prompt, etc.) is implementation-defined.
+- **MUST** present a one-time data-protection notice before the first successful generation in a given environment and require explicit operator acknowledgement before proceeding:
   > "Free-Tier prompts and generated images are used by Google to train and improve their models. Don't submit confidential or personal data. To opt out, enable billing on this API key—see <https://ai.google.dev/gemini-api/terms>."
   The acknowledgement MUST be persisted at `$XDG_STATE_HOME/nolte-shared/gemini-image-generation/ack` (falling back to `$HOME/.local/state/nolte-shared/gemini-image-generation/ack` when `XDG_STATE_HOME` is unset) so the operator isn't prompted again on the same machine across sessions.
 - **MUST** write a sidecar metadata file next to every generated image, named `<image>.meta.json`, containing at minimum:
@@ -53,7 +53,6 @@ Additionally, the model ID `gemini-2.5-flash-image` is deliberately version-pinn
   - `mime_type`: the MIME type returned by the API
 - **SHOULD** derive the image format from the target file extension (`.png`, `.jpg`, `.webp`) and validate it against the MIME type returned by the API; mismatch is a warning, not a failure.
 - **SHOULD** emit a friendly setup hint when `GEMINI_API_KEY` is missing, pointing at the [Google AI Studio API-key page](https://aistudio.google.com/apikey) and explaining that Free-Tier requires no billing setup.
-- **SHOULD** surface the current Free-Tier rate-limit ceiling in the 429 error message so the operator understands what was hit.
 - **MAY** accept an optional `n` parameter for multiple images per call when the model supports it; each image gets its own sidecar (the prompt is duplicated across sidecars by design—this is a known consequence of the per-image-sidecar convention).
 - **MAY** accept an optional seed parameter when the model supports deterministic generation, and record it in the sidecar.
 
