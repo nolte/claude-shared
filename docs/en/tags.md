@@ -15,6 +15,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [audience-doc-author](agents/nolte-shared/audience-doc-author.md) — nolte-shared
 - [audience-review](agents/nolte-shared/audience-review.md) — nolte-shared
 - [audience-identify](skills/nolte-shared/audience-identify.md) — nolte-shared
+- [blog-author](skills/nolte-shared/blog-author.md) — nolte-shared
 
 ## `audit`
 
@@ -65,6 +66,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [docs-freshness-checker](agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [lektorat-scanner](agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
+- [blog-author](skills/nolte-shared/blog-author.md) — nolte-shared
 - [lektorat-apply](skills/nolte-shared/lektorat-apply.md) — nolte-shared
 
 ## `pull-request`
