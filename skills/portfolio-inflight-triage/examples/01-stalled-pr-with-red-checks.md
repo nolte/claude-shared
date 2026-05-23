@@ -3,8 +3,10 @@
 A scheduled portfolio in-flight audit run from inside `claude-shared`
 finds an open pull request in `nolte/release-tooling` whose only
 finding driver is a red required status check. The audit emits a
-single `Warning` finding that names `workflow-health-triage` as the
-recommended specialist and routes the red-check driver to it
+single `Suggestion` finding (per the §Classification and
+prioritisation matrix, since `age_multiplier` sits between `1×` and
+`2×` with no Critical-row trigger) that names `workflow-health-triage`
+as the recommended specialist and routes the red-check driver to it
 exclusively — no second specialist is attached for the same driver,
 even when the same PR also stalls on other axes. Exercises the
 red-check routing exclusivity rule from
@@ -73,12 +75,18 @@ audit applies the spec defaults.
    - `release_blocking: false` (no `release-blocker` label, no open `release-drafter` draft membership)
    - `age_multiplier: 1.3×` (9 days open ÷ 7-day threshold)
    - `cross_repo_blocking: false` (no roadmap or sprint reference scan hit)
-5. **Severity assigned.** With no Critical-row trigger active and
-   `age_multiplier` between `1×` and `2×`, the only Warning-row
-   trigger that fires is the red required checks driver. The skill
-   classifies the finding as `Warning` (not `Suggestion`, because the
-   red checks driver always lifts at least to `Warning` per the
-   matrix).
+5. **Severity assigned.** With no Critical-row trigger active
+   (`security_relevance`, `release_blocking`, and `cross_repo_blocking`
+   all false), `age_multiplier` between `1×` and `2×`, no conflict
+   against `develop`, and no link to a non-release sprint feature,
+   no Warning-row trigger fires. The skill classifies the finding
+   as `Suggestion` per the §Classification and prioritisation matrix:
+   "stalled past 1× but not yet 2× the threshold and not blocking".
+   Red required checks are part of the PR staleness threshold
+   definition (`open longer than 7 days with red required checks`),
+   not a separate severity driver; the §Specialist recommendation
+   red-check rule shapes the recommended specialist, not the
+   severity.
 6. **Specialist recommendation applied with exclusivity.** Because
    the only driver of this finding is the red required check, the
    skill names `workflow-health-triage` as the recommended specialist
@@ -94,7 +102,7 @@ audit applies the spec defaults.
 
    ```text
    [portfolio-inflight-management §Classification and prioritisation]
-   Warning — release-tooling/pr/142
+   Suggestion — release-tooling/pr/142
    driver: red required check (lint)
    axes: security_relevance=false, release_blocking=false,
          age_multiplier=1.3×, cross_repo_blocking=false
@@ -105,12 +113,12 @@ audit applies the spec defaults.
 8. **Per-severity counts confirmed.** The closing message in the
    operator's language reports the path of the new Findings-Report
    (`.audits/portfolio-inflight/2026-05-23.md`), the per-severity
-   counts (e.g. `Critical: 0`, `Warning: 1`, `Suggestion: 0`,
+   counts (e.g. `Critical: 0`, `Warning: 0`, `Suggestion: 1`,
    `Info: 0`), and points the operator at the recommended
    `workflow-health-triage` dispatch as the next step.
 9. **Hard rules honoured.** No PR closed, no PR merged, no branch
    deleted, no review comment resolved; no file modified in
    `nolte/release-tooling`; the audit's only write target is
    `.audits/portfolio-inflight/2026-05-23.md` in `claude-shared`; no
-   mutating `gh api` call issued; the `Warning` severity is written
-   exactly in Title Case (no `WARNING`).
+   mutating `gh api` call issued; the `Suggestion` severity is
+   written exactly in Title Case (no `SUGGESTION`).
