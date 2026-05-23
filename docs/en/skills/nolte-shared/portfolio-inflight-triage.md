@@ -100,11 +100,13 @@ When the spec disagrees with this skill, the spec wins. Propose a skill update r
 
 ### Examples
 
-- Read `examples/01-stalled-pr-with-red-checks.md` when triaging an audit finding for a PR whose only driver is a red required check (the `workflow-health-triage` exclusivity routing applies).
-- Read `examples/02-release-blocker-detection.md` when an open PR carries a `release-blocker` label or its head SHA appears in an open `release-drafter` draft (the `release_blocking` matrix-axis detection MUSTs apply).
-- Read `examples/03-roster-gap-3-recurrence.md` when a finding class without a matching specialist crosses the 3-recurrence threshold from the prior audit artefact (the "author a new specialist" escalation user-confirmation gate applies).
+Three `examples/` files are planned but not yet authored (deferred follow-up tracked by §Acceptance Criteria S-1 of the spec). Once they land, the following load-triggers become active:
 
-(The `examples/` files are deferred follow-up work tracked by §Acceptance Criteria S-1 of the spec; this `SKILL.md` references them by intent so the load-trigger phrases stay conformant with `spec/claude/skill-management/` §Progressive disclosure & file references when the files land.)
+- Once `examples/01-stalled-pr-with-red-checks.md` lands, read it when triaging an audit finding for a PR whose only driver is a red required check (the `workflow-health-triage` exclusivity routing applies).
+- Once `examples/02-release-blocker-detection.md` lands, read it when an open PR carries a `release-blocker` label or its head SHA appears in an open `release-drafter` draft (the `release_blocking` matrix-axis detection MUSTs apply).
+- Once `examples/03-roster-gap-3-recurrence.md` lands, read it when a finding class without a matching specialist crosses the 3-recurrence threshold from the prior audit artefact (the "author a new specialist" escalation user-confirmation gate applies).
+
+The intent-form references above stay conformant with `spec/claude/skill-management/` §Progressive disclosure & file references; they become live load-triggers when the files exist.
 
 ### Gotchas
 
