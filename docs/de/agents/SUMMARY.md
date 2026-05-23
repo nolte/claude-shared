@@ -1,3 +1,11 @@
+---
+title: Agents
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: generated
+---
+
 * [Agents](index.md)
 * 2 Plan
     * [audience-review](nolte-shared/audience-review.md)

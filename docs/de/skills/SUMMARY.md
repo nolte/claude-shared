@@ -1,3 +1,11 @@
+---
+title: Skills
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: generated
+---
+
 * [Skills](index.md)
 * 1 Vision
     * [mission-define](nolte-shared/mission-define.md)
