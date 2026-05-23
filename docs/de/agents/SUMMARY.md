@@ -25,6 +25,7 @@ last_updated: generated
     * [vocab-drift-scanner](nolte-shared/vocab-drift-scanner.md)
 * 6 Quality
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
+    * [project-structure-reviewer](nolte-shared/project-structure-reviewer.md)
     * [prose-vale-curator](nolte-shared/prose-vale-curator.md)
     * [quality-gate-enforcer](nolte-shared/quality-gate-enforcer.md)
 * 8 Cross-cutting
