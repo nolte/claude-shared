@@ -52,6 +52,27 @@ status: proposed
 
 Make the develop quality gate (lint, tests, Vale, Renovate, pre-commit) genuinely block regressions before they reach consumers.
 
+### R-8 — Reviewer agent coverage across every skill cluster
+
+```yaml
+id: R-8
+title: Reviewer agent coverage across every skill cluster
+detail: fine
+outcomes: [O-1, O-2]
+target_sprint: null
+mvp: false
+status: proposed
+```
+
+Every skill cluster gets a read-only reviewer agent paired with its existing "apply"-style skill. The six agents follow two templates: `feature-consistency-reviewer` for plan / sprint / quality clusters, and `vocab-drift-scanner` / `docs-freshness-checker` for drift-style audits. Delivers systematic review depth for roadmap, project structure, sprint, quality-gate, Mermaid diagrams, and tech-stack drift — a gap that "apply"-only skills leave open today.
+
+- [ ] roadmap-coherence-reviewer agent (#152)
+- [ ] project-structure-reviewer agent (#153)
+- [ ] sprint-readiness-reviewer agent (#154)
+- [ ] quality-gate-enforcer agent (#155)
+- [ ] mermaid-diagram-reviewer agent (#156)
+- [ ] tech-stack-drift-reviewer agent (#157)
+
 ## Phase 3 — Documentation Reach
 
 ### R-4 — Bilingual docs published with skill-agent catalog
