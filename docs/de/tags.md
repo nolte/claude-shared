@@ -26,6 +26,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [portfolio-inflight-collector](agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
 - [portfolio-manifest-collector](agents/nolte-shared/portfolio-manifest-collector.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
+- [quality-gate-enforcer](agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
 - [roadmap-coherence-reviewer](agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [sprint-readiness-reviewer](agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
@@ -93,6 +94,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [audience-review](agents/nolte-shared/audience-review.md) — nolte-shared
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [quality-gate-enforcer](agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
 - [roadmap-coherence-reviewer](agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [sprint-readiness-reviewer](agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
