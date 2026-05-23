@@ -26,6 +26,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [portfolio-inflight-collector](agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
 - [portfolio-manifest-collector](agents/nolte-shared/portfolio-manifest-collector.md) — nolte-shared
 - [prose-vale-curator](agents/nolte-shared/prose-vale-curator.md) — nolte-shared
+- [roadmap-coherence-reviewer](agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [vocab-drift-scanner](agents/nolte-shared/vocab-drift-scanner.md) — nolte-shared
 - [webview-ui-expert](agents/nolte-shared/webview-ui-expert.md) — nolte-shared
@@ -91,6 +92,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [audience-review](agents/nolte-shared/audience-review.md) — nolte-shared
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [roadmap-coherence-reviewer](agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [webview-ui-expert](agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [agent-review](skills/nolte-shared/agent-review.md) — nolte-shared

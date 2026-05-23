@@ -10,6 +10,7 @@ last_updated: generated
 * 2 Plan
     * [audience-review](nolte-shared/audience-review.md)
     * [feature-consistency-reviewer](nolte-shared/feature-consistency-reviewer.md)
+    * [roadmap-coherence-reviewer](nolte-shared/roadmap-coherence-reviewer.md)
 * 3 Design
     * [audience-doc-author](nolte-shared/audience-doc-author.md)
     * [claude-plugin-developer](nolte-shared/claude-plugin-developer.md)
