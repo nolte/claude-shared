@@ -23,6 +23,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [docs-freshness-checker](agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [lektorat-scanner](agents/nolte-shared/lektorat-scanner.md) — nolte-shared
+- [mermaid-diagram-reviewer](agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [portfolio-inflight-collector](agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
 - [portfolio-manifest-collector](agents/nolte-shared/portfolio-manifest-collector.md) — nolte-shared
 - [project-structure-reviewer](agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
@@ -95,6 +96,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [audience-review](agents/nolte-shared/audience-review.md) — nolte-shared
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [mermaid-diagram-reviewer](agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
 - [quality-gate-enforcer](agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
 - [roadmap-coherence-reviewer](agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
