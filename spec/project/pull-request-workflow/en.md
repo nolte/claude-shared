@@ -77,6 +77,11 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - **SHOULD** rely on the platform setting rather than on client-side `--delete-branch` flags passed to `gh pr merge`; when automerge handles the merge, only the platform setting fires, so the platform is the authoritative path
 - **MAY** delete residual remote branches manually via `gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<branch>` as a one-off catch-up when the platform setting was enabled only later—not as a routine operation
 
+### Linked-issue closure on develop merge
+- **MUST** treat `Closes #<n>` / `Fixes #<n>` / `Resolves #<n>` keywords in the PR body as advisory on a `develop` merge; GitHub's reference-closing autolink fires only on the repository's **default branch** (`main` under this branching model), so a squash-merge into `develop` leaves referenced tracking issues `OPEN`. The issues close implicitly only when `release-cd-refresh-master.yml` fast-forwards `main` to the released commit (per `branching-model`).
+- **SHOULD** close each referenced tracking issue manually after a `develop` merge, with a cross-reference comment naming the merging PR and the merge-commit SHA on `develop`, rather than waiting for the next release-fast-forward to close it implicitly; `skills/pull-request-merge/SKILL.md` operationalises this as a post-merge step that lists open referenced issues and waits for operator confirmation before invoking `gh issue close --reason completed`
+- **MUST NOT** close a referenced issue without explicit operator confirmation in the merging session—issue closure is an externally-visible action and the operator may have closed the issue through another path already
+
 ### Draft and work-in-progress PRs
 - **SHOULD** open PRs as Draft while work is ongoing and mark them ready for review only once CI is expected to pass and the description is complete
 - **MUST NOT** mark a PR ready for review when any required section of the description is missing or empty in violation of the rules above
@@ -107,6 +112,7 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - [ ] For the same 10 PRs, titles match the Conventional Commits form and the `type` corresponds to the branch prefix
 - [ ] The source branches of the same 10 PRs used one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, `exp/`, and the PR title type matched the prefix verbatim
 - [ ] A sample of recent PR bodies shows all five required sections present, with only Linked issues and Risk / rollout notes allowed to contain the literal `None`; any repository-specific sections appear *after* the required five, never interleaved
+- [ ] A sample of recent `develop` merges whose PR bodies carried `Closes #<n>` keywords shows each referenced tracking issue either closed manually with a cross-reference comment naming the merging PR and the merge-commit SHA, or still open pending the next `release-cd-refresh-master.yml` fast-forward of `main`; the autolink **MUST NOT** have closed any of them silently on the `develop` merge
 - [ ] `.github/workflows/pr-lint.yml` (or an equivalently-named workflow) exists and its job is declared as a required status check for `develop` in `.github/settings.yml`
 - [ ] `.github/settings.yml` sets `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` for the repository
 - [ ] The last 10 first-parent commits on `develop` (via `git log --first-parent develop -n 10`) each correspond to exactly one squash-merged PR and carry a Conventional-Commits-compliant message

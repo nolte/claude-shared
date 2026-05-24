@@ -152,6 +152,32 @@ If the logs contain `mergeResult: 'merge_failed'` or `Failed to merge PR: …`, 
 
 Report back: PR URL, merged-at timestamp, merge commit SHA on `origin/develop`, the labels that were applied, and—if 7b caught a silent no-op—the workflow-health classification and the remediation the user needs to take next.
 
+#### 7c. Close referenced tracking issues
+
+GitHub's `Closes #<n>` / `Fixes #<n>` / `Resolves #<n>` autolinks fire only on default-branch merges. Per `spec/project/pull-request-workflow/<canonical_language>.md` §"Linked-issue closure on develop merge", a squash-merge into `develop` leaves referenced tracking issues `OPEN`; this step closes them with operator confirmation rather than waiting for the next `release-cd-refresh-master.yml` fast-forward of `main`.
+
+Run only when step 7a confirmed `state == MERGED`. If the PR body carries no closing-keyword references, skip this step.
+
+1. Scan the PR body for closing-keyword references — case-insensitive `(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)`. Deduplicate by issue number. `Refs #<n>` is **not** a closing keyword and is ignored on purpose.
+
+2. For each referenced issue, read its current state:
+
+   ```
+   gh issue view <n> --json state,title --jq .
+   ```
+
+   Skip when `state == CLOSED` — the autolink may have fired (for example because `main` was fast-forwarded between the merge and this step), or another path closed it already.
+
+3. Present the remaining `OPEN` list to the operator, one line per issue (`#<n> <title>`), and require explicit confirmation before any close call. The operator **MAY** select all, a subset, or none.
+
+4. For each confirmed issue, close with a cross-reference comment that names the merging PR and the merge-commit SHA on `develop`:
+
+   ```
+   gh issue close <n> --reason completed --comment "Resolved by #<pr> (merged to \`develop\` as \`<merge_sha>\`). The \`Closes #<n>\` autolink fires only on default-branch merges; this repo's default is \`main\`, fast-forwarded from \`develop\` via \`release-cd-refresh-master\` — closing manually now rather than waiting for that promotion."
+   ```
+
+Report back which issues were closed, which were skipped because they were already closed, and which the operator declined.
+
 #### 8. Clean up local state
 
 Once the PR is merged, offer (don't automatically execute) the following cleanup to the user:
@@ -182,6 +208,7 @@ The skill is single-shot by default: when step 4 finds pending checks or step 7a
 - **`automerge` label must be spelled exactly**: the label name `automerge` is case-sensitive and must already exist in the repository's label set; applying a near-miss (`auto-merge`, `AutoMerge`) creates a new label silently or fails — always verify the label exists via the `gh label list` call in step 1 before applying it.
 - **`automerge.yaml` `SUCCESS` does not mean the merge happened**: `pascalgn/automerge-action` exits 0 even on `mergeResult: 'merge_failed'`; always confirm `state == MERGED` via `gh pr view` (step 7a) and, when the PR stays `OPEN` with green checks, audit the workflow logs for `merge_failed` (step 7b) before declaring completion.
 - **Required checks list is read from `.github/settings.yml`, not from the GitHub UI**: the UI shows all checks; the spec gates only on checks declared as required in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension) — use that file as the authoritative source when deciding whether all required checks are green.
+- **`Closes #N` autolinks don't fire on `develop` merges**: GitHub's reference-closing keywords (`Closes`, `Fixes`, `Resolves`) fire only when the merge lands on the repository's default branch. Under this branching model the default is `main`, but PRs target `develop`; referenced issues therefore stay `OPEN` after a `develop` squash-merge and close only when `release-cd-refresh-master.yml` fast-forwards `main`. Step 7c closes them manually with operator confirmation rather than waiting for the promotion.
 
 ### Resumability
 
@@ -198,4 +225,5 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** poll, sleep, or loop waiting for checks to complete **unless the user has opted in to wait mode** (see "Wait mode" below). Outside wait mode, report the outstanding state and stop; the user re-invokes the skill when ready. Inside wait mode, polling is permitted but bounded by the documented retry / interval / timeout caps and **never** silently in the background — every wait round produces a visible status line.
 - **Never** treat the `automerge.yaml` workflow's `SUCCESS` conclusion as proof the merge happened. `pascalgn/automerge-action` exits 0 on `mergeResult: 'merge_failed'`. Always confirm `state == MERGED` on the PR itself (step 7a), and when the PR is still open with green checks, audit the action's logs for `merge_failed` (step 7b) before declaring the merge complete.
 - **Never** delete the remote feature branch as part of the automatic merge flow. Post-merge branch cleanup is the platform's job via `delete_branch_on_merge: true`; a manual `gh api -X DELETE` call is only a one-off catch-up and requires explicit user confirmation.
+- **Never** close a referenced tracking issue without explicit operator confirmation in the merging session. Issue closure is externally-visible and the operator may have closed the issue through another path; step 7c always lists the open candidates and waits for approval before invoking `gh issue close`.
 - When `spec/project/pull-request-workflow/`, `spec/project/branching-model/`, or `spec/project/workflow-health/` disagrees with this skill, the spec wins. Propose a skill update rather than silently diverging.
