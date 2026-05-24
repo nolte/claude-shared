@@ -12,6 +12,7 @@ Canonical language: `en` · Translations: `de`
 | claude | agent-review | Claude Agent Review | Claude-Agent-Review | draft | 2026-04-24 |
 | claude | permission-allowlist | Claude Code Permission Allowlist Maintenance | Pflege der Claude-Code-Permission-Allowlist | draft | 2026-04-23 |
 | claude | png-to-transparent-svg | PNG to Transparent SVG | PNG zu transparentem SVG | draft | unversioned |
+| claude | research-triangulate | Research Triangulation | Recherche-Triangulation | draft | unversioned |
 | claude | resumable-work | Resumable Skill and Agent Work | Wiederaufnehmbare Skill- und Agent-Arbeit | draft | unversioned |
 | claude | review-plan | Review Plan Artifact | Review-Plan-Artefakt | draft | 2026-04-24 |
 | claude | skill-agent-catalog | Claude Skill and Agent Catalog | Claude-Skill- und -Agent-Katalog | draft | 2026-04-23 |
