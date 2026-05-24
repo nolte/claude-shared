@@ -77,6 +77,11 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - **SOLLTE [SHOULD]** auf die Platform-Einstellung statt auf clientseitige `--delete-branch`-Flags bei `gh pr merge` setzen; wenn der Automerge den Merge ausführt, greift nur die Platform-Einstellung, also ist sie der verbindliche Weg
 - **DARF [MAY]** verbleibende Remote-Branches manuell via `gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<branch>` entfernen, wenn die Platform-Einstellung erst nachträglich aktiviert wurde und historische Branches übrig sind — das ist ein einmaliger Nachholvorgang, kein Routinebetrieb
 
+### Schließen verlinkter Issues beim develop-Merge
+- **MUSS [MUST]** `Closes #<n>` / `Fixes #<n>` / `Resolves #<n>`-Schlüsselwörter im PR-Body bei einem `develop`-Merge als hinweisend behandeln; GitHubs Referenz-schließender Autolink greift nur auf dem **Default-Branch** des Repositorys (`main` unter diesem Branching-Modell), deshalb lässt ein Squash-Merge nach `develop` referenzierte Tracking-Issues `OPEN`. Die Issues schließen sich implizit erst, wenn `release-cd-refresh-master.yml` `main` auf den veröffentlichten Commit vorspult (gemäß `branching-model`).
+- **SOLLTE [SHOULD]** jedes referenzierte Tracking-Issue nach einem `develop`-Merge manuell schließen, mit einem Cross-Reference-Kommentar, der den mergenden PR und den Merge-Commit-SHA auf `develop` benennt — anstatt darauf zu warten, dass das nächste Release-Fast-Forward es implizit schließt; `skills/pull-request-merge/SKILL.md` operationalisiert das als Post-Merge-Schritt, der die offenen referenzierten Issues auflistet und auf eine Operator-Bestätigung wartet, bevor `gh issue close --reason completed` aufgerufen wird
+- **DARF NICHT [MUST NOT]** ein referenziertes Issue ohne explizite Operator-Bestätigung in der mergenden Session schließen — Issue-Schließung ist eine extern sichtbare Aktion, und der Operator hat das Issue möglicherweise bereits über einen anderen Weg geschlossen
+
 ### Draft- und Work-in-Progress-PRs
 - **SOLLTE [SHOULD]** PRs während laufender Arbeit als Draft öffnen und erst dann als bereit für Review markieren, wenn die CI voraussichtlich grün wird und die Beschreibung vollständig ist
 - **DARF NICHT [MUST NOT]** einen PR als bereit für Review markieren, wenn ein erforderlicher Beschreibungsabschnitt entgegen den obigen Regeln fehlt oder leer ist
@@ -117,6 +122,7 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - [ ] In Repositories mit `Taskfile.yml`-`lint`-Target oder `.pre-commit-config.yaml` zeigt eine Stichprobe aktueller PRs, dass der erste Push des gemergten Head-Commits keine CI-`lint`-Regression eingeführt hat, die lokales Tooling abgefangen hätte
 - [ ] Der `automerge.yaml`-Workflow ist so konfiguriert, dass der reusable Automerge-Workflow nur mergt, wenn jeder erforderliche Status-Check auf dem Head-Commit grün ist und jede Review-bezogene Branch-Protection-Regel für `develop` erfüllt ist — unabhängig davon, ob `required_approving_review_count` 0 oder höher ist
 - [ ] `.github/settings.yml` setzt `delete_branch_on_merge: true` für das Repository (direkt oder via der `nolte/gh-plumbing`-Commons-Extension), und eine Stichprobe via `git branch -r` zeigt keine gemergten PR-Feature-Branches, die über das Automations-Fenster hinaus auf der Remote verbleiben
+- [ ] Eine Stichprobe der jüngsten `develop`-Merges, deren PR-Body `Closes #<n>`-Schlüsselwörter trug, zeigt jedes referenzierte Tracking-Issue entweder manuell geschlossen mit einem Cross-Reference-Kommentar, der den mergenden PR und den Merge-Commit-SHA benennt, oder noch offen in Erwartung des nächsten `release-cd-refresh-master.yml`-Fast-Forwards von `main`; der Autolink **MUSS NICHT [MUST NOT]** eines davon stillschweigend beim `develop`-Merge geschlossen haben
 
 ## Offene Fragen
 - _Keine aktuell; alle Fragen aus der Entwurfsphase sind geklärt._
