@@ -20,7 +20,7 @@ last_updated: 2026-05-19
 
 - **Namen**: ASCII-Kebab-Case.
 - **Beschreibungen**: konkrete User-Trigger ("einsetzen, wenn der Nutzer X sagt"), keine abstrakten Fähigkeiten.
-- **Tool-Zugriff bei Agents**: Prinzip der minimalen Rechte. Read-only = keine Schreib-Tools.
+- **Tool-Zugriff bei Agents**: Prinzip der minimalen Rechte. Nur-Lese-Agents (read-only) erhalten keine Schreib-Tools.
 - **Keine absoluten Pfade** in Skill- oder Agent-Inhalten.
 - **Inhaltssprache**: Skills und Agents in Englisch, User-Antwort in Nutzersprache.
 

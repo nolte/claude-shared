@@ -18,7 +18,7 @@ Der Skill `skill-management` gerüstet und validiert Claude-Code-Skills. Er lieg
 
 ## Zielort entscheiden
 
-Vor dem Schreiben entscheidet der Skill, wo die neue Skill-Dateien landen:
+Vor dem Schreiben entscheidet der Skill, wo die neuen Skill-Dateien landen:
 
 | Kontext | Zielpfad |
 |---------|---------|

@@ -8,9 +8,9 @@ last_updated: 2026-05-19
 
 # Planning Suite
 
-The planning suite is the collection of skills and one agent that operationalises the `mission`, `roadmap`, `sprint`, `feature`, and `release-artifact` specs in an adopting repository. This page bundles the order in which the skills are typically invoked, plus a map of which skill writes which artefact.
+The planning suite bundles skills and one agent that operationalise the `mission`, `roadmap`, `sprint`, `feature`, and `release-artifact` specs in an adopting repository. This page shows the typical order in which the skills are invoked and maps each skill to the artefact it writes.
 
-Adoption is voluntary—a repository without a `project/` directory isn't disturbed by any of these skills.
+Adoption is voluntary. A repository without a `project/` directory is untouched by any of these skills.
 
 ## Lifecycle overview
 
@@ -83,7 +83,7 @@ The chain decision (chained or skipped) **MUST** be recorded verbatim in `## Rev
 
 ## When adoption pays off
 
-The suite earns its weight once a hobby project ships more than a handful of releases and the question of why the work is being done deserves a formal answer. A repository that's purely a library or a tool with no clearly identified user audience treats audience identification and the mission statement as overhead—the specs explicitly permit absence.
+The suite earns its weight once a hobby project ships more than a handful of releases. From that point on, the question of why the work is being done deserves a formal answer. A repository that's purely a library or a tool with no clearly identified user audience treats audience identification and the mission statement as overhead. The specs explicitly permit that absence.
 
 Adoption typically begins like this:
 

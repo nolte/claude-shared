@@ -1,0 +1,107 @@
+{
+  "operation": "revise",
+  "operation_version": "1",
+  "repository": "claude-shared",
+  "ran_at": "2026-05-26T18:30:00Z",
+  "scope": "docs/ only (README.md retained from pre-revise audit; out of revise scope per operator decision)",
+  "files_revised": [
+    "docs/de/concepts/agents/index.md",
+    "docs/de/concepts/skills/skill-management.md",
+    "docs/de/development/beitragen.md",
+    "docs/de/getting-started/installation.md",
+    "docs/de/lifecycle.md",
+    "docs/de/planning-suite.md",
+    "docs/en/concepts/skills/skill-management.md",
+    "docs/en/development/projektstruktur.md",
+    "docs/en/getting-started/installation.md",
+    "docs/en/lifecycle.md",
+    "docs/en/planning-suite.md"
+  ],
+  "files_skipped_spec_mirror": [
+    "docs/en/specs/agent-management.md",
+    "docs/en/specs/skill-management.md",
+    "docs/de/specs/agent-management.md",
+    "docs/de/specs/skill-management.md"
+  ],
+  "vocab_fix_applied": ".github/styles/config/vocabularies/claude-shared/accept.txt: added `[Aa]gents?` — eliminates 7 Microsoft.Terms `agent` D3 warnings in docs/ without prose rewrites",
+  "spec_mirror_skip_rationale": "These 4 files are hand-written summaries of spec/claude/{agent,skill}-management/{en,de}.md. Rewriting them would drift from their canonical source. The underlying spec/ files are out of Lektorat scope per §Scope and applicability. Operator approved skip.",
+  "findings_resolved": {
+    "D1": [
+      "docs/en/getting-started/installation.md L1-67: long intro sentence split into 3 sentences",
+      "docs/en/planning-suite.md L1-96: intro split + adoption paragraph (86 words) split at em-dash into 4 shorter sentences",
+      "docs/en/development/projektstruktur.md L1-68: lead-in sentences added before 'What goes where' and 'Languages' tables",
+      "docs/de/getting-started/installation.md L1-67: intro and dogfooding sections split into shorter sentences",
+      "docs/de/planning-suite.md L1-96: intro fully restructured + 86-word adoption paragraph broken into 4 sentences",
+      "docs/de/concepts/agents/index.md L1-65: opening 3-sentence compound paragraph split into two paragraphs"
+    ],
+    "D2": [
+      "docs/en/lifecycle.md L13: MVP expanded as 'minimum viable product (MVP)' on first use"
+    ],
+    "D3": [
+      "docs/de/planning-suite.md L11: DE_AGREEMENT resolved (re-checked via LanguageTool, 0 non-spelling matches)",
+      "docs/de/planning-suite.md L11: N-declension fix 'einen Agent' → 'einen Agenten' (LT-flagged during re-verification, not in original audit)",
+      "docs/de/planning-suite.md L58: GERMAN_SPELLER 'Govering' → 'Governing'",
+      "docs/de/development/beitragen.md L23: DE_CASE 'Read-only' → 'Nur-Lese-Agents (read-only)'",
+      "docs/de/concepts/skills/skill-management.md L21: DE_AGREEMENT 'die neue Skill-Dateien' → 'die neuen Skill-Dateien'",
+      "docs/de/lifecycle.md L94: DOPPELPUNKT_GROSS resolved by restructuring colon-introduced list into three question sentences"
+    ],
+    "D4": [
+      "docs/en/concepts/skills/skill-management.md L19: Microsoft.We 'our conventions' → 'the project conventions'"
+    ],
+    "D3_via_vocab_fix": [
+      "Microsoft.Terms 'agent'/'Agent' eliminated across 7 EN files via .github/styles/config/vocabularies/claude-shared/accept.txt: docs/en/concepts/agents/index.md, docs/en/development/beitragen.md, docs/en/development/index.md, docs/en/development/projektstruktur.md, docs/en/lifecycle.md, docs/en/planning-suite.md, docs/en/specs/agent-management.md"
+    ]
+  },
+  "findings_not_resolved": [
+    {
+      "file": "docs/en/specs/agent-management.md",
+      "dimension": "D1",
+      "severity": "critical",
+      "rationale": "Spec-mirror page — skipped per operator decision (would drift from spec/claude/agent-management/en.md canonical source)."
+    },
+    {
+      "file": "docs/en/specs/skill-management.md",
+      "dimension": "D1",
+      "severity": "critical",
+      "rationale": "Spec-mirror page — skipped per operator decision."
+    },
+    {
+      "file": "docs/de/specs/agent-management.md",
+      "dimension": "D1",
+      "severity": "critical",
+      "rationale": "Spec-mirror page — skipped per operator decision."
+    },
+    {
+      "file": "docs/de/specs/skill-management.md",
+      "dimension": "D1",
+      "severity": "critical",
+      "rationale": "Spec-mirror page — skipped per operator decision."
+    },
+    {
+      "file": "docs/de/specs/agent-management.md",
+      "dimension": "D3",
+      "severity": "warning",
+      "rationale": "Spec-mirror page — skipped per operator decision (DE_AGREEMENT remains, but should be fixed in spec/claude/agent-management/de.md canonical source instead)."
+    },
+    {
+      "file": "README.md",
+      "dimension": "any",
+      "rationale": "Out of operator-supplied revise scope (docs/ only)."
+    }
+  ],
+  "semantic_preservation_check": {
+    "frontmatter_unchanged": "all 11 revised files — verified via head-extract comparison",
+    "code_blocks_unchanged": "0 lines with code-fence backticks in the diff (verified via `grep -E '^[-+].*\\\\\\`\\\\\\`\\\\\\`' on git diff)",
+    "link_targets_unchanged": "0 lines with markdown-link syntax `]\\\\(` in the diff (verified via `grep -E '^[-+].*\\\\]\\\\('`)",
+    "html_comments_unchanged": "diagram-source markers in docs/de/planning-suite.md, docs/en/planning-suite.md, docs/{de,en}/lifecycle.md, and the Vale on/off markers in docs/en/concepts/skills/skill-management.md L16+L18 — all byte-identical",
+    "list_item_count_preserved": "no list items added or removed; ordered-list numbering unchanged",
+    "table_row_count_preserved": "no table rows added or removed; only the 'Govering → Governing' header cell text changed",
+    "key_claims_preserved": "all facts, identifiers, commands, file paths, audience IDs, MVP-status enum values, spec names, skill names, agent names, and lifecycle phase labels carried byte-identical or via the same lexical content into the rewrite",
+    "verifications_run": [
+      "git diff --stat → 24+/17- across 12 files; sub-5-line median per file (chirurgical rather than full rewrite)",
+      "vale on docs/en/*.md → 0 Microsoft.Terms `agent` findings (vocab fix wirkt)",
+      "LanguageTool /v2/check on docs/de/planning-suite.md L11, docs/de/development/beitragen.md L23, docs/de/concepts/skills/skill-management.md L21, docs/de/lifecycle.md L94 → 0 non-spelling matches each"
+    ]
+  },
+  "regression_check": "No regression observed. The diff is additive-or-neutral in length: 24 insertions vs 17 deletions across 12 files. The 'one new sentence' added in docs/en/development/projektstruktur.md ('The table below maps each kind of content to its location on disk:') and 'Three language conventions apply across the repository:' are lifted-prerequisite intros, not new factual claims — they paraphrase what the following table already shows. No new file paths, no new commands, no new product names, no new URLs introduced."
+}

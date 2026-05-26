@@ -1,5 +1,6 @@
 addon
 [Aa]ffordances?
+[Aa]gents?
 agentic
 [Aa]llowlisted
 APIs?

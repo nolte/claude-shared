@@ -8,7 +8,9 @@ last_updated: 2026-05-19
 
 # Agents
 
-Agents sind spezialisierte Sub-Agents mit fokussiertem Tool-Zugriff und System-Prompt. Claude ruft sie über das `Agent`-Tool mit `subagent_type: <name>` auf. Im Quellbaum von `claude-shared` liegen sie unter `agents/<name>.md`, zur Laufzeit unter `.claude/agents/<name>.md` oder `~/.claude/agents/<name>.md` — oder als Teil des `nolte-shared`-Plugins.
+Agents sind spezialisierte Sub-Agents mit fokussiertem Tool-Zugriff und eigenem System-Prompt. Claude ruft sie über das `Agent`-Tool mit `subagent_type: <name>` auf.
+
+Im Quellbaum von `claude-shared` liegen sie unter `agents/<name>.md`. Zur Laufzeit greift Claude Code auf sie unter `.claude/agents/<name>.md`, unter `~/.claude/agents/<name>.md` oder als Teil des `nolte-shared`-Plugins zu.
 
 ## Enthaltene Agents
 

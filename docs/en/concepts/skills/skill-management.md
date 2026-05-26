@@ -16,7 +16,7 @@ The `skill-management` skill scaffolds and validates Claude Code skills. It live
 <!-- vale Vale.Spelling = NO -->
 - "neuen Skill anlegen," "Skill für X erstellen"
 <!-- vale Vale.Spelling = YES -->
-- "validate this skill," "check if this skill follows our conventions"
+- "validate this skill," "check if this skill follows the project conventions"
 
 ## Deciding the target location
 

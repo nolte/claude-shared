@@ -4,7 +4,9 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: '^\.audits/lektorat/.*\.diff$'
       - id: end-of-file-fixer
+        exclude: '^\.audits/lektorat/.*\.diff$'
       - id: check-yaml
         args: [--allow-multiple-documents, --unsafe]
       - id: check-json
