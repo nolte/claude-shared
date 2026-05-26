@@ -6,7 +6,7 @@ track: developer-docs
 last_updated: 2026-05-19
 ---
 
-# Planning Suite
+# Planning suite
 
 The planning suite bundles skills and one agent that operationalise the `mission`, `roadmap`, `sprint`, `feature`, and `release-artifact` specs in an adopting repository. This page shows the typical order in which the skills are invoked and maps each skill to the artefact it writes.
 

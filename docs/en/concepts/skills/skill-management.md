@@ -6,7 +6,7 @@ track: developer-docs
 last_updated: 2026-05-19
 ---
 
-# Skill Management
+# Skill management
 
 The `skill-management` skill scaffolds and validates Claude Code skills. It lives at `skills/skill-management/SKILL.md` and follows the [Skill Authoring](../../specs/skill-management.md) spec.
 

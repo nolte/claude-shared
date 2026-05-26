@@ -14,7 +14,7 @@ Der Skill `skill-management` gerüstet und validiert Claude-Code-Skills. Er lieg
 
 - "neuen Skill anlegen", "Skill für X erstellen"
 - "create a new skill", "scaffold a skill for X", "add a skill to this repo"
-- "validate this skill", "check if this skill follows our conventions"
+- "validate this skill", "check if this skill follows the project conventions"
 
 ## Zielort entscheiden
 

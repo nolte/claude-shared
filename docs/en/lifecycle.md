@@ -168,7 +168,7 @@ Quality skills and agents run mostly in CI and pre-push contexts, but several ar
 | [`docs-freshness-checker`](agents/nolte-shared/docs-freshness-checker.md) | agent | Audit MkDocs docs for parity, dead links, stale spec/src references, ADR hygiene, and Mermaid-derived drift. |
 | [`prose-vale-curator`](agents/nolte-shared/prose-vale-curator.md) | agent | Curate prose so it passes Vale; in vocabulary-owning repos, extend `accept.txt` for legitimate technical identifiers. |
 
-### 7 Close and Release
+### 7 Close and release
 
 A sprint closes by validating its deployable artefact; release skills augment and publish the release notes that release-drafter has been accumulating.
 

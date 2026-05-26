@@ -6,7 +6,7 @@ track: developer-docs
 last_updated: 2026-05-19
 ---
 
-# Project Structure
+# Project structure
 
 Current top-level layout:
 
