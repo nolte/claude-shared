@@ -8,9 +8,9 @@ last_updated: 2026-05-19
 
 # Planning-Suite
 
-Die Planning-Suite ist die Sammlung von Skills und einem Agent, mit der ein Repository die Specs `mission`, `roadmap`, `sprint`, `feature` und `release-artifact` operationalisiert. Diese Seite bündelt die Reihenfolge, in der die Skills typischerweise zum Einsatz kommen, plus eine Karte „welcher Skill schreibt welches Artefakt".
+Die Planning-Suite umfasst mehrere Skills sowie einen Agenten. Damit operationalisiert ein adoptierendes Repository die Specs `mission`, `roadmap`, `sprint`, `feature` und `release-artifact`. Diese Seite zeigt die typische Reihenfolge der Skill-Aufrufe und ordnet jedem Skill das Artefakt zu, das er schreibt.
 
-Adoption ist freiwillig — ein Repository ohne `project/`-Verzeichnis wird durch keinen dieser Skills gestört.
+Adoption ist freiwillig. Ein Repository ohne `project/`-Verzeichnis bleibt von jedem dieser Skills unberührt.
 
 ## Lifecycle-Übersicht
 
@@ -55,7 +55,7 @@ Stadium-Form (`feature-consistency-reviewer`) markiert den einzigen Agent in der
 
 ## Skill-zu-Stage-Karte
 
-| Stage | Skill | Schreibt / liest | Govering Spec |
+| Stage | Skill | Schreibt / liest | Governing Spec |
 |---|---|---|---|
 | Foundation | `audience-identify` | schreibt das Audience-Artefakt (typischerweise `AUDIENCES.md`) | `audience-identification` |
 | Foundation | `roadmap-init` | schreibt `project/roadmap.md` und `project/goals.md` | `roadmap` |
@@ -83,7 +83,7 @@ Die Chain-Entscheidung (chained oder skipped) **MUSS** wortgetreu in `## Review 
 
 ## Wann Adoption sich lohnt
 
-Die Suite zahlt sich aus, sobald ein Hobby-Projekt mehr als ein paar Releases ausliefert und der Bedarf entsteht, „warum bauen wir das eigentlich?" formell zu beantworten. Für ein Repository, das ausschließlich Bibliothek oder Tool ohne klare User-Audience ist, sind Audience-Identifikation und Mission Statement Overhead — die Specs erlauben Abwesenheit ausdrücklich.
+Die Suite zahlt sich aus, sobald ein Hobby-Projekt mehr als ein paar Releases ausliefert. Dann entsteht der Bedarf, die Frage „warum bauen wir das eigentlich?" formell zu beantworten. Reine Bibliotheken oder Tools ohne klare User-Audience brauchen Audience-Identifikation und Mission-Statement nicht. Die Specs erlauben deren Abwesenheit ausdrücklich.
 
 Eine Adoption beginnt typischerweise so:
 

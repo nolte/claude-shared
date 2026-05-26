@@ -8,7 +8,7 @@ last_updated: 2026-05-19
 
 # Installation
 
-`claude-shared` is packaged as a single Claude Code plugin named **`nolte-shared`**. The plugin manifest lives at `.claude-plugin/plugin.json`, the marketplace descriptor at `.claude-plugin/marketplace.json`, skills under `skills/<name>/`, agents under `agents/<name>.md`.
+`claude-shared` ships as a single Claude Code plugin named **`nolte-shared`**. The plugin manifest lives at `.claude-plugin/plugin.json` and the marketplace descriptor at `.claude-plugin/marketplace.json`. Skills live under `skills/<name>/`, agents under `agents/<name>.md`.
 
 ## Prerequisites
 
@@ -46,7 +46,7 @@ Skills from the plugin are invocable under their namespace:
 
 ## Work on the plugin itself (dogfooding)
 
-When developing inside the `claude-shared` repo, launch Claude Code with the plugin pointing at the repo root so skills are discovered without duplicating files:
+When you develop inside the `claude-shared` repo, point Claude Code at the repo root. Skills are discovered in place, without copying files:
 
 ```bash
 claude --plugin-dir .

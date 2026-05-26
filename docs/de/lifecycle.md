@@ -91,7 +91,7 @@ Einträge mit **(A)** sind Agents; alles andere sind Skills.
 
 ### 1 Vision
 
-Die Mission rahmt das gesamte Vorhaben ein: wem das Projekt dient, was als Erfolg gilt, wann das messbar ist. Diese Phase wird einmal beim Projektstart durchlaufen und bei MVP-Status-Übergängen erneut aufgesucht.
+Die Mission rahmt das gesamte Vorhaben ein: Wem dient das Projekt? Was gilt als Erfolg? Wann ist Erfolg messbar? Diese Phase wird einmal beim Projektstart durchlaufen und bei MVP-Status-Übergängen erneut aufgesucht.
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|

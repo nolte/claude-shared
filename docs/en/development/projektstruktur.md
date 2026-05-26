@@ -45,6 +45,8 @@ agents/                      # reusable sub-agent definitions
 
 ## What goes where
 
+The table below maps each kind of content to its location on disk:
+
 | Content | Location |
 |---------|----------|
 | Plugin manifest | `.claude-plugin/plugin.json` |
@@ -57,6 +59,8 @@ agents/                      # reusable sub-agent definitions
 | User documentation | `docs/<lang>/…` |
 
 ## Languages
+
+Three language conventions apply across the repository:
 
 - **Skill and agent content**: English (token efficiency; the skills/agents may still instruct Claude to respond to the user in the user's language).
 - **Specifications**: canonical EN, translation DE, structurally in sync.
