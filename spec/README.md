@@ -29,6 +29,7 @@ Canonical language: `en` · Translations: `de`
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | 2026-04-23 |
 | project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | unversioned |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | unversioned |
+| project | diagram-opportunity | Diagram Opportunities in Documentation Prose | Diagramm-Vorschläge in Dokumentations-Prosa | draft | unversioned |
 | project | docs-audience-tracks | Documentation Audience Tracks | Dokumentations-Zielgruppen-Spuren | draft | unversioned |
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | unversioned |
 | project | docs-multilingual-authoring | Multilingual Documentation Authoring | Mehrsprachige Dokumentations-Autorenschaft | draft | unversioned |
