@@ -1,0 +1,83 @@
+{
+  "operation": "audit",
+  "operation_version": "1",
+  "ran_at": "2026-05-26T17:58:00Z",
+  "severity_floor": "suggestion",
+  "audience_artefact_path": "AUDIENCES.md",
+  "repository": "claude-shared",
+  "worktree": ".claude/worktrees/lektorat-audit-docs-readme",
+  "branch": "worktree-lektorat-audit-docs-readme",
+  "resolved_target_set": {
+    "total_files": 33,
+    "de_files": [
+      "docs/de/concepts/agents/index.md",
+      "docs/de/concepts/skills/index.md",
+      "docs/de/concepts/skills/skill-management.md",
+      "docs/de/concepts/skills/spec.md",
+      "docs/de/development/beitragen.md",
+      "docs/de/development/index.md",
+      "docs/de/development/projektstruktur.md",
+      "docs/de/getting-started/index.md",
+      "docs/de/getting-started/installation.md",
+      "docs/de/getting-started/nutzung.md",
+      "docs/de/index.md",
+      "docs/de/lifecycle.md",
+      "docs/de/planning-suite.md",
+      "docs/de/specs/agent-management.md",
+      "docs/de/specs/index.md",
+      "docs/de/specs/skill-management.md"
+    ],
+    "en_files": [
+      "docs/en/concepts/agents/index.md",
+      "docs/en/concepts/skills/index.md",
+      "docs/en/concepts/skills/skill-management.md",
+      "docs/en/concepts/skills/spec.md",
+      "docs/en/development/beitragen.md",
+      "docs/en/development/index.md",
+      "docs/en/development/projektstruktur.md",
+      "docs/en/getting-started/index.md",
+      "docs/en/getting-started/installation.md",
+      "docs/en/getting-started/nutzung.md",
+      "docs/en/index.md",
+      "docs/en/lifecycle.md",
+      "docs/en/planning-suite.md",
+      "docs/en/specs/agent-management.md",
+      "docs/en/specs/index.md",
+      "docs/en/specs/skill-management.md",
+      "README.md"
+    ]
+  },
+  "user_supplied_options": {
+    "scope": ["docs/de/", "docs/en/", "README.md"],
+    "operation": "audit"
+  },
+  "excluded_from_scope": {
+    "rationale": "Generated mirror pages (frontmatter last_updated: generated) and literate-nav SUMMARY.md files are excluded per the spec's prohibition on lektoring source-of-truth-derived artefacts (the underlying SKILL.md / agents/*.md files are themselves excluded per Hard rules).",
+    "patterns": [
+      "docs/<lang>/skills/nolte-shared/*.md",
+      "docs/<lang>/agents/nolte-shared/*.md",
+      "docs/<lang>/skills/SUMMARY.md",
+      "docs/<lang>/agents/SUMMARY.md",
+      "docs/<lang>/tags.md"
+    ],
+    "excluded_count": 128
+  },
+  "totals": {
+    "findings": 37,
+    "by_severity": {
+      "critical": 5,
+      "warning": 23,
+      "suggestion": 9
+    },
+    "by_dimension": {
+      "D1": 10,
+      "D2": 3,
+      "D3": 22,
+      "D4": 2,
+      "D5": 0
+    },
+    "inventory_findings": 0,
+    "files_with_findings": 19,
+    "files_clean": 14
+  }
+}
