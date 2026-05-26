@@ -49,3 +49,10 @@ Use `/reload-plugins` inside the session to pick up changes without restarting.
 - Keep `CLAUDE.md`, `spec/`, and the plugin manifest in sync with what the repo actually ships.
 - Never copy plugin-owned skills into a consumer's `.claude/skills/` — distribution happens via the plugin marketplace.
 - All generated configuration files (`.github/*.yml`, `Taskfile.yml`, workflow YAML) are written in English for portfolio consistency, regardless of the language used in conversation.
+
+## Parallel working copies (worktrees)
+
+`spec/project/parallel-working-copies/` is the single source of truth. Two operational reminders for any session running inside this repository:
+
+- Create worktrees under `~/repos/.worktrees/claude-shared/<slug>/` (or, for harness-/agent-initiated worktrees, `~/repos/.worktrees/claude-shared/agents/<slug>/`). Never nest a worktree under `.claude/worktrees/` — the spec's §Path layout forbids it explicitly.
+- Before the first `Agent({isolation: "worktree"})` call in a session, set `CLAUDE_AGENT_WORKTREE_ROOT` (or the equivalent Claude Code settings hook) to a spec-conformant root if the harness default would otherwise materialize the worktree under `.claude/worktrees/`.
