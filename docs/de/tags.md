@@ -20,6 +20,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `audit`
 
 - [dependency-audit-scanner](agents/nolte-shared/dependency-audit-scanner.md) — nolte-shared
+- [diagram-opportunity-reviewer](agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [docs-freshness-checker](agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [lektorat-scanner](agents/nolte-shared/lektorat-scanner.md) — nolte-shared
@@ -96,6 +97,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [audience-review](agents/nolte-shared/audience-review.md) — nolte-shared
 - [claude-plugin-developer](agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
+- [diagram-opportunity-reviewer](agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [mermaid-diagram-reviewer](agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](agents/nolte-shared/project-structure-reviewer.md) — nolte-shared

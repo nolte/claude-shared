@@ -19,6 +19,7 @@ last_updated: generated
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 5 Review
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)
+    * [diagram-opportunity-reviewer](nolte-shared/diagram-opportunity-reviewer.md)
     * [lektorat-scanner](nolte-shared/lektorat-scanner.md)
     * [portfolio-inflight-collector](nolte-shared/portfolio-inflight-collector.md)
     * [portfolio-manifest-collector](nolte-shared/portfolio-manifest-collector.md)
