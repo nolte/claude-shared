@@ -3,6 +3,21 @@ name: release-notes-curate
 description: "Augments the open release-drafter draft on develop with project-context-aware sections per the canonical-language file under spec/project/release-skill-layer/ §\"Skill A — Draft notes curation\". Reads the project's audience artefact, derives a section bundle from the detected project type, wraps the augmentation in stable HTML-comment markers so re-runs update in place, and writes the body back via `gh release edit` for a release tag. Invoke when the user asks to \"curate the release notes\", \"augment the draft release with project context\", \"shape the release notes for this repo\", or equivalent German-language requests. Don't use to publish the release (use `release-publish-trigger`), to identify audiences (use `audience-identify`), to draft notes from scratch (use the `audience-doc-author` agent), or to scaffold issue / PR templates (use `github-issue-templates-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [release]
 phase: close-release
+summary: "Augments the open release-drafter draft on develop with project-context-aware sections via gh release edit."
+summary_de: "Reichert den offenen release-drafter-Draft auf develop mit projektkontext-bewussten Sektionen via gh release edit an."
+use_when:
+  - "you want to curate the release notes for the open release-drafter draft"
+  - "you want to augment the draft release with project-context sections"
+  - "you want to shape the release notes for this repo's audiences"
+dont_use_when:
+  - situation: "You want to actually publish the release rather than augment the draft"
+    alternative: release-publish-trigger
+  - situation: "You want to identify audiences first"
+    alternative: audience-identify
+see_also:
+  - release-publish-trigger
+  - audience-identify
+  - audience-doc-author
 resumable: true
 ---
 

@@ -8,6 +8,8 @@ last_updated: generated
 
 # audience-doc-author
 
+> Verfasst oder überarbeitet audience-zugeschnittene Doku (README, Release-Notes, MkDocs-Seiten) gegen ein vorhandenes Audience-Artefakt.
+
 _Draft or refine an audience-tailored documentation artifact (README, release notes, MkDocs site pages, or any other doc type whose governing spec lives under spec/project/, for example readme-structure or mkdocs-structure) against an existing audience artifact produced by the nolte-shared:audience-identify skill. Use when the user asks to write, draft, or refactor a doc for specific audiences. Also handles equivalent German-language requests. Don't use without an existing audience artifact (dispatch audience-identify first); don't use for plugin skills or agents (that's claude-plugin-developer); don't use for spec authoring (that's the nolte-shared:spec skill); don't use as entry point for a greenfield README — use readme-structure-apply first, which then dispatches this agent for prose. Returns the drafted or edited document, an audience-to-content coverage map, any unresolved gaps, and a short caller checklist._
 
 - **Plugin:** `nolte-shared`
@@ -15,6 +17,25 @@ _Draft or refine an audience-tailored documentation artifact (README, release no
 - **Distribution:** `plugin`
 - **Tags:** `audience`, `prose`
 - **Quelle:** [agents/audience-doc-author.md](https://github.com/nolte/claude-shared/blob/main/agents/audience-doc-author.md)
+
+## Anwenden wenn
+
+- you want to draft a doc tailored to specific audiences
+- you want to refactor an existing doc to close audience gaps
+- you want spec-conforming prose for a doc-type with a governing spec
+
+## Nicht anwenden wenn
+
+- **No audience artifact exists yet for the target context** → [`audience-identify`](../../skills/nolte-shared/audience-identify.md)
+- **You want to author a plugin skill or agent** → [`claude-plugin-developer`](claude-plugin-developer.md)
+- **You want to author a spec rather than docs** → [`spec`](../../skills/nolte-shared/spec.md)
+- **You want to scaffold a greenfield README** → [`readme-structure-apply`](../../skills/nolte-shared/readme-structure-apply.md)
+
+## Siehe auch
+
+- [`audience-identify`](../../skills/nolte-shared/audience-identify.md)
+- [`readme-structure-apply`](../../skills/nolte-shared/readme-structure-apply.md)
+- [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 
 ---
 
@@ -50,11 +71,11 @@ You **do**:
 
 You **don't**:
 
-- Modify or extend the audience artifact (that's the `audience-identify` skill's job—stop and hand the gap back to the caller)
+- Modify or extend the audience artifact (that's the [`audience-identify`](../../skills/nolte-shared/audience-identify.md) skill's job—stop and hand the gap back to the caller)
 - Author documentation whose doc type has no governing spec under `spec/project/` (stop and ask the caller to author the spec first or to point you at an out-of-repo spec to apply)
 - Invent audiences, expectations, or interaction surfaces that aren't in the supplied audience artifact
 - Author or edit specs under `spec/` (delegate to `nolte-shared:spec`)
-- Author Claude Code plugin skills or agents (delegate to `claude-plugin-developer`)
+- Author Claude Code plugin skills or agents (delegate to [`claude-plugin-developer`](claude-plugin-developer.md))
 - Call the `Skill` tool or dispatch sibling agents (forbidden by `spec/claude/skill-vs-agent/en.md`)
 - Bump plugin or project versions, commit, push, or open pull requests—those are the caller's follow-ups
 
@@ -77,7 +98,7 @@ Keep the report tight. No prose summary of what the specs say—the caller has t
 
 Before any writing, confirm all of the following. If any precondition fails, stop and return a short report naming the exact missing input—don't improvise around it.
 
-1. **Audience artifact path is supplied and readable.** Read it. Verify it conforms to `spec/project/audience-identification/` at a glance: bounded context declared, all five relationship categories addressed or marked `none`, every entry tagged `confirmed` or `assumed`. If the file is missing categories or `confirmed` or `assumed` tags, stop—the fix belongs in `audience-identify`, not here.
+1. **Audience artifact path is supplied and readable.** Read it. Verify it conforms to `spec/project/audience-identification/` at a glance: bounded context declared, all five relationship categories addressed or marked `none`, every entry tagged `confirmed` or `assumed`. If the file is missing categories or `confirmed` or `assumed` tags, stop—the fix belongs in [`audience-identify`](../../skills/nolte-shared/audience-identify.md), not here.
 2. **Target doc type is named** (for example "README," "release notes," "migration guide"). If the caller hasn't declared it, stop and ask—don't guess from context.
 3. **Governing doc-type spec is present.** Glob under `spec/project/` for a spec that covers the declared doc type. Hits for current portfolio-known types:
    - README → `spec/project/readme-structure/`

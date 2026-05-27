@@ -8,12 +8,33 @@ last_updated: generated
 
 # pull-request-create
 
+> Öffnet einen spec-konformen Draft-GitHub-Pull-Request auf dem aktuellen Feature-Branch.
+
 _Create a GitHub pull request that conforms to the repository's pull-request-workflow spec. Invoke when the user asks to open a PR, create a pull request, draft a PR description, create a merge request, or push the branch and open a PR. Also handles equivalent German-language requests. Verifies the feature branch is synchronized with develop, composes a Conventional-Commits title and the five-section body (Summary, Changes, Linked issues, Testing, Risk / rollout notes), autolinks any touched spec files under spec/, confirms with the user, and runs the GitHub CLI PR creation command. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
 - **Tags:** `pull-request`
 - **Quelle:** [skills/pull-request-create/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/pull-request-create/SKILL.md)
+
+## Anwenden wenn
+
+- you want to open a PR on the current branch
+- you want to draft a PR description for already-committed work
+- you want to push the feature branch and immediately open a PR against develop
+
+## Nicht anwenden wenn
+
+- **You want to land an already-open draft PR on develop** → [`pull-request-merge`](pull-request-merge.md)
+
+## Siehe auch
+
+- [`pull-request-merge`](pull-request-merge.md)
+
+## Beispiele
+
+- **Prompt:** Open a PR for this branch
+  - **Ergebnis:** Draft PR on develop with Conventional-Commits title and the five-section body.
 
 ---
 

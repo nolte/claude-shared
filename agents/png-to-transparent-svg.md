@@ -6,6 +6,11 @@ tools: Read, Bash, Glob
 model: sonnet
 tags: [scaffolding]
 phase: cross-cutting
+summary: "Converts a PNG with fake-transparency background (checkerboard or single colour) into a clean SVG with real alpha."
+summary_de: "Konvertiert ein PNG mit Fake-Transparency-Hintergrund (Checkerboard oder Einfarbig) in ein sauberes SVG mit echtem Alpha."
+use_when:
+  - "you want to convert a PNG with baked-in checkerboard background to a transparent SVG"
+  - "you want to vectorise an AI-generated icon and drop the fake background"
 ---
 
 # PNG to Transparent SVG

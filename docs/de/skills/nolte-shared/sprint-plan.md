@@ -8,29 +8,50 @@ last_updated: generated
 
 # sprint-plan
 
-_Create a new sprint file under project/sprints/ per the project sprint spec. Invoke when the user asks to plan a sprint, open a sprint, draft the next sprint, schedule a sprint, or pull roadmap items into a sprint. Also handles equivalent German-language requests. Resolves the next monotonic sprint number, walks the value-delivery contract (rejects operator-internal verbs in `value_statement`), pulls in roadmap items whose `target_sprint` matches, populates the `features` list (delegating to `feature-decompose` when decompositions are missing), names the value-verifying feature, and writes the file with `status: planned`. Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Erstellt eine neue Sprint-Datei unter project/sprints/ mit Value-Statement, Features und value-verifizierendem Akzeptanzkriterium.
+
+_Create a new sprint file under project/sprints/ per the project sprint spec. Invoke when the user asks to plan a sprint, open a sprint, draft the next sprint, schedule a sprint, or pull roadmap items into a sprint. Also handles equivalent German-language requests. Resolves the next monotonic sprint number, walks the value-delivery contract (rejects operator-internal verbs in `value_statement`), pulls in roadmap items whose `target_sprint` matches, populates the `features` list (delegating to [`feature-decompose`](feature-decompose.md) when decompositions are missing), names the value-verifying feature, and writes the file with `status: planned`. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/sprint-plan/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/sprint-plan/SKILL.md)
 
+## Anwenden wenn
+
+- you want to plan or open a new sprint
+- you want to draft the next sprint with roadmap items pulled in
+- you want to schedule a sprint and populate the features list
+
+## Nicht anwenden wenn
+
+- **You want to drive an already-planned sprint day-to-day** → [`sprint-execute`](sprint-execute.md)
+- **You want to close an active sprint at review** → [`sprint-review`](sprint-review.md)
+- **You want to decompose a roadmap item into features first** → [`feature-decompose`](feature-decompose.md)
+
+## Siehe auch
+
+- [`sprint-execute`](sprint-execute.md)
+- [`sprint-review`](sprint-review.md)
+- [`sprint-readiness-reviewer`](../../agents/nolte-shared/sprint-readiness-reviewer.md)
+- [`feature-decompose`](feature-decompose.md)
+
 ---
 
 ## Sprint Plan
 
-Creates `project/sprints/<NNNN>-<slug>.md` per `spec/project/sprint/<canonical_language>.md`. This skill owns the `planned` state of the sprint lifecycle: it resolves the sprint number, captures the `value_statement` from the operator, pins the value-verifying feature, and writes the planned-state markdown. It deliberately doesn't activate the sprint or move features—`sprint-execute` owns those transitions.
+Creates `project/sprints/<NNNN>-<slug>.md` per `spec/project/sprint/<canonical_language>.md`. This skill owns the `planned` state of the sprint lifecycle: it resolves the sprint number, captures the `value_statement` from the operator, pins the value-verifying feature, and writes the planned-state markdown. It deliberately doesn't activate the sprint or move features—[`sprint-execute`](sprint-execute.md) owns those transitions.
 
 ### Why this is a skill, not an agent
 
 - **Mid-flow user dialogue is core** — the value statement is rejected if it begins with operator-internal verbs (`refactor`, `migrate`, …); resolving a rejection means a back-and-forth with the user, which an agent's structured-report shape can't carry.
 - **Output flows back into the main conversation** — the drafted sprint markdown, the resolved roadmap-item list, and the named value-verifying feature all live in the user's working context; isolating them behind an agent boundary would obscure the iterative review.
-- **Orchestrator that may dispatch other skills** — when a roadmap item lacks a feature decomposition, this skill reports the gap (and may chain `feature-decompose` per the skill-vs-agent hybrid pattern); orchestrators default to skill form.
+- **Orchestrator that may dispatch other skills** — when a roadmap item lacks a feature decomposition, this skill reports the gap (and may chain [`feature-decompose`](feature-decompose.md) per the skill-vs-agent hybrid pattern); orchestrators default to skill form.
 - Counter-dimension considered: a tool-restricted agent could perform the next-number resolution and the YAML write cleanly, but the load-bearing dimension is the user-facing rejection / iteration loop on `value_statement` — skill wins.
 
 ### User-language policy
 
-Detect the user's language and respond in it. The sprint markdown itself is written in the project's primary language (typically EN); the `value_statement`, `## Goal`, and other body content stay in the project's primary language so consuming skills (`sprint-execute`, `sprint-review`) read a single deterministic surface. Frontmatter keys, lifecycle tokens, and feature / roadmap IDs are always English.
+Detect the user's language and respond in it. The sprint markdown itself is written in the project's primary language (typically EN); the `value_statement`, `## Goal`, and other body content stay in the project's primary language so consuming skills ([`sprint-execute`](sprint-execute.md), [`sprint-review`](sprint-review.md)) read a single deterministic surface. Frontmatter keys, lifecycle tokens, and feature / roadmap IDs are always English.
 
 ### Preconditions
 
@@ -75,7 +96,7 @@ An empty `roadmap_items` list is permitted only for hardening sprints whose feat
 For each roadmap item collected in step 4, walk `project/features/` and find features whose frontmatter `roadmap_item` matches and whose `sprint` is null or already equals the new sprint's number. Two outcomes per roadmap item:
 
 - **Features exist** — collect their `id` values into the `features` list candidate.
-- **No features exist** — surface the gap to the user and offer to dispatch `feature-decompose` (the skill that decomposes a roadmap item into one or more features per `spec/project/feature/`). Don't fabricate features inline; if the user declines decomposition, drop the roadmap item back out of the sprint and move on.
+- **No features exist** — surface the gap to the user and offer to dispatch [`feature-decompose`](feature-decompose.md) (the skill that decomposes a roadmap item into one or more features per `spec/project/feature/`). Don't fabricate features inline; if the user declines decomposition, drop the roadmap item back out of the sprint and move on.
 
 After confirming the final feature list with the user, set each chosen feature's `sprint` frontmatter field to the new sprint number in the same write operation that adds the feature's `id` to the sprint's `features` list. The bidirectional invariant (feature side ↔ sprint side) is the canonical check per `spec/project/feature/` §Frontmatter schema; partial updates are forbidden.
 
@@ -84,7 +105,7 @@ After confirming the final feature list with the user, set each chosen feature's
 Exactly one feature in the sprint **MUST** carry a non-null `verifies_sprint_value: acceptance-<n>` frontmatter field per `spec/project/sprint/` §Value-delivery contract. Walk the candidate features:
 
 - If exactly one feature already declares `verifies_sprint_value` and its named acceptance criterion plausibly verifies the sprint's `value_statement`, confirm with the user and keep it.
-- If zero features declare it, ask the user to pick the verifying feature plus the specific `acceptance-<n>` identifier on that feature, and write the field. The `feature-decompose` skill is the canonical write authority at decomposition time; `sprint-plan` is the canonical write authority during planning per `spec/project/feature/` §Frontmatter schema.
+- If zero features declare it, ask the user to pick the verifying feature plus the specific `acceptance-<n>` identifier on that feature, and write the field. The [`feature-decompose`](feature-decompose.md) skill is the canonical write authority at decomposition time; `sprint-plan` is the canonical write authority during planning per `spec/project/feature/` §Frontmatter schema.
 - If more than one feature declares it, the constraint is violated; stop and ask the user to resolve down to exactly one before continuing.
 
 #### 7. Render the sprint file
@@ -119,10 +140,10 @@ features: [<F-a>, <F-b>]
 
 ### Review notes
 
-_Populated by `sprint-review` at closure._
+_Populated by [`sprint-review`](sprint-review.md) at closure._
 ```
 
-The `## Features` body bullet list **MUST** mirror the `features` frontmatter list exactly; `sprint-execute` enforces the invariant on every later mutation, but the initial write must already be consistent.
+The `## Features` body bullet list **MUST** mirror the `features` frontmatter list exactly; [`sprint-execute`](sprint-execute.md) enforces the invariant on every later mutation, but the initial write must already be consistent.
 
 #### 8. Present and confirm
 
@@ -137,16 +158,16 @@ Only write the file once the user approves. Report back: the path written, the s
 ### Gotchas
 
 - **`value_statement` must avoid operator-internal verbs.** "Refactor the release pipeline" reads as internal work; "Operators run a single command to ship a release" is the user-visible value the spec demands. The skill's heuristic flags imperative-form verbs that don't name a user benefit and asks the operator to rephrase before write.
-- **The `## Features` body list and the `features` frontmatter array MUST stay in lockstep.** `sprint-execute` enforces the bidirectional invariant later, but this skill creates the initial pair; an asymmetric write (only frontmatter, only body) leaves the sprint malformed and blocks subsequent `sprint-execute` runs.
+- **The `## Features` body list and the `features` frontmatter array MUST stay in lockstep.** [`sprint-execute`](sprint-execute.md) enforces the bidirectional invariant later, but this skill creates the initial pair; an asymmetric write (only frontmatter, only body) leaves the sprint malformed and blocks subsequent [`sprint-execute`](sprint-execute.md) runs.
 - **`verifies_sprint_value` lives on a feature, not on the sprint.** The sprint frontmatter names which feature carries the verifier (`verifies_sprint_value: F-<n>:acceptance-<m>`); the feature carries the actual `verifies_sprint_value: acceptance-<m>` field per the feature spec. Authoring the verifier in the sprint frontmatter without setting it on the feature side leaves the cross-reference half-broken.
 - **Sprint numbers are monotonic, never reused.** The skill resolves the next sprint number by reading the highest existing `<NNNN>` under `project/sprints/` plus the highest deleted number from `git log -- project/sprints/`. A retired sprint number isn't available for reuse, even after a `cancelled` sprint.
-- **At most one sprint is `active` at a time.** Creating a `planned` sprint while another is `active` is fine (planned sprints are queue items, not active commitments). The at-most-one invariant only applies to `status: active`; this skill writes `status: planned` and lets `sprint-execute` perform the `planned → active` promotion when the operator starts the first feature.
+- **At most one sprint is `active` at a time.** Creating a `planned` sprint while another is `active` is fine (planned sprints are queue items, not active commitments). The at-most-one invariant only applies to `status: active`; this skill writes `status: planned` and lets [`sprint-execute`](sprint-execute.md) perform the `planned → active` promotion when the operator starts the first feature.
 
 ### Examples
 
 - Read `examples/01-create-sprint-from-roadmap.md` when creating the first sprint by selecting features from the roadmap queue.
 - Read `examples/02-reject-operator-internal-value.md` when the user proposes a `value_statement` that starts with an operator-internal verb and the skill must refuse.
-- Read `examples/03-dispatch-feature-decompose.md` when a roadmap item lacks a feature file and the skill dispatches `feature-decompose` before continuing.
+- Read `examples/03-dispatch-feature-decompose.md` when a roadmap item lacks a feature file and the skill dispatches [`feature-decompose`](feature-decompose.md) before continuing.
 
 ### Resumability
 
@@ -155,10 +176,10 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 ### Hard rules
 
 - **Never** reuse a sprint number from a `cancelled` or `closed` sprint. Numbers are strictly monotonic per `spec/project/sprint/` §Directory layout and file shape.
-- **Never** write a sprint with `status` other than `planned`. Activation is `sprint-execute`'s authority.
+- **Never** write a sprint with `status` other than `planned`. Activation is [`sprint-execute`](sprint-execute.md)'s authority.
 - **Never** invent roadmap items, features, or audiences inline. Missing decompositions are reported as gaps; missing audiences are a `roadmap`-side concern, not a sprint-side fix.
 - **Never** persist a `value_statement` that begins with an operator-internal verb without an explicit user-supplied override rationale recorded in `## Goal`.
 - **Never** write a `features` frontmatter list that diverges from the `## Features` body bullet list at initial creation.
 - **Never** set `verifies_sprint_value` on more than one feature in the sprint, or leave it unset on every feature when the sprint is intended to close eventually.
-- **Never** edit any sprint other than the one being planned in this run; lifecycle transitions on existing sprints are `sprint-execute` and `sprint-review` territory.
+- **Never** edit any sprint other than the one being planned in this run; lifecycle transitions on existing sprints are [`sprint-execute`](sprint-execute.md) and [`sprint-review`](sprint-review.md) territory.
 - When `spec/project/sprint/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.

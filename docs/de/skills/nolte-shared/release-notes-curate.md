@@ -8,12 +8,31 @@ last_updated: generated
 
 # release-notes-curate
 
-_Augments the open release-drafter draft on develop with project-context-aware sections per the canonical-language file under spec/project/release-skill-layer/ §\"Skill A — Draft notes curation\". Reads the project's audience artefact, derives a section bundle from the detected project type, wraps the augmentation in stable HTML-comment markers so re-runs update in place, and writes the body back via `gh release edit` for a release tag. Invoke when the user asks to \"curate the release notes\", \"augment the draft release with project context\", \"shape the release notes for this repo\", or equivalent German-language requests. Don't use to publish the release (use `release-publish-trigger`), to identify audiences (use `audience-identify`), to draft notes from scratch (use the `audience-doc-author` agent), or to scaffold issue / PR templates (use `github-issue-templates-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Reichert den offenen release-drafter-Draft auf develop mit projektkontext-bewussten Sektionen via gh release edit an.
+
+_Augments the open release-drafter draft on develop with project-context-aware sections per the canonical-language file under spec/project/release-skill-layer/ §\"Skill A — Draft notes curation\". Reads the project's audience artefact, derives a section bundle from the detected project type, wraps the augmentation in stable HTML-comment markers so re-runs update in place, and writes the body back via `gh release edit` for a release tag. Invoke when the user asks to \"curate the release notes\", \"augment the draft release with project context\", \"shape the release notes for this repo\", or equivalent German-language requests. Don't use to publish the release (use [`release-publish-trigger`](release-publish-trigger.md)), to identify audiences (use [`audience-identify`](audience-identify.md)), to draft notes from scratch (use the [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) agent), or to scaffold issue / PR templates (use [`github-issue-templates-apply`](github-issue-templates-apply.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 7 Close & Release (`close-release`)
 - **Tags:** `release`
 - **Quelle:** [skills/release-notes-curate/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/release-notes-curate/SKILL.md)
+
+## Anwenden wenn
+
+- you want to curate the release notes for the open release-drafter draft
+- you want to augment the draft release with project-context sections
+- you want to shape the release notes for this repo's audiences
+
+## Nicht anwenden wenn
+
+- **You want to actually publish the release rather than augment the draft** → [`release-publish-trigger`](release-publish-trigger.md)
+- **You want to identify audiences first** → [`audience-identify`](audience-identify.md)
+
+## Siehe auch
+
+- [`release-publish-trigger`](release-publish-trigger.md)
+- [`audience-identify`](audience-identify.md)
+- [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
 
 ---
 
@@ -25,7 +44,7 @@ Operationalises `spec/project/release-skill-layer/<canonical_language>.md` §"Sk
 
 - **Per-write user approval is the contract** — the spec mandates a disclose-and-confirm gate before any `gh release edit --notes`, because the body is externally visible on the GitHub release page; an agent's fire-and-forget shape would lose that gate.
 - **Output flows back into the main conversation** — the project-type classification, the section bundle preview, and the diff between existing and augmented body all surface in the conversation so the operator can correct the augmentation before commit.
-- **Orchestrator role** — when no audience artefact exists, this skill dispatches `audience-identify` first; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
+- **Orchestrator role** — when no audience artefact exists, this skill dispatches [`audience-identify`](audience-identify.md) first; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
 - Counter-dimension considered: a narrow Markdown-formatter agent could specialise on section composition, but the load-bearing dimension is the multi-step approval dialogue (project type → audience → bundle → diff → write), not the prose mechanics — skill wins.
 
 ### User-language policy
@@ -56,7 +75,7 @@ Operations 4 to 6 form a stacked Plan-validate-execute cycle: Operation 4 self-v
 
 #### 2. Detect project type
 
-Walk the same six derivation signals used by `github-issue-templates-apply`, in order; stop at the first match. Read the files via the standard read tools — never via filename heuristics alone:
+Walk the same six derivation signals used by [`github-issue-templates-apply`](github-issue-templates-apply.md), in order; stop at the first match. Read the files via the standard read tools — never via filename heuristics alone:
 
 1. **Claude Code plugin** — `.claude-plugin/plugin.json` exists; top-level `skills/` and / or `agents/` folder present.
 2. **Python application** — `pyproject.toml` declares `[project.scripts]` (or equivalent application entry point), no library distribution metadata.
@@ -75,7 +94,7 @@ The spec requires that every section the skill writes traces back to an audience
 
 - Grep the repo for an audience artefact: `AUDIENCES.md` at the root, an "Audiences" or "Intended consumers" section in `README.md`, or a dedicated `docs/release-audiences.md`.
 - If found, read it and identify the primary audiences plus the content dimensions each one needs (per `release-notes-audience-analysis`).
-- If not found, dispatch the `audience-identify` skill to produce one before continuing. The skill stops, hands control to `audience-identify`, and resumes when the artefact lands.
+- If not found, dispatch the [`audience-identify`](audience-identify.md) skill to produce one before continuing. The skill stops, hands control to [`audience-identify`](audience-identify.md), and resumes when the artefact lands.
 
 The skill **MUST NOT** invent audience entries inline. Missing audiences become an `## Open questions` note inside the augmentation block, not fabricated content.
 
@@ -86,7 +105,7 @@ Read `references/project-bundles.md` for the canonical section bundle per projec
 For each bundle section, walk the commits since the previous release tag (`git log <prev-tag>..<draft-target-sha>`) and assemble the per-section content:
 
 - **Claude Code plugin** — diff `skills/`, `agents/`, `spec/` paths between the previous release tag and the draft target SHA; identify breaking changes by inspecting renamed slash commands (description-line changes), removed skills / agents, and plugin manifest version bumps.
-- **Python application** — diff `pyproject.toml` for runtime / dependency bumps, walk hardware-touching paths if the application matches the hardware-application heuristic (per `github-issue-templates-apply` references).
+- **Python application** — diff `pyproject.toml` for runtime / dependency bumps, walk hardware-touching paths if the application matches the hardware-application heuristic (per [`github-issue-templates-apply`](github-issue-templates-apply.md) references).
 - **Python library / Node / TypeScript** — diff API entry points (public modules, exported symbols), inspect `pyproject.toml` / `package.json` for major-version bumps.
 - **CLI tool** — diff command-line definitions in `pyproject.toml [project.scripts]`, `package.json bin`, or `Cargo.toml [[bin]]`.
 - **Documentation-only repo** — diff `docs/` for path moves, removals, new translations.
@@ -143,7 +162,7 @@ Block the write until the operator confirms.
 On confirmation:
 
 - Write the augmented body back via `gh release edit <tag> --notes "<full-body>"` (use `--notes-file <path>` with a temp file when the body crosses the shell quoting threshold).
-- **Never** call `gh release edit --draft=false` from this skill — that path belongs to `release-publish-trigger` and `release-publish.yml`.
+- **Never** call `gh release edit --draft=false` from this skill — that path belongs to [`release-publish-trigger`](release-publish-trigger.md) and `release-publish.yml`.
 - Re-read the draft body via `gh release view <tag> --json body` and verify exactly one `<!-- release-skill-layer:project-context-start -->` and one `<!-- release-skill-layer:project-context-end -->` marker remain. Refuse to declare success otherwise.
 
 #### 7. Re-run drift detection

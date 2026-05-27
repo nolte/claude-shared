@@ -8,12 +8,32 @@ last_updated: generated
 
 # spec-drift-audit
 
+> Auditiert jede Spec gegen die Repo-Implementierung und erzeugt ein traceable Spec-Drift-Audit-Artefakt.
+
 _Audits every spec under spec/<topic>/<slug>/ against the repository implementation (source code, config, workflows, docs) and produces a traceable audit artifact per spec/project/spec-drift-audit/. Invoke when the user asks to "run the quarterly spec-drift audit", "check spec versus implementation", "spec drift reconciliation", "audit all specs against the repo", "find spec vs code drift", "open the next quarterly audit", or when a spec changes and requires a matching partial audit. Also handles equivalent German-language requests. Do NOT use for continuous CI health checks (use workflow-health-triage), single-spec readiness review (use spec-readiness-reviewer agent), or feature-level code drift on new features (use feature-consistency-reviewer agent within feature-decompose scope). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
 - **Tags:** `audit`
 - **Quelle:** [skills/spec-drift-audit/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/spec-drift-audit/SKILL.md)
+
+## Anwenden wenn
+
+- you want to run the quarterly spec-drift audit
+- you want to reconcile a spec against the actual implementation in the code
+- you want to open a partial audit after a spec change
+
+## Nicht anwenden wenn
+
+- **You want continuous CI health checks rather than spec drift** → [`workflow-health-triage`](workflow-health-triage.md)
+- **You want a single-spec readiness audit before promotion** → [`spec-readiness-reviewer`](../../agents/nolte-shared/spec-readiness-reviewer.md)
+- **You want feature-level drift on new features** → [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md)
+
+## Siehe auch
+
+- [`spec-readiness-reviewer`](../../agents/nolte-shared/spec-readiness-reviewer.md)
+- [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md)
+- [`workflow-health-triage`](workflow-health-triage.md)
 
 ---
 
@@ -25,7 +45,7 @@ Operationalises `spec/project/spec-drift-audit/<canonical_language>.md` — reco
 
 - **Mid-flow interactivity** — the user decides per finding: adjust the implementation, adjust the spec, or flag as an Open Question. An agent's fire-and-forget contract loses that deliberation loop.
 - **Persistent on-disk output** — the audit artifact under `docs/audits/YYYY-Q<n>.md` (or a GitHub issue) must survive past the current turn and be worked off incrementally; skills own persistent artifacts, agents return ephemeral reports.
-- **Orchestration role** — the audit dispatches `project-structure-apply` and `vocab-drift-audit` as partial auditors in the same session; the skill-orchestrates-agent-executes pattern defaults the orchestrator to skill form.
+- **Orchestration role** — the audit dispatches [`project-structure-apply`](project-structure-apply.md) and [`vocab-drift-audit`](vocab-drift-audit.md) as partial auditors in the same session; the skill-orchestrates-agent-executes pattern defaults the orchestrator to skill form.
 - Counter-dimension considered: *context-window load* from reading all specs plus their implementation surfaces could bias toward an agent, but the audit is inherently interactive and scoped per cycle — the user controls which specs are in scope and confirms each finding disposition. Inline execution in the skill form wins.
 
 ### German trigger phrases
@@ -57,8 +77,8 @@ Interactive. Confirm scope and trigger with the user before proceeding.
 2. **Determine the Git revision.** Run `git rev-parse HEAD`; record it as `repo-revision`.
 3. **Collect in-scope specs.** Walk `spec/<topic>/<slug>/<canonical_language>.md` for every file whose `## Requirements` or `## Acceptance Criteria` section is non-empty. `Status: draft` specs are included. For a thematic audit, narrow to the declared topic area — record the narrowing.
 4. **Dispatch partial auditors.** For the implementation surfaces covered by existing skills, delegate and capture their output:
-   - Run `project-structure-apply` (audit mode only) to check `.github/`, `Taskfile.yml`, MkDocs, Renovate, and Probot alignment.
-   - Run `vocab-drift-audit` to check Vale vocabulary against the pinned upstream release.
+   - Run [`project-structure-apply`](project-structure-apply.md) (audit mode only) to check `.github/`, `Taskfile.yml`, MkDocs, Renovate, and Probot alignment.
+   - Run [`vocab-drift-audit`](vocab-drift-audit.md) to check Vale vocabulary against the pinned upstream release.
    - Run `task lint` and record the result.
    Record each tool's name and version (or git SHA) in the artifact's `tools-used` list.
 5. **Per-criterion check.** For each remaining spec criterion not covered by a dispatched tool, evaluate against the implementation: produce one of `pass`, `fail`, `blocked` (tooling missing), or `not-applicable` (with reason). Record the result.
@@ -100,7 +120,7 @@ Read `examples/03-finding-resolution.md` when working off findings via update an
 
 - **`spec/.spec-config.yml` must be read first.** The canonical language for spec paths depends on `canonical_language` in that config. Defaulting to `en` without reading the config silently routes to the wrong language in repos with a different canonical.
 - **`Status: draft` specs are in scope.** The governing spec explicitly includes draft specs in the audit perimeter. Do not skip them.
-- **Partial auditors only cover their slice.** `project-structure-apply` and `vocab-drift-audit` are delegated tools but each covers only one surface. Remaining spec criteria need direct per-criterion evaluation — never assume "dispatched means done".
+- **Partial auditors only cover their slice.** [`project-structure-apply`](project-structure-apply.md) and [`vocab-drift-audit`](vocab-drift-audit.md) are delegated tools but each covers only one surface. Remaining spec criteria need direct per-criterion evaluation — never assume "dispatched means done".
 - **Artifact location is repository-consistent.** If `docs/audits/` already contains prior artifacts, match the existing naming convention rather than inventing a new one. Check for prior artifacts before writing.
 - **Calendar quarter, not rolling.** Q1 = Jan–Mar, Q2 = Apr–Jun, Q3 = Jul–Sep, Q4 = Oct–Dec. A `2026-Q2` audit covers the April–June window regardless of the actual date within the quarter.
 

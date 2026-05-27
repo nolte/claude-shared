@@ -5,6 +5,20 @@ distribution: plugin
 tools: Read, Grep, Glob, Bash
 tags: [review, audit]
 phase: review
+summary: "Read-only prose scanner that flags Markdown passages which would be expressed better as a Mermaid diagram."
+summary_de: "Nur-Lese-Prosa-Scanner, der Markdown-Passagen markiert, die als Mermaid-Diagramm besser ausgedrückt wären."
+use_when:
+  - "you want to review docs for missing-diagram opportunities"
+  - "you want to find prose passages that fit one of the spec's diagram types"
+  - "you want a structured findings JSON of diagram candidates"
+dont_use_when:
+  - situation: "You want to author or apply a Mermaid diagram"
+    alternative: mermaid-diagrams-apply
+  - situation: "You want to audit existing diagrams for spec-conformance"
+    alternative: mermaid-diagram-reviewer
+see_also:
+  - mermaid-diagrams-apply
+  - mermaid-diagram-reviewer
 ---
 
 # Diagram Opportunity Reviewer

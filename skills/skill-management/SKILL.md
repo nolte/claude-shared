@@ -3,6 +3,23 @@ name: skill-management
 description: Author or revise Claude Code skills in the nolte-shared plugin source tree. Invoke when the user asks to create a new skill, scaffold a skill for a given purpose, add a skill to this repo, or revise the authoring shape of an existing skill (rewriting a weak description, adding a Hard rules section, trimming overly long instructions). Also handles equivalent German-language requests. Scaffolds the target skill's folder under skills/ (distribution happens via the plugin mechanism, not via .claude/skills copies) and writes SKILL.md with valid frontmatter. Do NOT use for reviewing or auditing an existing skill against the spec — that produces a persistent, spec-cited review plan and belongs to `skill-review`. Do NOT bump the plugin version in a skill-change PR — `release-automation` owns that via the release workflow. For a full spec-conformant draft of a new skill or agent, this skill chains to claude-plugin-developer after name and purpose decisions. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: design
+summary: "Scaffolds or revises a nolte-shared Claude Code skill folder."
+summary_de: "Scaffoldet oder überarbeitet einen nolte-shared Claude-Code-Skill-Ordner."
+use_when:
+  - "you want to create a new skill in the nolte-shared plugin"
+  - "you want to revise a weak description or restructure an existing skill"
+  - "you want to scaffold SKILL.md with valid frontmatter before writing the body"
+dont_use_when:
+  - situation: "You want to review an existing skill against the spec and emit a review plan"
+    alternative: skill-review
+  - situation: "You want a full spec-conformant draft (skill or agent), not just the scaffold"
+    alternative: claude-plugin-developer
+see_also:
+  - skill-review
+  - claude-plugin-developer
+examples:
+  - prompt: "Create a new skill for X"
+    outcome: "skills/x/SKILL.md scaffolded with valid frontmatter; chained to claude-plugin-developer for the spec-conformant draft."
 resumable: true
 ---
 

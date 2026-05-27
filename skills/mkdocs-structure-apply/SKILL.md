@@ -3,6 +3,25 @@ name: mkdocs-structure-apply
 description: "Audits a repository against the canonical-language file under spec/project/mkdocs-structure/ and, with per-item user approval, scaffolds or patches the MkDocs skeleton: the per-language docs/ tree, seven standard nav sections, plugin baseline (incl. mkdocs-include-markdown-plugin), pinned dep manifest, per-page frontmatter contract. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fixes). Invoke when the user asks to apply, audit, scaffold, or patch MkDocs against the spec; also handles equivalent German-language requests. Don't use for theme/typography decisions (per-repo), page-content authoring (use `audience-doc-author`), DRY refactoring (use `docs-dry-refactor`), per-page track frontmatter or audience-track content blocks (use `docs-audience-tracks-apply`), drift detection (use `docs-freshness-checker`), or catalog generator wiring (use `skill-agent-catalog-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
+summary: "Audits and scaffolds the portfolio-wide MkDocs skeleton: per-language docs/ tree, plugin baseline, nav contract, per-page frontmatter."
+summary_de: "Auditiert und scaffoldet das portfolio-weite MkDocs-Skelett: Per-Sprache-docs/-Tree, Plugin-Baseline, Nav-Kontrakt, Per-Page-Frontmatter."
+use_when:
+  - "you want to audit a repo against the MkDocs skeleton spec"
+  - "you want to greenfield-scaffold MkDocs in a fresh repo"
+  - "you want to additively patch missing pieces of the MkDocs setup"
+dont_use_when:
+  - situation: "You want to wire the per-page track frontmatter / audience-track content blocks"
+    alternative: docs-audience-tracks-apply
+  - situation: "You want DRY refactoring of duplicated content"
+    alternative: docs-dry-refactor
+  - situation: "You want page content rather than skeleton structure"
+    alternative: audience-doc-author
+  - situation: "You want catalog-generator wiring on top of MkDocs"
+    alternative: skill-agent-catalog-apply
+see_also:
+  - docs-audience-tracks-apply
+  - docs-dry-refactor
+  - skill-agent-catalog-apply
 resumable: true
 ---
 

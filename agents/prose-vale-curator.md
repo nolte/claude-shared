@@ -5,6 +5,21 @@ distribution: plugin
 tools: Read, Edit, Grep, Glob, Bash
 tags: [prose, audit]
 phase: quality
+summary: "Curates prose to pass Vale, prefers shipped vocabularies, extends accept.txt only inside vocabulary-owning repos."
+summary_de: "Kuratiert Prosa, damit Vale grün ist, bevorzugt mitgelieferte Vokabularien, erweitert accept.txt nur in Vokabular-eigenden Repos."
+use_when:
+  - "you want to make a doc Vale-clean"
+  - "you want to fix Vale alerts in a specific Markdown file"
+  - "you want to rephrase prose until Vale stops complaining"
+dont_use_when:
+  - situation: "You want net-new documentation rather than rephrasing"
+    alternative: audience-doc-author
+  - situation: "You want to audit whether local vocabulary entries should be retired"
+    alternative: vocab-drift-audit
+see_also:
+  - audience-doc-author
+  - vocab-drift-audit
+  - lektorat-apply
 ---
 
 # Prose Vale Curator

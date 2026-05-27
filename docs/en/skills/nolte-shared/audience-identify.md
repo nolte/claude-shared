@@ -8,12 +8,29 @@ last_updated: generated
 
 # audience-identify
 
+> Runs the audience-identification methodology against a bounded context and produces an authoritative audience artifact.
+
 _Runs the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produces an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", or equivalent German-language requests. Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context. Don't use to review an existing audience artifact for compliance (use audience-review). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
 - **Tags:** `audience`
 - **Source:** [skills/audience-identify/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/audience-identify/SKILL.md)
+
+## Use when
+
+- you want to identify audiences for a module, library, or whole project
+- you want a stakeholder list before writing a README, SLA, or threat model
+- another spec or skill needs an audience artefact that does not exist yet
+
+## Don't use when
+
+- **You want to review an existing audience artifact for compliance** → [`audience-review`](../../agents/nolte-shared/audience-review.md)
+
+## See also
+
+- [`audience-review`](../../agents/nolte-shared/audience-review.md)
+- [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
 
 ---
 

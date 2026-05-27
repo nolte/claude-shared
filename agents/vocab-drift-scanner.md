@@ -6,6 +6,16 @@ tools: Read, Bash, Glob, Grep
 model: sonnet
 tags: [audit]
 phase: review
+summary: "Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release."
+summary_de: "Nur-Lese-Diff der lokalen Vale-Vocab-Dateien gegen den gepinnten Upstream-Release nolte/vale-style."
+use_when:
+  - "vocab-drift-audit needs the upstream-vs-local vocabulary diff"
+  - "you want a two-section drift report (already-upstream / upstream-candidate)"
+dont_use_when:
+  - situation: "You want the follow-up actions (delete, bump pin, draft upstream PR)"
+    alternative: vocab-drift-audit
+see_also:
+  - vocab-drift-audit
 ---
 
 # Vocab Drift Scanner

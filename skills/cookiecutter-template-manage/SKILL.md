@@ -3,6 +3,15 @@ name: cookiecutter-template-manage
 description: Manages the lifecycle of a Cookiecutter template: scaffolds a new template or refactors an existing one (with mid-flow user confirmation of variable names and choice defaults), hardens Cookiecutter hooks, and sets up a pytest-cookies test harness. Invoke when the user says "manage a Cookiecutter template lifecycle", "scaffold or refactor a Cookiecutter template (with name + purpose confirmation)", "harden cookiecutter hooks", "set up pytest-cookies harness", "Cookiecutter-Template anlegen", "Cookiecutter-Template überarbeiten", "Cookiecutter-Hook absichern", or "pytest-cookies einrichten". Don't use for plain template consumption (a bare `cookiecutter <url>` call needs no orchestration), generic Python bootstrap, Copier or cruft work, or intentionally diverging templates. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: design
+summary: "Manages a Cookiecutter template lifecycle: scaffold, refactor, harden hooks, set up the pytest-cookies harness."
+summary_de: "Verwaltet den Cookiecutter-Template-Lebenszyklus: scaffolden, überarbeiten, Hooks absichern, pytest-cookies einrichten."
+use_when:
+  - "you want to scaffold a new Cookiecutter template"
+  - "you want to refactor an existing Cookiecutter template"
+  - "you want to harden Cookiecutter hooks (pre_prompt / pre_gen / post_gen)"
+  - "you want to set up a pytest-cookies test harness for a template"
+see_also:
+  - cookiecutter-template-author
 resumable: true
 ---
 

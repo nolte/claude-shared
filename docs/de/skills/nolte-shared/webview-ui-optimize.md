@@ -8,18 +8,37 @@ last_updated: generated
 
 # webview-ui-optimize
 
-_Audits a browser-rendered frontend against the canonical-language file under spec/frontend/webview-ui-optimization/ and, with per-item user approval, patches findings across five domains: Performance, Security, Accessibility (WCAG 2.2 AA), Internationalisation, and UX. Three operations: `audit` (written to `.audits/webview-ui-optimize/`), `patch` (one finding at a time), `expert-review` (dispatches `webview-ui-expert`). Invoke when the user asks to \"audit the frontend\", \"check the UI against the webview-ui spec\", \"optimise for performance / a11y / i18n / UX / security\", \"fix the CSP\", \"wire up vitest-axe\", or equivalent German-language requests. Don't use for brand-design decisions, audience artefact (`audience-identify`), prose linting (`prose-vale-curator`), CVE audits (`dependency-audit`), or release-pipeline (`release-automation`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Auditiert und patcht ein Browser-gerendertes Frontend über Performance, Security, Barrierefreiheit (WCAG 2.2 AA), i18n und UX.
+
+_Audits a browser-rendered frontend against the canonical-language file under spec/frontend/webview-ui-optimization/ and, with per-item user approval, patches findings across five domains: Performance, Security, Accessibility (WCAG 2.2 AA), Internationalisation, and UX. Three operations: `audit` (written to `.audits/webview-ui-optimize/`), `patch` (one finding at a time), `expert-review` (dispatches [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md)). Invoke when the user asks to \"audit the frontend\", \"check the UI against the webview-ui spec\", \"optimise for performance / a11y / i18n / UX / security\", \"fix the CSP\", \"wire up vitest-axe\", or equivalent German-language requests. Don't use for brand-design decisions, audience artefact ([`audience-identify`](audience-identify.md)), prose linting ([`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)), CVE audits ([`dependency-audit`](dependency-audit.md)), or release-pipeline (`release-automation`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `audit`, `scaffolding`
 - **Quelle:** [skills/webview-ui-optimize/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/webview-ui-optimize/SKILL.md)
 
+## Anwenden wenn
+
+- you want to audit a frontend against the webview-ui spec
+- you want to patch a single finding (CSP, axe rule, prefers-reduced-motion, etc.)
+- you want a deeper expert-review pass on a named target
+
+## Nicht anwenden wenn
+
+- **You want CVE auditing rather than UI optimisation** → [`dependency-audit`](dependency-audit.md)
+- **You want prose / Vale linting** → [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
+
+## Siehe auch
+
+- [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md)
+- [`dependency-audit`](dependency-audit.md)
+- [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
+
 ---
 
 ## Web-View UI Optimize
 
-Operationalises `spec/frontend/webview-ui-optimization/<canonical_language>.md` inside the current repository. The skill audits a target frontend against the five-domain rule set (Performance, Security, Accessibility, Internationalisation, UX) and — with explicit per-item user consent — patches one finding at a time. For cross-file reasoning that goes beyond a single rule (a CSP rewrite plus its Vite + Emotion + nginx pipeline; an a11y review of a complex feature), the skill dispatches the `webview-ui-expert` agent for a read-only deep review whose output the skill then feeds back into the per-item approval loop.
+Operationalises `spec/frontend/webview-ui-optimization/<canonical_language>.md` inside the current repository. The skill audits a target frontend against the five-domain rule set (Performance, Security, Accessibility, Internationalisation, UX) and — with explicit per-item user consent — patches one finding at a time. For cross-file reasoning that goes beyond a single rule (a CSP rewrite plus its Vite + Emotion + nginx pipeline; an a11y review of a complex feature), the skill dispatches the [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md) agent for a read-only deep review whose output the skill then feeds back into the per-item approval loop.
 
 When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent rules that don't appear in the spec.
 
@@ -37,8 +56,8 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 - **Mid-flow user approval is the contract.** Each finding's patch — a CSP header, a `dangerouslySetInnerHTML` quarantine, a focus-on-route-change hook, an `Intl.NumberFormat` migration, a snackbar-variant change — is written only with explicit user confirmation. The frontend is the user's voice in the product and individual changes can ripple visibly.
 - **Persistent on-disk artefacts that flow back into the main conversation.** The per-domain audit table, the planned-edit list, and the post-edit verification (vitest-axe smoke, Mozilla Observatory check) all surface as files under `.audits/webview-ui-optimize/` so the user can re-read and the next session can resume.
-- **Orchestrator pattern.** The skill dispatches `webview-ui-expert` for deep cross-file review, dispatches `dependency-audit` for the supply-chain MUSTs, and routes to `quality-gate` for the post-patch lint/type/test sweep. Per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
-- **Precedent.** Follows the audit + patch shape of `mkdocs-structure-apply`, `readme-structure-apply`, `docs-audience-tracks-apply`, `project-structure-apply`; portfolio-wide consistency favours the same artefact type.
+- **Orchestrator pattern.** The skill dispatches [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md) for deep cross-file review, dispatches [`dependency-audit`](dependency-audit.md) for the supply-chain MUSTs, and routes to [`quality-gate`](quality-gate.md) for the post-patch lint/type/test sweep. Per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
+- **Precedent.** Follows the audit + patch shape of [`mkdocs-structure-apply`](mkdocs-structure-apply.md), [`readme-structure-apply`](readme-structure-apply.md), [`docs-audience-tracks-apply`](docs-audience-tracks-apply.md), [`project-structure-apply`](project-structure-apply.md); portfolio-wide consistency favours the same artefact type.
 - **Counter-dimension considered.** A pure agent could specialise on one domain (a11y or security alone), but the load-bearing dimension is the per-rule approval dialogue across five interleaved domains; skill wins. The agent role is reserved for the read-only deep-review subtask.
 
 ### User-language policy
@@ -51,7 +70,7 @@ Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
 - `Read` / `Glob` / `Grep` for repository inspection: `package.json`, `vite.config.ts`, `index.html`, `tsconfig*.json`, `eslint.config.*`, `nginx*.conf` / `*.inc`, `src/**/*.{ts,tsx,css}`, every `*.json` translation file, every `.audits/webview-ui-expert/<domain>.md` source-of-truth research note.
 - `Write` to land a new audit report under `.audits/webview-ui-optimize/<timestamp>.md`; `Edit` to apply individual approved patches to existing files. Never overwrite a hand-edited audit; append a new timestamped report instead.
-- `Bash` for read-only verifications: `npm ls`, `npx vitest run <pattern>` for a targeted axe-smoke, `curl -sI` for header verification when the operator points at a deployed origin, `grep -R 'VITE_' dist/` for env-var leakage post-build, `node -e "console.log(import('dompurify'))"` style sanity checks. No destructive bash, no `npm audit` invocation (that belongs to `dependency-audit`).
+- `Bash` for read-only verifications: `npm ls`, `npx vitest run <pattern>` for a targeted axe-smoke, `curl -sI` for header verification when the operator points at a deployed origin, `grep -R 'VITE_' dist/` for env-var leakage post-build, `node -e "console.log(import('dompurify'))"` style sanity checks. No destructive bash, no `npm audit` invocation (that belongs to [`dependency-audit`](dependency-audit.md)).
 - No `WebFetch` / `WebSearch`: the spec and its `.audits/webview-ui-expert/<domain>.md` research notes are the only sources of truth. Vendor-doc lookups during an audit indicate a missing entry in the research notes and should surface as a `# TODO` rather than be auto-fetched.
 
 ### Preconditions
@@ -123,8 +142,8 @@ Walk through every MUST and SHOULD in the spec's `## Requirements` section, clas
 ### Caller follow-ups
 - For each critical or high finding, run `patch <rule-id>` to apply the fix with per-item approval.
 - For findings that need cross-file reasoning (CSP, focus-management hooks, MUI-X locale wiring), run `expert-review <file-or-component>`.
-- Run `quality-gate` after the patch sweep to verify lint/type/test.
-- Run `dependency-audit` for supply-chain MUSTs (npm audit + license).
+- Run [`quality-gate`](quality-gate.md) after the patch sweep to verify lint/type/test.
+- Run [`dependency-audit`](dependency-audit.md) for supply-chain MUSTs (npm audit + license).
 ```
 
 Audit is read-only — never autofix during audit. Each row's `Evidence` cell points at a concrete file:line or names the absent artefact ("no `nginx-security-headers.inc`"); never produce a finding without evidence.
@@ -147,7 +166,7 @@ After every successful write, the skill verifies the patch closed the finding:
 
 #### 3. `expert-review <target>` (deep read-only)
 
-For a named file, route module, or feature whose findings cross several spec rules (e.g. "the auth flow", "the dashboard chart", "the i18n bootstrap"), dispatch the `webview-ui-expert` agent. The agent receives:
+For a named file, route module, or feature whose findings cross several spec rules (e.g. "the auth flow", "the dashboard chart", "the i18n bootstrap"), dispatch the [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md) agent. The agent receives:
 
 - The target path (or feature description).
 - The current audit report's findings for that target.
@@ -165,7 +184,7 @@ The skill returns to the user, in this order:
 4. **Planned edits** (for `patch`): the single change being proposed, with rationale linking back to the spec line and the research-notes anchor.
 5. **Approval gate** (for `patch`): explicit user-decision point; nothing is written until the user confirms.
 6. **Applied edits** (after approval): the absolute path(s) of the written file(s), plus the post-write verification result.
-7. **Caller follow-ups**: dispatch `quality-gate` after a patch sweep, dispatch `dependency-audit` for supply-chain MUSTs, route to `prose-vale-curator` if any docs strings were rewritten, open the PR via `pull-request-create`.
+7. **Caller follow-ups**: dispatch [`quality-gate`](quality-gate.md) after a patch sweep, dispatch [`dependency-audit`](dependency-audit.md) for supply-chain MUSTs, route to [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md) if any docs strings were rewritten, open the PR via [`pull-request-create`](pull-request-create.md).
 
 ### Resumability
 
@@ -186,6 +205,6 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 - `spec/frontend/webview-ui-optimization/` — the canonical authoritative spec this skill operationalises.
 - `.audits/webview-ui-expert/<domain>.md` — the per-domain research notes that anchor every normative rule to ≥ 2 independent authoritative sources.
-- `spec/project/prose-style/` — the Vale rule set that the audit prose and the patch rationales should ultimately pass (delegated to `prose-vale-curator`).
-- `spec/claude/skill-vs-agent/` — the skill-vs-agent decision dimensions that justify this artefact as a skill, with the `webview-ui-expert` agent as the deep-review specialist.
+- `spec/project/prose-style/` — the Vale rule set that the audit prose and the patch rationales should ultimately pass (delegated to [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)).
+- `spec/claude/skill-vs-agent/` — the skill-vs-agent decision dimensions that justify this artefact as a skill, with the [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md) agent as the deep-review specialist.
 - `agents/webview-ui-expert.md` — the read-only deep-review agent dispatched by the `expert-review` operation.

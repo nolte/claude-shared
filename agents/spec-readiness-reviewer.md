@@ -6,6 +6,27 @@ tools: Read, Glob, Grep, Bash
 model: sonnet
 tags: [review, audit]
 phase: design
+summary: "Read-only audit of a spec for contradictions, audience fit, and AC coverage."
+summary_de: "Nur-Lese-Audit einer Spec auf Widersprüche, Audience-Fit und AC-Coverage."
+use_when:
+  - "you want to check a spec for internal or cross-spec contradictions"
+  - "you want to audit a spec for readiness before downstream implementation"
+  - "you want to find requirement-to-acceptance-criterion coverage gaps"
+  - "you suspect a spec contains ghost references to non-existent specs"
+dont_use_when:
+  - situation: "You want to author or translate the spec"
+    alternative: spec
+  - situation: "You want to reconcile a spec against the actual implementation in the codebase"
+    alternative: spec-drift-audit
+  - situation: "You want to create an audience artefact from scratch"
+    alternative: audience-identify
+see_also:
+  - spec
+  - spec-drift-audit
+  - audience-identify
+examples:
+  - prompt: "Audit spec/claude/skill-agent-catalog/ before implementation begins"
+    outcome: "Severity-sorted Critical/Warning/Suggestion/Info report; never edits."
 ---
 
 # Spec Readiness Reviewer

@@ -8,23 +8,43 @@ last_updated: generated
 
 # sprint-review
 
-_Close an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into `release-notes-curate` and `release-publish-trigger` (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably. Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Closes an active sprint per the sprint spec: validates the deployable artefact and records the value-delivery audit trail.
+
+_Close an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into [`release-notes-curate`](release-notes-curate.md) and [`release-publish-trigger`](release-publish-trigger.md) (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 7 Close & Release (`close-release`)
 - **Tags:** `scaffolding`, `release`
 - **Source:** [skills/sprint-review/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/sprint-review/SKILL.md)
 
+## Use when
+
+- you want to close, finish, or ship an active sprint
+- you want to validate the sprint's artifact_ref against the release-artifact spec
+- you want the optional chain into release-notes-curate and release-publish-trigger
+
+## Don't use when
+
+- **You want to drive day-to-day mechanics of the sprint** → [`sprint-execute`](sprint-execute.md)
+- **You want to plan or open a new sprint** → [`sprint-plan`](sprint-plan.md)
+
+## See also
+
+- [`sprint-execute`](sprint-execute.md)
+- [`sprint-plan`](sprint-plan.md)
+- [`release-notes-curate`](release-notes-curate.md)
+- [`release-publish-trigger`](release-publish-trigger.md)
+
 ---
 
 ## Sprint Review
 
-Closes an `active` sprint per `spec/project/sprint/<canonical_language>.md`. This skill is the canonical write authority for `active → review`, `review → closed`, and the cancellation paths from any stage. It delegates artefact validation to the rules declared by `spec/project/release-artifact/<canonical_language>.md` and may chain (with explicit operator opt-in) into `release-notes-curate` and `release-publish-trigger` per `spec/project/release-skill-layer/<canonical_language>.md`.
+Closes an `active` sprint per `spec/project/sprint/<canonical_language>.md`. This skill is the canonical write authority for `active → review`, `review → closed`, and the cancellation paths from any stage. It delegates artefact validation to the rules declared by `spec/project/release-artifact/<canonical_language>.md` and may chain (with explicit operator opt-in) into [`release-notes-curate`](release-notes-curate.md) and [`release-publish-trigger`](release-publish-trigger.md) per `spec/project/release-skill-layer/<canonical_language>.md`.
 
 ### Why this is a skill, not an agent
 
 - **Externally-visible mutations gate on user confirmation** — promoting a sprint to `closed` is irreversible bookkeeping, the artefact-validation results need to be reviewed by the user before the promotion fires, and the `release-skill-layer` chain is operator-opt-in by spec; an agent's fire-and-forget shape would lose those gates.
-- **Orchestrator that chains other skills** — this skill conditionally dispatches `release-notes-curate` and `release-publish-trigger` mid-flow, and falls through to a cancellation path on validation failure; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
+- **Orchestrator that chains other skills** — this skill conditionally dispatches [`release-notes-curate`](release-notes-curate.md) and [`release-publish-trigger`](release-publish-trigger.md) mid-flow, and falls through to a cancellation path on validation failure; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
 - **Output flows back into the main conversation** — the validation transcript, the `## Review notes` audit block, and the chosen lifecycle outcome (`closed` vs `cancelled`) all belong in the user's working context, not behind an agent's structured-report boundary.
 - Counter-dimension considered: a narrower agent could sharpen the per-kind artefact verification step (`git rev-parse`, `gh release view`, `docker manifest inspect`, etc.), but the load-bearing dimension is the multi-step orchestration with operator-opt-in branches — skill wins.
 
@@ -38,10 +58,10 @@ Before mutating the sprint or dispatching any chained skill, confirm:
 
 - Current working directory is inside a git repository with `project/sprints/` populated.
 - The user has named the sprint to close (or there's exactly one `active` sprint—use that one and confirm with the user before mutating).
-- The sprint's `status` is `active`. Refuse on `planned` (operate via `sprint-execute` first), `review` (mid-flow recovery; ask the user how to proceed), `closed`, or `cancelled` (already terminal).
-- Every feature listed in the sprint's `features` frontmatter is `done` (read each feature file and check `status`). On any non-`done` feature, stop and report the offending features; this skill doesn't drive feature transitions—`sprint-execute` does.
+- The sprint's `status` is `active`. Refuse on `planned` (operate via [`sprint-execute`](sprint-execute.md) first), `review` (mid-flow recovery; ask the user how to proceed), `closed`, or `cancelled` (already terminal).
+- Every feature listed in the sprint's `features` frontmatter is `done` (read each feature file and check `status`). On any non-`done` feature, stop and report the offending features; this skill doesn't drive feature transitions—[`sprint-execute`](sprint-execute.md) does.
 - The sprint's `features` frontmatter list is non-empty. An empty list makes the value-delivery contract unsatisfiable per `spec/project/sprint/` §Lifecycle; refuse the `active → review` transition with a verbatim error.
-- The sprint's `last_commit` frontmatter field is non-null per `spec/project/sprint/` §Acceptance Criteria. If it's null, hand back—`sprint-execute` is the canonical writer of that field.
+- The sprint's `last_commit` frontmatter field is non-null per `spec/project/sprint/` §Acceptance Criteria. If it's null, hand back—[`sprint-execute`](sprint-execute.md) is the canonical writer of that field.
 
 ### Operations
 
@@ -55,7 +75,7 @@ The skill follows a strict order. The artefact-validation block (step 3) **MUST*
 
 #### 2. Detect the project type
 
-Use the same signals as `release-skill-layer` and `github-issue-templates-apply` per `spec/project/release-artifact/` §Project-type detection:
+Use the same signals as `release-skill-layer` and [`github-issue-templates-apply`](github-issue-templates-apply.md) per `spec/project/release-artifact/` §Project-type detection:
 
 - `.claude-plugin/plugin.json` → Claude plugin
 - `pyproject.toml` shape → Python application or library
@@ -101,8 +121,8 @@ This step runs only when the project type publishes via `release-publish.yml` (t
 
 Ask the user explicitly whether to chain. The chain points are fixed:
 
-- **`release-notes-curate`** — augments the open `release-drafter` draft body with project-context-aware sections; idempotent on re-runs per `spec/project/release-skill-layer/` §Skill A.
-- **`release-publish-trigger`** — validates every gate from `spec/project/release-automation/` §Pre-publish verification and dispatches `release-publish.yml` via `gh workflow run`.
+- **[`release-notes-curate`](release-notes-curate.md)** — augments the open `release-drafter` draft body with project-context-aware sections; idempotent on re-runs per `spec/project/release-skill-layer/` §Skill A.
+- **[`release-publish-trigger`](release-publish-trigger.md)** — validates every gate from `spec/project/release-automation/` §Pre-publish verification and dispatches `release-publish.yml` via `gh workflow run`.
 
 Outcomes to record verbatim in `## Review notes`:
 
@@ -132,14 +152,14 @@ Triggered when step 3 fails unrecoverably (the underlying release pipeline is br
 - **`artifact_ref` validation is per-project-type.** The skill reads the project type from `project/portfolio.yml` (or, when absent, from heuristic detection) and applies the matching artifact-ref shape from the release-artifact spec: a Claude plugin sprint expects a published-release tag, a Python library expects a PyPI version, a documentation-only project expects a deployed-docs commit SHA, and so on. A wrong project-type detection produces a misleading "artifact_ref invalid" refusal. The skill surfaces the detected type before validating so the operator can override.
 - **`active → review` is reversible** (a failed artifact validation can route back to `active`); `review → closed` and `review → cancelled` are NOT. The skill warns explicitly before either terminal transition and requires verbatim operator confirmation.
 - **The `verifies_sprint_value` acceptance criterion is the load-bearing closure gate.** When the named criterion isn't checked on the carrying feature, the skill refuses `closed` and routes to `cancelled` (with a clear rationale paragraph) — operators sometimes try to argue the criterion "was achieved differently"; the spec is strict that the named criterion is the audit trail, not a related observation.
-- **Optional chaining into `release-notes-curate` and `release-publish-trigger` is operator-opt-in.** Defaulting to chain leads to surprise releases; the skill stays explicit about each chain hop and records the operator's opt-in verbatim in `## Review notes`.
+- **Optional chaining into [`release-notes-curate`](release-notes-curate.md) and [`release-publish-trigger`](release-publish-trigger.md) is operator-opt-in.** Defaulting to chain leads to surprise releases; the skill stays explicit about each chain hop and records the operator's opt-in verbatim in `## Review notes`.
 - **Cancelled sprints leave a value-delivery gap that the next sprint must explain.** When the skill cancels a sprint, the unfinished features need re-targeting (typically to the next sprint or back to the roadmap queue). The skill surfaces the affected feature IDs and asks where each one lands; nothing is silently re-targeted.
 
 ### Examples
 
 - Read `examples/01-clean-close-claude-plugin.md` when closing a sprint cleanly for a Claude plugin project with all features done.
 - Read `examples/02-artifact-validation-fails-cancel.md` when artifact validation fails and the sprint must be cancelled instead of closed.
-- Read `examples/03-chain-into-release-skill-layer.md` when the user opts in to chaining into `release-notes-curate` and `release-publish-trigger` after sprint closure.
+- Read `examples/03-chain-into-release-skill-layer.md` when the user opts in to chaining into [`release-notes-curate`](release-notes-curate.md) and [`release-publish-trigger`](release-publish-trigger.md) after sprint closure.
 
 ### Resumability
 
@@ -147,14 +167,14 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ### Hard rules
 
-- **Never** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id> draft=false`, or any other path that flips the draft state outside `release-publish.yml`. The rule comes from `spec/project/release-automation/`, `spec/project/release-skill-layer/`, and `spec/project/release-artifact/` §Dispatch boundary to release machinery and is non-negotiable here too. The only acceptable publish path is dispatching `release-publish-trigger`.
+- **Never** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id> draft=false`, or any other path that flips the draft state outside `release-publish.yml`. The rule comes from `spec/project/release-automation/`, `spec/project/release-skill-layer/`, and `spec/project/release-artifact/` §Dispatch boundary to release machinery and is non-negotiable here too. The only acceptable publish path is dispatching [`release-publish-trigger`](release-publish-trigger.md).
 - **Never** transition `active → closed` without passing through `review`. The value-coverage check lives in `review` per `spec/project/sprint/` §Lifecycle.
 - **Never** close a sprint while any feature in `features` is non-`done`, or while the `features` frontmatter list is empty, or while `last_commit` is null, or while `artifact_ref` is null. Each is a hard refusal point.
 - **Never** close a sprint with zero or more than one `verifies_sprint_value` declarations across its features, or with the named acceptance-criterion bullet unchecked.
 - **Never** accept a bare commit SHA as `artifact_ref` unless the project explicitly opts in via `.github/release-skill-layer.yml`.
-- **Never** chain into `release-notes-curate` or `release-publish-trigger` without the user's explicit opt-in, and never close the sprint without recording the operator's chain decision (chained or skipped) verbatim in `## Review notes`.
+- **Never** chain into [`release-notes-curate`](release-notes-curate.md) or [`release-publish-trigger`](release-publish-trigger.md) without the user's explicit opt-in, and never close the sprint without recording the operator's chain decision (chained or skipped) verbatim in `## Review notes`.
 - **Never** advance a roadmap item to `status: done` from a `cancelled` sprint, even when every feature is individually `done`. Re-target the pending features to a successor sprint instead.
-- **Never** edit any sprint other than the one being reviewed in this run. `sprint-plan` and `sprint-execute` own the other sprints' lifecycles.
+- **Never** edit any sprint other than the one being reviewed in this run. [`sprint-plan`](sprint-plan.md) and [`sprint-execute`](sprint-execute.md) own the other sprints' lifecycles.
 - When `spec/project/sprint/`, `spec/project/release-artifact/`, `spec/project/release-skill-layer/`, or `spec/project/release-automation/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
 
 ### Multi-model testing

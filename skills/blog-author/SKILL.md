@@ -3,6 +3,17 @@ name: blog-author
 description: Drafts a bilingual EN-canonical + DE-translated blog-post pair per the consumer repo's blog-author, post-writing-style, and post-audience-communication specs. Walks the operator through briefing inputs (topic-as-thesis, grounded artefact, primary audience, source list, slug, translationKey), writes the EN draft, runs the pre-handoff self-check, writes the DE translation, runs the per-pair self-check, executes `task build`, and dispatches `lektorat-apply` for the editorial audit. Invoke when the user asks to "schreibe einen neuen Blogpost", "draft a blog post about X", "neuer Eintrag zu Y", "operationalize blog-author", or equivalent German-language requests. Don't use to lektor an existing post (use `lektorat-apply`), to author portfolio pages (those live in `src/content/projects/`), or to redefine the post frontmatter schema (`src/content.config.ts`). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [prose, audience]
 phase: build
+summary: "Drafts a bilingual EN-canonical + DE-translated blog-post pair per the consumer repo's blog specs."
+summary_de: "Verfasst ein zweisprachiges Blog-Post-Paar (EN-canonical + DE-übersetzt) nach den Blog-Specs des Konsumenten-Repos."
+use_when:
+  - "you want to draft a new blog post about a topic"
+  - "you want to operationalise the blog-author flow with the briefing inputs"
+  - "you want a bilingual post (EN + DE) authored end-to-end with lektorat hand-off"
+dont_use_when:
+  - situation: "You want to lektor an existing post rather than draft a new one"
+    alternative: lektorat-apply
+see_also:
+  - lektorat-apply
 resumable: true
 ---
 

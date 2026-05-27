@@ -8,12 +8,31 @@ last_updated: generated
 
 # skill-agent-catalog-apply
 
-_Wires up the MkDocs skill-and-agent catalog in the current Claude Code plugin repository per the canonical-language file under spec/claude/skill-agent-catalog/. Audits the MkDocs config against the spec, scaffolds or patches the gen-files + literate-nav plugin configuration, writes the generator hook that walks every configured plugin source root, adds the Python dependencies to the project's docs requirements, and verifies that `task docs` produces Skills and Agents sections in the built navigation. Invoke when the user asks to \"apply the skill-agent-catalog spec\", \"wire up the catalog generator\", \"scaffold the skills/agents navigation\", or \"add another plugin source root\". Also handles equivalent German-language requests and checking whether a wired catalog is still in sync. Don't use for authoring individual skills/agents (use `skill-management`) or for general docs scaffolding (use `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Wires up the MkDocs skill-and-agent catalog (gen-files + literate-nav, generator hook, source-roots) in a plugin or consumer repo.
+
+_Wires up the MkDocs skill-and-agent catalog in the current Claude Code plugin repository per the canonical-language file under spec/claude/skill-agent-catalog/. Audits the MkDocs config against the spec, scaffolds or patches the gen-files + literate-nav plugin configuration, writes the generator hook that walks every configured plugin source root, adds the Python dependencies to the project's docs requirements, and verifies that `task docs` produces Skills and Agents sections in the built navigation. Invoke when the user asks to \"apply the skill-agent-catalog spec\", \"wire up the catalog generator\", \"scaffold the skills/agents navigation\", or \"add another plugin source root\". Also handles equivalent German-language requests and checking whether a wired catalog is still in sync. Don't use for authoring individual skills/agents (use [`skill-management`](skill-management.md)) or for general docs scaffolding (use [`project-structure-apply`](project-structure-apply.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`
 - **Source:** [skills/skill-agent-catalog-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/skill-agent-catalog-apply/SKILL.md)
+
+## Use when
+
+- you want to wire up the catalog generator in a fresh repo
+- you want to add another plugin source root to an existing catalog setup
+- you want to check whether a wired catalog is still in sync with the spec
+
+## Don't use when
+
+- **You want to author an individual skill or agent rather than the catalog wiring** → [`skill-management`](skill-management.md)
+- **You want general MkDocs scaffolding (not catalog-specific)** → [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+
+## See also
+
+- [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- [`skill-management`](skill-management.md)
+- [`project-structure-apply`](project-structure-apply.md)
 
 ---
 
@@ -37,7 +56,7 @@ Before doing anything:
    - If `.claude-plugin/plugin.json` is absent, the repo is operating in **consumer mode**. The catalog will only expose external plugin source roots; no local plugin is added.
 
    Report the detected mode explicitly in the audit output so the user knows which rule set applies. Don't bail purely because `.claude-plugin/plugin.json` is absent; consumer mode is a first-class supported shape.
-3. Confirm an `mkdocs.yml` exists at the repo root. If not, stop and tell the user to run `project-structure-apply` first (which is responsible for scaffolding MkDocs itself).
+3. Confirm an `mkdocs.yml` exists at the repo root. If not, stop and tell the user to run [`project-structure-apply`](project-structure-apply.md) first (which is responsible for scaffolding MkDocs itself).
 4. Locate `spec/claude/skill-agent-catalog/` in the current repo or via the `nolte-shared` plugin. If neither is reachable, stop and ask the user which spec source to use.
 5. In consumer mode, ask the user which external plugin source roots should appear in the catalog before proposing any changes (for example local clones of `nolte-shared`, other nolte plugins, or third-party plugins). Require at least one; the catalog is meaningless with an empty source list.
 6. Check for uncommitted changes in `mkdocs.yml`, the docs requirements file, and any existing generator hook path. If the tree is dirty there, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
@@ -55,12 +74,17 @@ Read the spec's Acceptance Criteria and classify each item as `pass`, `missing`,
 | Plugin source roots are configured | Look under `plugins.gen-files.scripts` or the extension config for a structure pairing local paths with public repo URLs (spec §Generation mechanism). |
 | Source roots match the detected mode | In plugin mode, the local path `.` (or `skills/` + `agents/`) with the repo's own `https://github.com/<owner>/<repo>` URL must be present. In consumer mode, at least one external source root must be present and no local-plugin entry should be declared. |
 | Skills and Agents navigation sections exist | Inspect `nav:` for stable top-level entries. Literate-nav `SUMMARY.md` files produced by the generator also satisfy this. |
+| Section index pages link to `by-task.md` | Read `docs/<lang>/skills/index.md` and `docs/<lang>/agents/index.md` for each configured language; both must contain a prominent link to `../by-task.md` (spec §Navigation and layout). |
 | Tag index page exists | Either declared in `nav:` or generated as `docs/tags.md`. |
-| Generated markdown stays uncommitted | Run `git ls-files docs/skills/ docs/agents/ docs/tags.md 2>/dev/null`; any hits are drift (generated pages must not be git-tracked). |
+| Task-oriented landing page exists per language | `docs/<lang>/by-task.md` exists for every configured docs language (spec §Task-oriented landing pages). Generator emits a one-shot skeleton; hand-curated pages carry an ISO-8601 `last_updated`. |
+| Generator uses a standard YAML parser | Inspect the generator hook; it must hand source frontmatter to `yaml.safe_load` (or equivalent), not a flat-line custom parser — `dont_use_when` and `examples` (lists of mappings, spec §Use-case metadata) require nested-mapping support. |
+| Source frontmatter respects use-case schema | Walk every source `SKILL.md` / `agents/<name>.md`. When `summary`, `summary_<lang>`, `use_when`, `dont_use_when`, `see_also`, or `examples` is declared, it conforms to the schema in spec §Use-case metadata (string limits, key sets, entry counts). Unresolvable `dont_use_when[].alternative` or `see_also[]` values fail the docs build. |
+| Source frontmatter `tags` are clean of auto-tags | No source `tags` entry begins with `_`. The reserved auto-tag `_translation-pending` (spec §Per-language short summary) must be generator-emitted only; an author-declared `_…` tag fails the docs build. |
+| Generated markdown stays uncommitted | Run `git ls-files docs/skills/ docs/agents/ docs/tags.md 2>/dev/null`; any hits are drift (generated pages must not be git-tracked) UNLESS the repo's docs-deploy pipeline bypasses `task docs` — in that case the catalog is intentionally committed and a CI freshness check guards drift. |
 | `task docs` regenerates the catalog | Inspect `Taskfile.yml`'s `docs` target; confirm it calls `mkdocs build` (or a thin wrapper) without requiring a separate regeneration step. |
-| Docs deps include `mkdocs-gen-files` and `mkdocs-literate-nav` | Read `docs-requirements.txt` / `pyproject.toml` `docs` extras / `requirements/docs.txt`, whichever the repo uses. |
+| Docs deps include `mkdocs-gen-files`, `mkdocs-literate-nav`, and `pyyaml` | Read `docs-requirements.txt` / `pyproject.toml` `docs` extras / `requirements/docs.txt`, whichever the repo uses. `pyyaml` is required because the standard-YAML parsing rule above. |
 
-Report findings grouped by spec section: Navigation, Generation mechanism, Source roots, Dependencies, Git hygiene. Audit is read-only.
+Report findings grouped by spec section: Navigation, Generation mechanism, Source roots, Use-case metadata, Per-language summary, Dependencies, Git hygiene. Audit is read-only.
 
 #### 2. Propose and apply changes
 
@@ -118,15 +142,22 @@ In either mode, extending the source list later (adding more external plugins) i
 
 ##### 2.3 Write the generator hook
 
-Create `scripts/docs/gen_catalog.py`. The hook walks every configured source root, reads each skill's `SKILL.md` and each agent's `<name>.md`, parses the frontmatter, and emits catalog pages via `mkdocs_gen_files.open(...)`. Key behaviours the hook **must** honour per the spec:
+Create `scripts/docs/gen_catalog.py`. The hook walks every configured source root, reads each skill's `SKILL.md` and each agent's `<name>.md`, parses the frontmatter, and emits catalog pages. Key behaviours the hook **must** honour per the spec:
 
+- **Parse frontmatter with `yaml.safe_load`** (or an equivalent standard YAML parser), not a flat-line custom parser. The use-case fields `dont_use_when` and `examples` are YAML lists of mappings and require nested-mapping support per spec §Generation mechanism.
 - Fail the build when a skill or agent has invalid frontmatter (missing `name`, missing `description`, agent missing `distribution`, `name` mismatches folder/file). Raise a clear exception naming the offending file and its source root.
-- Render `name` as page title, `description` verbatim, `distribution` for agents, `tags` as visible tags.
+- Validate the use-case fields (`use_when`, `dont_use_when`, `see_also`, `examples`) against the shape rules in spec §Use-case metadata: type, key-set, entry-count and per-string character limits. Resolve `dont_use_when[].alternative` and `see_also[]` against the discovered catalog; fail the build on unresolved or ambiguous names.
+- Validate `summary` and every `summary_<lang>` (≤200 characters, non-empty after whitespace stripping); fail the build on shape violations.
+- Reject author-declared `tags` entries that begin with `_` — the underscore prefix is reserved for generator-emitted auto-tags (`_translation-pending`).
+- Render `name` as page title, the **per-language summary** as a scannable subtitle above the routing description (resolution: `summary_<lang>` → `summary` → first sentence of `description` truncated; fall back to `summary` or truncation flips a chrome-localised "translation pending" badge and tags the page with `_translation-pending`), `description` and body verbatim except for cross-linking, `distribution` for agents, the effective tags (author-declared + auto-tags) as visible tags.
+- Render each declared use-case field as its own scannable section with chrome-localised labels: "Use when" / "Anwenden wenn", "Don't use when" / "Nicht anwenden wenn", "See also" / "Siehe auch", "Examples" / "Beispiele".
+- Cross-linking pass: build a per-language `name → URL` index from every discovered artifact, then rewrite every `dont_use_when[].alternative` and `see_also[]` reference into a Markdown link, and rewrite inline-code mentions (`` `name` ``) in the rendered `description`, `summary`, `summary_<lang>`, and body into Markdown links — but only when the mention resolves to exactly one artifact. Ambiguous inline-code mentions stay unlinked and emit a non-fatal generator warning.
 - Link back to the source file on the originating plugin's repo at the configured branch.
-- Write entries in deterministic alphabetical order by `name` within each plugin group.
-- Emit `docs/skills/SUMMARY.md` and `docs/agents/SUMMARY.md` for literate-nav.
-- Render the skill body (or agent system-prompt body) as the page's main content.
-- Emit a `docs/tags.md` tag index linking to every artifact that declares each tag.
+- Write entries in deterministic alphabetical order by `name` within each plugin group of each phase.
+- Emit `docs/<lang>/skills/SUMMARY.md` and `docs/<lang>/agents/SUMMARY.md` for literate-nav per configured docs language.
+- Section index pages link prominently to `../by-task.md` near the top.
+- Emit a `docs/<lang>/tags.md` tag index per configured docs language, listing every author-declared tag and every auto-tag that at least one artifact carries on that language.
+- Emit a **one-shot** `docs/<lang>/by-task.md` skeleton per configured docs language, pre-populated from artifacts' `use_when` entries. **Do not overwrite** the file if it already exists — the landing page transitions from generator-emitted skeleton to hand-curated artifact on the first edit.
 
 Include a concise docstring on the hook summarising what it does and pointing at the spec. Don't duplicate spec rules as comments scattered across the code; keep the hook readable and let the spec be the source of truth.
 
@@ -211,7 +242,8 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** commit generated catalog markdown back into `docs/`. Emission happens at build time via `mkdocs-gen-files`; the `site/` build output is gitignored.
 - **Never** remove an existing plugin source root silently when patching the sources file. Propose the change and wait for approval.
 - **Never** bump the plugin version in `.claude-plugin/plugin.json` as part of this skill's changes (per `release-automation`, the version is set by the release workflow).
-- **Never** translate artifact metadata or body at generation time. The spec says artifact content is rendered verbatim; only the surrounding chrome (section titles, intro text) is localised elsewhere.
+- **Never** translate the routing `description`, the body, or identifiers (`name`, `distribution`, `tags`, `phase`) at generation time. The single sanctioned translation surface is the per-language summary field `summary_<lang>` and the surrounding chrome (section titles, intro text, use-case section labels, translation-pending badge), per spec §Multilingual behavior.
+- **Never** overwrite an existing `docs/<lang>/by-task.md` on subsequent generator runs. The skeleton is a one-shot starting point; once a human starts curating the landing page, the generator stays out of the way (spec §Task-oriented landing pages).
 - **Never** duplicate `nolte-shared` as a source root when the current repo is itself `nolte-shared`; it's the local plugin, and the sources file already has it.
 - **Never** declare a local-plugin entry in consumer mode. Consumer-mode repos don't ship skills or agents of their own; adding a `local: .` source there would try to walk paths that don't exist.
 - **Always**, in plugin mode, make the local plugin the first entry in the sources list so its catalog appears first in the navigation. In consumer mode, order external sources as the user requests them and default to alphabetical by `name` if unspecified.
@@ -223,26 +255,29 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
 
-- **`mkdocs-gen-files` and `mkdocs-literate-nav` must be pinned in `docs/requirements.txt`.** The catalog rendering depends on both plugins; without them the docs build either falls back silently to a navigation without the catalog (worst case, drift goes unnoticed) or fails with an opaque MkDocs plugin-not-found error. `project-structure-apply` and this skill share that requirement; verify both lines exist in `docs/requirements.txt` before assuming the build will pick the catalog up.
+- **`mkdocs-gen-files` and `mkdocs-literate-nav` must be pinned in `docs/requirements.txt`.** The catalog rendering depends on both plugins; without them the docs build either falls back silently to a navigation without the catalog (worst case, drift goes unnoticed) or fails with an opaque MkDocs plugin-not-found error. [`project-structure-apply`](project-structure-apply.md) and this skill share that requirement; verify both lines exist in `docs/requirements.txt` before assuming the build will pick the catalog up.
 - **The generator hook only runs at build time, not on file save.** Changes to `skills/<name>/SKILL.md` or `agents/<name>.md` don't appear in the rendered catalog until the next `task docs` (or CI build). When the user edits an artefact and asks why the catalog doesn't show it, the answer is almost always that the build hasn't run yet, not that the generator's broken.
 - **Plugin source roots in `docs/catalog-sources.yml` are repo-relative paths, not install paths.** In plugin mode the entry is `local: .` (the current repo *is* the plugin). In consumer mode the entry points at where the plugin's repo content actually lives on disk relative to the docs build, typically `local: ../claude-shared` for a sibling checkout, or a vendored or submoduled subdirectory. `mkdocs-gen-files` resolves the path at build time relative to the `mkdocs.yml` location; the runtime `.claude/plugins/<plugin>/` install path is for skill discovery at session-start, not for docs generation.
 - **Consumer mode forbids the local-plugin entry.** A consumer-mode repo (one that installs `nolte-shared` rather than being it) **MUST NOT** declare `local: .` as a source; the walker would then look for `skills/` and `agents/` at the consumer's repo root, find nothing, and emit an empty catalog or a hard error. Plugin mode and consumer mode are deliberately exclusive on this point.
+- **`docs/<lang>/by-task.md` is one-shot on the **first** run only.** The generator pre-populates the file from `use_when` entries the first time it runs against a docs language; every subsequent run sees the file exists and leaves it alone. Two operational consequences: (a) when a consumer adds new artifacts later, the generator does not auto-add them to the curated landing page — the maintainer integrates them by hand; (b) when bootstrapping a fresh catalog, the maintainer typically deletes both `docs/<lang>/by-task.md` files once after migrating all artifacts so the regenerated skeleton reflects the full set of `use_when` entries.
+- **The cross-linking pass only transforms inline-code spans.** Plain-text occurrences of artifact names (e.g. "use spec-readiness-reviewer to audit") stay as plain text. To get a link, the author must wrap the name in single backticks (`` [`spec-readiness-reviewer`](../../agents/nolte-shared/spec-readiness-reviewer.md) ``). This is the false-positive guard from spec §Cross-linking — generic words that happen to collide with an artifact name (a hypothetical skill called `build`, say) stay untouched in prose.
+- **`_translation-pending` is never an author-declared tag.** Source `SKILL.md` and agent files **MUST NOT** put `_translation-pending` (or any other `_…` tag) in their `tags:` frontmatter; the generator emits the auto-tag per page per docs language based on summary-resolution fallback. Declaring it in source frontmatter fails the docs build immediately.
 
 ### Why this is a skill, not an agent
 
 This is a skill, not an agent, because:
 
-- **Orchestration role**: applying the catalog spec is a scaffolding step inside a larger "bring this plugin repo in line with portfolio conventions" flow, right alongside `project-structure-apply`. The output is expected to flow into the main conversation so the caller can see each proposed change.
+- **Orchestration role**: applying the catalog spec is a scaffolding step inside a larger "bring this plugin repo in line with portfolio conventions" flow, right alongside [`project-structure-apply`](project-structure-apply.md). The output is expected to flow into the main conversation so the caller can see each proposed change.
 - **Interactivity**: per-item approval of config patches is central to the contract; skills handle that naturally.
 - **Specialisation isn't the limiting factor**: the real logic lives in the spec and in the generator hook (a Python file), not in a narrow system prompt; a restricted agent wouldn't sharpen the work.
 - **Counter-dimension (context-window)**: the verification step (running `task docs` and reading the build output) has a mild context-window impact, but it's bounded and fits in the main conversation.
 - **Counter-dimension (parallelism / tool restriction)**: writing `scripts/docs/gen_catalog.py` is a self-contained Python-authoring task that an agent could plausibly own with a narrower tool surface (`Read`, `Write`, `Glob`). The reason it stays in the skill: the file write is one of several per-item approvals in a single apply cycle, so splitting it out would add a dispatch boundary without removing the surrounding interactivity.
 
-#### Boundary against `project-structure-apply`
+#### Boundary against [`project-structure-apply`](project-structure-apply.md)
 
-This skill follows the same orchestrator-pattern precedent as `project-structure-apply`, but the two own non-overlapping surfaces and **MUST NOT** be merged:
+This skill follows the same orchestrator-pattern precedent as [`project-structure-apply`](project-structure-apply.md), but the two own non-overlapping surfaces and **MUST NOT** be merged:
 
-- `project-structure-apply` scaffolds the bare MkDocs setup itself: `mkdocs.yml`, the Material theme, `docs/<lang>/` trees, the `task docs` target, the docs-requirements file. It is the prerequisite — without a working `mkdocs.yml`, this skill's preconditions fail and route the user there.
-- `skill-agent-catalog-apply` (this skill) wires the catalog generator on top of an already-scaffolded MkDocs setup: the `gen-files` plugin, the `literate-nav` plugin, the `docs/catalog-sources.yml` source-root list, and the `scripts/docs/gen_catalog.py` hook. It assumes the MkDocs base layer exists and never modifies the files `project-structure-apply` owns.
+- [`project-structure-apply`](project-structure-apply.md) scaffolds the bare MkDocs setup itself: `mkdocs.yml`, the Material theme, `docs/<lang>/` trees, the `task docs` target, the docs-requirements file. It is the prerequisite — without a working `mkdocs.yml`, this skill's preconditions fail and route the user there.
+- `skill-agent-catalog-apply` (this skill) wires the catalog generator on top of an already-scaffolded MkDocs setup: the `gen-files` plugin, the `literate-nav` plugin, the `docs/catalog-sources.yml` source-root list, and the `scripts/docs/gen_catalog.py` hook. It assumes the MkDocs base layer exists and never modifies the files [`project-structure-apply`](project-structure-apply.md) owns.
 
-The split is load-bearing because the catalog generator is plugin-specific (it only runs in repositories that publish skills/agents), while the bare MkDocs setup is portfolio-wide. Folding the catalog wiring into `project-structure-apply` would force every project repo to carry the catalog plumbing it doesn't need.
+The split is load-bearing because the catalog generator is plugin-specific (it only runs in repositories that publish skills/agents), while the bare MkDocs setup is portfolio-wide. Folding the catalog wiring into [`project-structure-apply`](project-structure-apply.md) would force every project repo to carry the catalog plumbing it doesn't need.

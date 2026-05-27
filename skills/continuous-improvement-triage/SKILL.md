@@ -3,6 +3,13 @@ name: continuous-improvement-triage
 description: "Operationalises spec/project/continuous-improvement/ by triaging portfolio audit findings, classifying them against the available specialist catalog, and dispatching hands-on remediation to the most specialised available Claude agent or skill. Invoke when the user asks to \"triage continuous-improvement findings\", \"classify a portfolio-improvement opportunity\", \"dispatch findings to specialised agents\", \"run the quarterly specialist-coverage review\", \"check whether a finding class needs a new specialist\", or equivalent German-language requests. Drives the three-operation loop: audit (periodic specialist-coverage review), update (record decisions and dispatch specialists), close (terminate the triage cycle). Applies the three-recurrence gap-closure rule and records all dispatch decisions in fix-PR Risk / rollout notes. Do not use to perform the hands-on remediation itself—that belongs to the dispatched specialist. Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [triage, audit]
 phase: review
+summary: "Triages portfolio audit findings and dispatches hands-on remediation to the most specialised available agent or skill."
+summary_de: "Triagiert Portfolio-Audit-Findings und dispatched die Behebung an den passendsten spezialisierten Agent oder Skill."
+use_when:
+  - "you want to triage continuous-improvement findings across the portfolio"
+  - "you want to classify a portfolio-improvement opportunity against the specialist catalog"
+  - "you want to run the quarterly specialist-coverage review"
+  - "you want to check whether a finding class needs a new specialist"
 resumable: true
 ---
 

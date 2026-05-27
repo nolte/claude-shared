@@ -3,6 +3,18 @@ name: portfolio-audit
 description: "Audits, renders, and bootstraps the cross-repository capability portfolio across `nolte/*` per `spec/portfolio/portfolio-management/`. Audit dispatches portfolio-manifest-collector agent for read-only inventory collection, then detects capability duplicates, surfaces gaps (broken peer references, spec-demanded gaps, copy-paste smells), and writes a Findings-Report under `.audits/portfolio/` with Critical / Warning / Suggestion / Info severities. Render regenerates the aggregated inventory under the per-language docs/ portfolio subtree. Bootstrap creates a repository's first `project/portfolio.yml`. Invoke when the user asks to \"audit the portfolio\", \"check for portfolio duplicates\", \"render the portfolio inventory\", or equivalent German-language requests. Don't use to consolidate duplicates (operator opens cross-repo PRs), to author new capabilities, or for per-repo tech_stack capture or refresh (use tech-stack-capture). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [audit]
 phase: quality
+summary: "Audits, renders, and bootstraps the cross-repository capability portfolio across nolte/*."
+summary_de: "Auditiert, rendert und bootstrappt das cross-repo Capability-Portfolio über nolte/*."
+use_when:
+  - "you want to audit the portfolio for duplicates or gaps"
+  - "you want to render the aggregated portfolio inventory under docs/"
+  - "you want to bootstrap a repository's first project/portfolio.yml"
+dont_use_when:
+  - situation: "You want per-repo tech-stack capture or refresh"
+    alternative: tech-stack-capture
+see_also:
+  - tech-stack-capture
+  - portfolio-manifest-collector
 resumable: true
 ---
 

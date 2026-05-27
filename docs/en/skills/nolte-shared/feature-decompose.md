@@ -8,22 +8,43 @@ last_updated: generated
 
 # feature-decompose
 
-_Decompose a roadmap item into feature files under project/features/ conforming to the canonical-language file under spec/project/feature/. Invoke when the user asks to decompose a roadmap item, break down a roadmap entry into features, draft features for a roadmap entry, scaffold a feature file, plan features for the next sprint, or write a new feature against the feature spec. Also handles equivalent German-language requests. Walks the operator through title, description, three-to-seven testable acceptance criteria, and test hooks per feature; identifies which feature carries `verifies_sprint_value`; and dispatches the `feature-consistency-reviewer` agent (or records a manual fallback pass) before allowing the new feature to leave `draft`. Do NOT use to transition feature status (`ready → in_progress` or `in_progress → done`) — that is owned by `sprint-execute` and `sprint-review`. Do NOT use to author roadmap items, sprints, or the mission file. Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Decomposes a roadmap item into feature files with testable acceptance criteria and test hooks.
+
+_Decompose a roadmap item into feature files under project/features/ conforming to the canonical-language file under spec/project/feature/. Invoke when the user asks to decompose a roadmap item, break down a roadmap entry into features, draft features for a roadmap entry, scaffold a feature file, plan features for the next sprint, or write a new feature against the feature spec. Also handles equivalent German-language requests. Walks the operator through title, description, three-to-seven testable acceptance criteria, and test hooks per feature; identifies which feature carries `verifies_sprint_value`; and dispatches the [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) agent (or records a manual fallback pass) before allowing the new feature to leave `draft`. Do NOT use to transition feature status (`ready → in_progress` or `in_progress → done`) — that is owned by [`sprint-execute`](sprint-execute.md) and [`sprint-review`](sprint-review.md). Do NOT use to author roadmap items, sprints, or the mission file. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
 - **Tags:** `scaffolding`
 - **Source:** [skills/feature-decompose/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/feature-decompose/SKILL.md)
 
+## Use when
+
+- you want to break a roadmap entry into feature files
+- you want to scaffold features for the next sprint
+- you want to draft a new feature against the feature spec
+
+## Don't use when
+
+- **You want to transition a feature's status (ready → in_progress)** → [`sprint-execute`](sprint-execute.md)
+- **You want to mark a feature done at sprint review** → [`sprint-review`](sprint-review.md)
+- **You want to author or retarget roadmap items themselves** → [`roadmap-plan`](roadmap-plan.md)
+
+## See also
+
+- [`roadmap-plan`](roadmap-plan.md)
+- [`sprint-plan`](sprint-plan.md)
+- [`sprint-execute`](sprint-execute.md)
+- [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md)
+
 ---
 
 ## Feature Decompose
 
-Decomposes one roadmap item into one or more feature files at `project/features/<slug>.md` per `spec/project/feature/<canonical_language>.md`. This skill is the only authoring surface in the feature lifecycle that creates feature files; later status transitions belong to `sprint-execute` and `sprint-review`.
+Decomposes one roadmap item into one or more feature files at `project/features/<slug>.md` per `spec/project/feature/<canonical_language>.md`. This skill is the only authoring surface in the feature lifecycle that creates feature files; later status transitions belong to [`sprint-execute`](sprint-execute.md) and [`sprint-review`](sprint-review.md).
 
 ### Why this is a skill, not an agent
 
-- **Mid-flow agent dispatch is the contract** — the spec mandates a consistency check via the `feature-consistency-reviewer` agent before `draft → ready`; the orchestrator that dispatches an agent is always a skill per `spec/claude/skill-vs-agent/` §Hybrid pattern.
+- **Mid-flow agent dispatch is the contract** — the spec mandates a consistency check via the [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) agent before `draft → ready`; the orchestrator that dispatches an agent is always a skill per `spec/claude/skill-vs-agent/` §Hybrid pattern.
 - **Per-feature operator approval** — title, description, acceptance criteria, test hooks, and the `verifies_sprint_value` choice each require user confirmation; an agent's structured-report shape can't carry those checkpoints.
 - **Persistent on-disk artefact under iterative drafting** — feature files live next to the roadmap and sprint corpus and are mutated again later by other skills; the iterative drafting (consistency findings → resolutions → final write) flows back into the main conversation naturally.
 - Counter-dimension considered: a narrower agent prompt could sharpen acceptance-criterion phrasing, but the load-bearing dimensions here are mid-flow agent dispatch and per-step operator approval — skill wins.
@@ -39,8 +60,8 @@ Before any write, confirm:
 - The current repository carries `spec/project/feature/<canonical_language>.md`. If absent, stop — the spec is the input to this skill, not optional.
 - `project/roadmap.md` exists and the target `roadmap_item` (passed by the user as `R-<n>`) is present in it; resolve its `outcomes`, `detail`, `target_sprint`, and `mvp` fields so they can be quoted into per-feature context.
 - `project/goals.md` exists and the roadmap item's `outcomes` list resolves; if not, stop and surface the broken outcome reference rather than guessing.
-- An audience artefact exists when the project carries `project/mission.md`; missing audiences block feature authoring the same way they block outcome and mission authoring (per `spec/project/roadmap/` and `spec/project/mission/`). Dispatch `audience-identify` first if needed.
-- The `feature-consistency-reviewer` agent is reachable in the current plugin runtime, **or** the operator explicitly acknowledges the manual-fallback path and provides a manual-pass identifier of the form `manual-<YYYY-MM-DD>` (per `spec/project/feature/` §Consistency check). The fallback is permitted only until the agent ships; once the agent is reachable, refuse to fall back.
+- An audience artefact exists when the project carries `project/mission.md`; missing audiences block feature authoring the same way they block outcome and mission authoring (per `spec/project/roadmap/` and `spec/project/mission/`). Dispatch [`audience-identify`](audience-identify.md) first if needed.
+- The [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) agent is reachable in the current plugin runtime, **or** the operator explicitly acknowledges the manual-fallback path and provides a manual-pass identifier of the form `manual-<YYYY-MM-DD>` (per `spec/project/feature/` §Consistency check). The fallback is permitted only until the agent ships; once the agent is reachable, refuse to fall back.
 - The next free `F-<n>` ID is determinable by reading the highest existing ID under `project/features/`; never reuse a retired ID.
 
 ### Operations
@@ -54,7 +75,7 @@ operator decides N.
    `project/roadmap.md` and replay its `title`, `outcomes`, `detail`,
    `target_sprint`, and `mvp` flag back to the operator. If `detail` is
    `coarse` or `backlog` and the item is targeted at the current or next
-   sprint, stop and recommend running `roadmap-refine` first — decomposing a
+   sprint, stop and recommend running [`roadmap-refine`](roadmap-refine.md) first — decomposing a
    non-`fine` item violates the roadmap spec.
 2. **Propose a feature split.** Suggest one to four feature titles based on
    the roadmap item's body checklist (when present) or its prose. The
@@ -85,7 +106,7 @@ operator decides N.
    that feature **MUST** carry `verifies_sprint_value: acceptance-<n>`
    naming the criterion that proves the sprint's `value_statement`. When
    the operator is unsure, leave all features with
-   `verifies_sprint_value: null` — `sprint-plan` may reassign it later.
+   `verifies_sprint_value: null` — [`sprint-plan`](sprint-plan.md) may reassign it later.
 5. **Run the consistency check** (mandatory; see Operation 2). Block the
    write until the check completes and every `overlap` or `duplication`
    finding is resolved.
@@ -99,8 +120,8 @@ operator decides N.
    MAY follow the required five.
 7. **Confirm paths back to the operator** in their language and remind
    them that `draft → ready`, `ready → in_progress`, and
-   `in_progress → done` are owned by `sprint-plan`, `sprint-execute`, and
-   `sprint-review` respectively — not by this skill.
+   `in_progress → done` are owned by [`sprint-plan`](sprint-plan.md), [`sprint-execute`](sprint-execute.md), and
+   [`sprint-review`](sprint-review.md) respectively — not by this skill.
 
 #### 2. Run the consistency check
 
@@ -109,7 +130,7 @@ populated `consistency_check` frontmatter object. The check is what allows a
 downstream skill to later transition `draft → ready`; without it, the
 feature is malformed.
 
-1. **Dispatch the `feature-consistency-reviewer` agent** with the draft
+1. **Dispatch the [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) agent** with the draft
    frontmatter and body assembled in step 3 of Operation 1, the resolved
    `roadmap_item`, the slug, and a short git revision identifier
    (`git rev-parse --short HEAD` from the dispatching skill — the agent
@@ -121,7 +142,7 @@ feature is malformed.
    the agent — that precondition has moved from the agent to here when
    the agent's `tools` list dropped `Bash`.
 2. **Manual fallback (deprecated, transitional only).** The
-   `feature-consistency-reviewer` agent ships with this skill — under
+   [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) agent ships with this skill — under
    normal conditions the dispatch in step 1 succeeds and the fallback
    isn't reached. The fallback exists exclusively for repos whose
    plugin runtime predates the agent's availability: when step 1 can't
@@ -158,7 +179,7 @@ feature is malformed.
 5. **Record the manual-pass author** in `## Consistency notes` when
    `agent_version` starts with `manual-`. The fallback is already
    deprecated as of the commit that ships this skill alongside the
-   `feature-consistency-reviewer` agent. Every manual pass on a repo
+   [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) agent. Every manual pass on a repo
    whose plugin runtime can resolve the agent is a workflow-health
    finding per `spec/project/feature/` §Consistency check; the right
    resolution is to upgrade the plugin runtime and rerun the check via
@@ -172,9 +193,9 @@ feature is malformed.
 
 ### Gotchas
 
-- **The `feature-consistency-reviewer` agent has no shell access** (per `agent-management` §Tool access — read-only invariant). The dispatching call from this skill **MUST** confirm the working tree is a git repository (`git rev-parse --is-inside-work-tree`) and pass the short SHA (`git rev-parse --short HEAD`) as a dispatch argument; the agent uses the SHA to populate `agent_version` in its findings report. Skipping this step and dispatching anyway produces an `agent_version: unknown` field in every consistency-check result.
+- **The [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) agent has no shell access** (per `agent-management` §Tool access — read-only invariant). The dispatching call from this skill **MUST** confirm the working tree is a git repository (`git rev-parse --is-inside-work-tree`) and pass the short SHA (`git rev-parse --short HEAD`) as a dispatch argument; the agent uses the SHA to populate `agent_version` in its findings report. Skipping this step and dispatching anyway produces an `agent_version: unknown` field in every consistency-check result.
 - **The manual-fallback path is deprecated, not removed.** When the agent dispatch in Operation 2 step 1 fails because the plugin runtime predates the agent's release, the operator can still walk the investigation surface manually — but the skill **MUST** ask explicit permission before falling back, and the resulting `consistency_check` block carries `agent: manual-<YYYY-MM-DD>` instead of an agent name. Auditing later that bypasses surface as if it were a regular agent run mis-attributes the resolution decisions.
-- **`verifies_sprint_value` is a feature-side invariant, not a sprint-side one.** At most one feature per sprint carries a non-null `verifies_sprint_value`; setting it on two features in the same sprint is a hard violation per `spec/project/feature/` §Frontmatter schema. The skill defaults the field to `null` on every new feature; the operator opts in explicitly when authoring or when `sprint-plan` reassigns the verifier.
+- **`verifies_sprint_value` is a feature-side invariant, not a sprint-side one.** At most one feature per sprint carries a non-null `verifies_sprint_value`; setting it on two features in the same sprint is a hard violation per `spec/project/feature/` §Frontmatter schema. The skill defaults the field to `null` on every new feature; the operator opts in explicitly when authoring or when [`sprint-plan`](sprint-plan.md) reassigns the verifier.
 - **The `R-<n>` and `F-<n>` ID counters are monotonic across the project's lifetime, never reused** even after deletion. Deriving the next ID from "max existing ID + 1" without checking the git history's deleted IDs would silently re-use a retired ID. The skill reads the highest existing ID under `project/features/` plus the highest deleted ID from `git log` before assigning.
 
 ### Resumability
@@ -183,9 +204,9 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ### Hard rules
 
-- **Never** transition a feature past `status: draft`. Only `sprint-plan`
-  (`draft → ready` after a `sprint` value is assigned) and `sprint-execute` /
-  `sprint-review` (later transitions) own status flips. This skill writes
+- **Never** transition a feature past `status: draft`. Only [`sprint-plan`](sprint-plan.md)
+  (`draft → ready` after a `sprint` value is assigned) and [`sprint-execute`](sprint-execute.md) /
+  [`sprint-review`](sprint-review.md) (later transitions) own status flips. This skill writes
   `status: draft` and stops.
 - **Never** write a feature file without a populated `consistency_check`
   frontmatter object whose `findings` array is non-empty (a clean run still
@@ -203,7 +224,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** include effort estimates, points, due dates, or assignment
   fields beyond the nine declared frontmatter fields; lints flag unknown
   keys.
-- **Never** dispatch `feature-consistency-reviewer` from inside an agent
+- **Never** dispatch [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) from inside an agent
   context. This is a skill operation; the parent dispatcher of this skill
   is the user or another skill, never an agent.
 - **Never** write the feature file when the operator declines to resolve an

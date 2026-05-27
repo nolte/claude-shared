@@ -5,6 +5,8 @@ Status: draft
 ## Context
 This repository ships reusable Claude Code skills and agents as the `nolte-shared` plugin, and the published MkDocs site is the discovery surface for both this plugin and any other Claude Code plugins consumed alongside it. The `skill-management` and `agent-management` specs define the on-disk shape of these artifacts, but consumers need a browsable catalog to see what's available, what each artifact does, and when Claude will invoke it. Today such a catalog would have to be maintained by hand and would drift whenever a skill or agent is added, renamed, or reworked. This spec defines how the MkDocs documentation site exposes an always-current catalog of skills and agents—generated from the very source files that already govern them, across this plugin and any additional plugins configured into the docs build. It's the foundation for generating the corresponding documentation objects.
 
+**Readers**: catalog-generator implementors (the `scripts/docs/gen_catalog.py` pre-build step), `skill-agent-catalog-apply` skill authors (consumer-side wiring), task-oriented landing-page authors. Skill and agent authors themselves should read `skill-management` and `agent-management` instead—those specs hold the per-artifact authoring rules and delegate catalog-specific schema details (per-language summary, use-case metadata) back to this spec.
+
 ### Operating modes
 The catalog applies to two kinds of repositories:
 
@@ -19,7 +21,10 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - Each catalog entry shows the artifact's canonical metadata (`name`, `description`, `distribution` for agents, `phase`, `tags` when present) and links back to the source on the originating plugin's repository
 - The catalog regenerates as part of the normal `task docs` / `mkdocs build` flow with no extra manual step
 - Readers can tell at a glance which plugin provides which artifact, which delivery-lifecycle phase it belongs to, and they can browse by tag
-- The catalog integrates with the existing multilingual MkDocs layout (`docs/en/`, `docs/de/`) without forcing translation of artifact metadata
+- The catalog integrates with the existing multilingual MkDocs layout (`docs/en/`, `docs/de/`) and **MAY** carry a translated short summary per language so non-English readers can scan the catalog without losing the English routing metadata
+- Each catalog entry surfaces scannable use-case metadata—when to invoke the artifact, when not to (with named alternatives), peers worth comparing, and short prompt/outcome examples—so readers can pick the right skill or agent without reading the full body
+- Readers can enter the catalog through task-oriented landing pages ("I want to publish a release," "I want to write a spec") that disambiguate similar artifacts, in addition to the phase- and tag-oriented indexes
+- Catalog entries cross-link automatically: structured peer references and inline-code mentions of known skill or agent names become real links between catalog pages
 
 ## Non-Goals
 - Defining the on-disk shape of skills or agents (owned by `skill-management` and `agent-management`)
@@ -39,7 +44,9 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 
 ### Content of a catalog entry
 - **MUST** render the frontmatter `name` as the page title
-- **MUST** include the full `description` verbatim
+- **MUST** include the full `description` verbatim—the generator preserves the source text without translation, summarization, or content substitution. The cross-linking pass described in §Cross-linking is the single sanctioned exception: it rewrites inline-code mentions of known artifact names into Markdown links without altering surrounding prose
+- **MUST**, when the artifact's frontmatter declares `summary`, render that summary as a short subtitle above the routing description (see "Per-language short summary" below for the per-language resolution and fallback rules)
+- **MUST**, when the artifact's frontmatter declares any of `use_when`, `dont_use_when`, `see_also`, or `examples`, render the corresponding scannable section using the chrome-localized labels (see "Use-case metadata" below)
 - **MUST** include the `distribution` field for agents (`plugin` or `project`)
 - **MUST** label each entry with the source plugin it comes from (for example `nolte-shared`)
 - **MUST** link to the source file in the originating plugin's repository on its main branch; the link base URL is configured per plugin source root (for example `https://github.com/nolte/claude-shared/blob/main/...`)
@@ -65,6 +72,27 @@ Every skill and agent **MUST** declare which phase of the delivery lifecycle it 
 - **MUST NOT** declare `phase` as a list; a single artifact occupies exactly one phase. Artefacts whose responsibility spans multiple phases either get a more focused split or, when no split is appropriate, are classified as `cross-cutting`
 - **SHOULD**, when authoring a new artifact, pick the **earliest phase** in the lifecycle the artifact is normally invoked in; review and quality artifacts that are themselves invoked from a build-phase skill belong to the artifact's own primary purpose, not to the calling phase
 
+### Per-language short summary
+The `description` field is the routing source-of-truth Claude Code reads to decide whether to dispatch an artifact, so it tends to be long, English, and trigger-dense—hard for a human reader to scan, hard for a non-English reader to grasp. The catalog therefore renders an additional, optional, per-language **short summary** above the routing description.
+
+- **MAY** declare a top-level `summary:` field in the YAML frontmatter of a skill (`SKILL.md`) or agent (`<name>.md`); the value is a string, ≤200 characters, written in English (the canonical metadata language per `skill-management` / `agent-management`)
+- **MAY** declare, for every additional docs language `<lang>` configured in the consuming MkDocs site (per `spec/project/mkdocs-structure/` §i18n and parity), a sibling field `summary_<lang>:` (for example `summary_de:`) carrying the translated short summary; the value is a string, ≤200 characters
+- **MUST**, when rendering the catalog page for docs language `<lang>`, resolve the displayed summary in this order: (1) `summary_<lang>` if declared, (2) `summary` (the English canonical) if declared, (3) the first sentence of `description` truncated to 200 characters as the fallback
+- **MUST**, when a catalog page falls back to the English `summary` or to the `description` truncation in a non-English docs language, render a visible "translation pending" badge using the chrome-localized label, AND tag the page with the reserved auto-tag `_translation-pending` so the tag index surfaces every untranslated entry
+- **MUST NOT** treat `_translation-pending` as an author-declared tag; the underscore-prefixed name is reserved for generator-emitted auto-tags and **MUST NOT** appear in the artifact's `tags` frontmatter (the underscore prefix is the visible marker that the tag isn't human-curated)
+- **MUST** validate `summary` and every `summary_<lang>` as plain strings; the docs build fails with a clear file-and-field error when the value is missing the string type, exceeds 200 characters, or is empty after whitespace stripping
+
+### Use-case metadata
+The `description` field collapses every routing signal—positive triggers, negative triggers, alternatives, examples—into a single dense prose block, which makes it hard for human readers to scan and impossible for the catalog to link peers automatically. This section defines four optional, structured frontmatter fields the catalog renders as scannable sections and uses to drive automatic cross-linking (see "Cross-linking" below).
+
+- **MAY** declare a `use_when:` field in the YAML frontmatter of a skill or agent; the value is a YAML list of plain strings, each describing one concrete trigger scenario ("you want to publish a release," "you have a failing CI run on `develop`"). Limits: ≤6 entries, each ≤120 characters
+- **MAY** declare a `dont_use_when:` field; the value is a YAML list of mappings, each with the keys `situation` (plain string, ≤120 characters) and `alternative` (a single skill or agent `name` to redirect to). Limits: ≤6 entries; every `alternative` value **MUST** resolve to a skill or agent discoverable in any configured plugin source root, or the docs build fails
+- **MAY** declare a `see_also:` field; the value is a YAML list of skill or agent names (each a plain string matching a discoverable artifact's `name`). Limits: ≤8 entries; every entry **MUST** resolve to a discoverable artifact
+- **MAY** declare an `examples:` field; the value is a YAML list of mappings, each with the keys `prompt` (plain string, ≤200 characters, illustrating the kind of request that triggers the artifact) and `outcome` (plain string, ≤200 characters, describing the artifact's response). Limits: ≤4 entries
+- **MUST** render each declared field on the catalog page as its own scannable section using the chrome-localized labels (for English: `Use when`, `Don't use when`, `See also`, `Examples`; for German: `Anwenden wenn`, `Nicht anwenden wenn`, `Siehe auch`, `Beispiele`)
+- **MUST** treat all four fields as optional in this spec; their authoring requirement (when authors **SHOULD** declare them) is owned by `skill-management` and `agent-management`
+- **MUST** validate every field's shape (list type, element type, key set, character limits) and the resolvability of `dont_use_when[].alternative` and `see_also[]` against the discovered catalog; on any violation the docs build fails with a clear error naming the offending file, field, and value
+
 ### Generation mechanism
 - **MUST** generate catalog pages from the source files
 - The repository **MUST NOT** commit generated catalog markdown back into `docs/` _unless_ the docs-deploy pipeline (the workflow that produces the GitHub Pages output) bypasses `task docs` / the configured catalog generator and invokes `mkdocs build` directly. In that case the repository **MUST** commit the generated catalog files so the deploy build picks them up from the checkout, AND **MUST** ship a CI freshness check that fails the build when the committed catalog drifts from a fresh re-generation (typical shape: `task docs:catalog && git diff --exit-code docs/<lang>/{skills,agents} docs/<lang>/tags.md`)
@@ -73,26 +101,51 @@ Every skill and agent **MUST** declare which phase of the delivery lifecycle it 
 - **MUST** read plugin source roots from a configured list—each entry pairing the local source path with the public repository URL used for source links—so additional plugins can be added without changing generator code
 - **MUST** expose catalog generation through `task docs` so local builds and CI produce identical output; in the pre-build form this is wired by declaring the generator step as a Taskfile dependency of the docs task
 - **MUST NOT** require a separate manual "regenerate catalog" step outside the normal docs build
-- **MUST** write the five per-page MUST frontmatter keys (`title`, `audience`, `content_mode`, `track`, `last_updated`) per `spec/project/mkdocs-structure/` §Per-page structure on every generated catalog file (per-artifact page, per-section `index.md`, literate-nav `SUMMARY.md`, tag index). The generator **MUST** fix `track: developer-docs` for every catalog file (rather than reading the value per-artifact from source frontmatter) per `spec/project/docs-audience-tracks/` §Audience-to-track mapping, so the catalog audience stays consistent across source plugins and per-page `track` values don't drift
+- **MUST** write the five per-page MUST frontmatter keys (`title`, `audience`, `content_mode`, `track`, `last_updated`) per `spec/project/mkdocs-structure/` §Per-page structure on every generated catalog file (per-artifact page, per-section `index.md`, literate-nav `SUMMARY.md`, tag index, task-oriented landing page). The generator **MUST** fix `track: developer-docs` for every catalog file (rather than reading the value per-artifact from source frontmatter) per `spec/project/docs-audience-tracks/` §Audience-to-track mapping, so the catalog audience stays consistent across source plugins and per-page `track` values don't drift
+- **MUST** parse source frontmatter with a standard YAML parser (PyYAML or equivalent) that supports nested mappings and sequences of mappings; the older flat-only line parser is insufficient because `dont_use_when` and `examples` (see "Use-case metadata") declare lists of mappings
+
+### Cross-linking
+The catalog is a network of related artifacts, but a reader can only follow that network when peer references are real hyperlinks. The generator therefore performs two cross-linking passes after discovering every artifact across every plugin source root.
+
+- **MUST** build, per docs language, an index mapping each discovered artifact's `name` to its catalog page URL (one entry per skill, one per agent) before rendering any page
+- **MUST** transform every structured peer reference into a Markdown link to the peer's catalog page: every `dont_use_when[].alternative` value and every `see_also[]` entry **MUST** render as a clickable link, never as plain text
+- **MUST** transform inline-code mentions of known artifact names in the rendered `description`, `summary`, `summary_<lang>`, and body into Markdown links to the matching catalog page, **but only** when the inline-code span (`` `name` ``) matches exactly one entry in the cross-link index for that docs language
+- **MUST NOT** transform plain-text occurrences of artifact names outside inline-code spans, to avoid false positives on generic words that coincidentally collide with an artifact name
+- **MUST**, when an inline-code mention matches more than one artifact (for example a skill and an agent share the same short label, or two plugins ship artifacts of the same name), leave the mention unlinked AND emit a generator warning naming the file, the ambiguous mention, and the colliding artifacts
+- **MUST**, when a structured peer reference (`dont_use_when[].alternative` or `see_also[]`) doesn't resolve to any discovered artifact, fail the docs build (per "Use-case metadata" above); inline-code mentions that don't resolve are left as plain inline code without a warning
 
 ### Navigation and layout
 - **MUST** expose the catalog under stable top-level sections in the MkDocs navigation—at minimum a `Skills` section and an `Agents` section
 - **MUST** group entries within each section **first by phase** (in the canonical phase order listed under "Phase classification": `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`), then by source plugin within each phase, so readers can see at a glance which artifacts apply to each delivery-lifecycle phase
 - **MUST** order catalog entries deterministically—alphabetical by `name` within each plugin sub-group of each phase—so diffs of the rendered site stay stable
 - **MUST** omit a phase heading that has no entries; an empty phase isn't rendered
-- **SHOULD** provide an index page per section summarizing every entry (name + description + phase + tags) with links to the detail pages
-- **SHOULD** provide a tag index that lists every tag across all entries and links to the artifacts that declare it
+- **MUST** provide an index page per section summarizing every entry (name + description + phase + tags) with links to the detail pages; the index page **MUST** include a prominent link to the section's task-oriented landing page (see "Task-oriented landing pages" below). Discoverability is this spec's core mission and a catalog without per-section index pages would force readers back into the navigation tree to scan
+- **MUST** provide a tag index that lists every tag across all entries and links to the artifacts that declare it; the tag index **MUST** also list every reserved auto-tag emitted by the generator (currently `_translation-pending`) when at least one artifact carries it. When no artifact in the catalog declares any tag the page **MAY** be omitted; the generator then **MUST NOT** leave a dangling link from any other catalog page
+
+### Task-oriented landing pages
+The phase- and tag-oriented indexes assume a reader who already speaks the catalog's vocabulary. A reader who only knows what they want to do—"publish a release," "write a spec," "open a PR"—is left guessing. A small set of hand-curated, task-oriented landing pages closes that gap by grouping artifacts by user intent rather than by lifecycle phase.
+
+- **MUST** ship at least one task-oriented landing page per configured docs language at a stable path under each section (recommended: `docs/<lang>/skills/by-task.md` and `docs/<lang>/agents/by-task.md`, or a combined `docs/<lang>/by-task.md` linked from both section indexes)
+- **MUST** group artifacts on the landing page by user-intent rubrics (each rubric a short H2 such as "Open a pull request," "Publish a release," "Author a spec," "Audit something"); under each rubric, list the relevant skills and agents with a one-sentence disambiguation that tells the reader which one to pick when several are listed
+- **SHOULD** keep the rubric set small at first (three to five rubrics) and grow it as use-case patterns emerge; an exhaustive landing page that mirrors the phase index defeats its purpose
+- **MAY** have the catalog generator emit a skeleton landing-page file populated from artifacts' `use_when` entries when no landing page exists yet; the skeleton is a starting point for a human author, and the generator **MUST NOT** rewrite it on subsequent runs once the file exists
+- **MUST** treat the landing page as a regular MkDocs page subject to the five-key per-page frontmatter contract (`title`, `audience`, `content_mode`, `track`, `last_updated`); generator-emitted skeletons declare `last_updated: generated`, hand-curated landing pages carry an ISO-8601 date
 
 ### Multilingual behavior
-- **MUST** render artifact metadata (`name`, `description`, `distribution`, `tags`, body) as-is from the source frontmatter; for artifacts shipped by this repository this is English by the `skill-management` / `agent-management` rule, while external plugins are rendered verbatim regardless of their own language conventions
-- **MUST** treat `tags` as identifiers, not prose: they're rendered in their canonical lowercase ASCII kebab-case form (per `skill-management` / `agent-management`) and never translated, case-folded, or otherwise rewritten between docs languages
-- **SHOULD** localize only the surrounding chrome—section titles, intro paragraphs, navigation labels, the tag-index header—into each configured docs language (`docs/en/`, `docs/de/`)
-- **MUST NOT** translate artifact metadata or body at generation time; translations of those fields are out of scope
+- **MUST** render artifact identifiers (`name`, `distribution`, `tags`, `phase`) as-is from the source frontmatter; these are technical identifiers and **MUST NOT** be translated, case-folded, or otherwise rewritten between docs languages
+- **MUST** render the source `description` and body without translation, summarization, or content substitution—these fields are the routing source-of-truth Claude reads to dispatch the artifact, and their wording stays untouched. The cross-linking pass described in §Cross-linking is the single sanctioned exception: it rewrites inline-code mentions of known artifact names into Markdown links without altering surrounding prose
+- **MAY** render a translated short summary above the routing description per docs language, sourced from the `summary_<lang>` frontmatter field per "Per-language short summary" above; this is the single sanctioned translation surface for catalog content
+- **SHOULD** localize the surrounding chrome—section titles, intro paragraphs, navigation labels, tag-index header, phase labels, use-case section labels, "translation pending" badge—into each configured docs language (`docs/en/`, `docs/de/`)
+- **MUST NOT** translate `description`, body, identifiers, or `tags` at generation time; the only translated catalog content is the per-language summary and the chrome
 
 ### Error handling
 - **MUST** fail the docs build when a skill or agent has missing or invalid frontmatter rather than producing a broken catalog
 - **MUST** emit a clear error message that names the offending source file and the plugin source root it came from
 - **MUST** fail the docs build when an artifact's `phase` is missing or isn't in the phase vocabulary, with an error message that names the offending file, the plugin source root, and the value of the rejected `phase`
+- **MUST** fail the docs build when `summary` or any `summary_<lang>` violates its shape constraints (non-string type, empty after whitespace stripping, or longer than 200 characters), naming the offending file and field
+- **MUST** fail the docs build when any of `use_when`, `dont_use_when`, `see_also`, or `examples` violates its shape contract from "Use-case metadata" (wrong type, wrong key set on mapping elements, over the entry or character limit), naming the offending file, field, and offending value
+- **MUST** fail the docs build when a `dont_use_when[].alternative` or `see_also[]` value names a skill or agent that no configured plugin source root provides, naming the offending file, the unresolved name, and the field it appeared in
+- **MUST** emit a non-fatal generator warning (build still passes) when an inline-code mention in a rendered `description`, `summary`, `summary_<lang>`, or body matches more than one discovered artifact and is therefore left unlinked, naming the offending file, the ambiguous mention, and the colliding artifacts
 
 ## Acceptance Criteria
 - [ ] `task docs` produces a docs site whose navigation contains a Skills section with one page per skill across all configured plugin source roots
@@ -101,7 +154,7 @@ Every skill and agent **MUST** declare which phase of the delivery lifecycle it 
 - [ ] When an artifact's frontmatter declares `tags`, those tags appear on the catalog page
 - [ ] Each catalog page contains a direct link to the source file on the originating plugin's main-branch repository URL
 - [ ] Adding a new skill or agent in any configured plugin source root requires no manual edit to `docs/` or `mkdocs.yml` for the entry to appear
-- [ ] Every generated catalog file (per-artifact page, per-section `index.md`, literate-nav `SUMMARY.md`, tag index) declares the five-key per-page frontmatter set (`title`, `audience`, `content_mode`, `track`, `last_updated`) per `spec/project/mkdocs-structure/` §Per-page structure; the `track` value is generator-fixed to `developer-docs` per `spec/project/docs-audience-tracks/`
+- [ ] Every generated catalog file (per-artifact page, per-section `index.md`, literate-nav `SUMMARY.md`, tag index, task-oriented landing page) declares the five-key per-page frontmatter set (`title`, `audience`, `content_mode`, `track`, `last_updated`) per `spec/project/mkdocs-structure/` §Per-page structure; the `track` value is generator-fixed to `developer-docs` per `spec/project/docs-audience-tracks/`
 - [ ] Removing a skill or agent removes the corresponding catalog page on the next `task docs` run
 - [ ] `mkdocs.yml` declares `mkdocs-literate-nav`, and a configured list of plugin source roots (each pairing a local path with a public repository URL) is read by the catalog generator
 - [ ] The catalog generator is either declared as a `mkdocs-gen-files` script in `mkdocs.yml` or wired into `task docs` as a standalone pre-build step
@@ -115,10 +168,25 @@ Every skill and agent **MUST** declare which phase of the delivery lifecycle it 
 - [ ] Each catalog page displays the artifact's `phase` as a visible badge using the localized chrome label
 - [ ] The Skills and Agents index pages render a per-phase heading (omitting phases with zero entries) above each plugin sub-group
 - [ ] A tag index page exists and links to every artifact that declares the tag
+- [ ] Each section index page links prominently to its task-oriented landing page (`by-task.md`)
+- [ ] At least one task-oriented landing page exists per configured docs language, grouping artifacts by user intent with one-sentence disambiguations
+- [ ] When an artifact declares `summary`, the catalog page renders it as a short subtitle above the routing `description`; when `summary_<lang>` is declared for a docs language, the `<lang>` page renders the translated summary instead
+- [ ] When the catalog falls back to the English `summary` or to a `description` truncation on a non-English docs language, the page shows a chrome-localized "translation pending" badge and the auto-tag `_translation-pending` appears in the tag index
+- [ ] The reserved auto-tag `_translation-pending` is never accepted in source-frontmatter `tags`; declaring it there fails the docs build
+- [ ] When an artifact declares `use_when`, `dont_use_when`, `see_also`, or `examples`, the catalog page renders each declared field as a scannable section under a chrome-localized label
+- [ ] `dont_use_when[].alternative` and `see_also[]` values render as Markdown links pointing to the referenced artifact's catalog page; an unresolvable name fails the docs build
+- [ ] Inline-code mentions (`` `name` ``) of known artifact names in `description`, `summary`, `summary_<lang>`, and body render as Markdown links to the matching catalog page; ambiguous mentions stay unlinked and emit a generator warning naming the file and colliding artifacts
+- [ ] A `summary` or `summary_<lang>` longer than 200 characters or empty after whitespace stripping fails the docs build with a file-and-field error
+- [ ] A malformed `use_when`, `dont_use_when`, `see_also`, or `examples` (wrong type, wrong key set, over the limit) fails the docs build with a file-and-field error
+- [ ] The catalog generator parses source frontmatter with a standard YAML parser that supports nested mappings (rejecting the older flat-only line parser)
+- [ ] Every task-oriented landing page (generator-emitted skeleton or hand-curated) declares the five-key per-page frontmatter set; generator-emitted skeletons carry `last_updated: generated`, hand-curated landing pages carry an ISO-8601 date
+- [ ] When the catalog generator emits a skeleton landing page from artifacts' `use_when` entries, a subsequent `task docs` run leaves the file unchanged if it already exists; the skeleton is a one-shot starting point
+- [ ] Plain-text occurrences of artifact names that aren't wrapped in inline-code spans (backticks) are never transformed into Markdown links on any rendered catalog page—only inline-code mentions are eligible for the cross-linking rewrite
 
 ## Open Questions
 - Should versions of skills and agents (history, changelogs) appear in the catalog, or is the git history sufficient?
-- If translations of an artifact body are ever desired, where do they live—a parallel `skills/<name>/docs/<lang>.md`, or separately curated pages under `docs/<lang>/`?
 - How are plugin source roots configured exactly—inline in `mkdocs.yml` under the `gen-files` plugin config, or in a sibling YAML file referenced from there?
 - How should this spec evolve once `mkdocs-static-i18n` upstream supports files emitted by `mkdocs-gen-files`? As of May 2026 (`mkdocs-static-i18n` 1.3.1) those files are silently dropped in `reconfigure.py` because their `abs_src_path` is outside `docs_dir`, which forces the pre-build form whenever folder-strategy i18n is in use.
 - The docs-deploy detour: should we standardise on bumping the `nolte/gh-plumbing` `reusable-mkdocs.yaml` upstream to call `task docs` instead, so every consumer can stay on the cleaner "no committed catalog" form? The conditional rule above exists because `reusable-mkdocs.yaml@v1.1.12` invokes `mhausenblas/mkdocs-deploy-gh-pages@1.26` directly, which runs `mkdocs build` and never sees `task docs`.
+- Should `use_when`, `dont_use_when`, `see_also`, and `examples` graduate from optional to required for newly authored artifacts after the pilot migration validates the format, or should they remain perpetually optional with `description` still doing double duty?
+- Should the catalog ever surface peer references *into* an artifact (that is, an artifact `A` lists `B` in `see_also`; should `B`'s catalog page show a back-reference to `A`)? Useful for navigation, costs an extra render pass.

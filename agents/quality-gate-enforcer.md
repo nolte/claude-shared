@@ -5,6 +5,22 @@ distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
 phase: quality
+summary: "Reviews the quality-gate wiring (Taskfile, pre-commit, CI workflow, timeouts) for spec-conformance; never executes the gate."
+summary_de: "Prüft die Quality-Gate-Verdrahtung (Taskfile, pre-commit, CI-Workflow, Timeouts) auf Spec-Konformität; führt das Gate nie aus."
+use_when:
+  - "you want to audit the quality-gate wiring against the spec"
+  - "you want a structured findings list (composition gap, runner drift, timeout missing)"
+dont_use_when:
+  - situation: "You want to actually run the gate locally"
+    alternative: quality-gate
+  - situation: "You want to triage a red CI run"
+    alternative: workflow-health-triage
+  - situation: "You want to audit CVEs"
+    alternative: dependency-audit
+see_also:
+  - quality-gate
+  - workflow-health-triage
+  - dependency-audit
 ---
 
 # Quality Gate Enforcer

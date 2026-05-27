@@ -3,6 +3,21 @@ name: webview-ui-optimize
 description: "Audits a browser-rendered frontend against the canonical-language file under spec/frontend/webview-ui-optimization/ and, with per-item user approval, patches findings across five domains: Performance, Security, Accessibility (WCAG 2.2 AA), Internationalisation, and UX. Three operations: `audit` (written to `.audits/webview-ui-optimize/`), `patch` (one finding at a time), `expert-review` (dispatches `webview-ui-expert`). Invoke when the user asks to \"audit the frontend\", \"check the UI against the webview-ui spec\", \"optimise for performance / a11y / i18n / UX / security\", \"fix the CSP\", \"wire up vitest-axe\", or equivalent German-language requests. Don't use for brand-design decisions, audience artefact (`audience-identify`), prose linting (`prose-vale-curator`), CVE audits (`dependency-audit`), or release-pipeline (`release-automation`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [audit, scaffolding]
 phase: design
+summary: "Audits and patches a browser-rendered frontend across Performance, Security, A11y (WCAG 2.2 AA), i18n, and UX."
+summary_de: "Auditiert und patcht ein Browser-gerendertes Frontend über Performance, Security, Barrierefreiheit (WCAG 2.2 AA), i18n und UX."
+use_when:
+  - "you want to audit a frontend against the webview-ui spec"
+  - "you want to patch a single finding (CSP, axe rule, prefers-reduced-motion, etc.)"
+  - "you want a deeper expert-review pass on a named target"
+dont_use_when:
+  - situation: "You want CVE auditing rather than UI optimisation"
+    alternative: dependency-audit
+  - situation: "You want prose / Vale linting"
+    alternative: prose-vale-curator
+see_also:
+  - webview-ui-expert
+  - dependency-audit
+  - prose-vale-curator
 resumable: true
 ---
 

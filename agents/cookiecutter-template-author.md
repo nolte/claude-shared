@@ -5,6 +5,17 @@ distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch
 tags: [scaffolding, quality-gate]
 phase: cross-cutting
+summary: "Scaffolds or refactors Cookiecutter templates, hardens hooks, sets up pytest-cookies harness + GitHub Actions matrix."
+summary_de: "Scaffoldet oder überarbeitet Cookiecutter-Templates, härtet Hooks ab, richtet pytest-cookies-Harness + GitHub-Actions-Matrix ein."
+use_when:
+  - "you want to scaffold a fresh Cookiecutter template against the spec corpus"
+  - "you want to author or harden a Cookiecutter hook (pre_prompt / pre_gen / post_gen)"
+  - "you want to set up a pytest-cookies test harness with a CI matrix"
+dont_use_when:
+  - situation: "You want the full template lifecycle (manage, scaffold, refactor) with name/purpose discovery"
+    alternative: cookiecutter-template-manage
+see_also:
+  - cookiecutter-template-manage
 ---
 
 # Cookiecutter Template Author

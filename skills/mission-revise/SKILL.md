@@ -3,6 +3,18 @@ name: mission-revise
 description: "Revises an existing `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests. Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`. Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding]
 phase: vision
+summary: "Revises an existing project/mission.md: statement, audiences, time bound, or mvp_status lifecycle flips."
+summary_de: "Überarbeitet eine bestehende project/mission.md: Statement, Audiences, Time-Bound oder mvp_status-Lifecycle-Flips."
+use_when:
+  - "you want to revise the mission statement, audiences, or verifying-feature pointer"
+  - "you want to flip mvp_status (defining → in_progress → achieved → stabilised)"
+  - "you want to revise the mission after stabilisation (rationale required)"
+dont_use_when:
+  - situation: "project/mission.md does not exist yet"
+    alternative: mission-define
+see_also:
+  - mission-define
+  - roadmap-plan
 resumable: true
 ---
 

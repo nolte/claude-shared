@@ -6,6 +6,24 @@ tools: Read, Glob, Grep, Bash
 model: sonnet
 tags: [review, audit]
 phase: design
+summary: "Read-only deep cross-file review of one named frontend target across Performance, Security, A11y, i18n, UX."
+summary_de: "Nur-Lese-Cross-File-Deep-Review eines benannten Frontend-Ziels über Performance, Security, Barrierefreiheit, i18n, UX."
+use_when:
+  - "webview-ui-optimize's expert-review dispatches a deeper read"
+  - "you want a deep audit of a specific target (auth flow, dashboard, i18n bootstrap, CSP pipeline)"
+dont_use_when:
+  - situation: "You want single-rule audits"
+    alternative: webview-ui-optimize
+  - situation: "You want to apply fixes"
+    alternative: webview-ui-optimize
+  - situation: "You want CVE auditing"
+    alternative: dependency-audit
+  - situation: "You want prose / Vale review"
+    alternative: prose-vale-curator
+see_also:
+  - webview-ui-optimize
+  - dependency-audit
+  - prose-vale-curator
 ---
 
 # Web-View UI Expert

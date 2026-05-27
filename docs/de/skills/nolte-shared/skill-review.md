@@ -8,12 +8,29 @@ last_updated: generated
 
 # skill-review
 
-_Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/ keyed by the target skill's name. Invoke when the user asks "review this skill", "audit a specific skill folder", "check whether this skill is spec-compliant", or "skill review for a specific skill". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for a specific skill". Also handles equivalent German-language requests. Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Prüft einen Claude-Code-Skill gegen die Spec und erzeugt einen umsetzbaren Review-Plan unter .audits/skill-review/.
+
+_Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/ keyed by the target skill's name. Invoke when the user asks "review this skill", "audit a specific skill folder", "check whether this skill is spec-compliant", or "skill review for a specific skill". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for a specific skill". Also handles equivalent German-language requests. Do NOT use for agent review (use [`agent-review`](agent-review.md)) or for pull-request-level review (`review` skill). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
 - **Tags:** `review`
 - **Quelle:** [skills/skill-review/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/skill-review/SKILL.md)
+
+## Anwenden wenn
+
+- you want to review a specific skill folder for spec compliance
+- you want an actionable review plan for a skill
+- you want to close an existing skill-review plan once every item is addressed
+
+## Nicht anwenden wenn
+
+- **You want to review an agent file rather than a skill** → [`agent-review`](agent-review.md)
+
+## Siehe auch
+
+- [`agent-review`](agent-review.md)
+- [`skill-management`](skill-management.md)
 
 ---
 
@@ -35,7 +52,7 @@ This skill also triggers on equivalent German-language requests, including:
 
 - **Mid-flow interactivity** — scope confirmation (which skill, narrowed aspect?) and item-closure decisions happen with the user in the loop; an agent's fire-and-forget contract would lose that.
 - **Persistent on-disk output is the contract** — the `review-plan` artifact under `.audits/` must survive past the current turn and be worked off incrementally; skills own persistent state, agents return structured reports.
-- **Orchestrator of specs + (potentially) dispatches agents** — this skill may chain to `pull-request-create` in the same thread after the plan is closed; the skill-orchestrates-agent-executes pattern (see `skill-vs-agent`) defaults the orchestrator to skill form.
+- **Orchestrator of specs + (potentially) dispatches agents** — this skill may chain to [`pull-request-create`](pull-request-create.md) in the same thread after the plan is closed; the skill-orchestrates-agent-executes pattern (see `skill-vs-agent`) defaults the orchestrator to skill form.
 - Counter-dimension considered: *context-window impact* from reading three specs plus the target skill would bias toward an agent, but the read volume is bounded (each spec is one file, the target skill is one folder) and the user wants visibility into progress — inline reading wins.
 
 ### User-language policy
@@ -116,7 +133,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 ### Hard rules
 
 - **One plan per target.** A rerun supersedes; never edit a previous run's plan into a new one.
-- **No finding without a spec citation.** If an issue is real but no `skill-management` / `skill-vs-agent` rule covers it, record it as `Info` with a note that the spec itself may need to grow — never promote an opinion to `Warning` or `Critical`.
+- **No finding without a spec citation.** If an issue is real but no [`skill-management`](skill-management.md) / `skill-vs-agent` rule covers it, record it as `Info` with a note that the spec itself may need to grow — never promote an opinion to `Warning` or `Critical`.
 - **Never delete a plan with an open Critical.** `Warning` / `Suggestion` / `Info` may be deferred to tracked issues; `Critical` must land or be downgraded (which requires a spec change, not a reviewer's choice).
 - **No invention in frontmatter.** Unknown git SHA → `unknown`. Missing reference → the finding describes the gap; do not paper over it.
 - **English section headings, English commit messages.** Prose inside findings may follow the user's language; the structural contract with downstream tooling stays English-only.

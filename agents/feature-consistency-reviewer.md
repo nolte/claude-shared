@@ -5,6 +5,20 @@ distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
 phase: plan
+summary: "Reviews a draft feature file for overlap, duplication, and prior art against features, source code, and the spec corpus."
+summary_de: "Prüft eine Draft-Feature-Datei auf Überlappung, Duplikate und Vorarbeit gegen Features, Source-Code und das Spec-Corpus."
+use_when:
+  - "feature-decompose needs the consistency check before draft → ready"
+  - "you want to check whether a planned feature already has prior art"
+  - "you want a structured findings list with proposed resolutions per finding"
+dont_use_when:
+  - situation: "You want to author or edit the feature itself"
+    alternative: feature-decompose
+  - situation: "You want spec-versus-code drift on existing features"
+    alternative: spec-drift-audit
+see_also:
+  - feature-decompose
+  - spec-drift-audit
 ---
 
 # Feature Consistency Reviewer

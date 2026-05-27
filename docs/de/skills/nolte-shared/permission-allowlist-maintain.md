@@ -8,12 +8,20 @@ last_updated: generated
 
 # permission-allowlist-maintain
 
+> Kuratiert die eingecheckte .claude/settings.json permissions.allow-Liste gemäß Permission-Allowlist-Spec.
+
 _Curates the committed `.claude/settings.json` `permissions.allow` list of the current repository per `spec/claude/permission-allowlist/`. Proposes additions sourced from the `fewer-permission-prompts` built-in or from the user, applies the spec's three-condition selection criteria (frequent + read-only + not-already-autoallowed), rejects forbidden pattern classes (interpreter wildcards, task-runner wildcards, mutation-capable `gh`/`git` wildcards), and routes every change through the standard pull-request flow. Invoke when the user asks to \"tidy the permission allowlist\", \"add `Bash(task lint)` to the allowlist\", \"review `.claude/settings.json`\", or equivalent German-language requests. Don't use to edit `.claude/settings.local.json` or `~/.claude/settings.json` (out of scope per spec)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`
 - **Quelle:** [skills/permission-allowlist-maintain/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/permission-allowlist-maintain/SKILL.md)
+
+## Anwenden wenn
+
+- you want to tidy the .claude/settings.json allowlist
+- you want to add a frequent read-only Bash or tool entry to the allowlist
+- you want to review an existing allowlist against the spec's three-condition rule
 
 ---
 
@@ -25,7 +33,7 @@ Implements `spec/claude/permission-allowlist/` for the repository's committed `.
 
 - **Per-entry user approval is the contract.** Every candidate triggers a small dialogue (accept verbatim, narrow the pattern, reject with reason); the spec's §Selection criteria explicitly forbids batched insertion.
 - **Externally-visible mutations need user gating.** `.claude/settings.json` lands in a PR that affects every contributor's confirmation prompts; the change is reviewed publicly, so the curator's mid-flow approvals are part of the contract.
-- **Orchestrator pattern (per `skill-vs-agent`).** Candidate discovery is delegated to `fewer-permission-prompts` and the eventual PR is opened via `pull-request-create`; the skill stays in the main thread to chain those tools.
+- **Orchestrator pattern (per `skill-vs-agent`).** Candidate discovery is delegated to `fewer-permission-prompts` and the eventual PR is opened via [`pull-request-create`](pull-request-create.md); the skill stays in the main thread to chain those tools.
 - Counter-dimension considered: a narrow agent could specialise on pattern-narrowing (turning `Bash(git fetch --tags --prune)` into `Bash(git fetch *)`), but the load-bearing dimension is interactivity, not output specialisation—skill wins.
 
 ### User-language policy
@@ -99,7 +107,7 @@ The change ships through the standard pull-request flow per the spec's §Authori
 
 Dispatch `nolte-shared:pull-request-create` for the PR creation; the user confirms title and body before push.
 
-The actual merge is `pull-request-merge`'s job, not this skill's.
+The actual merge is [`pull-request-merge`](pull-request-merge.md)'s job, not this skill's.
 
 ### Examples
 

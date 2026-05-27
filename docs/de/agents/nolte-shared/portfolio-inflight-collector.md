@@ -8,6 +8,8 @@ last_updated: generated
 
 # portfolio-inflight-collector
 
+> Nur-Lese-In-Flight-Datensammler: offene Issues, PRs (inkl. Drafts), Branches ohne PR, ungelöste Review-Threads + Discussions über nolte/*.
+
 _Read-only in-flight data collector dispatched by portfolio-inflight-triage to gather open issues, open PRs (including drafts), branches without an active PR pointing to develop, and unresolved review-comment threads plus open GitHub Discussions across the nolte portfolio. Invoke when the portfolio-inflight-triage skill needs to collect per-repository in-flight data across all nolte Portfolio-Member repositories, fetch the four primary data sources defined in spec/portfolio/portfolio-inflight-management/ §Data sources, or refresh a per-repository in-flight snapshot for the audit. Don't use to classify findings by severity (that is the calling skill's responsibility), to apply the stalling thresholds or matrix-axis evaluation (also the skill's job), to author or modify the Findings-Report, or for any write operation against any Portfolio-Member repository._
 
 - **Plugin:** `nolte-shared`
@@ -16,11 +18,24 @@ _Read-only in-flight data collector dispatched by portfolio-inflight-triage to g
 - **Tags:** `audit`
 - **Quelle:** [agents/portfolio-inflight-collector.md](https://github.com/nolte/claude-shared/blob/main/agents/portfolio-inflight-collector.md)
 
+## Anwenden wenn
+
+- portfolio-inflight-triage needs to collect per-repo in-flight data across all nolte members
+- you want to refresh a per-repository in-flight snapshot for the audit
+
+## Nicht anwenden wenn
+
+- **You want severity classification or matrix-axis evaluation** → [`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md)
+
+## Siehe auch
+
+- [`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md)
+
 ---
 
 ## Portfolio In-Flight Collector
 
-Read-only in-flight data collector dispatched by `portfolio-inflight-triage` to gather the four primary data sources defined in `spec/portfolio/portfolio-inflight-management/` §Data sources — open issues, open pull requests (including drafts), branches without an active PR pointing to `develop`, and unresolved review-comment threads plus open GitHub Discussions — across the resolved nolte Portfolio-Member set, via the GitHub API. Returns a pre-reduced structured per-repository summary to the calling skill. No write operations, no severity classification, no threshold evaluation, no matrix-axis derivation — those responsibilities belong to the orchestrating skill.
+Read-only in-flight data collector dispatched by [`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md) to gather the four primary data sources defined in `spec/portfolio/portfolio-inflight-management/` §Data sources — open issues, open pull requests (including drafts), branches without an active PR pointing to `develop`, and unresolved review-comment threads plus open GitHub Discussions — across the resolved nolte Portfolio-Member set, via the GitHub API. Returns a pre-reduced structured per-repository summary to the calling skill. No write operations, no severity classification, no threshold evaluation, no matrix-axis derivation — those responsibilities belong to the orchestrating skill.
 
 ### Why this is an agent, not a skill
 
@@ -30,7 +45,7 @@ Read-only in-flight data collector dispatched by `portfolio-inflight-triage` to 
 - **Tool restriction is load-bearing:** only `Read`, `Bash`, `Glob`, and `Grep` are declared — no `Edit`, no `Write`, no `NotebookEdit`. Enforcing read-only at the harness level prevents accidental mutations against any Portfolio-Member repository during the per-repository fan-out, which directly implements the §Operator authority `MUST NOT` rules from the spec.
 - **Specialisation sharpens output:** a focused system prompt that knows exactly which fields to extract per data source (issue: number, title, age, assignee, labels, last activity; PR: number, title, draft state, mergeable state, required-checks state, head SHA, last reviewer activity; branch: name, last push, has-open-PR-to-develop; review thread: PR number, thread ID, last comment age, maintainer-reply state; discussion: number, age, last maintainer reply) produces a more consistent per-repository summary than running the same extraction inline in a general orchestration conversation.
 - **Model pin (`sonnet`):** in-flight data collection applies a fixed extraction pattern (GitHub API JSON → structured per-source summary) against a known schema. This is high-volume but low-novelty work — same shape across every repository, no creative reasoning needed. Sonnet handles structured JSON extraction reliably and at substantially lower cost than Opus; a full Portfolio-Member scan touches four endpoints × N repositories, so the cost differential matters more here than for the manifest collector. The pin is justified per `spec/claude/agent-management/` §Model selection.
-- **Counter-dimension considered:** the calling skill (`portfolio-inflight-triage`) expects to confirm `project/inflight.yml` threshold overrides interactively with the operator and to escalate specialist-roster-gap findings to "author a new specialist" after the 3-recurrence threshold. That mid-flow interactivity is a skill-side concern, explicitly forbidden for this agent shape by `spec/claude/skill-vs-agent/` and reinforced by §Audit operation `MUST NOT` "be implemented as a Claude Agent" in the spec — but those are skill-side properties, not collector-side. The collection step itself has no user-visible checkpoints, so the agent shape fits cleanly for this read-only data-gathering half.
+- **Counter-dimension considered:** the calling skill ([`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md)) expects to confirm `project/inflight.yml` threshold overrides interactively with the operator and to escalate specialist-roster-gap findings to "author a new specialist" after the 3-recurrence threshold. That mid-flow interactivity is a skill-side concern, explicitly forbidden for this agent shape by `spec/claude/skill-vs-agent/` and reinforced by §Audit operation `MUST NOT` "be implemented as a Claude Agent" in the spec — but those are skill-side properties, not collector-side. The collection step itself has no user-visible checkpoints, so the agent shape fits cleanly for this read-only data-gathering half.
 
 ### Read-only Bash justification
 
@@ -186,7 +201,7 @@ Per-source opt-outs honoured: <list of <repo>:<source> or "none">
 
 The calling skill provides one of:
 
-1. **Pre-resolved Portfolio-Member list:** an explicit list of `nolte` repository names to scan. Used when the calling skill already has the resolved Portfolio-Member set in its context (typically because a prior `portfolio-manifest-collector` run produced it).
+1. **Pre-resolved Portfolio-Member list:** an explicit list of `nolte` repository names to scan. Used when the calling skill already has the resolved Portfolio-Member set in its context (typically because a prior [`portfolio-manifest-collector`](portfolio-manifest-collector.md) run produced it).
 2. **Resolve-fresh instruction:** the literal instruction "resolve Portfolio-Member set from GitHub API" — the agent runs `gh api orgs/nolte/repos --paginate` and filters out archived and private repositories itself, then applies the `portfolio: excluded` opt-out check.
 3. **Single repository:** a single `nolte/<repo>` name for a targeted collection run against one repository.
 
@@ -205,7 +220,7 @@ Before collecting:
 1. Confirm the GitHub CLI is available and authenticated: `gh auth status`. If unauthenticated, stop and report rather than failing mid-fan-out.
 2. Check the current rate-limit headroom via `gh api rate_limit`. The threshold is higher than for the manifest collector because this agent issues approximately **6 to 9 API calls per repository** (issues + PRs + branches + default-branch + per-PR review-threads + per-PR GraphQL + Discussions + optionally release-drafter drafts and `inflight.yml`). For a portfolio of N repositories with M open PRs each, the call volume scales as roughly `N × (6 + 2 × M)`. Stop and report if remaining requests are fewer than `max(200, N × (6 + 2 × average_open_prs_estimate))` rather than exhausting the limit mid-scan. Use `200` as the conservative floor when N is small.
 3. Confirm the resolved Portfolio-Member set is non-empty; if the API returns an empty list, return a collection report with zero entries and a `Warning` note rather than silently succeeding.
-4. Confirm the agent is dispatched by the orchestrating skill `portfolio-inflight-triage` (or another caller that explicitly accepts the collector's output shape). The agent body never assumes operator-side context.
+4. Confirm the agent is dispatched by the orchestrating skill [`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md) (or another caller that explicitly accepts the collector's output shape). The agent body never assumes operator-side context.
 
 ### Working procedure
 
@@ -233,7 +248,7 @@ Before collecting:
 
 5. **Compile the aggregated overview** from the per-repository summaries: counts per data source, opted-out list, per-source-skip list, repositories with `project/inflight.yml` overrides, fetch-error list, final rate-limit status.
 
-6. **Return the in-flight collection report** in the format specified by §Output shape. The calling skill (`portfolio-inflight-triage`) consumes this report and applies the §Stalling thresholds, §Classification and prioritisation matrix-axis evaluation, §Specialist recommendation matching, and §Findings-Report shape rendering.
+6. **Return the in-flight collection report** in the format specified by §Output shape. The calling skill ([`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md)) consumes this report and applies the §Stalling thresholds, §Classification and prioritisation matrix-axis evaluation, §Specialist recommendation matching, and §Findings-Report shape rendering.
 
 ### Hard rules
 

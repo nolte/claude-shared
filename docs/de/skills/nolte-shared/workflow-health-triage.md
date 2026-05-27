@@ -8,12 +8,30 @@ last_updated: generated
 
 # workflow-health-triage
 
-_Triages a failing GitHub Actions workflow run on `develop` or `main` per `spec/project/workflow-health/`. Classifies the failure into one of `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`, dispatches the most specialised Claude agent that matches the classification, records the classification plus the dispatched agent's name in the eventual fix PR's Risk / rollout notes, and verifies the standard `fix/`-PR flow. Invoke when the user asks to \"triage this red workflow\", \"classify this CI failure\", or equivalent German-language requests. Don't use to silence checks via `continue-on-error` shortcuts or by removing required-checks entries (forbidden by spec); don't use to bypass branch protection (`enforce_admins` on develop has no exception path); don't use to merge a fix PR (use `pull-request-merge`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Triagiert einen roten GitHub-Actions-Workflow auf develop/main und dispatched den passendsten spezialisierten Agent zur Behebung.
+
+_Triages a failing GitHub Actions workflow run on `develop` or `main` per `spec/project/workflow-health/`. Classifies the failure into one of `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`, dispatches the most specialised Claude agent that matches the classification, records the classification plus the dispatched agent's name in the eventual fix PR's Risk / rollout notes, and verifies the standard `fix/`-PR flow. Invoke when the user asks to \"triage this red workflow\", \"classify this CI failure\", or equivalent German-language requests. Don't use to silence checks via `continue-on-error` shortcuts or by removing required-checks entries (forbidden by spec); don't use to bypass branch protection (`enforce_admins` on develop has no exception path); don't use to merge a fix PR (use [`pull-request-merge`](pull-request-merge.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Tags:** `audit`, `pull-request`
 - **Quelle:** [skills/workflow-health-triage/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/workflow-health-triage/SKILL.md)
+
+## Anwenden wenn
+
+- you want to triage a red workflow run on develop or main
+- you want to classify a CI failure (defect / flake / infra / stale pin / secret drift)
+- you want the fix to land via the standard fix/-PR flow
+
+## Nicht anwenden wenn
+
+- **You want to merge the fix PR after triage** → [`pull-request-merge`](pull-request-merge.md)
+- **You want a per-repo CVE audit, not CI triage** → [`dependency-audit`](dependency-audit.md)
+
+## Siehe auch
+
+- [`pull-request-merge`](pull-request-merge.md)
+- [`dependency-audit`](dependency-audit.md)
 
 ---
 
@@ -24,7 +42,7 @@ Implements `spec/project/workflow-health/` §Triage before remediation and §Spe
 ### Why this is a skill, not an agent
 
 - **Externally-visible mutations gate on user confirmation.** Classification ambiguity, agent-dispatch confirmation, and the fix-PR title / body are mid-flow user dialogues; an agent's fire-and-forget shape would miss them.
-- **Orchestrator pattern (per `skill-vs-agent`).** The work itself is *classify, dispatch, verify*; the dispatched specialised agent does the editing. The orchestrator stays in the main thread and chains other skills (`pull-request-create` for the fix PR, optionally `pull-request-merge` after CI is green).
+- **Orchestrator pattern (per `skill-vs-agent`).** The work itself is *classify, dispatch, verify*; the dispatched specialised agent does the editing. The orchestrator stays in the main thread and chains other skills ([`pull-request-create`](pull-request-create.md) for the fix PR, optionally [`pull-request-merge`](pull-request-merge.md) after CI is green).
 - **Per-classification user gating.** At least three of the six classes (`defect`, `flake`, `secret drift`) need a human "yes that's the right call" before the dispatcher commits to a remediation lane.
 - Counter-dimension considered: a narrow agent could handle the classification step in isolation and gain context-window protection, but every downstream lane (PR creation, agent dispatch, verification) is interactive—keeping the whole flow in one skill is simpler than splitting at the classification boundary.
 
@@ -77,13 +95,13 @@ The set of available agents changes over time; never freeze a snapshot of "which
 1. **Resolve the candidate set.** `Glob` `agents/*.md` (plus `~/.claude/agents/*.md` for the project-distributed half), then `Read` the `description:` line of every candidate. Build a (`name`, `description`) table; the table is the runtime inventory.
 2. **Match classification to candidate.** Walk the candidates and pick the one whose `description` most closely matches the (classification, failing-artefact-area) pair: a `defect` in a markdown spec/skill/agent file maps to whichever agent's description names "spec-conformant authoring" or the equivalent; a `defect` in a workflow YAML maps to whichever agent's description names "workflow YAML" or "GitHub Actions"; a documentation `defect` maps to whichever agent names an audience-targeted documentation responsibility; and so on. The match is on the description's stated responsibility, not on the agent's name.
 3. **Recognise the no-fix classifications.** `flake` and `secret drift` produce no agent dispatch by design — the work is documenting the flake in the project's flake registry (`FLAKES.md` or the `flake`-labelled issue set, whichever the repository uses) for `flake`, or rotating the credential outside Claude for `secret drift`. The skill produces only the fix PR that re-references the rotated credential.
-4. **No match is a portfolio gap.** When the candidate walk produces no plausible match and the failure class has occurred three or more times historically (use `gh run list --status failure --branch develop --limit 50` plus a quick grep to estimate), surface this as a portfolio gap per `spec/project/workflow-health/` §Specialised-agent dispatch — the user is asked whether to author a new agent (via `claude-plugin-developer`) before the fix PR opens. When a match exists, dispatch with `Agent(subagent_type="<plugin>:<agent>")` and pass the classification, the run URL, the failing-step excerpt, and the fix-PR-title hint. Wait for the agent's report.
+4. **No match is a portfolio gap.** When the candidate walk produces no plausible match and the failure class has occurred three or more times historically (use `gh run list --status failure --branch develop --limit 50` plus a quick grep to estimate), surface this as a portfolio gap per `spec/project/workflow-health/` §Specialised-agent dispatch — the user is asked whether to author a new agent (via [`claude-plugin-developer`](../../agents/nolte-shared/claude-plugin-developer.md)) before the fix PR opens. When a match exists, dispatch with `Agent(subagent_type="<plugin>:<agent>")` and pass the classification, the run URL, the failing-step excerpt, and the fix-PR-title hint. Wait for the agent's report.
 
 The dynamic-lookup design means a new specialised agent that lands in `agents/` becomes dispatchable immediately, without a coordinated edit to this skill — and a renamed or removed agent stops being a target the next time the skill runs, with no stale snapshot to mislead the dispatch.
 
 ### Old patterns
 
-Earlier revisions of this skill enumerated specific agent names inline (for example `workflow-yaml-fixer`, `claude-plugin-developer`, `audience-doc-author`) as the dispatch table. That snapshot rotted whenever a new agent landed or an existing one renamed; the runtime-Glob design above replaces it. The historical mapping is preserved here only so a reader who recognises the prior wording can spot the transition: `defect` in workflow YAML used to fall back to generalist (no matching agent), `defect` in spec / skill / agent files used to dispatch `claude-plugin-developer`, `defect` in documentation used to dispatch `audience-doc-author`. Use the runtime lookup above instead of this snapshot.
+Earlier revisions of this skill enumerated specific agent names inline (for example `workflow-yaml-fixer`, [`claude-plugin-developer`](../../agents/nolte-shared/claude-plugin-developer.md), [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)) as the dispatch table. That snapshot rotted whenever a new agent landed or an existing one renamed; the runtime-Glob design above replaces it. The historical mapping is preserved here only so a reader who recognises the prior wording can spot the transition: `defect` in workflow YAML used to fall back to generalist (no matching agent), `defect` in spec / skill / agent files used to dispatch [`claude-plugin-developer`](../../agents/nolte-shared/claude-plugin-developer.md), `defect` in documentation used to dispatch [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md). Use the runtime lookup above instead of this snapshot.
 
 #### 4. Verify the fix PR carries the audit trail
 
@@ -92,17 +110,17 @@ Whether the editing was done by a specialised agent or the generalist, the resul
 - Triage classification verbatim (one of the six labels above, with a one-line note for `other`)
 - Dispatched agent name (the literal `subagent_type` argument), or the literal phrase "no matching specialised agent—generalist remediation"
 
-If the user wants the skill to open the fix PR itself, dispatch `pull-request-create` with these two lines pre-populated in the Risk / rollout notes; the user still confirms the title and body before push, per the `pull-request-create` spec's externally-visible-action gate.
+If the user wants the skill to open the fix PR itself, dispatch [`pull-request-create`](pull-request-create.md) with these two lines pre-populated in the Risk / rollout notes; the user still confirms the title and body before push, per the [`pull-request-create`](pull-request-create.md) spec's externally-visible-action gate.
 
 #### 5. Verify the standard PR gate
 
-After the fix PR opens, the skill stops. The actual merge belongs to `pull-request-merge`, which re-validates the gate. The skill **MUST NOT**:
+After the fix PR opens, the skill stops. The actual merge belongs to [`pull-request-merge`](pull-request-merge.md), which re-validates the gate. The skill **MUST NOT**:
 
-- merge the fix PR itself (out of scope; `pull-request-merge` owns that)
+- merge the fix PR itself (out of scope; [`pull-request-merge`](pull-request-merge.md) owns that)
 - pass `--admin` anywhere (`enforce_admins: true` on `develop` has no exception)
 - waive a still-failing required check on the fix PR (the spec forbids `continue-on-error` masking and required-check removal)
 
-Report back the run ID, the classification, the dispatched agent name (or "generalist"), the fix-PR URL, and a one-line "next action: invoke `pull-request-merge` after CI is green".
+Report back the run ID, the classification, the dispatched agent name (or "generalist"), the fix-PR URL, and a one-line "next action: invoke [`pull-request-merge`](pull-request-merge.md) after CI is green".
 
 ### Examples
 

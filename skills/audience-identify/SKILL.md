@@ -3,6 +3,18 @@ name: audience-identify
 description: Runs the audience-identification methodology from spec/project/audience-identification/ against a bounded context (software module, service, library, or whole project) and produces an authoritative audience artifact. Invoke when the user says things like "identify audiences for this module", "who are the consumers/users of X", "stakeholder identification for X", "audience analysis before I write the README / SLA / threat model", "list the audiences of this library", or equivalent German-language requests. Also triggers when another spec or skill (readme-structure, future SLA or threat-modeling specs) needs to reference an audience list that does not yet exist for the current context. Don't use to review an existing audience artifact for compliance (use audience-review). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [audience]
 phase: plan
+summary: "Runs the audience-identification methodology against a bounded context and produces an authoritative audience artifact."
+summary_de: "Führt die Audience-Identifikation gegen einen abgegrenzten Kontext aus und erzeugt ein autoritatives Audience-Artefakt."
+use_when:
+  - "you want to identify audiences for a module, library, or whole project"
+  - "you want a stakeholder list before writing a README, SLA, or threat model"
+  - "another spec or skill needs an audience artefact that does not exist yet"
+dont_use_when:
+  - situation: "You want to review an existing audience artifact for compliance"
+    alternative: audience-review
+see_also:
+  - audience-review
+  - audience-doc-author
 resumable: true
 ---
 

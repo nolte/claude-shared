@@ -8,12 +8,29 @@ last_updated: generated
 
 # mission-revise
 
+> Revises an existing project/mission.md: statement, audiences, time bound, or mvp_status lifecycle flips.
+
 _Revises an existing `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests. Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 1 Vision (`vision`)
 - **Tags:** `scaffolding`
 - **Source:** [skills/mission-revise/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/mission-revise/SKILL.md)
+
+## Use when
+
+- you want to revise the mission statement, audiences, or verifying-feature pointer
+- you want to flip mvp_status (defining → in_progress → achieved → stabilised)
+- you want to revise the mission after stabilisation (rationale required)
+
+## Don't use when
+
+- **project/mission.md does not exist yet** → [`mission-define`](mission-define.md)
+
+## See also
+
+- [`mission-define`](mission-define.md)
+- [`roadmap-plan`](roadmap-plan.md)
 
 ---
 
@@ -31,7 +48,7 @@ This skill also triggers on equivalent German-language requests, including:
 
 ### Why this is a skill, not an agent
 
-- **Persistent on-disk artefact** — every revision mutates a versioned markdown file consuming skills (`mission-define` for first-write, future audits, the roadmap's `mvp` semantics) read; an agent would lose the persistent-state contract.
+- **Persistent on-disk artefact** — every revision mutates a versioned markdown file consuming skills ([`mission-define`](mission-define.md) for first-write, future audits, the roadmap's `mvp` semantics) read; an agent would lose the persistent-state contract.
 - **Per-step user gating drives the lifecycle** — `mvp_status` flips are explicit operator decisions per the spec, never silently inferred from satisfying the conditions; the spec mandates that the operator confirm the flip after the skill has shown the satisfied conditions, so an agent's structured-report shape can't carry the gate.
 - **Output flows back into the main conversation** — the stabilisation-gate verification (which roadmap items are still open, which sprint closed last, whether a subsequent sprint has held) is itself useful conversational context; isolating it behind an agent boundary would obscure the operator decision the skill exists to support.
 - Counter-dimension considered: a narrow agent could specialise on parsing roadmap and sprint frontmatter for the gate check and gain on context-window protection, but the load-bearing dimension is the per-step approval dialogue around each mutation, not parser sharpness — skill wins.
@@ -45,7 +62,7 @@ Detect the user's language and respond in it. Mission-file content (`mission_sta
 Before any revision:
 
 - Confirm the working directory is the target project root (`git rev-parse --is-inside-work-tree`).
-- Confirm `project/mission.md` exists and parses (eight required frontmatter fields plus the four required body sections in the declared order). If absent, stop and dispatch `mission-define`. If malformed, stop and ask the user whether to repair the file by hand before revising.
+- Confirm `project/mission.md` exists and parses (eight required frontmatter fields plus the four required body sections in the declared order). If absent, stop and dispatch [`mission-define`](mission-define.md). If malformed, stop and ask the user whether to repair the file by hand before revising.
 - Confirm the audience artefact and `project/goals.md` are still reachable, since revisions to `audiences` or `relevant_outcomes` resolve against them.
 - Read `project/roadmap.md` and the contents of `project/sprints/` so operations 2 and 3 can verify cross-spec invariants (`mvp: true` item statuses, sprint lifecycle, mission-closing sprint, subsequent-sprint condition).
 
@@ -124,7 +141,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ### Hard rules
 
-- **Never** create `project/mission.md` from scratch. This skill is edit-only; first-write is `mission-define`'s job.
+- **Never** create `project/mission.md` from scratch. This skill is edit-only; first-write is [`mission-define`](mission-define.md)'s job.
 - **Never** infer a `mvp_status` flip silently from satisfied conditions. The flip is always an explicit operator decision.
 - **Never** allow an illegal lifecycle transition (anything outside `defining → in_progress → achieved → stabilised` plus the regression path `stabilised → in_progress`).
 - **Never** flip to `stabilised` before every gate condition is verified against the actual artefacts. Cite the evidence inline; never accept the user's word as a substitute for the check.
@@ -132,5 +149,5 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** auto-generate the post-stabilisation rationale paragraph. The operator writes it.
 - **Never** name an audience in `## Audiences` that's absent from `audiences`, or vice versa. The two surfaces are bidirectionally validated after every revision.
 - **Never** invent audience identifiers, outcome IDs, or feature-acceptance pairs in a revision. Every reference **MUST** resolve to an existing artefact at write time.
-- **Never** allow a post-MVP roadmap item (`mvp: false`) to start while `mvp_status` is `defining`, `in_progress`, or `achieved`; surface this as a violation when the user reports it but never alter the roadmap from this skill — `roadmap-refine` is the canonical write authority for that surface.
+- **Never** allow a post-MVP roadmap item (`mvp: false`) to start while `mvp_status` is `defining`, `in_progress`, or `achieved`; surface this as a violation when the user reports it but never alter the roadmap from this skill — [`roadmap-refine`](roadmap-refine.md) is the canonical write authority for that surface.
 - When `spec/project/mission/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.

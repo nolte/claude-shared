@@ -8,12 +8,21 @@ last_updated: generated
 
 # continuous-improvement-triage
 
+> Triagiert Portfolio-Audit-Findings und dispatched die Behebung an den passendsten spezialisierten Agent oder Skill.
+
 _Operationalises spec/project/continuous-improvement/ by triaging portfolio audit findings, classifying them against the available specialist catalog, and dispatching hands-on remediation to the most specialised available Claude agent or skill. Invoke when the user asks to \"triage continuous-improvement findings\", \"classify a portfolio-improvement opportunity\", \"dispatch findings to specialised agents\", \"run the quarterly specialist-coverage review\", \"check whether a finding class needs a new specialist\", or equivalent German-language requests. Drives the three-operation loop: audit (periodic specialist-coverage review), update (record decisions and dispatch specialists), close (terminate the triage cycle). Applies the three-recurrence gap-closure rule and records all dispatch decisions in fix-PR Risk / rollout notes. Do not use to perform the hands-on remediation itself—that belongs to the dispatched specialist. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
 - **Tags:** `triage`, `audit`
 - **Quelle:** [skills/continuous-improvement-triage/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/continuous-improvement-triage/SKILL.md)
+
+## Anwenden wenn
+
+- you want to triage continuous-improvement findings across the portfolio
+- you want to classify a portfolio-improvement opportunity against the specialist catalog
+- you want to run the quarterly specialist-coverage review
+- you want to check whether a finding class needs a new specialist
 
 ---
 
@@ -24,7 +33,7 @@ Implements `spec/project/continuous-improvement/` §Specialist dispatch, §Portf
 ### Why this is a skill, not an agent
 
 - **User confirmation gates every dispatch decision.** Finding classification, specialist-match confirmation, and gap-closure decisions all require mid-flow dialogue; an agent's fire-and-forget shape misses them.
-- **Orchestrator pattern (per `skill-vs-agent`).** The work is *classify, dispatch, verify*—not edit. The dispatched specialist does the mutating work; this skill stays in the main thread and chains other skills (`pull-request-create`, optionally `pull-request-merge`).
+- **Orchestrator pattern (per `skill-vs-agent`).** The work is *classify, dispatch, verify*—not edit. The dispatched specialist does the mutating work; this skill stays in the main thread and chains other skills ([`pull-request-create`](pull-request-create.md), optionally [`pull-request-merge`](pull-request-merge.md)).
 - **Quarterly cadence requires standing-session instructions.** The specialist-coverage review surfaces decisions that accumulate across multiple prompts; a skill's persistent instruction context fits this naturally.
 - Counter-dimension considered: a narrow agent could handle the classification step in isolation and gain context-window protection, but every downstream lane (dispatch, gap-closure decision, PR annotation) is interactive—keeping the whole flow in one skill is simpler than splitting at the classification boundary.
 
@@ -53,7 +62,7 @@ A triage artifact must exist for `update` and `close`; if none exists, start wit
 
 Perform the periodic specialist-coverage review mandated by the spec (at minimum once per calendar quarter).
 
-1. **Locate merged remediation PRs.** Run `gh pr list --state merged --limit 50 --json number,title,body,labels` and filter for PRs whose body contains a **Risk / rollout notes** section that references an in-scope finding source (`spec-drift-audit`, `workflow-health`, `project-structure-apply`, `vocab-drift-audit`, `prose-style`, manual review Issue, or ad-hoc contributor observation).
+1. **Locate merged remediation PRs.** Run `gh pr list --state merged --limit 50 --json number,title,body,labels` and filter for PRs whose body contains a **Risk / rollout notes** section that references an in-scope finding source ([`spec-drift-audit`](spec-drift-audit.md), `workflow-health`, [`project-structure-apply`](project-structure-apply.md), [`vocab-drift-audit`](vocab-drift-audit.md), `prose-style`, manual review Issue, or ad-hoc contributor observation).
 
 2. **Extract dispatch signals.** For each matched PR, parse the **Risk / rollout notes** section for:
    - The named specialist (or the literal phrase "no matching specialised agent—generalist remediation").
@@ -68,7 +77,7 @@ Perform the periodic specialist-coverage review mandated by the spec (at minimum
 
 6. **Initialise the triage artifact.** Instantiate `templates/triage.template.md` with `triage-type: continuous-improvement`, today's date, the repository name, `scope: portfolio`, and `status: open`. Populate `## Findings` with the structured list from steps 2–5 and `## Processing log` with an `audit` entry. Propose the artifact filename as `.audits/continuous-improvement/<YYYY-QN>.md` (for example `.audits/continuous-improvement/2026-Q2.md`) and confirm with the user before writing.
 
-7. **Fold or separate coverage review.** Per the spec, the quarterly specialist-coverage review SHOULD be folded into the `spec-drift-audit` artifact under a `## Specialist coverage review` heading. Ask the user whether to fold or keep standalone; default to folding when a `spec-drift-audit` artifact for the same quarter already exists.
+7. **Fold or separate coverage review.** Per the spec, the quarterly specialist-coverage review SHOULD be folded into the [`spec-drift-audit`](spec-drift-audit.md) artifact under a `## Specialist coverage review` heading. Ask the user whether to fold or keep standalone; default to folding when a [`spec-drift-audit`](spec-drift-audit.md) artifact for the same quarter already exists.
 
 #### 2. update
 
@@ -88,7 +97,7 @@ Record decisions on open findings and dispatch specialists.
    - The dispatched specialist (`subagent_type` argument literal), or the phrase "no matching specialised agent—generalist remediation".
    Append these two lines to a `## Decisions` entry in the triage artifact immediately after dispatch.
 
-5. **Gap-closure authoring.** When a new specialist is authored via `claude-plugin-developer`, record the decision in `## Decisions` with the gap-closure justification (three-recurrence threshold, or explicit high-impact rationale for pre-threshold creation). The fix PR for the new specialist itself MUST carry the high-impact justification if created before the threshold.
+5. **Gap-closure authoring.** When a new specialist is authored via [`claude-plugin-developer`](../../agents/nolte-shared/claude-plugin-developer.md), record the decision in `## Decisions` with the gap-closure justification (three-recurrence threshold, or explicit high-impact rationale for pre-threshold creation). The fix PR for the new specialist itself MUST carry the high-impact justification if created before the threshold.
 
 6. **Cross-repository promotion check.** If the same finding class has been observed in two or more repositories, remind the user that the spec requires plugin distribution for any specialist created in response; do not close the gap-closure decision until the `distribution: plugin` requirement is confirmed.
 
@@ -112,7 +121,7 @@ Terminate the triage cycle after all decisions are recorded.
 
 ### Gotchas
 
-- **Partial `spec-drift-audit` runs do NOT suppress the quarterly coverage review.** The spec explicitly states that partial-audit narrowing applies to drift, not to coverage. If a narrowed drift audit has already happened this quarter without a coverage section, the quarterly review is still due—and the omission is itself a finding for the next audit cycle.
+- **Partial [`spec-drift-audit`](spec-drift-audit.md) runs do NOT suppress the quarterly coverage review.** The spec explicitly states that partial-audit narrowing applies to drift, not to coverage. If a narrowed drift audit has already happened this quarter without a coverage section, the quarterly review is still due—and the omission is itself a finding for the next audit cycle.
 - **Sprint-review closure is not a substitute.** A successfully closed sprint does not satisfy the quarterly specialist-coverage review. Both cadences are independently mandatory per the spec's §Relationship to existing specs.
 - **Three-recurrence count is per finding *class*, not per repository.** Count generalist-handled occurrences across the whole portfolio. Two recurrences in one repo plus one in another equals three—the threshold is met and plugin distribution is required for any new specialist.
 - **Missing audit trail is a finding.** A merged remediation PR that lacks the required **Risk / rollout notes** fields is not merely a documentation gap; the spec defines it as an in-scope finding to be recorded and remediated in the next cycle.

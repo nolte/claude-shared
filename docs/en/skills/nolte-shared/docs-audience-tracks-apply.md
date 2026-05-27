@@ -8,12 +8,33 @@ last_updated: generated
 
 # docs-audience-tracks-apply
 
-_Audits a repository against the canonical-language file under spec/project/docs-audience-tracks/ and, with per-item user approval, scaffolds or patches the documentation-tracks layer: per-page `track:` frontmatter across the per-language docs/ tree, required user-docs and developer-docs content blocks, and the audience-to-track mapping in the project's audience artefact. Three operations: `audit` (read-only conformance report), `migrate` (greenfield), `patch` (additive fixes one finding at a time). Invoke when the user asks to apply, audit, migrate, or patch documentation tracks against the spec; also handles equivalent German-language requests. Don't use for the MkDocs skeleton (`mkdocs-structure-apply`), audience artefact (`audience-identify`), page content (`audience-doc-author`), drift detection (`docs-freshness-checker`), or prose mechanics (`prose-vale-curator`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Wires up per-page track frontmatter and audience-to-track mapping in MkDocs docs/; audit, migrate, or patch operations.
+
+_Audits a repository against the canonical-language file under spec/project/docs-audience-tracks/ and, with per-item user approval, scaffolds or patches the documentation-tracks layer: per-page `track:` frontmatter across the per-language docs/ tree, required user-docs and developer-docs content blocks, and the audience-to-track mapping in the project's audience artefact. Three operations: `audit` (read-only conformance report), `migrate` (greenfield), `patch` (additive fixes one finding at a time). Invoke when the user asks to apply, audit, migrate, or patch documentation tracks against the spec; also handles equivalent German-language requests. Don't use for the MkDocs skeleton ([`mkdocs-structure-apply`](mkdocs-structure-apply.md)), audience artefact ([`audience-identify`](audience-identify.md)), page content ([`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)), drift detection ([`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md)), or prose mechanics ([`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`
 - **Source:** [skills/docs-audience-tracks-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/docs-audience-tracks-apply/SKILL.md)
+
+## Use when
+
+- you want to audit a repo for docs-audience-tracks conformance
+- you want to greenfield-migrate a docs/ tree onto the audience-tracks layer
+- you want to additively patch one finding at a time
+
+## Don't use when
+
+- **You need to scaffold the MkDocs skeleton itself** → [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- **You need to create the audience artefact first** → [`audience-identify`](audience-identify.md)
+- **You want to author page content rather than wire structure** → [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
+- **You want drift detection across docs** → [`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md)
+
+## See also
+
+- [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- [`audience-identify`](audience-identify.md)
+- [`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md)
 
 ---
 
@@ -29,8 +50,8 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 - **Mid-flow user approval is the contract.** Every page-frontmatter edit, every content-block scaffold, and every audience-artefact patch is written only with explicit per-change confirmation; the audit is read-only and the apply step is a sequence of approvals an agent's fire-and-forget shape can't carry.
 - **Persistent on-disk output that flows back into the main conversation.** The audit table, the per-page proposals, the audience-artefact diff, and the post-migration `mkdocs build --strict` output all surface in the conversation so the user can decide; isolating them in a structured-report boundary would obscure the per-file approval surface.
-- **Orchestrator pattern.** The skill can dispatch the `audience-doc-author` agent for content-block authoring once the container exists, the `audience-identify` skill for missing audience artefacts, and `docs-freshness-checker` for the post-migration parity check; per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
-- **Precedent.** Follows the same audit + scaffold + patch shape as `mkdocs-structure-apply`, `project-structure-apply`, `skill-agent-catalog-apply`; portfolio-wide consistency (`spec/claude/skill-vs-agent/` §Portfolio-wide consistency) favours the same artefact type.
+- **Orchestrator pattern.** The skill can dispatch the [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) agent for content-block authoring once the container exists, the [`audience-identify`](audience-identify.md) skill for missing audience artefacts, and [`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md) for the post-migration parity check; per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
+- **Precedent.** Follows the same audit + scaffold + patch shape as [`mkdocs-structure-apply`](mkdocs-structure-apply.md), [`project-structure-apply`](project-structure-apply.md), [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md); portfolio-wide consistency (`spec/claude/skill-vs-agent/` §Portfolio-wide consistency) favours the same artefact type.
 - **Counter-dimension considered.** A narrower agent could specialise on per-page frontmatter rewriting and gain on context-window protection, but the high-impact part is the per-block approval dialogue and the audience-artefact patch — both load-bearing on user judgement, not mechanical generation; skill wins.
 
 ### User-language policy
@@ -42,7 +63,7 @@ Detect the user's language from their message and respond in it. Generated artef
 Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
 - `Read` / `Glob` / `Grep` for repository inspection (docs/<lang>/ trees, page frontmatter, audience artefact, marker files that indicate active extension specs).
-- `Write` / `Edit` for scaffold and patch operations on per-page frontmatter, content-block placeholder pages, and the audience artefact; never overwriting an existing audience artefact wholesale (delegate that to `audience-identify`).
+- `Write` / `Edit` for scaffold and patch operations on per-page frontmatter, content-block placeholder pages, and the audience artefact; never overwriting an existing audience artefact wholesale (delegate that to [`audience-identify`](audience-identify.md)).
 - `Bash` is necessary for `mkdocs build --strict` verification after migrations and for `git rev-parse --is-inside-work-tree` precondition. No destructive bash (no `git push`, no `gh pr create`, no `rm`).
 - No `WebFetch` / `WebSearch`: the spec is the only source of truth.
 
@@ -52,8 +73,8 @@ Before doing anything:
 
 1. Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
 2. Locate `spec/project/docs-audience-tracks/<canonical_language>.md` — either in the target repo or via the `nolte-shared` plugin. If neither is reachable, stop and ask the user which spec source to use.
-3. Locate the audience artefact per `spec/project/audience-identification/` §Artifact location (`AUDIENCES.md` at the bounded-context root, or the documented alternative). If the artefact is missing, stop and route the user to the `audience-identify` skill — this skill cannot proceed without an authoritative audience list.
-4. Locate `mkdocs.yml` and derive the language list. If `mkdocs.yml` is absent, route the user to `mkdocs-structure-apply` first.
+3. Locate the audience artefact per `spec/project/audience-identification/` §Artifact location (`AUDIENCES.md` at the bounded-context root, or the documented alternative). If the artefact is missing, stop and route the user to the [`audience-identify`](audience-identify.md) skill — this skill cannot proceed without an authoritative audience list.
+4. Locate `mkdocs.yml` and derive the language list. If `mkdocs.yml` is absent, route the user to [`mkdocs-structure-apply`](mkdocs-structure-apply.md) first.
 5. Resolve the operation:
    - User asked for a read-only audit → `audit`.
    - `docs/<lang>/` pages mostly lack `track:` frontmatter (>50% missing) → `migrate` is the default (subject to user confirmation).
@@ -82,8 +103,8 @@ Audit is read-only — never autofix during audit.
 For each step below, confirm with the user per file or per group before writing.
 
 - For every page under `docs/<lang>/` (outside `_`-prefixed snippet folders): propose adding `track:` to its frontmatter. Default the value from the page's path and existing `audience` frontmatter via the portfolio-baseline default mapping; never invent. When neither the path nor `audience` gives a deterministic answer, propose `track: # TODO: confirm` and ask the user inline.
-- For every track the audience artefact serves and that lacks one of the MUST content blocks: scaffold a placeholder page at a stable location (`docs/<lang>/getting-started/installation.md` for installation, `docs/<lang>/index.md` H2 sections for value proposition / audience / use cases, `docs/<lang>/getting-started/setup.md` for setup, …). Write only the container plus the per-page frontmatter contract — page-content authoring belongs to the `audience-doc-author` agent or the human author.
-- Patch the audience artefact to add the `track:` field next to each audience entry. When the artefact uses a structured table or list form (per the `audience-identify` skill's template), insert the new field in the right column or sub-bullet. When the artefact lacks a `track` field shape entirely, propose extending it and route the user to re-run `audience-identify`'s `validate` operation afterwards.
+- For every track the audience artefact serves and that lacks one of the MUST content blocks: scaffold a placeholder page at a stable location (`docs/<lang>/getting-started/installation.md` for installation, `docs/<lang>/index.md` H2 sections for value proposition / audience / use cases, `docs/<lang>/getting-started/setup.md` for setup, …). Write only the container plus the per-page frontmatter contract — page-content authoring belongs to the [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) agent or the human author.
+- Patch the audience artefact to add the `track:` field next to each audience entry. When the artefact uses a structured table or list form (per the [`audience-identify`](audience-identify.md) skill's template), insert the new field in the right column or sub-bullet. When the artefact lacks a `track` field shape entirely, propose extending it and route the user to re-run [`audience-identify`](audience-identify.md)'s `validate` operation afterwards.
 - When the repository serves both tracks but the Home page doesn't route between them, propose a one-paragraph addition to the Home page that points end users at the user-docs entry and contributors at the developer-docs entry.
 - After every successful write, re-run `mkdocs build --strict` so the user sees the change verified end-to-end. A failing build stops the operation and surfaces the raw output verbatim; never claim success on a red build.
 
@@ -95,7 +116,7 @@ For each `missing` or `drift` finding from an audit run, propose the exact chang
 - **Unrecognised `track:` value**: surface the value, list the legal enumeration, request approval for a replacement.
 - **Missing MUST content block**: propose the placeholder page (containers only, no prose), request approval.
 - **Audience-track mismatch**: surface the conflict, propose two resolutions (change `track:` on the page, or change the audience-artefact entry), request the user's decision.
-- **Audience artefact missing `track:` fields**: route the user to `audience-identify` to add them through the canonical methodology, rather than patching the artefact from this skill.
+- **Audience artefact missing `track:` fields**: route the user to [`audience-identify`](audience-identify.md) to add them through the canonical methodology, rather than patching the artefact from this skill.
 
 ### Output contract
 
@@ -108,7 +129,7 @@ The skill returns to the user, in this order:
 5. **Approval gate** (for `migrate` / `patch`): explicit user-decision point; nothing is written until the user confirms.
 6. **Applied edits** (after approval): list of files actually written, with absolute paths.
 7. **Build verification**: `mkdocs build --strict` exit code plus a raw output snippet on failure; on success report the build summary line only.
-8. **Caller follow-ups**: explicit list — commit the working-tree edits, dispatch `audience-doc-author` to fill in the placeholder pages' bodies, route to `audience-identify` if the audience artefact needs the `track:` field added through the canonical methodology, open the PR via `pull-request-create`, and similar.
+8. **Caller follow-ups**: explicit list — commit the working-tree edits, dispatch [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) to fill in the placeholder pages' bodies, route to [`audience-identify`](audience-identify.md) if the audience artefact needs the `track:` field added through the canonical methodology, open the PR via [`pull-request-create`](pull-request-create.md), and similar.
 
 ### Gotchas
 
@@ -122,10 +143,10 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ### Hard rules
 
-1. **Never** author the prose body of a content block. The skill creates the *containers* (placeholder pages with frontmatter, the H1, and a single-paragraph stub naming the block's purpose), but never the prose. Block authoring belongs to the `audience-doc-author` agent or the human author.
+1. **Never** author the prose body of a content block. The skill creates the *containers* (placeholder pages with frontmatter, the H1, and a single-paragraph stub naming the block's purpose), but never the prose. Block authoring belongs to the [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) agent or the human author.
 2. **Never** invent a `track:` value when neither the path nor `audience` gives a deterministic mapping. The fallback is `track: # TODO: confirm` plus an inline question to the user.
-3. **Never** rewrite the audience artefact wholesale. Inline patches (adding a `track:` field next to an existing entry) are permitted; structural rewrites belong to `audience-identify`.
-4. **Never** modify content outside `docs/<lang>/`, the audience artefact, and (when explicitly approved) the Home page's routing paragraph. Theme, palette, nav order, and plugin baseline belong to `mkdocs-structure-apply`.
+3. **Never** rewrite the audience artefact wholesale. Inline patches (adding a `track:` field next to an existing entry) are permitted; structural rewrites belong to [`audience-identify`](audience-identify.md).
+4. **Never** modify content outside `docs/<lang>/`, the audience artefact, and (when explicitly approved) the Home page's routing paragraph. Theme, palette, nav order, and plugin baseline belong to [`mkdocs-structure-apply`](mkdocs-structure-apply.md).
 5. **Always** read the spec at runtime: prefer the target repo's `spec/project/docs-audience-tracks/<canonical_language>.md`; fall back to the copy shipped by the `nolte-shared` plugin only when the target repo lacks one. Never carry a baked-in copy inside the skill itself.
 6. **Always** verify the build after every write: `mkdocs build --strict` must run green before the operation ends. A red build stops the operation.
 7. **Always** preserve existing frontmatter keys when patching `track:` onto a page that already has `title` / `audience` / `content_mode` / `last_updated`. Add `track:` in its canonical position (between `content_mode` and `last_updated`) without touching the other keys.

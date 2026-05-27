@@ -3,6 +3,22 @@ name: roadmap-plan
 description: "Adds, retargets, and reshapes roadmap items in `project/roadmap.md` per `spec/project/roadmap/` and `spec/project/mission/`. Invoke when the user asks to \"add a roadmap item\", \"queue work for sprint N\", \"promote roadmap item to fine\", \"retarget R-3 to sprint 9\", \"flip MVP on this item\", or equivalent German-language requests. Validates outcome IDs against `goals.md`, validates `target_sprint` against `project/sprints/`, enforces the lifecycle transitions declared in the roadmap and mission specs (including the asymmetric MVP-flag rule: `false→true` allowed before stabilisation, `true→false` forbidden after the item entered `status: active`), and refuses partial writes that would leave inconsistencies. Don't use to scaffold the roadmap from scratch (use `roadmap-init`) or to enforce the detail-level invariant (use `roadmap-refine`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [planning]
 phase: plan
+summary: "Adds, retargets, and reshapes roadmap items in project/roadmap.md with full lifecycle validation."
+summary_de: "Fügt Roadmap-Items hinzu, retargetet sie und passt sie an in project/roadmap.md mit vollständiger Lifecycle-Validierung."
+use_when:
+  - "you want to add a roadmap item or queue work for sprint N"
+  - "you want to retarget an existing roadmap item to another sprint"
+  - "you want to flip the MVP flag on a roadmap item"
+dont_use_when:
+  - situation: "project/roadmap.md does not exist yet"
+    alternative: roadmap-init
+  - situation: "You want to enforce the queue-wide detail-level invariant"
+    alternative: roadmap-refine
+see_also:
+  - roadmap-init
+  - roadmap-refine
+  - feature-decompose
+  - sprint-plan
 resumable: true
 ---
 

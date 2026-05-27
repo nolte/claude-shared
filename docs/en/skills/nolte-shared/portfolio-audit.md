@@ -8,12 +8,29 @@ last_updated: generated
 
 # portfolio-audit
 
+> Audits, renders, and bootstraps the cross-repository capability portfolio across nolte/*.
+
 _Audits, renders, and bootstraps the cross-repository capability portfolio across `nolte/*` per `spec/portfolio/portfolio-management/`. Audit dispatches portfolio-manifest-collector agent for read-only inventory collection, then detects capability duplicates, surfaces gaps (broken peer references, spec-demanded gaps, copy-paste smells), and writes a Findings-Report under `.audits/portfolio/` with Critical / Warning / Suggestion / Info severities. Render regenerates the aggregated inventory under the per-language docs/ portfolio subtree. Bootstrap creates a repository's first `project/portfolio.yml`. Invoke when the user asks to \"audit the portfolio\", \"check for portfolio duplicates\", \"render the portfolio inventory\", or equivalent German-language requests. Don't use to consolidate duplicates (operator opens cross-repo PRs), to author new capabilities, or for per-repo tech_stack capture or refresh (use tech-stack-capture). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Tags:** `audit`
 - **Source:** [skills/portfolio-audit/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/portfolio-audit/SKILL.md)
+
+## Use when
+
+- you want to audit the portfolio for duplicates or gaps
+- you want to render the aggregated portfolio inventory under docs/
+- you want to bootstrap a repository's first project/portfolio.yml
+
+## Don't use when
+
+- **You want per-repo tech-stack capture or refresh** → [`tech-stack-capture`](tech-stack-capture.md)
+
+## See also
+
+- [`tech-stack-capture`](tech-stack-capture.md)
+- [`portfolio-manifest-collector`](../../agents/nolte-shared/portfolio-manifest-collector.md)
 
 ---
 
@@ -31,7 +48,7 @@ If any of the three operations grows complex enough to need its own dedicated re
 
 - **Mid-flow user confirmation on duplicate-resolution choices.** The Audit operation surfaces duplicate candidates and gap-class findings; deciding which repository owns a contested capability, or whether a copy-paste smell warrants a new shared capability, is a per-step user dialogue. An agent's fire-and-forget shape would lose those checkpoints.
 - **Persistent on-disk artefacts as deliverables.** Audit writes `.audits/portfolio/<YYYY-MM-DD>.md`. Render writes `docs/<lang>/portfolio/*.md`. Bootstrap writes `project/portfolio.yml` in the consuming repository. Skills own persistent state.
-- **Context-window-protective manifest collection via agent.** Audit delegates raw manifest collection to the `portfolio-manifest-collector` agent, which fetches and parses each Portfolio-Member's `project/portfolio.yml` via `gh api` and returns a pre-reduced structured summary (declared capabilities, audiences, peer references). Raw YAML is discarded inside the agent before it returns, so the main conversation receives only the synthesised inventory report rather than the full raw manifest dump.
+- **Context-window-protective manifest collection via agent.** Audit delegates raw manifest collection to the [`portfolio-manifest-collector`](../../agents/nolte-shared/portfolio-manifest-collector.md) agent, which fetches and parses each Portfolio-Member's `project/portfolio.yml` via `gh api` and returns a pre-reduced structured summary (declared capabilities, audiences, peer references). Raw YAML is discarded inside the agent before it returns, so the main conversation receives only the synthesised inventory report rather than the full raw manifest dump.
 - **Counter-dimension considered**: a tool-restricted agent could perform the Audit operation cleanly in isolation, but Render and Bootstrap both write user-visible files in the active checkout and benefit from staying in the main conversation; bundling all three behind one skill is simpler than splitting Audit out.
 
 ### User-language policy
@@ -54,7 +71,7 @@ If the active repository is neither, stop and ask the user whether to switch to 
 Runs the cross-repository capability audit per `spec/portfolio/portfolio-management/` §Portfolio audit.
 
 1. **Detect Portfolio-Member set** — query the GitHub API for the active set of public, non-archived repositories under `nolte` via `gh api orgs/nolte/repos --paginate --jq '.[] | select(.archived==false and .private==false) | .name'`. Cross-check each repository for an opt-out marker (`portfolio: excluded` at the top of `CLAUDE.md`); excluded repositories drop out of the audit set with their rationale recorded.
-2. **Collect per-repository manifests via agent** — Dispatch `portfolio-manifest-collector` (Agent) to gather manifests from all portfolio members. Wait for its inventory report before proceeding to duplicate-detection and gap-classification. The agent fetches `project/portfolio.yml` for each member via `gh api`, reduces raw YAML to structured per-repository summaries (declared capabilities, audiences, peer references, missing-manifest indicator), and returns the full manifest-inventory report. Repositories without `project/portfolio.yml` produce a `missing-manifest` entry rather than an error.
+2. **Collect per-repository manifests via agent** — Dispatch [`portfolio-manifest-collector`](../../agents/nolte-shared/portfolio-manifest-collector.md) (Agent) to gather manifests from all portfolio members. Wait for its inventory report before proceeding to duplicate-detection and gap-classification. The agent fetches `project/portfolio.yml` for each member via `gh api`, reduces raw YAML to structured per-repository summaries (declared capabilities, audiences, peer references, missing-manifest indicator), and returns the full manifest-inventory report. Repositories without `project/portfolio.yml` produce a `missing-manifest` entry rather than an error.
 3. **Run the four checks against the collected summary**:
    - **Manifest presence**: every Portfolio-Member repository ships a `project/portfolio.yml` or has the opt-out marker. Missing manifests on opted-in repositories are `Warning` findings.
    - **Manifest validity**: each manifest parses as YAML and contains the required fields (`name`, `description`, `audience`, `status`, `rationale`) per `spec/portfolio/portfolio-management/` §Capability inventory per repository. Schema violations are `Critical` findings.
@@ -75,7 +92,7 @@ Audit operation **never** consolidates duplicates, never deletes capabilities, n
 
 Regenerates the aggregated portfolio inventory pages under `claude-shared/docs/<lang>/portfolio/` from the same manifests collected in Audit.
 
-1. **Manifest collection** — when the same conversation has already collected manifests (operation 1 step 2) within this turn, reuse the cached structured summary; otherwise dispatch `portfolio-manifest-collector` (Agent) afresh to collect the manifests via the same `gh api` flow as operation 1 step 2.
+1. **Manifest collection** — when the same conversation has already collected manifests (operation 1 step 2) within this turn, reuse the cached structured summary; otherwise dispatch [`portfolio-manifest-collector`](../../agents/nolte-shared/portfolio-manifest-collector.md) (Agent) afresh to collect the manifests via the same `gh api` flow as operation 1 step 2.
 2. **Generate per-repository sections** for each Portfolio-Member: mission statement (quoted from `project/mission.md`), capability list with status badges (`active` / `experimental` / `deprecated`), audiences served (cross-referenced to the repository's audience artefact per `audience-identification`), outbound-peer-reference list.
 3. **Generate the Mermaid diagram** (per `spec/project/mermaid-diagrams/`) visualizing the capability-to-repository mapping and cross-repository peer references. Pick the diagram type from the supported catalog; default to `flowchart` direction `LR` for the cross-repo map.
 4. **Generate the `historical capabilities` appendix** if any archived repositories had registered capabilities; capabilities listed here keep peer references resolvable but are marked with the archival date.
@@ -116,7 +133,7 @@ Runs the tech-stack-discovery methodology from `spec/portfolio/tech-stack-discov
    - **Net-new** — the detected value isn't in the baseline at all (the repository introduces a tool the portfolio hasn't ratified yet).
 5. **Persist the result** under `.audits/tech-stack/<YYYY-Q<n>>.md` (or the per-repo equivalent) — same severity grammar as Audit, same `Caller follow-ups` shape.
 
-Discover-tech-stack is read-only — it doesn't modify the portfolio baseline in `spec/portfolio/tech-stack/`. When the user discovers a net-new tool worth ratifying, this skill stops and routes them to the `spec` skill to propose a baseline extension, rather than silently amending the spec from here.
+Discover-tech-stack is read-only — it doesn't modify the portfolio baseline in `spec/portfolio/tech-stack/`. When the user discovers a net-new tool worth ratifying, this skill stops and routes them to the [`spec`](spec.md) skill to propose a baseline extension, rather than silently amending the spec from here.
 
 ### Reference: spec anchors
 
@@ -146,7 +163,7 @@ When the spec disagrees with this skill's instructions, the spec wins. Propose a
 
 ### Gotchas
 
-- **Bootstrap blocks if `tech-stack-capture` hasn't run yet**: Bootstrap reads `project/mission.md` and the audience artefact as inputs; if neither exists in the target repository, Bootstrap has nothing to derive capabilities from — route the user to `mission-define` and `audience-identify` first rather than proceeding with empty fields.
+- **Bootstrap blocks if [`tech-stack-capture`](tech-stack-capture.md) hasn't run yet**: Bootstrap reads `project/mission.md` and the audience artefact as inputs; if neither exists in the target repository, Bootstrap has nothing to derive capabilities from — route the user to [`mission-define`](mission-define.md) and [`audience-identify`](audience-identify.md) first rather than proceeding with empty fields.
 - **`gh api` rate limits can stall portfolio-wide manifest collection**: fetching `project/portfolio.yml` for every public non-archived repository in one call sequence can exhaust the GitHub API rate limit for large portfolios — spread calls across turns or check `gh api rate_limit` before starting a full-portfolio Audit.
 - **Findings-Report and rendered inventory must land in `claude-shared`, not in the calling repo**: writing `.audits/portfolio/` or `docs/<lang>/portfolio/` from a non-`claude-shared` working directory is a structural error; confirm `cwd` resolves to the `claude-shared` checkout before any Audit or Render write.
 

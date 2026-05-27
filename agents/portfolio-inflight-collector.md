@@ -6,6 +6,16 @@ tools: [Read, Bash, Glob, Grep]
 model: sonnet
 tags: [audit]
 phase: review
+summary: "Read-only in-flight data collector: open issues, PRs (incl. drafts), branches without PR, unresolved review threads + Discussions across nolte/*."
+summary_de: "Nur-Lese-In-Flight-Datensammler: offene Issues, PRs (inkl. Drafts), Branches ohne PR, ungelöste Review-Threads + Discussions über nolte/*."
+use_when:
+  - "portfolio-inflight-triage needs to collect per-repo in-flight data across all nolte members"
+  - "you want to refresh a per-repository in-flight snapshot for the audit"
+dont_use_when:
+  - situation: "You want severity classification or matrix-axis evaluation"
+    alternative: portfolio-inflight-triage
+see_also:
+  - portfolio-inflight-triage
 ---
 
 # Portfolio In-Flight Collector

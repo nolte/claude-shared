@@ -8,6 +8,8 @@ last_updated: generated
 
 # sprint-execute
 
+> Treibt das Tagesgeschäft eines aktiven Sprints: Lifecycle-Übergänge, Feature-Listen-Sync, last_commit-Updates.
+
 _Drive the daily mechanics of an active sprint per the project sprint spec. Invoke when the user asks to start a sprint, start a feature, mark a feature in progress, mark a feature done, sync a sprint's feature list, or update the sprint's last commit. Also handles equivalent German-language requests. Promotes a `planned` sprint to `active` when the first feature starts, drives feature lifecycle transitions (`ready → in_progress`, `in_progress → done`), keeps the `## Features` body list and `features` frontmatter in lockstep, updates `last_commit` whenever a feature reaches `done`, and refuses to start a feature whose sprint isn't this one while another sprint is already `active`. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
@@ -15,11 +17,29 @@ _Drive the daily mechanics of an active sprint per the project sprint spec. Invo
 - **Tags:** `lifecycle`
 - **Quelle:** [skills/sprint-execute/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/sprint-execute/SKILL.md)
 
+## Anwenden wenn
+
+- you want to start a sprint or start a feature in an active sprint
+- you want to mark a feature in_progress or done
+- you want to sync the sprint's feature list with frontmatter
+
+## Nicht anwenden wenn
+
+- **You want to plan or open a new sprint file** → [`sprint-plan`](sprint-plan.md)
+- **You want to close an active sprint at the review gate** → [`sprint-review`](sprint-review.md)
+- **You want to decompose a roadmap item into features** → [`feature-decompose`](feature-decompose.md)
+
+## Siehe auch
+
+- [`sprint-plan`](sprint-plan.md)
+- [`sprint-review`](sprint-review.md)
+- [`feature-decompose`](feature-decompose.md)
+
 ---
 
 ## Sprint Execute
 
-Drives the lifecycle of an `active` sprint per `spec/project/sprint/<canonical_language>.md`. This skill is the canonical write authority for `planned → active` promotion, feature `ready → in_progress` and `in_progress → done` transitions inside the sprint's scope, the `last_commit` frontmatter field, and the `## Features` body / `features` frontmatter sync. It deliberately doesn't close the sprint—`sprint-review` owns `active → review` and beyond.
+Drives the lifecycle of an `active` sprint per `spec/project/sprint/<canonical_language>.md`. This skill is the canonical write authority for `planned → active` promotion, feature `ready → in_progress` and `in_progress → done` transitions inside the sprint's scope, the `last_commit` frontmatter field, and the `## Features` body / `features` frontmatter sync. It deliberately doesn't close the sprint—[`sprint-review`](sprint-review.md) owns `active → review` and beyond.
 
 ### Why this is a skill, not an agent
 
@@ -80,8 +100,8 @@ Steps:
 1. Read the feature file. Confirm `status: in_progress`. Confirm every acceptance-criterion checkbox in `## Acceptance criteria` is checked, and every `## Test hooks` entry has status `passing` or `skipped` (per `spec/project/feature/` §Lifecycle and gates). Stop and report any unchecked criterion or `pending` / `failing` hook.
 2. Confirm the sprint named by the feature's `sprint` field is `active` or `review` per `spec/project/feature/` §Lifecycle and gates.
 3. Set `status: done` and `ended: <today's ISO date>` on the feature.
-4. **Update the sprint's `last_commit`.** Run `git rev-parse HEAD` to resolve the most recent commit SHA on the current branch, then write the result to the sprint's `last_commit` frontmatter field. This is the canonical write authority for that field per `spec/project/sprint/` §Frontmatter schema; `last_commit` anchors the artefact ancestry check that `sprint-review` runs at closure.
-5. Surface the updated sprint state to the user: features remaining `in_progress`, `last_commit` SHA, and a hint that `sprint-review` becomes invokable when every feature in the sprint is `done`.
+4. **Update the sprint's `last_commit`.** Run `git rev-parse HEAD` to resolve the most recent commit SHA on the current branch, then write the result to the sprint's `last_commit` frontmatter field. This is the canonical write authority for that field per `spec/project/sprint/` §Frontmatter schema; `last_commit` anchors the artefact ancestry check that [`sprint-review`](sprint-review.md) runs at closure.
+5. Surface the updated sprint state to the user: features remaining `in_progress`, `last_commit` SHA, and a hint that [`sprint-review`](sprint-review.md) becomes invokable when every feature in the sprint is `done`.
 
 #### 4. Sync `## Features` body bullets with `features` frontmatter
 
@@ -97,16 +117,16 @@ Steps:
 
 The following requests are **out of scope** for this skill:
 
-- `active → review` and any subsequent transition — owned by `sprint-review`.
-- Cancelling a sprint at any stage — `sprint-review` writes the cancellation rationale per `spec/project/sprint/` §Hobby-scale variability.
-- Mutating `value_statement` on a sprint that's already `active` — refuse and hand back. The field is frozen after activation per `spec/project/sprint/` §Roadmap and feature linkage; the recovery path is `cancelled` plus a fresh sprint, owned by `sprint-review`.
-- Mutating `roadmap_items` or `artifact_ref` on a sprint that's already `active` — refuse and hand back. `roadmap_items` may be edited only while `planned` (per `sprint-plan`); `artifact_ref` is `sprint-review`'s authority at closure.
+- `active → review` and any subsequent transition — owned by [`sprint-review`](sprint-review.md).
+- Cancelling a sprint at any stage — [`sprint-review`](sprint-review.md) writes the cancellation rationale per `spec/project/sprint/` §Hobby-scale variability.
+- Mutating `value_statement` on a sprint that's already `active` — refuse and hand back. The field is frozen after activation per `spec/project/sprint/` §Roadmap and feature linkage; the recovery path is `cancelled` plus a fresh sprint, owned by [`sprint-review`](sprint-review.md).
+- Mutating `roadmap_items` or `artifact_ref` on a sprint that's already `active` — refuse and hand back. `roadmap_items` may be edited only while `planned` (per [`sprint-plan`](sprint-plan.md)); `artifact_ref` is [`sprint-review`](sprint-review.md)'s authority at closure.
 
 When the user asks for any of the above, stop and surface the correct skill to invoke instead.
 
 ### Gotchas
 
-- **The at-most-one-active-sprint invariant is the most common operator stumbling block.** Trying to start a feature whose sprint is `planned` while a different sprint is already `active` is forbidden — the skill refuses with a verbatim error naming the conflicting sprint. Operators routinely expect "starting a feature on sprint N+1 should auto-close sprint N"; the spec deliberately doesn't allow that auto-promotion path. Close the active sprint via `sprint-review` first, then start the next.
+- **The at-most-one-active-sprint invariant is the most common operator stumbling block.** Trying to start a feature whose sprint is `planned` while a different sprint is already `active` is forbidden — the skill refuses with a verbatim error naming the conflicting sprint. Operators routinely expect "starting a feature on sprint N+1 should auto-close sprint N"; the spec deliberately doesn't allow that auto-promotion path. Close the active sprint via [`sprint-review`](sprint-review.md) first, then start the next.
 - **`last_commit` is updated only when a feature reaches `done`.** A feature transitioning `ready → in_progress` doesn't bump `last_commit`; a sprint mid-progress can have a stale `last_commit` between feature completions. Don't read `last_commit` as "most recent commit on this branch" — read it as "commit at which the most recent feature in this sprint was marked done."
 - **The `## Features` body list and the `features` frontmatter array are kept in lockstep by Operation D.** Mutating only one surface is a partial-write failure mode; `sprint-execute` refuses partial mutations and the operator has to update both atomically.
 - **Acceptance criteria and test hooks are gated separately** for the `in_progress → done` transition. Operation C confirms both: every acceptance-criterion checkbox is checked AND every test hook reports `passing` or `skipped`. A skill or test hook still in `pending` blocks the transition even when the criteria are visually checked off.
@@ -129,7 +149,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** mutate the `## Features` body bullets without mutating the `features` frontmatter list in the same write, and vice versa. Partial updates are forbidden.
 - **Never** mark a feature `done` while any acceptance-criterion checkbox is unchecked or any test-hook status is `pending` or `failing`.
 - **Never** write `last_commit` on a sprint as a side effect of anything other than a feature in that sprint reaching `done`. The field's only canonical writer is operation C.
-- **Never** transition a sprint past `active` from this skill. `active → review`, `review → closed`, `review → cancelled`, and the cancellation paths from any earlier state are `sprint-review`'s authority.
+- **Never** transition a sprint past `active` from this skill. `active → review`, `review → closed`, `review → cancelled`, and the cancellation paths from any earlier state are [`sprint-review`](sprint-review.md)'s authority.
 - **Never** alter `value_statement` on an `active` sprint. If reality has shifted, the sprint must be cancelled and rescheduled per `spec/project/sprint/` §Roadmap and feature linkage.
 - When `spec/project/sprint/` or `spec/project/feature/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
 

@@ -52,6 +52,24 @@ PHASE_ORDER: tuple[str, ...] = (
 )
 PHASE_VOCABULARY: frozenset[str] = frozenset(PHASE_ORDER)
 
+# Limits per spec/claude/skill-agent-catalog/ §Per-language short summary and §Use-case metadata.
+SUMMARY_MAX_LEN = 200
+USE_WHEN_MAX_ENTRIES = 6
+USE_WHEN_MAX_LEN = 120
+DONT_USE_WHEN_MAX_ENTRIES = 6
+DONT_USE_WHEN_SITUATION_MAX_LEN = 120
+SEE_ALSO_MAX_ENTRIES = 8
+EXAMPLES_MAX_ENTRIES = 4
+EXAMPLES_FIELD_MAX_LEN = 200
+
+# Reserved auto-tag emitted by the generator when a non-English page falls back to the English
+# summary or the description truncation, per spec §Per-language short summary.
+AUTO_TAG_TRANSLATION_PENDING = "_translation-pending"
+
+# The canonical metadata language summary (vs. summary_<lang>) is authored in,
+# per spec §Per-language short summary.
+SUMMARY_CANONICAL_LANG = "en"
+
 CHROME = {
     "de": {
         "skills_title": "Skills",
@@ -76,6 +94,28 @@ CHROME = {
         "tags_label": "Tags",
         "plugin_label": "Plugin",
         "phase_label": "Phase",
+        "use_when_label": "Anwenden wenn",
+        "dont_use_when_label": "Nicht anwenden wenn",
+        "see_also_label": "Siehe auch",
+        "examples_label": "Beispiele",
+        "example_prompt_label": "Prompt",
+        "example_outcome_label": "Ergebnis",
+        "translation_pending_badge": "🚧 Übersetzung ausstehend",
+        "by_task_link_label": "Nach Aufgabe stöbern →",
+        "by_task_title": "Nach Aufgabe",
+        "by_task_intro": (
+            "Aufgaben-orientierte Einstiegs-Seite: gruppiert Skills und Agents nach Nutzer-Absicht "
+            "statt nach Phase. Hand-kuratiert; erweitern, sobald neue Use-Case-Muster sichtbar werden."
+        ),
+        "by_task_skeleton_notice": (
+            "_Hinweis: Dieses Skelett wurde vom Katalog-Generator aus `use_when`-Frontmatter-Einträgen "
+            "vorbefüllt. Es wird in Folgeläufen NICHT überschrieben — gerne Rubriken ergänzen, "
+            "umsortieren oder Einträge mit Disambiguierungs-Notizen versehen._"
+        ),
+        "by_task_no_use_when": (
+            "Noch hat kein Artefakt `use_when`-Einträge deklariert; sobald welche existieren, kann "
+            "der Generator hier ein erstes Skelett vorschlagen."
+        ),
         "phase_labels": {
             "vision": "1 Vision",
             "plan": "2 Plan",
@@ -110,6 +150,28 @@ CHROME = {
         "tags_label": "Tags",
         "plugin_label": "Plugin",
         "phase_label": "Phase",
+        "use_when_label": "Use when",
+        "dont_use_when_label": "Don't use when",
+        "see_also_label": "See also",
+        "examples_label": "Examples",
+        "example_prompt_label": "Prompt",
+        "example_outcome_label": "Outcome",
+        "translation_pending_badge": "🚧 Translation pending",
+        "by_task_link_label": "Browse by task →",
+        "by_task_title": "By task",
+        "by_task_intro": (
+            "Task-oriented landing page: groups skills and agents by user intent rather than by "
+            "phase. Hand-curated; grow as new use-case patterns emerge."
+        ),
+        "by_task_skeleton_notice": (
+            "_Note: This skeleton was pre-populated by the catalog generator from `use_when` "
+            "frontmatter entries. It is NOT regenerated on subsequent runs — please add rubrics, "
+            "reorganise, or annotate entries with disambiguation hints as needed._"
+        ),
+        "by_task_no_use_when": (
+            "No artifact has declared `use_when` entries yet; once any do, the generator can "
+            "propose a first skeleton here."
+        ),
         "phase_labels": {
             "vision": "1 Vision",
             "plan": "2 Plan",
@@ -151,6 +213,13 @@ class Artifact:
     source_relpath: str
     repo_url: str
     branch: str
+    # Optional fields per spec §Per-language short summary and §Use-case metadata.
+    summary: str | None = None
+    summaries: dict[str, str] | None = None  # lang → translated short summary
+    use_when: list[str] | None = None
+    dont_use_when: list[dict[str, str]] | None = None  # {situation, alternative}
+    see_also: list[str] | None = None
+    examples: list[dict[str, str]] | None = None  # {prompt, outcome}
 
     @property
     def source_url(self) -> str:
@@ -189,12 +258,16 @@ def _render_frontmatter(*, title: str, content_mode: str) -> str:
 def parse_frontmatter(text: str, file_label: str) -> tuple[dict, str]:
     """Parse the YAML-ish frontmatter block leniently.
 
-    Skill and agent frontmatter is flat (no nested mappings) but ``description``
-    routinely contains colons followed by spaces — for example ``status: planned``
-    — which PyYAML rejects as ambiguous plain scalars. We treat each top-level
-    line as ``key: value`` with the value taken verbatim, handling YAML block
-    scalars (``>``, ``>-``, ``|``, ``|-``) via continuation collection. Bracketed
-    list values like ``tags: [a, b]`` are delegated to PyYAML.
+    Skill and agent frontmatter is mostly flat (no nested mappings on the legacy
+    fields) but ``description`` routinely contains colons followed by spaces —
+    for example ``status: planned`` — which PyYAML rejects as ambiguous plain
+    scalars. We treat each top-level line as ``key: value`` with the value taken
+    verbatim, handling YAML block scalars (``>``, ``>-``, ``|``, ``|-``) via
+    continuation collection. Bracketed list values like ``tags: [a, b]`` are
+    delegated to PyYAML, and YAML block-style sequences/mappings (introduced by
+    a key with no inline value followed by indented lines) are delegated to
+    PyYAML as well — this is how ``dont_use_when``/``examples`` (lists of
+    mappings) and the wider use-case metadata land.
     """
 
     match = FRONTMATTER_RE.match(text)
@@ -234,6 +307,25 @@ def parse_frontmatter(text: str, file_label: str) -> tuple[dict, str]:
             except yaml.YAMLError as exc:
                 raise CatalogError(
                     f"{file_label}: invalid list value for {key!r}: {exc}"
+                ) from exc
+        elif raw_value == "" and i < len(lines) and lines[i] and lines[i][0].isspace():
+            # YAML block-style value follows (sequence of mappings, mapping of
+            # mappings, …). Collect all indented continuation lines and hand
+            # the whole block to PyYAML; this is what use_when / dont_use_when /
+            # see_also / examples ride on per spec §Use-case metadata.
+            block_lines = []
+            while i < len(lines):
+                cont = lines[i]
+                if cont and not cont[0].isspace():
+                    break
+                block_lines.append(cont)
+                i += 1
+            block_text = "\n".join(block_lines)
+            try:
+                meta[key] = yaml.safe_load(block_text)
+            except yaml.YAMLError as exc:
+                raise CatalogError(
+                    f"{file_label}: invalid YAML block for {key!r}: {exc}"
                 ) from exc
         elif (
             len(raw_value) >= 2
@@ -314,6 +406,12 @@ def _normalize_tags(raw, label: str) -> list[str]:
     for tag in raw:
         if not isinstance(tag, str):
             raise CatalogError(f"{label}: tag entries must be strings")
+        if tag.startswith("_"):
+            raise CatalogError(
+                f"{label}: tag '{tag}' begins with '_' which is reserved for "
+                f"generator-emitted auto-tags (e.g. '{AUTO_TAG_TRANSLATION_PENDING}'). "
+                f"Source frontmatter MUST NOT declare an underscore-prefixed tag."
+            )
         if len(tag) > 30 or not TAG_RE.match(tag):
             raise CatalogError(
                 f"{label}: tag '{tag}' must be lowercase ASCII kebab-case, ≤30 chars"
@@ -322,7 +420,222 @@ def _normalize_tags(raw, label: str) -> list[str]:
     return tags
 
 
-def discover_skills(source: SourceRoot) -> list[Artifact]:
+def _validate_summary(raw, label: str, field_name: str) -> str | None:
+    """Per spec §Per-language short summary.
+
+    Returns the validated summary string, or ``None`` if the field wasn't
+    declared. Raises CatalogError for any shape violation (wrong type, empty
+    after whitespace stripping, > SUMMARY_MAX_LEN chars).
+    """
+
+    if raw is None:
+        return None
+    if not isinstance(raw, str):
+        raise CatalogError(
+            f"{label}: frontmatter '{field_name}' must be a plain string, got "
+            f"{type(raw).__name__}"
+        )
+    stripped = raw.strip()
+    if not stripped:
+        raise CatalogError(
+            f"{label}: frontmatter '{field_name}' must be non-empty after "
+            f"whitespace stripping"
+        )
+    if len(stripped) > SUMMARY_MAX_LEN:
+        raise CatalogError(
+            f"{label}: frontmatter '{field_name}' is {len(stripped)} characters; "
+            f"the limit is {SUMMARY_MAX_LEN}"
+        )
+    return stripped
+
+
+def _collect_summaries(meta: dict, label: str, languages: list[str]) -> dict[str, str]:
+    """Read every ``summary_<lang>`` field for languages configured in the docs
+    build and return a ``{lang: summary}`` mapping. The English-canonical
+    ``summary`` is collected separately by the caller via ``_validate_summary``.
+    """
+
+    out: dict[str, str] = {}
+    for lang in languages:
+        if lang == SUMMARY_CANONICAL_LANG:
+            continue
+        field = f"summary_{lang}"
+        if field in meta:
+            value = _validate_summary(meta[field], label, field)
+            if value is not None:
+                out[lang] = value
+    return out
+
+
+def _validate_use_when(raw, label: str) -> list[str] | None:
+    """Per spec §Use-case metadata: list of plain strings, ≤6 entries, each ≤120 chars."""
+
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        raise CatalogError(f"{label}: frontmatter 'use_when' must be a YAML list")
+    if len(raw) > USE_WHEN_MAX_ENTRIES:
+        raise CatalogError(
+            f"{label}: frontmatter 'use_when' has {len(raw)} entries; "
+            f"limit is {USE_WHEN_MAX_ENTRIES}"
+        )
+    out: list[str] = []
+    for idx, entry in enumerate(raw):
+        if not isinstance(entry, str):
+            raise CatalogError(
+                f"{label}: frontmatter 'use_when[{idx}]' must be a plain string, "
+                f"got {type(entry).__name__}"
+            )
+        stripped = entry.strip()
+        if not stripped:
+            raise CatalogError(
+                f"{label}: frontmatter 'use_when[{idx}]' is empty after stripping"
+            )
+        if len(stripped) > USE_WHEN_MAX_LEN:
+            raise CatalogError(
+                f"{label}: frontmatter 'use_when[{idx}]' is {len(stripped)} "
+                f"characters; limit is {USE_WHEN_MAX_LEN}"
+            )
+        out.append(stripped)
+    return out
+
+
+def _validate_dont_use_when(raw, label: str) -> list[dict[str, str]] | None:
+    """Per spec §Use-case metadata: list of {situation, alternative} mappings.
+
+    Resolvability of ``alternative`` against the discovered catalog happens later
+    in :func:`_resolve_use_case_references`, after every source root has been
+    walked.
+    """
+
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        raise CatalogError(f"{label}: frontmatter 'dont_use_when' must be a YAML list")
+    if len(raw) > DONT_USE_WHEN_MAX_ENTRIES:
+        raise CatalogError(
+            f"{label}: frontmatter 'dont_use_when' has {len(raw)} entries; "
+            f"limit is {DONT_USE_WHEN_MAX_ENTRIES}"
+        )
+    out: list[dict[str, str]] = []
+    allowed_keys = {"situation", "alternative"}
+    for idx, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            raise CatalogError(
+                f"{label}: frontmatter 'dont_use_when[{idx}]' must be a mapping with "
+                f"keys 'situation' and 'alternative', got {type(entry).__name__}"
+            )
+        keys = set(entry.keys())
+        if keys != allowed_keys:
+            raise CatalogError(
+                f"{label}: frontmatter 'dont_use_when[{idx}]' must have exactly the "
+                f"keys 'situation' and 'alternative', got {sorted(keys)}"
+            )
+        situation = entry["situation"]
+        alternative = entry["alternative"]
+        if not isinstance(situation, str):
+            raise CatalogError(
+                f"{label}: frontmatter 'dont_use_when[{idx}].situation' must be a "
+                f"plain string, got {type(situation).__name__}"
+            )
+        situation = situation.strip()
+        if not situation:
+            raise CatalogError(
+                f"{label}: frontmatter 'dont_use_when[{idx}].situation' is empty "
+                f"after stripping"
+            )
+        if len(situation) > DONT_USE_WHEN_SITUATION_MAX_LEN:
+            raise CatalogError(
+                f"{label}: frontmatter 'dont_use_when[{idx}].situation' is "
+                f"{len(situation)} characters; limit is "
+                f"{DONT_USE_WHEN_SITUATION_MAX_LEN}"
+            )
+        if not isinstance(alternative, str) or not alternative.strip():
+            raise CatalogError(
+                f"{label}: frontmatter 'dont_use_when[{idx}].alternative' must be a "
+                f"non-empty plain string naming a skill or agent"
+            )
+        out.append({"situation": situation, "alternative": alternative.strip()})
+    return out
+
+
+def _validate_see_also(raw, label: str) -> list[str] | None:
+    """Per spec §Use-case metadata: list of skill/agent names, ≤8 entries.
+
+    Resolvability happens later in :func:`_resolve_use_case_references`.
+    """
+
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        raise CatalogError(f"{label}: frontmatter 'see_also' must be a YAML list")
+    if len(raw) > SEE_ALSO_MAX_ENTRIES:
+        raise CatalogError(
+            f"{label}: frontmatter 'see_also' has {len(raw)} entries; "
+            f"limit is {SEE_ALSO_MAX_ENTRIES}"
+        )
+    out: list[str] = []
+    for idx, entry in enumerate(raw):
+        if not isinstance(entry, str) or not entry.strip():
+            raise CatalogError(
+                f"{label}: frontmatter 'see_also[{idx}]' must be a non-empty plain "
+                f"string naming a skill or agent"
+            )
+        out.append(entry.strip())
+    return out
+
+
+def _validate_examples(raw, label: str) -> list[dict[str, str]] | None:
+    """Per spec §Use-case metadata: list of {prompt, outcome} mappings, ≤4 entries."""
+
+    if raw is None:
+        return None
+    if not isinstance(raw, list):
+        raise CatalogError(f"{label}: frontmatter 'examples' must be a YAML list")
+    if len(raw) > EXAMPLES_MAX_ENTRIES:
+        raise CatalogError(
+            f"{label}: frontmatter 'examples' has {len(raw)} entries; "
+            f"limit is {EXAMPLES_MAX_ENTRIES}"
+        )
+    out: list[dict[str, str]] = []
+    allowed_keys = {"prompt", "outcome"}
+    for idx, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            raise CatalogError(
+                f"{label}: frontmatter 'examples[{idx}]' must be a mapping with keys "
+                f"'prompt' and 'outcome', got {type(entry).__name__}"
+            )
+        keys = set(entry.keys())
+        if keys != allowed_keys:
+            raise CatalogError(
+                f"{label}: frontmatter 'examples[{idx}]' must have exactly the keys "
+                f"'prompt' and 'outcome', got {sorted(keys)}"
+            )
+        rec: dict[str, str] = {}
+        for sub in ("prompt", "outcome"):
+            value = entry[sub]
+            if not isinstance(value, str):
+                raise CatalogError(
+                    f"{label}: frontmatter 'examples[{idx}].{sub}' must be a plain "
+                    f"string, got {type(value).__name__}"
+                )
+            value = value.strip()
+            if not value:
+                raise CatalogError(
+                    f"{label}: frontmatter 'examples[{idx}].{sub}' is empty after "
+                    f"stripping"
+                )
+            if len(value) > EXAMPLES_FIELD_MAX_LEN:
+                raise CatalogError(
+                    f"{label}: frontmatter 'examples[{idx}].{sub}' is {len(value)} "
+                    f"characters; limit is {EXAMPLES_FIELD_MAX_LEN}"
+                )
+            rec[sub] = value
+        out.append(rec)
+    return out
+
+
+def discover_skills(source: SourceRoot, languages: list[str]) -> list[Artifact]:
     skills_dir = source.local / source.skills_path
     if not skills_dir.is_dir():
         return []
@@ -357,12 +670,18 @@ def discover_skills(source: SourceRoot) -> list[Artifact]:
                 source_relpath=f"{source.skills_path}/{entry.name}/SKILL.md",
                 repo_url=source.repo_url,
                 branch=source.branch,
+                summary=_validate_summary(meta.get("summary"), label, "summary"),
+                summaries=_collect_summaries(meta, label, languages),
+                use_when=_validate_use_when(meta.get("use_when"), label),
+                dont_use_when=_validate_dont_use_when(meta.get("dont_use_when"), label),
+                see_also=_validate_see_also(meta.get("see_also"), label),
+                examples=_validate_examples(meta.get("examples"), label),
             )
         )
     return artefacts
 
 
-def discover_agents(source: SourceRoot) -> list[Artifact]:
+def discover_agents(source: SourceRoot, languages: list[str]) -> list[Artifact]:
     agents_dir = source.local / source.agents_path
     if not agents_dir.is_dir():
         return []
@@ -401,12 +720,27 @@ def discover_agents(source: SourceRoot) -> list[Artifact]:
                 source_relpath=f"{source.agents_path}/{entry.name}",
                 repo_url=source.repo_url,
                 branch=source.branch,
+                summary=_validate_summary(meta.get("summary"), label, "summary"),
+                summaries=_collect_summaries(meta, label, languages),
+                use_when=_validate_use_when(meta.get("use_when"), label),
+                dont_use_when=_validate_dont_use_when(meta.get("dont_use_when"), label),
+                see_also=_validate_see_also(meta.get("see_also"), label),
+                examples=_validate_examples(meta.get("examples"), label),
             )
         )
     return artefacts
 
 
 _HEADING_RE = re.compile(r"^(#{1,5})(\s)", re.MULTILINE)
+
+# Inline-code span matching the shape of a valid skill or agent name
+# (lowercase ASCII kebab-case). The wider RFC-1738-style backtick-rules of
+# Markdown allow more, but artifact names are always this shape so this is
+# both sufficient and false-positive-safe for the cross-linking pass below.
+INLINE_CODE_NAME_RE = re.compile(r"`([a-z][a-z0-9-]*)`")
+
+# Sentence boundary used by _truncate_description as a fallback summary source.
+_SENTENCE_END_RE = re.compile(r"(?<=[\.!?])\s+")
 
 
 def _demote_headings(body: str) -> str:
@@ -420,30 +754,278 @@ def _demote_headings(body: str) -> str:
     return _HEADING_RE.sub(lambda m: f"#{m.group(1)}{m.group(2)}", body)
 
 
-def render_page(artifact: Artifact, chrome: dict) -> str:
+# ---------------------------------------------------------------------------
+# Cross-linking
+# ---------------------------------------------------------------------------
+
+
+def _build_link_index(skills: list[Artifact], agents: list[Artifact]) -> dict[str, list[Artifact]]:
+    """Return ``{name: [Artifact, ...]}`` for every discovered artifact.
+
+    The same name can map to multiple artifacts when (a) a skill and an agent
+    share a name or (b) two plugin source roots ship artifacts of the same
+    name. Cross-linking treats those as ambiguous.
+    """
+
+    index: dict[str, list[Artifact]] = {}
+    for art in [*skills, *agents]:
+        index.setdefault(art.name, []).append(art)
+    return index
+
+
+def _resolve_use_case_references(
+    skills: list[Artifact], agents: list[Artifact]
+) -> None:
+    """Validate every ``dont_use_when[].alternative`` and ``see_also[]`` value
+    against the discovered catalog, per spec §Use-case metadata. Fails the
+    build on unresolved or ambiguous references.
+    """
+
+    index = _build_link_index(skills, agents)
+    for art in [*skills, *agents]:
+        label = f"{art.plugin}:{art.kind}/{art.name}"
+        if art.dont_use_when:
+            for i, entry in enumerate(art.dont_use_when):
+                _check_ref_resolves(
+                    index, entry["alternative"], label, f"dont_use_when[{i}].alternative"
+                )
+        if art.see_also:
+            for i, target in enumerate(art.see_also):
+                _check_ref_resolves(
+                    index, target, label, f"see_also[{i}]"
+                )
+
+
+def _check_ref_resolves(
+    index: dict[str, list[Artifact]], target: str, label: str, field_path: str
+) -> None:
+    if target not in index:
+        raise CatalogError(
+            f"{label}: '{field_path}' references '{target}' which is not discoverable "
+            f"in any configured plugin source root"
+        )
+    if len(index[target]) > 1:
+        collisions = ", ".join(
+            f"{a.plugin}:{a.kind}/{a.name}" for a in index[target]
+        )
+        raise CatalogError(
+            f"{label}: '{field_path}' references '{target}' which is ambiguous "
+            f"(found in: {collisions}); rename one of the colliding artifacts"
+        )
+
+
+def _relative_link(
+    from_art: Artifact, to_art: Artifact
+) -> str:
+    """Compute the relative MkDocs link from ``from_art``'s catalog page to
+    ``to_art``'s catalog page, working purely from logical path segments so the
+    result is the same across docs languages.
+    """
+
+    from_section = "skills" if from_art.kind == "skill" else "agents"
+    to_section = "skills" if to_art.kind == "skill" else "agents"
+    from_dir_parts = [from_section, from_art.plugin]
+    to_parts = [to_section, to_art.plugin, f"{to_art.name}.md"]
+    # Walk up to the closest common ancestor, then descend.
+    common = 0
+    while (
+        common < len(from_dir_parts)
+        and common < len(to_parts) - 1
+        and from_dir_parts[common] == to_parts[common]
+    ):
+        common += 1
+    ups = ["..".rstrip()] * (len(from_dir_parts) - common)
+    downs = to_parts[common:]
+    return "/".join([*ups, *downs])
+
+
+def _apply_inline_cross_linking(
+    text: str,
+    from_art: Artifact,
+    index: dict[str, list[Artifact]],
+    warnings: list[tuple[str, str, list[Artifact]]],
+) -> str:
+    """Rewrite inline-code mentions ``\\`name\\``` in ``text`` into Markdown
+    links when ``name`` resolves to exactly one discovered artifact. Ambiguous
+    mentions stay unlinked and are appended to ``warnings`` for a build-time
+    diagnostic.
+    """
+
+    self_label = f"{from_art.plugin}:{from_art.kind}/{from_art.name}"
+
+    def replace(m: re.Match[str]) -> str:
+        name = m.group(1)
+        targets = index.get(name)
+        if not targets:
+            return m.group(0)
+        if len(targets) > 1:
+            warnings.append((self_label, name, list(targets)))
+            return m.group(0)
+        target = targets[0]
+        if target.name == from_art.name and target.kind == from_art.kind:
+            # Self-mention: never link the page to itself.
+            return m.group(0)
+        url = _relative_link(from_art, target)
+        return f"[`{name}`]({url})"
+
+    return INLINE_CODE_NAME_RE.sub(replace, text)
+
+
+# ---------------------------------------------------------------------------
+# Summary resolution + auto-tags
+# ---------------------------------------------------------------------------
+
+
+def _truncate_description(description: str) -> str:
+    """Fallback summary: first sentence of ``description``, capped at SUMMARY_MAX_LEN."""
+
+    flat = " ".join(description.split())
+    # Split at the first sentence boundary; if none found, the whole text is
+    # one sentence.
+    first = _SENTENCE_END_RE.split(flat, maxsplit=1)[0]
+    if len(first) > SUMMARY_MAX_LEN:
+        return first[: SUMMARY_MAX_LEN - 1].rstrip() + "…"
+    return first
+
+
+def _resolve_summary_for_lang(art: Artifact, lang: str) -> tuple[str, bool]:
+    """Return ``(displayed_summary, is_translation_pending)`` for ``art`` on the
+    catalog page of docs language ``lang``, per spec §Per-language short summary.
+
+    The three-step fallback chain is summary_<lang> → summary (English) →
+    first sentence of description truncated to SUMMARY_MAX_LEN. The boolean is
+    True whenever the page falls back away from a native-language summary on a
+    non-English docs language; that boolean drives both the chrome badge and
+    the ``_translation-pending`` auto-tag.
+    """
+
+    if lang != SUMMARY_CANONICAL_LANG and art.summaries and lang in art.summaries:
+        return art.summaries[lang], False
+    if art.summary:
+        return art.summary, lang != SUMMARY_CANONICAL_LANG
+    return _truncate_description(art.description), lang != SUMMARY_CANONICAL_LANG
+
+
+def _effective_tags(art: Artifact, lang: str) -> list[str]:
+    """Return ``art.tags`` plus any generator-emitted auto-tags applicable to
+    the rendered page in docs language ``lang``. Currently the only auto-tag is
+    ``_translation-pending`` per spec §Per-language short summary.
+    """
+
+    base = list(art.tags)
+    _, pending = _resolve_summary_for_lang(art, lang)
+    if pending:
+        base.append(AUTO_TAG_TRANSLATION_PENDING)
+    return base
+
+
+def render_page(
+    artifact: Artifact,
+    chrome: dict,
+    lang: str,
+    link_index: dict[str, list[Artifact]],
+    warnings: list[tuple[str, str, list[Artifact]]],
+) -> str:
     phase_label = chrome["phase_labels"][artifact.phase]
+    summary_text, translation_pending = _resolve_summary_for_lang(artifact, lang)
+    tags_for_page = _effective_tags(artifact, lang)
+
     lines: list[str] = []
     lines.append(_render_frontmatter(title=artifact.name, content_mode="reference"))
     lines.append(f"# {artifact.name}")
     lines.append("")
-    lines.append(f"_{artifact.description}_")
+
+    # Per-language short summary as a callout above the routing description.
+    # The translation-pending badge sits on its own line so screen readers and
+    # markdown viewers both surface it. Cross-link the summary (the rewrite
+    # only touches inline-code spans, so the leading/trailing prose stays put).
+    summary_rendered = _apply_inline_cross_linking(
+        summary_text, artifact, link_index, warnings
+    )
+    lines.append(f"> {summary_rendered}")
+    if translation_pending:
+        lines.append(f">")
+        lines.append(f"> _{chrome['translation_pending_badge']}_")
     lines.append("")
+
+    # Routing description (the source-of-truth Claude reads).
+    description_rendered = _apply_inline_cross_linking(
+        artifact.description, artifact, link_index, warnings
+    )
+    lines.append(f"_{description_rendered}_")
+    lines.append("")
+
+    # Metadata bullets.
     lines.append(f"- **{chrome['plugin_label']}:** `{artifact.plugin}`")
     lines.append(f"- **{chrome['phase_label']}:** {phase_label} (`{artifact.phase}`)")
     if artifact.distribution:
         lines.append(f"- **{chrome['distribution_label']}:** `{artifact.distribution}`")
-    if artifact.tags:
-        tag_list = ", ".join(f"`{t}`" for t in artifact.tags)
+    if tags_for_page:
+        tag_list = ", ".join(f"`{t}`" for t in tags_for_page)
         lines.append(f"- **{chrome['tags_label']}:** {tag_list}")
     lines.append(
         f"- **{chrome['source_label']}:** "
         f"[{artifact.source_relpath}]({artifact.source_url})"
     )
     lines.append("")
+
+    # Use-case metadata sections (each rendered only when the field is declared).
+    if artifact.use_when:
+        lines.append(f"## {chrome['use_when_label']}")
+        lines.append("")
+        for entry in artifact.use_when:
+            lines.append(f"- {entry}")
+        lines.append("")
+    if artifact.dont_use_when:
+        lines.append(f"## {chrome['dont_use_when_label']}")
+        lines.append("")
+        for entry in artifact.dont_use_when:
+            target_link = _resolve_structured_link(
+                entry["alternative"], artifact, link_index
+            )
+            lines.append(f"- **{entry['situation']}** → {target_link}")
+        lines.append("")
+    if artifact.see_also:
+        lines.append(f"## {chrome['see_also_label']}")
+        lines.append("")
+        for target in artifact.see_also:
+            target_link = _resolve_structured_link(target, artifact, link_index)
+            lines.append(f"- {target_link}")
+        lines.append("")
+    if artifact.examples:
+        lines.append(f"## {chrome['examples_label']}")
+        lines.append("")
+        # Nested bullets keep the prompt/outcome pair grouped without tripping
+        # markdownlint's MD028 (no blank lines inside blockquotes).
+        for ex in artifact.examples:
+            lines.append(f"- **{chrome['example_prompt_label']}:** {ex['prompt']}")
+            lines.append(f"  - **{chrome['example_outcome_label']}:** {ex['outcome']}")
+        lines.append("")
+
     lines.append("---")
     lines.append("")
-    lines.append(_demote_headings(artifact.body.rstrip()))
+    body_rendered = _apply_inline_cross_linking(
+        artifact.body.rstrip(), artifact, link_index, warnings
+    )
+    lines.append(_demote_headings(body_rendered))
     return "\n".join(lines) + "\n"
+
+
+def _resolve_structured_link(
+    target_name: str,
+    from_art: Artifact,
+    index: dict[str, list[Artifact]],
+) -> str:
+    """Resolve a ``dont_use_when[].alternative`` or ``see_also[]`` reference
+    into an inline Markdown link. The caller has already verified resolution
+    via :func:`_resolve_use_case_references`, so we can assume exactly one
+    target exists here.
+    """
+
+    targets = index[target_name]
+    target = targets[0]
+    url = _relative_link(from_art, target)
+    return f"[`{target_name}`]({url})"
 
 
 def group_by_phase_then_plugin(
@@ -481,6 +1063,8 @@ def emit_section(
     section: str,  # "skills" or "agents"
     artefacts: list[Artifact],
     chrome: dict,
+    link_index: dict[str, list[Artifact]],
+    warnings: list[tuple[str, str, list[Artifact]]],
 ) -> None:
     section_dir = DOCS_DIR / lang / section
     if section_dir.exists():
@@ -492,7 +1076,10 @@ def emit_section(
     show_plugin_subgroup = len(distinct_plugins) > 1
 
     for art in artefacts:
-        write_page(section_dir / art.plugin / f"{art.name}.md", render_page(art, chrome))
+        write_page(
+            section_dir / art.plugin / f"{art.name}.md",
+            render_page(art, chrome, lang, link_index, warnings),
+        )
 
     title_key = f"{section}_title"
     intro_key = f"{section}_intro"
@@ -500,6 +1087,10 @@ def emit_section(
     index_lines: list[str] = []
     index_lines.append(_render_frontmatter(title=chrome[title_key], content_mode="meta"))
     index_lines.append(f"# {chrome[title_key]}")
+    index_lines.append("")
+    # Prominent by-task link near the top of the section index, per
+    # spec §Navigation and layout.
+    index_lines.append(f"[**{chrome['by_task_link_label']}**](../by-task.md)")
     index_lines.append("")
     index_lines.append(chrome[intro_key])
     index_lines.append("")
@@ -511,8 +1102,9 @@ def emit_section(
                 index_lines.append(f"### {plugin}")
                 index_lines.append("")
             for art in items:
+                summary_text, _ = _resolve_summary_for_lang(art, lang)
                 index_lines.append(
-                    f"- [`{art.name}`]({plugin}/{art.name}.md) — {art.description}"
+                    f"- [`{art.name}`]({plugin}/{art.name}.md) — {summary_text}"
                 )
             index_lines.append("")
     write_page(section_dir / "index.md", "\n".join(index_lines).rstrip() + "\n")
@@ -547,9 +1139,15 @@ def emit_section(
 
 
 def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> None:
+    """Emit ``docs/<lang>/tags.md`` listing every author-declared tag and every
+    generator-emitted auto-tag (currently ``_translation-pending``) for the
+    docs language ``lang``. Per spec §Navigation and layout the auto-tag
+    appears only when at least one artifact carries it.
+    """
+
     by_tag: dict[str, list[Artifact]] = {}
     for art in all_artefacts:
-        for tag in art.tags:
+        for tag in _effective_tags(art, lang):
             by_tag.setdefault(tag, []).append(art)
     for tag in by_tag:
         by_tag[tag].sort(key=lambda a: (a.kind, a.plugin, a.name))
@@ -564,7 +1162,9 @@ def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> No
     if not by_tag:
         lines.append(chrome['no_tags'])
     else:
-        for tag in sorted(by_tag):
+        # Sort: author tags first (alphabetical), auto-tags (underscore-prefixed) last.
+        ordered_tags = sorted(by_tag, key=lambda t: (t.startswith("_"), t))
+        for tag in ordered_tags:
             lines.append(f"## `{tag}`")
             lines.append("")
             for art in by_tag[tag]:
@@ -572,6 +1172,47 @@ def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> No
                 href = f"{section}/{art.plugin}/{art.name}.md"
                 lines.append(f"- [{art.name}]({href}) — {art.plugin}")
             lines.append("")
+    write_page(path, "\n".join(lines).rstrip() + "\n")
+
+
+def emit_landing_skeleton(
+    lang: str,
+    skills: list[Artifact],
+    agents: list[Artifact],
+    chrome: dict,
+) -> None:
+    """Per spec §Task-oriented landing pages: emit ``docs/<lang>/by-task.md``
+    as a one-shot skeleton populated from artifacts' ``use_when`` entries.
+    Does **NOT** overwrite an existing file — the landing page transitions
+    from generator-emitted skeleton to hand-curated artifact as soon as a
+    human starts editing it.
+    """
+
+    path = DOCS_DIR / lang / "by-task.md"
+    if path.exists():
+        return
+
+    artefacts_with_use_when = [a for a in [*skills, *agents] if a.use_when]
+
+    lines: list[str] = []
+    lines.append(_render_frontmatter(title=chrome["by_task_title"], content_mode="meta"))
+    lines.append(f"# {chrome['by_task_title']}")
+    lines.append("")
+    lines.append(chrome["by_task_intro"])
+    lines.append("")
+    lines.append(chrome["by_task_skeleton_notice"])
+    lines.append("")
+    if not artefacts_with_use_when:
+        lines.append(chrome["by_task_no_use_when"])
+    else:
+        # Flat list of every `use_when` entry across the catalog, sorted by
+        # artifact name. The human author groups them into rubrics on the
+        # first hand-edit.
+        for art in sorted(artefacts_with_use_when, key=lambda a: a.name):
+            section = "skills" if art.kind == "skill" else "agents"
+            href = f"{section}/{art.plugin}/{art.name}.md"
+            for entry in art.use_when:
+                lines.append(f"- [`{art.name}`]({href}) — _{entry}_")
     write_page(path, "\n".join(lines).rstrip() + "\n")
 
 
@@ -583,17 +1224,46 @@ def main() -> int:
         skills: list[Artifact] = []
         agents: list[Artifact] = []
         for source in sources:
-            skills.extend(discover_skills(source))
-            agents.extend(discover_agents(source))
+            skills.extend(discover_skills(source, languages))
+            agents.extend(discover_agents(source, languages))
+
+        # Structured peer references (dont_use_when[].alternative, see_also[])
+        # MUST resolve against the discovered catalog; unresolved or ambiguous
+        # ones fail the docs build per spec §Use-case metadata.
+        _resolve_use_case_references(skills, agents)
+
+        # One cross-link index drives the inline-code rewrite on every rendered
+        # page; warnings collected here are flushed to stderr after the run.
+        link_index = _build_link_index(skills, agents)
+        warnings: list[tuple[str, str, list[Artifact]]] = []
 
         for lang in languages:
             chrome = CHROME.get(lang, CHROME["en"])
-            emit_section(lang, "skills", skills, chrome)
-            emit_section(lang, "agents", agents, chrome)
+            emit_section(lang, "skills", skills, chrome, link_index, warnings)
+            emit_section(lang, "agents", agents, chrome, link_index, warnings)
             emit_tag_index(lang, skills + agents, chrome)
+            emit_landing_skeleton(lang, skills, agents, chrome)
     except CatalogError as exc:
         print(f"gen_catalog: {exc}", file=sys.stderr)
         return 1
+
+    # Surface ambiguous inline-code mentions as non-fatal build warnings per
+    # spec §Cross-linking. De-duplicate so the same collision reported on
+    # every language doesn't drown the log.
+    seen: set[tuple[str, str]] = set()
+    for self_label, mention, collisions in warnings:
+        key = (self_label, mention)
+        if key in seen:
+            continue
+        seen.add(key)
+        collision_str = ", ".join(
+            f"{a.plugin}:{a.kind}/{a.name}" for a in collisions
+        )
+        print(
+            f"gen_catalog: warning: {self_label}: inline-code mention "
+            f"`{mention}` is ambiguous (matches: {collision_str}) — left unlinked",
+            file=sys.stderr,
+        )
 
     print(
         f"gen_catalog: wrote {len(skills)} skill(s) and {len(agents)} agent(s) "

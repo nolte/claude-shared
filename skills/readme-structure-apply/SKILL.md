@@ -3,6 +3,23 @@ name: readme-structure-apply
 description: "Audits the repository's `README.md` against the canonical-language file under spec/project/readme-structure/ and, with per-item user approval, scaffolds or patches the file: H1 + tagline, CI badges, six required sections in order (Purpose, Usage, Structure, Related repositories, Status, License), the consumer-first ordering rule, the ≤200-line length budget, and link rules. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fix). Invoke when the user asks to apply, audit, scaffold, or patch the README against the spec; also handles equivalent German-language requests. Don't use for docs/ page content (`audience-doc-author`), MkDocs nav (`mkdocs-structure-apply`), Vale prose linting (`prose-vale-curator`), or the audience artefact (`audience-identify`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
+summary: "Audits, scaffolds, or patches a repository's README.md against the readme-structure spec (six required sections, ≤200 lines)."
+summary_de: "Auditiert, scaffoldet oder patcht README.md eines Repos gegen die Readme-Structure-Spec (sechs Pflicht-Sektionen, ≤200 Zeilen)."
+use_when:
+  - "you want to audit an existing README against the spec"
+  - "you want to scaffold a fresh README for a new repo"
+  - "you want to additively patch a missing section into an existing README"
+dont_use_when:
+  - situation: "You want to author docs/ page content rather than the README"
+    alternative: audience-doc-author
+  - situation: "You want MkDocs nav scaffolding"
+    alternative: mkdocs-structure-apply
+  - situation: "You want Vale prose linting"
+    alternative: prose-vale-curator
+see_also:
+  - audience-doc-author
+  - mkdocs-structure-apply
+  - prose-vale-curator
 resumable: true
 ---
 

@@ -8,12 +8,30 @@ last_updated: generated
 
 # mission-define
 
-_Authors a project's first `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"define the mission\", \"write project/mission.md\", \"set up the mission file\", \"draft the SMART mission\", or equivalent German-language requests. Walks SMART one letter at a time (Specific statement, Measurable verifies_via pointer, Achievable MVP scope, Relevant outcome IDs, Time-bound shape), gathers a per-audience MVP-deliverable paragraph, composes the frontmatter plus the four required body sections (Statement, Audiences, Verification, Source), and writes the file with `mvp_status: defining`. Refuses to run when `project/mission.md` already exists (use `mission-revise`) or when `project/goals.md` or the audience artefact is missing. Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Verfasst die erste project/mission.md eines Projekts entlang des SMART-Walks und der vier Pflicht-Sektionen.
+
+_Authors a project's first `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"define the mission\", \"write project/mission.md\", \"set up the mission file\", \"draft the SMART mission\", or equivalent German-language requests. Walks SMART one letter at a time (Specific statement, Measurable verifies_via pointer, Achievable MVP scope, Relevant outcome IDs, Time-bound shape), gathers a per-audience MVP-deliverable paragraph, composes the frontmatter plus the four required body sections (Statement, Audiences, Verification, Source), and writes the file with `mvp_status: defining`. Refuses to run when `project/mission.md` already exists (use [`mission-revise`](mission-revise.md)) or when `project/goals.md` or the audience artefact is missing. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 1 Vision (`vision`)
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/mission-define/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/mission-define/SKILL.md)
+
+## Anwenden wenn
+
+- you want to write the project's first mission file (none exists yet)
+- you want to walk SMART one letter at a time for a new mission
+- you want to draft mvp_status: defining with the four body sections
+
+## Nicht anwenden wenn
+
+- **project/mission.md already exists and you want to revise it** → [`mission-revise`](mission-revise.md)
+
+## Siehe auch
+
+- [`mission-revise`](mission-revise.md)
+- [`audience-identify`](audience-identify.md)
+- [`roadmap-init`](roadmap-init.md)
 
 ---
 
@@ -31,7 +49,7 @@ This skill also triggers on equivalent German-language requests, including:
 
 ### Why this is a skill, not an agent
 
-- **Persistent on-disk artefact** — the output is a versioned markdown file consuming skills (`mission-revise`, future audits, the roadmap layer) read for years to come; a skill owns persistent state, an agent returns a structured report and forgets.
+- **Persistent on-disk artefact** — the output is a versioned markdown file consuming skills ([`mission-revise`](mission-revise.md), future audits, the roadmap layer) read for years to come; a skill owns persistent state, an agent returns a structured report and forgets.
 - **Mid-flow user gating is the SMART contract** — every letter of SMART is a per-step user dialogue (audience choice, verifying-feature pointer, MVP scope size, outcome list, time-bound shape); the spec forbids batched output, so an agent's fire-and-forget shape would lose the gates.
 - **Output flows back into the main conversation** — the audience tailoring paragraphs and the verifying-feature reference must surface in the conversation so the user can iterate before the file is written; isolating them behind an agent's structured-report boundary would obscure the iterative drafting.
 - Counter-dimension considered: a narrower agent prompt could sharpen SMART-statement phrasing, but the load-bearing dimension here is interactivity (every SMART letter requires confirmation), not prose specialisation — skill wins.
@@ -46,10 +64,10 @@ Before any drafting work:
 
 - Confirm the working directory is the target project root (`git rev-parse --is-inside-work-tree`).
 - Confirm `git` is reachable in `PATH`; the `## Source` audit trail in operation 4 captures the audience artefact's last-commit SHA via `git log` and the mission write fails without it.
-- Confirm `project/mission.md` does **not** yet exist. If it does, stop and tell the user this skill is first-write only — `mission-revise` owns edits.
+- Confirm `project/mission.md` does **not** yet exist. If it does, stop and tell the user this skill is first-write only — [`mission-revise`](mission-revise.md) owns edits.
 - Confirm `project/goals.md` exists and parses (Vision section plus `O-<n>` outcomes per the sibling `roadmap` spec). If absent or empty, stop and ask the user to author goals first; outcomes are an input to mission Relevant, not something this skill invents.
-- Confirm the audience artefact exists at the location declared by `audience-identification` (typically `AUDIENCES.md`). If absent, dispatch `audience-identify` first; the spec forbids inventing audiences inline.
-- Confirm at least one feature under `project/features/` exists with an `acceptance-<n>` criterion that can serve as the mission-verifying criterion. If none exists, stop and ask the user whether to author the verifying feature first (via `feature-decompose`) or to declare the mission's verifying criterion as a deferred decision and revisit.
+- Confirm the audience artefact exists at the location declared by `audience-identification` (typically `AUDIENCES.md`). If absent, dispatch [`audience-identify`](audience-identify.md) first; the spec forbids inventing audiences inline.
+- Confirm at least one feature under `project/features/` exists with an `acceptance-<n>` criterion that can serve as the mission-verifying criterion. If none exists, stop and ask the user whether to author the verifying feature first (via [`feature-decompose`](feature-decompose.md)) or to declare the mission's verifying criterion as a deferred decision and revisit.
 
 ### Operations
 
@@ -90,14 +108,14 @@ Render the mission file with:
 
 Present the full draft (frontmatter plus body) back to the user in their language and iterate until they approve. Only then write `project/mission.md`. Never write a partial file; either every required field and section is present or the write is deferred.
 
-After writing, remind the user that the next mission-side operation is `mission-revise` (for the `defining → in_progress` flip once the first MVP item enters `status: active`) and that `mvp: true` flags on roadmap items are the authoritative MVP-membership signal — keep them in sync via `roadmap-refine`, never inline-edit them from this skill.
+After writing, remind the user that the next mission-side operation is [`mission-revise`](mission-revise.md) (for the `defining → in_progress` flip once the first MVP item enters `status: active`) and that `mvp: true` flags on roadmap items are the authoritative MVP-membership signal — keep them in sync via [`roadmap-refine`](roadmap-refine.md), never inline-edit them from this skill.
 
 ### Gotchas
 
 - The **Time-bound** letter does **not** map to a date even when the user volunteers one. The two legal shapes are outcome-anchored or `mvp_completion`-anchored; reject calendar dates with the spec's verbatim rejection rather than translating them into a fake `mvp_completion`.
 - The `verifies_via` field names exactly **one** feature plus exactly **one** `acceptance-<n>` ID. The sibling `feature` spec already enforces "at most one feature per sprint carries a non-null `verifies_sprint_value`"; if the user proposes two verifying features, the mission scope is wrong, not the constraint.
 - The audience artefact path is *not* always `AUDIENCES.md` — it's whatever the project's `audience-identification` run picked (README section, dedicated file, or ADR). Read the actual artefact and capture its real path plus last-commit SHA in `## Source`; never hard-code `AUDIENCES.md`.
-- An `mvp: true` flag on a roadmap item without `detail: fine` and a non-null `target_sprint` is a roadmap-side lint violation, not something to silently accept here. Surface it back to the user and ask whether to fix the roadmap first via `roadmap-refine`.
+- An `mvp: true` flag on a roadmap item without `detail: fine` and a non-null `target_sprint` is a roadmap-side lint violation, not something to silently accept here. Surface it back to the user and ask whether to fix the roadmap first via [`roadmap-refine`](roadmap-refine.md).
 - The `## Source` audit trail is part of the spec contract, not optional metadata. A first-write without an audience-artefact SHA, a `goals.md` reference, and an authorship line fails validation downstream.
 
 ### Examples
@@ -116,7 +134,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** invent audience identifiers, outcome IDs, or feature-acceptance pairs. Every reference **MUST** resolve to an existing artefact at write time.
 - **Never** accept a calendar date or free-text deadline in `time_bound`. The spec's two legal shapes are the only legal shapes.
 - **Never** accept an MVP scope that flags every roadmap item with `mvp: true`. The Achievable bound exists for a reason.
-- **Never** set `mvp_status` to anything other than `defining` on first-write. Lifecycle transitions are `mission-revise`'s job.
+- **Never** set `mvp_status` to anything other than `defining` on first-write. Lifecycle transitions are [`mission-revise`](mission-revise.md)'s job.
 - **Never** name an audience in `## Audiences` that's absent from the `audiences` frontmatter, or vice versa. The two surfaces are bidirectionally validated.
 - **Never** batch the SMART walk or the audience walk. Per-step user confirmation is the contract.
 - **Never** copy an existing mission file from another repository. Each project's mission is its own.

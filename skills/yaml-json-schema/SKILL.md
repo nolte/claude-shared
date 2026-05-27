@@ -15,6 +15,13 @@ description: >-
   project-structure scaffolding (`project-structure-apply`).
 tags: [scaffolding, audit, validation]
 phase: design
+summary: "Authors, audits, refactors, and validates YAML-encoded JSON Schema 2020-12 documents."
+summary_de: "Verfasst, auditiert, refaktoriert und validiert YAML-codierte JSON-Schema-2020-12-Dokumente."
+use_when:
+  - "you want to scaffold a new JSON Schema in YAML"
+  - "you want to audit existing schemas for dialect drift or missing identity"
+  - "you want to refactor inline duplicates into a $defs entry"
+  - "you want to validate YAML data against a schema"
 ---
 
 # YAML JSON Schema

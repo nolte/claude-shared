@@ -6,6 +6,16 @@ tools: Read, Bash
 model: sonnet
 tags: [audit]
 phase: review
+summary: "Read-only CVE scanner per project type (pip-audit, npm audit, govulncheck, cargo audit); returns structured drift inventory."
+summary_de: "Nur-Lese-CVE-Scanner pro Projekttyp (pip-audit, npm audit, govulncheck, cargo audit); liefert strukturiertes Drift-Inventar."
+use_when:
+  - "the dependency-audit skill needs to run the project-typed vulnerability scan"
+  - "you want a per-package CVE list with severity and fixed-in version"
+dont_use_when:
+  - situation: "You want severity triage and follow-up actions"
+    alternative: dependency-audit
+see_also:
+  - dependency-audit
 ---
 
 # Dependency Audit Scanner

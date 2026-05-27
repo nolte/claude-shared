@@ -8,12 +8,30 @@ last_updated: generated
 
 # tech-stack-capture
 
-_Captures or refreshes the `tech_stack:` block in a Portfolio-Member's `project/portfolio.yml` per the canonical-language file under `spec/portfolio/tech-stack-discovery/` §Discovery sequence. Probes repo signals (lockfiles, `Taskfile.yml`, `.github/workflows/`, `renovate.json5`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml`), classifies hits against the closed `kind` (12) and `group` (5) enums from `spec/portfolio/tech-stack/`, compares each candidate against the global stack, drops inherited matches, and confirms every proposed change interactively before writing. Invoke when the user asks to "capture the tech stack", "scaffold a tech_stack block", "refresh the tech_stack section", or equivalent German-language requests. Don't use to author `portfolio/tech-stack.yml` (hand-curated only) or to run signal-verification audits (use `portfolio-audit`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Captures or refreshes the tech_stack block in project/portfolio.yml by probing lockfiles, Taskfile, CI, and tooling configs.
+
+_Captures or refreshes the `tech_stack:` block in a Portfolio-Member's `project/portfolio.yml` per the canonical-language file under `spec/portfolio/tech-stack-discovery/` §Discovery sequence. Probes repo signals (lockfiles, `Taskfile.yml`, `.github/workflows/`, `renovate.json5`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml`), classifies hits against the closed `kind` (12) and `group` (5) enums from `spec/portfolio/tech-stack/`, compares each candidate against the global stack, drops inherited matches, and confirms every proposed change interactively before writing. Invoke when the user asks to "capture the tech stack", "scaffold a tech_stack block", "refresh the tech_stack section", or equivalent German-language requests. Don't use to author `portfolio/tech-stack.yml` (hand-curated only) or to run signal-verification audits (use [`portfolio-audit`](portfolio-audit.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`
 - **Source:** [skills/tech-stack-capture/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/tech-stack-capture/SKILL.md)
+
+## Use when
+
+- you want to capture the tech stack for a Portfolio-Member's portfolio.yml
+- you want to refresh the tech_stack section after dependency or tooling changes
+- you want a probe-driven scaffold rather than hand-curation
+
+## Don't use when
+
+- **You want to author the global portfolio/tech-stack.yml (hand-curated only)** → [`portfolio-audit`](portfolio-audit.md)
+- **You want signal-verification audits across the portfolio** → [`portfolio-audit`](portfolio-audit.md)
+
+## See also
+
+- [`portfolio-audit`](portfolio-audit.md)
+- [`tech-stack-drift-reviewer`](../../agents/nolte-shared/tech-stack-drift-reviewer.md)
 
 ---
 
@@ -46,7 +64,7 @@ The skill runs in two roles depending on the active repository:
 - **Inside any Portfolio-Member repository** (the typical adopter — repo under `nolte/*` with a `project/portfolio.yml`): the operation runs end-to-end against that repo's `project/portfolio.yml`. Detection: presence of `project/portfolio.yml` AND absence of `.claude-plugin/plugin.json` (so this isn't `claude-shared` itself unless explicitly so).
 - **Inside `claude-shared`** (where the global stack lives plus this repository's own `project/portfolio.yml`): the operation runs against `claude-shared`'s own `project/portfolio.yml`. Detection: presence of `.claude-plugin/plugin.json` AND `portfolio/tech-stack.yml` AND `project/portfolio.yml`.
 
-If the active repository carries no `project/portfolio.yml` at all, stop and route the operator to `portfolio-audit` Bootstrap; the per-repo `tech_stack:` block requires the manifest to exist first per `spec/portfolio/portfolio-management/` §Capability inventory per repository.
+If the active repository carries no `project/portfolio.yml` at all, stop and route the operator to [`portfolio-audit`](portfolio-audit.md) Bootstrap; the per-repo `tech_stack:` block requires the manifest to exist first per `spec/portfolio/portfolio-management/` §Capability inventory per repository.
 
 If the active repository ships its own `portfolio/tech-stack.yml` and isn't `claude-shared`, stop with a `Critical` warning: a Portfolio-Member shipping its own global manifest is forbidden per `spec/portfolio/tech-stack/` §Global tech-stack manifest.
 
@@ -54,7 +72,7 @@ If the active repository ships its own `portfolio/tech-stack.yml` and isn't `cla
 
 Before any signal probe, confirm:
 
-- `project/portfolio.yml` exists and parses as YAML. Missing or malformed manifests block the skill; route the operator to `portfolio-audit` Bootstrap or to fixing the parse error first.
+- `project/portfolio.yml` exists and parses as YAML. Missing or malformed manifests block the skill; route the operator to [`portfolio-audit`](portfolio-audit.md) Bootstrap or to fixing the parse error first.
 - The global manifest at `claude-shared:portfolio/tech-stack.yml` is reachable. When the active repository is `claude-shared`, read it locally. From any other repo, fetch via `gh api repos/nolte/claude-shared/contents/portfolio/tech-stack.yml --jq .content | base64 -d` and discard the raw content once a structured per-entry summary (name, kind, group, status) is in hand. Network-unreachable global manifests block the skill with an explicit error; don't proceed against a stale local cache without operator acknowledgement.
 - The active repository is on a feature branch (per `spec/project/branching-model/`), not `develop` or `main`. Confirm via `git rev-parse --abbrev-ref HEAD`. Capturing on a protected branch is a structural error and is refused even if file writes would technically succeed.
 
@@ -113,7 +131,7 @@ Per the discovery spec's MUST, present every proposed delta to the maintainer be
 - **Proposed overrides** — for every inherited entry the operator wants to suppress, build an override record with `name`, `inherit: false`, and a non-empty `rationale`. Empty rationale blocks the write. When the operator wants a different version of an inherited entry, surface the spec's two-step path (`overrides:` suppression PLUS a repo-specific `additions:` replacement) — never edit the inherited entry's fields directly.
 - **Proposed regroup** — for every inherited entry whose repo-specific purpose differs from the portfolio default (for example `python` used only by the MkDocs build pipeline in this repo), offer a regroup record with `name`, the new `group:`, and a non-empty `rationale`. Refuse a no-op regroup (new `group` equals inherited `group`) and refuse a regroup paired with an override on the same `name` (the override already removes the entry, so the regroup would be dead code).
 
-Free-form additions (entries the operator declares despite no matching signal) are permitted under the spec's SHOULD but require an explicit acknowledgement that `portfolio-audit` will produce a `Warning` for the missing signal. Record the acknowledgement verbatim inside the entry's `rationale` field with the marker phrase `acknowledged-missing-signal:` followed by the operator's one-sentence justification; the audit downgrades the finding to `Suggestion` when that marker is present.
+Free-form additions (entries the operator declares despite no matching signal) are permitted under the spec's SHOULD but require an explicit acknowledgement that [`portfolio-audit`](portfolio-audit.md) will produce a `Warning` for the missing signal. Record the acknowledgement verbatim inside the entry's `rationale` field with the marker phrase `acknowledged-missing-signal:` followed by the operator's one-sentence justification; the audit downgrades the finding to `Suggestion` when that marker is present.
 
 Don't proceed to step 8 until every proposed addition, override, and regroup has been individually confirmed, edited, or rejected. An empty `tech_stack: {}` is a legitimate outcome and is written only after explicit confirmation — silent emptiness is forbidden.
 
@@ -129,7 +147,7 @@ Compose the final `tech_stack:` block from the three confirmed working sets. Val
 
 Then write `project/portfolio.yml` atomically. Preserve unrelated top-level keys (`capabilities:`, `audiences:`, `peers:` — whatever the existing manifest carries); only the `tech_stack:` key is rewritten. Re-parse the file after writing to confirm the result is valid YAML; on parse failure, restore the prior version and surface the parse error.
 
-Confirm in the user's language with the path of the rewritten manifest, a per-section count (`additions:` N, `overrides:` M, `regroup:` K, inherited-confirmed P), and the follow-up reminder that opening a PR via `pull-request-create` is the next step — the skill stops at the write.
+Confirm in the user's language with the path of the rewritten manifest, a per-section count (`additions:` N, `overrides:` M, `regroup:` K, inherited-confirmed P), and the follow-up reminder that opening a PR via [`pull-request-create`](pull-request-create.md) is the next step — the skill stops at the write.
 
 The skill **MAY** emit a "candidates not picked" log alongside the confirmation summary, listing signal-derived candidates the operator rejected during step 7 with a one-phrase rejection reason each. The log is for the operator's audit awareness only; it is **NOT** committed to the repository.
 
@@ -138,7 +156,7 @@ The skill **MAY** emit a "candidates not picked" log alongside the confirmation 
 - **`tech_stack: {}` is a legitimate empty result, not a missing block.** A repository that uses the full inherited stack unmodified and has no repo-specific additions writes `tech_stack: {}` after operator confirmation — never omit the key entirely. The audit treats an absent `tech_stack:` key as a `Critical` "manifest doesn't conform to the schema spec"; an empty mapping is the explicit "inherited as-is" affirmation. Don't shortcut by leaving the key out even when the confirmation result has zero additions, overrides, and regroups.
 - **The `inherit:` field is a fixed-literal, not a boolean knob.** Every `overrides[]` record carries `inherit: false` exactly — the field is named explicitly for readability and to leave room for a future opt-in semantic without re-shaping the record (per schema §Inheritance semantics). Writing `inherit: true` or omitting the field is a parse error against the schema.
 - **Regroup vs. overrides-plus-additions is a one-or-the-other choice.** A consumer who needs a different `group` value on an inherited entry uses `regroup:`. A consumer who needs a different `version`, `role`, `kind`, or any other field on the same entry uses `overrides:` (to suppress) plus `additions:` (to redeclare). Mixing both records for the same `name` is a `Warning` audit finding; the skill refuses to write the combination.
-- **Free-form additions need the acknowledged-missing-signal marker.** When the operator insists on declaring an entry that no signal supports (for example a documented deployment target that isn't yet wired into a workflow file), the skill writes `rationale: "acknowledged-missing-signal: <operator-sentence>"`. Without the marker phrase the audit emits a regular `Warning`; with the marker the audit downgrades to `Suggestion`. Don't reword the marker phrase — `portfolio-audit` recognises the exact `acknowledged-missing-signal:` prefix.
+- **Free-form additions need the acknowledged-missing-signal marker.** When the operator insists on declaring an entry that no signal supports (for example a documented deployment target that isn't yet wired into a workflow file), the skill writes `rationale: "acknowledged-missing-signal: <operator-sentence>"`. Without the marker phrase the audit emits a regular `Warning`; with the marker the audit downgrades to `Suggestion`. Don't reword the marker phrase — [`portfolio-audit`](portfolio-audit.md) recognises the exact `acknowledged-missing-signal:` prefix.
 - **The global manifest is read-only from this skill.** Even when running inside `claude-shared` itself, the skill never modifies `portfolio/tech-stack.yml`. Promoting a repo-specific addition to portfolio-wide is a hand-curated PR against the global manifest, not a skill operation. When the operator asks the skill to "add this to the global stack", stop and route them to a hand-authored PR.
 - **Refresh preserves operator-edited entries that survived a prior round.** When `existing_additions` from step 2 contains entries the current signal probe wouldn't surface (for example a hand-added `kind: deploy-target` entry that doesn't have a signal class), the skill keeps presenting those entries in step 7 with their existing field set so the operator can re-confirm, edit, or drop them. Silently deleting them across a refresh would lose deliberate operator authoring.
 
@@ -161,5 +179,5 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - Never write a `regroup[]` record whose new `group` equals the inherited entry's `group` (no-op regroup) or whose `rationale` is empty. Both are `Warning`-grade audit findings — refuse the write upstream.
 - Never invent a signal hit. Every candidate entry traces back to a file the skill actually read. Free-form operator additions are permitted via the acknowledged-missing-signal marker; fabricating a signal source the skill didn't probe is forbidden.
 - Never edit any field of an inherited entry other than via the schema spec's two mechanisms (`overrides[]` to suppress, `regroup[]` to re-classify the group). The inherited entries' `name`, `kind`, `role`, `version`, `status`, `lifecycle`, `since`, and `source_of_truth` stay portfolio-curated; the per-repo `tech_stack:` block never mutates them.
-- Never commit a "candidates not picked" log to the repository. The log is session-local and exists only for the operator's audit awareness; persisting it would couple `portfolio-audit` to in-band log files that aren't part of the schema.
+- Never commit a "candidates not picked" log to the repository. The log is session-local and exists only for the operator's audit awareness; persisting it would couple [`portfolio-audit`](portfolio-audit.md) to in-band log files that aren't part of the schema.
 - When `spec/portfolio/tech-stack-discovery/` or `spec/portfolio/tech-stack/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.

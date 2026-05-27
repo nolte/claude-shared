@@ -33,7 +33,10 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 - The agent **MAY** still be instructed to respond to the user in the user's language regardless of where the body is authored
 - **MUST** be self-contained—any supporting assets (references, examples, prompt fragments) live alongside the agent file in a sibling folder `agents/<name>/` and are referenced by relative path
 - **MAY** include an optional `tags` field in YAML frontmatter: a list of lowercase ASCII kebab-case strings, each ≤30 characters, with no more than 5 entries; tags provide thematic grouping so the catalog (`skill-agent-catalog`) and peer-cluster lookups (`skill-vs-agent` §Portfolio-wide consistency) can browse by topic
+- **MUST NOT** declare a `tags` entry that begins with `_` (underscore); the underscore prefix is reserved for catalog-generator-emitted auto-tags such as `_translation-pending`
 - **MUST** include a `phase` field in YAML frontmatter whose value is exactly one identifier from the eight-value vocabulary declared in `skill-agent-catalog` §Phase classification (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); the catalog generator fails the docs build when `phase` is missing or out of vocabulary
+- **MAY** include an optional `summary` field plus a `summary_<lang>` field per additional docs language; both are short (≤200 character) plain strings the catalog renders as a scannable subtitle above the routing `description`. Resolution and fallback rules live in `skill-agent-catalog` §Per-language short summary
+- **MAY** include any of the optional use-case fields `use_when`, `dont_use_when`, `see_also`, or `examples`; the detailed schema and validation rules live in `skill-agent-catalog` §Use-case metadata. Authors **SHOULD** declare them whenever overlap with other artefacts is likely, so the catalog stays scannable and the cross-linking pass can connect related artefacts
 
 ### Tag vocabulary
 - **SHOULD** prefer a term from the starter vocabulary below when one applies, so artifacts in the same functional cluster share the same tag string
@@ -137,7 +140,10 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [ ] `name` in frontmatter equals the filename without `.md`
 - [ ] `description` names concrete triggers the calling Claude can match against user requests
 - [ ] If `tags` is declared in frontmatter, every entry is a lowercase ASCII kebab-case string ≤30 characters and the list contains at most 5 entries
+- [ ] No `tags` entry begins with `_` (underscore-prefixed tags are reserved for catalog-generator auto-tagging)
 - [ ] Frontmatter declares a `phase` field whose value is one of `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, or `cross-cutting`
+- [ ] If `summary` or any `summary_<lang>` is declared, the value is a non-empty plain string ≤200 characters
+- [ ] If `use_when`, `dont_use_when`, `see_also`, or `examples` is declared, the value conforms to the schema in `skill-agent-catalog` §Use-case metadata
 - [ ] `distribution` is exactly `plugin` or `project`: no other value, no missing field
 - [ ] If `distribution: plugin`, the agent is dispatchable via `subagent_type: <name>` in a project where the containing plugin is installed, without manually copying the file
 - [ ] If `distribution: project`, the agent is dispatchable via `subagent_type: <name>` after being deployed to `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, with no plugin required

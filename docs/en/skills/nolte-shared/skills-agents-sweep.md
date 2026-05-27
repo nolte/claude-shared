@@ -8,12 +8,31 @@ last_updated: generated
 
 # skills-agents-sweep
 
+> Orchestrates a portfolio-wide sweep audit of all skills and agents with cross-cutting findings and a wave-based roadmap.
+
 _Orchestrates a portfolio-wide audit of all skills and agents in the plugin inventory, producing a consolidated sweep report under .audits/skills-agents-sweep/ with cross-cutting findings (boundary conflicts, spec-induced gaps, operations-vocabulary drift, classification errors) and a wave-based implementation roadmap. Invoke when the user asks to "run a portfolio-wide skills and agents sweep audit", "check cross-cutting drift between skills and agents", "consolidate per-artefact reviews into a single sweep report", or "plan a wave-based implementation roadmap for sweep findings". Also handles equivalent German-language requests. Do NOT use for per-artefact reviews (use skill-review or agent-review for those); do NOT use for spec-versus-implementation reconciliation (use spec-drift-audit). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
 - **Tags:** `audit`
 - **Source:** [skills/skills-agents-sweep/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/skills-agents-sweep/SKILL.md)
+
+## Use when
+
+- you want to run a portfolio-wide skills-and-agents sweep audit
+- you want to check cross-cutting drift between skills and agents
+- you want a wave-based implementation roadmap for sweep findings
+
+## Don't use when
+
+- **You want a per-artefact review (single skill or agent)** → [`skill-review`](skill-review.md)
+- **You want spec-versus-implementation reconciliation** → [`spec-drift-audit`](spec-drift-audit.md)
+
+## See also
+
+- [`skill-review`](skill-review.md)
+- [`agent-review`](agent-review.md)
+- [`spec-drift-audit`](spec-drift-audit.md)
 
 ---
 
@@ -27,7 +46,7 @@ The sweep supplements per-artefact reviews with cross-cutting analysis that no s
 
 - **Mid-flow interactivity** — scope confirmation (full inventory vs. narrowed subset by phase or tag), wave-decision sign-offs (implement vs. defer vs. retire), and consolidated-report approval all require user input at multiple checkpoints. An agent's fire-and-forget contract loses that deliberation loop.
 - **Persistent on-disk output is the contract** — the consolidated report under `.audits/skills-agents-sweep/` must survive past the current turn and be referenced by every downstream implementation PR as its evidence source. Skills own persistent artefacts; agents return ephemeral reports.
-- **Orchestration role** — this skill dispatches `skill-review` and `agent-review` as sub-procedures for phase 1 and chains to `pull-request-create` when waves are committed. The skill-orchestrates pattern defaults the orchestrator to skill form per `spec/claude/skill-vs-agent/`.
+- **Orchestration role** — this skill dispatches [`skill-review`](skill-review.md) and [`agent-review`](agent-review.md) as sub-procedures for phase 1 and chains to [`pull-request-create`](pull-request-create.md) when waves are committed. The skill-orchestrates pattern defaults the orchestrator to skill form per `spec/claude/skill-vs-agent/`.
 - Counter-dimension considered: *context-window load* from reading 30-plus skill files plus cross-cutting analysis could bias toward an agent. However, the sweep is inherently interactive — the user controls which artefacts are in scope, approves the consolidated report before phase 4 begins, and decides per-wave. The incremental, user-confirmed structure rules out fire-and-forget agent execution.
 
 ### German trigger phrases
@@ -107,7 +126,7 @@ Read `examples/03-wave-implementation.md` for a worked closure cycle.
 
 - **One open sweep at a time.** The governing spec is strict: a second sweep must not be opened until the previous one is closed. Always check for an existing open report before running `audit`. A stale open report (no processing-log entry for six months) should be explicitly closed or resumed, not silently overwritten.
 - **Phase ordering is mandatory.** The consolidated report must exist on disk before phase 4 implementation begins. Do not propose PRs based on in-memory analysis — the on-disk report is the evidence source every implementation PR references.
-- **Per-artefact reviews are phase 1, not optional.** Cross-cutting findings in phase 2 are only as reliable as the per-artefact plans feeding them. If `skill-review` or `agent-review` plans are missing for any in-scope artefact, record the gap in the report's `## Scope` section.
+- **Per-artefact reviews are phase 1, not optional.** Cross-cutting findings in phase 2 are only as reliable as the per-artefact plans feeding them. If [`skill-review`](skill-review.md) or [`agent-review`](agent-review.md) plans are missing for any in-scope artefact, record the gap in the report's `## Scope` section.
 - **Cross-cutting analysis covers only what per-artefact reviews cannot.** Do not restate per-artefact findings in the consolidated report body. Cite the plan path; do not reproduce the findings inline.
 - **`spec/.spec-config.yml` must be read before resolving any spec path.** The canonical language for all spec paths depends on `canonical_language` in that config; defaulting to `en` without reading the config silently misroutes in repos with a different canonical language.
 

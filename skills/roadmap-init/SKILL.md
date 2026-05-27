@@ -3,6 +3,22 @@ name: roadmap-init
 description: Scaffold the project planning pair `project/goals.md` and `project/roadmap.md` for the first time, per `spec/project/roadmap/`. Invoke when the user asks to "set up the roadmap", "initialise project goals", "create goals.md and roadmap.md", "bootstrap the roadmap", or any equivalent fresh-bootstrap request. Also handles equivalent German-language requests. Verifies the audience artefact exists (and dispatches `audience-identify` when it doesn't), drafts the Vision plus numbered Outcomes in `project/goals.md`, drafts an empty queue plus optional phase headings in `project/roadmap.md`, presents both files for explicit approval, then writes them. Do NOT use to add roadmap items, retarget sprints, or flip MVP flags — that is `roadmap-plan`. Do NOT use to enforce the detail-level invariant — that is `roadmap-refine`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: plan
+summary: "Scaffolds the project planning pair project/goals.md and project/roadmap.md for the first time."
+summary_de: "Scaffoldet das Planungspaar project/goals.md und project/roadmap.md zum ersten Mal."
+use_when:
+  - "you want to set up the project planning pair from scratch (goals.md + roadmap.md)"
+  - "you want to bootstrap the roadmap and initial outcomes"
+  - "you want a fresh planning structure with audience artefact already in place"
+dont_use_when:
+  - situation: "You want to add roadmap items, retarget sprints, or flip MVP flags"
+    alternative: roadmap-plan
+  - situation: "You want to enforce the detail-level invariant on an existing roadmap"
+    alternative: roadmap-refine
+see_also:
+  - roadmap-plan
+  - roadmap-refine
+  - audience-identify
+  - mission-define
 resumable: true
 ---
 

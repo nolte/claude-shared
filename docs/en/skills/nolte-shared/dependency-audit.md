@@ -8,12 +8,29 @@ last_updated: generated
 
 # dependency-audit
 
-_Scan the current project's dependency tree for known vulnerabilities (CVEs) and, when requested, license-compliance issues. Dispatches dependency-audit-scanner agent for the read-only scan step. Detects project kind from `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` for Python and `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` for Node, runs the appropriate auditors, and produces a severity-sorted report with direct vs transitive attribution. Invoke when the user asks to "audit dependencies," "run a CVE scan," "check for vulnerable packages," "check license compliance," "run pip-audit," "run npm audit," or equivalent German-language requests. Also handles a pre-PR / pre-release dependency gate. Don't use for upgrading dependencies (that's an author's decision) or for writing Renovate configs (that's `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Scans the project's dependency tree for known CVEs and (optionally) license-compliance issues; severity-sorted report.
+
+_Scan the current project's dependency tree for known vulnerabilities (CVEs) and, when requested, license-compliance issues. Dispatches dependency-audit-scanner agent for the read-only scan step. Detects project kind from `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` for Python and `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` for Node, runs the appropriate auditors, and produces a severity-sorted report with direct vs transitive attribution. Invoke when the user asks to "audit dependencies," "run a CVE scan," "check for vulnerable packages," "check license compliance," "run pip-audit," "run npm audit," or equivalent German-language requests. Also handles a pre-PR / pre-release dependency gate. Don't use for upgrading dependencies (that's an author's decision) or for writing Renovate configs (that's [`project-structure-apply`](project-structure-apply.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Tags:** `dependency`
 - **Source:** [skills/dependency-audit/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/dependency-audit/SKILL.md)
+
+## Use when
+
+- you want to run a CVE scan on the current project
+- you want a pre-PR or pre-release dependency-vulnerability gate
+- you want to check license compliance across direct and transitive dependencies
+
+## Don't use when
+
+- **You want to upgrade dependencies (that is an author's decision)** → [`project-structure-apply`](project-structure-apply.md)
+- **You want to write or update Renovate config** → [`project-structure-apply`](project-structure-apply.md)
+
+## See also
+
+- [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md)
 
 ---
 
@@ -45,7 +62,7 @@ Detect the user's language from their message and respond in it. The report itse
 
 #### 0. Dispatch the read-only scan agent
 
-Dispatch `dependency-audit-scanner` (Agent) for the read-only audit pass: it detects project type, runs the matching auditor (pip-audit / npm audit / etc.), and returns a structured drift report. Wait for its inventory before proceeding to severity-triage and follow-up actions.
+Dispatch [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md) (Agent) for the read-only audit pass: it detects project type, runs the matching auditor (pip-audit / npm audit / etc.), and returns a structured drift report. Wait for its inventory before proceeding to severity-triage and follow-up actions.
 
 #### 1. Detect project kind
 
@@ -176,8 +193,8 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ### Why this is a skill, not an agent
 
-This skill follows the hybrid pattern: the read-only scan phase is delegated to the `dependency-audit-scanner` agent (context-window isolation, tool restriction), while orchestration and follow-up actions stay in the skill.
+This skill follows the hybrid pattern: the read-only scan phase is delegated to the [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md) agent (context-window isolation, tool restriction), while orchestration and follow-up actions stay in the skill.
 
 - **Orchestration role**: typical callers run this as one step inside a larger flow (pre-PR gate, release cut, periodic security review); the output flows back into the main conversation so the user can triage.
 - **Interactivity**: the follow-up actions in Step 6 need user approval — bumping a dependency, adding an advisory ignore entry, drafting a license allowlist — so mid-flow interactivity favours the skill side.
-- **Hybrid split**: the pure scanning half (detect lockfile, run auditor, normalise JSON) is self-contained and benefits from context-window isolation; the `dependency-audit-scanner` agent handles it. The follow-up-action half stays here so the user can approve each change interactively.
+- **Hybrid split**: the pure scanning half (detect lockfile, run auditor, normalise JSON) is self-contained and benefits from context-window isolation; the [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md) agent handles it. The follow-up-action half stays here so the user can approve each change interactively.

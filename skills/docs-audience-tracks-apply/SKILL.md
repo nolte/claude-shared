@@ -3,6 +3,25 @@ name: docs-audience-tracks-apply
 description: "Audits a repository against the canonical-language file under spec/project/docs-audience-tracks/ and, with per-item user approval, scaffolds or patches the documentation-tracks layer: per-page `track:` frontmatter across the per-language docs/ tree, required user-docs and developer-docs content blocks, and the audience-to-track mapping in the project's audience artefact. Three operations: `audit` (read-only conformance report), `migrate` (greenfield), `patch` (additive fixes one finding at a time). Invoke when the user asks to apply, audit, migrate, or patch documentation tracks against the spec; also handles equivalent German-language requests. Don't use for the MkDocs skeleton (`mkdocs-structure-apply`), audience artefact (`audience-identify`), page content (`audience-doc-author`), drift detection (`docs-freshness-checker`), or prose mechanics (`prose-vale-curator`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
+summary: "Wires up per-page track frontmatter and audience-to-track mapping in MkDocs docs/; audit, migrate, or patch operations."
+summary_de: "Verdrahtet Per-Page-Track-Frontmatter und Audience-zu-Track-Mapping in MkDocs docs/; Audit-, Migrate- oder Patch-Operationen."
+use_when:
+  - "you want to audit a repo for docs-audience-tracks conformance"
+  - "you want to greenfield-migrate a docs/ tree onto the audience-tracks layer"
+  - "you want to additively patch one finding at a time"
+dont_use_when:
+  - situation: "You need to scaffold the MkDocs skeleton itself"
+    alternative: mkdocs-structure-apply
+  - situation: "You need to create the audience artefact first"
+    alternative: audience-identify
+  - situation: "You want to author page content rather than wire structure"
+    alternative: audience-doc-author
+  - situation: "You want drift detection across docs"
+    alternative: docs-freshness-checker
+see_also:
+  - mkdocs-structure-apply
+  - audience-identify
+  - docs-freshness-checker
 resumable: true
 ---
 

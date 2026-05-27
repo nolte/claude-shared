@@ -3,6 +3,15 @@ name: vocab-drift-audit
 description: Audit repository-local Vale vocabularies against the pinned upstream release of nolte/vale-style to detect drift. Dispatches vocab-drift-scanner agent for the read-only diff step; follow-up actions (delete entries, bump pin, draft upstream PR) stay user-controlled in this skill. Invoke when the user asks to audit the Vale vocabulary, check for vocabulary drift, diff the local vocab against nolte/vale-style, or review whether local Vale terms can be retired. Also handles equivalent German-language requests. Reports local entries that are already accepted upstream (should be deleted) and local entries that aren't yet upstream (should be PR'd to nolte/vale-style). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [audit]
 phase: quality
+summary: "Audits repository-local Vale vocabularies against the pinned upstream nolte/vale-style release to detect drift."
+summary_de: "Auditiert lokale Vale-Vokabularien gegen den gepinnten Upstream-Release nolte/vale-style auf Drift."
+use_when:
+  - "you want to audit the local Vale vocabulary for drift against upstream"
+  - "you want to find local terms that can be retired (already upstream)"
+  - "you want to find local terms that should be PR'd upstream"
+see_also:
+  - vocab-drift-scanner
+  - prose-vale-curator
 resumable: true
 ---
 

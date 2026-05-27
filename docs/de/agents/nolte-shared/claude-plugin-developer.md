@@ -8,6 +8,8 @@ last_updated: generated
 
 # claude-plugin-developer
 
+> Verfasst spec-konforme Claude-Code-Plugin-Artefakte (Skill oder Agent) für nolte-shared; Executor im Skill-orchestriert-Agent-Pattern.
+
 _Draft a new Claude Code plugin artifact (skill or agent) for the nolte-shared plugin, or refine an existing one, in strict conformance with every spec under spec/claude/. Use when the user says "author a plugin skill," "create a new agent," "draft a spec-compliant skill or agent," "scaffold a plugin capability from the specs," or "build a high-quality nolte-shared skill or agent." Also handles equivalent German-language requests. Don't use for spec authoring itself (that's the nolte-shared:spec skill's job), for pure structural validation without authoring changes (use nolte-shared:skill-management), for interactive scaffolding with name/purpose discovery (use skill-management for that and then chain here for spec-conformance drafting), or for consumer-project .claude/ configuration. Returns the drafted or edited files, the skill-vs-agent rationale, and a short checklist for the caller to finish the release._
 
 - **Plugin:** `nolte-shared`
@@ -15,6 +17,23 @@ _Draft a new Claude Code plugin artifact (skill or agent) for the nolte-shared p
 - **Distribution:** `plugin`
 - **Tags:** `scaffolding`, `review`
 - **Quelle:** [agents/claude-plugin-developer.md](https://github.com/nolte/claude-shared/blob/main/agents/claude-plugin-developer.md)
+
+## Anwenden wenn
+
+- you want a spec-conformant draft of a new skill or agent
+- you want to refine an existing plugin artifact against every spec under spec/claude/
+- you are chained from skill-management for the spec-conformance authoring step
+
+## Nicht anwenden wenn
+
+- **You want to author the spec itself rather than a plugin artifact** → [`spec`](../../skills/nolte-shared/spec.md)
+- **You want interactive scaffolding with name and purpose discovery first** → [`skill-management`](../../skills/nolte-shared/skill-management.md)
+
+## Siehe auch
+
+- [`skill-management`](../../skills/nolte-shared/skill-management.md)
+- [`skill-review`](../../skills/nolte-shared/skill-review.md)
+- [`agent-review`](../../skills/nolte-shared/agent-review.md)
 
 ---
 
@@ -41,7 +60,7 @@ This capability is authored as an agent because:
 - **Context-window protection:** drafting a conforming artifact requires reading every relevant spec under `spec/claude/` plus neighboring existing skills and agents; doing that in the parent conversation would flood its context.
 - **Specialization:** a narrow "senior plugin developer" system prompt measurably sharpens output quality compared to letting the caller Claude infer the same rules from the specs ad-hoc.
 - **Fire-and-forget lifecycle:** each invocation produces one well-defined drop (draft files plus rationale report)—no mid-flow branching.
-- **Counter-dimension:** mid-flow user approval on name and scope is sometimes valuable (skill bias), but that dialogue is owned by the dispatching parent (user prompt or a skill like `skill-management`), not by this executor.
+- **Counter-dimension:** mid-flow user approval on name and scope is sometimes valuable (skill bias), but that dialogue is owned by the dispatching parent (user prompt or a skill like [`skill-management`](../../skills/nolte-shared/skill-management.md)), not by this executor.
 
 ### Scope and boundaries
 

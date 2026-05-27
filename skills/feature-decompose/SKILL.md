@@ -3,6 +3,24 @@ name: feature-decompose
 description: Decompose a roadmap item into feature files under project/features/ conforming to the canonical-language file under spec/project/feature/. Invoke when the user asks to decompose a roadmap item, break down a roadmap entry into features, draft features for a roadmap entry, scaffold a feature file, plan features for the next sprint, or write a new feature against the feature spec. Also handles equivalent German-language requests. Walks the operator through title, description, three-to-seven testable acceptance criteria, and test hooks per feature; identifies which feature carries `verifies_sprint_value`; and dispatches the `feature-consistency-reviewer` agent (or records a manual fallback pass) before allowing the new feature to leave `draft`. Do NOT use to transition feature status (`ready → in_progress` or `in_progress → done`) — that is owned by `sprint-execute` and `sprint-review`. Do NOT use to author roadmap items, sprints, or the mission file. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: plan
+summary: "Decomposes a roadmap item into feature files with testable acceptance criteria and test hooks."
+summary_de: "Zerlegt einen Roadmap-Eintrag in Feature-Dateien mit testbaren Akzeptanzkriterien und Test-Hooks."
+use_when:
+  - "you want to break a roadmap entry into feature files"
+  - "you want to scaffold features for the next sprint"
+  - "you want to draft a new feature against the feature spec"
+dont_use_when:
+  - situation: "You want to transition a feature's status (ready → in_progress)"
+    alternative: sprint-execute
+  - situation: "You want to mark a feature done at sprint review"
+    alternative: sprint-review
+  - situation: "You want to author or retarget roadmap items themselves"
+    alternative: roadmap-plan
+see_also:
+  - roadmap-plan
+  - sprint-plan
+  - sprint-execute
+  - feature-consistency-reviewer
 resumable: true
 ---
 

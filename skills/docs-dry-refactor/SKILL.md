@@ -3,6 +3,22 @@ name: docs-dry-refactor
 description: "Operationalises spec/project/mkdocs-structure/ §Snippet inclusion (DRY). Detects paragraph duplication across MkDocs pages and, with per-snippet user approval, extracts duplicates into `mkdocs-include-markdown-plugin` includes pointing at a canonical source (preferring a live source file over a dedicated per-language _snippets/ folder). Three operations: `scan` (read-only ranked findings), `propose` (surface canonical source, markers, include directives for a target snippet ID, await approval), `apply` (write markers, replace consumer blocks, verify via `mkdocs build --strict`). Invoke when the user asks to dedupe, DRY-refactor, extract snippets, or factor out duplicated MkDocs content; also handles equivalent German-language requests. Don't use for non-MkDocs markdown trees, single-file snippet authoring, prose linting (`prose-vale-curator`), structural scaffolding (`mkdocs-structure-apply`), or drift detection (`docs-freshness-checker`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
+summary: "Detects duplicated MkDocs paragraphs and extracts them into mkdocs-include-markdown-plugin snippets."
+summary_de: "Erkennt duplizierte MkDocs-Absätze und extrahiert sie in mkdocs-include-markdown-plugin-Snippets."
+use_when:
+  - "you want to DRY-refactor duplicated content across MkDocs pages"
+  - "you want to extract a paragraph into a shared snippet with a canonical source"
+  - "you want a read-only ranked finding list of likely-duplicate paragraphs"
+dont_use_when:
+  - situation: "You want prose-style linting rather than DRY refactoring"
+    alternative: prose-vale-curator
+  - situation: "You need MkDocs scaffolding rather than content refactoring"
+    alternative: mkdocs-structure-apply
+  - situation: "You need drift detection across docs"
+    alternative: docs-freshness-checker
+see_also:
+  - mkdocs-structure-apply
+  - docs-freshness-checker
 resumable: true
 ---
 

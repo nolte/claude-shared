@@ -3,6 +3,20 @@ name: release-publish-trigger
 description: "Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per the canonical-language file under spec/project/release-skill-layer/ §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check on develop is SUCCESS, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or equivalent German-language requests. Typically called by sprint-review's opt-in chain, not directly after sprint closure."
 tags: [release]
 phase: close-release
+summary: "Validates every pre-publish gate locally, then dispatches release-publish.yml for the open release-drafter draft on develop."
+summary_de: "Prüft jeden Pre-Publish-Gate lokal und dispatched dann release-publish.yml für den offenen Release-Drafter-Draft auf develop."
+use_when:
+  - "you want to publish the open release-drafter draft"
+  - "you want to ship the release after every gate is green"
+  - "you want pre-publish gate verification + workflow_dispatch in one step"
+dont_use_when:
+  - situation: "You want to curate the release notes rather than publish"
+    alternative: release-notes-curate
+  - situation: "You want to triage a red required check that blocks the gate"
+    alternative: workflow-health-triage
+see_also:
+  - release-notes-curate
+  - workflow-health-triage
 ---
 
 # Release Publish Trigger

@@ -8,6 +8,8 @@ last_updated: generated
 
 # cookiecutter-template-author
 
+> Scaffolds or refactors Cookiecutter templates, hardens hooks, sets up pytest-cookies harness + GitHub Actions matrix.
+
 _Scaffold or refactor a Cookiecutter template for a nolte-spec-conformant project, author or harden Cookiecutter hooks (`pre_prompt.py`, `pre_gen_project.py`, `post_gen_project.py`), or set up a `pytest-cookies` test harness plus a GitHub Actions matrix. Every template MUST render a project conforming to the bound spec corpus (project-structure, pull-request-workflow, branching-model, release-automation, release-skill-layer). Typically dispatched by the cookiecutter-template-manage skill for the authoring step; the skill owns variable-name and choice-default mid-flow approvals. Don't use for plain template consumption, generic Python bootstrap, Copier or cruft work, or intentionally diverging templates. Returns created or edited files, a conformance audit, anti-pattern rationales, and a caller checklist._
 
 - **Plugin:** `nolte-shared`
@@ -15,6 +17,20 @@ _Scaffold or refactor a Cookiecutter template for a nolte-spec-conformant projec
 - **Distribution:** `plugin`
 - **Tags:** `scaffolding`, `quality-gate`
 - **Source:** [agents/cookiecutter-template-author.md](https://github.com/nolte/claude-shared/blob/main/agents/cookiecutter-template-author.md)
+
+## Use when
+
+- you want to scaffold a fresh Cookiecutter template against the spec corpus
+- you want to author or harden a Cookiecutter hook (pre_prompt / pre_gen / post_gen)
+- you want to set up a pytest-cookies test harness with a CI matrix
+
+## Don't use when
+
+- **You want the full template lifecycle (manage, scaffold, refactor) with name/purpose discovery** → [`cookiecutter-template-manage`](../../skills/nolte-shared/cookiecutter-template-manage.md)
+
+## See also
+
+- [`cookiecutter-template-manage`](../../skills/nolte-shared/cookiecutter-template-manage.md)
 
 ---
 
