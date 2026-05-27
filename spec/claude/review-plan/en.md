@@ -101,6 +101,7 @@ This section is the single canonical source for severity vocabulary across every
 - **MUST** reference this spec from every review spec that produces a plan (`skill-review`, `agent-review`, and any future review type)—the review spec owns the criteria, this spec owns the artifact shape
 - **MUST NOT** be used as the output of `spec-drift-audit`; that spec persists a quarterly audit record that isn't meant to be deleted on processing completion
 - **SHOULD**, when a review agent (for example `audience-review`) emits a report in the main conversation, still persist the structured plan to `.audits/<review-type>/<target>.md` so the processing contract is consistent regardless of who ran the review
+- **SHOULD** consult `spec/project/parallel-working-copies/` §Audit artefacts in multiple worktrees when the plan is produced inside a worktree rather than the primary checkout; the per-(review-type, target) uniqueness rule from this spec is only observable inside one working tree at a time, and the worktree-local commit, transfer, and cleanup rules live there
 
 ## Acceptance Criteria
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
