@@ -31,10 +31,10 @@ Pull requests (PRs, equivalent to GitLab merge requests / MRs) are the sole path
 - **SHOULD** link at least one related issue via `Closes #<n>` or `Refs #<n>` in the description when a tracking issue exists
 
 ### Branch freshness
-- **MUST** ensure the feature branch contains every commit of the current `develop` tip before the PR is opened, so the CI run reflects the state that will exist on `develop` after merge; this is achieved by either merging `develop` into the feature branch or rebasing the feature branch onto `develop`
+- **MUST** ensure the feature branch contains every commit of the current `develop` tip before the PR is opened, so the CI run reflects the state that will exist on `develop` after merge; this is achieved by rebasing the feature branch onto `develop` (rebase is the spec-mandated synchronization method per the MUST below in this section, not a contributor preference)
 - **MUST** re-synchronize the feature branch with `develop` whenever `develop` advances while the PR is open, before the PR is moved out of Draft or before automerge is allowed to act; a PR whose branch lags behind `develop` isn't considered ready for merge
 - **MUST** enable the GitHub "require branches to be up to date before merging" option for `develop` in `.github/settings.yml` (in `protection.required_status_checks.strict: true`, directly or via the `nolte/gh-plumbing` commons extension), so the platform enforces this precondition in addition to the client-side workflow
-- **MAY** choose rebase or merge to perform the sync; the spec doesn't prescribe which, but the chosen operation **MUST** leave `develop` fully contained in the feature branch before the PR is opened or re-requested for review
+- **MUST** use rebase (not merge) to perform the synchronization with `develop`; rebase produces a linear feature-branch history that lands as a single squash-commit on `develop` per `### Merge strategy`, ensures every PR's CI run reflects the merge-time `develop` tip without an intermediate merge bubble, and standardises the path from feature branch into `develop` so reviewers see one shape across every PR. The synchronization **MUST** leave `develop` fully contained in the feature branch before the PR is opened or re-requested for review; force-with-lease pushes that follow the rebase are governed by §Fix-forward on red checks
 
 ### PR description structure
 A pull-request template **MUST** exist at `.github/pull_request_template.md` and **MUST** contain the following sections, in this exact order and with these exact headings:
