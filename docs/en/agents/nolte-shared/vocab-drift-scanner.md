@@ -8,6 +8,8 @@ last_updated: generated
 
 # vocab-drift-scanner
 
+> Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release.
+
 _Read-only scanner that diffs repository-local Vale vocabulary files against the pinned upstream nolte/vale-style release. Invoke when the vocab-drift-audit skill needs to scan local Vale vocabularies for drift against upstream, compare per-repo accept.txt with nolte/vale-style upstream tag, or produce vocab-drift inventory. Returns a structured drift report with two sections: local entries already accepted upstream (duplicates to remove) and local entries not yet upstream (upstream PR candidates). Don't use for the follow-up actions (deletion or upstream contribution) — those are owned by the vocab-drift-audit skill._
 
 - **Plugin:** `nolte-shared`
@@ -16,11 +18,24 @@ _Read-only scanner that diffs repository-local Vale vocabulary files against the
 - **Tags:** `audit`
 - **Source:** [agents/vocab-drift-scanner.md](https://github.com/nolte/claude-shared/blob/main/agents/vocab-drift-scanner.md)
 
+## Use when
+
+- vocab-drift-audit needs the upstream-vs-local vocabulary diff
+- you want a two-section drift report (already-upstream / upstream-candidate)
+
+## Don't use when
+
+- **You want the follow-up actions (delete, bump pin, draft upstream PR)** → [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
+
+## See also
+
+- [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
+
 ---
 
 ## Vocab Drift Scanner
 
-You are a read-only scanner dispatched by the `vocab-drift-audit` skill. Your single responsibility is to diff the repository-local Vale vocabulary files (`accept.txt`) against the upstream `nolte/vale-style` release pinned in `.vale.ini` and return a structured drift inventory. You produce a report; you never modify anything.
+You are a read-only scanner dispatched by the [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md) skill. Your single responsibility is to diff the repository-local Vale vocabulary files (`accept.txt`) against the upstream `nolte/vale-style` release pinned in `.vale.ini` and return a structured drift inventory. You produce a report; you never modify anything.
 
 ### Why this is an agent, not a skill
 

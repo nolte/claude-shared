@@ -8,12 +8,28 @@ last_updated: generated
 
 # github-issue-templates-apply
 
-_Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Scaffoldet spec-konforme GitHub-Issue-Forms (.github/ISSUE_TEMPLATE/), zugeschnitten auf Projekttyp und Audience.
+
+_Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's [`project-structure-apply`](project-structure-apply.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`
 - **Quelle:** [skills/github-issue-templates-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/github-issue-templates-apply/SKILL.md)
+
+## Anwenden wenn
+
+- you want to scaffold GitHub issue forms for this repo
+- you want bug-report and feature-request templates aligned with the audience
+- you want project-type-specific extra issue templates
+
+## Nicht anwenden wenn
+
+- **You want generic .github/ scaffolding rather than just issue templates** → [`project-structure-apply`](project-structure-apply.md)
+
+## Siehe auch
+
+- [`project-structure-apply`](project-structure-apply.md)
 
 ---
 
@@ -34,7 +50,7 @@ This skill also triggers on equivalent German-language requests, including:
 
 - **Per-template user approval is the contract** — the spec mandates that the derivation (project type, audiences, chosen templates, project-specific fields) is surfaced and confirmed before any file is written; an agent's fire-and-forget shape would lose that gate.
 - **Output flows back into the main conversation** — the project-type classification, the chosen field set per template, and the drift report on re-runs all surface in the conversation so the user can correct them; isolating them in a structured-report boundary would obscure the per-decision approval surface.
-- **Orchestrator role** — when no audience artefact exists, this skill dispatches the `audience-identify` skill before generating templates; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
+- **Orchestrator role** — when no audience artefact exists, this skill dispatches the [`audience-identify`](audience-identify.md) skill before generating templates; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
 - Counter-dimension considered: a narrow YAML-form-generator agent could specialise on Issue Forms syntax, but the load-bearing dimension is the multi-step approval dialogue (project type → audience → chosen templates → fields → write), not the YAML mechanics — skill wins.
 
 ### User-language policy
@@ -76,8 +92,8 @@ Edge handling:
 The spec requires an identified *reporter* audience and *triager* audience before fields are derived.
 
 - If the repository already has an audience artefact (per `audience-identification` — typically `AUDIENCES.md`, an "Audiences" section in `README.md`, or an ADR), read it and confirm it covers reporters and triagers. Grep for `AUDIENCES.md` and for headings matching `Audiences` / `Intended consumers`.
-- If no artefact exists or it doesn't cover reporters and triagers, dispatch the `audience-identify` skill to produce one before continuing. Do not invent audiences inline; the spec forbids it.
-- When the artefact exists but is older than the most recent material change to the repo (new public API, new deployment target, new regulated data class), prompt the user to run `audience-identify` in `revisit` mode before continuing — stale audiences silently invalidate the derived field set.
+- If no artefact exists or it doesn't cover reporters and triagers, dispatch the [`audience-identify`](audience-identify.md) skill to produce one before continuing. Do not invent audiences inline; the spec forbids it.
+- When the artefact exists but is older than the most recent material change to the repo (new public API, new deployment target, new regulated data class), prompt the user to run [`audience-identify`](audience-identify.md) in `revisit` mode before continuing — stale audiences silently invalidate the derived field set.
 
 #### 3. Derive templates and fields
 
@@ -172,7 +188,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - Never write any file under `.github/ISSUE_TEMPLATE/` without first surfacing the full derivation (project type, audiences, templates, fields, labels, assignees) to the user and getting an explicit confirmation.
 - Never leave `.github/ISSUE_TEMPLATE/` in a half-configured state — apply is atomic. On any single-file failure, roll back the partial set.
 - Never write template content in a language other than English, regardless of the repo's documentation language.
-- Never proceed without an audience artefact that covers reporters and triagers — either read an existing one or dispatch `audience-identify` first.
+- Never proceed without an audience artefact that covers reporters and triagers — either read an existing one or dispatch [`audience-identify`](audience-identify.md) first.
 - Never write a `feature_request.yml` with more than two required fields total (search acknowledgement + one substantive `textarea`). Never raise a project-type-specific or audience-derived feature-template field to `required: true`. Never require a closed-taxonomy field (severity, priority, target release, milestone, owner) on the feature template.
 - Never touch `.github/pull_request_template.md`, `.github/DISCUSSION_TEMPLATE/`, `CODEOWNERS`, `SECURITY.md`, or `SUPPORT.md` from this skill — those are out of scope per the spec.
 - Never silently overwrite an existing `.github/ISSUE_TEMPLATE/` directory on a re-run. Diff first, then ask per item.

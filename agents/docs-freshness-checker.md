@@ -6,6 +6,21 @@ tools: Read, Glob, Grep, Bash
 model: sonnet
 tags: [audit, prose]
 phase: quality
+summary: "Read-only freshness audit of MkDocs docs: language parity, dead links, stale spec/code refs, ADR hygiene, Mermaid derived-source drift."
+summary_de: "Nur-Lese-Frische-Audit der MkDocs-Doku: Sprach-Parität, tote Links, veraltete spec-/code-Refs, ADR-Hygiene, Mermaid-Derived-Source-Drift."
+use_when:
+  - "you want to check docs for drift before a release"
+  - "you want to find dead internal markdown links"
+  - "you want to check DE/EN parity across the language trees"
+  - "you want to find Mermaid derived-source-marker drift"
+dont_use_when:
+  - situation: "You want to write or update documentation"
+    alternative: audience-doc-author
+  - situation: "You want vocabulary / Vale linting"
+    alternative: prose-vale-curator
+see_also:
+  - audience-doc-author
+  - prose-vale-curator
 ---
 
 # Documentation Freshness Checker

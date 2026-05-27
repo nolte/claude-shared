@@ -10,6 +10,9 @@ Atlassian
 [Aa]utodetect(s|ed|ing|ion)?
 autofocus
 [Aa]utomerge[ds]?
+[Aa]uto-tag(s|ged|ging)?
+[Dd]iscoverability
+[Dd]isambiguations?
 Bamberger
 bluetooth
 bundlers?

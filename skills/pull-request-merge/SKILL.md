@@ -3,6 +3,20 @@ name: pull-request-merge
 description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [pull-request]
 phase: review
+summary: "Promotes a draft PR to merged on develop, passing every pull-request-workflow gate."
+summary_de: "Befördert einen Draft-PR auf develop und durchläuft jeden Pull-Request-Workflow-Gate."
+use_when:
+  - "you want to merge the open draft PR on this branch"
+  - "you want to ship the current PR to develop"
+  - "you want to apply automerge and let the squash-merge workflow land the PR"
+dont_use_when:
+  - situation: "You want to create or open the PR in the first place"
+    alternative: pull-request-create
+see_also:
+  - pull-request-create
+examples:
+  - prompt: "Merge the open PR"
+    outcome: "Ready PR squash-merged onto develop; merge commit verified."
 resumable: true
 ---
 

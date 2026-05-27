@@ -3,6 +3,20 @@ name: workflow-health-triage
 description: "Triages a failing GitHub Actions workflow run on `develop` or `main` per `spec/project/workflow-health/`. Classifies the failure into one of `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`, dispatches the most specialised Claude agent that matches the classification, records the classification plus the dispatched agent's name in the eventual fix PR's Risk / rollout notes, and verifies the standard `fix/`-PR flow. Invoke when the user asks to \"triage this red workflow\", \"classify this CI failure\", or equivalent German-language requests. Don't use to silence checks via `continue-on-error` shortcuts or by removing required-checks entries (forbidden by spec); don't use to bypass branch protection (`enforce_admins` on develop has no exception path); don't use to merge a fix PR (use `pull-request-merge`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [audit, pull-request]
 phase: quality
+summary: "Triages a failing GitHub Actions workflow on develop/main and dispatches the most specialised agent to remediate."
+summary_de: "Triagiert einen roten GitHub-Actions-Workflow auf develop/main und dispatched den passendsten spezialisierten Agent zur Behebung."
+use_when:
+  - "you want to triage a red workflow run on develop or main"
+  - "you want to classify a CI failure (defect / flake / infra / stale pin / secret drift)"
+  - "you want the fix to land via the standard fix/-PR flow"
+dont_use_when:
+  - situation: "You want to merge the fix PR after triage"
+    alternative: pull-request-merge
+  - situation: "You want a per-repo CVE audit, not CI triage"
+    alternative: dependency-audit
+see_also:
+  - pull-request-merge
+  - dependency-audit
 resumable: true
 ---
 

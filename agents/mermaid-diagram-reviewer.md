@@ -5,6 +5,20 @@ distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
 phase: quality
+summary: "Static audit of every Mermaid block in docs/<lang>/ against the spec plus MkDocs setup; structured findings, no rendering."
+summary_de: "Statisches Audit jedes Mermaid-Blocks in docs/<lang>/ gegen die Spec plus MkDocs-Setup; strukturierte Findings, kein Rendering."
+use_when:
+  - "you want to review Mermaid diagrams against the spec"
+  - "you want to find missing or malformed source markers"
+  - "you want to detect Mermaid authoring violations (gitGraph, inline styling)"
+dont_use_when:
+  - situation: "You want to author or fix diagrams"
+    alternative: mermaid-diagrams-apply
+  - situation: "You want derived-source freshness drift detection"
+    alternative: docs-freshness-checker
+see_also:
+  - mermaid-diagrams-apply
+  - docs-freshness-checker
 ---
 
 # Mermaid Diagram Reviewer

@@ -8,12 +8,40 @@ last_updated: generated
 
 # spec
 
+> Authors, translates, indexes, and drift-checks bilingual specifications under spec/.
+
 _Create, translate, index, deduplicate, and drift-check multilingual specifications stored under the project's spec/ folder. Invoke when the user wants to write a new spec, update or translate an existing one, check whether a requirement is already covered, regenerate the spec index, or verify that translations are still in sync with the canonical version. Supports writing the request in any configured language; specs on disk always exist in all configured languages, with one canonical source and the rest as translations kept strictly in sync. Don't use for readiness audit (contradiction detection, audience fit, AC coverage) — use spec-readiness-reviewer. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`
 - **Source:** [skills/spec/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/spec/SKILL.md)
+
+## Use when
+
+- you want to write a new specification under spec/
+- you want to translate an existing spec into another configured language
+- you suspect a requirement is already covered and want to dedupe before authoring
+- you want to regenerate the spec index after adding or renaming a spec
+- you want to verify translations are still in sync with the canonical version
+
+## Don't use when
+
+- **You want to audit a spec for contradictions, AC coverage, or audience fit** → [`spec-readiness-reviewer`](../../agents/nolte-shared/spec-readiness-reviewer.md)
+- **You want to reconcile a spec against the actual implementation in the codebase** → [`spec-drift-audit`](spec-drift-audit.md)
+
+## See also
+
+- [`spec-readiness-reviewer`](../../agents/nolte-shared/spec-readiness-reviewer.md)
+- [`spec-drift-audit`](spec-drift-audit.md)
+- [`audience-identify`](audience-identify.md)
+
+## Examples
+
+- **Prompt:** Write a new spec for the foo workflow under spec/project/foo/
+  - **Outcome:** Bilingual spec files at spec/project/foo/{en,de}.md plus regenerated spec index.
+- **Prompt:** The German translation of spec/project/bar/ is out of sync — refresh it.
+  - **Outcome:** spec/project/bar/de.md re-aligned with the canonical EN version.
 
 ---
 

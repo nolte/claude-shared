@@ -3,6 +3,20 @@ name: tech-stack-capture
 description: Captures or refreshes the `tech_stack:` block in a Portfolio-Member's `project/portfolio.yml` per the canonical-language file under `spec/portfolio/tech-stack-discovery/` §Discovery sequence. Probes repo signals (lockfiles, `Taskfile.yml`, `.github/workflows/`, `renovate.json5`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml`), classifies hits against the closed `kind` (12) and `group` (5) enums from `spec/portfolio/tech-stack/`, compares each candidate against the global stack, drops inherited matches, and confirms every proposed change interactively before writing. Invoke when the user asks to "capture the tech stack", "scaffold a tech_stack block", "refresh the tech_stack section", or equivalent German-language requests. Don't use to author `portfolio/tech-stack.yml` (hand-curated only) or to run signal-verification audits (use `portfolio-audit`). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: design
+summary: "Captures or refreshes the tech_stack block in project/portfolio.yml by probing lockfiles, Taskfile, CI, and tooling configs."
+summary_de: "Erfasst oder aktualisiert den tech_stack-Block in project/portfolio.yml durch Sondieren von Lockfiles, Taskfile, CI und Tooling-Configs."
+use_when:
+  - "you want to capture the tech stack for a Portfolio-Member's portfolio.yml"
+  - "you want to refresh the tech_stack section after dependency or tooling changes"
+  - "you want a probe-driven scaffold rather than hand-curation"
+dont_use_when:
+  - situation: "You want to author the global portfolio/tech-stack.yml (hand-curated only)"
+    alternative: portfolio-audit
+  - situation: "You want signal-verification audits across the portfolio"
+    alternative: portfolio-audit
+see_also:
+  - portfolio-audit
+  - tech-stack-drift-reviewer
 resumable: true
 ---
 

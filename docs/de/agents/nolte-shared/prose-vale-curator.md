@@ -8,13 +8,32 @@ last_updated: generated
 
 # prose-vale-curator
 
-_Curates prose in the current project so it passes Vale, prefers terms from the shipped vocabularies for consistency, and—only inside a repository that owns Vale vocabulary source (for example nolte/vale-style)—extends an `accept.txt` when a term is a legitimate technical identifier that rephrasing would strip of precision. Invoke when the user says \"make this doc Vale-clean\", \"fix the Vale alerts in README.md\", \"rephrase until vale is green\", or equivalent German-language requests. Don't use for net-new documentation (use `audience-doc-author`), for auditing whether local vocabulary entries should be retired or upstreamed (use `vocab-drift-audit`), or for authoring new Vale style rule YAML. Returns edited files, a per-file before/after alert count, a list of rephrases, a list of vocabulary additions, and upstream-candidate terms when the current repo doesn't own the vocabulary source._
+> Kuratiert Prosa, damit Vale grün ist, bevorzugt mitgelieferte Vokabularien, erweitert accept.txt nur in Vokabular-eigenden Repos.
+
+_Curates prose in the current project so it passes Vale, prefers terms from the shipped vocabularies for consistency, and—only inside a repository that owns Vale vocabulary source (for example nolte/vale-style)—extends an `accept.txt` when a term is a legitimate technical identifier that rephrasing would strip of precision. Invoke when the user says \"make this doc Vale-clean\", \"fix the Vale alerts in README.md\", \"rephrase until vale is green\", or equivalent German-language requests. Don't use for net-new documentation (use [`audience-doc-author`](audience-doc-author.md)), for auditing whether local vocabulary entries should be retired or upstreamed (use [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)), or for authoring new Vale style rule YAML. Returns edited files, a per-file before/after alert count, a list of rephrases, a list of vocabulary additions, and upstream-candidate terms when the current repo doesn't own the vocabulary source._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Distribution:** `plugin`
 - **Tags:** `prose`, `audit`
 - **Quelle:** [agents/prose-vale-curator.md](https://github.com/nolte/claude-shared/blob/main/agents/prose-vale-curator.md)
+
+## Anwenden wenn
+
+- you want to make a doc Vale-clean
+- you want to fix Vale alerts in a specific Markdown file
+- you want to rephrase prose until Vale stops complaining
+
+## Nicht anwenden wenn
+
+- **You want net-new documentation rather than rephrasing** → [`audience-doc-author`](audience-doc-author.md)
+- **You want to audit whether local vocabulary entries should be retired** → [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
+
+## Siehe auch
+
+- [`audience-doc-author`](audience-doc-author.md)
+- [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
+- [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 
 ---
 
@@ -46,8 +65,8 @@ You **don't**:
 - Add `<!-- vale off -->` markers, per-file ignores, or any other alert-silencing comment when the real fix is a rephrase or a vocabulary entry.
 - Modify the project's `.vale.ini` (scope blocks, packages pin, `MinAlertLevel`, and similar)—that's a config change the caller owns.
 - Author or modify Vale style rule YAML under `styles/<pack>/*.yml` (for example `nolte-styles/*.yml`). This agent edits prose and, narrowly, `accept.txt`.
-- Audit whether existing local vocabulary entries should be retired or upstreamed—that's the `vocab-drift-audit` skill.
-- Generate net-new documentation—that's `audience-doc-author`.
+- Audit whether existing local vocabulary entries should be retired or upstreamed—that's the [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md) skill.
+- Generate net-new documentation—that's [`audience-doc-author`](audience-doc-author.md).
 - Call the `Skill` tool or dispatch sibling agents (forbidden by `spec/claude/skill-vs-agent/en.md`).
 - Commit, push, bump versions, or open pull requests—those are the caller's follow-ups.
 
@@ -148,7 +167,7 @@ Before editing anything, verify with `Read`, `Bash`, and `Glob`:
 5. **Re-run `vale` on every edited file** and record the "after" alert count. Every remaining alert needs an explanation in the report.
 5a. **Run a Voice-and-tone spot check** against `spec/project/prose-style/` §Voice and tone (the editorial MUSTs that Vale doesn't enforce yet). Surface heuristic findings only — don't rewrite. Heuristics to apply per file:
    - **Passive voice** — sentences whose verb phrase matches `\b(is|are|was|were|be|been|being)\b\s+\w+ed\b` outside of code blocks; report as candidate, the Reviewer judges the rare legitimate passive use.
-   - **Second-person on instructional pages** — when the page's `content_mode` frontmatter is `tutorial`, `how-to`, or `troubleshooting` (read frontmatter via the same offset-Read approach `docs-freshness-checker` uses), any paragraph that lacks `you` / `your` and the imperative mood is a candidate.
+   - **Second-person on instructional pages** — when the page's `content_mode` frontmatter is `tutorial`, `how-to`, or `troubleshooting` (read frontmatter via the same offset-Read approach [`docs-freshness-checker`](docs-freshness-checker.md) uses), any paragraph that lacks `you` / `your` and the imperative mood is a candidate.
    - **Sentence-case headings** — any `^#{1,6}\s+` heading where two or more non-leading words start with an uppercase letter and aren't proper nouns / product names (a curated list of allowed proper nouns lives in the loaded `accept.txt` vocabularies; treat that as the whitelist).
    - **Gendered generic pronouns** — `\b(he|she|his|hers|he/she|s/he)\b` outside of direct quotations.
    - **Militaristic / non-inclusive terms** — the Microsoft Bias-Free Communication substitution list (`master`, `slave`, `hang` as a verb, `DMZ`, `blacklist`, `whitelist`, …) treated as a curated regex pack; report each hit with the suggested replacement.

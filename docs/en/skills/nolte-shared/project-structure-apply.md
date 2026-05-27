@@ -8,12 +8,31 @@ last_updated: generated
 
 # project-structure-apply
 
+> Audits a repository against the project-structure spec and scaffolds missing artefacts (README, .github/, Renovate, Taskfile, MkDocs, .claude/).
+
 _Audits a repository against the canonical-language file under spec/project/project-structure/ and scaffolds or patches missing artefacts: README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, MkDocs setup, .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, `stale`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`
 - **Source:** [skills/project-structure-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/project-structure-apply/SKILL.md)
+
+## Use when
+
+- you want to audit the project structure of a repo
+- you want to scaffold missing GitHub configs (settings, release-drafter, boring-cyborg, stale)
+- you want to check that the backing GitHub Apps (Probot, Renovate) are installed
+
+## Don't use when
+
+- **You want to wire the skill-and-agent catalog on top of MkDocs** → [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md)
+- **You want to scaffold issue-template forms specifically** → [`github-issue-templates-apply`](github-issue-templates-apply.md)
+
+## See also
+
+- [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- [`github-issue-templates-apply`](github-issue-templates-apply.md)
+- [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md)
 
 ---
 
@@ -79,7 +98,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** write a `.github/settings.yml` without an `_extends:` pointing at `nolte/gh-plumbing:.github/commons-settings.yml` (or the short form `gh-plumbing:.github/commons-settings.yml` inside the `nolte` org). Same applies to release-drafter, boring-cyborg, and stale.
 - **Never** copy plugin-owned skills into `.claude/skills/`. Distribution is the plugin mechanism's job.
 - **Never** automatically move source files out of the repository root. Report the drift and let the user decide.
-- **Never** scaffold or rewrite content inside the `project/` planning tree (`project/roadmap.md`, `project/goals.md`, `project/sprints/`, `project/features/`, `project/release-artifacts/`, `project/mission.md`). The audit verifies the layout only; per-file authoring is delegated to the planning skills (`roadmap-init`, `sprint-plan`, `feature-decompose`, `mission-define`) per the matching specs.
+- **Never** scaffold or rewrite content inside the `project/` planning tree (`project/roadmap.md`, `project/goals.md`, `project/sprints/`, `project/features/`, `project/release-artifacts/`, `project/mission.md`). The audit verifies the layout only; per-file authoring is delegated to the planning skills ([`roadmap-init`](roadmap-init.md), [`sprint-plan`](sprint-plan.md), [`feature-decompose`](feature-decompose.md), [`mission-define`](mission-define.md)) per the matching specs.
 - **Never** commit a real `.env`. When creating `.env.example`, simultaneously ensure `.env` is listed in `.gitignore`.
 - **Never** attempt to install a GitHub App programmatically. Report the install status and link to the app's marketplace page so a human can approve the install.
 - When `spec/project/project-structure/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.

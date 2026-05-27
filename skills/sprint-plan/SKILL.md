@@ -3,6 +3,24 @@ name: sprint-plan
 description: Create a new sprint file under project/sprints/ per the project sprint spec. Invoke when the user asks to plan a sprint, open a sprint, draft the next sprint, schedule a sprint, or pull roadmap items into a sprint. Also handles equivalent German-language requests. Resolves the next monotonic sprint number, walks the value-delivery contract (rejects operator-internal verbs in `value_statement`), pulls in roadmap items whose `target_sprint` matches, populates the `features` list (delegating to `feature-decompose` when decompositions are missing), names the value-verifying feature, and writes the file with `status: planned`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: plan
+summary: "Creates a new sprint file under project/sprints/ with value statement, features, and value-verifying acceptance criterion."
+summary_de: "Erstellt eine neue Sprint-Datei unter project/sprints/ mit Value-Statement, Features und value-verifizierendem Akzeptanzkriterium."
+use_when:
+  - "you want to plan or open a new sprint"
+  - "you want to draft the next sprint with roadmap items pulled in"
+  - "you want to schedule a sprint and populate the features list"
+dont_use_when:
+  - situation: "You want to drive an already-planned sprint day-to-day"
+    alternative: sprint-execute
+  - situation: "You want to close an active sprint at review"
+    alternative: sprint-review
+  - situation: "You want to decompose a roadmap item into features first"
+    alternative: feature-decompose
+see_also:
+  - sprint-execute
+  - sprint-review
+  - sprint-readiness-reviewer
+  - feature-decompose
 resumable: true
 ---
 

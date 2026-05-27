@@ -3,6 +3,21 @@ name: lektorat-apply
 description: Reviews existing Markdown prose against the five editorial quality dimensions (readability, comprehensibility, spelling/grammar, writing style, audience-fit) defined in `spec/project/lektorat/`. Distinguishes three operations — `audit` (read-only structured report), `patch` (one finding, one diff, one approval), `revise` (full-artefact rewrite with diff review) — and dispatches the `lektorat-scanner` agent for the read-only detection phase. Invoke when the user asks to "lektoriere README.md", "audit docs for audience-fit", "revise this page with Lektorat", "prüfe diese Doku auf Lesbarkeit", "audit the editorial quality", or equivalent English- or German-language requests. Writes outputs under `.audits/lektorat/<YYYY-MM-DD-HHMM>/`. Don't use to author new prose (use `audience-doc-author`), to curate Vale rules (use `prose-vale-curator`), to lektor `spec/` files (out of scope), or to edit source code, configs, or LLM-instruction artefacts (SKILL.md, agents/*.md). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [prose, audit]
 phase: quality
+summary: "Reviews existing Markdown prose against five editorial dimensions (readability, comprehensibility, grammar, style, audience-fit)."
+summary_de: "Prüft bestehende Markdown-Prosa gegen fünf Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit)."
+use_when:
+  - "you want to audit existing docs for editorial quality"
+  - "you want to apply a single editorial fix as a one-finding, one-diff change"
+  - "you want a full-artefact rewrite with diff review (lektorat revise)"
+dont_use_when:
+  - situation: "You want to author new prose from scratch"
+    alternative: audience-doc-author
+  - situation: "You want to curate Vale rules rather than fix prose"
+    alternative: prose-vale-curator
+see_also:
+  - audience-doc-author
+  - prose-vale-curator
+  - lektorat-scanner
 resumable: true
 ---
 

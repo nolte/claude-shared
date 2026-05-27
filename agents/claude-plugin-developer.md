@@ -5,6 +5,21 @@ distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 tags: [scaffolding, review]
 phase: design
+summary: "Drafts spec-conformant Claude Code plugin artifacts (skill or agent) for nolte-shared, executor in the skill-orchestrates-agent pattern."
+summary_de: "Verfasst spec-konforme Claude-Code-Plugin-Artefakte (Skill oder Agent) für nolte-shared; Executor im Skill-orchestriert-Agent-Pattern."
+use_when:
+  - "you want a spec-conformant draft of a new skill or agent"
+  - "you want to refine an existing plugin artifact against every spec under spec/claude/"
+  - "you are chained from skill-management for the spec-conformance authoring step"
+dont_use_when:
+  - situation: "You want to author the spec itself rather than a plugin artifact"
+    alternative: spec
+  - situation: "You want interactive scaffolding with name and purpose discovery first"
+    alternative: skill-management
+see_also:
+  - skill-management
+  - skill-review
+  - agent-review
 ---
 
 # Claude Plugin Developer

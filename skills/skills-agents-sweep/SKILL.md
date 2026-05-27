@@ -3,6 +3,21 @@ name: skills-agents-sweep
 description: Orchestrates a portfolio-wide audit of all skills and agents in the plugin inventory, producing a consolidated sweep report under .audits/skills-agents-sweep/ with cross-cutting findings (boundary conflicts, spec-induced gaps, operations-vocabulary drift, classification errors) and a wave-based implementation roadmap. Invoke when the user asks to "run a portfolio-wide skills and agents sweep audit", "check cross-cutting drift between skills and agents", "consolidate per-artefact reviews into a single sweep report", or "plan a wave-based implementation roadmap for sweep findings". Also handles equivalent German-language requests. Do NOT use for per-artefact reviews (use skill-review or agent-review for those); do NOT use for spec-versus-implementation reconciliation (use spec-drift-audit). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [audit]
 phase: review
+summary: "Orchestrates a portfolio-wide sweep audit of all skills and agents with cross-cutting findings and a wave-based roadmap."
+summary_de: "Orchestriert ein portfolio-weites Sweep-Audit aller Skills und Agents mit übergreifenden Findings und einer Wave-basierten Roadmap."
+use_when:
+  - "you want to run a portfolio-wide skills-and-agents sweep audit"
+  - "you want to check cross-cutting drift between skills and agents"
+  - "you want a wave-based implementation roadmap for sweep findings"
+dont_use_when:
+  - situation: "You want a per-artefact review (single skill or agent)"
+    alternative: skill-review
+  - situation: "You want spec-versus-implementation reconciliation"
+    alternative: spec-drift-audit
+see_also:
+  - skill-review
+  - agent-review
+  - spec-drift-audit
 resumable: true
 ---
 

@@ -3,6 +3,17 @@ name: agent-review
 description: Review a Claude Code agent against spec/claude/agent-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/agent-review/ keyed by the target agent's name. Invoke when the user asks "review this agent", "audit a specific agent file", "check whether this agent is spec-compliant", or "agent review for a specific agent". Also handles closing an existing review plan once every item is addressed — "close the agent review plan for a specific agent". Also handles equivalent German-language requests. Do NOT use for skill review (use skill-review) or for pull-request-level review (`review` skill). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [review]
 phase: review
+summary: "Reviews a Claude Code agent against the spec and emits an actionable review plan under .audits/agent-review/."
+summary_de: "Prüft einen Claude-Code-Agent gegen die Spec und erzeugt einen umsetzbaren Review-Plan unter .audits/agent-review/."
+use_when:
+  - "you want to review a specific agent file for spec compliance"
+  - "you want an actionable review plan for an agent"
+  - "you want to close an existing agent-review plan once every item is addressed"
+dont_use_when:
+  - situation: "You want to review a skill (SKILL.md), not an agent"
+    alternative: skill-review
+see_also:
+  - skill-review
 resumable: true
 ---
 

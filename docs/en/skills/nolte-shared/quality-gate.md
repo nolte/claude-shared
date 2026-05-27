@@ -8,12 +8,29 @@ last_updated: generated
 
 # quality-gate
 
+> Runs the project's lint + typecheck + test gate in parallel and tabulates which checks failed.
+
 _Run the project's lint + typecheck + test gate in parallel, tabulate the results, and call out exactly which checks failed so the caller can triage before a commit, a PR, or a release. Prefers repository-declared Taskfile targets (`task lint`, `task test`, `task typecheck`, `task check`) when they exist so project conventions and ignore lists are honoured; otherwise detects and runs the native tooling directly (ruff, pytest, eslint, tsc, vitest, go test, cargo test, and similar). Invoke when the user asks to "run the quality gate," "run lint and tests," "make sure CI will pass," "run all checks before committing," or equivalent German-language requests. Don't use for CVE scanning or license compliance (those are dependency-audit's job, even when task lint wraps a security check) and don't use for documentation builds (those are a separate concern)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Tags:** `quality-gate`
 - **Source:** [skills/quality-gate/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/quality-gate/SKILL.md)
+
+## Use when
+
+- you want to run the project's quality gate before a commit, PR, or release
+- you want a parallel lint + typecheck + test run with a tabulated outcome
+- you want to verify CI will pass locally
+
+## Don't use when
+
+- **You want a CVE scan rather than the lint/typecheck/test gate** → [`dependency-audit`](dependency-audit.md)
+- **You want a documentation build (mkdocs build)** → [`project-structure-apply`](project-structure-apply.md)
+
+## See also
+
+- [`dependency-audit`](dependency-audit.md)
 
 ---
 

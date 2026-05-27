@@ -5,6 +5,18 @@ distribution: plugin
 tools: Read, Grep, Glob
 tags: [audience, review]
 phase: plan
+summary: "Reviews an existing audience-analysis artifact against the spec; read-only structured findings report."
+summary_de: "Prüft ein vorhandenes Audience-Analyse-Artefakt gegen die Spec; nur-Lese strukturierter Findings-Report."
+use_when:
+  - "you want to review an existing audience list for completeness"
+  - "you want to audit an audience artifact before promoting a downstream artefact"
+  - "you want to validate release-notes audiences before publish"
+dont_use_when:
+  - situation: "No audience artefact exists yet"
+    alternative: audience-identify
+see_also:
+  - audience-identify
+  - audience-doc-author
 ---
 
 # Audience Review Agent

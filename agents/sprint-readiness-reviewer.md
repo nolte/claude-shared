@@ -5,6 +5,22 @@ distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
 phase: plan
+summary: "Read-only sprint-readiness gate: go/no-go report on a sprint before sprint-execute promotes it planned → active."
+summary_de: "Nur-Lese-Sprint-Readiness-Gate: Go/No-Go-Report zu einem Sprint, bevor sprint-execute ihn planned → active befördert."
+use_when:
+  - "you want a sprint readiness gate before starting a sprint"
+  - "you want a go/no-go on sprint N with structured per-finding list"
+dont_use_when:
+  - situation: "You want to mutate or author the sprint file"
+    alternative: sprint-plan
+  - situation: "You want to drive the lifecycle transitions"
+    alternative: sprint-execute
+  - situation: "You want to author the features themselves"
+    alternative: feature-decompose
+see_also:
+  - sprint-plan
+  - sprint-execute
+  - feature-decompose
 ---
 
 # Sprint Readiness Reviewer

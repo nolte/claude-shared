@@ -8,12 +8,30 @@ last_updated: generated
 
 # release-publish-trigger
 
+> Validates every pre-publish gate locally, then dispatches release-publish.yml for the open release-drafter draft on develop.
+
 _Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per the canonical-language file under spec/project/release-skill-layer/ §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check on develop is SUCCESS, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or equivalent German-language requests. Typically called by sprint-review's opt-in chain, not directly after sprint closure._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 7 Close & Release (`close-release`)
 - **Tags:** `release`
 - **Source:** [skills/release-publish-trigger/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/release-publish-trigger/SKILL.md)
+
+## Use when
+
+- you want to publish the open release-drafter draft
+- you want to ship the release after every gate is green
+- you want pre-publish gate verification + workflow_dispatch in one step
+
+## Don't use when
+
+- **You want to curate the release notes rather than publish** → [`release-notes-curate`](release-notes-curate.md)
+- **You want to triage a red required check that blocks the gate** → [`workflow-health-triage`](workflow-health-triage.md)
+
+## See also
+
+- [`release-notes-curate`](release-notes-curate.md)
+- [`workflow-health-triage`](workflow-health-triage.md)
 
 ---
 
@@ -94,7 +112,7 @@ Before dispatch, surface to the operator as a single block:
 - target tag and `target_commitish` SHA;
 - result of each gate (PASS / FAIL with detail);
 - version-bearing-file diff summary (file, current value, target value);
-- audience-coverage summary when the draft body carries the `release-skill-layer:project-context-start` marker (Skill A has run); a non-blocking note offering to dispatch `release-notes-curate` first when the marker is absent;
+- audience-coverage summary when the draft body carries the `release-skill-layer:project-context-start` marker (Skill A has run); a non-blocking note offering to dispatch [`release-notes-curate`](release-notes-curate.md) first when the marker is absent;
 - the exact `gh workflow run` invocation that will be issued.
 
 Block the dispatch until the operator confirms.
@@ -114,16 +132,16 @@ Immediately after `gh workflow run` returns:
 - Find the new run: `gh run list --workflow=release-publish.yml --limit 1 --json databaseId,status,conclusion,url,headSha`. The match is the run whose `headSha` equals the draft's target SHA and whose `status` is `queued` or `in_progress`.
 - Report the run URL plus the current status to the operator.
 - **Default behaviour is single-shot**: the skill does **not** poll to completion. The operator re-invokes (or opens the URL) once the run finishes.
-- **Wait mode** is the explicit opt-in (via `--wait` argument or unambiguous prompt phrasing like "warte bis der Publish durch ist"): re-check `gh run view <id> --json status,conclusion` at the configured interval (≥60 s) until `status=completed` or the configured wall-clock timeout (≤15 min) is reached. Bound caps mirror `pull-request-merge`'s wait mode (interval default 90 s, timeout default 10 min, max retries 10, visible status line per round, failure short-circuits to `workflow-health` triage).
+- **Wait mode** is the explicit opt-in (via `--wait` argument or unambiguous prompt phrasing like "warte bis der Publish durch ist"): re-check `gh run view <id> --json status,conclusion` at the configured interval (≥60 s) until `status=completed` or the configured wall-clock timeout (≤15 min) is reached. Bound caps mirror [`pull-request-merge`](pull-request-merge.md)'s wait mode (interval default 90 s, timeout default 10 min, max retries 10, visible status line per round, failure short-circuits to `workflow-health` triage).
 
 After the run completes (single-shot or wait mode):
 
 - On `conclusion=success`: confirm with the operator that the release is now published (`gh release view <tag> --json isDraft` returns `{"isDraft": false}`) and that `release-cd-refresh-master.yml` has started a downstream run (`gh run list --workflow=release-cd-refresh-master.yml --limit 1`); both checks are part of `release-automation`'s acceptance criteria.
-- On `conclusion=failure`: do **not** retry. Route to `workflow-health` triage — classify per `spec/project/workflow-health/`. The most common cause is a `merge_failed` from `pascalgn/automerge-action` when `release-publish.yml` itself uses `automerge-action`; check the run logs for `mergeResult: 'merge_failed'` per `pull-request-merge` step 7b and route as a stale-pin incident if so.
+- On `conclusion=failure`: do **not** retry. Route to `workflow-health` triage — classify per `spec/project/workflow-health/`. The most common cause is a `merge_failed` from `pascalgn/automerge-action` when `release-publish.yml` itself uses `automerge-action`; check the run logs for `mergeResult: 'merge_failed'` per [`pull-request-merge`](pull-request-merge.md) step 7b and route as a stale-pin incident if so.
 
 ### Wait mode
 
-Activated by `--wait` or unambiguous operator phrasing. Caps mirror `pull-request-merge`:
+Activated by `--wait` or unambiguous operator phrasing. Caps mirror [`pull-request-merge`](pull-request-merge.md):
 
 - Interval ≥ 60 s (default 90 s).
 - Wall-clock timeout ≤ 15 min (default 10 min).

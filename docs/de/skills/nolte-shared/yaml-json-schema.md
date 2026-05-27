@@ -8,12 +8,21 @@ last_updated: generated
 
 # yaml-json-schema
 
-_Authors, audits, refactors, and validates YAML-encoded JSON Schema 2020-12 documents per `spec/project/yaml-json-schema/`. Scaffolds a new `<slug>-v1.0.schema.yaml` with all mandatory skeleton entries in spec order; audits existing `*.schema.yaml` files for dialect drift, missing identity, inline duplicates, and missing property descriptions; refactors duplicates into `$defs`; runs meta-validation and data-conformance validation. Invoke for: "scaffold a JSON Schema in YAML", "audit our schemas", "extract a `$defs` entry", "validate this YAML against a schema", or German equivalents ("YAML-Schema anlegen", "Schemata auditieren", "Daten gegen Schema validieren"). Skip for: OpenAPI/AsyncAPI Schema Objects, JSON-encoded schemas, feature-frontmatter rules (`spec/project/feature/`), or project-structure scaffolding (`project-structure-apply`)._
+> Verfasst, auditiert, refaktoriert und validiert YAML-codierte JSON-Schema-2020-12-Dokumente.
+
+_Authors, audits, refactors, and validates YAML-encoded JSON Schema 2020-12 documents per `spec/project/yaml-json-schema/`. Scaffolds a new `<slug>-v1.0.schema.yaml` with all mandatory skeleton entries in spec order; audits existing `*.schema.yaml` files for dialect drift, missing identity, inline duplicates, and missing property descriptions; refactors duplicates into `$defs`; runs meta-validation and data-conformance validation. Invoke for: "scaffold a JSON Schema in YAML", "audit our schemas", "extract a `$defs` entry", "validate this YAML against a schema", or German equivalents ("YAML-Schema anlegen", "Schemata auditieren", "Daten gegen Schema validieren"). Skip for: OpenAPI/AsyncAPI Schema Objects, JSON-encoded schemas, feature-frontmatter rules (`spec/project/feature/`), or project-structure scaffolding ([`project-structure-apply`](project-structure-apply.md))._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`, `validation`
 - **Quelle:** [skills/yaml-json-schema/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/yaml-json-schema/SKILL.md)
+
+## Anwenden wenn
+
+- you want to scaffold a new JSON Schema in YAML
+- you want to audit existing schemas for dialect drift or missing identity
+- you want to refactor inline duplicates into a $defs entry
+- you want to validate YAML data against a schema
 
 ---
 
@@ -75,7 +84,7 @@ Associate every data file (`*.yaml`, `*.yml`, `*.json`) with its schema via side
 
 #### 6. Lifecycle bump (revise an existing schema)
 
-Diff proposed change; classify as minor (backward-compatible) or major (breaking). Compose the new filename and `$id` segment. Write alongside the previous file; never edit in place for externally-referenced schemas. Surface consumer migration list; delegate release-note entry to `release-notes-curate`.
+Diff proposed change; classify as minor (backward-compatible) or major (breaking). Compose the new filename and `$id` segment. Write alongside the previous file; never edit in place for externally-referenced schemas. Surface consumer migration list; delegate release-note entry to [`release-notes-curate`](release-notes-curate.md).
 
 #### 7. Re-audit
 
@@ -112,7 +121,7 @@ Re-run operations 2, 4, and 5 end-to-end; present a fresh grouped summary. Call 
 - **Never** silence a meta-validation or data-validation failure with `--no-fail`, `|| true`, or equivalent. A failing schema or data file is a stop-and-fix event.
 - **Never** treat absence of an installed validator as a passing gate. Emit an install hint and report the gate as **blocked**.
 - **Never** perform silent writes. Every file change requires explicit per-item user confirmation; every audit finding is presented before any fix is written.
-- **Never** take on `project-structure-apply` work. If the audit reveals that `schemas/` directories are absent at the structural level, the README is missing entirely, or the Taskfile has no `lint` target, stop and route the user to `project-structure-apply` — don't silently scaffold those out of scope.
+- **Never** take on [`project-structure-apply`](project-structure-apply.md) work. If the audit reveals that `schemas/` directories are absent at the structural level, the README is missing entirely, or the Taskfile has no `lint` target, stop and route the user to [`project-structure-apply`](project-structure-apply.md) — don't silently scaffold those out of scope.
 - **Never** modify the spec while applying it. If a real-world need conflicts with `spec/project/yaml-json-schema/`, report it and ask the user to update the spec via the `nolte-shared:spec` skill before proceeding.
 - **Never** invoke this skill on OpenAPI Schema Objects, AsyncAPI Schema Objects, or JSON-encoded JSON Schema documents. Those formats are explicitly out of scope per the spec's §Delimitation.
 

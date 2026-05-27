@@ -5,6 +5,22 @@ distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
 phase: quality
+summary: "Read-only tech-stack drift audit: diffs declared manifest against on-disk repo signals (lockfiles, configs, workflows)."
+summary_de: "Nur-Lese-Tech-Stack-Drift-Audit: diffed deklariertes Manifest gegen On-Disk-Repo-Signale (Lockfiles, Configs, Workflows)."
+use_when:
+  - "you want to audit the tech stack for drift against repo signals"
+  - "you want to diff the declared stack against what is actually used"
+dont_use_when:
+  - situation: "You want to author the manifest"
+    alternative: tech-stack-capture
+  - situation: "You want to render the portfolio inventory"
+    alternative: portfolio-audit
+  - situation: "You want to bump dependency versions"
+    alternative: dependency-audit
+see_also:
+  - tech-stack-capture
+  - portfolio-audit
+  - dependency-audit
 ---
 
 # Tech Stack Drift Reviewer

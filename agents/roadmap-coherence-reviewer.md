@@ -5,6 +5,19 @@ distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
 phase: plan
+summary: "Read-only roadmap-coherence audit against goals, mission, sprints, and features; structured findings list."
+summary_de: "Nur-Lese-Roadmap-Kohärenz-Audit gegen Goals, Mission, Sprints und Features; strukturierte Findings-Liste."
+use_when:
+  - "you want to review project/roadmap.md for coherence"
+  - "you want to find cross-document drift between roadmap, goals, mission, sprints"
+dont_use_when:
+  - situation: "You want to author or transition roadmap items"
+    alternative: roadmap-plan
+  - situation: "You want to enforce the queue-wide detail-level invariant"
+    alternative: roadmap-refine
+see_also:
+  - roadmap-plan
+  - roadmap-refine
 ---
 
 # Roadmap Coherence Reviewer

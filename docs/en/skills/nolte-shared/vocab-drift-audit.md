@@ -8,12 +8,25 @@ last_updated: generated
 
 # vocab-drift-audit
 
+> Audits repository-local Vale vocabularies against the pinned upstream nolte/vale-style release to detect drift.
+
 _Audit repository-local Vale vocabularies against the pinned upstream release of nolte/vale-style to detect drift. Dispatches vocab-drift-scanner agent for the read-only diff step; follow-up actions (delete entries, bump pin, draft upstream PR) stay user-controlled in this skill. Invoke when the user asks to audit the Vale vocabulary, check for vocabulary drift, diff the local vocab against nolte/vale-style, or review whether local Vale terms can be retired. Also handles equivalent German-language requests. Reports local entries that are already accepted upstream (should be deleted) and local entries that aren't yet upstream (should be PR'd to nolte/vale-style). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Tags:** `audit`
 - **Source:** [skills/vocab-drift-audit/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/vocab-drift-audit/SKILL.md)
+
+## Use when
+
+- you want to audit the local Vale vocabulary for drift against upstream
+- you want to find local terms that can be retired (already upstream)
+- you want to find local terms that should be PR'd upstream
+
+## See also
+
+- [`vocab-drift-scanner`](../../agents/nolte-shared/vocab-drift-scanner.md)
+- [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
 
 ---
 
@@ -25,8 +38,8 @@ Operationalises the MUST rule in `spec/project/prose-style/<canonical_language>.
 
 - **Output flows back into the main conversation** — the diff report (duplicates to remove, upstream PR candidates) is the input to follow-up actions the user authorises in the same turn (delete local entries, draft an upstream PR, bump the pinned tag).
 - **Interactivity guards against destructive defaults** — the skill never deletes accepted-locally entries or bumps the pin without explicit user confirmation; that gating is core to the contract and would be lost in an agent's fire-and-forget shape.
-- **Orchestration role** — typical use is one step inside a "tidy the prose tooling before a release" flow that may chain into `pull-request-create` for the upstream contribution; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
-- Counter-dimension considered and accepted: the read-only scan phase is now extracted into `vocab-drift-scanner` (agent) per the Hybrid pattern in `skill-vs-agent`. The follow-up actions (delete entries, bump pin, draft upstream PR) require user confirmation and stay in the skill; the orchestration role keeps the skill form appropriate for this outer flow.
+- **Orchestration role** — typical use is one step inside a "tidy the prose tooling before a release" flow that may chain into [`pull-request-create`](pull-request-create.md) for the upstream contribution; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
+- Counter-dimension considered and accepted: the read-only scan phase is now extracted into [`vocab-drift-scanner`](../../agents/nolte-shared/vocab-drift-scanner.md) (agent) per the Hybrid pattern in `skill-vs-agent`. The follow-up actions (delete entries, bump pin, draft upstream PR) require user confirmation and stay in the skill; the orchestration role keeps the skill form appropriate for this outer flow.
 
 ### User-language policy
 
@@ -41,7 +54,7 @@ Detect the user's language from their message and respond in it. The audit repor
 ### Operations
 
 1. **Locate the Vale config.** Read `.vale.ini` from the repo root first, then from common alternative locations (`docs/.vale.ini`, `.github/.vale.ini`). Extract `StylesPath` and the `nolte/vale-style` pin tag. If either is missing, stop with a clear message.
-2. **Dispatch `vocab-drift-scanner` (Agent) for the read-only diff between the repository's local `accept.txt` files and the pinned upstream `nolte/vale-style` tag. Wait for its drift inventory before proceeding to user-confirmation and follow-up actions.**
+2. **Dispatch [`vocab-drift-scanner`](../../agents/nolte-shared/vocab-drift-scanner.md) (Agent) for the read-only diff between the repository's local `accept.txt` files and the pinned upstream `nolte/vale-style` tag. Wait for its drift inventory before proceeding to user-confirmation and follow-up actions.**
 3. **Render the report** from the agent's drift inventory as Markdown with three sections in this order: `## Duplicates to remove`, `## Upstream PR candidates`, `## Health`. Group findings under each section by local vocabulary file, and show the file path relative to the repo root.
 4. **Offer follow-up actions** in the response (don't execute them without explicit confirmation):
    - Delete the duplicate lines from the local `accept.txt` files and bump the pinned tag in `.vale.ini` if a newer `nolte/vale-style` release is available.

@@ -8,24 +8,44 @@ last_updated: generated
 
 # roadmap-plan
 
-_Adds, retargets, and reshapes roadmap items in `project/roadmap.md` per `spec/project/roadmap/` and `spec/project/mission/`. Invoke when the user asks to \"add a roadmap item\", \"queue work for sprint N\", \"promote roadmap item to fine\", \"retarget R-3 to sprint 9\", \"flip MVP on this item\", or equivalent German-language requests. Validates outcome IDs against `goals.md`, validates `target_sprint` against `project/sprints/`, enforces the lifecycle transitions declared in the roadmap and mission specs (including the asymmetric MVP-flag rule: `false→true` allowed before stabilisation, `true→false` forbidden after the item entered `status: active`), and refuses partial writes that would leave inconsistencies. Don't use to scaffold the roadmap from scratch (use `roadmap-init`) or to enforce the detail-level invariant (use `roadmap-refine`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Fügt Roadmap-Items hinzu, retargetet sie und passt sie an in project/roadmap.md mit vollständiger Lifecycle-Validierung.
+
+_Adds, retargets, and reshapes roadmap items in `project/roadmap.md` per `spec/project/roadmap/` and `spec/project/mission/`. Invoke when the user asks to \"add a roadmap item\", \"queue work for sprint N\", \"promote roadmap item to fine\", \"retarget R-3 to sprint 9\", \"flip MVP on this item\", or equivalent German-language requests. Validates outcome IDs against `goals.md`, validates `target_sprint` against `project/sprints/`, enforces the lifecycle transitions declared in the roadmap and mission specs (including the asymmetric MVP-flag rule: `false→true` allowed before stabilisation, `true→false` forbidden after the item entered `status: active`), and refuses partial writes that would leave inconsistencies. Don't use to scaffold the roadmap from scratch (use [`roadmap-init`](roadmap-init.md)) or to enforce the detail-level invariant (use [`roadmap-refine`](roadmap-refine.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
 - **Tags:** `planning`
 - **Quelle:** [skills/roadmap-plan/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/roadmap-plan/SKILL.md)
 
+## Anwenden wenn
+
+- you want to add a roadmap item or queue work for sprint N
+- you want to retarget an existing roadmap item to another sprint
+- you want to flip the MVP flag on a roadmap item
+
+## Nicht anwenden wenn
+
+- **project/roadmap.md does not exist yet** → [`roadmap-init`](roadmap-init.md)
+- **You want to enforce the queue-wide detail-level invariant** → [`roadmap-refine`](roadmap-refine.md)
+
+## Siehe auch
+
+- [`roadmap-init`](roadmap-init.md)
+- [`roadmap-refine`](roadmap-refine.md)
+- [`feature-decompose`](feature-decompose.md)
+- [`sprint-plan`](sprint-plan.md)
+
 ---
 
 ## Roadmap Plan
 
-Mutates the queue in `project/roadmap.md` per `spec/project/roadmap/<canonical_language>.md` and the cross-cutting MVP semantics declared by `spec/project/mission/<canonical_language>.md`. Owns adds, detail promotions, sprint retargets, MVP flips, and lifecycle transitions on existing items. The detail-level invariant is checked here on every write; the wider per-queue audit belongs to `roadmap-refine`.
+Mutates the queue in `project/roadmap.md` per `spec/project/roadmap/<canonical_language>.md` and the cross-cutting MVP semantics declared by `spec/project/mission/<canonical_language>.md`. Owns adds, detail promotions, sprint retargets, MVP flips, and lifecycle transitions on existing items. The detail-level invariant is checked here on every write; the wider per-queue audit belongs to [`roadmap-refine`](roadmap-refine.md).
 
 ### Why this is a skill, not an agent
 
 - **Mid-flow interactivity is the contract** — every mutation (new item draft, sprint retarget, MVP flip) needs explicit confirmation before it hits disk; an agent's structured-report shape would lose the per-edit gate.
 - **Output flows back into the main conversation** — drafted items, validated cross-references, and lifecycle warnings all need to be readable in the working context so the user can iterate before confirming.
-- **Orchestrator role** — when this skill discovers that the audience artefact or the goals file is missing, it dispatches `audience-identify` or `roadmap-init` and resumes; when fixes spread across the queue, it cooperates with `roadmap-refine`. The orchestrator stays in skill form per `skill-vs-agent`.
+- **Orchestrator role** — when this skill discovers that the audience artefact or the goals file is missing, it dispatches [`audience-identify`](audience-identify.md) or [`roadmap-init`](roadmap-init.md) and resumes; when fixes spread across the queue, it cooperates with [`roadmap-refine`](roadmap-refine.md). The orchestrator stays in skill form per `skill-vs-agent`.
 - Counter-dimension considered: a narrow agent could sharpen the cross-reference validation pass (resolve every `O-<n>` and every `target_sprint` in one shot), but the load-bearing dimension is the per-mutation user dialogue, not the validator's output specialisation — skill wins.
 
 ### User-language policy
@@ -36,7 +56,7 @@ Detect the user's language and respond in it. Item titles, bodies, and any prose
 
 Before any mutation:
 
-- `project/roadmap.md` and `project/goals.md` exist. When either is missing, stop and direct the user to `roadmap-init`.
+- `project/roadmap.md` and `project/goals.md` exist. When either is missing, stop and direct the user to [`roadmap-init`](roadmap-init.md).
 - The roadmap parses end-to-end; a partially-parsed file is rejected because partial writes risk corrupting items the parser couldn't reach.
 - `project/sprints/` is reachable when the requested mutation cites a `target_sprint`; otherwise the cross-reference can't be validated and the mutation is refused.
 - `project/mission.md` may or may not exist. When it exists, every roadmap item carries the `mvp` field; when it does not, items **MAY** carry `mvp: false` uniformly or omit the field entirely. This skill respects whichever shape the file already uses and refuses to mix the two on a single write.
@@ -93,7 +113,7 @@ Every other transition (in particular `proposed → done` and any path back from
 Additional gates:
 
 - `active → done` requires that every feature this item spawned (under `project/features/`) is itself `done`, and that the corresponding sprint has reached `closed` (specifically `closed`, not `cancelled`). When a sprint reaches `cancelled` with features attached, the item remains `active` until the pending features are re-targeted to a successor sprint that itself reaches `closed`. This skill checks the sprint state via `project/sprints/`; when the gate fails, refuse the transition with a verbatim error citing the spec.
-- `proposed → active` is normally driven by `sprint-execute` when a feature on the item enters `in_progress`; this skill performs the transition only when explicitly requested by the user and only when no sprint-side state would be left inconsistent.
+- `proposed → active` is normally driven by [`sprint-execute`](sprint-execute.md) when a feature on the item enters `in_progress`; this skill performs the transition only when explicitly requested by the user and only when no sprint-side state would be left inconsistent.
 
 #### 5. `mvp-flip` — change the `mvp` boolean
 
@@ -120,8 +140,8 @@ When any check fails, **refuse the write entirely**. Do not produce partial outp
 
 - **The MVP-flag rule is asymmetric.** `mvp: false → true` is allowed before stabilisation; `mvp: true → false` is forbidden after the item entered `status: active` (per `spec/project/mission/`). The skill enforces both directions, but the operator routinely confuses the two — flag flips on already-active MVP items get refused with a verbatim error citing the spec section.
 - **`R-<n>` IDs are monotonic across the project's lifetime, never reused** even after deletion. The skill reads the highest existing ID under the roadmap plus the highest deleted ID from `git log -- project/roadmap.md` before assigning. Reusing a retired ID would silently bind two different features to the same ID across the project's history.
-- **`target_sprint` pointing at a `closed` or `cancelled` sprint isn't this skill's violation** — that's a separate lint owned by `roadmap-refine`. The skill surfaces the situation as an informational note and refuses to retarget directly; the operator either accepts the note or runs `roadmap-refine` for the cross-queue fix.
-- **Mission file presence changes the schema.** When `project/mission.md` exists, every roadmap item carries an `mvp: bool` field; when the mission file is absent, the field is silently dropped. Authoring a roadmap item in a mission-less project and later adding the mission flips every item to require a default `mvp: false` — this skill won't backfill silently; the operator runs a follow-up pass with `mission-define` first.
+- **`target_sprint` pointing at a `closed` or `cancelled` sprint isn't this skill's violation** — that's a separate lint owned by [`roadmap-refine`](roadmap-refine.md). The skill surfaces the situation as an informational note and refuses to retarget directly; the operator either accepts the note or runs [`roadmap-refine`](roadmap-refine.md) for the cross-queue fix.
+- **Mission file presence changes the schema.** When `project/mission.md` exists, every roadmap item carries an `mvp: bool` field; when the mission file is absent, the field is silently dropped. Authoring a roadmap item in a mission-less project and later adding the mission flips every item to require a default `mvp: false` — this skill won't backfill silently; the operator runs a follow-up pass with [`mission-define`](mission-define.md) first.
 - **`outcomes` resolution against `goals.md` is strict.** An outcome ID that doesn't exist in `goals.md` blocks the write; there's no "warn-and-continue" mode. When the operator wants a placeholder outcome, they must add the outcome to `goals.md` first via the goals-authoring path; this skill doesn't author outcomes.
 
 ### Examples
@@ -136,7 +156,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ### Hard rules
 
-- **Never** invent outcomes, audience entries, or sprint numbers inline. Missing outcomes route to the goals workflow; missing audiences route to `audience-identify`; non-existent sprint numbers are refused.
+- **Never** invent outcomes, audience entries, or sprint numbers inline. Missing outcomes route to the goals workflow; missing audiences route to [`audience-identify`](audience-identify.md); non-existent sprint numbers are refused.
 - **Never** assign an `R-<n>` ID that has already existed in the file's history (even if currently deleted). IDs are monotonic and never reused.
 - **Never** allow `proposed → done` or any transition back from `cancelled`. Direct `proposed → done` is forbidden because every done item must have been actively worked on.
 - **Never** flip `mvp: true → false` after the item entered `status: active`. The asymmetry is mandated by `spec/project/mission/`.

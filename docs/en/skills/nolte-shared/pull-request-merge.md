@@ -8,6 +8,8 @@ last_updated: generated
 
 # pull-request-merge
 
+> Promotes a draft PR to merged on develop, passing every pull-request-workflow gate.
+
 _Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
@@ -15,11 +17,30 @@ _Promote an open draft pull request on the current branch to a merged state on `
 - **Tags:** `pull-request`
 - **Source:** [skills/pull-request-merge/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/pull-request-merge/SKILL.md)
 
+## Use when
+
+- you want to merge the open draft PR on this branch
+- you want to ship the current PR to develop
+- you want to apply automerge and let the squash-merge workflow land the PR
+
+## Don't use when
+
+- **You want to create or open the PR in the first place** → [`pull-request-create`](pull-request-create.md)
+
+## See also
+
+- [`pull-request-create`](pull-request-create.md)
+
+## Examples
+
+- **Prompt:** Merge the open PR
+  - **Outcome:** Ready PR squash-merged onto develop; merge commit verified.
+
 ---
 
 ## Pull Request Merge
 
-Promotes an open draft pull request (typically the one opened by `pull-request-create`) to a merged state on `develop`. This skill is the counterpart to `pull-request-create`: that skill opens the PR; this skill lands it. It honors `spec/project/pull-request-workflow/<canonical_language>.md`, `spec/project/branching-model/<canonical_language>.md`, and `spec/project/workflow-health/<canonical_language>.md` end-to-end: `enforce_admins: true` is respected, `--squash` is the only merge strategy, and failing required checks route to workflow-health triage rather than to a waiver.
+Promotes an open draft pull request (typically the one opened by [`pull-request-create`](pull-request-create.md)) to a merged state on `develop`. This skill is the counterpart to [`pull-request-create`](pull-request-create.md): that skill opens the PR; this skill lands it. It honors `spec/project/pull-request-workflow/<canonical_language>.md`, `spec/project/branching-model/<canonical_language>.md`, and `spec/project/workflow-health/<canonical_language>.md` end-to-end: `enforce_admins: true` is respected, `--squash` is the only merge strategy, and failing required checks route to workflow-health triage rather than to a waiver.
 
 ### Why this is a skill, not an agent
 
@@ -69,7 +90,7 @@ Candidate sources:
 
 - **Type label** from the PR title's Conventional-Commits prefix: `feat` → candidates `type:feat`, `kind:feat`, `feat`; same pattern for `fix`, `chore`, `docs`. Take the first candidate that exists.
 - **Area labels** from touched paths (case-insensitive match against existing labels):
-  - paths under `spec/` → candidates `area:spec`, `spec`
+  - paths under `spec/` → candidates `area:spec`, [`spec`](spec.md)
   - paths under `skills/` → candidates `area:skill`, `skills`
   - paths under `agents/` → candidates `area:agent`, `agents`
   - paths under `.github/workflows/` or `.github/settings.yml` → candidates `cicd`
@@ -221,7 +242,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** use a merge strategy other than `--squash`. Squash-merge is mandated by the `pull-request-workflow` spec.
 - **Never** create a new GitHub label from this skill. Label candidates that don't exist in the repository are reported as a gap, not silently added.
 - **Never** skip the `review` skill delegation. A final review is the cheapest pre-merge gate; only an explicit user override bypasses it.
-- **Never** rebase or merge `develop` into the feature branch silently to fix a lag. Branch-freshness gaps return control to the user, consistent with `pull-request-create`.
+- **Never** rebase or merge `develop` into the feature branch silently to fix a lag. Branch-freshness gaps return control to the user, consistent with [`pull-request-create`](pull-request-create.md).
 - **Never** poll, sleep, or loop waiting for checks to complete **unless the user has opted in to wait mode** (see "Wait mode" below). Outside wait mode, report the outstanding state and stop; the user re-invokes the skill when ready. Inside wait mode, polling is permitted but bounded by the documented retry / interval / timeout caps and **never** silently in the background — every wait round produces a visible status line.
 - **Never** treat the `automerge.yaml` workflow's `SUCCESS` conclusion as proof the merge happened. `pascalgn/automerge-action` exits 0 on `mergeResult: 'merge_failed'`. Always confirm `state == MERGED` on the PR itself (step 7a), and when the PR is still open with green checks, audit the action's logs for `merge_failed` (step 7b) before declaring the merge complete.
 - **Never** delete the remote feature branch as part of the automatic merge flow. Post-merge branch cleanup is the platform's job via `delete_branch_on_merge: true`; a manual `gh api -X DELETE` call is only a one-off catch-up and requires explicit user confirmation.

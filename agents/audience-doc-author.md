@@ -5,6 +5,25 @@ distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 tags: [audience, prose]
 phase: design
+summary: "Drafts or refines audience-tailored documentation (README, release notes, MkDocs pages) against an existing audience artifact."
+summary_de: "Verfasst oder überarbeitet audience-zugeschnittene Doku (README, Release-Notes, MkDocs-Seiten) gegen ein vorhandenes Audience-Artefakt."
+use_when:
+  - "you want to draft a doc tailored to specific audiences"
+  - "you want to refactor an existing doc to close audience gaps"
+  - "you want spec-conforming prose for a doc-type with a governing spec"
+dont_use_when:
+  - situation: "No audience artifact exists yet for the target context"
+    alternative: audience-identify
+  - situation: "You want to author a plugin skill or agent"
+    alternative: claude-plugin-developer
+  - situation: "You want to author a spec rather than docs"
+    alternative: spec
+  - situation: "You want to scaffold a greenfield README"
+    alternative: readme-structure-apply
+see_also:
+  - audience-identify
+  - readme-structure-apply
+  - lektorat-apply
 ---
 
 # Audience Documentation Author

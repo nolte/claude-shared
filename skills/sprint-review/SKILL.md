@@ -3,6 +3,22 @@ name: sprint-review
 description: Close an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into `release-notes-curate` and `release-publish-trigger` (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding, release]
 phase: close-release
+summary: "Closes an active sprint per the sprint spec: validates the deployable artefact and records the value-delivery audit trail."
+summary_de: "Schließt einen aktiven Sprint gemäß Sprint-Spec: validiert das Deploy-Artefakt und protokolliert den Value-Delivery-Audit-Trail."
+use_when:
+  - "you want to close, finish, or ship an active sprint"
+  - "you want to validate the sprint's artifact_ref against the release-artifact spec"
+  - "you want the optional chain into release-notes-curate and release-publish-trigger"
+dont_use_when:
+  - situation: "You want to drive day-to-day mechanics of the sprint"
+    alternative: sprint-execute
+  - situation: "You want to plan or open a new sprint"
+    alternative: sprint-plan
+see_also:
+  - sprint-execute
+  - sprint-plan
+  - release-notes-curate
+  - release-publish-trigger
 resumable: true
 ---
 

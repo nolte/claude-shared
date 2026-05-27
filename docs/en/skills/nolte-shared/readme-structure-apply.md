@@ -8,12 +8,32 @@ last_updated: generated
 
 # readme-structure-apply
 
-_Audits the repository's `README.md` against the canonical-language file under spec/project/readme-structure/ and, with per-item user approval, scaffolds or patches the file: H1 + tagline, CI badges, six required sections in order (Purpose, Usage, Structure, Related repositories, Status, License), the consumer-first ordering rule, the ≤200-line length budget, and link rules. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fix). Invoke when the user asks to apply, audit, scaffold, or patch the README against the spec; also handles equivalent German-language requests. Don't use for docs/ page content (`audience-doc-author`), MkDocs nav (`mkdocs-structure-apply`), Vale prose linting (`prose-vale-curator`), or the audience artefact (`audience-identify`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Audits, scaffolds, or patches a repository's README.md against the readme-structure spec (six required sections, ≤200 lines).
+
+_Audits the repository's `README.md` against the canonical-language file under spec/project/readme-structure/ and, with per-item user approval, scaffolds or patches the file: H1 + tagline, CI badges, six required sections in order (Purpose, Usage, Structure, Related repositories, Status, License), the consumer-first ordering rule, the ≤200-line length budget, and link rules. Three operations: `audit` (read-only conformance report), `scaffold` (greenfield), `patch` (additive fix). Invoke when the user asks to apply, audit, scaffold, or patch the README against the spec; also handles equivalent German-language requests. Don't use for docs/ page content ([`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)), MkDocs nav ([`mkdocs-structure-apply`](mkdocs-structure-apply.md)), Vale prose linting ([`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)), or the audience artefact ([`audience-identify`](audience-identify.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`
 - **Source:** [skills/readme-structure-apply/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/readme-structure-apply/SKILL.md)
+
+## Use when
+
+- you want to audit an existing README against the spec
+- you want to scaffold a fresh README for a new repo
+- you want to additively patch a missing section into an existing README
+
+## Don't use when
+
+- **You want to author docs/ page content rather than the README** → [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
+- **You want MkDocs nav scaffolding** → [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- **You want Vale prose linting** → [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
+
+## See also
+
+- [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
+- [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
 
 ---
 
@@ -28,9 +48,9 @@ When the spec isn't present in the target repository, fall back to the copy ship
 Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a skill because:
 
 - **Mid-flow user approval is the contract.** Every section addition, badge change, and tagline rewrite is written only with explicit per-change confirmation; the README is the repository's most visible artefact and the user's voice in it matters.
-- **Persistent on-disk output that flows back into the main conversation.** The audit table, the per-section proposals, and the post-edit Vale check (delegated to `prose-vale-curator`) all surface in the conversation so the user can decide.
-- **Orchestrator pattern.** The skill dispatches `audience-doc-author` for the tagline / Purpose / Usage prose authoring once the section containers exist, dispatches `prose-vale-curator` to Vale-check the result, and routes to `audience-identify` when the README needs an `## Audiences` section but the audience artefact doesn't exist yet; per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
-- **Precedent.** Follows the same audit + scaffold + patch shape as `mkdocs-structure-apply`, `project-structure-apply`, `docs-audience-tracks-apply`; portfolio-wide consistency favours the same artefact type.
+- **Persistent on-disk output that flows back into the main conversation.** The audit table, the per-section proposals, and the post-edit Vale check (delegated to [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)) all surface in the conversation so the user can decide.
+- **Orchestrator pattern.** The skill dispatches [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) for the tagline / Purpose / Usage prose authoring once the section containers exist, dispatches [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md) to Vale-check the result, and routes to [`audience-identify`](audience-identify.md) when the README needs an `## Audiences` section but the audience artefact doesn't exist yet; per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
+- **Precedent.** Follows the same audit + scaffold + patch shape as [`mkdocs-structure-apply`](mkdocs-structure-apply.md), [`project-structure-apply`](project-structure-apply.md), [`docs-audience-tracks-apply`](docs-audience-tracks-apply.md); portfolio-wide consistency favours the same artefact type.
 - **Counter-dimension considered.** A narrower agent could specialise on README authoring as a bounded one-shot, but the load-bearing dimension here is the per-section approval dialogue, not the prose authoring (which is delegated); skill wins.
 
 ### User-language policy
@@ -64,7 +84,7 @@ Before doing anything:
 
 Walk through the spec's Acceptance Criteria one item at a time, classify each finding as `pass`, `missing`, or `drift`. Group findings by spec area:
 
-- **File and language**: `README.md` at repo root, English-only, passes Vale (delegate the Vale check to `prose-vale-curator` rather than running Vale here — surface the count, not the alerts).
+- **File and language**: `README.md` at repo root, English-only, passes Vale (delegate the Vale check to [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md) rather than running Vale here — surface the count, not the alerts).
 - **Header block**: single `# <repo-name>` H1 matching the GitHub repo name, CI badges under the H1 for every merge-gating workflow, one-to-three-sentence tagline naming what the repo is and who it's for (no marketing language), primary proper nouns linked on first mention, tagline ≤ 280 characters.
 - **Required sections**: `## Purpose`, `## Usage` (or `## Installation` or `## Getting started`), `## Structure` (when layout non-obvious), `## Related repositories` (when peers exist), `## Status`, `## License` (when `LICENSE` ships). Verify presence and order; report sections in wrong order as `drift`.
 - **Consumer-first ordering**: consumer-facing sections (`Purpose`, `Usage`) precede contributor sections (`Structure`, `Status`, `License`); dogfooding instructions live as `###` sub-sections of `## Usage`, never as top-level sections.
@@ -80,29 +100,29 @@ For each step below, confirm with the user per section before writing.
 - Create `README.md` at repo root with the following structure:
   - `# <repo-name>` H1 — derived from the directory name or the `name:` field of `.claude-plugin/plugin.json` / `pyproject.toml` / `package.json`.
   - CI badge block under the H1 — one badge per workflow under `.github/workflows/` that gates merges to `develop` (detected via `if: github.ref == 'refs/heads/develop'` or `branches: [develop]`). One badge per line.
-  - Tagline — propose a single one-sentence stub with two `# TODO` markers: the deliverable shape and the intended consumer audience. The audience marker routes to `audience-identify` when the artefact exists, otherwise to the user.
-  - `## Purpose` — empty body with a placeholder paragraph ("Replace this with two to six bullets describing the problem this repository solves."); dispatch `audience-doc-author` for the body authoring as a follow-up.
+  - Tagline — propose a single one-sentence stub with two `# TODO` markers: the deliverable shape and the intended consumer audience. The audience marker routes to [`audience-identify`](audience-identify.md) when the artefact exists, otherwise to the user.
+  - `## Purpose` — empty body with a placeholder paragraph ("Replace this with two to six bullets describing the problem this repository solves."); dispatch [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) for the body authoring as a follow-up.
   - `## Usage` (default) or `## Installation` / `## Getting started` (when the repository type suggests one of the alternatives) — empty body with a placeholder pointing at the chosen install path, plus a `### Local development` sub-section stub when the repo carries a `Taskfile.yml`.
   - `## Structure` (only when the repo layout is non-obvious — Claude Code plugins, multi-component monorepos, HA integrations) — empty `tree`-style placeholder with `# TODO` markers for the per-entry comments.
   - `## Related repositories` (only when neighbouring portfolio repos exist) — empty bullet list with `# TODO` markers for peer-link + description.
   - `## Status` — single-line placeholder ("Early stage." or similar) with a `# TODO` marker.
   - `## License` — `[<SPDX identifier>](LICENSE)` link plus copyright holder line, both derived from the `LICENSE` file's first few lines.
-- After scaffolding, route the user to `audience-doc-author` for the Purpose / Usage / Structure body authoring and to `prose-vale-curator` for the final Vale check.
+- After scaffolding, route the user to [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) for the Purpose / Usage / Structure body authoring and to [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md) for the final Vale check.
 
 #### 3. `patch` (additive: `README.md` present)
 
 For each `missing` or `drift` finding from a prior audit, propose the exact change and ask the user to approve it before writing. Don't bundle unrelated changes into a single approval step.
 
-- **Missing required section**: propose the section header with a placeholder body and a `# TODO` marker for the prose; route the user to `audience-doc-author` for the body.
+- **Missing required section**: propose the section header with a placeholder body and a `# TODO` marker for the prose; route the user to [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) for the body.
 - **Required sections in wrong order**: propose the reorder as a single edit; show the before / after section sequence inline.
 - **H1 doesn't match repo name**: propose the fix; verify against the GitHub repository name via the local `.git/config` `remote.origin.url`.
 - **Missing or stale CI badge**: propose the badge addition / removal; the badge must point at `github.com/<org>/<repo>/actions/workflows/<file>.yml` and the workflow file must exist in `.github/workflows/`.
 - **`LICENSE` linked via absolute URL**: propose the relative-link replacement.
 - **Tagline > 280 characters or contains marketing language**: surface the violation and propose a short rewrite; the user approves the wording.
-- **Total length > ~200 lines**: surface which sections exceed; propose moving sub-content into `docs/` and route the user to `mkdocs-structure-apply` or `audience-doc-author` as appropriate.
+- **Total length > ~200 lines**: surface which sections exceed; propose moving sub-content into `docs/` and route the user to [`mkdocs-structure-apply`](mkdocs-structure-apply.md) or [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) as appropriate.
 - **Dogfooding section at top-level**: propose moving it into `## Usage` as a `### Local development` sub-section.
 
-After every successful write, route the user to `prose-vale-curator` for the post-edit Vale check; never claim "Vale-clean" without dispatching the curator.
+After every successful write, route the user to [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md) for the post-edit Vale check; never claim "Vale-clean" without dispatching the curator.
 
 ### Output contract
 
@@ -114,7 +134,7 @@ The skill returns to the user, in this order:
 4. **Planned edits** (for `scaffold` / `patch`): list of changes, one line per change, with rationale linking back to the spec line.
 5. **Approval gate** (for `scaffold` / `patch`): explicit user-decision point; nothing is written until the user confirms.
 6. **Applied edits** (after approval): the absolute path of the written file, plus a per-section diff summary.
-7. **Caller follow-ups**: explicit list — dispatch `audience-doc-author` to fill in `# TODO` body markers, dispatch `prose-vale-curator` to Vale-check the result, route to `audience-identify` if the README needs an audience reference but the artefact doesn't exist, commit the edits, open the PR via `pull-request-create`.
+7. **Caller follow-ups**: explicit list — dispatch [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) to fill in `# TODO` body markers, dispatch [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md) to Vale-check the result, route to [`audience-identify`](audience-identify.md) if the README needs an audience reference but the artefact doesn't exist, commit the edits, open the PR via [`pull-request-create`](pull-request-create.md).
 
 ### Gotchas
 
@@ -128,16 +148,16 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ### Hard rules
 
-1. **Never** author body prose beyond a single placeholder paragraph plus `# TODO` markers. Body authoring is delegated to `audience-doc-author`.
+1. **Never** author body prose beyond a single placeholder paragraph plus `# TODO` markers. Body authoring is delegated to [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md).
 2. **Never** produce a non-English `README.md` (no `README.de.md`, no inline German prose). The spec's §File and language MUST is hard.
 3. **Never** silently break the consumer-first ordering rule. When a patch would move a contributor section above a consumer section, stop and explain.
 4. **Never** auto-publish or auto-fetch a primary-proper-noun link (Claude Code, Home Assistant, Vale, …). Surface the link as a `# TODO` marker and ask the user to provide the canonical upstream URL.
 5. **Always** read the spec at runtime: prefer the target repo's `spec/project/readme-structure/<canonical_language>.md`; fall back to the copy shipped by the `nolte-shared` plugin only when the target repo lacks one.
-6. **Always** delegate the Vale check to `prose-vale-curator` after a scaffold or patch; never claim "Vale-clean" without dispatching the curator.
+6. **Always** delegate the Vale check to [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md) after a scaffold or patch; never claim "Vale-clean" without dispatching the curator.
 
 ### Sources
 
 - `spec/project/readme-structure/` — the canonical authoritative spec this skill operationalises
-- `spec/project/prose-style/` — the Vale rule set the resulting README must pass; this skill delegates the actual check to `prose-vale-curator`
+- `spec/project/prose-style/` — the Vale rule set the resulting README must pass; this skill delegates the actual check to [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
 - `spec/project/audience-identification/` — the audience artefact the README references for "intended consumers"
 - `spec/claude/skill-vs-agent/` — the skill-vs-agent decision dimensions that justify this artefact as a skill, not an agent

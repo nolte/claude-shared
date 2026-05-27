@@ -3,6 +3,21 @@ name: roadmap-refine
 description: "Enforces the detail-level invariant on `project/roadmap.md` per `spec/project/roadmap/` §Detail-level convention. Invoke when the user asks to \"refine the roadmap\", \"check roadmap detail levels\", \"is the roadmap ready for the next sprint\", \"promote roadmap items to fine\", or equivalent German-language requests. Resolves the current and next sprint by reading `project/sprints/`, walks every roadmap item, emits a structured violation record on stderr for every item with `target_sprint` equal to the current or next sprint and `detail` other than `fine`, exits non-zero when any violation is open, and walks per-item fix proposals one at a time. Don't use to add items, retarget sprints, or flip MVP flags (use `roadmap-plan`); don't use to scaffold the roadmap from scratch (use `roadmap-init`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [audit]
 phase: plan
+summary: "Enforces the detail-level invariant on project/roadmap.md (current and next sprint items must be 'fine')."
+summary_de: "Erzwingt die Detail-Level-Invariante in project/roadmap.md (Items für aktuellen und nächsten Sprint müssen 'fine' sein)."
+use_when:
+  - "you want to check roadmap items are at the right detail level for the next sprint"
+  - "you want to promote roadmap items from coarse/medium to fine"
+  - "you want to verify the roadmap is ready for sprint planning"
+dont_use_when:
+  - situation: "You want to add or retarget items"
+    alternative: roadmap-plan
+  - situation: "project/roadmap.md does not exist yet"
+    alternative: roadmap-init
+see_also:
+  - roadmap-plan
+  - roadmap-init
+  - sprint-plan
 resumable: true
 ---
 

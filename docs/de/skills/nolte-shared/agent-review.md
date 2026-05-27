@@ -8,12 +8,28 @@ last_updated: generated
 
 # agent-review
 
+> Prüft einen Claude-Code-Agent gegen die Spec und erzeugt einen umsetzbaren Review-Plan unter .audits/agent-review/.
+
 _Review a Claude Code agent against spec/claude/agent-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/agent-review/ keyed by the target agent's name. Invoke when the user asks "review this agent", "audit a specific agent file", "check whether this agent is spec-compliant", or "agent review for a specific agent". Also handles closing an existing review plan once every item is addressed — "close the agent review plan for a specific agent". Also handles equivalent German-language requests. Do NOT use for skill review (use skill-review) or for pull-request-level review (`review` skill). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
 - **Tags:** `review`
 - **Quelle:** [skills/agent-review/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/agent-review/SKILL.md)
+
+## Anwenden wenn
+
+- you want to review a specific agent file for spec compliance
+- you want an actionable review plan for an agent
+- you want to close an existing agent-review plan once every item is addressed
+
+## Nicht anwenden wenn
+
+- **You want to review a skill (SKILL.md), not an agent** → [`skill-review`](skill-review.md)
+
+## Siehe auch
+
+- [`skill-review`](skill-review.md)
 
 ---
 
@@ -35,9 +51,9 @@ This skill also triggers on equivalent German-language requests, including:
 
 - **Mid-flow interactivity** — scope confirmation (which agent, narrowed aspect?) and item-closure decisions happen with the user in the loop; an agent's fire-and-forget contract would lose that.
 - **Persistent on-disk output is the contract** — the `review-plan` artifact under `.audits/` must survive past the current turn and be worked off incrementally; skills own persistent state, agents return structured reports.
-- **Orchestrator, potentially chains to other skills** — after the plan is closed, the user may run `pull-request-create` in the same thread; the skill-orchestrates pattern (see `skill-vs-agent`) defaults the orchestrator to skill form.
+- **Orchestrator, potentially chains to other skills** — after the plan is closed, the user may run [`pull-request-create`](pull-request-create.md) in the same thread; the skill-orchestrates pattern (see `skill-vs-agent`) defaults the orchestrator to skill form.
 - Counter-dimension considered: *context-window impact* from reading three specs plus the target agent would bias toward an agent, but an agent file is a single markdown and each spec is one file — the read volume is bounded and the user wants visibility.
-- This skill is the sibling of `skill-review`; the two share the `review-plan` output shape and differ only in which authoring spec drives the checks.
+- This skill is the sibling of [`skill-review`](skill-review.md); the two share the `review-plan` output shape and differ only in which authoring spec drives the checks.
 
 ### User-language policy
 

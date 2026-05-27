@@ -3,6 +3,19 @@ name: dependency-audit
 description: Scan the current project's dependency tree for known vulnerabilities (CVEs) and, when requested, license-compliance issues. Dispatches dependency-audit-scanner agent for the read-only scan step. Detects project kind from `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` for Python and `package.json` / `package-lock.json` / `pnpm-lock.yaml` / `yarn.lock` for Node, runs the appropriate auditors, and produces a severity-sorted report with direct vs transitive attribution. Invoke when the user asks to "audit dependencies," "run a CVE scan," "check for vulnerable packages," "check license compliance," "run pip-audit," "run npm audit," or equivalent German-language requests. Also handles a pre-PR / pre-release dependency gate. Don't use for upgrading dependencies (that's an author's decision) or for writing Renovate configs (that's `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [dependency]
 phase: quality
+summary: "Scans the project's dependency tree for known CVEs and (optionally) license-compliance issues; severity-sorted report."
+summary_de: "Scannt den Dependency-Baum des Projekts nach bekannten CVEs und optional Lizenz-Compliance-Issues; Severity-sortierter Report."
+use_when:
+  - "you want to run a CVE scan on the current project"
+  - "you want a pre-PR or pre-release dependency-vulnerability gate"
+  - "you want to check license compliance across direct and transitive dependencies"
+dont_use_when:
+  - situation: "You want to upgrade dependencies (that is an author's decision)"
+    alternative: project-structure-apply
+  - situation: "You want to write or update Renovate config"
+    alternative: project-structure-apply
+see_also:
+  - dependency-audit-scanner
 resumable: true
 ---
 

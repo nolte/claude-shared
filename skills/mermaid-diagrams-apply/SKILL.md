@@ -17,6 +17,22 @@ description: >-
   `spec/claude/resumable-work/`.
 tags: [scaffolding, audit]
 phase: design
+summary: "Audits and wires up MkDocs Mermaid setup; helps an author add a single Mermaid diagram with the mandatory source marker."
+summary_de: "Auditiert und verdrahtet das MkDocs-Mermaid-Setup; hilft beim Hinzufügen eines Mermaid-Diagramms mit verpflichtendem Source-Marker."
+use_when:
+  - "you want to wire up Mermaid in MkDocs (superfences, pinned pymdown-extensions)"
+  - "you want to audit the Mermaid setup against the spec"
+  - "you want to draft a new flowchart or sequence diagram with the mandatory marker"
+dont_use_when:
+  - situation: "You want general MkDocs scaffolding (not Mermaid-specific)"
+    alternative: mkdocs-structure-apply
+  - situation: "You want to author or audit a spec rather than a diagram"
+    alternative: spec
+  - situation: "You want a freshness audit across docs"
+    alternative: docs-freshness-checker
+see_also:
+  - mkdocs-structure-apply
+  - mermaid-diagram-reviewer
 resumable: true
 ---
 

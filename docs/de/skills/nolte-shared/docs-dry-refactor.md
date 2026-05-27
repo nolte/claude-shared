@@ -8,12 +8,31 @@ last_updated: generated
 
 # docs-dry-refactor
 
-_Operationalises spec/project/mkdocs-structure/ §Snippet inclusion (DRY). Detects paragraph duplication across MkDocs pages and, with per-snippet user approval, extracts duplicates into `mkdocs-include-markdown-plugin` includes pointing at a canonical source (preferring a live source file over a dedicated per-language _snippets/ folder). Three operations: `scan` (read-only ranked findings), `propose` (surface canonical source, markers, include directives for a target snippet ID, await approval), `apply` (write markers, replace consumer blocks, verify via `mkdocs build --strict`). Invoke when the user asks to dedupe, DRY-refactor, extract snippets, or factor out duplicated MkDocs content; also handles equivalent German-language requests. Don't use for non-MkDocs markdown trees, single-file snippet authoring, prose linting (`prose-vale-curator`), structural scaffolding (`mkdocs-structure-apply`), or drift detection (`docs-freshness-checker`). Supports resume on re-invocation per `spec/claude/resumable-work/`._
+> Erkennt duplizierte MkDocs-Absätze und extrahiert sie in mkdocs-include-markdown-plugin-Snippets.
+
+_Operationalises spec/project/mkdocs-structure/ §Snippet inclusion (DRY). Detects paragraph duplication across MkDocs pages and, with per-snippet user approval, extracts duplicates into `mkdocs-include-markdown-plugin` includes pointing at a canonical source (preferring a live source file over a dedicated per-language _snippets/ folder). Three operations: `scan` (read-only ranked findings), `propose` (surface canonical source, markers, include directives for a target snippet ID, await approval), `apply` (write markers, replace consumer blocks, verify via `mkdocs build --strict`). Invoke when the user asks to dedupe, DRY-refactor, extract snippets, or factor out duplicated MkDocs content; also handles equivalent German-language requests. Don't use for non-MkDocs markdown trees, single-file snippet authoring, prose linting ([`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)), structural scaffolding ([`mkdocs-structure-apply`](mkdocs-structure-apply.md)), or drift detection ([`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md)). Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Tags:** `scaffolding`, `audit`
 - **Quelle:** [skills/docs-dry-refactor/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/docs-dry-refactor/SKILL.md)
+
+## Anwenden wenn
+
+- you want to DRY-refactor duplicated content across MkDocs pages
+- you want to extract a paragraph into a shared snippet with a canonical source
+- you want a read-only ranked finding list of likely-duplicate paragraphs
+
+## Nicht anwenden wenn
+
+- **You want prose-style linting rather than DRY refactoring** → [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
+- **You need MkDocs scaffolding rather than content refactoring** → [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- **You need drift detection across docs** → [`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md)
+
+## Siehe auch
+
+- [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- [`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md)
 
 ---
 
@@ -29,8 +48,8 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 - **Mid-flow per-snippet user approval is the contract.** Each candidate extraction (canonical source choice, marker placement, every consumer's include directive) is a separate user decision; an agent's fire-and-forget shape would collapse the per-snippet approvals into a single opaque report.
 - **Persistent on-disk output that flows back into the main conversation.** The findings table, the per-finding proposal, and the build-verification output all surface in the conversation so the user can decide; isolating them in a structured-report boundary would obscure the per-snippet approval surface.
-- **Orchestrator pattern.** The skill may later dispatch the `audience-doc-author` agent for snippet-body authoring (when no canonical source exists and a fresh dedicated snippet file is needed) or chain to `mkdocs-structure-apply audit` to verify the §Snippet inclusion (DRY) acceptance items post-extract; per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
-- **Precedent.** Follows the same audit-then-act shape as `mkdocs-structure-apply` and `project-structure-apply`; portfolio-wide consistency (`spec/claude/skill-vs-agent/` §Portfolio-wide consistency) favours the same artifact type and the shared `scaffolding, audit` tag cluster.
+- **Orchestrator pattern.** The skill may later dispatch the [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) agent for snippet-body authoring (when no canonical source exists and a fresh dedicated snippet file is needed) or chain to `mkdocs-structure-apply audit` to verify the §Snippet inclusion (DRY) acceptance items post-extract; per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
+- **Precedent.** Follows the same audit-then-act shape as [`mkdocs-structure-apply`](mkdocs-structure-apply.md) and [`project-structure-apply`](project-structure-apply.md); portfolio-wide consistency (`spec/claude/skill-vs-agent/` §Portfolio-wide consistency) favours the same artifact type and the shared `scaffolding, audit` tag cluster.
 - **Counter-dimension considered.** A narrower agent could specialise on the duplicate-detection scan and gain on context-window protection during large docs trees, but the high-impact part is the per-snippet approval dialogue and the build-verification loop, not the scan itself; skill wins.
 
 ### User-language policy
@@ -119,7 +138,7 @@ The skill returns to the user, in this order:
 5. **Approval gate** (for `propose`): explicit user-decision point; nothing is written until the user confirms.
 6. **Applied edits** (for `apply`): list of files actually written, with absolute paths and the marker comments inserted (one row per file).
 7. **Build verification** (for `apply`): `mkdocs build --strict` exit code; on failure the raw stderr block verbatim plus the revert log.
-8. **Caller follow-ups**: explicit list — commit the working-tree edits, optionally re-run `scan` to surface residual findings, optionally route to `mkdocs-structure-apply audit` to verify §Snippet inclusion (DRY) conformance end-to-end, open the PR via `pull-request-create`. Never bump the plugin version, commit, push, tag, or open PRs from this skill.
+8. **Caller follow-ups**: explicit list — commit the working-tree edits, optionally re-run `scan` to surface residual findings, optionally route to `mkdocs-structure-apply audit` to verify §Snippet inclusion (DRY) conformance end-to-end, open the PR via [`pull-request-create`](pull-request-create.md). Never bump the plugin version, commit, push, tag, or open PRs from this skill.
 
 ### Resumability
 
@@ -135,8 +154,8 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 6. **Never touch generated catalog pages.** `docs/<lang>/skills/SUMMARY.md`, `docs/<lang>/skills/<plugin>/<name>.md`, `docs/<lang>/agents/<plugin>/<name>.md`, `docs/<lang>/tags.md` are emitted by the catalog generator and are excluded from `scan`. The skill never rewrites or proposes extractions over them.
 7. **Never break existing include chains.** Pages already containing `{% include-markdown … %}` are flagged as "partial DRY (existing include)" hints in `scan` and skipped from new findings; the skill never overlays a new include over an existing one.
 8. **Prefer live-source canonical files over dedicated snippet files.** When the duplicated content originates from a non-docs file (CONTRIBUTING.md, `pyproject.toml`, a workflow step name, a source file), surface that file as the canonical source. Only when no such source exists, propose a new `docs/<lang>/_snippets/<topic>.md`.
-9. **Never bump versions, commit, push, tag releases, or open pull requests.** The skill produces working-tree edits only; lifecycle is owned by `pull-request-create`, `pull-request-merge`, and `release-publish-trigger`.
-10. **Never dispatch the `Skill` tool recursively into this skill.** The skill **MAY** orchestrate the `audience-doc-author` agent for snippet-body authoring and chain to the `mkdocs-structure-apply` skill (audit mode) for post-extract verification at the explicit hand-off points named in the Output contract; silent recursion isn't allowed.
+9. **Never bump versions, commit, push, tag releases, or open pull requests.** The skill produces working-tree edits only; lifecycle is owned by [`pull-request-create`](pull-request-create.md), [`pull-request-merge`](pull-request-merge.md), and [`release-publish-trigger`](release-publish-trigger.md).
+10. **Never dispatch the `Skill` tool recursively into this skill.** The skill **MAY** orchestrate the [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md) agent for snippet-body authoring and chain to the [`mkdocs-structure-apply`](mkdocs-structure-apply.md) skill (audit mode) for post-extract verification at the explicit hand-off points named in the Output contract; silent recursion isn't allowed.
 11. **Dedicated snippet files are fragments, not pages.** They **MUST NOT** carry per-page frontmatter (`title`, `audience`, `last_updated`) and **MUST** live under a `_`-prefixed folder inside `docs/<lang>/` (typically `docs/<lang>/_snippets/`) so MkDocs doesn't render them in the nav.
 12. **Marker format is consistent and content-named.** Start and end markers use the canonical source's native comment syntax (`<!-- docs-include-start: <name> -->` for HTML and Markdown, `# docs-include-start: <name>` for YAML and Python, `// docs-include-start: <name>` for JSON-with-comments). Marker names are kebab-case after the content they bracket (`lint-job`, `release-checklist`), never positional (`section-1`, `section-2`).
 13. **Always** apply snippet extractions, marker insertions, and consumer-page rewrites symmetrically across every language tree configured in `spec/.spec-config.yml`'s `languages` list, per `spec/project/docs-multilingual-authoring/` §Authoring protocol. A language-neutral snippet (a code excerpt, a YAML fragment, a CLI transcript) **MAY** live in only one language tree and be included from every other (the spec's preferred shape for non-prose content); a translatable-prose snippet **MUST** exist once per language under `docs/<lang>/_snippets/`. Rewriting a consumer page in `docs/<canonical_language>/` without applying the same include directive to every counterpart in `docs/<other_language>/` is a violation.

@@ -3,6 +3,17 @@ name: github-issue-templates-apply
 description: Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: design
+summary: "Scaffolds spec-conformant GitHub Issue Forms (.github/ISSUE_TEMPLATE/) tailored to project type and audience."
+summary_de: "Scaffoldet spec-konforme GitHub-Issue-Forms (.github/ISSUE_TEMPLATE/), zugeschnitten auf Projekttyp und Audience."
+use_when:
+  - "you want to scaffold GitHub issue forms for this repo"
+  - "you want bug-report and feature-request templates aligned with the audience"
+  - "you want project-type-specific extra issue templates"
+dont_use_when:
+  - situation: "You want generic .github/ scaffolding rather than just issue templates"
+    alternative: project-structure-apply
+see_also:
+  - project-structure-apply
 resumable: true
 ---
 

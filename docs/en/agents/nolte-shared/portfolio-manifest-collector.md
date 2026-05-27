@@ -8,6 +8,8 @@ last_updated: generated
 
 # portfolio-manifest-collector
 
+> Read-only inventory collector: gathers per-repo project/portfolio.yml manifests across nolte/*.
+
 _Read-only inventory collector dispatched by portfolio-audit to gather per-repo project/portfolio.yml manifests across all nolte portfolio members. Invoke when the portfolio-audit skill needs to collect portfolio manifests, gather tech-stack inventory from all nolte repos, or list portfolio.yml across repos. Don't use to author or modify portfolio.yml files (use portfolio-audit Bootstrap), to detect duplicates or gaps (that is the calling skill's responsibility), or for any write operation against portfolio members._
 
 - **Plugin:** `nolte-shared`
@@ -16,11 +18,26 @@ _Read-only inventory collector dispatched by portfolio-audit to gather per-repo 
 - **Tags:** `audit`
 - **Source:** [agents/portfolio-manifest-collector.md](https://github.com/nolte/claude-shared/blob/main/agents/portfolio-manifest-collector.md)
 
+## Use when
+
+- portfolio-audit needs to collect portfolio manifests across the portfolio
+- you want to gather tech-stack inventory from all nolte repos
+
+## Don't use when
+
+- **You want to detect duplicates or gaps (skill's job)** → [`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md)
+- **You want to author or modify portfolio.yml** → [`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md)
+
+## See also
+
+- [`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md)
+- [`tech-stack-capture`](../../skills/nolte-shared/tech-stack-capture.md)
+
 ---
 
 ## Portfolio Manifest Collector
 
-Read-only inventory collector dispatched by `portfolio-audit` to gather per-repo `project/portfolio.yml` manifests across all active `nolte` portfolio members via the GitHub API and return a structured manifest-inventory report to the calling skill. No write operations, no deduplication, no gap analysis — those responsibilities belong to the orchestrating skill.
+Read-only inventory collector dispatched by [`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md) to gather per-repo `project/portfolio.yml` manifests across all active `nolte` portfolio members via the GitHub API and return a structured manifest-inventory report to the calling skill. No write operations, no deduplication, no gap analysis — those responsibilities belong to the orchestrating skill.
 
 ### Why this is an agent, not a skill
 
@@ -30,7 +47,7 @@ Read-only inventory collector dispatched by `portfolio-audit` to gather per-repo
 - **Tool restriction is load-bearing:** only `Read`, `Bash`, `Glob`, and `Grep` are declared — no `Edit`, no `Write`. Enforcing read-only at the harness level prevents accidental mutations against any portfolio member during collection.
 - **Specialisation sharpens output:** a focused system prompt that knows exactly which YAML fields to extract (`name`, `description`, `audience`, `status`, `rationale`, `peers`, `since`) produces a more consistent per-repo summary than running the same extraction inline in a general orchestration conversation.
 - **Model pin (`sonnet`):** manifest collection applies a fixed extraction pattern (YAML → structured summary) against a known schema. This is high-volume but low-novelty work. Sonnet handles structured YAML extraction reliably and at substantially lower cost than Opus; a full portfolio scan can touch dozens of repositories, so the cost differential matters. The pin is justified per `spec/claude/agent-management/` §Model selection.
-- **Counter-dimension considered:** the calling skill (`portfolio-audit`) expects to triage findings interactively with the user after manifest collection completes. That mid-flow interactivity is a skill-side concern and belongs in the orchestrator. The collection step itself has no user-visible checkpoints, so the agent shape fits cleanly.
+- **Counter-dimension considered:** the calling skill ([`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md)) expects to triage findings interactively with the user after manifest collection completes. That mid-flow interactivity is a skill-side concern and belongs in the orchestrator. The collection step itself has no user-visible checkpoints, so the agent shape fits cleanly.
 
 ### Read-only Bash justification
 
@@ -132,7 +149,7 @@ Before collecting:
 
 4. **Compile the aggregated overview** from the per-repository summaries: counts, missing-manifest list, parse-error list, opt-out list, final rate-limit status.
 
-5. **Return the manifest-inventory report** in the format specified by §Output shape. The calling skill (`portfolio-audit`) consumes this report and proceeds to duplicate-detection and gap-classification.
+5. **Return the manifest-inventory report** in the format specified by §Output shape. The calling skill ([`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md)) consumes this report and proceeds to duplicate-detection and gap-classification.
 
 ### Hard rules
 

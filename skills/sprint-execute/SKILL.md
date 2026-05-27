@@ -3,6 +3,23 @@ name: sprint-execute
 description: Drive the daily mechanics of an active sprint per the project sprint spec. Invoke when the user asks to start a sprint, start a feature, mark a feature in progress, mark a feature done, sync a sprint's feature list, or update the sprint's last commit. Also handles equivalent German-language requests. Promotes a `planned` sprint to `active` when the first feature starts, drives feature lifecycle transitions (`ready → in_progress`, `in_progress → done`), keeps the `## Features` body list and `features` frontmatter in lockstep, updates `last_commit` whenever a feature reaches `done`, and refuses to start a feature whose sprint isn't this one while another sprint is already `active`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [lifecycle]
 phase: build
+summary: "Drives the daily mechanics of an active sprint: lifecycle transitions, feature-list sync, last_commit updates."
+summary_de: "Treibt das Tagesgeschäft eines aktiven Sprints: Lifecycle-Übergänge, Feature-Listen-Sync, last_commit-Updates."
+use_when:
+  - "you want to start a sprint or start a feature in an active sprint"
+  - "you want to mark a feature in_progress or done"
+  - "you want to sync the sprint's feature list with frontmatter"
+dont_use_when:
+  - situation: "You want to plan or open a new sprint file"
+    alternative: sprint-plan
+  - situation: "You want to close an active sprint at the review gate"
+    alternative: sprint-review
+  - situation: "You want to decompose a roadmap item into features"
+    alternative: feature-decompose
+see_also:
+  - sprint-plan
+  - sprint-review
+  - feature-decompose
 resumable: true
 ---
 

@@ -6,6 +6,19 @@ tools: [Read, Bash, Glob, Grep]
 model: sonnet
 tags: [audit]
 phase: review
+summary: "Read-only inventory collector: gathers per-repo project/portfolio.yml manifests across nolte/*."
+summary_de: "Nur-Lese-Inventar-Sammler: erfasst per-Repo project/portfolio.yml-Manifeste über nolte/*."
+use_when:
+  - "portfolio-audit needs to collect portfolio manifests across the portfolio"
+  - "you want to gather tech-stack inventory from all nolte repos"
+dont_use_when:
+  - situation: "You want to detect duplicates or gaps (skill's job)"
+    alternative: portfolio-audit
+  - situation: "You want to author or modify portfolio.yml"
+    alternative: portfolio-audit
+see_also:
+  - portfolio-audit
+  - tech-stack-capture
 ---
 
 # Portfolio Manifest Collector

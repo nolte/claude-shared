@@ -5,6 +5,19 @@ distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
 phase: quality
+summary: "Read-only audit of the repository's layout against the project-structure spec; severity-sorted findings on disk only."
+summary_de: "Nur-Lese-Audit des Repo-Layouts gegen die Project-Structure-Spec; Severity-sortierte Findings nur auf Disk-Basis."
+use_when:
+  - "you want to audit the project structure of a repo"
+  - "you want to find scaffolding drift against the spec"
+  - "you want a severity-sorted findings list with proposed resolutions"
+dont_use_when:
+  - situation: "You want to scaffold missing artefacts"
+    alternative: project-structure-apply
+  - situation: "You want to verify the live GitHub-App installation status"
+    alternative: project-structure-apply
+see_also:
+  - project-structure-apply
 ---
 
 # Project Structure Reviewer

@@ -6,6 +6,19 @@ tools: Read, Grep, Glob, Bash
 model: sonnet
 tags: [audit, prose]
 phase: review
+summary: "Read-only editorial scanner across the five lektorat dimensions (D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit)."
+summary_de: "Nur-Lese-Lektorats-Scanner über die fünf Dimensionen (D1 Lesbarkeit, D2 Verständlichkeit, D3 Grammatik, D4 Stil, D5 Audience-Fit)."
+use_when:
+  - "lektorat-apply needs an editorial audit pass"
+  - "you want a JSON findings report that gates patch and revise operations"
+dont_use_when:
+  - situation: "You want patch or revise operations (these write to disk)"
+    alternative: lektorat-apply
+  - situation: "You want cross-language parity drift detection"
+    alternative: docs-freshness-checker
+see_also:
+  - lektorat-apply
+  - docs-freshness-checker
 ---
 
 # Lektorat Scanner

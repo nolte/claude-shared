@@ -3,6 +3,21 @@ name: portfolio-inflight-triage
 description: "Runs the read-only periodic in-flight audit across nolte/* per `spec/portfolio/portfolio-inflight-management/`. Dispatches `portfolio-inflight-collector` for the four data sources (open issues, open PRs incl. drafts, branches without active PR, unresolved review threads + Discussions), applies spec stalling thresholds with optional `project/inflight.yml` overrides, classifies via the four-axis matrix into `Critical`/`Warning`/`Suggestion`/`Info`, attaches a specialist slug per finding (slash-command verbatim for PR / branch / issue targets), records roster-gap findings, and writes a dated Findings-Report under `.audits/portfolio-inflight/` in `claude-shared`. Invoke when the user asks to \"audit the portfolio in-flight\", \"run the in-flight triage\", \"check stalled PRs / issues / branches\", or equivalent German-language requests. Don't use to merge / close / delete / resolve anything (operator dispatches), for per-repo CI triage (use `workflow-health-triage`), or for capability allocation (`portfolio-audit`)."
 tags: [audit]
 phase: review
+summary: "Runs the read-only periodic in-flight audit across nolte/* (open PRs, branches, issues, review threads) with severity classification."
+summary_de: "Führt den nur-Lese periodischen In-Flight-Audit über nolte/* aus (offene PRs, Branches, Issues, Review-Threads) mit Severity-Klassifikation."
+use_when:
+  - "you want to audit the portfolio's in-flight state across all repos"
+  - "you want to find stalled PRs, branches, issues, or review threads"
+  - "you want a dated Findings-Report under .audits/portfolio-inflight/"
+dont_use_when:
+  - situation: "You want per-repo CI triage rather than portfolio in-flight"
+    alternative: workflow-health-triage
+  - situation: "You want capability allocation rather than in-flight state"
+    alternative: portfolio-audit
+see_also:
+  - portfolio-audit
+  - workflow-health-triage
+  - portfolio-inflight-collector
 ---
 
 # Portfolio In-Flight Triage

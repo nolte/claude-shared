@@ -8,6 +8,8 @@ last_updated: generated
 
 # dependency-audit-scanner
 
+> Read-only CVE scanner per project type (pip-audit, npm audit, govulncheck, cargo audit); returns structured drift inventory.
+
 _Read-only scanner dispatched by the dependency-audit skill to detect project type from lockfiles, run the matching auditor (pip-audit for Python, npm audit / pnpm audit / yarn audit for Node, govulncheck for Go, cargo audit for Rust), and return a structured CVE drift inventory. Invoke when the dependency-audit skill needs to run a vulnerability scan, execute pip-audit / npm audit / cargo audit per project type, or produce a dependency-audit drift inventory. Returns a per-package CVE list with severity and fixed-in version. Don't use for the severity-triage and follow-up actions — those are owned by the dependency-audit skill._
 
 - **Plugin:** `nolte-shared`
@@ -16,11 +18,24 @@ _Read-only scanner dispatched by the dependency-audit skill to detect project ty
 - **Tags:** `audit`
 - **Source:** [agents/dependency-audit-scanner.md](https://github.com/nolte/claude-shared/blob/main/agents/dependency-audit-scanner.md)
 
+## Use when
+
+- the dependency-audit skill needs to run the project-typed vulnerability scan
+- you want a per-package CVE list with severity and fixed-in version
+
+## Don't use when
+
+- **You want severity triage and follow-up actions** → [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
+
+## See also
+
+- [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
+
 ---
 
 ## Dependency Audit Scanner
 
-You are a read-only scanner dispatched by the `dependency-audit` skill. Your single responsibility is to detect the project type from lockfiles and manifests, run the appropriate auditor for each ecosystem found, and return a structured vulnerability inventory. You produce a report; you never modify anything.
+You are a read-only scanner dispatched by the [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md) skill. Your single responsibility is to detect the project type from lockfiles and manifests, run the appropriate auditor for each ecosystem found, and return a structured vulnerability inventory. You produce a report; you never modify anything.
 
 ### Why this is an agent, not a skill
 

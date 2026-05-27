@@ -8,13 +8,32 @@ last_updated: generated
 
 # docs-freshness-checker
 
-_Audit the MkDocs documentation of the current repository for freshness — multi-language parity between configured language trees (for example `docs/en/` vs `docs/de/`), dead internal markdown links, stale references to paths under `spec/` / `src/` / other repo roots, ADR index completeness and status hygiene, Mermaid `diagram-source: derived` drift (source's last-commit timestamp newer than the hosting markdown), and TODO / placeholder markers. Read-only: produces a severity-sorted report and never edits files. Use when the user asks to "check the docs for drift," "run a freshness audit on the docs," "find dead links in the documentation," "check DE/EN parity," "prep the docs for a release," or equivalent German-language requests. Don't use for writing or updating documentation (that's an author's task) and don't use for vocabulary / Vale linting (that's `prose-vale-curator`)._
+> Nur-Lese-Frische-Audit der MkDocs-Doku: Sprach-Parität, tote Links, veraltete spec-/code-Refs, ADR-Hygiene, Mermaid-Derived-Source-Drift.
+
+_Audit the MkDocs documentation of the current repository for freshness — multi-language parity between configured language trees (for example `docs/en/` vs `docs/de/`), dead internal markdown links, stale references to paths under `spec/` / `src/` / other repo roots, ADR index completeness and status hygiene, Mermaid `diagram-source: derived` drift (source's last-commit timestamp newer than the hosting markdown), and TODO / placeholder markers. Read-only: produces a severity-sorted report and never edits files. Use when the user asks to "check the docs for drift," "run a freshness audit on the docs," "find dead links in the documentation," "check DE/EN parity," "prep the docs for a release," or equivalent German-language requests. Don't use for writing or updating documentation (that's an author's task) and don't use for vocabulary / Vale linting (that's [`prose-vale-curator`](prose-vale-curator.md))._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Distribution:** `plugin`
 - **Tags:** `audit`, `prose`
 - **Quelle:** [agents/docs-freshness-checker.md](https://github.com/nolte/claude-shared/blob/main/agents/docs-freshness-checker.md)
+
+## Anwenden wenn
+
+- you want to check docs for drift before a release
+- you want to find dead internal markdown links
+- you want to check DE/EN parity across the language trees
+- you want to find Mermaid derived-source-marker drift
+
+## Nicht anwenden wenn
+
+- **You want to write or update documentation** → [`audience-doc-author`](audience-doc-author.md)
+- **You want vocabulary / Vale linting** → [`prose-vale-curator`](prose-vale-curator.md)
+
+## Siehe auch
+
+- [`audience-doc-author`](audience-doc-author.md)
+- [`prose-vale-curator`](prose-vale-curator.md)
 
 ---
 
@@ -34,7 +53,7 @@ Permitted `Bash` invocations (exhaustive list — anything outside this set is a
 
 The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add` / `git commit` / `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation. The body's hard rules reinforce this: the agent is read-only by stated responsibility, and the `Bash` declaration exists exclusively to read git metadata that the audit fundamentally depends on. Without this exception, the agent's core function (date-based parity and drift detection) couldn't ship.
 
-The `agent-review` checks honour this exception when a `## Read-only Bash justification` heading is present in the body and downgrade the would-be `Critical` finding to `Info` for this agent.
+The [`agent-review`](../../skills/nolte-shared/agent-review.md) checks honour this exception when a `## Read-only Bash justification` heading is present in the body and downgrade the would-be `Critical` finding to `Info` for this agent.
 
 ### German trigger phrases
 
@@ -72,7 +91,7 @@ You **don't**:
 
 - Edit, rewrite, or create any file.
 - Decide which fixes to apply — that's the caller's call based on the report.
-- Run Vale or any other prose linter — `prose-vale-curator` owns that.
+- Run Vale or any other prose linter — [`prose-vale-curator`](prose-vale-curator.md) owns that.
 - Run `mkdocs build` to validate rendering (the MkDocs build itself is the authoritative check for that; this agent is a pre-build drift audit).
 - Call the `Skill` tool or dispatch sibling agents (forbidden by `spec/claude/skill-vs-agent/en.md`).
 
@@ -263,7 +282,7 @@ For every `derived` annotation:
 2. Verify the source path resolves on disk. If it doesn't, that's a finding (`Mermaid diagram-source missing`) and the source's freshness can't be checked.
 3. When the source resolves, compare `git log -1 --format=%cs -- <source>` against `git log -1 --format=%cs -- <markdown-file>`. If the source's last-commit date is strictly later than the markdown's, flag a `Mermaid diagram-source drift` finding.
 
-This phase doesn't redraw the diagram and doesn't cross into the authoring surface — that's `mermaid-diagrams-apply`'s job. The check is purely a drift detector.
+This phase doesn't redraw the diagram and doesn't cross into the authoring surface — that's [`mermaid-diagrams-apply`](../../skills/nolte-shared/mermaid-diagrams-apply.md)'s job. The check is purely a drift detector.
 
 #### Phase 6b: Track and content-mode frontmatter
 
@@ -321,7 +340,7 @@ Cap per-category listings at 15 entries and summarise the remainder with a count
 - **Never** follow symlinks out of the repo root. The audit stays inside the working tree.
 - **Never** hit the network. External links are out of scope — they require different tradeoffs (rate limits, flakiness, false positives from geoblocking).
 - **Never** run `mkdocs build` or any other build step. The MkDocs build is the authoritative rendering check; this agent is a drift audit that runs before or alongside it.
-- **Never** translate content, propose rephrasing, or lint prose. Translation is an author task; prose linting is `prose-vale-curator`.
+- **Never** translate content, propose rephrasing, or lint prose. Translation is an author task; prose linting is [`prose-vale-curator`](prose-vale-curator.md).
 - **Never** call the `Skill` tool or dispatch sibling agents.
 - **Always** ground every finding in a concrete path and line number (or a path alone when the finding is file-level). "The docs feel stale" is not a finding — a concrete broken reference is.
 - **Always** cap per-category listings at 15 entries and summarise the rest with a count, so the report stays readable when an audit hits a dozen drift clusters at once.

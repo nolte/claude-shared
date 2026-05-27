@@ -3,6 +3,23 @@ name: spec-drift-audit
 description: Audits every spec under spec/<topic>/<slug>/ against the repository implementation (source code, config, workflows, docs) and produces a traceable audit artifact per spec/project/spec-drift-audit/. Invoke when the user asks to "run the quarterly spec-drift audit", "check spec versus implementation", "spec drift reconciliation", "audit all specs against the repo", "find spec vs code drift", "open the next quarterly audit", or when a spec changes and requires a matching partial audit. Also handles equivalent German-language requests. Do NOT use for continuous CI health checks (use workflow-health-triage), single-spec readiness review (use spec-readiness-reviewer agent), or feature-level code drift on new features (use feature-consistency-reviewer agent within feature-decompose scope). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [audit]
 phase: review
+summary: "Audits every spec against the repository implementation and produces a traceable spec-drift audit artifact."
+summary_de: "Auditiert jede Spec gegen die Repo-Implementierung und erzeugt ein traceable Spec-Drift-Audit-Artefakt."
+use_when:
+  - "you want to run the quarterly spec-drift audit"
+  - "you want to reconcile a spec against the actual implementation in the code"
+  - "you want to open a partial audit after a spec change"
+dont_use_when:
+  - situation: "You want continuous CI health checks rather than spec drift"
+    alternative: workflow-health-triage
+  - situation: "You want a single-spec readiness audit before promotion"
+    alternative: spec-readiness-reviewer
+  - situation: "You want feature-level drift on new features"
+    alternative: feature-consistency-reviewer
+see_also:
+  - spec-readiness-reviewer
+  - feature-consistency-reviewer
+  - workflow-health-triage
 resumable: true
 ---
 
