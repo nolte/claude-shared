@@ -46,7 +46,7 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 
 ## 4 Build
 
-- [`blog-author`](nolte-shared/blog-author.md) — Drafts a bilingual EN-canonical + DE-translated blog-post pair per the consumer repo's blog specs.
+- [`blog-author`](nolte-shared/blog-author.md) — Drafts a bilingual EN-canonical + DE-translated blog-post pair per this plugin's blog-author specs, writing into a consumer blog repo.
 - [`sprint-execute`](nolte-shared/sprint-execute.md) — Drives the daily mechanics of an active sprint: lifecycle transitions, feature-list sync, last_commit updates.
 
 ## 5 Review
