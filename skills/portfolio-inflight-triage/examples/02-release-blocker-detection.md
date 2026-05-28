@@ -11,6 +11,12 @@ without the staleness threshold having to fire. Exercises the
 prioritisation and the sub-threshold escalation note in §Stalling
 thresholds.
 
+## Contents
+
+- [Input prompt](#input-prompt)
+- [Input files](#input-files)
+- [Expected behaviour](#expected-behaviour)
+
 ## Input prompt
 
 > Audit the portfolio in-flight.
