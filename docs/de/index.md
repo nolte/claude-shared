@@ -48,5 +48,5 @@ flowchart LR
 - [Erste Schritte](getting-started/index.md) — Plugin laden und eigene Skills nutzen
 - [Skills](skills/index.md) — Überblick der mitgelieferten Skills
 - [Agents](agents/index.md) — Überblick der mitgelieferten Agents
-- [Spezifikationen](specs/index.md) — verbindliche Regeln für Autoren
-- [Entwicklung](development/index.md) — am Repository selbst arbeiten
+- [Spezifikationen](references/specs/index.md) — verbindliche Regeln für Autoren
+- [Entwicklung](guides/development.md) — am Repository selbst arbeiten

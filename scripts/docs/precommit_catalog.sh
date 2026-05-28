@@ -24,10 +24,10 @@ task docs:catalog
 CATALOG_PATHS=(
   docs/de/skills
   docs/de/agents
-  docs/de/tags.md
+  docs/de/references/tags.md
   docs/en/skills
   docs/en/agents
-  docs/en/tags.md
+  docs/en/references/tags.md
 )
 
 # Stage every regenerated catalog file so it joins the in-flight commit.

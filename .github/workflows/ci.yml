@@ -68,5 +68,5 @@ jobs:
         # has drifted from a fresh re-generation.
         run: |
           git diff --exit-code \
-            docs/de/skills docs/de/agents docs/de/tags.md \
-            docs/en/skills docs/en/agents docs/en/tags.md
+            docs/de/skills docs/de/agents docs/de/references/tags.md \
+            docs/en/skills docs/en/agents docs/en/references/tags.md

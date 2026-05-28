@@ -10,8 +10,8 @@ last_updated: 2026-05-19
 
 This section is for contributors working on the `claude-shared` repository itself—adding new skills, new agents, or maintaining the specifications.
 
-- [Project Structure](projektstruktur.md): where things live and why
-- [Contributing](beitragen.md): workflow, conventions, commits
+- [Project Structure](project-structure.md): where things live and why
+- [Contributing](contributing.md): workflow, conventions, commits
 
 ## Dogfooding
 
@@ -27,7 +27,7 @@ claude --plugin-dir .
 
 Before writing a new skill or agent, read the relevant specification:
 
-- [Skill Authoring](../specs/skill-management.md)
-- [Agent Authoring](../specs/agent-management.md)
+- [Skill Authoring](../references/specs/skill-management.md)
+- [Agent Authoring](../references/specs/agent-management.md)
 
 Create new skills through the [Skill Management](../skills/nolte-shared/skill-management.md) skill itself—that guarantees conformance.

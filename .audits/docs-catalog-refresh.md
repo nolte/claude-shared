@@ -85,7 +85,11 @@ The current `AUDIENCES.md` uses prose-only labels with no canonical kebab-case I
 
 Per-page `audience:` frontmatter values in F2 reference these IDs (with the additional convenience aliases `contributor` ≔ `maintainer`, `user` ≔ `downstream-end-user`).
 
-### F4 — Top-level nav drift (critical) — captured as proposal only
+### F4 — Top-level nav drift (critical) — RESOLVED
+
+**Status: RESOLVED** (issue #197, branch `docs/collapse-nav-sections`). The ten-section nav was collapsed to the seven canonical sections below; the corresponding `docs/<lang>/<section>/` folders were relocated symmetrically across `de` and `en`, every author-prose cross-link was rewritten for the new relative depths, `scripts/docs/gen_catalog.py` `emit_tag_index()` now emits `docs/<lang>/references/tags.md` with `../`-prefixed catalog hrefs (the CI freshness gate and `precommit_catalog.sh` `CATALOG_PATHS` were updated to match), and `mkdocs build --strict` passes with zero warnings. Folder moves: `lifecycle.md`→`guides/development-lifecycle.md`; `development/{index,projektstruktur,beitragen}.md`→`guides/{development,project-structure,contributing}.md`; `concepts/skills/{index,skill-management,spec}.md`→`guides/{skills-concept,skill-management,spec}.md`; `concepts/agents/index.md`→`guides/agents-concept.md`; `specs/`→`references/specs/`; `tags.md`→`references/tags.md`; `planning-suite.md`→`project/index.md`; new `guides/index.md` + `references/index.md` landing pages.
+
+The original proposal (for the record):
 
 `spec/project/mkdocs-structure/en.md` §Top-level navigation defines the seven canonical sections (Home, Getting Started, Guides, References, ADRs, Project, plus declared extension sections). The repo's `mkdocs.yml` carries ten:
 
@@ -137,7 +141,7 @@ Patch: extend `gen_catalog.py` to emit a frontmatter block on every page it writ
 
 ## Caller follow-ups (after this PR merges)
 
-- Open a follow-up issue for the F4 nav restructuring (proposal in §F4); the move is mechanical but touches every section folder and every cross-link.
+- ~~Open a follow-up issue for the F4 nav restructuring (proposal in §F4); the move is mechanical but touches every section folder and every cross-link.~~ Done: issue #197, branch `docs/collapse-nav-sections`. §F4 is RESOLVED.
 - Author a spec amendment via `/nolte-shared:spec` to relax `mkdocs-structure/` §Snippet inclusion (DRY) so the include-markdown opening / closing tags are pinned per-repo (F1a in this audit). Until then, this repo carries the custom-tag pin in `mkdocs.yml`.
 - Once F2 lands, dispatch `audience-doc-author` for any page whose `# TODO` audience refinement is desired.
 - Re-run `docs-freshness-checker` quarterly per the spec's §Triggers and cadence.

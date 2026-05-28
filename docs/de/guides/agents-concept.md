@@ -25,7 +25,7 @@ Im Quellbaum von `claude-shared` liegen sie unter `agents/<name>.md`. Zur Laufze
 | `png-to-transparent-svg` | Wandelt PNGs mit eingebranntem Karomuster in SVGs mit echter Alpha-Transparenz |
 | `feature-consistency-reviewer` | Prüft ein draft-Feature gegen Feature-Korpus, Source-Roots und Spec-Bestand auf Überlappung, Duplikation, Drift und Prior Art |
 
-Alle Agents folgen derselben Spezifikation ([Agent-Autorenschaft](../../specs/agent-management.md)). Kanonische Quelle pro Agent: `agents/<name>.md` im Quellbaum.
+Alle Agents folgen derselben Spezifikation ([Agent-Autorenschaft](../references/specs/agent-management.md)). Kanonische Quelle pro Agent: `agents/<name>.md` im Quellbaum.
 
 ## Form eines Agents
 
@@ -61,6 +61,6 @@ Agents dürfen keinen bestimmten Installationsort voraussetzen; alle internen Re
 
 Die vollständigen Regeln, Akzeptanzkriterien und offenen Fragen stehen in:
 
-- [Agent-Autorenschaft (Spec)](../../specs/agent-management.md)
+- [Agent-Autorenschaft (Spec)](../references/specs/agent-management.md)
 - Quelle (kanonisch EN): `spec/claude/agent-management/en.md`
 - Übersetzung (DE): `spec/claude/agent-management/de.md`

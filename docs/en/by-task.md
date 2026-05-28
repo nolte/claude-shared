@@ -10,7 +10,7 @@ last_updated: 2026-05-26
 
 Task-oriented landing page: groups skills and agents by user intent rather than by delivery-lifecycle phase. Hand-curated; rubrics grow as more artifacts expose `use_when` metadata.
 
-> **Note:** Only the pilot-migrated artifacts currently appear here. For anything not yet listed, browse the phase-grouped [Skills](skills/index.md) and [Agents](agents/index.md) indexes, or the [Tag index](tags.md) for thematic browsing.
+> **Note:** Only the pilot-migrated artifacts currently appear here. For anything not yet listed, browse the phase-grouped [Skills](skills/index.md) and [Agents](agents/index.md) indexes, or the [Tag index](references/tags.md) for thematic browsing.
 
 ## Open or land a pull request
 
