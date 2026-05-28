@@ -16,7 +16,7 @@ Every portfolio repository that ships documentation does so through MkDocs, typi
 - Checking external links (anything `http://` or `https://`): the tradeoffs around rate limits, flakiness, geoblocking, and false positives belong in a different tool
 - Prose linting, vocabulary consistency, or style-guide enforcement: that's `spec/project/prose-style/` + `prose-vale-curator`
 - Rendering validation: MkDocs itself (`mkdocs build --strict` in CI) is the authoritative check that the site renders
-- Declaring the on-disk shape of MkDocs (i18n plugin choice, theme, nav structure)—those are per-repository decisions, and the audit adapts to what `mkdocs.yml` declares
+- Declaring the on-disk shape of MkDocs (i18n plugin choice, theme, nav structure)—that's now owned by `spec/project/mkdocs-structure/`. This audit reads `mkdocs.yml` to discover what's actually wired up, then checks conformance against `mkdocs-structure`'s expectations; it doesn't redefine the shape itself
 - Defining operational details of the agent that implements the audit (`agents/docs-freshness-checker.md`): those can evolve without a spec change
 
 ## Requirements
@@ -32,19 +32,22 @@ The audit **MUST** classify every finding into exactly one of these categories:
 
 - **Internal-link rot**: a relative markdown link whose target doesn't exist on disk. Anchors are resolved strictly—the file must exist; the anchor target inside the file is a `SHOULD` check, not a `MUST`, because anchor detection is fragile across themes.
 - **Cross-tree reference rot**: a link from the docs into `spec/`, `src/`, `scripts/`, `docker/`, `helm/`, `tests/`, `tools/` whose target path no longer exists in the working tree.
-- **Language-parity gap**: in a bilingual (or multilingual) repository, a relative path that exists in one configured language tree but is missing in another.
+- **Language-parity gap**: in a bilingual (or multilingual) repository, a relative path that exists in one configured language tree but is missing in another. The authoring counterpart that prevents the gap at the source is `spec/project/docs-multilingual-authoring/` §Authoring protocol.
 - **Content-staleness delta**: in a multilingual repository, counterpart files whose last-commit timestamps diverge beyond a threshold (default 30 days) or whose sizes diverge beyond 2×; these are spot-checked on the N most recently modified files per tree rather than checked exhaustively.
-- **Mermaid diagram-source drift**: a Mermaid block in the docs annotated with `<!-- diagram-source: derived — <path> -->` (per `spec/project/mermaid-diagrams/`) whose named source artifact has a more recent last-commit timestamp than the markdown file containing the block—the source has changed but the diagram hasn't been redrawn. The detector compares `git log -1 --format=%cs -- <source>` and `git log -1 --format=%cs -- <markdown-file>`; `user-described` blocks aren't checked because they have no machine-readable source.
+- **Mermaid diagram-source drift**: a Mermaid block in the docs annotated with `<!-- diagram-source: derived—<path> -->` (per `spec/project/mermaid-diagrams/`) whose named source artifact has a more recent last-commit timestamp than the markdown file containing the block—the source has changed but the diagram hasn't been redrawn. The detector compares `git log -1 --format=%cs -- <source>` and `git log -1 --format=%cs -- <markdown-file>`; `user-described` blocks aren't checked because they have no machine-readable source.
 - **ADR index drift**: an ADR file on disk that isn't referenced by the corresponding `adr/index.md`, or an `adr/index.md` entry whose file doesn't exist.
 - **ADR status hygiene**: an ADR whose declared status isn't one of `proposed`, `accepted`, `superseded`, `deprecated`, `rejected`; or a `Supersedes: ADR-NNN` reference pointing at an ADR whose status is still `accepted`.
 - **Stale markers**: occurrences of `TODO`, `FIXME`, `XXX`, `TBD`, `coming soon`, `placeholder`, `Lorem ipsum` (and their German counterparts) inside documentation; classification depends on context (ADR vs. prose).
+- **Track-frontmatter drift**: a page under `docs/<lang>/` (outside `_`-prefixed snippet folders) that lacks the `track` frontmatter key, or whose `track` value isn't `user-docs`, `developer-docs`, or an extension value declared by a project-type-specific spec that the repository has opted into. Sourced from `spec/project/docs-audience-tracks/` §Per-page contract.
+- **Content-mode drift**: a page under `docs/<lang>/` (outside snippet folders) that lacks the `content_mode` frontmatter key, or whose `content_mode` value isn't one of `tutorial`, `how-to`, `reference`, `explanation`, `troubleshooting`, `glossary`, `meta`, or an extension value declared by a project-type-specific spec. Mixing-violations (a `how-to` page that ships extended `explanation` content, a `reference` page with embedded recipes) are reported as `content-mode mixing` findings at warning severity—the detection is a Reviewer-judgement signal, not a strict regex, so the audit lists candidate pages without automatically failing.
+- **Audience-track mismatch**: a page whose `audience` frontmatter value maps to a track different from the page's `track` frontmatter value, per the default mapping declared in `spec/project/docs-audience-tracks/` §Audience-to-track mapping (overridable per project with a recorded rationale in the audience artefact).
 
 Additional categories **MAY** be added by a repository when its documentation needs them (for example, an API-reference-vs-code check in a repository that ships an OpenAPI spec), but the portfolio-level categories above are the floor.
 
 ### Severity classification
 - **MUST** adopt the following severity scale:
-  - **critical**: internal-link rot, cross-tree reference rot, ADR status inconsistency that breaks a supersedes chain; response window: before the next release
-  - **warning**: language-parity gap, stale marker inside an ADR whose status is `accepted`, ADR index drift, content-staleness delta > 90 days, Mermaid diagram-source drift; response window: within the current quarter
+  - **critical**: internal-link rot, cross-tree reference rot, ADR status inconsistency that breaks a supersedes chain, track-frontmatter drift with an unrecognised value (vs. simply missing), content-mode drift with an unrecognised value; response window: before the next release
+  - **warning**: language-parity gap, stale marker inside an ADR whose status is `accepted`, ADR index drift, content-staleness delta > 90 days, Mermaid diagram-source drift, track-frontmatter drift (missing key), content-mode drift (missing key), content-mode mixing candidate, audience-track mismatch; response window: within the current quarter
   - **info**: stale marker inside ordinary prose, content-staleness delta 30–90 days, ADR without a declared status (treat as info, not critical—the ADR is still readable); response window: best effort
 - **MUST NOT** downgrade a severity on local judgement alone; disagreement with the classification belongs in an explicit waiver recorded in the audit artifact
 
@@ -78,6 +81,7 @@ Additional categories **MAY** be added by a repository when its documentation ne
 - [ ] Every docs-freshness audit artifact records the repo root, the `mkdocs.yml` path, the audited Git revision, and the categories that were (and weren't) run
 - [ ] No audit run in any repository modified documentation or any other file; the audit's read-only discipline holds in practice, not just in the spec
 - [ ] The agent `agents/docs-freshness-checker.md` produces output that maps 1-to-1 onto the categories and severities declared here, so the artifact can be generated mechanically
+- [ ] The audit reports a `track-frontmatter drift`, `content-mode drift`, or `audience-track mismatch` finding whenever a docs page under a non-snippet folder violates the corresponding contract from `spec/project/docs-audience-tracks/` or `spec/project/mkdocs-structure/` §Content modes (Diátaxis alignment)
 
 ## Open Questions
 - Should the spec standardise a single artifact file path (for example `docs/audits/docs-freshness.md` with quarterly sections) portfolio-wide, or does per-repository freedom stay?

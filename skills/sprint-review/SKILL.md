@@ -1,7 +1,25 @@
 ---
 name: sprint-review
-description: Close an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into `release-notes-curate` and `release-publish-trigger` (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably.
+description: Close an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into `release-notes-curate` and `release-publish-trigger` (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding, release]
+phase: close-release
+summary: "Closes an active sprint per the sprint spec: validates the deployable artefact and records the value-delivery audit trail."
+summary_de: "Schließt einen aktiven Sprint gemäß Sprint-Spec: validiert das Deploy-Artefakt und protokolliert den Value-Delivery-Audit-Trail."
+use_when:
+  - "you want to close, finish, or ship an active sprint"
+  - "you want to validate the sprint's artifact_ref against the release-artifact spec"
+  - "you want the optional chain into release-notes-curate and release-publish-trigger"
+dont_use_when:
+  - situation: "You want to drive day-to-day mechanics of the sprint"
+    alternative: sprint-execute
+  - situation: "You want to plan or open a new sprint"
+    alternative: sprint-plan
+see_also:
+  - sprint-execute
+  - sprint-plan
+  - release-notes-curate
+  - release-publish-trigger
+resumable: true
 ---
 
 # Sprint Review
@@ -122,6 +140,16 @@ Triggered when step 3 fails unrecoverably (the underlying release pipeline is br
 - **Optional chaining into `release-notes-curate` and `release-publish-trigger` is operator-opt-in.** Defaulting to chain leads to surprise releases; the skill stays explicit about each chain hop and records the operator's opt-in verbatim in `## Review notes`.
 - **Cancelled sprints leave a value-delivery gap that the next sprint must explain.** When the skill cancels a sprint, the unfinished features need re-targeting (typically to the next sprint or back to the roadmap queue). The skill surfaces the affected feature IDs and asks where each one lands; nothing is silently re-targeted.
 
+## Examples
+
+- Read `examples/01-clean-close-claude-plugin.md` when closing a sprint cleanly for a Claude plugin project with all features done.
+- Read `examples/02-artifact-validation-fails-cancel.md` when artifact validation fails and the sprint must be cancelled instead of closed.
+- Read `examples/03-chain-into-release-skill-layer.md` when the user opts in to chaining into `release-notes-curate` and `release-publish-trigger` after sprint closure.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/sprint-review/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+
 ## Hard rules
 
 - **Never** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id> draft=false`, or any other path that flips the draft state outside `release-publish.yml`. The rule comes from `spec/project/release-automation/`, `spec/project/release-skill-layer/`, and `spec/project/release-artifact/` §Dispatch boundary to release machinery and is non-negotiable here too. The only acceptable publish path is dispatching `release-publish-trigger`.
@@ -133,3 +161,7 @@ Triggered when step 3 fails unrecoverably (the underlying release pipeline is br
 - **Never** advance a roadmap item to `status: done` from a `cancelled` sprint, even when every feature is individually `done`. Re-target the pending features to a successor sprint instead.
 - **Never** edit any sprint other than the one being reviewed in this run. `sprint-plan` and `sprint-execute` own the other sprints' lifecycles.
 - When `spec/project/sprint/`, `spec/project/release-artifact/`, `spec/project/release-skill-layer/`, or `spec/project/release-automation/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
+
+## Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.

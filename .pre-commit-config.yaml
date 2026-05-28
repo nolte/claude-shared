@@ -4,7 +4,9 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
+        exclude: '^\.audits/lektorat/.*\.diff$'
       - id: end-of-file-fixer
+        exclude: '^\.audits/lektorat/.*\.diff$'
       - id: check-yaml
         args: [--allow-multiple-documents, --unsafe]
       - id: check-json
@@ -25,6 +27,13 @@ repos:
         entry: task lint:prose
         language: system
         types: [markdown]
+        pass_filenames: false
+
+      - id: docs-catalog-fresh
+        name: docs:catalog (regenerate skill-agent catalog)
+        entry: scripts/docs/precommit_catalog.sh
+        language: system
+        files: '^(skills/.*/SKILL\.md|agents/.*\.md)$'
         pass_filenames: false
 
   - repo: https://github.com/igorshubovych/markdownlint-cli

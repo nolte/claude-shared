@@ -1,0 +1,58 @@
+---
+title: Skills
+audience: [maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: generated
+---
+
+* [Skills](index.md)
+* 1 Vision
+    * [mission-define](nolte-shared/mission-define.md)
+    * [mission-revise](nolte-shared/mission-revise.md)
+* 2 Plan
+    * [audience-identify](nolte-shared/audience-identify.md)
+    * [feature-decompose](nolte-shared/feature-decompose.md)
+    * [roadmap-init](nolte-shared/roadmap-init.md)
+    * [roadmap-plan](nolte-shared/roadmap-plan.md)
+    * [roadmap-refine](nolte-shared/roadmap-refine.md)
+    * [sprint-plan](nolte-shared/sprint-plan.md)
+* 3 Design
+    * [cookiecutter-template-manage](nolte-shared/cookiecutter-template-manage.md)
+    * [docs-audience-tracks-apply](nolte-shared/docs-audience-tracks-apply.md)
+    * [docs-dry-refactor](nolte-shared/docs-dry-refactor.md)
+    * [github-issue-templates-apply](nolte-shared/github-issue-templates-apply.md)
+    * [mermaid-diagrams-apply](nolte-shared/mermaid-diagrams-apply.md)
+    * [mkdocs-structure-apply](nolte-shared/mkdocs-structure-apply.md)
+    * [permission-allowlist-maintain](nolte-shared/permission-allowlist-maintain.md)
+    * [project-structure-apply](nolte-shared/project-structure-apply.md)
+    * [readme-structure-apply](nolte-shared/readme-structure-apply.md)
+    * [skill-agent-catalog-apply](nolte-shared/skill-agent-catalog-apply.md)
+    * [skill-management](nolte-shared/skill-management.md)
+    * [spec](nolte-shared/spec.md)
+    * [tech-stack-capture](nolte-shared/tech-stack-capture.md)
+    * [webview-ui-optimize](nolte-shared/webview-ui-optimize.md)
+    * [yaml-json-schema](nolte-shared/yaml-json-schema.md)
+* 4 Build
+    * [blog-author](nolte-shared/blog-author.md)
+    * [sprint-execute](nolte-shared/sprint-execute.md)
+* 5 Review
+    * [agent-review](nolte-shared/agent-review.md)
+    * [continuous-improvement-triage](nolte-shared/continuous-improvement-triage.md)
+    * [portfolio-inflight-triage](nolte-shared/portfolio-inflight-triage.md)
+    * [pull-request-create](nolte-shared/pull-request-create.md)
+    * [pull-request-merge](nolte-shared/pull-request-merge.md)
+    * [skill-review](nolte-shared/skill-review.md)
+    * [skills-agents-sweep](nolte-shared/skills-agents-sweep.md)
+    * [spec-drift-audit](nolte-shared/spec-drift-audit.md)
+* 6 Quality
+    * [dependency-audit](nolte-shared/dependency-audit.md)
+    * [lektorat-apply](nolte-shared/lektorat-apply.md)
+    * [portfolio-audit](nolte-shared/portfolio-audit.md)
+    * [quality-gate](nolte-shared/quality-gate.md)
+    * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)
+    * [workflow-health-triage](nolte-shared/workflow-health-triage.md)
+* 7 Close & Release
+    * [release-notes-curate](nolte-shared/release-notes-curate.md)
+    * [release-publish-trigger](nolte-shared/release-publish-trigger.md)
+    * [sprint-review](nolte-shared/sprint-review.md)

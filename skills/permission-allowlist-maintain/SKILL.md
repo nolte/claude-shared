@@ -2,6 +2,13 @@
 name: permission-allowlist-maintain
 description: "Curates the committed `.claude/settings.json` `permissions.allow` list of the current repository per `spec/claude/permission-allowlist/`. Proposes additions sourced from the `fewer-permission-prompts` built-in or from the user, applies the spec's three-condition selection criteria (frequent + read-only + not-already-autoallowed), rejects forbidden pattern classes (interpreter wildcards, task-runner wildcards, mutation-capable `gh`/`git` wildcards), and routes every change through the standard pull-request flow. Invoke when the user asks to \"tidy the permission allowlist\", \"add `Bash(task lint)` to the allowlist\", \"review `.claude/settings.json`\", or equivalent German-language requests. Don't use to edit `.claude/settings.local.json` or `~/.claude/settings.json` (out of scope per spec)."
 tags: [scaffolding, audit]
+phase: design
+summary: "Curates the committed .claude/settings.json permissions.allow list per the permission-allowlist spec."
+summary_de: "Kuratiert die eingecheckte .claude/settings.json permissions.allow-Liste gemäß Permission-Allowlist-Spec."
+use_when:
+  - "you want to tidy the .claude/settings.json allowlist"
+  - "you want to add a frequent read-only Bash or tool entry to the allowlist"
+  - "you want to review an existing allowlist against the spec's three-condition rule"
 ---
 
 # Permission Allowlist Maintain
@@ -87,6 +94,12 @@ The change ships through the standard pull-request flow per the spec's §Authori
 Dispatch `nolte-shared:pull-request-create` for the PR creation; the user confirms title and body before push.
 
 The actual merge is `pull-request-merge`'s job, not this skill's.
+
+## Examples
+
+- Read `examples/01-add-task-lint-from-fewer-prompts.md` when adding a new allowlist entry sourced from the `fewer-permission-prompts` skill output.
+- Read `examples/02-reject-forbidden-wildcard.md` when the user requests a pattern that the spec forbids (e.g. an interpreter wildcard).
+- Read `examples/03-prune-redundant-entries.md` when pruning entries that are already covered by a broader pattern already in the allowlist.
 
 ## Hard rules
 

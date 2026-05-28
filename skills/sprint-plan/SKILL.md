@@ -1,7 +1,27 @@
 ---
 name: sprint-plan
-description: Create a new sprint file at `project/sprints/<NNNN>-<slug>.md` per the project sprint spec. Invoke when the user asks to plan a sprint, open a sprint, draft the next sprint, schedule a sprint, or pull roadmap items into a sprint. Also handles equivalent German-language requests. Resolves the next monotonic sprint number, walks the value-delivery contract (rejects operator-internal verbs in `value_statement`), pulls in roadmap items whose `target_sprint` matches, populates the `features` list (delegating to `feature-decompose` when decompositions are missing), names the value-verifying feature, and writes the file with `status: planned`.
+description: Create a new sprint file under project/sprints/ per the project sprint spec. Invoke when the user asks to plan a sprint, open a sprint, draft the next sprint, schedule a sprint, or pull roadmap items into a sprint. Also handles equivalent German-language requests. Resolves the next monotonic sprint number, walks the value-delivery contract (rejects operator-internal verbs in `value_statement`), pulls in roadmap items whose `target_sprint` matches, populates the `features` list (delegating to `feature-decompose` when decompositions are missing), names the value-verifying feature, and writes the file with `status: planned`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
+phase: plan
+summary: "Creates a new sprint file under project/sprints/ with value statement, features, and value-verifying acceptance criterion."
+summary_de: "Erstellt eine neue Sprint-Datei unter project/sprints/ mit Value-Statement, Features und value-verifizierendem Akzeptanzkriterium."
+use_when:
+  - "you want to plan or open a new sprint"
+  - "you want to draft the next sprint with roadmap items pulled in"
+  - "you want to schedule a sprint and populate the features list"
+dont_use_when:
+  - situation: "You want to drive an already-planned sprint day-to-day"
+    alternative: sprint-execute
+  - situation: "You want to close an active sprint at review"
+    alternative: sprint-review
+  - situation: "You want to decompose a roadmap item into features first"
+    alternative: feature-decompose
+see_also:
+  - sprint-execute
+  - sprint-review
+  - sprint-readiness-reviewer
+  - feature-decompose
+resumable: true
 ---
 
 # Sprint Plan
@@ -78,7 +98,7 @@ Exactly one feature in the sprint **MUST** carry a non-null `verifies_sprint_val
 
 Write the file with this exact shape (frontmatter keys in the declared order from `spec/project/sprint/` §Frontmatter schema):
 
-```markdown
+```text
 ---
 number: <NNNN>
 status: planned
@@ -97,8 +117,8 @@ features: [<F-a>, <F-b>]
 
 ## Features
 
-- [<F-a>](../features/<slug-a>.md) — status: ready
-- [<F-b>](../features/<slug-b>.md) — status: ready
+- [<F-a>](`../features/<slug-a>.md`) — status: ready
+- [<F-b>](`../features/<slug-b>.md`) — status: ready
 
 ## Out of scope
 
@@ -128,6 +148,16 @@ Only write the file once the user approves. Report back: the path written, the s
 - **`verifies_sprint_value` lives on a feature, not on the sprint.** The sprint frontmatter names which feature carries the verifier (`verifies_sprint_value: F-<n>:acceptance-<m>`); the feature carries the actual `verifies_sprint_value: acceptance-<m>` field per the feature spec. Authoring the verifier in the sprint frontmatter without setting it on the feature side leaves the cross-reference half-broken.
 - **Sprint numbers are monotonic, never reused.** The skill resolves the next sprint number by reading the highest existing `<NNNN>` under `project/sprints/` plus the highest deleted number from `git log -- project/sprints/`. A retired sprint number isn't available for reuse, even after a `cancelled` sprint.
 - **At most one sprint is `active` at a time.** Creating a `planned` sprint while another is `active` is fine (planned sprints are queue items, not active commitments). The at-most-one invariant only applies to `status: active`; this skill writes `status: planned` and lets `sprint-execute` perform the `planned → active` promotion when the operator starts the first feature.
+
+## Examples
+
+- Read `examples/01-create-sprint-from-roadmap.md` when creating the first sprint by selecting features from the roadmap queue.
+- Read `examples/02-reject-operator-internal-value.md` when the user proposes a `value_statement` that starts with an operator-internal verb and the skill must refuse.
+- Read `examples/03-dispatch-feature-decompose.md` when a roadmap item lacks a feature file and the skill dispatches `feature-decompose` before continuing.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/sprint-plan/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

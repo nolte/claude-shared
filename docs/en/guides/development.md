@@ -1,0 +1,33 @@
+---
+title: Development
+audience: [external-contributor, maintainer]
+content_mode: meta
+track: developer-docs
+last_updated: 2026-05-19
+---
+
+# Development
+
+This section is for contributors working on the `claude-shared` repository itself—adding new skills, new agents, or maintaining the specifications.
+
+- [Project Structure](project-structure.md): where things live and why
+- [Contributing](contributing.md): workflow, conventions, commits
+
+## Dogfooding
+
+When working on the repo, launch Claude Code with the plugin pointing at the repo root:
+
+```bash
+claude --plugin-dir .
+```
+
+`/reload-plugins` picks up changes during a session.
+
+## Read the spec first
+
+Before writing a new skill or agent, read the relevant specification:
+
+- [Skill Authoring](../references/specs/skill-management.md)
+- [Agent Authoring](../references/specs/agent-management.md)
+
+Create new skills through the [Skill Management](../skills/nolte-shared/skill-management.md) skill itself—that guarantees conformance.

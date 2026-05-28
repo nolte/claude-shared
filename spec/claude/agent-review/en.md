@@ -67,6 +67,12 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 - **SHOULD** verify that at least one counter-dimension is named when the decision was a close call—absence is a `Suggestion`, not a `Critical`, consistent with the SHOULD formulation in `skill-vs-agent`
 - **MUST** run a duplicate-capability check: grep every other `agents/*.md` and `skills/*/SKILL.md` `description` line for semantic overlap; any plausible overlap produces a `Warning` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing
 
+### Checks derived from spec-driven-development
+
+- **MUST** run a spec-anchor check: verify the agent body contains at least one reference to a `spec/...` path. An agent without any spec citation is a `Critical` finding per `spec/project/spec-driven-development/` MUST
+- **MAY** suppress this check with a documented exception in the plan's `## Scope` section when an agent is explicitly classified as "implementation-only"; suppression must be anchored in a spec or a recorded project decision
+- Rationale: this check operationalises the MUST from spec-driven-development that has so far been operator-only
+
 ### Tool-scope checks
 
 - **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure—tools declared but not used are `Warning` findings (dead permission)

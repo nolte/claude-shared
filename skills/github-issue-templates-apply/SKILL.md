@@ -1,12 +1,34 @@
 ---
 name: github-issue-templates-apply
-description: Apply spec/project/github-issue-templates/<canonical_language>.md to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests ("Issue-Templates für dieses Repo erzeugen", "GitHub-Issue-Forms anlegen", "Bug- und Feature-Template scaffolden", "spec github-issue-templates anwenden"). Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`).
+description: Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
+phase: design
+summary: "Scaffolds spec-conformant GitHub Issue Forms (.github/ISSUE_TEMPLATE/) tailored to project type and audience."
+summary_de: "Scaffoldet spec-konforme GitHub-Issue-Forms (.github/ISSUE_TEMPLATE/), zugeschnitten auf Projekttyp und Audience."
+use_when:
+  - "you want to scaffold GitHub issue forms for this repo"
+  - "you want bug-report and feature-request templates aligned with the audience"
+  - "you want project-type-specific extra issue templates"
+dont_use_when:
+  - situation: "You want generic .github/ scaffolding rather than just issue templates"
+    alternative: project-structure-apply
+see_also:
+  - project-structure-apply
+resumable: true
 ---
 
 # GitHub Issue Templates Apply
 
 Operationalises `spec/project/github-issue-templates/<canonical_language>.md` against a target repository: classifies the project type, reads or produces the audience artefact, derives the triage-question set, and writes `.github/ISSUE_TEMPLATE/*.yml` plus `config.yml` as GitHub Issue Forms — atomically and only after explicit user confirmation of the derivation.
+
+## German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Issue-Templates für dieses Repo erzeugen"
+- "GitHub-Issue-Forms anlegen"
+- "Bug- und Feature-Template scaffolden"
+- "spec github-issue-templates anwenden"
 
 ## Why this is a skill, not an agent
 
@@ -134,6 +156,16 @@ A clean re-run on a conformant repo MUST produce no diff.
 - `id:` keys on form components are referenced by the GitHub API and by repo-level automation. Choose stable, descriptive IDs (`plugin-version`, not `field-3`) so renaming the label later doesn't break consumers.
 - `render: shell` (and `render: python`, `render: javascript`, …) only takes effect on `textarea`; on `input` it is silently ignored.
 - `contact_links` is a flat list under `config.yml`'s top level — not nested under any template. Putting it inside a `body:` block makes the chooser drop it without an error message.
+
+## Examples
+
+- Read `examples/01-fresh-scaffold-claude-plugin.md` when scaffolding issue templates for a new Claude plugin project.
+- Read `examples/02-update-existing-templates.md` when re-running the skill to update templates that already exist on disk.
+- Read `examples/03-python-library-project-type.md` when the project type is a Python library and you need to see how project-type inference changes the template set.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/github-issue-templates-apply/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

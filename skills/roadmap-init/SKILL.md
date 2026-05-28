@@ -1,12 +1,37 @@
 ---
 name: roadmap-init
-description: Scaffold the project planning pair `project/goals.md` and `project/roadmap.md` for the first time, per `spec/project/roadmap/`. Invoke when the user asks to "set up the roadmap", "initialise project goals", "create goals.md and roadmap.md", "bootstrap the roadmap", "wir brauchen eine Roadmap für dieses Projekt", "lege project/goals.md und project/roadmap.md an", or any equivalent fresh-bootstrap request. Also handles equivalent German-language requests. Verifies the audience artefact exists (and dispatches `audience-identify` when it doesn't), drafts the Vision plus Outcomes (`O-<n>`) in `project/goals.md`, drafts an empty queue plus optional phase headings in `project/roadmap.md`, presents both files for explicit approval, then writes them. Do NOT use to add roadmap items, retarget sprints, or flip MVP flags — that is `roadmap-planner`. Do NOT use to enforce the detail-level invariant — that is `roadmap-refine`.
+description: Scaffold the project planning pair `project/goals.md` and `project/roadmap.md` for the first time, per `spec/project/roadmap/`. Invoke when the user asks to "set up the roadmap", "initialise project goals", "create goals.md and roadmap.md", "bootstrap the roadmap", or any equivalent fresh-bootstrap request. Also handles equivalent German-language requests. Verifies the audience artefact exists (and dispatches `audience-identify` when it doesn't), drafts the Vision plus numbered Outcomes in `project/goals.md`, drafts an empty queue plus optional phase headings in `project/roadmap.md`, presents both files for explicit approval, then writes them. Do NOT use to add roadmap items, retarget sprints, or flip MVP flags — that is `roadmap-plan`. Do NOT use to enforce the detail-level invariant — that is `roadmap-refine`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
+phase: plan
+summary: "Scaffolds the project planning pair project/goals.md and project/roadmap.md for the first time."
+summary_de: "Scaffoldet das Planungspaar project/goals.md und project/roadmap.md zum ersten Mal."
+use_when:
+  - "you want to set up the project planning pair from scratch (goals.md + roadmap.md)"
+  - "you want to bootstrap the roadmap and initial outcomes"
+  - "you want a fresh planning structure with audience artefact already in place"
+dont_use_when:
+  - situation: "You want to add roadmap items, retarget sprints, or flip MVP flags"
+    alternative: roadmap-plan
+  - situation: "You want to enforce the detail-level invariant on an existing roadmap"
+    alternative: roadmap-refine
+see_also:
+  - roadmap-plan
+  - roadmap-refine
+  - audience-identify
+  - mission-define
+resumable: true
 ---
 
 # Roadmap Init
 
-Bootstraps the planning pair declared by `spec/project/roadmap/<canonical_language>.md`: a single `project/goals.md` carrying the Vision and the outcome catalogue, plus a single `project/roadmap.md` carrying an (initially empty) queue. Once both files exist, lifecycle work moves to `roadmap-planner` for adds and edits and to `roadmap-refine` for the detail-level invariant.
+Bootstraps the planning pair declared by `spec/project/roadmap/<canonical_language>.md`: a single `project/goals.md` carrying the Vision and the outcome catalogue, plus a single `project/roadmap.md` carrying an (initially empty) queue. Once both files exist, lifecycle work moves to `roadmap-plan` for adds and edits and to `roadmap-refine` for the detail-level invariant.
+
+## German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "wir brauchen eine Roadmap für dieses Projekt"
+- "lege project/goals.md und project/roadmap.md an"
 
 ## Why this is a skill, not an agent
 
@@ -26,7 +51,7 @@ The five fixed schema strings (`fine`, `coarse`, `backlog`, `proposed`, `active`
 Before any write:
 
 - The current working directory is inside a git repository.
-- `project/goals.md` and `project/roadmap.md` **do not yet exist**. If either file is already present, stop and direct the user to `roadmap-planner` (for additions) or `roadmap-refine` (for invariant enforcement) instead of overwriting.
+- `project/goals.md` and `project/roadmap.md` **do not yet exist**. If either file is already present, stop and direct the user to `roadmap-plan` (for additions) or `roadmap-refine` (for invariant enforcement) instead of overwriting.
 - The repo's audience artefact (typically `AUDIENCES.md`, or whichever location the project's `audience-identification` adoption uses) exists and is non-empty. When the artefact is missing or empty, dispatch the `audience-identify` skill and pause this skill until the user signals the artefact is ready; resume by re-reading it from disk. The spec mandates this dispatch, and outcome authoring is blocked until it completes.
 - `project/mission.md` may or may not exist; this skill does not require it. Mission authoring is owned by a separate skill family.
 
@@ -61,11 +86,11 @@ Iterate with the user until the Vision and every outcome are approved. Do not wr
 
 Compose:
 
-1. A short top-of-file paragraph stating that this file is the queue governed by `spec/project/roadmap/`, and that detail levels and lifecycle are enforced by `roadmap-refine` and `roadmap-planner`.
+1. A short top-of-file paragraph stating that this file is the queue governed by `spec/project/roadmap/`, and that detail levels and lifecycle are enforced by `roadmap-refine` and `roadmap-plan`.
 2. Optional level-2 phase headings (for example `## Phase 1 — Foundations`, `## Phase 2 — Stabilisation`) when the user wants them. Phases are documentation, not schema; a flat roadmap with zero phase headings is equally valid. Ask the user; do not assume phases.
-3. No roadmap items. The queue starts empty by design — items are added by `roadmap-planner`.
+3. No roadmap items. The queue starts empty by design — items are added by `roadmap-plan`.
 
-Item IDs (`R-<n>`) are monotonic and never reused across the project's lifetime, parallel to outcome IDs in `goals.md`. The empty queue created here means `roadmap-planner` will start its counter at `R-1`; document the convention in the top-of-file paragraph so later contributors don't reset it.
+Item IDs (`R-<n>`) are monotonic and never reused across the project's lifetime, parallel to outcome IDs in `goals.md`. The empty queue created here means `roadmap-plan` will start its counter at `R-1`; document the convention in the top-of-file paragraph so later contributors don't reset it.
 
 ### 4. Present both drafts and confirm
 
@@ -78,7 +103,7 @@ Once approved:
 1. Create `project/` if it does not yet exist.
 2. Write `project/goals.md` and `project/roadmap.md` in one operation; refuse partial writes. When the write of either file fails, roll back so a freshly bootstrapped project never lands in a half-bootstrapped state with one file present and the other missing.
 3. Confirm the paths back to the user in their language and remind them that:
-   - `roadmap-planner` is the entry point for adding items, retargeting sprints, and flipping MVP flags.
+   - `roadmap-plan` is the entry point for adding items, retargeting sprints, and flipping MVP flags.
    - `roadmap-refine` walks the queue and reports detail-level violations once items exist.
    - When `project/mission.md` is added later, every roadmap item will start carrying the `mvp` field.
 
@@ -88,13 +113,23 @@ Once approved:
 - Outcome IDs and roadmap item IDs share the same monotonicity rule but live in different files; do not cross the streams. `O-1` and `R-1` are independent counters.
 - The spec does not prescribe the Vision heading text. Match whatever convention the project already uses (German repos often title it `# Vision` or `# Zielbild`); the canonical-language wording does not force a translation here.
 
+## Examples
+
+- Read `examples/01-fresh-bootstrap-with-audiences.md` when bootstrapping a fresh `project/goals.md` and `project/roadmap.md` on a project that already has an audience artefact.
+- Read `examples/02-audience-missing-dispatch-identify.md` when the audience artefact is absent and the skill dispatches `audience-identify` first.
+- Read `examples/03-refusal-when-roadmap-exists.md` when `project/roadmap.md` already exists and the skill must refuse to overwrite it.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/roadmap-init/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+
 ## Hard rules
 
 - **Never** invent audience entries inline. When no audience artefact exists, dispatch `audience-identify` first; outcomes whose audience is fabricated cannot serve a real reader.
 - **Never** overwrite an existing `project/goals.md` or `project/roadmap.md`. If either file is present, stop and redirect to the appropriate sibling skill.
 - **Never** assign an outcome ID that has already existed in the file's history (even if currently deleted). `O-<n>` is monotonic and never reused across the project's lifetime.
 - **Never** phrase an outcome as an internal capability ("we refactor X", "we set up Y"); outcomes are end-user benefits.
-- **Never** add roadmap items inside this skill. The queue starts empty; additions are owned by `roadmap-planner`.
+- **Never** add roadmap items inside this skill. The queue starts empty; additions are owned by `roadmap-plan`.
 - **Never** write the files before the user has approved both drafts in the same review.
 - **Never** assume the project's primary language; detect it from existing prose or ask explicitly.
 - When `spec/project/roadmap/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.

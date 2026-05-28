@@ -1,7 +1,27 @@
 ---
 name: feature-decompose
-description: Decompose a roadmap item (R-<n>) into one or more `project/features/<slug>.md` files conforming to spec/project/feature/<canonical_language>.md. Invoke when the user asks to decompose a roadmap item, break down R-<n> into features, draft features for a roadmap entry, scaffold a feature file, plan features for the next sprint, or write a new feature against the feature spec. Also handles equivalent German-language requests. Walks the operator through title, description, three-to-seven testable acceptance criteria, and test hooks per feature; identifies which feature carries `verifies_sprint_value`; and dispatches the `feature-consistency-reviewer` agent (or records a manual fallback pass) before allowing the new feature to leave `draft`. Do NOT use to transition feature status (`ready → in_progress` or `in_progress → done`) — that is owned by `sprint-execute` and `sprint-review`. Do NOT use to author roadmap items, sprints, or the mission file.
+description: Decompose a roadmap item into feature files under project/features/ per spec/project/feature/. Invoke when the user asks to decompose a roadmap item, break down a roadmap entry into features, draft features, scaffold a feature file, plan features for the next sprint, or write a new feature. Also handles equivalent German-language requests. Walks the operator through title, description, 3-7 testable acceptance criteria, and test hooks per feature; identifies which carries `verifies_sprint_value`; dispatches `feature-consistency-reviewer` (or records a manual fallback) before allowing the feature to leave `draft`. Don't use to transition feature status (`ready → in_progress` / `in_progress → done` is `sprint-execute` / `sprint-review`) or to author roadmap items, sprints, or the mission file. Supports resume per `spec/claude/resumable-work/`.
 tags: [scaffolding]
+phase: plan
+summary: "Decomposes a roadmap item into feature files with testable acceptance criteria and test hooks."
+summary_de: "Zerlegt einen Roadmap-Eintrag in Feature-Dateien mit testbaren Akzeptanzkriterien und Test-Hooks."
+use_when:
+  - "you want to break a roadmap entry into feature files"
+  - "you want to scaffold features for the next sprint"
+  - "you want to draft a new feature against the feature spec"
+dont_use_when:
+  - situation: "You want to transition a feature's status (ready → in_progress)"
+    alternative: sprint-execute
+  - situation: "You want to mark a feature done at sprint review"
+    alternative: sprint-review
+  - situation: "You want to author or retarget roadmap items themselves"
+    alternative: roadmap-plan
+see_also:
+  - roadmap-plan
+  - sprint-plan
+  - sprint-execute
+  - feature-consistency-reviewer
+resumable: true
 ---
 
 # Feature Decompose
@@ -151,12 +171,22 @@ feature is malformed.
    resolution is to upgrade the plugin runtime and rerun the check via
    the agent path.
 
+## Examples
+
+- Read `examples/01-single-feature-from-roadmap-item.md` when decomposing a single roadmap item into a feature for the first time.
+- Read `examples/02-split-into-multiple-features.md` when a roadmap item is large enough to warrant multiple features.
+- Read `examples/03-consistency-check-overlap.md` when the consistency checker reports potential overlap with existing features.
+
 ## Gotchas
 
 - **The `feature-consistency-reviewer` agent has no shell access** (per `agent-management` §Tool access — read-only invariant). The dispatching call from this skill **MUST** confirm the working tree is a git repository (`git rev-parse --is-inside-work-tree`) and pass the short SHA (`git rev-parse --short HEAD`) as a dispatch argument; the agent uses the SHA to populate `agent_version` in its findings report. Skipping this step and dispatching anyway produces an `agent_version: unknown` field in every consistency-check result.
 - **The manual-fallback path is deprecated, not removed.** When the agent dispatch in Operation 2 step 1 fails because the plugin runtime predates the agent's release, the operator can still walk the investigation surface manually — but the skill **MUST** ask explicit permission before falling back, and the resulting `consistency_check` block carries `agent: manual-<YYYY-MM-DD>` instead of an agent name. Auditing later that bypasses surface as if it were a regular agent run mis-attributes the resolution decisions.
 - **`verifies_sprint_value` is a feature-side invariant, not a sprint-side one.** At most one feature per sprint carries a non-null `verifies_sprint_value`; setting it on two features in the same sprint is a hard violation per `spec/project/feature/` §Frontmatter schema. The skill defaults the field to `null` on every new feature; the operator opts in explicitly when authoring or when `sprint-plan` reassigns the verifier.
 - **The `R-<n>` and `F-<n>` ID counters are monotonic across the project's lifetime, never reused** even after deletion. Deriving the next ID from "max existing ID + 1" without checking the git history's deleted IDs would silently re-use a retired ID. The skill reads the highest existing ID under `project/features/` plus the highest deleted ID from `git log` before assigning.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/feature-decompose/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

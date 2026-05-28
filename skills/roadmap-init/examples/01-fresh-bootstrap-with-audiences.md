@@ -33,14 +33,14 @@ Happy path: a fresh repository with no `project/` directory, but a populated `AU
    - cites one audience identifier from `AUDIENCES.md` in a trailing `_(audience: …)_` cite,
    - does not invent any audience identifier outside the artefact.
 6. **Roadmap draft** — drafts `project/roadmap.md` with:
-   - a top-of-file paragraph naming `spec/project/roadmap/` as governing spec and pointing maintenance at `roadmap-planner` and `roadmap-refine`,
+   - a top-of-file paragraph naming `spec/project/roadmap/` as governing spec and pointing maintenance at `roadmap-plan` and `roadmap-refine`,
    - the convention note that `R-<n>` IDs are monotonic and never reused across the project's lifetime,
    - **zero roadmap items** (the queue starts empty by design),
    - phase headings only if the user explicitly asks for them (the skill must ask, not assume).
 7. **Approval gate** — presents both drafts side by side and waits for explicit approval of both before any disk write. Refuses to write either file in isolation.
 8. **Atomic write** — once approved, creates `project/`, writes `project/goals.md` and `project/roadmap.md` together. If either write fails, rolls back so the project never lands in a half-bootstrapped state with one file present and the other missing.
 9. **Hand-off message** — confirms both paths back to the user in German, reminds them that:
-   - `roadmap-planner` is the entry point for adding items, retargeting sprints, and flipping MVP flags,
+   - `roadmap-plan` is the entry point for adding items, retargeting sprints, and flipping MVP flags,
    - `roadmap-refine` walks the queue and enforces the detail-level invariant once items exist,
    - when `project/mission.md` is added later, every roadmap item will start carrying the `mvp` field.
 10. **No mission requirement** — the skill does not ask for or require `project/mission.md`; mission authoring belongs to a separate skill family.

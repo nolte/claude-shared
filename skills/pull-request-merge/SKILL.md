@@ -1,7 +1,23 @@
 ---
 name: pull-request-merge
-description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`.
+description: Promote an open draft pull request on the current branch to a merged state on `develop`, applying repository-declared labels and passing every gate from the pull-request-workflow spec. Invoke when the user asks to promote the draft PR, ship the PR, merge the draft, or bring the PR over the finish line. Also handles equivalent German-language requests. Delegates pre-merge review to the `review` skill (and `security-review` when the diff touches security-sensitive paths), derives labels from the Conventional-Commits type and touched paths, flips draft → ready, triggers automerge by applying the `automerge` label so the repository's automerge workflow squash-merges the PR once every required check is green, and verifies the merge commit landed on `develop`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [pull-request]
+phase: review
+summary: "Promotes a draft PR to merged on develop, passing every pull-request-workflow gate."
+summary_de: "Befördert einen Draft-PR auf develop und durchläuft jeden Pull-Request-Workflow-Gate."
+use_when:
+  - "you want to merge the open draft PR on this branch"
+  - "you want to ship the current PR to develop"
+  - "you want to apply automerge and let the squash-merge workflow land the PR"
+dont_use_when:
+  - situation: "You want to create or open the PR in the first place"
+    alternative: pull-request-create
+see_also:
+  - pull-request-create
+examples:
+  - prompt: "Merge the open PR"
+    outcome: "Ready PR squash-merged onto develop; merge commit verified."
+resumable: true
 ---
 
 # Pull Request Merge
@@ -139,6 +155,32 @@ If the logs contain `mergeResult: 'merge_failed'` or `Failed to merge PR: …`, 
 
 Report back: PR URL, merged-at timestamp, merge commit SHA on `origin/develop`, the labels that were applied, and—if 7b caught a silent no-op—the workflow-health classification and the remediation the user needs to take next.
 
+### 7c. Close referenced tracking issues
+
+GitHub's `Closes #<n>` / `Fixes #<n>` / `Resolves #<n>` autolinks fire only on default-branch merges. Per `spec/project/pull-request-workflow/<canonical_language>.md` §"Linked-issue closure on develop merge", a squash-merge into `develop` leaves referenced tracking issues `OPEN`; this step closes them with operator confirmation rather than waiting for the next `release-cd-refresh-master.yml` fast-forward of `main`.
+
+Run only when step 7a confirmed `state == MERGED`. If the PR body carries no closing-keyword references, skip this step.
+
+1. Scan the PR body for closing-keyword references — case-insensitive `(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)`. Deduplicate by issue number. `Refs #<n>` is **not** a closing keyword and is ignored on purpose.
+
+2. For each referenced issue, read its current state:
+
+   ```
+   gh issue view <n> --json state,title --jq .
+   ```
+
+   Skip when `state == CLOSED` — the autolink may have fired (for example because `main` was fast-forwarded between the merge and this step), or another path closed it already.
+
+3. Present the remaining `OPEN` list to the operator, one line per issue (`#<n> <title>`), and require explicit confirmation before any close call. The operator **MAY** select all, a subset, or none.
+
+4. For each confirmed issue, close with a cross-reference comment that names the merging PR and the merge-commit SHA on `develop`:
+
+   ```
+   gh issue close <n> --reason completed --comment "Resolved by #<pr> (merged to \`develop\` as \`<merge_sha>\`). The \`Closes #<n>\` autolink fires only on default-branch merges; this repo's default is \`main\`, fast-forwarded from \`develop\` via \`release-cd-refresh-master\` — closing manually now rather than waiting for that promotion."
+   ```
+
+Report back which issues were closed, which were skipped because they were already closed, and which the operator declined.
+
 ### 8. Clean up local state
 
 Once the PR is merged, offer (don't automatically execute) the following cleanup to the user:
@@ -158,6 +200,23 @@ Never run `git push origin --delete …` or `gh api -X DELETE` without explicit 
 
 The skill is single-shot by default: when step 4 finds pending checks or step 7a finds the PR still `OPEN`, the skill reports and stops; the user re-invokes once GitHub is in the next state. **Wait mode** is an opt-in that lets the skill wait for state transitions inside a single invocation, bounded by hard caps (interval ≥60s, wall-clock ≤15 min, ≤10 retries per wait point, visible status line per round, failure short-circuits to workflow-health). Read `references/wait-mode.md` when the user opts in via `--wait` or an unambiguous "wait until X" instruction in the prompt — the reference covers activation, every cap with its rationale, the per-step implementation pattern (step 4 vs. step 7a), and the prompt-cache trade-off that justifies the bounds.
 
+## Examples
+
+- Read `examples/01-clean-merge-via-automerge-label.md` when promoting a ready PR through the automerge label on the first end-to-end run.
+- Read `examples/02-pending-checks-reports-and-stops.md` when required checks are still pending and the skill reports state instead of proceeding.
+- Read `examples/03-wait-mode-with-explicit-flag.md` when the user opts into wait mode via `--wait` and you need to see the polling loop behaviour.
+
+## Gotchas
+
+- **`automerge` label must be spelled exactly**: the label name `automerge` is case-sensitive and must already exist in the repository's label set; applying a near-miss (`auto-merge`, `AutoMerge`) creates a new label silently or fails — always verify the label exists via the `gh label list` call in step 1 before applying it.
+- **`automerge.yaml` `SUCCESS` does not mean the merge happened**: `pascalgn/automerge-action` exits 0 even on `mergeResult: 'merge_failed'`; always confirm `state == MERGED` via `gh pr view` (step 7a) and, when the PR stays `OPEN` with green checks, audit the workflow logs for `merge_failed` (step 7b) before declaring completion.
+- **Required checks list is read from `.github/settings.yml`, not from the GitHub UI**: the UI shows all checks; the spec gates only on checks declared as required in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension) — use that file as the authoritative source when deciding whether all required checks are green.
+- **`Closes #N` autolinks don't fire on `develop` merges**: GitHub's reference-closing keywords (`Closes`, `Fixes`, `Resolves`) fire only when the merge lands on the repository's default branch. Under this branching model the default is `main`, but PRs target `develop`; referenced issues therefore stay `OPEN` after a `develop` squash-merge and close only when `release-cd-refresh-master.yml` fast-forwards `main`. Step 7c closes them manually with operator confirmation rather than waiting for the promotion.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/pull-request-merge/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+
 ## Hard rules
 
 - **Never** flip a draft to ready while any required check is pending or failing. Failures route to the `workflow-health` triage flow, not to a waiver.
@@ -169,4 +228,5 @@ The skill is single-shot by default: when step 4 finds pending checks or step 7a
 - **Never** poll, sleep, or loop waiting for checks to complete **unless the user has opted in to wait mode** (see "Wait mode" below). Outside wait mode, report the outstanding state and stop; the user re-invokes the skill when ready. Inside wait mode, polling is permitted but bounded by the documented retry / interval / timeout caps and **never** silently in the background — every wait round produces a visible status line.
 - **Never** treat the `automerge.yaml` workflow's `SUCCESS` conclusion as proof the merge happened. `pascalgn/automerge-action` exits 0 on `mergeResult: 'merge_failed'`. Always confirm `state == MERGED` on the PR itself (step 7a), and when the PR is still open with green checks, audit the action's logs for `merge_failed` (step 7b) before declaring the merge complete.
 - **Never** delete the remote feature branch as part of the automatic merge flow. Post-merge branch cleanup is the platform's job via `delete_branch_on_merge: true`; a manual `gh api -X DELETE` call is only a one-off catch-up and requires explicit user confirmation.
+- **Never** close a referenced tracking issue without explicit operator confirmation in the merging session. Issue closure is externally-visible and the operator may have closed the issue through another path; step 7c always lists the open candidates and waits for approval before invoking `gh issue close`.
 - When `spec/project/pull-request-workflow/`, `spec/project/branching-model/`, or `spec/project/workflow-health/` disagrees with this skill, the spec wins. Propose a skill update rather than silently diverging.

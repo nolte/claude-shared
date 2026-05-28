@@ -1,7 +1,23 @@
 ---
 name: workflow-health-triage
-description: "Triages a failing GitHub Actions workflow run on `develop` or `main` per `spec/project/workflow-health/`. Classifies the failure into one of `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`, dispatches the most specialised Claude agent that matches the classification, records the classification plus the dispatched agent's name in the eventual fix PR's Risk / rollout notes, and verifies the standard `fix/`-PR flow. Invoke when the user asks to \"triage this red workflow\", \"classify this CI failure\", or equivalent German-language requests. Don't use to silence checks via `continue-on-error` shortcuts or by removing required-checks entries (forbidden by spec); don't use to bypass branch protection (`enforce_admins` on develop has no exception path); don't use to merge a fix PR (use `pull-request-merge`)."
+description: "Triages a failing GitHub Actions workflow run on `develop` or `main` per `spec/project/workflow-health/`. Classifies the failure into one of `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`, dispatches the most specialised Claude agent that matches the classification, records the classification plus the dispatched agent's name in the eventual fix PR's Risk / rollout notes, and verifies the standard `fix/`-PR flow. Invoke when the user asks to \"triage this red workflow\", \"classify this CI failure\", or equivalent German-language requests. Don't use to silence checks via `continue-on-error` shortcuts or by removing required-checks entries (forbidden by spec); don't use to bypass branch protection (`enforce_admins` on develop has no exception path); don't use to merge a fix PR (use `pull-request-merge`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [audit, pull-request]
+phase: quality
+summary: "Triages a failing GitHub Actions workflow on develop/main and dispatches the most specialised agent to remediate."
+summary_de: "Triagiert einen roten GitHub-Actions-Workflow auf develop/main und dispatched den passendsten spezialisierten Agent zur Behebung."
+use_when:
+  - "you want to triage a red workflow run on develop or main"
+  - "you want to classify a CI failure (defect / flake / infra / stale pin / secret drift)"
+  - "you want the fix to land via the standard fix/-PR flow"
+dont_use_when:
+  - situation: "You want to merge the fix PR after triage"
+    alternative: pull-request-merge
+  - situation: "You want a per-repo CVE audit, not CI triage"
+    alternative: dependency-audit
+see_also:
+  - pull-request-merge
+  - dependency-audit
+resumable: true
 ---
 
 # Workflow Health Triage
@@ -68,7 +84,7 @@ The set of available agents changes over time; never freeze a snapshot of "which
 
 The dynamic-lookup design means a new specialised agent that lands in `agents/` becomes dispatchable immediately, without a coordinated edit to this skill — and a renamed or removed agent stops being a target the next time the skill runs, with no stale snapshot to mislead the dispatch.
 
-#### Old patterns
+## Old patterns
 
 Earlier revisions of this skill enumerated specific agent names inline (for example `workflow-yaml-fixer`, `claude-plugin-developer`, `audience-doc-author`) as the dispatch table. That snapshot rotted whenever a new agent landed or an existing one renamed; the runtime-Glob design above replaces it. The historical mapping is preserved here only so a reader who recognises the prior wording can spot the transition: `defect` in workflow YAML used to fall back to generalist (no matching agent), `defect` in spec / skill / agent files used to dispatch `claude-plugin-developer`, `defect` in documentation used to dispatch `audience-doc-author`. Use the runtime lookup above instead of this snapshot.
 
@@ -91,6 +107,16 @@ After the fix PR opens, the skill stops. The actual merge belongs to `pull-reque
 
 Report back the run ID, the classification, the dispatched agent name (or "generalist"), the fix-PR URL, and a one-line "next action: invoke `pull-request-merge` after CI is green".
 
+## Examples
+
+- Read `examples/01-defect-classification-dispatch.md` when triaging a failure that classifies as `defect` and dispatches to a specialised agent.
+- Read `examples/02-stale-pin-portfolio-gap.md` when the failure root-causes to a stale pin in the portfolio plumbing.
+- Read `examples/03-flake-no-fix-record-only.md` when the failure classifies as `flake` and the skill records the classification without opening a fix PR.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/workflow-health-triage/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+
 ## Hard rules
 
 - **Never** re-run a failed required workflow run more than once before a recorded triage classification exists; the spec calls repeated blind re-runs drift.
@@ -110,3 +136,7 @@ Per `spec/claude/skill-management/` §Gotchas—concrete corrections to non-obvi
 - **`pascalgn/automerge-action` exits 0 on `mergeResult: 'merge_failed'`.** A `automerge.yaml` run with conclusion `success` whose log carries `mergeResult: 'merge_failed'` or `Failed to merge PR:` is a `stale pin` failure (the reusable's `MERGE_METHOD` default doesn't match the repo's allowed strategy in some pre-fix versions). Triage the `automerge.yaml` `uses:` tag, not the workflow YAML itself.
 - **Renovate-generated bump PRs for `nolte/gh-plumbing` aren't automerged in this portfolio.** A `stale pin` remediation that proposes to enable Renovate automerge for `nolte/gh-plumbing` violates `workflow-health` §Upstream drift and the AC against it. The remediation is a human-acknowledged Renovate PR, not an automerge rule.
 - **`flake` without reproducible evidence is `defect`.** A "let's just re-run and hope" reflex is exactly what the spec forbids. If the same `headSha` doesn't re-run cleanly green and no infra signal explains the first failure, the class is `defect` and the work is a fix, not a tracking entry.
+
+## Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.

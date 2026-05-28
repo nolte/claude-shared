@@ -1,12 +1,36 @@
 ---
 name: quality-gate
-description: Run the project's lint + typecheck + test gate in parallel, tabulate the results, and call out exactly which checks failed so the caller can triage before a commit, a PR, or a release. Prefers repository-declared Taskfile targets (`task lint`, `task test`, `task typecheck`, `task check`) when they exist so project conventions and ignore lists are honoured; otherwise detects and runs the native tooling directly (ruff, pytest, eslint, tsc, vitest, go test, cargo test, and similar). Invoke when the user asks to "run the quality gate," "run lint and tests," "make sure CI will pass," "run all checks before I commit," or equivalent German-language requests ("Quality-Gate ausführen," "vor dem Commit prüfen," "Linting und Tests laufen lassen"). Don't use for security/CVE scanning (that's `dependency-audit`) and don't use for documentation builds (those are a separate concern).
+description: Run the project's lint + typecheck + test gate in parallel, tabulate the results, and call out exactly which checks failed so the caller can triage before a commit, a PR, or a release. Prefers repository-declared Taskfile targets (`task lint`, `task test`, `task typecheck`, `task check`) when they exist so project conventions and ignore lists are honoured; otherwise detects and runs the native tooling directly (ruff, pytest, eslint, tsc, vitest, go test, cargo test, and similar). Invoke when the user asks to "run the quality gate," "run lint and tests," "make sure CI will pass," "run all checks before committing," or equivalent German-language requests. Don't use for CVE scanning or license compliance (those are dependency-audit's job, even when task lint wraps a security check) and don't use for documentation builds (those are a separate concern).
 tags: [quality-gate]
+phase: quality
+summary: "Runs the project's lint + typecheck + test gate in parallel and tabulates which checks failed."
+summary_de: "Führt das Lint-+-Typecheck-+-Test-Gate des Projekts parallel aus und tabelliert, welche Checks gescheitert sind."
+use_when:
+  - "you want to run the project's quality gate before a commit, PR, or release"
+  - "you want a parallel lint + typecheck + test run with a tabulated outcome"
+  - "you want to verify CI will pass locally"
+dont_use_when:
+  - situation: "You want a CVE scan rather than the lint/typecheck/test gate"
+    alternative: dependency-audit
+  - situation: "You want a documentation build (mkdocs build)"
+    alternative: project-structure-apply
+see_also:
+  - dependency-audit
 ---
 
 # Quality Gate
 
 Run every lint, typecheck, and test step the project declares, in parallel, and report the outcome as a single table. This skill doesn't fix failures—it surfaces them with enough detail that the caller knows what to fix.
+
+Implements `spec/project/quality-gate/` — the spec defines the gate composition contract, invocation requirements, and output shape. This skill binds those rules to the on-disk procedure.
+
+## German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Quality-Gate ausführen"
+- "vor dem Commit prüfen"
+- "Linting und Tests laufen lassen"
 
 ## User-language policy
 
@@ -18,9 +42,9 @@ Detect the user's language from their message and respond in it. The result tabl
 - **Scope override** (optional): caller may restrict the run to a named subset — "lint only," "tests only," "typecheck only," "fast" (lint + typecheck, skip tests).
 - **Subroot filter** (optional): in a monorepo, caller may name a subroot (`backend/`, `frontend/`, `packages/foo/`) to scope the run.
 
-## Operation
+## Operations
 
-### Step 1: Prefer Taskfile targets
+### 1. Prefer Taskfile targets
 
 If the repo root has `Taskfile.yml` or `Taskfile.yaml`, enumerate the declared targets:
 
@@ -44,7 +68,7 @@ Rules for picking targets:
 
 Record every chosen target in the report so the caller can see what ran.
 
-### Step 2: Detect native tooling (fallback)
+### 2. Detect native tooling (fallback)
 
 For any category not covered by a Taskfile target, detect the tooling from the manifests:
 
@@ -64,7 +88,7 @@ Detection rules:
 
 If a category has no detectable tooling and no Taskfile target, record it as `skipped: no tooling detected` rather than claiming pass.
 
-### Step 3: Run checks in parallel
+### 3. Run checks in parallel
 
 Issue every chosen command in a single parallel batch. Each command **must** end with `; echo "EXIT:$?"` so the exit code survives through redirects and shell wrappers. Honour these timeouts:
 
@@ -74,7 +98,7 @@ Issue every chosen command in a single parallel batch. Each command **must** end
 
 If a command times out, report it as `timeout` in the status column—don't retry.
 
-### Step 4: Parse each result
+### 4. Parse each result
 
 For every check, capture:
 
@@ -90,7 +114,7 @@ Project-local conventions that the skill **must** honour when the Taskfile targe
 
 When running tools directly (Step 2 fallback), **don't** add project-local ignores the skill doesn't know about. Report the raw tool output and let the caller decide.
 
-### Step 5: Render the result table
+### 5. Render the result table
 
 ```
 | Check | Status | Runner | Details |
@@ -104,11 +128,23 @@ The **Runner** column shows exactly what was invoked — the Taskfile target nam
 
 Below the table, for every `fail` or `timeout` row, append a one-paragraph excerpt from the captured output (≤10 lines, fenced in a code block). Group excerpts by check.
 
-### Step 6: Overall verdict
+### 6. Overall verdict
 
 - **All `pass`**: one-line green summary (`Quality gate passed — N checks green.`).
 - **Any `fail` / `timeout`**: red summary naming the failed checks and pointing at the excerpts below the table.
 - **Any `skipped: no tooling detected`**: mention them explicitly in the summary so the caller can decide whether they're acceptable (a pure-Python repo genuinely has no frontend lint) or a misconfiguration (missing `ruff` config).
+
+## Examples
+
+- Read `examples/01-task-targets-when-available.md` when Taskfile targets exist and the skill should prefer them over direct tool invocation.
+- Read `examples/02-native-fallback-no-taskfile.md` when no Taskfile is present and the skill must detect and run native tooling directly.
+- Read `examples/03-multi-language-monorepo.md` when the repository has multiple language subroots that each need a separate parallel scan.
+
+## Gotchas
+
+- **Taskfile target may exist but wrap nothing**: `task --list-all` lists a target even if it contains no commands or calls a non-existent dependency; always inspect the target via `task --summary <name>` before relying on its output — an empty or broken target silently produces exit 0.
+- **Tool detection order is not deterministic across repos**: a monorepo may carry both `pyproject.toml` and `package.json` at the root, making the detected lint/test runner ambiguous; always select the runner per the subroot where its manifest lives and document which runner was chosen in the `Runner` column.
+- **Missing Taskfile target for a category is not a failure**: when `task lint` doesn't exist the skill falls through to native tooling — record `skipped: no tooling detected` rather than reporting `fail`; claiming fail without a detected tool is a false positive.
 
 ## Hard rules
 
@@ -120,8 +156,9 @@ Below the table, for every `fail` or `timeout` row, append a one-paragraph excer
 - **Always** prefer Taskfile targets over direct tool invocation when a suitable target exists. That keeps project conventions in charge.
 - **Always** report exactly what was invoked in the **Runner** column so the caller can reproduce any failure locally.
 - **Always** include enough of the failure output (≤10 lines per failing check) that the caller doesn't need to re-run to triage.
+- When `spec/project/quality-gate/` and this skill disagree, the spec wins; this skill needs the update.
 
-## Rationale
+## Why this is a skill, not an agent
 
 This is a skill, not an agent, because:
 

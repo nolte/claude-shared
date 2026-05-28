@@ -101,6 +101,7 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 - **MUSS [MUST]** aus jeder Review-Spec referenziert werden, die einen Plan produziert (`skill-review`, `agent-review` und jeder künftige Review-Typ) — die Review-Spec besitzt die Kriterien, diese Spec besitzt die Artefakt-Form
 - **MUSS NICHT [MUST NOT]** als Ausgabe von `spec-drift-audit` verwendet werden; jene Spec persistiert ein quartalsweises Audit-Record, das nicht bei Verarbeitungs-Abschluss gelöscht werden soll
 - **SOLLTE [SHOULD]**, wenn ein Review-Agent (z. B. `audience-review`) einen Report in der Hauptkonversation emittiert, den strukturierten Plan trotzdem unter `.audits/<review-type>/<target>.md` persistieren, damit der Verarbeitungsvertrag unabhängig davon konsistent ist, wer das Review gefahren hat
+- **SOLLTE [SHOULD]** `spec/project/parallel-working-copies/` §Audit-Artefakte in mehreren Worktrees konsultieren, wenn der Plan in einem Worktree statt im primären Checkout erzeugt wird; die Per-(Review-Typ, Ziel)-Eindeutigkeitsregel aus dieser Spec ist jeweils nur innerhalb eines Working Tree beobachtbar, und die worktree-lokalen Commit-, Transfer- und Cleanup-Regeln leben dort
 
 ## Abnahmekriterien
 <!-- Testbare, abhakbare Bedingungen. Reviewer müssen pro Punkt "erfüllt / nicht erfüllt" markieren können. -->

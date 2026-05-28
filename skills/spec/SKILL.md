@@ -1,7 +1,31 @@
 ---
 name: spec
-description: Create, translate, index, deduplicate, and drift-check multilingual specifications stored under the project's spec/ folder. Invoke when the user wants to write a new spec, update or translate an existing one, check whether a requirement is already covered, regenerate the spec index, or verify that translations are still in sync with the canonical version. Supports writing the request in any configured language; specs on disk always exist in all configured languages, with one canonical source and the rest as translations kept strictly in sync.
+description: Create, translate, index, deduplicate, and drift-check multilingual specifications stored under the project's spec/ folder. Invoke when the user wants to write a new spec, update or translate an existing one, check whether a requirement is already covered, regenerate the spec index, or verify that translations are still in sync with the canonical version. Supports writing the request in any configured language; specs on disk always exist in all configured languages, with one canonical source and the rest as translations kept strictly in sync. Don't use for readiness audit (contradiction detection, audience fit, AC coverage) — use spec-readiness-reviewer. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
+phase: design
+summary: "Authors, translates, indexes, and drift-checks bilingual specifications under spec/."
+summary_de: "Verfasst, übersetzt, indiziert und prüft mehrsprachige Spezifikationen unter spec/."
+use_when:
+  - "you want to write a new specification under spec/"
+  - "you want to translate an existing spec into another configured language"
+  - "you suspect a requirement is already covered and want to dedupe before authoring"
+  - "you want to regenerate the spec index after adding or renaming a spec"
+  - "you want to verify translations are still in sync with the canonical version"
+dont_use_when:
+  - situation: "You want to audit a spec for contradictions, AC coverage, or audience fit"
+    alternative: spec-readiness-reviewer
+  - situation: "You want to reconcile a spec against the actual implementation in the codebase"
+    alternative: spec-drift-audit
+see_also:
+  - spec-readiness-reviewer
+  - spec-drift-audit
+  - audience-identify
+examples:
+  - prompt: "Write a new spec for the foo workflow under spec/project/foo/"
+    outcome: "Bilingual spec files at spec/project/foo/{en,de}.md plus regenerated spec index."
+  - prompt: "The German translation of spec/project/bar/ is out of sync — refresh it."
+    outcome: "spec/project/bar/de.md re-aligned with the canonical EN version."
+resumable: true
 ---
 
 # Multilingual Spec Skill
@@ -111,6 +135,22 @@ The starter template at `templates/spec.template.md` is deliberately minimal. Ev
 - If template sections stay empty across most specs → propose trimming them.
 
 Don't silently modify the template. Surface the proposal to the user and let them decide.
+
+## Examples
+
+- Read `examples/01-create-new-spec-multilingual.md` when creating a new spec from scratch in all configured languages simultaneously.
+- Read `examples/02-translate-existing-spec.md` when translating an existing canonical spec into a second language.
+- Read `examples/03-drift-check-translations.md` when checking whether a translation has drifted from the canonical version.
+
+## Gotchas
+
+- **`spec/.spec-config.yml` is the authoritative language source**: the canonical language and the full language list come from this file; if it is missing, fall back to `en` / `[en, de]` defaults but create the config on the first `create` operation — guessing language settings from the conversation language will produce wrong canonical paths in multilingual repos.
+- **Canonical file must be written first, translations second**: if a spec is only partially written (canonical exists, translations absent), the repo is in a broken state per the "always together" rule; ensure the write step covers every configured language in a single operation or rolls back entirely.
+- **`git log -1` for `Last updated` requires the file to be tracked**: untracked spec files produce no git log output; the index regeneration step must handle this case by marking `Last updated` as `unversioned` rather than leaving the cell empty or erroring out.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/spec/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

@@ -1,7 +1,22 @@
 ---
 name: release-publish-trigger
-description: "Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per spec/project/release-skill-layer/<canonical_language>.md §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check on develop is SUCCESS, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or equivalent German-language requests."
+description: "Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per the canonical-language file under spec/project/release-skill-layer/ §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check on develop is SUCCESS, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or equivalent German-language requests. Typically called by sprint-review's opt-in chain, not directly after sprint closure."
 tags: [release]
+phase: close-release
+summary: "Validates every pre-publish gate locally, then dispatches release-publish.yml for the open release-drafter draft on develop."
+summary_de: "Prüft jeden Pre-Publish-Gate lokal und dispatched dann release-publish.yml für den offenen Release-Drafter-Draft auf develop."
+use_when:
+  - "you want to publish the open release-drafter draft"
+  - "you want to ship the release after every gate is green"
+  - "you want pre-publish gate verification + workflow_dispatch in one step"
+dont_use_when:
+  - situation: "You want to curate the release notes rather than publish"
+    alternative: release-notes-curate
+  - situation: "You want to triage a red required check that blocks the gate"
+    alternative: workflow-health-triage
+see_also:
+  - release-notes-curate
+  - workflow-health-triage
 ---
 
 # Release Publish Trigger
@@ -127,6 +142,12 @@ The single-shot default exists because the prompt-cache TTL is 5 min; unbounded 
 - A red required check on `develop`'s tip blocks publish but is not always recoverable by re-running. The triage path is `workflow-health`, not "retry until green."
 - `release-cd-refresh-master.yml` should fire automatically after `release-publish.yml` succeeds. When it doesn't fire (the known-platform-constraint case where `release: published` from `GITHUB_TOKEN` doesn't cascade to a fresh workflow run, per `workflow-health` §Known platform constraints), surface this and route to manual fast-forward of `main` per `branching-model` §Release flow.
 - The skill never runs `gh release edit --draft=false` even as a fallback — that flag is reserved for incident response and remains a manual operator action documented in `release-automation` §Non-Goals.
+
+## Examples
+
+- Read `examples/01-clean-dispatch-all-gates-pass.md` when all pre-publish gates pass and the skill dispatches the release workflow cleanly.
+- Read `examples/02-version-bearing-files-misaligned.md` when version-bearing files are out of sync and the gate blocks dispatch.
+- Read `examples/03-required-checks-red-route-to-workflow-health.md` when a required check on `develop`'s tip is red and triage routes to `workflow-health`.
 
 ## Hard rules
 

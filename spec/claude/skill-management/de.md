@@ -27,6 +27,10 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - **MUSS [MUST]** Anweisungen innerhalb von `SKILL.md` aus Token-Effizienzgründen auf Englisch halten; der Skill darf Claude weiterhin anweisen, dem Nutzer in dessen Sprache zu antworten
 - **MUSS [MUST]** in sich geschlossen sein — unterstützende Artefakte (Templates, Referenzen, Beispiele) liegen innerhalb des Skill-Ordners
 - **KANN [MAY]** ein optionales `tags`-Feld im YAML-Frontmatter enthalten: eine Liste von kleingeschriebenen ASCII-Kebab-Case-Strings, jeder ≤30 Zeichen, mit höchstens 5 Einträgen; Tags liefern thematische Gruppierung, damit Katalog (`skill-agent-catalog`) und Peer-Cluster-Abgleich (`skill-vs-agent` §Portfolio-weite Konsistenz) nach Thema durchstöbert werden können
+- **DARF NICHT [MUST NOT]** einen `tags`-Eintrag deklarieren, der mit `_` (Unterstrich) beginnt; das Unterstrich-Präfix ist für Generator-emittierte Auto-Tags wie `_translation-pending` reserviert
+- **MUSS [MUST]** ein `phase`-Feld im YAML-Frontmatter enthalten, dessen Wert genau ein Identifier aus dem Acht-Werte-Vokabular ist, das in `skill-agent-catalog` §Phasen-Klassifikation deklariert ist (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); der Katalog-Generator lässt den Doku-Build scheitern, wenn `phase` fehlt oder außerhalb des Vokabulars liegt
+- **KANN [MAY]** ein optionales `summary`-Feld sowie pro zusätzlich konfigurierter Doku-Sprache ein `summary_<lang>`-Feld enthalten; beide sind kurze (≤200 Zeichen) Klartext-Strings, die der Katalog als scanbaren Untertitel über der Routing-`description` rendert. Auflösung und Fallback regelt `skill-agent-catalog` §Per-Sprache-Kurzbeschreibung
+- **KANN [MAY]** beliebige der optionalen Use-Case-Felder `use_when`, `dont_use_when`, `see_also` oder `examples` enthalten; das detaillierte Schema und die Validierung leben in `skill-agent-catalog` §Use-Case-Metadaten. Autoren **SOLLTEN [SHOULD]** sie deklarieren, sobald Überlappung mit anderen Artefakten wahrscheinlich ist, damit der Katalog scanbar bleibt und der Cross-Linking-Pass verwandte Artefakte verbinden kann
 
 ### Frontmatter-Validierung (Agent-Skills-Spezifikation und Anthropic-Platform-Limits)
 
@@ -98,6 +102,16 @@ Folgt der öffentlichen Leitlinie unter <https://agentskills.io/skill-creation/b
 - **SOLLTE [SHOULD]** jede vom Skript deklarierte Konfigurationskonstante begründen; „Voodoo-Konstanten" (`TIMEOUT = 47`, `RETRIES = 5`) ohne erklärenden Inline-Kommentar sind ein `Warning`-würdiger Authoring-Smell ([R2](#referenzen))
 - **MUSS [MUST]** in jeder Prosa, die ein Skript erwähnt, die **Ausführungs-Absicht explizit machen**: entweder „Run `analyze_form.py` to extract fields" (ausführen) oder „See `analyze_form.py` for the field extraction algorithm" (als Referenz lesen); Mehrdeutigkeit hier führt dazu, dass Claude die falsche Wahl trifft und Tokens verschwendet ([R2](#referenzen))
 
+### Operations-Vokabular
+
+Skills mit mehreren benannten Operationen verwenden einen `## Operations`-Block. Dieser Abschnitt legt Benennung und Überschriften-Form dieses Blocks fest, damit Skill-Autoren, Reviewer und die Sweep-Tooling eine einheitliche Terminologie teilen.
+
+- **MUSS [MUST]** `## Operations` (Plural) als Überschrift des Operations-Blocks verwenden; das Singular `## Operation` ist nicht konform
+- **MUSS [MUST]** jede Operation mit einem Verb aus dem geschlossenen Vokabular benennen: `audit` (lesender Check), `scaffold` (Greenfield-Anlage), `patch` (additive Korrektur), `apply` (audit + scaffold + patch in einem Ablauf), `migrate` (Brownfield → konform), `run` (Standard-Verb für Skills mit einer einzigen Operation), `update` (bestehendes Artefakt verändern), `close` (Lifecycle beenden)
+- **DARF NICHT [MUST NOT]** neue Operations-Verben einführen, ohne diese Liste anzupassen
+- **MUSS [MUST]** Teil-Operationen als `### N. <verb>` (nummeriert) oder als H3-Überschrift gefolgt von einem Backtick-zitierten Befehls-Verb betiteln; Buchstaben (`A.`/`B.`/`C.`) und `### Step N` sind nicht konform
+- **SOLLTE [SHOULD]** Operations-Namen kurz halten (ein Wort) und innerhalb eines Skill-Clusters konsistent wählen (z. B. sollen Lifecycle-Skills ihre Verben aufeinander abstimmen)
+
 ### Progressive Disclosure und Datei-Referenzen
 
 Skills werden von Claude in drei Stufen geladen — Metadaten beim Start (~100 Tokens pro Skill), voller `SKILL.md`-Body bei Trigger, unterstützende Dateien nur bei explizitem Lesen ([R5](#referenzen), [R1](#referenzen)). Die On-Disk-Form **MUSS** dieses Lade-Modell unterstützen.
@@ -105,6 +119,7 @@ Skills werden von Claude in drei Stufen geladen — Metadaten beim Start (~100 T
 - **MUSS [MUST]** Datei-Referenzen innerhalb von `SKILL.md` **maximal eine Ebene tief** halten: `SKILL.md` → `references/foo.md` ist ok; `SKILL.md` → `references/foo.md` → `references/bar.md` ist verboten, weil Claude bei verschachtelten Referenzen partielle Reads (`head -100`) nutzt und dadurch Inhalte verpasst ([R2](#referenzen))
 - **MUSS [MUST]** ein **Inhaltsverzeichnis** an den Anfang jeder Referenzdatei setzen, die länger als 100 Zeilen ist, damit Partial-Read-Vorschauen den vollen Umfang der Datei sichtbar machen ([R2](#referenzen))
 - **MUSS [MUST]**, jedes Mal wenn `SKILL.md` eine Hilfsdatei referenziert, **was die Datei enthält** und **wann sie zu laden ist** benennen (z. B. „Read `references/api-errors.md` if the API returns a non-200 status code"); ein generisches „see `references/` for details" konterkariert Progressive Disclosure, weil Claude kein Signal für *wann* Laden hat ([R2](#referenzen), [R4](#referenzen))
+- **MUSS [MUST]** eine explizite Lade-Trigger-Formulierung in `SKILL.md` für jedes Asset unter `references/`, `templates/`, `assets/`, `scripts/` oder `examples/` tragen. Muster: `„Read <relativer-Pfad> when <Trigger-Bedingung>"` oder `„See <relativer-Pfad> for <spezifisches-Anliegen>"` (mit explizitem „when"- oder „for"-Clausel). Implizite Referenzen ohne Lade-Trigger sind nicht konform, da Claude das Asset unter Progressive Disclosure nicht einblendet.
 - **SOLLTE [SHOULD]** Hilfsdateien nach **Domäne** organisieren, wenn der Skill mehrere Bereiche überspannt (`reference/finance.md`, `reference/sales.md`, `reference/product.md`), damit jede Nutzer-Anfrage nur den relevanten Ausschnitt lädt ([R2](#referenzen))
 - **SOLLTE [SHOULD]** den Skill-Scope auf eine **kohärente Arbeits-Einheit** (Funktions-Kohärenz) begrenzen: ein Skill, der „die Datenbank abfragt und Ergebnisse formatiert", ist eine Einheit; ein Skill, der „die Datenbank abfragt, formatiert und administriert", sind zwei Einheiten und sollten getrennt werden ([R4](#referenzen))
 
@@ -127,6 +142,11 @@ Die in diesem Plugin ausgelieferten Skills laufen in Claude Code; das Verständn
 - **SOLLTE [SHOULD]** den Skill **gegen jedes Modell testen, mit dem er eingesetzt werden soll** — Haiku, Sonnet und Opus; was für Opus funktioniert, gibt Haiku evtl. nicht genug Anleitung; was für Haiku klar ist, kann für Opus überflüssig erklären ([R2](#referenzen))
 - **KANN [MAY]** die Skill-Struktur mit dem Upstream-`skills-ref`-Validator validieren (`skills-ref validate ./skills/<name>`), bevor ein PR aufgemacht wird; der Validator fängt Frontmatter- und Naming-Probleme, die diese Spezifikation nicht erschöpfend auflistet ([R1](#referenzen))
 
+### Wiederaufnehmbare Runs
+- **MUSS [MUST]** `resumable: true` im `SKILL.md`-Frontmatter deklarieren, wenn der normale Kontrollfluss des Skills mehr als ein Genehmigungsgate oder mehr als eine benannte interne Phase umfasst, und `spec/claude/resumable-work/` für den On-Disk-Envelope, die Checkpoint-Kadenz, das Re-Invocation-Prompt und den Lebenszyklus befolgen; die tragenden Regeln leben in jener Spec und werden hier nicht dupliziert
+- **MUSS [MUST]** Resume-Support im `description`-Text des Skills erwähnen, wann immer `resumable: true` gesetzt ist, damit Operator:innen, die den Katalog lesen, wissen, welche Workflows sich gefahrlos unterbrechen lassen
+- **SOLLTE NICHT [SHOULD NOT]** `resumable: true` für Einmal-Skills deklarieren, deren komplette Ausführung ein einzelner Bash-Aufruf oder ein einzelner Tool-Call ist, der billig neu startbar ist
+
 ## Akzeptanzkriterien
 - [ ] Quellordner existiert unter `skills/<name>/` in claude-shared mit `<name>` in ASCII-Kebab-Case
 - [ ] Repository enthält eine gültige `.claude-plugin/plugin.json` und `.claude-plugin/marketplace.json`, die diesen Skill als Teil des `nolte-shared`-Plugins bereitstellen
@@ -136,6 +156,10 @@ Die in diesem Plugin ausgelieferten Skills laufen in Claude Code; das Verständn
 - [ ] `name` im Frontmatter entspricht dem Ordnernamen
 - [ ] `description` nennt die konkreten Nutzer-Formulierungen, die den Skill auslösen sollen
 - [ ] Falls `tags` im Frontmatter deklariert ist, ist jeder Eintrag ein kleingeschriebener ASCII-Kebab-Case-String ≤30 Zeichen, und die Liste enthält höchstens 5 Einträge
+- [ ] Kein `tags`-Eintrag beginnt mit `_` (Unterstrich-Präfix ist für Generator-Auto-Tags reserviert)
+- [ ] Falls `summary` oder ein `summary_<lang>` deklariert ist, ist der Wert ein nicht-leerer Klartext-String mit ≤200 Zeichen
+- [ ] Falls `use_when`, `dont_use_when`, `see_also` oder `examples` deklariert ist, entspricht der Wert dem Schema aus `skill-agent-catalog` §Use-Case-Metadaten
+- [ ] Frontmatter deklariert ein `phase`-Feld, dessen Wert einer von `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release` oder `cross-cutting` ist
 - [ ] Skill funktioniert in einem nachgelagerten Projekt, das keinen claude-shared-spezifischen Kontext enthält, geladen über das Plugin
 - [ ] Keine hartkodierten absoluten Pfade; alle internen Pfade sind relativ zum Skill-Ordner oder zum Projekt, auf dem der Skill operiert
 - [ ] Falls der Skill Dateien schreibt, sind Zielorte und Vorbedingungen dokumentiert

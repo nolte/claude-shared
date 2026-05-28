@@ -1,3 +1,11 @@
+---
+title: Usage
+audience: [maintainer, downstream-user]
+content_mode: how-to
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Usage
 
 Once the plugin is loaded, its skills appear as slash commands in the Claude Code prompt. This page covers the common invocation patterns and the namespace.
@@ -32,4 +40,4 @@ If a project ships its own skill of the same name, the plugin version remains re
 
 - [Skill Management](../skills/nolte-shared/skill-management.md) in depth
 - [Spec skill](../skills/nolte-shared/spec.md) in depth
-- [Specifications](../specs/index.md): the authoring rules
+- [Specifications](../references/specs/index.md): the authoring rules

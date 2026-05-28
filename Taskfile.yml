@@ -15,6 +15,11 @@ tasks:
       - task -l
     silent: true
 
+  setup:
+    desc: Install pre-commit hooks (run once after cloning)
+    cmds:
+      - task: pre-commit:install
+
   lint:
     desc: Run pre-commit across all files
     cmds:

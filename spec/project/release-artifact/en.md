@@ -23,7 +23,7 @@ The sibling `sprint` spec mandates that every closed sprint points at a concrete
 - Substituting `release-notes-audience-analysis`. Audience-driven content is its concern; this spec only verifies that an artefact exists and matches its declared shape.
 - Replacing CI / CD systems. The artefact's existence and reachability is what matters here, not the build pipeline that produced it.
 - Defining the sprint or feature lifecycle. Each is owned by its own sibling spec; this spec only specifies the artefact-side surface.
-- Mandating semver or any specific versioning policy beyond what `release-drafter` already enforces in the consuming repo.
+- Mandating SemVer or any specific versioning policy beyond what `release-drafter` already enforces in the consuming repo.
 
 ## Requirements
 

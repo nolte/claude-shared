@@ -1,3 +1,11 @@
+---
+title: Nutzung
+audience: [maintainer, downstream-user]
+content_mode: how-to
+track: developer-docs
+last_updated: 2026-05-19
+---
+
 # Nutzung
 
 Sobald das Plugin geladen ist, stehen seine Skills als Slash-Commands im Claude-Code-Prompt bereit. Diese Seite klärt die wichtigsten Aufrufmuster und den Namespace.
@@ -32,4 +40,4 @@ Trägt ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version e
 
 - [Skill-Management](../skills/nolte-shared/skill-management.md) im Detail
 - [Spec-Skill](../skills/nolte-shared/spec.md) im Detail
-- [Spezifikationen](../specs/index.md) — verbindliche Autoren-Regeln
+- [Spezifikationen](../references/specs/index.md) — verbindliche Autoren-Regeln

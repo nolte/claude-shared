@@ -1,12 +1,36 @@
 ---
 name: skill-review
-description: Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/<skill-name>.md. Invoke when the user asks "review this skill", "audit skills/<name>", "check whether this skill is spec-compliant", "skill review for <name>", "prüfe diesen Skill", "Skill-Review für X", "Audit von skills/<name>", or "ist dieser Skill spec-konform". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for <name>", "schließe den Skill-Review-Plan". Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill).
+description: Review a Claude Code skill against spec/claude/skill-management/ and spec/claude/skill-vs-agent/, and emit an actionable review plan per spec/claude/review-plan/ under .audits/skill-review/ keyed by the target skill's name. Invoke when the user asks "review this skill", "audit a specific skill folder", "check whether this skill is spec-compliant", or "skill review for a specific skill". Also handles closing an existing review plan once every item is addressed — "close the skill review plan for a specific skill". Also handles equivalent German-language requests. Do NOT use for agent review (use `agent-review`) or for pull-request-level review (`review` skill). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [review]
+phase: review
+summary: "Reviews a Claude Code skill against the spec and emits an actionable review plan under .audits/skill-review/."
+summary_de: "Prüft einen Claude-Code-Skill gegen die Spec und erzeugt einen umsetzbaren Review-Plan unter .audits/skill-review/."
+use_when:
+  - "you want to review a specific skill folder for spec compliance"
+  - "you want an actionable review plan for a skill"
+  - "you want to close an existing skill-review plan once every item is addressed"
+dont_use_when:
+  - situation: "You want to review an agent file rather than a skill"
+    alternative: agent-review
+see_also:
+  - agent-review
+  - skill-management
+resumable: true
 ---
 
 # Skill Review Skill
 
 Operationalizes `spec/claude/skill-review/` — reviews one Claude Code skill against its authoring specs and persists the result as a processable plan under `.audits/skill-review/`. The plan is the deliverable; the skill is the procedure that produces and, later, retires it.
+
+## German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "prüfe diesen Skill"
+- "Skill-Review für X"
+- "Audit von skills/"
+- "ist dieser Skill spec-konform"
+- "schließe den Skill-Review-Plan"
 
 ## Why this is a skill, not an agent
 
@@ -79,6 +103,16 @@ When the user reports "I fixed items 3 and 5":
 Reference `spec/claude/review-plan/<canonical>.md` for the authoritative format. Never restate its rules in the plan itself. The template at `templates/plan.template.md` is the starting point. Every finding uses the four-line structure (statement + `Where` / `Fix` / `Verify`) and cites a spec requirement in the bracketed prefix — inventions without a citation are rejected at draft time.
 
 See `examples/walkthrough.md` for an end-to-end transcript covering the create, update, defer, and close turns.
+
+## Gotchas
+
+- **`skills-ref` validator is not provisioned in most repos**: the external skill-structure validator (step 5) may not be installed; when it's absent, record an explicit override in the plan's `## Scope` with a one-line justification rather than silently skipping the check — an undocumented skip is itself a `Warning` finding per `skill-review` §Checks derived from external skill-structure validation.
+- **`spec/.spec-config.yml` must be read before resolving any spec path**: `<canonical>` for the four required spec files depends on `canonical_language` in that config; defaulting to `en` without reading the config silently misroutes reviews in repos with a different canonical language.
+- **Plan file is local-only until committed**: `.audits/skill-review/<name>.md` exists only in the working tree until the user commits it; if the session ends before the user stages and commits, the plan is lost — remind the user to commit early or offer to stage immediately after writing.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/skill-review/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

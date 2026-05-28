@@ -3,13 +3,13 @@
 Status: draft
 
 ## Context
-The claude-shared repository collects reusable Claude Code skills and agents that downstream projects consume. An agent has two lives: a **source** form in this repository (under `agents/`), and a **runtime** form in a consuming project (under `.claude/agents/` or `~/.claude/agents/`) where Claude Code actually loads it and the `Agent` tool dispatches to it via `subagent_type`. Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality, which makes reuse fragile and routing unreliable. This spec defines how new agents are authored, where they live in both forms, and what existing agents must conform to.
+The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. An agent has two lives: a **source** form in this repository (under `agents/`), and a **runtime** form in a consuming project (under `.claude/agents/` or `~/.claude/agents/`) where Claude Code actually loads it and the `Agent` tool dispatches to it via `subagent_type`. Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality, which makes reuse fragile and routing unreliable. This spec defines how new agents are authored, where they live in both forms, and what existing agents must conform to.
 
 ## Goals
 - Every agent has the same predictable shape on disk
 - Agents are routable by Claude through precise, trigger-oriented descriptions
 - Agents have the minimum necessary tool access to do their job
-- Agents are portable across any project that consumes claude-shared, with no hidden dependencies
+- Agents are portable across any project that consumes `claude-shared`, with no hidden dependencies
 - Authors have a clear checklist and template to start from
 
 ## Non-Goals
@@ -33,6 +33,10 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - The agent **MAY** still be instructed to respond to the user in the user's language regardless of where the body is authored
 - **MUST** be self-contained—any supporting assets (references, examples, prompt fragments) live alongside the agent file in a sibling folder `agents/<name>/` and are referenced by relative path
 - **MAY** include an optional `tags` field in YAML frontmatter: a list of lowercase ASCII kebab-case strings, each ≤30 characters, with no more than 5 entries; tags provide thematic grouping so the catalog (`skill-agent-catalog`) and peer-cluster lookups (`skill-vs-agent` §Portfolio-wide consistency) can browse by topic
+- **MUST NOT** declare a `tags` entry that begins with `_` (underscore); the underscore prefix is reserved for catalog-generator-emitted auto-tags such as `_translation-pending`
+- **MUST** include a `phase` field in YAML frontmatter whose value is exactly one identifier from the eight-value vocabulary declared in `skill-agent-catalog` §Phase classification (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); the catalog generator fails the docs build when `phase` is missing or out of vocabulary
+- **MAY** include an optional `summary` field plus a `summary_<lang>` field per additional docs language; both are short (≤200 character) plain strings the catalog renders as a scannable subtitle above the routing `description`. Resolution and fallback rules live in `skill-agent-catalog` §Per-language short summary
+- **MAY** include any of the optional use-case fields `use_when`, `dont_use_when`, `see_also`, or `examples`; the detailed schema and validation rules live in `skill-agent-catalog` §Use-case metadata. Authors **SHOULD** declare them whenever overlap with other artefacts is likely, so the catalog stays scannable and the cross-linking pass can connect related artefacts
 
 ### Tag vocabulary
 - **SHOULD** prefer a term from the starter vocabulary below when one applies, so artifacts in the same functional cluster share the same tag string
@@ -102,8 +106,8 @@ For security reasons, Claude Code **silently ignores** the `hooks`, `mcpServers`
 - **MAY**, when the agent is intended to be picked up by Claude **proactively** (without the user naming it explicitly), include the phrase **"use proactively"** in the `description` field; the runtime treats this phrase as an opt-in signal for proactive delegation ([R1](#references)). Conversely, if the agent should only run when the user explicitly names it, **MUST NOT** include "use proactively" in `description`
 - **SHOULD** apply **single-responsibility design** to every agent: one clear goal, one input shape, one output shape, one handoff rule. Agents that conflate multiple responsibilities (review + fix, audit + remediate) regress quickly because the dispatching Claude can't reliably match the description to a request ([R6](#references))
 
-### Source location (claude-shared repository)
-- **MUST** live at `agents/<name>.md` in the claude-shared source tree, so it can be copied, symlinked, or bundled into a plugin for distribution
+### Source location (`claude-shared` repository)
+- **MUST** live at `agents/<name>.md` in the `claude-shared` source tree, so it can be copied, symlinked, or bundled into a plugin for distribution
 - **MAY** have a sibling folder `agents/<name>/` for supporting files when needed
 
 ### Runtime location (consuming project)
@@ -123,18 +127,29 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - **SHOULD** include in `description` both positive triggers ("use when…") and common negative cases ("don't use for…") when overlap with other agents is likely
 - **MAY** include example invocations and expected reports in a sibling `agents/<name>/examples/` folder
 
+### Resumable runs
+- **MUST** declare `resumable: true` in the agent's frontmatter when the agent internally spans more than one named phase that produces an intermediate artefact the operator would otherwise lose on interruption, and follow `spec/claude/resumable-work/` for the on-disk envelope, checkpoint cadence, re-invocation prompt, and lifecycle; the load-bearing rules live in that spec and aren't duplicated here
+- **MUST** mention resume support in the agent's `description` text whenever `resumable: true` is set, so the calling Claude can route accordingly
+<!-- vale Microsoft.Contractions = NO -->
+- **SHOULD NOT** declare `resumable: true` for fire-and-forget agents whose contract is a single read-only pass cheap to restart
+<!-- vale Microsoft.Contractions = YES -->
+
 ## Acceptance Criteria
-- [ ] Source file exists at `agents/<name>.md` in claude-shared with `<name>` in ASCII kebab-case
+- [ ] Source file exists at `agents/<name>.md` in `claude-shared` with `<name>` in ASCII kebab-case
 - [ ] Frontmatter parses as valid YAML and contains at minimum `name`, `description`, and `distribution`
 - [ ] `name` in frontmatter equals the filename without `.md`
 - [ ] `description` names concrete triggers the calling Claude can match against user requests
 - [ ] If `tags` is declared in frontmatter, every entry is a lowercase ASCII kebab-case string ≤30 characters and the list contains at most 5 entries
+- [ ] No `tags` entry begins with `_` (underscore-prefixed tags are reserved for catalog-generator auto-tagging)
+- [ ] Frontmatter declares a `phase` field whose value is one of `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, or `cross-cutting`
+- [ ] If `summary` or any `summary_<lang>` is declared, the value is a non-empty plain string ≤200 characters
+- [ ] If `use_when`, `dont_use_when`, `see_also`, or `examples` is declared, the value conforms to the schema in `skill-agent-catalog` §Use-case metadata
 - [ ] `distribution` is exactly `plugin` or `project`: no other value, no missing field
 - [ ] If `distribution: plugin`, the agent is dispatchable via `subagent_type: <name>` in a project where the containing plugin is installed, without manually copying the file
 - [ ] If `distribution: project`, the agent is dispatchable via `subagent_type: <name>` after being deployed to `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, with no plugin required
 - [ ] If `tools` is set, the listed tools are sufficient for the agent's stated responsibility and contain no unused entries
 - [ ] Read-only agents have no write/edit/execution tools in their `tools` list
-- [ ] Agent works when invoked in a downstream project that doesn't contain claude-shared-specific context
+- [ ] Agent works when invoked in a downstream project that doesn't contain `claude-shared`-specific context
 - [ ] No hard-coded absolute paths; all internal references are relative to the agent file or the project it operates on
 - [ ] If the agent writes files or performs side effects, the targets and preconditions are documented in the system prompt
 - [ ] Frontmatter field names and technical identifier values (`name`, `distribution`, `tools`, `model`, `tags`) are English; `description` and the system-prompt body are English by default, unless the agent declares `distribution: project` and the consuming project's root-level convention file (typically `CLAUDE.md`) declares a non-English documentation language and authorizes that language for agent prose

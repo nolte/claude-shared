@@ -3,12 +3,12 @@
 Status: draft
 
 ## Context
-The claude-shared repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives: a **source** form in this repository (under `skills/`) and a **runtime** form in a consuming project, where Claude Code actually loads it. The only supported runtime-distribution path is the Claude Code plugin mechanism: this repository is itself a Claude Code plugin (`.claude-plugin/plugin.json` plus a marketplace entry), and consuming projects pick up skills by installing the plugin. Without a consistent shape and a single distribution path, skills drift in naming, trigger descriptions, and internal structure, and consumers end up with ad-hoc copies or symlinks that diverge over time. This spec defines how new skills are authored, how they're distributed, and what existing skills must conform to.
+The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives: a **source** form in this repository (under `skills/`) and a **runtime** form in a consuming project, where Claude Code actually loads it. The only supported runtime-distribution path is the Claude Code plugin mechanism: this repository is itself a Claude Code plugin (`.claude-plugin/plugin.json` plus a marketplace entry), and consuming projects pick up skills by installing the plugin. Without a consistent shape and a single distribution path, skills drift in naming, trigger descriptions, and internal structure, and consumers end up with ad-hoc copies or symlinks that diverge over time. This spec defines how new skills are authored, how they're distributed, and what existing skills must conform to.
 
 ## Goals
 - Every skill has the same predictable shape on disk
 - Skills are discoverable by Claude through precise, trigger-oriented descriptions
-- Skills are portable across any project that consumes claude-shared, with no hidden dependencies
+- Skills are portable across any project that consumes `claude-shared`, with no hidden dependencies
 - Authors have a clear checklist and template to start from
 
 ## Non-Goals
@@ -27,6 +27,10 @@ The claude-shared repository collects reusable Claude Code skills and agents tha
 - **MUST** keep instructions inside `SKILL.md` in English for token efficiency; the skill may still instruct Claude to respond to the user in the user's language
 - **MUST** be self-contained—any supporting assets (templates, references, examples) live inside the skill folder
 - **MAY** include an optional `tags` field in YAML frontmatter: a list of lowercase ASCII kebab-case strings, each ≤30 characters, with no more than 5 entries; tags provide thematic grouping so the catalog (`skill-agent-catalog`) and peer-cluster lookups (`skill-vs-agent` §Portfolio-wide consistency) can browse by topic
+- **MUST NOT** declare a `tags` entry that begins with `_` (underscore); the underscore prefix is reserved for catalog-generator-emitted auto-tags such as `_translation-pending`
+- **MUST** include a `phase` field in YAML frontmatter whose value is exactly one identifier from the eight-value vocabulary declared in `skill-agent-catalog` §Phase classification (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); the catalog generator fails the docs build when `phase` is missing or out of vocabulary
+- **MAY** include an optional `summary` field plus a `summary_<lang>` field per additional docs language; both are short (≤200 character) plain strings the catalog renders as a scannable subtitle above the routing `description`. Resolution and fallback rules live in `skill-agent-catalog` §Per-language short summary
+- **MAY** include any of the optional use-case fields `use_when`, `dont_use_when`, `see_also`, or `examples`; the detailed schema and validation rules live in `skill-agent-catalog` §Use-case metadata. Authors **SHOULD** declare them whenever overlap with other artefacts is likely, so the catalog stays scannable and the cross-linking pass can connect related artefacts
 
 ### Frontmatter validation (Agent Skills spec & Anthropic platform limits)
 
@@ -59,8 +63,8 @@ Starter vocabulary:
 - `quality-gate`: lint, typecheck, test
 - `dependency`: CVE scans, license compliance, lockfile hygiene
 
-### Source location (claude-shared repository)
-- **MUST** live at `skills/<name>/` in the claude-shared source tree
+### Source location (`claude-shared` repository)
+- **MUST** live at `skills/<name>/` in the `claude-shared` source tree
 - **MUST** be shipped as part of the `nolte-shared` Claude Code plugin declared by this repository's `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json`; no skill in this repository exists outside the plugin scope
 
 ### Distribution
@@ -98,6 +102,16 @@ Tracks the public guidance at <https://agentskills.io/skill-creation/best-practi
 - **SHOULD** justify every configuration constant the script declares; "voodoo constants" (`TIMEOUT = 47`, `RETRIES = 5`) without an inline comment explaining the value are a `Warning`-grade authoring smell ([R2](#references))
 - **MUST**, in any prose that mentions a script, make the **execution intent explicit**: write either "Run `analyze_form.py` to extract fields" (execute) or "See `analyze_form.py` for the field extraction algorithm" (read as reference); ambiguity here causes Claude to make the wrong choice and waste tokens ([R2](#references))
 
+### Operations vocabulary
+
+Skills with multiple named operations use a `## Operations` block. This section governs the naming and heading form of that block so that skill authors, reviewers, and the sweep tooling share a consistent vocabulary.
+
+- **MUST** use `## Operations` (plural) as the heading for the operations block; singular `## Operation` is non-conformant
+- **MUST** name each operation with one verb from the closed vocabulary: `audit` (read-only check), `scaffold` (greenfield create), `patch` (additive fix), `apply` (audit + scaffold + patch in one flow), `migrate` (brownfield → conforming), `run` (default verb for skills with one operation), `update` (mutate an existing artefact), `close` (terminate a lifecycle)
+- **MUST NOT** introduce new operation verbs without amending this list
+- **MUST** title sub-operations as `### N. <verb>` (numbered) or as a level-3 heading followed by a backtick-quoted command verb; alphabetic letters (`A.`/`B.`/`C.`) and `### Step N` are non-conformant
+- **SHOULD** retain operation names short (single word) and consistent within a skill cluster (for example, lifecycle skills should align verbs)
+
 ### Progressive disclosure & file references
 
 Skills are loaded in three stages by Claude—metadata at startup (~100 tokens per skill), full `SKILL.md` body when triggered, supporting files only when explicitly read ([R5](#references), [R1](#references)). The on-disk shape **MUST** support that loading model.
@@ -105,6 +119,7 @@ Skills are loaded in three stages by Claude—metadata at startup (~100 tokens p
 - **MUST** keep file references inside `SKILL.md` **at most one level deep**: `SKILL.md` → `references/foo.md` is fine; `SKILL.md` → `references/foo.md` → `references/bar.md` is forbidden, because Claude tends to use partial reads (`head -100`) on nested references and then misses content ([R2](#references))
 - **MUST** include a **table of contents** at the top of any reference file longer than 100 lines, so partial-read previews still surface the file's full scope ([R2](#references))
 - **MUST**, every time `SKILL.md` references a supporting file, name **what the file contains** and **when to load it** (for example "Read `references/api-errors.md` if the API returns a non-200 status code"); generic "see `references/` for details" defeats progressive disclosure because Claude has no signal for *when* to load ([R2](#references), [R4](#references))
+- **MUST** carry an explicit load-trigger phrase in `SKILL.md` for every asset under `references/`, `templates/`, `assets/`, `scripts/`, or `examples/`. Pattern: `"Read <relative-path> when <trigger condition>"` or `"See <relative-path> for <specific concern>"` (with an explicit "when" or "for" clause). Implicit references without a load-trigger are non-conformant since Claude won't surface the asset under progressive disclosure.
 - **SHOULD** organize supporting files by **domain** when the skill spans multiple subjects (`reference/finance.md`, `reference/sales.md`, `reference/product.md`), so each user query loads only the relevant slice ([R2](#references))
 - **SHOULD** keep skill scope to a **single coherent unit of work** (function-level coherence): a skill that "queries the database and formats the results" is one unit; a skill that "queries the database, formats the results, and administers the database" is two units that should be split ([R4](#references))
 
@@ -127,8 +142,15 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - **SHOULD** **test the skill against every model the skill is intended to be used with**, namely Haiku, Sonnet, and Opus; what works for Opus may not provide enough guidance for Haiku, and what's clear for Haiku may over-explain for Opus ([R2](#references))
 - **MAY** validate skill structure with the upstream `skills-ref` reference validator (`skills-ref validate ./skills/<name>`) before opening a PR; the validator catches frontmatter and naming issues this spec doesn't enumerate exhaustively ([R1](#references))
 
+### Resumable runs
+- **MUST** declare `resumable: true` in `SKILL.md` frontmatter when the skill's normal control flow includes more than one user-approval gate or more than one named internal phase, and follow `spec/claude/resumable-work/` for the on-disk envelope, checkpoint cadence, re-invocation prompt, and lifecycle; the load-bearing rules live in that spec and aren't duplicated here
+- **MUST** mention resume support in the skill's `description` text whenever `resumable: true` is set, so operators reading the catalog know which workflows are safe to interrupt
+<!-- vale Microsoft.Contractions = NO -->
+- **SHOULD NOT** declare `resumable: true` for one-shot skills whose entire execution is a single Bash invocation or single tool call cheap to restart
+<!-- vale Microsoft.Contractions = YES -->
+
 ## Acceptance Criteria
-- [ ] Source folder exists at `skills/<name>/` in claude-shared with `<name>` in ASCII kebab-case
+- [ ] Source folder exists at `skills/<name>/` in `claude-shared` with `<name>` in ASCII kebab-case
 - [ ] Repository contains a valid `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` that expose this skill as part of the `nolte-shared` plugin
 - [ ] Skill is discoverable in a consuming project solely by installing the `nolte-shared` plugin from the marketplace—no manual copy or symlink into `.claude/skills/` is needed or permitted
 - [ ] Plugin version in `.claude-plugin/plugin.json` equals the latest published GitHub Release tag (maintained per `release-automation` §Version-bearing file alignment, not by skill-change PRs); no diff to the `version` field appears in any PR whose sole purpose is adding, renaming, or removing a skill
@@ -136,7 +158,11 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - [ ] `name` in frontmatter equals the folder name
 - [ ] `description` mentions the concrete user phrasings that should trigger the skill
 - [ ] If `tags` is declared in frontmatter, every entry is a lowercase ASCII kebab-case string ≤30 characters and the list contains at most 5 entries
-- [ ] Skill works when invoked in a downstream project that doesn't contain claude-shared-specific context, loaded through the plugin
+- [ ] No `tags` entry begins with `_` (underscore-prefixed tags are reserved for catalog-generator auto-tagging)
+- [ ] Frontmatter declares a `phase` field whose value is one of `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, or `cross-cutting`
+- [ ] If `summary` or any `summary_<lang>` is declared, the value is a non-empty plain string ≤200 characters
+- [ ] If `use_when`, `dont_use_when`, `see_also`, or `examples` is declared, the value conforms to the schema in `skill-agent-catalog` §Use-case metadata
+- [ ] Skill works when invoked in a downstream project that doesn't contain `claude-shared`-specific context, loaded through the plugin
 - [ ] No hard-coded absolute paths; all internal paths are relative to the skill folder or the project the skill operates on
 - [ ] If the skill writes files, the target locations and preconditions are documented
 - [ ] Reviewing an individual skill against this spec follows `spec/claude/skill-review/`; review output conforms to `spec/claude/review-plan/` and lives under `.audits/skill-review/<name>.md`

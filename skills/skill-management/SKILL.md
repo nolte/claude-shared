@@ -1,7 +1,26 @@
 ---
 name: skill-management
-description: Author or revise Claude Code skills in the nolte-shared plugin source tree. Invoke when the user asks to create a new skill, scaffold a skill for a given purpose, add a skill to this repo, or revise the authoring shape of an existing skill (rewriting a weak description, adding a Hard rules section, trimming overly long instructions). Also handles equivalent German-language requests. Scaffolds the folder under skills/<name>/ (distribution happens via the plugin mechanism, not via .claude/skills copies) and writes SKILL.md with valid frontmatter. Do NOT use for reviewing or auditing an existing skill against the spec — that produces a persistent, spec-cited review plan and belongs to `skill-review`. Do NOT bump the plugin version in a skill-change PR — `release-automation` owns that via the release workflow.
+description: Author or revise Claude Code skills in the nolte-shared plugin source tree. Invoke when the user asks to create a new skill, scaffold a skill, add a skill to this repo, or revise an existing skill (weak description, missing Hard rules, overlong instructions). Also handles equivalent German-language requests. Scaffolds the target folder under skills/ (distribution via the plugin mechanism, not .claude/skills copies) and writes SKILL.md with valid frontmatter. Don't use to review or audit an existing skill (use `skill-review` for the persistent spec-cited plan), to bump the plugin version in a skill-change PR (`release-automation` owns that), or for a full spec-conformant draft of a skill or agent (this skill chains to claude-plugin-developer after name/purpose decisions). Supports resume per `spec/claude/resumable-work/`.
 tags: [scaffolding]
+phase: design
+summary: "Scaffolds or revises a nolte-shared Claude Code skill folder."
+summary_de: "Scaffoldet oder überarbeitet einen nolte-shared Claude-Code-Skill-Ordner."
+use_when:
+  - "you want to create a new skill in the nolte-shared plugin"
+  - "you want to revise a weak description or restructure an existing skill"
+  - "you want to scaffold SKILL.md with valid frontmatter before writing the body"
+dont_use_when:
+  - situation: "You want to review an existing skill against the spec and emit a review plan"
+    alternative: skill-review
+  - situation: "You want a full spec-conformant draft (skill or agent), not just the scaffold"
+    alternative: claude-plugin-developer
+see_also:
+  - skill-review
+  - claude-plugin-developer
+examples:
+  - prompt: "Create a new skill for X"
+    outcome: "skills/x/SKILL.md scaffolded with valid frontmatter; chained to claude-plugin-developer for the spec-conformant draft."
+resumable: true
 ---
 
 # Skill Management
@@ -61,6 +80,16 @@ Out of scope. Invoke `skill-review` — it applies every MUST / SHOULD / MAY fro
 - **The `## Reserved-token rationale` exception** added to `skill-management` §Frontmatter validation in 2026-Q2 is a `nolte-shared` plugin-specific narrowing — the upstream Anthropic platform validator rejects names containing `claude` / `anthropic` regardless. When scaffolding for a project that submits skills through Anthropic's intake path (rather than the `nolte-shared` plugin marketplace), don't apply the exception. The local `scripts/validate_skills.py` validator honours it, but the upstream one doesn't.
 - **`description` length is measured in characters, not bytes.** The 1024-character cap counts grapheme clusters; multi-byte UTF-8 sequences (German umlauts, em-dashes) count as one character each, not as their byte length. `len(description)` in Python and the local validator both use the character count; don't surprise the operator with a "1024-byte cap" framing.
 - **Folder name and `name` frontmatter MUST match exactly.** A typo in either is a `Critical` per spec. The skill verifies the match before any write; renaming a skill is a coordinated rename of the folder, the frontmatter, and every cross-reference (`grep -RIn '<old-name>' spec/ skills/ agents/ docs/ project/`).
+
+## Examples
+
+- Read `examples/01-scaffold-new-skill.md` when scaffolding a brand-new skill from scratch.
+- Read `examples/02-revise-existing-frontmatter.md` when revising frontmatter fields on an already-existing skill.
+- Read `examples/03-route-to-skill-review.md` when the user asks for a skill review and this skill routes them to `skill-review`.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/skill-management/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

@@ -1,7 +1,26 @@
 ---
 name: sprint-execute
-description: Drive the daily mechanics of an active sprint per the project sprint spec. Invoke when the user asks to start a sprint, start a feature, mark a feature in progress, mark a feature done, sync a sprint's feature list, or update the sprint's last commit. Also handles equivalent German-language requests. Promotes a `planned` sprint to `active` when the first feature starts, drives feature lifecycle transitions (`ready → in_progress`, `in_progress → done`), keeps the `## Features` body list and `features` frontmatter in lockstep, updates `last_commit` whenever a feature reaches `done`, and refuses to start a feature whose sprint isn't this one while another sprint is already `active`.
-tags: [scaffolding]
+description: Drive the daily mechanics of an active sprint per the project sprint spec. Invoke when the user asks to start a sprint, start a feature, mark a feature in progress, mark a feature done, sync a sprint's feature list, or update the sprint's last commit. Also handles equivalent German-language requests. Promotes a `planned` sprint to `active` when the first feature starts, drives feature lifecycle transitions (`ready → in_progress`, `in_progress → done`), keeps the `## Features` body list and `features` frontmatter in lockstep, updates `last_commit` whenever a feature reaches `done`, and refuses to start a feature whose sprint isn't this one while another sprint is already `active`. Supports resume on re-invocation per `spec/claude/resumable-work/`.
+tags: [lifecycle]
+phase: build
+summary: "Drives the daily mechanics of an active sprint: lifecycle transitions, feature-list sync, last_commit updates."
+summary_de: "Treibt das Tagesgeschäft eines aktiven Sprints: Lifecycle-Übergänge, Feature-Listen-Sync, last_commit-Updates."
+use_when:
+  - "you want to start a sprint or start a feature in an active sprint"
+  - "you want to mark a feature in_progress or done"
+  - "you want to sync the sprint's feature list with frontmatter"
+dont_use_when:
+  - situation: "You want to plan or open a new sprint file"
+    alternative: sprint-plan
+  - situation: "You want to close an active sprint at the review gate"
+    alternative: sprint-review
+  - situation: "You want to decompose a roadmap item into features"
+    alternative: feature-decompose
+see_also:
+  - sprint-plan
+  - sprint-review
+  - feature-decompose
+resumable: true
 ---
 
 # Sprint Execute
@@ -31,7 +50,7 @@ Before mutating any sprint or feature file, confirm:
 
 This skill performs whichever of the operations below the user's request maps to. Each operation is its own deterministic block; the skill never silently extends one operation into another (no "started a feature, may as well close the sprint while I'm here").
 
-### A. Promote `planned → active`
+### 1. Promote `planned → active`
 
 Triggered as a side effect of the first `ready → in_progress` transition on a feature whose `sprint` field matches a `planned` sprint, or directly when the user explicitly asks to start the sprint.
 
@@ -42,7 +61,7 @@ Steps:
 3. Set `status: active` and `started: <today's ISO date>` in the sprint's frontmatter.
 4. Surface a one-line confirmation to the user: "Starting sprint <NNNN> — <slug>".
 
-### B. Transition a feature `ready → in_progress`
+### 2. Transition a feature `ready → in_progress`
 
 Triggered when the user asks to start a specific feature.
 
@@ -58,7 +77,7 @@ Steps:
 4. Set `status: in_progress` on the feature.
 5. Mark the feature's roadmap item `active` if it's still `proposed` per `spec/project/roadmap/` §Lifecycle.
 
-### C. Transition a feature `in_progress → done`
+### 3. Transition a feature `in_progress → done`
 
 Triggered when the user asks to mark a feature done.
 
@@ -70,7 +89,7 @@ Steps:
 4. **Update the sprint's `last_commit`.** Run `git rev-parse HEAD` to resolve the most recent commit SHA on the current branch, then write the result to the sprint's `last_commit` frontmatter field. This is the canonical write authority for that field per `spec/project/sprint/` §Frontmatter schema; `last_commit` anchors the artefact ancestry check that `sprint-review` runs at closure.
 5. Surface the updated sprint state to the user: features remaining `in_progress`, `last_commit` SHA, and a hint that `sprint-review` becomes invokable when every feature in the sprint is `done`.
 
-### D. Sync `## Features` body bullets with `features` frontmatter
+### 4. Sync `## Features` body bullets with `features` frontmatter
 
 Triggered when the user adds or removes a feature mid-sprint, or when a stale body / frontmatter divergence is detected during another operation.
 
@@ -80,7 +99,7 @@ Steps:
 2. **Refuse partial updates.** If the user's request mutates only the body or only the frontmatter, stop and report; the body and the frontmatter list **MUST** be updated in the same operation per `spec/project/sprint/` §Roadmap and feature linkage.
 3. Apply the requested addition or removal to both surfaces atomically. When adding a feature mid-sprint, also set the feature file's `sprint` field to this sprint's number (and check that no other sprint already references it). When removing, clear the feature file's `sprint` field (set to null).
 
-### E. Decline transitions outside this skill's scope
+### 5. Decline transitions outside this skill's scope
 
 The following requests are **out of scope** for this skill:
 
@@ -99,6 +118,16 @@ When the user asks for any of the above, stop and surface the correct skill to i
 - **Acceptance criteria and test hooks are gated separately** for the `in_progress → done` transition. Operation C confirms both: every acceptance-criterion checkbox is checked AND every test hook reports `passing` or `skipped`. A skill or test hook still in `pending` blocks the transition even when the criteria are visually checked off.
 - **Roadmap-item promotion to `status: active`** is a side effect of the first feature transitioning to `in_progress` for that roadmap item. The skill writes the promotion silently (no operator dialogue), but the operator should be aware that a `proposed` roadmap item flips to `active` the first time a tied feature starts work.
 
+## Examples
+
+- Read `examples/01-start-feature-promotes-sprint.md` when starting the first feature in a planned sprint, which also promotes the sprint to `active`.
+- Read `examples/02-mark-feature-done-updates-last-commit.md` when marking a feature `done` and verifying that `last_commit` is updated on the sprint.
+- Read `examples/03-refuse-when-other-sprint-active.md` when a second sprint would become active and the skill must refuse the transition.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/sprint-execute/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+
 ## Hard rules
 
 - **Never** allow two sprints to be `active` simultaneously. The at-most-one-active-sprint invariant is non-negotiable per `spec/project/sprint/` §Lifecycle; on conflict, refuse the offending feature transition and surface the conflicting sprint to the user.
@@ -109,3 +138,7 @@ When the user asks for any of the above, stop and surface the correct skill to i
 - **Never** transition a sprint past `active` from this skill. `active → review`, `review → closed`, `review → cancelled`, and the cancellation paths from any earlier state are `sprint-review`'s authority.
 - **Never** alter `value_statement` on an `active` sprint. If reality has shifted, the sprint must be cancelled and rescheduled per `spec/project/sprint/` §Roadmap and feature linkage.
 - When `spec/project/sprint/` or `spec/project/feature/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
+
+## Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.

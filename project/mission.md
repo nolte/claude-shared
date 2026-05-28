@@ -9,9 +9,9 @@ audiences:
 verifies_via: F-1:acceptance-1
 time_bound:
   kind: mvp_completion
-mvp_status: defining
+mvp_status: in_progress
 created: 2026-05-09
-revised_at: null
+revised_at: 2026-05-11
 ---
 
 # Mission
@@ -47,3 +47,4 @@ When that checkbox is checked at the close of the sprint that lands this feature
 - **Audience artefact:** `AUDIENCES.md` at the repo root, last-commit SHA `0e3b6f9fc64bbfd97c74c2575d25fcfcae5598d6` at write time.
 - **Goals consulted:** `project/goals.md` (authored in the same change-set as this mission file). Outcomes referenced: `O-1`, `O-3`.
 - **Authorship:** maintainer `nolte` via inline application of `skills/mission-define/SKILL.md`. The skill wasn't yet loaded as a slash command in the running plugin runtime at the time of writing (it landed on `develop` minutes prior, in PR #46); operations were followed manually against the merged spec at `spec/project/mission/en.md`. A `/reload-plugins` would lift the inline application in any subsequent invocation.
+- **2026-05-11 — `mvp_status: defining → in_progress`** via `mission-revise` Operation B. Evidence: roadmap item `R-1` (`mvp: true`) entered `status: active` when sprint `0001` was promoted to `active` and feature `F-1` started (`ready → in_progress`); see commit `9ee8805` on branch `chore/sprint-0001-execute`.

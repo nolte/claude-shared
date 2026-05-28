@@ -13,8 +13,27 @@ description: >-
   flowchart", or equivalent German-language requests. Don't use for general
   MkDocs scaffolding (use `project-structure-apply`), spec authoring (use
   `spec`), the docs-freshness audit (use `docs-freshness-checker`), or
-  non-Mermaid diagrams.
+  non-Mermaid diagrams. Supports resume on re-invocation per
+  `spec/claude/resumable-work/`.
 tags: [scaffolding, audit]
+phase: design
+summary: "Audits and wires up MkDocs Mermaid setup; helps an author add a single Mermaid diagram with the mandatory source marker."
+summary_de: "Auditiert und verdrahtet das MkDocs-Mermaid-Setup; hilft beim Hinzufügen eines Mermaid-Diagramms mit verpflichtendem Source-Marker."
+use_when:
+  - "you want to wire up Mermaid in MkDocs (superfences, pinned pymdown-extensions)"
+  - "you want to audit the Mermaid setup against the spec"
+  - "you want to draft a new flowchart or sequence diagram with the mandatory marker"
+dont_use_when:
+  - situation: "You want general MkDocs scaffolding (not Mermaid-specific)"
+    alternative: mkdocs-structure-apply
+  - situation: "You want to author or audit a spec rather than a diagram"
+    alternative: spec
+  - situation: "You want a freshness audit across docs"
+    alternative: docs-freshness-checker
+see_also:
+  - mkdocs-structure-apply
+  - mermaid-diagram-reviewer
+resumable: true
 ---
 
 # Mermaid Diagrams Apply
@@ -129,10 +148,20 @@ When the user has finished approving changes, re-run operations 1 and 4 end-to-e
 - **`pymdownx.superfences` may already exist** without the Mermaid `custom_fence`. Merge into the existing block; don't add a second `pymdownx.superfences` entry—MkDocs will silently use only one and the merge order is undefined.
 - **`!!python/name:pymdownx.superfences.fence_code_format`** is a YAML constructor tag. Some YAML loaders (notably plain `yaml.safe_load`) reject it. When reading `mkdocs.yml`, treat it as a string for the purpose of detection rather than parsing it.
 - **Multilingual repos with `i18n`**: when the docs use the `mkdocs-static-i18n` plugin in `docs_structure: folder` mode, the audit must walk every configured language tree, not just the default. Pull the language list from `plugins.i18n.languages`.
-- **Mermaid v10+ syntax**: Material loads Mermaid 10 by default. `flowchart` syntax replaces the older `graph` keyword; emit `flowchart` exclusively. Existing `graph TB` blocks discovered in the audit are drift but not breakage—Mermaid still accepts them—so propose a one-line keyword swap rather than a full rewrite.
+- **Mermaid v10+ syntax**: `flowchart` syntax replaces the older `graph` keyword; emit `flowchart` exclusively (verify Material's bundled Mermaid version against the Material changelog if your build differs). Existing `graph TB` blocks discovered in the audit are drift but not breakage—Mermaid still accepts them—so propose a one-line keyword swap rather than a full rewrite.
 - **`erDiagram` cardinality glyphs** (`||--o{`, `}o--||`) render only when the surrounding fence has the `mermaid` class; they break with a generic ` ```text` fence. The audit checks the fence header, not just the content keyword.
 - **Trailing whitespace inside `<!-- diagram-source: ... -->`**: the marker is detected by exact prefix match. A trailing space before `-->` doesn't break the comment but breaks naive grep-based scanners; trim before writing.
 - **`docs/requirements.txt` may not exist** even when MkDocs is configured—some repos rely on a `pyproject.toml` `[project.optional-dependencies.docs]` group. Ask the user where the docs install set lives before scaffolding a new `docs/requirements.txt`.
+
+## Examples
+
+- Read `examples/01-wire-up-mkdocs-fresh.md` when wiring Mermaid into a MkDocs project for the first time.
+- Read `examples/02-author-flowchart-from-description.md` when authoring a new flowchart diagram from a user description.
+- Read `examples/03-audit-existing-blocks.md` when auditing existing Mermaid blocks in a docs tree for spec compliance.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/mermaid-diagrams-apply/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 
@@ -146,3 +175,8 @@ When the user has finished approving changes, re-run operations 1 and 4 end-to-e
 - **Never** take on `project-structure-apply` work. If the audit reveals that `mkdocs.yml` is missing entirely, the docs tree is absent, or `theme.name` is something other than `material`, stop and route the user to `project-structure-apply`—don't silently scaffold those out of scope.
 - **Never** modify the spec while applying it. If a real-world need conflicts with `spec/project/mermaid-diagrams/`, report it and ask the user to update the spec via the `nolte-shared:spec` skill before proceeding.
 - **Never** edit a Mermaid block in another markdown file as a side-effect of the current operation. Each operation touches one block (or one config file) at a time, with its own approval.
+- **Always** apply a Mermaid block insertion or audit fix symmetrically to every counterpart page across every language tree configured in `spec/.spec-config.yml`'s `languages` list, per `spec/project/docs-multilingual-authoring/` §Authoring protocol. Mermaid sources are language-neutral (the Hard rule above already mandates English-only labels inside the fence), so the same block text is inserted at the same position in every language counterpart in the same operation; the surrounding markdown chrome that introduces or annotates the block is localised per language.
+
+## Multi-model testing
+
+Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.

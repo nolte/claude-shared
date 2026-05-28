@@ -1,12 +1,34 @@
 ---
 name: mission-revise
-description: "Revises an existing `project/mission.md` per spec/project/mission/<canonical_language>.md. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests (\"Mission überarbeiten\", \"mvp_status umstellen\", \"die Mission ist stabilisiert\"). Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`."
+description: "Revises an existing `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests. Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`. Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding]
+phase: vision
+summary: "Revises an existing project/mission.md: statement, audiences, time bound, or mvp_status lifecycle flips."
+summary_de: "Überarbeitet eine bestehende project/mission.md: Statement, Audiences, Time-Bound oder mvp_status-Lifecycle-Flips."
+use_when:
+  - "you want to revise the mission statement, audiences, or verifying-feature pointer"
+  - "you want to flip mvp_status (defining → in_progress → achieved → stabilised)"
+  - "you want to revise the mission after stabilisation (rationale required)"
+dont_use_when:
+  - situation: "project/mission.md does not exist yet"
+    alternative: mission-define
+see_also:
+  - mission-define
+  - roadmap-plan
+resumable: true
 ---
 
 # Mission Revise
 
 Edits an existing `project/mission.md` against `spec/project/mission/<canonical_language>.md` (canonical language: English). The spec is the authority for legal lifecycle transitions and the stabilisation gate; this skill enforces them mechanically and writes the resulting diff with explicit user confirmation.
+
+## German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Mission überarbeiten"
+- "mvp_status umstellen"
+- "die Mission ist stabilisiert"
 
 ## Why this is a skill, not an agent
 
@@ -90,6 +112,16 @@ For every operation: present the diff (frontmatter delta plus body delta) back t
 - The MVP-closing sprint is identified by which sprint moved the **last** `mvp: true` roadmap item to `status: done` — not the sprint with the largest count of MVP items. When the closure is split across sprints, the one carrying the final transition is the gate-relevant one.
 - A regression flip (`stabilised → in_progress`) does **not** automatically halt post-MVP roadmap items already in `status: active` — the spec lets in-flight work finish. The skill only blocks **new** post-MVP starts via the audit trail; never edit roadmap-item status from this skill.
 - Branch C's rationale paragraph is required even for tiny revisions (a typo fix in the statement) once `mvp_status: stabilised` — the spec is intentionally strict because every post-stabilisation revision redefines what stabilisation meant.
+
+## Examples
+
+- Read `examples/01-revise-statement.md` when revising the mission statement wording while keeping the lifecycle status unchanged.
+- Read `examples/02-flip-mvp-status-to-achieved.md` when flipping `mvp_status` from `in_progress` to `achieved` after all MVP items land.
+- Read `examples/03-stabilisation-gate-blocks.md` when the stabilisation gate blocks a post-MVP revision and you need to see how to handle the refusal.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/mission-revise/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 

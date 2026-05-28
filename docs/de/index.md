@@ -1,4 +1,12 @@
-# claude-shared
+---
+title: Startseite
+audience: [maintainer, downstream-user]
+content_mode: meta
+track: developer-docs
+last_updated: 2026-05-19
+---
+
+# Startseite
 
 `claude-shared` ist eine gemeinsame Basis aus [Claude Code](https://docs.claude.com/en/docs/claude-code)-**Agents** und **Skills**, die über mehrere Projekte hinweg wiederverwendet wird. Paketiert als Plugin **`nolte-shared`**, damit Teams überall dieselben Review-Gewohnheiten, Coding-Richtlinien und Helfer-Workflows nutzen — ohne sie in jedem Repository neu zu bauen.
 
@@ -40,5 +48,5 @@ flowchart LR
 - [Erste Schritte](getting-started/index.md) — Plugin laden und eigene Skills nutzen
 - [Skills](skills/index.md) — Überblick der mitgelieferten Skills
 - [Agents](agents/index.md) — Überblick der mitgelieferten Agents
-- [Spezifikationen](specs/index.md) — verbindliche Regeln für Autoren
-- [Entwicklung](development/index.md) — am Repository selbst arbeiten
+- [Spezifikationen](references/specs/index.md) — verbindliche Regeln für Autoren
+- [Entwicklung](guides/development.md) — am Repository selbst arbeiten

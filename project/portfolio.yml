@@ -1,0 +1,159 @@
+# Portfolio manifest for nolte/claude-shared.
+# Schema: spec/portfolio/portfolio-management/ §Capability inventory per repository
+# Audience references resolve against AUDIENCES.md at the repo root.
+
+capabilities:
+  - name: shared-claude-code-skills
+    description: >-
+      Bundles reusable Claude Code skills (slash commands) under
+      skills/<name>/SKILL.md that downstream nolte portfolio projects install
+      through the plugin marketplace to get consistent, spec-compliant
+      authoring, review, planning, and release workflows.
+    audience:
+      - Downstream Claude Code users in portfolio projects
+      - Plugin author dogfooding inside this repo
+    status: active
+    rationale: >-
+      claude-shared is the single source of Claude Code skill distribution in
+      the nolte portfolio; consolidating skill artefacts here removes the
+      per-repo reimplementation tax and keeps slash-command surfaces stable
+      across consumer repos.
+    since: 2026-04-24
+
+  - name: shared-claude-code-agents
+    description: >-
+      Bundles reusable Claude Code sub-agents under agents/<name>.md
+      (context-window-protective read-only or write-narrow specialists) that
+      downstream projects invoke through
+      Agent(subagent_type=<plugin>:<agent>).
+    audience:
+      - Downstream Claude Code users in portfolio projects
+      - Plugin author dogfooding inside this repo
+    status: active
+    rationale: >-
+      Agents complement skills as the read-only or specialised counterpart; the
+      plugin consolidates them in one source tree so downstream repos route
+      through one install path rather than maintaining per-repo agents.
+    peers:
+      - claude-shared:shared-claude-code-skills
+    since: 2026-04-24
+
+  - name: portfolio-spec-corpus
+    description: >-
+      Bilingual (EN-canonical with DE translation) specs under spec/ that
+      govern Claude Code skill and agent authoring, project layout, branching,
+      releases, audience identification, and portfolio management for the
+      nolte portfolio.
+    audience:
+      - Plugin author dogfooding inside this repo
+      - Other Nolte portfolio repos as passive consumers of the conventions
+      - External contributors via pull request
+    status: active
+    rationale: >-
+      claude-shared is the only repo running the spec-driven-development
+      convention with EN-canonical plus DE-translation discipline and per-spec
+      promotion gates; consolidating portfolio-wide conventions here avoids
+      divergent rule sets across repos.
+    since: 2026-04-24
+
+  - name: planning-suite-reference-adopter
+    description: >-
+      Applies the planning-suite specs (mission, goals, roadmap, features,
+      sprints) to claude-shared itself under project/, so other
+      Portfolio-Member repos see the planning suite in action before adopting
+      it.
+    audience:
+      - Plugin author dogfooding inside this repo
+      - Downstream Claude Code users in portfolio projects
+    status: experimental
+    rationale: >-
+      The planning suite is new (sprint 0001 opened 2026-05-11); claude-shared
+      owns the reference adoption because it ships the specs and skills that
+      other repos will install. Promote to active once sprint 0001 closes and
+      a second sprint validates the loop without regression.
+    peers:
+      - claude-shared:portfolio-spec-corpus
+      - claude-shared:shared-claude-code-skills
+    since: 2026-05-09
+
+  - name: auto-generated-skill-agent-catalog
+    description: >-
+      Generates a navigable MkDocs catalog of every skill and agent in the
+      nolte-shared plugin (and optionally external plugin source roots) so
+      downstream readers discover what the plugin ships without reading the
+      source tree directly.
+    audience:
+      - Downstream Claude Code users in portfolio projects
+      - Plugin author dogfooding inside this repo
+      - External contributors via pull request
+    status: active
+    rationale: >-
+      The catalog is implemented as a portfolio-distributable skill
+      (skill-agent-catalog-apply) plus claude-shared's own generator hook
+      under scripts/docs/, so the catalog renders on every task docs run
+      without per-skill manual edits.
+    peers:
+      - claude-shared:shared-claude-code-skills
+      - claude-shared:shared-claude-code-agents
+    since: 2026-05-09
+
+  - name: shared-vale-vocabulary-extension
+    description: >-
+      Extends the nolte/vale-style baseline vocabulary with portfolio-specific
+      terms (autoload, autolink, Probot, Renovate, vtracer, retarget, and
+      similar) so prose under README.md, docs/en/, and spec/**/en.md passes
+      Vale across the portfolio.
+    audience:
+      - Plugin author dogfooding inside this repo
+      - Other Nolte portfolio repos as passive consumers of the conventions
+    status: active
+    rationale: >-
+      The vocabulary lives under
+      .github/styles/config/vocabularies/claude-shared/accept.txt as a
+      portfolio add-on the vocab-drift-audit skill diffs against the pinned
+      nolte/vale-style release; consolidating the extension here keeps drift
+      auditable.
+    peers:
+      - claude-shared:portfolio-spec-corpus
+    since: 2026-04-24
+
+# Schema for tech_stack: spec/portfolio/tech-stack/ §Per-repository tech-stack block.
+# Inheritance is additive: the entries in portfolio/tech-stack.yml are implicitly
+# inherited unless explicitly overridden below. claude-shared inherits the
+# full global stack (mkdocs, renovate, github-actions, task, vale, pre-commit,
+# markdownlint, gh-plumbing, release-drafter, probot-settings, boring-cyborg,
+# stale-bot, claude-code, claude-code-plugin) and adds Python plus the two
+# deploy targets specific to this repository.
+tech_stack:
+  additions:
+    - name: python
+      kind: language
+      group: documentation
+      role: Implementation language for MkDocs plugins, the docs gen-files hook, and any scripts under scripts/.
+      status: active
+      lifecycle: build
+      since: 2026-04-23
+      source_of_truth: docs/requirements.txt
+      rationale: >-
+        in claude-shared python is only used for the MkDocs build pipeline
+        (catalog generator hook, plugins, validation scripts under scripts/)
+        — not as an application runtime — so it is grouped under
+        documentation rather than language-runtime.
+
+    - name: github-pages
+      kind: deploy-target
+      group: documentation
+      role: Hosts the rendered MkDocs site delivered by the release-cd-deliver-docs.yml workflow.
+      status: active
+      lifecycle: runtime
+      since: 2026-05-18
+      source_of_truth: .github/workflows/release-cd-deliver-docs.yml
+
+    - name: claude-code-marketplace
+      kind: deploy-target
+      group: plugin-platform
+      role: Plugin distribution channel; downstream nolte/* repos install nolte-shared by referencing the marketplace manifest.
+      status: active
+      lifecycle: runtime
+      since: 2026-05-18
+      source_of_truth: .claude-plugin/marketplace.json
