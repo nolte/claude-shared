@@ -25,6 +25,8 @@ Canonical language: `en` · Translations: `de`
 | portfolio | tech-stack | Portfolio Tech Stack Capture | Portfolio-Tech-Stack-Erfassung | draft | unversioned |
 | portfolio | tech-stack-discovery | Portfolio Tech-Stack Discovery | Portfolio-Tech-Stack-Discovery | draft | unversioned |
 | project | audience-identification | Audience Identification | Zielgruppen-Identifikation | draft | 2026-04-24 |
+| project | blog-author | Blog author | Blog-Autor | draft | unversioned |
+| project | blog-author-trigger | Blog author trigger | Blog-Autor-Trigger | draft | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | 2026-04-23 |
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | 2026-04-23 |
 | project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | unversioned |
@@ -40,6 +42,8 @@ Canonical language: `en` · Translations: `de`
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
 | project | mkdocs-structure | MkDocs Site Structure | MkDocs-Site-Struktur | draft | unversioned |
 | project | parallel-working-copies | Parallel Working Copies | Parallele Working Copies | draft | unversioned |
+| project | post-audience-communication | Post audience communication | Audience-Kommunikation für Posts | draft | unversioned |
+| project | post-writing-style | Post writing style | Post-Schreibstil | draft | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | 2026-05-01 |
 | project | prose-style | Prose Style | Textstil | draft | 2026-04-24 |
 | project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | 2026-04-23 |

@@ -46,7 +46,7 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 
 ## 4 Build
 
-- [`blog-author`](nolte-shared/blog-author.md) — Verfasst ein zweisprachiges Blog-Post-Paar (EN-canonical + DE-übersetzt) nach den Blog-Specs des Konsumenten-Repos.
+- [`blog-author`](nolte-shared/blog-author.md) — Verfasst ein zweisprachiges Blog-Post-Paar (EN-canonical + DE-übersetzt) nach den blog-author-Specs dieses Plugins und schreibt es in ein Konsumenten-Blog-Repo.
 - [`sprint-execute`](nolte-shared/sprint-execute.md) — Treibt das Tagesgeschäft eines aktiven Sprints: Lifecycle-Übergänge, Feature-Listen-Sync, last_commit-Updates.
 
 ## 5 Review
