@@ -59,10 +59,11 @@ the spec at HEAD and are explicitly out of scope for this feature.
   columns `Check`/`Status`/`Runner`/`Details`); no contributor needs
   to open the Taskfile or `ci.yml` to learn how to run the gate
   locally.
-- [ ] **acceptance-2** The README names which CI lint-side categories
-  are covered by `.pre-commit-config.yaml` and which the contributor
-  must invoke separately before push; the list is exhaustive against
-  the categories the gate actually runs.
+- [ ] **acceptance-2** The README lists every gate category named in
+  `ci.yml`'s `lint` / `test` / `docs` jobs, marking each as
+  `covered by pre-commit` or `contributor-invoked`; the list resolves
+  one-to-one against the job names so a reader can confirm
+  completeness by string match.
 - [ ] **acceptance-3** `Taskfile.yml` declares a `check` task that
   invokes the lint and test categories the repo has relevant code for;
   `task check` exits zero on a clean tree and non-zero when any
@@ -74,10 +75,11 @@ the spec at HEAD and are explicitly out of scope for this feature.
   invocation and the output-shape paragraph in the Usage section;
   cross-reference against `spec/project/quality-gate/` §Output shape —
   `pending`
-- **acceptance-2** — manual: extract the README's pre-commit-vs-CI
-  gap list; cross-reference each entry against
-  `.pre-commit-config.yaml` hooks and the `lint` / `test` / `docs` jobs
-  in `ci.yml`; assert the list is exhaustive — `pending`
+- **acceptance-2** — manual: extract the README's gap list; assert
+  one-to-one match between its entries and the job names in
+  `ci.yml`'s `lint` / `test` / `docs` jobs; assert each entry's
+  marker is one of `covered by pre-commit` or `contributor-invoked` —
+  `pending`
 - **acceptance-3** — manual: on a clean tree, run `task check`;
   assert exit 0 plus the table-shape output; introduce a deliberate
   lint failure (e.g., a Vale-banned token in a tracked Markdown

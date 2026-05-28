@@ -3,7 +3,7 @@ number: 0003
 status: planned
 started: null
 ended: null
-value_statement: "Consumers of the nolte-shared plugin pull a develop snapshot whose required-checks set blocks every regression class the quality gate covers (lint, tests, Vale, pre-commit, Renovate-driven lockfile bumps), so the snapshot is consumable without post-merge surprise."
+value_statement: "Anyone reading claude-shared's README on a fresh clone — a downstream consumer evaluating the plugin, a contributor opening the next PR — can reproduce the develop quality gate from a single documented `task` invocation without reading the underlying Taskfile or workflow YAML."
 artifact_ref: null
 last_commit: null
 roadmap_items: [R-3]
@@ -25,10 +25,12 @@ documentation in `README.md` plus the `task check` aggregate target in
 The value-verifying acceptance criterion is `F-3:acceptance-1` (the
 README documents the canonical gate-invocation target plus the
 expected output shape per `spec/project/quality-gate/` §Output shape);
-when that bullet is checked at sprint closure, the snapshot a consumer
-pulls from `develop` is consumable without post-merge surprise because
-the gate that prevents surprise is now discoverable from the first
-file a contributor reads.
+when that bullet is checked at sprint closure, anyone reading the
+README on a fresh clone can reproduce the gate from the single
+documented `task` invocation — which is exactly the value-delivery
+claim this sprint makes. The develop-side gating itself, which is
+what actually keeps the snapshot consumable, already ships at HEAD and
+is named in `## Out of scope` below.
 
 ## Features
 
