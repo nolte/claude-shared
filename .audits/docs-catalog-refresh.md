@@ -91,7 +91,6 @@ Per-page `audience:` frontmatter values in F2 reference these IDs (with the addi
 
 The original proposal (for the record):
 
-
 `spec/project/mkdocs-structure/en.md` §Top-level navigation defines the seven canonical sections (Home, Getting Started, Guides, References, ADRs, Project, plus declared extension sections). The repo's `mkdocs.yml` carries ten:
 
 | Current nav | Standard? | Proposed disposition |

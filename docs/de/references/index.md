@@ -8,7 +8,7 @@ last_updated: 2026-05-28
 
 # References
 
-Nachschlage-Seiten: verbindliche Format- und Konventions-Referenzen sowie der katalogweite Tag-Index.
+Verbindliche Format- und Konventions-Referenzen sowie der katalogweite Tag-Index.
 
 ## Spezifikationen
 

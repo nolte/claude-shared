@@ -8,7 +8,7 @@ last_updated: 2026-05-28
 
 # References
 
-Lookup pages: the binding format and convention references plus the catalog-wide tag index.
+Binding format and convention references, plus the catalog-wide tag index.
 
 ## Specifications
 

@@ -8,7 +8,7 @@ last_updated: 2026-05-28
 
 # Guides
 
-Task-oriented how-tos and explanatory background pages for `claude-shared`—from working on the repository to understanding skills, agents, and the delivery lifecycle.
+Task-oriented how-tos and explanatory background pages for `claude-shared`, from working on the repository to understanding skills, agents, and the delivery lifecycle.
 
 ## Working on the repository
 

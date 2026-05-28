@@ -8,7 +8,7 @@ last_updated: 2026-05-28
 
 # Guides
 
-Aufgaben-orientierte How-tos und erklärende Hintergrund-Seiten rund um `claude-shared` — von der Mitarbeit am Repository bis zum Verständnis von Skills, Agents und dem Liefer-Lebenszyklus.
+Aufgaben-orientierte How-tos und erklärende Hintergrund-Seiten rund um `claude-shared`, von der Mitarbeit am Repository bis zum Verständnis von Skills, Agents und dem Liefer-Lebenszyklus.
 
 ## Am Repository arbeiten
 
