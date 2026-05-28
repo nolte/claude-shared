@@ -19,6 +19,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `audit`
 
+- [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [dependency-audit-scanner](../agents/nolte-shared/dependency-audit-scanner.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
@@ -97,6 +98,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [audience-review](../agents/nolte-shared/audience-review.md) — nolte-shared
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
+- [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
@@ -136,6 +138,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [tech-stack-capture](../skills/nolte-shared/tech-stack-capture.md) — nolte-shared
 - [webview-ui-optimize](../skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [yaml-json-schema](../skills/nolte-shared/yaml-json-schema.md) — nolte-shared
+
+## `security`
+
+- [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 
 ## `triage`
 
