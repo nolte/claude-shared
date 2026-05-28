@@ -1,9 +1,7 @@
 addon
 [Aa]ffordances?
-[Aa]gents?
 agentic
 [Aa]llowlisted
-APIs?
 async
 [Aa]stros?
 Astro's
@@ -23,7 +21,6 @@ bundlers?
 [Cc]allouts?
 Carliner
 Chissom
-[Cc]ookiecutter
 Contentful
 CSPs?
 dayjs
@@ -48,12 +45,9 @@ focusable
 Gedankenstrich
 godoc
 Grammarly
-hotfix
 HMAC
-idempotency
 [Ii]mplementors?
 Inkbot
-[Ii]nlining
 [Ii]nvokable
 kamerplanter
 Kalzumeus
@@ -69,7 +63,6 @@ Mailchimp
 Mantine
 memoise
 [Mm]ergeable
-mitigations
 MUI('s)?
 [Nn]amespaces?
 navigations
@@ -88,9 +81,7 @@ Recharts
 [Rr]epurpose
 Sachtextformel
 sandboxing
-[Ss]cannability
 Shiki
-[Ss]kimmable
 Skywork
 [Ss]nackbars?
 Spatien
@@ -114,7 +105,6 @@ Vite('s)?
 [Vv]endor(ed|ing)?
 [Vv]iewport
 [Vv]irtualis(e|ed)
-virtualenv
 Vue
 Webheads
 wordmark

@@ -8,7 +8,7 @@ last_updated: 2026-05-19
 
 # Skill management
 
-The `skill-management` skill scaffolds and validates Claude Code skills. It lives at `skills/skill-management/SKILL.md` and follows the [Skill Authoring](../../specs/skill-management.md) spec.
+The `skill-management` skill scaffolds and validates Claude Code skills. It lives at `skills/skill-management/SKILL.md` and follows the [Skill Authoring](../references/specs/skill-management.md) spec.
 
 ## When to use
 
@@ -71,4 +71,4 @@ Targeted edits to an existing skill: sharpen a weak `description`, add a Hard Ru
 ## Sources
 
 - Skill file: `skills/skill-management/SKILL.md`
-- Specification: [`spec/claude/skill-management/`](../../specs/skill-management.md)
+- Specification: [`spec/claude/skill-management/`](../references/specs/skill-management.md)

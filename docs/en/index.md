@@ -48,5 +48,5 @@ flowchart LR
 - [Getting Started](getting-started/index.md): load the plugin and use the skills
 - [Skills](skills/index.md): overview of bundled skills
 - [Agents](agents/index.md): overview of bundled agents
-- [Specifications](specs/index.md): authoring rules
-- [Development](development/index.md): work on this repository
+- [Specifications](references/specs/index.md): authoring rules
+- [Development](guides/development.md): work on this repository
