@@ -45,6 +45,7 @@ Claude Code (CLI, Plugin und Agent-SDK-Läufe) fragt den/die Nutzer:in bei jedem
 ### Verhältnis zu `settings.local.json` und `~/.claude/settings.json`
 - **DARF [MAY]** entwicklerlokal in `.claude/settings.local.json` oder im Home-Verzeichnis breitere Patterns geführt werden; das Risiko trägt in diesem Fall die/der Entwickler:in selbst, und diese Dateien sind ausdrücklich Nicht-Scope dieser Spec
 - **DARF NICHT [MUST NOT]** ein breites Pattern aus `settings.local.json` oder `~/.claude/settings.json` in die committete `.claude/settings.json` übernommen werden, ohne es gegen die obigen Auswahlkriterien erneut zu prüfen — insbesondere mutationsfähige Wildcards wie `Bash(git *)`, `Bash(gh api *)` oder `Bash(gh pr *)` bleiben aus der committeten Datei draußen
+- **DARF NICHT [MUST NOT]** diese committete Datei als Freischalt-Punkt für autonome oder Hintergrund-Agenten behandelt werden: ein nicht-interaktiver Agent, der mutationsfähige Kommandos (`git commit` / `git push`, `gh pr create`, einen Task-Runner) braucht, um innerhalb eines Worktree zu agieren, wird über die Session-`/permissions`-Freigabe oder `.claude/settings.local.json` autorisiert — gemäß `spec/project/parallel-working-copies/` §Harness-initiierte und Agent-initiierte Worktrees, niemals durch Aufnahme dieser Patterns hier
 
 ### Governance
 - **MUSS [MUST]** jede Diskrepanz zwischen dieser Spec und `.claude/settings.json` durch eine Änderung an der committeten Datei aufgelöst werden — nicht durch stille Anpassung der Spec
