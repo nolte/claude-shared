@@ -24,6 +24,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 - [`audience-doc-author`](nolte-shared/audience-doc-author.md) — Verfasst oder überarbeitet audience-zugeschnittene Doku (README, Release-Notes, MkDocs-Seiten) gegen ein vorhandenes Audience-Artefakt.
 - [`claude-plugin-developer`](nolte-shared/claude-plugin-developer.md) — Verfasst spec-konforme Claude-Code-Plugin-Artefakte (Skill oder Agent) für nolte-shared; Executor im Skill-orchestriert-Agent-Pattern.
 - [`spec-readiness-reviewer`](nolte-shared/spec-readiness-reviewer.md) — Nur-Lese-Audit einer Spec auf Widersprüche, Audience-Fit und AC-Coverage.
+- [`test-case-extractor`](nolte-shared/test-case-extractor.md) — Leitet strukturierte, framework-agnostische, rückverfolgbare Testfälle aus einem Anforderungsdokument ab, aus der Perspektive nutzer-beobachtbaren Verhaltens.
 - [`webview-ui-expert`](nolte-shared/webview-ui-expert.md) — Nur-Lese-Cross-File-Deep-Review eines benannten Frontend-Ziels über Performance, Security, Barrierefreiheit, i18n, UX.
 
 ## 5 Review

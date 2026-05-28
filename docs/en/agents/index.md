@@ -24,6 +24,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`audience-doc-author`](nolte-shared/audience-doc-author.md) — Drafts or refines audience-tailored documentation (README, release notes, MkDocs pages) against an existing audience artifact.
 - [`claude-plugin-developer`](nolte-shared/claude-plugin-developer.md) — Drafts spec-conformant Claude Code plugin artifacts (skill or agent) for nolte-shared, executor in the skill-orchestrates-agent pattern.
 - [`spec-readiness-reviewer`](nolte-shared/spec-readiness-reviewer.md) — Read-only audit of a spec for contradictions, audience fit, and AC coverage.
+- [`test-case-extractor`](nolte-shared/test-case-extractor.md) — Derives structured, framework-agnostic, traceable test cases from a requirement document, written from the user-observable-behaviour perspective.
 - [`webview-ui-expert`](nolte-shared/webview-ui-expert.md) — Read-only deep cross-file review of one named frontend target across Performance, Security, A11y, i18n, UX.
 
 ## 5 Review

@@ -16,6 +16,7 @@ last_updated: generated
     * [audience-doc-author](nolte-shared/audience-doc-author.md)
     * [claude-plugin-developer](nolte-shared/claude-plugin-developer.md)
     * [spec-readiness-reviewer](nolte-shared/spec-readiness-reviewer.md)
+    * [test-case-extractor](nolte-shared/test-case-extractor.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 5 Review
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)

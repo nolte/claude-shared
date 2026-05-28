@@ -93,6 +93,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [release-publish-trigger](../skills/nolte-shared/release-publish-trigger.md) — nolte-shared
 - [sprint-review](../skills/nolte-shared/sprint-review.md) — nolte-shared
 
+## `requirements`
+
+- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+
 ## `review`
 
 - [audience-review](../agents/nolte-shared/audience-review.md) — nolte-shared
@@ -115,6 +119,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
+- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [cookiecutter-template-manage](../skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
 - [docs-audience-tracks-apply](../skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](../skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
@@ -136,6 +141,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [tech-stack-capture](../skills/nolte-shared/tech-stack-capture.md) — nolte-shared
 - [webview-ui-optimize](../skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [yaml-json-schema](../skills/nolte-shared/yaml-json-schema.md) — nolte-shared
+
+## `testing`
+
+- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 
 ## `triage`
 
