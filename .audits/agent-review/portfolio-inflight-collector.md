@@ -13,7 +13,7 @@ specs-applied:
     revision: "323119fc545735f8d56256c12e7da0f4cc81e2b7"
 repo-revision: "5ee7c1af1a73aafee028114939b99a5489745ae0"
 created: "2026-05-23"
-status: open
+status: closed
 ---
 
 # Agent Review: portfolio-inflight-collector
@@ -117,4 +117,7 @@ Verify: the implementing spec §Audit operation line `MUST reuse the Portfolio-M
 
 ## Processing log
 
-(empty until items are closed)
+- 2026-05-28 — W1/W2/W3 (dead-permission `Read`/`Glob`/`Grep`) — resolved: trimmed `tools: [Read, Bash, Glob, Grep]` to `tools: [Bash]`. The agent accesses every data source via `gh api` (Bash); no local file read/glob/grep is used. The `## Read-only Bash justification` section already present keeps the narrow Bash exception intact. Verified: `grep '^tools:' agents/portfolio-inflight-collector.md` = `tools: [Bash]`.
+- 2026-05-28 — W4 (body > 200 lines) — resolved: moved the `## Output shape` template (~100 lines) into `agents/portfolio-inflight-collector/output-shape.md` with a one-line load-trigger phrase in the body. Verified: `wc -l agents/portfolio-inflight-collector.md` = 155 (below the ~200 SHOULD threshold).
+- 2026-05-28 — I-2 (portfolio-wide envelope) — resolved by the same trim applied to the sibling `agents/portfolio-manifest-collector.md` (`tools: [Read, Bash, Glob, Grep]` → `tools: [Bash]`). Decision recorded: read-only fan-out collectors declare only the tools they invoke; no spec-level envelope sanction was needed.
+- 2026-05-28 — I-1, I-3 — informational, no action (Bash narrow exception still applies after the trim; the documented split vs `portfolio-manifest-collector` is unchanged).

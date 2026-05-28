@@ -13,7 +13,7 @@ specs-applied:
     revision: "323119fc545735f8d56256c12e7da0f4cc81e2b7"
 repo-revision: "5ee7c1af1a73aafee028114939b99a5489745ae0"
 created: "2026-05-23"
-status: in-progress
+status: closed
 ---
 
 # Skill Review: portfolio-inflight-triage
@@ -133,3 +133,8 @@ Verify: same as the previous Info finding's verification.
 ## Processing log
 
 - 2026-05-23 — C1 token-cap — tightened §Operations steps 5/6/9 (removed inline parentheticals duplicating the load-trigger target's content) and compressed §Reference: spec anchors from 11 bullets to 1 (sections listed inline, descriptions dropped). Detail remains in `references/matrix-axes-and-report.md` (already-existing reference). — verified: `wc -c skills/portfolio-inflight-triage/SKILL.md` = 19,398 chars / ~4,850 tokens estimate, below the 5,000-token cap (was 21,587 chars / ~5,397 tokens before the trim).
+
+- 2026-05-28 — C1 token-cap regression — re-trimmed `SKILL.md` (compacted the redundant Run-operation observational sentence, the portfolio-audit pattern note, and the rate-limit gotcha). Verified: ~4986 tokens (19,946 chars / 4), below the 5,000-token cap; 124 lines, below the 500-line cap.
+- 2026-05-28 — W1/W2/W3 (examples lack TOC) — resolved: added a `## Contents` table-of-contents block (Input prompt / Input files / Expected behaviour) to all three `examples/0[123]-*.md` files (124/117/140 lines, each over the 100-line TOC threshold).
+- 2026-05-28 — S1 (resume marker) — resolved as wontfix with rationale: `portfolio-inflight-triage` carries no `resumable: true` frontmatter and is a read-only, atomically-run audit (collect → classify → single end-of-flow write). Per `spec/claude/skill-management/` §Resumable runs the marker belongs only on skills that declare `resumable: true`; adding it here would misrepresent the contract. No change.
+- 2026-05-28 — I-1, I-2, I-3 — informational, no action (description `claude` substring is the repo name; the documented splits vs `portfolio-audit` and `continuous-improvement-triage` are unchanged).

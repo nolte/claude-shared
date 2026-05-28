@@ -13,6 +13,12 @@ red-check routing exclusivity rule from
 `spec/portfolio/portfolio-inflight-management/` §Specialist
 recommendation.
 
+## Contents
+
+- [Input prompt](#input-prompt)
+- [Input files](#input-files)
+- [Expected behaviour](#expected-behaviour)
+
 ## Input prompt
 
 > Run the in-flight triage.

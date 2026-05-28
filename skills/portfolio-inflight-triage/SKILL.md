@@ -32,7 +32,7 @@ Implements the audit half of `spec/portfolio/portfolio-inflight-management/` as 
 - **Skill-orchestrates-agent-executes is the explicit spec rule.** §Audit operation requires `MUST be implemented as a dedicated skill … MUST NOT be implemented as a Claude Agent` and `MUST dispatch a read-only specialist agent portfolio-inflight-collector for per-repository data-source collection`. The spec pins the hybrid pattern here verbatim; this skill is the orchestrator half.
 - **Counter-dimension considered:** a tool-restricted agent could cleanly perform classification and matrix-axis derivation in isolation, given that the data-collection volume is already handled by the collector agent. The decisive counter is the two mid-flow user-confirmation gates and the persistent on-disk write target — both are skill-side per `spec/claude/skill-vs-agent/`.
 
-Follows the same orchestrator pattern as `portfolio-audit`, which dispatches `portfolio-manifest-collector` for the equivalent manifest-collection step.
+Follows the same orchestrator pattern as `portfolio-audit` (which dispatches `portfolio-manifest-collector`).
 
 ## User-language policy
 
@@ -81,7 +81,7 @@ Runs the cross-repository in-flight audit per `spec/portfolio/portfolio-inflight
 
 10. **Confirm in the user's language** — the path of the new Findings-Report, the per-severity counts, the count of roster-gap findings (if any), and the next step (open the report and triage `Critical` items first via the recommended slash commands; route roster-gap escalations through `continuous-improvement-triage`).
 
-The Run operation **never** closes / merges / deletes / resolves / closes anything in any Portfolio-Member repository, never opens a PR or issue against any Portfolio-Member, and modifies no file outside `.audits/portfolio-inflight/<YYYY-MM-DD>.md` in `claude-shared` per §Operator authority.
+The Run operation is observational per §Operator authority: it never mutates any Portfolio-Member and writes only `.audits/portfolio-inflight/<YYYY-MM-DD>.md` in `claude-shared` (see Hard rules).
 
 ## Reference: spec anchors
 
@@ -106,7 +106,7 @@ When the spec disagrees with this skill, the spec wins. Propose a skill update r
 - **`release-drafter`-draft head-SHA membership requires the collector's draft list.** When the collector report is missing the `Open release-drafter drafts` block (the calling skill omitted draft collection, or no drafts exist), only the `release-blocker` label signal applies for `release_blocking` detection — don't try to fetch drafts inline from the skill; the collector owns every `gh api` call per §Audit operation.
 - **Threshold-override confirmation happens once per audit, not per-finding.** Step 3 surfaces each repository's `project/inflight.yml` override once; the confirmed thresholds apply to every finding from that repository in step 4. Re-prompting per-finding would be operator-hostile and isn't what the user-confirmation gate is for.
 - **Recurrence is counted across prior audit artefacts AND the current run.** The 3-recurrence escalation in step 7 considers the most recent prior `.audits/portfolio-inflight/<YYYY-MM-DD>.md` plus the in-progress run; older artefacts beyond the immediately previous one aren't walked. When no prior artefact exists, recurrence is the in-run count only per §Specialist recommendation `MUST`.
-- **`gh api` rate limits scale with N repositories × M open PRs.** The collector enforces a headroom precheck (see its §Preconditions step 2), but a full-portfolio run still consumes a non-trivial slice of the hourly budget. Spread invocations across hours when the operator schedules back-to-back audits, or check `gh api rate_limit` first.
+- **`gh api` rate limits scale with N repos × M open PRs.** The collector enforces a headroom precheck (its §Preconditions step 2), but a full run still consumes a non-trivial slice of the hourly budget; check `gh api rate_limit` before back-to-back audits.
 - **An empty in-flight surface still produces a Findings-Report.** Per the spec's S-7 acceptance criterion, zero stalled items across the portfolio produces a valid Findings-Report with zero findings under each severity rather than no report at all. Step 9 always writes, never short-circuits on emptiness.
 
 ## Hard rules

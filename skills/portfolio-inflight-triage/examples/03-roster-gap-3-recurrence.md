@@ -12,6 +12,12 @@ mechanic from `spec/portfolio/portfolio-inflight-management/`
 §Specialist recommendation and the 3-recurrence rule from
 `spec/project/continuous-improvement/` §Portfolio gap closure.
 
+## Contents
+
+- [Input prompt](#input-prompt)
+- [Input files](#input-files)
+- [Expected behaviour](#expected-behaviour)
+
 ## Input prompt
 
 > Run the in-flight triage.
