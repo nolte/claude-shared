@@ -1,6 +1,5 @@
 addon
 [Aa]ffordances?
-[Aa]gents?
 agentic
 [Aa]llowlisted
 APIs?
@@ -48,7 +47,6 @@ focusable
 Gedankenstrich
 godoc
 Grammarly
-hotfix
 HMAC
 idempotency
 [Ii]mplementors?
