@@ -1,12 +1,14 @@
 ---
-title: Planning Suite
+title: Project
 audience: [maintainer]
-content_mode: explanation
+content_mode: meta
 track: developer-docs
-last_updated: 2026-05-19
+last_updated: 2026-05-28
 ---
 
-# Planning suite
+# Project
+
+This section orients you around the `project/` planning tree (mission, goals, roadmap, sprints, features) and the planning-suite skills that operationalise it.
 
 The planning suite bundles skills and one agent that operationalise the `mission`, `roadmap`, `sprint`, `feature`, and `release-artifact` specs in an adopting repository. This page shows the typical order in which the skills are invoked and maps each skill to the artefact it writes.
 

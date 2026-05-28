@@ -1,12 +1,14 @@
 ---
-title: Planning-Suite
+title: Projekt
 audience: [maintainer]
-content_mode: explanation
+content_mode: meta
 track: developer-docs
-last_updated: 2026-05-19
+last_updated: 2026-05-28
 ---
 
-# Planning-Suite
+# Projekt
+
+Dieser Abschnitt orientiert dich rund um den `project/`-Planungsbaum (Mission, Goals, Roadmap, Sprints, Features) und die Planning-Suite-Skills, die ihn operationalisieren.
 
 Die Planning-Suite umfasst mehrere Skills sowie einen Agenten. Damit operationalisiert ein adoptierendes Repository die Specs `mission`, `roadmap`, `sprint`, `feature` und `release-artifact`. Diese Seite zeigt die typische Reihenfolge der Skill-Aufrufe und ordnet jedem Skill das Artefakt zu, das er schreibt.
 

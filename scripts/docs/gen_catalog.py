@@ -1139,10 +1139,16 @@ def emit_section(
 
 
 def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> None:
-    """Emit ``docs/<lang>/tags.md`` listing every author-declared tag and every
-    generator-emitted auto-tag (currently ``_translation-pending``) for the
-    docs language ``lang``. Per spec §Navigation and layout the auto-tag
+    """Emit ``docs/<lang>/references/tags.md`` listing every author-declared tag
+    and every generator-emitted auto-tag (currently ``_translation-pending``)
+    for the docs language ``lang``. Per spec §Navigation and layout the auto-tag
     appears only when at least one artifact carries it.
+
+    The tag index lives under the ``references/`` section (per
+    spec/project/mkdocs-structure/ §Top-level navigation; the catalog's tag
+    index is reference content), so every href walks up one level
+    (``../skills/…``, ``../agents/…``) to reach the catalog trees that sit at
+    ``docs/<lang>/{skills,agents}/``.
     """
 
     by_tag: dict[str, list[Artifact]] = {}
@@ -1152,7 +1158,7 @@ def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> No
     for tag in by_tag:
         by_tag[tag].sort(key=lambda a: (a.kind, a.plugin, a.name))
 
-    path = DOCS_DIR / lang / "tags.md"
+    path = DOCS_DIR / lang / "references" / "tags.md"
     lines: list[str] = []
     lines.append(_render_frontmatter(title=chrome["tags_title"], content_mode="meta"))
     lines.append(f"# {chrome['tags_title']}")
@@ -1169,7 +1175,9 @@ def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> No
             lines.append("")
             for art in by_tag[tag]:
                 section = "skills" if art.kind == "skill" else "agents"
-                href = f"{section}/{art.plugin}/{art.name}.md"
+                # tags.md sits under references/, so step up one level to the
+                # catalog trees at docs/<lang>/{skills,agents}/.
+                href = f"../{section}/{art.plugin}/{art.name}.md"
                 lines.append(f"- [{art.name}]({href}) — {art.plugin}")
             lines.append("")
     write_page(path, "\n".join(lines).rstrip() + "\n")

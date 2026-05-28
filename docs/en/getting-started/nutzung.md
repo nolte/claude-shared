@@ -40,4 +40,4 @@ If a project ships its own skill of the same name, the plugin version remains re
 
 - [Skill Management](../skills/nolte-shared/skill-management.md) in depth
 - [Spec skill](../skills/nolte-shared/spec.md) in depth
-- [Specifications](../specs/index.md): the authoring rules
+- [Specifications](../references/specs/index.md): the authoring rules

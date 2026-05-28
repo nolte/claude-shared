@@ -71,20 +71,21 @@ plugins:
           nav_translations:
             Startseite: Home
             Erste Schritte: Getting Started
-            Überblick: Overview
             Installation: Installation
             Nutzung: Usage
+            Guides: Guides
+            References: References
+            Projekt: Project
             Skills: Skills
-            Skill-Management: Skill Management
-            Spec: Spec
             Agents: Agents
-            Agents-Übersicht: Agents Overview
-            Konzepte: Concepts
             Tags: Tags
             Spezifikationen: Specifications
             Skill-Autorenschaft: Skill Authoring
             Agent-Autorenschaft: Agent Authoring
-            Planning-Suite: Planning Suite
+            Skill-Management: Skill Management
+            Spec: Spec
+            Skills-Konzept: Skills Concept
+            Agents-Konzept: Agents Concept
             Entwicklungszyklus: Development Lifecycle
             Entwicklung: Development
             Projektstruktur: Project Structure
@@ -151,21 +152,23 @@ nav:
       - de/getting-started/index.md
       - Installation: de/getting-started/installation.md
       - Nutzung: de/getting-started/nutzung.md
+  - Guides:
+      - de/guides/index.md
+      - Entwicklung: de/guides/development.md
+      - Projektstruktur: de/guides/project-structure.md
+      - Beitragen: de/guides/contributing.md
+      - Skills-Konzept: de/guides/skills-concept.md
+      - Skill-Management: de/guides/skill-management.md
+      - Spec: de/guides/spec.md
+      - Agents-Konzept: de/guides/agents-concept.md
+      - Entwicklungszyklus: de/guides/development-lifecycle.md
+  - References:
+      - de/references/index.md
+      - Spezifikationen:
+          - de/references/specs/index.md
+          - Skill-Autorenschaft: de/references/specs/skill-management.md
+          - Agent-Autorenschaft: de/references/specs/agent-management.md
+      - Tags: de/references/tags.md
+  - Projekt: de/project/index.md
   - Skills: de/skills/
   - Agents: de/agents/
-  - Tags: de/tags.md
-  - Konzepte:
-      - de/concepts/skills/index.md
-      - Skill-Management: de/concepts/skills/skill-management.md
-      - Spec: de/concepts/skills/spec.md
-      - Agents-Übersicht: de/concepts/agents/index.md
-  - Spezifikationen:
-      - de/specs/index.md
-      - Skill-Autorenschaft: de/specs/skill-management.md
-      - Agent-Autorenschaft: de/specs/agent-management.md
-  - Planning-Suite: de/planning-suite.md
-  - Entwicklungszyklus: de/lifecycle.md
-  - Entwicklung:
-      - de/development/index.md
-      - Projektstruktur: de/development/projektstruktur.md
-      - Beitragen: de/development/beitragen.md

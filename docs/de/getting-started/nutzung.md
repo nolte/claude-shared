@@ -40,4 +40,4 @@ Trägt ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version e
 
 - [Skill-Management](../skills/nolte-shared/skill-management.md) im Detail
 - [Spec-Skill](../skills/nolte-shared/spec.md) im Detail
-- [Spezifikationen](../specs/index.md) — verbindliche Autoren-Regeln
+- [Spezifikationen](../references/specs/index.md) — verbindliche Autoren-Regeln

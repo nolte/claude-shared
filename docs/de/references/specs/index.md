@@ -8,11 +8,11 @@ last_updated: 2026-05-19
 
 # Spezifikationen
 
-Die Spezifikationen unter `spec/` definieren die verbindlichen Regeln für Autoren von Skills und Agents. Sie sind **mehrsprachig**: Kanonisch auf Englisch, übersetzt nach Deutsch — strukturell und semantisch synchron gehalten durch den [Spec-Skill](../skills/nolte-shared/spec.md).
+Die Spezifikationen unter `spec/` definieren die verbindlichen Regeln für Autoren von Skills und Agents. Sie sind **mehrsprachig**: Kanonisch auf Englisch, übersetzt nach Deutsch — strukturell und semantisch synchron gehalten durch den [Spec-Skill](../../skills/nolte-shared/spec.md).
 
 ## Vorhandene Specs
 
-Die autoritative, vom [Spec-Skill](../skills/nolte-shared/spec.md) gepflegte Liste liegt in [`spec/README.md`](https://github.com/nolte/claude-shared/blob/develop/spec/README.md) — dort stehen alle Specs mit Topic, Slug, Sprachtiteln, Status und letztem Update-Datum.
+Die autoritative, vom [Spec-Skill](../../skills/nolte-shared/spec.md) gepflegte Liste liegt in [`spec/README.md`](https://github.com/nolte/claude-shared/blob/develop/spec/README.md) — dort stehen alle Specs mit Topic, Slug, Sprachtiteln, Status und letztem Update-Datum.
 
 Grober Schnitt zur Orientierung:
 
@@ -33,4 +33,4 @@ Normative Aussagen nutzen RFC-2119-Keywords, in Übersetzungen mit der englische
 
 ## Mitwirken an Specs
 
-Neue Spec oder Änderung? Immer über den [Spec-Skill](../skills/nolte-shared/spec.md) — so bleiben Kanon und Übersetzungen und der Index garantiert synchron. Direkte Edits an Übersetzungen sind der häufigste Drift-Verursacher und werden vom Skill beim nächsten Drift-Check gemeldet.
+Neue Spec oder Änderung? Immer über den [Spec-Skill](../../skills/nolte-shared/spec.md) — so bleiben Kanon und Übersetzungen und der Index garantiert synchron. Direkte Edits an Übersetzungen sind der häufigste Drift-Verursacher und werden vom Skill beim nächsten Drift-Check gemeldet.

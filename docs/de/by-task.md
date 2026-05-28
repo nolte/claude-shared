@@ -10,7 +10,7 @@ last_updated: 2026-05-26
 
 Aufgaben-orientierte Einstiegs-Seite: gruppiert Skills und Agents nach Nutzer-Absicht statt nach Phase des Liefer-Lebenszyklus. Hand-kuratiert; Rubriken wachsen, sobald weitere Artefakte `use_when`-Metadaten ausspielen.
 
-> **Hinweis:** Bislang erscheinen hier nur die pilot-migrierten Artefakte. Was noch nicht gelistet ist, findest du im phasen-gruppierten [Skills](skills/index.md)- und [Agents](agents/index.md)-Index oder über den [Tag-Index](tags.md).
+> **Hinweis:** Bislang erscheinen hier nur die pilot-migrierten Artefakte. Was noch nicht gelistet ist, findest du im phasen-gruppierten [Skills](skills/index.md)- und [Agents](agents/index.md)-Index oder über den [Tag-Index](references/tags.md).
 
 ## Pull Request öffnen oder landen
 
