@@ -1,11 +1,11 @@
 ---
 id: F-2
 title: Plugin published via automated release pipeline
-status: draft
+status: done
 roadmap_item: R-2
 sprint: 2
 created: 2026-05-11
-ended: null
+ended: 2026-05-28
 verifies_sprint_value: acceptance-1
 consistency_check:
   performed_at: 2026-05-11
@@ -24,16 +24,16 @@ The pipeline is composed of three already-shipped pieces — the `release-drafte
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** A published (non-draft) GitHub release tag exists on `nolte/claude-shared` for a version greater than `v0.1.1`, with a body produced from the `release-drafter` template; the publish event was caused by `release-publish.yml`, not by a manual `gh release edit --draft=false`.
-- [ ] **acceptance-2** `.github/workflows/ci.yml` carries an `on.workflow_dispatch` trigger; manually dispatching the workflow against `develop` produces a SUCCESS run that satisfies every required status check the branch-protection ruleset names.
-- [ ] **acceptance-3** Running `/nolte-shared:release-publish-trigger` against `develop` HEAD passes every pre-publish gate from `spec/project/release-skill-layer/` §"Skill B — Release publish trigger" and dispatches `release-publish.yml`, with the resulting workflow run reaching `conclusion: success` and flipping the open draft to published.
+- [x] **acceptance-1** A published (non-draft) GitHub release tag exists on `nolte/claude-shared` for a version greater than `v0.1.1`, with a body produced from the `release-drafter` template; the publish event was caused by `release-publish.yml`, not by a manual `gh release edit --draft=false`. Closed by the v0.1.3 publish: `release-publish.yml` run `26593368091` (event `workflow_dispatch`, `conclusion: success`, head `3b7fc1d`) flipped the draft to published on 2026-05-28T18:13:34Z; `author=github-actions[bot]`.
+- [x] **acceptance-2** `.github/workflows/ci.yml` carries an `on.workflow_dispatch` trigger; manually dispatching the workflow against `develop` produces a SUCCESS run that satisfies every required status check the branch-protection ruleset names. Closed by PR #211 (`c2e47ee`) which added `workflow_dispatch`; dispatch run `26600382940` against `develop` reached `conclusion: success` with `lint`, `test`, `docs` all green.
+- [x] **acceptance-3** Running `/nolte-shared:release-publish-trigger` against `develop` HEAD passes every pre-publish gate from `spec/project/release-skill-layer/` §"Skill B — Release publish trigger" and dispatches `release-publish.yml`, with the resulting workflow run reaching `conclusion: success` and flipping the open draft to published. Closed by the `release-publish-trigger` run that dispatched `release-publish.yml` run `26593368091` (all five pre-publish gates green; `conclusion: success`; draft flipped to published).
 - [x] **acceptance-4** After publication the released tag's version string matches the version declared in `.claude-plugin/plugin.json` and in both `version` fields of `.claude-plugin/marketplace.json` (`metadata.version` and `plugins[0].version`), so consumers reading either manifest see consistent metadata. Closed by PR #95 `chore(release): v0.1.3 (#95)` at `3ccd5da89fa93459e81fff982462818d3a04d4bf` — see `## Consistency notes` for the provenance correction relative to the original wording.
 
 ## Test hooks
 
-- **acceptance-1** — manual: `gh release list --repo nolte/claude-shared --json tagName,isDraft,publishedAt,author` shows a non-draft entry > v0.1.1 whose `author.login` matches the release-publish workflow's bot — `pending`
-- **acceptance-2** — manual: open `.github/workflows/ci.yml` and verify `on.workflow_dispatch`; then `gh workflow run ci.yml --ref develop` and `gh run list --workflow ci.yml --branch develop --limit 1 --json conclusion` shows `conclusion: success` — `pending`
-- **acceptance-3** — skill: invoke `/nolte-shared:release-publish-trigger`; expect "all gates green" plus a dispatched `release-publish.yml` run; `gh run view <id> --json conclusion` shows `success` — `pending`
+- **acceptance-1** — manual: `gh release list --repo nolte/claude-shared --json tagName,isDraft,publishedAt,author` shows a non-draft entry > v0.1.1 whose `author.login` matches the release-publish workflow's bot — `passing` (v0.1.3, `isDraft=false`, `author=github-actions[bot]`; the authoritative proof is `release-publish.yml` run `26593368091`, `conclusion: success`, which performed the publish)
+- **acceptance-2** — manual: open `.github/workflows/ci.yml` and verify `on.workflow_dispatch`; then `gh workflow run ci.yml --ref develop` and `gh run list --workflow ci.yml --branch develop --limit 1 --json conclusion` shows `conclusion: success` — `passing` (`workflow_dispatch` added in PR #211 `c2e47ee`; dispatch run `26600382940` on `develop`, `conclusion: success`)
+- **acceptance-3** — skill: invoke `/nolte-shared:release-publish-trigger`; expect "all gates green" plus a dispatched `release-publish.yml` run; `gh run view <id> --json conclusion` shows `success` — `passing` (all five pre-publish gates green; dispatched `release-publish.yml` run `26593368091`, `conclusion: success`)
 - **acceptance-4** — manual: after publish, `gh release view <tag> --json tagName` and grep `.claude-plugin/plugin.json` + `.claude-plugin/marketplace.json` for the version string; assert all three occurrences (`plugin.json.version`, `marketplace.json.metadata.version`, `marketplace.json.plugins[0].version`) match the tag — `passing` (verified after PR #95 squash-merge on `develop`; all three read `0.1.3`)
 
 ## Consistency notes
