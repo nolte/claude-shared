@@ -60,6 +60,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [dependency-audit](../skills/nolte-shared/dependency-audit.md) — nolte-shared
 
+## `design`
+
+- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
+
 ## `frontend`
 
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
@@ -80,6 +84,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [audience-doc-author](../agents/nolte-shared/audience-doc-author.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
+- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [prose-vale-curator](../agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [blog-author](../skills/nolte-shared/blog-author.md) — nolte-shared
@@ -124,6 +129,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
+- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [cookiecutter-template-manage](../skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
 - [docs-audience-tracks-apply](../skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared

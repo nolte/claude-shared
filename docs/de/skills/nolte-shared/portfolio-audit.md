@@ -169,7 +169,7 @@ When the spec disagrees with this skill's instructions, the spec wins. Propose a
 
 ### Resumability
 
-Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/portfolio-audit/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, …) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/portfolio-audit/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ### Hard rules
 

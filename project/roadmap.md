@@ -13,12 +13,12 @@ detail: fine
 outcomes: [O-3]
 target_sprint: 1
 mvp: true
-status: active
+status: done
 ```
 
 The plugin demonstrates its own planning-suite specs by self-application: `project/goals.md`, `project/roadmap.md`, `project/features/`, `project/sprints/`, and `project/mission.md` exist as a reference adopter, and at least one sprint runs end-to-end (`planned → active → review → closed`) delivering the mission statement against a verifying acceptance criterion. This satisfies O-3 ("every spec the plugin ships is dogfooded before downstream adoption") because the proof-of-life happens here first.
 
-- [ ] mission-statement-published
+- [x] mission-statement-published
 
 ## Phase 2 — Release & Quality Discipline
 
@@ -31,12 +31,12 @@ detail: fine
 outcomes: [O-1, O-2]
 target_sprint: 2
 mvp: false
-status: proposed
+status: done
 ```
 
 Consumers of the `nolte-shared` plugin install a published, non-draft release of `claude-shared` whose publication was performed by the repo's own pipeline rather than by a manual `gh release edit`. The path runs from a develop merge through `release-drafter` (changelog aggregation) and `release-publish.yml` (the publish workflow), gated by the `release-publish-trigger` skill which validates every pre-publish condition locally before dispatching. Closing the remaining `ci.yml` `workflow_dispatch` gap lets the skill's required-checks gate pass and produces the first end-to-end published release.
 
-- [ ] plugin-published-via-automated-release
+- [x] plugin-published-via-automated-release
 
 ### R-3 — Develop branch quality gate hardened
 
