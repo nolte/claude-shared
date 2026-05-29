@@ -22,7 +22,7 @@ resumable: true
 
 # Blog Author Trigger
 
-Operationalises `spec/project/blog-author-trigger/<canonical_language>.md`: the **when** layer that bridges a `feature → done` transition in a source consumer (a `claude-shared`-shape repository with `project/features/`) to the **what** layer, [`blog-author`](../blog-author/SKILL.md), which drafts the bilingual post pair in a blog consumer (reference: `nolte/blog`). The trigger spec is contract-only and leaves the wiring mechanism open; this skill is the reference wiring per the spec's §Open questions resolution — a dedicated trigger skill that `sprint-execute` automatically dispatches after it writes a feature's `done` status.
+Operationalises `spec/project/blog-author-trigger/<canonical_language>.md`: the **when** layer that bridges a `feature → done` transition in a source consumer (a `claude-shared`-shape repository with `project/features/`) to the **what** layer, `blog-author`, which drafts the bilingual post pair in a blog consumer (reference: `nolte/blog`). The trigger spec is contract-only and leaves the wiring mechanism open; this skill is the reference wiring per the spec's §Open questions resolution — a dedicated trigger skill that `sprint-execute` automatically dispatches after it writes a feature's `done` status.
 
 This skill binds the spec's contract to an on-disk procedure. When this skill and the spec disagree, the spec wins and this skill needs the update.
 
@@ -93,7 +93,7 @@ Apply the deterministic rules from `spec/project/blog-author-trigger/` §Briefin
 
 ### 4. Execute the chosen path
 
-- **Choice 1 — new post.** Pre-stage the derived briefing at `project/blog-triggers/<feature-slug>.briefing.md` in the source consumer, surface the blog consumer's clone path, and dispatch [`blog-author`](../blog-author/SKILL.md) with the briefing as Step-1 input (in-place when the source consumer is its own blog consumer; otherwise per §Cross-repository handover).
+- **Choice 1 — new post.** Pre-stage the derived briefing at `project/blog-triggers/<feature-slug>.briefing.md` in the source consumer, surface the blog consumer's clone path, and dispatch `blog-author` with the briefing as Step-1 input (in-place when the source consumer is its own blog consumer; otherwise per §Cross-repository handover).
 - **Choice 2 — update existing post.** As Choice 1, plus the target post's existing `slug` and `translationKey` (operator picks from the index) and an **update reason** derived from the feature `title` plus a one-line summary of what changed.
 - **Choice 3 — defer to backlog.** Write the deferral artefact (next operation). No `blog-author` dispatch.
 
