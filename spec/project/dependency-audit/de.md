@@ -63,7 +63,7 @@ Jedes Repository im Portfolio zieht Drittanbieter-Pakete über ein oder mehrere 
 
 ### Audit-Artefakt
 - **MUSS** das Ergebnis jedes vollständigen Audits als Commit, Issue oder Datei im Repository persistieren; der Artefaktort bleibt eine Wahl pro Repository und ist kein portfolioweit fest verdrahteter Pfad (analog zur Freiheit pro Repository, die `spec/project/spec-drift-audit/` bewusst bewahrt)
-- **SOLLTE** standardmäßig den kanonischen Pfad `docs/audits/dependencies-YYYY-Q<n>.md` verwenden; ein GitHub-Issue mit Label `security-audit` ist eine akzeptierte Alternative, und etwaige später gebaute Cross-Repo-Aggregations-Werkzeuge knüpfen an eine der beiden Formen an
+- **SOLLTE** standardmäßig den kanonischen Pfad `.audits/dependency-audit/dependencies-YYYY-Q<n>.md` verwenden (der portfolio-weite `.audits/<audit-type>/`-Standard, gemäß `spec/project/spec-drift-audit/`); ein GitHub-Issue mit Label `security-audit` ist eine akzeptierte Alternative, und etwaige später gebaute Cross-Repo-Aggregations-Werkzeuge knüpfen an eine der beiden Formen an
 - **MUSS** im Artefakt enthalten: Datum, Auslöser (quartalsweise, pre-release, manifest-change), Geltungsbereich (welche Unterordner wurden auditiert, welche übersprungen und warum), die verwendeten Werkzeuge und ihre Versionen, pro Befund Schweregrad und Reaktionsentscheidung, sowie die auditierte Git-Revision
 - **SOLLTE** auf das vorherige Audit-Artefakt verlinken, damit der Fortschritt über Quartale hinweg nachvollziehbar bleibt
 

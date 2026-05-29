@@ -63,7 +63,7 @@ Every repository in the portfolio pulls in third-party packages through one or m
 
 ### Audit artifact
 - **MUST** persist the result of every full audit as a commit, issue, or file in the repository; the artifact location stays a per-repository choice rather than a portfolio-wide hard-coded path (mirroring the per-repository freedom `spec/project/spec-drift-audit/` deliberately preserves)
-- **SHOULD** default to the canonical path `docs/audits/dependencies-YYYY-Q<n>.md`; a GitHub issue labelled `security-audit` is an accepted alternative, and any cross-repo aggregation tooling built later keys off either form
+- **SHOULD** default to the canonical path `.audits/dependency-audit/dependencies-YYYY-Q<n>.md` (the portfolio-wide `.audits/<audit-type>/` standard, per `spec/project/spec-drift-audit/`); a GitHub issue labelled `security-audit` is an accepted alternative, and any cross-repo aggregation tooling built later keys off either form
 - **MUST** include in the artifact: date, trigger (quarterly, pre-release, manifest-change), scope (which subroots were audited, which were skipped and why), the tools used and their versions, the per-finding severity and response decision, and the Git revision audited
 - **SHOULD** link to the prior audit artifact so the progression is traceable across quarters
 
