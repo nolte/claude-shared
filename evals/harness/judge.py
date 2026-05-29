@@ -5,8 +5,9 @@ string/structure checks in the scenario test). The judge is told to answer with 
 final ``PASS`` or ``FAIL`` line so the verdict parses unambiguously; a malformed verdict
 raises rather than silently passing.
 
-Cost discipline: `judge` calls the Anthropic API and is gated behind RUN_EVALS=1. The
-prompt builder and verdict parser are pure and unit-tested directly.
+Cost discipline: `judge` drives the model through `claude -p` (the same auth as the
+runner — your Claude Code login, no separate Anthropic API key), gated behind RUN_EVALS=1.
+The prompt builder, command builder, and verdict parser are pure and unit-tested directly.
 """
 from __future__ import annotations
 
@@ -50,17 +51,33 @@ def parse_verdict(text: str) -> bool:
     raise ValueError(f"judge response did not end with PASS/FAIL: {lines[-1]!r}")
 
 
-def judge(output: str, rubric: str, model: str | None = None) -> bool:
-    """Grade `output` against `rubric` via the Anthropic API. Gated behind RUN_EVALS=1."""
+def build_judge_command(prompt: str, model: str | None = None) -> list[str]:
+    """Pure construction of the ``claude -p`` argv for a judge call (no plugin, no tools)."""
+    return [
+        "claude",
+        "-p",
+        prompt,
+        "--model",
+        model or judge_model(),
+        "--permission-mode",
+        "plan",
+        "--output-format",
+        "json",
+    ]
+
+
+def judge(output: str, rubric: str, model: str | None = None, timeout: int = 300) -> bool:
+    """Grade `output` against `rubric` via ``claude -p``. Gated behind RUN_EVALS=1.
+
+    Uses the same auth as the runner — your Claude Code login (a Pro/Max subscription or
+    an API key) — so no separate Anthropic API key or Console account is required.
+    """
     if os.environ.get("RUN_EVALS") != "1":
         raise RuntimeError("judge requires RUN_EVALS=1 (live LLM call has a cost)")
-    import anthropic  # lazy: only needed for live runs
+    import subprocess
 
-    client = anthropic.Anthropic()
-    message = client.messages.create(
-        model=model or judge_model(),
-        max_tokens=1024,
-        messages=[{"role": "user", "content": build_judge_prompt(output, rubric)}],
-    )
-    text = "".join(block.text for block in message.content if block.type == "text")
-    return parse_verdict(text)
+    from evals.harness.runner import parse_json_result
+
+    cmd = build_judge_command(build_judge_prompt(output, rubric), model)
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, check=False)
+    return parse_verdict(parse_json_result(proc.stdout))
