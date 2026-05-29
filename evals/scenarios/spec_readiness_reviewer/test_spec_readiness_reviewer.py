@@ -56,7 +56,9 @@ def test_planted_findings(plugin_dir, fixture_repo, record_scorecard, n_samples,
             {
                 "mentions-caching-contradiction": "cach" in report.lower(),
                 "uses-Critical-severity": "Critical" in report,
-                "no-invented-severity": "Blocker" not in report,
+                # "uses only canonical severity buckets" needs context (the word
+                # "blocker" appears legitimately in prose), so it lives in the judge
+                # rubric (item 3), not a brittle substring check here.
                 "judge:rubric": judge.judge(report, RUBRIC),
             }
         )
