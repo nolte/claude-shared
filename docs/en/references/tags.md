@@ -108,6 +108,10 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [release-publish-trigger](../skills/nolte-shared/release-publish-trigger.md) — nolte-shared
 - [sprint-review](../skills/nolte-shared/sprint-review.md) — nolte-shared
 
+## `requirements`
+
+- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+
 ## `review`
 
 - [audience-review](../agents/nolte-shared/audience-review.md) — nolte-shared
@@ -133,6 +137,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
+- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [cookiecutter-template-manage](../skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
 - [docs-audience-tracks-apply](../skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](../skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
@@ -158,6 +163,10 @@ Cross-reference: each tag links to every skill and agent that declares it.
 ## `security`
 
 - [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
+
+## `testing`
+
+- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 
 ## `triage`
 

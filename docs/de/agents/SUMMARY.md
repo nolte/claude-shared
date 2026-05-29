@@ -17,6 +17,7 @@ last_updated: generated
     * [claude-plugin-developer](nolte-shared/claude-plugin-developer.md)
     * [graphic-prompt-generator](nolte-shared/graphic-prompt-generator.md)
     * [spec-readiness-reviewer](nolte-shared/spec-readiness-reviewer.md)
+    * [test-case-extractor](nolte-shared/test-case-extractor.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 5 Review
     * [code-security-reviewer](nolte-shared/code-security-reviewer.md)
