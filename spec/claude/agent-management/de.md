@@ -32,7 +32,7 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - **MUSS [MUST]** Frontmatter-Feldnamen und Werte technischer Bezeichner auf Englisch halten: `name`, `distribution`, `tools`-Einträge, `model` und `tags`-Einträge bleiben unabhängig von der Dokumentationssprache des Projekts in Englisch
 - **SOLLTE [SHOULD]** den `description`-Wert und den System-Prompt-Body aus Token-Effizienz- und teamweiter Portabilitätsgründen auf Englisch halten; Agenten mit `distribution: project` für ein Projekt, das in seiner Wurzel-Konventionsdatei (typischerweise `CLAUDE.md`) eine nicht-englische Dokumentationssprache deklariert, **DÜRFEN [MAY]** stattdessen `description` und Body in der Hauptdokumentationssprache des Projekts verfassen. Agenten mit `distribution: plugin` **MÜSSEN [MUST]** in Description und Body englischsprachig bleiben, da sie über mehrere Downstream-Projekte mit potenziell unterschiedlichen Sprachen ausgeliefert werden
 - Der Agent **DARF [MAY]** dennoch angewiesen werden, dem Nutzer in dessen Sprache zu antworten — unabhängig davon, in welcher Sprache der Body verfasst ist
-- **MUSS [MUST]** in sich geschlossen sein — unterstützende Artefakte (Referenzen, Beispiele, Prompt-Bausteine) liegen neben der Agent-Datei in einem Schwester-Ordner `agents/<name>/` und werden über relative Pfade referenziert
+- **MUSS [MUST]** in sich geschlossen sein: ein Agent ist genau eine Top-Level-Markdown-Datei `agents/<name>.md`. Unterstützendes Material (Referenzen, Beispiele, Prompt-Bausteine, Output-Shape-Templates) wird direkt in den Agent-Body inlined. **DARF NICHT [MUST NOT]** eine Begleit-Markdown-Datei in einem Schwester-Ordner `agents/<name>/` ablegen, weil Claude Codes Default-Agent-Discovery `agents/` **rekursiv** scannt: jede genestete `.md` wird als gescopeter Phantom-Agent (`<name>:<file>`) registriert und erbt mangels Frontmatter die volle Tool-Oberfläche ohne `tools`-Einschränkung. Ist ein unterstützendes Artefakt wirklich zu groß zum Inlinen, wird es **außerhalb** des rekursiv gescannten `agents/`-Baums abgelegt (zum Beispiel unter einem Top-Level-`agent-assets/<name>/`) und über einen relativen Pfad referenziert
 - **KANN [MAY]** ein optionales `tags`-Feld im YAML-Frontmatter enthalten: eine Liste von kleingeschriebenen ASCII-Kebab-Case-Strings, jeder ≤30 Zeichen, mit höchstens 5 Einträgen; Tags liefern thematische Gruppierung, damit Katalog (`skill-agent-catalog`) und Peer-Cluster-Abgleich (`skill-vs-agent` §Portfolio-weite Konsistenz) nach Thema durchstöbert werden können
 - **DARF NICHT [MUST NOT]** einen `tags`-Eintrag deklarieren, der mit `_` (Unterstrich) beginnt; das Unterstrich-Präfix ist für Generator-emittierte Auto-Tags wie `_translation-pending` reserviert
 - **MUSS [MUST]** ein `phase`-Feld im YAML-Frontmatter enthalten, dessen Wert genau ein Identifier aus dem Acht-Werte-Vokabular ist, das in `skill-agent-catalog` §Phasen-Klassifikation deklariert ist (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); der Katalog-Generator lässt den Doku-Build scheitern, wenn `phase` fehlt oder außerhalb des Vokabulars liegt
@@ -111,7 +111,7 @@ Aus Sicherheitsgründen **ignoriert Claude Code stillschweigend** die Frontmatte
 
 ### Quell-Ablageort (Repository claude-shared)
 - **MUSS [MUST]** im Quellbaum von claude-shared unter `agents/<name>.md` liegen, damit er kopiert, symlinkt oder für die Verteilung in ein Plugin gebündelt werden kann
-- **KANN [MAY]** bei Bedarf einen Schwester-Ordner `agents/<name>/` für unterstützende Dateien haben
+- **DARF NICHT [MUST NOT]** einen Schwester-Ordner `agents/<name>/` für unterstützende Markdown-Dateien einführen; die rekursive Agent-Discovery würde ihn als Phantom-Agent registrieren (siehe §Struktur). Unterstützende Artefakte, die sich nicht inlinen lassen, liegen außerhalb des `agents/`-Baums (zum Beispiel `agent-assets/<name>/`) und werden über relative Pfade referenziert
 
 ### Laufzeit-Ablageort (konsumierendes Projekt)
 Der Laufzeit-Ablageort richtet sich nach dem deklarierten `distribution`:
@@ -126,9 +126,9 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 ### Empfehlungen
 - **SOLLTE [SHOULD]** den System-Prompt mit Rolle und Grenzen des Agents beginnen, dann das erwartete Ausgabeformat, dann die Arbeitsweise
 - **SOLLTE [SHOULD]** im System-Prompt ausdrücklich festhalten, ob der Agent Code schreibt oder nur recherchiert, da der aufrufende Claude diese Unterscheidung beim Dispatch treffen muss
-- **SOLLTE [SHOULD]** den System-Prompt fokussiert halten; wächst er über etwa 200 Zeilen, sollten längere Referenzen in Dateien unter `agents/<name>/` ausgelagert werden (diese ~200-Zeilen-Zahl ist eine lokale `nolte-shared`-Konvention; Anthropic dokumentiert kein Agent-Datei-Größenbudget, im Gegensatz zur weichen ~500-Zeilen-`SKILL.md`-Richtlinie, die `skill-management` für Skills kodifiziert)
+- **SOLLTE [SHOULD]** den System-Prompt fokussiert halten; wächst er über etwa 200 Zeilen, sollte die Prosa gestrafft statt aufgeteilt werden—ein Agent bleibt eine einzelne Datei (siehe §Struktur), längeres Material wird also inlined oder, nur wenn wirklich zu groß, außerhalb des `agents/`-Baums abgelegt (zum Beispiel `agent-assets/<name>/`). Die ~200-Zeilen-Zahl ist eine lokale `nolte-shared`-Konvention; Anthropic dokumentiert kein Agent-Datei-Größenbudget, im Gegensatz zur weichen ~500-Zeilen-`SKILL.md`-Richtlinie, die `skill-management` für Skills kodifiziert
 - **SOLLTE [SHOULD]** in der `description` sowohl positive Trigger („einsetzen, wenn…") als auch typische negative Fälle („nicht einsetzen für…") nennen, wenn Überschneidungen mit anderen Agents wahrscheinlich sind
-- **KANN [MAY]** Beispiel-Aufrufe und erwartete Berichte in einem Schwester-Ordner `agents/<name>/examples/` enthalten
+- **KANN [MAY]** Beispiel-Aufrufe und erwartete Berichte inline im Agent-Body enthalten; sind sie zu groß zum Inlinen, werden sie außerhalb des `agents/`-Baums abgelegt (zum Beispiel `agent-assets/<name>/examples/`) und über relative Pfade referenziert—niemals in einem Schwester-Ordner `agents/<name>/`, den die rekursive Discovery als Phantom-Agent registrieren würde
 
 ### Wiederaufnehmbare Runs
 - **MUSS [MUST]** `resumable: true` im Frontmatter des Agents deklarieren, wenn der Agent intern mehr als eine benannte Phase umspannt, die ein Zwischenartefakt produziert, das die Person bei Unterbrechung sonst verlieren würde, und `spec/claude/resumable-work/` für den On-Disk-Envelope, die Checkpoint-Kadenz, das Re-Invocation-Prompt und den Lebenszyklus befolgen; die tragenden Regeln leben in jener Spec und werden hier nicht dupliziert
@@ -137,6 +137,7 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 
 ## Akzeptanzkriterien
 - [ ] Quelldatei existiert unter `agents/<name>.md` in claude-shared mit `<name>` in ASCII-Kebab-Case
+- [ ] Keine unterstützende Markdown-Datei liegt in einem Schwester-Ordner `agents/<name>/`; die rekursive Agent-Discovery würde sie als Phantom-Agent mit allen Tools registrieren. Unterstützende Artefakte, die sich nicht inlinen lassen, liegen außerhalb des `agents/`-Baums (überprüfbar mit `find agents -mindepth 2 -name '*.md'`, das keine Treffer liefert)
 - [ ] Frontmatter parst als gültiges YAML und enthält mindestens `name`, `description` und `distribution`
 - [ ] `name` im Frontmatter entspricht dem Dateinamen ohne `.md`
 - [ ] `description` benennt konkrete Trigger, die der aufrufende Claude mit Nutzeranfragen abgleichen kann

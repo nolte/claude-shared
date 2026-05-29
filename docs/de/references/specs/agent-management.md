@@ -3,7 +3,7 @@ title: Agent-Autorenschaft
 audience: [maintainer]
 content_mode: reference
 track: developer-docs
-last_updated: 2026-05-19
+last_updated: 2026-05-29
 ---
 
 # Agent-Autorenschaft
@@ -45,7 +45,7 @@ Ohne einheitliche Form driften Agents in Benennung, Trigger-Beschreibung, Tool-S
 - **MUSS [MUST]** `description` mit konkreten Triggern ("einsetzen, wenn …") — nicht abstrakte Fähigkeiten
 - **MUSS [MUST]** System-Prompt im Markdown-Body: eine Verantwortlichkeit, erwartete Ausgabeform
 - **MUSS [MUST]** Frontmatter und System-Prompt auf Englisch halten (Token-Effizienz)
-- **MUSS [MUST]** in sich geschlossen sein — unterstützende Artefakte in `agents/<name>/`
+- **MUSS [MUST]** in sich geschlossen sein — eine einzelne Top-Level-`agents/<name>.md`; kein Schwester-Ordner `agents/<name>/` (rekursive Discovery würde genestete Markdown als Phantom-Agent registrieren)
 
 ### Tool-Zugriff
 

@@ -32,7 +32,7 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 - **MUST** keep frontmatter field names and technical identifier values in English: `name`, `distribution`, `tools` entries, `model`, and `tags` entries stay English regardless of the project's documentation language
 - **SHOULD** keep the `description` value and the system-prompt body in English for token efficiency and portability across teams; agents authored with `distribution: project` for a project that declares a non-English documentation language in its root-level convention file (typically `CLAUDE.md`) **MAY** instead author the `description` and the body in the project's primary documentation language. Agents authored with `distribution: plugin` **MUST** stay English-only in description and body because they ship across multiple downstream projects with possibly different languages
 - The agent **MAY** still be instructed to respond to the user in the user's language regardless of where the body is authored
-- **MUST** be self-contained—any supporting assets (references, examples, prompt fragments) live alongside the agent file in a sibling folder `agents/<name>/` and are referenced by relative path
+- **MUST** be self-contained: an agent is exactly one top-level markdown file `agents/<name>.md`. Inline any supporting material (references, examples, prompt fragments, output-shape templates) directly into the agent body. **MUST NOT** place a companion markdown file in a sibling folder `agents/<name>/`, because Claude Code's default agent discovery scans `agents/` **recursively**: every nested `.md` is registered as a phantom, scope-prefixed agent (`<name>:<file>`) and, lacking frontmatter, inherits the full tool surface with no `tools` restriction. When a supporting asset is genuinely too large to inline, place it **outside** the recursively-scanned `agents/` tree (for example under a top-level `agent-assets/<name>/`) and reference it by relative path
 - **MAY** include an optional `tags` field in YAML frontmatter: a list of lowercase ASCII kebab-case strings, each ≤30 characters, with no more than 5 entries; tags provide thematic grouping so the catalog (`skill-agent-catalog`) and peer-cluster lookups (`skill-vs-agent` §Portfolio-wide consistency) can browse by topic
 - **MUST NOT** declare a `tags` entry that begins with `_` (underscore); the underscore prefix is reserved for catalog-generator-emitted auto-tags such as `_translation-pending`
 - **MUST** include a `phase` field in YAML frontmatter whose value is exactly one identifier from the eight-value vocabulary declared in `skill-agent-catalog` §Phase classification (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); the catalog generator fails the docs build when `phase` is missing or out of vocabulary
@@ -111,7 +111,7 @@ For security reasons, Claude Code **silently ignores** the `hooks`, `mcpServers`
 
 ### Source location (`claude-shared` repository)
 - **MUST** live at `agents/<name>.md` in the `claude-shared` source tree, so it can be copied, symlinked, or bundled into a plugin for distribution
-- **MAY** have a sibling folder `agents/<name>/` for supporting files when needed
+- **MUST NOT** introduce a sibling folder `agents/<name>/` for supporting markdown; recursive agent discovery would register it as a phantom agent (see §Structure). Supporting assets too large to inline live outside the `agents/` tree (for example `agent-assets/<name>/`) and are referenced by relative path
 
 ### Runtime location (consuming project)
 Runtime location follows the declared `distribution`:
@@ -126,9 +126,9 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 ### Recommendations
 - **SHOULD** begin the system prompt with the agent's role and boundaries, then the expected output format, then the working procedure
 - **SHOULD** state explicitly in the system prompt whether the agent writes code or only researches, since the calling Claude is responsible for that distinction at dispatch time
-- **SHOULD** keep the system prompt focused; if it grows past roughly 200 lines, move long-form references into `agents/<name>/` files (this ~200-line figure is a local `nolte-shared` convention; Anthropic documents no agent-file size budget, in contrast to the soft ~500-line `SKILL.md` guideline that `skill-management` codifies for skills)
+- **SHOULD** keep the system prompt focused; if it grows past roughly 200 lines, tighten the prose rather than splitting it out—an agent stays a single file (see §Structure), so long-form material stays inline or, only when genuinely too large, moves outside the `agents/` tree (for example `agent-assets/<name>/`). The ~200-line figure is a local `nolte-shared` convention; Anthropic documents no agent-file size budget, in contrast to the soft ~500-line `SKILL.md` guideline that `skill-management` codifies for skills
 - **SHOULD** include in `description` both positive triggers ("use when…") and common negative cases ("don't use for…") when overlap with other agents is likely
-- **MAY** include example invocations and expected reports in a sibling `agents/<name>/examples/` folder
+- **MAY** include example invocations and expected reports inline in the agent body; when they're too large to inline, place them outside the `agents/` tree (for example `agent-assets/<name>/examples/`) and reference them by relative path—never in a sibling `agents/<name>/` folder, which recursive discovery would register as a phantom agent
 
 ### Resumable runs
 - **MUST** declare `resumable: true` in the agent's frontmatter when the agent internally spans more than one named phase that produces an intermediate artefact the operator would otherwise lose on interruption, and follow `spec/claude/resumable-work/` for the on-disk envelope, checkpoint cadence, re-invocation prompt, and lifecycle; the load-bearing rules live in that spec and aren't duplicated here
@@ -139,6 +139,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 
 ## Acceptance Criteria
 - [ ] Source file exists at `agents/<name>.md` in `claude-shared` with `<name>` in ASCII kebab-case
+- [ ] No supporting markdown file exists in a sibling folder `agents/<name>/`; recursive agent discovery would register it as a phantom, all-tools agent. Supporting assets too large to inline live outside the `agents/` tree (verifiable with `find agents -mindepth 2 -name '*.md'` returning no results)
 - [ ] Frontmatter parses as valid YAML and contains at minimum `name`, `description`, and `distribution`
 - [ ] `name` in frontmatter equals the filename without `.md`
 - [ ] `description` names concrete triggers the calling Claude can match against user requests

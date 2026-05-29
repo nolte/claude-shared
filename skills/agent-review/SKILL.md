@@ -70,7 +70,7 @@ Interactive. Confirm each decision with the user before acting on it.
    - If `status` is `open` or `in-progress`, tell the user a live plan exists and ask: resume it, supersede it (overwrite), or abort. Do not silently overwrite.
    - If `status` is `complete`, ask whether to rerun (overwrite — per `review-plan` one-plan-per-target invariant).
 3. **Narrow scope if the user asks** ("frontmatter only", "tools only", "rationale only"). Record the narrowing verbatim — it goes into the plan's `## Scope`.
-4. **Read the review surface** in this order: YAML frontmatter → markdown body (role, output format, procedure, rationale) → every file under `agents/<name>/` referenced from the body. A missing referenced file is a finding, not a stop.
+4. **Read the review surface** in this order: YAML frontmatter → markdown body (role, output format, procedure, rationale) → any external supporting asset referenced from the body. Agents are single self-contained files: per `agent-management` §Structure there is no `agents/<name>/` sibling folder, and a nested companion markdown file is itself a finding (recursive discovery registers it as a phantom agent). A missing referenced file is a finding, not a stop.
 5. **Apply the checks from `spec/claude/agent-review/`**, in the spec's declared order:
    1. Frontmatter fields: `name` matches filename, `description` names concrete triggers, `distribution` is exactly `plugin` or `project`.
    2. `tools` scoping: declared-vs-used bidirectional check (declared-unused → `Warning`, used-undeclared → `Critical`), read-only-agent invariant (if the `description` verbs are review / audit / research / lint / report, `tools` must NOT contain `Edit`, `Write`, `Bash`, or `NotebookEdit` → otherwise `Critical`).

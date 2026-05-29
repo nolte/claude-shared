@@ -31,7 +31,7 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 ### Review-Scope
 
 - **MUSS [MUST]** genau einen Agent als Eingabe nehmen, identifiziert durch den Pfad `agents/<name>.md` in einem `nolte-shared`-Quellbaum oder den äquivalenten Runtime-Pfad `.claude/agents/<name>.md` / `~/.claude/agents/<name>.md` beim Review einer Consumer-Kopie
-- **MUSS [MUST]** folgendes in dieser Reihenfolge als Review-Oberfläche behandeln: YAML-Frontmatter, den Markdown-Body (Rolle, Output-Format, Prozedur, Rationale), jedes Geschwister-Asset unter `agents/<name>/`, das aus dem Body referenziert wird (Beispiele, Langform-Referenzen, Prompt-Fragmente)
+- **MUSS [MUST]** folgendes in dieser Reihenfolge als Review-Oberfläche behandeln: YAML-Frontmatter, den Markdown-Body (Rolle, Output-Format, Prozedur, Rationale) und jedes externe unterstützende Asset, das aus dem Body referenziert wird (Beispiele, Langform-Referenzen, Prompt-Fragmente außerhalb des `agents/`-Baums). Eine Begleit-Markdown-Datei in einem Schwester-Ordner `agents/<name>/` ist selbst ein Finding—die rekursive Discovery registriert sie als Phantom-Agent (siehe `agent-management` §Struktur)—kein legitimer Teil der Oberfläche
 - **MUSS NICHT [MUST NOT]** mehr als einen Agent pro Plan reviewen; parallele Reviews mehrerer Agents emittieren je einen `review-plan` pro Ziel
 - **KANN [MAY]** den Scope auf einen bestimmten Aspekt einschränken (nur Frontmatter, nur Tools, nur Rationale), wenn das Review durch eine gezielte Änderung ausgelöst wurde, und **MUSS [MUST]** die Einschränkung im `## Scope`-Abschnitt des Plans dokumentieren
 
@@ -107,7 +107,7 @@ Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hyb
 - **MUSS [MUST]** verifizieren, dass der System-Prompt die erwartete Output-Form benennt, gemäß dem MUST in `agent-management`; Fehlen ist ein `Critical`
 - **MUSS [MUST]** verifizieren, dass der System-Prompt mit Rolle und Grenzen des Agents öffnet, dann das erwartete Output-Format nennt, dann die Arbeitsweise, gemäß dem SHOULD in `agent-management`; Abweichung ist ein `Warning`
 - **MUSS [MUST]** verifizieren, dass der System-Prompt ausdrücklich festhält, ob der Agent Code schreibt oder nur recherchiert, gemäß dem SHOULD in `agent-management`; Fehlen ist ein `Warning`
-- **SOLLTE [SHOULD]** Agent-Bodys, die das in `agent-management` genannte Soft-Längen-Ziel (~200 Zeilen) überschreiten, ohne unterstützendes Material nach `agents/<name>/` auszulagern, als `Warning` flaggen und damit das SHOULD aus `agent-management` spiegeln
+- **SOLLTE [SHOULD]** Agent-Bodys, die das in `agent-management` genannte Soft-Längen-Ziel (~200 Zeilen) überschreiten, als `Warning` flaggen und damit das SHOULD aus `agent-management` spiegeln; Abhilfe ist gestraffte Prosa oder das Auslagern wirklich übergroßer Assets außerhalb des `agents/`-Baums, niemals ein Schwester-Ordner `agents/<name>/`
 - **SOLLTE [SHOULD]** bei Agents, die Dateien schreiben oder Seiteneffekte verursachen (`tools`-Liste enthält eines von `Edit`, `Write`, `Bash` oder `NotebookEdit`), verifizieren, dass der System-Prompt Ziele und Vorbedingungen dieser Effekte dokumentiert, gemäß dem Akzeptanzkriterium aus `agent-management`; Fehlen ist ein `Warning`
 
 ### Review-Prozedur
