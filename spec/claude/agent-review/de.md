@@ -23,7 +23,7 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 - Review von Skills — das deckt `skill-review` mit symmetrischer Struktur ab
 - Ersetzung der quartalsweisen portfolioweiten Reconciliation — das gehört zu `spec-drift-audit`
 - Linter- und Markdown-Style-Checks, die bereits von `task lint` / Vale / Pre-Commit-Hooks erzwungen werden — diese bleiben bei ihrem eigenen Tooling
-- Laufzeit- oder Verhaltens-Korrektheit des Agents (ob ein Dispatch tatsächlich die behauptete Report-Form liefert) — diese Spec reviewt das **erstellte Artefakt**, nicht eine Live-Ausführung
+- Laufzeit- oder Verhaltens-Korrektheit des Agents (ob ein Dispatch tatsächlich die behauptete Report-Form liefert) — diese Spec reviewt das **erstellte Artefakt**, nicht eine Live-Ausführung — einschließlich der Frage, ob ein in `description` benannter negativer Trigger das aufrufende Claude tatsächlich dazu bringt, den Agent für den ausgeschlossenen Fall *nicht* zu dispatchen; das Review verifiziert nur, dass der negative Trigger vorhanden ist und ein bestehendes Peer-Artefakt benennt (siehe §„Description-Qualität und proaktive-Delegation-Absicht" und §„Checks aus `skill-vs-agent`"), nicht seine Routing-Wirkung
 
 ## Anforderungen
 <!-- RFC-2119-Schlüsselwörter verwenden: MUST, SHOULD, MAY. Eine atomare Anforderung pro Bullet. -->
@@ -100,7 +100,7 @@ Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hyb
 ### Description-Qualität und proaktive-Delegation-Absicht
 
 - **MUSS [MUST]** verifizieren, wenn die `description` die Phrase „use proactively" (oder das Äquivalent „use this proactively", „should be used proactively", „invoke proactively") enthält, dass die Verantwortlichkeit des Agents tatsächlich rechtfertigt, dass Claude ihn ohne explizite Nutzeraufforderung anbietet — Anzeichen, dass der Check besteht: Der Agent löst eine Problemklasse, die der Nutzer wahrscheinlich nicht explizit benennt (Security-Review bei jedem PR, Audit bei jedem Commit). Anzeichen, dass der Check scheitert: Der Agent hat destruktive Seiteneffekte, benötigt Credentials oder geht Verpflichtungen mit externen Systemen ein. Eine „proactively"-Behauptung an einem destruktiven oder credential-tragenden Agent ist ein `Critical` ([R5](#referenzen))
-- **SOLLTE [SHOULD]** verifizieren, wenn der Agent klare Überlappung mit einem anderen bestehenden Artefakt (Skill oder Agent) hat, dass die `description` die Überlappung als **negativen Trigger** benennt („don't use for X, use the `<peer>` agent / skill instead"); das Fehlen des Negativs ist ein `Warning` ([R5](#referenzen))
+- **SOLLTE [SHOULD]** verifizieren, wenn der Agent klare Überlappung mit einem anderen bestehenden Artefakt (Skill oder Agent) hat, dass die `description` die Überlappung als **negativen Trigger** benennt („don't use for X, use the `<peer>` agent / skill instead"); das Fehlen des Negativs ist ein `Warning` ([R5](#referenzen)). Der Check verifiziert nur, dass der negative Trigger *vorhanden* ist und ein bestehendes Peer benennt; ob er das aufrufende Claude tatsächlich dazu bringt, den Agent für den ausgeschlossenen Fall zu überspringen, ist Dispatch-Zeit-Routing-Verhalten und liegt bewusst außerhalb des Scopes (siehe §Nicht-Ziele)
 
 ### Prompt-Struktur-Checks
 
@@ -158,4 +158,4 @@ Quellen für die zusätzlichen Checks oben. Bei Findings, die eine konkrete Upst
 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Soll das Review eines Agents, dessen `description` negative Trigger nennt, auch verifizieren, dass diese Negativen die benannten Fälle tatsächlich ausschließen — und wenn ja, wie wird das verifiziert, ohne den Agent laufen zu lassen?
+_Derzeit keine._

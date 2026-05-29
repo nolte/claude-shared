@@ -134,4 +134,4 @@ A portfolio-wide tech-stack inventory pays back the curation overhead along five
 
 ## Open Questions
 
-- Should the §Benefits section grow a sixth bullet for "release-notes generation" once the portfolio standardises a release-notes audience analysis per `spec/project/release-notes-audience-analysis/`? Premature today; revisit once that pipeline lands.
+- Default: keep §Benefits at five bullets and don't add a sixth "release-notes generation" bullet; the §Benefits-documentation gate's MAY clause is the mechanism that adds it later. Revisit when all three hold in one PR: (a) `spec/project/release-notes-audience-analysis/` leaves `Status: draft` (reaches `active`/`stable`); (b) a concrete release-path consumer, namely `release-notes-curate` (Skill A in `spec/project/release-skill-layer/`) or `portfolio-audit`, actually reads a `project/portfolio.yml` `tech_stack:` entry to drive a release-notes decision; and (c) `project/goals.md` carries an outcome ID the new bullet can anchor to. Until (c) holds, the §Benefits-documentation gate **MUST** ("keep each bullet anchored to at least one outcome ID") blocks the bullet regardless of (a)/(b).

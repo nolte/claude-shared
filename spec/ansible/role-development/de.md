@@ -71,6 +71,7 @@ Referenzen:
 - **MUSS NICHT [MUST NOT]** den `delegated`-Driver für Idempotenz-Aussagen verwenden, weil er das per-Host-Zustandsmodell umgeht
 - **SOLLTE [SHOULD]** den `docker`- oder `podman`-Driver verwenden und mindestens einen Verifikations-Schritt enthalten (`molecule verify` mit `ansible.builtin.assert` oder `testinfra`), der das primäre beobachtbare Ergebnis der Rolle abdeckt. Rollen, die beobachtbaren Laufzeit-Zustand ändern (einen laufenden Dienst, einen offenen Port, eine ausgelieferte Datei), SOLLTEN den Verify-Schritt als faktisch verpflichtend behandeln.
 - **KANN [MAY]** zusätzliche Szenarien (`molecule/<scenario>/`) für distro- oder topologie-spezifische Test-Matrizen ergänzen
+- **SOLLTE [SHOULD]** ein Molecule-Szenario pro Plattform-Familie bereitstellen, die in `meta/main.yml` `galaxy_info.platforms` deklariert ist, damit die Test-Matrix dem selbst erklärten Support-Vertrag der Rolle folgt. Die Spec schreibt bewusst keine portfolioweite Mindest-Matrix vor (Debian, RHEL oder andere)—die rollen-eigene Plattform-Liste ist die einzige Quelle der Wahrheit, analog zur per-Repo-Umgebungs-Untergrenze in [`spec/ansible/playbook-development/`](../playbook-development/de.md) §Python-Toolchain.
 
 ### Linting
 - **MUSS [MUST]** `ansible-lint` und `yamllint` als CI-Gate ausführen; beide müssen grün sein, bevor eine Rollen-Version getaggt werden darf
@@ -108,4 +109,4 @@ Referenzen:
 - [ ] Die Rolle (oder ihre enthaltende Collection) ist auf einen Galaxy- / Pulp-Endpunkt veröffentlicht, gegen den das `requirements.yml` des konsumierenden Playbooks an einen getaggten Release pinnt
 
 ## Offene Fragen
-- Soll die Spec eine portfolio­weite Mindest-Molecule-Szenario-Matrix vorschreiben (Debian + RHEL-Familie, oder nur eines)?
+_Derzeit keine._

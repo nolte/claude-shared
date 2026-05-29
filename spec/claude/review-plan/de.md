@@ -98,6 +98,7 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 - **MUSS NICHT [MUST NOT]** die Plan-Datei löschen, solange ein offener `- [ ]` `Critical` besteht; `Warning` / `Suggestion` / `Info`-Einträge **KÖNNEN [MAY]** auf getrackte Issues vertagt werden, um das Löschen zu ermöglichen
 - **MUSS [MUST]** die Plan-Datei löschen, wenn jeder Eintrag entweder `- [x]` ist oder eine `→ deferred: <url>`-Annotation trägt; die Commit-Message der Löschung **MUSS [MUST]** `review(<review-type>): close <target> — <C>C/<W>W/<S>S/<I>I` lauten (Zählungen von Critical, Warning, Suggestion, Info zum Zeitpunkt der Erzeugung), sodass das Git-Log der durchsuchbare Audit-Trail ist
 - **SOLLTE [SHOULD]** beim Löschen des Plans auch getrackte Issues schließen, auf die vertagte Einträge verweisen, sofern der zugrundeliegende Fix anderswo gelandet ist — die Commit-Message der Löschung benennt diese Issues in ihrem Body
+- **SOLLTE [SHOULD]** als veraltet gelten und neu bewertet werden — gegen die aktuelle `repo-revision` neu verarbeitet oder explizit auf `superseded` gesetzt —, wenn der Plan länger als sechs Monate offen war, ohne dass ein neuer `## Processing log`-Eintrag hinzukam. Das spiegelt `spec/claude/skills-agents-sweep/` §Lebenszyklus wider, damit beide Audit-Artefakt-Specs ein konsistentes Veraltungs-Vokabular tragen; es ist eine Erkennungs- und Sichtbarmachungs-Konvention, kein hartes Ablaufdatum und kein automatisches Löschen
 
 ### Bezug zu anderen Specs
 
@@ -120,4 +121,4 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Muss diese Spec ein maximales Alter eines offenen Plans vorgeben, jenseits dessen er als veraltet gilt und entweder neu verarbeitet oder explizit superseded wird?
+- Default: Ein offener Plan gilt als veraltet und wird neu bewertet, sobald er länger als sechs Monate offen war, ohne dass ein neuer `## Processing log`-Eintrag hinzukam (abgestimmt mit `spec/claude/skills-agents-sweep/` §Lebenszyklus). Revisit when: wenn ein `.audits/<review-type>/<target>.md`-Plan beobachtet wird, der länger als sechs Monate ohne `## Processing log`-Zeile überlebt, ODER wenn zwei oder mehr Pläne für dasselbe Ziel innerhalb eines einzigen Release-Zyklus als superseded beobachtet werden (Signal, dass das Fenster zu lang ist) — die Zahl anhand dieser Evidenz neu kalibrieren.

@@ -72,7 +72,7 @@ A template-generation skill **MUST** follow this derivation procedure, in order:
    - Multiple-of choice → `checkboxes`.
    - Acknowledgement gates (code of conduct, search check) → `checkboxes` with `required: true`.
 5. **Set labels and assignees.** Pre-fill `labels:` from the project's label taxonomy (often a `.github/labels.yml` or Probot `settings.yml`). Only pre-fill `assignees:` when the repo has a stable triage owner.
-6. **Wire the chooser.** Update `.github/ISSUE_TEMPLATE/config.yml` with `contact_links` for any external destinations (Discussions, support forum, security policy) so the chooser surfaces them alongside the templates.
+6. **Wire the chooser.** Update `.github/ISSUE_TEMPLATE/config.yml` with `contact_links` for any external destinations (Discussions, support forum, security policy) so the chooser surfaces them alongside the templates. A security `contact_link` is **REQUIRED**: until `project-structure` specifies a `SECURITY.md` location, point it at GitHub private vulnerability reporting; once that location is specified, point it at the repo's `SECURITY.md` instead.
 7. **Record the applied derivation.** The applied derivation **MUST** be recorded as a YAML comment block at the top of `config.yml` (project type, audience artefact path + date, generated-template list, audience-set identifier), so a re-run can re-read it inline.
 
 ### Field hygiene
@@ -132,4 +132,4 @@ A downstream skill that applies this spec **MUST**:
 
 ## Open Questions
 
-- Once CODEOWNERS / SECURITY.md are also specified under `project-structure`, should the issue-template chooser link to SECURITY.md via `config.yml.contact_links` automatically?
+- Default: the chooser routes security reports through `config.yml` `contact_links` pointed at GitHub private vulnerability reporting, because no `SECURITY.md` convention exists to link to yet. Revisit when: `spec/project/project-structure/en.md` (its open question at line 164 about CODEOWNERS / SECURITY.md / SUPPORT.md) gains a MUST/SHOULD for a concrete `SECURITY.md` path. At that point step 6 here MUST add a `contact_link` automatically pointing at that `SECURITY.md`.

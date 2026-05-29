@@ -98,6 +98,7 @@ This section is the single canonical source for severity vocabulary across every
 - **MUST NOT** delete the plan file while any `- [ ]` `Critical` remains open; `Warning` / `Suggestion` / `Info` items **MAY** be deferred to tracked issues to unblock deletion
 - **MUST** delete the plan file when every item is either `- [x]` or carries a `→ deferred: <url>` annotation; the deletion commit message **MUST** be `review(<review-type>): close <target>—<C>C/<W>W/<S>S/<I>I` (counts of Critical, Warning, Suggestion, Info at creation time), so the git log is the searchable audit trail
 - **SHOULD**, when the plan is deleted, also close any tracked issues referenced by deferred items if the underlying fix has landed elsewhere—the plan's deletion commit names those issues in its body
+- **SHOULD** be considered stale and re-evaluated—reprocessed against the current `repo-revision`, or explicitly set to `superseded` instead—if the plan has been open for more than six months without a new `## Processing log` entry. This mirrors `spec/claude/skills-agents-sweep/` §Lifecycle so both audit-artefact specs carry one consistent staleness vocabulary; it's a detect-and-surface convention, not a hard expiry or automatic deletion
 
 ### Relationship to other specs
 
@@ -120,4 +121,4 @@ This section is the single canonical source for severity vocabulary across every
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Does this spec need to prescribe a maximum plan age beyond which an open plan is considered stale and either reprocessed or explicitly superseded?
+- Default: an open plan is considered stale and re-evaluated once it has been open for more than six months without a new `## Processing log` entry (aligned with `spec/claude/skills-agents-sweep/` §Lifecycle). Revisit when: any `.audits/<review-type>/<target>.md` plan is observed surviving more than six months with no `## Processing log` line, OR when two or more plans for the same target are observed superseded within a single release cycle (signalling the window is too long)—recalibrate the number from that evidence.

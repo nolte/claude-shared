@@ -70,7 +70,7 @@ Ein Template-erzeugender Skill **MUSS [MUST]** dieses Ableitungsverfahren in der
    - Mehrere-aus-vielen → `checkboxes`.
    - Bestätigungsgates (Code of Conduct, Suchprüfung) → `checkboxes` mit `required: true`.
 5. **Labels und Assignees setzen.** `labels:` aus der Label-Taxonomie des Projekts vorbelegen (häufig `.github/labels.yml` oder Probot `settings.yml`). `assignees:` nur dann vorbelegen, wenn das Repo einen stabilen Triage-Owner hat.
-6. **Den Chooser verdrahten.** `.github/ISSUE_TEMPLATE/config.yml` mit `contact_links` für externe Ziele (Discussions, Support-Forum, Security-Policy) ergänzen, damit der Chooser sie neben den Templates anzeigt.
+6. **Den Chooser verdrahten.** `.github/ISSUE_TEMPLATE/config.yml` mit `contact_links` für externe Ziele (Discussions, Support-Forum, Security-Policy) ergänzen, damit der Chooser sie neben den Templates anzeigt. Ein Security-`contact_link` ist **ERFORDERLICH [REQUIRED]**: Solange `project-structure` keinen `SECURITY.md`-Ort spezifiziert, auf GitHub Private Vulnerability Reporting zeigen; sobald dieser Ort spezifiziert ist, stattdessen auf die `SECURITY.md` des Repos zeigen.
 7. **Die angewendete Ableitung festhalten.** Die angewendete Ableitung **MUSS [MUST]** als YAML-Kommentarblock am Anfang der `config.yml` festgehalten werden (Projekttyp, Pfad + Datum des Audience-Artefakts, Liste der generierten Templates, Audience-Set-Bezeichner), damit ein erneuter Lauf sie inline wieder lesen kann.
 
 ### Feld-Hygiene
@@ -128,4 +128,4 @@ Ein nachgelagerter Skill, der diese Spec anwendet, **MUSS [MUST]**:
 
 ## Open Questions
 
-- Sobald CODEOWNERS / SECURITY.md ebenfalls unter `project-structure` spezifiziert sind, soll der Issue-Template-Chooser via `config.yml.contact_links` automatisch auf SECURITY.md verlinken?
+- Default: Der Chooser leitet Security-Meldungen über `config.yml` `contact_links` auf GitHub Private Vulnerability Reporting, weil noch keine `SECURITY.md`-Konvention existiert, auf die verlinkt werden könnte. Revisit, wenn: `spec/project/project-structure/en.md` (deren Open Question in Zeile 164 zu CODEOWNERS / SECURITY.md / SUPPORT.md) ein MUST/SHOULD für einen konkreten `SECURITY.md`-Pfad erhält. Ab dann MUSS Schritt 6 hier automatisch einen `contact_link` ergänzen, der auf diese `SECURITY.md` zeigt.

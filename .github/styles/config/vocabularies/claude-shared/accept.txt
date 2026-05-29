@@ -126,3 +126,9 @@ Matuschak
 Desrosiers
 diataxis
 else's
+diffable
+queryable
+revisitable
+roadmaps
+slugification
+untriaged

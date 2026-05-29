@@ -43,7 +43,7 @@ Readers: agent authors maintaining the checker; reviewers verifying its findings
 - **MUST** report a **structural mismatch** when the same key path resolves to different value types across locales (string in one, object/nested in another)
 - **MUST** scan the source roots for key references and classify: a key used in code but defined in no locale (**critical**: a runtime miss), and a key defined in the locales but referenced nowhere in code (**orphan**, informational)
 - **MUST** treat statically-undecidable dynamic keys (template-string or variable lookups such as `` t(`enums.${type}`) ``) as a noted caveat, never as a hard miss—report them as "dynamic, not statically verifiable" so they neither inflate the critical count nor get silently dropped
-- **SHOULD** run quality heuristics: empty string values per locale; values identical across the reference and another locale (likely untranslated); and interpolation-placeholder parity (the same `{{var}}` / `{var}` / `%s` placeholders appear in every locale's value for a key)
+- **SHOULD** run quality heuristics: empty string values per locale; values identical across the reference and another locale (likely untranslated); and interpolation-placeholder parity (the same `{{var}}` / `{var}` / `%s` placeholders appear in every locale's value for a key). No exemption allowlist is provided; identical values are reported at info level only and are expected to include some legitimate-by-design matches such as proper nouns, brand names, and units. Placeholder parity covers simple `{{var}}` / `{var}` / `%s` style placeholders only; ICU MessageFormat plural and select bodies such as `{count, plural, …}` are compared as opaque strings, not parsed
 - **MAY**, when the project declares a key-naming convention, report keys that violate it; absent a declared convention the agent doesn't invent one
 
 ### Output and side effects
@@ -53,6 +53,7 @@ Readers: agent authors maintaining the checker; reviewers verifying its findings
 - **MUST** cap per-category output (for example: show the first N entries and summarise the remainder as "… and {n} more") so a large drift doesn't produce an unreadable wall of keys
 - **SHOULD** attribute each used-but-undefined key to a source location (file and line) so the finding is actionable
 - **MUST** report which locale files, source roots, globs, reference locale, and call-site patterns it used, so the audit's scope is auditable and reproducible
+- **MUST** state, where it reports placeholder-parity findings, that parity is checked at simple-placeholder granularity (`{{var}}` / `{var}` / `%s`) and that ICU MessageFormat plural and select bodies are treated as opaque strings, so a consumer isn't misled into thinking ICU bodies were structurally validated
 
 ## Acceptance Criteria
 
@@ -76,5 +77,5 @@ Readers: agent authors maintaining the checker; reviewers verifying its findings
 
 ## Open Questions
 
-- Should the "identical across locales" heuristic exempt locales that are legitimately close (for example proper nouns, brand names, units), and if so via an allowlist?
-- Should placeholder-parity checking understand ICU MessageFormat plural/select syntax, or stay at simple-placeholder granularity until an ICU-aware pass is warranted?
+- Default: keep the identical-across-locales heuristic as an info-tier finding only, with no exemption allowlist, since the lowest info tier already bounds the noise cost and never inflates the critical or warning count. Revisit when: a real audit run on a localized app reports that legitimate-by-design identical values (proper nouns, brand names, units) make up more than half of the identical-value info findings, or an operator explicitly requests suppression after such a run. No such run exists yet—there's no `project/i18n-audit.yml` config and no i18n-audit artifact anywhere in the repo.
+- Default: keep placeholder parity at simple-placeholder granularity (`{{var}}` / `{var}` / `%s`) and treat ICU MessageFormat plural and select bodies as opaque strings rather than parsing them. Revisit when: a project that uses ICU MessageFormat (FormatJS / react-intl is a §Inputs listed target library) runs the audit and simple-granularity parity produces a demonstrably misleading result on a `{count, plural, …}` or `{…, select, …}` form—a real false-positive or false-negative parity finding traceable to an ICU body. Upstream signal to watch: the portfolio's own plural convention is i18next JSON-v4 suffix grammar (`_one` / `_other`) per `spec/frontend/webview-ui-optimization/` §i18next plurals, not ICU, so the trigger is specifically a non-portfolio consumer adopting ICU.
