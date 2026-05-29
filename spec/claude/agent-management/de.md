@@ -14,6 +14,7 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 
 ## Nicht-Ziele
 - Plugin-Paketierung und -Verteilung (separat behandelt)
+- Plugin-Level-Schnittführung — wann eine Capability in dieses Plugin gegenüber einem separaten gehört und wie das Plugin überschaubar bleibt, während seine Agent-Anzahl wächst (abgedeckt durch `plugin-scoping`)
 - Einrichtung nachgelagerter Projekte und `.claude/`-Konfiguration
 - Vorgabe konkreten Agent-Verhaltens jenseits struktureller Regeln
 - Die Orchestrierungslogik im aufrufenden Claude (welcher Agent wann gewählt wird)
@@ -67,6 +68,7 @@ Jeder Agent deklariert diese Absicht, damit Autoren, Reviewer und Konsumenten au
   - **Enge Ausnahme** für Read-only-Audit-/Review-Agents, deren Audit-Surface eine seiteneffektfreie Shell-Fähigkeit benötigt, die kein dediziertes Tool abdeckt (typischerweise `git log`, `git rev-parse`, `git ls-files`, `gh api ... --jq` gegen Read-only-Endpunkte): `Bash` **DARF [MAY]** in `tools` erscheinen, wenn der Agent-Body einen `## Read-only Bash justification`-Abschnitt mitführt, der die exakte Teilmenge der Read-only-Kommandos benennt, die der Agent aufruft, und alles andere (Writes, Netzwerk-Mutationen, Package-Installs, Dateibearbeitungen) explizit verbietet. Der Agent **DARF [MUST NOT]** weiterhin keine `Edit`, `Write` oder `NotebookEdit` deklarieren — diese sind für Read-only-Agents bedingungslos verboten. Die `agent-review`-Checks honorieren die Ausnahme, wenn der Body-Abschnitt vorhanden ist, und stufen den ansonsten `Critical`-grade Befund auf `Info` herab; ohne den Abschnitt bleibt `Bash` auf einem Read-only-Agent ein `Critical`
 - **SOLLTE [SHOULD]** dedizierte Tools (`Read`, `Grep`, `Glob`, `Edit`) gegenüber `Bash`-Äquivalenten bevorzugen, wenn beides möglich wäre
 - **KANN [MAY]** stattdessen `disallowedTools` (Denylist, subtraktiv gegen das geerbte Set) deklarieren, wenn der Agent die meisten Tools behalten, aber eine kleine spezifische Teilmenge verlieren soll — sind beide Felder gesetzt, wendet die Laufzeit zuerst `disallowedTools` an und löst danach `tools` gegen den verbliebenen Pool auf, sodass ein in beiden Listen genanntes Tool entfernt wird ([R1](#referenzen))
+- **DARF NICHT [MUST NOT]** `Agent` im `tools`-Feld auflisten — Claude-Code-Subagents können keine weiteren Subagents spawnen, das Tool wäre also wirkungslos, und es zu deklarieren führt Leser in die Irre, genestetes Fan-out sei möglich. Das einzig unterstützte genestete Muster bleibt *Skill orchestriert, Agent führt aus* ([R1](#referenzen) und `skill-vs-agent` §Hybrid-Muster)
 
 ### Modell-Wahl
 - **KANN [MAY]** ein `model`-Feld im Frontmatter deklarieren; erlaubte Werte gemäß Claude Code sind ein Modell-Alias (`sonnet`, `opus`, `haiku`), eine vollständige Modell-ID (z. B. `claude-opus-4-7`, `claude-sonnet-4-6`) oder das Literal `inherit` ([R1](#referenzen))
@@ -105,6 +107,7 @@ Aus Sicherheitsgründen **ignoriert Claude Code stillschweigend** die Frontmatte
 - **DARF NICHT [MUST NOT]** das Skill-Tool aus dem Body eines Agents heraus aufrufen, um Skill-förmige Arbeit an die Eltern-Konversation zurück zu delegieren — der Agent läuft in einem isolierten Kontext-Fenster und hat keinen stabilen Kanal für Skill-Level-Interaktivität ([R3](#referenzen) und `skill-vs-agent` §Hybrid-Muster)
 - **KANN [MAY]**, wenn der Agent von Claude **proaktiv** aufgegriffen werden soll (ohne dass der Nutzer ihn explizit nennt), die Phrase **„use proactively"** im `description`-Feld enthalten; die Laufzeit behandelt diese Phrase als Opt-in-Signal für proaktive Delegation ([R1](#referenzen)). Umgekehrt: Soll der Agent nur laufen, wenn der Nutzer ihn explizit nennt, **DARF** „use proactively" **NICHT [MUST NOT]** in `description` stehen
 - **SOLLTE [SHOULD]** für jeden Agent **Single-Responsibility-Design** anwenden: ein klares Ziel, eine Eingabeform, eine Ausgabeform, eine Übergaberegel. Agents, die mehrere Verantwortlichkeiten zusammenmischen (Review + Fix, Audit + Remediation), regredieren schnell, weil das dispatchierende Claude die Description nicht zuverlässig auf eine Anfrage abbilden kann ([R6](#referenzen))
+- **SOLLTE [SHOULD]** die Agent-Oberfläche des Plugins schlank und die `description` jedes Agents scharf umrissen halten: Claudes automatische Delegation lässt nach, je größer die Zahl ähnlicher oder überlappender Agents wird, sodass ein Überangebot an Agents das Routing schädigt, selbst wenn jeder einzelne für sich wohlgeformt ist ([R1](#referenzen)). Bei mehrdeutigem Routing explizite Aufrufe gegenüber dem Verlass auf Auto-Delegation bevorzugen und Überlappung gemäß `skill-vs-agent` §Duplikat-Vermeidung und den Plugin-Grenz-Regeln in `plugin-scoping` auflösen
 
 ### Quell-Ablageort (Repository claude-shared)
 - **MUSS [MUST]** im Quellbaum von claude-shared unter `agents/<name>.md` liegen, damit er kopiert, symlinkt oder für die Verteilung in ein Plugin gebündelt werden kann
@@ -123,7 +126,7 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 ### Empfehlungen
 - **SOLLTE [SHOULD]** den System-Prompt mit Rolle und Grenzen des Agents beginnen, dann das erwartete Ausgabeformat, dann die Arbeitsweise
 - **SOLLTE [SHOULD]** im System-Prompt ausdrücklich festhalten, ob der Agent Code schreibt oder nur recherchiert, da der aufrufende Claude diese Unterscheidung beim Dispatch treffen muss
-- **SOLLTE [SHOULD]** den System-Prompt fokussiert halten; wächst er über etwa 200 Zeilen, sollten längere Referenzen in Dateien unter `agents/<name>/` ausgelagert werden
+- **SOLLTE [SHOULD]** den System-Prompt fokussiert halten; wächst er über etwa 200 Zeilen, sollten längere Referenzen in Dateien unter `agents/<name>/` ausgelagert werden (diese ~200-Zeilen-Zahl ist eine lokale `nolte-shared`-Konvention; Anthropic dokumentiert kein Agent-Datei-Größenbudget, im Gegensatz zur weichen ~500-Zeilen-`SKILL.md`-Richtlinie, die `skill-management` für Skills kodifiziert)
 - **SOLLTE [SHOULD]** in der `description` sowohl positive Trigger („einsetzen, wenn…") als auch typische negative Fälle („nicht einsetzen für…") nennen, wenn Überschneidungen mit anderen Agents wahrscheinlich sind
 - **KANN [MAY]** Beispiel-Aufrufe und erwartete Berichte in einem Schwester-Ordner `agents/<name>/examples/` enthalten
 
@@ -154,6 +157,7 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 - [ ] Das Review eines einzelnen Agents gegen diese Spec folgt `spec/claude/agent-review/`; die Review-Ausgabe entspricht `spec/claude/review-plan/` und liegt unter `.audits/agent-review/<name>.md`
 - [ ] Kein als `distribution: plugin` deklarierter Agent setzt eines der Felder `hooks`, `mcpServers`, `permissionMode` im Frontmatter (diese Felder werden für plugin-distribuierte Agents von der Laufzeit stillschweigend verworfen)
 - [ ] Kein Agent-Body invokiert einen weiteren Subagent über das Agent-Tool oder eine äquivalente Dispatch-Formulierung (Subagents können in Claude Code keine Subagents spawnen)
+- [ ] Kein Agent listet `Agent` in seinem `tools`-Feld (Subagents können keine Subagents spawnen, der Eintrag wäre also wirkungslos)
 - [ ] Jeder Agent, dessen `description` die Phrase „use proactively" enthält, rechtfertigt tatsächlich proaktive Delegation; Agents, die nur auf explizite Nutzeranfrage laufen sollen, **DÜRFEN** die Phrase **NICHT** enthalten
 - [ ] Jeder Agent, der `model` auf einen anderen Wert als `inherit` pinnt, begründet das Pin entweder im System-Prompt oder trägt einen Kommentar mit der Kosten-/Qualitäts-Abwägung
 - [ ] Die Verantwortlichkeit jedes Agents ist eine einzelne — ein Ziel, eine Eingabeform, eine Ausgabeform; ein Agent, dessen `description` als „X und Y" oder „X plus Z" liest, ist aufgeteilt oder hat eine dokumentierte Begründung für die Verschmelzung

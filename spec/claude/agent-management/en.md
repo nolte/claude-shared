@@ -14,6 +14,7 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 
 ## Non-Goals
 - Plugin packaging and distribution (covered separately)
+- Plugin-level scoping—when a capability belongs in this plugin versus a separate one, and how the plugin stays scannable as its agent count grows (covered by `plugin-scoping`)
 - Downstream project setup and `.claude/` configuration
 - Prescribing specific agent behavior beyond structural rules
 - The orchestration logic inside the calling Claude (which agent to pick when)
@@ -67,6 +68,7 @@ Every agent declares this intent so authors, reviewers, and consumers all see fr
   - **Narrow exception** for read-only audit / review agents whose audit surface genuinely requires a side-effect-free shell capability that no dedicated tool covers (typically `git log`, `git rev-parse`, `git ls-files`, `gh api ... --jq` against read-only endpoints): `Bash` **MAY** appear in `tools` when the agent body carries a `## Read-only Bash justification` section that names the exact subset of read-only commands the agent invokes and explicitly forbids anything else (writes, network mutations, package installs, file edits). The agent still **MUST NOT** declare `Edit`, `Write`, or `NotebookEdit`; those tools are unconditionally banned for read-only agents. The `agent-review` checks honour the exception when the body section is present and downgrade the otherwise-`Critical` finding to `Info`; without the section, `Bash` on a read-only agent stays a `Critical`
 - **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents when both would work
 - **MAY** instead declare `disallowedTools` (denylist, subtractive against the inherited set) when the agent should keep most tools but lose a small specific subset—if both `tools` and `disallowedTools` are set, the runtime applies `disallowedTools` first, then resolves `tools` against the remaining pool, so a tool listed in both is removed ([R1](#references))
+- **MUST NOT** list `Agent` in the `tools` field—Claude Code subagents can't spawn other subagents, so the tool would be inert, and declaring it misleads readers into believing nested fan-out is possible. The one supported nested pattern remains *skill orchestrates, agent executes* ([R1](#references), and `skill-vs-agent` §Hybrid pattern)
 
 ### Model selection
 - **MAY** declare a `model` field in frontmatter; allowed values per Claude Code are a model alias (`sonnet`, `opus`, `haiku`), a full model ID (for example `claude-opus-4-7`, `claude-sonnet-4-6`), or the literal `inherit` ([R1](#references))
@@ -105,6 +107,7 @@ For security reasons, Claude Code **silently ignores** the `hooks`, `mcpServers`
 - **MUST NOT** invoke the Skill tool from inside an agent body to delegate skill-shaped work back to the parent—the agent runs in an isolated context window and has no stable channel for skill-level interactivity ([R3](#references), and `skill-vs-agent` §Hybrid pattern)
 - **MAY**, when the agent is intended to be picked up by Claude **proactively** (without the user naming it explicitly), include the phrase **"use proactively"** in the `description` field; the runtime treats this phrase as an opt-in signal for proactive delegation ([R1](#references)). Conversely, if the agent should only run when the user explicitly names it, **MUST NOT** include "use proactively" in `description`
 - **SHOULD** apply **single-responsibility design** to every agent: one clear goal, one input shape, one output shape, one handoff rule. Agents that conflate multiple responsibilities (review + fix, audit + remediate) regress quickly because the dispatching Claude can't reliably match the description to a request ([R6](#references))
+- **SHOULD** keep the plugin's agent surface lean and each agent's `description` sharply scoped: Claude's automatic delegation degrades as the number of similar or overlapping agents grows, so an oversupply of agents harms routing even when each one is individually well-formed ([R1](#references)). When routing is ambiguous, prefer explicit invocation over relying on automatic delegation, and resolve overlap per `skill-vs-agent` §Duplicate prevention and the plugin-boundary rules in `plugin-scoping`
 
 ### Source location (`claude-shared` repository)
 - **MUST** live at `agents/<name>.md` in the `claude-shared` source tree, so it can be copied, symlinked, or bundled into a plugin for distribution
@@ -123,7 +126,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 ### Recommendations
 - **SHOULD** begin the system prompt with the agent's role and boundaries, then the expected output format, then the working procedure
 - **SHOULD** state explicitly in the system prompt whether the agent writes code or only researches, since the calling Claude is responsible for that distinction at dispatch time
-- **SHOULD** keep the system prompt focused; if it grows past roughly 200 lines, move long-form references into `agents/<name>/` files
+- **SHOULD** keep the system prompt focused; if it grows past roughly 200 lines, move long-form references into `agents/<name>/` files (this ~200-line figure is a local `nolte-shared` convention; Anthropic documents no agent-file size budget, in contrast to the soft ~500-line `SKILL.md` guideline that `skill-management` codifies for skills)
 - **SHOULD** include in `description` both positive triggers ("use when…") and common negative cases ("don't use for…") when overlap with other agents is likely
 - **MAY** include example invocations and expected reports in a sibling `agents/<name>/examples/` folder
 
@@ -156,6 +159,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [ ] Reviewing an individual agent against this spec follows `spec/claude/agent-review/`; review output conforms to `spec/claude/review-plan/` and lives under `.audits/agent-review/<name>.md`
 - [ ] No agent declared `distribution: plugin` sets any of the fields `hooks`, `mcpServers`, `permissionMode` in frontmatter (those fields are silently dropped by the runtime for plugin-distributed agents)
 - [ ] No agent body invokes another subagent via the Agent tool or any equivalent dispatch phrasing (subagents can't spawn subagents in Claude Code)
+- [ ] No agent lists `Agent` in its `tools` field (subagents can't spawn subagents, so the entry would be inert)
 - [ ] Every agent whose `description` contains the phrase "use proactively" actually warrants proactive delegation; agents that should only run on explicit user request **MUST NOT** include the phrase
 - [ ] Every agent that pins `model` to a value other than `inherit` either justifies the pin in the system prompt or carries a comment explaining the cost/quality trade-off
 - [ ] Every agent's responsibility is single—one goal, one input shape, one output shape; an agent whose `description` reads as "X and Y" or "X plus Z" is split or has a documented reason for the conflation
