@@ -43,6 +43,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      # Deterministic eval-harness unit tests only; behavioural evals stay opt-in
+      # (RUN_EVALS=1) and never run in CI, so no ANTHROPIC_API_KEY is needed here.
+      - run: pip install -r evals/requirements-dev.txt
       - uses: arduino/setup-task@v2
         with:
           version: 3.x

@@ -1,0 +1,4 @@
+# Behavioural eval layer — only needed for live runs (RUN_EVALS=1).
+# Also requires the `claude` CLI on PATH and ANTHROPIC_API_KEY in the environment.
+anthropic>=0.40
+claude-agent-sdk>=0.1

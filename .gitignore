@@ -7,6 +7,10 @@
 __pycache__/
 *.py[cod]
 *.egg-info/
+.pytest_cache/
+
+# Eval-harness run output (scorecards from live RUN_EVALS=1 runs)
+/evals/out/
 
 # Virtual environments
 .venv/
