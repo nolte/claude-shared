@@ -1,11 +1,11 @@
 ---
 id: F-4
 title: Reviewer agent coverage across every skill cluster
-status: ready
+status: done
 roadmap_item: R-8
 sprint: 4
 created: 2026-05-28
-ended: null
+ended: 2026-05-29
 verifies_sprint_value: acceptance-1
 consistency_check:
   performed_at: 2026-05-28
@@ -27,19 +27,19 @@ The feature is framed retroactively: the six reviewer agents already ship on `de
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** All six artefact clusters named by R-8 have a dedicated read-only reviewer agent present under `agents/`: `roadmap-coherence-reviewer` (plan), `project-structure-reviewer` (structure), `sprint-readiness-reviewer` (sprint), `quality-gate-enforcer` (quality-gate), `mermaid-diagram-reviewer` (Mermaid), and `tech-stack-drift-reviewer` (tech-stack).
-- [ ] **acceptance-2** Each of the six agents declares a read-only tool set (no `Edit`, no `Write`; `Bash` only under the documented narrow read-only exception per `spec/claude/agent-management/`), so an audit run can never mutate the repository.
-- [ ] **acceptance-3** Each of the six agents names its paired apply-style skill in `see_also` (for example `project-structure-reviewer` to `project-structure-apply`), so a reader finds the review/apply pairing without guessing.
-- [ ] **acceptance-4** Each of the six agents carries both `summary` and `summary_de` frontmatter, so the bilingual skill-agent catalog renders the reviewer in either language.
-- [ ] **acceptance-5** `task validate:skills` passes with all six agents present, confirming their frontmatter conforms to `spec/claude/agent-management/`.
+- [x] **acceptance-1** All six artefact clusters named by R-8 have a dedicated read-only reviewer agent present under `agents/`: `roadmap-coherence-reviewer` (plan), `project-structure-reviewer` (structure), `sprint-readiness-reviewer` (sprint), `quality-gate-enforcer` (quality-gate), `mermaid-diagram-reviewer` (Mermaid), and `tech-stack-drift-reviewer` (tech-stack). Verified: all six files present on `develop` and inside the `v0.1.3` tag (`3b7fc1d`).
+- [x] **acceptance-2** Each of the six agents declares a read-only tool set (no `Edit`, no `Write`; `Bash` only under the documented narrow read-only exception per `spec/claude/agent-management/`), so an audit run can never mutate the repository. Verified: each declares `tools: Read, Grep, Glob`.
+- [x] **acceptance-3** Each of the six agents names its paired apply-style skill in `see_also` (for example `project-structure-reviewer` to `project-structure-apply`), so a reader finds the review/apply pairing without guessing. Verified: `roadmap-coherence-reviewer`→`roadmap-plan`/`roadmap-refine`, `project-structure-reviewer`→`project-structure-apply`, `sprint-readiness-reviewer`→`sprint-plan`/`sprint-execute`, `quality-gate-enforcer`→`quality-gate`, `mermaid-diagram-reviewer`→`mermaid-diagrams-apply`, `tech-stack-drift-reviewer`→`tech-stack-capture`.
+- [x] **acceptance-4** Each of the six agents carries both `summary` and `summary_de` frontmatter, so the bilingual skill-agent catalog renders the reviewer in either language. Verified: all six carry exactly one `summary:` and one `summary_de:`.
+- [x] **acceptance-5** `task validate:skills` passes with all six agents present, confirming their frontmatter conforms to `spec/claude/agent-management/`. Verified: `validate_skills` reports `0C` (zero critical) across 68 artifacts; the six reviewers raise no finding.
 
 ## Test hooks
 
-- **acceptance-1** — manual: confirm `agents/roadmap-coherence-reviewer.md`, `agents/project-structure-reviewer.md`, `agents/sprint-readiness-reviewer.md`, `agents/quality-gate-enforcer.md`, `agents/mermaid-diagram-reviewer.md`, and `agents/tech-stack-drift-reviewer.md` all exist — `pending`
-- **acceptance-2** — manual: read the `tools` frontmatter of each of the six agent files; assert none lists `Edit` or `Write` — `pending`
-- **acceptance-3** — manual: read the `see_also` frontmatter of each; assert each names its apply-style skill — `pending`
-- **acceptance-4** — manual: read each agent's frontmatter and assert both `summary` and `summary_de` are present — `pending`
-- **acceptance-5** — CLI: `task validate:skills` exits `0` — `pending`
+- **acceptance-1** — manual: confirm `agents/roadmap-coherence-reviewer.md`, `agents/project-structure-reviewer.md`, `agents/sprint-readiness-reviewer.md`, `agents/quality-gate-enforcer.md`, `agents/mermaid-diagram-reviewer.md`, and `agents/tech-stack-drift-reviewer.md` all exist — `passing` (all six present on `develop` and in `v0.1.3`)
+- **acceptance-2** — manual: read the `tools` frontmatter of each of the six agent files; assert none lists `Edit` or `Write` — `passing` (each declares `tools: Read, Grep, Glob`)
+- **acceptance-3** — manual: read the `see_also` frontmatter of each; assert each names its apply-style skill — `passing` (each names its apply-style counterpart)
+- **acceptance-4** — manual: read each agent's frontmatter and assert both `summary` and `summary_de` are present — `passing` (one `summary` + one `summary_de` per agent)
+- **acceptance-5** — CLI: `task validate:skills` exits `0` — `passing` (`0C` across 68 artifacts; the six reviewers raise no finding)
 
 ## Consistency notes
 
