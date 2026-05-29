@@ -19,6 +19,7 @@ last_updated: generated
     * [spec-readiness-reviewer](nolte-shared/spec-readiness-reviewer.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 5 Review
+    * [code-security-reviewer](nolte-shared/code-security-reviewer.md)
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)
     * [diagram-opportunity-reviewer](nolte-shared/diagram-opportunity-reviewer.md)
     * [lektorat-scanner](nolte-shared/lektorat-scanner.md)

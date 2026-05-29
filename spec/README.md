@@ -29,6 +29,7 @@ Canonical language: `en` · Translations: `de`
 | project | blog-author | Blog author | Blog-Autor | draft | unversioned |
 | project | blog-author-trigger | Blog author trigger | Blog-Autor-Trigger | draft | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | 2026-04-23 |
+| project | code-security-audit | Whole-Codebase Security Audit | Whole-Codebase-Security-Audit | draft | unversioned |
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | 2026-04-23 |
 | project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | unversioned |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | unversioned |

@@ -29,6 +29,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 
 ## 5 Review
 
+- [`code-security-reviewer`](nolte-shared/code-security-reviewer.md) — Read-only whole-codebase OWASP audit correlating findings across files into a severity-classified report.
 - [`dependency-audit-scanner`](nolte-shared/dependency-audit-scanner.md) — Read-only CVE scanner per project type (pip-audit, npm audit, govulncheck, cargo audit); returns structured drift inventory.
 - [`diagram-opportunity-reviewer`](nolte-shared/diagram-opportunity-reviewer.md) — Read-only prose scanner that flags Markdown passages which would be expressed better as a Mermaid diagram.
 - [`lektorat-scanner`](nolte-shared/lektorat-scanner.md) — Read-only editorial scanner across the five lektorat dimensions (D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit).
