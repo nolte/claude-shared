@@ -27,6 +27,7 @@ Die Referenzimplementierung ist die `README.md` dieses Repositories selbst. Sie 
 ## Anforderungen
 
 ### Datei und Sprache
+- Diese Spec gilt für jedes Repository, das eine README ausliefert, einschließlich Einzel-Maintainer- oder experimenteller Repos; es gibt keine Ausnahme. Abschnitte ohne sinnvollen Inhalt werden gemäß der Weglass-Regel aus §Pflicht-Abschnitte weggelassen, statt dass das Repository sich aus dem Grundgerüst ausklinkt.
 - **MUSS [MUST]** als `README.md` im Repository-Wurzelverzeichnis liegen
 - **MUSS [MUST]** in Englisch verfasst sein, unabhängig von der primären Arbeitssprache der Maintainer, damit portfolioweite Werkzeuge und externe Konsumentinnen eine konsistente Stimme sehen
 - **MUSS [MUST]** den Regeln der `prose-style`-Spec folgen (Vale, Microsoft- + RedHat-Styles, `nolte/vale-style`-Vokabulare)
@@ -43,7 +44,7 @@ Die Referenzimplementierung ist die `README.md` dieses Repositories selbst. Sie 
 Die folgenden `##`-Überschriften **MÜSSEN [MUST]** in der angegebenen Reihenfolge erscheinen, sobald der zugrunde liegende Inhalt auf den Repository-Typ zutrifft. Ein Abschnitt **DARF NICHT [MUST NOT]** weggelassen werden, außer er hat für diesen Repository-Typ keinen sinnvollen Inhalt; er **DARF NICHT [MUST NOT]** aus stilistischen Gründen umsortiert werden.
 
 1. **`## Purpose`** — **MUSS [MUST]** erscheinen. Erklärt das Problem, das das Repository löst, und wer die beabsichtigten Konsumentinnen sind. Zwei bis sechs Stichpunkte oder ein kurzer Absatz. Keine Feature-Aufzählung.
-2. **`## Usage`** (oder `## Installation`, oder `## Getting started` — eines wählen und dabei bleiben) — **MUSS [MUST]** erscheinen. Zeigt den kürzesten Weg von null zu einer funktionierenden Konsumentenerfahrung. **MUSS [MUST]** mindestens einen ausführbaren Codeblock enthalten (Shell, Config-Snippet oder Import-Beispiel). **SOLLTE [SHOULD]** in Unter-Abschnitte (`###`) aufgeteilt werden, wenn das Repository mehrere Install- oder Konsum-Modi unterstützt (zum Beispiel Downstream-Install vs. lokale Entwicklung vs. Dogfooding).
+2. **`## Usage`** (oder `## Installation`, oder `## Getting started` — eines wählen und dabei bleiben) — **MUSS [MUST]** erscheinen. Zeigt den kürzesten Weg von null zu einer funktionierenden Konsumentenerfahrung. **MUSS [MUST]** mindestens einen ausführbaren Codeblock enthalten (Shell, Config-Snippet oder Import-Beispiel). **SOLLTE [SHOULD]** in Unter-Abschnitte (`###`) aufgeteilt werden, wenn das Repository mehrere Install- oder Konsum-Modi unterstützt (zum Beispiel Downstream-Install vs. lokale Entwicklung vs. Dogfooding). Für Repositories, die ein Endanwender-Artefakt ausliefern (HACS-Integration, CLI mit Binär-Releases), `###`-Unterabschnitte unter der einzelnen kanonischen Überschrift verwenden (zum Beispiel `### Install`, `### Use`); keinen zweiten Top-Level-Abschnitt `## Installation` einführen.
 3. **`## Structure`** — **SOLLTE [SHOULD]** für Repositories erscheinen, deren Layout für Erstleser nicht offensichtlich ist (Plugins mit `.claude-plugin/` + `skills/`, Multi-Komponenten-Monorepos, HA-Integrationen). Zeigt eine beschnittene `tree`-artige Auflistung mit einzeiligen Kommentaren pro Eintrag, kein vollständiger Dateibaum.
 4. **`## Related repositories`** — **SOLLTE [SHOULD]** erscheinen, wenn das Repository auf andere Repositories im nolte-Portfolio angewiesen ist, diese erweitert oder von ihnen abhängig ist (`nolte/gh-plumbing`, `nolte/vale-style`, `nolte/taskfiles`, `nolte/claude-shared` und ähnliche). Jeder Eintrag ist ein Bullet-Link gefolgt von einer einzeiligen Beschreibung der Rolle des Peers.
 5. **`## Status`** — **SOLLTE [SHOULD]** erscheinen. Ein kurzer Absatz, der den Lebenszyklus-Zustand beschreibt (frühes Stadium, stabil, nur Wartung, archiviert). Ergänzt die GitHub-Repository-Metadaten, dupliziert sie aber nicht.
@@ -90,5 +91,4 @@ Die folgenden `##`-Überschriften **MÜSSEN [MUST]** in der angegebenen Reihenfo
 - [ ] Die Gesamt-READM-Länge liegt bei höchstens etwa 200 Zeilen, Codeblöcke ausgenommen
 
 ## Offene Fragen
-- Sollten Repositories, die ein Endanwender-Artefakt ausliefern (HACS-Integrationen, CLIs mit Binär-Releases), zusätzlich einen `## Installation`-Abschnitt verlangen, der von `## Usage` getrennt ist, oder deckt ein einzelnes `## Usage` mit `###`-Unterabschnitten beide Fälle ausreichend ab?
-- Wie soll diese Spec mit Repositories umgehen, die absichtlich keine Konsumentinnen jenseits des Maintainers haben (persönliche Dotfiles, Experimente) — sind sie ausgenommen, oder folgen sie dem Grundgerüst trotzdem und lassen Abschnitte ohne sinnvollen Inhalt einfach weg?
+_Derzeit keine._

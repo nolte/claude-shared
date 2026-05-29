@@ -39,7 +39,8 @@ Readers: skill and agent authors who maintain the prompt-authoring agent; review
 
 ### Prompt assembly
 
-- **MUST** assemble every brand-aware prompt in the order mandated by `corporate-design-colors` §AI image color contract: (1) the canonical style reference (`--sref` code for Midjourney, or the per-model equivalent—a fixed reference image or canonical style paragraph for generators without an sref mechanism), (2) descriptive color phrases drawn from `brand-vocabulary.md`, (3) hex values appended as final reinforcement, (4) a recorded seed slot for reproducibility
+- **MUST** assemble every brand-aware prompt in the order mandated by `corporate-design-colors` §AI image color contract: (1) the canonical style reference (`--sref` code for Midjourney, or the per-model equivalent for generators without an sref mechanism), (2) descriptive color phrases drawn from `brand-vocabulary.md`, (3) hex values appended as final reinforcement, (4) a recorded seed slot for reproducibility
+- **MUST** treat the per-model style-reference equivalent for sref-less generators (a fixed reference image or a canonical style paragraph) as owned by `corporate-design-colors` §AI image color contract; this spec consumes whatever that contract pins and **MUST NOT** decide the equivalent generator-by-generator on its own
 - **MUST** target exactly one named generator per prompt and use that generator's prompt syntax; a prompt document **MUST** name its target generator (for example `gemini-2.5-flash-image`, `midjourney-v7`) so a downstream consumer knows which tool the prompt is valid for
 - **MUST** include an explicit negative-prompt / avoidance clause (for example: no embedded text, no other companies' logos, no watermark) appropriate to the target generator, because generated text and stray marks are unreliable across current diffusion models
 - **MUST NOT** embed legible text or typography as the asset's payload in the prompt; text is added in post-processing, and the prompt document records this as a post-step rather than asking the generator to render copy
@@ -50,6 +51,8 @@ Readers: skill and agent authors who maintain the prompt-authoring agent; review
 
 - **MUST** write one Markdown prompt document per requested asset; the agent's value is the durable on-disk artifact, not a chat-only answer
 - **MUST** write prompt documents under a single configurable design-prompts directory, defaulting to `design/prompts/` in the consuming repository, and **MUST NOT** hard-code any one project's path (the project-local predecessor wrote to `spec/design/`, which isn't portable)
+- **MUST** create the configured design-prompts directory if it doesn't exist (it's an output location, not a precondition), and **MUST NOT** place prompt documents under the `docs/` tree, which is reserved for published audience-facing pages
+- No separate pre-generation ledger is maintained; the per-asset document (plus the batch index document below) is the durable pre-generation record. The post-generation `brand-prompt-library.md` remains owned by `corporate-design-colors`
 - **MUST** name each document `<asset-type>_<slug>.md` where `<asset-type>` is one of a documented type vocabulary (for example `app-icon`, `logo`, `nav-icon`, `illustration`, `empty-state`, `onboarding`, `hero`, `badge`, `pattern`, `diagram`) and `<slug>` is a kebab-case description
 - **MUST** include in every document: the asset type, target generator, intended variants (light/dark/neutral), target dimensions and file format, the copy-paste-ready prompt blocks, and a post-processing checklist (for example: remove background via `png-to-transparent-svg`; scale and check legibility at 48 px)
 - **MUST** record the seed slot (even if empty/`unset`) and the style-reference identifier used, so a later regenerate-with-tweaks is reproducible
@@ -84,7 +87,5 @@ Readers: skill and agent authors who maintain the prompt-authoring agent; review
 
 ## Open Questions
 
-- Should the default design-prompts directory be `design/prompts/` (chosen here) or live under the consuming repo's docs tree, and should it be created automatically or required to pre-exist?
-- For generators without an `--sref` mechanism (Gemini), is a fixed reference image or a canonical style paragraph the better "per-model equivalent," and should `corporate-design-colors` pin that choice rather than leaving it to this spec?
-- Should the agent append a row to a pre-generation prompt ledger (distinct from the post-generation `brand-prompt-library.md`), or is the per-asset document sufficient as the durable record?
+- The per-model style-reference equivalent for sref-less generators is owned by `corporate-design-colors` §AI image color contract; this spec consumes whatever that contract pins. Pending in that spec: `corporate-design-colors` must declare whether the equivalent is a fixed reference image (recommended) or a canonical style paragraph.
 - Should the asset-type vocabulary be normative here or delegated to a future `spec/design/imagery-style/` once that spec lands?

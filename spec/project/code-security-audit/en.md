@@ -24,7 +24,7 @@ Readers: agent authors maintaining the auditor; reviewers who consume its report
 - CVE / dependency / lockfile vulnerability scanning—owned by `spec/project/dependency-audit/`; this audit is about the project's own code, not its dependencies' known CVEs
 - Security review of *requirements or specifications* (the intended security posture) rather than implemented code—a separate concern; this audit reads code, not the spec's security requirements
 - **Applying fixes**: the project-local predecessor edited source; the portfolio agent is read-only and the fix step belongs to a human or a separate skill, so the audit stays single-responsibility
-- Running third-party SAST tooling (`semgrep`, `bandit`, `CodeQL`)—the agent performs LLM-driven pattern analysis; wiring a SAST runner is a possible future skill, out of scope here
+- Running third-party SAST tooling (`semgrep`, `bandit`, `CodeQL`)—the agent performs LLM-driven pattern analysis; this stays out of scope here. A future `sast-runner` skill may emit findings the operator supplies to this agent as additional context—the read-only agent never executes the runner itself
 
 ## Requirements
 
@@ -32,7 +32,7 @@ Readers: agent authors maintaining the auditor; reviewers who consume its report
 
 - **MUST** be strictly read-only: declare only read and search tools (`Read`, `Grep`, `Glob`), declare no `Edit`, `Write`, `NotebookEdit`, and apply no fixes; the single output is the audit report
 - **MUST NOT** suppress, downgrade, or annotate findings in the source (no `# nosec` / `# noqa` / `eslint-disable` insertion); reporting is the only action
-- **MUST** return the report in its final message; persisting it to `.audits/` (per `spec/claude/review-plan/`) is the calling skill's or operator's responsibility, not the read-only agent's
+- **MUST** return the report in its final message; persisting it to `.audits/` (per `spec/claude/review-plan/`) is the calling skill's or operator's responsibility, not the read-only agent's. When persisted by a calling skill, the report lives at `.audits/code-security-audit/<target-slug>.md` per `spec/claude/review-plan/` §File location and naming; a re-run overwrites the single canonical file rather than accumulating timestamped snapshots
 
 ### Discovery and stack adaptation
 
@@ -51,7 +51,7 @@ Readers: agent authors maintaining the auditor; reviewers who consume its report
 
 ### Output
 
-- **MUST** emit a single severity-classified report: a four-level priority scheme (for example P0 critical / P1 high / P2 medium / P3 low or equivalent critical→low), each finding carrying a title, an OWASP category, a file:line attribution, the problem, and a concrete remediation recommendation (described, not applied)
+- **MUST** emit a single severity-classified report using the portfolio-wide severity vocabulary from `spec/claude/review-plan/` §Severity scale (Critical / Warning / Suggestion / Info, verbatim Title Case)—it MUST NOT invent a P0–P3 or critical/high/medium/low scale; each finding carries a title, an OWASP category, a file:line attribution, the problem, and a concrete remediation recommendation (described, not applied)
 - **MUST** lead with an overall assessment table (per OWASP category: rating + finding count) and, for multi-tenant projects, a tenant-isolation matrix (endpoint group × tenant-filter × authorization-check × status)
 - **MUST** state the audit scope (scanned roots, globs, detected stack, declared posture or OWASP-default assumption) so the audit is reproducible
 - **SHOULD** distinguish confirmed findings from suspected-but-uncertain ones so the consumer can triage; an uncertain finding is reported, not silently dropped
@@ -60,10 +60,10 @@ Readers: agent authors maintaining the auditor; reviewers who consume its report
 ## Acceptance Criteria
 
 - [ ] The agent declares only `Read`, `Grep`, `Glob` (no write/edit/execution tools) and applies no source edits and inserts no finding-suppression comments
-- [ ] Running the audit produces a severity-classified report whose findings each carry a title, OWASP category, file:line, problem, and a described (not applied) remediation
+- [ ] Running the audit produces a report classified by the `spec/claude/review-plan/` §Severity scale vocabulary (Critical / Warning / Suggestion / Info) whose findings each carry a title, OWASP category, file:line, problem, and a described (not applied) remediation
 - [ ] The report leads with a per-OWASP-category assessment table and states the scanned roots, globs, and detected stack
-- [ ] A multi-tenant project's report includes a tenant-isolation matrix and flags any tenant-scoped path missing a tenant filter as critical
-- [ ] A hard-coded credential or a secret in source / config / logs is reported as critical with a file:line
+- [ ] A multi-tenant project's report includes a tenant-isolation matrix and flags any tenant-scoped path missing a tenant filter as Critical
+- [ ] A hard-coded credential or a secret in source / config / logs is reported as Critical with a file:line
 - [ ] An injection-prone data-access call (string-interpolated query) is reported with the parameterised remediation described
 - [ ] A project with an AI/RAG pipeline has prompt-injection and SSRF checks represented in the report; a project without one omits them without a spurious finding
 - [ ] The report distinguishes confirmed from suspected findings
@@ -76,10 +76,8 @@ Readers: agent authors maintaining the auditor; reviewers who consume its report
 - [R3] CVE / dependency vulnerability audit (delimited against this spec): `spec/project/dependency-audit/`
 - [R4] Review-plan / audit-output persistence conventions: `spec/claude/review-plan/`
 - [R5] OWASP Top 10 (2021): <https://owasp.org/Top10/>
+- [R6] Canonical portfolio-wide severity vocabulary (Critical / Warning / Suggestion / Info): `spec/claude/review-plan/` §Severity scale
 
 ## Open Questions
 
-- Should the audit optionally drive a SAST runner (`semgrep` / `bandit` / `CodeQL`) through a separate skill, with this agent consuming the SAST output as an additional signal, or stay purely LLM-driven pattern analysis?
-- Should a calling skill own the persistence of the report under `.audits/code-security-audit/`, and should re-runs replace a single canonical report or accumulate timestamped snapshots?
 - Where's the boundary between this whole-codebase audit and a future architecture-level threat-modeling spec that reasons about trust boundaries and data flows rather than code patterns?
-- Should the severity scheme be pinned to a single portfolio-wide vocabulary (P0–P3 vs critical/high/medium/low) for cross-repo aggregation, or left to the agent?

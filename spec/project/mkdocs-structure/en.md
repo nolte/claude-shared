@@ -72,7 +72,7 @@ This spec closes that gap. It defines (a) the portfolio-wide MkDocs skeleton—s
   - `audience`: one or more audience IDs declared in the project's audience artifact (`AUDIENCES.md` or the documented alternative location per `spec/project/audience-identification/`)
   - `content_mode`: exactly one value from the closed enumeration declared in §Content modes (Diátaxis alignment) (or an explicitly opted-in extension value)
   - `track`: exactly one of `user-docs` or `developer-docs` (or an explicitly opted-in extension value), per `spec/project/docs-audience-tracks/` §Per-page contract—this key is the audience-track signal that runs orthogonally to `audience` and `content_mode`
-  - `last_updated`: ISO-8601 date the content was last revised, or the literal `generated` for pages emitted by a catalog generator
+  - `last_updated`: ISO-8601 date the content was last revised, or the literal `generated` for pages emitted by a catalog generator. The literal `generated` declares the date as generator-maintained: `spec/project/docs-freshness/` treats it as a skip-trigger and **MUST NOT** flag content-staleness on such a page, since its freshness is owned by the generator's own CI freshness check rather than the read-only audit
 - **SHOULD** include a `## Sources` section as the page's last section, linking back to the authoritative source (`spec/<path>`, `src/<path>`, an ADR, an external URL) when the page derives from a single source of truth
 - **MAY** declare additional frontmatter keys: `tags` for cross-page lookups, `status` for explicitly marking `draft` / `stable` / `deprecated`, `summary` for a one-line abstract used in section index pages
 - **MUST NOT** invent frontmatter keys with portfolio-wide meaning without proposing them via a spec amendment
@@ -183,7 +183,7 @@ Two declared extension points let project-type-specific specs add to the skeleto
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
 - None at draft time. The seven initial design questions (ADR-section trigger, Project-section opt-in, extension discovery mechanism, audience baseline, source-language descriptor, extension-section cap, Skills/Agents absolute position) were resolved during initial authoring; see the PR that introduces this spec for the rationale of each.
-- Should the `content_mode` no-mixing rule be enforced statically (a marker scan of the page body looking for instructional verbs inside a `reference` page, recipe lists inside an `explanation`, …) or only flagged at audit time as a Reviewer-judgement call? The rule itself is normative; the enforcement mechanism is deferred until the `docs-freshness` audit accumulates enough false-positive cost to decide.
+- Resolved: the no-mixing rule is detected at audit time as a Reviewer-judgement signal at warning severity, never via a static marker scan—see `spec/project/docs-freshness/` §Drift categories (Content-mode drift).
 - Does the `prerequisites` frontmatter key on `tutorial` / `how-to` pages stay optional (`MAY`), or does it harden to `SHOULD` once the audit surface can verify the prerequisite chain is acyclic and reachable?
 
 ## Sources

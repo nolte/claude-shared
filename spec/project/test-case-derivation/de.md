@@ -27,6 +27,7 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 - Die Test-Tier-Verteilung eines Projekts auditieren (die „Test-Pyramide"-Form) — ein separates, meinungsbehaftetes Anliegen, das projektlokal bleibt
 - Die Anforderungsdokumente selbst verfassen oder editieren — der Agent liest Anforderungen, er schreibt sie nicht
 - Visuelles Review der Screenshots oder Logs eines Testlaufs gegen eine Spec — ein separates, stack-gekoppeltes Anliegen
+- Die Batch-Orchestrierung über viele Anforderungen (Auswahl- und Commit-Politik) ist ein Konsumenten-Projekt-Skill, der diesen Agent pro Anforderung dispatcht (der Skill-orchestriert/Agent-führt-aus-Hybrid), keine Verantwortung dieses Agents
 
 ## Anforderungen
 
@@ -48,7 +49,7 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 ### Ausgabe-Vertrag
 
 - **MUSS [MUST]** strukturierte Testfall-Dokumente in ein einzelnes konfigurierbares Ausgabe-Verzeichnis schreiben statt in einen hartcodierten Pfad, per Default `tests/cases/` im Konsumenten-Repository, ein Dokument pro Quell-Anforderung, benannt nach der Anforderung, auf die es zurückführt
-- **MUSS [MUST]** jedem Dokument einen YAML-Frontmatter-Block geben (mindestens: Quell-Anforderungs-ID, Titel, Testfall-Anzahl, abgedeckte Bereiche, Erzeugungsdatum) und jedem Testfall die Struktur: Titel, Anforderungs-Referenz, Priorität, Kategorie, Vorbedingungen, Schritte, erwartete Ergebnisse, Nachbedingungen, Tags
+- **MUSS [MUST]** jedem Dokument einen YAML-Frontmatter-Block geben (mindestens: Quell-Anforderungs-ID, Titel, Testfall-Anzahl, abgedeckte Bereiche, Erzeugungsdatum) und jedem Testfall die Struktur: Titel, Anforderungs-Referenz, Priorität, Kategorie, Vorbedingungen, Schritte, erwartete Ergebnisse, Nachbedingungen, Tags; diese Struktur ist portfolioweit festgelegt — nur Sprache, Ausgabe-Verzeichnis und Interface-Oberflächen-Vokabular passen sich pro Projekt an
 - **MUSS [MUST]** jedes Dokument mit einer Abdeckungs-Zusammenfassung beenden, die Anforderungs-Sektionen auf die sie abdeckenden Fälle abbildet, und **MUSS [MUST]** Anforderungs-Sektionen, aus denen kein Fall abgeleitet werden konnte (offene Anforderungen), explizit auflisten statt sie still wegzulassen
 - **MUSS [MUST]** jeden Testfall eigenständig und retrieval-freundlich halten (eine einzeilige Intent-Zusammenfassung, prominente Tags und Identifier, konsistentes Domänen-Vokabular, explizite Querverweise auf verwandte Fälle), sodass er die Ingestion in ein Retrieval-System als unabhängiger Chunk übersteht
 - **MUSS [MUST]** das Dokument einer Anforderung deterministisch regenerieren: Ein erneuter Lauf auf derselben Anforderung liefert dieselben Fälle (modulo des Erzeugungs-Timestamps); der Agent überschreibt seine eigene frühere Ausgabe und merged nicht still mit Hand-Edits
@@ -76,7 +77,4 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 
 ## Offene Fragen
 
-- Soll die Batch-Ableitung über viele Anforderungen (und die Wahl, welche zu verarbeiten sind, plus das Committen der Ergebnisse) in einem Konsumenten-Projekt-Orchestrierungs-Skill leben — analog zum projektlokalen `test-extract`-Wrapper — statt in diesem Agent?
-- Soll die Ausgabe ein Dokument pro Anforderung sein (hier gewählt) oder eines pro funktionalem Bereich, und soll der Verzeichnis-Default `tests/cases/` sein oder unter dem Docs-Baum liegen?
-- Soll die Testfall-Struktur auf ein einziges portfolioweites Template festgelegt werden für Cross-Repo-Aggregation, oder pro Projekt anpassbar bleiben?
 - Soll der Agent einen maschinenlesbaren Rückverfolgbarkeits-Index (Anforderung → Fälle) neben den menschenlesbaren Dokumenten emittieren, für nachgelagertes Coverage-Tooling?

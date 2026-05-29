@@ -22,6 +22,7 @@ Reviews von Claude-Code-Artefakten — ein Skill gegen `skill-management`, ein A
 - Versionierung von Plänen über Zeit — pro (Ziel, Review-Typ) existiert genau ein Plan zugleich; ein Re-Run **ersetzt** den Plan statt ihn zu revisionieren
 - Langlebige Audit-Register — die Pläne dieser Spec sind Wegwerf-Artefakte; für ein permanentes Quartals-Audit-Record gilt `spec-drift-audit`
 - CI-Reporting-Formate (SARIF, JUnit, …) — der Plan ist eine menschen- und LLM-freundliche Markdown-Datei, kein CI-Ergebnis-Austauschformat
+- Eine `.audits/`-Index-/Registry-Datei — offene Pläne werden durch Scannen des Verzeichnisses aufgezählt (zum Beispiel `grep -l "status: open" .audits/**/*.md`); ein Index wäre eine drift-anfällige zweite Quelle der Wahrheit, die dem Wegwerf-Lebenszyklus ohne Ansammlung widerspricht
 
 ## Anforderungen
 <!-- RFC-2119-Schlüsselwörter verwenden: MUST, SHOULD, MAY. Eine atomare Anforderung pro Bullet. -->
@@ -31,6 +32,7 @@ Reviews von Claude-Code-Artefakten — ein Skill gegen `skill-management`, ein A
 - **MUSS [MUST]** unter `.audits/<review-type>/<target-slug>.md` liegen, wobei:
   - `<review-type>` der Review-Spec-Slug ist (z. B. `skill-review`, `agent-review`)
   - `<target-slug>` eine ASCII-Kebab-Case-Ableitung des Bezeichners des reviewten Artefakts ist (bei Skill: Skill-Name; bei Agent: Agent-Name)
+- **MUSS [MUST]** den `<review-type>` ausschließlich über das Unterverzeichnis kodieren; der Basename **MUSS NICHT [MUST NOT]** ihn wiederholen (kein `skill-review-<target>.md`) — konsumierende Specs zitieren den blanken `<target-slug>.md`-Basename, und die Commit-Message der Löschung trägt den Review-Typ bereits
 - **MUSS NICHT [MUST NOT]** einen Zeitstempel oder eine laufende Nummer im Dateinamen enthalten — es gibt zu jedem Zeitpunkt genau **einen** Plan pro (Review-Typ, Ziel); ein Re-Run überschreibt den bestehenden Plan
 - **MUSS [MUST]** `.audits/` in Git einchecken (nicht ge-`.gitignore`-d), damit Pläne in Pull-Request-Diffs sichtbar sind und der Review-Pfad geteilt wird
 - **SOLLTE [SHOULD]**, wenn das reviewte Artefakt außerhalb des aktuellen Repositories liegt (z. B. Review der Kopie eines Skills in einem Plugin-Consumer), den absoluten oder repo-relativen Pfad des Ziels im Frontmatter-Feld `target` führen, während der Dateiname weiterhin nur den Slug nutzt
@@ -90,8 +92,9 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 ### Lebenszyklus
 
 - **MUSS [MUST]** pro Review-Aufruf frisch erzeugt werden; ein Re-Run gegen dasselbe Ziel **MUSS [MUST]** den bestehenden Plan in einem einzigen Commit überschreiben und den `status` des vorherigen Plans in der Commit-Message des Überschreibens auf `superseded` setzen — niemals den alten Plan in den neuen editieren
+- **MUSS [MUST]**, wenn das Review-Ziel mitten im Zyklus umbenannt wird, die Plan-Datei per `git mv` mitumbenennen (erhält die `git log --follow`-Linie), das Frontmatter-Feld `target` aktualisieren und den Move in der Commit-Message benennen; **nicht** neu erzeugen, damit der teilweise Abhak-Stand und das `## Processing log` überleben. Das ist abzugrenzen vom Supersede-Pfad oben, der auf einen Re-Run mit neuen Findings begrenzt ist — nicht auf eine Ziel-Umbenennung, die dieselben Findings unter einem neuen Bezeichner behält
 - **MUSS [MUST]** Einträge nur dann als `- [x]` markieren, wenn sowohl der Fix gelandet ist als auch der `Verify`-Schritt ausgeführt wurde; Teil-Fixes bleiben `- [ ]`
-- **MUSS [MUST]** pro Schließung eine Zeile an `## Processing log` anhängen, in der Form: `YYYY-MM-DD — <item-shorthand> — <getätigte Aktion> — <verifiziert von>`
+- **MUSS [MUST]** pro Schließung eine Zeile an `## Processing log` anhängen, in der Form: `YYYY-MM-DD — <item-shorthand> — <getätigte Aktion> — <verifiziert von>`; `<verifiziert von>` ist ein einzelnes Freitext-Akteur-Label (zum Beispiel `human:nolte`, `agent:agent-review`) und **MUSS NICHT [MUST NOT]** in strukturierte Username- / Session- / Agent-Unterfelder zerlegt werden — gemäß §Nicht-Ziele gibt die Spec nicht vor, wer oder was den Plan verarbeitet, und der Commit-Autor trägt bereits die Maschinen-Identität
 - **MUSS NICHT [MUST NOT]** die Plan-Datei löschen, solange ein offener `- [ ]` `Critical` besteht; `Warning` / `Suggestion` / `Info`-Einträge **KÖNNEN [MAY]** auf getrackte Issues vertagt werden, um das Löschen zu ermöglichen
 - **MUSS [MUST]** die Plan-Datei löschen, wenn jeder Eintrag entweder `- [x]` ist oder eine `→ deferred: <url>`-Annotation trägt; die Commit-Message der Löschung **MUSS [MUST]** `review(<review-type>): close <target> — <C>C/<W>W/<S>S/<I>I` lauten (Zählungen von Critical, Warning, Suggestion, Info zum Zeitpunkt der Erzeugung), sodass das Git-Log der durchsuchbare Audit-Trail ist
 - **SOLLTE [SHOULD]** beim Löschen des Plans auch getrackte Issues schließen, auf die vertagte Einträge verweisen, sofern der zugrundeliegende Fix anderswo gelandet ist — die Commit-Message der Löschung benennt diese Issues in ihrem Body
@@ -102,6 +105,7 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 - **MUSS NICHT [MUST NOT]** als Ausgabe von `spec-drift-audit` verwendet werden; jene Spec persistiert ein quartalsweises Audit-Record, das nicht bei Verarbeitungs-Abschluss gelöscht werden soll
 - **SOLLTE [SHOULD]**, wenn ein Review-Agent (z. B. `audience-review`) einen Report in der Hauptkonversation emittiert, den strukturierten Plan trotzdem unter `.audits/<review-type>/<target>.md` persistieren, damit der Verarbeitungsvertrag unabhängig davon konsistent ist, wer das Review gefahren hat
 - **SOLLTE [SHOULD]** `spec/project/parallel-working-copies/` §Audit-Artefakte in mehreren Worktrees konsultieren, wenn der Plan in einem Worktree statt im primären Checkout erzeugt wird; die Per-(Review-Typ, Ziel)-Eindeutigkeitsregel aus dieser Spec ist jeweils nur innerhalb eines Working Tree beobachtbar, und die worktree-lokalen Commit-, Transfer- und Cleanup-Regeln leben dort
+- **SOLLTE [SHOULD]** in Repositories, die direkte Pushes nach `develop` verbieten, den Plan und den Fix, den er beschreibt, im selben Feature-Branch-PR landen lassen — Erzeugen, Abhaken, `## Processing log`-Aktualisierungen und der Lösch-Commit alle in einem Diff — gemäß `spec/project/parallel-working-copies/` §Audit-Artefakte; ein eigenständiger früherer PR ist Reviews vorbehalten, die vor jeder Fix-Abgrenzung laufen
 
 ## Abnahmekriterien
 <!-- Testbare, abhakbare Bedingungen. Reviewer müssen pro Punkt "erfüllt / nicht erfüllt" markieren können. -->
@@ -116,9 +120,4 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Soll `## Processing log` die Akteur-Identität (menschlicher Username, Claude-Session, Agent-Typ) als strukturierte Felder erfassen, oder reicht freier Text für die aktuelle Skala?
-- Wird eine `.audits/`-Index-Datei benötigt, die offene Pläne auflistet, oder reicht `ls .audits/**/*.md`?
-- Sollen Plan-Dateinamen den Review-Typ-Präfix auch im Basenamen tragen (`skill-review-<target>.md`) für flachere `ls`-Ansichten, oder ist die Unterverzeichnis-Gruppierung vorzuziehen?
-- Wenn ein Review-Ziel mitten im Zyklus umbenannt wird: Wird die Plan-Datei mitumbenannt (und der Rename-Commit benennt den Move) oder frisch neu erzeugt?
 - Muss diese Spec ein maximales Alter eines offenen Plans vorgeben, jenseits dessen er als veraltet gilt und entweder neu verarbeitet oder explizit superseded wird?
-- Wie interagiert der Plan-Lebenszyklus mit Repositories, die direkte Pushes nach `develop` verbieten — landet der Plan im selben PR wie der Fix, den er beschreibt, oder als separater früherer PR?

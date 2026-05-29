@@ -21,7 +21,7 @@ A Cookiecutter template in this portfolio is a project-scaffold artefact that re
 <!-- Explicitly out of scope. Prevents creep. -->
 - Consuming an existing template (a plain `cookiecutter <url>` invocation needs no spec or agent)
 - Generic Python-project bootstrap unrelated to Cookiecutter (use the standard Python project structure under `spec/project/project-structure/`)
-- Copier or cruft templates—those have different anti-patterns and different hook contracts; cross-references to them belong in the agent's body, not this spec
+- Copier or cruft templates—those have different anti-patterns and different hook contracts; cross-references to them belong in the agent's body, not this spec. A dedicated `copier-template-authoring` / `cruft-template-authoring` spec is created only if and when the portfolio ships such a template.
 - Templates that intentionally diverge from the nolte portfolio specs (those are out-of-scope for the agent and for this spec; the divergence requires an explicit waiver recorded outside this surface)
 - The render-time `cookiecutter.json` variable schema (it varies per template by design—the spec governs the shape of the resulting project, not the input shape)
 - Visual identity or branding of the rendered project (per-template decision, gated by the rendered project's own `mkdocs-material` palette settings)
@@ -85,7 +85,6 @@ The template **MUST NOT** render any of the following:
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should this spec extend to Copier and cruft templates as well, or stay Cookiecutter-only with cross-references to a future `copier-template-authoring` and `cruft-template-authoring`? Defer until the portfolio actually ships a non-Cookiecutter template; the agent's existing scope is Cookiecutter-only.
 - Does the post-generation hook need to dispatch the `audience-identify` skill automatically (one-step generation + audience identification), or does the banner-only "next step" pointer suffice? Defer until a portfolio template has run for 5+ generations and we know whether operators actually follow the banner.
 - Should the `pytest-cookies` matrix be required to cover Windows when the rendered project's target audience may include Windows users (Home Assistant integrations, CLIs with binary releases), or stay Linux-only as the portfolio convention? Defer until a portfolio repository renders a Windows-targeted artefact.
 

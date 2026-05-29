@@ -45,7 +45,9 @@ focusable
 Gedankenstrich
 godoc
 Grammarly
+greppable
 HMAC
+idempotently
 [Ii]mplementors?
 Inkbot
 [Ii]nvokable
@@ -95,6 +97,7 @@ symbolication
 Tailwind
 Tauri
 textstat
+thresholding
 tooltips?
 tritan
 typedoc

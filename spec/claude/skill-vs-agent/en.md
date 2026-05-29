@@ -52,6 +52,7 @@ These dimensions track Anthropic's official "Choose between subagents and the ma
   - Tool restriction is desired (read-only research, lint-only, refactor-only) and would measurably improve safety or behavior
   - A specialized, narrow system prompt measurably improves the task's output quality
 - **MUST** default to a **skill** when the criteria above are contradictory or genuinely ambiguous; the rationale is that skills remain the human-visible surface and can dispatch agents later without restructuring consumer workflows, whereas an agent can't become a skill without losing its isolation contract
+- **MUST**, when tool restriction **and** mid-flow interactivity both apply, author a **skill** and declare `allowed-tools` (per `skill-management`) for voluntary tool discipline; an agent with a pause/resume protocol is **forbidden** because an agent runs in an isolated subagent context with no stable way to surface skill-level interactivity back to the parent conversation (see §Hybrid pattern). This is a direct consequence of the default-to-skill rule above, not a separate escape hatch.
 
 ### Hybrid pattern: Skill orchestrates, agent executes
 - **MUST** model implementation work that sits inside a broader workflow as `skill → Agent(subagent_type=<agent>)` rather than as a monolithic skill whenever at least one agent-side criterion (context-window protection, parallelism, tool restriction, specialization) applies to the implementation step
@@ -72,6 +73,7 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 ### Duplicate prevention
 - **MUST NOT** ship a skill and an agent that provide equivalent capabilities within the `nolte-shared` plugin; one artifact per capability is the invariant
 - **MUST**, before authoring a new artifact, check the existing skills under `skills/` and agents under `agents/` for an equivalent or near-equivalent capability (read every `description` line; don't rely on name similarity alone)
+- The canonical audit-time mechanism for this in-plugin capability-equivalence check is the `skills-agents-sweep` skill's boundary-matrix step: a **semantic read of every `description` line** that classifies each overlapping pair as conflict, adjacent, or chain. Keyword intersection or embedding similarity **MAY** serve only as an optional pre-filter that narrows candidate pairs for the semantic read; neither **MAY** stand in for the decision itself
 - **SHOULD**, when the boundary is genuinely blurry between an existing artifact and a proposed new one, propose a merge, a rename, or a clearer split as part of the authoring PR—never silently ship a third overlapping artifact
 - **MAY** tolerate equivalent-looking artifacts across **different** plugins; this rule is scoped to `nolte-shared`, and downstream plugins own their own de-duplication
 
@@ -86,6 +88,7 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 ### Rationale documentation
 - **MUST** include a short rationale section in the artifact body (not only in the frontmatter `description`): one short paragraph or a two-to-four-bullet list naming the decisive dimensions that led to the skill-vs-agent choice
 - **SHOULD** name at least one dimension that pointed the other way and the reason it was outweighed; absence of a counter-dimension note implies the choice was uncontested
+- The one-dimension floor is intentional and deliberately a hard **MUST**, while the two-dimension structure (a second named dimension plus a counter-dimension) is deliberately only a **SHOULD**: forcing two named dimensions on a genuinely one-sided choice produces filler prose rather than a sharper audit, so the floor isn't raised
 - **MAY** reference a specific sibling artifact as precedent (for example: "follows the same orchestrator pattern as `pull-request-create`")
 - The placement within the body is at the author's discretion; sensible locations are directly under the top-level heading or as a short footer just before the hard rules
 
@@ -96,7 +99,7 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 - Rationale: deterministic heading enables `grep`-based portfolio audits, single source of truth for the section semantic
 
 ### Portfolio-wide consistency
-- **MUST**, when a capability class recurs across three or more consuming repositories, ship it as a plugin-level artifact rather than as project-local copies; this threshold is aligned with the `workflow-health` spec's three-recurrence trigger for specialized-agent authoring, and the decision rule above still determines whether the plugin-level artifact is a skill or an agent
+- **MUST**, when a capability class recurs across three or more consuming repositories, ship it as a plugin-level artifact rather than as project-local copies; the three-recurrence constant is owned by the `continuous-improvement` spec (the most general statement of the rule), and `workflow-health`, `portfolio-management`, and this spec all defer to it. The threshold changes only in lockstep across all four specs—this spec **MUST NOT** diverge to a different number. The decision rule above still determines whether the plugin-level artifact is a skill or an agent
 - **SHOULD** align a new artifact with the artifact type used by existing peers in the same functional cluster (PR management, audit, lint, release tooling): when every existing peer is a skill, the new one is a skill unless a dimension forces the other way
 - **SHOULD** use the optional `tags` field (per `skill-management` / `agent-management`) as the machine-checkable signal for peer-cluster membership—artifacts sharing a tag form a cluster in the catalog's tag index, so cluster alignment is verifiable from frontmatter rather than relying on name similarity
 - **MAY** propose reclassification of an existing artifact (skill → agent or vice versa) when repeated usage reveals the initial choice was wrong; such a reclassification is a breaking change for consumers and **MUST** be shipped as a new artifact plus a deprecation note on the old one, never as a silent format flip
@@ -124,8 +127,4 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 - [R6] Subagents in the Claude Agent SDK (four benefits—context isolation, parallelism, specialized instructions, tool restrictions—with parallelism and context management as the two primary drivers): <https://code.claude.com/docs/en/agent-sdk/subagents>
 
 ## Open Questions
-- Should this spec declare a minimum "rationale section" structure (at least two named dimensions, at least one counter-dimension) to make audits mechanical, or is the current "at least one decisive dimension" bar sufficient?
-- When a capability would benefit from tool restriction **and** mid-flow interactivity at the same time (a direct contradiction between agent-side and skill-side dimensions), is there a preferred escape hatch—a skill that imposes a voluntary tool discipline, or an agent with a pre-declared pause/resume protocol?
 - Should slash commands / CLI entry points be introduced as a third artifact class in a future iteration, and how would this decision rule extend to them?
-- How's the "capability equivalence" check in the duplicate-prevention rule operationalized in practice—a semantic read of every `description` at audit time, a lighter-weight keyword intersection, or a generator that compares embeddings?
-- Should the three-recurrence threshold for plugin-level promotion be kept in lockstep with `workflow-health` (changes tracked together) or diverge when this spec's broader scope warrants a different number?

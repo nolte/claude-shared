@@ -69,21 +69,23 @@ Referenzen:
 - **MUSS [MUST]** ein `molecule/default/`-Szenario enthalten, das die Rolle konvergiert und Idempotenz prüft (ein zweiter `converge` meldet null Änderungen)
 - **MUSS [MUST]** `molecule test` (den vollen Lifecycle aus create/converge/idempotence/verify/destroy) als CI-Gate ausführen; ein Merge auf den Integrations-Branch erfordert Grün
 - **MUSS NICHT [MUST NOT]** den `delegated`-Driver für Idempotenz-Aussagen verwenden, weil er das per-Host-Zustandsmodell umgeht
-- **SOLLTE [SHOULD]** den `docker`- oder `podman`-Driver verwenden und mindestens einen Verifikations-Schritt enthalten (`molecule verify` mit `ansible.builtin.assert` oder `testinfra`), der das primäre beobachtbare Ergebnis der Rolle abdeckt
+- **SOLLTE [SHOULD]** den `docker`- oder `podman`-Driver verwenden und mindestens einen Verifikations-Schritt enthalten (`molecule verify` mit `ansible.builtin.assert` oder `testinfra`), der das primäre beobachtbare Ergebnis der Rolle abdeckt. Rollen, die beobachtbaren Laufzeit-Zustand ändern (einen laufenden Dienst, einen offenen Port, eine ausgelieferte Datei), SOLLTEN den Verify-Schritt als faktisch verpflichtend behandeln.
 - **KANN [MAY]** zusätzliche Szenarien (`molecule/<scenario>/`) für distro- oder topologie-spezifische Test-Matrizen ergänzen
 
 ### Linting
 - **MUSS [MUST]** `ansible-lint` und `yamllint` als CI-Gate ausführen; beide müssen grün sein, bevor eine Rollen-Version getaggt werden darf
+- **SOLLTE [SHOULD]** die `args`-Regel von `ansible-lint` aktivieren, damit Argument-Spec-Verstöße und Drift zwischen `defaults/main.yml` ↔ `argument_specs.yml` im bestehenden Lint-Gate auffallen; ein separater Validator ist nicht erforderlich
 - **SOLLTE [SHOULD]** beide Linter in eine `.pre-commit-config.yaml` verkabeln, damit Verstöße lokal vor dem Commit auffallen
 - **SOLLTE [SHOULD]** Linter-Ausnahmen inline (`# noqa`) und eng halten, statt Regeln global zu deaktivieren; den Grund neben jeder Ausnahme dokumentieren
 
 ### Versionierung
 - **MUSS [MUST]** jede veröffentlichte Rolle mit semantischer Versionierung auf Git-Tags versionieren (`v1.4.2`, niemals nur `1.4` oder `latest`)
 - **MUSS [MUST]** die öffentliche Oberfläche der Rolle als Stabilitäts-Vertrag behandeln: Breaking Changes an `argument_specs.yml`, an Defaults in `defaults/main.yml` oder an `meta/main.yml` `dependencies:` erfordern einen Major-Version-Bump
+- **SOLLTE [SHOULD]** Variablen-Umbenennungen/-Entfernungen mit einer Minor-Version ausliefern, die einen Ansible-`deprecated`/`warn`-Hinweis trägt, bevor der Major-Bump erfolgt; Brüche an Abhängigkeiten und Default-Werten DÜRFEN [MAY] direkt zum Major-Bump gehen
 - **SOLLTE [SHOULD]** ein `CHANGELOG.md` (oder Release-Drafter-Output) pflegen, das Änderungen je getaggter Version auflistet
 
 ### Galaxy-Publishing
-- **MUSS [MUST]** die Rolle (oder die enthaltende Collection) so veröffentlichen, dass konsumierende Playbook-Repos sie via `requirements.yml` pinnen können; Standalone-Rollen via `ansible-galaxy role import`, Collections via `ansible-galaxy collection publish`
+- **MUSS [MUST]** die Rolle (oder die enthaltende Collection) so veröffentlichen, dass konsumierende Playbook-Repos sie via `requirements.yml` pinnen können; Standalone-Rollen via `ansible-galaxy role import`, Collections via `ansible-galaxy collection publish`. Single-Role-Repos setzen standardmäßig auf Standalone-Rollen-Publishing; eine Collection (`galaxy.yml`) wird übernommen, sobald das Repo eine zweite verwandte Rolle ausliefert, im Einklang mit der Post-2.10-Ökosystem-Richtung.
 - **SOLLTE [SHOULD]** das Publishing aus einem CI-Workflow triggern (auf Tag-Push), nicht von der Maschine einer Entwicklerin, damit jeder Release reproduzierbar ist
 - **KANN [MAY]** auf eine private Galaxy- / Pulp-Instanz veröffentlichen, wenn die Rolle portfolio-intern ist; das `requirements.yml` des konsumierenden Playbooks nutzt dann die passende `source:`-URL
 
@@ -106,8 +108,4 @@ Referenzen:
 - [ ] Die Rolle (oder ihre enthaltende Collection) ist auf einen Galaxy- / Pulp-Endpunkt veröffentlicht, gegen den das `requirements.yml` des konsumierenden Playbooks an einen getaggten Release pinnt
 
 ## Offene Fragen
-- Soll jede Rolle einen Molecule-`verify`-Schritt mitbringen, oder bei Idempotenz-only bleiben (Aufstufung von `verify` von **SOLLTE [SHOULD]** auf **MUSS [MUST]**)?
 - Soll die Spec eine portfolio­weite Mindest-Molecule-Szenario-Matrix vorschreiben (Debian + RHEL-Familie, oder nur eines)?
-- Soll `argument_specs.yml` in der CI maschinell gegen `defaults/main.yml` validiert werden, und falls ja mit welchem Werkzeug?
-- Sollen Breaking Changes zusätzlich ein Deprecation-Fenster (eine Minor-Version mit Deprecation-Warnung) vor dem Major-Bump erfordern, oder reicht ein reiner Tag-Bump?
-- Soll Rollen-Publishing standardmäßig auf eine Collection (`galaxy.yml`) statt auf eine Standalone-Rolle setzen — auch für Single-Role-Repos —, im Einklang mit der Post-2.10-Ökosystem-Richtung?

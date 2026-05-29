@@ -16,6 +16,7 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 - Prescribing specific skill contents beyond structural rules
 - The exact Claude Code marketplace / plugin-installation UX (owned by Claude Code itself, not by this repository)
 - Plugin-level scoping—when a capability belongs in this plugin versus a separate one, and how the plugin stays scannable as its skill count grows (covered by `plugin-scoping`)
+- The skill-vs-agent format decision—whether a given capability should be a skill or an agent (covered by `skill-vs-agent`)
 
 ## Requirements
 
@@ -73,9 +74,10 @@ Starter vocabulary:
 - **MUST NOT** be distributed by copying the folder into a consuming project's `.claude/skills/<name>/`, by symlinking, by vendoring, or by any other out-of-band path; such copies drift from the source and defeat the point of a shared plugin
 - **MUST NOT** manually bump the plugin version in `.claude-plugin/plugin.json` or the corresponding marketplace entry as part of a PR that adds, renames, removes, or materially changes a skill; the version is derived from the published GitHub Release tag and updated on the default branch exclusively by the release workflow—see `release-automation` §Version-bearing file alignment for the mechanism (including the fallback path where a maintainer opens a dedicated `chore(release): <tag>` PR)
 - **MAY** coexist in a consuming project alongside project-local skills under that project's own `.claude/skills/`; such project-local skills are outside the scope of this spec and **MUST NOT** reuse a name already owned by the `nolte-shared` plugin
+- **MUST NOT** carry a per-skill `version` or compatibility-metadata field; versioning is plugin-scoped (the single `nolte-shared` manifest version, release-tag-derived per `release-automation` §Version-bearing file alignment), per-skill change history is git history, and compatibility is a plugin-level concern
 
 ### Runtime discovery (consuming project)
-- **MUST** be loadable by Claude Code from the plugin's skills path once the plugin is installed; the skill surfaces to the user as `nolte-shared:<name>`
+- **MUST** be loadable by Claude Code from the plugin's skills path once the plugin is installed; the skill surfaces to the user as `nolte-shared:<name>`. The user-facing slash command is derived directly from `name` (`/nolte-shared:<name>`); there is no separate command identifier, so the folder name, frontmatter `name`, and slash command are necessarily identical
 - **MUST NOT** assume any specific absolute or project-relative runtime path; all internal paths stay relative to the skill folder and work wherever Claude Code extracts or mounts the plugin
 
 ### Recommendations
@@ -117,7 +119,7 @@ Skills with multiple named operations use a `## Operations` block. This section 
 
 Skills are loaded in three stages by Claude—metadata at startup (~100 tokens per skill), full `SKILL.md` body when triggered, supporting files only when explicitly read ([R5](#references), [R1](#references)). The on-disk shape **MUST** support that loading model. Because only the ~100-token metadata is preloaded, a plugin can ship many skills with no per-skill context penalty beyond that metadata ([R5](#references)); a plugin's thematic breadth is therefore not a context cost, which is why plugin scope is governed by distribution rather than count (see `plugin-scoping`). Caveat: an open Claude Code bug (`anthropics/claude-code#14882`, filed 2025-12-20, unconfirmed) reports full `SKILL.md` bodies preloaded at startup, contradicting the documented metadata-only design; until it's resolved, treat aggressive skill-count growth with some caution.
 
-- **MUST** keep file references inside `SKILL.md` **at most one level deep**: `SKILL.md` → `references/foo.md` is fine; `SKILL.md` → `references/foo.md` → `references/bar.md` is forbidden, because Claude tends to use partial reads (`head -100`) on nested references and then misses content ([R2](#references))
+- **MUST** keep file references inside `SKILL.md` **at most one level deep**: `SKILL.md` → `references/foo.md` is fine; `SKILL.md` → `references/foo.md` → `references/bar.md` is forbidden, because Claude tends to use partial reads (`head -100`) on nested references and then misses content ([R2](#references)). Physical subfolder nesting under `references/` etc. isn't itself capped, but because every asset **MUST** be directly load-triggered from `SKILL.md` and reference chains **MUST** stay one hop deep, deeply nested support trees are effectively unreachable and **SHOULD** be avoided
 - **MUST** include a **table of contents** at the top of any reference file longer than 100 lines, so partial-read previews still surface the file's full scope ([R2](#references))
 - **MUST**, every time `SKILL.md` references a supporting file, name **what the file contains** and **when to load it** (for example "Read `references/api-errors.md` if the API returns a non-200 status code"); generic "see `references/` for details" defeats progressive disclosure because Claude has no signal for *when* to load ([R2](#references), [R4](#references))
 - **MUST** carry an explicit load-trigger phrase in `SKILL.md` for every asset under `references/`, `templates/`, `assets/`, `scripts/`, or `examples/`. Pattern: `"Read <relative-path> when <trigger condition>"` or `"See <relative-path> for <specific concern>"` (with an explicit "when" or "for" clause). Implicit references without a load-trigger are non-conformant since Claude won't surface the asset under progressive disclosure.
@@ -189,7 +191,4 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - [R6] anthropics/skills (canonical Anthropic skill repository): <https://github.com/anthropics/skills>
 
 ## Open Questions
-- Should the folder name be required to match any user-facing slash-command name, or may they differ?
-- Do skills need version or compatibility metadata as they evolve?
-- Where's the boundary between a skill and an agent? When should a capability be one versus the other?
-- Is there a maximum nesting depth for supporting subfolders, or does that stay loose?
+_None at this time._

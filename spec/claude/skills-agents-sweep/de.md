@@ -51,6 +51,7 @@ Diese Spec kodifiziert die Methodik eines Skills-und-Agents-Sweep-Audits: ein pe
 - **MUSS** den konsolidierten Bericht unter `.audits/skills-agents-sweep/<Datum>-<Slug>.md` persistieren, bevor Phase 4 beginnt
 - **DARF NICHT** mit Phase 4 beginnen, bevor der konsolidierte Bericht auf der Festplatte existiert, sodass jeder Umsetzungs-PR den Bericht als Nachweis-Quelle referenzieren kann
 - **SOLLTE** Per-Artefakt-Reviews in Phase 1 vor der Cross-Cutting-Analyse in Phase 2 durchführen, weil die Per-Artefakt-Pläne Einzelbefunde liefern, die in die Cross-Cutting-Dimensionen einfließen
+- Der Phasen-Vertrag ist normativ; die Ausführungsstrategie (sequenziell, parallel, Subagent-Fan-out) ist die Wahl des Operators und **DARF** hier **NICHT** vorgeschrieben werden
 
 ### Cross-Cutting-Dimensionen
 
@@ -67,7 +68,7 @@ Diese Spec kodifiziert die Methodik eines Skills-und-Agents-Sweep-Audits: ein pe
 - **MUSS** alle folgenden Abschnitte in dieser Reihenfolge enthalten: YAML-Frontmatter, Executive Summary mit Top-Findings-Tabelle, Artefakt-Inventar-Tabelle, Abgrenzungs-Matrix, spec-induziertes Lücken-Inventar, Adoption-Friction-Analyse, Skill-vs-Agent-Klassifikations-Befunde, wellen-basierte Umsetzungs-Roadmap und ein Processing-Log
 - **MUSS** im YAML-Frontmatter enthalten: `audit-type: skills-agents-sweep`, `target`, `scope` (Artefaktanzahl), `repo-revision`, `created` (ISO-Datum), `status: open` und `per-artefact-plans` (Anzahl)
 - **MUSS** die Per-Artefakt-Plan-Pfade unter `.audits/skill-review/` und `.audits/agent-review/` im Executive Summary zitieren, damit Reviewer Cross-Cutting-Befunde zu konkreten Per-Artefakt-Nachweisen zurückverfolgen können
-- **SOLLTE** eine Go/No-Go-Empfehlung im Executive Summary enthalten, die angibt, ob Critical-Befunde eine Release-Promotion blockieren
+- **SOLLTE** eine Go/No-Go-Empfehlung im Executive Summary enthalten, die angibt, ob Critical-Befunde eine Release-Promotion blockieren; diese Empfehlung bleibt menschenlesbar und ist **KEIN** maschinell lesbares Release-Gate, sodass `release-publish-trigger` sein Gate-Set weiterhin an `spec/project/release-automation/` §Pre-publish verification verankert, statt ein Frontmatter-Feld aus dem Sweep-Bericht zu lesen
 
 ### Wellen-basierte Umsetzungs-Roadmap
 
@@ -79,6 +80,7 @@ Diese Spec kodifiziert die Methodik eines Skills-und-Agents-Sweep-Audits: ein pe
 ### Lifecycle
 
 - **MUSS** genau einen offenen Sweep pro Repository zur gleichen Zeit aufrechterhalten; ein zweiter Sweep **DARF NICHT** eröffnet werden, bis der vorherige Sweep geschlossen ist
+- Der committete konsolidierte Bericht mit `status: open` ist der Koordinations-Lock; Beitragende erkennen einen laufenden Sweep an der Existenz dieser Datei auf dem Default-Branch. Es ist kein separater Lock-Mechanismus definiert
 - **MUSS** durch einen Commit geschlossen werden, der die konsolidierte Berichtsdatei aus `.audits/skills-agents-sweep/` entfernt; die Commit-Message **MUSS** dem Muster `sweep(skills-agents-sweep): close <Slug>--<Wellen-Zusammenfassung>` folgen, wobei `<Wellen-Zusammenfassung>` beschreibt, welche Wellen umgesetzt oder zurückgestellt wurden
 - **MUSS** im Processing-Log des konsolidierten Berichts pro Wellen-Abschluss einen Eintrag festhalten mit Datum, Wellen-Kenner, durchgeführter Aktion und Verifikations-Methode
 - **SOLLTE** als veraltet gelten und eine Neu-Eröffnung erfordern, wenn er mehr als sechs Monate lang offen war ohne einen Processing-Log-Eintrag
@@ -88,7 +90,7 @@ Diese Spec kodifiziert die Methodik eines Skills-und-Agents-Sweep-Audits: ein pe
 - **MUSS** `spec/claude/skill-review/` und `spec/claude/agent-review/` als Verfahren für Per-Artefakt-Reviews referenzieren, die in Sweep-Phase 1 beauftragt werden; ihre Anforderungen werden hier nicht wiederholt
 - **MUSS** `spec/claude/review-plan/` für das Per-Artefakt-Plan-Format referenzieren; seine Anforderungen werden hier nicht wiederholt
 - **DARF NICHT** Prüfungen duplizieren, die bereits durch `skill-review` oder `agent-review` abgedeckt sind; die Cross-Cutting-Analyse umfasst nur Dimensionen, die das gleichzeitige Betrachten des gesamten Inventars erfordern
-- **SOLLTE** mit `spec/project/spec-drift-audit/` koordinieren, indem festgehalten wird, dass `spec-drift-audit` den Inhaltsdrift von Spec-Dateien abdeckt, während `skills-agents-sweep` Artefakt-zu-Spec-Bindungs-Lücken abdeckt; die beiden Specs haben unterschiedliche Scopes mit komplementären Befunden
+- **SOLLTE** mit `spec/project/spec-drift-audit/` koordinieren, indem festgehalten wird, dass `spec-drift-audit` den Inhaltsdrift von Spec-Dateien abdeckt, während `skills-agents-sweep` Artefakt-zu-Spec-Bindungs-Lücken abdeckt; die beiden Specs haben unterschiedliche Scopes mit komplementären Befunden und bleiben deshalb getrennte, gegenseitig referenzierte Verfahren statt sich einen kombinierten Einstiegspunkt zu teilen
 
 ## Acceptance Criteria
 
@@ -101,7 +103,4 @@ Diese Spec kodifiziert die Methodik eines Skills-und-Agents-Sweep-Audits: ein pe
 
 ## Open Questions
 
-- Soll die Sweep-Methodik ein konkretes Subagent-basiertes Ausführungsmuster für Phase 1 kodifizieren (zum Beispiel: einen `skill-review`-Subagenten pro Skill parallel starten), oder soll die Methodik werkzeug-agnostisch bleiben und die Ausführungsstrategie dem Operator überlassen?
-- Wie wird die Sweep-Koordination bei mehreren parallel arbeitenden Beitragenden im gleichen Repository gehandhabt? Die Ein-Sweep-Invariante verhindert parallele Sweeps, definiert aber keinen Lock-Mechanismus.
-- Soll die Go/No-Go-Empfehlung des konsolidierten Berichts maschinell lesbar sein (zum Beispiel ein `release-blocker: true/false`-Frontmatter-Feld), damit das `release-publish-trigger`-Skill automatisch darauf gaten kann?
-- Wie wird der Sweep mit dem periodischen `spec-drift-audit`-Verfahren koordiniert? Beide Specs haben unterschiedliche Scopes (`skills-agents-sweep` umfasst Artefakt-zu-Spec-Bindung unter `spec/claude/`; `spec-drift-audit` umfasst Spec-Datei-Inhalt unter `spec/project/`), aber eine einzelne Contributor-Session könnte beide ausführen wollen. Sollte es einen kombinierten Einstiegspunkt geben?
+_Derzeit keine._

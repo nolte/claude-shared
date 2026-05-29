@@ -32,7 +32,7 @@ Zwei Designvorgaben prägen die Spec. Erstens ist die Ebene **operativ**, nicht 
 - Lektorat von Dateien unter `spec/` — sie folgen dem Übersetzungs-Flow der `spec`-Skill und haben eigene autoritative Drift-Checks; eine Aufnahme hier würde eine zweite Quelle der Wahrheit für Spec-Prosa erzeugen
 - Autorschaft von Vale-Regeln (Active-Voice-Detektor, gendered-pronoun-Detektor und Ähnliches): `prose-style` führt das bereits als aufgeschobene Entscheidung und `Lektorat` greift dem nicht vor
 - Slack-Nachrichten, Wiki-Seiten, Blog-Posts oder andere Nicht-Markdown-Prosa-Flächen für Menschen — `Lektorat` deckt GitHub-Issue- und Pull-Request-Bodys als bewusste Scope-Erweiterung ab (sie sind nutzersichtbares Markdown, das in Suchmaschinen und Projekt-Historie landet). Anmerkung: `prose-style` §Pull-request descriptions and release notes verlangt bereits Vale-Abdeckung auf EN-PR-Bodys und EN-Release-Note-Bodys; `Lektorat` führt diese Abdeckung dort **nicht** ein, sondern erweitert sie um die D1/D2/D5-Dimensionen und die DE-Pipeline. Befunde aus dem Vale-CI-Gate von `prose-style` werden gemäß §Koordination mit Nachbarspecs per Vale-Regel-ID dedupliziert. Andere Prosa-Flächen bleiben außerhalb des Scopes, bis sie separat spezifiziert sind
-- Ein blockierendes Gate für redaktionelle Befunde der Severity `suggestion`; nur `critical`-Befunde sind gate-tauglich, und selbst dann opt-in pro Repository (siehe offene Fragen)
+- Ein blockierendes Gate für redaktionelle Befunde der Severity `suggestion`; nur `critical`-Befunde sind gate-tauglich, und selbst dann opt-in pro Repository (siehe §Severity-Klassifikation)
 
 ## Anforderungen
 
@@ -67,6 +67,7 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 - **MUSS [MUST]** den berechneten Metrik-Wert, den Korridor und mindestens ein verstoßendes Beispiel (längster Satz, tiefste Schachtelung) im Befund nennen, damit er auditierbar ist
 - **DARF NICHT [MUST NOT]** im `patch`-Modus eine Passage aus reinen Lesbarkeits-Gründen umschreiben, ohne einen Metrik-Wert oder eine benannte Heuristik-Quelle im Befund; eine Meinung ist kein Befund
 - **SOLLTE [SHOULD]** Metrik-Befunde durch **strukturelle Heuristiken** ergänzen (Absätze länger als drei Sätze, Listen mit mehr als sieben Peers, Überschriften tiefer als `####`) — diese sind per Default `suggestion`
+- **SOLLTE [SHOULD]** die benannten Metriken berechnen, indem eine gepflegte sprach­spezifische Lesbarkeits-Bibliothek konsumiert wird (eine `textstat`-Klasse-Bibliothek für Englisch, eine `readability-de`-Klasse-Bibliothek für Deutsch), statt die klassischen Formeln neu zu implementieren; die Spec schränkt nur die Metrik-Namen und die Korridore oben ein, nicht die Implementierung, und die gewählte Bibliothek **KANN [MAY]** neben den Pipeline-Metadaten (§Ausgaben) zur Reproduzierbarkeit aufgezeichnet werden
 
 #### D2 — Verständlichkeit
 
@@ -122,6 +123,7 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
   - `suggestion`: qualifiziert eine Heuristik, schlägt eine stilistische Verfeinerung vor oder weitet einen Satz für Klarheit, ohne die Bedeutung zu verändern
 - **MUSS [MUST]** diese Severity-Namen wörtlich in maschinenlesbarer Ausgabe verwenden (JSON-Keys, Frontmatter-Values, CLI-Exit-Code-Mapping); `info`, `error`, `notice` und ähnliche Synonyme sind **DARF NICHT [MUST NOT]**
 - **MUSS [MUST]** Severity-Klassifikation **dimensions­bewusst** halten: ein D3-Tippfehler in einem publizierten Release-Note ist `critical`, derselbe Tippfehler in einem Markdown-Kommentar als Entwurf ist `warning`, derselbe Tippfehler innerhalb eines Code-Identifiers ist **kein Befund** (außer Scope gemäß §Geltungsbereich)
+- **MUSS [MUST]** `critical`-Befunde in nachgelagerten Gates (`sprint-review`, `release-publish-trigger`) **per Default beratend** behandeln: ein `critical`-Befund **DARF NICHT [MUST NOT]** für sich allein einen Sprint-Review oder ein Release blockieren. Ein Repository **KANN [MAY]** über ein `Lektorat`-lokales Flag in das Blockieren bei `critical` opt-in gehen — analog dazu, wie `docs-freshness` Befunde surfaced, ohne Releases zu blockieren. Die portfolio-weite Promotion von `critical` von beratend zu blockierend ist ein nachverfolgter Follow-up, gated auf das erste Quartal akkumulierter Audit-Daten, und ist noch nicht in Kraft
 
 ### Operationen
 
@@ -251,6 +253,7 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
 - **MUSS [MUST]** `id` über Läufe hinweg stabil halten für denselben Befund auf derselben Datei/Zeile/Dimension, sodass eine Verwerfung per `id` aufgezeichnet werden kann
 - **MUSS [MUST]** zusätzlich eine **menschenlesbare** Markdown-Zusammenfassung (severity-sortiert) für den Operator-Review emittieren; JSON ist für Maschinen, Markdown ist für Menschen
 - **SOLLTE [SHOULD]** beide Ausgaben unter `.audits/lektorat/<YYYY-MM-DD-HHMM>/` schreiben, sodass ein Repository einen prüfbaren Audit-Verlauf akkumuliert (spiegelt `spec/project/spec-drift-audit/` und ähnliche geschichtete Audits)
+- Das `.audits/lektorat/`-JSON ist der **Vertrag**; das Rendern von Befunden als **Pull-Request-Zeilenkommentare** (oder CI-Annotationen) ist für diese Spec ausdrücklich **außerhalb des Scopes** und eine nachgelagerte CI-/Rendering-Entscheidung über jenem JSON — konsistent damit, wie die übrigen Audit-Specs des Portfolios ihren On-Disk-Audit-Verlauf als das Liefergut behandeln
 
 #### Edit-Diff (für `patch` und `revise`)
 
@@ -314,12 +317,8 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 
 ## Offene Fragen
 
-- Sollen Befunde der Severity `critical` als **blockierendes Gate** in `sprint-review` und `release-publish-trigger` wirken, oder beratend bleiben? Default vorerst: **beratend**, mit Opt-in pro Repository über ein `Lektorat`-lokales Flag — analog dazu, wie `docs-freshness` Befunde aktuell surfaced ohne Releases zu blockieren. Promotion zu blockierend nach dem ersten Quartal Audit-Daten.
-- ~~Auf welche konkrete **deutsche Pipeline** soll das Portfolio sich für D3 (deutsche Rechtschreibung/Grammatik) einigen?~~ **Aufgelöst**: der Portfolio-Default ist die **LanguageTool HTTP API** — Public-Endpoint `https://api.languagetool.org/v2` für Open-Source-Repositories, oder eine selbst gehostete Bereitstellung derselben Engine für Repositories mit Sensitivitäts-, Durchsatz- oder Air-Gap-Anforderungen. Der HTTP-API-Vertrag ist in beiden Formen identisch; der lauf-spezifische Pin in `pipeline_metadata` (siehe §Outputs) hält fest, welcher Endpoint tatsächlich verwendet wurde, sodass ein Lauf reproduzierbar bleibt. Repositories **KÖNNEN [MAY]** den Default überschreiben, indem sie ein alternatives Werkzeug in ihrer `Lektorat`-lokalen Konfiguration pinnen; der lastentragende Vertrag ist die JSON-Ausgabe-Form, nicht die Werkzeug-Identität. **Hinweis**: der Public-Endpoint hat bekannte Rate-Limits (kleine Per-Request-Payload, ~20 Anfragen/Minute für anonymen Zugriff) und sendet Prosa an einen Drittanbieter-Server; beides sind Implementierungs-Belange der konsumierenden Skill (`lektorat-apply`), nicht Spec-Belange.
 - Soll `Lektorat` seinen Scope auf **API-Referenz-Text aus Quellcode** (typedoc, sphinx, godoc-Output) ausweiten? Default vorerst: **nein**, generierte Referenz ist eine Code-Tooling-Sache und ein eigenes Spec-Topic; erneut bewerten, sobald ein Portfolio-Repo eine Referenz-Site liefert, deren Audience über Entwickler hinausgeht.
-- Soll `Lektorat` eine **eigene Lesbarkeits-Metrik-Bibliothek** mitbringen oder pro Sprache einen externen Dienst konsumieren (textstat für EN, readability-de für DE)? Default vorerst: gepflegte Bibliotheken konsumieren, um klassische Formeln nicht neu zu implementieren; die Spec schränkt nur die **Metrik-Namen** und **Korridore** ein, nicht die Implementierung.
 - Soll der `lektorat-scanner`-Agent **parallel pro Datei** dispatchbar sein (ein Agent-Run pro Artefakt, Ergebnisse durch die Skill zusammengeführt) oder **gebatcht** (ein Agent-Run für das ganze Repository)? Default vorerst: offen — die erste Implementierung soll messen; die JSON-Ausgabe ist beidseitig dieselbe.
-- Soll `Lektorat` **Diff-Annotationen auf Pull-Requests** produzieren (z.B. als PR-Zeilenkommentare) zusätzlich zum `.audits/lektorat/`-Audit-Verlauf? Default vorerst: **nein**, der Audit-Verlauf ist der Vertrag; PR-Zeilenkommentare sind eine nachgelagerte Rendering-Entscheidung, die nicht in diese Spec gehört.
 
 ## Quellen
 

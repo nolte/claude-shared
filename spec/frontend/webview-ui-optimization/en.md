@@ -44,7 +44,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 #### React 19 rendering
 
-- **MUST** enable the React Compiler (`babel-plugin-react-compiler` 1.x) in the Vite pipeline and wire `eslint-plugin-react-compiler`; manual `useMemo` / `useCallback` / `React.memo` **MUST** be treated as escape hatches only.
+- **MUST** enable the React Compiler (`babel-plugin-react-compiler` 1.x) in the Vite pipeline and wire `eslint-plugin-react-compiler` (ratified portfolio-wide 2026-05-29; the compiler is stable, the reference stack pins React 19 + Vite 8, and `eslint-plugin-react-compiler` is the enforced guardrail, so the MUST stays a MUST); manual `useMemo` / `useCallback` / `React.memo` **MUST** be treated as escape hatches only.
 - **MUST** wrap state updates that drive expensive renders (filter changes, tab switches, chart inputs) in `startTransition`; pair the resulting `isPending` with a non-blocking indicator, never with a full-page skeleton.
 - **SHOULD** apply `useDeferredValue` to props feeding `memo()`-wrapped slow children when the source setter can't be moved inside a transition.
 - **MUST** code-split routes via React Router v7 lazy route modules and pair every async data boundary with `<Suspense>` + an `<ErrorBoundary>` exposing a Retry action.
@@ -95,7 +95,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
   - `Cross-Origin-Resource-Policy: same-origin` on app-owned assets.
   - `Permissions-Policy` denying every powerful feature the SPA doesn't actively use (camera, microphone, geolocation, payment, USB, serial, bluetooth, accelerometer, gyroscope, magnetometer, MIDI, and similar) and opting in to `'self'` only for features genuinely needed.
   - `X-Frame-Options: DENY` as a belt-and-braces fallback to `frame-ancestors 'none'`.
-- **SHOULD** add `Cross-Origin-Embedder-Policy: require-corp` only when the SPA needs cross-origin isolation (SharedArrayBuffer, high-resolution timers); COEP is opt-in because it breaks naïvely embedded resources.
+- **SHOULD** add `Cross-Origin-Embedder-Policy: require-corp` only when the SPA needs cross-origin isolation (SharedArrayBuffer, high-resolution timers); COEP is opt-in because it breaks naïvely embedded resources. Once cross-origin isolation is actually required, COEP `require-corp` (paired with `Cross-Origin-Opener-Policy: same-origin`) becomes a **MUST** for that surface.
 
 #### React rendering safety
 
@@ -118,7 +118,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 #### Supply chain and verification
 
-- **MUST** commit `package-lock.json` (or `pnpm-lock.yaml`) and install with `npm ci` / `pnpm install --frozen-lockfile` in CI; **MUST** gate releases on zero known high/critical CVEs in production dependencies via `npm audit --omit=dev` (or equivalent).
+- Supply-chain hygiene—lockfile commit, frozen-lockfile install in CI, CVE severity classification, and release-blocking thresholds—is governed by `spec/project/dependency-audit/`; this spec defers to that owner and adds only the frontend-specific SRI, HTTP-Observatory, and source-map rules below rather than restating lockfile or audit thresholds.
 - **MUST** verify the deployed header set against Mozilla HTTP Observatory after each production deploy; treat any drop in grade as a release blocker.
 - **MUST** apply Subresource Integrity (`integrity` + `crossorigin="anonymous"`) to every `<script>` and `<link rel="stylesheet">` from a foreign origin; the default posture is to self-host via Vite so SRI is moot.
 
@@ -196,7 +196,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 - **MUST** configure `i18next-browser-languagedetector` with explicit `order` (`['querystring', 'cookie', 'localStorage', 'navigator', 'htmlTag']`) and explicit `caches` (`['cookie', 'localStorage']`); deterministic cookie name (`i18next`) and storage key (`i18nextLng`).
 - **MUST** make a persisted user choice always beat automatic detection: `i18n.changeLanguage(lng)` writes through to the caches the detector reads.
 - **MUST** declare `supportedLngs` (canonical first) and `fallbackLng` explicitly in `i18n.init`; resource-path injection via the querystring slot is mitigated only by this allow-list.
-- **MUST** encode the locale in the URL via a React Router v7 dynamic segment (`/:locale/*`) or a `prefix(...)` route; the router is the single source of truth for the active locale and **MUST** sync i18next on every navigation.
+- **MUST** encode the locale in the URL via a React Router v7 dynamic segment (`/:locale/*`) or a `prefix(...)` route; the router is the single source of truth for the active locale and **MUST** sync i18next on every navigation. The canonical locale **MAY** be served prefix-less at the `x-default` root while every non-canonical locale carries its prefix; cookies stay a detection input only and **MUST NOT** be the sole locale source.
 - **MUST** emit `Content-Language: <locale>` from nginx on every localised response; **SHOULD** honour an existing `i18next` cookie ahead of `Accept-Language`-based root redirects.
 - **MUST** emit static `<link rel="alternate" hreflang="…" href="…">` tags (one per locale, plus `x-default`) in the initial `index.html` server-side or at build time, bidirectional. React-runtime injection of `hreflang` is forbidden.
 
@@ -252,7 +252,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 - **MUST** mount React Router v7 `<ScrollRestoration/>` once at the layout root.
 - **MUST** show a global pending indicator (subtle top-of-layout progress bar) driven by `useNavigation().state` only after a ≥ 200 ms delay so fast navigations don't flash.
 - **MUST NOT** trap the browser Back button: modal close binds ESC and an explicit close button; route guards redirect via `<Navigate replace />` so the guarded URL isn't in the back stack twice.
-- **SHOULD** use `<NavLink prefetch="intent">` for navigation links inside the main shell when running in framework mode; **MUST NOT** use `prefetch="render"` or `prefetch="viewport"` on large lists.
+- **SHOULD** use `<NavLink prefetch="intent">` for navigation links inside the main shell when running in framework mode; **MUST NOT** use `prefetch="render"` or `prefetch="viewport"` on large lists. Every framework-mode-only rule **MUST** carry the `when running in framework mode` qualifier; the reference stack ships a CSR SPA, so a routing-specific sibling spec is deferred until a portfolio repo adopts React Router framework mode at scale.
 
 #### Forms
 
@@ -307,12 +307,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 ## Open Questions
 
-- Should the spec mandate the React Compiler today (it's stable but ESLint rule maturity varies), or stay at SHOULD pending a portfolio-wide rollout decision?
-- Should `Cross-Origin-Embedder-Policy: require-corp` move to MUST once cross-origin isolation is wanted for high-resolution timers / `SharedArrayBuffer`, or remain explicitly opt-in given third-party CORP friction?
-- Should the i18n locale-prefix rule be tightened from MUST to MUST-NOT-USE-COOKIE-ONLY, given that some operator setups deliberately keep canonical-language URLs locale-less?
-- Should the spec name a single project-wide spinner-show delay (for example 250 ms) or keep the 200–300 ms range so individual repositories pick within it consistently?
-- Where exactly does this spec end and `spec/project/dependency-audit/` begin for supply-chain hygiene—the lockfile and `npm audit` rules currently appear in both; should one cross-reference the other?
-- Should React Router v7 framework-mode rules (`<NavLink prefetch="intent">`, route-module file convention) sit in this spec or in a sibling routing-specific spec, given that SPA-mode and framework-mode diverge meaningfully?
+_None at this time._
 
 ## Sources
 

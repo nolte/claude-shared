@@ -43,6 +43,7 @@ This section is a **local `nolte-shared` convention** derived from the distribut
 - **MUST NOT** split a plugin merely because its members address different topics or lifecycle phases; a topic-only split fragments a single end-to-end user workflow across multiple installs and forces a consumer to discover, install, and version-track N plugins to obtain one coherent flow
 - **MUST** name the concrete distribution-contract difference in the splitting PR's description; a split whose rationale reduces to "these are different topics" or "the plugin is getting large" doesn't satisfy this spec
 - **SHOULD** prefer one plugin per distribution contract even when that plugin spans many lifecycle phases; the catalog's `phase` classification ([R5](#references)), not the plugin boundary, is the axis that organizes a plugin by lifecycle
+- **SHOULD** record each plugin's single distribution contract in its `project/portfolio.yml` capability rationale (per `portfolio-management`), so the rendered portfolio inventory surfaces every plugin's distribution contract and makes split decisions portfolio-auditable rather than visible only per-PR; the `skill-agent-catalog` consumer mode catalogs artifacts for discovery and **isn't** where distribution contracts are recorded
 
 ### Scannability is an intra-plugin concern
 This section is a **local `nolte-shared` convention**.
@@ -57,6 +58,7 @@ This section is a **local `nolte-shared` convention**.
 - **MUST** therefore operationalize "scoping discipline" as **description-quality and overlap-elimination discipline** (governed by `skill-management`, `agent-management`, and `skill-vs-agent`), never as a target number of plugins or artifacts
 - **SHOULD**, when routing reliability visibly degrades as the plugin grows, first sharpen the `description` fields (third-person, what + when) and remove capability overlap; consider a distribution-contract split only if one genuinely exists
 - **SHOULD** prefer explicit invocation over relying on automatic delegation for agents whose routing is ambiguous, because automatic delegation degrades as the number of similar agents grows ([R3](#references))
+- **SHOULD** avoid adopting a soft, self-imposed artifact ceiling as a review trigger; `nolte-shared` attaches no number to its scoping discipline and relies purely on observed routing-quality and overlap signals. The periodic `skills-agents-sweep` ([R5](#references)) is the review trigger, driven by routing-quality and overlap signals rather than by a count, and never read as a split criterion
 
 ### Namespace and naming coherence
 - **MUST** choose a plugin `name` that's a stable, collision-resistant **namespace**: plugin skills are always namespaced as `/<plugin-name>:<skill-name>`, and the `plugin.json` `name` field *is* the skill namespace ([R1](#references))
@@ -82,7 +84,5 @@ This section is a **local `nolte-shared` convention**.
 - [R5] `skill-vs-agent`, `skill-management`, `agent-management`, `skill-agent-catalog` (this plugin): the artifact-type, on-disk-shape, and catalog specs this spec sits above
 
 ## Open Questions
-- Anthropic documents no upper bound or thematic-cohesion criterion for a single plugin. Should `nolte-shared` adopt a *soft*, self-imposed artifact ceiling as a review trigger (prompting a duplicate-prevention and routing-quality sweep), or rely purely on observed routing-quality signals with no number attached?
 - An open Claude Code bug (`anthropics/claude-code#14882`, filed 2025-12-20, unconfirmed) reports full `SKILL.md` bodies preloaded at startup, contradicting the documented metadata-only preload ([R4](#references)). Until it's resolved, should the portfolio enforce skill-count discipline defensively even though the documented design imposes no count penalty?
 - Is `nolte-shared`'s "one shared-workflow plugin" the permanent shape, or will a stability split (a stable surface versus an experimental surface) eventually surface a genuine distribution-contract difference that warrants a second plugin?
-- Should the consumer-mode catalog (multiple plugin source roots in `skill-agent-catalog`) feed a future portfolio-level plugin map that records each plugin's distribution contract, so split decisions are auditable across the whole portfolio rather than per-PR?

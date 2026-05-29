@@ -23,8 +23,10 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 ### Zusammensetzung
 - **MUSS** drei Kategorien einschließen, wenn das Repository relevanten Code für jede hat: Lint, Typprüfung, Tests; Kategorien ohne relevanten Code (zum Beispiel Typprüfung in einem reinen Shell-Repo) sind nicht erforderlich
 - **MUSS** jede Kategorie ausführen, die das Repository tatsächlich besitzt; partielle Gates, die eine Kategorie still weglassen, **DÜRFEN NICHT** `pass` berichten
-- **SOLLTE** das Gate aus bestehenden Taskfile-Targets komponieren (`task lint`, `task test`, `task typecheck` oder ein einziges `task check`, das alle drei umschließt); ein neues Top-Level-Target, das die Arbeit dupliziert, ist redundant
-- **DARF** das Gate um weitere Kategorien erweitern, wenn die Natur des Repositorys es rechtfertigt (Schema-Validation für ein Daten-Projekt, Helm-Lint für ein Infrastruktur-Projekt); Erweiterungen **MÜSSEN** im Taskfile explizit deklariert und in der Ausgabe des Gates sichtbar sein
+- **MUSS** das aggregierte Gate als `task check` bereitstellen; die Pro-Kategorie-Targets (`task lint`, `task test`, `task typecheck`) und die Pro-Unterordner-Targets komponieren hinein. Ein einziger erkennbarer Name über das Portfolio hinweg ist das, was den dokumentierten Aufruf überall identisch macht (§Ziele)
+- **SOLLTE** das Gate aus diesen bestehenden Taskfile-Targets komponieren, statt deren Arbeit zu duplizieren; ein neues Top-Level-Target, das Lint / Typprüfung / Tests neu implementiert, ist redundant
+- **DARF** das Gate um weitere Kategorien erweitern, wenn die Natur des Repositorys es rechtfertigt (Schema-Validation für ein Daten-Projekt, Helm-Lint für ein Infrastruktur-Projekt); Erweiterungen **MÜSSEN** im Taskfile explizit deklariert und in der Ausgabe des Gates sichtbar sein. Wenn die Schema-Validation-Kategorie JSON-Schema-Meta-Validation ausführt (gemäß `spec/project/yaml-json-schema/`), **MUSS** sie ein Schema ablehnen, das via `allOf` komponiert und sich zum Schließen seiner Form allein auf `additionalProperties: false` verlässt, weil `additionalProperties: false` unter `allOf` unzuverlässig ist; die Garantie der geschlossenen Form erfordert `unevaluatedProperties: false`
+- Coverage-Schwellenprüfung ist **KEINE** erforderliche Gate-Kategorie; sie bleibt ein CI-seitiges Anliegen, damit der lokale und der CI-Lauf die „identisch ausführen"-Invariante (§Invocation-Vertrag) erfüllen, ohne auf jedem lokalen Lauf Coverage-Instrumentierung zu erzwingen. Ein Repository **DARF** sie als zusätzliche Kategorie (gemäß der DARF-Erweitern-Regel) in einer eigenen Zeile berichten; wenn es das tut, **MUSS** dasselbe Target lokal und in CI identisch laufen
 
 ### Invocation-Vertrag
 - **MUSS** das Gate identisch vom lokalen Arbeitsplatz und aus CI ausführen — keine Umgebungs-Verzweigung, die eins strenger macht als das andere
@@ -49,6 +51,7 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 ### Auslöser
 - **MUSS** an drei verschiedenen Punkten ausführbar sein, auch wenn der Aufruf gleich aussieht: (a) ein lokaler Pre-Commit- / Pre-PR-Schritt einer beitragenden Person, (b) CI bei jedem Push auf einen PR-Branch, (c) Release-Gating vor einem Tag
 - **SOLLTE** aus einem Pre-Commit-Hook aufrufbar sein, wenn das Repository pre-commit nutzt; Repositories, die pre-commit nicht nutzen, verlassen sich auf den expliziten Aufruf der beitragenden Person
+- **DARF** einen `fast`-Scope (Lint + Typprüfung, Tests übersprungen) für den Pre-Commit-Einsatz bereitstellen; ein `fast`-Lauf **MUSS** die Tests-Zeile als `skipped` berichten (gemäß §Ausgabeform) und das Gesamturteil **MUSS** den übersprungenen Teil vermerken. Ob pre-commit das volle oder das `fast`-Gate aufruft, bleibt eine Entscheidung des Repositorys
 - **DARF NICHT** das Gate selbst hinter einen CI-only-Runner binden (zum Beispiel einen Self-Hosted-GPU-Runner, der für die Tests nötig wäre); wenn eine Suite tatsächlich nicht lokal laufen kann, wird sie aus dem Gate herausgetrennt und der Split im README des Repositorys dokumentiert
 
 ### Abgrenzung
@@ -59,10 +62,10 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 ### Monorepo- und Unterordner-Verhalten
 - **MUSS** jede Kategorie auf die Unterordner skopieren, die das relevante Manifest tatsächlich besitzen (zum Beispiel `ruff` nur in `backend/`, `eslint` nur in `frontend/`), wenn das Repository ein Monorepo ist; eine monolithische Invocation, die den gesamten Baum durchläuft, würde unbeteiligten Code aufgreifen
 - **SOLLTE** pro Unterordner Taskfile-Targets bereitstellen (`task lint:backend`, `task test:frontend`) neben den aggregierten Targets, damit Beitragende schnell skopieren können
-- **MUSS** Unterordner-Ergebnisse unter der zugehörigen Kategoriezeile in der Ausgabetabelle aggregieren, statt die Tabelle in eine Zeile pro Unterordner zu explodieren; das Unterordner-Detail gehört in die Spalte `Details`
+- **MUSS** Unterordner-Ergebnisse unter der zugehörigen Kategoriezeile in der Ausgabetabelle aggregieren, statt die Tabelle in eine Zeile pro Unterordner zu explodieren; das Unterordner-Detail gehört in die Spalte `Details`. Dies gilt auch, wenn Unterordner divergierende Sprach-Stacks nutzen — die Lesbarkeit wird durch die Spalte `Details` bedient, nicht durch Zeilen-Explosion
 
 ## Akzeptanzkriterien
-- [ ] Jedes Repository mit Lint- / Typprüfungs- / Testcode hat ein Taskfile-Target (`task check` oder eine Kombination aus `task lint`, `task test`, `task typecheck`), das das vollständige Gate ausführt
+- [ ] Jedes Repository mit Lint- / Typprüfungs- / Testcode stellt das aggregierte Gate als `task check` bereit, komponiert aus `task lint`, `task test` und `task typecheck`
 - [ ] Der dokumentierte Aufruf des Gates ist zwischen dem README des Repositorys und seinem CI-Workflow identisch
 - [ ] Die Ausgabetabelle des Gates nutzt den Spaltenvertrag `Check` / `Status` / `Runner` / `Details` über jeden Invocation-Pfad hinweg
 - [ ] Kein Repository berichtet das Gate als `pass`, während es eine Kategorie, für die es relevanten Code besitzt, still überspringt
@@ -72,7 +75,4 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 - [ ] Der Skill `skills/quality-gate/` ruft zuerst die Taskfile-Targets des Repositorys auf und fällt nur dann auf native Werkzeug-Erkennung zurück, wenn kein passendes Target existiert
 
 ## Offene Fragen
-- Soll die Spec einen einzigen Top-Level-Target-Namen (`task check`) portfolioweit vorschreiben, oder ist die Pro-Repository-Wahl zwischen `task check`, `task gate` und Äquivalenten akzeptabel?
-- Braucht das Gate einen dokumentierten `--fast`-Modus (Lint + Typprüfung, Tests überspringen) für den Einsatz in Pre-Commit-Hooks, in denen die volle Testsuite prohibitiv wäre, oder bleibt der Pre-Commit-Scope eine Entscheidung des Repositorys?
-- Sollen Coverage-Schwellen innerhalb des Gates leben (eine fehlschlagende Schwelle ist eine `fail`-Zeile) oder außerhalb (Schwellen-Checks sind ein separater Schritt in CI), gegeben dass lokale Testläufe selten Coverage berechnen?
-- Wenn ein Monorepo divergierende Sprach-Stacks pro Unterordner hat, soll die Ausgabe des Gates eine Zeile pro Kategorie-und-Unterordner für die Lesbarkeit zeigen, oder bleibt das aktuelle „eine Zeile pro Kategorie mit Unterordner-Detail in `Details`"?
+_Derzeit keine._

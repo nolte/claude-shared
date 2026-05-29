@@ -16,6 +16,7 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - Vorgabe konkreter Skill-Inhalte jenseits struktureller Regeln
 - Die konkrete Marketplace- / Plugin-Installations-UX von Claude Code (wird von Claude Code selbst verantwortet, nicht von diesem Repository)
 - Plugin-Level-Schnittführung — wann eine Capability in dieses Plugin gegenüber einem separaten gehört und wie das Plugin überschaubar bleibt, während seine Skill-Anzahl wächst (abgedeckt durch `plugin-scoping`)
+- Die Skill-vs-Agent-Format-Entscheidung — ob eine gegebene Capability ein Skill oder ein Agent sein soll (abgedeckt durch `skill-vs-agent`)
 
 ## Anforderungen
 
@@ -73,9 +74,10 @@ Starter-Vokabular:
 - **DARF NICHT [MUST NOT]** durch Kopieren in das `.claude/skills/<name>/`-Verzeichnis eines konsumierenden Projekts, durch Symlink, durch Vendoring oder auf irgendeinem anderen Out-of-Band-Pfad verteilt werden; solche Kopien driften gegenüber der Quelle und untergraben den Sinn eines geteilten Plugins
 - **DARF NICHT [MUST NOT]** die Plugin-Version in `.claude-plugin/plugin.json` oder im zugehörigen Marketplace-Eintrag manuell als Teil eines PRs erhöhen, der einen Skill hinzufügt, umbenennt, entfernt oder seinen Vertrag wesentlich ändert; die Version wird vom veröffentlichten GitHub-Release-Tag abgeleitet und ausschließlich durch den Release-Workflow auf dem Default-Branch aktualisiert — siehe `release-automation` §Abgleich versionstragender Dateien für den Mechanismus (einschließlich des Fallback Paths, bei dem ein Maintainer einen dedizierten `chore(release): <tag>`-PR eröffnet)
 - **DARF [MAY]** in einem konsumierenden Projekt neben projektlokalen Skills unter dessen eigenem `.claude/skills/` koexistieren; solche projektlokalen Skills liegen außerhalb des Scopes dieser Spec und **DÜRFEN NICHT [MUST NOT]** einen Namen wiederverwenden, der bereits im `nolte-shared`-Plugin belegt ist
+- **DARF NICHT [MUST NOT]** ein Per-Skill-Feld für `version` oder Kompatibilitäts-Metadaten mitführen; Versionierung ist plugin-scoped (die einzige `nolte-shared`-Manifest-Version, abgeleitet vom Release-Tag gemäß `release-automation` §Abgleich versionstragender Dateien), die Per-Skill-Änderungsgeschichte ist die Git-History, und Kompatibilität ist eine Plugin-Level-Angelegenheit
 
 ### Laufzeit-Auffindbarkeit (konsumierendes Projekt)
-- **MUSS [MUST]** von Claude Code aus dem Plugin-Skills-Pfad geladen werden, sobald das Plugin installiert ist; der Skill erscheint dem Nutzer als `nolte-shared:<name>`
+- **MUSS [MUST]** von Claude Code aus dem Plugin-Skills-Pfad geladen werden, sobald das Plugin installiert ist; der Skill erscheint dem Nutzer als `nolte-shared:<name>`. Der nutzerseitige Slash-Command wird direkt aus `name` abgeleitet (`/nolte-shared:<name>`); es gibt keinen separaten Command-Identifier, sodass Ordnername, Frontmatter-`name` und Slash-Command zwangsläufig identisch sind
 - **DARF NICHT [MUST NOT]** irgendeinen spezifischen absoluten oder projekt-relativen Laufzeit-Pfad voraussetzen; alle internen Pfade bleiben relativ zum Skill-Ordner und funktionieren überall dort, wo Claude Code das Plugin entpackt oder einbindet
 
 ### Empfehlungen
@@ -117,7 +119,7 @@ Skills mit mehreren benannten Operationen verwenden einen `## Operations`-Block.
 
 Skills werden von Claude in drei Stufen geladen — Metadaten beim Start (~100 Tokens pro Skill), voller `SKILL.md`-Body bei Trigger, unterstützende Dateien nur bei explizitem Lesen ([R5](#referenzen), [R1](#referenzen)). Die On-Disk-Form **MUSS** dieses Lade-Modell unterstützen. Da nur die ~100-Token-Metadaten vorab geladen werden, kann ein Plugin viele Skills ohne Per-Skill-Kontext-Strafe über diese Metadaten hinaus ausliefern ([R5](#referenzen)); die thematische Breite eines Plugins ist daher keine Kontext-Kosten, weshalb der Plugin-Scope nach Distribution statt nach Anzahl geregelt wird (siehe `plugin-scoping`). Vorbehalt: ein offener Claude-Code-Bug (anthropics/claude-code#14882, eingereicht 2025-12-20, unbestätigt) berichtet, dass vollständige `SKILL.md`-Bodies beim Start vorgeladen werden, was dem dokumentierten reinen Metadaten-Design widerspricht; bis zur Behebung ist aggressives Skill-Anzahl-Wachstum mit einer gewissen Vorsicht zu behandeln.
 
-- **MUSS [MUST]** Datei-Referenzen innerhalb von `SKILL.md` **maximal eine Ebene tief** halten: `SKILL.md` → `references/foo.md` ist ok; `SKILL.md` → `references/foo.md` → `references/bar.md` ist verboten, weil Claude bei verschachtelten Referenzen partielle Reads (`head -100`) nutzt und dadurch Inhalte verpasst ([R2](#referenzen))
+- **MUSS [MUST]** Datei-Referenzen innerhalb von `SKILL.md` **maximal eine Ebene tief** halten: `SKILL.md` → `references/foo.md` ist ok; `SKILL.md` → `references/foo.md` → `references/bar.md` ist verboten, weil Claude bei verschachtelten Referenzen partielle Reads (`head -100`) nutzt und dadurch Inhalte verpasst ([R2](#referenzen)). Physische Unterordner-Verschachtelung unter `references/` usw. ist selbst nicht gedeckelt, aber weil jedes Asset direkt aus `SKILL.md` lade-getriggert werden **MUSS** und Referenzketten maximal einen Hop tief bleiben **MÜSSEN**, sind tief verschachtelte Hilfsbäume praktisch unerreichbar und **SOLLTEN** vermieden werden
 - **MUSS [MUST]** ein **Inhaltsverzeichnis** an den Anfang jeder Referenzdatei setzen, die länger als 100 Zeilen ist, damit Partial-Read-Vorschauen den vollen Umfang der Datei sichtbar machen ([R2](#referenzen))
 - **MUSS [MUST]**, jedes Mal wenn `SKILL.md` eine Hilfsdatei referenziert, **was die Datei enthält** und **wann sie zu laden ist** benennen (z. B. „Read `references/api-errors.md` if the API returns a non-200 status code"); ein generisches „see `references/` for details" konterkariert Progressive Disclosure, weil Claude kein Signal für *wann* Laden hat ([R2](#referenzen), [R4](#referenzen))
 - **MUSS [MUST]** eine explizite Lade-Trigger-Formulierung in `SKILL.md` für jedes Asset unter `references/`, `templates/`, `assets/`, `scripts/` oder `examples/` tragen. Muster: `„Read <relativer-Pfad> when <Trigger-Bedingung>"` oder `„See <relativer-Pfad> for <spezifisches-Anliegen>"` (mit explizitem „when"- oder „for"-Clausel). Implizite Referenzen ohne Lade-Trigger sind nicht konform, da Claude das Asset unter Progressive Disclosure nicht einblendet.
@@ -187,7 +189,4 @@ Die in diesem Plugin ausgelieferten Skills laufen in Claude Code; das Verständn
 - [R6] anthropics/skills (kanonisches Anthropic-Skill-Repository) — <https://github.com/anthropics/skills>
 
 ## Offene Fragen
-- Soll der Ordnername verpflichtend einem etwaigen nutzerseitigen Slash-Command-Namen entsprechen, oder dürfen sie abweichen?
-- Brauchen Skills Versions- oder Kompatibilitäts-Metadaten, während sie sich weiterentwickeln?
-- Wo verläuft die Grenze zwischen einem Skill und einem Agent? Wann soll eine Fähigkeit das eine sein, wann das andere?
-- Gibt es eine maximale Verschachtelungstiefe für unterstützende Unterordner, oder bleibt das lose?
+_Derzeit keine._

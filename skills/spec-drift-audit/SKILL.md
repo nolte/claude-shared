@@ -30,7 +30,7 @@ Operationalises `spec/project/spec-drift-audit/<canonical_language>.md` — reco
 ## Why this is a skill, not an agent
 
 - **Mid-flow interactivity** — the user decides per finding: adjust the implementation, adjust the spec, or flag as an Open Question. An agent's fire-and-forget contract loses that deliberation loop.
-- **Persistent on-disk output** — the audit artifact under `docs/audits/YYYY-Q<n>.md` (or a GitHub issue) must survive past the current turn and be worked off incrementally; skills own persistent artifacts, agents return ephemeral reports.
+- **Persistent on-disk output** — the audit artifact under `.audits/spec-drift/YYYY-Q<n>.md` (or a GitHub issue) must survive past the current turn and be worked off incrementally; skills own persistent artifacts, agents return ephemeral reports.
 - **Orchestration role** — the audit dispatches `project-structure-apply` and `vocab-drift-audit` as partial auditors in the same session; the skill-orchestrates-agent-executes pattern defaults the orchestrator to skill form.
 - Counter-dimension considered: *context-window load* from reading all specs plus their implementation surfaces could bias toward an agent, but the audit is inherently interactive and scoped per cycle — the user controls which specs are in scope and confirms each finding disposition. Inline execution in the skill form wins.
 
@@ -51,7 +51,7 @@ Before any operation, verify:
 
 1. `spec/.spec-config.yml` is present — read it to determine `canonical_language` (fall back to `en`).
 2. `spec/project/spec-drift-audit/<canonical_language>.md` is present — this is the governing spec; stop if missing.
-3. `docs/audits/` exists or can be created (check `git ls-files docs/audits/.gitkeep`); create `docs/audits/.gitkeep` if the folder is absent.
+3. `.audits/spec-drift/` exists or can be created (check `git ls-files .audits/spec-drift/.gitkeep`); create `.audits/spec-drift/.gitkeep` if the folder is absent.
 
 ## Operations
 
@@ -69,7 +69,7 @@ Interactive. Confirm scope and trigger with the user before proceeding.
    Record each tool's name and version (or git SHA) in the artifact's `tools-used` list.
 5. **Per-criterion check.** For each remaining spec criterion not covered by a dispatched tool, evaluate against the implementation: produce one of `pass`, `fail`, `blocked` (tooling missing), or `not-applicable` (with reason). Record the result.
 6. **Draft the artifact.** Read `templates/audit.template.md` for the Markdown template. Fill every frontmatter field. List all findings with `fail` or `blocked` status in `## Findings`. Leave `## Decisions` empty at creation.
-7. **Write the artifact** to `docs/audits/<YYYY>-Q<n>.md` (or `docs/audits/<YYYY>-Q<n>-<topic>.md` for thematic audits). Confirm the path with the user.
+7. **Write the artifact** to `.audits/spec-drift/<YYYY>-Q<n>.md` (or `.audits/spec-drift/<YYYY>-Q<n>-<topic>.md` for thematic audits). Confirm the path with the user.
 8. **Offer to stage and commit.** Show the artifact path. Do not commit without explicit user confirmation.
 
 Read `examples/01-quarterly-audit.md` when running a full-scope quarterly audit to see a realistic walkthrough.
@@ -79,7 +79,7 @@ Read `examples/02-spec-change-trigger.md` when running a thematic partial audit 
 
 When the user reports decisions for one or more findings:
 
-1. **Read** the current audit artifact from `docs/audits/`.
+1. **Read** the current audit artifact from `.audits/spec-drift/`.
 2. **Verify** each claimed closure: re-read the relevant spec criterion and the referenced implementation file. Do not accept "done" without spot-checking.
 3. **Record the decision** per finding: `adjust-impl`, `adjust-spec`, or `open-question`. Update the `## Decisions` section.
 4. **Append one log line** to `## Processing log` per decision: `YYYY-MM-DD — <finding-id> — <decision> — verified: <method>`.
@@ -107,7 +107,7 @@ Read `examples/03-finding-resolution.md` when working off findings via update an
 - **`spec/.spec-config.yml` must be read first.** The canonical language for spec paths depends on `canonical_language` in that config. Defaulting to `en` without reading the config silently routes to the wrong language in repos with a different canonical.
 - **`Status: draft` specs are in scope.** The governing spec explicitly includes draft specs in the audit perimeter. Do not skip them.
 - **Partial auditors only cover their slice.** `project-structure-apply` and `vocab-drift-audit` are delegated tools but each covers only one surface. Remaining spec criteria need direct per-criterion evaluation — never assume "dispatched means done".
-- **Artifact location is repository-consistent.** If `docs/audits/` already contains prior artifacts, match the existing naming convention rather than inventing a new one. Check for prior artifacts before writing.
+- **Artifact location is repository-consistent.** If `.audits/spec-drift/` already contains prior artifacts, match the existing naming convention rather than inventing a new one. Check for prior artifacts before writing.
 - **Calendar quarter, not rolling.** Q1 = Jan–Mar, Q2 = Apr–Jun, Q3 = Jul–Sep, Q4 = Oct–Dec. A `2026-Q2` audit covers the April–June window regardless of the actual date within the quarter.
 
 ## Resumability

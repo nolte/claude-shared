@@ -55,7 +55,7 @@ Detect the user's language from their message and respond in it. The report itse
 ### Inputs
 
 - **Repo root**: default is the current working directory.
-- **License audit toggle**: opt-in via the caller ("also check licenses," "include license compliance"). Off by default because it's slower and often needs an allowlist the project doesn't yet declare.
+- **License audit toggle**: defaults to **on** whenever a license allowlist is discoverable in the repo (at `.license-allowlist.txt`, `.licenses/allowed.txt`, under `tool.*` in the manifest, or equivalent) — per `spec/project/dependency-audit/`, a discoverable allowlist means license auditing is "enabled" and the pass runs automatically. When no allowlist is discoverable, the toggle is off by default and the caller opts in explicitly ("also check licenses," "include license compliance"). The caller may always opt out of an automatic license pass for an ad-hoc invocation.
 - **Severity floor**: defaults to `low` (report every finding). Caller may narrow to `medium` or `high` to de-noise pre-release gates.
 
 ### Operations
@@ -104,20 +104,22 @@ Run every detected auditor per subroot. Use `--json` / equivalent machine-readab
 
 Record per finding: `package`, `installed_version`, `advisory_id` (GHSA/CVE/PYSEC), `severity` (`critical` / `high` / `medium` / `low` / `unknown`), `path` (direct or transitive), `fixed_in`, `summary_url`.
 
-#### 4. Run a license audit (optional)
+#### 4. Run a license audit (auto-on when an allowlist is discoverable)
 
-Only when the caller asked for it:
-
-- **Python**: `pip-licenses --format=json --with-urls --with-license-file=false` (install hint: `pip install pip-licenses`).
-- **Node**: `npx --yes license-checker --json --production` (or `pnpm licenses list --long --json` for pnpm).
-
-Compare the discovered licenses against the project's allowlist. Locations to check, in order:
+First check for a license allowlist. Locations to check, in order:
 
 1. `.license-allowlist.txt` or `.licenses/allowed.txt` at the repo root.
 2. A `licenses:` array under `tool.pip-audit` or an equivalent config block in `pyproject.toml`.
 3. The project's README if it explicitly lists accepted licenses (uncommon).
 
-If no allowlist exists, flag every non-permissive license (GPL / AGPL / LGPL / SSPL / unknown) as `review`, not as failure. Don't invent a policy.
+Per `spec/project/dependency-audit/`, license auditing counts as "enabled" whenever an allowlist is discoverable. When one is found, **run the license pass automatically** (the caller may still opt out for an ad-hoc invocation). When no allowlist is discoverable, run the license pass only when the caller explicitly asked for it.
+
+When the license pass runs:
+
+- **Python**: `pip-licenses --format=json --with-urls --with-license-file=false` (install hint: `pip install pip-licenses`).
+- **Node**: `npx --yes license-checker --json --production` (or `pnpm licenses list --long --json` for pnpm).
+
+Compare the discovered licenses against the allowlist. If no allowlist exists (and the caller opted in anyway), flag every non-permissive license (GPL / AGPL / LGPL / SSPL / unknown) as `review`, not as failure. Don't invent a policy.
 
 #### 5. Render the report
 
