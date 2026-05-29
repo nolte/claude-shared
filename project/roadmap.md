@@ -45,14 +45,14 @@ id: R-3
 title: Develop branch quality gate hardened
 detail: fine
 outcomes: [O-2, O-3]
-target_sprint: null
+target_sprint: 3
 mvp: false
-status: proposed
+status: done
 ```
 
 The lint/test/docs gate already runs on every `develop`-bound PR (per `.github/workflows/ci.yml` jobs `lint`, `test`, `docs` and `.github/settings.yml` `required_status_checks.contexts`), and `.pre-commit-config.yaml` mirrors the lint category locally. The remaining gap is conformance against `spec/project/quality-gate/` §Acceptance criteria #7 (README names the gate target plus expected output shape) and the documented pre-commit-vs-CI scope, so a new contributor can reproduce the gate on day one without reading the source tree.
 
-- [ ] quality-gate-spec-conformance-gaps-closed
+- [x] quality-gate-spec-conformance-gaps-closed
 
 ### R-8 — Reviewer agent coverage across every skill cluster
 
