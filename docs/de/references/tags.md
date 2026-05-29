@@ -23,6 +23,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [portfolio-inflight-collector](../agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
@@ -62,6 +63,14 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `design`
 
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
+
+## `frontend`
+
+- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
+
+## `i18n`
+
+- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 
 ## `lifecycle`
 
@@ -104,6 +113,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](../agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
 - [quality-gate-enforcer](../agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared

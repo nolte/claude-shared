@@ -38,6 +38,7 @@ Canonical language: `en` · Translations: `de`
 | project | docs-multilingual-authoring | Multilingual Documentation Authoring | Mehrsprachige Dokumentations-Autorenschaft | draft | unversioned |
 | project | feature | Project Feature | Projekt-Feature | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
+| project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | unversioned |
 | project | lektorat | Lektorat | Lektorat | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
