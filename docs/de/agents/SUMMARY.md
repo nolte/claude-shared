@@ -15,10 +15,12 @@ last_updated: generated
 * 3 Design
     * [audience-doc-author](nolte-shared/audience-doc-author.md)
     * [claude-plugin-developer](nolte-shared/claude-plugin-developer.md)
+    * [graphic-prompt-generator](nolte-shared/graphic-prompt-generator.md)
     * [spec-readiness-reviewer](nolte-shared/spec-readiness-reviewer.md)
     * [test-case-extractor](nolte-shared/test-case-extractor.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 5 Review
+    * [code-security-reviewer](nolte-shared/code-security-reviewer.md)
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)
     * [diagram-opportunity-reviewer](nolte-shared/diagram-opportunity-reviewer.md)
     * [lektorat-scanner](nolte-shared/lektorat-scanner.md)
@@ -27,6 +29,7 @@ last_updated: generated
     * [vocab-drift-scanner](nolte-shared/vocab-drift-scanner.md)
 * 6 Quality
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
+    * [i18n-completeness-checker](nolte-shared/i18n-completeness-checker.md)
     * [mermaid-diagram-reviewer](nolte-shared/mermaid-diagram-reviewer.md)
     * [project-structure-reviewer](nolte-shared/project-structure-reviewer.md)
     * [prose-vale-curator](nolte-shared/prose-vale-curator.md)

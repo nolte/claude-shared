@@ -45,6 +45,7 @@ Claude Code (CLI, plugin, and Agent SDK runs) prompts the user for confirmation 
 ### Relationship to `settings.local.json` and `~/.claude/settings.json`
 - **MAY** keep broader patterns in `.claude/settings.local.json` or `~/.claude/settings.json` at the developer's own risk; those files are out of scope for this spec
 - **MUST NOT** copy a broad pattern from `settings.local.json` or `~/.claude/settings.json` into the committed `.claude/settings.json` without re-evaluating it against the selection criteria above—in particular, mutation-capable wildcards such as `Bash(git *)`, `Bash(gh api *)`, or `Bash(gh pr *)` stay out of the committed file
+- **MUST NOT** treat this committed file as the place to enable autonomous or background agents: a non-interactive agent that needs mutation-capable commands (`git commit` / `git push`, `gh pr create`, a task runner) to act inside a worktree is authorized through the session `/permissions` grant or `.claude/settings.local.json` per `spec/project/parallel-working-copies/` §Harness-initiated and agent-initiated worktrees, never by adding those patterns here
 
 ### Governance
 - **MUST** resolve any discrepancy between this spec and `.claude/settings.json` by editing the committed file—not by silently relaxing the spec

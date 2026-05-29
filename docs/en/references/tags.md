@@ -19,10 +19,12 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 ## `audit`
 
+- [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [dependency-audit-scanner](../agents/nolte-shared/dependency-audit-scanner.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [portfolio-inflight-collector](../agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
@@ -59,6 +61,18 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [dependency-audit](../skills/nolte-shared/dependency-audit.md) — nolte-shared
 
+## `design`
+
+- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
+
+## `frontend`
+
+- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
+
+## `i18n`
+
+- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
+
 ## `lifecycle`
 
 - [sprint-execute](../skills/nolte-shared/sprint-execute.md) — nolte-shared
@@ -71,6 +85,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [audience-doc-author](../agents/nolte-shared/audience-doc-author.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
+- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [prose-vale-curator](../agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [blog-author](../skills/nolte-shared/blog-author.md) — nolte-shared
@@ -101,8 +116,10 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [audience-review](../agents/nolte-shared/audience-review.md) — nolte-shared
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
+- [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](../agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
 - [quality-gate-enforcer](../agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
@@ -118,6 +135,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
+- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [cookiecutter-template-manage](../skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
@@ -141,6 +159,10 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [tech-stack-capture](../skills/nolte-shared/tech-stack-capture.md) — nolte-shared
 - [webview-ui-optimize](../skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [yaml-json-schema](../skills/nolte-shared/yaml-json-schema.md) — nolte-shared
+
+## `security`
+
+- [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 
 ## `testing`
 
