@@ -61,7 +61,7 @@ id: R-8
 title: Reviewer agent coverage across every skill cluster
 detail: fine
 outcomes: [O-1, O-2]
-target_sprint: null
+target_sprint: 4
 mvp: false
 status: proposed
 ```
