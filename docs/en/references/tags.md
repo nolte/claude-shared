@@ -75,6 +75,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 ## `lifecycle`
 
+- [blog-author-trigger](../skills/nolte-shared/blog-author-trigger.md) — nolte-shared
 - [sprint-execute](../skills/nolte-shared/sprint-execute.md) — nolte-shared
 
 ## `planning`
@@ -89,6 +90,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [prose-vale-curator](../agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [blog-author](../skills/nolte-shared/blog-author.md) — nolte-shared
+- [blog-author-trigger](../skills/nolte-shared/blog-author-trigger.md) — nolte-shared
 - [lektorat-apply](../skills/nolte-shared/lektorat-apply.md) — nolte-shared
 
 ## `pull-request`

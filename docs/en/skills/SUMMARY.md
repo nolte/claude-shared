@@ -35,6 +35,7 @@ last_updated: generated
     * [yaml-json-schema](nolte-shared/yaml-json-schema.md)
 * 4 Build
     * [blog-author](nolte-shared/blog-author.md)
+    * [blog-author-trigger](nolte-shared/blog-author-trigger.md)
     * [sprint-execute](nolte-shared/sprint-execute.md)
 * 5 Review
     * [agent-review](nolte-shared/agent-review.md)
