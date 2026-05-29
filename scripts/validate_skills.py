@@ -296,6 +296,31 @@ def check_agent(path: Path) -> list[Finding]:
     return findings
 
 
+def check_agent_tree(agents_dir: Path) -> list[Finding]:
+    """Flag any markdown nested under `agents/<name>/`.
+
+    Per `spec/claude/agent-management/` §Structure an agent is exactly one
+    top-level file `agents/<name>.md`. Claude Code's default agent discovery
+    scans `agents/` *recursively*, so a companion markdown file in a sibling
+    folder is registered as a phantom, scope-prefixed agent (`<name>:<file>`)
+    that — lacking frontmatter — inherits the full tool surface with no `tools`
+    restriction. Supporting assets that cannot be inlined live outside the
+    `agents/` tree (for example `agent-assets/<name>/`).
+    """
+    findings: list[Finding] = []
+    for md in sorted(agents_dir.rglob("*.md")):
+        if md.parent == agents_dir:
+            continue  # top-level agent file — the only legitimate shape
+        rel = md.relative_to(REPO).as_posix()
+        findings.append(Finding(
+            "Critical", rel, "agent-management.nested-companion-markdown",
+            "markdown nested under agents/ is registered as a phantom all-tools "
+            "agent by recursive discovery; inline it into the agent body or move "
+            "it outside the agents/ tree (agent-management §Structure)",
+        ))
+    return findings
+
+
 def main() -> int:
     targets = sys.argv[1:] or ["skills/", "agents/"]
     paths: list[Path] = []
@@ -322,6 +347,16 @@ def main() -> int:
             all_findings.extend(check_skill(path))
         elif rel.startswith("agents/") and path.suffix == ".md":
             all_findings.extend(check_agent(path))
+
+    # Phantom-agent leak scan: only the top-level `agents/*.md` glob above visits
+    # legitimate agents, so nested companion markdown would slip through. Run the
+    # recursive tree check whenever the agents/ directory is in scope.
+    agents_dir = REPO / "agents"
+    scope_includes_agents = any(
+        (REPO / t).resolve() in (agents_dir.resolve(), REPO.resolve()) for t in targets
+    )
+    if scope_includes_agents and agents_dir.is_dir():
+        all_findings.extend(check_agent_tree(agents_dir))
 
     if not all_findings:
         print(f"validate_skills: {len(paths)} artifacts checked, no findings")

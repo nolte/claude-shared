@@ -3,7 +3,7 @@ title: Projektstruktur
 audience: [external-contributor, maintainer]
 content_mode: reference
 track: developer-docs
-last_updated: 2026-05-19
+last_updated: 2026-05-29
 ---
 
 # Projektstruktur
@@ -50,7 +50,7 @@ agents/                      # wiederverwendbare Sub-Agent-Definitionen
 | Plugin-Manifest | `.claude-plugin/plugin.json` |
 | Skill-Quellen | `skills/<name>/` |
 | Skill-Templates/Refs | `skills/<name>/templates/`, `references/`, `examples/` |
-| Agent-Quellen | `agents/<name>.md` (+ `agents/<name>/` für Beispiele) |
+| Agent-Quellen | `agents/<name>.md` (einzelne, in sich geschlossene Datei; kein Schwester-Ordner) |
 | Spezifikationen | `spec/<topic>/<slug>/<lang>.md` |
 | Spec-Config | `spec/.spec-config.yml` |
 | Spec-Index | `spec/README.md` (auto-generiert — nicht von Hand bearbeiten) |

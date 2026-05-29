@@ -53,7 +53,7 @@ Jede Anforderung dieser Spec gilt für beide Modi, sofern sie nicht ausdrücklic
 - **MUSS [MUST]** etwaige im Frontmatter deklarierte `tags` als sichtbare Tags auf der Eintrags-Seite rendern; `tags` sind gemäß `skill-management` / `agent-management` normalisiert (kleingeschriebenes ASCII-Kebab-Case, ≤30 Zeichen, ≤5 Einträge)
 - **MUSS [MUST]** das `phase`-Feld des Artefakts (siehe „Phasen-Klassifikation" unten) als sichtbares Badge auf der Eintrags-Seite rendern, mit dem Phasen-Label aus dem lokalisierten Chrome
 - **SOLLTE [SHOULD]** den Body von `SKILL.md` (bzw. das System-Prompt-Markdown des Agents) als Hauptinhalt der Seite rendern, damit die Autoren-Anweisungen für Leser sichtbar sind
-- **KANN [MAY]** begleitende Assets auflisten, indem die Schwester-Dateien unter `skills/<name>/` bzw. `agents/<name>/` angezeigt werden (z. B. `templates/`, `references/`, `examples/`)
+- **KANN [MAY]** begleitende Assets auflisten, indem die Schwester-Dateien unter `skills/<name>/` angezeigt werden (z. B. `templates/`, `references/`, `examples/`); Agents sind einzelne, in sich geschlossene Dateien ohne Schwester-Ordner (gemäß `agent-management` §Struktur), daher gibt es agentenseitig keine Schwester-Assets zum Auflisten
 
 ### Phasen-Klassifikation
 Jeder Skill und jeder Agent **MUSS [MUST]** deklarieren, welcher Phase des Liefer-Lebenszyklus er zugeordnet ist—über ein `phase:`-Frontmatter-Feld. Der Wert ist ein einzelner kleingeschriebener ASCII-Kebab-Case-Identifier aus dem geschlossenen Vokabular unten; kein anderer Wert ist zulässig. Autoren, die wirklich keine einzelne Phase festlegen können, verwenden `cross-cutting`.

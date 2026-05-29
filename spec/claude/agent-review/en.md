@@ -31,7 +31,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 ### Review scope
 
 - **MUST** take a single agent as input, identified by the path `agents/<name>.md` in a `nolte-shared`-style source tree, or the equivalent runtime path `.claude/agents/<name>.md` / `~/.claude/agents/<name>.md` when reviewing a consumer's copy
-- **MUST** treat the following as the review surface, in this order: YAML frontmatter, the markdown body (role, output format, procedure, rationale), every sibling asset under `agents/<name>/` referenced from the body (examples, long-form references, prompt fragments)
+- **MUST** treat the following as the review surface, in this order: YAML frontmatter, the markdown body (role, output format, procedure, rationale), and any external supporting asset referenced from the body (examples, long-form references, prompt fragments living outside the `agents/` tree). A companion markdown file in a sibling `agents/<name>/` folder is itself a finding—recursive discovery registers it as a phantom agent (see `agent-management` §Structure)—not a legitimate part of the surface
 - **MUST NOT** review more than one agent per plan; parallel reviews of multiple agents emit one `review-plan` per target
 - **MAY** narrow the scope to a specific aspect (frontmatter only, tools only, rationale only) when the review is triggered by a focused change, and **MUST** record the narrowing in the plan's `## Scope` section
 
@@ -107,7 +107,7 @@ Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybri
 - **MUST** verify that the system prompt names the expected output shape per the MUST in `agent-management`; absence is a `Critical`
 - **MUST** verify that the system prompt opens with the agent's role and boundaries, then the expected output format, then the working method per the SHOULD in `agent-management`; deviation is a `Warning`
 - **MUST** verify that the system prompt explicitly declares whether the agent writes code or only researches per the SHOULD in `agent-management`; absence is a `Warning`
-- **SHOULD** flag agent bodies that exceed the soft length target named in `agent-management` (~200 lines) without factoring supporting material into `agents/<name>/` sibling files as a `Warning`, reflecting the SHOULD in `agent-management`
+- **SHOULD** flag agent bodies that exceed the soft length target named in `agent-management` (~200 lines) as a `Warning`, reflecting the SHOULD in `agent-management`; the remedy is tighter prose or moving genuinely oversized assets outside the `agents/` tree, never a sibling `agents/<name>/` folder
 - **SHOULD** verify, when the agent is authored to write files or cause side effects (its `tools` list includes any of `Edit`, `Write`, `Bash`, or `NotebookEdit`), that the system prompt documents the goals and preconditions of those effects per the `agent-management` acceptance criterion; absence is a `Warning`
 
 ### Review procedure

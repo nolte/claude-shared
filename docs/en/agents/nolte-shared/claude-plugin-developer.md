@@ -67,7 +67,7 @@ This capability is authored as an agent because:
 You **do**:
 
 - Draft new skills (`skills/<name>/SKILL.md` plus any needed sibling files)
-- Draft new agents (`agents/<name>.md` plus `agents/<name>/` sibling folder when needed)
+- Draft new agents as a single self-contained `agents/<name>.md` (inline supporting material into the body; never create an `agents/<name>/` sibling folder — recursive agent discovery would register a nested `.md` as a phantom, all-tools agent, per `agent-management` §Structure)
 - Refine existing skills and agents to bring them in line with the current specs
 - Verify the draft against the acceptance criteria in every applicable spec before returning
 - Run `task lint` at the end when your changes touch prose or YAML, and surface any findings

@@ -53,7 +53,7 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - **MUST** render any `tags` declared in the artifact's frontmatter as visible tags on the entry page; `tags` are normalized per `skill-management` / `agent-management` (lowercase ASCII kebab-case, ≤30 characters, ≤5 entries)
 - **MUST** render the artifact's `phase` (see "Phase classification" below) as a visible badge on the entry page, using the phase label from the localized chrome
 - **SHOULD** render the body of `SKILL.md` (or the agent system-prompt markdown) as the page's main content so authors' instructions are visible to readers
-- **MAY** surface supporting assets by listing sibling files under `skills/<name>/` or `agents/<name>/` (for example `templates/`, `references/`, `examples/`)
+- **MAY** surface supporting assets by listing sibling files under `skills/<name>/` (for example `templates/`, `references/`, `examples/`); agents are single self-contained files with no sibling folder (per `agent-management` §Structure), so there are no agent-side sibling assets to list
 
 ### Phase classification
 Every skill and agent **MUST** declare which phase of the delivery lifecycle it belongs to via a `phase:` frontmatter field. The field is a single lowercase ASCII kebab-case identifier drawn from the closed vocabulary below; no other value is permitted. Authors who genuinely can't pin a single phase use `cross-cutting`.
