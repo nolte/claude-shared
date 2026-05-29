@@ -30,7 +30,7 @@ Readers: skill and agent authors in `claude-shared`, plus operators who run long
 ## Requirements
 
 ### Scope of applicability
-- **MUST** apply to every skill or agent whose normal control flow includes more than one user-approval gate, or more than one internal phase that produces an intermediate artefact the operator would otherwise lose on interruption
+- **MUST** apply to every skill whose normal control flow includes more than one user-approval gate, or more than one internal phase that produces an intermediate artefact the operator would otherwise lose on interruption; agents fall under the discretionary clause below rather than this MUST, because an agent runs headless and has no user-approval gate to preserve
 - **MUST** be declared in the skill's `SKILL.md` frontmatter (or the agent's frontmatter) via a `resumable: true` field, so the catalog generator and `skill-vs-agent` peer lookups can surface resume support to operators
 - **MUST** be referenced from the skill or agent description text (one short clause: "supports resume on re-invocation") whenever `resumable: true` is set, so operators reading the catalog without inspecting frontmatter still know
 <!-- vale Microsoft.Contractions = NO -->
@@ -84,6 +84,7 @@ The following keys form the mandatory envelope every state file MUST carry. Skil
 - **MUST**, when no in-progress run matches, start a fresh run and write a new state file at the first checkpoint
 - **MUST** honour the operator's choice exactly: `resume` re-hydrates from the file and **MUST NOT** re-ask any question whose answer is already in `decisions:`; `start-new` writes a fresh file with a new `run_id` and leaves the old file untouched; `discard` deletes the old file before continuing
 - **MUST NOT** treat the file's mere presence as authorisation to resume—the operator's interactive confirmation is required every time, except when the operator passes an explicit non-interactive override (see §Non-interactive override below)
+- **MUST**, for a `resumable: true` agent (which runs headless and can't render the interactive prompt itself), receive its resume choice from the dispatching context: the parent skill resolves the three-way choice with the operator and passes it down via the §Non-interactive override mechanism, or the agent applies a default of `start-new` when no choice is supplied; an agent **MUST NOT** silently resume from a checkpoint without an explicit passed-in choice
 
 ### Completion and cleanup
 - **MUST** set `status:` to `completed` on natural completion (the skill or agent reached its terminal step successfully)
@@ -111,7 +112,8 @@ The following keys form the mandatory envelope every state file MUST carry. Skil
 - **MUST** continue to write any finished audit, report, or artefact to the location its own spec dictates; resuming a run that produces an `.audits/...` file means the file is written when the run reaches its terminal step, not as a checkpoint side effect
 
 ## Acceptance Criteria
-- [ ] Every skill and agent under `skills/` and `agents/` whose normal control flow has more than one user-approval gate OR more than one named internal phase carries `resumable: true` in its frontmatter
+- [ ] Every skill under `skills/` whose normal control flow has more than one user-approval gate OR more than one named internal phase that produces an intermediate artefact carries `resumable: true` in its frontmatter
+- [ ] Every agent under `agents/` carrying `resumable: true` genuinely spans more than one named phase with an intermediate artefact (per §Scope of applicability's discretionary agent clause); a read-only single-pass agent correctly omits the field, and omission is never itself a finding
 - [ ] Every skill and agent with `resumable: true` mentions resume support in its `description:` text
 - [ ] No skill or agent with `resumable: true` writes resume state outside `.resume/<skill-or-agent-name>/`
 - [ ] The repository's `.gitignore` contains an entry that ignores `/.resume/`

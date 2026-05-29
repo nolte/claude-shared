@@ -30,7 +30,7 @@ Leserschaft: Skill- und Agent-Autor:innen in `claude-shared` sowie Operator:inne
 ## Requirements
 
 ### Geltungsbereich
-- **MUSS [MUST]** für jeden Skill bzw. Agent gelten, dessen normaler Kontrollfluss mehr als ein Genehmigungsgate oder mehr als eine interne Phase mit einem Zwischenartefakt umfasst, das die Person bei Unterbrechung sonst verlieren würde
+- **MUSS [MUST]** für jeden Skill gelten, dessen normaler Kontrollfluss mehr als ein Genehmigungsgate oder mehr als eine interne Phase mit einem Zwischenartefakt umfasst, das die Person bei Unterbrechung sonst verlieren würde; Agents fallen unter die Ermessensklausel weiter unten statt unter dieses MUSS, weil ein Agent headless läuft und kein Genehmigungsgate zu bewahren hat
 - **MUSS [MUST]** im `SKILL.md`-Frontmatter des Skills (bzw. im Agent-Frontmatter) per `resumable: true`-Feld deklariert werden, damit der Katalog-Generator und die Peer-Lookups aus `skill-vs-agent` Resume-Support sichtbar machen können
 - **MUSS [MUST]** aus dem `description`-Text des Skills bzw. Agents heraus referenziert werden (eine kurze Klausel: „supports resume on re-invocation"), wann immer `resumable: true` gesetzt ist, damit Operator:innen, die den Katalog lesen ohne ins Frontmatter zu schauen, dies dennoch erkennen
 - **SOLLTE NICHT [SHOULD NOT]** für Einmal-Skills gelten, deren komplette Ausführung ein einzelner Bash-Aufruf oder ein einzelner Tool-Call ist, der selbst billig neu startbar ist; `resumable: false` (oder das Feld auslassen) ist für diese die richtige Wahl
@@ -80,6 +80,7 @@ Die folgenden Schlüssel bilden den Pflicht-Envelope, den jede State-Datei trage
 - **MUSS [MUST]** bei keinem passenden in-progress Run einen frischen Run starten und beim ersten Checkpoint eine neue State-Datei schreiben
 - **MUSS [MUST]** die Wahl der Person exakt befolgen: `resume` re-hydriert aus der Datei und **DARF NICHT [MUST NOT]** Fragen erneut stellen, deren Antwort bereits in `decisions:` steht; `start-new` schreibt eine frische Datei mit neuer `run_id` und lässt die alte Datei unangetastet; `discard` löscht die alte Datei vor dem Fortfahren
 - **DARF NICHT [MUST NOT]** die bloße Existenz der Datei als Resume-Autorisierung werten — die interaktive Bestätigung der Person ist jedes Mal erforderlich, es sei denn die Person übergibt einen expliziten Non-Interactive-Override (siehe §Non-Interactive-Override unten)
+- **MUSS [MUST]** bei einem `resumable: true`-Agent (der headless läuft und das interaktive Prompt nicht selbst rendern kann) seine Resume-Wahl aus dem dispatchenden Kontext erhalten: das Parent-Skill löst die Drei-Wege-Wahl mit der Person auf und reicht sie über den §Non-Interactive-Override-Mechanismus nach unten durch, oder der Agent wendet `start-new` als Default an, wenn keine Wahl übergeben wird; ein Agent **DARF NICHT [MUST NOT]** still aus einem Checkpoint wiederaufnehmen, ohne dass eine Wahl explizit übergeben wurde
 
 ### Abschluss und Aufräumen
 - **MUSS [MUST]** `status:` bei natürlichem Abschluss auf `completed` setzen (der Skill bzw. Agent hat seinen terminalen Schritt erfolgreich erreicht)
@@ -107,7 +108,8 @@ Die folgenden Schlüssel bilden den Pflicht-Envelope, den jede State-Datei trage
 - **MUSS [MUST]** weiterhin jedes fertige Audit, jeden Bericht und jedes Artefakt an den Ort schreiben, den die jeweilige eigene Spec vorgibt; das Wiederaufnehmen eines Runs, der eine `.audits/...`-Datei produziert, bedeutet, dass die Datei geschrieben wird, wenn der Run seinen terminalen Schritt erreicht, nicht als Checkpoint-Nebeneffekt
 
 ## Acceptance Criteria
-- [ ] Jeder Skill und Agent unter `skills/` und `agents/`, dessen normaler Kontrollfluss mehr als ein Genehmigungsgate ODER mehr als eine benannte interne Phase hat, trägt `resumable: true` im Frontmatter
+- [ ] Jeder Skill unter `skills/`, dessen normaler Kontrollfluss mehr als ein Genehmigungsgate ODER mehr als eine benannte interne Phase mit einem Zwischenartefakt hat, trägt `resumable: true` im Frontmatter
+- [ ] Jeder Agent unter `agents/`, der `resumable: true` trägt, umspannt tatsächlich mehr als eine benannte Phase mit einem Zwischenartefakt (gemäß der Ermessensklausel für Agents in §Geltungsbereich); ein read-only Single-Pass-Agent lässt das Feld korrekt weg, und das Weglassen ist nie selbst ein Befund
 - [ ] Jeder Skill und Agent mit `resumable: true` erwähnt Resume-Support im `description:`-Text
 - [ ] Kein Skill bzw. Agent mit `resumable: true` schreibt Resume-State außerhalb von `.resume/<skill-or-agent-name>/`
 - [ ] Die `.gitignore` des Repositories enthält einen Eintrag, der `/.resume/` ignoriert
