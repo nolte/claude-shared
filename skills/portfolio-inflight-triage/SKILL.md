@@ -1,6 +1,6 @@
 ---
 name: portfolio-inflight-triage
-description: "Runs the read-only periodic in-flight audit across nolte/* per `spec/portfolio/portfolio-inflight-management/`. Dispatches `portfolio-inflight-collector` for the four data sources (open issues, open PRs incl. drafts, branches without active PR, unresolved review threads + Discussions), applies spec stalling thresholds with optional `project/inflight.yml` overrides, classifies via the four-axis matrix into `Critical`/`Warning`/`Suggestion`/`Info`, attaches a specialist slug per finding (slash-command verbatim for PR / branch / issue targets), records roster-gap findings, and writes a dated Findings-Report under `.audits/portfolio-inflight/` in `claude-shared`. Invoke when the user asks to \"audit the portfolio in-flight\", \"run the in-flight triage\", \"check stalled PRs / issues / branches\", or equivalent German-language requests. Don't use to merge / close / delete / resolve anything (operator dispatches), for per-repo CI triage (use `workflow-health-triage`), or for capability allocation (`portfolio-audit`)."
+description: "Runs the read-only periodic in-flight audit across nolte/* per `spec/portfolio/portfolio-inflight-management/`. Dispatches `portfolio-inflight-collector` for the four data sources (open issues, open PRs incl. drafts, branches without active PR, unresolved review threads + Discussions), applies spec stalling thresholds with optional `project/inflight.yml` overrides, classifies findings via the four-axis matrix into `Critical`/`Warning`/`Suggestion`/`Info`, attaches a specialist slug per finding, and writes a dated Findings-Report under `.audits/portfolio-inflight/`. Invoke when the user asks to \"audit the portfolio in-flight\", \"run the in-flight triage\", \"check stalled PRs / issues / branches\", or equivalent German-language requests. Don't use to merge / close / delete / resolve anything (operator dispatches), for per-repo CI triage (use `workflow-health-triage`), or for capability allocation (`portfolio-audit`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [audit]
 phase: review
 summary: "Runs the read-only periodic in-flight audit across nolte/* (open PRs, branches, issues, review threads) with severity classification."
@@ -18,6 +18,7 @@ see_also:
   - portfolio-audit
   - workflow-health-triage
   - portfolio-inflight-collector
+resumable: true
 ---
 
 # Portfolio In-Flight Triage
@@ -122,3 +123,7 @@ When the spec disagrees with this skill, the spec wins. Propose a skill update r
 - Never bypass the three user-confirmation gates: threshold-override honour (step 3), roster-gap 3-recurrence escalation (step 7), and pre-write per-severity-counts confirmation (step 8). The interactive checkpoints are the spec's reason this is a skill rather than an agent; bypassing them undermines `spec/claude/skill-vs-agent/`.
 - Never invoke the Skill tool from this skill's body during the data-collection or classification phase — the collector dispatch is an Agent invocation, not a Skill invocation. Calling another skill sequentially (for example `continuous-improvement-triage` to route the report) is allowed and matches the `spec/claude/skill-vs-agent/` hybrid-pattern `SHOULD` on chaining.
 - When `spec/portfolio/portfolio-inflight-management/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/portfolio-inflight-triage/<run-id>.yml` after every successful user-approval gate (threshold-override honour in step 3, roster-gap escalation in step 7, pre-write confirmation in step 8) and after each named phase boundary (collector dispatch complete, classification complete). On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, …) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.

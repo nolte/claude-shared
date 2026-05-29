@@ -9,9 +9,9 @@ audiences:
 verifies_via: F-1:acceptance-1
 time_bound:
   kind: mvp_completion
-mvp_status: in_progress
+mvp_status: stabilised
 created: 2026-05-09
-revised_at: 2026-05-11
+revised_at: 2026-05-29
 ---
 
 # Mission
@@ -48,3 +48,5 @@ When that checkbox is checked at the close of the sprint that lands this feature
 - **Goals consulted:** `project/goals.md` (authored in the same change-set as this mission file). Outcomes referenced: `O-1`, `O-3`.
 - **Authorship:** maintainer `nolte` via inline application of `skills/mission-define/SKILL.md`. The skill wasn't yet loaded as a slash command in the running plugin runtime at the time of writing (it landed on `develop` minutes prior, in PR #46); operations were followed manually against the merged spec at `spec/project/mission/en.md`. A `/reload-plugins` would lift the inline application in any subsequent invocation.
 - **2026-05-11 — `mvp_status: defining → in_progress`** via `mission-revise` Operation B. Evidence: roadmap item `R-1` (`mvp: true`) entered `status: active` when sprint `0001` was promoted to `active` and feature `F-1` started (`ready → in_progress`); see commit `9ee8805` on branch `chore/sprint-0001-execute`.
+- **2026-05-29 — `mvp_status: in_progress → achieved`** via `mission-revise` Operation B. Evidence: the sole `mvp: true` roadmap item `R-1` is `status: done` and the mission's verifying criterion `F-1:acceptance-1` is checked `[x]`. The flip was overdue: the conditions had held since Sprint `0001` closed, but the status flag lagged until this revision.
+- **2026-05-29 — `mvp_status: achieved → stabilised`** via `mission-revise` Operation B (§Stabilisation gate). Evidence: every `mvp: true` item (`R-1`) is `done`; the MVP-closing Sprint `0001` is `closed`; the full subsequent Sprint `0002` (number `0001 + 1`) is `closed` with no MVP item re-opened to `active`; no defect-fix feature against an MVP item is `in_progress`. Reconciliation note: post-MVP items `R-2` and `R-8` were executed to `done` while the flag still read `in_progress`, ahead of where the stabilisation gate would have permitted post-MVP starts; this flip corrects the lag, and the gate conditions hold in retrospect.

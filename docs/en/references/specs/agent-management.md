@@ -3,7 +3,7 @@ title: Agent Authoring
 audience: [maintainer]
 content_mode: reference
 track: developer-docs
-last_updated: 2026-05-19
+last_updated: 2026-05-29
 ---
 
 # Agent Authoring
@@ -45,7 +45,7 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 - **MUST** write a `description` naming concrete triggers ("use when …"): not abstract capabilities
 - **MUST** include a system prompt in the body scoped to a single responsibility and stating its output shape
 - **MUST** keep frontmatter and system prompt in English (token efficiency)
-- **MUST** be self-contained—supporting assets in `agents/<name>/`
+- **MUST** be self-contained—a single top-level `agents/<name>.md`; no sibling `agents/<name>/` folder (recursive discovery would register nested markdown as a phantom agent)
 
 ### Tool access
 

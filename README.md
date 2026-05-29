@@ -88,6 +88,26 @@ task setup    # alias for: pre-commit install
 
 Without this step the catalog regeneration doesn't run locally; the `Verify committed catalog is fresh` CI gate then catches missing regenerations after-the-fact instead of preventing them.
 
+### Running the quality gate
+
+Run the develop quality gate locally before a commit or a pull request with a single Taskfile target:
+
+```bash
+task check
+```
+
+`task check` runs the `lint` and `test` categories. The `docs` category stays a separate CI job, because it gates documentation freshness rather than the code itself. The target exits zero on a clean tree and non-zero when any category fails.
+
+For a parseable result, invoke the `/nolte-shared:quality-gate` skill. It renders a single table with the columns `Check`, `Status`, `Runner`, and `Details`, one row per category. Each `Status` is one of `pass`, `fail`, `skipped`, or `timeout`, and the `Runner` column records the exact command that ran (for example `task lint`) so the result stays reproducible.
+
+The `ci` workflow gates the same three categories on `develop` as separate required status checks. This is where each category is covered locally:
+
+| Category (`ci.yml` job) | Local coverage |
+| --- | --- |
+| `lint` | covered by pre-commit (run `task setup` once, then the hooks fire on every `git commit`) |
+| `test` | contributor-invoked (`task test`, a placeholder until a runtime test suite lands) |
+| `docs` | contributor-invoked (`task docs` builds the MkDocs site with `--strict`; pre-commit only refreshes the catalog) |
+
 ### Notes
 
 - **Self-hosted marketplace source**: The plugin entry in `marketplace.json` uses `"source": "."` (relative path). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.

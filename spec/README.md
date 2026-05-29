@@ -11,6 +11,7 @@ Canonical language: `en` · Translations: `de`
 | claude | agent-management | Claude Agent Authoring | Claude-Agent-Autorenschaft | draft | 2026-04-24 |
 | claude | agent-review | Claude Agent Review | Claude-Agent-Review | draft | 2026-04-24 |
 | claude | permission-allowlist | Claude Code Permission Allowlist Maintenance | Pflege der Claude-Code-Permission-Allowlist | draft | 2026-04-23 |
+| claude | plugin-scoping | Claude Plugin Scoping | Claude-Plugin-Schnittführung | draft | unversioned |
 | claude | png-to-transparent-svg | PNG to Transparent SVG | PNG zu transparentem SVG | draft | unversioned |
 | claude | research-triangulate | Research Triangulation | Recherche-Triangulation | draft | unversioned |
 | claude | resumable-work | Resumable Skill and Agent Work | Wiederaufnehmbare Skill- und Agent-Arbeit | draft | unversioned |
@@ -20,6 +21,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-review | Claude Skill Review | Claude-Skill-Review | draft | 2026-04-24 |
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | 2026-04-23 |
 | design | corporate-design-colors | Corporate Design — Color System | Corporate Design — Farbsystem | draft | unversioned |
+| design | graphic-prompt-authoring | Graphic Prompt Authoring | Grafik-Prompt-Autorenschaft | draft | unversioned |
 | portfolio | portfolio-inflight-management | Portfolio In-Flight Management | Portfolio-In-Flight-Management | draft | unversioned |
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | unversioned |
 | portfolio | tech-stack | Portfolio Tech Stack Capture | Portfolio-Tech-Stack-Erfassung | draft | unversioned |
@@ -28,6 +30,7 @@ Canonical language: `en` · Translations: `de`
 | project | blog-author | Blog author | Blog-Autor | draft | unversioned |
 | project | blog-author-trigger | Blog author trigger | Blog-Autor-Trigger | draft | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | 2026-04-23 |
+| project | code-security-audit | Whole-Codebase Security Audit | Whole-Codebase-Security-Audit | draft | unversioned |
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | 2026-04-23 |
 | project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | unversioned |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | unversioned |
@@ -37,6 +40,7 @@ Canonical language: `en` · Translations: `de`
 | project | docs-multilingual-authoring | Multilingual Documentation Authoring | Mehrsprachige Dokumentations-Autorenschaft | draft | unversioned |
 | project | feature | Project Feature | Projekt-Feature | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
+| project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | unversioned |
 | project | lektorat | Lektorat | Lektorat | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
@@ -58,5 +62,6 @@ Canonical language: `en` · Translations: `de`
 | project | spec-driven-development | Spec-Driven Development | Spezifikations-getriebene Entwicklung | draft | unversioned |
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | unversioned |
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
+| project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |
 | tools | gemini-image-generation | Gemini Image Generation (Free-Tier) | Gemini-Bildgenerierung (Free-Tier) | draft | unversioned |

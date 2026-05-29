@@ -15,6 +15,7 @@ Claude Code offers two reusable-capability formats in this plugin: **skills** (a
 ## Non-Goals
 - On-disk structure, naming, frontmatter, or templates for either artifact (covered by `skill-management` and `agent-management`)
 - Plugin distribution and marketplace mechanics (covered by those specs)
+- Plugin-level scoping—when capabilities belong in one plugin versus several, and how a single plugin stays scannable as it grows (covered by `plugin-scoping`)
 - Which specific tools a given agent declares in its `tools` field (a per-agent scope decision, not a portfolio-wide rule)
 - Discovery and catalog rendering in the MkDocs site (covered by `skill-agent-catalog`)
 - The routing behavior of the Claude Code runtime itself—this spec governs authoring choices, not runtime dispatch
@@ -33,6 +34,10 @@ Every candidate capability is evaluated along the dimensions below. Each dimensi
 | **Context-window impact** | Output contributes to the main conversation naturally | Heavy reads / searches would pollute the main context; isolation is a win |
 | **Specialization** | General procedure; a focused system prompt wouldn't measurably change quality | A narrow system prompt noticeably sharpens output quality |
 | **Lifecycle** | Persists across the conversation—may be invoked more than once | Single-shot task with a clear completion criterion |
+| **Latency** | Fast turnaround matters; a subagent's separate context window adds spin-up and round-trip overhead | Latency isn't critical; the task can run out-of-band and report back when done |
+| **Change scope** | A quick, targeted change in the current context | A larger self-contained unit of work with a well-defined input and output |
+
+These dimensions track Anthropic's official "Choose between subagents and the main conversation" guidance ([R5](#references)): route work to the **main conversation** (a skill) when it needs frequent back-and-forth, when multiple phases share significant context, when the change is **quick and targeted**, or when **latency** matters; route it to a **subagent** (an agent) when the task emits verbose output the orchestrator doesn't need, when tool or permission restriction is wanted, or when the work is self-contained and returns a summary. The **Latency** and **Change scope** rows carry the two criteria the rest of the table didn't already capture. Of the agent-side dimensions, Anthropic frames **parallelism and context management as the two *primary* drivers** for moving work into a subagent (specialization and tool restriction are sub-cases of context management) ([R6](#references)); the **Parallelism** and **Context-window impact** rows are therefore the load-bearing ones when an agent is chosen.
 
 ### Primary decision rule
 - **MUST** choose a **skill** when the capability satisfies any of:
@@ -106,7 +111,8 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 - [ ] The `workflow-health` spec's "Specialized-agent dispatch for remediation" subsection stays consistent with the hybrid-pattern rule declared here; any future divergence is resolved in favor of this spec
 - [ ] No agent in this plugin attempts to spawn another subagent (verifiable by grepping agent bodies for `Agent(`, `subagent_type`, or equivalent dispatch phrasings)
 - [ ] Every skill that declares `context: fork` documents in its rationale section why the fork variant is preferable to a sibling agent file
-- [ ] The decision-dimensions table is consistent with the official Anthropic guidance on when to use the main conversation versus a subagent ([R3](#references)); divergences are resolved in favor of this spec but explained in `## Open Questions`
+- [ ] The decision-dimensions table is consistent with the official Anthropic guidance on when to use the main conversation versus a subagent ([R3](#references), [R5](#references)); divergences are resolved in favor of this spec but explained in `## Open Questions`
+- [ ] The decision-dimensions table includes the **Latency** and **Change scope** dimensions that reflect Anthropic's "Choose between subagents and the main conversation" criteria ([R5](#references))
 
 ## References
 
@@ -114,6 +120,8 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 - [R2] Extend Claude with skills, Claude Code docs (`context: fork`): <https://code.claude.com/docs/en/skills>
 - [R3] Building Effective AI Agents, Anthropic engineering: <https://www.anthropic.com/research/building-effective-agents>
 - [R4] Equipping agents for the real world with Agent Skills, Anthropic engineering, 2025-10-16: <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>
+- [R5] Create custom subagents, Claude Code docs, "Choose between subagents and the main conversation" section (use the main conversation for quick targeted changes / when latency matters; use a subagent for verbose output, tool restriction, self-contained work): <https://code.claude.com/docs/en/sub-agents>
+- [R6] Subagents in the Claude Agent SDK (four benefits—context isolation, parallelism, specialized instructions, tool restrictions—with parallelism and context management as the two primary drivers): <https://code.claude.com/docs/en/agent-sdk/subagents>
 
 ## Open Questions
 - Should this spec declare a minimum "rationale section" structure (at least two named dimensions, at least one counter-dimension) to make audits mechanical, or is the current "at least one decisive dimension" bar sufficient?

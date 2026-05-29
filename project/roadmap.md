@@ -13,12 +13,12 @@ detail: fine
 outcomes: [O-3]
 target_sprint: 1
 mvp: true
-status: active
+status: done
 ```
 
 The plugin demonstrates its own planning-suite specs by self-application: `project/goals.md`, `project/roadmap.md`, `project/features/`, `project/sprints/`, and `project/mission.md` exist as a reference adopter, and at least one sprint runs end-to-end (`planned → active → review → closed`) delivering the mission statement against a verifying acceptance criterion. This satisfies O-3 ("every spec the plugin ships is dogfooded before downstream adoption") because the proof-of-life happens here first.
 
-- [ ] mission-statement-published
+- [x] mission-statement-published
 
 ## Phase 2 — Release & Quality Discipline
 
@@ -31,12 +31,12 @@ detail: fine
 outcomes: [O-1, O-2]
 target_sprint: 2
 mvp: false
-status: proposed
+status: done
 ```
 
 Consumers of the `nolte-shared` plugin install a published, non-draft release of `claude-shared` whose publication was performed by the repo's own pipeline rather than by a manual `gh release edit`. The path runs from a develop merge through `release-drafter` (changelog aggregation) and `release-publish.yml` (the publish workflow), gated by the `release-publish-trigger` skill which validates every pre-publish condition locally before dispatching. Closing the remaining `ci.yml` `workflow_dispatch` gap lets the skill's required-checks gate pass and produces the first end-to-end published release.
 
-- [ ] plugin-published-via-automated-release
+- [x] plugin-published-via-automated-release
 
 ### R-3 — Develop branch quality gate hardened
 
@@ -61,19 +61,19 @@ id: R-8
 title: Reviewer agent coverage across every skill cluster
 detail: fine
 outcomes: [O-1, O-2]
-target_sprint: null
+target_sprint: 4
 mvp: false
-status: proposed
+status: done
 ```
 
 Every skill cluster gets a read-only reviewer agent paired with its existing "apply"-style skill. The six agents follow two templates: `feature-consistency-reviewer` for plan / sprint / quality clusters, and `vocab-drift-scanner` / `docs-freshness-checker` for drift-style audits. Delivers systematic review depth for roadmap, project structure, sprint, quality-gate, Mermaid diagrams, and tech-stack drift — a gap that "apply"-only skills leave open today.
 
-- [ ] roadmap-coherence-reviewer agent (#152)
-- [ ] project-structure-reviewer agent (#153)
-- [ ] sprint-readiness-reviewer agent (#154)
-- [ ] quality-gate-enforcer agent (#155)
-- [ ] mermaid-diagram-reviewer agent (#156)
-- [ ] tech-stack-drift-reviewer agent (#157)
+- [x] roadmap-coherence-reviewer agent (#152)
+- [x] project-structure-reviewer agent (#153)
+- [x] sprint-readiness-reviewer agent (#154)
+- [x] quality-gate-enforcer agent (#155)
+- [x] mermaid-diagram-reviewer agent (#156)
+- [x] tech-stack-drift-reviewer agent (#157)
 
 ## Phase 3 — Documentation Reach
 
