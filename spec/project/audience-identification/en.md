@@ -62,4 +62,4 @@ Software modules and projects are consumed, operated, constrained, or observed b
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- How does this spec interact with future threat-modeling, privacy-impact, or SLA specs that will also consume the same audience list?
+- How does this spec interact with future threat-modeling, privacy-impact, or SLA specs that will also consume the same audience list? Unblock when the first spec on the security/privacy/SLA axis that consumes the audience artifact is drafted under `spec/project/` (for example `spec/project/threat-modeling/`, `spec/project/privacy-impact/`, or `spec/project/sla/` whose Requirements cite the audience artifact). Measurable: `grep -rl 'audience' spec/project/{threat-modeling,privacy-impact,sla}/` returns a hit. Then wire the concrete bidirectional cross-reference; the `spec-drift-audit` "newly-added consumers that cite the artefact" clause (see the §Artifact-location requirement) surfaces the dependency. No external upstream link applies—this is an internal portfolio authoring event, not a Claude Code platform dependency.

@@ -54,6 +54,7 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 - **MUST** keep each test case self-contained and retrieval-friendly (a one-line intent summary, prominent tags and identifiers, consistent domain vocabulary, explicit cross-references to related cases) so it survives ingestion into a retrieval system as an independent chunk
 - **MUST** regenerate a requirement's document deterministically: re-running on the same requirement yields the same cases (modulo the generated timestamp); the agent overwrites its own prior output and doesn't merge with hand-edits silently
 - **MUST** restrict writes to test-case documents under the configured output directory; the agent **MUST NOT** edit source code, the requirement documents, or any other file
+- The agent emits only the human-readable test-case documents; their per-case `requirement_id` frontmatter plus tags and the per-document coverage summary are the machine-parseable traceability surface. By current default the agent **MUST** avoid emitting a separate machine-readable traceability index until a downstream coverage tool declares the schema it requires, so that no second artefact widens the determinism and regeneration surface without a reader.
 
 ## Acceptance Criteria
 
@@ -77,4 +78,4 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 
 ## Open Questions
 
-- Should the agent emit a machine-readable traceability index (requirement → cases) alongside the human-readable documents, for downstream coverage tooling?
+- Default: the agent emits no separate machine-readable traceability index; the per-case `requirement_id` frontmatter plus tags and the per-document coverage summary are the traceability surface. Revisit when: a portfolio- or project-level requirement-coverage roll-up tool is specified (analogous to how `spec/portfolio/portfolio-management/` defines the manifest format its collectors emit) AND that spec names the concrete input schema it requires (file name, fields, location). The quality-gate `coverage` category doesn't count: it's CI code-coverage thresholding, not requirement-to-test-case traceability ingestion.

@@ -80,4 +80,4 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer, die seinen Report konsu
 
 ## Offene Fragen
 
-- Wo liegt die Grenze zwischen diesem Whole-Codebase-Audit und einer künftigen Architektur-Level-Threat-Modeling-Spec, die über Trust-Boundaries und Datenflüsse statt über Code-Patterns räsoniert?
+- Reziproke Grenze zu einer künftigen Architektur-Level-Threat-Modeling-Spec. Erneut prüfen, wenn eine `spec/project/threat-modeling/` (oder eine äquivalent benannte Architektur-Level-Threat-Modeling-Spec) unter `spec/` angelegt wird ODER ein Roadmap-Item dafür in `project/roadmap.md` eröffnet wird. In diesem Moment einen reziproken Abgrenzungs-Bullet sowohl zu den §Nicht-Zielen dieser Spec als auch zu den Nicht-Zielen/Zielen der Threat-Modeling-Spec hinzufügen. Heute prüfbares Prädikat: `test -d spec/project/threat-modeling` und grep in `project/roadmap.md` nach einem Threat-Modeling-Eintrag—beide false am 2026-05-29 (post-#228).

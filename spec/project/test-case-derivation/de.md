@@ -54,6 +54,7 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 - **MUSS [MUST]** jeden Testfall eigenständig und retrieval-freundlich halten (eine einzeilige Intent-Zusammenfassung, prominente Tags und Identifier, konsistentes Domänen-Vokabular, explizite Querverweise auf verwandte Fälle), sodass er die Ingestion in ein Retrieval-System als unabhängiger Chunk übersteht
 - **MUSS [MUST]** das Dokument einer Anforderung deterministisch regenerieren: Ein erneuter Lauf auf derselben Anforderung liefert dieselben Fälle (modulo des Erzeugungs-Timestamps); der Agent überschreibt seine eigene frühere Ausgabe und merged nicht still mit Hand-Edits
 - **MUSS [MUST]** Schreibvorgänge auf Testfall-Dokumente unter dem konfigurierten Ausgabe-Verzeichnis beschränken; der Agent **DARF NICHT [MUST NOT]** Quellcode, die Anforderungsdokumente oder eine andere Datei editieren
+- Der Agent emittiert nur die menschenlesbaren Testfall-Dokumente; ihr `requirement_id`-Frontmatter pro Fall plus Tags und die Abdeckungs-Zusammenfassung pro Dokument sind die maschinell parsebare Rückverfolgbarkeits-Oberfläche. Per aktuellem Default **MUSS [MUST]** der Agent davon absehen, einen separaten maschinenlesbaren Rückverfolgbarkeits-Index zu emittieren, bis ein nachgelagertes Coverage-Tool das von ihm benötigte Schema deklariert, sodass kein zweites Artefakt die Determinismus- und Regenerations-Oberfläche ohne Leser verbreitert.
 
 ## Akzeptanzkriterien
 
@@ -77,4 +78,4 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 
 ## Offene Fragen
 
-- Soll der Agent einen maschinenlesbaren Rückverfolgbarkeits-Index (Anforderung → Fälle) neben den menschenlesbaren Dokumenten emittieren, für nachgelagertes Coverage-Tooling?
+- Default: Der Agent emittiert keinen separaten maschinenlesbaren Rückverfolgbarkeits-Index; das `requirement_id`-Frontmatter pro Fall plus Tags und die Abdeckungs-Zusammenfassung pro Dokument sind die Rückverfolgbarkeits-Oberfläche. Erneut prüfen wenn: Ein Anforderungs-Coverage-Roll-up-Tool auf Portfolio- oder Projektebene spezifiziert wird (analog dazu, wie `spec/portfolio/portfolio-management/` das Manifest-Format definiert, das seine Collectoren emittieren) UND diese Spec das von ihr benötigte konkrete Eingabe-Schema benennt (Dateiname, Felder, Ort). Die quality-gate-`coverage`-Kategorie zählt nicht: Sie ist CI-Code-Coverage-Schwellwertprüfung, keine Ingestion von Anforderung-zu-Testfall-Rückverfolgbarkeit.

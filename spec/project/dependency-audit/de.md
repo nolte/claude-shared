@@ -88,4 +88,4 @@ Jedes Repository im Portfolio zieht Drittanbieter-Pakete über ein oder mehrere 
 - [ ] Das Audit-Artefakt zu jedem Release-Tag referenziert den Dependency-Audit-Zustand zur Release-Revision, damit post-Release-Supply-Chain-Triage von einer bekannten Baseline aus starten kann
 
 ## Offene Fragen
-- Muss die Quartalskadenz enger werden (monatlich) für Repositories im Geltungsbereich bestimmter Compliance-Regime, und wenn ja, welche Regime rechtfertigen die Verschärfung?
+- Erneut prüfen, sobald ein `nolte/*`-Portfolio-Repository formal ein benanntes Compliance-Regime betritt (SOC2 / PCI-DSS / HIPAA / ISO 27001 / Äquivalent) — belegt dadurch, dass dieses Regime in der `project/portfolio.yml`, der `CLAUDE.md` oder einem Audience-/SLA-Artefakt des Repositorys deklariert ist. Zu diesem Zeitpunkt: das konkrete Regime benennen, dessen vorgeschriebenes Audit-Intervall festlegen (zum Beispiel monatlich) und das `DARF` aus §Auslöser und Kadenz in ein `MUSS` umwandeln, das auf Repositories mit diesem Regime-Label begrenzt ist. Keine Spec-Änderung vor diesem Ereignis.

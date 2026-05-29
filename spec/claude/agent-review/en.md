@@ -23,7 +23,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 - Reviewing skills: `skill-review` covers that with symmetric structure
 - Replacing quarterly portfolio-wide reconciliation: `spec-drift-audit` owns that
 - Linter and markdown-style checks already enforced by `task lint` / Vale / pre-commit hooks—those stay with their own tooling
-- Runtime or behavioral correctness of the agent (whether dispatching the agent actually produces the claimed report shape when invoked)—this spec reviews the **authored artifact**, not a live execution
+- Runtime or behavioral correctness of the agent (whether dispatching the agent actually produces the claimed report shape when invoked)—this spec reviews the **authored artifact**, not a live execution—including whether a negative trigger named in `description` actually causes the calling Claude to *not* dispatch the agent for the excluded case; the review verifies only that the negative trigger is present and names an existing peer artifact (see §"Description quality and proactive-delegation intent" and §"Checks derived from `skill-vs-agent`"), not its routing effect
 
 ## Requirements
 <!-- Use RFC 2119 keywords: MUST, SHOULD, MAY. One atomic requirement per bullet. -->
@@ -100,7 +100,7 @@ Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybri
 ### Description quality and proactive-delegation intent
 
 - **MUST** verify, when the `description` contains the phrase "use proactively" (or the equivalent "use this proactively," "should be used proactively," "invoke proactively"), that the agent's responsibility actually warrants Claude offering it without explicit user request—signs a check passes: the agent solves a class of problem the user is unlikely to name explicitly (security review on every PR, audit on every commit). Signs the check fails: the agent has destructive side effects, requires credentials, or makes commitments to external systems. A "proactively" claim on a destructive or credential-bearing agent is a `Critical` ([R5](#references))
-- **SHOULD** verify, when the agent has clear overlap with another existing artifact (skill or agent), that `description` names the overlap as a **negative trigger** ("don't use for X, use the `<peer>` agent / skill instead"); absence of the negative is a `Warning` ([R5](#references))
+- **SHOULD** verify, when the agent has clear overlap with another existing artifact (skill or agent), that `description` names the overlap as a **negative trigger** ("don't use for X, use the `<peer>` agent / skill instead"); absence of the negative is a `Warning` ([R5](#references)). The check verifies only that the negative trigger is *present* and names an existing peer; whether it actually causes the calling Claude to skip the agent for the excluded case is dispatch-time routing behavior and is deliberately out of scope (see §Non-Goals)
 
 ### Prompt-structure checks
 
@@ -158,4 +158,4 @@ Sources for the additional checks above. Cite the relevant entry in finding brac
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should reviewing an agent whose `description` names negative triggers also verify those negatives actually exclude the named cases—and if so, how's that verified without running the agent?
+_None at this time._

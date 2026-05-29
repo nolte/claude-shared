@@ -71,6 +71,7 @@ References:
 - **MUST NOT** use the `delegated` driver to verify that the role is idempotent because it bypasses the per-host state model
 - **SHOULD** use the `docker` or `podman` driver, and include at least one verification step (`molecule verify` with `ansible.builtin.assert` or `testinfra`) covering the role's primary observable outcome. Roles that change observable runtime state (a running service, an open port, a deployed file) SHOULD treat the verify step as effectively mandatory.
 - **MAY** add additional scenarios (`molecule/<scenario>/`) for distro-specific or topology-specific test matrices
+- **SHOULD** provide one Molecule scenario per platform family declared in `meta/main.yml` `galaxy_info.platforms`, so the test matrix tracks the role's own stated support contract. The spec deliberately prescribes no portfolio-wide minimum matrix (Debian, RHEL, or otherwise)—the per-role platform list is the single source of truth, mirroring the per-repo environment-floor decision in [`spec/ansible/playbook-development/`](../playbook-development/en.md) §Python toolchain.
 
 ### Linting
 - **MUST** run `ansible-lint` and `yamllint` as a CI gate; both have to be green before a role version can be tagged
@@ -108,4 +109,4 @@ References:
 - [ ] The role (or its containing collection) is published to a Galaxy / Pulp endpoint that the consuming playbook's `requirements.yml` pins to a tagged release
 
 ## Open Questions
-- Should the spec prescribe a portfolio-wide minimum Molecule scenario matrix (Debian + RHEL family, or just one)?
+_None at this time._
