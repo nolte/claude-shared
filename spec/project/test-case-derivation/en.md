@@ -27,6 +27,7 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 - Auditing a project's test-tier distribution (the "test pyramid" shape)—a separate, opinion-bearing concern that stays project-local
 - Authoring or editing the requirement documents themselves—the agent reads requirements, it doesn't write them
 - Visual review of a test run's screenshots or logs against a spec—a separate, stack-coupled concern
+- Batch orchestration across many requirements (selection and commit policy) is a consuming-project skill that dispatches this agent per requirement (the skill-orchestrates/agent-executes hybrid), not a responsibility of this agent
 
 ## Requirements
 
@@ -48,7 +49,7 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 ### Output contract
 
 - **MUST** write structured test-case documents to a single configurable output directory rather than a hard-coded path, defaulting to `tests/cases/` in the consuming repository, one document per source requirement, named for the requirement it traces to
-- **MUST** give each document a YAML frontmatter block (at least: source requirement id, title, test-case count, covered areas, generated date) and each test case the structure: title, requirement reference, priority, category, preconditions, steps, expected results, postconditions, tags
+- **MUST** give each document a YAML frontmatter block (at least: source requirement id, title, test-case count, covered areas, generated date) and each test case the structure: title, requirement reference, priority, category, preconditions, steps, expected results, postconditions, tags; this structure is portfolio-fixed—only language, output directory, and interface-surface vocabulary adapt per project
 - **MUST** end each document with a coverage summary mapping requirement sections to the cases that cover them, and **MUST** explicitly list requirement sections from which no case could be derived (open requirements) rather than silently omitting them
 - **MUST** keep each test case self-contained and retrieval-friendly (a one-line intent summary, prominent tags and identifiers, consistent domain vocabulary, explicit cross-references to related cases) so it survives ingestion into a retrieval system as an independent chunk
 - **MUST** regenerate a requirement's document deterministically: re-running on the same requirement yields the same cases (modulo the generated timestamp); the agent overwrites its own prior output and doesn't merge with hand-edits silently
@@ -76,7 +77,4 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 
 ## Open Questions
 
-- Should batch derivation across many requirements (and the choice of which to process, plus committing the results) live in a consuming-project orchestration skill—mirroring the project-local `test-extract` wrapper—rather than in this agent?
-- Should the output be one document per requirement (chosen here) or one per functional area, and should the directory default be `tests/cases/` or live under the docs tree?
-- Should the test-case structure be pinned to a single portfolio-wide template for cross-repo aggregation, or stay adaptable per project?
 - Should the agent emit a machine-readable traceability index (requirement → cases) alongside the human-readable documents, for downstream coverage tooling?

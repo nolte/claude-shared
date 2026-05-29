@@ -29,6 +29,7 @@ Das Portfolio pflegt eine wachsende Menge an Specs unter `spec/<topic>/<slug>/`.
 - **MUSS [MUST]** einen Full-Scope-Audit mindestens einmal pro Kalenderquartal durchführen; der Audit-Kalender folgt Kalenderquartalen, nicht individueller Verfügbarkeit
 - **MUSS [MUST]** zusätzlich einen thematisch passenden Teil-Audit auslösen, sobald eine Spec signifikant geändert wurde (neue MUSS-Regel, geändertes Akzeptanzkriterium, verschobene Scope-Grenzen) — spätestens im Folge-Merge nach dem Spec-Update
 - **SOLLTE [SHOULD]** die Spec-Kopplung jedes neu eingeführten Skills oder Agents im selben Audit-Zyklus mitprüfen, damit neue Artefakte nicht von Tag 1 an mit eigener Drift starten
+- **MUSS [MUST]** als lokaler, operator-ausgelöster Audit pro Repository laufen (quartalsweise plus spec-change-getriggert); die repo-übergreifende Aggregation ist hier nicht im Scope und wird durch `spec/portfolio/portfolio-management` geregelt, daher **DARF** dieser Audit **NICHT [MUST NOT]** an einen Cron-getriggerten zentralen Durchlauf gekoppelt werden
 
 ### Durchführung
 - **MUSS [MUST]** jeden Audit reproduzierbar durchführen: das Audit-Ergebnis **MUSS [MUST]** die eingesetzten Werkzeuge (`project-structure-apply`, `vocab-drift-audit`, `task lint` und Entsprechungen) sowie die exakte Git-Revision des geprüften Repositories nennen
@@ -42,13 +43,16 @@ Das Portfolio pflegt eine wachsende Menge an Specs unter `spec/<topic>/<slug>/`.
 - **SOLLTE [SHOULD]** wiederkehrende Befunde an derselben Stelle nach dem zweiten Auftreten strukturell adressieren (automatisierter Check, strengere Pre-Commit-Regel, Spec-Präzisierung), statt noch einen Einzelfix nachzuliefern
 
 ### Audit-Ergebnis-Artefakt
-- **MUSS [MUST]** das Ergebnis jedes Audits als Commit oder Issue im Repository persistieren (ein PR-Body zählt nur, wenn der PR gemergt wird); der Artefakt-Ort **SOLLTE [SHOULD]** pro Repository einheitlich gewählt werden (zum Beispiel immer `docs/audits/YYYY-Q<n>.md` oder ein GitHub-Issue mit Label `audit`)
+- **MUSS [MUST]** das Ergebnis jedes Audits als git-getrackte Markdown-Datei unter `.audits/spec-drift/<YYYY>-Q<n>.md` persistieren (ein PR-Body zählt nur, wenn der PR gemergt wird); dies ist der portfolio-weite Standard-Artefakt-Ort und ersetzt jede frühere `docs/audits/`-Konvention
+- **MUSS [MUST]** das Artefakt gemäß dem Vier-Abschnitte-Layout und der kanonischen Severity-Skala strukturieren, die `spec/claude/review-plan` vorschreibt (derselbe Artefakt-Vertrag, den `spec/portfolio/portfolio-management` unter `.audits/portfolio/` persistiert), damit sich Spec-Drift-Befunde identisch zu jedem anderen Audit-Artefakt im Portfolio lesen
+- **DARF [MAY]** das Ergebnis zusätzlich als GitHub-Issue mit Label `audit` als sekundäre, menschenlesbare Form ausweisen, aber die git-getrackte `.audits/spec-drift/`-Datei bleibt das maßgebliche Artefakt
 - **MUSS [MUST]** mindestens enthalten: Datum, Auslöser (quartal, spec-change, neuer Skill), Scope, eingesetzte Werkzeuge, Ergebnisse pro Criterion und die Entscheidungen gemäß §Feedbackloop
 
 ### Abgrenzung zu anderen Specs und Skills
 - **MUSS [MUST]** `spec/project/workflow-health/` als *laufenden* Gesundheitscheck behandeln (dauerhaft grüne CI, Triage von Flakes), während diese Spec der *periodische* Tiefen-Audit ist; beide ergänzen sich und **DÜRFEN NICHT [MUST NOT]** vermischt werden
 - **SOLLTE [SHOULD]** die Skills `project-structure-apply` und `vocab-drift-audit` als Teil-Auditoren im Audit ausführen und dabei festhalten, dass sie je nur einen Ausschnitt der Gesamtoberfläche abdecken
 - **DARF NICHT [MUST NOT]** dieser Audit-Prozess als Rechtfertigung genutzt werden, andere Specs (zum Beispiel `pull-request-workflow`) auf Spec-Ebene zu unterlaufen — Audit-Befunde durchlaufen den regulären Pull-Request-Prozess
+- **MUSS [MUST]** die repo-übergreifende, portfolio-weite Aggregation an `spec/portfolio/portfolio-management` delegieren (der zentralisierte, quartalsweise + on-demand laufende Portfolio-Audit, der aus `claude-shared` läuft, nie per Cron); diese Spec bleibt repo-lokal, und beide **DÜRFEN NICHT [MUST NOT]** vermischt werden
 
 ## Akzeptanzkriterien
 - [ ] Im Repository existiert eine nachvollziehbare Audit-Historie (Commits, Issues oder Audit-Dateien) mit mindestens einem Eintrag pro Kalenderquartal seit Einführung dieser Spec — oder eine dokumentierte Ausnahme, warum ein Quartal ausgesetzt wurde
@@ -58,5 +62,4 @@ Das Portfolio pflegt eine wachsende Menge an Specs unter `spec/<topic>/<slug>/`.
 - [ ] Audit-Einträge referenzieren die Git-Revision des geprüften Repository-Stands und die Version der genutzten Audit-Skills, damit der Audit reproduzierbar ist
 
 ## Offene Fragen
-- Soll die Audit-Artefakt-Form portfolio-weit vereinheitlicht werden (einheitliches Markdown-Template unter `docs/audits/` in jedem Repository) oder pro Repository frei bleiben? Bewusst für eine spätere Entscheidung offen gelassen.
-- Braucht das Portfolio einen zentralen, repo-übergreifenden Audit-Durchlauf (zum Beispiel per Cron-Action in `nolte/gh-plumbing`), oder bleibt der Audit lokal pro Repository? Abhängig davon, ob eine zentrale Aggregation den Aufwand rechtfertigt.
+_Derzeit keine._

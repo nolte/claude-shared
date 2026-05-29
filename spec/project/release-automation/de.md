@@ -24,7 +24,7 @@ Diese Spec schließt die Lücke zwischen `release-drafter` (baut und pflegt den 
 - Binary-Builds, Signing, SBOM-Generierung.
 - Erzeugung von Release-Notes-Inhalten — bleibt Aufgabe von `release-drafter`, gespeist durch Conventional-Commits-PR-Titel.
 - Versionierungspolitik (SemVer-Ableitung von major/minor/patch) — geerbt aus der `release-drafter`-Konfiguration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
-- Hotfix-Flow (Release von `main` zurück nach `develop`) — offen als Open Question auf `branching-model` und außerhalb des Scopes hier.
+- Hotfix-Flow — gehört zu `branching-model` §Hotfix flow, das ihn als Standard-`fix/`-Pull-Request gegen `develop` mit nachfolgendem gewöhnlichem Patch-Release festlegt; außerhalb des Scopes hier.
 - Vollständige Abschaffung des manuellen `gh release edit --draft=false`-Pfads; der manuelle Pfad bleibt als dokumentierter Fallback für Incident-Response, wenn der Workflow selbst kaputt ist.
 - Vorschrift darüber, welche Ökosysteme in die Portfolio-Konventions-Tabelle in §Versionstragende Dateien aufgenommen werden; die Tabelle wächst organisch, sobald Repos neuer Typen ins Portfolio kommen, jede Ergänzung ist eine kleine Spec-Änderung, keine neue Spec.
 

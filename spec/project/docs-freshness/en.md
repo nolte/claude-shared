@@ -35,7 +35,7 @@ The audit **MUST** classify every finding into exactly one of these categories:
 - **Language-parity gap**: in a bilingual (or multilingual) repository, a relative path that exists in one configured language tree but is missing in another. The authoring counterpart that prevents the gap at the source is `spec/project/docs-multilingual-authoring/` §Authoring protocol.
 - **Content-staleness delta**: in a multilingual repository, counterpart files whose last-commit timestamps diverge beyond a threshold (default 30 days) or whose sizes diverge beyond 2×; these are spot-checked on the N most recently modified files per tree rather than checked exhaustively.
 - **Mermaid diagram-source drift**: a Mermaid block in the docs annotated with `<!-- diagram-source: derived—<path> -->` (per `spec/project/mermaid-diagrams/`) whose named source artifact has a more recent last-commit timestamp than the markdown file containing the block—the source has changed but the diagram hasn't been redrawn. The detector compares `git log -1 --format=%cs -- <source>` and `git log -1 --format=%cs -- <markdown-file>`; `user-described` blocks aren't checked because they have no machine-readable source.
-- **ADR index drift**: an ADR file on disk that isn't referenced by the corresponding `adr/index.md`, or an `adr/index.md` entry whose file doesn't exist.
+- **ADR index drift**: an ADR file on disk that isn't referenced by the corresponding `adr/index.md`, or an `adr/index.md` entry whose file doesn't exist. When `adr/index.md` is generated (declared by a generator hook or a frontmatter marker such as `last_updated: generated` per `spec/project/mkdocs-structure/` §Per-page structure), the ADR-index-drift check **MUST** skip it; freshness of generated indices is owned by the generator's own CI freshness check (a `git diff --exit-code` pass), not this read-only audit (see §Read-only discipline and §Delimitation).
 - **ADR status hygiene**: an ADR whose declared status isn't one of `proposed`, `accepted`, `superseded`, `deprecated`, `rejected`; or a `Supersedes: ADR-NNN` reference pointing at an ADR whose status is still `accepted`.
 - **Stale markers**: occurrences of `TODO`, `FIXME`, `XXX`, `TBD`, `coming soon`, `placeholder`, `Lorem ipsum` (and their German counterparts) inside documentation; classification depends on context (ADR vs. prose).
 - **Track-frontmatter drift**: a page under `docs/<lang>/` (outside `_`-prefixed snippet folders) that lacks the `track` frontmatter key, or whose `track` value isn't `user-docs`, `developer-docs`, or an extension value declared by a project-type-specific spec that the repository has opted into. Sourced from `spec/project/docs-audience-tracks/` §Per-page contract.
@@ -56,6 +56,7 @@ Additional categories **MAY** be added by a repository when its documentation ne
 - **MUST** additionally run before every release tag that includes documentation changes since the previous audit
 - **SHOULD** run as a pre-PR gate whenever the PR modifies documentation; the gate is optional but recommended because drift cascades fastest at PR merge time
 - **MAY** run on a shorter cadence (monthly) for repositories whose documentation is a primary product surface
+- **MAY** narrow a pre-release run to the critical-severity categories only (internal-link rot, cross-tree reference rot, ADR supersedes-chain breaks, unrecognised track/content-mode values) as a fast pre-tag gate—a named "release-readiness" narrowing preset rather than a separate audit mode; the narrowing **MUST** be recorded per §Scope
 
 ### Read-only discipline
 - **MUST** be read-only: the audit reports findings, and fixes are a separate, opt-in step taken by an author (or a different agent)
@@ -64,9 +65,10 @@ Additional categories **MAY** be added by a repository when its documentation ne
 - **MUST NOT** translate, rephrase, or otherwise alter content across language trees; the audit reports parity gaps, not closes them
 
 ### Audit artifact
-- **MUST** persist the result of every full audit as a commit, issue, or file in the repository; the artifact location **SHOULD** be consistent per repository (for example `docs/audits/docs-freshness-YYYY-Q<n>.md`)
+- **MUST** persist the result of every full audit as a commit, issue, or file in the repository; the artifact location **SHOULD** follow the portfolio audit-trail convention `.audits/docs-freshness/<YYYY>-Q<n>.md` (matching the `.audits/<skill>/` pattern used elsewhere) and **MUST** live outside the MkDocs `docs_dir` so the audit never self-scans its own artifacts. Resolved jointly with `spec/project/spec-drift-audit/`'s identical question.
 - **MUST** include in the artifact: date, trigger (quarterly, pre-release, PR-change), the repo root and `mkdocs.yml` path used, which categories were run (or narrowed out), the Git revision audited, the per-category severity counts, and the full finding list sorted by severity
 - **MUST** cap per-category listings at 15 entries in the artifact and summarise the remainder with a count, so large drift clusters don't flood the report
+- **SHOULD** consult `spec/project/parallel-working-copies/` §Audit artefacts in multiple worktrees when the audit runs inside a worktree rather than the primary checkout; the cross-tree and parity findings reflect only the working tree the audit was launched from, and the worktree-local commit, transfer, and cleanup rules for the `.audits/docs-freshness/` artifact live there
 
 ### Delimitation
 - **MUST** stay separate from `spec/project/prose-style/` and the `prose-vale-curator` agent: Vale owns prose correctness and vocabulary; this audit owns structural drift
@@ -84,8 +86,5 @@ Additional categories **MAY** be added by a repository when its documentation ne
 - [ ] The audit reports a `track-frontmatter drift`, `content-mode drift`, or `audience-track mismatch` finding whenever a docs page under a non-snippet folder violates the corresponding contract from `spec/project/docs-audience-tracks/` or `spec/project/mkdocs-structure/` §Content modes (Diátaxis alignment)
 
 ## Open Questions
-- Should the spec standardise a single artifact file path (for example `docs/audits/docs-freshness.md` with quarterly sections) portfolio-wide, or does per-repository freedom stay?
 - Is anchor-target verification inside a file a future hardening step (raise it from SHOULD to MUST once there's a reliable detector), or does the fragility make that a permanent SHOULD?
 - Should the content-staleness spot-check grow from N=5 most-recent files to a percentage of the tree for large docs sets, and if so, what's the threshold?
-- Does the portfolio want a dedicated "release-readiness docs audit" mode that runs only §Critical checks for fast pre-tag gating, or does the full audit stay the only mode?
-- When an `adr/index.md` is itself generated (by a script or a plugin), should the ADR-index-drift check skip it, or should generated indices be rebuilt and diffed as part of the audit?

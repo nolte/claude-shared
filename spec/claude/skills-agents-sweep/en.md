@@ -51,6 +51,7 @@ This spec codifies the methodology for a skills-and-agents sweep audit: a period
 - **MUST** persist the consolidated report under `.audits/skills-agents-sweep/<date>-<slug>.md` before beginning phase 4
 - **MUST NOT** begin phase 4 implementation before the consolidated report exists on disk, so that every implementation PR can reference the report as its evidence source
 - **SHOULD** execute per-artifact reviews in phase 1 before cross-cutting analysis in phase 2, because the per-artifact plans surface individual findings that feed the cross-cutting dimensions
+- The phase contract is normative; the execution strategy (sequential, parallel, subagent fan-out) is the operator's choice and **MUST NOT** be prescribed here
 
 ### Cross-cutting dimensions
 
@@ -67,7 +68,7 @@ This spec codifies the methodology for a skills-and-agents sweep audit: a period
 - **MUST** contain all of the following sections, in this order: YAML frontmatter, executive summary with top findings table, artifact inventory table, boundary matrix, spec-induced gap inventory, adoption-friction analysis, skill-vs-agent classification findings, wave-based implementation roadmap, and a processing log
 - **MUST** include in the YAML frontmatter: `audit-type: skills-agents-sweep`, `target`, `scope` (artifact counts), `repo-revision`, `created` (ISO date), `status: open`, and `per-artefact-plans` (count)
 - **MUST** cite the per-artifact plan paths under `.audits/skill-review/` and `.audits/agent-review/` in the executive summary so that reviewers can trace cross-cutting findings to specific per-artifact evidence
-- **SHOULD** include a go/no-go recommendation in the executive summary that states whether Critical findings block release promotion
+- **SHOULD** include a go/no-go recommendation in the executive summary that states whether Critical findings block release promotion; this recommendation stays human-readable and **MUST NOT** act as a machine-readable release gate, so `release-publish-trigger` continues to anchor its gate set to `spec/project/release-automation/` §Pre-publish verification rather than reading a frontmatter field from the sweep report
 
 ### Wave-based implementation roadmap
 
@@ -79,6 +80,7 @@ This spec codifies the methodology for a skills-and-agents sweep audit: a period
 ### Lifecycle
 
 - **MUST** maintain exactly one open sweep per repository at a time; a second sweep **MUST NOT** be opened until the previous sweep is closed
+- The committed consolidated report with `status: open` is the coordination lock; contributors detect an in-flight sweep by the presence of that file on the default branch. No separate lock mechanism is defined
 - **MUST** be closed via a commit that removes the consolidated report file from `.audits/skills-agents-sweep/`; the commit message **MUST** follow the pattern `sweep(skills-agents-sweep): close <slug>--<wave-summary>` where `<wave-summary>` describes which waves were implemented or deferred
 - **MUST** record in the consolidated report's processing log one entry per wave closure, with the date, the wave identifier, the action taken, and a verification method
 - **SHOULD** be considered stale and requiring re-opening if it has been open for more than six months without a processing-log entry
@@ -88,7 +90,7 @@ This spec codifies the methodology for a skills-and-agents sweep audit: a period
 - **MUST** reference `spec/claude/skill-review/` and `spec/claude/agent-review/` as the procedures for per-artifact reviews dispatched in sweep phase 1; don't restate their requirements here
 - **MUST** reference `spec/claude/review-plan/` for the per-artifact plan format; don't restate its requirements here
 - **MUST NOT** duplicate checks already covered by `skill-review` or `agent-review`; cross-cutting analysis only covers dimensions that require seeing the full inventory simultaneously
-- **SHOULD** coordinate with `spec/project/spec-drift-audit/` by noting that `spec-drift-audit` covers spec-file content drift while `skills-agents-sweep` covers artifact-to-spec binding gaps; the two specs have different scopes and complementary findings
+- **SHOULD** coordinate with `spec/project/spec-drift-audit/` by noting that `spec-drift-audit` covers spec-file content drift while `skills-agents-sweep` covers artifact-to-spec binding gaps; the two specs have different scopes and complementary findings, so they stay separate cross-referenced procedures rather than sharing a combined entry point
 
 ## Acceptance Criteria
 
@@ -101,7 +103,4 @@ This spec codifies the methodology for a skills-and-agents sweep audit: a period
 
 ## Open Questions
 
-- Should the sweep methodology codify a specific subagent-based execution pattern for phase 1 (for example, spawning one `skill-review` subagent per skill in parallel), or should the methodology remain tool-agnostic and leave execution strategy to the operator?
-- How's sweep coordination handled when multiple contributors are working on the same repository? The single-open-sweep invariant prevents parallel sweeps, but doesn't define a lock mechanism.
-- Should the consolidated report's go/no-go recommendation be machine-readable (for example, a `release-blocker: true/false` frontmatter field) to allow the `release-publish-trigger` skill to gate on it automatically?
-- How's the sweep coordinated with the periodic `spec-drift-audit` procedure? The two specs have different scopes (`skills-agents-sweep` covers artifact-to-spec binding under `spec/claude/`; `spec-drift-audit` covers spec-file content under `spec/project/`), but a single contributor session might want to run both. Should there be a combined entry point?
+_None at this time._

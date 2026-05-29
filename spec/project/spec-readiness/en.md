@@ -35,19 +35,21 @@ Specifications under `spec/<topic>/<slug>/` are the source of truth for downstre
 - **MUST** flag as Warning any Goal that directly contradicts a Non-Goal inside the same spec (for example a goal implying outputs that the non-goals explicitly disclaim)
 - **SHOULD** flag as Info chains of softening (a MAY that effectively reverses a SHOULD which was already conditional) when they make the rule-set opaque to a reader
 - **MAY** propose a resolution direction per finding—strengthen one rule, weaken the other, split the scope—without prescribing the final choice
+- **MUST** report a cross-spec contradiction symmetrically (both specs named, neither preferred); any preferred resolution direction is the advisory MAY above, never an automatic verdict that picks a winner by spec age, stability, or topic—choosing the winner is the human reviewer's call (see §Delimitation)
 - **MUST NOT** declare a contradiction based on prose alone when no RFC-2119 verb is in play; plain prose inconsistencies are prose-lint concerns, not readiness concerns
+- Cross-spec contradiction detection is **emergent** from the in-scope spec set; the audit derives candidate pairs dynamically and a maintained "contradiction corpus" is explicitly out of scope until accumulated `Recurring` findings prove the dynamic check misses recurring tension pairs (Info)
 
 ### Dimension 2—Audience fit
 - **MUST** derive each spec's implicit readers from its prose (typical sets: implementers, reviewers, tooling authors, release managers, product owners, operators); the derivation is observation, not a blank-sheet audience analysis
 - **MUST** check that for every derived audience there is content the audience can act on—Requirements for implementers, Acceptance Criteria for reviewers, interface-level MUSTs for tooling authors, Open Questions surfaced for product owners
 - **MUST** flag as Warning a spec whose audience can't be derived ("who is this written for?") or whose Requirements don't address the derived audience's decisions
-- **SHOULD** cross-reference an existing `audience-identify` artifact when the spec's module has one; if the spec addresses an audience the artifact names but the spec's Requirements don't meet it, the finding is a Warning, not Critical
+- **SHOULD** cross-reference an existing `audience-identify` artifact when the spec's module has one; if the spec addresses an audience the artifact names but the spec's Requirements don't meet it, the finding is a Warning, not Critical. Severity here is decided by substance, not by the bare reference: an artifact-named audience the spec doesn't serve is a Warning, whereas merely not citing an artifact while still serving the derived audience is at most an Info hint (see the §Dimension 2 Info rule below)
 - **SHOULD** flag as Info a spec whose audience is implicit but derivable only with effort; the fix is usually a one-line "readers:" hint, not a restructure
 - **MAY** point at `audience-identify` as the follow-up tool when a spec's module has no audience artifact and the readiness audit can't derive audiences confidently
 - **MUST NOT** create or author audience artifacts as part of this audit; that's out of scope (see §Delimitation)
 
 ### Dimension 3—Domain completeness
-- **MUST** verify that every Requirement has at least one Acceptance Criterion that's testable (measurable outcome, observable state, or enforceable gate)—a Requirement without a testable AC is a Warning
+- **MUST** verify that every Requirement has at least one Acceptance Criterion that's testable (measurable outcome, observable state, or enforceable gate)—a Requirement without a testable AC is a Warning; "at least one per Requirement" is the deliberate bar and a per-MUST AC quota is out of scope, because finer quotas invite gaming (splitting one AC into N trivial ones) without improving real coverage
 - **MUST** verify that every Acceptance Criterion traces back to a Requirement or a Goal—an orphan AC (can't be tied to any Requirement or Goal) is a Warning
 - **MUST** classify every Open Question as either **load-bearing** (implementation or downstream work can't responsibly proceed without an answer) or **parking-lot** (nice-to-have refinement, downstream can proceed with a reasonable default); a load-bearing OQ in a spec that's being considered for promotion is a Critical finding
 - **MUST** flag as Critical any reference from spec A to spec B where spec B doesn't exist, or exists but doesn't contain the section the reference implies
@@ -81,6 +83,7 @@ Specifications under `spec/<topic>/<slug>/` are the source of truth for downstre
 - **MUST** include in the artifact: date, trigger (quarterly, pre-promotion, PR-change), scope (which specs were audited, which were narrowed out), the Git revision audited, per-spec severity counts, and the full finding list sorted by severity
 - **SHOULD** link to the prior audit artifact so the portfolio's readiness trajectory is traceable across quarters
 - **SHOULD** follow the `review-plan` artifact format when the audit targets a single spec ahead of a promotion decision, so the output slots into the same audit machinery as skill-review and agent-review
+- **SHOULD** consult `spec/project/parallel-working-copies/` §Audit artefacts in multiple worktrees when the audit is run inside a worktree rather than the primary checkout, since the artifact's per-repository uniqueness is only observable inside one working tree at a time and the worktree-local commit, transfer, and cleanup rules live there
 
 ### Delimitation
 - **MUST** stay separate from the `spec` skill: that skill creates, translates, indexes, deduplicates translations, and checks translation drift; this audit checks readiness of the **content**
@@ -99,8 +102,4 @@ Specifications under `spec/<topic>/<slug>/` are the source of truth for downstre
 - [ ] Readiness-audit artifacts for single-spec promotion runs conform to the `review-plan` artifact format, so they're consumable by the same review-closure machinery as skill- and agent-review
 
 ## Open Questions
-- Should the audit define a canonical "contradiction corpus" (a maintained list of known spec-pair tension points that the audit always checks) or stay purely emergent from the current spec set?
-- Should audience derivation fail loudly (warning) as soon as the spec's module has an `audience-identify` artifact the spec doesn't reference, or is referencing the artifact a SHOULD that the audit only surfaces as info?
-- Does the portfolio want a minimum number of Acceptance Criteria per Requirement (for example ≥1 per MUST, ≥1 per cluster of SHOULDs), or does "at least one per Requirement" stay the bar?
 - Should the audit gate draft→accepted promotion automatically (CI enforces the zero-critical invariant) or stay advisory until the portfolio has more experience with the readiness metric?
-- When two specs contradict, should the audit prefer one of them by spec age / stability / topic, or always report the contradiction symmetrically and leave the resolution to the human reviewer?

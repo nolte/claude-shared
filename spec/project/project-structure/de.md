@@ -26,10 +26,10 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 - **MUSS [MUST]** eine `README.md` im Repository-Wurzelverzeichnis enthalten mit Projektvorstellung, Feature-Übersicht, Quickstart und Verweisen auf die vollständige Dokumentation; die innere Struktur dieser Datei (Pflicht-Abschnitte, Reihenfolge, Badges, Cross-Repository-Links) wird von der `readme-structure`-Spec geregelt
 - **MUSS [MUST]** eine `.gitignore` enthalten
 - **MUSS [MUST]** eine `CLAUDE.md` enthalten, die KI-gestützte Entwicklungs­konventionen, Architektur-Hinweise und Kommando-Einstiegspunkte des Repositories dokumentiert
-- **MUSS [MUST]** eine `renovate.json5` (bevorzugt) oder `renovate.json` enthalten, die das portfolioweite Preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>` erweitert — an einen Release-Tag gepinnt (zum Beispiel `#v1.1.12`) —, damit die Renovate-Konfiguration portfolio­übergreifend konsistent bleibt; per-Repository-Überschreibungen **SOLLTEN [SHOULD]** schmal gehalten werden (typischerweise Package-Gruppierungen oder Automerge-Regeln)
+- **MUSS [MUST]** eine `renovate.json5` (der kanonische Standard — JSON5 ist bevorzugt, weil die Portfolio-Presets auf Inline-Kommentaren beruhen) oder `renovate.json` (der Fallback, nur zulässig, wo JSON5-Tooling nicht verfügbar ist) enthalten, die das portfolioweite Preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>` erweitert — an einen Release-Tag gepinnt (zum Beispiel `#v1.1.12`) —, damit die Renovate-Konfiguration portfolio­übergreifend konsistent bleibt; per-Repository-Überschreibungen **SOLLTEN [SHOULD]** schmal gehalten werden (typischerweise Package-Gruppierungen oder Automerge-Regeln)
 - **MUSS [MUST]** die Renovate GitHub App (<https://github.com/apps/renovate>) auf dem Repository installiert haben, damit die obige `renovate.json5`-Konfiguration tatsächlich Dependency-Updates auslöst; ohne die App ist die Konfigurationsdatei wirkungslos und es entstehen weder PRs noch ein Dependency-Dashboard-Issue — es gilt dasselbe Probot-artige Installationsmuster wie für `settings` / `boring-cyborg` / `stale`, und die Installation ist menschlich-genehmigt
 - **MUSS [MUST]** eine `.pre-commit-config.yaml` enthalten, die für den Stack relevante Linter und Formatter fixiert
-- **SOLLTE [SHOULD]** eine `LICENSE`-Datei im Wurzelverzeichnis enthalten, wenn das Repository veröffentlicht oder zur Weiterverbreitung gedacht ist
+- **MUSS [MUST]** eine `LICENSE`-Datei im Wurzelverzeichnis enthalten, wenn das Repository öffentlich oder zur Weiterverbreitung gedacht ist; **SOLLTE [SHOULD]** andernfalls
 
 ### Claude-Code-Integration
 - **MUSS [MUST]** ein `.claude/`-Verzeichnis mit projektbezogener Claude-Code-Konfiguration enthalten (beliebige Kombination aus `agents/`, `skills/`, `commands/` und `settings*.json` je nach Bedarf)
@@ -38,6 +38,8 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 ### CI und Automatisierung
 - **MUSS [MUST]** ein `.github/`-Verzeichnis mit Workflows unter `.github/workflows/` enthalten
 - **MUSS [MUST]** eine `Taskfile.yml` (oder `Taskfile.yaml`) im Repository-Wurzelverzeichnis enthalten, die reproduzierbare Kommandos mindestens für Test-, Lint- und Docs-Ziele bereitstellt
+- **SOLLTE [SHOULD]** das aggregierte Quality-Gate unter dem portfolio-kanonischen Target-Namen `task check` bereitstellen, damit der Aufruf des Gates portfolioübergreifend identisch bleibt; die Zusammensetzung und der Output-Vertrag des Gates werden von `spec/project/quality-gate/` geregelt und diese Spec listet sie nie selbst auf, sondern fixiert nur den kanonischen Target-Namen
+- **SOLLTE [SHOULD]** ein `setup`-Target bereitstellen, das die projektlokale Umgebung erzeugt und Hooks/Abhängigkeiten installiert, damit das Onboarding nach dem ersten Klonen ein einziges Kommando ist
 - **SOLLTE [SHOULD]** Lint-, Test- und Docs-Kommandos in der CI über Taskfile-Targets aufrufen, damit lokales Verhalten und CI-Verhalten identisch bleiben
 - **SOLLTE [SHOULD]** CI-Status-Badges für die primären Workflows in der `README.md` anzeigen
 
@@ -49,6 +51,8 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - **KANN [MAY]** einen repository-spezifischen Packaging-Workflow enthalten (zum Beispiel eine `release.yml`, die `manifest.json` patcht, ein ZIP baut und via `gh release upload` hochlädt), getriggert auf `release: [published]`, wenn das Repository ein Auslieferungs-Artefakt wie eine HACS-Integration verschifft
 - **SOLLTE [SHOULD]** jede Referenz auf einen wiederverwendbaren Workflow an einen Tag pinnen (zum Beispiel `@v1.1.12`) statt an einen beweglichen Branch, damit das Release-Pipeline-Verhalten reproduzierbar bleibt
 
+Versionierungs-Policy und die Draft→Published-Release-Mechanik werden von `spec/project/release-automation/` und `spec/project/release-artifact/` geregelt; diese Spec referenziert sie und listet sie nie selbst auf.
+
 ### GitHub-Repository-Konfiguration
 - **MUSS [MUST]** GitHub-Repository-Einstellungen — Topics, Beschreibung, Homepage, Branch-Protection, Labels, Mitarbeitende und Merge-Button-Optionen — als Code über `.github/settings.yml` verwalten, konsumiert von der [Probot-Settings-App](https://probot.github.io/apps/settings/)
 - **MUSS [MUST]** die portfolioweiten Defaults über `_extends: nolte/gh-plumbing:.github/commons-settings.yml` erben (die Kurzform `gh-plumbing:.github/commons-settings.yml` ist innerhalb der `nolte`-Organisation gleichwertig) und die per-Repository-Inhalte auf repository-spezifische Felder wie `name`, `description`, `homepage` und `topics` beschränken
@@ -57,13 +61,15 @@ Das `nolte/gh-plumbing`-Portfolio liefert wiederverwendbare Workflows für Relea
 - **MUSS [MUST]** eine `.github/release-drafter.yml` enthalten, die `nolte/gh-plumbing:.github/commons-release-drafter.yml` erweitert, um den Release-Notes-Drafter zu speisen (der zugehörige Workflow wird von der branching-model-Spec beschrieben)
 - **SOLLTE [SHOULD]** eine `.github/boring-cyborg.yml` enthalten, die `nolte/gh-plumbing:.github/commons-boring-cyborg.yml` erweitert, für Newcomer-Onboarding, Auto-Labeling und Reviewer-Zuweisung über die [Boring-Cyborg-App](https://probot.github.io/apps/boring-cyborg/)
 - **SOLLTE [SHOULD]** eine `.github/stale.yml` enthalten, die `nolte/gh-plumbing:.github/commons-stale.yml` erweitert, um inaktive Issues und Pull Requests über die [Stale-App](https://probot.github.io/apps/stale/) zu verwalten
+- Issue-Templates unter `.github/` werden von `spec/project/github-issue-templates/` geregelt; diese Spec hebt sie nur hervor und listet ihre Form nie selbst auf
+- Das Pull-Request-Template `.github/pull_request_template.md` wird von `spec/project/pull-request-workflow/` geregelt; diese Spec hebt es nur hervor und listet seine Form nie selbst auf
 - **KANN [MAY]** einzelne Schlüssel aus den geerbten `commons-*.yml`-Dateien überschreiben, wenn der Bedarf eines Repositories von den Portfolio-Defaults abweicht; solche Überschreibungen schmal halten und neben der Änderung erklären
 
 ### Dokumentation
 - **MUSS [MUST]** ein `docs/`-Verzeichnis als MkDocs-Quelle enthalten
 - **MUSS [MUST]** eine `mkdocs.yml` im Repository-Wurzelverzeichnis enthalten
 - **SOLLTE [SHOULD]** die Dokumentation über einen CI-Workflow veröffentlichen (zum Beispiel GitHub Pages)
-- **KANN [MAY]** `docs/` nach Sprache aufteilen (`docs/en/`, `docs/de/`, …), wenn mehrsprachige Dokumentation erforderlich ist
+- **MUSS [MUST]** `docs/` in per-Sprache-Unterverzeichnisse (`docs/en/`, `docs/de/`, …) gemäß `spec/project/mkdocs-structure/` §Sprach-Parität organisieren, die das per-Sprache-Layout und die sprachübergreifende Datei-Baum-Parität für jedes Repository vorschreibt
 - **SOLLTE [SHOULD]** die MkDocs-Site gemäß `spec/project/mkdocs-structure/` strukturieren, die die kanonische Navigation, Plugin-Basis, Per-Page-Struktur, i18n-Parität und Erweiterungs-Hooks für projekt-typ-spezifische Specs definiert
 
 ### Spezifikationen
@@ -81,6 +87,7 @@ Das Portfolio führt Roadmap-, Sprint-, Feature- und Release-Artefakt-Datensätz
 
 ### Tests
 - **MUSS [MUST]** ein `tests/`-Verzeichnis im Repository-Wurzelverzeichnis enthalten
+- Für Claude-Code-Plugin-/Prompt-only-Repositories (das Layout `.claude-plugin/` + `skills/`) ohne Runtime-Quellcode ist `tests/` ein **SOLLTE [SHOULD]** statt eines **MUSS [MUST]**; die Validierungs-Oberfläche dieses Projekttyps ist die Frontmatter-/Contract-Prüfung (zum Beispiel `scripts/validate_skills.py`), verkabelt als `task test`-Target
 - **SOLLTE [SHOULD]** die Struktur des Quellbaums innerhalb von `tests/` spiegeln
 - **KANN [MAY]** End-to-End-Tests in einem eigenen Unterordner wie `tests/e2e/` ablegen
 
@@ -140,7 +147,7 @@ Diese Regeln gelten für jede `requirements.txt` und `requirements-dev.txt`, die
 - [ ] `Taskfile.yml` oder `Taskfile.yaml` ist vorhanden und `task --list` listet Test-, Lint- und Docs-Ziele auf
 - [ ] `docs/` und `mkdocs.yml` existieren und `mkdocs build` läuft fehlerfrei durch
 - [ ] `spec/` existiert im Repository-Wurzelverzeichnis
-- [ ] `tests/` existiert und enthält mindestens einen Test
+- [ ] `tests/` existiert und enthält mindestens einen Test, **oder** das Repository ist ein Claude-Code-Plugin-/Prompt-only-Repository (`.claude-plugin/` + `skills/`), dessen `task test`-Target eine Frontmatter-/Contract-Validierung (zum Beispiel `scripts/validate_skills.py`) anstelle von Runtime-Tests ausführt
 - [ ] Primärer Quellcode liegt unter `src/`, `src/<component>/`, `custom_components/<name>/`, `.claude-plugin/` + `skills/<name>/`, **oder** das Repository ist ein Ansible-Bootstrap-/Provisioning-Repository mit `playbooks/`, `roles/` und einem Inventar-Baum (`inventory/` oder `inventories/<env>/`) im Wurzelverzeichnis; nicht lose im Wurzelverzeichnis
 - [ ] Wenn das Repository Python-Quellcode enthält (`*.py`-Dateien, `custom_components/<name>/` oder `pyproject.toml`), ist eine `requirements.txt` im Repository-Wurzelverzeichnis oder unter jeder Python-führenden `src/<component>/` vorhanden
 - [ ] Wenn das Repository Python-Quellcode enthält, existiert eine `pyproject.toml` im Repository-Wurzelverzeichnis (Einzweck) oder unter jeder `src/<component>/` (mehrteilig) und deklariert `[build-system]`, Projekt-Metadaten und alle verwendete Python-Tooling-Konfiguration
@@ -151,12 +158,7 @@ Diese Regeln gelten für jede `requirements.txt` und `requirements-dev.txt`, die
 - [ ] Wenn eine `hacs.json` vorhanden ist, existiert `custom_components/<domain>/` und stimmt mit der HA-Integrations-Domain überein
 - [ ] Wenn `project/` vorhanden ist, liegen die Planungs-Artefakte unter dem Layout `project/roadmap.md`, `project/goals.md`, `project/sprints/<NNNN>-<slug>.md`, `project/features/<slug>.md` oder `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` (mit `project/release-artifacts/out-of-band/INDEX.md`, sofern mindestens ein Out-of-Band-Eintrag existiert); geschachtelte oder alternative Orte schlagen die Validierung fehl
 - [ ] CI-Status-Badges für die primären Workflows erscheinen am oberen Rand der `README.md`
+- [ ] Wenn das Repository öffentlich ist, existiert eine `LICENSE`-Datei im Wurzelverzeichnis
 
 ## Offene Fragen
-- Soll `LICENSE` für alle öffentlichen Repositories im Portfolio auf **MUSS [MUST]** angehoben werden?
-- Soll die Spec zusätzlich Issue-Templates, Pull-Request-Templates und `CODEOWNERS` für `.github/` vorschreiben? Die Probot-Konfiguration (settings, release-drafter, boring-cyborg, stale) ist nun abgedeckt; die Community-Health-Dateien bleiben offen.
-- Ist `renovate.json5` der kanonische Standard, oder soll `renovate.json` gleichwertig akzeptiert bleiben?
-- Sollen Release-Artefakte (Changelogs, Release-Workflows, Versionierungs-Policy) von hier referenziert oder vollständig einer separaten Release-Prozess-Spec überlassen werden?
-- Soll mehrsprachige Dokumentation (`docs/<lang>/`) zum **SOLLTE [SHOULD]** werden, sobald eine zweite Sprache erscheint, oder **KANN [MAY]** bleiben?
-- Gibt es ein kanonisches Mindest-Set an Taskfile-Targets über Test/Lint/Docs hinaus (zum Beispiel `setup`, `ci`, `release`)?
-- Soll `tests/` für Claude-Code-Plugin-Repositories, die nur Prompt-/Skill-Inhalte ausliefern und keinen Runtime-Code enthalten, von **MUSS [MUST]** auf **SOLLTE [SHOULD]** abgeschwächt werden?
+- Soll die Spec zusätzlich die Community-Health-Dateien `CODEOWNERS`, `SECURITY.md` und `SUPPORT.md` für `.github/` vorschreiben? Issue-Templates (`github-issue-templates`) und das Pull-Request-Template (`pull-request-workflow`) sind nun durch eigene Specs abgedeckt; die verbleibenden Community-Health-Dateien `CODEOWNERS` / `SECURITY.md` / `SUPPORT.md` gehören hierher und bleiben offen.

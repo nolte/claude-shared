@@ -24,7 +24,7 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 - Binary builds, signing, SBOM generation.
 - Release-notes content generation—that remains `release-drafter`'s responsibility, fed by Conventional-Commits PR titles.
 - Versioning policy (SemVer major/minor/patch derivation)—inherited from `release-drafter` configuration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
-- hotfix flow (release from `main` back to `develop`)—tracked as an Open Question on `branching-model` and out of scope here.
+- The hotfix flow—owned by `branching-model` `§Hotfix flow`, which settles it as a standard `fix/` pull request against `develop` followed by an ordinary patch release; out of scope here.
 - Deprecating the manual `gh release edit --draft=false` path entirely; the manual path remains a documented fallback for incident response when the workflow itself is broken.
 - Prescribing which ecosystems are included in the portfolio convention table for §Version-bearing files; the table grows as repos of new types enter the portfolio, each addition being a minor spec amendment rather than a new spec.
 

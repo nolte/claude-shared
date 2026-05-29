@@ -36,7 +36,7 @@ The spec deliberately scopes itself to **JSON Schema 2020-12 in YAML**. JSON-enc
 - Authoring schemas as JSON-encoded files (`*.json` or `*.schema.json`). The portfolio's authoring rule is YAML-only, and `*.schema.yaml` is the only authoring form this spec recognises. JSON-encoded schemas remain forbidden until a separate spec governs them; downstream consumers that need a JSON artefact derive it at build time via `yq -o json` (or an equivalent transform) from the YAML source.
 - Replacing `spec/project/feature/` (which governs the *content* of feature frontmatter) with a schema spec. This spec is about the shape and lifecycle of schema files; the frontmatter spec stays authoritative for what feature frontmatter contains.
 - Centralising frequently-shared schemas in a portfolio-wide registry directory. The portfolio policy is repo-local placement; cross-repository sharing is solved through `$id` discipline and absolute `$ref` URI targets into the owning repo's GitHub path, not through a shared directory under `spec/portfolio/<topic>/schemas/`.
-- Mandating code-generation from schemas (`Pydantic` models, TypeScript types, Go structs). Generation is permitted but stays out of this spec's MUST/SHOULD/MAY surface—that's a future spec.
+- Mandating code-generation from schemas (`Pydantic` models, TypeScript types, Go structs). Generation is permitted but stays out of this spec's MUST/SHOULD/MAY surface—that's a future spec. This deferral is settled: when generation is promoted, it becomes a **per-language SHOULD** that names one generator per ecosystem (for example `datamodel-code-generator`/Pydantic for Python, `json-schema-to-typescript` for TypeScript)—mirroring how this spec leaves the validator choice per-repo—rather than mandating a single portfolio-wide generator. The trigger to write that future spec is the first consumer that ships a `*.schema.yaml` and asks for generated types.
 
 ## Requirements
 
@@ -70,7 +70,7 @@ Every schema file MUST be readable as YAML, parseable as JSON Schema 2020-12, an
 4. `description`: one to three sentences explaining what the schema governs and where the schema is consumed. The description **MUST** name the consuming spec (`Refs spec/<topic>/<slug>/`) so the schema is traceable to its governing spec.
 5. `type`: the JSON Schema type keyword. For schemas describing objects, the value is `object`; for schemas describing arrays, `array`. Schemas that describe a union of types use `oneOf` or `anyOf` at the top level instead and omit the top-level `type`.
 6. `required`: the list of required property names, alphabetised. Omitted for schemas whose top-level type isn't `object`.
-7. `additionalProperties`: explicit `false` or an inline schema. The portfolio default is `false` for closed object shapes; `true` is permitted only when the description of the schema explains why the object is intentionally extensible.
+7. `additionalProperties`: explicit `false` or an inline schema. The portfolio default is `false` for closed object shapes; `true` is permitted only when the description of the schema explains why the object is intentionally extensible. When the schema composes sub-schemas via `allOf`, the closed-shape guarantee **MUST** instead be expressed with `unevaluatedProperties: false`, because `additionalProperties: false` doesn't see properties contributed by `allOf` members under 2020-12.
 8. `properties`: the per-property sub-schemas, in the order the consuming spec lists them. Property names use **`snake_case`** unless the data they describe is itself `camelCase` by external standard (for example GitHub Actions inputs).
 9. `$defs`: the reusable sub-schema map. Present only when at least one entry is referenced via `$ref` from elsewhere in the document; never present empty.
 10. `examples`: a list of at least one fully-valid example object. The example **MUST** validate against the schema; the meta-validation gate proves it.
@@ -136,11 +136,11 @@ Inside `properties` and inside `$defs`, every individual property sub-schema MUS
 - [ ] Every `*.schema.yaml` file carries the ten top-level keys from §Document skeleton in the declared order; the lint step rejects a file with an out-of-order key, a missing required key, or an extra top-level key (for example any `x-…` extension) with a non-zero exit code.
 - [ ] Every property sub-schema inside top-level `properties` carries either a `type` keyword or a `oneOf` / `anyOf` / `enum` composition that constrains its shape; sub-schemas with neither are reported by the lint step (the JSON Schema meta-schema doesn't enforce this on its own).
 - [ ] No `*.schema.yaml` file is edited in place after its first commit; every revision appears in the diff as a new file `<slug>-v<major>.<minor+1>.schema.yaml` (minor bump) or `<slug>-v<major+1>.0.schema.yaml` (major bump) alongside the previous file, and the previous file is removed only in a follow-up commit once no consumer still pins its `$id`.
+- [ ] Every closed object schema that uses `allOf` declares `unevaluatedProperties: false`; the lint step rejects a composed schema that relies on `additionalProperties: false` alone.
 
 ## Open Questions
 
-- Should the spec mandate `unevaluatedProperties: false` in addition to `additionalProperties: false` for closed object schemas with `allOf` composition, or is the simpler rule sufficient until composition becomes common?
-- Should code generation from schemas (`Pydantic`, TypeScript, Go) become a SHOULD in a follow-up revision, and which generator becomes the portfolio default?
+_None at this time._
 
 ## References
 

@@ -62,6 +62,8 @@ Ein Agent wird für genau eine von zwei Auslieferungsformen angelegt. Die Wahl w
 
 Jeder Agent deklariert diese Absicht, damit Autoren, Reviewer und Konsumenten aus der Datei selbst erkennen, ob er zu einem Plugin-Bundle gehört oder für die eigenständige Projektnutzung gedacht ist.
 
+Agents führen keine Per-Datei-Versions-Metadaten mit; die Versionierung wird auf Plugin-Ebene (`.claude-plugin/plugin.json`) und über die Git-Historie gehandhabt. Ein Per-Agent-`version`-Frontmatter-Feld wird zurückgestellt, bis der Verteilungsmechanismus unabhängiges Per-Agent-Pinning unterstützt (siehe `plugin-scoping`).
+
 ### Tool-Zugriff
 - **MUSS [MUST]** ein `tools`-Feld im Frontmatter deklarieren, wenn der Agent eingeschränkt werden soll; das Feld nur dann weglassen, wenn der Agent tatsächlich die volle Tool-Oberfläche benötigt — **`tools` wegzulassen erteilt implizit jedes vom Aufrufer geerbte Tool**, das ist eine Permission-Sprawl-Falle, kein sicherer Default ([R1](#referenzen), [R3](#referenzen))
 - **MUSS [MUST]** `tools` auf die minimal notwendige Menge für die Verantwortlichkeit des Agents beschränken (Prinzip der minimalen Rechte); rein lesende Agents **DÜRFEN NICHT [MUST NOT]** Schreib-, Edit- oder Ausführungs-Tools erhalten
@@ -126,6 +128,7 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 ### Empfehlungen
 - **SOLLTE [SHOULD]** den System-Prompt mit Rolle und Grenzen des Agents beginnen, dann das erwartete Ausgabeformat, dann die Arbeitsweise
 - **SOLLTE [SHOULD]** im System-Prompt ausdrücklich festhalten, ob der Agent Code schreibt oder nur recherchiert, da der aufrufende Claude diese Unterscheidung beim Dispatch treffen muss
+- Jeder Agent deklariert seinen eigenen Output-Vertrag im System-Prompt (bereits von §Struktur gefordert); es gibt kein einzelnes repoweites Bericht-Schema. Review-, Audit- und Recherche-Agents **SOLLTEN [SHOULD]** einen strukturierten Bericht zurückgeben (zum Beispiel schweregrad-klassifizierte Befunde oder eine Coverage-Map) und **SOLLTEN [SHOULD]** mit einem expliziten Caller-Follow-ups-/Übergabe-Abschnitt abschließen; freitextliche Zusammenfassungen sind nur für triviale Einzelfakt-Antworten akzeptabel
 - **SOLLTE [SHOULD]** den System-Prompt fokussiert halten; wächst er über etwa 200 Zeilen, sollte die Prosa gestrafft statt aufgeteilt werden—ein Agent bleibt eine einzelne Datei (siehe §Struktur), längeres Material wird also inlined oder, nur wenn wirklich zu groß, außerhalb des `agents/`-Baums abgelegt (zum Beispiel `agent-assets/<name>/`). Die ~200-Zeilen-Zahl ist eine lokale `nolte-shared`-Konvention; Anthropic dokumentiert kein Agent-Datei-Größenbudget, im Gegensatz zur weichen ~500-Zeilen-`SKILL.md`-Richtlinie, die `skill-management` für Skills kodifiziert
 - **SOLLTE [SHOULD]** in der `description` sowohl positive Trigger („einsetzen, wenn…") als auch typische negative Fälle („nicht einsetzen für…") nennen, wenn Überschneidungen mit anderen Agents wahrscheinlich sind
 - **KANN [MAY]** Beispiel-Aufrufe und erwartete Berichte inline im Agent-Body enthalten; sind sie zu groß zum Inlinen, werden sie außerhalb des `agents/`-Baums abgelegt (zum Beispiel `agent-assets/<name>/examples/`) und über relative Pfade referenziert—niemals in einem Schwester-Ordner `agents/<name>/`, den die rekursive Discovery als Phantom-Agent registrieren würde
@@ -174,8 +177,4 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 - [R6] Best practices for Claude Code subagents, PubNub Engineering — <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
 
 ## Offene Fragen
-- Soll der Dateiname (und damit `name`) exakt dem `subagent_type`-String entsprechen, oder ist eine Mapping-Schicht erlaubt?
-- Brauchen Agents Versions- oder Kompatibilitäts-Metadaten, während sie sich weiterentwickeln, oder genügt die Git-Historie der Agent-Datei?
-- Wo verläuft die Grenze zwischen einem Skill und einem Agent? Wann soll eine Fähigkeit das eine sein, wann das andere?
-- Sollen Agents deklarieren, an welche anderen Agents sie delegieren dürfen, oder bleibt Delegation vollständig dem aufrufenden Claude überlassen?
-- Gibt es eine gemeinsame Konvention, wie Agents zurückmelden (strukturiert vs. freitextliche Zusammenfassung), oder ist das pro Agent?
+_Derzeit keine._

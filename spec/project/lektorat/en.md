@@ -32,7 +32,7 @@ Two design constraints shape the spec. First, the layer is **operative**, not de
 - Lektoring files under `spec/`: they follow the `spec` skill's translation flow and have their own authoritative drift checks; including them here would create a second source of truth for spec prose
 - Vale-rule authoring (active-voice detector, gendered-pronoun detector, and similar): `prose-style` already lists this as a deferred decision and `Lektorat` doesn't pre-empt it
 - Slack messages, wiki pages, blog posts, or other non-Markdown human-facing prose surfaces: `Lektorat` covers GitHub Issue and pull-request bodies as a deliberate scope extension (they're user-visible Markdown that flows into search engines and project history). Note that `prose-style` §Pull-request descriptions and release notes already mandates Vale coverage on EN PR bodies and EN release-note bodies; `Lektorat` adds **no** coverage there but extends it with the D1/D2/D5 dimensions and the DE pipeline. Findings from `prose-style`'s Vale CI gate are deduplicated by Vale rule ID per §Coordination with neighbouring specs. Other prose surfaces remain out of scope until separately specified
-- A blocking gate for editorial findings of severity `suggestion`; only `critical` findings are gate-eligible, and even then opt-in per repository (see Open Questions)
+- A blocking gate for editorial findings of severity `suggestion`; only `critical` findings are gate-eligible, and even then opt-in per repository (see §Severity classification)
 
 ## Requirements
 
@@ -67,6 +67,7 @@ The five dimensions below are the **authoritative** list. Each finding produced 
 - **MUST** report the computed metric value, the corridor, and at least one offending sample (longest sentence, deepest nesting) so the finding is auditable
 - **MUST NOT** rewrite a passage on readability grounds alone in `patch` mode without a metric value or a named heuristic citation in the finding; an opinion isn't a finding
 - **SHOULD** complement metric findings with **structural heuristics** (paragraphs longer than three sentences, lists with more than seven peers, headings deeper than `####`)—these are `suggestion`-level by default
+- **SHOULD** compute the named metrics by consuming a maintained per-language readability library (a `textstat`-class library for English, a `readability-de`-class library for German) rather than re-implementing the classic formulas; the spec constrains only the metric names and the corridors above, not the implementation, and the chosen library **MAY** be recorded alongside the pipeline metadata (§Outputs) for reproducibility
 
 #### D2—Comprehensibility
 
@@ -122,6 +123,7 @@ The five dimensions below are the **authoritative** list. Each finding produced 
   - `suggestion`: qualifies a heuristic, proposes a stylistic refinement, or expands a sentence for clarity without changing meaning
 - **MUST** use these severity names verbatim in machine-readable output (JSON keys, frontmatter values, CLI exit-code mapping); `info`, `error`, `notice`, and similar synonyms are **MUST NOT**
 - **MUST** keep severity classification **dimension-aware**: a D3 misspelling in a published release note is `critical`, the same misspelling in a draft Markdown comment is `warning`, the same misspelling inside a code identifier produces **no finding** (out of scope per §Scope and applicability)
+- **MUST** treat `critical` findings as **advisory by default** in downstream gates (`sprint-review`, `release-publish-trigger`): a `critical` finding **MUST NOT** block a sprint review or a release on its own. A repository **MAY** opt into blocking on `critical` via a `Lektorat`-local flag, mirroring how `docs-freshness` surfaces findings without blocking releases. The portfolio-wide promotion of `critical` from advisory to blocking is a tracked follow-up, gated on the first quarter of accumulated audit data, and isn't yet in force
 
 ### Operations
 
@@ -251,6 +253,7 @@ The `Lektorat` layer **MUST** distinguish exactly three operations. The names be
 - **MUST** keep `id` stable across runs for the same finding on the same file/line/dimension so a dismissal can be recorded by `id`
 - **MUST** also emit a **human-readable** Markdown summary (severity-sorted) for operator review; the JSON is for machines, the Markdown is for humans
 - **SHOULD** write both outputs under `.audits/lektorat/<YYYY-MM-DD-HHMM>/` so a repository accumulates a reviewable audit trail (mirrors `spec/project/spec-drift-audit/` and similar layered audits)
+- The `.audits/lektorat/` JSON is the **contract**; rendering findings as **pull-request-line annotations** (or CI annotations) is explicitly **out of scope** for this spec and is a downstream CI/rendering decision layered over that JSON, consistent with how the portfolio's other audit specs treat their on-disk audit trail as the deliverable
 
 #### Edit diff (for `patch` and `revise`)
 
@@ -314,12 +317,8 @@ The spec deliberately leaves the exact implementation shape **open**, but **SHOU
 
 ## Open Questions
 
-- Should `critical`-severity findings act as a **blocking gate** in `sprint-review` and `release-publish-trigger`, or remain advisory? Default for now: **advisory**, with opt-in per repository via a `Lektorat`-local flag, mirroring how `docs-freshness` currently surfaces findings without blocking releases. Promote to blocking after the first quarter of audit data lands.
-- ~~Which concrete **German pipeline** should the portfolio standardise on for D3 (German spelling/grammar)?~~ **Resolved**: the portfolio default is the **LanguageTool HTTP API**: Public endpoint `https://api.languagetool.org/v2` for open-source repositories, or a self-hosted deployment of the same engine for repositories with sensitivity, throughput, or air-gap constraints. The HTTP API contract is identical in both forms; the per-run pin in `pipeline_metadata` (see §Outputs) records which endpoint was actually used so a run is reproducible. Repositories MAY override the default by pinning an alternative tool in their `Lektorat`-local configuration; the load-bearing contract is the JSON output shape, not the tool identity. **Note**: the Public endpoint has known rate limits (small per-request payload, ~20 requests/minute for anonymous access) and routes prose to a third-party server, both of which are implementation-level concerns for the consuming skill (`lektorat-apply`) rather than spec-level constraints.
 - Should `Lektorat` extend its scope to **API reference text generated from source** (typedoc, sphinx, godoc output)? Default for now: **no**, generated reference is a code-tooling concern and a separate spec topic; revisit when a portfolio repository ships a reference site whose audience extends beyond developers.
-- Should `Lektorat` carry its **own readability metric library** or consume an external service per language (textstat for EN, readability-de for DE)? Default for now: consume well-maintained libraries to avoid re-implementing classic formulas; the spec only constrains the **metric names** and **corridors**, not the implementation.
 - Should the `lektorat-scanner` agent be **dispatchable in parallel per file** (one agent run per artefact, results joined by the skill) or **batched** (one agent run for the whole repository)? Default for now: open—let the first implementation measure; the JSON output shape is the same either way.
-- Should `Lektorat` produce **diff annotations on pull requests** (for example as PR-line comments) in addition to the `.audits/lektorat/` audit trail? Default for now: **no**, the audit trail is the contract; PR-line comments are a downstream rendering decision that doesn't belong in this spec.
 
 ## Sources
 

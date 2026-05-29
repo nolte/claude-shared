@@ -90,6 +90,7 @@ Apply the deterministic rules from `spec/project/blog-author-trigger/` §Briefin
 
 - When the blog consumer's existing-post index is reachable, compute an advisory suggestion (the operator's choice always overrides it): derived slug absent from the index → suggest Choice 1; derived slug present → suggest Choice 2 with that post as target; the feature is a non-value-verifying mid-sprint feature whose sprint's `verifies_sprint_value` feature hasn't shipped → suggest Choice 3.
 - Present **exactly three** choices and require the operator to pick one in this session. If the session ends without a choice, the trigger is implicitly deferred (Choice 3).
+- When multiple `feature → done` transitions fire in one session, surface them **sequentially** — one three-way choice per feature, never batched into a single decision (per `spec/project/blog-author-trigger/` §Operator decision contract, this keeps the exactly-three-choices gate intact per feature). You **MAY** offer a "skip all remaining → defer to backlog" shortcut that defers every remaining feature via Choice 3.
 
 ### 4. Execute the chosen path
 

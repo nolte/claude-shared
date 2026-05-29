@@ -45,6 +45,8 @@ Ein Playbook-Repository **MUSS [MUST]** sich als genau eines der zwei Profile un
 - **MUSS [MUST]** `ansible-core` und jeden Python-Helfer der Toolchain (`ansible-lint`, `yamllint`, zugehörige Plugins) innerhalb einer projektlokalen Python-Virtual-Environment installieren — gemäß `spec/project/project-structure/` §Python-Entwicklung; niemals auf eine systemweite oder user-globale Ansible-Installation verlassen
 - **MUSS [MUST]** Laufzeit-Abhängigkeiten (`ansible-core` plus etwaige Collection-seitige Python-Deps wie `requests`, `netaddr`, `kubernetes` für die relevanten Collections) in `requirements.txt` pinnen und Tooling-only-Abhängigkeiten (`ansible-lint`, `yamllint`) in `requirements-dev.txt` pinnen
 - **SOLLTE [SHOULD]** Taskfile-Targets so verkabeln, dass `task install` das venv aus diesen Dateien provisioniert und die CI dasselbe Target vor Lint-, Syntax- und Dry-Run-Stufen aufruft — sodass Entwicklungs-Workstation und CI denselben Einstiegspunkt teilen
+- Es gibt bewusst **keine** portfolioweite Mindestversion von `ansible-core`: Die Versions-Untergrenze bleibt pro Repo (Edge-/Raspberry-Pi-Ziele und Control-Node-Python-Versionen unterscheiden sich), und der explizite `requirements.txt`-Pin oben ist das, was Reproduzierbarkeit garantiert
+- Die CI-Laufzeit bleibt dem konsumierenden Repo überlassen; diese Spec schreibt bewusst **kein** Execution-Environment-Image (EE) vor. Die tragende Reproduzierbarkeits-Garantie ist das projektlokale venv, gepinnt über `requirements.txt` / `requirements-dev.txt`, und der eine gemeinsame Installations-Einstiegspunkt oben — nicht ein Container-Image
 
 ### Idempotente Läufe und Check-Mode
 - **MUSS [MUST]** jeden Play idempotent gestalten; ein zweiter Aufruf gegen einen bereits konvergierten Host meldet null geänderte Tasks
@@ -89,8 +91,8 @@ Ein Playbook-Repository **MUSS [MUST]** sich als genau eines der zwei Profile un
 
 ### CI-Pipeline
 - **MUSS [MUST]** in der CI enthalten: einen Lint-Schritt (`ansible-lint`, `yamllint`), einen Syntax-Schritt (`ansible-playbook --syntax-check`) und einen Dry-Run-Schritt (`ansible-playbook --check --diff`) gegen ein repräsentatives Test-Inventar
-- **SOLLTE [SHOULD]** aus der CI heraus (oder via explizit gegateten Workflow) einen realen Apply gegen eine Staging-Umgebung laufen lassen, bevor Apply gegen Production erfolgt
-- **SOLLTE [SHOULD]** den Dry-Run-Diff als PR-Artefakt veröffentlichen, damit Reviewer ohne lokales Reproduzieren lesen können, was sich ändern würde
+- **SOLLTE [SHOULD]** aus der CI heraus (oder via explizit gegateten Workflow) einen realen Apply gegen eine Staging-Umgebung laufen lassen, bevor Apply gegen Production erfolgt; dies bleibt ein **SOLLTE [SHOULD]** (kein **MUSS [MUST]**), weil nicht jedes multi-environment-fleet-Repo eine Staging-Umgebung deklariert, die Production spiegelt, und konkrete Release-Promotion gemäß §Nicht-Ziele außerhalb des Scopes liegt
+- **SOLLTE [SHOULD]** den Dry-Run-Diff als PR-Artefakt veröffentlichen, damit Reviewer ohne lokales Reproduzieren lesen können, was sich ändern würde; Dateiformat und Aufbewahrung des Artefakts bleiben jeder Repo-Diskretion überlassen (die Spec schreibt nur vor, dass der Diff veröffentlicht wird, nicht wie er gespeichert wird)
 
 ### Querverweise
 - Für rollen-interne Konventionen (Galaxy-Verzeichnislayout, `meta/argument_specs.yml`, `defaults/` vs `vars/`, Molecule, Galaxy-Publishing) siehe [`spec/ansible/role-development/`](../role-development/de.md)
@@ -113,8 +115,4 @@ Ein Playbook-Repository **MUSS [MUST]** sich als genau eines der zwei Profile un
 
 ## Offene Fragen
 - Soll das Profil *single-environment-bootstrap* in eine eigene dedizierte Spec (`spec/ansible/edge-device-bootstrap/`) ausgelagert werden, sobald ein zweites Repository es übernimmt — oder als Profil innerhalb dieser Spec bleiben?
-- Soll das Dry-Run-Diff-Artefakt portfolio­weit standardisiert sein (Dateiformat, Aufbewahrung), oder bleibt es jeder Repo-Diskretion überlassen?
 - Soll `sops`-Integration von **KANN [MAY]** auf **SOLLTE [SHOULD]** angehoben werden, sobald ein portfolio­weites Muster (kustomize-artiger Key-Store) entsteht?
-- Soll es eine portfolio­weite Mindestversion von Ansible / `ansible-core` geben, oder bleibt sie pro Repo?
-- Soll die Spec Execution-Environment-Images (EE) für die CI vorschreiben, oder die Laufzeit dem konsumierenden Repo überlassen?
-- Soll ein expliziter Staging-vor-Production-Gate **MUSS [MUST]** statt **SOLLTE [SHOULD]** sein für Repos, die Production-Hosts berühren?

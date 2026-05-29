@@ -12,7 +12,7 @@ Repositories in this portfolio use `main` as a presentation-only branch that alw
 - Branch roles are unambiguous for humans and AI agents reading the repository
 
 ## Non-Goals
-- Tag naming scheme (handled by release-drafter configuration)
+- Tag naming scheme (handled by release-drafter configuration; the portfolio convention is the `v`-prefixed SemVer tag, for example `v1.2.3`, set centrally in `nolte/gh-plumbing:.github/commons-release-drafter.yml`)
 - Changelog generation (handled by release-drafter)
 - Publication to external registries (HACS, PyPI, container registries)
 - Project-level Taskfile / CI target contents (covered by the project-structure spec)
@@ -42,6 +42,11 @@ Repositories in this portfolio use `main` as a presentation-only branch that alw
 - **MUST** derive `main` content mechanically from the release; editing files directly on `main` is a bug
 - **SHOULD** keep the default pull-request base set to `develop`, not `main`
 
+### `Hotfix` flow
+- **MUST** handle an emergency hotfix as a standard `fix/` pull request against `develop`, followed by a new patch release that fast-forwards `main` through `release-cd-refresh-master.yml` like any other release
+- **MUST NOT** branch off `main` or merge a hotfix back into `main`; the "no manual writes to `main`" rule in §Branch roles and §Release flow admits no hotfix carve-out
+- **MUST** record the resulting release as an out-of-band artefact under `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` per `spec/project/release-artifact/` §out-of-band; mid-sprint hot-fixes are tracked the same way per `spec/project/sprint/`, and `spec/project/release-automation/` §Non-Goals defers the hotfix flow to this subsection
+
 ### Required GitHub workflows
 The repository **MUST** include the following workflows under `.github/workflows/`, each wired to the corresponding reusable workflow from `nolte/gh-plumbing`:
 
@@ -49,6 +54,8 @@ The repository **MUST** include the following workflows under `.github/workflows
 - **`release-publish.yml`**: triggers on `workflow_dispatch` only; uses `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml` to flip the open draft to `draft: false` once the pre-publish gates declared in `spec/project/release-automation/` have all passed; requires `contents: write` permission
 - **`release-cd-refresh-master.yml`**: triggers on `release: [published]`; uses `nolte/gh-plumbing/.github/workflows/reusable-release-cd-refresh-master.yml` with `target_branch: main` to fast-forward `main` to the released commit; requires `contents: write` permission
 - **`automerge.yaml`**: triggers on pull-request / review / check-suite events; uses `nolte/gh-plumbing/.github/workflows/reusable-automerge.yaml` so approved, green pull requests against `develop` merge automatically
+
+`target_branch` is `main` for every repository, including HACS integrations; the `master` token in the reusable-workflow filename `reusable-release-cd-refresh-master.yml` is a `nolte/gh-plumbing` naming legacy and doesn't imply a `master` branch.
 
 The repository **SHOULD** also include, where applicable:
 
@@ -58,6 +65,7 @@ The repository **SHOULD** also include, where applicable:
 ### Workflow integrity
 - **MUST** keep the four required workflows (`release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`) in every repository that follows this branching model
 - **SHOULD** pin the `nolte/gh-plumbing` reusable-workflow reference to a tag (for example `@v1.1.12`) rather than a moving branch, so the refresh behavior of `main` is reproducible
+- The bump cadence for the pinned tag is governed by `spec/project/workflow-health/` §Upstream drift (candidate bump applied through a single gated PR, with Renovate automerge forbidden for `nolte/gh-plumbing` tag bumps); each repository pins the latest validated tag, and no single fixed version is mandated portfolio-wide
 
 ## Acceptance Criteria
 - [ ] `develop` exists and is the default pull-request base
@@ -74,8 +82,4 @@ The repository **SHOULD** also include, where applicable:
 - [ ] If MkDocs is used **and** `.github/workflows/release-cd-deliver-docs.yml` is shipped, the workflow triggers on `release: [published]` (the workflow itself is SHOULD, per Requirements §Required GitHub workflows; this AC checks its trigger when present, not its presence)
 
 ## Open Questions
-- How should emergency hotfixes be handled—branch off `main`, merge back to both `main` and `develop`, or always cycle through `develop` plus a new patch release?
-- Should `target_branch` remain `main` uniformly, even for HACS integrations whose historical convention was `master`?
-- Is there a portfolio-wide policy for which `nolte/gh-plumbing` version tag to pin across all repositories, and how's it bumped?
-- Should this spec prescribe a tag naming scheme (`v1.2.3` vs `1.2.3`) or leave that to release-drafter configuration per repository?
-- Should the automerge workflow be mandatory, or optional when a repository prefers manual merges?
+_None at this time._

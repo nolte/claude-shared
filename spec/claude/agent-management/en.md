@@ -62,6 +62,8 @@ An agent is authored for exactly one of two delivery forms. The choice is made u
 
 Every agent declares this intent so authors, reviewers, and consumers all see from the file itself whether it belongs to a plugin bundle or is meant for standalone project use.
 
+Agents carry no per-file version metadata; versioning is handled at the plugin level (`.claude-plugin/plugin.json`) and via git history. A per-agent `version` frontmatter field is deferred until the distribution mechanism supports independent per-agent pinning (see `plugin-scoping`).
+
 ### Tool access
 - **MUST** declare a `tools` field in frontmatter when the agent should be restricted; omit the field only when the agent genuinely needs the full tool surface, because **omitting `tools` implicitly grants every tool inherited from the caller**, which is a permission-sprawl trap, not a safe default ([R1](#references), [R3](#references))
 - **MUST** scope `tools` to the minimum set needed for the agent's responsibility (principle of least authority); read-only agents MUST NOT receive write, edit, or execution tools
@@ -126,6 +128,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 ### Recommendations
 - **SHOULD** begin the system prompt with the agent's role and boundaries, then the expected output format, then the working procedure
 - **SHOULD** state explicitly in the system prompt whether the agent writes code or only researches, since the calling Claude is responsible for that distinction at dispatch time
+- Each agent declares its own output contract in the system prompt (already required by §Structure); there is no single repo-wide report schema. Review, audit, and research agents **SHOULD** return a structured report (for example severity-classified findings or a coverage map) and **SHOULD** close with an explicit caller follow-ups / handoff section; free-form summaries are acceptable only for trivial single-fact responses
 - **SHOULD** keep the system prompt focused; if it grows past roughly 200 lines, tighten the prose rather than splitting it out—an agent stays a single file (see §Structure), so long-form material stays inline or, only when genuinely too large, moves outside the `agents/` tree (for example `agent-assets/<name>/`). The ~200-line figure is a local `nolte-shared` convention; Anthropic documents no agent-file size budget, in contrast to the soft ~500-line `SKILL.md` guideline that `skill-management` codifies for skills
 - **SHOULD** include in `description` both positive triggers ("use when…") and common negative cases ("don't use for…") when overlap with other agents is likely
 - **MAY** include example invocations and expected reports inline in the agent body; when they're too large to inline, place them outside the `agents/` tree (for example `agent-assets/<name>/examples/`) and reference them by relative path—never in a sibling `agents/<name>/` folder, which recursive discovery would register as a phantom agent
@@ -176,8 +179,4 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [R6] Best practices for Claude Code subagents, PubNub Engineering: <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
 
 ## Open Questions
-- Should the filename (and thus `name`) match the `subagent_type` string exactly, or is a mapping layer allowed?
-- Do agents need version or compatibility metadata as they evolve, or is the git history of the agent file sufficient?
-- Where's the boundary between a skill and an agent? When should a capability be one versus the other?
-- Should agents declare which other agents they may delegate to, or is delegation left entirely to the calling Claude?
-- Is there a shared convention for how agents report back (structured vs. free-form summary), or is that per-agent?
+_None at this time._

@@ -72,7 +72,7 @@ Diese Spec schließt diese Lücke. Sie definiert (a) das portfolio-weite MkDocs-
   - `audience`: eine oder mehrere Audience-IDs aus dem Audience-Artefakt des Projekts (`AUDIENCES.md` oder die per `spec/project/audience-identification/` dokumentierte alternative Lage)
   - `content_mode`: genau ein Wert aus der geschlossenen Enumeration, die §Inhalts-Modi (Diátaxis-Ausrichtung) deklariert (oder ein explizit per Opt-in zugelassener Erweiterungs-Wert)
   - `track`: genau einer aus `user-docs` oder `developer-docs` (oder ein explizit per Opt-in zugelassener Erweiterungs-Wert), gemäß `spec/project/docs-audience-tracks/` §Per-Page-Kontrakt — dieser Schlüssel ist das Audience-Spur-Signal, das orthogonal zu `audience` und `content_mode` läuft
-  - `last_updated`: ISO-8601-Datum der letzten Inhaltsrevision oder das Literal `generated` für Seiten, die ein Katalog-Generator emittiert hat
+  - `last_updated`: ISO-8601-Datum der letzten Inhaltsrevision oder das Literal `generated` für Seiten, die ein Katalog-Generator emittiert hat. Das Literal `generated` deklariert das Datum als generator-gepflegt: `spec/project/docs-freshness/` behandelt es als Skip-Trigger und **DARF NICHT [MUST NOT]** auf einer solchen Seite Content-Staleness melden, da deren Aktualität dem CI-Freshness-Check des Generators selbst obliegt und nicht dem schreibgeschützten Audit
 - **SOLLTE [SHOULD]** eine `## Sources`-Sektion als letzte Sektion der Seite einbauen, die auf die autoritative Quelle (`spec/<path>`, `src/<path>`, einen ADR, eine externe URL) zurückverweist, sofern die Seite aus einer einzigen Quelle der Wahrheit abgeleitet ist
 - **KANN [MAY]** zusätzliche Frontmatter-Schlüssel deklarieren: `tags` für Cross-Page-Lookups, `status` für explizite `draft`/`stable`/`deprecated`-Markierung, `summary` für eine einzeilige Kurzfassung, die in Sektions-Indexseiten verwendet wird
 - **DARF NICHT [MUST NOT]** Frontmatter-Schlüssel mit portfolio-weiter Bedeutung erfinden, ohne sie über eine Spec-Änderung vorzuschlagen
@@ -183,7 +183,7 @@ Zwei deklarierte Erweiterungspunkte erlauben es projekt-typ-spezifischen Specs, 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
 - Keine zum Entwurfszeitpunkt. Die sieben initialen Design-Fragen (ADR-Sektions-Trigger, Project-Sektions-Opt-in, Mechanismus für Erweiterungs-Erkennung, Audience-Basis, Quellsprachen-Deskriptor, Cap für Erweiterungs-Sektionen, absolute Position von Skills/Agents) wurden während der initialen Autorenschaft geklärt; siehe den PR, der diese Spec einführt, für die Rationale jeder Frage.
-- Soll die `content_mode`-Nicht-Mischen-Regel statisch erzwungen werden (ein Marker-Scan des Seitenkörpers, der instruktive Verben in einer `reference`-Seite, Rezeptlisten in einer `explanation`, … sucht) oder zur Audit-Zeit nur als Reviewer-Urteil markiert werden? Die Regel selbst ist normativ; der Durchsetzungsmechanismus wird vertagt, bis der `docs-freshness`-Audit genug False-Positive-Kosten akkumuliert, um zu entscheiden.
+- Geklärt: Die Nicht-Mischen-Regel wird zur Audit-Zeit als Reviewer-Urteils-Signal mit Warning-Schweregrad erkannt, niemals über einen statischen Marker-Scan — siehe `spec/project/docs-freshness/` §Drift-Kategorien (Content-Mode-Drift).
 - Bleibt der `prerequisites`-Frontmatter-Schlüssel auf `tutorial`-/`how-to`-Seiten optional (`KANN [MAY]`), oder wird er zu `SOLLTE [SHOULD]` verhärtet, sobald die Audit-Oberfläche verifizieren kann, dass die Prerequisite-Kette azyklisch und erreichbar ist?
 
 ## Quellen

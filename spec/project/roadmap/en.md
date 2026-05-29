@@ -93,6 +93,7 @@ End users authenticate via the new SSO provider in under three steps; the legacy
 ### Sprint and feature linkage
 
 - **MAY** assign `target_sprint` to suggest which sprint should pick the item up; the suggestion is non-binding and the actual sprint composition is owned by `sprint-plan` per the sibling `sprint` spec.
+- **MUST NOT** express `target_sprint` as a range or list; it's a single integer or `null`. A roadmap item that conceptually spans multiple sprints **MUST** be split (decomposed via `feature-decompose` into per-sprint features, each delivering an independently verifiable slice) rather than expressed as a sprint range. The scalar form is what the detail-level refinement rule (which resolves exactly one current and one next sprint) and the sibling `sprint` spec's per-sprint value contract both depend on.
 - **MUST** clear or re-target `target_sprint` when its referenced sprint reaches terminal status (`closed` or `cancelled`) without picking the item up; `sprint-plan` owns this update at sprint closure. The valid post-closure values are `null` (item drops back to unscheduled) or a new integer pointing at a `planned` sprint. Leaving `target_sprint` pointing at a terminal sprint is a lint violation.
 - **MUST NOT** include feature definitions inline. Decomposition of a roadmap item into one or more features is the contract of the sibling `feature` spec and the `feature-decompose` skill; the roadmap item only references its features by ID once they exist (the back-reference lives on the feature side, not in the roadmap).
 
@@ -129,5 +130,4 @@ End users authenticate via the new SSO provider in under three steps; the legacy
 
 - Should the roadmap allow a tagging field (`tags: [perf, ux, infra]`) for filtering large queues, or does that belong to a future surface (a generated index page)? Defer until a project's roadmap exceeds roughly twenty `coarse`+`backlog` items.
 - How do we represent dependencies between roadmap items (`R-7 depends on R-3`)? Frontmatter list (`depends_on: [R-3]`) is the obvious shape, but a hobby-scale roadmap rarely needs strict ordering beyond top-to-bottom; revisit when a real project hits an actual blocker chain.
-- Should `target_sprint` accept a range (`target_sprint: [3, 5]`) for items that span multiple sprints, or is splitting the item the right answer? Splitting is preferred today; revisit if a real cross-sprint item appears that genuinely cannot be split.
 - Should phases carry a stable identifier so that downstream tooling (release notes, audience-doc-author) can group changes by phase? Defer until at least one phase-aware consumer exists.

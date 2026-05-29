@@ -12,7 +12,7 @@ Repositories in diesem Portfolio verwenden `main` als reinen Präsentations-Bran
 - Branch-Rollen sind für Menschen und KI-Agenten, die das Repository lesen, eindeutig
 
 ## Nicht-Ziele
-- Tag-Namensschema (von der release-drafter-Konfiguration abgedeckt)
+- Tag-Namensschema (von der release-drafter-Konfiguration abgedeckt; die Portfolio-Konvention ist der `v`-präfixierte SemVer-Tag, zum Beispiel `v1.2.3`, zentral in `nolte/gh-plumbing:.github/commons-release-drafter.yml` gesetzt)
 - Changelog-Erzeugung (von release-drafter abgedeckt)
 - Veröffentlichung in externen Registries (HACS, PyPI, Container-Registries)
 - Inhalt projektweiter Taskfile-/CI-Targets (durch die project-structure-Spec abgedeckt)
@@ -42,6 +42,11 @@ Repositories in diesem Portfolio verwenden `main` als reinen Präsentations-Bran
 - **MUSS [MUST]** den Inhalt von `main` mechanisch aus dem Release ableiten; direkte Datei-Änderungen auf `main` sind ein Fehler
 - **SOLLTE [SHOULD]** die Default-Pull-Request-Basis auf `develop` lassen, nicht auf `main`
 
+### Hotfix-Flow
+- **MUSS [MUST]** einen Notfall-Hotfix als regulären `fix/`-Pull-Request gegen `develop` behandeln, gefolgt von einem neuen Patch-Release, das `main` über `release-cd-refresh-master.yml` wie jedes andere Release per Fast-Forward bringt
+- **MUSS NICHT [MUST NOT]** ab `main` branchen oder einen Hotfix zurück nach `main` mergen; die Regel „keine manuellen Schreibzugriffe auf `main`“ aus §Branch-Rollen und §Release-Flow lässt keine Hotfix-Ausnahme zu
+- **MUSS [MUST]** das resultierende Release als Out-of-Band-Artefakt unter `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` gemäß `spec/project/release-artifact/` §out-of-band erfassen; Mid-Sprint-Hotfixes werden gemäß `spec/project/sprint/` auf dieselbe Weise nachgehalten, und `spec/project/release-automation/` §Nicht-Ziele delegiert den Hotfix-Flow an diesen Unterabschnitt
+
 ### Erforderliche GitHub-Workflows
 Das Repository **MUSS [MUST]** die folgenden Workflows unter `.github/workflows/` enthalten, jeweils an den entsprechenden wiederverwendbaren Workflow aus `nolte/gh-plumbing` angeschlossen:
 
@@ -49,6 +54,8 @@ Das Repository **MUSS [MUST]** die folgenden Workflows unter `.github/workflows/
 - **`release-publish.yml`** — löst ausschließlich auf `workflow_dispatch` aus; nutzt `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml`, um den offenen Entwurf auf `draft: false` zu flippen, sobald die in `spec/project/release-automation/` deklarierten Pre-Publish-Gates allesamt grün sind; benötigt die Berechtigung `contents: write`
 - **`release-cd-refresh-master.yml`** — löst auf `release: [published]` aus; nutzt `nolte/gh-plumbing/.github/workflows/reusable-release-cd-refresh-master.yml` mit `target_branch: main`, um `main` per Fast-Forward auf den veröffentlichten Commit zu bringen; benötigt die Berechtigung `contents: write`
 - **`automerge.yaml`** — löst auf Pull-Request-/Review-/Check-Suite-Events aus; nutzt `nolte/gh-plumbing/.github/workflows/reusable-automerge.yaml`, damit freigegebene, grüne Pull Requests gegen `develop` automatisch gemergt werden
+
+`target_branch` ist für jedes Repository `main`, einschließlich HACS-Integrationen; das `master`-Token im Dateinamen des wiederverwendbaren Workflows `reusable-release-cd-refresh-master.yml` ist ein `nolte/gh-plumbing`-Namens-Altlast und impliziert keinen `master`-Branch.
 
 Das Repository **SOLLTE [SHOULD]** außerdem enthalten, wo anwendbar:
 
@@ -58,6 +65,7 @@ Das Repository **SOLLTE [SHOULD]** außerdem enthalten, wo anwendbar:
 ### Workflow-Integrität
 - **MUSS [MUST]** die vier Pflicht-Workflows (`release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`) in jedem Repository halten, das diesem Branching-Modell folgt
 - **SOLLTE [SHOULD]** die Referenz auf die wiederverwendbaren `nolte/gh-plumbing`-Workflows auf einen Tag fixieren (zum Beispiel `@v1.1.12`) statt auf einen wandernden Branch, damit das Refresh-Verhalten von `main` reproduzierbar bleibt
+- Die Bump-Kadenz für den fixierten Tag wird von `spec/project/workflow-health/` §Upstream-Drift geregelt (Kandidaten-Bump über einen einzelnen gegateten PR, wobei Renovate-Automerge für `nolte/gh-plumbing`-Tag-Bumps verboten ist); jedes Repository fixiert den zuletzt validierten Tag, und portfolioweit ist keine einzelne feste Version vorgeschrieben
 
 ## Akzeptanzkriterien
 - [ ] `develop` existiert und ist die Default-Basis für Pull Requests
@@ -74,8 +82,4 @@ Das Repository **SOLLTE [SHOULD]** außerdem enthalten, wo anwendbar:
 - [ ] Wenn MkDocs verwendet wird **und** `.github/workflows/release-cd-deliver-docs.yml` ausgeliefert ist, löst der Workflow auf `release: [published]` aus (der Workflow selbst ist SHOULD, gemäß Anforderungen §Erforderliche GitHub-Workflows; dieses AK prüft den Trigger im Vorhandenseinsfall, nicht das Vorhandensein selbst)
 
 ## Offene Fragen
-- Wie sollen Notfall-Hotfixes behandelt werden — Branch ab `main`, Merge zurück nach `main` und `develop`, oder immer über `develop` plus neues Patch-Release?
-- Soll `target_branch` einheitlich `main` bleiben, auch für HACS-Integrationen, deren historische Konvention `master` war?
-- Gibt es eine portfolioweite Policy, welchen `nolte/gh-plumbing`-Versions-Tag alle Repositories pinnen, und wie wird dieser hochgezogen?
-- Soll diese Spec ein Tag-Namensschema (`v1.2.3` vs `1.2.3`) vorschreiben oder das der release-drafter-Konfiguration je Repository überlassen?
-- Soll der Automerge-Workflow verpflichtend sein oder optional, wenn ein Repository manuelle Merges bevorzugt?
+_Derzeit keine._

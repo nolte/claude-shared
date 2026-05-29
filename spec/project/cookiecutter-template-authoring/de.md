@@ -21,7 +21,7 @@ Ein Cookiecutter-Template in diesem Portfolio ist ein Projekt-Scaffold-Artefakt,
 <!-- Explizit außerhalb des Scopes. Verhindert Scope-Creep. -->
 - Das Konsumieren eines existierenden Templates (ein gewöhnlicher `cookiecutter <url>`-Aufruf braucht keine Spec und keinen Agent)
 - Generisches Python-Projekt-Bootstrap ohne Cookiecutter-Bezug (verwende die Standard-Python-Projektstruktur aus `spec/project/project-structure/`)
-- Copier- oder cruft-Templates — die haben andere Anti-Patterns und andere Hook-Kontrakte; Querverweise auf sie gehören in den Agent-Body, nicht in diese Spec
+- Copier- oder cruft-Templates — die haben andere Anti-Patterns und andere Hook-Kontrakte; Querverweise auf sie gehören in den Agent-Body, nicht in diese Spec. Eine eigene `copier-template-authoring`- / `cruft-template-authoring`-Spec wird nur dann erstellt, wenn das Portfolio tatsächlich ein solches Template ausliefert.
 - Templates, die absichtlich von den nolte-Portfolio-Specs abweichen (out-of-scope für den Agent und für diese Spec; die Abweichung verlangt einen expliziten Waiver außerhalb dieser Oberfläche)
 - Das Render-Zeit-`cookiecutter.json`-Variablen-Schema (variiert pro Template by Design — die Spec regelt die Form des resultierenden Projekts, nicht die Eingabeform)
 - Visuelle Identität oder Branding des gerenderten Projekts (Per-Template-Entscheidung, gegated durch die `mkdocs-material`-Palette-Einstellungen des gerenderten Projekts)
@@ -85,7 +85,6 @@ Das Template **DARF NICHT [MUST NOT]** eines der folgenden rendern:
 
 ## Offene Fragen
 <!-- Ungeklärte Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Soll diese Spec auch auf Copier- und cruft-Templates ausgedehnt werden, oder Cookiecutter-only bleiben mit Querverweisen auf eine künftige `copier-template-authoring`- und `cruft-template-authoring`-Spec? Verschoben, bis das Portfolio tatsächlich ein Nicht-Cookiecutter-Template ausliefert; der bestehende Scope des Agents ist Cookiecutter-only.
 - Muss der Post-Generation-Hook das `audience-identify`-Skill automatisch dispatchen (Ein-Schritt-Generierung + Audience-Identifikation), oder reicht der Banner-only „Nächster Schritt"-Pointer? Verschoben, bis ein Portfolio-Template 5+ Generierungen durchlaufen hat und wir wissen, ob Operatoren dem Banner tatsächlich folgen.
 - Muss die `pytest-cookies`-Matrix Windows abdecken, wenn die Zielgruppe des gerenderten Projekts Windows-Nutzer enthalten kann (Home-Assistant-Integrationen, CLIs mit Binär-Releases), oder bleibt sie als Portfolio-Konvention Linux-only? Verschoben, bis ein Portfolio-Repository ein Windows-zielendes Artefakt rendert.
 

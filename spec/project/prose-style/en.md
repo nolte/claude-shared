@@ -44,6 +44,8 @@ Documentation, specifications, READMEs, release notes, and other human-readable 
 - **SHOULD** open a pull request against `nolte/vale-style` with a one-line justification per new entry, so additions are reviewable
 - **MAY** keep a term in a repository-local vocabulary only while the upstream PR is pending; once the upstream change is released, the local entry **MUST** be removed and the pinned `nolte/vale-style` release **MUST** be bumped
 
+The drift between repository-local vocabularies and the pinned `nolte/vale-style` release is audited by the `vocab-drift-audit` skill rather than by a periodic CI cron.
+
 ### Pull-request descriptions and release notes
 - **MUST** apply the same shared Vale rule set to pull-request descriptions and to GitHub Release notes (drafted by release-drafter, edited before publishing), because this prose flows directly into external changelogs and user-facing release pages
 - **MUST** check pull-request descriptions in CI (for example via a PR-check workflow) at the repository's configured `MinAlertLevel`, failing on `error`-level alerts the same way documentation does
@@ -95,7 +97,6 @@ The Vale rule sets enforce a mechanical baseline, but the rules below codify the
 - [ ] The shared Vale vocabulary at `nolte/vale-style` carries Microsoft's bias-free substitutions (`primary` / `subordinate`, `stop responding`, `perimeter network`, …) so a per-repo override isn't needed to enforce them
 
 ## Open Questions
-- _None—all prior open points have been resolved. The drift audit between repository-local vocabularies and the pinned `nolte/vale-style` release is delegated to a dedicated Claude Skill rather than enforced through a periodic CI cron._
 - Should the §Voice and tone rules be automatically enforced via additional Vale rules deposited in `nolte/vale-style` (an active-voice detector, a title-case detector, a gendered-pronoun detector), or do they stay editorial guidance for now? Vale rule authoring is non-trivial and false-positive-prone; defer until enough drift is recorded to justify the rule cost.
 
 ## Sources

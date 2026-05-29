@@ -34,9 +34,11 @@ Leser: Agent-Autoren, die den Checker pflegen; Reviewer, die seine Befunde prüf
 - **MUSS [MUST]** eine einzelne **Referenz-Locale** bestimmen (die Source-of-Truth-Sprache, gegen die andere Locales gemessen werden): die vom Operator benannte verwenden, sonst die deklarierte Default-Locale des Projekts, sonst auf eine dokumentierte Heuristik zurückfallen und angeben, welche Locale gewählt wurde
 - **MUSS [MUST]** die zu scannenden Source-Roots für Key-Verwendung entdecken, statt den Pfad einer App hartzucodieren, und berichten, welche Roots und Datei-Globs gescannt wurden
 - **MUSS [MUST]** die Call-Site-Lookup-Patterns an die i18n-Bibliothek des Projekts anpassen (react-i18next / i18next `t('…')` und `i18nKey="…"`, vue-i18n `$t('…')` / `<i18n-t>`, FormatJS / react-intl `formatMessage`/`<FormattedMessage id>` und vergleichbare); wenn die Bibliothek nicht bestimmt werden kann, das angenommene Pattern-Set im Report angeben
+- **DARF [MAY]** eine optionale repository-lokale Config-Datei (`project/i18n-audit.yml`) lesen, die Locale-Pfade, Referenz-Locale, Source-Globs und i18n-Bibliothek deklariert; wenn vorhanden, haben ihre Werte Vorrang vor der Discovery, wenn abwesend, ist Pro-Invocation-Discovery der dokumentierte Default. Der Report **MUSS** pro aufgelöster Eingabe angeben, ob der Wert aus der Config-Datei, einem Operator-Argument oder der Discovery stammt
 
 ### Audit-Dimensionen
 
+- **MUSS [MUST]** jeden unabhängigen Locale-Baum (pro Paket / Subroot) als separaten Audit-Scope behandeln und Keys nie über Bäume hinweg zusammenführen; die Referenz-Locale, Parität und Orphan-/Fehlend-Mathematik jedes Scopes wird allein innerhalb dieses Baums berechnet. Die Grenze ist der entdeckte Locale-Baum-Root oder die Pro-Scope-Einträge, wenn die optionale Config-Datei sie deklariert
 - **MUSS [MUST]** jede Locale-Datei zu gepunkteten Key-Pfaden flachklopfen und gegen die Referenz-Locale berechnen: Keys, die in der Referenz vorhanden, aber in einer anderen Locale fehlen, und Keys, die in einer anderen Locale vorhanden, aber in der Referenz fehlen (strukturelle Divergenz)
 - **MUSS [MUST]** einen **strukturellen Mismatch** berichten, wenn derselbe Key-Pfad über Locales hinweg zu unterschiedlichen Werttypen auflöst (String in einer, Objekt/verschachtelt in einer anderen)
 - **MUSS [MUST]** die Source-Roots nach Key-Referenzen scannen und klassifizieren: ein im Code verwendeter, aber in keiner Locale definierter Key (**kritisch** — ein Laufzeit-Miss) und ein in den Locales definierter, aber nirgends im Code referenzierter Key (**Orphan**, informativ)
@@ -74,7 +76,5 @@ Leser: Agent-Autoren, die den Checker pflegen; Reviewer, die seine Befunde prüf
 
 ## Offene Fragen
 
-- Soll das Audit eine projektweite Config-Datei unterstützen (die Locale-Pfade, Referenz-Locale, Source-Globs und i18n-Bibliothek deklariert), sodass Wiederholungsläufe keine Operator-Argumente brauchen, oder genügt Pro-Invocation-Discovery?
-- Soll das Audit bei Monorepos mit mehreren unabhängigen Locale-Bäumen (pro Paket) jeden Baum separat behandeln oder zusammenführen, und wie wird die Grenze deklariert?
 - Soll die „identisch über Locales"-Heuristik Locales ausnehmen, die legitim nah sind (zum Beispiel Eigennamen, Markennamen, Einheiten), und wenn ja via Allowlist?
 - Soll die Platzhalter-Paritätsprüfung ICU-MessageFormat-Plural-/Select-Syntax verstehen, oder bei Simple-Platzhalter-Granularität bleiben, bis ein ICU-bewusster Pass gerechtfertigt ist?

@@ -44,6 +44,8 @@ Dokumentation, Spezifikationen, READMEs, Release-Notes und sonstiges menschenles
 - **SOLLTE [SHOULD]** einen Pull Request gegen `nolte/vale-style` eröffnen, mit einer einzeiligen Begründung je neuem Eintrag, damit Ergänzungen prüfbar sind
 - **KANN [MAY]** einen Begriff nur übergangsweise in einem repository-lokalen Vokabular halten, solange der Upstream-PR offen ist; nach Release der Upstream-Änderung **MUSS [MUST]** der lokale Eintrag entfernt und das gepinnte `nolte/vale-style`-Release **MUSS [MUST]** angehoben werden
 
+Die Drift zwischen repository-lokalen Vokabularen und dem gepinnten `nolte/vale-style`-Release wird über den `vocab-drift-audit`-Skill geprüft statt über einen periodischen CI-Cron.
+
 ### Pull-Request-Beschreibungen und Release-Notes
 - **MUSS [MUST]** dasselbe gemeinsame Vale-Regelwerk auf Pull-Request-Beschreibungen und GitHub-Release-Notes anwenden (vom release-drafter entworfen, vor der Veröffentlichung bearbeitet), denn diese Prosa fließt direkt in externe Changelogs und nutzerseitige Release-Seiten
 - **MUSS [MUST]** Pull-Request-Beschreibungen in der CI prüfen (zum Beispiel über einen PR-Check-Workflow) auf dem im Repository konfigurierten `MinAlertLevel` und auf `error`-Stufe genauso scheitern wie die Dokumentation
@@ -95,7 +97,6 @@ Die Vale-Regelsätze erzwingen eine mechanische Basislinie, aber die folgenden R
 - [ ] Das gemeinsame Vale-Vokabular unter `nolte/vale-style` trägt Microsofts Bias-Free-Ersetzungen (`primary` / `subordinate`, `stop responding`, `perimeter network`, …), damit zur Durchsetzung kein Per-Repo-Override nötig ist
 
 ## Offene Fragen
-- _Keine – alle vorherigen offenen Punkte sind geklärt. Der Drift-Audit zwischen repository-lokalen Vokabularen und dem gepinnten `nolte/vale-style`-Release wird über einen dedizierten Claude-Skill abgedeckt statt über einen periodischen CI-Cron erzwungen._
 - Sollen die §Stimme-und-Ton-Regeln über zusätzliche Vale-Regeln in `nolte/vale-style` automatisch durchgesetzt werden (ein Aktiv-Detektor, ein Title-Case-Detektor, ein Pronomen-Detektor), oder bleiben sie vorerst redaktionelle Leitlinien? Vale-Regel-Autorenschaft ist nicht trivial und neigt zu False-Positives; verschoben, bis genug Drift dokumentiert ist, um die Regel-Kosten zu rechtfertigen.
 
 ## Quellen

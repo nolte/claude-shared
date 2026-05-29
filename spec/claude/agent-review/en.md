@@ -49,7 +49,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
   - `description` names concrete triggers (positive triggers at minimum; negative triggers SHOULD be present when overlap with other artifacts is plausible)
   - `distribution` is exactly `plugin` or `project`: no other value, no missing field
   - `tools` is either absent (full tool surface justified in body) or scoped to the minimum set needed for the stated responsibility
-  - Read-only agents (agents whose stated responsibility is research, review, audit, or reporting) have **no** write, edit, or execution tools—the presence of any of Edit, Write, Bash, NotebookEdit in a read-only agent's `tools` list is a `Critical`. **Narrow exception** per `agent-management` §Tool access: `Bash` on a read-only agent is downgraded from `Critical` to `Info` when the agent body carries a `## Read-only Bash justification` section that names the exact subset of side-effect-free commands the agent invokes (typically `git log`, `git rev-parse`, `git ls-files`, `gh api ... --jq` against read-only endpoints) and explicitly forbids any write or mutation. `Edit`, `Write`, and `NotebookEdit` remain unconditional `Critical`s; the exception is `Bash`-only
+  - Read-only agents (agents whose stated responsibility is research, review, audit, or reporting) have **no** write, edit, or execution tools—the presence of any of Edit, Write, Bash, NotebookEdit in a read-only agent's `tools` list is a `Critical`. **Narrow exception** per `agent-management` §Tool access: `Bash` on a read-only agent is downgraded from `Critical` to `Info` when the agent body carries a `## Read-only Bash justification` section that names the exact subset of side-effect-free commands the agent invokes (typically `git log`, `git rev-parse`, `git ls-files`, `gh api ... --jq` against read-only endpoints) and explicitly forbids any write or mutation. `Edit`, `Write`, and `NotebookEdit` remain unconditional `Critical`s; the exception is `Bash`-only. Read-only status is detected from the responsibility verbs in `description` / system prompt (review, audit, research, lint, report); no `read-only` frontmatter flag exists. When the classification is genuinely ambiguous, the reviewer records the call in the plan's `## Scope`
   - Agent body **never** invokes the Skill tool on behalf of the user—detected by grepping the body for `Skill(`, `Skill tool`, or equivalent dispatch phrasings; any match is a `Critical` per `skill-vs-agent`
   - No hard-coded absolute paths in the body or in sibling assets
   - Frontmatter field names and technical identifier values (`name`, `distribution`, `tools`, `model`, `tags`) are English; the `description` value and the system-prompt body comply with `agent-management.Structure`: English by default, with a project-language exception for `distribution: project` agents whose consuming project declares a non-English documentation language and authorizes it for agent prose. Verify the project authorization (typically `CLAUDE.md`) is present before downgrading what would otherwise be a `Critical` to `Info`
@@ -65,7 +65,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 
 - **MUST** confirm the agent body contains a **rationale section** that names at least one decisive dimension for the agent-over-skill choice; its absence is a `Critical`
 - **SHOULD** verify that at least one counter-dimension is named when the decision was a close call—absence is a `Suggestion`, not a `Critical`, consistent with the SHOULD formulation in `skill-vs-agent`
-- **MUST** run a duplicate-capability check: grep every other `agents/*.md` and `skills/*/SKILL.md` `description` line for semantic overlap; any plausible overlap produces a `Warning` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing
+- **MUST** run a duplicate-capability check: grep every other `agents/*.md` and `skills/*/SKILL.md` `description` line for semantic overlap; any plausible overlap produces a `Warning` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing. The check is scoped to the source tree under review (in-repo `agents/*.md` and `skills/*/SKILL.md`); cross-plugin equivalence is explicitly tolerated per `skill-vs-agent` §Duplicate prevention and isn't a finding
 
 ### Checks derived from spec-driven-development
 
@@ -75,7 +75,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 
 ### Tool-scope checks
 
-- **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure—tools declared but not used are `Warning` findings (dead permission)
+- **MUST** verify, for every tool declared in `tools`, that the agent body demonstrably uses that tool in its procedure (the agent's working method, not merely an illustrative example section)—a tool that appears only inside an example is dead permission and a `Warning`; tools declared but not used are `Warning` findings (dead permission)
 - **MUST** verify, for every tool the agent body clearly needs, that it's declared in `tools`: tools used but not declared are `Critical` findings (the agent will fail to run)
 - **MUST** verify the agent **doesn't omit** the `tools` field unintentionally: an absent `tools` field grants the inherited full tool surface, which is permission sprawl. If the agent's responsibility is "research" / "review" / "audit" / "report" and `tools` is absent, that's a `Critical`; for any other agent the absence is a `Warning` unless the body explicitly justifies inheriting all tools ([R5](#references), [R6](#references))
 - **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents; an agent using `Bash` for operations a dedicated tool covers gets a `Warning` unless the body justifies the choice
@@ -88,6 +88,7 @@ Mirrors `agent-management` §"Plugin-distribution security constraints"; cite th
 - **MUST** verify, when `distribution: plugin` is declared, that the frontmatter **doesn't** set `hooks`, `mcpServers`, or `permissionMode`; any of those fields is a `Critical` (the runtime silently ignores them for plugin agents and the author is being misled into thinking they're active) ([R5](#references))
 - **MUST**, when `distribution: project` is declared, accept those fields as valid; their presence **isn't** a finding for project-distributed agents
 - **SHOULD**, when an agent declares `distribution: plugin` AND its body describes behavior that obviously requires `hooks` / `mcpServers` / `permissionMode` (for example "this agent installs a PreToolUse hook," "this agent connects to its own MCP server," "this agent runs in plan mode"), flag a `Warning` even if the fields are absent—the description and the distribution are inconsistent
+- **SHOULD** verify, when `distribution: project` is declared, that the body references no plugin-co-located asset (`${CLAUDE_PLUGIN_ROOT}` or paths under the plugin source tree's own `agents/` or `skills/` tree, marketplace-relative assets) that would not resolve in a project runtime; such a reference is a `Warning`
 
 ### Subagent-boundary checks
 
@@ -126,7 +127,7 @@ Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybri
 
 ## Acceptance Criteria
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
-- [ ] A worked example exists applying this review procedure to one agent in `nolte-shared` (for instance `audience-review`) and producing a conforming plan under `.audits/agent-review/`
+- [ ] A worked example exists applying this review procedure to one agent in `nolte-shared` (for instance `audience-review`) and producing a conforming plan under `.audits/agent-review/`; `audience-review` is reviewed as an ordinary single-target run—the reviewer named `agent-review` is a skill, not a self-reviewing agent, so no recursion-termination logic is required
 - [ ] Every agent in `agents/` has been reviewed against the current `agent-management` revision at least once since this spec was adopted, verifiable by either an open plan under `.audits/agent-review/` or a closing commit in `git log` matching the `review-plan` deletion pattern
 - [ ] No agent in `agents/` lacks a rationale section; running the rationale-section check across all agents produces zero `Critical`s
 - [ ] No agent in `agents/` invokes the Skill tool on behalf of the user; a grep for `Skill(` across all agent body files returns zero matches
@@ -157,9 +158,4 @@ Sources for the additional checks above. Cite the relevant entry in finding brac
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should the duplicate-prevention check read skill descriptions from `skills/*/SKILL.md` in the same repository only, or should it also query the MkDocs-rendered catalog across installed plugins when a consumer reviews a downstream copy?
-- How's "read-only agent" detected mechanically—by the verbs in the `description` (review, audit, research, lint, report), by an explicit `read-only: true` flag in frontmatter that doesn't yet exist, or by a human judgement captured in the plan's `## Scope`?
-- Should the tools-used-vs-tools-declared check tolerate the case where a tool appears only in an example section of the body and not in the procedure itself, or is example-only usage a sign of dead permission?
-- When `distribution: project` is declared, should the review verify anything beyond the value itself—for example that the agent doesn't reference plugin-co-located assets, which would break project-level use?
 - Should reviewing an agent whose `description` names negative triggers also verify those negatives actually exclude the named cases—and if so, how's that verified without running the agent?
-- How does this spec invocation interact with `audience-review`: the first agent in the portfolio—since reviewing a review-agent is a recursion case worth explicit handling: is the first-ever plan written by the review or by a human, and how's the recursion terminated?
