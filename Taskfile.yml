@@ -37,6 +37,15 @@ tasks:
       - echo "no tests yet"
     silent: true
 
+  check:
+    desc: |
+      Run the develop quality gate locally: lint + test. The docs category
+      is a separate CI job (the documentation-freshness gate, not the code
+      gate). Exits zero on a clean tree and non-zero when any category fails.
+    cmds:
+      - task: lint
+      - task: test
+
   validate:skills:
     desc: |
       Validate every skill and agent frontmatter against the structural rules
