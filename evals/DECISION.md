@@ -1,19 +1,28 @@
 # Decision — Behavioural eval harness: promptfoo vs. pytest
 
-Status: proposed
+Status: accepted
 Date: 2026-05-29
+Decided: 2026-05-29 — pytest-primary (corpus evidence, see §Corpus evidence)
 Scope: choosing the framework for **behavioural** evals of this plugin's skills/agents
 (does a change to a skill / agent / spec measurably improve the end result?). The
 existing static layer (`scripts/validate_skills.py`, frontmatter/structure) is out of
 scope and stays as-is — it is *Layer 0* below.
 
-> **Decision (recommendation): use promptfoo as the primary behavioural-eval harness**,
-> anchored first on report-producing agents, driving the agent through a thin custom
-> provider over `claude -p`. Keep `validate_skills.py` static checks in Python/`task`.
-> Use a pytest-driven runner only as the documented escape-hatch for file-mutating
-> *skills* (scaffolding) where assertions are about written files and repo state.
-> The decision flips to **pytest-primary** if the eval corpus turns out to be dominated
-> by file-mutating skills rather than report/review agents (see §When the decision flips).
+> **Decision: pytest is the primary behavioural-eval harness.** It is the only single
+> toolchain that reaches the whole corpus — read-only report *agents* (via `claude -p`
+> plus a small LLM-judge helper) **and** the file-mutating, interactive *skills* (via
+> fixture repos, file-side-effect assertions, and scripted multi-turn user simulation
+> through the Claude Agent SDK). It fits the existing Python / `task` / no-Node repo and
+> extends `validate_skills.py` + `task test`. Its one gap — native baseline-vs-change
+> comparison — is a one-time ~80-line scorecard+diff layer that then serves both surfaces.
+> `validate_skills.py` static checks stay as Layer 0. promptfoo is **not** adopted as the
+> CI harness; it remains an optional *local* tool for rapid prompt-tuning of a single
+> report agent if a contributor wants its UI.
+>
+> This reverses the first draft of this document, which recommended promptfoo-primary.
+> That recommendation was **anchor-biased**: it was reasoned from a report-producing agent
+> (`spec-readiness-reviewer`), which is promptfoo's sweet spot but is **not representative**
+> of the corpus. Measuring the corpus (see §Corpus evidence) flips the decision.
 
 This document is *not executed* — the snippets are illustrative sketches that show how
 each framework would wire up, not a benchmarked run.
@@ -37,6 +46,24 @@ cleanest input→output case (no mid-flow user turn) and its governing spec
 made grading rubric. Fixture: one spec file with a *planted* MUST-vs-MUST-NOT
 contradiction and one orphan Acceptance Criterion, so a correct run must surface both.
 
+## Corpus evidence (the deciding factor)
+
+The decision turns on the actual shape of what we will eval, not on the anchor we picked
+for convenience. Measured against the repo on 2026-05-29:
+
+- **Agents (26):** 20 are read-only report producers (`*-reviewer`, `*-scanner`,
+  `*-collector`, `spec-readiness-reviewer`, …) — 77 %, promptfoo-shaped. Only 6 declare
+  `Write`/`Edit`.
+- **Skills (~42):** 24 are file-mutating / authoring; most of the remaining "report"
+  skills still write files (`*-review` / `*-audit` → `.audits/`, `audience-identify` →
+  an artifact). And **40 of 42 skills self-describe a mid-flow user-approval / interactive
+  gate** ("per-item approval", "iterate until", "one at a time", "confirm with the user").
+
+So the two surfaces have opposite shapes: agents lean read-only-text (promptfoo-friendly),
+while the skill majority is file-mutating **and** interactive (pytest-friendly; promptfoo's
+single-shot prompt→completion model fights both the file side-effects and the multi-turn
+approval gates). A single CI harness must reach both — only pytest does, so it wins.
+
 ## Comparison matrix
 
 | Axis | promptfoo | pytest (+ DIY helpers) |
@@ -54,9 +81,11 @@ contradiction and one orphan Acceptance Criterion, so a correct run must surface
 | **Maintenance model** | External tool, declarative YAML config; matches this repo's "declarative spec + thin script" aesthetic | In-house Python; full control but you own every eval primitive |
 
 The two decisive rows for *this* repo and *this* goal: **baseline-vs-change comparison**
-(promptfoo native, pytest DIY) and **fixtures/file-side-effects** (pytest native,
-promptfoo awkward). The anchor we chose — a report-producing agent — lands squarely in
-promptfoo's sweet spot.
+(promptfoo native, pytest DIY) and **fixtures/file-side-effects + multi-turn** (pytest
+native, promptfoo awkward). The anchor we chose — a report-producing agent — lands in
+promptfoo's sweet spot, but per §Corpus evidence it is *not* representative: the corpus is
+dominated by file-mutating, interactive skills, so the fixtures/multi-turn rows outweigh
+the comparison row (whose gap pytest closes with a small one-time layer).
 
 ## Sketch A — promptfoo (anchored on spec-readiness-reviewer)
 
@@ -164,34 +193,42 @@ Prove a positive effect: run the suite on the baseline commit → `scorecard-bas
 `python evals/compare.py base head` diffs them. Every primitive — judge, sampling
 aggregation, diff, reporting — is hand-built.
 
-## When the decision flips
+## Why pytest, not promptfoo (all three flip conditions hold)
 
-Choose **pytest-primary** instead if any of these hold:
+The first draft listed three conditions under which pytest wins. The corpus measurement
+shows all three are true here:
 
-- The eval corpus will be dominated by **file-mutating skills** (scaffolding:
-  `project-structure-apply`, `mkdocs-structure-apply`, `readme-structure-apply`,
-  `pull-request-create`), where assertions are about written files / repo state and
-  golden snapshots — pytest's fixture model is far more natural than a promptfoo custom
-  provider that has to return a diff.
-- Avoiding a second toolchain (Node) in a Python-only repo is a hard constraint.
-- Judgment-heavy skills with **mid-flow user approval** dominate (e.g. `spec-drift-audit`,
-  the `*-apply` skills), needing scripted multi-turn user simulation — easier with the
-  Claude Agent SDK inside pytest than inside promptfoo.
+- The corpus **is** dominated by file-mutating skills (24 mutating + most "report" skills
+  writing `.audits/`), where assertions are about written files / repo state and golden
+  snapshots — pytest's fixture model beats a promptfoo custom provider that must return a
+  diff.
+- The repo **is** Python-only / no-Node; avoiding a second toolchain is a real constraint
+  and pytest extends the existing `validate_skills.py` + `task test`.
+- Judgment-heavy skills with **mid-flow user approval dominate** (40/42), needing scripted
+  multi-turn user simulation — natural with the Claude Agent SDK inside pytest, awkward in
+  promptfoo.
 
-## Recommendation and next step
+When you might still reach for promptfoo: *locally*, to iterate fast on a single report
+agent's prompt and eyeball its UI diff. That is a convenience, not the CI gate, and it
+does not justify adding Node to CI.
 
-1. **promptfoo primary** for behavioural evals, starting with report/review *agents*
-   (`spec-readiness-reviewer`, `prose-vale-curator`, `feature-consistency-reviewer`, …) —
-   their input→output shape is promptfoo's sweet spot and they directly serve the
-   "prove a change improved the result" goal via native side-by-side comparison.
-2. **Keep `validate_skills.py` static checks** in Python/`task` as Layer 0 (cheap,
-   deterministic, every PR).
-3. **pytest escape-hatch** for file-mutating skills, wired into the same `task test`
-   target so CI has one entry point.
-4. **Wire CI path-filtered**: Layer 0 on every PR; behavioural evals only when the
-   touched skill/agent/spec changed, plus a small smoke set; N-sample pass-rate
-   thresholds rather than hard pass/fail; baseline scorecard as a CI artifact.
+## Plan and next steps
 
-Open follow-ups before building: pin the eval model; decide the fixture-repo layout
-(reuse the per-skill `examples/*.md` as the scenario seed corpus); decide whether the
-`llm-rubric` text is generated mechanically from each spec's `- [ ]` Acceptance Criteria.
+1. **pytest as the single behavioural-eval harness**, wired into `task test` next to the
+   existing static checks, so CI has one entry point and one language.
+2. Build the thin shared primitives once: a `run_agent()` / `run_skill()` runner over
+   `claude -p --output-format json` (and the Claude Agent SDK for skills that need scripted
+   user turns), a `judge(output, rubric) -> score` LLM-judge helper, an N-sample pass-rate
+   wrapper, and a `scorecard.json` writer + `compare.py` baseline-vs-change diff.
+3. **Keep `validate_skills.py` static checks** as Layer 0 (cheap, deterministic, every PR).
+4. Start the scenario corpus with **two anchors that exercise both shapes**: a read-only
+   report agent (`spec-readiness-reviewer`) and one file-mutating, interactive skill
+   (`readme-structure-apply` audit→patch), so the harness proves it covers both surfaces.
+5. **Wire CI path-filtered**: Layer 0 on every PR; behavioural evals only when the touched
+   skill / agent / spec changed, plus a small smoke set; N-sample pass-rate thresholds
+   rather than hard pass/fail; baseline scorecard as a CI artifact.
+
+Open follow-ups before building: pin the eval model; decide the fixture-repo layout (reuse
+the per-skill `examples/*.md` as the scenario seed corpus); decide whether the judge rubric
+is generated mechanically from each spec's `- [ ]` Acceptance Criteria. promptfoo stays an
+optional local-only prompt-tuning aid, not a CI dependency.
