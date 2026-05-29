@@ -20,6 +20,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-review | Claude Skill Review | Claude-Skill-Review | draft | 2026-04-24 |
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | 2026-04-23 |
 | design | corporate-design-colors | Corporate Design — Color System | Corporate Design — Farbsystem | draft | unversioned |
+| design | graphic-prompt-authoring | Graphic Prompt Authoring | Grafik-Prompt-Autorenschaft | draft | unversioned |
 | portfolio | portfolio-inflight-management | Portfolio In-Flight Management | Portfolio-In-Flight-Management | draft | unversioned |
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | unversioned |
 | portfolio | tech-stack | Portfolio Tech Stack Capture | Portfolio-Tech-Stack-Erfassung | draft | unversioned |
@@ -38,6 +39,7 @@ Canonical language: `en` · Translations: `de`
 | project | docs-multilingual-authoring | Multilingual Documentation Authoring | Mehrsprachige Dokumentations-Autorenschaft | draft | unversioned |
 | project | feature | Project Feature | Projekt-Feature | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
+| project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | unversioned |
 | project | lektorat | Lektorat | Lektorat | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |

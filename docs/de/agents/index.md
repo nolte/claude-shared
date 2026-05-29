@@ -23,6 +23,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 
 - [`audience-doc-author`](nolte-shared/audience-doc-author.md) — Verfasst oder überarbeitet audience-zugeschnittene Doku (README, Release-Notes, MkDocs-Seiten) gegen ein vorhandenes Audience-Artefakt.
 - [`claude-plugin-developer`](nolte-shared/claude-plugin-developer.md) — Verfasst spec-konforme Claude-Code-Plugin-Artefakte (Skill oder Agent) für nolte-shared; Executor im Skill-orchestriert-Agent-Pattern.
+- [`graphic-prompt-generator`](nolte-shared/graphic-prompt-generator.md) — Verfasst brand-konforme, generatorfertige KI-Bild-Prompts als dauerhafte Markdown-Dokumente aus einem kurzen Grafik-Briefing.
 - [`spec-readiness-reviewer`](nolte-shared/spec-readiness-reviewer.md) — Nur-Lese-Audit einer Spec auf Widersprüche, Audience-Fit und AC-Coverage.
 - [`webview-ui-expert`](nolte-shared/webview-ui-expert.md) — Nur-Lese-Cross-File-Deep-Review eines benannten Frontend-Ziels über Performance, Security, Barrierefreiheit, i18n, UX.
 
@@ -39,6 +40,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 ## 6 Quality
 
 - [`docs-freshness-checker`](nolte-shared/docs-freshness-checker.md) — Nur-Lese-Frische-Audit der MkDocs-Doku: Sprach-Parität, tote Links, veraltete spec-/code-Refs, ADR-Hygiene, Mermaid-Derived-Source-Drift.
+- [`i18n-completeness-checker`](nolte-shared/i18n-completeness-checker.md) — Read-only-Vollständigkeits-Audit der Übersetzungsdateien gegeneinander und gegen die Code-Verwendung als nach Schweregrad sortierter Report.
 - [`mermaid-diagram-reviewer`](nolte-shared/mermaid-diagram-reviewer.md) — Statisches Audit jedes Mermaid-Blocks in docs/<lang>/ gegen die Spec plus MkDocs-Setup; strukturierte Findings, kein Rendering.
 - [`project-structure-reviewer`](nolte-shared/project-structure-reviewer.md) — Nur-Lese-Audit des Repo-Layouts gegen die Project-Structure-Spec; Severity-sortierte Findings nur auf Disk-Basis.
 - [`prose-vale-curator`](nolte-shared/prose-vale-curator.md) — Kuratiert Prosa, damit Vale grün ist, bevorzugt mitgelieferte Vokabularien, erweitert accept.txt nur in Vokabular-eigenden Repos.

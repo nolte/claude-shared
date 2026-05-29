@@ -23,6 +23,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 
 - [`audience-doc-author`](nolte-shared/audience-doc-author.md) — Drafts or refines audience-tailored documentation (README, release notes, MkDocs pages) against an existing audience artifact.
 - [`claude-plugin-developer`](nolte-shared/claude-plugin-developer.md) — Drafts spec-conformant Claude Code plugin artifacts (skill or agent) for nolte-shared, executor in the skill-orchestrates-agent pattern.
+- [`graphic-prompt-generator`](nolte-shared/graphic-prompt-generator.md) — Authors brand-conformant, generator-ready AI image prompts as durable Markdown documents from a short graphic brief.
 - [`spec-readiness-reviewer`](nolte-shared/spec-readiness-reviewer.md) — Read-only audit of a spec for contradictions, audience fit, and AC coverage.
 - [`webview-ui-expert`](nolte-shared/webview-ui-expert.md) — Read-only deep cross-file review of one named frontend target across Performance, Security, A11y, i18n, UX.
 
@@ -39,6 +40,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 ## 6 Quality
 
 - [`docs-freshness-checker`](nolte-shared/docs-freshness-checker.md) — Read-only freshness audit of MkDocs docs: language parity, dead links, stale spec/code refs, ADR hygiene, Mermaid derived-source drift.
+- [`i18n-completeness-checker`](nolte-shared/i18n-completeness-checker.md) — Read-only completeness audit of translation files against each other and against code usage, as a severity-sorted report.
 - [`mermaid-diagram-reviewer`](nolte-shared/mermaid-diagram-reviewer.md) — Static audit of every Mermaid block in docs/<lang>/ against the spec plus MkDocs setup; structured findings, no rendering.
 - [`project-structure-reviewer`](nolte-shared/project-structure-reviewer.md) — Read-only audit of the repository's layout against the project-structure spec; severity-sorted findings on disk only.
 - [`prose-vale-curator`](nolte-shared/prose-vale-curator.md) — Curates prose to pass Vale, prefers shipped vocabularies, extends accept.txt only inside vocabulary-owning repos.

@@ -31,12 +31,12 @@ detail: fine
 outcomes: [O-1, O-2]
 target_sprint: 2
 mvp: false
-status: proposed
+status: done
 ```
 
 Consumers of the `nolte-shared` plugin install a published, non-draft release of `claude-shared` whose publication was performed by the repo's own pipeline rather than by a manual `gh release edit`. The path runs from a develop merge through `release-drafter` (changelog aggregation) and `release-publish.yml` (the publish workflow), gated by the `release-publish-trigger` skill which validates every pre-publish condition locally before dispatching. Closing the remaining `ci.yml` `workflow_dispatch` gap lets the skill's required-checks gate pass and produces the first end-to-end published release.
 
-- [ ] plugin-published-via-automated-release
+- [x] plugin-published-via-automated-release
 
 ### R-3 — Develop branch quality gate hardened
 
