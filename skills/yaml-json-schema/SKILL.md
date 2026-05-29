@@ -12,7 +12,8 @@ description: >-
   ("YAML-Schema anlegen", "Schemata auditieren", "Daten gegen Schema
   validieren"). Skip for: OpenAPI/AsyncAPI Schema Objects, JSON-encoded
   schemas, feature-frontmatter rules (`spec/project/feature/`), or
-  project-structure scaffolding (`project-structure-apply`).
+  project-structure scaffolding (`project-structure-apply`). Supports resume
+  on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding, audit, validation]
 phase: design
 summary: "Authors, audits, refactors, and validates YAML-encoded JSON Schema 2020-12 documents."
@@ -22,6 +23,7 @@ use_when:
   - "you want to audit existing schemas for dialect drift or missing identity"
   - "you want to refactor inline duplicates into a $defs entry"
   - "you want to validate YAML data against a schema"
+resumable: true
 ---
 
 # YAML JSON Schema
@@ -126,3 +128,7 @@ Re-run operations 2, 4, and 5 end-to-end; present a fresh grouped summary. Call 
 ## Multi-model testing
 
 Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for cost-sensitive runs; Opus 4.7 is appropriate for high-stakes audits that require deeper reasoning. The skill body has no model-specific assumptions beyond standard tool-call semantics.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/yaml-json-schema/<run-id>.yml` after every successful per-step user-approval gate (each property authored in the Author walk, each finding fixed in the Refactor walk, the separately approved README edit) and after each named phase boundary (audit pass complete). On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, …) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
