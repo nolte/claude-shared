@@ -15,6 +15,7 @@ last_updated: generated
 * 3 Design
     * [audience-doc-author](nolte-shared/audience-doc-author.md)
     * [claude-plugin-developer](nolte-shared/claude-plugin-developer.md)
+    * [graphic-prompt-generator](nolte-shared/graphic-prompt-generator.md)
     * [spec-readiness-reviewer](nolte-shared/spec-readiness-reviewer.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 5 Review
