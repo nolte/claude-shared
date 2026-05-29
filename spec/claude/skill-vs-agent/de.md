@@ -15,6 +15,7 @@ Claude Code bietet in diesem Plugin zwei Formate für wiederverwendbare Capabili
 ## Nicht-Ziele
 - On-Disk-Struktur, Benennung, Frontmatter oder Templates für eines der beiden Artefakte (abgedeckt durch `skill-management` und `agent-management`)
 - Plugin-Distribution und Marketplace-Mechanik (abgedeckt durch diese Spezifikationen)
+- Plugin-Level-Schnittführung — wann Capabilities in ein Plugin gegenüber mehreren gehören und wie ein einzelnes Plugin überschaubar bleibt, während es wächst (abgedeckt durch `plugin-scoping`)
 - Welche konkreten Tools ein Agent im `tools`-Feld deklariert (eine pro-Agent-Scope-Entscheidung, keine portfolio-weite Regel)
 - Discovery und Katalog-Rendering im MkDocs-Site (abgedeckt durch `skill-agent-catalog`)
 - Das Routing-Verhalten der Claude-Code-Laufzeit selbst — diese Spezifikation regelt Autoring-Entscheidungen, nicht Laufzeit-Dispatch
@@ -33,6 +34,10 @@ Jede Kandidat-Capability wird entlang der folgenden Dimensionen bewertet. Jede D
 | **Kontext-Fenster-Wirkung** | Ausgabe fließt natürlich in die Haupt-Konversation ein | Umfangreiche Reads / Suchen würden den Haupt-Kontext verschmutzen; Isolation ist ein Gewinn |
 | **Spezialisierung** | Allgemeine Prozedur; ein fokussierter System-Prompt würde die Qualität nicht messbar verändern | Ein enger System-Prompt schärft die Ausgabequalität spürbar |
 | **Lebenszyklus** | Besteht über die gesamte Konversation hinweg — kann mehrfach aufgerufen werden | Einmal-Aufgabe mit klarem Abschlusskriterium |
+| **Latenz** | Schnelle Rückmeldung zählt; das separate Kontext-Fenster eines Subagents bringt Spin-up- und Round-Trip-Overhead | Latenz ist nicht kritisch; die Aufgabe kann out-of-band laufen und sich zurückmelden, wenn sie fertig ist |
+| **Änderungs-Umfang** | Eine schnelle, gezielte Änderung im aktuellen Kontext | Eine größere eigenständige Arbeitseinheit mit wohldefinierter Eingabe und Ausgabe |
+
+Diese Dimensionen folgen Anthropics offizieller Anleitung „Choose between subagents and the main conversation" ([R5](#referenzen)): leite Arbeit an die **Haupt-Konversation** (einen Skill), wenn sie häufiges Hin und Her braucht, wenn mehrere Phasen erheblichen Kontext teilen, wenn die Änderung **schnell und gezielt** ist oder wenn **Latenz** zählt; leite sie an einen **Subagent** (einen Agent), wenn die Aufgabe ausführliche Ausgabe erzeugt, die der Orchestrator nicht braucht, wenn Tool- oder Berechtigungs-Einschränkung erwünscht ist oder wenn die Arbeit eigenständig ist und eine Zusammenfassung zurückgibt. Die Zeilen **Latenz** und **Änderungs-Umfang** tragen die zwei Kriterien, die der Rest der Tabelle nicht bereits erfasst hatte. Von den Agent-seitigen Dimensionen rahmt Anthropic **Parallelisierung und Kontext-Management als die zwei *primären* Treiber** dafür, Arbeit in einen Subagent zu verlagern (Spezialisierung und Tool-Einschränkung sind Unterfälle des Kontext-Managements) ([R6](#referenzen)); die Zeilen **Parallelität** und **Kontext-Fenster-Wirkung** sind daher die tragenden, wenn ein Agent gewählt wird.
 
 ### Primäre Entscheidungsregel
 - **MUSS [MUST]** einen **Skill** wählen, wenn die Capability eines der folgenden erfüllt:
@@ -106,7 +111,8 @@ Claude Code unterstützt, einen Skill selbst in einem isolierten Subagent-Kontex
 - [ ] Der Abschnitt „Specialized-agent dispatch for remediation" der `workflow-health`-Spezifikation bleibt mit der hier deklarierten Hybrid-Muster-Regel konsistent; künftige Divergenzen werden zugunsten dieser Spezifikation aufgelöst
 - [ ] Kein Agent in diesem Plugin versucht, einen weiteren Subagent zu spawnen (verifizierbar durch Grep auf Agent-Bodies nach `Agent(`, `subagent_type` oder äquivalenten Dispatch-Formulierungen)
 - [ ] Jeder Skill, der `context: fork` deklariert, dokumentiert in seinem Rationalen-Abschnitt, warum die Fork-Variante einer Schwester-Agent-Datei vorzuziehen ist
-- [ ] Die Tabelle der Entscheidungsdimensionen ist konsistent mit der offiziellen Anthropic-Anleitung dazu, wann die Haupt-Konversation gegenüber einem Subagent zu wählen ist ([R3](#referenzen)); Divergenzen werden zugunsten dieser Spezifikation aufgelöst, aber in `## Offene Fragen` erläutert
+- [ ] Die Tabelle der Entscheidungsdimensionen ist konsistent mit der offiziellen Anthropic-Anleitung dazu, wann die Haupt-Konversation gegenüber einem Subagent zu wählen ist ([R3](#referenzen), [R5](#referenzen)); Divergenzen werden zugunsten dieser Spezifikation aufgelöst, aber in `## Offene Fragen` erläutert
+- [ ] Die Tabelle der Entscheidungsdimensionen enthält die Dimensionen **Latenz** und **Änderungs-Umfang**, die Anthropics Kriterien aus „Choose between subagents and the main conversation" abbilden ([R5](#referenzen))
 
 ## Referenzen
 
@@ -114,6 +120,8 @@ Claude Code unterstützt, einen Skill selbst in einem isolierten Subagent-Kontex
 - [R2] Extend Claude with skills, Claude-Code-Doku (`context: fork`) — <https://code.claude.com/docs/en/skills>
 - [R3] Building Effective AI Agents, Anthropic Engineering — <https://www.anthropic.com/research/building-effective-agents>
 - [R4] Equipping agents for the real world with Agent Skills, Anthropic Engineering, 2025-10-16 — <https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills>
+- [R5] Create custom subagents, Claude-Code-Doku — „Choose between subagents and the main conversation" (Haupt-Konversation für schnelle, gezielte Änderungen / wenn Latenz zählt; Subagent für ausführliche Ausgabe, Tool-Einschränkung, eigenständige Arbeit) — <https://code.claude.com/docs/en/sub-agents>
+- [R6] Subagents im Claude Agent SDK (vier Vorteile — Kontext-Isolation, Parallelisierung, spezialisierte Instruktionen, Tool-Einschränkungen — mit Parallelisierung und Kontext-Management als den zwei primären Treibern) — <https://code.claude.com/docs/en/agent-sdk/subagents>
 
 ## Offene Fragen
 - Soll diese Spezifikation eine Mindeststruktur für den „Rationalen-Abschnitt" festlegen (mindestens zwei benannte Dimensionen, mindestens eine Gegendimension), um Audits mechanisch durchführbar zu machen, oder reicht die aktuelle Messlatte „mindestens eine entscheidende Dimension" aus?

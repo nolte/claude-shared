@@ -15,6 +15,7 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 - Einrichtung nachgelagerter Projekte und `.claude/`-Konfiguration jenseits der Plugin-Installation
 - Vorgabe konkreter Skill-Inhalte jenseits struktureller Regeln
 - Die konkrete Marketplace- / Plugin-Installations-UX von Claude Code (wird von Claude Code selbst verantwortet, nicht von diesem Repository)
+- Plugin-Level-Schnittführung — wann eine Capability in dieses Plugin gegenüber einem separaten gehört und wie das Plugin überschaubar bleibt, während seine Skill-Anzahl wächst (abgedeckt durch `plugin-scoping`)
 
 ## Anforderungen
 
@@ -88,7 +89,7 @@ Starter-Vokabular:
 
 Folgt der öffentlichen Leitlinie unter <https://agentskills.io/skill-creation/best-practices> ([R4](#referenzen)) und der offiziellen Anthropic-Skill-Authoring-Seite ([R2](#referenzen)); den Source-Slug zitieren, wenn ein Finding eine konkrete Regel pinnt.
 
-- **MUSS [MUST]** `SKILL.md` unter 500 Zeilen und 5.000 Tokens halten (Upstream-Hard-Cap, identisch in der formalen Spezifikation ([R1](#referenzen)) und der Best-Practices-Seite ([R2](#referenzen))); Inhalte darüber **MUSS** in `references/`, `templates/`/`assets/` oder `scripts/` ausgelagert werden und **MUSS** eine explizite Lade-Trigger-Formulierung („Read X when Y", „use template Z for output Q") in `SKILL.md` tragen, damit Progressive Disclosure wie vorgesehen funktioniert
+- **MUSS [MUST]** `SKILL.md` unter 500 Zeilen und 5.000 Tokens halten (upstream ist die **5.000-Token-Zahl der eigentliche Hard-Cap**, identisch in der formalen Spezifikation ([R1](#referenzen)) und der Best-Practices-Seite ([R2](#referenzen)), während die **500-Zeilen-Zahl ein weicher Performance-Richtwert** ist — „for optimal performance"; dieses Plugin hält beide als MUSS für ein stabiles, kompaktierungs-überlebendes Authoring-Budget); Inhalte darüber **MUSS** in `references/`, `templates/`/`assets/` oder `scripts/` ausgelagert werden und **MUSS** eine explizite Lade-Trigger-Formulierung („Read X when Y", „use template Z for output Q") in `SKILL.md` tragen, damit Progressive Disclosure wie vorgesehen funktioniert
 - **SOLLTE [SHOULD]** einen **Gotchas**-Abschnitt enthalten, der konkrete Korrekturen zu nicht-offensichtlichen Umgebungs-Fakten auflistet, die der Agent sonst falsch annehmen würde; das ist unterschiedlich vom **Hard rules**-Abschnitt (Invarianten) und von generischen Ratschlägen ([R4](#referenzen))
 - **SOLLTE [SHOULD]** die Spezifität der Anweisungen an die Fragilität der Aufgabe anpassen (Freiheit plus *Warum* für flexible Aufgaben; präskriptiv für fragile oder sequenzielle Operationen), **einen klaren Default vorgeben** statt eines Menüs gleichwertiger Optionen und **Prozeduren statt Deklarationen bevorzugen** (vermitteln, wie eine Problemklasse anzugehen ist, nicht was für eine konkrete Instanz produziert werden soll) ([R4](#referenzen))
 - **SOLLTE [SHOULD]** den Skill auf realer Expertise verankern — aus einer praktischen Aufgabe extrahieren oder aus projekt-spezifischen Artefakten synthetisieren (Runbooks, Code-Review-Kommentare, Versionsgeschichte, reale Fehlerfälle) statt allein aus generischer LLM-Ausgabe ([R4](#referenzen))
@@ -114,7 +115,7 @@ Skills mit mehreren benannten Operationen verwenden einen `## Operations`-Block.
 
 ### Progressive Disclosure und Datei-Referenzen
 
-Skills werden von Claude in drei Stufen geladen — Metadaten beim Start (~100 Tokens pro Skill), voller `SKILL.md`-Body bei Trigger, unterstützende Dateien nur bei explizitem Lesen ([R5](#referenzen), [R1](#referenzen)). Die On-Disk-Form **MUSS** dieses Lade-Modell unterstützen.
+Skills werden von Claude in drei Stufen geladen — Metadaten beim Start (~100 Tokens pro Skill), voller `SKILL.md`-Body bei Trigger, unterstützende Dateien nur bei explizitem Lesen ([R5](#referenzen), [R1](#referenzen)). Die On-Disk-Form **MUSS** dieses Lade-Modell unterstützen. Da nur die ~100-Token-Metadaten vorab geladen werden, kann ein Plugin viele Skills ohne Per-Skill-Kontext-Strafe über diese Metadaten hinaus ausliefern ([R5](#referenzen)); die thematische Breite eines Plugins ist daher keine Kontext-Kosten, weshalb der Plugin-Scope nach Distribution statt nach Anzahl geregelt wird (siehe `plugin-scoping`). Vorbehalt: ein offener Claude-Code-Bug (anthropics/claude-code#14882, eingereicht 2025-12-20, unbestätigt) berichtet, dass vollständige `SKILL.md`-Bodies beim Start vorgeladen werden, was dem dokumentierten reinen Metadaten-Design widerspricht; bis zur Behebung ist aggressives Skill-Anzahl-Wachstum mit einer gewissen Vorsicht zu behandeln.
 
 - **MUSS [MUST]** Datei-Referenzen innerhalb von `SKILL.md` **maximal eine Ebene tief** halten: `SKILL.md` → `references/foo.md` ist ok; `SKILL.md` → `references/foo.md` → `references/bar.md` ist verboten, weil Claude bei verschachtelten Referenzen partielle Reads (`head -100`) nutzt und dadurch Inhalte verpasst ([R2](#referenzen))
 - **MUSS [MUST]** ein **Inhaltsverzeichnis** an den Anfang jeder Referenzdatei setzen, die länger als 100 Zeilen ist, damit Partial-Read-Vorschauen den vollen Umfang der Datei sichtbar machen ([R2](#referenzen))
@@ -122,6 +123,7 @@ Skills werden von Claude in drei Stufen geladen — Metadaten beim Start (~100 T
 - **MUSS [MUST]** eine explizite Lade-Trigger-Formulierung in `SKILL.md` für jedes Asset unter `references/`, `templates/`, `assets/`, `scripts/` oder `examples/` tragen. Muster: `„Read <relativer-Pfad> when <Trigger-Bedingung>"` oder `„See <relativer-Pfad> for <spezifisches-Anliegen>"` (mit explizitem „when"- oder „for"-Clausel). Implizite Referenzen ohne Lade-Trigger sind nicht konform, da Claude das Asset unter Progressive Disclosure nicht einblendet.
 - **SOLLTE [SHOULD]** Hilfsdateien nach **Domäne** organisieren, wenn der Skill mehrere Bereiche überspannt (`reference/finance.md`, `reference/sales.md`, `reference/product.md`), damit jede Nutzer-Anfrage nur den relevanten Ausschnitt lädt ([R2](#referenzen))
 - **SOLLTE [SHOULD]** den Skill-Scope auf eine **kohärente Arbeits-Einheit** (Funktions-Kohärenz) begrenzen: ein Skill, der „die Datenbank abfragt und Ergebnisse formatiert", ist eine Einheit; ein Skill, der „die Datenbank abfragt, formatiert und administriert", sind zwei Einheiten und sollten getrennt werden ([R4](#referenzen))
+- **SOLLTE [SHOULD]** mehrere kleine, komponierbare Single-Capability-Skills, die sich zu größeren Workflows kombinieren, gegenüber einem großen Mehrzweck-Skill bevorzugen; Skills sind als modulare, komponierbare Einheiten konzipiert, und Progressive Disclosure beseitigt die Kontext-Kosten, die viele kleine Skills sonst teuer machen würden ([R5](#referenzen))
 
 ### Laufzeit- und Lifecycle-Bewusstsein (Claude Code)
 

@@ -15,6 +15,7 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 - Downstream project setup and `.claude/` configuration beyond installing the plugin
 - Prescribing specific skill contents beyond structural rules
 - The exact Claude Code marketplace / plugin-installation UX (owned by Claude Code itself, not by this repository)
+- Plugin-level scoping—when a capability belongs in this plugin versus a separate one, and how the plugin stays scannable as its skill count grows (covered by `plugin-scoping`)
 
 ## Requirements
 
@@ -88,7 +89,7 @@ Starter vocabulary:
 
 Tracks the public guidance at <https://agentskills.io/skill-creation/best-practices> ([R4](#references)) and the official Anthropic skill-authoring page ([R2](#references)); cite the source slug when a finding pins a specific rule.
 
-- **MUST** keep `SKILL.md` under 500 lines and 5,000 tokens (the upstream hard cap, restated identically in the formal spec ([R1](#references)) and the best-practices page ([R2](#references))); content beyond that **MUST** move into `references/`, `templates/`/`assets/`, or `scripts/` and **MUST** carry an explicit load-trigger phrase ("Read X when Y," "use template Z for output Q") in `SKILL.md` so progressive disclosure works as designed
+- **MUST** keep `SKILL.md` under 500 lines and 5,000 tokens (upstream, the **5,000-token figure is the genuine hard cap** restated identically in the formal spec ([R1](#references)) and the best-practices page ([R2](#references)), whereas the **500-line figure is a soft performance guideline** ("for optimal performance"); this plugin keeps both as MUST for a stable, compaction-survivable authoring budget); content beyond that **MUST** move into `references/`, `templates/`/`assets/`, or `scripts/` and **MUST** carry an explicit load-trigger phrase ("Read X when Y," "use template Z for output Q") in `SKILL.md` so progressive disclosure works as designed
 - **SHOULD** include a **Gotchas** section listing concrete corrections to non-obvious environment facts the agent would otherwise get wrong; this is distinct from the **Hard rules** section (invariants) and from generic advice ([R4](#references))
 - **SHOULD** match specificity to fragility (give the agent freedom plus the *why* for flexible tasks; be prescriptive for fragile or sequential operations), **provide a clear default** rather than a menu of equal options, and **favor procedures over declarations** (teach how to approach a class of problem, not what to produce for one instance) ([R4](#references))
 - **SHOULD** ground the skill in real expertise—extract from a hands-on task or synthesize from project-specific artifacts (runbooks, code-review comments, version history, failure cases) rather than from generic LLM output alone ([R4](#references))
@@ -114,7 +115,7 @@ Skills with multiple named operations use a `## Operations` block. This section 
 
 ### Progressive disclosure & file references
 
-Skills are loaded in three stages by Claude—metadata at startup (~100 tokens per skill), full `SKILL.md` body when triggered, supporting files only when explicitly read ([R5](#references), [R1](#references)). The on-disk shape **MUST** support that loading model.
+Skills are loaded in three stages by Claude—metadata at startup (~100 tokens per skill), full `SKILL.md` body when triggered, supporting files only when explicitly read ([R5](#references), [R1](#references)). The on-disk shape **MUST** support that loading model. Because only the ~100-token metadata is preloaded, a plugin can ship many skills with no per-skill context penalty beyond that metadata ([R5](#references)); a plugin's thematic breadth is therefore not a context cost, which is why plugin scope is governed by distribution rather than count (see `plugin-scoping`). Caveat: an open Claude Code bug (`anthropics/claude-code#14882`, filed 2025-12-20, unconfirmed) reports full `SKILL.md` bodies preloaded at startup, contradicting the documented metadata-only design; until it's resolved, treat aggressive skill-count growth with some caution.
 
 - **MUST** keep file references inside `SKILL.md` **at most one level deep**: `SKILL.md` → `references/foo.md` is fine; `SKILL.md` → `references/foo.md` → `references/bar.md` is forbidden, because Claude tends to use partial reads (`head -100`) on nested references and then misses content ([R2](#references))
 - **MUST** include a **table of contents** at the top of any reference file longer than 100 lines, so partial-read previews still surface the file's full scope ([R2](#references))
@@ -122,6 +123,7 @@ Skills are loaded in three stages by Claude—metadata at startup (~100 tokens p
 - **MUST** carry an explicit load-trigger phrase in `SKILL.md` for every asset under `references/`, `templates/`, `assets/`, `scripts/`, or `examples/`. Pattern: `"Read <relative-path> when <trigger condition>"` or `"See <relative-path> for <specific concern>"` (with an explicit "when" or "for" clause). Implicit references without a load-trigger are non-conformant since Claude won't surface the asset under progressive disclosure.
 - **SHOULD** organize supporting files by **domain** when the skill spans multiple subjects (`reference/finance.md`, `reference/sales.md`, `reference/product.md`), so each user query loads only the relevant slice ([R2](#references))
 - **SHOULD** keep skill scope to a **single coherent unit of work** (function-level coherence): a skill that "queries the database and formats the results" is one unit; a skill that "queries the database, formats the results, and administers the database" is two units that should be split ([R4](#references))
+- **SHOULD** favor several small, single-capability skills that combine into larger workflows over one large multi-purpose skill; skills are designed as modular building blocks, and progressive disclosure removes the context cost that would otherwise make many small skills expensive ([R5](#references))
 
 ### Runtime & lifecycle awareness (Claude Code)
 

@@ -11,6 +11,7 @@ Canonical language: `en` · Translations: `de`
 | claude | agent-management | Claude Agent Authoring | Claude-Agent-Autorenschaft | draft | 2026-04-24 |
 | claude | agent-review | Claude Agent Review | Claude-Agent-Review | draft | 2026-04-24 |
 | claude | permission-allowlist | Claude Code Permission Allowlist Maintenance | Pflege der Claude-Code-Permission-Allowlist | draft | 2026-04-23 |
+| claude | plugin-scoping | Claude Plugin Scoping | Claude-Plugin-Schnittführung | draft | unversioned |
 | claude | png-to-transparent-svg | PNG to Transparent SVG | PNG zu transparentem SVG | draft | unversioned |
 | claude | research-triangulate | Research Triangulation | Recherche-Triangulation | draft | unversioned |
 | claude | resumable-work | Resumable Skill and Agent Work | Wiederaufnehmbare Skill- und Agent-Arbeit | draft | unversioned |
