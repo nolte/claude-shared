@@ -179,6 +179,15 @@ A clean re-run on an already-curated draft with no new commits MUST produce no d
 
 Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/release-notes-curate/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
+## Source triangulation
+
+Per `spec/claude/research-triangulate/`, before this skill writes any **repo-external assertion** into the release notes — an upstream version, a migration-guide link, a breaking-change claim, or an external product name — triangulate it instead of trusting a single source:
+
+- **Independent sources by blast radius.** At least two independent sources; **at least three** (the Release/dispatch tier) when the assertion will direct a write outside the working copy (a version pin, a sister-repo path, a third-party API signature, an external tool default).
+- **Record provenance.** For every source record the URL or path, the source class, and the retrieval date in the notes' source list or an associated `.audits/release-notes-curate/<run>/` findings file; at least one source SHOULD carry a verifiable date so a stale link or version is detectable.
+- **Surface conflicts, never silent-vote.** When sources disagree, name the most likely explanation and let the operator decide; never apply a majority vote or auto-pick by source class.
+- **Mark `unverified` when under-triangulated.** If the required source count is unreachable, mark the assertion `unverified` and hand back to the operator; in an autonomous run with no reachable operator, abort the write and persist the conflict as a findings report.
+
 ## Hard rules
 
 - Never write to a release outside the open `release-drafter` draft on the default branch.

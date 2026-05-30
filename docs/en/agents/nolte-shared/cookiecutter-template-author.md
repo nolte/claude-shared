@@ -122,6 +122,15 @@ Keep the report tight. No narration of which tools you called, no recap of the s
 8. **Self-audit** against the Hard rules below: every rule is either `n/a`, `clean`, `fixed`, or `flagged—<reason>` in the report.
 9. **Report back** in the structure above.
 
+### Source triangulation
+
+Per `spec/claude/research-triangulate/`, before the agent acts on any **repo-external assertion** — an upstream best-practice idiom, a tool version or default, a third-party API signature, or a path or contract in a sister repo the rendered project targets — triangulate it instead of trusting a single source. This extends the existing "make conflicts visible" discipline with the spec's explicit rules:
+
+- **Independent sources by blast radius.** At least two independent sources; **at least three** (the Release/dispatch tier) when the assertion will direct a write outside the working copy (a version pin, a sister-repo path, a third-party API signature, an external tool default).
+- **Record provenance.** For every source record the URL or path, the source class, and the retrieval date in the structured report returned to the dispatching skill; at least one source SHOULD carry a verifiable date so a stale default or version is detectable.
+- **Surface conflicts, never silent-vote.** When sources disagree, name the most likely explanation in the report and let the caller decide; never apply a majority vote or auto-pick by source class.
+- **Mark `unverified` when under-triangulated.** If the required source count is unreachable, mark the assertion `unverified` in the report and hand back to the caller; in an autonomous run with no reachable operator, abort the write rather than guess.
+
 ### Hard rules — the agent MUST enforce
 
 1. **Never sort `cookiecutter.json` alphabetically.** Variable order is semantic—later variables reference earlier ones through Jinja2. Preserve or restore the declaration order on every edit.

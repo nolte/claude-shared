@@ -111,10 +111,12 @@ Compare the discovered licenses against the allowlist. If no allowlist exists (a
 ```
 # Dependency Audit
 
-Scope: <repo root>, <n> manifests across <m> subroots
+Scope: <repo root>, <n> manifests across <m> subroots (skipped: <list with reasons>)
+Trigger: <quarterly | pre-release | manifest-change>
 Severity floor: <level>
 License audit: <on|off>
-Auditors run: <list>
+Auditors run (with versions): <list>
+Git revision: <sha>
 
 ## Findings (sorted: critical → high → medium → low)
 
@@ -123,6 +125,7 @@ Auditors run: <list>
   - Advisory: <GHSA / CVE / PYSEC id> — <short summary>
   - Fixed in: <version range or "no fix yet">
   - Reference: <url>
+  - Response: <fix | ignore with rationale (valid-until <date>) | accept as known>
 
 (repeat per finding)
 
@@ -140,13 +143,19 @@ Auditors run: <list>
 
 Sort findings by severity first, then package name alphabetically, so diffs of the rendered report stay stable across runs.
 
-### 6. Offer follow-up actions
+### 6. Triage and respond
 
-Don't execute these without explicit confirmation:
+Per `spec/project/dependency-audit/` §Response to findings, every finding gets exactly one of three responses inside its severity's response window. Never silently downgrade a severity — disagreement with the auditor's classification is an ignore entry with an explicit rationale, not a reclassification.
 
-- For each finding with a `fixed_in` version: suggest the smallest dependency bump that crosses the fix boundary.
-- For findings without a fix yet: offer to add the advisory to the auditor's ignore list with a `valid-until` date (for example the `--ignore-vuln` argument of `pip-audit` wired into a Taskfile target) so the gate stays meaningful.
-- For license `review` entries: offer to draft an `.license-allowlist.txt` with the accepted licenses the user names.
+- **`fix`**: bump to the smallest version that crosses the `fixed_in` boundary. For a `critical` or `high` finding this is the only response, unless an accepted, dated ignore entry exists.
+- **`ignore with rationale`**: record the advisory in the auditor's **native ignore location** (for example `pyproject.toml` under `[tool.pip-audit]`, or `.npm-audit-ignore.json`) — never as free-form prose only the report sees. Every entry MUST carry the advisory ID, the affected package, a `valid-until` ISO-8601 date, and a one-line rationale; an entry missing any of these fails the audit. Revisit each entry at the latest on its `valid-until` date and never renew it without a fresh rationale. Never silence a finding globally (`--ignore-vuln <id>` with no date) just to green the gate.
+- **`accept as known`**: permitted only for the `medium` / `low` tiers. A `critical` or `high` finding **MUST NOT** be marked `accept as known`.
+
+Don't execute a bump, write an ignore entry, or draft a `.license-allowlist.txt` without explicit confirmation. Keep the active ignore list small (guideline: fewer than ten per subroot); a growing list signals the dependency strategy itself needs review rather than another one-off ignore.
+
+### 7. Persist the audit artifact
+
+Per `spec/project/dependency-audit/` §Audit artifact, persist every full audit as a git-tracked artifact (a commit or a `security-audit`-labelled issue are accepted alternatives). Default to the canonical path `.audits/dependency-audit/dependencies-YYYY-Q<n>.md` (the portfolio-wide `.audits/<audit-type>/` standard). The artifact MUST record: date; trigger (quarterly / pre-release / manifest-change); scope (which subroots were audited, which were skipped and why); the tools used and their versions; the per-finding severity and response decision; and the Git revision audited. Link to the prior quarter's artifact so the progression stays traceable. The quarterly `spec-drift-audit` references this artifact rather than re-running the scan.
 
 ## Gotchas
 
@@ -165,6 +174,15 @@ Don't execute these without explicit confirmation:
 ## Resumability
 
 Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/dependency-audit/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+
+## Source triangulation
+
+Per `spec/claude/research-triangulate/`, before this skill presents any **repo-external assertion** that goes beyond the auditor's own machine-readable output — a recommended fix version, an interpretation of an advisory's affected range, or a licence's compatibility — triangulate it instead of trusting a single source:
+
+- **Independent sources by blast radius.** At least two independent sources; **at least three** (the Release/dispatch tier) when the assertion will direct a write outside the working copy (a version pin, a sister-repo path, a third-party API signature, an external tool default).
+- **Record provenance.** For every source record the URL or path, the source class, and the retrieval date in the audit artifact's source list; at least one source SHOULD carry a verifiable date so a stale advisory or pin is detectable.
+- **Surface conflicts, never silent-vote.** When sources disagree, name the most likely explanation and let the operator decide; never apply a majority vote or auto-pick by source class.
+- **Mark `unverified` when under-triangulated.** If the required source count is unreachable, mark the assertion `unverified` and hand back to the operator; in an autonomous run with no reachable operator, abort the write and persist the conflict as a findings report.
 
 ## Hard rules
 

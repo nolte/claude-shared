@@ -45,6 +45,9 @@ flowchart LR
 
 ## Next
 
+If you want to **consume** the plugin in your own project, start at [Using nolte-shared](using.md). If you want to **develop** this repository, start at [Getting Started](getting-started/index.md).
+
+- [Using nolte-shared](using.md): install and use the plugin downstream (user docs)
 - [Getting Started](getting-started/index.md): load the plugin and use the skills
 - [Skills](skills/index.md): overview of bundled skills
 - [Agents](agents/index.md): overview of bundled agents

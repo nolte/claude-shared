@@ -29,7 +29,7 @@ tasks:
     desc: Run Vale prose linter across English-language Markdown
     cmds:
       - vale sync
-      - vale --minAlertLevel=error README.md docs/en/ $(find spec -name 'en.md')
+      - vale README.md docs/en/ $(find spec -name 'en.md')
 
   test:
     desc: Run the test suite — validates every skill and agent frontmatter
