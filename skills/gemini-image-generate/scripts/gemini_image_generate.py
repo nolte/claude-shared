@@ -209,27 +209,59 @@ def build_request(prompt: str, api_key: str, n: int, seed: int | None) -> urllib
     )
 
 
+def _api_error_detail(exc: urllib.error.HTTPError) -> tuple[str, bool]:
+    """Read the API error body; return (human-readable detail, is_zero_quota).
+
+    The body is read here so Google's actual ``error.message`` is surfaced
+    instead of being swallowed (the original code looked only at the status
+    code). ``is_zero_quota`` is True when the body reports a Free-Tier quota of
+    ``limit: 0`` — the model is not enabled on the Free Tier at all and requires
+    billing, which is categorically different from a temporary rate-limit that
+    retrying would clear.
+    """
+    try:
+        body = exc.read().decode("utf-8", "replace")
+    except Exception:
+        return "", False
+    try:
+        detail = (json.loads(body).get("error", {}).get("message") or "").strip()
+    except (ValueError, TypeError, AttributeError):
+        detail = body.strip()
+    zero_quota = re.search(r"limit:\s*0\b", body) is not None
+    return detail, zero_quota
+
+
 def call_api(request: urllib.request.Request) -> dict:
     try:
         with urllib.request.urlopen(request) as response:
             payload = response.read()
     except urllib.error.HTTPError as exc:
         status = exc.code
+        detail, zero_quota = _api_error_detail(exc)
+        suffix = f" API said: {detail}" if detail else ""
         if status == 429:
+            if zero_quota:
+                raise GenerationError(
+                    "This model is not available on the Free Tier (reported quota "
+                    "limit: 0) — it requires billing on the API key's Google Cloud "
+                    "project. Enable billing, then retry; waiting will not help."
+                    f"{suffix}",
+                    code=EXIT_RATE_LIMIT,
+                ) from exc
             raise GenerationError(
                 f"Free-Tier quota exhausted (HTTP 429). {FREE_TIER_RATE}. "
                 "Not retried automatically — each retry burns more quota. "
-                "Wait for the window to reset or enable billing.",
+                f"Wait for the window to reset or enable billing.{suffix}",
                 code=EXIT_RATE_LIMIT,
             ) from exc
         if status in (401, 403):
             raise GenerationError(
                 f"Authentication failed (HTTP {status}). Check {API_KEY_ENV} and "
-                f"manage your key at {KEY_PAGE}.",
+                f"manage your key at {KEY_PAGE}.{suffix}",
                 code=EXIT_AUTH,
             ) from exc
         raise GenerationError(
-            f"Gemini API returned HTTP {status}. The request was not fulfilled."
+            f"Gemini API returned HTTP {status}. The request was not fulfilled.{suffix}"
         ) from exc
     except urllib.error.URLError as exc:
         raise GenerationError(

@@ -57,6 +57,11 @@ def http_error(code: int) -> urllib.error.HTTPError:
     return urllib.error.HTTPError("https://x", code, "err", {}, None)
 
 
+def http_error_with_body(code: int, body: str) -> urllib.error.HTTPError:
+    """HTTPError whose .read() returns `body` — mirrors a real Google error payload."""
+    return urllib.error.HTTPError("https://x", code, "err", {}, io.BytesIO(body.encode()))
+
+
 def executable_source() -> str:
     """Source with the module docstring and full-line comments removed."""
     src = SCRIPT_PATH.read_text(encoding="utf-8")
@@ -168,6 +173,46 @@ class HttpErrors(_Base):
         self.assertEqual(code, gig.EXIT_ERROR)
         self.assertIn("Network error", msg)
         self.assertNotIn("Traceback", msg)
+
+    # --- error-body handling (issue #239): surface the real cause ----------- #
+    _ZERO_QUOTA_BODY = json.dumps({"error": {
+        "code": 429,
+        "message": "You exceeded your current quota. Quota exceeded for metric: "
+                   "generativelanguage.googleapis.com/generate_content_free_tier_requests, "
+                   "limit: 0, model: gemini-2.5-flash-preview-image",
+        "status": "RESOURCE_EXHAUSTED",
+    }})
+    _RATE_LIMIT_BODY = json.dumps({"error": {
+        "code": 429,
+        "message": "Resource has been exhausted (e.g. check quota). Please retry in 5s.",
+        "status": "RESOURCE_EXHAUSTED",
+    }})
+
+    def test_429_zero_quota_reports_billing_not_retry(self):
+        # limit:0 means the model is off the Free Tier entirely — billing, not waiting.
+        code, msg, _ = self._run_with(http_error_with_body(429, self._ZERO_QUOTA_BODY))
+        self.assertEqual(code, gig.EXIT_RATE_LIMIT)
+        self.assertIn("billing", msg.lower())
+        self.assertIn("limit: 0", msg)
+        self.assertIn("gemini-2.5-flash-preview-image", msg)  # real cause surfaced
+
+    def test_429_real_rate_limit_keeps_quota_guidance_and_surfaces_detail(self):
+        code, msg, _ = self._run_with(http_error_with_body(429, self._RATE_LIMIT_BODY))
+        self.assertEqual(code, gig.EXIT_RATE_LIMIT)
+        self.assertRegex(msg, r"\d+\s*(requests\s*)?per\s*(minute|day)")  # quota figure kept
+        self.assertIn("Please retry in 5s", msg)  # Google's actual message surfaced
+
+    def test_http_error_body_detail_surfaced_on_generic_status(self):
+        body = json.dumps({"error": {"message": "Something specific went wrong", "status": "INTERNAL"}})
+        code, msg, _ = self._run_with(http_error_with_body(500, body))
+        self.assertEqual(code, gig.EXIT_ERROR)
+        self.assertIn("Something specific went wrong", msg)
+
+    def test_unreadable_error_body_falls_back_cleanly(self):
+        # The original fp=None helper must still produce the generic message, no crash.
+        code, msg, _ = self._run_with(http_error(429))
+        self.assertEqual(code, gig.EXIT_RATE_LIMIT)
+        self.assertIn("429", msg)
 
 
 # --------------------------------------------------------------------------- #
