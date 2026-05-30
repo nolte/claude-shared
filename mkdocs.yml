@@ -88,6 +88,7 @@ plugins:
             Skills-Konzept: Skills Concept
             Agents-Konzept: Agents Concept
             Entwicklungszyklus: Development Lifecycle
+            Bildgenerierung: Image Generation
             Entwicklung: Development
             Projektstruktur: Project Structure
             Beitragen: Contributing
@@ -164,6 +165,7 @@ nav:
       - Spec: de/guides/spec.md
       - Agents-Konzept: de/guides/agents-concept.md
       - Entwicklungszyklus: de/guides/development-lifecycle.md
+      - Bildgenerierung: de/guides/image-generation.md
   - References:
       - de/references/index.md
       - Spezifikationen:

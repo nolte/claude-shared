@@ -26,3 +26,7 @@ Task-oriented how-tos and explanatory background pages for `claude-shared`, from
 ## Lifecycle
 
 - [Development Lifecycle](development-lifecycle.md): where each skill and agent fits in the delivery lifecycle
+
+## Capabilities
+
+- [Image Generation](image-generation.md): generate an image from a prompt via swappable providers (Cloudflare, Pollinations, Gemini), and which token each one needs
