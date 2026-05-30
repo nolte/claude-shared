@@ -16,6 +16,8 @@ dont_use_when:
     alternative: audience-doc-author
   - situation: "You want to audit whether local vocabulary entries should be retired"
     alternative: vocab-drift-audit
+  - situation: "You want a five-dimension editorial review (readability, audience-fit) rather than Vale-clean rephrasing"
+    alternative: lektorat-apply
 see_also:
   - audience-doc-author
   - vocab-drift-audit

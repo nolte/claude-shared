@@ -1,4 +1,4 @@
-# Example 03 — Operation B: stabilisation gate **blocks** `achieved → stabilised`
+# Example 03 — Operation 2: stabilisation gate **blocks** `achieved → stabilised`
 
 The operator believes the MVP is stabilised and asks for the flip,
 but the subsequent sprint (the one whose `number` is

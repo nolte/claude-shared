@@ -55,14 +55,6 @@ The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add
 
 The [`agent-review`](../../skills/nolte-shared/agent-review.md) checks honour this exception when a `## Read-only Bash justification` heading is present in the body and downgrade the would-be `Critical` finding to `Info` for this agent.
 
-### German trigger phrases
-
-This agent also triggers on equivalent German-language requests, including:
-
-- "Doku auf Aktualität prüfen"
-- "tote Links in der Doku finden"
-- "DE/EN-Parität prüfen"
-
 ### Why this is an agent, not a skill
 
 - **Self-contained input and output:** the caller hands over the repo root (usually just "this repo") and expects a structured freshness report. No mid-flow user approval is required for any step.

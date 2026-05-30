@@ -26,11 +26,13 @@ _Audits, renders, and bootstraps the cross-repository capability portfolio acros
 ## Don't use when
 
 - **You want per-repo tech-stack capture or refresh** → [`tech-stack-capture`](tech-stack-capture.md)
+- **You want in-flight state triage (stalled PRs, issues, review threads) rather than capability allocation** → [`portfolio-inflight-triage`](portfolio-inflight-triage.md)
 
 ## See also
 
 - [`tech-stack-capture`](tech-stack-capture.md)
 - [`portfolio-manifest-collector`](../../agents/nolte-shared/portfolio-manifest-collector.md)
+- [`portfolio-inflight-triage`](portfolio-inflight-triage.md)
 
 ---
 

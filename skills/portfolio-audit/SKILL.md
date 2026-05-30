@@ -12,9 +12,12 @@ use_when:
 dont_use_when:
   - situation: "You want per-repo tech-stack capture or refresh"
     alternative: tech-stack-capture
+  - situation: "You want in-flight state triage (stalled PRs, issues, review threads) rather than capability allocation"
+    alternative: portfolio-inflight-triage
 see_also:
   - tech-stack-capture
   - portfolio-manifest-collector
+  - portfolio-inflight-triage
 resumable: true
 ---
 
