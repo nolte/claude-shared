@@ -36,7 +36,7 @@ last_updated: generated
 * 4 Build
     * [blog-author](nolte-shared/blog-author.md)
     * [blog-author-trigger](nolte-shared/blog-author-trigger.md)
-    * [gemini-image-generate](nolte-shared/gemini-image-generate.md)
+    * [image-generate](nolte-shared/image-generate.md)
     * [sprint-execute](nolte-shared/sprint-execute.md)
 * 5 Review
     * [agent-review](nolte-shared/agent-review.md)
