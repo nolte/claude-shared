@@ -59,6 +59,18 @@ tasks:
     cmds:
       - python3 scripts/validate_skills.py
 
+  image:generate:
+    desc: |
+      Generate an image from a text prompt via a pluggable provider backend
+      (skills/image-generate/scripts/image_generate.py). Default provider is
+      cloudflare (free tier, needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID);
+      --provider pollinations is auth-free; --provider gemini requires billing.
+      Pass script args after `--`, e.g.:
+        task image:generate -- --prompt "a teal fox icon, flat" --out fox.png
+        task image:generate -- --provider pollinations --prompt "a tree" --out tree.jpg
+    cmds:
+      - python3 skills/image-generate/scripts/image_generate.py {{.CLI_ARGS}}
+
   docs:catalog:
     desc: Generate the Skills/Agents catalog under docs/<lang>/{skills,agents}/
     cmds:

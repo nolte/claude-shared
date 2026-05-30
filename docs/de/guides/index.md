@@ -26,3 +26,7 @@ Aufgaben-orientierte How-tos und erklärende Hintergrund-Seiten rund um `claude-
 ## Lebenszyklus
 
 - [Entwicklungszyklus](development-lifecycle.md) — wo jeder Skill und Agent im Liefer-Lebenszyklus greift
+
+## Fähigkeiten
+
+- [Bildgenerierung](image-generation.md) — ein Bild aus einem Prompt über austauschbare Provider (Cloudflare, Pollinations, Gemini) erzeugen, und welchen Token jeder braucht

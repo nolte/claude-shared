@@ -1,7 +1,13 @@
+[Cc]loudflare
 Duden
 Gedankenstrich
+[Gg]emini
+generativelanguage
 kamerplanter
 [Ll]ektor(at|ing|iert|ieren)?
+[Pp]ollinations
 Sachtextformel
+scriptable
 Spatien
+swappable
 und

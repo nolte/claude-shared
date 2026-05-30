@@ -48,7 +48,7 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 
 - [`blog-author`](nolte-shared/blog-author.md) — Verfasst ein zweisprachiges Blog-Post-Paar (EN-canonical + DE-übersetzt) nach den blog-author-Specs dieses Plugins und schreibt es in ein Konsumenten-Blog-Repo.
 - [`blog-author-trigger`](nolte-shared/blog-author-trigger.md) — Bei einem feature→done-Übergang leitet es ein Blog-Post-Briefing ab, schlägt neu/update/defer vor und dispatched entweder blog-author oder schreibt ein Deferral-Artefakt.
-- [`gemini-image-generate`](nolte-shared/gemini-image-generate.md) — Erzeugt aus einem Text-Prompt ein Bild über das Gemini-Free-Tier-Modell und schreibt Bild plus Metadaten-Sidecar an einen gewählten Pfad.
+- [`image-generate`](nolte-shared/image-generate.md) — Erzeugt aus einem Text-Prompt ein Bild über ein austauschbares Provider-Backend (Cloudflare/Pollinations/Gemini) und schreibt Bild plus Metadaten-Sidecar an einen gewählten Pfad.
 - [`sprint-execute`](nolte-shared/sprint-execute.md) — Treibt das Tagesgeschäft eines aktiven Sprints: Lifecycle-Übergänge, Feature-Listen-Sync, last_commit-Updates.
 
 ## 5 Review
