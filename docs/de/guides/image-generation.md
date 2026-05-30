@@ -62,14 +62,14 @@ Der Default-Provider ist `cloudflare`, dafür ist also kein `--provider` nötig:
 task image:generate -- --prompt "a minimalist teal fox icon, flat" --out fox.jpg
 
 # oder direkt
-python3 skills/image-generate/scripts/image_generate.py \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
     --prompt "a minimalist teal fox icon, flat" --out fox.jpg
 ```
 
 Backend wechseln mit `--provider`:
 
 ```bash
-python3 skills/image-generate/scripts/image_generate.py \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
     --provider pollinations --prompt "a tree, comic style" --out tree.jpg --accept-data-policy
 ```
 
@@ -79,6 +79,17 @@ Nützliche Flags: `--from-prompt-doc <doc> --variant light|dark` (ein `graphic-p
 
 !!! tip
     Cloudflare und Pollinations liefern beide JPEG. Nutze ein `.jpg`-Ziel, um die Endungs-/MIME-Abweichungswarnung zu vermeiden (das Bild wird so oder so geschrieben).
+
+## Nutzung in einem anderen Repo
+
+Wenn das `nolte-shared`-Plugin in einem anderen Repository installiert ist, ist diese Fähigkeit dort als `/nolte-shared:image-generate` erreichbar — es wird nichts ins Consumer-Repo kopiert. Der Skill ruft das mitgelieferte Skript über `${CLAUDE_PLUGIN_ROOT}` auf, das in jedem Kontext auf das installierte Plugin-Verzeichnis zeigt (Marketplace-Installation und `claude --plugin-dir .`-Dogfooding), sodass derselbe Befehl überall funktioniert:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
+    --prompt "a teal fox icon, flat" --out fox.jpg
+```
+
+Nur der *Skript*-Pfad ist plugin-relativ; Daten-Pfade (`--out`, `--from-prompt-doc`) bleiben relativ zum Arbeitsverzeichnis des Consumers. Die Abkürzung `task image:generate` ist `claude-shared`-lokal (sie führt das repo-relative Skript außerhalb von Claude aus); Consumer-Repos nutzen stattdessen den Slash-Command.
 
 ## Fügt sich in eine Pipeline
 
