@@ -16,9 +16,20 @@ This repository provides a single source for:
 - **Skills**: reusable slash commands and workflows invoked via the `Skill` tool.
 - **Conventions**: shared guidance (`CLAUDE.md` snippets, prompt fragments) that projects can compose into their own setup.
 
+The plugin's primary readers are **`downstream-user`** (Claude Code users in portfolio projects who install this plugin), **`dogfooding-author`** (the plugin author developing it in this repo), plus **`maintainer`** and **`external-contributor`** for the codebase itself. The full audience list — with criticality, expectations, and per-audience track — lives in [`AUDIENCES.md`](AUDIENCES.md).
+
+**When to use this plugin** — typical scenarios:
+
+- Enforce a consistent pull-request workflow across multiple repositories in the same portfolio.
+- Apply a uniform pre-merge review baseline (`review`, `security-review`) before shipping.
+- Bootstrap or refresh a project's MkDocs documentation skeleton with audience-track frontmatter.
+- Run a portfolio-wide `dependency-audit` / `docs-freshness` / `vocab-drift` pass on a recurring schedule.
+
+Out-of-scope cases are listed under [§Scope & guarantees](#scope--guarantees) — in short: the plugin ships tooling, not a managed service, and it does not own downstream release accountability.
+
 ## What this plugin ships
 
-The plugin is distributed as a single bundle. After install, every skill below is callable as `/nolte-shared:<name>`. Agents are dispatched by skills, or directly via the `Task` tool when the caller knows which agent it wants.
+The plugin is distributed as a single bundle. After install, every skill below is callable as `/nolte-shared:<name>`. Agents are dispatched by skills, or directly via Claude Code's `Task` tool (the API skills use to launch agents programmatically) when the caller knows which agent it wants.
 
 ### Skills
 

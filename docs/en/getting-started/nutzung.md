@@ -2,7 +2,7 @@
 title: Usage
 audience: [maintainer, external-contributor]
 content_mode: how-to
-track: developer-docs
+track: user-docs
 last_updated: 2026-05-19
 ---
 
@@ -30,7 +30,7 @@ They also appear under `/skills` where Tab-completion works.
 
 ## Response language
 
-Skill files themselves are kept in English (token efficiency). Claude detects the user's language from their message and responds in that language—German in gets German out.
+Skill files themselves are kept in English to keep Claude's processing cost low. Claude detects the user's language from their message and responds in that language—German in gets German out.
 
 ## Namespace collisions
 
