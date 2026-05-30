@@ -46,7 +46,7 @@ Three constraints shape the design:
 
 ### `pollinations`
 - **MUST** force `private=true` on every request (opt out of the public feed) and **MUST NOT** expose a CLI flag to disable it.
-- **MUST** present a one-time disclaimer covering the public-feed default and the **undocumented output licence**, requiring acknowledgement before first use.
+- **MUST** present a one-time disclaimer, requiring acknowledgement before first use, covering: the public-feed default; that `private=true` is a feed opt-out only and **not** a non-storage guarantee (response caches persist, per the provider's privacy policy); and that the Terms grant **no explicit output licence** (deferring to the underlying model's licence).
 - **MUST NOT** be the default provider.
 - **MUST** send a browser-style `User-Agent`; the default `urllib` UA is rejected by Pollinations' Cloudflare bot protection (HTTP 403, error 1010).
 

@@ -194,6 +194,8 @@ def test_pollinations_disclaimer_mentions_feed_and_licence(state, capsys):
     err = capsys.readouterr().err
     assert "public feed" in err.lower()
     assert "licence" in err.lower() or "license" in err.lower()
+    assert "myceli" in err.lower()  # operating legal entity named (GDPR)
+    assert "model" in err.lower()  # output rights deferred to the model licence
 
 
 def test_pollinations_writes_binary_and_needs_no_auth(state):

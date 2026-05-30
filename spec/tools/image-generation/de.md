@@ -46,7 +46,7 @@ Drei Randbedingungen prägen das Design:
 
 ### `pollinations`
 - **MUSS [MUST]** bei jedem Request `private=true` erzwingen (Opt-out vom öffentlichen Feed) und **MUSS NICHT [MUST NOT]** ein CLI-Flag anbieten, das dies deaktiviert.
-- **MUSS [MUST]** einen einmaligen Disclaimer präsentieren, der den öffentlichen-Feed-Default und die **undokumentierte Output-Lizenz** abdeckt, mit Bestätigung vor der ersten Nutzung.
+- **MUSS [MUST]** einen einmaligen Disclaimer präsentieren, mit Bestätigung vor der ersten Nutzung, der abdeckt: den öffentlichen-Feed-Default; dass `private=true` nur ein Feed-Opt-out ist und **keine** Nicht-Speicherungs-Garantie (Response-Caches bleiben laut Privacy Policy des Anbieters bestehen); und dass die Terms **keine explizite Output-Lizenz** gewähren (Verweis auf die Lizenz des zugrunde liegenden Modells).
 - **MUSS NICHT [MUST NOT]** der Default-Provider sein.
 - **MUSS [MUST]** einen Browser-typischen `User-Agent` senden; der Default-`urllib`-UA wird von Pollinations' Cloudflare-Bot-Schutz abgewiesen (HTTP 403, error 1010).
 

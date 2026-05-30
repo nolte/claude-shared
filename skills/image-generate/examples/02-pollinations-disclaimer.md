@@ -1,13 +1,17 @@
 # Example 2 — Pollinations (auth-free) and its disclaimer
 
-Pollinations needs no account — ideal for a quick, throwaway image. But it carries two
-risks the tool surfaces before the first generation:
+Pollinations needs no account — ideal for a quick, throwaway image. It is operated by
+Myceli.AI OU (Estonia; GDPR applies) and *does* have formal Terms and a Privacy Policy,
+but two risks remain that the tool surfaces before the first generation:
 
 1. **Public feed by default.** Pollinations posts generated images and their prompts to a
-   public feed. The tool **hard-codes `private=true`** to opt out — this is not overridable.
-2. **Undocumented output licence.** Only the platform code is MIT-licensed; the licence and
-   ownership of generated images are not officially documented. Don't use it for
-   confidential or commercial work — prefer `cloudflare` there.
+   public feed. The tool **hard-codes `private=true`** to opt out (not overridable). Note:
+   per the privacy policy this only hides the image from the feed — it does **not**
+   guarantee non-storage (response caches persist up to ~30 days).
+2. **No explicit output licence.** The Terms grant no ownership/licence for the generated
+   images; they state *"model licences vary; verify before commercial use"* and defer to
+   the underlying model's licence (this tool uses FLUX). For confidential or commercial
+   work, prefer `cloudflare` (output ownership + Apache-2.0).
 
 ## Generate (first time → disclaimer)
 

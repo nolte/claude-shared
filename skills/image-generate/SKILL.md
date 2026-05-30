@@ -39,7 +39,7 @@ Turns a text prompt into an image file on disk — no chat UI, scriptable into a
 | `--provider` | Auth | Free? | Notes |
 |---|---|---|---|
 | `cloudflare` (default) | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` | Yes — 10k neurons/day, no credit card | FLUX.1-schnell (Apache-2.0), no watermark, no feed |
-| `pollinations` | none (opt. `POLLINATIONS_API_TOKEN`) | Yes, auth-free | **Public feed by default — the tool forces `private=true`.** Output **licence undocumented**; one-time disclaimer shown. Never the default. |
+| `pollinations` | none (opt. `POLLINATIONS_API_TOKEN`) | Yes, auth-free | Operated by Myceli.AI OU (Estonia, GDPR). **Public feed by default — the tool forces `private=true`** (feed opt-out only, *not* a non-storage guarantee). The Terms grant **no explicit output licence** ("verify the model licence"); `safe` filter is off by default. One-time disclaimer; never the default. |
 | `gemini` | `GEMINI_API_KEY` | **No — requires billing** (free-tier quota is 0 for this model) | `gemini-2.5-flash-image`; data-use notice shown |
 
 ## Inputs
@@ -75,7 +75,7 @@ Generate one image (or `n`) from the resolved prompt to the target path.
 - **Never** pass `--force` to overwrite an existing file without explicit operator confirmation in the same turn.
 - **Never** pass any provider's API key/token on the command line or echo it into the conversation; credentials travel only through environment variables.
 - **Never** retry automatically on an HTTP 429 / billing-required (`limit: 0`) — surface the message and stop.
-- For confidential or commercial work, prefer `cloudflare` (clear Apache-2.0 output, no feed) over `pollinations` (undocumented licence).
+- For confidential or commercial work, prefer `cloudflare` (Cloudflare grants output ownership + FLUX.1-schnell is Apache-2.0, no feed) over `pollinations` (Terms grant no explicit output licence — they defer to the model's licence — and `private=true` is feed-opt-out only, not a non-storage guarantee).
 
 ## Gotchas
 

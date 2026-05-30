@@ -217,13 +217,18 @@ class PollinationsProvider(Provider):
 
     def consent_notice(self) -> str | None:
         return (
-            "Pollinations.ai notice: by default, generated images and their prompts "
-            "appear in a PUBLIC feed (image.pollinations.ai/feed). This tool forces "
-            "private=true to opt out, but be aware the service stores/serves images "
-            "on shared infrastructure. The licence and ownership of generated images "
-            "are NOT officially documented (only the platform code is MIT-licensed); "
-            "treat outputs as legally unsettled and do not send confidential or "
-            "personal prompts. Set POLLINATIONS_API_TOKEN to remove watermarks."
+            "Pollinations.ai notice (operated by Myceli.AI OU, Estonia; GDPR applies):\n"
+            "- PUBLIC FEED: images and prompts go to a public feed by default. This tool "
+            "forces private=true to opt out, but per the privacy policy that only hides "
+            "them from the feed; it does NOT guarantee non-storage (response caches "
+            "persist up to ~30 days).\n"
+            "- OUTPUT LICENCE: the Terms grant no explicit ownership or licence for "
+            "generated images; they state 'model licences vary; verify before commercial "
+            "use'. For blog or commercial use you rely on the underlying model's licence "
+            "(this tool uses FLUX). Treat outputs as legally unsettled.\n"
+            "- CONTENT: no NSFW filter is applied by default. Do not send confidential or "
+            "personal prompts, real people's likenesses, or trademarks.\n"
+            "Set POLLINATIONS_API_TOKEN to remove watermarks."
         )
 
     def generate(self, prompt, n, seed, opts):
