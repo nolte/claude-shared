@@ -44,6 +44,7 @@ Drei Randbedingungen prägen das Design:
 
 ### `cloudflare` (Default)
 - **MUSS [MUST]** Cloudflare Workers AI FLUX.1-schnell (Apache-2.0-Output) mit `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` aufrufen; Fehlen einer der beiden ergibt einen Setup-Hinweis, der beide nennt sowie das Free-Tier-Neuronen-Budget. Kein Datenschutz-/Lizenzhinweis erforderlich.
+- **SOLLTE [SHOULD]** für diesen Provider den Modell-Invarianten aus `spec/design/flux-image-generation/` folgen: natürlichsprachige Prompts (keine SDXL-Komma-Tags oder Prompt-Gewichte), `guidance = 0`, `steps ≤ 8` und keine Negative Prompts (Unerwünschtes positiv formuliert).
 
 ### `pollinations`
 - **MUSS [MUST]** bei jedem Request `private=true` erzwingen (Opt-out vom öffentlichen Feed) und **MUSS NICHT [MUST NOT]** ein CLI-Flag anbieten, das dies deaktiviert.

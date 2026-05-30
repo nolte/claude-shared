@@ -21,6 +21,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-review | Claude Skill Review | Claude-Skill-Review | draft | 2026-04-24 |
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | 2026-04-23 |
 | design | corporate-design-colors | Corporate Design — Color System | Corporate Design — Farbsystem | draft | unversioned |
+| design | flux-image-generation | FLUX Image Generation | FLUX-Bildgenerierung | draft | unversioned |
 | design | graphic-prompt-authoring | Graphic Prompt Authoring | Grafik-Prompt-Autorenschaft | draft | unversioned |
 | portfolio | portfolio-inflight-management | Portfolio In-Flight Management | Portfolio-In-Flight-Management | draft | unversioned |
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | unversioned |

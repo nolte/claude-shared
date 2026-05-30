@@ -44,6 +44,7 @@ Three constraints shape the design:
 
 ### `cloudflare` (default)
 - **MUST** call Cloudflare Workers AI FLUX.1-schnell (Apache-2.0 output) using `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`; absence of either yields a setup hint naming both and the free-tier neuron budget. No data/licence notice is required.
+- **SHOULD** follow the model-level FLUX invariants in `spec/design/flux-image-generation/` for this provider: natural-language prompts (no SDXL comma-tags or prompt weights), `guidance = 0`, `steps ≤ 8`, and no negative prompts (unwanted attributes phrased positively).
 
 ### `pollinations`
 - **MUST** force `private=true` on every request (opt out of the public feed) and **MUST NOT** expose a CLI flag to disable it.
