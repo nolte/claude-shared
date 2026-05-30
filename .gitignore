@@ -56,3 +56,11 @@ desktop.ini
 
 # Logs
 *.log
+
+# Generated brand/mascot image renders — reproducible from design/prompts/*.md.
+# Kept out of git on purpose; the .meta.json sidecars also embed the Cloudflare account id.
+design/assets/
+design/**/*.jpg
+design/**/*.jpeg
+design/**/*.png
+design/**/*.meta.json
