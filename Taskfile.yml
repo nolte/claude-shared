@@ -38,7 +38,7 @@ tasks:
       unless RUN_EVALS=1. Requires pytest: `pip install -r evals/requirements-dev.txt`.
     cmds:
       - task: validate:skills
-      - python3 -m pytest evals -q
+      - python3 -m pytest tests -q
 
   check:
     desc: |

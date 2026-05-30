@@ -12,7 +12,8 @@ from __future__ import annotations
 import pytest
 
 from evals.harness.scorecard import aggregate_samples
-from evals.scenarios.spec_readiness_reviewer import scenario
+
+from . import scenario
 
 
 @pytest.mark.behavioural

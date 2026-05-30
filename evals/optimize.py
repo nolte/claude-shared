@@ -30,7 +30,7 @@ Run (the degrade-and-recover demo):
 
     RUN_EVALS=1 .venv/bin/python -m evals.optimize \\
         --target agents/spec-readiness-reviewer.md \\
-        --scenario-module evals.scenarios.spec_readiness_reviewer.scenario \\
+        --scenario-module tests.e2e.spec_readiness_reviewer.scenario \\
         --desc "Audit a spec for readiness; flag the planted MUST-vs-MUST-NOT caching \\
                 contradiction as Critical and the orphan AC as Warning." \\
         --max-iters 5 --samples 5 --quality 0.9 --model sonnet
