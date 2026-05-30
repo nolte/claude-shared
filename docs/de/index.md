@@ -45,6 +45,9 @@ flowchart LR
 
 ## Weiter
 
+Wenn du das Plugin in deinem eigenen Projekt **nutzen** willst, beginne bei [nolte-shared nutzen](using.md). Wenn du an diesem Repository **entwickeln** willst, beginne bei [Erste Schritte](getting-started/index.md).
+
+- [nolte-shared nutzen](using.md) — das Plugin downstream installieren und nutzen (User-Docs)
 - [Erste Schritte](getting-started/index.md) — Plugin laden und eigene Skills nutzen
 - [Skills](skills/index.md) — Überblick der mitgelieferten Skills
 - [Agents](agents/index.md) — Überblick der mitgelieferten Agents
