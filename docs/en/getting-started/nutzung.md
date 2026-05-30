@@ -1,6 +1,6 @@
 ---
 title: Usage
-audience: [maintainer, downstream-user]
+audience: [maintainer, external-contributor]
 content_mode: how-to
 track: developer-docs
 last_updated: 2026-05-19

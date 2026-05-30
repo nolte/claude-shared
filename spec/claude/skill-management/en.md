@@ -107,12 +107,13 @@ Tracks the public guidance at <https://agentskills.io/skill-creation/best-practi
 
 ### Operations vocabulary
 
-Skills with multiple named operations use a `## Operations` block. This section governs the naming and heading form of that block so that skill authors, reviewers, and the sweep tooling share a consistent vocabulary.
+A skill that exposes more than one **dispatchable operation** (a user-selectable mode the caller picks between, such as `audit` vs. `migrate` vs. `patch`) documents them in a `## Operations` block. This section governs the naming and heading form of that block so that skill authors, reviewers, and the sweep tooling share a consistent vocabulary. It binds the *dispatchable operations* a skill offers, not the sequential procedure steps of a single operation.
 
 - **MUST** use `## Operations` (plural) as the heading for the operations block; singular `## Operation` is non-conformant
-- **MUST** name each operation with one verb from the closed vocabulary: `audit` (read-only check), `scaffold` (greenfield create), `patch` (additive fix), `apply` (audit + scaffold + patch in one flow), `migrate` (brownfield → conforming), `run` (default verb for skills with one operation), `update` (mutate an existing artefact), `close` (terminate a lifecycle)
-- **MUST NOT** introduce new operation verbs without amending this list
-- **MUST** title sub-operations as `### N. <verb>` (numbered) or as a level-3 heading followed by a backtick-quoted command verb; alphabetic letters (`A.`/`B.`/`C.`) and `### Step N` are non-conformant
+- **SHOULD** name an operation that performs a standard scaffolding-lifecycle action with the matching verb from the lifecycle vocabulary, so artefacts in the same cluster read alike: `audit` (read-only check), `scaffold` (greenfield create), `patch` (additive fix), `apply` (audit + scaffold + patch in one flow), `migrate` (brownfield → conforming), `run` (default verb for a skill with one operation), `update` (mutate an existing artefact), `close` (terminate a lifecycle)
+- **MAY** name an operation with a domain-specific verb when it has no clean lifecycle equivalent or when the domain verb is materially clearer (for example a planning skill's `add` / `promote` / `retarget`, a sprint skill's `transition` / `decline`, a content skill's `revise` / `propose`); the lifecycle list is the recommended default, not a closed set that forbids every other verb. Still prefer a lifecycle verb when one fits cleanly (`audit` over `validate` or `scan`, `update` over `revisit`, `migrate` over `refactor`) so the surface stays predictable
+- **Procedure steps are exempt from the vocabulary.** A skill with a single dispatchable operation that documents it as an ordered runbook (for example `### 1. Detect project kind`, `### 2. Run auditors`, `### 3. Render the report`) draws its step headings from the task, not from any verb list; those are steps of one operation, not dispatchable operations. Only the heading-form rule below applies to them
+- **MUST** title sub-operations and procedure steps as `### N. <verb-or-step>` (numbered) or as a level-3 heading followed by a backtick-quoted command verb; alphabetic letters (`A.`/`B.`/`C.`) and `### Step N` are non-conformant
 - **SHOULD** retain operation names short (single word) and consistent within a skill cluster (for example, lifecycle skills should align verbs)
 
 ### Progressive disclosure & file references

@@ -79,7 +79,7 @@ Mirrors the authoring requirements added to `skill-management` §"Authoring qual
 Mirrors `skill-management` §"Frontmatter validation"; cite the originating rule when a finding pins one.
 
 - **MUST** verify `name` is 1–64 characters, lowercase ASCII letters/digits/hyphens only, doesn't start or end with `-`, and contains no `--`; any violation is a `Critical`
-- **MUST** verify neither `name` nor any other frontmatter value contains the reserved tokens `anthropic` or `claude`; a violation is a `Critical` (the upstream platform validator rejects the skill)
+- **MUST** verify `name` doesn't contain the reserved tokens `anthropic` or `claude` (the reserved-word rule applies to `name` only, per `skill-management` §Frontmatter validation, because descriptive fields like `description` may legitimately mention `claude`); a violation is a `Critical` (the upstream platform validator rejects the skill), unless the artefact body carries a `## Reserved-token rationale` section claiming the narrow Claude/Anthropic-surface exception
 - **MUST** verify neither `name` nor `description` contains XML tags; a violation is a `Critical`
 - **MUST** verify `description` is non-empty and ≤1024 characters; over-cap or empty is a `Critical`
 - **MUST** verify `description` is written in **third person**: presence of the pronouns "I," "you," or "we" (or other non-third-person markers) in the description text is a `Critical`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))

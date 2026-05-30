@@ -29,6 +29,8 @@ Das Portfolio regelt bereits, **wie** Spezifikationen und Implementierung abgegl
   - einer `project-structure-apply`-Abweichung (fehlendes oder divergierendes Artefakt)
   - eines `vocab-drift-audit`-Berichts über lokal hinzugefügte Einträge, die bereits upstream vorhanden sind, oder über lokale Einträge, die per PR upstream gebracht werden sollten
   - eines `portfolio-inflight-triage`-Findings-Report-Eintrags mit Severity `Critical` oder `Warning` gemäß `spec/portfolio/portfolio-inflight-management/` §Findings-Report shape
+  - eines `portfolio-audit`-Findings-Report-Eintrags mit Severity `Critical` oder `Warning` gemäß `spec/portfolio/portfolio-management/`
+  - eines `dependency-audit`-Findings mit Severity `critical` oder `high` gemäß `spec/project/dependency-audit/`
   - eines Lint-Fehlers in `prose-style` oder `markdown-formatting` auf einer versionierten Datei
   - jeder manuellen Review-Feststellung, die als GitHub-Issue, Commit-Notiz oder Audit-Artefakt festgehalten wurde
 - **MUSS [MUST]** darüber hinaus Ad-hoc-Findings abdecken, die außerhalb eines geplanten Audits entdeckt werden (ein Beitragender bemerkt Drift bei unabhängiger Arbeit), sobald sie als GitHub-Issue oder getracker Remediation-PR erfasst sind — die Erfassung ist der Trigger, nicht die ursprüngliche Audit-Quelle

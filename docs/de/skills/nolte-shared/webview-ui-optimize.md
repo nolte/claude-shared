@@ -50,7 +50,7 @@ This skill also triggers on equivalent German-language requests, including:
 - "WebView optimieren"
 - "a11y-Audit"
 
-### Rationale (why a skill, not just an agent)
+### Why this is a skill, not an agent
 
 Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a skill because:
 

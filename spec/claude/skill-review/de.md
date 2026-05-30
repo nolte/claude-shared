@@ -79,7 +79,7 @@ Spiegelt die Autoren-Anforderungen aus `skill-management` §„Autoren-Qualität
 Spiegelt `skill-management` §„Frontmatter-Validierung"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
 
 - **MUSS [MUST]** verifizieren, dass `name` 1–64 Zeichen hat, nur ASCII-Kleinbuchstaben/-Ziffern/-Bindestriche, nicht mit `-` beginnt oder endet und kein `--` enthält; jede Verletzung ist ein `Critical`
-- **MUSS [MUST]** verifizieren, dass weder `name` noch ein anderer Frontmatter-Wert die reservierten Tokens `anthropic` oder `claude` enthält; eine Verletzung ist ein `Critical` (der Upstream-Plattform-Validator weist den Skill ab)
+- **MUSS [MUST]** verifizieren, dass `name` nicht die reservierten Tokens `anthropic` oder `claude` enthält (die Reserved-Word-Regel gilt nur für `name`, gemäß `skill-management` §Frontmatter validation, da beschreibende Felder wie `description` legitim `claude` erwähnen dürfen); eine Verletzung ist ein `Critical` (der Upstream-Plattform-Validator weist den Skill ab), außer der Artefakt-Body trägt einen `## Reserved-token rationale`-Abschnitt, der die enge Claude/Anthropic-Surface-Ausnahme beansprucht
 - **MUSS [MUST]** verifizieren, dass weder `name` noch `description` XML-Tags enthält; eine Verletzung ist ein `Critical`
 - **MUSS [MUST]** verifizieren, dass `description` nicht-leer und ≤1024 Zeichen ist; Über-Cap oder leer ist ein `Critical`
 - **MUSS [MUST]** verifizieren, dass `description` in der **dritten Person** verfasst ist: das Vorkommen der Pronomen „I", „you" oder „we" (oder anderer Nicht-Dritte-Person-Marker) im Description-Text ist ein `Critical`. Zitat: `skill-management` §Frontmatter-Validierung, abgeleitet aus den Upstream-Plattform-Best-Practices ([R5](#referenzen))

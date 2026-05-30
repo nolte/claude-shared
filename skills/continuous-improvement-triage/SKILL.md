@@ -10,6 +10,19 @@ use_when:
   - "you want to classify a portfolio-improvement opportunity against the specialist catalog"
   - "you want to run the quarterly specialist-coverage review"
   - "you want to check whether a finding class needs a new specialist"
+dont_use_when:
+  - situation: "You want to produce the audit findings rather than triage and dispatch them"
+    alternative: portfolio-audit
+  - situation: "You want a cross-cutting skills-and-agents sweep with a remediation roadmap"
+    alternative: skills-agents-sweep
+  - situation: "You want spec-versus-implementation drift reconciliation"
+    alternative: spec-drift-audit
+  - situation: "You want to triage a failing CI workflow run"
+    alternative: workflow-health-triage
+see_also:
+  - portfolio-audit
+  - skills-agents-sweep
+  - workflow-health-triage
 resumable: true
 ---
 
@@ -49,7 +62,7 @@ A triage artifact must exist for `update` and `close`; if none exists, start wit
 
 Perform the periodic specialist-coverage review mandated by the spec (at minimum once per calendar quarter).
 
-1. **Locate merged remediation PRs.** Run `gh pr list --state merged --limit 50 --json number,title,body,labels` and filter for PRs whose body contains a **Risk / rollout notes** section that references an in-scope finding source (`spec-drift-audit`, `workflow-health`, `project-structure-apply`, `vocab-drift-audit`, `prose-style`, manual review Issue, or ad-hoc contributor observation).
+1. **Locate merged remediation PRs.** Run `gh pr list --state merged --limit 50 --json number,title,body,labels` and filter for PRs whose body contains a **Risk / rollout notes** section that references an in-scope finding source (`spec-drift-audit`, `workflow-health`, `project-structure-apply`, `vocab-drift-audit`, `portfolio-audit`, `portfolio-inflight-triage`, `dependency-audit`, `prose-style`, manual review Issue, or ad-hoc contributor observation).
 
 2. **Extract dispatch signals.** For each matched PR, parse the **Risk / rollout notes** section for:
    - The named specialist (or the literal phrase "no matching specialised agent—generalist remediation").

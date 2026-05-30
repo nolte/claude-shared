@@ -104,15 +104,15 @@ Emit a single severity-classified report:
 | Broken access control (A01) | … | n |
 | … | … | n |
 
-### P0 — critical
+### Critical
 #### SEC-001: {title}
 - **File:** `path:line`  **OWASP:** {category}  **Confidence:** {confirmed|suspected}
 - **Problem:** …
 - **Recommended remediation (not applied):** …
 
-### P1 — high
-### P2 — medium
-### P3 — low / hardening
+### Warning
+### Suggestion
+### Info
 
 ### Tenant-isolation matrix (multi-tenant projects)
 | Endpoint group | Tenant filter | AuthZ check | Status |
@@ -120,7 +120,14 @@ Emit a single severity-classified report:
 | … | yes/no | yes/no | OK/at-risk |
 ~~~
 
-Sort by severity (P0 → P3). State the scope. Keep per-category output readable.
+Classify every finding with the portfolio-wide severity vocabulary from `spec/claude/review-plan/` §Severity scale (verbatim Title Case), applied to the security context:
+
+- **Critical** — exploitable vulnerability or MUST-fix issue that blocks release: injection, broken authentication or access control, a hard-coded credential or secret in source / config / logs, a tenant-scoped path missing its tenant filter.
+- **Warning** — a real weakness that should be fixed before the next release but is not directly exploitable on its own (defence-in-depth gap with a plausible escalation path).
+- **Suggestion** — a hardening opportunity or one-line improvement that raises the security posture without addressing a concrete weakness.
+- **Info** — an observation or context note; no action required.
+
+Never invent a `P0–P3` or `critical/high/medium/low` scale. Sort by severity (Critical → Info). State the scope. Keep per-category output readable.
 
 ### Hard rules
 

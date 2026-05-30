@@ -70,6 +70,7 @@ plugins:
           build: true
           nav_translations:
             Startseite: Home
+            Plugin nutzen: Using nolte-shared
             Erste Schritte: Getting Started
             Installation: Installation
             Nutzung: Usage
@@ -148,6 +149,7 @@ extra:
 
 nav:
   - Startseite: de/index.md
+  - Plugin nutzen: de/using.md
   - Erste Schritte:
       - de/getting-started/index.md
       - Installation: de/getting-started/installation.md

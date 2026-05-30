@@ -41,14 +41,6 @@ The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add
 
 The `agent-review` checks honour this exception when a `## Read-only Bash justification` heading is present in the body and downgrade the would-be `Critical` finding to `Info` for this agent.
 
-## German trigger phrases
-
-This agent also triggers on equivalent German-language requests, including:
-
-- "Doku auf Aktualität prüfen"
-- "tote Links in der Doku finden"
-- "DE/EN-Parität prüfen"
-
 ## Why this is an agent, not a skill
 
 - **Self-contained input and output:** the caller hands over the repo root (usually just "this repo") and expects a structured freshness report. No mid-flow user approval is required for any step.
@@ -296,7 +288,7 @@ Per `spec/project/docs-audience-tracks/` §Audience-to-track mapping:
 
 1. Load the project's audience artefact (`AUDIENCES.md` at the bounded-context root, the README-section or ADR alternative per `spec/project/audience-identification/`). If the artefact carries `track:` fields on individual audience entries, build an `audience-id → track` map.
 2. If the artefact is missing or carries no per-audience `track` fields, fall back to the portfolio-baseline default: `user` → `user-docs`; `contributor` / `operator` / `release-manager` → `developer-docs`.
-3. For every page that declares both `audience:` and `track:` frontmatter: when one of the `audience:` IDs maps to a different track than the page's `track:` value, emit an `Audience-track mismatch` finding (warning) so a Reviewer can resolve the contradiction deliberately.
+3. For every page that declares both `audience:` and `track:` frontmatter **and whose `content_mode:` is not `meta`**: when one of the `audience:` IDs maps to a different track than the page's `track:` value, emit an `Audience-track mismatch` finding (warning) so a Reviewer can resolve the contradiction deliberately. **Skip `content_mode: meta` pages** — per `spec/project/docs-audience-tracks/` §Per-page contract, meta pages (the Home page introducing both tracks, per-section index pages, generator-emitted nav stubs, tag indexes, ADRs that motivate the track split) are exempt from the audience-to-track no-contradiction rule, because `content_mode: meta` already signals that the page routes readers across tracks rather than serving one.
 
 ### Phase 7: Stale markers
 

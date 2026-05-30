@@ -53,7 +53,7 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects.
 
-### Rationale (why an agent, not a skill)
+### Why this is an agent, not a skill
 
 This capability is authored as an agent because:
 
