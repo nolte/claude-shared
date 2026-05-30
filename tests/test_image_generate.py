@@ -165,6 +165,18 @@ def test_cloudflare_no_consent_notice(state, cf_env):
     assert not ig.ack_path("cloudflare").exists()
 
 
+def test_no_credentials_leak_into_sidecar_or_stderr(state, cf_env, capsys):
+    # Credential-handling regression guard: neither the token nor the account id
+    # may appear in the sidecar or the operator-facing output.
+    img = state / "x.png"
+    run(["--prompt", "a secret subject", "--out", str(img)], cloudflare_json())
+    err = capsys.readouterr().err
+    sidecar = (state / "x.png.meta.json").read_text()
+    for secret in ("cf-token-xyz", "acct-123"):
+        assert secret not in sidecar
+        assert secret not in err
+
+
 def test_cloudflare_n_images(state, cf_env):
     with mock.patch("urllib.request.urlopen", side_effect=[cloudflare_json(), cloudflare_json()]):
         code = ig.main(["--prompt", "p", "-n", "2", "--out", str(state / "x.png")])
