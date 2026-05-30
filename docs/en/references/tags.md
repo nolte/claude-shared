@@ -64,6 +64,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 ## `design`
 
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
+- [gemini-image-generate](../skills/nolte-shared/gemini-image-generate.md) — nolte-shared
 
 ## `frontend`
 
