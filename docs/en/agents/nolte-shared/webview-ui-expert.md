@@ -42,13 +42,6 @@ _Performs a read-only, cross-file deep review of one named target against the ca
 
 You are a frontend deep-review auditor whose only job is to take one named target — a file, a route module, a feature description, or a stack-wide concern — and produce a single severity-sorted report against `spec/frontend/webview-ui-optimization/<canonical_language>.md` across every applicable domain (Performance, Security, Accessibility, Internationalisation, UX). You **don't** modify files. Fixes are the caller's follow-up step, typically via the [`webview-ui-optimize`](../../skills/nolte-shared/webview-ui-optimize.md) skill's `patch` operation.
 
-### German trigger phrases
-
-This agent also triggers on equivalent German-language requests, including:
-
-- "Frontend-Review für …"
-- "Deep-Review der Dashboard-Charts"
-
 ### Why this is an agent, not a skill
 
 - **Self-contained input and output:** the caller hands over a target and expects a structured report keyed to the spec's five domains and the canonical severity scale. No mid-flow user approval is required during the review itself.
@@ -57,6 +50,14 @@ This agent also triggers on equivalent German-language requests, including:
 - **Specialisation sharpens output:** a narrow "five-domain spec-anchored cross-file review" system prompt measurably improves signal-to-noise over running the same checks inline in the parent conversation, especially when domains interact (a CSP nonce design that also affects Emotion's runtime style cost, an RTL pipeline that also affects MUI-X picker locale wiring).
 - **Model pin (`sonnet`):** the review applies a fixed rule set against a known artefact shape — structurally similar to the [`spec-readiness-reviewer`](spec-readiness-reviewer.md) agent. Sonnet handles structural pattern matching reliably at substantially lower cost than Opus; portfolio-wide review sweeps benefit from the cost differential. The pin is justified per `spec/claude/agent-management/` §Model selection.
 - **Counter-dimension:** the caller often wants to triage findings interactively (skill bias), but triage starts once the report is in hand; the deep review itself needs no mid-flow approval, and the [`webview-ui-optimize`](../../skills/nolte-shared/webview-ui-optimize.md) skill is the orchestrator that handles the per-finding patch dialogue.
+
+### Read-only Bash justification
+
+This agent declares `Bash` under the narrow read-only exception in `spec/claude/agent-management/` §Tool access. It invokes exactly one shell command and nothing else:
+
+- `git rev-parse --is-inside-work-tree` — to confirm the target lives in a git repository before resolving paths.
+
+It **MUST NOT** run any other command: no writes, no file edits, no `git` mutations, no network calls, no package installs, no build or test runs. The agent declares no `Edit`, `Write`, or `NotebookEdit` tool, so the read-only contract is also enforced at the harness level.
 
 ### Scope and boundaries
 

@@ -24,6 +24,19 @@ _Operationalises spec/project/continuous-improvement/ by triaging portfolio audi
 - you want to run the quarterly specialist-coverage review
 - you want to check whether a finding class needs a new specialist
 
+## Nicht anwenden wenn
+
+- **You want to produce the audit findings rather than triage and dispatch them** → [`portfolio-audit`](portfolio-audit.md)
+- **You want a cross-cutting skills-and-agents sweep with a remediation roadmap** → [`skills-agents-sweep`](skills-agents-sweep.md)
+- **You want spec-versus-implementation drift reconciliation** → [`spec-drift-audit`](spec-drift-audit.md)
+- **You want to triage a failing CI workflow run** → [`workflow-health-triage`](workflow-health-triage.md)
+
+## Siehe auch
+
+- [`portfolio-audit`](portfolio-audit.md)
+- [`skills-agents-sweep`](skills-agents-sweep.md)
+- [`workflow-health-triage`](workflow-health-triage.md)
+
 ---
 
 ## Continuous Improvement Triage

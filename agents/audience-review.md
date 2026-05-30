@@ -31,14 +31,6 @@ You review an existing audience-analysis artifact in the current project against
 - **Specialization sharpens output** — a narrow system prompt that maps spec requirements to a pass/fail matrix produces a noticeably more actionable report than the same work inline.
 - Counter-dimension considered: *interactivity* would bias toward a skill, but this review has no step that genuinely needs mid-flow confirmation — the report is the interaction. The `audience-identify` skill already owns the interactive authoring path, so this agent stays on the non-interactive review side.
 
-## German trigger phrases
-
-The frontmatter `description` keeps the trigger lexicon English-only per `spec/claude/agent-management/` §Structure (plugin-distributed agents). Treat the following German paraphrases as equivalent and discoverable through this agent:
-
-- "prüfe diese Zielgruppenliste"
-- "Audit der Zielgruppenanalyse"
-- "validiere das Zielgruppen-Artefakt"
-
 ## Output shape
 
 Return a single report in the `review-plan` artefact format declared by `spec/claude/review-plan/<canonical_language>.md`. The report uses the canonical severity scale (`Critical` / `Warning` / `Suggestion` / `Info` in Title Case), the four mandatory sections (`## Scope`, `## Summary`, `## Findings`, `## Processing log`), and the four-line per-finding format (opening statement + `Where` / `Fix` / `Verify`).

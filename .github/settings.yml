@@ -1,4 +1,4 @@
-_extends: nolte/gh-plumbing:.github/commons-settings.yml@v1.1.15
+_extends: nolte/gh-plumbing:.github/commons-settings.yml@v1.1.19
 
 repository:
   name: claude-shared

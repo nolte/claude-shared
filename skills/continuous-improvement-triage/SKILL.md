@@ -10,6 +10,19 @@ use_when:
   - "you want to classify a portfolio-improvement opportunity against the specialist catalog"
   - "you want to run the quarterly specialist-coverage review"
   - "you want to check whether a finding class needs a new specialist"
+dont_use_when:
+  - situation: "You want to produce the audit findings rather than triage and dispatch them"
+    alternative: portfolio-audit
+  - situation: "You want a cross-cutting skills-and-agents sweep with a remediation roadmap"
+    alternative: skills-agents-sweep
+  - situation: "You want spec-versus-implementation drift reconciliation"
+    alternative: spec-drift-audit
+  - situation: "You want to triage a failing CI workflow run"
+    alternative: workflow-health-triage
+see_also:
+  - portfolio-audit
+  - skills-agents-sweep
+  - workflow-health-triage
 resumable: true
 ---
 

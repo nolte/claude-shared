@@ -62,10 +62,7 @@ Non-`*.md` files are silently skipped from any of the four explicit shapes — M
 Additional optional inputs the caller may pass:
 
 - **Repository root** (absolute path) — when the scanner runs outside the repository's working tree. Defaults to the current working tree resolved via `git rev-parse --show-toplevel`.
-- **Per-file cap override** (integer) — see §Volume control. The spec's default is 3; the spec's §Open Questions notes that overrides are a future-question, so prefer the default unless the caller is explicit.
-- **Per-run cap override** (integer) — same shape, spec default 15.
-
-No other inputs are required. The scanner derives nothing it was not given.
+No other inputs are required. The per-file (3) and per-run (15) caps are fixed portfolio-wide and **MUST NOT** be exposed as invocation-time overrides per `spec/project/diagram-opportunity/` §Volume control; the scanner derives nothing it was not given.
 
 ## Preconditions
 
@@ -210,7 +207,7 @@ The agent applies two hard caps to the **top-report** findings array. The full u
 - **Per-file cap: 3.** No more than three findings per source file appear in the top report. Additional matches from the same file are recorded only in the full inventory.
 - **Per-run cap: 15.** No more than fifteen findings appear in the top report across the entire run. Additional matches are summarized as `truncated: true` and `further_candidate_count: <N>`; the additional N findings live in the full inventory.
 
-When the caller passes per-file or per-run cap overrides via input, honour them; otherwise the spec defaults apply. The cap is a hard ceiling — never silently raise it based on confidence.
+The per-file (3) and per-run (15) caps are fixed; per `spec/project/diagram-opportunity/` §Volume control the agent **MUST NOT** expose them as invocation-time overrides — the defaults are the only supported values, fixed portfolio-wide so the "operator never overwhelmed" guarantee holds uniformly. The cap is a hard ceiling — never silently raise it based on confidence; overflow is always summarized in `full_findings`, never streamed. The `caps` object in §Output shape records these fixed defaults for traceability only.
 
 ### Deterministic ordering
 
