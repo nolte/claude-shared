@@ -32,9 +32,13 @@ tasks:
       - vale README.md docs/en/ $(find spec -name 'en.md')
 
   test:
-    desc: Run the test suite — validates every skill and agent frontmatter
+    desc: |
+      Run the test suite: skill/agent frontmatter validation (static Layer 0) plus the
+      eval-harness unit tests. Behavioural evals that drive a skill/agent are skipped
+      unless RUN_EVALS=1. Requires pytest: `pip install -r evals/requirements-dev.txt`.
     cmds:
       - task: validate:skills
+      - python3 -m pytest tests -q
 
   check:
     desc: |
