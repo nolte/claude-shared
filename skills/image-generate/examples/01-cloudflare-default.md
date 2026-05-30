@@ -17,7 +17,7 @@ export CLOUDFLARE_ACCOUNT_ID="…"
 ## Generate
 
 ```bash
-python3 skills/image-generate/scripts/image_generate.py \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
     --prompt "a minimalist teal fox icon, flat, thick outlines" \
     --out assets/fox.png
 ```

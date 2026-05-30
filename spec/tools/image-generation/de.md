@@ -40,6 +40,7 @@ Drei Randbedingungen prägen das Design:
 - **MUSS [MUST]** HTTP 401/403 als terminalen Auth-Fehler behandeln, der auf die Credential-Seite des Providers verweist; jeder andere Fehler (Netzwerk, DNS, Filesystem, fehlerhafte Antwort) **MUSS [MUST]** eine lesbare Meldung und einen Exitcode ungleich null erzeugen, niemals einen rohen Stacktrace als einzige Ausgabe.
 - **SOLLTE [SHOULD]** das Format aus der Ziel-Endung ableiten und bei MIME-Abweichung warnen (nicht scheitern); das Bild wird trotzdem geschrieben, weil das Kontingent bereits verbraucht ist.
 - **MUSS [MUST]** einen einmaligen, digest-versionierten Bestätigungsmechanismus anbieten, **pro Provider** gekeyed unter `$XDG_STATE_HOME/nolte-shared/image-generate/<provider>/ack`, für Provider, die einen Hinweis deklarieren.
+- **MUSS [MUST]** das mitgelieferte Skript über `${CLAUDE_PLUGIN_ROOT}` statt über einen repo-relativen Pfad aufrufen, damit der Skill aus jedem Consumer-Repository funktioniert, das das Plugin installiert (das Skript liegt im installierten Plugin-Verzeichnis, nicht im Arbeitsbaum des Consumers); nur Daten-Pfade (`--out`, `--from-prompt-doc`) bleiben relativ zum Arbeitsverzeichnis des Consumers.
 
 ### `cloudflare` (Default)
 - **MUSS [MUST]** Cloudflare Workers AI FLUX.1-schnell (Apache-2.0-Output) mit `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` aufrufen; Fehlen einer der beiden ergibt einen Setup-Hinweis, der beide nennt sowie das Free-Tier-Neuronen-Budget. Kein Datenschutz-/Lizenzhinweis erforderlich.

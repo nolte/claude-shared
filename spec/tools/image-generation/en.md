@@ -40,6 +40,7 @@ Three constraints shape the design:
 - **MUST** treat HTTP 401/403 as a terminal auth error pointing at the provider's credential page; any other failure (network, DNS, filesystem, malformed response) **MUST** produce a readable message and a non-zero exit, never a raw stack trace as the only output.
 - **SHOULD** derive the format from the target extension and warn (not fail) on a MIME mismatch; the image is still written, because the quota was already spent.
 - **MUST** offer a one-time, digest-versioned acknowledgement mechanism, keyed **per provider** under `$XDG_STATE_HOME/nolte-shared/image-generate/<provider>/ack`, for providers that declare a notice.
+- **MUST** invoke the bundled script through `${CLAUDE_PLUGIN_ROOT}` rather than a repo-relative path, so the skill works from any consumer repository that installs the plugin (the script lives in the installed plugin directory, not the consumer's working tree); only data paths (`--out`, `--from-prompt-doc`) stay relative to the consumer's working directory.
 
 ### `cloudflare` (default)
 - **MUST** call Cloudflare Workers AI FLUX.1-schnell (Apache-2.0 output) using `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID`; absence of either yields a setup hint naming both and the free-tier neuron budget. No data/licence notice is required.

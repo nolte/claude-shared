@@ -75,7 +75,7 @@ Generate one image (or `n`) from the resolved prompt to the target path.
 3. **Run the bundled engine:**
 
    ```bash
-   python3 skills/image-generate/scripts/image_generate.py \
+   python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
        --provider <cloudflare|pollinations|gemini> --prompt "<prompt>" --out <path> \
        [--from-prompt-doc <doc> --variant <light|dark>] [-n <N>] [--seed <S>] \
        [--width <W> --height <H>] [--force]
@@ -99,6 +99,7 @@ Generate one image (or `n`) from the resolved prompt to the target path.
 - **Per-provider, digest-versioned consent.** Acks live at `$XDG_STATE_HOME/nolte-shared/image-generate/<provider>/ack`; each provider is acknowledged independently, and a changed notice re-prompts automatically.
 - **`n>1` writes `<stem>-1`, `<stem>-2`, …** with one sidecar each; the `prompt` is identical across all.
 - **Cloudflare needs both** `CLOUDFLARE_API_TOKEN` (scope: Workers AI) **and** `CLOUDFLARE_ACCOUNT_ID`.
+- **`${CLAUDE_PLUGIN_ROOT}` is load-bearing — don't "simplify" it to a repo-relative path.** The bundled script lives in the installed plugin directory, not the consumer repo's working tree; `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin root in every context (marketplace install and `claude --plugin-dir .` dogfooding). A bare `skills/image-generate/scripts/…` path only works inside `claude-shared` itself and breaks the skill in every consumer repo. Data paths (`--out`, `--from-prompt-doc`) stay relative to the consumer's working directory — only the script path is plugin-rooted.
 
 ### Examples
 

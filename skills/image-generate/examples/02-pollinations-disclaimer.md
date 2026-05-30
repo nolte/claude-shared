@@ -16,7 +16,7 @@ but two risks remain that the tool surfaces before the first generation:
 ## Generate (first time → disclaimer)
 
 ```bash
-python3 skills/image-generate/scripts/image_generate.py \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
     --provider pollinations \
     --prompt "a single tree, bold comic style, thick black outlines" \
     --out /tmp/tree.jpg
@@ -26,7 +26,7 @@ On the first run the tool prints the disclaimer and waits for acknowledgement. I
 interactive shell, type `yes`. Non-interactively (CI), acknowledge explicitly:
 
 ```bash
-python3 skills/image-generate/scripts/image_generate.py \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
     --provider pollinations --prompt "…" --out /tmp/tree.jpg --accept-data-policy
 ```
 

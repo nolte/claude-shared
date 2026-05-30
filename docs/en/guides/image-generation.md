@@ -62,14 +62,14 @@ The default provider is `cloudflare`, so no `--provider` is needed for it:
 task image:generate -- --prompt "a minimalist teal fox icon, flat" --out fox.jpg
 
 # or directly
-python3 skills/image-generate/scripts/image_generate.py \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
     --prompt "a minimalist teal fox icon, flat" --out fox.jpg
 ```
 
 Switch backends with `--provider`:
 
 ```bash
-python3 skills/image-generate/scripts/image_generate.py \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
     --provider pollinations --prompt "a tree, comic style" --out tree.jpg --accept-data-policy
 ```
 
@@ -79,6 +79,17 @@ Useful flags: `--from-prompt-doc <doc> --variant light|dark` (render a `graphic-
 
 !!! tip
     Cloudflare and Pollinations both return JPEG. Use a `.jpg` target to avoid the extension/MIME-mismatch warning (the image is still written either way).
+
+## Using it in another repo
+
+When the `nolte-shared` plugin is installed in another repository, this capability is reachable there as `/nolte-shared:image-generate`; nothing is copied into the consumer repo. The skill invokes the bundled script through `${CLAUDE_PLUGIN_ROOT}`, which resolves to the installed plugin's directory in any context (marketplace install and `claude --plugin-dir .` dogfooding), so the same command works everywhere:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
+    --prompt "a teal fox icon, flat" --out fox.jpg
+```
+
+Only the *script* path is plugin-rooted; data paths (`--out`, `--from-prompt-doc`) stay relative to the consumer's working directory. The `task image:generate` shortcut is `claude-shared`-local (it runs the repo-relative script outside Claude); consumer repos use the slash command instead.
 
 ## Fits a pipeline
 

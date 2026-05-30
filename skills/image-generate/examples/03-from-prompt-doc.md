@@ -8,7 +8,7 @@ This tool can render a chosen section directly — closing the pipeline
 ## Generate the Dark-Mode variant
 
 ```bash
-python3 skills/image-generate/scripts/image_generate.py \
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
     --from-prompt-doc design/prompts/hero_dashboard.md \
     --variant dark \
     --out assets/hero-dark.png
