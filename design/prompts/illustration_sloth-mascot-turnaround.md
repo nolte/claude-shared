@@ -37,6 +37,7 @@ Two recurring traps, both handled in the prompts below:
 
 ## View 1 — Front (verified ✅, canonical)
 Append a POSE phrase (see Poses) after "symmetrical." for variants.
+
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 
@@ -46,6 +47,7 @@ Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white 
 ```
 
 ## View 2 — Side profile (verified ✅)
+
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 
@@ -55,6 +57,7 @@ Fur deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown). Cream warm bone white #F4F1E
 ```
 
 ## View 3 — Back (verified ✅)
+
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 
@@ -64,6 +67,7 @@ Fur deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown).
 ```
 
 ## View 4 — Three-quarter front (experimental ⚠️ — re-roll seeds)
+
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 
@@ -73,6 +77,7 @@ Fur deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white #F4F1EA
 ```
 
 ## View 5 — Three-quarter back (experimental ⚠️ — re-roll seeds)
+
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 

@@ -78,6 +78,7 @@ deterministic script — semantic compression needs judgement. Claude or the
 §Character bible — every feature, both colour names and hex.
 
 **Compiled — flux-1-schnell** (~187 tokens, hex-free, anchors first):
+
 ```
 A chibi cartoon three-toed sloth sitting upright facing the viewer, symmetrical, with deep blue-indigo plush fur (a blue-violet indigo, definitely NOT brown). A big heart-shaped cream face mask with a small V-notch holds two large round dark-brown eyes; two broad dark diagonal stripes cross over the eyes like a mask, pale between them. Small dark nose, a gentle closed smile, two round coral-orange blush cheeks, a small jagged head tuft on top. The cream is only on the face — the whole body is solid indigo with no belly patch. Exactly three pale cream claws on each hand and foot. Bold even dark outline, smooth matte fills with soft cel-shading, flat warm bone-white background, soft oval shadow beneath. Modern flat kawaii vector cartoon style.
 ```

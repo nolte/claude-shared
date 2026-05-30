@@ -56,11 +56,13 @@ derived from it. Keep these recognition anchors exact — word drift is characte
 > the trimmed, truncation-safe equivalents.
 
 **Light Mode**
+
 ```
 A chibi cartoon three-toed sloth sitting upright facing the viewer, symmetrical, with deep blue-indigo plush fur (a blue-violet indigo, definitely NOT brown). A big heart-shaped cream face mask with a small V-notch holds two large round dark-brown eyes; two broad dark diagonal stripes cross over the eyes like a mask, pale between them. Small dark nose, a gentle closed smile, two round coral-orange blush cheeks, a small jagged head tuft on top. The cream is only on the face — the whole body is solid indigo with no belly patch. Exactly three pale cream claws on each hand and foot. Bold even dark outline, smooth matte fills with soft cel-shading, flat warm bone-white background, soft oval shadow beneath. Modern flat kawaii vector cartoon style.
 ```
 
 **Dark Mode**
+
 ```
 A chibi cartoon three-toed sloth sitting upright facing the viewer, symmetrical, with soft cobalt-violet plush fur (a light blue-violet, definitely NOT brown), styled for dark mode. A big heart-shaped cream face mask with a small V-notch holds two large round dark-brown eyes; two broad dark diagonal stripes cross over the eyes like a mask, pale between them. Small dark nose, a gentle closed smile, two round coral-orange blush cheeks, a small jagged head tuft on top. The cream is only on the face — the whole body is solid cobalt-violet with no belly patch. Exactly three pale cream claws on each hand and foot. Bold even warm-bone outline so it stays crisp, smooth matte fills with soft cel-shading, flat deep warm charcoal background, soft shadow beneath. Modern flat kawaii vector cartoon style.
 ```

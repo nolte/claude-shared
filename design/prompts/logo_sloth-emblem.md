@@ -15,6 +15,7 @@ It must read instantly at small sizes and feel modern, friendly, and unmistakabl
 the same brand as the mascot illustration.
 
 ## Prompt — Light Mode
+
 ```
 BRAND-STYLE-REF v0 (bootstrap): modern flat-design comic / vector cartoon, bold even-weight clean outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, subject centered and isolated on a plain flat background, designed to stay legible at small sizes.
 
@@ -24,6 +25,7 @@ Brand color reinforcement: muted indigo #5B5FC7, warm moss green #4F9D69, warm a
 ```
 
 ## Prompt — Dark Mode
+
 ```
 BRAND-STYLE-REF v0 (bootstrap): modern flat-design comic / vector cartoon, bold even-weight clean outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, subject centered and isolated on a plain flat background, designed to stay legible at small sizes.
 

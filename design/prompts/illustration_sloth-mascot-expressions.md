@@ -16,21 +16,25 @@ invariant; only the **eyes, mouth, brows and blush** change per expression. Comp
 ## Fixed blocks (verbatim)
 
 **STYLE:**
+
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 ```
 
 **HEAD (invariant identity, up to the face):**
+
 ```
 a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, NOT natural brown tan or beige sloth fur. Front view, facing the viewer, symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A small rounded dark nose centered.
 ```
 
 **TAIL (invariant body):**
+
 ```
 The cream is ONLY on the face mask; the whole body — chest, belly, back and sides — is solid deep blue-indigo with no belly patch. Compact rounded body with no visible neck, short arms at the sides, exactly three pale cream elongated rounded claws on each hand and foot. Bold even-weight dark-indigo outline, small soft-grey oval shadow beneath.
 ```
 
 **COLOR LOCK:**
+
 ```
 Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black.
 ```
@@ -59,6 +63,7 @@ smile. The best approximation is the wide-round-eyes + raised-brows variant
 (the wide-round-eyes + raised-brows variant); accept it or add the open mouth in post.
 
 ## Worked example (Happy)
+
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 

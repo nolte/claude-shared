@@ -28,6 +28,7 @@ warm-bone background (easy to cut out).
    matte DARK CHARCOAL laptop** — that breaks the Apple association at the source.
 
 ## Prompt (scene-first, dark-charcoal laptop — verified)
+
 ```
 modern flat-design kawaii vector cartoon, bold clean dark outlines, smooth matte fills with a single soft cel-shading step, simple flat shapes.
 
