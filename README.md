@@ -16,16 +16,16 @@ This repository provides a single source for:
 - **Skills**: reusable slash commands and workflows invoked via the `Skill` tool.
 - **Conventions**: shared guidance (`CLAUDE.md` snippets, prompt fragments) that projects can compose into their own setup.
 
-The plugin's primary readers are **`downstream-user`** (Claude Code users in portfolio projects who install this plugin), **`dogfooding-author`** (the plugin author developing it in this repo), plus **`maintainer`** and **`external-contributor`** for the codebase itself. The full audience list — with criticality, expectations, and per-audience track — lives in [`AUDIENCES.md`](AUDIENCES.md).
+The plugin's primary readers are **`downstream-user`** (Claude Code users in portfolio projects who install this plugin), **`dogfooding-author`** (the plugin author developing it in this repo), plus **`maintainer`** and **`external-contributor`** for the codebase itself. The full audience list—with criticality, expectations, and per-audience track—lives in [`AUDIENCES.md`](AUDIENCES.md).
 
-**When to use this plugin** — typical scenarios:
+**When to use this plugin** (typical scenarios):
 
 - Enforce a consistent pull-request workflow across multiple repositories in the same portfolio.
 - Apply a uniform pre-merge review baseline (`review`, `security-review`) before shipping.
 - Bootstrap or refresh a project's MkDocs documentation skeleton with audience-track frontmatter.
 - Run a portfolio-wide `dependency-audit` / `docs-freshness` / `vocab-drift` pass on a recurring schedule.
 
-Out-of-scope cases are listed under [§Scope & guarantees](#scope--guarantees) — in short: the plugin ships tooling, not a managed service, and it does not own downstream release accountability.
+Out-of-scope cases are listed under [§Scope & guarantees](#scope--guarantees). In short, the plugin ships tooling, not a managed service, and it doesn't own downstream release accountability.
 
 ## What this plugin ships
 

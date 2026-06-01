@@ -51,7 +51,7 @@ Skills from the plugin are invocable under their namespace:
 
 ## Work on the plugin itself (dogfooding)
 
-When you develop inside the `claude-shared` repo, point Claude Code at the repo root. Claude Code then discovers the skills in place — no file duplication needed:
+When you develop inside the `claude-shared` repo, point Claude Code at the repo root. Claude Code then discovers the skills in place—no file duplication needed:
 
 ```bash
 claude --plugin-dir .
@@ -65,7 +65,7 @@ Reload changes during a session with:
 
 ## Verify the plugin loaded
 
-After startup, `/skills` lists the entries from this repo — for example `nolte-shared:spec` and `nolte-shared:skill-management`. If something is missing, check:
+After startup, `/skills` lists the entries from this repo—for example `nolte-shared:spec` and `nolte-shared:skill-management`. If something is missing, check:
 
 1. `.claude-plugin/plugin.json` is valid JSON
 2. Each folder contains `skills/<name>/SKILL.md` with valid frontmatter

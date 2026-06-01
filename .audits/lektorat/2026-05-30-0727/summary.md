@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD038 — strip-artefact whitespace inside code spans is expected in generated audit-trail evidence -->
+
 # Lektorat audit — `nolte/claude-shared`
 
 - **Run timestamp**: 2026-05-30T07:26:09Z
@@ -6,7 +8,7 @@
 - **In-scope files**: 39 (EN: 20; DE: 19)
 - **Pipelines**: EN `vale 3.14.1`; DE `languagetool-http 6.9-SNAPSHOT (build 2026-05-26)`
 
-**Severity totals**: critical=24, warning=128, suggestion=546  
+**Severity totals**: critical=24, warning=128, suggestion=546
 **Dimension totals**: D1=36, D3=578, D4=84; D2 / D5 not yet evaluated (need scanner-agent dispatch).
 
 ## Infrastructure conditions (19)
@@ -1299,4 +1301,3 @@
   > `be required`
 
 _(Suggestion bucket truncated in `summary.md`; full inventory in `findings.json`.)_
-
