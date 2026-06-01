@@ -57,6 +57,16 @@ Three constraints shape the design:
 - **MUST** make the billing requirement explicit (the model's Free-Tier quota is 0) in both the setup hint and the one-time notice.
 - **SHOULD** follow the model-level Gemini invariants in `spec/design/gemini-image-generation/` for this provider: narrative prompts with stated intent (not SDXL comma-tags), unwanted attributes phrased positively (no negative-prompt parameter exists), quoted literals for in-image text, and awareness that every output carries a SynthID watermark.
 
+## Manual UI-handoff path (no API call)
+
+The `gemini` provider above requires billing. A **semi-automatic alternative** sidesteps the API entirely and is owned by the `gemini-image-handoff` skill: a Gemini-optimised prompt is authored, then the operator pastes it into the Gemini web UI (the Gemini app or AI Studio) and downloads the image from the chat. This path:
+
+- **MUST NOT** make any API call; it therefore carries no billing requirement and needs no `GEMINI_API_KEY`.
+- **MUST** author the prompt to the model baseline in `spec/design/gemini-image-generation/`; the automated half is the prompt, the manual half is the operator's UI step.
+- writes **no** image file and **no** sidecar; file placement and provenance are the operator's responsibility, and the sidecar contract above binds only the API-backed providers.
+- **MUST** surface the SynthID-watermark caveat (every Gemini UI output is watermarked) so a commercial or blog asset choice is informed.
+- **MUST NOT** be conflated with the `gemini` API provider above; it's a distinct, no-network path.
+
 ## Acceptance Criteria
 
 - [ ] `--provider` defaults to `cloudflare`; an unknown provider is a usage error.
@@ -68,6 +78,7 @@ Three constraints shape the design:
 - [ ] Every `pollinations` request URL contains `private=true`, and there is no flag to disable it; the first `pollinations` run prints the feed/licence disclaimer and requires acknowledgement.
 - [ ] Invocation without `--out` is a usage error; invocation over an existing file is rejected unless `--force`.
 - [ ] The acknowledgement path contains the provider name; two providers acknowledge independently; rewriting a stored digest re-prompts.
+- [ ] The manual UI-handoff path makes no network call and writes no image or sidecar; it emits a prompt conforming to the Gemini baseline plus the UI entry and download steps, and states the SynthID caveat.
 
 ## Open Questions
 
