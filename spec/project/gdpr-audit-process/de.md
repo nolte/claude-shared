@@ -1,0 +1,115 @@
+# Repository-weites DSGVO-Datenschutzaudit
+
+Status: draft
+
+## Kontext
+
+Das Portfolio auditiert den Code eines Repositorys bereits auf allgemeine Sicherheit (`spec/project/code-security-audit/`, OWASP-orientiert, repository-weit) und auf verwundbare Abhängigkeiten (`spec/project/dependency-audit/`, CVE-bezogen). Keines beantwortet eine eigenständige Frage, die nolte's EU-gerichtete Projekte beantworten müssen: **verarbeitet diese Codebasis personenbezogene Daten so, wie es die DSGVO (Verordnung (EU) 2016/679) und ihr deutsches Begleitrecht erlauben?** Ein Sicherheitsaudit fragt „kann eine angreifende Person eindringen?"; ein Datenschutzaudit fragt „erheben, minimieren, sichern, speichern und löschen wir personenbezogene Daten rechtmäßig, und können betroffene Personen ihre Rechte ausüben?" Beide überschneiden sich nur bei Artikel 32 (Sicherheit der Verarbeitung); alles Übrige — Datenminimierung, Rechtsgrundlage, Einwilligung, Betroffenenrechte-Endpunkte, Aufbewahrung, Drittlandtransfers, Cookies/Tracker — ist DSGVO-spezifisch und heute ungeprüft.
+
+Diese Spezifikation regelt dieses Datenschutzaudit, operationalisiert durch einen `gdpr-data-protection-reviewer`-Agenten (`distribution: plugin`). Wie der Sicherheitsauditor ist er generalisiert, **read-only** und in der Methodik stack-agnostisch: er entdeckt den Stack und die Personendaten-Oberflächen des Repositorys, statt das Framework einer App anzunehmen, und er auditiert — er bearbeitet niemals Quellcode, redigiert keine Daten und wendet keine Korrekturen an.
+
+Das Audit hat eine strukturelle Ehrlichkeitsbedingung, die das Sicherheitsaudit nicht hat: **der Großteil der DSGVO ist nicht in Code implementiert.** Ein Repository kann zeigen, dass ein Lösch-Endpunkt existiert; es kann nicht zeigen, dass ein Auftragsverarbeitungsvertrag tatsächlich unterzeichnet wurde, dass die gewählte Rechtsgrundlage rechtlich gültig ist oder dass die Formulierung eines Einwilligungsbanners die Einwilligung „freiwillig" macht. Das Audit trennt daher zwei Befundklassen — **code-verifizierbar** (ein Signal, das der Agent aus dem Repository bestätigt oder widerlegt) und **rechtsprüfungs-erforderlich** (ein Signal, das der Agent für eine Person oder eine Datenschutzbeauftragte zur Beurteilung sichtbar macht) — und meldet eine rechtliche Schlussfolgerung niemals als bestätigtes Bestehen oder Nichtbestehen.
+
+Leser: Agent-Autoren, die den Auditor pflegen; Reviewer und Datenschutzbeauftragte, die seinen Bericht konsumieren; Entwickler, die einen Datenschutz-Durchlauf vor dem Ausliefern eines Features mit Personenbezug oder vor einem Release fahren.
+
+## Ziele
+
+- Ein repository-weites, DSGVO-orientiertes Datenschutzaudit bereitstellen, das den Umgang mit personenbezogenen Daten dateiübergreifend korreliert — das Datenmodell gegen den Löschpfad, die Logging-Schicht gegen die von ihr ausgegebenen Personendaten, die Drittanbieter-Integrationen gegen die Drittland-Transferoberfläche
+- Strikt read-only bleiben: das Audit findet und meldet; es bearbeitet niemals Quellcode, redigiert oder verschiebt keine personenbezogenen Daten, unterdrückt keine Befunde und ändert kein Verhalten
+- In der Methodik stack-agnostisch bleiben (die DSGVO-Artikel sind fix), während konkrete Erkennungsmuster an den erkannten Stack des Projekts angepasst werden (Web-Framework, ORM/Datenschicht, Frontend, Drittanbieter-SDKs, Cloud-/Regionskonfiguration)
+- **Code-verifizierbare** Befunde von **rechtsprüfungs-erforderlichen** Befunden trennen, damit das Audit aus einem Code-Signal niemals rechtliche Konformität überbeansprucht
+- Einen severity-klassifizierten, artikel-attribuierten Bericht erzeugen, mit dem eine Person arbeiten kann, mit einer file:line-Attribution je code-verifizierbarem Befund
+- Explizite Grenzen zum OWASP-Sicherheitsaudit (allgemeine AppSec), zum Abhängigkeits-/CVE-Audit und zum diff-bezogenen Review ziehen, sodass der Agent nur für das repository-weite Datenschutzaudit aufgerufen wird
+
+## Nicht-Ziele
+
+- Allgemeines Anwendungssicherheits-Review (Authentifizierung, Zugriffskontrolle, Injection, Secret-Handling jenseits personenbezogener Daten) — Eigentum von `spec/project/code-security-audit/`. Dieses Audit greift nur an der Schnittstelle zu DSGVO-Artikel 32 in die Sicherheit hinein (Verschlüsselung personenbezogener Daten, Pseudonymisierung, Personendaten-in-Logs) und überlässt den Rest
+- CVE-/Abhängigkeits-/Lockfile-Schwachstellenscan — Eigentum von `spec/project/dependency-audit/`
+- Diff-bezogenes Review der Änderungen des aktuellen Branches — Eigentum der `security-review`-CLI-Skill; dieses Audit ist repository-weit
+- **Ein rechtliches Konformitätsurteil fällen.** Das Audit meldet code-verifizierbare Signale und macht rechtsprüfungs-erforderliche Punkte sichtbar; es zertifiziert keine DSGVO-Konformität, validiert nicht die rechtliche Hinlänglichkeit einer Rechtsgrundlage, eines AV-Vertrags, einer DSFA-Schlussfolgerung oder einer Einwilligungsformulierung und ist keine Rechtsberatung
+- **Korrekturen oder Remediation anwenden.** Der Agent ist read-only; der Korrekturschritt gehört einer Person oder einer separaten Skill, sodass das Audit single-responsibility bleibt
+- Die rechtlichen Artefakte selbst verfassen (Datenschutzerklärungstext, Verzeichnis von Verarbeitungstätigkeiten, DSFA) — das Audit prüft auf deren Vorhandensein und auf Code-Konsistenz mit ihnen, es schreibt sie nicht
+- Drittanbieter-Privacy-/PII-Scan-Tooling oder DSAR-Automatisierungsplattformen ausführen — der Agent führt LLM-gestützte Musteranalyse über das Repository durch; externe Runner bleiben außerhalb des Geltungsbereichs
+
+## Anforderungen
+
+### Read-only-Vertrag
+
+- **MUSS [MUST]** strikt read-only sein: nur Lese- und Such-Tools deklarieren (`Read`, `Grep`, `Glob`), kein `Edit`, `Write`, `NotebookEdit` deklarieren und keine Korrekturen anwenden; die einzige Ausgabe ist der Auditbericht
+- **DARF NICHT [MUST NOT]** personenbezogene Daten, die ihm in Seed-Daten, Fixtures oder Logs begegnen, redigieren, verschieben, exportieren oder anderweitig anfassen; er meldet Ort und Klasse der Exposition, er handelt nicht an den Daten
+- **DARF NICHT [MUST NOT]** Befunde im Quellcode unterdrücken, herabstufen oder annotieren; Melden ist die einzige Aktion
+- **MUSS [MUST]** den Bericht in seiner finalen Nachricht zurückgeben; das Persistieren ist Aufgabe der aufrufenden Skill oder der bedienenden Person. Beim Persistieren liegt der Bericht unter `.audits/gdpr-audit-process/<target-slug>.md` (Unterverzeichnis = Slug dieser Spec) gemäß `spec/claude/review-plan/` §File location and naming; ein erneuter Lauf überschreibt die einzelne kanonische Datei, statt zeitgestempelte Snapshots anzuhäufen
+
+### Discovery und Stack-Anpassung
+
+- **MUSS [MUST]** die **Personendaten-Oberflächen** des Repositorys entdecken, statt die Pfade eines Projekts fest zu verdrahten: die Datenmodelle / Schemata / Migrationen, die Request-/Response-DTOs, die Logging-Konfiguration, die Drittanbieter-SDK-Integrationen, die Cloud-/Infrastruktur-Regionskonfiguration und die Frontend-Analytics-/Tag-Schicht; der Bericht **MUSS [MUST]** angeben, welche Roots und Globs er gescannt hat
+- **MUSS [MUST]** den Stack des Projekts erkennen (Web-Framework, Datenzugriffsschicht, Frontend-Framework, Drittanbieter-Verarbeiter) und konkrete Erkennungsmuster daran anpassen — die Methodik (DSGVO-Artikel) ist fix, die Beispielmuster sind stack-spezifisch
+- **MUSS [MUST]** erkennen, welche Klassen personenbezogener Daten das Repository verarbeitet — mindestens: direkte Identifikatoren (Name, E-Mail, Telefon, Adresse, behördliche Kennungen), Online-Identifikatoren (IP-Adresse, Geräte-ID, Cookies) und **besondere Kategorien nach Artikel 9** (Gesundheits-, biometrische, genetische, rassische/ethnische, politische, religiöse, sexuelle-Orientierungs-, Gewerkschaftsdaten) — und besondere Kategorien als Severity-Verstärker behandeln
+- **MUSS [MUST]**, wenn das Projekt eine Datenschutz-Haltung deklariert (eine Datenschutzerklärung, ein Verzeichnis von Verarbeitungstätigkeiten, eine Aufbewahrungsrichtlinie, eine dokumentierte Rechtsgrundlage je Verarbeitung), den Code gegen diese deklarierte Haltung auditieren; fehlt eine deklarierte Haltung, gegen DSGVO-Vorgaben auditieren und die Annahme angeben
+
+### Audit-Abdeckung
+
+Das Audit **MUSS [MUST]** die folgenden Dimensionen abdecken und dabei dateiübergreifend korrelieren, nicht je Datei. Jeder Befund **MUSS [MUST]** dem/den DSGVO-Artikel(n) zugeordnet werden, aus denen er sich ableitet, und als code-verifizierbar oder rechtsprüfungs-erforderlich klassifiziert werden (§Grenze: code-verifizierbar versus rechtsprüfungs-erforderlich).
+
+- **MUSS [MUST]** **Rechtmäßigkeit, Einwilligung und Transparenz** auditieren (Art. 5(1)(a), 6, 7, 9, 12–14): Vorhandensein eines Datenschutzerklärungs-Artefakts oder einer `/privacy`-Route; Einwilligungserfassung im Code, wo Einwilligung die Grundlage ist, einschließlich der **Opt-in-Default-Regel** — vorab angekreuzte Kästchen, Opt-out-Defaults oder ohne aktive Handlung angenommene Einwilligung sind Befunde; gebündelte/erzwungene Einwilligung; ob der Widerruf der Einwilligung so einfach ist wie ihre Erteilung; Verarbeitung besonderer Kategorien, die eine Bedingung nach Artikel 9 trägt
+- **MUSS [MUST]** **Datenminimierung und Zweckbindung** auditieren (Art. 5(1)(b)(c), 25): Datenmodelle und DTOs, die mehr personenbezogene Daten erheben, als der angegebene Zweck benötigt; Datenschutz **durch Voreinstellung** (die Standardkonfiguration exponiert/verarbeitet das Minimum); zu breite Lesezugriffe auf personenbezogene Daten; Freitext- oder Catch-all-Felder, die personenbezogene Daten still absorbieren
+- **MUSS [MUST]** **Speicherbegrenzung und Aufbewahrung** auditieren (Art. 5(1)(e)): Vorhandensein eines Aufbewahrungs-/Löschmechanismus (TTL, geplanter Purge-Job, Aufbewahrungskonfiguration); das **Fehlen** jeglichen Aufbewahrungs- oder Löschmechanismus für einen Speicher mit personenbezogenen Daten ist ein Befund; Backups/Exporte, die der Aufbewahrungsrichtlinie entkommen
+- **MUSS [MUST]** **die Umsetzung der Betroffenenrechte** auditieren (Art. 12–22) als erstklassige korrelierte Prüfungen — für jedes Recht, ob die Codebasis einen Pfad implementiert: Auskunft/Transparenz (Art. 15), Berichtigung (Art. 16), **Löschung / Recht auf Vergessenwerden** (Art. 17) — einschließlich der Falle, dass ein Soft-Delete oder ein Deaktivierungs-Flag, das personenbezogene Daten intakt lässt, die Löschung **nicht** erfüllt — Einschränkung (Art. 18), **Datenübertragbarkeit** in einem strukturierten, gängigen, maschinenlesbaren Format wie JSON oder CSV (Art. 20), Widerspruch/Opt-out (Art. 21) und **automatisierte Entscheidungsfindung / Profiling**-Schutzmaßnahmen einschließlich eines Human-in-the-Loop-Pfads (Art. 22)
+- **MUSS [MUST]** **die Sicherheit der Verarbeitung personenbezogener Daten** auditieren (Art. 32), auf personenbezogene Daten begrenzt und vom allgemeinen OWASP-Audit abgegrenzt: Verschlüsselung personenbezogener Daten bei der Übertragung (TLS erzwungen) und im Ruhezustand (Datenbank-/feldweise Verschlüsselung sensibler Felder); **Pseudonymisierung und Anonymisierung** personenbezogener Daten, wo machbar; und — **eine erstklassige DSGVO-spezifische Prüfung** — **personenbezogene Daten in Logs, Fehlermeldungen, Stacktraces, Analytics-Events und Crash-Reports** (E-Mails, Namen, Tokens, vollständige IP-Adressen, an Log-Senken ausgegebene Daten besonderer Kategorien)
+- **MUSS [MUST]** **Verarbeiter und internationale Transfers** auditieren (Art. 28, 44–49): Drittanbieter-Dienste erkennen, die personenbezogene Daten empfangen (Analytics, Error-/Crash-Reporting, E-Mail, Zahlung, Support, Cloud/Storage), aus Abhängigkeiten und Konfiguration; die **Drittland-Transferoberfläche** erkennen — Cloud-Regionen und Daten-Residency-Konfiguration (etwa eine US-Region für EU-Personendaten) und US-basierte oder andere SaaS aus Ländern ohne Angemessenheit, die personenbezogene Daten empfangen; den Bedarf eines Auftragsverarbeitungsvertrags (Art. 28) je erkanntem Verarbeiter und einer Garantie nach Artikel 46 (Standardvertragsklauseln, Angemessenheit, Transfer-Folgenabschätzung gemäß Schrems II) je erkanntem Transfer als rechtsprüfungs-erforderlich sichtbar machen
+- **MUSS [MUST]** **Cookies, Tracker und Telemetrie** gegen das ePrivacy-Regime und seine deutsche Umsetzung auditieren (TDDDG, der Nachfolger des TTDSG): nicht-essenzielle Cookies, Tracker, Tag-Manager oder Fingerprinting, die **vor** einem aktiven Einwilligungssignal gesetzt werden; Analytics oder Produkt-Telemetrie, die ohne Opt-in auf „an" voreingestellt ist; ob ein Einwilligungsbanner / eine Consent-Management-Schicht vorhanden ist und nicht-essenzielle Speicherung gatet
+- **SOLLTE [SHOULD]** **Rechenschafts- und Folgenabschätzungs-Signale** auditieren (Art. 5(2), 30, 33/34, 35): Vorhandensein eines Verzeichnisses von Verarbeitungstätigkeiten (Art. 30); **DSFA-Auslöser** (Art. 35) — großangelegte Verarbeitung besonderer Kategorien, systematische Überwachung oder automatisiertes Profiling im Code ohne ein zugehöriges Datenschutz-Folgenabschätzungs-Artefakt; Breach-Readiness-Signale (Audit-Trails / Zugriffs-Logging, die eine Meldung nach Art. 33/34 stützen würden). Der Großteil dieser Dimension ist rechtsprüfungs-erforderlich; der Agent macht den Auslöser und das Vorhandensein/Fehlen des Artefakts sichtbar, keine Schlussfolgerung
+
+### Grenze: code-verifizierbar versus rechtsprüfungs-erforderlich
+
+- **MUSS [MUST]** jeden Befund als genau eines der folgenden klassifizieren:
+  - **code-verifizierbar** — der Agent hat das Signal aus dem Repository bestätigt oder widerlegt (zum Beispiel: „kein Löschpfad entfernt Zeilen aus `users`"; „vollständige IP-Adresse geloggt bei `api/mw/log.py:42`"; „Google Analytics vor der Einwilligung geladen bei `web/index.html:18`"). Diese tragen eine file:line-Attribution
+  - **rechtsprüfungs-erforderlich** — der Agent hat ein Signal erkannt, dessen Konformität nur eine Person oder eine Datenschutzbeauftragte beurteilen kann (zum Beispiel: „Stripe empfängt personenbezogene Daten — bestätigen, dass ein Auftragsverarbeitungsvertrag existiert"; „personenbezogene Daten in einer US-Region gespeichert — eine Garantie für Transfers nach Artikel 46 bestätigen"; „Einwilligungsbanner vorhanden — bestätigen, dass die Formulierung die Einwilligung freiwillig macht"). Diese benennen das erkannte Signal und die Rechtsfrage, niemals ein Urteil
+- **DARF NICHT [MUST NOT]** einen rechtsprüfungs-erforderlichen Punkt als bestätigtes Bestehen oder Nichtbestehen der Konformität melden und **DARF NICHT [MUST NOT]** behaupten oder andeuten, dass das Audit DSGVO-Konformität zertifiziert oder eine Rechtsberatung darstellt
+- **MUSS [MUST]** beim Melden des Fehlens eines Artefakts (Verzeichnis, AV-Vertrag, DSFA, Datenschutzerklärung) angeben, dass Fehlen-im-Repository ein Signal ist und das Artefakt außerhalb des Repositorys existieren kann — es auf rechtsprüfungs-erforderlich routen, statt Nichtkonformität zu behaupten
+
+### Ausgabe
+
+- **MUSS [MUST]** einen einzelnen severity-klassifizierten Bericht ausgeben, der das portfolio-weite Severity-Vokabular aus `spec/claude/review-plan/` §Severity scale verwendet (Critical / Warning / Suggestion / Info, wortgleich Title Case) — er **DARF NICHT [MUST NOT]** eine parallele Skala erfinden; jeder Befund trägt einen Titel, den/die DSGVO-Artikel, die Klasse code-verifizierbar/rechtsprüfungs-erforderlich, eine file:line-Attribution für code-verifizierbare Befunde, das Problem und eine konkrete Remediation-Empfehlung (beschrieben, nicht angewendet)
+- **MUSS [MUST]** mit einer Gesamtbewertungstabelle beginnen (je Auditdimension: Bewertung + Befundzahl + Aufteilung code-verifizierbar/rechtsprüfungs-erforderlich) und einer **Betroffenenrechte-Matrix** (Recht Art. 15–22 × implementiert? × file:line / Lücke)
+- **MUSS [MUST]** ein **Personendaten-Inventar** enthalten (Datenklasse × wo erhoben × wo gespeichert × wo es das System verlässt / welcher Verarbeiter / welche Region), damit die Datenflüsse, auf die sich die Befunde beziehen, sichtbar sind
+- **MUSS [MUST]** den Auditumfang angeben (gescannte Roots, Globs, erkannter Stack, erkannte Personendaten-Klassen, deklarierte Haltung oder DSGVO-Default-Annahme), damit das Audit reproduzierbar ist
+- **SOLLTE [SHOULD]** bestätigte Befunde von vermuteten-aber-unsicheren unterscheiden, damit die konsumierende Person triagieren kann; ein unsicherer Befund wird gemeldet, nicht still verworfen
+- **MUSS [MUST]** diese Spezifikation im Agent-Body oder in der `description` zitieren
+
+## Akzeptanzkriterien
+
+- [ ] Der Agent deklariert nur `Read`, `Grep`, `Glob` (keine Schreib-/Edit-/Ausführungs-Tools), wendet keine Quellcode-Edits an und redigiert oder verschiebt niemals personenbezogene Daten, die ihm begegnen
+- [ ] Das Ausführen des Audits erzeugt einen Bericht, der nach dem `spec/claude/review-plan/` §Severity scale-Vokabular klassifiziert ist (Critical / Warning / Suggestion / Info) und dessen Befunde je einen Titel, DSGVO-Artikel, die Klasse code-verifizierbar/rechtsprüfungs-erforderlich, file:line (für code-verifizierbare), Problem und eine beschriebene (nicht angewendete) Remediation tragen
+- [ ] Der Bericht beginnt mit einer Bewertungstabelle je Dimension, einer Betroffenenrechte-Matrix und einem Personendaten-Inventar und gibt die gescannten Roots, Globs, den erkannten Stack und die erkannten Personendaten-Klassen an
+- [ ] Ein Speicher mit personenbezogenen Daten ohne Aufbewahrungs- oder Löschmechanismus wird gemeldet (Art. 5(1)(e)); ein Soft-Delete, der personenbezogene Daten intakt lässt, wird als die Löschung nicht erfüllend gekennzeichnet (Art. 17)
+- [ ] Personenbezogene Daten, die an ein Log, eine Fehlermeldung oder ein Analytics-Event ausgegeben werden (E-Mail, Name, Token, vollständige IP, Daten besonderer Kategorien), werden als Critical mit einer file:line gemeldet (Art. 32)
+- [ ] Ein nicht-essenzieller Cookie/Tracker/Telemetrie, der vor einem aktiven Einwilligungssignal feuert, wird gemeldet (ePrivacy / TDDDG); Analytics, die ohne Opt-in auf „an" voreingestellt ist, wird gemeldet
+- [ ] Ein erkannter Drittanbieter-Verarbeiter und ein erkannter Drittlandtransfer (z. B. EU-Personendaten in einer US-Region) werden je als rechtsprüfungs-erforderlich sichtbar gemacht und benennen die Frage nach dem AV-Vertrag / der Artikel-46-Garantie, ohne ein Urteil zu fällen
+- [ ] Daten besonderer Kategorien (Artikel 9) erhöhen die Severity der Befunde, die sie berühren
+- [ ] Kein Befund behauptet eine Gesamtzertifizierung der DSGVO-Konformität oder eine Rechtsberatung; Fehlen-im-Repository eines rechtlichen Artefakts wird als Signal gemeldet, das außerhalb des Repositorys existieren kann
+- [ ] Das Audit ist abgegrenzt von `code-security-audit` (allgemeine OWASP/AppSec), `dependency-audit` (CVE-Umfang) und `security-review` (Diff-Umfang), und die `description` des Agenten nennt diese Negativfälle
+- [ ] Der Agent fügt keinen Unterdrückungs-Kommentar (`# noqa`, `# nosec`, eine ESLint-disable-Direktive oder Äquivalent) in eine Quelldatei ein, und der Bericht wird in der finalen Nachricht des Agenten geliefert, nicht als Dateischreibvorgang oder Zwischenschritt
+- [ ] Wenn das Repository eine Datenschutz-Haltung deklariert, benennt der Bericht diese Haltung und auditiert gegen sie; wenn keine deklariert ist, gibt der Bericht an, dass gegen DSGVO-Standardannahmen auditiert wird
+- [ ] Der Bericht enthält Befunde — oder eine ausdrückliche „keine Lücke erkannt"-Aussage — für die Dimension Datenminimierung und Zweckbindung (Art. 5(1)(b)(c), 25)
+- [ ] Rechtsprüfungs-erforderliche Befunde sind strukturell von code-verifizierbaren Befunden unterscheidbar (durch ein ausdrückliches Klassen-Label je Befund oder einen eigenen Abschnitt), sodass eine datenschutzbeauftragte Person sie auflisten kann, ohne jeden Befundtext zu lesen
+- [ ] Wenn das Repository einen DSFA-Auslöser enthält (groß angelegte Verarbeitung besonderer Kategorien, systematische Überwachung oder automatisiertes Profiling), enthält der Bericht einen Abschnitt zu Rechenschafts- und DSFA-Signalen, der den Auslöser und das Vorhandensein/Fehlen des relevanten Artefakts sichtbar macht (Art. 5(2), 30, 35)
+- [ ] Der Agent-Body oder die `description` zitiert `spec/project/gdpr-audit-process/`
+
+## Referenzen
+
+- [R1] Agent-Authoring-Regeln und Read-only-Tool-Disziplin: `spec/claude/agent-management/`
+- [R2] Skill-vs-Agent-Entscheidungsregel und Anforderung an den Rationale-Abschnitt: `spec/claude/skill-vs-agent/`
+- [R3] Vollständiges Codebase-Sicherheitsaudit (gegen diese Spezifikation an der Art.-32-Schnittstelle abgegrenzt): `spec/project/code-security-audit/`
+- [R4] CVE-/Abhängigkeits-Schwachstellenaudit (gegen diese Spezifikation abgegrenzt): `spec/project/dependency-audit/`
+- [R5] Review-Plan- / Audit-Ausgabe-Persistenz und Severity-Vokabular: `spec/claude/review-plan/`
+- [R6] Verordnung (EU) 2016/679 (DSGVO), Volltext: <https://gdpr-info.eu/>
+- [R7] DSGVO Artikel 5 (Grundsätze), Artikel 25 (Datenschutz durch Technikgestaltung und durch Voreinstellungen), Artikel 30 (Verzeichnis von Verarbeitungstätigkeiten), Artikel 32 (Sicherheit der Verarbeitung), Artikel 12–22 (Betroffenenrechte), Artikel 44–49 (Übermittlungen an Drittländer)
+- [R8] EU-DSGVO-Compliance-Checkliste: <https://gdpr.eu/checklist/>
+- [R9] Telekommunikation-Digitale-Dienste-Datenschutz-Gesetz (TDDDG, Nachfolger des TTDSG) zu Cookies/Trackern und Telemedien; ePrivacy-Richtlinie 2002/58/EG
+
+## Offene Fragen
+
+- **Begleit-Skill vs. nur-Agent.** Diese Spezifikation definiert den read-only `gdpr-data-protection-reviewer`-Agenten. Ob eine schlanke `gdpr-audit`-CLI-Skill ihn umhüllen sollte (um den Bericht unter `.audits/gdpr-audit-process/` zu persistieren und ihn in Release-Flows einzuketten, analog dazu, wie `security-review` sich zu `code-security-reviewer` verhält), ist zurückgestellt. Erneut prüfen, wenn ein Release- oder Pre-Ship-Gate einen operator-aufrufbaren Einstiegspunkt benötigt; gemäß `spec/claude/skill-vs-agent/` entscheiden.
+- **Reziproke Grenze zu einer künftigen Threat-Modeling-Spezifikation.** Die DSFA aus Artikel 35 überschneidet sich mit einem architektur-ebenen Threat-Modeling-Anliegen. Erneut prüfen, wenn `spec/project/threat-modeling/` erstellt oder ein Roadmap-Eintrag dafür geöffnet wird; in diesem Moment einen reziproken Abgrenzungspunkt zu beiden Spezifikationen hinzufügen. Heute prüfbares Prädikat: `test -d spec/project/threat-modeling` ist falsch.
+- **Verhältnis zu einem License-Check-Prozess.** Ein verwandter `license-check-process` ist in Arbeit (Branch `feat/license-check-process`). Falls er als Compliance-Audit-Familie landet, erwägen, ob DSGVO- und Lizenz-Audits eine gemeinsame Bericht-Hülle teilen sollten. Erneut prüfen, wenn dieser Branch gemergt wird.

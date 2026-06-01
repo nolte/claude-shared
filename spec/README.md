@@ -40,6 +40,7 @@ Canonical language: `en` · Translations: `de`
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | unversioned |
 | project | docs-multilingual-authoring | Multilingual Documentation Authoring | Mehrsprachige Dokumentations-Autorenschaft | draft | unversioned |
 | project | feature | Project Feature | Projekt-Feature | draft | unversioned |
+| project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | unversioned |
 | project | lektorat | Lektorat | Lektorat | draft | unversioned |

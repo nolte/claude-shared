@@ -33,6 +33,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 - [`code-security-reviewer`](nolte-shared/code-security-reviewer.md) — Read-only Whole-Codebase-OWASP-Audit, das Befunde über Dateien hinweg zu einem nach Schweregrad klassifizierten Report korreliert.
 - [`dependency-audit-scanner`](nolte-shared/dependency-audit-scanner.md) — Nur-Lese-CVE-Scanner pro Projekttyp (pip-audit, npm audit, govulncheck, cargo audit); liefert strukturiertes Drift-Inventar.
 - [`diagram-opportunity-reviewer`](nolte-shared/diagram-opportunity-reviewer.md) — Nur-Lese-Prosa-Scanner, der Markdown-Passagen markiert, die als Mermaid-Diagramm besser ausgedrückt wären.
+- [`gdpr-data-protection-reviewer`](nolte-shared/gdpr-data-protection-reviewer.md) — Read-only repository-weites DSGVO-Datenschutzaudit; trennt code-verifizierbare Befunde von rechtsprüfungs-erforderlichen.
 - [`lektorat-scanner`](nolte-shared/lektorat-scanner.md) — Nur-Lese-Lektorats-Scanner über die fünf Dimensionen (D1 Lesbarkeit, D2 Verständlichkeit, D3 Grammatik, D4 Stil, D5 Audience-Fit).
 - [`portfolio-inflight-collector`](nolte-shared/portfolio-inflight-collector.md) — Nur-Lese-In-Flight-Datensammler: offene Issues, PRs (inkl. Drafts), Branches ohne PR, ungelöste Review-Threads + Discussions über nolte/*.
 - [`portfolio-manifest-collector`](nolte-shared/portfolio-manifest-collector.md) — Nur-Lese-Inventar-Sammler: erfasst per-Repo project/portfolio.yml-Manifeste über nolte/*.

@@ -24,6 +24,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
@@ -83,6 +84,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [roadmap-plan](../skills/nolte-shared/roadmap-plan.md) — nolte-shared
 
+## `privacy`
+
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
+
 ## `prose`
 
 - [audience-doc-author](../agents/nolte-shared/audience-doc-author.md) — nolte-shared
@@ -122,6 +127,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](../agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
