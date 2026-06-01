@@ -14,9 +14,9 @@ This page summarizes the specification at `spec/claude/agent-management/en.md` (
 
 ## Context
 
-The `claude-shared` repository collects reusable Claude Code skills and agents. An agent has two lives: a **source form** here (`agents/`) and a **runtime form** in a consuming project (`.claude/agents/` or `~/.claude/agents/`) where Claude Code loads it and the `Agent` tool dispatches via `subagent_type`.
+The `claude-shared` repository collects reusable Claude Code skills and agents. An agent has two lives: a **source form** here (`agents/`) and a **runtime form** in a consuming project (`.claude/agents/` or `~/.claude/agents/`). From the runtime form Claude Code loads the agent, and the `Agent` tool dispatches via `subagent_type`.
 
-Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality—reuse becomes fragile and routing unreliable.
+Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality. Reuse then becomes fragile and routing unreliable.
 
 ## Goals and Non-Goals
 
@@ -44,7 +44,7 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 - **MUST** set `name` to match the filename without `.md`
 - **MUST** write a `description` naming concrete triggers ("use when …"): not abstract capabilities
 - **MUST** include a system prompt in the body scoped to a single responsibility and stating its output shape
-- **MUST** keep frontmatter and system prompt in English (token efficiency)
+- **MUST** keep frontmatter and system prompt in English (this keeps Claude's processing cost low)
 - **MUST** be self-contained—a single top-level `agents/<name>.md`; no sibling `agents/<name>/` folder (recursive discovery would register nested markdown as a phantom agent)
 
 ### Tool access

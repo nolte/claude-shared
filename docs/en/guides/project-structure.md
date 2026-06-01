@@ -62,10 +62,10 @@ The table below maps each kind of content to its location on disk:
 
 Three language conventions apply across the repository:
 
-- **Skill and agent content**: English (token efficiency; the skills/agents may still instruct Claude to respond to the user in the user's language).
+- **Skill and agent content**: English—this keeps Claude's processing cost low. Skills/agents may still instruct Claude to respond to the user in the user's language.
 - **Specifications**: canonical EN, translation DE, structurally in sync.
 - **Documentation (`docs/`)**: DE and EN via `mkdocs-static-i18n`.
 
 ## Plugin namespace
 
-The plugin is called `nolte-shared` (see `.claude-plugin/plugin.json`). Skills are invocable as `/nolte-shared:<skill>`. The plugin name isn't changed lightly—it's part of every invocation and every document.
+The plugin is called `nolte-shared` (see `.claude-plugin/plugin.json`). Skills are invocable as `/nolte-shared:<skill>`. The plugin name stays stable—it's part of every invocation and every document.

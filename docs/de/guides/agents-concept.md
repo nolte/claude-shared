@@ -10,7 +10,7 @@ last_updated: 2026-05-19
 
 Agents sind spezialisierte Sub-Agents mit fokussiertem Tool-Zugriff und eigenem System-Prompt. Claude ruft sie über das `Agent`-Tool mit `subagent_type: <name>` auf.
 
-Im Quellbaum von `claude-shared` liegen sie unter `agents/<name>.md`. Zur Laufzeit greift Claude Code auf sie unter `.claude/agents/<name>.md`, unter `~/.claude/agents/<name>.md` oder als Teil des `nolte-shared`-Plugins zu.
+Im Quellbaum von `claude-shared` liegen sie unter `agents/<name>.md`. Zur Laufzeit liest Claude Code sie aus drei Orten: `.claude/agents/<name>.md`, `~/.claude/agents/<name>.md` oder dem `nolte-shared`-Plugin.
 
 ## Enthaltene Agents
 
@@ -44,7 +44,7 @@ model: sonnet               # optional
 Rolle und Grenzen. Ausgabeformat. Arbeitsweise.
 ```
 
-Das Frontmatter `name` muss dem Dateinamen ohne `.md` entsprechen. `tools` wird weggelassen, wenn der Agent die volle Tool-Oberfläche braucht — sonst auf den minimal nötigen Umfang gesetzt. Rein lesende Agents haben **keine** Schreib-/Edit-/Ausführungs-Tools.
+Das Frontmatter `name` muss dem Dateinamen ohne `.md` entsprechen. `tools` weglassen für die volle Oberfläche; sonst auf den minimal nötigen Umfang setzen. Rein lesende Agents haben **keine** Schreib-/Edit-/Ausführungs-Tools.
 
 ## Quell- vs. Laufzeit-Ort
 

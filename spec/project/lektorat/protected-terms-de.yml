@@ -1,0 +1,96 @@
+# lektorat — Geschützte DE-Begriffe für D3 (Rechtschreibung)
+#
+# Quelle für die in spec/project/lektorat/de.md §D3 genannte
+# „Lektorat-lokale Geschützte-Begriffe-Liste" (für Deutsch). Tokens auf
+# dieser Liste werden NIE als Rechtschreibfehler durch den DE-Pipeline
+# (z.B. LanguageTool) gemeldet — sie sind Fachjargon, Eigennamen,
+# Identifier oder bewusste Stilisierung.
+#
+# Die Liste deckt EXPLIZIT NUR den DE-Pfad ab. Englische Eigennamen werden
+# durch nolte/vale-style verwaltet (siehe spec/project/prose-style/).
+#
+# Schema:
+#   version: <int>
+#   terms: Liste von Strings (case-sensitive Match auf Token-Grenze)
+#   patterns: Liste von Regex-Strings (erweiterte Heuristik)
+#
+# Bei Aufnahmen: ein neuer Begriff erfordert einen einsätzigen rationale
+# als Kommentar darüber.
+
+version: 1
+
+terms:
+  # Plugin- und Skill-Vokabular
+  - Spec
+  - Specs
+  - Skill
+  - Skills
+  - Agent
+  - Agents
+  - Frontmatter
+  - Dispatch
+  - Hooks
+  - Renovate
+  - Dependabot
+
+  # Verb-Anglizismen, idiomatisch im Portfolio
+  - scaffolden
+  - scaffoldet
+  - dispatchen
+  - dispatched
+  - dispatcht
+  - routen
+  - geroutet
+  - parsen
+  - parst
+  - mergen
+  - merged
+  - committen
+  - committed
+  - pushen
+  - pulled
+  - lintet
+  - gelintet
+
+  # Tooling-Eigennamen, im Portfolio gebräuchlich
+  - MkDocs
+  - LanguageTool
+  - Hunspell
+  - Cookiecutter
+  - Probot
+  - Mend
+
+  # Konventionsterme
+  - Dogfooding
+  - Symlink
+  - Symlinks
+  - Worktree
+  - Worktrees
+  - Repo
+  - Repos
+  - Subagent
+  - Subagents
+
+  # Diátaxis / Doku-Modi
+  - Diátaxis
+  - Tutorial
+  - Tutorials
+  - Reference
+  - References
+  - How-to
+  - Troubleshooting
+
+patterns:
+  # MUST / SHOULD / MAY in Großbuchstaben — RFC-2119-Stil
+  - '^(MUST|SHOULD|MAY|MUST NOT|SHALL|SHALL NOT|RECOMMENDED)$'
+  # Vier- bis sechsbuchstabige Allcaps-Akronyme (PR, RFC, CI, SLA, ...)
+  - '^[A-Z]{2,6}$'
+  # nolte-Skills und -Agents Namespace-Form
+  - '^nolte/[a-z][a-z0-9-]*$'
+  - '^nolte-[a-z][a-z0-9-]*$'
+  # kebab-case Identifier
+  - '^[a-z]+(-[a-z0-9]+)+$'
+  # snake_case Identifier
+  - '^[a-z]+(_[a-z0-9]+)+$'
+  # PascalCase Identifier
+  - '^[A-Z][a-z]+([A-Z][a-z0-9]+)+$'

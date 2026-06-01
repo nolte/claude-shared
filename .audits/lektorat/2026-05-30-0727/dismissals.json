@@ -1,0 +1,23 @@
+{
+  "schema_version": "1",
+  "dismissals": [
+    {
+      "id": "d3e95f67a4673b40",
+      "file": "README.md",
+      "line_start": 113,
+      "rule": "vale:Microsoft.GeneralURL",
+      "reason": "Technical idiom 'git URL' is conventional in dev docs; Microsoft GeneralURL rule's 'address' substitution targets general-audience prose, not Git references. False positive in this context.",
+      "recorded_at": "2026-05-30T07:55:00Z",
+      "recorded_via": "lektorat-apply patch operation, operator decision skip-and-record"
+    },
+    {
+      "id": "bf45172e9518bba6",
+      "file": "docs/en/references/specs/index.md",
+      "line_start": 24,
+      "rule": "vale:Microsoft.HeadingAcronyms",
+      "reason": "'RFC 2119' is the canonical IETF document name; replacing it would be factually incorrect for the spec-maintenance audience. Heading-slug stability (#rfc-2119-conventions) is load-bearing for cross-page deep links per spec §Refactor safety.",
+      "recorded_at": "2026-05-30T08:10:00Z",
+      "recorded_via": "lektorat-apply patch operation, operator decision skip-and-record"
+    }
+  ]
+}

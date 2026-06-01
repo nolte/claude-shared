@@ -14,12 +14,12 @@ Diese Seite fasst die Spezifikation aus `spec/claude/skill-management/de.md` zus
 
 ## Kontext
 
-Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents, die von nachgelagerten Projekten genutzt werden. Ein Skill hat zwei Ausprägungen:
+Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents für nachgelagerte Projekte. Ein Skill hat zwei Ausprägungen:
 
 - **Quell-Form** in diesem Repository: `skills/<name>/`
 - **Laufzeit-Form** im konsumierenden Projekt: `.claude/skills/<name>/` oder `~/.claude/skills/<name>/`
 
-Ohne einheitliche Form driften Skills in Benennung, Trigger-Beschreibungen und innerer Struktur auseinander, was Wiederverwendung brüchig macht.
+Ohne einheitliche Form driften Skills in Benennung, Trigger-Beschreibungen und innerer Struktur auseinander. Wiederverwendung wird dann brüchig.
 
 ## Ziele und Nicht-Ziele
 
@@ -45,7 +45,7 @@ Ohne einheitliche Form driften Skills in Benennung, Trigger-Beschreibungen und i
 - **MUSS [MUST]** YAML-Frontmatter mit `name` und `description` enthalten
 - **MUSS [MUST]** `name` exakt gleich dem Ordnernamen setzen
 - **MUSS [MUST]** eine `description` schreiben, die konkrete User-Trigger benennt, keine abstrakten Fähigkeiten
-- **MUSS [MUST]** die Anweisungen in `SKILL.md` aus Token-Effizienzgründen auf Englisch halten
+- **MUSS [MUST]** die Anweisungen in `SKILL.md` auf Englisch halten (senkt Claudes Verarbeitungskosten)
 - **MUSS [MUST]** in sich geschlossen sein — alle unterstützenden Assets im Skill-Ordner
 
 ### Ablageorte

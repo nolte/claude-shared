@@ -8,7 +8,7 @@ last_updated: 2026-05-19
 
 # Agents
 
-Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the `claude-shared` source tree they live at `agents/<name>.md`; at runtime under `.claude/agents/<name>.md` or `~/.claude/agents/<name>.md`, or bundled inside the `nolte-shared` plugin.
+Agents are specialized sub-agents with focused tool access and a system prompt. Claude dispatches them via the `Agent` tool with `subagent_type: <name>`. In the `claude-shared` source tree they live at `agents/<name>.md`. At runtime Claude Code loads them from three places: `.claude/agents/<name>.md`, `~/.claude/agents/<name>.md`, or the `nolte-shared` plugin.
 
 ## Bundled agents
 
@@ -42,7 +42,7 @@ model: sonnet               # optional
 Role and boundaries. Output format. Procedure.
 ```
 
-Frontmatter `name` must match the filename without `.md`. Omit `tools` only when the agent genuinely needs the full surface; otherwise list the minimum. Read-only agents must **never** receive write/edit/execution tools.
+Frontmatter `name` must match the filename without `.md`. Omit `tools` for the full surface; otherwise list the minimum. Read-only agents must **never** receive write/edit/execution tools.
 
 ## Source vs. runtime location
 
@@ -53,7 +53,7 @@ Frontmatter `name` must match the filename without `.md`. Omit `tools` only when
 | Consuming project, user-level | `~/.claude/agents/<name>.md` |
 | Delivered via plugin | the plugin's designated agents path |
 
-Agents must not assume a particular install location; all internal references stay relative to the agent file or the project it operates on.
+Agents must not assume a particular install location. All internal references stay relative to the agent file or the project it operates on.
 
 ## Authoring rules
 
