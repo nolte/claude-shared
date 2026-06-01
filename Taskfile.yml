@@ -49,6 +49,18 @@ tasks:
       - task: lint
       - task: test
 
+  license:sbom:
+    desc: |
+      Generate a CycloneDX SBOM with resolved licenses (including transitive
+      dependencies) for the Python toolchain, per spec/project/license-check.
+      Writes sbom.cdx.json (gitignored, reproducible). Requires uv.
+    cmds:
+      - uv venv .sbom-venv
+      - uv pip install --python .sbom-venv -r docs/requirements.txt -r evals/requirements-dev.txt
+      - uvx --from cyclonedx-bom cyclonedx-py environment .sbom-venv -o sbom.cdx.json
+      - rm -rf .sbom-venv
+      - 'echo "CycloneDX SBOM (with licenses) written to sbom.cdx.json"'
+
   validate:skills:
     desc: |
       Validate every skill and agent frontmatter against the structural rules
