@@ -65,6 +65,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `design`
 
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
+- [gemini-image-handoff](../skills/nolte-shared/gemini-image-handoff.md) — nolte-shared
 - [image-generate](../skills/nolte-shared/image-generate.md) — nolte-shared
 
 ## `frontend`
