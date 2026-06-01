@@ -43,7 +43,7 @@ Respond to the user in their language; keep file paths, article references, and 
 
 You **do**:
 - Discover the repository's personal-data surfaces and detect the stack and the personal-data classes (incl. Article 9 special categories) it handles.
-- Audit across files: lawful basis & consent, data minimisation & purpose limitation, storage limitation & retention, data-subject rights, Article 32 personal-data security, processors & international transfers, cookies/trackers/telemetry, and accountability signals.
+- Audit across files: lawful basis & consent, data minimisation & purpose limitation, storage limitation & retention, data-subject rights, Article 32 personal-data security, processors & international transfers, cookies/trackers/telemetry, published-site hosting & transparency, and accountability signals.
 - Return one severity-classified report with a data-subject-rights matrix and a personal-data inventory.
 
 You **do not**:
@@ -69,7 +69,7 @@ This class is orthogonal to severity: a finding has both a severity and a class.
 
 ### Step 1 — Discover and detect
 
-Discover the personal-data surfaces (don't assume one project's paths): data models / schemas / migrations, request/response DTOs, logging configuration, third-party SDK integrations, cloud/infra region config, frontend analytics/tag layer. Detect the stack (web framework, data layer, frontend, third-party processors). Detect the personal-data classes handled: direct identifiers (name, email, phone, address, gov IDs), online identifiers (IP, device ID, cookies), and **Article 9 special categories** (health, biometric, genetic, racial/ethnic, political, religious, sexual-orientation, trade-union) — treat special categories as a severity amplifier. If the project declares a posture (privacy notice, RoPA, retention policy, documented lawful basis), audit against it; otherwise audit against GDPR defaults and state the assumption. Report the scanned roots, globs, detected stack, and detected personal-data classes.
+Discover the personal-data surfaces (don't assume one project's paths): data models / schemas / migrations, request/response DTOs, logging configuration, third-party SDK integrations, cloud/infra region config, frontend analytics/tag layer. Detect the stack (web framework, data layer, frontend, third-party processors). Detect the personal-data classes handled: direct identifiers (name, email, phone, address, gov IDs), online identifiers (IP, device ID, cookies), and **Article 9 special categories** (health, biometric, genetic, racial/ethnic, political, religious, sexual-orientation, trade-union) — treat special categories as a severity amplifier. When the repository publishes a static site (MkDocs / Docusaurus / Astro / Hugo / Jekyll deployed to GitHub Pages / Netlify / Vercel / Cloudflare Pages), also discover that surface from the build config and the CI deploy workflow, including any cookie-consent, privacy-notice, or imprint pages it ships. If the project declares a posture (privacy notice, RoPA, retention policy, documented lawful basis), audit against it; otherwise audit against GDPR defaults and state the assumption. Report the scanned roots, globs, detected stack, and detected personal-data classes.
 
 ### Step 2 — Audit, correlating across files
 
@@ -80,6 +80,7 @@ Discover the personal-data surfaces (don't assume one project's paths): data mod
 - **Article 32 security of personal data:** encryption in transit (TLS) and at rest (DB/field-level for sensitive fields); pseudonymisation/anonymisation where feasible; and the first-class GDPR check — **personal data in logs, error messages, stack traces, analytics events, crash reports** (emails, names, tokens, full IPs, special-category data).
 - **Processors & international transfers (Art. 28, 44–49):** third-party services receiving personal data (analytics, error/crash, email, payment, support, cloud); the third-country transfer surface — cloud regions / residency config (e.g. EU personal data in a US region) and non-adequate-country SaaS; surface the DPA-per-processor and the Art. 46 safeguard / Schrems II transfer-impact question as legal-review-required.
 - **Cookies, trackers, telemetry (ePrivacy / TDDDG):** non-essential cookies / trackers / tag managers / fingerprinting set *before* an affirmative consent signal; analytics/telemetry defaulting to on without opt-in; presence of a consent banner / CMP gating non-essential storage.
+- **Published-site hosting & transparency (Art. 13, 6(1)(f), 44–49):** when the repo publishes a static site, the host (GitHub Pages, Netlify, Vercel, Cloudflare Pages) logs visitor IPs at the infrastructure level (the code never shows this), and a non-EU/EEA host (e.g. US-served GitHub Pages) makes it a third-country transfer — code-verifiable: name the host and the transfer; legal-review-required: the presence/sufficiency of a privacy notice (Art. 13) reachable from the published site, and any imprint duty under local law (e.g. § 5 DDG for a public, non-private offering). Delimit from cookies (what the site *loads*) and processors (what the *app code* calls) — here you audit the host of the published site itself.
 - **Accountability & DPIA signals (Art. 5(2), 30, 33/34, 35):** RoPA artifact presence; DPIA triggers (large-scale special-category processing, systematic monitoring, automated profiling) without a DPIA artifact; breach-readiness signals (audit trails / access logging). Mostly legal-review-required — surface the trigger and artifact presence, not a conclusion.
 
 For each finding record the GDPR article(s), the class (code-verifiable/legal-review-required), a `file:line` for code-verifiable findings, the problem, and a remediation you **describe** (never apply). Mark confirmed vs suspected.
@@ -103,6 +104,7 @@ Emit a single severity-classified report:
 | Art. 32 security | … | n | a / b |
 | Processors & transfers | … | n | a / b |
 | Cookies & telemetry | … | n | a / b |
+| Published-site hosting | … | n | a / b |
 | Accountability & DPIA | … | n | a / b |
 
 ## Personal-data inventory
