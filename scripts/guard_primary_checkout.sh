@@ -22,6 +22,17 @@
 # distinguished by git-dir == git-common-dir.
 set -euo pipefail
 
+# Skip in CI and other non-interactive automation. CI runners (and
+# `pre-commit run --all-files` via `task lint`) check the branch out in a
+# detached HEAD inside a normal clone, where git-dir == git-common-dir —
+# indistinguishable from a primary checkout sitting on a feature branch, so
+# the guard would block the lint job on every feature-branch PR. This guard
+# targets a developer's local `git commit`, not CI; `CI` is set by GitHub
+# Actions and essentially every other CI provider.
+if [ -n "${CI:-}" ]; then
+  exit 0
+fi
+
 # Resolve both to absolute paths. In the primary checkout the per-worktree
 # git-dir and the shared git-common-dir are the same directory; in a linked
 # worktree the git-dir is .git/worktrees/<name> and they differ.
