@@ -93,7 +93,7 @@ The five dimensions below are the **authoritative** list. Each finding produced 
 
 - **MUST** apply **language-specific** spelling and grammar checks:
   - **English text**: defer to the Vale-driven mechanics already governed by `prose-style`; `Lektorat` does **not** re-implement spelling/grammar for English, it consumes Vale's output and surfaces it as `D3` findings in the unified report
-  - **German text**—apply a `Lektorat`-owned DE pipeline (portfolio default: LanguageTool HTTP API; see §Language handling) because `prose-style` explicitly scopes Vale to English only and a DE alternative isn't available portfolio-wide
+  - **German text**: apply a `Lektorat`-owned DE pipeline (portfolio default: LanguageTool HTTP API; see §Language handling) because `prose-style` explicitly scopes Vale to English only and a DE alternative isn't available portfolio-wide
 - **MUST** protect **proper nouns, product names, technical identifiers, command names, file paths, URLs, and project-specific jargon** from spelling correction by sourcing the protected set from the audience artefact and the `nolte/vale-style` vocabulary (for English) or from [`spec/project/lektorat/protected-terms-de.yml`](protected-terms-de.yml) (for German); the protected-terms file is YAML, versioned, and additions require a one-line rationale comment so reviewers can judge each entry
 - **MUST** classify a spelling or grammar finding as `critical` when it would change rendered meaning or is visible in a published artefact (release-note body, README, top-level docs), and as `warning` otherwise
 - **MUST NOT** correct a spelling that the audience artefact or the protected-terms list marks as intentional (a brand name, a product spelling, a deliberate stylisation)
