@@ -29,7 +29,8 @@ env/
 .audits/2026-Q*/
 .audits/202[0-9]-Q[1-4]/
 
-# Resume scratch — in-flight skill/agent state per spec/claude/resumable-work/ (local-only)
+# Resume scratch — in-flight skill/agent state per spec/claude/resumable-work/,
+# plus the always-on session-journal.md written by scripts/wip_journal.py (local-only)
 /.resume/
 
 # Vale — style packages fetched by `vale sync` (keep repo-local vocab)
