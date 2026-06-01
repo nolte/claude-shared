@@ -28,3 +28,10 @@ Spatien
 swappable
 telemedia
 und
+Gemma
+Gemma's
+LLMs?
+Syft
+Zlib
+Unlicense
+copyrightability
