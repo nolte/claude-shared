@@ -193,7 +193,9 @@ class CloudflareProvider(Provider):
         headers = {"Authorization": f"Bearer {token}"}
         images: list[tuple[str, bytes]] = []
         for i in range(n):
-            body: dict = {"prompt": prompt, "steps": 8}
+            # FLUX.1-schnell is optimal at 1-4 steps; 8 is only Cloudflare's cap and
+            # adds latency and cost without quality. See spec/design/flux-image-generation/.
+            body: dict = {"prompt": prompt, "steps": 4}
             if seed is not None:
                 body["seed"] = seed + i
             resp = _post_json(url, body, headers, self.KEY_PAGE)
