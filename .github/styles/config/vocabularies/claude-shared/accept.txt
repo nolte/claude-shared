@@ -8,6 +8,7 @@
 anonymisation
 ControlNet
 dev
+Docusaurus
 DTOs
 Duden
 ePrivacy
@@ -18,6 +19,7 @@ Imagen
 kamerplanter
 LoRA
 multimodal
+Netlify
 pseudonymisation
 Sachtextformel
 Schrems
@@ -28,3 +30,10 @@ Spatien
 swappable
 telemedia
 und
+Gemma
+Gemma's
+LLMs?
+Syft
+Zlib
+Unlicense
+copyrightability

@@ -77,3 +77,11 @@ jobs:
           git diff --exit-code \
             docs/de/skills docs/de/agents docs/de/references/tags.md \
             docs/en/skills docs/en/agents docs/en/references/tags.md
+      - name: Verify committed portfolio inventory is fresh
+        # Per spec/portfolio/portfolio-management/ §Documentation rendering:
+        # the rendered docs/<lang>/portfolio/ pages MUST be a pure function of
+        # portfolio/aggregate.yml; this step fails when the committed pages
+        # have drifted from a fresh re-generation.
+        run: |
+          git diff --exit-code \
+            docs/de/portfolio docs/en/portfolio
