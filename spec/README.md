@@ -22,6 +22,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | 2026-04-23 |
 | design | corporate-design-colors | Corporate Design — Color System | Corporate Design — Farbsystem | draft | unversioned |
 | design | flux-image-generation | FLUX Image Generation | FLUX-Bildgenerierung | draft | unversioned |
+| design | gemini-image-generation | Gemini Image Generation | Gemini-Bildgenerierung | draft | unversioned |
 | design | graphic-prompt-authoring | Graphic Prompt Authoring | Grafik-Prompt-Autorenschaft | draft | unversioned |
 | portfolio | portfolio-inflight-management | Portfolio In-Flight Management | Portfolio-In-Flight-Management | draft | unversioned |
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | unversioned |
@@ -66,4 +67,4 @@ Canonical language: `en` · Translations: `de`
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |
-| tools | gemini-image-generation | Gemini Image Generation (Free-Tier) | Gemini-Bildgenerierung (Free-Tier) | draft | unversioned |
+| tools | image-generation | Image Generation (Multi-Provider) | Bildgenerierung (Multi-Provider) | draft | 2026-05-30 |

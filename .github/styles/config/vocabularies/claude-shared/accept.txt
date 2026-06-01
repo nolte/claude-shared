@@ -2,6 +2,7 @@
 [Gg]emini
 [Ll]atents
 [Ll]ektor(at|ing|iert|ieren)?
+[Nn]ano
 [Pp]ollinations
 [Ss]chnell
 anonymisation
@@ -13,8 +14,10 @@ ePrivacy
 FLUX
 Gedankenstrich
 generativelanguage
+Imagen
 kamerplanter
 LoRA
+multimodal
 pseudonymisation
 Sachtextformel
 Schrems

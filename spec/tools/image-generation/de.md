@@ -55,6 +55,17 @@ Drei Randbedingungen prägen das Design:
 ### `gemini`
 - **MUSS [MUST]** die Modell-ID `gemini-2.5-flash-image` und den `v1beta`-generativelanguage-Endpunkt fest verdrahten; bezahlte `imagen-*`-Modelle und Vertex-AI-Endpunkte (`*-aiplatform.googleapis.com`) **MÜSSEN [MUST]** unerreichbar sein.
 - **MUSS [MUST]** die Billing-Anforderung explizit machen (das Free-Tier-Kontingent des Modells ist 0) — sowohl im Setup-Hinweis als auch im einmaligen Hinweis.
+- **SOLLTE [SHOULD]** für diesen Provider den Modell-Invarianten aus `spec/design/gemini-image-generation/` folgen: erzählende Prompts mit genannter Absicht (keine SDXL-Komma-Tags), unerwünschte Attribute positiv formuliert (es existiert kein Negative-Prompt-Parameter), in Anführungszeichen gesetzte Literale für Bild-Text und das Bewusstsein, dass jeder Output ein SynthID-Wasserzeichen trägt.
+
+## Manueller UI-Handoff-Pfad (kein API-Aufruf)
+
+Der `gemini`-Provider oben erfordert Billing. Eine **halbautomatische Alternative** umgeht die API vollständig und ist im Besitz der `gemini-image-handoff`-Skill: Ein Gemini-optimierter Prompt wird erzeugt, dann fügt der Operator ihn in die Gemini-Web-UI ein (die Gemini-App oder AI Studio) und lädt das Bild aus dem Chat herunter. Dieser Pfad:
+
+- **MUSS NICHT [MUST NOT]** irgendeinen API-Aufruf machen; er trägt daher keine Billing-Anforderung und braucht keinen `GEMINI_API_KEY`.
+- **MUSS [MUST]** den Prompt gemäß der Modell-Grundlage in `spec/design/gemini-image-generation/` erzeugen; die automatisierte Hälfte ist der Prompt, die manuelle Hälfte ist der UI-Schritt des Operators.
+- schreibt **keine** Bilddatei und **kein** Sidecar; Dateiablage und Provenienz liegen in der Verantwortung des Operators, und der Sidecar-Vertrag oben bindet nur die API-gestützten Provider.
+- **MUSS [MUST]** den SynthID-Wasserzeichen-Vorbehalt sichtbar machen (jeder Gemini-UI-Output ist mit Wasserzeichen versehen), damit eine kommerzielle oder Blog-Asset-Wahl informiert erfolgt.
+- **MUSS NICHT [MUST NOT]** mit dem `gemini`-API-Provider oben vermengt werden; es ist ein eigener, netzwerkloser Pfad.
 
 ## Akzeptanzkriterien
 
@@ -67,6 +78,7 @@ Drei Randbedingungen prägen das Design:
 - [ ] Jede `pollinations`-Request-URL enthält `private=true`, und es gibt kein Flag, das dies deaktiviert; der erste `pollinations`-Lauf zeigt den Feed-/Lizenz-Disclaimer und verlangt Bestätigung.
 - [ ] Aufruf ohne `--out` ist ein Usage-Fehler; Aufruf über eine existierende Datei wird ohne `--force` abgelehnt.
 - [ ] Der Bestätigungspfad enthält den Provider-Namen; zwei Provider bestätigen unabhängig; das Überschreiben eines gespeicherten Digests löst eine erneute Aufforderung aus.
+- [ ] Der manuelle UI-Handoff-Pfad macht keinen Netzwerkaufruf und schreibt kein Bild und kein Sidecar; er liefert einen der Gemini-Grundlage entsprechenden Prompt plus die UI-Eingabe- und Download-Schritte und nennt den SynthID-Vorbehalt.
 
 ## Offene Fragen
 
