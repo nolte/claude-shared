@@ -92,6 +92,7 @@ plugins:
             Entwicklung: Development
             Projektstruktur: Project Structure
             Beitragen: Contributing
+            Datenschutz: Privacy
 
   - literate-nav:
       nav_file: SUMMARY.md
@@ -176,3 +177,4 @@ nav:
   - Projekt: de/project/index.md
   - Skills: de/skills/
   - Agents: de/agents/
+  - Datenschutz: de/privacy.md
