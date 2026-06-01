@@ -12,6 +12,8 @@ last_updated: generated
 
 Aggregated capability inventory across the active `nolte/*` portfolio, generated from each member repository's `project/portfolio.yml` manifest. This page is auto-generated — edit `portfolio/aggregate.yml` (or re-run the `portfolio-audit` skill's Render operation), not this file.
 
+**2** repositories · **8** capabilities
+
 ## Capability map
 
 Capability-to-repository mapping across the portfolio.
@@ -19,25 +21,33 @@ Capability-to-repository mapping across the portfolio.
 <!-- diagram-source: derived—portfolio/aggregate.yml -->
 ```mermaid
 flowchart LR
-    R0["nolte/claude-shared"]
-    R0C0["shared-claude-code-skills"]
-    R0 --> R0C0
-    R0C1["shared-claude-code-agents"]
-    R0 --> R0C1
-    R0C2["portfolio-spec-corpus"]
-    R0 --> R0C2
-    R0C3["planning-suite-reference-adopter"]
-    R0 --> R0C3
-    R0C4["auto-generated-skill-agent-catalog"]
-    R0 --> R0C4
-    R0C5["shared-vale-vocabulary-extension"]
-    R0 --> R0C5
-    R1["nolte/vale-style"]
-    R1C0["vale-style-package"]
-    R1 --> R1C0
-    R1C1["vocabulary-curation-spec"]
-    R1 --> R1C1
+    classDef active fill:#e6f4ea,stroke:#137333,color:#0d652d;
+    classDef experimental fill:#fef7e0,stroke:#b06000,color:#7a4f01;
+    classDef deprecated fill:#fce8e6,stroke:#a50e0e,color:#7a1c12;
+    classDef planned fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
+    subgraph R0["nolte/claude-shared"]
+        R0C0["shared-claude-code-skills"]
+        R0C1["shared-claude-code-agents"]
+        R0C2["portfolio-spec-corpus"]
+        R0C3["planning-suite-reference-adopter"]
+        R0C4["auto-generated-skill-agent-catalog"]
+        R0C5["shared-vale-vocabulary-extension"]
+    end
+    subgraph R1["nolte/vale-style"]
+        R1C0["vale-style-package"]
+        R1C1["vocabulary-curation-spec"]
+    end
+    class R0C0 active;
+    class R0C1 active;
+    class R0C2 active;
+    class R0C3 experimental;
+    class R0C4 active;
+    class R0C5 active;
+    class R1C0 active;
+    class R1C1 experimental;
 ```
+
+Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 
 ## nolte/claude-shared
 
@@ -47,12 +57,12 @@ flowchart LR
 
 | Capability | Status | Description | Audiences |
 |---|---|---|---|
-| `shared-claude-code-skills` | ✅ active | Bundles reusable Claude Code skills (slash commands) under skills/<name>/SKILL.md that downstream nolte portfolio projects install through the plugin marketplace to get consistent, spec-compliant authoring, review, planning, and release workflows. | Downstream Claude Code users in portfolio projects; Plugin author dogfooding inside this repo |
-| `shared-claude-code-agents` | ✅ active | Bundles reusable Claude Code sub-agents under agents/<name>.md (context-window-protective read-only or write-narrow specialists) that downstream projects invoke through Agent(subagent_type=<plugin>:<agent>). | Downstream Claude Code users in portfolio projects; Plugin author dogfooding inside this repo |
-| `portfolio-spec-corpus` | ✅ active | Bilingual (EN-canonical with DE translation) specs under spec/ that govern Claude Code skill and agent authoring, project layout, branching, releases, audience identification, and portfolio management for the nolte portfolio. | Plugin author dogfooding inside this repo; Other Nolte portfolio repos as passive consumers of the conventions; External contributors via pull request |
-| `planning-suite-reference-adopter` | 🧪 experimental | Applies the planning-suite specs (mission, goals, roadmap, features, sprints) to claude-shared itself under project/, so other Portfolio-Member repos see the planning suite in action before adopting it. | Plugin author dogfooding inside this repo; Downstream Claude Code users in portfolio projects |
-| `auto-generated-skill-agent-catalog` | ✅ active | Generates a navigable MkDocs catalog of every skill and agent in the nolte-shared plugin (and optionally external plugin source roots) so downstream readers discover what the plugin ships without reading the source tree directly. | Downstream Claude Code users in portfolio projects; Plugin author dogfooding inside this repo; External contributors via pull request |
-| `shared-vale-vocabulary-extension` | ✅ active | Extends the nolte/vale-style baseline vocabulary with portfolio-specific terms (autoload, autolink, Probot, Renovate, vtracer, retarget, and similar) so prose under README.md, docs/en/, and spec/**/en.md passes Vale across the portfolio. | Plugin author dogfooding inside this repo; Other Nolte portfolio repos as passive consumers of the conventions |
+| `shared-claude-code-skills` | ✅ active | Bundles reusable Claude Code skills (slash commands) under skills/&lt;name&gt;/SKILL.md that downstream nolte portfolio projects install through the plugin marketplace to get consistent, spec-compliant authoring, review, planning, and release workflows. | Downstream Claude Code users in portfolio projects<br>Plugin author dogfooding inside this repo |
+| `shared-claude-code-agents` | ✅ active | Bundles reusable Claude Code sub-agents under agents/&lt;name&gt;.md (context-window-protective read-only or write-narrow specialists) that downstream projects invoke through Agent(subagent_type=&lt;plugin&gt;:&lt;agent&gt;). | Downstream Claude Code users in portfolio projects<br>Plugin author dogfooding inside this repo |
+| `portfolio-spec-corpus` | ✅ active | Bilingual (EN-canonical with DE translation) specs under spec/ that govern Claude Code skill and agent authoring, project layout, branching, releases, audience identification, and portfolio management for the nolte portfolio. | Plugin author dogfooding inside this repo<br>Other Nolte portfolio repos as passive consumers of the conventions<br>External contributors via pull request |
+| `planning-suite-reference-adopter` | 🧪 experimental | Applies the planning-suite specs (mission, goals, roadmap, features, sprints) to claude-shared itself under project/, so other Portfolio-Member repos see the planning suite in action before adopting it. | Plugin author dogfooding inside this repo<br>Downstream Claude Code users in portfolio projects |
+| `auto-generated-skill-agent-catalog` | ✅ active | Generates a navigable MkDocs catalog of every skill and agent in the nolte-shared plugin (and optionally external plugin source roots) so downstream readers discover what the plugin ships without reading the source tree directly. | Downstream Claude Code users in portfolio projects<br>Plugin author dogfooding inside this repo<br>External contributors via pull request |
+| `shared-vale-vocabulary-extension` | ✅ active | Extends the nolte/vale-style baseline vocabulary with portfolio-specific terms (autoload, autolink, Probot, Renovate, vtracer, retarget, and similar) so prose under README.md, docs/en/, and spec/**/en.md passes Vale across the portfolio. | Plugin author dogfooding inside this repo<br>Other Nolte portfolio repos as passive consumers of the conventions |
 
 ### Peer references
 
@@ -66,8 +76,8 @@ _None declared._
 
 | Capability | Status | Description | Audiences |
 |---|---|---|---|
-| `vale-style-package` | ✅ active | A curated Vale style package distributed as `nolte-styles.zip` via GitHub releases. Consumer repositories integrate it via a single `.vale.ini` `Packages` entry to lint markdown consistently across the portfolio. | nolte/* consumer repositories; CI pipelines in consumer repos; local developers in consumer repos |
-| `vocabulary-curation-spec` | 🧪 experimental | A written specification under `spec/vocabulary-and-style-curation/{en,de}.md` that codifies inclusion criteria, removal policy, and group scoping for the vocabularies shipped in `vale-style-package`. Curator agents from `nolte/claude-shared` (`prose-vale-curator`, `vocab-drift-audit`) cite this spec to ground automated curation decisions. | nolte (primary maintainer); Claude Code agents / skills; External contributors |
+| `vale-style-package` | ✅ active | A curated Vale style package distributed as `nolte-styles.zip` via GitHub releases. Consumer repositories integrate it via a single `.vale.ini` `Packages` entry to lint markdown consistently across the portfolio. | nolte/* consumer repositories<br>CI pipelines in consumer repos<br>local developers in consumer repos |
+| `vocabulary-curation-spec` | 🧪 experimental | A written specification under `spec/vocabulary-and-style-curation/{en,de}.md` that codifies inclusion criteria, removal policy, and group scoping for the vocabularies shipped in `vale-style-package`. Curator agents from `nolte/claude-shared` (`prose-vale-curator`, `vocab-drift-audit`) cite this spec to ground automated curation decisions. | nolte (primary maintainer)<br>Claude Code agents / skills<br>External contributors |
 
 ### Peer references
 

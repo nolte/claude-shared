@@ -50,6 +50,8 @@ L = {
         ),
         "map": "Capability map",
         "map_intro": "Capability-to-repository mapping across the portfolio.",
+        "overview": lambda r, c: f"**{r}** repositories · **{c}** capabilities",
+        "legend": "Status:",
         "mission": "Mission",
         "capabilities": "Capabilities",
         "col_cap": "Capability",
@@ -73,6 +75,8 @@ L = {
         ),
         "map": "Fähigkeiten-Karte",
         "map_intro": "Fähigkeit-zu-Repository-Zuordnung über das Portfolio.",
+        "overview": lambda r, c: f"**{r}** Repositories · **{c}** Fähigkeiten",
+        "legend": "Status:",
         "mission": "Mission",
         "capabilities": "Fähigkeiten",
         "col_cap": "Fähigkeit",
@@ -115,22 +119,49 @@ def _esc(text: str) -> str:
     return str(text).replace('"', "'")
 
 
+def _html(text: str) -> str:
+    """Escape plain-text Markdown cell/blockquote content so angle-bracket
+    placeholders (``<name>``, ``<plugin>:<agent>``) survive rendering instead of
+    being parsed as HTML tags by the Markdown/HTML pipeline. Backtick code spans
+    in the source render as before; only literal ``&``/``<``/``>`` are escaped."""
+    return (
+        str(text)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+    )
+
+
 def render_mermaid(members: list[dict]) -> list[str]:
     # Per spec/project/mermaid-diagrams/ every Mermaid block under docs/<lang>/
     # MUST be preceded by a diagram-source comment; this block is derived from
     # the committed snapshot, so docs-freshness can detect drift against it.
+    #
+    # Each repository is a subgraph that visually boxes its capabilities (clearer
+    # than a flat repo→capability arrow fan); capability nodes are tinted by
+    # status via classDef so the map is scannable at a glance. The fills are
+    # light with explicit dark text, so they stay legible on both the light and
+    # dark Material palettes. Peer references are drawn as repo-to-repo edges.
     out = [
         "<!-- diagram-source: derived—portfolio/aggregate.yml -->",
         "```mermaid",
         "flowchart LR",
+        "    classDef active fill:#e6f4ea,stroke:#137333,color:#0d652d;",
+        "    classDef experimental fill:#fef7e0,stroke:#b06000,color:#7a4f01;",
+        "    classDef deprecated fill:#fce8e6,stroke:#a50e0e,color:#7a1c12;",
+        "    classDef planned fill:#e8f0fe,stroke:#1967d2,color:#174ea6;",
     ]
+    class_lines: list[str] = []
     for ri, m in enumerate(members):
-        rid = _node_id("R", ri)
-        out.append(f'    {rid}["{_esc(m["repo"])}"]')
+        out.append(f'    subgraph R{ri}["{_esc(m["repo"])}"]')
         for ci, cap in enumerate(m.get("capabilities", [])):
             cid = _node_id(f"R{ri}C", ci)
-            out.append(f'    {cid}["{_esc(cap["name"])}"]')
-            out.append(f"    {rid} --> {cid}")
+            out.append(f'        {cid}["{_esc(cap["name"])}"]')
+            status = str(cap.get("status", ""))
+            if status in STATUS_BADGE:
+                class_lines.append(f"    class {cid} {status};")
+        out.append("    end")
+    out += class_lines
     # Outbound peer edges (repo-to-repo) when declared.
     repo_to_rid = {m["repo"]: _node_id("R", ri) for ri, m in enumerate(members)}
     for ri, m in enumerate(members):
@@ -146,7 +177,7 @@ def render_member(m: dict, t: dict) -> list[str]:
     out = [f"## {m['repo']}", ""]
     mission = (m.get("mission_statement") or "").strip()
     if mission:
-        out += [f"> {mission}", ""]
+        out += [f"> {_html(mission)}", ""]
     out += [f"### {t['capabilities']}", ""]
     caps = m.get("capabilities", [])
     if caps:
@@ -156,8 +187,10 @@ def render_member(m: dict, t: dict) -> list[str]:
         ]
         for cap in caps:
             badge = STATUS_BADGE.get(str(cap.get("status", "")), str(cap.get("status", "—")))
-            desc = " ".join(str(cap.get("description", "")).split())
-            aud = "; ".join(cap.get("audience") or []) or "—"
+            desc = _html(" ".join(str(cap.get("description", "")).split()))
+            # One audience per line keeps the cell scannable instead of a
+            # run-on; <br> renders as a line break in the Material table cell.
+            aud = "<br>".join(_html(a) for a in (cap.get("audience") or [])) or "—"
             name = cap.get("name", "—")
             out.append(f"| `{name}` | {badge} | {desc} | {aud} |")
         out.append("")
@@ -185,10 +218,16 @@ def render_page(lang: str, snapshot: dict) -> str:
         "---",
         "",
     ]
+    n_caps = sum(len(m.get("capabilities", [])) for m in members)
+    legend = " · ".join(
+        STATUS_BADGE[k] for k in ("active", "experimental", "deprecated", "planned")
+    )
+
     body = [AUTOGEN, "", f"# {t['h1']}", "", t["intro"], ""]
+    body += [t["overview"](len(members), n_caps), ""]
     body += [f"## {t['map']}", "", t["map_intro"], ""]
     body += render_mermaid(members)
-    body += [""]
+    body += ["", f"{t['legend']} {legend}", ""]
     for m in members:
         body += render_member(m, t)
     body += [f"## {t['historical']}", ""]
