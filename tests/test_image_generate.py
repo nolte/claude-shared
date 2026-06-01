@@ -177,6 +177,15 @@ def test_no_credentials_leak_into_sidecar_or_stderr(state, cf_env, capsys):
         assert secret not in err
 
 
+def test_cloudflare_uses_flux_optimal_steps(state, cf_env):
+    # FLUX.1-schnell is optimal at 1-4 steps (spec/design/flux-image-generation/);
+    # 8 is only Cloudflare's hard cap. Guard against regressing back to the cap.
+    code, m = run(["--prompt", "x", "--out", str(state / "x.png")], cloudflare_json())
+    assert code == 0
+    sent = json.loads(m.call_args.args[0].data)
+    assert sent["steps"] == 4
+
+
 def test_cloudflare_n_images(state, cf_env):
     with mock.patch("urllib.request.urlopen", side_effect=[cloudflare_json(), cloudflare_json()]):
         code = ig.main(["--prompt", "p", "-n", "2", "--out", str(state / "x.png")])
