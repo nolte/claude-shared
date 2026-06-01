@@ -76,10 +76,16 @@ tasks:
     cmds:
       - python3 scripts/docs/gen_catalog.py
 
+  docs:portfolio:
+    desc: Generate the portfolio inventory under docs/<lang>/portfolio/ from portfolio/aggregate.yml
+    cmds:
+      - python3 scripts/docs/gen_portfolio.py
+
   docs:
-    desc: Build the MkDocs site (regenerates the catalog first)
+    desc: Build the MkDocs site (regenerates the catalog and portfolio inventory first)
     deps:
       - docs:catalog
+      - docs:portfolio
     cmds:
       - mkdocs build --strict
 
