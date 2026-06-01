@@ -1,0 +1,101 @@
+# Aggregated portfolio snapshot — the single source of truth for
+# scripts/docs/gen_portfolio.py. Populated by the portfolio-audit skill's
+# Render operation, which collects each active nolte/* member's
+# project/portfolio.yml + project/mission.md via gh api. Per
+# spec/portfolio/portfolio-management/ §Documentation rendering the rendered
+# docs/<lang>/portfolio/ pages MUST NOT be hand-edited; edit this snapshot
+# (or re-run Render) and regenerate via `task docs:portfolio`.
+
+schema_version: 1
+snapshot_source: portfolio-audit Render (portfolio-manifest-collector via gh api)
+members:
+- repo: nolte/claude-shared
+  repo_url: https://github.com/nolte/claude-shared
+  mission_statement: claude-shared (the nolte-shared Claude Code plugin) gives downstream
+    Claude Code users in nolte portfolio projects plus the plugin's own dogfooding maintainer
+    a consistent, spec-compliant set of skills, agents, and bilingual specifications they
+    can apply without per-repository reimplementation.
+  capabilities:
+  - name: shared-claude-code-skills
+    description: Bundles reusable Claude Code skills (slash commands) under skills/<name>/SKILL.md
+      that downstream nolte portfolio projects install through the plugin marketplace to get
+      consistent, spec-compliant authoring, review, planning, and release workflows.
+    status: active
+    audience:
+    - Downstream Claude Code users in portfolio projects
+    - Plugin author dogfooding inside this repo
+    since: 2026-04-24
+  - name: shared-claude-code-agents
+    description: Bundles reusable Claude Code sub-agents under agents/<name>.md (context-window-protective
+      read-only or write-narrow specialists) that downstream projects invoke through Agent(subagent_type=<plugin>:<agent>).
+    status: active
+    audience:
+    - Downstream Claude Code users in portfolio projects
+    - Plugin author dogfooding inside this repo
+    since: 2026-04-24
+  - name: portfolio-spec-corpus
+    description: Bilingual (EN-canonical with DE translation) specs under spec/ that govern
+      Claude Code skill and agent authoring, project layout, branching, releases, audience
+      identification, and portfolio management for the nolte portfolio.
+    status: active
+    audience:
+    - Plugin author dogfooding inside this repo
+    - Other Nolte portfolio repos as passive consumers of the conventions
+    - External contributors via pull request
+    since: 2026-04-24
+  - name: planning-suite-reference-adopter
+    description: Applies the planning-suite specs (mission, goals, roadmap, features, sprints)
+      to claude-shared itself under project/, so other Portfolio-Member repos see the planning
+      suite in action before adopting it.
+    status: experimental
+    audience:
+    - Plugin author dogfooding inside this repo
+    - Downstream Claude Code users in portfolio projects
+    since: 2026-05-09
+  - name: auto-generated-skill-agent-catalog
+    description: Generates a navigable MkDocs catalog of every skill and agent in the nolte-shared
+      plugin (and optionally external plugin source roots) so downstream readers discover
+      what the plugin ships without reading the source tree directly.
+    status: active
+    audience:
+    - Downstream Claude Code users in portfolio projects
+    - Plugin author dogfooding inside this repo
+    - External contributors via pull request
+    since: 2026-05-09
+  - name: shared-vale-vocabulary-extension
+    description: Extends the nolte/vale-style baseline vocabulary with portfolio-specific
+      terms (autoload, autolink, Probot, Renovate, vtracer, retarget, and similar) so prose
+      under README.md, docs/en/, and spec/**/en.md passes Vale across the portfolio.
+    status: active
+    audience:
+    - Plugin author dogfooding inside this repo
+    - Other Nolte portfolio repos as passive consumers of the conventions
+    since: 2026-04-24
+  peers: []
+- repo: nolte/vale-style
+  repo_url: https://github.com/nolte/vale-style
+  mission_statement: vale-style ships a single curated Vale style package that consuming nolte/*
+    repositories integrate via one .vale.ini entry to lint markdown consistently across the
+    portfolio.
+  capabilities:
+  - name: vale-style-package
+    description: A curated Vale style package distributed as `nolte-styles.zip` via GitHub
+      releases. Consumer repositories integrate it via a single `.vale.ini` `Packages` entry
+      to lint markdown consistently across the portfolio.
+    status: active
+    audience:
+    - nolte/* consumer repositories
+    - CI pipelines in consumer repos
+    - local developers in consumer repos
+  - name: vocabulary-curation-spec
+    description: A written specification under `spec/vocabulary-and-style-curation/{en,de}.md`
+      that codifies inclusion criteria, removal policy, and group scoping for the vocabularies
+      shipped in `vale-style-package`. Curator agents from `nolte/claude-shared` (`prose-vale-curator`,
+      `vocab-drift-audit`) cite this spec to ground automated curation decisions.
+    status: experimental
+    audience:
+    - nolte (primary maintainer)
+    - Claude Code agents / skills
+    - External contributors
+  peers: []
+historical: []

@@ -77,6 +77,7 @@ plugins:
             Guides: Guides
             References: References
             Projekt: Project
+            Portfolio: Portfolio
             Skills: Skills
             Agents: Agents
             Tags: Tags
@@ -175,6 +176,7 @@ nav:
           - Agent-Autorenschaft: de/references/specs/agent-management.md
       - Tags: de/references/tags.md
   - Projekt: de/project/index.md
+  - Portfolio: de/portfolio/index.md
   - Skills: de/skills/
   - Agents: de/agents/
   - Datenschutz: de/privacy.md
