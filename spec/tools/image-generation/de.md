@@ -55,6 +55,7 @@ Drei Randbedingungen prägen das Design:
 ### `gemini`
 - **MUSS [MUST]** die Modell-ID `gemini-2.5-flash-image` und den `v1beta`-generativelanguage-Endpunkt fest verdrahten; bezahlte `imagen-*`-Modelle und Vertex-AI-Endpunkte (`*-aiplatform.googleapis.com`) **MÜSSEN [MUST]** unerreichbar sein.
 - **MUSS [MUST]** die Billing-Anforderung explizit machen (das Free-Tier-Kontingent des Modells ist 0) — sowohl im Setup-Hinweis als auch im einmaligen Hinweis.
+- **SOLLTE [SHOULD]** für diesen Provider den Modell-Invarianten aus `spec/design/gemini-image-generation/` folgen: erzählende Prompts mit genannter Absicht (keine SDXL-Komma-Tags), unerwünschte Attribute positiv formuliert (es existiert kein Negative-Prompt-Parameter), in Anführungszeichen gesetzte Literale für Bild-Text und das Bewusstsein, dass jeder Output ein SynthID-Wasserzeichen trägt.
 
 ## Akzeptanzkriterien
 

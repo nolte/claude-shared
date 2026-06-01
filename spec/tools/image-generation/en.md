@@ -55,6 +55,7 @@ Three constraints shape the design:
 ### `gemini`
 - **MUST** pin the model ID `gemini-2.5-flash-image` and the `v1beta` generativelanguage endpoint; paid `imagen-*` models and Vertex AI endpoints (`*-aiplatform.googleapis.com`) **MUST** be unreachable.
 - **MUST** make the billing requirement explicit (the model's Free-Tier quota is 0) in both the setup hint and the one-time notice.
+- **SHOULD** follow the model-level Gemini invariants in `spec/design/gemini-image-generation/` for this provider: narrative prompts with stated intent (not SDXL comma-tags), unwanted attributes phrased positively (no negative-prompt parameter exists), quoted literals for in-image text, and awareness that every output carries a SynthID watermark.
 
 ## Acceptance Criteria
 
