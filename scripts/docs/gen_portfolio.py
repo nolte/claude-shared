@@ -53,6 +53,7 @@ L = {
         "overview": lambda r, c: f"**{r}** repositories · **{c}** capabilities",
         "legend": "Status:",
         "mission": "Mission",
+        "mission_missing": "_No mission statement declared (`project/mission.md` missing)._",
         "capabilities": "Capabilities",
         "col_cap": "Capability",
         "col_status": "Status",
@@ -78,6 +79,7 @@ L = {
         "overview": lambda r, c: f"**{r}** Repositories · **{c}** Fähigkeiten",
         "legend": "Status:",
         "mission": "Mission",
+        "mission_missing": "_Kein Mission-Statement deklariert (`project/mission.md` fehlt)._",
         "capabilities": "Fähigkeiten",
         "col_cap": "Fähigkeit",
         "col_status": "Status",
@@ -178,6 +180,11 @@ def render_member(m: dict, t: dict) -> list[str]:
     mission = (m.get("mission_statement") or "").strip()
     if mission:
         out += [f"> {_html(mission)}", ""]
+    else:
+        # Per spec/portfolio/portfolio-management/ §Documentation rendering, a
+        # member without a project/mission.md renders a placeholder noting the
+        # gap (the Audit emits a Warning); the renderer never invents a mission.
+        out += [t["mission_missing"], ""]
     out += [f"### {t['capabilities']}", ""]
     caps = m.get("capabilities", [])
     if caps:

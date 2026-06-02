@@ -9,34 +9,72 @@
 schema_version: 1
 snapshot_source: portfolio-audit Render (portfolio-manifest-collector via gh api)
 members:
+- repo: nolte/blog
+  repo_url: https://github.com/nolte/blog
+  mission_statement: >-
+    A bilingual AI-drafted and human-curated knowledge base that turns the
+    author's software-project work into durable English and German posts for
+    technical readers, portfolio reviewers, and the author's own future-self.
+  capabilities:
+  - name: bilingual-blog-knowledge-base
+    description: >-
+      A bilingual (English-canonical, German-translated) Astro blog and personal
+      knowledge base, deployed to GitHub Pages, that publishes durable posts as
+      real EN+DE pairs without translation drift for technical readers, portfolio
+      reviewers, and the author's own future-self.
+    status: experimental
+    audience:
+    - A — Technical readers
+    - B — Portfolio reviewers
+    - C — Author as knowledge-base user
+    since: 2026-05-21
+  - name: transparent-ai-authoring
+    description: >-
+      Per-post AI-disclosure (the aiGenerated frontmatter flag, with a planned
+      visible badge and About-page explanation) that keeps AI-drafted content
+      transparently distinct from hand-curated content.
+    status: experimental
+    audience:
+    - A — Technical readers
+    - B — Portfolio reviewers
+    - L — People and projects named in posts
+    since: 2026-05-21
+  peers:
+  - nolte/claude-shared
 - repo: nolte/claude-shared
   repo_url: https://github.com/nolte/claude-shared
-  mission_statement: claude-shared (the nolte-shared Claude Code plugin) gives downstream
-    Claude Code users in nolte portfolio projects plus the plugin's own dogfooding maintainer
-    a consistent, spec-compliant set of skills, agents, and bilingual specifications they
-    can apply without per-repository reimplementation.
+  mission_statement: >-
+    claude-shared (the nolte-shared Claude Code plugin) gives downstream Claude
+    Code users in nolte portfolio projects plus the plugin's own dogfooding
+    maintainer a consistent, spec-compliant set of skills, agents, and bilingual
+    specifications they can apply without per-repository reimplementation.
   capabilities:
   - name: shared-claude-code-skills
-    description: Bundles reusable Claude Code skills (slash commands) under skills/<name>/SKILL.md
-      that downstream nolte portfolio projects install through the plugin marketplace to get
-      consistent, spec-compliant authoring, review, planning, and release workflows.
+    description: >-
+      Bundles reusable Claude Code skills (slash commands) under
+      skills/<name>/SKILL.md that downstream nolte portfolio projects install
+      through the plugin marketplace to get consistent, spec-compliant authoring,
+      review, planning, and release workflows.
     status: active
     audience:
     - Downstream Claude Code users in portfolio projects
     - Plugin author dogfooding inside this repo
     since: 2026-04-24
   - name: shared-claude-code-agents
-    description: Bundles reusable Claude Code sub-agents under agents/<name>.md (context-window-protective
-      read-only or write-narrow specialists) that downstream projects invoke through Agent(subagent_type=<plugin>:<agent>).
+    description: >-
+      Bundles reusable Claude Code sub-agents under agents/<name>.md
+      (context-window-protective read-only or write-narrow specialists) that
+      downstream projects invoke through Agent(subagent_type=<plugin>:<agent>).
     status: active
     audience:
     - Downstream Claude Code users in portfolio projects
     - Plugin author dogfooding inside this repo
     since: 2026-04-24
   - name: portfolio-spec-corpus
-    description: Bilingual (EN-canonical with DE translation) specs under spec/ that govern
-      Claude Code skill and agent authoring, project layout, branching, releases, audience
-      identification, and portfolio management for the nolte portfolio.
+    description: >-
+      Bilingual (EN-canonical with DE translation) specs under spec/ that govern
+      Claude Code skill and agent authoring, project layout, branching, releases,
+      audience identification, and portfolio management for the nolte portfolio.
     status: active
     audience:
     - Plugin author dogfooding inside this repo
@@ -44,18 +82,21 @@ members:
     - External contributors via pull request
     since: 2026-04-24
   - name: planning-suite-reference-adopter
-    description: Applies the planning-suite specs (mission, goals, roadmap, features, sprints)
-      to claude-shared itself under project/, so other Portfolio-Member repos see the planning
-      suite in action before adopting it.
+    description: >-
+      Applies the planning-suite specs (mission, goals, roadmap, features,
+      sprints) to claude-shared itself under project/, so other Portfolio-Member
+      repos see the planning suite in action before adopting it.
     status: experimental
     audience:
     - Plugin author dogfooding inside this repo
     - Downstream Claude Code users in portfolio projects
     since: 2026-05-09
   - name: auto-generated-skill-agent-catalog
-    description: Generates a navigable MkDocs catalog of every skill and agent in the nolte-shared
-      plugin (and optionally external plugin source roots) so downstream readers discover
-      what the plugin ships without reading the source tree directly.
+    description: >-
+      Generates a navigable MkDocs catalog of every skill and agent in the
+      nolte-shared plugin (and optionally external plugin source roots) so
+      downstream readers discover what the plugin ships without reading the
+      source tree directly.
     status: active
     audience:
     - Downstream Claude Code users in portfolio projects
@@ -63,9 +104,11 @@ members:
     - External contributors via pull request
     since: 2026-05-09
   - name: shared-vale-vocabulary-extension
-    description: Extends the nolte/vale-style baseline vocabulary with portfolio-specific
-      terms (autoload, autolink, Probot, Renovate, vtracer, retarget, and similar) so prose
-      under README.md, docs/en/, and spec/**/en.md passes Vale across the portfolio.
+    description: >-
+      Extends the nolte/vale-style baseline vocabulary with portfolio-specific
+      terms (autoload, autolink, Probot, Renovate, vtracer, retarget, and
+      similar) so prose under README.md, docs/en/, and spec/**/en.md passes Vale
+      across the portfolio.
     status: active
     audience:
     - Plugin author dogfooding inside this repo
@@ -74,28 +117,49 @@ members:
   peers: []
 - repo: nolte/vale-style
   repo_url: https://github.com/nolte/vale-style
-  mission_statement: vale-style ships a single curated Vale style package that consuming nolte/*
-    repositories integrate via one .vale.ini entry to lint markdown consistently across the
-    portfolio.
+  mission_statement: >-
+    vale-style ships a single curated Vale style package that consuming nolte/*
+    repositories integrate via one .vale.ini entry to lint markdown consistently
+    across the portfolio.
   capabilities:
   - name: vale-style-package
-    description: A curated Vale style package distributed as `nolte-styles.zip` via GitHub
-      releases. Consumer repositories integrate it via a single `.vale.ini` `Packages` entry
-      to lint markdown consistently across the portfolio.
+    description: >-
+      A curated Vale style package distributed as `nolte-styles.zip` via GitHub
+      releases. Consumer repositories integrate it via a single `.vale.ini`
+      `Packages` entry to lint markdown consistently across the portfolio.
     status: active
     audience:
     - nolte/* consumer repositories
     - CI pipelines in consumer repos
     - local developers in consumer repos
   - name: vocabulary-curation-spec
-    description: A written specification under `spec/vocabulary-and-style-curation/{en,de}.md`
-      that codifies inclusion criteria, removal policy, and group scoping for the vocabularies
-      shipped in `vale-style-package`. Curator agents from `nolte/claude-shared` (`prose-vale-curator`,
-      `vocab-drift-audit`) cite this spec to ground automated curation decisions.
+    description: >-
+      A written specification under `spec/vocabulary-and-style-curation/{en,de}.md`
+      that codifies inclusion criteria, removal policy, and group scoping for the
+      vocabularies shipped in `vale-style-package`. Curator agents from
+      `nolte/claude-shared` (`prose-vale-curator`, `vocab-drift-audit`) cite this
+      spec to ground automated curation decisions.
     status: experimental
     audience:
     - nolte (primary maintainer)
     - Claude Code agents / skills
     - External contributors
+  peers: []
+- repo: nolte/workstation
+  repo_url: https://github.com/nolte/workstation
+  mission_statement: ""
+  capabilities:
+  - name: developer-workstation-provisioning
+    description: >-
+      A chezmoi source tree that provisions a developer workstation to an
+      identical, reproducible state from a single `chezmoi init --apply`:
+      asdf-pinned CLI tool versions, a baseline git config, a curated zsh setup,
+      the reusable Taskfile collection, and the pre-commit / cookiecutter /
+      MkDocs Python virtualenvs.
+    status: active
+    audience:
+    - workstation-operator
+    - downstream-tooling-consumers
+    since: 2026-06-01
   peers: []
 historical: []
