@@ -69,7 +69,8 @@ cat >&2 <<EOF
 
     # 1. park the current feature work in its own worktree
     git switch develop
-    git worktree add ~/repos/.worktrees/claude-shared/<slug> $branch
+    git worktree add "\${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/claude-shared/<slug>" $branch
+    #    (or, for a fresh branch off develop: task worktree:add -- $branch)
 
     # 2. restore the primary checkout to the remote tip
     git fetch origin develop && git merge --ff-only origin/develop
