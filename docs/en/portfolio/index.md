@@ -12,7 +12,7 @@ last_updated: generated
 
 Aggregated capability inventory across the active `nolte/*` portfolio, generated from each member repository's `project/portfolio.yml` manifest. This page is auto-generated — edit `portfolio/aggregate.yml` (or re-run the `portfolio-audit` skill's Render operation), not this file.
 
-**2** repositories · **8** capabilities
+**4** repositories · **11** capabilities
 
 ## Capability map
 
@@ -25,29 +25,55 @@ flowchart LR
     classDef experimental fill:#fef7e0,stroke:#b06000,color:#7a4f01;
     classDef deprecated fill:#fce8e6,stroke:#a50e0e,color:#7a1c12;
     classDef planned fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
-    subgraph R0["nolte/claude-shared"]
-        R0C0["shared-claude-code-skills"]
-        R0C1["shared-claude-code-agents"]
-        R0C2["portfolio-spec-corpus"]
-        R0C3["planning-suite-reference-adopter"]
-        R0C4["auto-generated-skill-agent-catalog"]
-        R0C5["shared-vale-vocabulary-extension"]
+    subgraph R0["nolte/blog"]
+        R0C0["bilingual-blog-knowledge-base"]
+        R0C1["transparent-ai-authoring"]
     end
-    subgraph R1["nolte/vale-style"]
-        R1C0["vale-style-package"]
-        R1C1["vocabulary-curation-spec"]
+    subgraph R1["nolte/claude-shared"]
+        R1C0["shared-claude-code-skills"]
+        R1C1["shared-claude-code-agents"]
+        R1C2["portfolio-spec-corpus"]
+        R1C3["planning-suite-reference-adopter"]
+        R1C4["auto-generated-skill-agent-catalog"]
+        R1C5["shared-vale-vocabulary-extension"]
     end
-    class R0C0 active;
-    class R0C1 active;
-    class R0C2 active;
-    class R0C3 experimental;
-    class R0C4 active;
-    class R0C5 active;
+    subgraph R2["nolte/vale-style"]
+        R2C0["vale-style-package"]
+        R2C1["vocabulary-curation-spec"]
+    end
+    subgraph R3["nolte/workstation"]
+        R3C0["developer-workstation-provisioning"]
+    end
+    class R0C0 experimental;
+    class R0C1 experimental;
     class R1C0 active;
-    class R1C1 experimental;
+    class R1C1 active;
+    class R1C2 active;
+    class R1C3 experimental;
+    class R1C4 active;
+    class R1C5 active;
+    class R2C0 active;
+    class R2C1 experimental;
+    class R3C0 active;
+    R0 -.peer.-> R1
 ```
 
 Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
+
+## nolte/blog
+
+> A bilingual AI-drafted and human-curated knowledge base that turns the author's software-project work into durable English and German posts for technical readers, portfolio reviewers, and the author's own future-self.
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `bilingual-blog-knowledge-base` | 🧪 experimental | A bilingual (English-canonical, German-translated) Astro blog and personal knowledge base, deployed to GitHub Pages, that publishes durable posts as real EN+DE pairs without translation drift for technical readers, portfolio reviewers, and the author's own future-self. | A — Technical readers<br>B — Portfolio reviewers<br>C — Author as knowledge-base user |
+| `transparent-ai-authoring` | 🧪 experimental | Per-post AI-disclosure (the aiGenerated frontmatter flag, with a planned visible badge and About-page explanation) that keeps AI-drafted content transparently distinct from hand-curated content. | A — Technical readers<br>B — Portfolio reviewers<br>L — People and projects named in posts |
+
+### Peer references
+
+- `nolte/claude-shared`
 
 ## nolte/claude-shared
 
@@ -78,6 +104,20 @@ _None declared._
 |---|---|---|---|
 | `vale-style-package` | ✅ active | A curated Vale style package distributed as `nolte-styles.zip` via GitHub releases. Consumer repositories integrate it via a single `.vale.ini` `Packages` entry to lint markdown consistently across the portfolio. | nolte/* consumer repositories<br>CI pipelines in consumer repos<br>local developers in consumer repos |
 | `vocabulary-curation-spec` | 🧪 experimental | A written specification under `spec/vocabulary-and-style-curation/{en,de}.md` that codifies inclusion criteria, removal policy, and group scoping for the vocabularies shipped in `vale-style-package`. Curator agents from `nolte/claude-shared` (`prose-vale-curator`, `vocab-drift-audit`) cite this spec to ground automated curation decisions. | nolte (primary maintainer)<br>Claude Code agents / skills<br>External contributors |
+
+### Peer references
+
+_None declared._
+
+## nolte/workstation
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `developer-workstation-provisioning` | ✅ active | A chezmoi source tree that provisions a developer workstation to an identical, reproducible state from a single `chezmoi init --apply`: asdf-pinned CLI tool versions, a baseline git config, a curated zsh setup, the reusable Taskfile collection, and the pre-commit / cookiecutter / MkDocs Python virtualenvs. | workstation-operator<br>downstream-tooling-consumers |
 
 ### Peer references
 
