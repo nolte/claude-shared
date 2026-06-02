@@ -14,12 +14,12 @@ This page summarizes the specification at `spec/claude/skill-management/en.md` (
 
 ## Context
 
-The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives:
+The `claude-shared` repository collects reusable Claude Code skills and agents for downstream projects. A skill has two lives:
 
 - **Source form** in this repository: `skills/<name>/`
 - **Runtime form** in a consuming project: `.claude/skills/<name>/` or `~/.claude/skills/<name>/`
 
-Without a consistent shape, skills drift in naming, trigger descriptions, and internal structure—reuse becomes fragile and maintenance harder.
+Without a consistent shape, skills drift in naming, trigger descriptions, and internal structure. Reuse then becomes fragile and maintenance harder.
 
 ## Goals and Non-Goals
 
@@ -45,7 +45,7 @@ Without a consistent shape, skills drift in naming, trigger descriptions, and in
 - **MUST** include YAML frontmatter with `name` and `description`
 - **MUST** set `name` to match the folder name exactly
 - **MUST** write a `description` that names concrete user triggers, not abstract capabilities
-- **MUST** keep instructions in `SKILL.md` in English for token efficiency
+- **MUST** keep instructions in `SKILL.md` in English (this keeps Claude's processing cost low)
 - **MUST** be self-contained—supporting assets live inside the skill folder
 
 ### Locations

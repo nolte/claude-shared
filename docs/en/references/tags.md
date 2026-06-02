@@ -24,6 +24,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
@@ -64,6 +65,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 ## `design`
 
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
+- [gemini-image-handoff](../skills/nolte-shared/gemini-image-handoff.md) — nolte-shared
 - [image-generate](../skills/nolte-shared/image-generate.md) — nolte-shared
 
 ## `frontend`
@@ -82,6 +84,10 @@ Cross-reference: each tag links to every skill and agent that declares it.
 ## `planning`
 
 - [roadmap-plan](../skills/nolte-shared/roadmap-plan.md) — nolte-shared
+
+## `privacy`
+
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 
 ## `prose`
 
@@ -122,6 +128,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](../agents/nolte-shared/project-structure-reviewer.md) — nolte-shared

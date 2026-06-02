@@ -22,6 +22,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | 2026-04-23 |
 | design | corporate-design-colors | Corporate Design — Color System | Corporate Design — Farbsystem | draft | unversioned |
 | design | flux-image-generation | FLUX Image Generation | FLUX-Bildgenerierung | draft | unversioned |
+| design | gemini-image-generation | Gemini Image Generation | Gemini-Bildgenerierung | draft | unversioned |
 | design | graphic-prompt-authoring | Graphic Prompt Authoring | Grafik-Prompt-Autorenschaft | draft | unversioned |
 | portfolio | portfolio-inflight-management | Portfolio In-Flight Management | Portfolio-In-Flight-Management | draft | unversioned |
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | unversioned |
@@ -40,9 +41,11 @@ Canonical language: `en` · Translations: `de`
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | unversioned |
 | project | docs-multilingual-authoring | Multilingual Documentation Authoring | Mehrsprachige Dokumentations-Autorenschaft | draft | unversioned |
 | project | feature | Project Feature | Projekt-Feature | draft | unversioned |
+| project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | unversioned |
 | project | lektorat | Lektorat | Lektorat | draft | unversioned |
+| project | license-check | License Check | Lizenzprüfung | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
 | project | mkdocs-structure | MkDocs Site Structure | MkDocs-Site-Struktur | draft | unversioned |
@@ -65,4 +68,4 @@ Canonical language: `en` · Translations: `de`
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |
-| tools | gemini-image-generation | Gemini Image Generation (Free-Tier) | Gemini-Bildgenerierung (Free-Tier) | draft | unversioned |
+| tools | image-generation | Image Generation (Multi-Provider) | Bildgenerierung (Multi-Provider) | draft | 2026-05-30 |

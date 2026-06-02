@@ -14,9 +14,9 @@ Diese Seite fasst die Spezifikation aus `spec/claude/agent-management/de.md` zus
 
 ## Kontext
 
-Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents. Ein Agent hat zwei Ausprägungen: eine **Quell-Form** hier (`agents/`) und eine **Laufzeit-Form** im konsumierenden Projekt (`.claude/agents/` oder `~/.claude/agents/`), aus der Claude Code den Agent lädt und das `Agent`-Tool per `subagent_type` dispatcht.
+Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents. Ein Agent hat zwei Ausprägungen: eine **Quell-Form** hier (`agents/`) und eine **Laufzeit-Form** im konsumierenden Projekt (`.claude/agents/` oder `~/.claude/agents/`). Aus der Laufzeit-Form lädt Claude Code den Agent und dispatcht das `Agent`-Tool per `subagent_type`.
 
-Ohne einheitliche Form driften Agents in Benennung, Trigger-Beschreibung, Tool-Scoping und System-Prompt-Qualität — Wiederverwendung wird brüchig und Routing unzuverlässig.
+Ohne einheitliche Form driften Agents in Benennung, Trigger-Beschreibung, Tool-Scoping und System-Prompt-Qualität. Wiederverwendung wird dann brüchig und Routing unzuverlässig.
 
 ## Ziele und Nicht-Ziele
 
@@ -44,7 +44,7 @@ Ohne einheitliche Form driften Agents in Benennung, Trigger-Beschreibung, Tool-S
 - **MUSS [MUST]** `name` = Dateiname ohne `.md`
 - **MUSS [MUST]** `description` mit konkreten Triggern ("einsetzen, wenn …") — nicht abstrakte Fähigkeiten
 - **MUSS [MUST]** System-Prompt im Markdown-Body: eine Verantwortlichkeit, erwartete Ausgabeform
-- **MUSS [MUST]** Frontmatter und System-Prompt auf Englisch halten (Token-Effizienz)
+- **MUSS [MUST]** Frontmatter und System-Prompt auf Englisch halten (senkt Claudes Verarbeitungskosten)
 - **MUSS [MUST]** in sich geschlossen sein — eine einzelne Top-Level-`agents/<name>.md`; kein Schwester-Ordner `agents/<name>/` (rekursive Discovery würde genestete Markdown als Phantom-Agent registrieren)
 
 ### Tool-Zugriff

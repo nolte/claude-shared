@@ -2,7 +2,7 @@
 title: Nutzung
 audience: [maintainer, external-contributor]
 content_mode: how-to
-track: developer-docs
+track: user-docs
 last_updated: 2026-05-19
 ---
 
@@ -12,7 +12,7 @@ Sobald das Plugin geladen ist, stehen seine Skills als Slash-Commands im Claude-
 
 ## Skills aufrufen
 
-Skills des Plugins sind per Name aufrufbar — optional mit Plugin-Prefix:
+Skills des Plugins sind per Name aufrufbar — optional mit Plugin-Prefix (z. B. `/nolte-shared:spec` statt nur `/spec`):
 
 ```
 /nolte-shared:spec
@@ -30,11 +30,11 @@ Claude Code zeigt sie außerdem unter `/skills` an. Von dort lassen sie sich mit
 
 ## Antwortsprache
 
-Die Skill-Dateien selbst sind konsequent auf Englisch gehalten (Token-Effizienz). Claude erkennt aber die Sprache der Nutzereingabe und antwortet in dieser Sprache — Deutsch fragen ergibt Deutsch als Antwort.
+Die Skill-Dateien sind konsequent auf Englisch — das senkt Claudes Verarbeitungskosten. Claude erkennt die Sprache deiner Eingabe und antwortet in ihr. Deutsch fragen ergibt Deutsch als Antwort.
 
 ## Namespace-Kollisionen
 
-Trägt ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version erreichbar. Zur Auflösung einer Mehrdeutigkeit immer die namespaced Form `/nolte-shared:<skill>` nutzen.
+Hat ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version erreichbar. Bei Mehrdeutigkeit immer die namespaced Form `/nolte-shared:<skill>` nutzen.
 
 ## Nächste Schritte
 

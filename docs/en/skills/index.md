@@ -48,6 +48,7 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 
 - [`blog-author`](nolte-shared/blog-author.md) — Drafts a bilingual EN-canonical + DE-translated blog-post pair per this plugin's blog-author specs, writing into a consumer blog repo.
 - [`blog-author-trigger`](nolte-shared/blog-author-trigger.md) — On a feature→done transition, derives a blog-post briefing, suggests new/update/defer, and either dispatches blog-author or writes a deferral artefact.
+- [`gemini-image-handoff`](nolte-shared/gemini-image-handoff.md) — Authors a Gemini-optimised prompt and guides the operator through pasting it into the Gemini web UI and downloading the image — a semi-automatic, no-API, no-billing handoff.
 - [`image-generate`](nolte-shared/image-generate.md) — Generates an image from a text prompt via a swappable provider backend (Cloudflare/Pollinations/Gemini), writing the image plus a metadata sidecar to a chosen path.
 - [`sprint-execute`](nolte-shared/sprint-execute.md) — Drives the daily mechanics of an active sprint: lifecycle transitions, feature-list sync, last_commit updates.
 

@@ -10,9 +10,9 @@ last_updated: 2026-05-19
 
 The `nolte-shared` skills and agents are designed to cover the full development lifecycle of a project, from first mission statement to released artefact. This page shows where each artefact fits in.
 
-The lifecycle has seven sequential phases plus an eighth, **Cross-cutting**, that collects artefacts whose responsibility is genuinely phase-agnostic. The first seven phases form a **cycle**: at the end of a sprint, the loop returns to **Plan** to schedule the next sprint. Once the project reaches its minimum viable product (MVP), the loop returns to **Vision** so the mission can be revised toward stabilisation.
+The lifecycle has seven sequential phases plus an eighth, **Cross-cutting**, that collects artefacts whose responsibility is genuinely phase-agnostic. The first seven phases form a loop. At the end of a sprint, the loop returns to **Plan** to schedule the next sprint. Once the project reaches its minimum viable product (MVP), the loop returns to **Vision**. The mission is then revised toward stabilisation.
 
-Every skill and agent declares its phase in its frontmatter (`phase:`); the catalog generator groups the [Skills](../skills/index.md) and [Agents](../agents/index.md) catalog pages by that field, so this page and the catalog stay in lock-step.
+Every skill and agent declares its phase in its frontmatter (`phase:`). The catalog generator groups the [Skills](../skills/index.md) and [Agents](../agents/index.md) catalog pages by that field. This page and the catalog stay in lock-step.
 
 <!-- diagram-source: user-described — eight-phase lifecycle with skills and agents grouped per phase; agents are marked with a parenthetical (A) suffix; return edges from Close to Plan (next sprint) and from Close to Vision (MVP achieved) -->
 ```mermaid

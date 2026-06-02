@@ -8,7 +8,12 @@ last_updated: 2026-05-19
 
 # Installation
 
-`claude-shared` ships as a single Claude Code plugin named **`nolte-shared`**. The plugin manifest lives at `.claude-plugin/plugin.json` and the marketplace descriptor at `.claude-plugin/marketplace.json`. Skills live under `skills/<name>/`, agents under `agents/<name>.md`.
+`claude-shared` ships as a single Claude Code plugin named **`nolte-shared`**. Layout:
+
+- Plugin manifest: `.claude-plugin/plugin.json`
+- Marketplace descriptor: `.claude-plugin/marketplace.json`
+- Skills: `skills/<name>/`
+- Agents: `agents/<name>.md`
 
 ## Prerequisites
 
@@ -38,7 +43,7 @@ Skills from the plugin are invocable under their namespace:
 ```
 
 !!! tip "Symlink instead of copying"
-    To use `claude-shared` alongside your own `.claude/` directory, symlink individual skills:
+    Optionally symlink individual skills. That keeps `claude-shared` alongside your own `.claude/` directory:
     ```bash
     ln -s /path/to/claude-shared/skills/<name> .claude/skills/<name>
     ```
@@ -46,7 +51,7 @@ Skills from the plugin are invocable under their namespace:
 
 ## Work on the plugin itself (dogfooding)
 
-When you develop inside the `claude-shared` repo, point Claude Code at the repo root. Skills are discovered in place, without copying files:
+When you develop inside the `claude-shared` repo, point Claude Code at the repo root. Claude Code then discovers the skills in place—no file duplication needed:
 
 ```bash
 claude --plugin-dir .
@@ -60,7 +65,7 @@ Reload changes during a session with:
 
 ## Verify the plugin loaded
 
-After startup, `/skills` should list entries from this repo (for example `nolte-shared:spec`, `nolte-shared:skill-management`). If something is missing, check:
+After startup, `/skills` lists the entries from this repo—for example `nolte-shared:spec` and `nolte-shared:skill-management`. If something is missing, check:
 
 1. `.claude-plugin/plugin.json` is valid JSON
 2. Each folder contains `skills/<name>/SKILL.md` with valid frontmatter

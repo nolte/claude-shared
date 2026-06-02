@@ -10,9 +10,9 @@ last_updated: 2026-05-19
 
 Die `nolte-shared`-Skills und -Agents decken den vollständigen Entwicklungszyklus eines Projekts ab — vom ersten Mission-Statement bis zum veröffentlichten Release-Artefakt. Diese Seite zeigt, wo jedes Artefakt greift.
 
-Der Zyklus hat sieben sequenzielle Phasen plus eine achte, **Cross-cutting**, die phasenagnostische Artefakte sammelt. Die ersten sieben Phasen bilden einen **Zyklus**: am Ende eines Sprints kehrt der Lauf zurück zu **Plan**, um den nächsten Sprint zu planen; sobald das MVP erreicht ist, kehrt der Lauf zurück zu **Vision**, damit die Mission Richtung Stabilisierung revidiert werden kann.
+Der Zyklus hat sieben sequenzielle Phasen plus eine achte, **Cross-cutting**, die phasenagnostische Artefakte sammelt. Die ersten sieben Phasen bilden einen Kreislauf. Am Ende eines Sprints kehrt der Lauf zurück zu **Plan**, um den nächsten Sprint zu planen. Sobald das MVP erreicht ist, kehrt der Lauf zurück zu **Vision** — die Mission wird Richtung Stabilisierung revidiert.
 
-Jeder Skill und jeder Agent deklariert seine Phase im Frontmatter (`phase:`); der Katalog-Generator gruppiert die [Skills](../skills/index.md)- und [Agents](../agents/index.md)-Katalog-Seiten nach diesem Feld, sodass diese Seite und der Katalog im Gleichschritt bleiben.
+Jeder Skill und jeder Agent deklariert seine Phase im Frontmatter (`phase:`). Der Katalog-Generator gruppiert die [Skills](../skills/index.md)- und [Agents](../agents/index.md)-Katalog-Seiten nach diesem Feld. So bleiben diese Seite und der Katalog im Gleichschritt.
 
 <!-- diagram-source: user-described — eight-phase lifecycle with skills and agents grouped per phase; agents are marked with a parenthetical (A) suffix; return edges from Close to Plan (next sprint) and from Close to Vision (MVP achieved) -->
 ```mermaid

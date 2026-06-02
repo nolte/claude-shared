@@ -58,10 +58,10 @@ agents/                      # wiederverwendbare Sub-Agent-Definitionen
 
 ## Sprachen
 
-- **Skill- und Agent-Inhalte**: Englisch (Token-Effizienz; die Skills/Agents dürfen Claude dennoch anweisen, dem Nutzer in dessen Sprache zu antworten).
+- **Skill- und Agent-Inhalte**: Englisch — das senkt Claudes Verarbeitungskosten. Skills/Agents dürfen Claude dennoch anweisen, dem Nutzer in dessen Sprache zu antworten.
 - **Spezifikationen**: kanonisch EN, Übersetzung DE, strukturell synchron.
 - **Dokumentation (`docs/`)**: DE und EN, über `mkdocs-static-i18n`.
 
 ## Plugin-Namespace
 
-Das Plugin heißt `nolte-shared` (siehe `.claude-plugin/plugin.json`). Skills sind entsprechend als `/nolte-shared:<skill>` aufrufbar. Der Plugin-Name ändert sich nicht leichtfertig — er ist Teil aller Aufrufe und Dokumentationen.
+Das Plugin heißt `nolte-shared` (siehe `.claude-plugin/plugin.json`). Skills sind entsprechend als `/nolte-shared:<skill>` aufrufbar. Der Plugin-Name bleibt stabil — er ist Teil aller Aufrufe und Dokumentationen.
