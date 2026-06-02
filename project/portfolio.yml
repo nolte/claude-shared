@@ -115,6 +115,7 @@ capabilities:
       auditable.
     peers:
       - claude-shared:portfolio-spec-corpus
+      - vale-style:vale-style-package
     since: 2026-04-24
 
 # Schema for tech_stack: spec/portfolio/tech-stack/ §Per-repository tech-stack block.

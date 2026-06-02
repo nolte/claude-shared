@@ -114,7 +114,8 @@ members:
     - Plugin author dogfooding inside this repo
     - Other Nolte portfolio repos as passive consumers of the conventions
     since: 2026-04-24
-  peers: []
+  peers:
+  - nolte/vale-style
 - repo: nolte/vale-style
   repo_url: https://github.com/nolte/vale-style
   mission_statement: >-
