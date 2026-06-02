@@ -56,6 +56,7 @@ flowchart LR
     class R2C1 experimental;
     class R3C0 active;
     R0 -.peer.-> R1
+    R1 -.peer.-> R2
 ```
 
 Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
@@ -92,7 +93,7 @@ Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 
 ### Peer-Referenzen
 
-_Keine deklariert._
+- `nolte/vale-style`
 
 ## nolte/vale-style
 
