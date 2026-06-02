@@ -58,6 +58,18 @@ Use `/reload-plugins` inside the session to pick up changes without restarting.
 - Create worktrees under `~/repos/.worktrees/claude-shared/<slug>/` (or, for harness-/agent-initiated worktrees, `~/repos/.worktrees/claude-shared/agents/<slug>/`). Never nest a worktree under `.claude/worktrees/` — the spec's §Path layout forbids it explicitly.
 - Before the first `Agent({isolation: "worktree"})` call in a session, set `CLAUDE_AGENT_WORKTREE_ROOT` (or the equivalent Claude Code settings hook) to a spec-conformant root if the harness default would otherwise materialize the worktree under `.claude/worktrees/`.
 
+## Crash recovery / resuming interrupted work
+
+A notebook crash, terminal close, or session expiry does **not** destroy in-flight work — Claude Code persists every top-level session transcript under `~/.claude/projects/<encoded-cwd>/`. Two on-disk safety nets make recovery routine:
+
+- **Session-level (covers everything, including free-form work):** run `task resume` in the affected working copy to list its resumable sessions newest-first with their opening prompt, then `claude --resume <id>` (or `claude --continue` for the most recent). This is the first thing to reach for after a crash.
+- **Always-on journal:** `scripts/wip_journal.py` is wired as a `SessionStart` / `PostToolUse` / `PreCompact` hook in `.claude/settings.json` and appends a "where was I" trail to the gitignored `.resume/session-journal.md`. `cat .resume/session-journal.md` shows the last files touched and when, per session.
+- **Skill-level (structured decision log):** in-scope skills/agents checkpoint to `.resume/<name>/<run-id>.yml` per `spec/claude/resumable-work/`; re-invoking a resumable skill with the same inputs surfaces the resume prompt.
+
+Operational rule: prefer running long feature work as a **top-level session inside the worktree** (`cd <worktree> && claude`) over a dispatched worktree-isolated subagent — only top-level sessions can be `claude --resume`'d; a subagent's transcript lives under its parent and cannot be resumed on its own.
+
+For multi-source **research** that must survive a crash, prefer the Workflow harness over the built-in `deep-research` skill: a Workflow run persists every dispatched agent transcript and supports `resumeFromRunId`, whereas `deep-research` (a sealed harness built-in) holds fetched sources and verified claims only in conversation context and writes nothing to disk until its final report.
+
 ## Blog-author trigger (feature → done)
 
 Per `spec/project/blog-author-trigger/` §Consumer contract, this repository declares its trigger roles:

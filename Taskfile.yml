@@ -15,6 +15,18 @@ tasks:
       - task -l
     silent: true
 
+  resume:
+    desc: |
+      List resumable Claude Code sessions for THIS working copy (newest first,
+      with their opening prompt) and print the exact `claude --resume` command.
+      Use after a notebook crash, terminal close, or session expiry to get back
+      to an interrupted run — covers all top-level work, including free-form work
+      no resumable skill governs. See also `.resume/session-journal.md` for the
+      always-on "where was I" trail written by scripts/wip_journal.py.
+    cmds:
+      - python3 scripts/resume_sessions.py
+    silent: true
+
   setup:
     desc: Install pre-commit hooks (run once after cloning)
     cmds:
