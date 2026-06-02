@@ -52,8 +52,9 @@ Use `/reload-plugins` inside the session to pick up changes without restarting.
 
 ## Parallel working copies (worktrees)
 
-`spec/project/parallel-working-copies/` is the single source of truth. Two operational reminders for any session running inside this repository:
+`spec/project/parallel-working-copies/` is the single source of truth. The core rule and the operational reminders for any session running inside this repository:
 
+- **The primary checkout (`~/repos/github/claude-shared/`) is for integration only and MUST stay on `develop` at all times.** Never create, switch to, or commit a feature branch (`feat/`, `fix/`, `chore/`, `docs/`, `exp/`) here — not even when only one feature is in flight. *Every* change to specs, skills, agents, or docs happens in a dedicated worktree that branches off `develop`; the primary checkout is the stable launchpad you branch *from* and merge *into*, never the place you work in. This is the MUST in the spec's §Branch-to-worktree mapping. If you find the primary checkout on a feature branch, that is drift to repair (migrate the branch into a worktree, reset the primary checkout to `origin/develop`), not a state to extend.
 - Create worktrees under `~/repos/.worktrees/claude-shared/<slug>/` (or, for harness-/agent-initiated worktrees, `~/repos/.worktrees/claude-shared/agents/<slug>/`). Never nest a worktree under `.claude/worktrees/` — the spec's §Path layout forbids it explicitly.
 - Before the first `Agent({isolation: "worktree"})` call in a session, set `CLAUDE_AGENT_WORKTREE_ROOT` (or the equivalent Claude Code settings hook) to a spec-conformant root if the harness default would otherwise materialize the worktree under `.claude/worktrees/`.
 
