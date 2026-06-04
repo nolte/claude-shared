@@ -12,7 +12,7 @@ last_updated: generated
 
 Aggregated capability inventory across the active `nolte/*` portfolio, generated from each member repository's `project/portfolio.yml` manifest. This page is auto-generated — edit `portfolio/aggregate.yml` (or re-run the `portfolio-audit` skill's Render operation), not this file.
 
-**4** repositories · **11** capabilities
+**6** repositories · **15** capabilities
 
 ## Capability map
 
@@ -37,12 +37,20 @@ flowchart LR
         R1C4["auto-generated-skill-agent-catalog"]
         R1C5["shared-vale-vocabulary-extension"]
     end
-    subgraph R2["nolte/vale-style"]
-        R2C0["vale-style-package"]
-        R2C1["vocabulary-curation-spec"]
+    subgraph R2["nolte/gh-plumbing"]
+        R2C0["reusable-github-actions-workflows"]
+        R2C1["probot-commons-config"]
+        R2C2["renovate-shared-presets"]
     end
-    subgraph R3["nolte/workstation"]
-        R3C0["developer-workstation-provisioning"]
+    subgraph R3["nolte/taskfiles"]
+        R3C0["reusable-taskfile-collection"]
+    end
+    subgraph R4["nolte/vale-style"]
+        R4C0["vale-style-package"]
+        R4C1["vocabulary-curation-spec"]
+    end
+    subgraph R5["nolte/workstation"]
+        R5C0["developer-workstation-provisioning"]
     end
     class R0C0 experimental;
     class R0C1 experimental;
@@ -53,10 +61,14 @@ flowchart LR
     class R1C4 active;
     class R1C5 active;
     class R2C0 active;
-    class R2C1 experimental;
+    class R2C1 active;
+    class R2C2 active;
     class R3C0 active;
+    class R4C0 active;
+    class R4C1 experimental;
+    class R5C0 active;
     R0 -.peer.-> R1
-    R1 -.peer.-> R2
+    R1 -.peer.-> R4
 ```
 
 Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
@@ -94,6 +106,36 @@ Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 ### Peer references
 
 - `nolte/vale-style`
+
+## nolte/gh-plumbing
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `reusable-github-actions-workflows` | ✅ active | A library of reusable GitHub Actions workflows (reusable-*.yaml: pre-commit, mkdocs deploy, spelling/Vale, automerge, release-drafter/publish, Docker lint/build/publish, Ansible molecule/galaxy, Terraform lint, Trivy, chain-bench, dependency-review) that downstream nolte/* repositories call to get consistent CI/CD without reimplementing pipelines. | Downstream repositories consuming reusable workflows<br>Repository maintainer (nolte) |
+| `probot-commons-config` | ✅ active | Shared Probot app configuration commons (settings, release-drafter, boring-cyborg, stale presets) that downstream nolte/* repositories extend so repository governance stays uniform across the portfolio. | Downstream repositories extending Probot configurations<br>Repository maintainer (nolte) |
+| `renovate-shared-presets` | ✅ active | Shared Renovate configuration presets (renovate-configs/) that downstream nolte/* repositories extend for consistent dependency-update grouping, scheduling, and labelling. | Downstream repositories consuming Renovate presets<br>Renovate bot |
+
+### Peer references
+
+_None declared._
+
+## nolte/taskfiles
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `reusable-taskfile-collection` | ✅ active | A collection of remotely-includable Taskfiles (src/taskfile-include-*.yaml for mkdocs, pre-commit, kind, and k8s) that downstream nolte/* projects include via the Task includes: mechanism to get consistent task targets without copying Taskfile logic into each repository. | Taskfile-consumer project<br>Consumer-side developer running tasks locally<br>Consumer-side CI/CD pipeline |
+
+### Peer references
+
+_None declared._
 
 ## nolte/vale-style
 
