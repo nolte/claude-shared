@@ -68,6 +68,7 @@ Jedes Repository im Portfolio zieht Drittanbieter-Pakete über ein oder mehrere 
 - **SOLLTE** auf das vorherige Audit-Artefakt verlinken, damit der Fortschritt über Quartale hinweg nachvollziehbar bleibt
 
 ### Lizenz-Audit (wenn aktiviert)
+- **MUSS** die Klassifizierung und die allow/review/deny-Policy aus `spec/project/license-check/` anwenden; dieser Lauf setzt die Policy jener Spec für den Dependency-Slice um, statt eine eigene zu definieren, und die dortige Portfolio-Default-Policy gilt als die unten geforderte „explizite Richtlinie mit namentlich ausgeschlossenen Lizenzen"
 - **MUSS** Lizenz-Auditing als „aktiviert" behandeln, sobald eine Allowlist auffindbar ist (unter `.license-allowlist.txt`, unter `tool.*` im Manifest oder Äquivalent); in diesem Fall führen das Quartals- und das vollständige Audit den Lizenzdurchlauf automatisch aus, und nur Ad-hoc-Invocations dürfen sich abmelden
 - **MUSS** den Ort der Allowlist im README des Repositorys oder Äquivalent dokumentieren, damit das Regelwerk auffindbar ist
 - **MUSS** jedes Paket, dessen Lizenz nicht auf der Allowlist steht, als `review` klassifizieren, nicht als Failure, solange keine explizite Richtlinie existiert; ein Hard Fail setzt eine explizite Richtlinie mit namentlich ausgeschlossenen Lizenzen voraus
