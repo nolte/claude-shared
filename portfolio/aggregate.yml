@@ -213,4 +213,63 @@ members:
     - Consumer-side developer running tasks locally
     - Consumer-side CI/CD pipeline
   peers: []
+- repo: nolte/ansible-reachy-mini-bootstrap
+  repo_url: https://github.com/nolte/ansible-reachy-mini-bootstrap
+  mission_statement: ""
+  capabilities:
+  - name: reachy-mini-ansible-provisioning
+    description: >-
+      An Ansible playbook and role collection that bootstraps a Reachy Mini WiFi
+      device (Raspberry Pi OS) to a working state — network, system
+      dependencies, and the Pollen/Reachy runtime — from a single inventory plus
+      playbook run.
+    status: active
+    audience:
+    - "`nolte` (repo author, first operator on his own device)"
+    - "Reachy Mini owner / hobbyist"
+  peers: []
+- repo: nolte/claude-home-assistant
+  repo_url: https://github.com/nolte/claude-home-assistant
+  mission_statement: ""
+  capabilities:
+  - name: claude-code-skills-and-agents-for-home-assistant
+    description: >-
+      A Claude Code plugin bundling skills and agents for Home Assistant
+      development — custom integrations, Lovelace cards, blueprints and
+      automations, and ESPHome / add-on work — that authors HA artefacts against
+      Home Assistant Core and HACS conventions.
+    status: active
+    audience:
+    - "Plugin-Autor beim Dogfooding in diesem Repo (nolte)"
+    - "Spätere öffentliche Nutzer (HA-Custom-Integration- und Card-Autoren-Community)"
+  peers: []
+- repo: nolte/claude-reachy-mini
+  repo_url: https://github.com/nolte/claude-reachy-mini
+  mission_statement: ""
+  capabilities:
+  - name: claude-code-skills-and-agents-for-reachy-mini
+    description: >-
+      A Claude Code plugin bundling skills and agents for Reachy Mini robot
+      development — dance-to-music behaviours and Home Assistant integration —
+      so the operator builds Reachy Mini apps with consistent, spec-grounded
+      tooling.
+    status: active
+    audience:
+    - "Plugin-Autor beim Dogfooding in diesem Repo (nolte)"
+    - "Spätere öffentliche Nutzer (Reachy-Mini-Hobby- und Maker-Community)"
+  peers: []
+- repo: nolte/reachy-mini-mcp
+  repo_url: https://github.com/nolte/reachy-mini-mcp
+  mission_statement: ""
+  capabilities:
+  - name: reachy-mini-mcp-server
+    description: >-
+      A Model Context Protocol server that wraps the Pollen Reachy Mini daemon
+      behind a REST interface, exposing the robot's behaviours to MCP clients
+      and LLM end users.
+    status: active
+    audience:
+    - "MCP clients"
+    - "Reachy Mini owners / developers"
+  peers: []
 historical: []

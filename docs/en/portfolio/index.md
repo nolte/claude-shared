@@ -12,7 +12,7 @@ last_updated: generated
 
 Aggregated capability inventory across the active `nolte/*` portfolio, generated from each member repository's `project/portfolio.yml` manifest. This page is auto-generated — edit `portfolio/aggregate.yml` (or re-run the `portfolio-audit` skill's Render operation), not this file.
 
-**6** repositories · **15** capabilities
+**10** repositories · **19** capabilities
 
 ## Capability map
 
@@ -25,53 +25,83 @@ flowchart LR
     classDef experimental fill:#fef7e0,stroke:#b06000,color:#7a4f01;
     classDef deprecated fill:#fce8e6,stroke:#a50e0e,color:#7a1c12;
     classDef planned fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
-    subgraph R0["nolte/blog"]
-        R0C0["bilingual-blog-knowledge-base"]
-        R0C1["transparent-ai-authoring"]
+    subgraph R0["nolte/ansible-reachy-mini-bootstrap"]
+        R0C0["reachy-mini-ansible-provisioning"]
     end
-    subgraph R1["nolte/claude-shared"]
-        R1C0["shared-claude-code-skills"]
-        R1C1["shared-claude-code-agents"]
-        R1C2["portfolio-spec-corpus"]
-        R1C3["planning-suite-reference-adopter"]
-        R1C4["auto-generated-skill-agent-catalog"]
-        R1C5["shared-vale-vocabulary-extension"]
+    subgraph R1["nolte/blog"]
+        R1C0["bilingual-blog-knowledge-base"]
+        R1C1["transparent-ai-authoring"]
     end
-    subgraph R2["nolte/gh-plumbing"]
-        R2C0["reusable-github-actions-workflows"]
-        R2C1["probot-commons-config"]
-        R2C2["renovate-shared-presets"]
+    subgraph R2["nolte/claude-home-assistant"]
+        R2C0["claude-code-skills-and-agents-for-home-assistant"]
     end
-    subgraph R3["nolte/taskfiles"]
-        R3C0["reusable-taskfile-collection"]
+    subgraph R3["nolte/claude-reachy-mini"]
+        R3C0["claude-code-skills-and-agents-for-reachy-mini"]
     end
-    subgraph R4["nolte/vale-style"]
-        R4C0["vale-style-package"]
-        R4C1["vocabulary-curation-spec"]
+    subgraph R4["nolte/claude-shared"]
+        R4C0["shared-claude-code-skills"]
+        R4C1["shared-claude-code-agents"]
+        R4C2["portfolio-spec-corpus"]
+        R4C3["planning-suite-reference-adopter"]
+        R4C4["auto-generated-skill-agent-catalog"]
+        R4C5["shared-vale-vocabulary-extension"]
     end
-    subgraph R5["nolte/workstation"]
-        R5C0["developer-workstation-provisioning"]
+    subgraph R5["nolte/gh-plumbing"]
+        R5C0["reusable-github-actions-workflows"]
+        R5C1["probot-commons-config"]
+        R5C2["renovate-shared-presets"]
     end
-    class R0C0 experimental;
-    class R0C1 experimental;
-    class R1C0 active;
-    class R1C1 active;
-    class R1C2 active;
-    class R1C3 experimental;
-    class R1C4 active;
-    class R1C5 active;
+    subgraph R6["nolte/reachy-mini-mcp"]
+        R6C0["reachy-mini-mcp-server"]
+    end
+    subgraph R7["nolte/taskfiles"]
+        R7C0["reusable-taskfile-collection"]
+    end
+    subgraph R8["nolte/vale-style"]
+        R8C0["vale-style-package"]
+        R8C1["vocabulary-curation-spec"]
+    end
+    subgraph R9["nolte/workstation"]
+        R9C0["developer-workstation-provisioning"]
+    end
+    class R0C0 active;
+    class R1C0 experimental;
+    class R1C1 experimental;
     class R2C0 active;
-    class R2C1 active;
-    class R2C2 active;
     class R3C0 active;
     class R4C0 active;
-    class R4C1 experimental;
+    class R4C1 active;
+    class R4C2 active;
+    class R4C3 experimental;
+    class R4C4 active;
+    class R4C5 active;
     class R5C0 active;
-    R0 -.peer.-> R1
+    class R5C1 active;
+    class R5C2 active;
+    class R6C0 active;
+    class R7C0 active;
+    class R8C0 active;
+    class R8C1 experimental;
+    class R9C0 active;
     R1 -.peer.-> R4
+    R4 -.peer.-> R8
 ```
 
 Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
+
+## nolte/ansible-reachy-mini-bootstrap
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `reachy-mini-ansible-provisioning` | ✅ active | An Ansible playbook and role collection that bootstraps a Reachy Mini WiFi device (Raspberry Pi OS) to a working state — network, system dependencies, and the Pollen/Reachy runtime — from a single inventory plus playbook run. | `nolte` (repo author, first operator on his own device)<br>Reachy Mini owner / hobbyist |
+
+### Peer references
+
+_None declared._
 
 ## nolte/blog
 
@@ -87,6 +117,34 @@ Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 ### Peer references
 
 - `nolte/claude-shared`
+
+## nolte/claude-home-assistant
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `claude-code-skills-and-agents-for-home-assistant` | ✅ active | A Claude Code plugin bundling skills and agents for Home Assistant development — custom integrations, Lovelace cards, blueprints and automations, and ESPHome / add-on work — that authors HA artefacts against Home Assistant Core and HACS conventions. | Plugin-Autor beim Dogfooding in diesem Repo (nolte)<br>Spätere öffentliche Nutzer (HA-Custom-Integration- und Card-Autoren-Community) |
+
+### Peer references
+
+_None declared._
+
+## nolte/claude-reachy-mini
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `claude-code-skills-and-agents-for-reachy-mini` | ✅ active | A Claude Code plugin bundling skills and agents for Reachy Mini robot development — dance-to-music behaviours and Home Assistant integration — so the operator builds Reachy Mini apps with consistent, spec-grounded tooling. | Plugin-Autor beim Dogfooding in diesem Repo (nolte)<br>Spätere öffentliche Nutzer (Reachy-Mini-Hobby- und Maker-Community) |
+
+### Peer references
+
+_None declared._
 
 ## nolte/claude-shared
 
@@ -118,6 +176,20 @@ _No mission statement declared (`project/mission.md` missing)._
 | `reusable-github-actions-workflows` | ✅ active | A library of reusable GitHub Actions workflows (reusable-*.yaml: pre-commit, mkdocs deploy, spelling/Vale, automerge, release-drafter/publish, Docker lint/build/publish, Ansible molecule/galaxy, Terraform lint, Trivy, chain-bench, dependency-review) that downstream nolte/* repositories call to get consistent CI/CD without reimplementing pipelines. | Downstream repositories consuming reusable workflows<br>Repository maintainer (nolte) |
 | `probot-commons-config` | ✅ active | Shared Probot app configuration commons (settings, release-drafter, boring-cyborg, stale presets) that downstream nolte/* repositories extend so repository governance stays uniform across the portfolio. | Downstream repositories extending Probot configurations<br>Repository maintainer (nolte) |
 | `renovate-shared-presets` | ✅ active | Shared Renovate configuration presets (renovate-configs/) that downstream nolte/* repositories extend for consistent dependency-update grouping, scheduling, and labelling. | Downstream repositories consuming Renovate presets<br>Renovate bot |
+
+### Peer references
+
+_None declared._
+
+## nolte/reachy-mini-mcp
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `reachy-mini-mcp-server` | ✅ active | A Model Context Protocol server that wraps the Pollen Reachy Mini daemon behind a REST interface, exposing the robot's behaviours to MCP clients and LLM end users. | MCP clients<br>Reachy Mini owners / developers |
 
 ### Peer references
 
