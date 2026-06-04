@@ -42,6 +42,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [continuous-improvement-triage](../skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
 - [docs-audience-tracks-apply](../skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](../skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
+- [issue-orchestrate](../skills/nolte-shared/issue-orchestrate.md) — nolte-shared
 - [lektorat-apply](../skills/nolte-shared/lektorat-apply.md) — nolte-shared
 - [mermaid-diagrams-apply](../skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
 - [mkdocs-structure-apply](../skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
@@ -181,6 +182,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `triage`
 
 - [continuous-improvement-triage](../skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
+- [issue-orchestrate](../skills/nolte-shared/issue-orchestrate.md) — nolte-shared
 
 ## `validation`
 
