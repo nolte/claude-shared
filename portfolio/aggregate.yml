@@ -163,4 +163,54 @@ members:
     - downstream-tooling-consumers
     since: 2026-06-01
   peers: []
+- repo: nolte/gh-plumbing
+  repo_url: https://github.com/nolte/gh-plumbing
+  mission_statement: ""
+  capabilities:
+  - name: reusable-github-actions-workflows
+    description: >-
+      A library of reusable GitHub Actions workflows (reusable-*.yaml:
+      pre-commit, mkdocs deploy, spelling/Vale, automerge, release-drafter/publish,
+      Docker lint/build/publish, Ansible molecule/galaxy, Terraform lint, Trivy,
+      chain-bench, dependency-review) that downstream nolte/* repositories call
+      to get consistent CI/CD without reimplementing pipelines.
+    status: active
+    audience:
+    - Downstream repositories consuming reusable workflows
+    - Repository maintainer (nolte)
+  - name: probot-commons-config
+    description: >-
+      Shared Probot app configuration commons (settings, release-drafter,
+      boring-cyborg, stale presets) that downstream nolte/* repositories extend
+      so repository governance stays uniform across the portfolio.
+    status: active
+    audience:
+    - Downstream repositories extending Probot configurations
+    - Repository maintainer (nolte)
+  - name: renovate-shared-presets
+    description: >-
+      Shared Renovate configuration presets (renovate-configs/) that downstream
+      nolte/* repositories extend for consistent dependency-update grouping,
+      scheduling, and labelling.
+    status: active
+    audience:
+    - Downstream repositories consuming Renovate presets
+    - Renovate bot
+  peers: []
+- repo: nolte/taskfiles
+  repo_url: https://github.com/nolte/taskfiles
+  mission_statement: ""
+  capabilities:
+  - name: reusable-taskfile-collection
+    description: >-
+      A collection of remotely-includable Taskfiles (src/taskfile-include-*.yaml
+      for mkdocs, pre-commit, kind, and k8s) that downstream nolte/* projects
+      include via the Task includes: mechanism to get consistent task targets
+      without copying Taskfile logic into each repository.
+    status: active
+    audience:
+    - Taskfile-consumer project
+    - Consumer-side developer running tasks locally
+    - Consumer-side CI/CD pipeline
+  peers: []
 historical: []
