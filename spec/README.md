@@ -44,6 +44,7 @@ Canonical language: `en` · Translations: `de`
 | project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | unversioned |
+| project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | unversioned |
 | project | lektorat | Lektorat | Lektorat | draft | unversioned |
 | project | license-check | License Check | Lizenzprüfung | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
