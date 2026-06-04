@@ -12,7 +12,7 @@ last_updated: generated
 
 Aggregated capability inventory across the active `nolte/*` portfolio, generated from each member repository's `project/portfolio.yml` manifest. This page is auto-generated — edit `portfolio/aggregate.yml` (or re-run the `portfolio-audit` skill's Render operation), not this file.
 
-**10** repositories · **19** capabilities
+**11** repositories · **20** capabilities
 
 ## Capability map
 
@@ -51,18 +51,21 @@ flowchart LR
         R5C1["probot-commons-config"]
         R5C2["renovate-shared-presets"]
     end
-    subgraph R6["nolte/reachy-mini-mcp"]
-        R6C0["reachy-mini-mcp-server"]
+    subgraph R6["nolte/kamerplanter"]
+        R6C0["plant-lifecycle-management-system"]
     end
-    subgraph R7["nolte/taskfiles"]
-        R7C0["reusable-taskfile-collection"]
+    subgraph R7["nolte/reachy-mini-mcp"]
+        R7C0["reachy-mini-mcp-server"]
     end
-    subgraph R8["nolte/vale-style"]
-        R8C0["vale-style-package"]
-        R8C1["vocabulary-curation-spec"]
+    subgraph R8["nolte/taskfiles"]
+        R8C0["reusable-taskfile-collection"]
     end
-    subgraph R9["nolte/workstation"]
-        R9C0["developer-workstation-provisioning"]
+    subgraph R9["nolte/vale-style"]
+        R9C0["vale-style-package"]
+        R9C1["vocabulary-curation-spec"]
+    end
+    subgraph R10["nolte/workstation"]
+        R10C0["developer-workstation-provisioning"]
     end
     class R0C0 active;
     class R1C0 experimental;
@@ -81,10 +84,11 @@ flowchart LR
     class R6C0 active;
     class R7C0 active;
     class R8C0 active;
-    class R8C1 experimental;
     class R9C0 active;
+    class R9C1 experimental;
+    class R10C0 active;
     R1 -.peer.-> R4
-    R4 -.peer.-> R8
+    R4 -.peer.-> R9
 ```
 
 Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
@@ -176,6 +180,20 @@ _No mission statement declared (`project/mission.md` missing)._
 | `reusable-github-actions-workflows` | ✅ active | A library of reusable GitHub Actions workflows (reusable-*.yaml: pre-commit, mkdocs deploy, spelling/Vale, automerge, release-drafter/publish, Docker lint/build/publish, Ansible molecule/galaxy, Terraform lint, Trivy, chain-bench, dependency-review) that downstream nolte/* repositories call to get consistent CI/CD without reimplementing pipelines. | Downstream repositories consuming reusable workflows<br>Repository maintainer (nolte) |
 | `probot-commons-config` | ✅ active | Shared Probot app configuration commons (settings, release-drafter, boring-cyborg, stale presets) that downstream nolte/* repositories extend so repository governance stays uniform across the portfolio. | Downstream repositories extending Probot configurations<br>Repository maintainer (nolte) |
 | `renovate-shared-presets` | ✅ active | Shared Renovate configuration presets (renovate-configs/) that downstream nolte/* repositories extend for consistent dependency-update grouping, scheduling, and labelling. | Downstream repositories consuming Renovate presets<br>Renovate bot |
+
+### Peer references
+
+_None declared._
+
+## nolte/kamerplanter
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `plant-lifecycle-management-system` | ✅ active | A self-hosted, multi-tenant plant lifecycle management system — seed-to-harvest tracking with a growth-phase state machine (GDD/VPD/photoperiod), nutrient planning, adaptive care reminders, integrated pest management, a RAG knowledge assistant, and a Home Assistant integration — for home growers, hobby gardeners, and community gardens. | Home grower / hobby gardener / houseplant owner<br>Community-garden administrator<br>Self-hoster |
 
 ### Peer references
 
