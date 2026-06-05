@@ -68,6 +68,7 @@ Every repository in the portfolio pulls in third-party packages through one or m
 - **SHOULD** link to the prior audit artifact so the progression is traceable across quarters
 
 ### License audit (when enabled)
+- **MUST** apply the classification and the allow/review/deny policy defined in `spec/project/license-check/`; this pass implements that spec's policy for the dependency slice rather than defining its own, and the portfolio-default policy there counts as the "explicit policy with named disallowed licenses" required below
 - **MUST** treat license auditing as "enabled" whenever an allowlist is discoverable (at `.license-allowlist.txt`, under `tool.*` in the manifest, or equivalent); in that case the quarterly and full audits run the license pass automatically and only ad-hoc invocations may opt out
 - **MUST** document the allowlist location in the repository's README or equivalent so the rule set is discoverable
 - **MUST** classify every package whose license isn't on the allowlist as `review`, not as failure, when no explicit policy exists; a hard failure requires an explicit policy with named disallowed licenses
