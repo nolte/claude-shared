@@ -35,6 +35,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`diagram-opportunity-reviewer`](nolte-shared/diagram-opportunity-reviewer.md) — Read-only prose scanner that flags Markdown passages which would be expressed better as a Mermaid diagram.
 - [`gdpr-data-protection-reviewer`](nolte-shared/gdpr-data-protection-reviewer.md) — Read-only whole-repository GDPR data-protection audit; separates code-verifiable findings from legal-review-required ones.
 - [`lektorat-scanner`](nolte-shared/lektorat-scanner.md) — Read-only editorial scanner across the five lektorat dimensions (D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit).
+- [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Read-only license-inventory scanner: SBOM with resolved licenses, SPDX identification, and category classification per stack.
 - [`portfolio-inflight-collector`](nolte-shared/portfolio-inflight-collector.md) — Read-only in-flight data collector: open issues, PRs (incl. drafts), branches without PR, unresolved review threads + Discussions across nolte/*.
 - [`portfolio-manifest-collector`](nolte-shared/portfolio-manifest-collector.md) — Read-only inventory collector: gathers per-repo project/portfolio.yml manifests across nolte/*.
 - [`vocab-drift-scanner`](nolte-shared/vocab-drift-scanner.md) — Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release.
