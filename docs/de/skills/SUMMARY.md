@@ -52,6 +52,7 @@ last_updated: generated
 * 6 Quality
     * [dependency-audit](nolte-shared/dependency-audit.md)
     * [lektorat-apply](nolte-shared/lektorat-apply.md)
+    * [lektorat-auto-revise](nolte-shared/lektorat-auto-revise.md)
     * [portfolio-audit](nolte-shared/portfolio-audit.md)
     * [quality-gate](nolte-shared/quality-gate.md)
     * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)

@@ -46,6 +46,7 @@ Canonical language: `en` · Translations: `de`
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | unversioned |
 | project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | unversioned |
 | project | lektorat | Lektorat | Lektorat | draft | unversioned |
+| project | lektorat-auto-revise | Lektorat Auto-Revise | Lektorat Auto-Revise | draft | unversioned |
 | project | license-check | License Check | Lizenzprüfung | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
