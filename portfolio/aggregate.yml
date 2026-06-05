@@ -272,4 +272,22 @@ members:
     - "MCP clients"
     - "Reachy Mini owners / developers"
   peers: []
+- repo: nolte/kamerplanter
+  repo_url: https://github.com/nolte/kamerplanter
+  mission_statement: ""
+  capabilities:
+  - name: plant-lifecycle-management-system
+    description: >-
+      A self-hosted, multi-tenant plant lifecycle management system —
+      seed-to-harvest tracking with a growth-phase state machine
+      (GDD/VPD/photoperiod), nutrient planning, adaptive care reminders,
+      integrated pest management, a RAG knowledge assistant, and a Home
+      Assistant integration — for home growers, hobby gardeners, and community
+      gardens.
+    status: active
+    audience:
+    - Home grower / hobby gardener / houseplant owner
+    - Community-garden administrator
+    - Self-hoster
+  peers: []
 historical: []
