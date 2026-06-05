@@ -68,6 +68,7 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 
 - [`dependency-audit`](nolte-shared/dependency-audit.md) — Scans the project's dependency tree for known CVEs and (optionally) license-compliance issues; severity-sorted report.
 - [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Reviews existing Markdown prose against five editorial dimensions (readability, comprehensibility, grammar, style, audience-fit).
+- [`lektorat-auto-revise`](nolte-shared/lektorat-auto-revise.md) — Autonomously works off a lektorat audit report by routing each artefact to the matching author and re-auditing until it converges.
 - [`portfolio-audit`](nolte-shared/portfolio-audit.md) — Audits, renders, and bootstraps the cross-repository capability portfolio across nolte/*.
 - [`quality-gate`](nolte-shared/quality-gate.md) — Runs the project's lint + typecheck + test gate in parallel and tabulates which checks failed.
 - [`vocab-drift-audit`](nolte-shared/vocab-drift-audit.md) — Audits repository-local Vale vocabularies against the pinned upstream nolte/vale-style release to detect drift.

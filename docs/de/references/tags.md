@@ -44,6 +44,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [docs-dry-refactor](../skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
 - [issue-orchestrate](../skills/nolte-shared/issue-orchestrate.md) — nolte-shared
 - [lektorat-apply](../skills/nolte-shared/lektorat-apply.md) — nolte-shared
+- [lektorat-auto-revise](../skills/nolte-shared/lektorat-auto-revise.md) — nolte-shared
 - [mermaid-diagrams-apply](../skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
 - [mkdocs-structure-apply](../skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](../skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared
@@ -100,6 +101,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [blog-author](../skills/nolte-shared/blog-author.md) — nolte-shared
 - [blog-author-trigger](../skills/nolte-shared/blog-author-trigger.md) — nolte-shared
 - [lektorat-apply](../skills/nolte-shared/lektorat-apply.md) — nolte-shared
+- [lektorat-auto-revise](../skills/nolte-shared/lektorat-auto-revise.md) — nolte-shared
 
 ## `pull-request`
 
