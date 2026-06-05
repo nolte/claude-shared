@@ -26,9 +26,9 @@ resumable: true
 
 # Lektorat Auto-Revise
 
-Operationalises [`spec/project/lektorat-auto-revise/`](../../spec/project/lektorat-auto-revise/en.md) for the `nolte-shared` plugin: the autonomous bridge from an existing `lektorat audit` findings report to a finished, re-verified artefact. It consumes the audit, routes each affected artefact to the **author best suited to its type**, composes a per-file briefing, lets that author revise, and re-audits until the artefact converges.
+Operationalises `spec/project/lektorat-auto-revise/` for the `nolte-shared` plugin: the autonomous bridge from an existing `lektorat audit` findings report to a finished, re-verified artefact. It consumes the audit, routes each affected artefact to the **author best suited to its type**, composes a per-file briefing, lets that author revise, and re-audits until the artefact converges.
 
-This skill binds the spec's contract to an on-disk procedure. It owns **no** editorial rules of its own — severities, dimensions, scope, audience binding, and semantic-preservation guarantees belong to [`spec/project/lektorat/`](../../spec/project/lektorat/en.md); the writing-style and audience rules belong to the dispatched author's bound specs. When this skill and a spec disagree, the spec wins and this skill needs the update.
+This skill binds the spec's contract to an on-disk procedure. It owns **no** editorial rules of its own — severities, dimensions, scope, audience binding, and semantic-preservation guarantees belong to `spec/project/lektorat/`; the writing-style and audience rules belong to the dispatched author's bound specs. When this skill and a spec disagree, the spec wins and this skill needs the update.
 
 ## German trigger phrases
 

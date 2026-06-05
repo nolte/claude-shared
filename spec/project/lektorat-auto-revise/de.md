@@ -1,4 +1,4 @@
-# Lektorat Auto-Revise
+# `Lektorat Auto-Revise`
 
 Status: draft
 
