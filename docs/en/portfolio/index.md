@@ -12,7 +12,7 @@ last_updated: generated
 
 Aggregated capability inventory across the active `nolte/*` portfolio, generated from each member repository's `project/portfolio.yml` manifest. This page is auto-generated — edit `portfolio/aggregate.yml` (or re-run the `portfolio-audit` skill's Render operation), not this file.
 
-**11** repositories · **20** capabilities
+**15** repositories · **24** capabilities
 
 ## Capability map
 
@@ -46,26 +46,38 @@ flowchart LR
         R4C4["auto-generated-skill-agent-catalog"]
         R4C5["shared-vale-vocabulary-extension"]
     end
-    subgraph R5["nolte/gh-plumbing"]
-        R5C0["reusable-github-actions-workflows"]
-        R5C1["probot-commons-config"]
-        R5C2["renovate-shared-presets"]
+    subgraph R5["nolte/cookiecutter-gh-project"]
+        R5C0["github-project-cookiecutter-template"]
     end
-    subgraph R6["nolte/kamerplanter"]
-        R6C0["plant-lifecycle-management-system"]
+    subgraph R6["nolte/gh-plumbing"]
+        R6C0["reusable-github-actions-workflows"]
+        R6C1["probot-commons-config"]
+        R6C2["renovate-shared-presets"]
     end
-    subgraph R7["nolte/reachy-mini-mcp"]
-        R7C0["reachy-mini-mcp-server"]
+    subgraph R7["nolte/kamerplanter"]
+        R7C0["plant-lifecycle-management-system"]
     end
-    subgraph R8["nolte/taskfiles"]
-        R8C0["reusable-taskfile-collection"]
+    subgraph R8["nolte/kamerplanter-ha"]
+        R8C0["kamerplanter-home-assistant-integration"]
     end
-    subgraph R9["nolte/vale-style"]
-        R9C0["vale-style-package"]
-        R9C1["vocabulary-curation-spec"]
+    subgraph R9["nolte/reachy-mini-app"]
+        R9C0["reachy-mini-behavior-app"]
     end
-    subgraph R10["nolte/workstation"]
-        R10C0["developer-workstation-provisioning"]
+    subgraph R10["nolte/reachy-mini-mcp"]
+        R10C0["reachy-mini-mcp-server"]
+    end
+    subgraph R11["nolte/taskfiles"]
+        R11C0["reusable-taskfile-collection"]
+    end
+    subgraph R12["nolte/terraform-github-bootstrap"]
+        R12C0["github-config-as-code"]
+    end
+    subgraph R13["nolte/vale-style"]
+        R13C0["vale-style-package"]
+        R13C1["vocabulary-curation-spec"]
+    end
+    subgraph R14["nolte/workstation"]
+        R14C0["developer-workstation-provisioning"]
     end
     class R0C0 active;
     class R1C0 experimental;
@@ -79,16 +91,23 @@ flowchart LR
     class R4C4 active;
     class R4C5 active;
     class R5C0 active;
-    class R5C1 active;
-    class R5C2 active;
     class R6C0 active;
+    class R6C1 active;
+    class R6C2 active;
     class R7C0 active;
     class R8C0 active;
-    class R9C0 active;
-    class R9C1 experimental;
+    class R9C0 experimental;
     class R10C0 active;
+    class R11C0 active;
+    class R12C0 active;
+    class R13C0 active;
+    class R13C1 experimental;
+    class R14C0 active;
     R1 -.peer.-> R4
-    R4 -.peer.-> R9
+    R4 -.peer.-> R13
+    R5 -.peer.-> R6
+    R8 -.peer.-> R7
+    R12 -.peer.-> R6
 ```
 
 Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
@@ -169,6 +188,20 @@ _None declared._
 
 - `nolte/vale-style`
 
+## nolte/cookiecutter-gh-project
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `github-project-cookiecutter-template` | ✅ active | A Cookiecutter template that scaffolds a standardised nolte-style GitHub project — pre-wired GitHub Actions and settings based on nolte/gh-plumbing (release process, MkDocs docs publishing, static tests, labelling) — from a single cookiecutter run. | Developer scaffolding a new nolte-style GitHub project |
+
+### Peer references
+
+- `nolte/gh-plumbing`
+
 ## nolte/gh-plumbing
 
 _No mission statement declared (`project/mission.md` missing)._
@@ -194,6 +227,34 @@ _No mission statement declared (`project/mission.md` missing)._
 | Capability | Status | Description | Audiences |
 |---|---|---|---|
 | `plant-lifecycle-management-system` | ✅ active | A self-hosted, multi-tenant plant lifecycle management system — seed-to-harvest tracking with a growth-phase state machine (GDD/VPD/photoperiod), nutrient planning, adaptive care reminders, integrated pest management, a RAG knowledge assistant, and a Home Assistant integration — for home growers, hobby gardeners, and community gardens. | Home grower / hobby gardener / houseplant owner<br>Community-garden administrator<br>Self-hoster |
+
+### Peer references
+
+_None declared._
+
+## nolte/kamerplanter-ha
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `kamerplanter-home-assistant-integration` | ✅ active | A HACS-distributed Home Assistant custom integration that connects a Kamerplanter instance to Home Assistant — exposing plant monitoring (growth phases, days-in-phase, next-phase predictions, nutrient-plan assignments), per-channel nutrient dosages, tank management, and per-location overviews as sensors and services. | Home Assistant user running Kamerplanter<br>Self-hoster running both Kamerplanter and Home Assistant |
+
+### Peer references
+
+- `nolte/kamerplanter`
+
+## nolte/reachy-mini-app
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `reachy-mini-behavior-app` | 🧪 experimental | A Reachy Mini behavior package built on the Pollen Robotics / Hugging Face reachy_mini SDK — packaging robot behaviours (for example dance-to-music) that run on the Reachy Mini and distributed as a Hugging Face app. | Reachy Mini owner / maker |
 
 ### Peer references
 
@@ -226,6 +287,20 @@ _No mission statement declared (`project/mission.md` missing)._
 ### Peer references
 
 _None declared._
+
+## nolte/terraform-github-bootstrap
+
+_No mission statement declared (`project/mission.md` missing)._
+
+### Capabilities
+
+| Capability | Status | Description | Audiences |
+|---|---|---|---|
+| `github-config-as-code` | ✅ active | Terraform (integrations/github provider) that manages the nolte GitHub account's repository inventory (existence, description, topics, visibility, feature flags) and per-repo repository rulesets (modern branch protection) as code — the deliberate complement to gh-plumbing's Probot-managed per-repo settings. | Terraform operator / maintainer (nolte)<br>The nolte GitHub account and its repositories |
+
+### Peer references
+
+- `nolte/gh-plumbing`
 
 ## nolte/vale-style
 

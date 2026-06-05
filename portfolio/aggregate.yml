@@ -290,4 +290,66 @@ members:
     - Community-garden administrator
     - Self-hoster
   peers: []
+- repo: nolte/kamerplanter-ha
+  repo_url: https://github.com/nolte/kamerplanter-ha
+  mission_statement: ""
+  capabilities:
+  - name: kamerplanter-home-assistant-integration
+    description: >-
+      A HACS-distributed Home Assistant custom integration that connects a
+      Kamerplanter instance to Home Assistant — exposing plant monitoring
+      (growth phases, days-in-phase, next-phase predictions, nutrient-plan
+      assignments), per-channel nutrient dosages, tank management, and
+      per-location overviews as sensors and services.
+    status: active
+    audience:
+    - "Home Assistant user running Kamerplanter"
+    - "Self-hoster running both Kamerplanter and Home Assistant"
+  peers:
+  - nolte/kamerplanter
+- repo: nolte/reachy-mini-app
+  repo_url: https://github.com/nolte/reachy-mini-app
+  mission_statement: ""
+  capabilities:
+  - name: reachy-mini-behavior-app
+    description: >-
+      A Reachy Mini behavior package built on the Pollen Robotics / Hugging Face
+      reachy_mini SDK — packaging robot behaviours (for example dance-to-music)
+      that run on the Reachy Mini and distributed as a Hugging Face app.
+    status: experimental
+    audience:
+    - "Reachy Mini owner / maker"
+  peers: []
+- repo: nolte/cookiecutter-gh-project
+  repo_url: https://github.com/nolte/cookiecutter-gh-project
+  mission_statement: ""
+  capabilities:
+  - name: github-project-cookiecutter-template
+    description: >-
+      A Cookiecutter template that scaffolds a standardised nolte-style GitHub
+      project — pre-wired GitHub Actions and settings based on nolte/gh-plumbing
+      (release process, MkDocs docs publishing, static tests, labelling) — from
+      a single cookiecutter run.
+    status: active
+    audience:
+    - "Developer scaffolding a new nolte-style GitHub project"
+  peers:
+  - nolte/gh-plumbing
+- repo: nolte/terraform-github-bootstrap
+  repo_url: https://github.com/nolte/terraform-github-bootstrap
+  mission_statement: ""
+  capabilities:
+  - name: github-config-as-code
+    description: >-
+      Terraform (integrations/github provider) that manages the nolte GitHub
+      account's repository inventory (existence, description, topics,
+      visibility, feature flags) and per-repo repository rulesets (modern branch
+      protection) as code — the deliberate complement to gh-plumbing's
+      Probot-managed per-repo settings.
+    status: active
+    audience:
+    - "Terraform operator / maintainer (nolte)"
+    - "The nolte GitHub account and its repositories"
+  peers:
+  - nolte/gh-plumbing
 historical: []
