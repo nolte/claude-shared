@@ -27,6 +27,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
+- [license-check-scanner](../agents/nolte-shared/license-check-scanner.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [portfolio-inflight-collector](../agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
 - [portfolio-manifest-collector](../agents/nolte-shared/portfolio-manifest-collector.md) — nolte-shared
@@ -45,6 +46,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [issue-orchestrate](../skills/nolte-shared/issue-orchestrate.md) — nolte-shared
 - [lektorat-apply](../skills/nolte-shared/lektorat-apply.md) — nolte-shared
 - [lektorat-auto-revise](../skills/nolte-shared/lektorat-auto-revise.md) — nolte-shared
+- [license-check](../skills/nolte-shared/license-check.md) — nolte-shared
 - [mermaid-diagrams-apply](../skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
 - [mkdocs-structure-apply](../skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](../skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared

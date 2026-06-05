@@ -25,6 +25,7 @@ last_updated: generated
     * [diagram-opportunity-reviewer](nolte-shared/diagram-opportunity-reviewer.md)
     * [gdpr-data-protection-reviewer](nolte-shared/gdpr-data-protection-reviewer.md)
     * [lektorat-scanner](nolte-shared/lektorat-scanner.md)
+    * [license-check-scanner](nolte-shared/license-check-scanner.md)
     * [portfolio-inflight-collector](nolte-shared/portfolio-inflight-collector.md)
     * [portfolio-manifest-collector](nolte-shared/portfolio-manifest-collector.md)
     * [vocab-drift-scanner](nolte-shared/vocab-drift-scanner.md)
