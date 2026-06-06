@@ -319,7 +319,7 @@ _None declared._
 
 ## nolte/workstation
 
-_No mission statement declared (`project/mission.md` missing)._
+> nolte/workstation lets the workstation-operator bring any developer machine to an identical, reproducible state from a single chezmoi source tree, so every machine and the downstream tooling running on it behave the same.
 
 ### Capabilities
 

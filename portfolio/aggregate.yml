@@ -148,7 +148,10 @@ members:
   peers: []
 - repo: nolte/workstation
   repo_url: https://github.com/nolte/workstation
-  mission_statement: ""
+  mission_statement: >-
+    nolte/workstation lets the workstation-operator bring any developer machine
+    to an identical, reproducible state from a single chezmoi source tree, so
+    every machine and the downstream tooling running on it behave the same.
   capabilities:
   - name: developer-workstation-provisioning
     description: >-
