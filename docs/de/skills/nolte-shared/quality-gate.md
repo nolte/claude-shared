@@ -140,12 +140,14 @@ When running tools directly (Step 2 fallback), **don't** add project-local ignor
 ```
 | Check | Status | Runner | Details |
 |---|---|---|---|
-| Lint | pass/fail | `task lint` | <n> errors, <m> warnings |
-| Typecheck | pass/fail | `tsc -b` (detected) | <n> type errors |
-| Tests | pass/fail | `task test` | <passed>/<total> passed |
+| Lint | pass/fail | `task lint` | <n> errors, <m> warnings (exit <code>) |
+| Typecheck | pass/fail | `tsc -b` (detected) | <n> type errors (exit <code>) |
+| Tests | pass/fail | `task test` | <passed>/<total> passed (exit <code>) |
 ```
 
 The **Runner** column shows exactly what was invoked — the Taskfile target name or the detected command — so the caller can reproduce the failure locally.
+
+The **Details** column **should** surface the underlying tool's exit code (the `EXIT:$?` value captured in Step 4) per `spec/project/quality-gate/` §Timeouts and failure handling, so the caller can tell "lint found 3 errors" (exit 1) apart from "lint crashed" (exit > 1).
 
 Below the table, for every `fail` or `timeout` row, append a one-paragraph excerpt from the captured output (≤10 lines, fenced in a code block). Group excerpts by check.
 

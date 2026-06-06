@@ -44,7 +44,7 @@ The portfolio maintains a growing set of specifications under `spec/<topic>/<slu
 
 ### Audit result artifact
 - **MUST** persist the result of every audit as a Markdown file tracked in git at `.audits/spec-drift/<YYYY>-Q<n>.md` (a PR body counts only when the PR is merged); this is the portfolio-wide standard artifact location, replacing any prior `docs/audits/` convention
-- **MUST** structure the artifact per the four-section layout and canonical severity vocabulary mandated by `spec/claude/review-plan` (the same artifact contract that `spec/portfolio/portfolio-management` persists under `.audits/portfolio/`), so spec-drift findings read identically to every other audit artifact in the portfolio
+- **MUST** structure the artifact per the four required sections (`## Scope`, `## Summary`, `## Findings`, `## Processing log`, in that order, with those exact English headings) and the canonical four-level severity scale (`Critical`, `Warning`, `Suggestion`, `Info`) mandated by `spec/claude/review-plan` §Severity scale and §Required sections (the same artifact contract that `spec/portfolio/portfolio-management` persists under `.audits/portfolio/`), so spec-drift findings read identically to every other audit artifact in the portfolio
 - **MAY** additionally surface the result as a GitHub issue with label `audit` as a secondary, human-facing form, but the git-tracked `.audits/spec-drift/` file remains the authoritative artifact
 - **MUST** record at least: date, trigger (quarterly, spec-change, new skill), scope, tools executed, per-criterion results, and the decisions taken per §Feedback loop
 

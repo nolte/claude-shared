@@ -93,6 +93,7 @@ generated: {date}
 **Requirement**: {id} — {section reference}
 **Priority**: Critical | High | Medium | Low
 **Category**: {happy-path | validation | error | state-transition | navigation | …}
+**Technique**: {boundary-value | equivalence-partition | state-transition | user-journey | navigation | visual-feedback | error-guessing}  <!-- the standard derivation technique this case exercises, per spec §Derivation discipline -->
 **Preconditions**:
 - {required state, data, configuration}
 **Steps**:

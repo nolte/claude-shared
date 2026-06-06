@@ -4,8 +4,8 @@ relevant_outcomes:
   - O-1
   - O-3
 audiences:
-  - Downstream Claude Code users in portfolio projects
-  - Plugin author dogfooding inside this repo
+  - downstream-user
+  - dogfooding-author
 verifies_via: F-1:acceptance-1
 time_bound:
   kind: mvp_completion
