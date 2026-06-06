@@ -123,3 +123,10 @@ Each default is the standing rule; a platform/upstream/consumer change re-opens 
 - **project/blog-author** Q2 (handover-contract YAML schema) + Q3 (hero-image corpus policy): both settled (prose contract stands; hero policy stays consumer-side). Q1 (resolved 2026-06-06 as standing two-route design) and the "Intentionally not open" subsection are retained.
 - **project/github-issue-templates** Q3 (security-report routing): chooser routes via `config.yml` contact_links to GitHub private vulnerability reporting; revisit when project-structure defines a concrete SECURITY.md convention.
 - **project/lektorat** Q3 (API-reference scope) + Q5 (batched-vs-per-file dispatch): generated reference text stays out of scope; batched dispatch stays the default.
+
+## Welle 2 — brand-owner value decision (2026-06-06)
+
+- **design/corporate-design-colors Q1 (brand-primary OKLCH):** RESOLVED. Brand owner chose a muted indigo `oklch(0.47 0.12 276)`, sRGB hex `#4A529D`. Verified in-gamut (peak chroma ~0.29 at L0.47/H276, so chroma 0.12 is muted with headroom); the +60° tertiary (H336, peak ~0.21), 180° complement (H96, peak ~0.10), split-complement (H66/H126) and analog (H246/H306) derivations all stay in sRGB gamut. Recorded in §Brand harmony axes; the OQ is removed.
+- **design/graphic-prompt-authoring Q2 (sref-less style reference):** RESOLVED. Already answered by `corporate-design-colors` §AI image color contract (line 119), which mandates a fixed canonical reference image rather than a free-text style paragraph; with brand-primary now decided, the dependency is closed. The OQ is removed.
+
+The #229 watch-list is now fully cleared.

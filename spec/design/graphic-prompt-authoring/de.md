@@ -90,6 +90,4 @@ Leser: Skill- und Agent-Autoren, die den Prompt-Autoren-Agent pflegen; Reviewer,
 
 ## Offene Fragen
 
-- Das pro-Modell-Style-Referenz-Äquivalent für sref-lose Generatoren liegt im Besitz von `corporate-design-colors` §AI image color contract; diese Spec konsumiert, was jener Vertrag festschreibt. Ausstehend in jener Spec: `corporate-design-colors` muss deklarieren, ob das Äquivalent ein festes Referenzbild (empfohlen) oder ein kanonischer Stil-Absatz ist.
-
-_Das Asset-Typ-Vokabular-Deferral wurde am 2026-06-06 entschieden (siehe `.audits/decisions/2026-06-06-settle-open-questions.md`); die Style-Referenz-Frage oben bleibt offen, im Besitz von `corporate-design-colors`._
+_Alle offenen Fragen sind aufgelöst. Das pro-Modell-Style-Referenz-Äquivalent wird von `corporate-design-colors` §AI image color contract festgelegt, der ein festes kanonisches Referenzbild vorschreibt (keinen Freitext-Stil-Absatz); da `brand-primary` nun entschieden ist (`oklch(0.47 0.12 276)` / `#4A529D`), konsumiert diese Spec jenen Vertrag direkt. Das Asset-Typ-Vokabular-Deferral wurde am 2026-06-06 entschieden. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für den vollständigen Eintrag._

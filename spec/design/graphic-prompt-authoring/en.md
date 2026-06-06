@@ -90,6 +90,4 @@ Readers: skill and agent authors who maintain the prompt-authoring agent; review
 
 ## Open Questions
 
-- The per-model style-reference equivalent for sref-less generators is owned by `corporate-design-colors` §AI image color contract; this spec consumes whatever that contract pins. Pending in that spec: `corporate-design-colors` must declare whether the equivalent is a fixed reference image (recommended) or a canonical style paragraph.
-
-_The asset-type-vocabulary deferral was settled on 2026-06-06 (see `.audits/decisions/2026-06-06-settle-open-questions.md`); the style-reference question above stays open, owned by `corporate-design-colors`._
+_All open questions are resolved. The per-model style-reference equivalent is settled by `corporate-design-colors` §AI image color contract, which mandates a fixed canonical reference image (not a free-text style paragraph); with `brand-primary` now decided (`oklch(0.47 0.12 276)` / `#4A529D`), this spec consumes that contract directly. The asset-type-vocabulary deferral was settled on 2026-06-06. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the full record._
