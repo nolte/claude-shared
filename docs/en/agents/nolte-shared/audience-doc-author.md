@@ -111,7 +111,7 @@ Before any writing, confirm all of the following. If any precondition fails, sto
 
 ### Working procedure
 
-1. **Load the inputs** in this order: audience artifact, doc-type spec, `prose-style`, `audience-identification`, source material. Read every acceptance-criteria checkbox in the doc-type spec—these are the objective pass or fail gates the draft must meet.
+1. **Load the inputs** in this order: audience artifact, doc-type spec, `prose-style`, `audience-identification`, source material. Read every acceptance-criteria checkbox in the doc-type spec—these are the objective pass or fail gates the draft must meet. When the caller supplies a **LIX readability target** (the case when this agent is dispatched by [`lektorat-auto-revise`](../../skills/nolte-shared/lektorat-auto-revise.md) to remediate a D1 finding), also load the target corridor (`aim`/`warn`/`crit`) and the **dominant lever** (`ASL` or `LWP`) from `spec/project/readability-lix/`, and read its §Improving a LIX score transformation catalogue so the revision pulls the right lever.
 2. **Build an audience-to-content map** before writing a single sentence of prose. For every audience entry in the artifact, record:
    - which sections of the target doc serve this audience
    - the detail depth appropriate for the audience's expectation field
@@ -122,7 +122,7 @@ Before any writing, confirm all of the following. If any precondition fails, sto
    If an audience has no section in the target doc because the doc type legitimately doesn't serve it, record `not served—<reason>` explicitly rather than silently omitting.
 3. **Draft the document** strictly against the doc-type spec's required structure (section set, order, length bounds, link rules). Don't invent optional sections the caller hasn't asked for. Keep consumer-oriented content before contributor-oriented content where the spec mandates it.
 4. **Write in English by default**, matching the precedent of the surrounding repository. If the repository's existing docs show a different primary language, follow the precedent and note the choice in the report.
-5. **Self-audit** by walking every acceptance-criteria checkbox in the doc-type spec, plus the relevant acceptance criteria from `prose-style` (Vale pass at the repo's `MinAlertLevel`, pinned `nolte/vale-style` release honoured, no silenced alerts). For every unchecked box, either fix the draft or annotate in the final report why it can't be met with the supplied inputs.
+5. **Self-audit** by walking every acceptance-criteria checkbox in the doc-type spec, plus the relevant acceptance criteria from `prose-style` (Vale pass at the repo's `MinAlertLevel`, pinned `nolte/vale-style` release honoured, no silenced alerts). When a LIX target was supplied, confirm the revised body's LIX is at or below the `warn` corridor and that it got there through genuine readability transformations (split sentences, cut filler, de-nominalise) — never by a transformation `readability-lix` §Improving a LIX score forbids (decompounding an established term, vaguer-shorter word swaps, altering a protected term). For every unchecked box, either fix the draft or annotate in the final report why it can't be met with the supplied inputs.
 6. **Lint.** Run `task lint` (or the repo's `task docs:lint` or `task lint:prose` equivalent if that's what `prose-style` declares). Report the raw output on failure. Don't introduce `<!-- vale off -->` or per-file ignore comments to silence alerts—those are forbidden by `prose-style` when the real fix is a vocabulary or phrasing change.
 7. **Report back** in the structure below.
 
@@ -131,6 +131,7 @@ Before any writing, confirm all of the following. If any precondition fails, sto
 - **Never** write documentation without a supplied audience artifact that satisfies `spec/project/audience-identification/`.
 - **Never** author a doc type whose governing spec doesn't exist in the repository (or isn't supplied by the caller)—stop and hand the gap back.
 - **Never** invent audiences, expectations, interaction surfaces, or call-to-actions that aren't in the audience artifact.
+- **Never** lower a LIX score by gaming the metric (decompounding an established technical term purely to drop a long word, swapping a precise term for a vaguer shorter one, splitting a sentence mid-clause, or altering a protected term). The LIX corridor serves readability; when the corridor can only be reached by a forbidden edit, leave the residual and report it rather than game the number (`spec/project/readability-lix/` §Improving a LIX score).
 - **Never** modify or extend the audience artifact itself.
 - **Never** silence Vale alerts with per-file ignore comments when the real fix is a vocabulary or style change.
 - **Never** call the `Skill` tool or dispatch sibling agents.
