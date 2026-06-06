@@ -20,7 +20,7 @@ Aufgaben-orientierte Einstiegs-Seite: gruppiert Skills und Agents nach Nutzer-Ab
 ## Spezifikation verfassen oder prüfen
 
 - **Eine Spec unter `spec/` schreiben, übersetzen oder auffrischen** → [`spec`](skills/nolte-shared/spec.md). Hält jede konfigurierte Sprachbaum-Variante mit der kanonischen Quelle synchron, regeneriert den Spec-Index, dedupliziert gegen bestehende Coverage.
-- **Eine Spec vor der Downstream-Implementierung prüfen** → [`spec-readiness-reviewer`](agents/nolte-shared/spec-readiness-reviewer.md). Nur-Lese-Audit auf Widersprüche, Audience-Fit, Requirement-↔-AC-Coverage und Ghost-Referenzen auf nicht existierende Specs. Severity-sortierter Report; editiert nie.
+- **Eine Spec vor der Downstream-Implementierung prüfen** → [`spec-readiness-reviewer`](agents/nolte-shared/spec-readiness-reviewer.md). Nur-Lese-Audit auf Widersprüche, Audience-Fit, Requirement-↔-AC-Coverage (AC, Acceptance Criteria) und Ghost-Referenzen auf nicht existierende Specs. Severity-sortierter Report; editiert nie.
 
 ## Einen Claude-Code-Skill verfassen
 

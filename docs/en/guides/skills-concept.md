@@ -8,7 +8,7 @@ last_updated: 2026-05-19
 
 # Skills
 
-Skills are reusable workflows Claude Code invokes via the `Skill` tool. In the `claude-shared` source tree they live at `skills/<name>/SKILL.md`; at runtime in a consuming project under `.claude/skills/<name>/` or `~/.claude/skills/<name>/`: or, as here, bundled inside the `nolte-shared` plugin.
+Skills are reusable workflows Claude Code invokes via the `Skill` tool. In the `claude-shared` source tree they live at `skills/<name>/SKILL.md`; at runtime in a consuming project under `.claude/skills/<name>/` or `~/.claude/skills/<name>/`; or, as here, bundled inside the `nolte-shared` plugin.
 
 ## Bundled skills
 
@@ -32,7 +32,7 @@ Skills are reusable workflows Claude Code invokes via the `Skill` tool. In the `
 | `workflow-health-triage` | Triage a failing GitHub Actions workflow per `workflow-health` spec; classify, dispatch a specialised agent, route the fix through the standard PR flow |
 | `permission-allowlist-maintain` | Curate the committed `.claude/settings.json` `permissions.allow` list per `permission-allowlist` spec; user-gated per-entry approval |
 | `audience-identify` | Identify the audiences of a bounded context and write a reviewable audience artifact |
-| `mission-define` | First-write `project/mission.md` walking SMART one letter at a time |
+| `mission-define` | First-write `project/mission.md` walking SMART (Specific, Measurable, Achievable, Relevant, Time-bound) one letter at a time |
 | `mission-revise` | Edit `project/mission.md` and flip `mvp_status` lifecycle per the `mission` spec |
 | `roadmap-init` | Scaffold initial `project/goals.md` and `project/roadmap.md` (Vision plus Outcomes plus empty queue) |
 | `roadmap-refine` | Enforce the detail-level invariant in `project/roadmap.md` with structured violation reports |

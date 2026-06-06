@@ -160,7 +160,7 @@ Early stage—the repository currently serves as the anchor point for consolidat
 
 This plugin ships tooling—skills, agents, specs—not a managed service. It helps maintainers of downstream projects keep their workflows consistent, but it doesn't take responsibility for downstream outcomes:
 
-- **No SLA.** Skills and agents are best-effort automation. Release quality, code quality and security posture of a downstream project remain the accountability of that project's maintainers.
+- **No service-level agreement (SLA).** Skills and agents are best-effort automation. Release quality, code quality and security posture of a downstream project remain the accountability of that project's maintainers.
 - **No warranty on recommendations.** Outputs from `quality-gate`, `dependency-audit`, and review-style skills are advisory. A clean report isn't a guarantee that the reviewed change is safe to ship.
 - **No support contract.** Issues and pull requests are triaged on a best-effort basis (see [`CONTRIBUTING.md`](CONTRIBUTING.md)). There is no published response-time commitment.
 - **Vulnerability handling** follows [`SECURITY.md`](SECURITY.md); the plugin's threat scope is limited to what this repository itself ships, not to downstream use of its outputs.

@@ -11,4 +11,4 @@ last_updated: 2026-05-19
 This section shows how to load `claude-shared` as a plugin in a Claude Code project and use the bundled skills.
 
 - [Installation](installation.md): load the plugin from a local checkout
-- [Usage](nutzung.md): invoke skills and understand the namespace
+- [Usage](usage.md): invoke skills and understand the namespace

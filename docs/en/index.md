@@ -31,7 +31,7 @@ flowchart LR
 | **Skills source** | `skills/<name>/` |
 | **Agents source** | `agents/<name>.md` |
 | **Specifications** | `spec/claude/<topic>/<lang>.md` |
-| **Status** | Early stage—content being consolidated |
+| **Status** | Actively developed; interfaces may change |
 
 ## What's included
 

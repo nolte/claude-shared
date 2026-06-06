@@ -14,7 +14,7 @@ Diese Seite fasst die Spezifikation aus `spec/claude/agent-management/de.md` zus
 
 ## Kontext
 
-Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents. Ein Agent hat zwei Ausprägungen: eine **Quell-Form** hier (`agents/`) und eine **Laufzeit-Form** im konsumierenden Projekt (`.claude/agents/` oder `~/.claude/agents/`). Aus der Laufzeit-Form lädt Claude Code den Agent und dispatcht das `Agent`-Tool per `subagent_type`.
+Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents. Ein Agent hat zwei Ausprägungen. Die **Quell-Form** liegt hier (`agents/`). Die **Laufzeit-Form** liegt im konsumierenden Projekt (`.claude/agents/` oder `~/.claude/agents/`). Aus der Laufzeit-Form lädt Claude Code den Agenten. Dann dispatcht es das `Agent`-Tool per `subagent_type`.
 
 Ohne einheitliche Form driften Agents in Benennung, Trigger-Beschreibung, Tool-Scoping und System-Prompt-Qualität. Wiederverwendung wird dann brüchig und Routing unzuverlässig.
 

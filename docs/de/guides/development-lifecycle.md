@@ -137,7 +137,7 @@ Design ist die Phase, in der Konventionen, Scaffolds und Spezifikationen geschri
 
 ### 4 Build
 
-Ein geplanter Sprint wird aktiv, sobald das erste Feature startet. `sprint-execute` ist der Daily-Driver: er steuert den Feature-Status und hält die Frontmatter der Sprint-Datei mit der Realität synchron.
+Ein geplanter Sprint wird aktiv, sobald das erste Feature startet. `sprint-execute` ist der Daily-Driver: Er steuert den Feature-Status und hält die Frontmatter der Sprint-Datei mit der Realität synchron.
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
@@ -180,7 +180,7 @@ Ein Sprint wird geschlossen, indem sein deployment-fähiges Artefakt validiert w
 
 ### 8 Cross-cutting
 
-Cross-cutting-Artefakte sind phasenagnostisch: sie werden situativ gerufen, unabhängig davon, in welcher Lebenszyklus-Phase die umgebende Arbeit gerade steckt. Beide aktuellen Cross-cutting-Artefakte sind Agents.
+Cross-cutting-Artefakte sind phasenagnostisch: Sie werden situativ gerufen, unabhängig davon, in welcher Lebenszyklus-Phase die umgebende Arbeit gerade steckt. Beide aktuellen Cross-cutting-Artefakte sind Agents.
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
@@ -196,6 +196,6 @@ Cross-cutting-Artefakte sind phasenagnostisch: sie werden situativ gerufen, unab
 
 Diese Seite handelt vom Projekt-Lifecycle; Querschnitts-Themen und Per-Artefakt-Katalog-Sichten haben eigene Seiten:
 
-- Der [Agent-Katalog](../agents/index.md) listet jeden ausgelieferten Agent, gruppiert nach Phase, mit den vollständigen Metadaten.
+- Der [Agent-Katalog](../agents/index.md) listet jeden ausgelieferten Agenten, gruppiert nach Phase, mit den vollständigen Metadaten.
 - Der [Skill-Katalog](../skills/index.md) listet jeden ausgelieferten Skill, gruppiert nach Phase, mit den vollständigen Metadaten.
 - Der [Tag-Index](../references/tags.md) verknüpft Skills und Agents, die denselben Tag deklarieren.

@@ -37,19 +37,21 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 
 ## Requirements (excerpt)
 
+The keywords MUST, MUST NOT, SHOULD, and MAY follow RFC 2119 (normative-requirement convention).
+
 ### Structure
 
 - **MUST** be a single Markdown file `<name>.md` in ASCII kebab-case
 - **MUST** include YAML frontmatter with `name` and `description`
 - **MUST** set `name` to match the filename without `.md`
-- **MUST** write a `description` naming concrete triggers ("use when …"): not abstract capabilities
-- **MUST** include a system prompt in the body scoped to a single responsibility and stating its output shape
-- **MUST** keep frontmatter and system prompt in English (this keeps Claude's processing cost low)
-- **MUST** be self-contained—a single top-level `agents/<name>.md`; no sibling `agents/<name>/` folder (recursive discovery would register nested markdown as a phantom agent)
+- **MUST** write a `description` that names concrete triggers ("use when …"). Don't describe abstract capabilities
+- **MUST** include a system prompt in the body. Scope it to a single responsibility and state its output shape
+- **MUST** keep frontmatter and system prompt in English. This keeps Claude's processing cost low
+- **MUST** be self-contained: a single top-level `agents/<name>.md` with no sibling `agents/<name>/` folder. Recursive discovery would otherwise register the nested markdown as a phantom agent
 
 ### Tool access
 
-- **MUST** declare `tools` when restricted; omit only when the agent genuinely needs full access
+- **MUST** declare `tools` when restricted. Omit `tools` only when the agent genuinely needs full access
 - **MUST** scope `tools` to the minimum set required (principle of least authority)
 - **MUST NOT** give read-only agents write/edit/execution tools
 - **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents when either would work
@@ -62,7 +64,7 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 ### Locations
 
 - **MUST** place source at `agents/<name>.md`
-- **MUST** be loadable at runtime from `.claude/agents/<name>.md`, `~/.claude/agents/<name>.md`, or the plugin path
+- **MUST** be loadable at runtime from one of three paths: `.claude/agents/<name>.md`, `~/.claude/agents/<name>.md`, or the plugin path
 - **MUST NOT** assume a particular install location
 
 ### Recommendations

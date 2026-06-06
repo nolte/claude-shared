@@ -53,7 +53,7 @@ flowchart TB
     rmap --> rp
 ```
 
-Stadium-Form (`feature-consistency-reviewer`) markiert den einzigen Agent in der Suite; alle Rechtecke sind Skills oder On-disk-Artefakte. Gestrichelte Kanten markieren Dispatch- oder Lifecycle-Beziehungen, durchgezogene Kanten markieren Schreib-Operationen.
+Stadium-Form (`feature-consistency-reviewer`) markiert den einzigen Agenten in der Suite; alle Rechtecke sind Skills oder On-disk-Artefakte. Gestrichelte Kanten markieren Dispatch- oder Lifecycle-Beziehungen, durchgezogene Kanten markieren Schreib-Operationen.
 
 ## Skill-zu-Stage-Karte
 

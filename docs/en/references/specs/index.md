@@ -23,7 +23,7 @@ Detail pages in this documentation currently exist for `skill-management` and `a
 
 ## RFC 2119 conventions
 
-Normative statements use RFC 2119 keywords. Translations keep the English form as a gloss:
+Normative statements use RFC 2119 (Request for Comments 2119) keywords. Translations keep the English form as a gloss:
 
 - `MUST` → `MUSS [MUST]`
 - `MUST NOT` → `DARF NICHT [MUST NOT]`

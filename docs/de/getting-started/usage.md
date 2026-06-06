@@ -12,7 +12,7 @@ Sobald das Plugin geladen ist, stehen seine Skills als Slash-Commands im Claude-
 
 ## Skills aufrufen
 
-Skills des Plugins sind per Name aufrufbar — optional mit Plugin-Prefix (z. B. `/nolte-shared:spec` statt nur `/spec`):
+Skills des Plugins sind per Name aufrufbar — optional mit Plugin-Präfix (z. B. `/nolte-shared:spec` statt nur `/spec`):
 
 ```
 /nolte-shared:spec
@@ -21,7 +21,7 @@ Skills des Plugins sind per Name aufrufbar — optional mit Plugin-Prefix (z. B.
 
 Claude Code zeigt sie außerdem unter `/skills` an. Von dort lassen sie sich mit Tab auswählen.
 
-## Welcher Skill für was
+## Welcher Skill wofür
 
 | Skill | Zweck | Typische Trigger |
 |-------|-------|-----------------|
@@ -34,7 +34,7 @@ Die Skill-Dateien sind konsequent auf Englisch — das senkt Claudes Verarbeitun
 
 ## Namespace-Kollisionen
 
-Hat ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version erreichbar. Bei Mehrdeutigkeit immer die namespaced Form `/nolte-shared:<skill>` nutzen.
+Hat ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version erreichbar. Bei Mehrdeutigkeit immer die namensraum-qualifizierte Form `/nolte-shared:<skill>` nutzen.
 
 ## Nächste Schritte
 

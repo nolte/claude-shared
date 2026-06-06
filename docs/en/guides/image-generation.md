@@ -29,7 +29,7 @@ The deterministic engine is a stdlib-only script, `skills/image-generate/scripts
 Cloudflare Workers AI runs FLUX.1-schnell on a real recurring free tier (10,000 neurons/day, no credit card). You need a **token** and your **account id**:
 
 1. Create a free account at <https://dash.cloudflare.com/sign-up> (no card required).
-2. In the dashboard go to **AI → Workers AI → "Use REST API"**.
+2. In the dashboard go to **AI → Workers AI → "Use REST API"** (REST is Representational State Transfer).
 3. Click **"Create a Workers AI API Token"**. Cloudflare pre-fills the right permissions:
    - `Account` · `Workers AI` · **Read**
    - `Account` · `Workers AI` · **Edit** (this one is required, because generating an image is a `run`/Edit action)
@@ -78,7 +78,7 @@ Every run writes the image plus a `<image>.meta.json` sidecar recording `provide
 Useful flags: `--from-prompt-doc <doc> --variant light|dark` (render a `graphic-prompt-generator` document), `-n <N>` (several images of the same prompt), `--seed`, `--width`/`--height`, `--force` (overwrite an existing file).
 
 !!! tip
-    Cloudflare and Pollinations both return JPEG. Use a `.jpg` target to avoid the extension/MIME-mismatch warning (the image is still written either way).
+    Cloudflare and Pollinations both return JPEG. Use a `.jpg` target to avoid the extension/MIME-mismatch warning (MIME is Multipurpose Internet Mail Extensions) (the image is still written either way).
 
 ## Using it in another repo
 

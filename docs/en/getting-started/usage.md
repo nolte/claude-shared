@@ -30,11 +30,11 @@ They also appear under `/skills` where Tab-completion works.
 
 ## Response language
 
-Skill files themselves are kept in English to keep Claude's processing cost low. Claude detects the user's language from their message and responds in that language—German in gets German out.
+Skill files themselves are kept in English to keep Claude's processing cost low. Claude detects the user's language from their message. It then responds in that language—German in gets German out.
 
 ## Namespace collisions
 
-If a project ships its own skill of the same name, the plugin version remains reachable. Use the namespaced form `/nolte-shared:<skill>` to resolve ambiguity.
+A project may ship its own skill of the same name. Even then, the plugin version remains reachable. Use the namespaced form `/nolte-shared:<skill>` to resolve ambiguity.
 
 ## Next
 
