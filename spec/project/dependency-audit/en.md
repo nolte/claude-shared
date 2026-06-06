@@ -89,4 +89,5 @@ Every repository in the portfolio pulls in third-party packages through one or m
 - [ ] The audit artifact for any release tag references the dependency-audit state at the release revision, so post-release supply-chain triage can start from a known baseline
 
 ## Open Questions
-- Revisit when a `nolte/*` portfolio repository formally enters a named compliance regime (SOC2 / PCI-DSS / HIPAA / ISO 27001 / equivalent)—evidenced by that regime being declared in the repo's `project/portfolio.yml`, `CLAUDE.md`, or an audience/SLA artefact. At that point: name the specific regime, decide its mandated audit interval (for example monthly), and convert the §Triggers and cadence `MAY` into a `MUST` scoped to repos carrying that regime label. No spec edit before that event.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

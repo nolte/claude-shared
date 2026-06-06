@@ -84,9 +84,8 @@ The template **MUST NOT** render any of the following:
 - [ ] The `cookiecutter-template-author` agent's body cites this spec as its normative source instead of restating the requirements
 
 ## Open Questions
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Default: keep banner-only (the MAY bullet)—the rendered-project hook can't legally dispatch a skill automatically, so automatic dispatch isn't a hook-contract change but a new generation-time wrapper. Revisit when: a portfolio Cookiecutter template has been authored AND rendered for 5+ distinct projects (today zero `cookiecutter.json` files exist anywhere in the portfolio), AND a post-generation review of those rendered repos shows the audience-identification step wasn't performed in at least 40% of cases despite the banner. At that point, reopen it as a runtime-mechanism design question (a generation-time wrapper that chains `audience-identify`), not as a hook-behaviour change.
-- Default: stay Linux-only (`ubuntu-latest`) unless the rendered target demands otherwise; the existing OS-matrix clause already promotes `windows-latest` to MUST exactly when a template renders a Windows-targeted artefact. Revisit when: the first portfolio Cookiecutter template that renders a Windows-targeted artefact is authored—detectable as a portfolio `cookiecutter.json` (today zero exist) whose rendered project's CI matrix or release flow includes a `windows-latest` / `.exe` / PowerShell-entrypoint target. No global spec change is needed; the existing clause fires for that one template.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
 
 ## Sources
 <!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->

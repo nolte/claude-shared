@@ -162,5 +162,5 @@ Sources for the additional checks above. Cite the relevant entry in finding brac
 - [R6] Agent Skills, formal specification: <https://agentskills.io/specification>
 
 ## Open Questions
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should reviewing a skill also verify that the skill's `description` triggers don't overlap with a runtime slash command or a Claude Code built-in command, and if so against which authoritative list? Unblock when EITHER (a) the Claude Code harness exposes a queryable, versioned built-in-/reserved-command list this repo can pin and grep against (watch the slash-commands surface in Claude Code docs, <https://code.claude.com/docs/en/slash-commands>)—the §Goals reproducibility bar ("identical results on the same source tree") can't be met against an unpinned, evolving list; OR (b) `skill-vs-agent` §Open Questions resolves slash commands as a first-class artifact class, at which point this spec inherits a defined command namespace to check description-trigger overlap against. Neither has occurred: #228 resolved 178 questions but explicitly left the `skill-vs-agent` third-artifact-class question open, and no reserved-command catalog exists in `spec/`, `scripts/`, or `.claude-plugin/`.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

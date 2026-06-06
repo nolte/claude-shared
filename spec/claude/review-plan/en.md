@@ -120,5 +120,5 @@ This section is the single canonical source for severity vocabulary across every
 - [ ] The `skill-review` and `agent-review` specs both reference this spec as the authoritative output format
 
 ## Open Questions
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Default: an open plan is considered stale and re-evaluated once it has been open for more than six months without a new `## Processing log` entry (aligned with `spec/claude/skills-agents-sweep/` §Lifecycle). Revisit when: any `.audits/<review-type>/<target>.md` plan is observed surviving more than six months with no `## Processing log` line, OR when two or more plans for the same target are observed superseded within a single release cycle (signalling the window is too long)—recalibrate the number from that evidence.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

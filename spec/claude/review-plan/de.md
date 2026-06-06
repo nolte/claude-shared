@@ -120,5 +120,5 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 - [ ] Die Specs `skill-review` und `agent-review` verweisen beide auf diese Spec als autoritatives Output-Format
 
 ## Offene Fragen
-<!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Default: Ein offener Plan gilt als veraltet und wird neu bewertet, sobald er länger als sechs Monate offen war, ohne dass ein neuer `## Processing log`-Eintrag hinzukam (abgestimmt mit `spec/claude/skills-agents-sweep/` §Lebenszyklus). Revisit when: wenn ein `.audits/<review-type>/<target>.md`-Plan beobachtet wird, der länger als sechs Monate ohne `## Processing log`-Zeile überlebt, ODER wenn zwei oder mehr Pläne für dasselbe Ziel innerhalb eines einzigen Release-Zyklus als superseded beobachtet werden (Signal, dass das Fenster zu lang ist) — die Zahl anhand dieser Evidenz neu kalibrieren.
+
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

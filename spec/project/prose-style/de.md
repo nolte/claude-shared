@@ -99,7 +99,8 @@ Standardmäßig bleiben diese §Stimme-und-Ton-Regeln **redaktionelle Leitlinien
 - [ ] Das gemeinsame Vale-Vokabular unter `nolte/vale-style` trägt Microsofts Bias-Free-Ersetzungen (`primary` / `subordinate`, `stop responding`, `perimeter network`, …), damit zur Durchsetzung kein Per-Repo-Override nötig ist
 
 ## Offene Fragen
-- Default: §Stimme und Ton als redaktionelle Leitlinien belassen, durchgesetzt über den Lektorat-D4-Lauf und das Pull-Request-Review; noch keine maßgeschneiderten Aktiv-, Title-Case- oder Pronomen-Vale-Regeln in `nolte/vale-style` verfassen (die Bias-Free-Ersetzungs-Tabelle ist die einzige bereits upstream automatisierte Stimme-und-Ton-Klasse). Revisit, wenn: eine einzelne Stimme-und-Ton-Verstoßklasse (zum Beispiel generische geschlechts-gebundene Pronomen, Ausrufezeichen oder Title-Case-Überschriften) in 3 oder mehr verschiedenen Lektorat-Audits unter `.audits/lektorat/` innerhalb eines rollierenden 90-Tage-Fensters als D4-Befund markiert wird oder über 3 oder mehr separate Pull-Request-Reviews wiederkehrt – beim Überschreiten dieser Schwelle eine gezielte Vale-Regel für genau diese Klasse upstream in `nolte/vale-style` deponieren. Die Aktiv-Klasse ist unabhängig von der Häufigkeit ausdrücklich von der Auto-Promotion ausgenommen, weil sie am anfälligsten für False-Positives ist.
+
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._
 
 ## Quellen
 <!-- Autoritative externe Referenzen, gegen die die obigen Anforderungen validiert wurden (≥2 unabhängige Quellen pro Aussage). -->

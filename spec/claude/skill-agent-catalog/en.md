@@ -185,4 +185,5 @@ The phase- and tag-oriented indexes assume a reader who already speaks the catal
 - [ ] Plain-text occurrences of artifact names that aren't wrapped in inline-code spans (backticks) are never transformed into Markdown links on any rendered catalog page—only inline-code mentions are eligible for the cross-linking rewrite
 
 ## Open Questions
-- Relax §Generation mechanism from "pre-build required under folder-strategy i18n" to "either form works" once a `mkdocs-static-i18n` release (above the `>=1.2` pin in `docs/requirements.txt`; current 1.3.1) ships a `reconfigure.py` that no longer discards files whose `abs_src_path` is outside the `docs_dir` directory—that is, it stops dropping `mkdocs-gen-files` output under `docs_structure: folder`. Track via <https://github.com/ultrabug/mkdocs-static-i18n> (changelog and the `reconfigure.py` gen-files interaction). Verify by wiring the catalog generator as a `mkdocs-gen-files` script and confirming generated pages survive into the built site under folder-strategy i18n.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

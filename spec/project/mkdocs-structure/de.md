@@ -181,10 +181,12 @@ Zwei deklarierte Erweiterungspunkte erlauben es projekt-typ-spezifischen Specs, 
 - [ ] Keine zwei Portfolio-Repositories haben in ihren `mkdocs.yml`-Dateien widersprüchliche `nav:`-Formen für die sieben Standard-Sektionen (Erweiterungs-Sektionen dürfen sich pro Projekttyp unterscheiden)
 
 ## Offene Fragen
+
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
 - Keine zum Entwurfszeitpunkt. Die sieben initialen Design-Fragen (ADR-Sektions-Trigger, Project-Sektions-Opt-in, Mechanismus für Erweiterungs-Erkennung, Audience-Basis, Quellsprachen-Deskriptor, Cap für Erweiterungs-Sektionen, absolute Position von Skills/Agents) wurden während der initialen Autorenschaft geklärt; siehe den PR, der diese Spec einführt, für die Rationale jeder Frage.
 - Geklärt: Die Nicht-Mischen-Regel wird zur Audit-Zeit als Reviewer-Urteils-Signal mit Warning-Schweregrad erkannt, niemals über einen statischen Marker-Scan — siehe `spec/project/docs-freshness/` §Drift-Kategorien (Content-Mode-Drift).
-- Default: `prerequisites` bleibt `KANN [MAY]` auf `tutorial`-/`how-to`-Seiten. Revisit, wenn: `spec/project/docs-freshness/` §Categories of drift eine „prerequisite-chain drift"-Kategorie hinzufügt, die sowohl (a) Zyklen im Prerequisites-Graphen als auch (b) unerreichbare / verwaiste Prerequisite-Ziele erkennt, mit einem zugewiesenen Schweregrad. Messbare Prüfung: `grep -iE 'prerequisite|acyclic|cyclic|reachab' spec/project/docs-freshness/en.md` liefert mindestens einen passenden Drift-Kategorie-Punkt (heute liefert es null). Ab diesem Zeitpunkt `prerequisites` von `KANN [MAY]` zu `SOLLTE [SHOULD]` befördern.
+
+_Das `prerequisites`-Deferral (von KANN zu SOLLTE) wurde am 2026-06-06 entschieden (siehe `.audits/decisions/2026-06-06-settle-open-questions.md`)._
 
 ## Quellen
 <!-- Autoritative externe Referenzen, gegen die die obigen Anforderungen validiert wurden (≥2 unabhängige Quellen pro Aussage). -->
