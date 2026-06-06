@@ -78,4 +78,4 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 
 ## Offene Fragen
 
-- Default: Der Agent emittiert keinen separaten maschinenlesbaren Rückverfolgbarkeits-Index; das `requirement_id`-Frontmatter pro Fall plus Tags und die Abdeckungs-Zusammenfassung pro Dokument sind die Rückverfolgbarkeits-Oberfläche. Erneut prüfen wenn: Ein Anforderungs-Coverage-Roll-up-Tool auf Portfolio- oder Projektebene spezifiziert wird (analog dazu, wie `spec/portfolio/portfolio-management/` das Manifest-Format definiert, das seine Collectoren emittieren) UND diese Spec das von ihr benötigte konkrete Eingabe-Schema benennt (Dateiname, Felder, Ort). Die quality-gate-`coverage`-Kategorie zählt nicht: Sie ist CI-Code-Coverage-Schwellwertprüfung, keine Ingestion von Anforderung-zu-Testfall-Rückverfolgbarkeit.
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

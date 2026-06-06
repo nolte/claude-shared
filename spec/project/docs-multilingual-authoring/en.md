@@ -92,6 +92,4 @@ This spec closes that gap by lifting the canonical-and-translation contract that
 
 ## Open Questions
 
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-
-- Default: this spec defines exactly one author-set translation-debt marker, `needs-review`; the `auto-translated` slot is settled (catalog `_translation-pending`) and the `outdated` slot is owned by `docs-freshness` staleness findings, so the binary marker stays. Revisit when: a `docs-freshness` audit (or a recurring pattern across audits—the same distinction appearing as a manual reviewer note on 3 or more `Language-parity gap` or stale-`needs-review` findings within one quarter) surfaces a recurring need to tell a human-flagged-for-review translation apart from a canonical-changed-while-translation-frozen translation that the §Severity content-staleness-delta finding doesn't already catch; when triggered, the richer taxonomy lands in `docs-freshness` §Severity classification as a finding-classification refinement, not here
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

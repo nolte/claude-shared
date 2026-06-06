@@ -78,4 +78,4 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 
 ## Open Questions
 
-- Default: the agent emits no separate machine-readable traceability index; the per-case `requirement_id` frontmatter plus tags and the per-document coverage summary are the traceability surface. Revisit when: a portfolio- or project-level requirement-coverage roll-up tool is specified (analogous to how `spec/portfolio/portfolio-management/` defines the manifest format its collectors emit) AND that spec names the concrete input schema it requires (file name, fields, location). The quality-gate `coverage` category doesn't count: it's CI code-coverage thresholding, not requirement-to-test-case traceability ingestion.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

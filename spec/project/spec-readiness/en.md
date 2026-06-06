@@ -102,4 +102,5 @@ Specifications under `spec/<topic>/<slug>/` are the source of truth for downstre
 - [ ] Readiness-audit artifacts for single-spec promotion runs conform to the `review-plan` artifact format, so they're consumable by the same review-closure machinery as skill- and agent-review
 
 ## Open Questions
-- Default: spec-readiness stays an advisory, operator-enforced gate—it isn't wired into CI. Revisit when: at least four completed quarterly audits under `.audits/spec-readiness/YYYY-Q<n>.md` exist (full audits, not frame-openings—today only 2026-Q2 is a completed audit; the 2026-Q3 file is a mid-Q2 frame whose full run is scheduled July–Sept 2026) AND across those audits the measured false-Critical rate (Critical findings later waived or reclassified ÷ total Critical findings raised) is below 10%, AND at least one single-spec promotion run has produced a `review-plan`-format artifact satisfying AC line 102, proving the machine-parseable format is stable. Until both conditions hold, a CI gate would block PRs on heuristic, judgement-laden Critical findings the agent itself flags as needing human resolution.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

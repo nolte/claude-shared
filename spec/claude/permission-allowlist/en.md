@@ -59,4 +59,5 @@ Claude Code (CLI, plugin, and Agent SDK runs) prompts the user for confirmation 
 - [ ] No spec-internal MUST rule is undermined by an entry in `.claude/settings.json`: in particular, no entry permits `gh pr merge *` or an equivalent that would bypass the pull-request-workflow `Automerge trigger protocol`
 
 ## Open Questions
-- Default: no central base allowlist—each repository owns its committed `.claude/settings.json` `permissions.allow` list, curated per §Selection criteria for new entries. Revisit when: a `portfolio-audit` run flags the committed `.claude/settings.json` `permissions.allow` block under `portfolio-management` §Cross-repository copy-paste smell, that is, the same base block is duplicated across three or more `nolte/*` Portfolio-Member repositories without a corresponding shared capability (the existing three-recurrence promotion threshold). At that point the candidate fix is a generator or sync skill, not an `_extends` config edit, because the Claude Code harness reads `.claude/settings.json` directly and has no inheritance mechanism.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
