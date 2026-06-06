@@ -14,6 +14,10 @@ Der Zyklus hat sieben sequenzielle Phasen plus eine achte, **Cross-cutting**, di
 
 Jeder Skill und jeder Agent deklariert seine Phase im Frontmatter (`phase:`). Der Katalog-Generator gruppiert die [Skills](../skills/index.md)- und [Agents](../agents/index.md)-Katalog-Seiten nach diesem Feld. So bleiben diese Seite und der Katalog im Gleichschritt.
 
+### Zyklus-Phasen und ihre Skills und Agents
+
+Welcher Skill oder Agent gehört zu welcher Zyklus-Phase, und wie kehrt der Kreislauf bei Sprint-Abschluss und bei MVP zurück?
+
 <!-- diagram-source: user-described — eight-phase lifecycle with skills and agents grouped per phase; agents are marked with a parenthetical (A) suffix; return edges from Close to Plan (next sprint) and from Close to Vision (MVP achieved) -->
 ```mermaid
 graph TD

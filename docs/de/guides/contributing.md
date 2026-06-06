@@ -10,6 +10,38 @@ last_updated: 2026-05-19
 
 **Voraussetzung:** Plugin lokal geladen (siehe [Installation](../getting-started/installation.md)). Erst dann sind `skill-management` und der `spec`-Skill verfügbar.
 
+## Setup und Voraussetzungen
+
+Bevor du die Checks des Repositorys lokal ausführen kannst, brauchst du die folgende Toolchain. Das Repository ist reine Dokumentation und Automatisierung — es gibt keinen Anwendungs-Build —, daher ist die Toolchain bewusst klein.
+
+| Tool | Version | Wofür |
+|------|---------|-------|
+| Python | 3.x | Führt die Validierungs- und Katalog-Skripte unter `scripts/` sowie die Testsuite aus |
+| Task | aktuell | Task-Runner; jeder Check ist als `task <target>` verfügbar (siehe `Taskfile.yml`) |
+| pre-commit | aktuell | Hook-Framework, das Whitespace, YAML, Markdown und Vale absichert |
+| Vale | aktuell | Prosa-Linter (zieht beim `vale sync` das gepinnte `nolte/vale-style`-Vokabular) |
+| Git | 2.x | Worktree-basierter Workflow gemäß der Parallel-Working-Copies-Konvention |
+
+Außerdem brauchst du ein GitHub-Konto mit Fork-/PR-Zugriff; weitere externe Konten sind nicht erforderlich.
+
+Erstmalige Bootstrap-Sequenz, einmal nach dem Klonen auszuführen:
+
+```bash
+task setup                              # installiert die pre-commit-Hooks
+pip install -r evals/requirements-dev.txt   # Test-Suite-Abhängigkeiten (pytest)
+```
+
+Nach dem Bootstrap sind die alltäglichen Checks:
+
+```bash
+task lint     # pre-commit über alle Dateien
+task test     # Skill-/Agent-Frontmatter-Validierung + Eval-Harness-Unit-Tests
+task check    # das develop-Quality-Gate lokal: lint + test
+task docs     # baut die zweisprachige MkDocs-Site (mkdocs build --strict)
+```
+
+Wer `task check` sauber durchlaufen lässt, hat ein lauffähiges Repository.
+
 ## Workflow
 
 1. **Spec zuerst lesen** — Skill oder Agent folgt immer einer geltenden [Spezifikation](../references/specs/index.md).

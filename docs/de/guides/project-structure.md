@@ -65,3 +65,24 @@ agents/                      # wiederverwendbare Sub-Agent-Definitionen
 ## Plugin-Namespace
 
 Das Plugin heißt `nolte-shared` (siehe `.claude-plugin/plugin.json`). Skills sind entsprechend als `/nolte-shared:<skill>` aufrufbar. Der Plugin-Name bleibt stabil — er ist Teil aller Aufrufe und Dokumentationen.
+
+## Tech-Stack
+
+Das Repository ist ein Dokumentations- und Automatisierungsprojekt, keine kompilierte Anwendung: Es gibt keinen Laufzeit-Service, sondern nur ein Claude-Code-Plugin samt der Werkzeuge, die es autorisieren, linten und veröffentlichen. Das kanonische Inventar dieser Bausteine — jeweils mit `kind`, `group`, Rolle und Source-of-Truth-Datei — ist die handgepflegte Portfolio-Quelle `portfolio/tech-stack.yml` (geregelt durch `spec/portfolio/tech-stack/`); die Liste unten spiegelt sie und darf nicht davon abweichen.
+
+| Komponente | Rolle | Source of Truth |
+|------------|-------|-----------------|
+| Python | Laufzeit für die Validierungs-, Katalog-Generierungs- und Journal-Skripte unter `scripts/` | `scripts/` |
+| MkDocs (Material + static-i18n) | Dokumentationsgenerator, der die zweisprachige Site unter `docs/` erzeugt | `mkdocs.yml` |
+| Task | Task-Orchestrator für die Quality-Gate-, Docs-, Lint- und Dogfooding-Targets | `Taskfile.yml` |
+| Vale | Prosa-Linter mit den gepinnten `nolte/vale-style`-Vokabularen | `.vale.ini` |
+| pre-commit | Hook-Framework, das Whitespace-, YAML-, Markdown- und Vale-Checks verdrahtet | `.pre-commit-config.yaml` |
+| Renovate | Automatischer Dependency-Update-Bot, der das `nolte/gh-plumbing`-Preset erweitert | `renovate.json5` |
+| GitHub Actions | CI-Provider für die Lint-, Test-, Docs- und Release-Workflows | `.github/workflows/` |
+
+Pinning-Absicht: Jedes MkDocs-Plugin ist in `docs/requirements.txt` gepinnt, der Vale-Style ist in `.vale.ini` auf ein `nolte/vale-style`-Release gepinnt, und die wiederverwendbaren CI-Workflows pinnen ihre `nolte/gh-plumbing`-Version. Projektlokale Ergänzungen über der Portfolio-Basis sind oben inline neben der kanonischen Quelle gelistet.
+
+## Quellen
+
+- `portfolio/tech-stack.yml` — kanonisches Portfolio-Tech-Stack-Inventar (gemäß `spec/portfolio/tech-stack/`)
+- `Taskfile.yml`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml` — die oben referenzierten Source-of-Truth-Dateien je Komponente

@@ -69,3 +69,24 @@ Three language conventions apply across the repository:
 ## Plugin namespace
 
 The plugin is called `nolte-shared` (see `.claude-plugin/plugin.json`). Skills are invocable as `/nolte-shared:<skill>`. The plugin name stays stable—it's part of every invocation and every document.
+
+## Tech stack
+
+The repository is a documentation-and-automation project rather than a compiled application: there is no runtime service, only a Claude Code plugin plus the tooling that authors, lints, and publishes it. The canonical inventory of these building blocks—each with its `kind`, `group`, role, and source-of-truth file—is the hand-curated portfolio source `portfolio/tech-stack.yml` (governed by `spec/portfolio/tech-stack/`); the list below mirrors it and must not drift from it.
+
+| Component | Role | Source of truth |
+|-----------|------|-----------------|
+| Python | Runtime for the validation, catalog-generation, and journal scripts under `scripts/` | `scripts/` |
+| MkDocs (Material + static-i18n) | Documentation generator producing the bilingual site under `docs/` | `mkdocs.yml` |
+| Task | Task orchestrator running the quality-gate, docs, lint, and dogfooding targets | `Taskfile.yml` |
+| Vale | Prose linter using the pinned `nolte/vale-style` vocabularies | `.vale.ini` |
+| pre-commit | Hook framework wiring whitespace, YAML, Markdown, and Vale checks | `.pre-commit-config.yaml` |
+| Renovate | Automated dependency-update bot extending the `nolte/gh-plumbing` preset | `renovate.json5` |
+| GitHub Actions | CI provider running the lint, test, docs, and release workflows | `.github/workflows/` |
+
+Pinning intent: every MkDocs plugin is pinned in `docs/requirements.txt`, the Vale style is pinned to a `nolte/vale-style` release in `.vale.ini`, and the reusable CI workflows pin their `nolte/gh-plumbing` version. Project-local additions on top of the portfolio baseline are listed inline above next to the canonical source.
+
+## Sources
+
+- `portfolio/tech-stack.yml` — canonical portfolio tech-stack inventory (per `spec/portfolio/tech-stack/`)
+- `Taskfile.yml`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml` — the per-component source-of-truth files referenced above
