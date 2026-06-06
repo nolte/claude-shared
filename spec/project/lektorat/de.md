@@ -51,17 +51,17 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 
 #### D1 — Lesbarkeit
 
-- **MUSS [MUST]** Lesbarkeit gegen benannte Metriken mit expliziten sprach­spezifischen Zielkorridoren bewerten:
-  - **Englischer Text**: Flesch Reading Ease (FRE) und Flesch–Kincaid Grade Level (FKGL)
-  - **Deutscher Text**: Wiener Sachtextformel (WSTF) Variante 1 und LIX
-- **MUSS [MUST]** Zielkorridore pro `content_mode` ausweisen, sodass eine `tutorial`-Seite nicht an derselben Dichte gemessen wird wie eine `reference`-Seite; die Default-Korridore sind:
+- **MUSS [MUST]** Lesbarkeit gegen benannte Metriken mit expliziten sprach­spezifischen Zielkorridoren bewerten. **LIX (Läsbarhetsindex) ist die primäre, sprachübergreifende Lesbarkeitsmetrik**, identisch berechnet für Englisch und Deutsch gemäß [`spec/project/readability-lix/`](../readability-lix/de.md), die die autoritative Quelle für die LIX-Formel, die Langwort-Regel, die Tokenisierungs- und Segmentierungs-Pipeline, die sprachübergreifende Kalibrierung (den Deutsch-Offset) und die unten reproduzierten Korridorwerte ist. Die Flesch-Familien- und Wiener-Metriken sind **ergänzende, beratende Signale**, die **DÜRFEN [MAY]** neben LIX berechnet und berichtet werden, aber **DÜRFEN NICHT [MUST NOT]** einen LIX-basierten D1-Befund überstimmen, eskalieren oder unterdrücken:
+  - **Englischer Text**: LIX (primär); Flesch Reading Ease (FRE) und Flesch–Kincaid Grade Level (FKGL) (ergänzend)
+  - **Deutscher Text**: LIX (primär); Wiener Sachtextformel (WSTF) Variante 1 (ergänzend)
+- **MUSS [MUST]** Zielkorridore pro `content_mode` ausweisen, sodass eine `tutorial`-Seite nicht an derselben Dichte gemessen wird wie eine `reference`-Seite; die Default-Korridore sind (die LIX-Spalten werden von [`spec/project/readability-lix/`](../readability-lix/de.md) §Zielkorridore regiert und hier zur Bequemlichkeit reproduziert — bei Widerspruch gewinnt `readability-lix`):
 
-  | `content_mode` (per `spec/project/mkdocs-structure/`) | EN: FRE warn / crit | EN: FKGL warn / crit | DE: WSTF warn / crit | DE: LIX warn / crit |
-  | --- | --- | --- | --- | --- |
-  | `tutorial`, `how-to`, `troubleshooting` | < 60 / < 45 | > 10 / > 14 | > 7 / > 10 | > 50 / > 60 |
-  | `explanation`, `reference`, `glossary` | < 45 / < 30 | > 14 / > 18 | > 10 / > 13 | > 60 / > 70 |
+  | `content_mode` (per `spec/project/mkdocs-structure/`) | EN: FRE warn / crit | EN: FKGL warn / crit | EN: LIX warn / crit | DE: WSTF warn / crit | DE: LIX warn / crit |
+  | --- | --- | --- | --- | --- | --- |
+  | `tutorial`, `how-to`, `troubleshooting` | < 60 / < 45 | > 10 / > 14 | > 45 / > 55 | > 7 / > 10 | > 50 / > 60 |
+  | `explanation`, `reference`, `glossary` | < 45 / < 30 | > 14 / > 18 | > 55 / > 65 | > 10 / > 13 | > 60 / > 70 |
 
-  Die `crit`-Spalte ist abgeleitet, indem die `warn`-Grenze um eine **Korridor­breite** (den absoluten Abstand zwischen den beiden `content_mode`-Zeilen derselben Metrik) verlängert wird: FRE-Breite = 15, FKGL-Breite = 4, WSTF-Breite = 3, LIX-Breite = 10. Die `crit`-Schwellen oben sind die operativen Werte; die Herleitung ist dokumentiert, damit eine künftige `content_mode`-Zeile konsistent ergänzt werden kann.
+  Die `crit`-Spalte ist abgeleitet, indem die `warn`-Grenze um eine **Korridor­breite** (den absoluten Abstand zwischen den beiden `content_mode`-Zeilen derselben Metrik) verlängert wird: FRE-Breite = 15, FKGL-Breite = 4, WSTF-Breite = 3, LIX-Breite = 10. Die englische und die deutsche LIX-Spalte unterscheiden sich um den sprachübergreifenden Offset Δ = 5 aus `readability-lix` §Sprachübergreifende Kalibrierung (deutsche Korridore liegen höher, weil deutsche Kompositabildung den Langwort-Anteil aufbläht). Die `crit`-Schwellen oben sind die operativen Werte; die Herleitung ist dokumentiert, damit eine künftige `content_mode`-Zeile konsistent ergänzt werden kann.
 
 - **MUSS [MUST]** eine Metrik, deren Wert die `warn`-Schwelle überschreitet (aber nicht die `crit`-Schwelle), als `warning`-Befund klassifizieren, und eine Metrik, deren Wert die `crit`-Schwelle überschreitet, als `critical`-Befund; die Schwellen werden aus der Per-`content_mode`-Zeile oben gelesen
 - **DARF NICHT [MUST NOT]** D1-Bewertung auf eine Seite anwenden, deren `content_mode` `meta` ist (gemäß `spec/project/mkdocs-structure/`); Meta-Seiten (Home, Per-Section-Index) sind von Lesbarkeits-Metriken ausgenommen, weil ihre Prosa navigatorisch und nicht instruktiv ist und keine Korridor-Zeile auf sie passt. Top-Level-Repository-Markdown ohne `content_mode`-Frontmatter-Key (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) **MUSS [MUST]** für D1-Zwecke auf `content_mode: meta` defaulten; dieser Default propagiert **nicht** in D3/D4/D5, die den Text gemäß ihrer eigenen Regeln bewerten
@@ -69,7 +69,7 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 - **MUSS [MUST]** den berechneten Metrik-Wert, den Korridor und mindestens ein verstoßendes Beispiel (längster Satz, tiefste Schachtelung) im Befund nennen, damit er auditierbar ist
 - **DARF NICHT [MUST NOT]** im `patch`-Modus eine Passage aus reinen Lesbarkeits-Gründen umschreiben, ohne einen Metrik-Wert oder eine benannte Heuristik-Quelle im Befund; eine Meinung ist kein Befund
 - **SOLLTE [SHOULD]** Metrik-Befunde durch **strukturelle Heuristiken** ergänzen (Absätze länger als drei Sätze, Listen mit mehr als sieben Peers, Überschriften tiefer als `####`) — diese sind per Default `suggestion`
-- **SOLLTE [SHOULD]** die benannten Metriken berechnen, indem eine gepflegte sprach­spezifische Lesbarkeits-Bibliothek konsumiert wird (eine `textstat`-Klasse-Bibliothek für Englisch, eine `readability-de`-Klasse-Bibliothek für Deutsch), statt die klassischen Formeln neu zu implementieren; die Spec schränkt nur die Metrik-Namen und die Korridore oben ein, nicht die Implementierung, und die gewählte Bibliothek **KANN [MAY]** neben den Pipeline-Metadaten (§Ausgaben) zur Reproduzierbarkeit aufgezeichnet werden
+- **SOLLTE [SHOULD]** die ergänzenden Metriken (FRE/FKGL für Englisch, WSTF für Deutsch) berechnen, indem eine gepflegte sprach­spezifische Lesbarkeits-Bibliothek konsumiert wird (eine `textstat`-Klasse-Bibliothek für Englisch, eine `readability-de`-Klasse-Bibliothek für Deutsch), statt die klassischen Formeln neu zu implementieren; die Spec schränkt nur die Metrik-Namen und die Korridore oben ein, nicht die Implementierung, und die gewählte Bibliothek **KANN [MAY]** neben den Pipeline-Metadaten (§Ausgaben) zur Reproduzierbarkeit aufgezeichnet werden. **LIX im Speziellen MUSS [MUST]** gemäß [`spec/project/readability-lix/`](../readability-lix/de.md) §Reproduzierbarkeit berechnet werden — eine einzige gepinnte Bibliothek und ein Tokenizer/Segmentierer, identisch für beide Sprachen verwendet, gegen die kanonische Formel validiert (nicht gegen einen Library-Docstring), wobei die aufgezeichnete Evidenz die Zählungen `lix`, `asl`, `lwp` sowie die rohen `words`/`sentences`/`long_words` trägt
 
 #### D2 — Verständlichkeit
 
@@ -210,12 +210,27 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
       "en": {
         "tool": "vale",
         "version": "<Ausgabe von `vale --version`>",
-        "configured_path": "<repo-relativer Pfad zur aktiven .vale.ini oder vale.yml>"
+        "configured_path": "<repo-relativer Pfad zur aktiven .vale.ini oder vale.yml>",
+        "readability": {
+          "library": "<LIX-Library-Name>",
+          "library_version": "<version>",
+          "tokenizer": "<Tokenizer/Segmentierer-Name>",
+          "tokenizer_version": "<version>",
+          "long_word_threshold": 6
+        }
       },
       "de": {
         "tool": "languagetool-http",
         "version": "<Wert von LanguageTool /v2/info `buildDate` oder das selbst gehostete Release-Tag>",
-        "configured_path": "<HTTP-Endpoint-URL (Public oder self-hosted) oder, bei alternativem Werkzeug, der aufgelöste Binary-Pfad>"
+        "configured_path": "<HTTP-Endpoint-URL (Public oder self-hosted) oder, bei alternativem Werkzeug, der aufgelöste Binary-Pfad>",
+        "readability": {
+          "library": "<LIX-Library-Name>",
+          "library_version": "<version>",
+          "tokenizer": "<Tokenizer/Segmentierer-Name>",
+          "tokenizer_version": "<version>",
+          "long_word_threshold": 6,
+          "decompounding": false
+        }
       }
     },
     "inventory_findings": [
@@ -245,7 +260,8 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
   }
   ```
 
-- **MUSS [MUST]** `pipeline_metadata.<sprache>` für jede in `language_summary` vertretene Sprache befüllen, deren Pipeline aufgelöst werden konnte; die drei Unterfelder `tool`, `version` und `configured_path` sind sämtlich erforderlich und lasttragend für das Reproduzierbarkeits-Akzeptanzkriterium. Platzhalter-Werte sind verboten — wenn eines der drei nicht auflösbar ist (z. B. die Binary fehlt), wird der entsprechende `pipeline_metadata.<sprache>`-Block **weggelassen** und der Scan-Zustand stattdessen in `inventory_findings` aufgezeichnet (siehe unten)
+- **MUSS [MUST]** `pipeline_metadata.<sprache>` für jede in `language_summary` vertretene Sprache befüllen, deren Pipeline aufgelöst werden konnte; die drei Unterfelder `tool`, `version` und `configured_path` (die D3-Rechtschreib-/Grammatik-Pipeline) sind sämtlich erforderlich und lasttragend für das Reproduzierbarkeits-Akzeptanzkriterium. Platzhalter-Werte sind verboten — wenn eines der drei nicht auflösbar ist (z. B. die Binary fehlt), wird der entsprechende `pipeline_metadata.<sprache>`-Block **weggelassen** und der Scan-Zustand stattdessen in `inventory_findings` aufgezeichnet (siehe unten)
+- **MUSS [MUST]** außerdem den `readability`-Sub-Block von `pipeline_metadata.<sprache>` gemäß [`spec/project/readability-lix/`](../readability-lix/de.md) §Reproduzierbarkeit befüllen — `library`, `library_version`, `tokenizer`, `tokenizer_version`, `long_word_threshold` (immer `6`) und, nur für Deutsch, `decompounding` — unter Verwendung **derselben** LIX-Library und desselben Tokenizers für beide Sprachen, damit EN- und DE-Werte vergleichbar bleiben
 - **MUSS [MUST]** jede Infrastruktur-Level-Scan-Bedingung im Array `inventory_findings` surfacen, **niemals** in `findings`. Das `findings`-Array trägt ausschließlich redaktionelle Befunde, klassifiziert nach der closed-Severity-Menge (`critical` / `warning` / `suggestion`) aus §Severity-Klassifikation; `inventory_findings` trägt Vorbedingungen, die einen Teil des Scans verhindert haben. Das `kind`-Feld ist eine geschlossene Aufzählung mit genau diesen fünf Werten:
   - `vale-unavailable`: Vale-Binary nicht aufrufbar, obwohl englische Dateien im Scope sind; D3/D4-EN-Mechanik wird übersprungen. `file: null`.
   - `language-pipeline-missing`: deutsche Dateien sind im Scope, aber keine DE-Pipeline-Konfiguration wurde übergeben (oder der konfigurierte Endpoint/die Binary ist nicht aufrufbar); D3 für die betroffene Datei wird übersprungen. `file` benennt die betroffene Datei; pro betroffener Datei ein Eintrag.
@@ -278,6 +294,7 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 - **MUSS [MUST]** `spec/project/prose-style/` als autoritative Quelle für EN-Voice/Tone-Regeln und Vale-Mechanik referenzieren; `Lektorat` konsumiert sie und **DARF NICHT [MUST NOT]** sie neu definieren
 - **MUSS [MUST]** `spec/project/audience-identification/` als autoritative Quelle für Audience-Identifier und Audience-Eigenschaften referenzieren; `Lektorat` liest das Artefakt und **DARF NICHT [MUST NOT]** Audiences erfinden
 - **MUSS [MUST]** `spec/project/docs-audience-tracks/` für den Per-Seite-`audience`/`track`/`content_mode`-Frontmatter-Vertrag referenzieren; `Lektorat` löst anwendbare Audiences darüber auf
+- **MUSS [MUST]** [`spec/project/readability-lix/`](../readability-lix/de.md) als autoritative Quelle der LIX-Metrik referenzieren (Formel, Langwort-Regel, Tokenisierungs-Pipeline, sprachübergreifende Kalibrierung, Korridorwerte und die Verbesserungs-Transformationen); `Lektorat` §D1 konsumiert LIX daraus und **DARF NICHT [MUST NOT]** die Metrik oder ihre Korridore neu definieren
 - **MUSS [MUST]** `spec/project/mkdocs-structure/` für das `content_mode`-Enum referenzieren, das die Lesbarkeits-Korridore treibt, und für die `_`-präfigierte Snippet-Ordner-Konvention
 - **MUSS [MUST]** `spec/project/docs-multilingual-authoring/` für den sprachübergreifenden Paritätsvertrag referenzieren; `Lektorat` **DARF NICHT [MUST NOT]** Übersetzungen synchronisieren
 - **MUSS [MUST]** `spec/project/docs-freshness/` für die sprachübergreifende Drift-Erkennung referenzieren; `Lektorat` **DARF NICHT [MUST NOT]** Paritäts-Drift erkennen
