@@ -29,7 +29,7 @@ Canonical language: `en` · Translations: `de`
 | portfolio | tech-stack | Portfolio Tech Stack Capture | Portfolio-Tech-Stack-Erfassung | draft | unversioned |
 | portfolio | tech-stack-discovery | Portfolio Tech-Stack Discovery | Portfolio-Tech-Stack-Discovery | draft | unversioned |
 | project | audience-identification | Audience Identification | Zielgruppen-Identifikation | accepted | 2026-04-24 |
-| project | blog-author | Blog author | Blog-Autor | draft | unversioned |
+| project | blog-author | Blog author | Blog-Autor | accepted | unversioned |
 | project | blog-author-trigger | Blog author trigger | Blog-Autor-Trigger | draft | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | 2026-04-23 |
 | project | code-security-audit | Whole-Codebase Security Audit | Whole-Codebase-Security-Audit | draft | unversioned |
