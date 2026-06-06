@@ -84,9 +84,8 @@ Das Template **DARF NICHT [MUST NOT]** eines der folgenden rendern:
 - [ ] Der `cookiecutter-template-author`-Agent zitiert in seinem Body diese Spec als normative Quelle, statt die Anforderungen zu wiederholen
 
 ## Offene Fragen
-<!-- Ungeklärte Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Default: Banner-only beibehalten (der KANN-Stichpunkt) — der Hook des gerenderten Projekts kann ein Skill nicht legal auto-dispatchen, daher ist automatisches Dispatch keine Hook-Kontrakt-Änderung, sondern ein neuer Generierungs-Zeit-Wrapper. Revisit, wenn: ein Portfolio-Cookiecutter-Template verfasst UND für 5+ verschiedene Projekte gerendert wurde (heute existiert nirgends im Portfolio eine `cookiecutter.json`-Datei) UND ein Post-Generation-Review dieser gerenderten Repos zeigt, dass der Audience-Identifikations-Schritt trotz des Banners in mindestens 40% der Fälle nicht durchgeführt wurde. Dann als Runtime-Mechanismus-Design-Frage wiedereröffnen (ein Generierungs-Zeit-Wrapper, der `audience-identify` anschließt), nicht als Hook-Verhaltens-Änderung.
-- Default: Linux-only (`ubuntu-latest`) bleiben, sofern das gerenderte Ziel nichts anderes verlangt; die bestehende OS-Matrix-Klausel hebt `windows-latest` bereits genau dann auf MUSS, wenn ein Template ein Windows-zielendes Artefakt rendert. Revisit, wenn: das erste Portfolio-Cookiecutter-Template verfasst wird, das ein Windows-zielendes Artefakt rendert — erkennbar als eine Portfolio-`cookiecutter.json` (heute existiert keine), deren gerendertes Projekt eine CI-Matrix oder einen Release-Flow mit einem `windows-latest`- / `.exe`- / PowerShell-Entrypoint-Ziel enthält. Keine globale Spec-Änderung nötig; die bestehende Klausel greift für dieses eine Template.
+
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._
 
 ## Quellen
 <!-- Autoritative externe Referenzen, gegen die die obigen Anforderungen validiert wurden (≥2 unabhängige Quellen pro Aussage). -->

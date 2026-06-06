@@ -99,7 +99,8 @@ By default these §Voice and tone rules stay **editorial guidance**: they're enf
 - [ ] The shared Vale vocabulary at `nolte/vale-style` carries Microsoft's bias-free substitutions (`primary` / `subordinate`, `stop responding`, `perimeter network`, …) so a per-repo override isn't needed to enforce them
 
 ## Open Questions
-- Default: keep §Voice and tone as editorial guidance enforced by the lektorat D4 pass and pull-request review; don't author bespoke active-voice, title-case, or gendered-pronoun Vale rules in `nolte/vale-style` yet (the bias-free substitution table is the only voice/tone class already automated upstream). Revisit when: a single voice/tone violation class (for example gendered generic pronouns, exclamation marks, or title-case headings) is flagged as a D4 finding in 3 or more distinct lektorat audits under `.audits/lektorat/` within a rolling 90-day window, or recurs across 3 or more separate pull-request reviews—on crossing that threshold, deposit a targeted Vale rule for that one class upstream in `nolte/vale-style`. The active-voice class is explicitly excluded from automatic promotion regardless of recurrence, because it's the most false-positive-prone.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
 
 ## Sources
 <!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->

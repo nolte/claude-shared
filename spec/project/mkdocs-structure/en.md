@@ -181,10 +181,12 @@ Two declared extension points let project-type-specific specs add to the skeleto
 - [ ] No two portfolio repositories' `mkdocs.yml` files declare conflicting `nav:` shapes for the seven standard sections (extension sections may vary by project type)
 
 ## Open Questions
+
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
 - None at draft time. The seven initial design questions (ADR-section trigger, Project-section opt-in, extension discovery mechanism, audience baseline, source-language descriptor, extension-section cap, Skills/Agents absolute position) were resolved during initial authoring; see the PR that introduces this spec for the rationale of each.
 - Resolved: the no-mixing rule is detected at audit time as a Reviewer-judgement signal at warning severity, never via a static marker scan—see `spec/project/docs-freshness/` §Drift categories (Content-mode drift).
-- Default: `prerequisites` stays `MAY` on `tutorial` / `how-to` pages. Revisit when: `spec/project/docs-freshness/` §Categories of drift adds a "prerequisite-chain drift" category that detects both (a) cycles in the prerequisites graph and (b) unreachable / dangling prerequisite targets, with an assigned severity. Measurable check: `grep -iE 'prerequisite|acyclic|cyclic|reachab' spec/project/docs-freshness/en.md` returns at least one matching drift-category bullet (today it returns zero). At that point promote `prerequisites` from `MAY` to `SHOULD`.
+
+_The `prerequisites` deferral (from MAY to SHOULD) was settled on 2026-06-06 (see `.audits/decisions/2026-06-06-settle-open-questions.md`)._
 
 ## Sources
 <!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->

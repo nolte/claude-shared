@@ -91,4 +91,5 @@ Readers: skill and agent authors who maintain the prompt-authoring agent; review
 ## Open Questions
 
 - The per-model style-reference equivalent for sref-less generators is owned by `corporate-design-colors` §AI image color contract; this spec consumes whatever that contract pins. Pending in that spec: `corporate-design-colors` must declare whether the equivalent is a fixed reference image (recommended) or a canonical style paragraph.
-- Default: the asset-type vocabulary stays provisionally normative here because the file-naming MUST needs it now; `spec/design/imagery-style/` is scoped to non-color imagery axes (composition, lighting, photographic-vs-illustrative register), so the expected outcome is that the naming vocabulary stays here. Revisit when: a file appears under the `spec/design/imagery-style/` path—at that moment, confirm explicitly whether the file-naming type vocabulary migrates to `imagery-style` or stays here as a naming-only taxonomy.
+
+_The asset-type-vocabulary deferral was settled on 2026-06-06 (see `.audits/decisions/2026-06-06-settle-open-questions.md`); the style-reference question above stays open, owned by `corporate-design-colors`._

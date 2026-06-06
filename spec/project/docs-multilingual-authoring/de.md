@@ -92,6 +92,4 @@ Diese Spec schließt die Lücke, indem sie den Canonical-und-Translation-Vertrag
 
 ## Offene Fragen
 
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-
-- Voreinstellung: Diese Spec definiert genau einen autorgesetzten Übersetzungsschuld-Marker, `needs-review`; der `auto-translated`-Slot ist geklärt (Katalog-`_translation-pending`) und der `outdated`-Slot gehört zu den Veraltungs-Findings von `docs-freshness`, daher bleibt der binäre Marker. Neu bewerten, wenn: ein `docs-freshness`-Audit (oder ein wiederkehrendes Muster über mehrere Audits — dieselbe Unterscheidung erscheint als manuelle Reviewer-Notiz bei 3 oder mehr `Language-parity gap`- oder veralteten `needs-review`-Findings innerhalb eines Quartals) einen wiederkehrenden Bedarf zutage fördert, eine human-flagged-for-review-Übersetzung von einer canonical-changed-while-translation-frozen-Übersetzung zu unterscheiden, die das §Severity-content-staleness-delta-Finding nicht bereits erfasst; wenn ausgelöst, landet die reichere Taxonomie in `docs-freshness` §Severity classification als Verfeinerung der Finding-Klassifikation, nicht hier
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

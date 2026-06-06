@@ -86,5 +86,5 @@ Additional categories **MAY** be added by a repository when its documentation ne
 - [ ] The audit reports a `track-frontmatter drift`, `content-mode drift`, or `audience-track mismatch` finding whenever a docs page under a non-snippet folder violates the corresponding contract from `spec/project/docs-audience-tracks/` or `spec/project/mkdocs-structure/` §Content modes (Diátaxis alignment)
 
 ## Open Questions
-- Default: keep the in-file anchor-target check a `SHOULD` as a deferred hardening step. Revisit when: both hold—(1) a slugification routine matching `mkdocs-material`'s `toc.slugify` default (the single mandated theme) is implemented in `docs-freshness-checker`, and (2) a dry-run over the nolte-shared docs tree plus at least one other portfolio repo's docs tree yields a measured false-positive rate below 5% of resolved anchor links—then promote the check from `SHOULD` to `MUST`.
-- Default: keep the N most-recently-modified files spot-check with N=5 as a cheap floor. Revisit when: a portfolio repo with more than 50 markdown files under `docs_dir` runs a full docs-freshness audit AND a follow-up exhaustive content-staleness pass over that same tree finds at least one warning-tier (older than 90 days) divergence that the N=5 spot-check missed—the observed miss rate then sets either a higher fixed N or a percentage-of-tree cap.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
