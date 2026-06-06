@@ -63,7 +63,7 @@ Ask the user for a one-sentence value statement phrased from the end-user perspe
 - English: `refactor`, `restructure`, `set up`, `configure`, `clean up`, `migrate`, `bump`, `update dependency`
 - German: `refaktorieren`, `umbauen`, `einrichten`, `konfigurieren`, `aufräumen`, `migrieren`, `aktualisieren`, `Abhängigkeit erneuern`
 
-The list **MAY** be widened per project; consult `.github/sprint-rejection-rules.yml` if it exists. The check is heuristic: when the user genuinely delivers an end-user-facing change whose phrasing happens to start with one of these verbs, they **MAY** override with a one-line rationale that is then recorded verbatim in the sprint's `## Goal` section.
+The list **MAY** be widened per project via a `sprint_rejection_verbs:` key in the shared `.github/release-skill-layer.yml` override surface (the same file the sibling `release-artifact` and `release-skill-layer` specs use); a project **MUST NOT** introduce a separate `.github/sprint-rejection-rules.yml` for this purpose. The check is heuristic: when the user genuinely delivers an end-user-facing change whose phrasing happens to start with one of these verbs, they **MAY** override with a one-line rationale that is then recorded verbatim in the sprint's `## Goal` section.
 
 ### 3. Derive the slug
 
