@@ -1,6 +1,6 @@
 # Post-Schreibstil
 
-Status: draft
+Status: accepted
 
 ## Kontext
 

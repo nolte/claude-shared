@@ -1,6 +1,6 @@
 # Post writing style
 
-Status: draft
+Status: accepted
 
 <!-- vale Microsoft.Quotes = NO -->
 <!-- vale Microsoft.Contractions = NO -->
