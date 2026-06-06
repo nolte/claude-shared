@@ -28,7 +28,7 @@ Canonical language: `en` · Translations: `de`
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | unversioned |
 | portfolio | tech-stack | Portfolio Tech Stack Capture | Portfolio-Tech-Stack-Erfassung | draft | unversioned |
 | portfolio | tech-stack-discovery | Portfolio Tech-Stack Discovery | Portfolio-Tech-Stack-Discovery | draft | unversioned |
-| project | audience-identification | Audience Identification | Zielgruppen-Identifikation | draft | 2026-04-24 |
+| project | audience-identification | Audience Identification | Zielgruppen-Identifikation | accepted | 2026-04-24 |
 | project | blog-author | Blog author | Blog-Autor | draft | unversioned |
 | project | blog-author-trigger | Blog author trigger | Blog-Autor-Trigger | draft | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | 2026-04-23 |
@@ -61,11 +61,11 @@ Canonical language: `en` · Translations: `de`
 | project | readme-structure | Repository README Structure | Repository-README-Struktur | draft | 2026-04-23 |
 | project | release-artifact | Project Release Artifact | Projekt-Release-Artefakt | draft | unversioned |
 | project | release-automation | Release Automation | Release-Automation | draft | 2026-04-24 |
-| project | release-notes-audience-analysis | Release Notes Audience Analysis | Zielgruppenanalyse für Release Notes | draft | 2026-04-24 |
+| project | release-notes-audience-analysis | Release Notes Audience Analysis | Zielgruppenanalyse für Release Notes | accepted | 2026-04-24 |
 | project | release-skill-layer | Local Release Skill Layer | Lokale Release-Skill-Schicht | draft | unversioned |
 | project | roadmap | Project Roadmap | Projekt-Roadmap | draft | unversioned |
 | project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | 2026-04-23 |
-| project | spec-driven-development | Spec-Driven Development | Spezifikations-getriebene Entwicklung | draft | unversioned |
+| project | spec-driven-development | Spec-Driven Development | Spezifikations-getriebene Entwicklung | accepted | unversioned |
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | unversioned |
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | unversioned |

@@ -22,7 +22,7 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 
 - Publishing artifacts to external registries (npm, PyPI, container registries, HACS ZIP uploads)—those stay with repository-specific `release: [published]` packaging workflows as `project-structure` describes.
 - Binary builds, signing, SBOM generation.
-- Release-notes content generation—that remains `release-drafter`'s responsibility, fed by Conventional-Commits PR titles.
+- Release-notes content generation—that remains `release-drafter`'s responsibility, fed by Conventional-Commits PR titles. For the audience analysis that governs what content those notes must cover, see [`spec/project/release-notes-audience-analysis/`](../release-notes-audience-analysis/en.md).
 - Versioning policy (SemVer major/minor/patch derivation)—inherited from `release-drafter` configuration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
 - The hotfix flow—owned by `branching-model` `§Hotfix flow`, which settles it as a standard `fix/` pull request against `develop` followed by an ordinary patch release; out of scope here.
 - Deprecating the manual `gh release edit --draft=false` path entirely; the manual path remains a documented fallback for incident response when the workflow itself is broken.

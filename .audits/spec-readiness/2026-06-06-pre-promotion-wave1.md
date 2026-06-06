@@ -65,3 +65,6 @@ Warnings (tracked, non-blocking): W-1 14 MUSTs without a testable AC (most are r
 
 - 2026-06-06 — lektorat — promoted draft→accepted, 0 Critical — verified by this audit
 - 2026-06-06 — post-writing-style — promoted draft→accepted, 0 Critical — verified by this audit
+- 2026-06-06 — audience-identification — Critical C-1 (ghost `§Artifact location`) resolved: three `§`-anchor references rewritten to point to the artifact-storage SHOULD in Requirements (EN+DE); promoted draft→accepted
+- 2026-06-06 — release-notes-audience-analysis — Critical C-1 reclassified as false-Critical (the `security-review` skill is a Claude Code built-in and `pull-request-merge` SKILL.md:65 routes security-sensitive diffs through it); reference at en.md:49 corrected to name `pull-request-merge` (EN+DE). Critical C-2 resolved: cross-link added to `release-automation` §Non-Goals (EN+DE), satisfying AC line 68. Promoted draft→accepted
+- 2026-06-06 — spec-driven-development — Critical C-1 (load-bearing OQ1, threshold met) resolved by recorded waiver: CI enforcement deliberately deferred, manual operator enforcement continues, new post-promotion revisit trigger set; Warning AC5 closed by adding recursion cross-references into §Open Questions (EN+DE). Promoted draft→accepted
