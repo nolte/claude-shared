@@ -15,7 +15,7 @@ _Turn a short graphic brief into a brand-conformant, generator-ready AI image-ge
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Distribution:** `plugin`
-- **Tags:** `design`, `prose`, `scaffolding`
+- **Tags:** `prose`, `scaffolding`
 - **Source:** [agents/graphic-prompt-generator.md](https://github.com/nolte/claude-shared/blob/main/agents/graphic-prompt-generator.md)
 
 ## Use when
@@ -29,6 +29,7 @@ _Turn a short graphic brief into a brand-conformant, generator-ready AI image-ge
 
 ## See also
 
+- [`image-generate`](../../skills/nolte-shared/image-generate.md)
 - [`png-to-transparent-svg`](png-to-transparent-svg.md)
 
 ---

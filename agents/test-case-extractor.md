@@ -4,7 +4,7 @@ description: Derive structured, framework-agnostic test cases from a requirement
 distribution: plugin
 tools: Read, Write, Glob, Grep
 phase: design
-tags: [testing, requirements, scaffolding]
+tags: [quality-gate, scaffolding]
 model: sonnet
 summary: "Derives structured, framework-agnostic, traceable test cases from a requirement document, written from the user-observable-behaviour perspective."
 summary_de: "Leitet strukturierte, framework-agnostische, rückverfolgbare Testfälle aus einem Anforderungsdokument ab, aus der Perspektive nutzer-beobachtbaren Verhaltens."

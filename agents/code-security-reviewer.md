@@ -4,7 +4,7 @@ description: Read-only, whole-codebase OWASP security audit that correlates find
 distribution: plugin
 tools: Read, Grep, Glob
 phase: review
-tags: [review, audit, security]
+tags: [review, audit]
 model: opus
 summary: "Read-only whole-codebase OWASP audit correlating findings across files into a severity-classified report."
 summary_de: "Read-only Whole-Codebase-OWASP-Audit, das Befunde über Dateien hinweg zu einem nach Schweregrad klassifizierten Report korreliert."

@@ -41,7 +41,7 @@ AI image generators (Gemini, DALL-E, Midjourney, and similar—this list is illu
 - [ ] The per-file summary contains pixel-removal counts that allow the caller to flag detector outliers (for example, a threshold below 5 % triggers caller review)
 - [ ] An invocation against a PNG the detector can't classify (mixed corner colours, partial alpha) warns and skips that file in the per-file report rather than guessing a threshold or blocking the batch on a question
 - [ ] The agent at `agents/png-to-transparent-svg.md` cites this spec in its `description` or body so the link is discoverable
-- [ ] The agent's tools list is the minimum needed (`Read`, `Write`, `Bash`, `Glob`)—no `Edit`, no network tools
+- [ ] The agent's tools list is the minimum needed (`Read`, `Bash`, `Glob`)—no `Write` (image-file writes happen inside the Python helpers invoked through `Bash`), no `Edit`, no network tools
 
 ## Open Questions
 

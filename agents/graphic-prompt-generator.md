@@ -4,7 +4,7 @@ description: Turn a short graphic brief into a brand-conformant, generator-ready
 distribution: plugin
 tools: Read, Write, Glob, Grep
 phase: design
-tags: [design, prose, scaffolding]
+tags: [prose, scaffolding]
 model: sonnet
 summary: "Authors brand-conformant, generator-ready AI image prompts as durable Markdown documents from a short graphic brief."
 summary_de: "Verfasst brand-konforme, generatorfertige KI-Bild-Prompts als dauerhafte Markdown-Dokumente aus einem kurzen Grafik-Briefing."
@@ -15,6 +15,7 @@ dont_use_when:
   - situation: "you want to remove a fake-transparency background or vectorise a generated PNG"
     alternative: png-to-transparent-svg
 see_also:
+  - "image-generate"
   - "png-to-transparent-svg"
 ---
 

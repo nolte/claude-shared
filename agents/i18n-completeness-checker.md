@@ -4,7 +4,7 @@ description: Read-only audit of a localized app's translation files for complete
 distribution: plugin
 tools: Read, Glob, Grep
 phase: quality
-tags: [review, audit, i18n, frontend]
+tags: [review, audit]
 model: sonnet
 summary: "Read-only completeness audit of translation files against each other and against code usage, as a severity-sorted report."
 summary_de: "Read-only-Vollständigkeits-Audit der Übersetzungsdateien gegeneinander und gegen die Code-Verwendung als nach Schweregrad sortierter Report."

@@ -15,7 +15,7 @@ _Read-only audit of a localized app's translation files for completeness against
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Distribution:** `plugin`
-- **Tags:** `review`, `audit`, `i18n`, `frontend`
+- **Tags:** `review`, `audit`
 - **Quelle:** [agents/i18n-completeness-checker.md](https://github.com/nolte/claude-shared/blob/main/agents/i18n-completeness-checker.md)
 
 ## Anwenden wenn

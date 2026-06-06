@@ -15,7 +15,7 @@ _Read-only, whole-codebase OWASP security audit that correlates findings across 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
 - **Distribution:** `plugin`
-- **Tags:** `review`, `audit`, `security`
+- **Tags:** `review`, `audit`
 - **Quelle:** [agents/code-security-reviewer.md](https://github.com/nolte/claude-shared/blob/main/agents/code-security-reviewer.md)
 
 ## Anwenden wenn

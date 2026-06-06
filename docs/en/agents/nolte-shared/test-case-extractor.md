@@ -15,7 +15,7 @@ _Derive structured, framework-agnostic test cases from a requirement or specific
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)
 - **Distribution:** `plugin`
-- **Tags:** `testing`, `requirements`, `scaffolding`
+- **Tags:** `quality-gate`, `scaffolding`
 - **Source:** [agents/test-case-extractor.md](https://github.com/nolte/claude-shared/blob/main/agents/test-case-extractor.md)
 
 ## Use when
