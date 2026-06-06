@@ -143,6 +143,12 @@ Git revision: <sha>
 - **`go-licenses` and Syft can mislabel.** `go-licenses` warns on non-Go code (which can conceal further requirements) and can fail to resolve a license URL; Syft historically marked unmatched license text as "unlicensed" before its `include-unknown-license-content` option. Treat any unresolved component as `review`, never a silent pass.
 - **The FSF static=dynamic-linking position is the conservative default, not settled law.** Use it to gate, but record in the artifact that it is the FSF interpretation.
 
+## Examples
+
+- Read `examples/01-permissive-python-pass.md` when running the first check on a permissive project that should pass cleanly.
+- Read `examples/02-transitive-mpl-review.md` when a transitive dependency carries weak (file-level) copyleft and must be routed to `review`.
+- Read `examples/03-conveyed-gpl-deny.md` when a conveyed component carries strong copyleft and the gate must `deny` it.
+
 ## Resumability
 
 Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/license-check/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.

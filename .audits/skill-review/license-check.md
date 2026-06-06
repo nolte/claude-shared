@@ -13,7 +13,7 @@ specs-applied:
     revision: "ea7a5e1"
 repo-revision: "b311e01"
 created: "2026-06-05"
-status: open
+status: in-progress
 ---
 
 # Skill Review: license-check
@@ -48,7 +48,7 @@ Next concrete action: author decides whether to add `examples/` evaluation scena
 
 ### Suggestion
 
-- [ ] [skill-review.evaluation-discipline] No `examples/` evaluation scenarios (the spec SHOULDs at least three input/expected-behavior scenarios; absence is a `Suggestion` for a new skill).
+- [x] [skill-review.evaluation-discipline] No `examples/` evaluation scenarios (the spec SHOULDs at least three input/expected-behavior scenarios; absence is a `Suggestion` for a new skill).
       Where: `skills/license-check/` has no `examples/` folder (sibling `dependency-audit` ships `examples/01..03`).
       Fix: add at least three scenarios under `skills/license-check/examples/` (for example: a permissive Python repo that passes; a repo with a transitive MPL-2.0 finding routed to `review`; a conveyed GPL component that is `deny`), each as a `Read examples/NN-… when …` load-triggered reference.
       Verify: `ls skills/license-check/examples/` lists ≥3 scenario files, each referenced with a load-trigger phrase in `SKILL.md`.
@@ -67,3 +67,4 @@ Next concrete action: author decides whether to add `examples/` evaluation scena
 ## Processing log
 
 <!-- Append one line per item closure: YYYY-MM-DD — <item-shorthand> — <action taken> — verified: <method> -->
+2026-06-05 — examples-evaluation-discipline — added three load-triggered scenarios under skills/license-check/examples/ (permissive pass, transitive MPL-2.0 review, conveyed GPL deny) and referenced them with "Read examples/NN-… when …" phrases in SKILL.md §Examples — verified: ls skills/license-check/examples/ shows 3 files, each referenced with a load-trigger phrase
