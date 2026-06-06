@@ -109,6 +109,22 @@ Dispatch `nolte-shared:pull-request-create` for the PR creation; the user confir
 
 The actual merge is [`pull-request-merge`](pull-request-merge.md)'s job, not this skill's.
 
+#### 8. Quarterly drift check (recurring)
+
+Per the spec's §Maintenance cadence and triggers, a drift check **SHOULD** run at least once per quarter (or on the next significant spec update, whichever comes first). This is a recurring process, not a standing file artefact: there is no separate per-quarter document to maintain.
+
+Run the quarterly drift check as a normal invocation of this skill, scoped to discovery:
+
+1. Dispatch `fewer-permission-prompts` (Operation 2's second source path) to scan recent transcripts for read-only commands that keep triggering confirmation prompts, and to surface entries that have since been upstreamed into the Claude Code autoallow set (candidates for pruning).
+2. Walk the surviving candidates through Operations 3–5 (selection criteria, forbidden-pattern rejection, narrowing).
+3. Record the run as the quarter's drift check in the PR body's **Risk / rollout notes**: a one-line statement `Serves as the Q<n>-<YYYY> permission-allowlist drift check per spec §Maintenance cadence`, plus the criteria walk for any added entry and the removal reason for any pruned entry. The PR (or its linked note) is the durable record that the quarter's check happened; no standalone `.audits/` artefact is required.
+
+When the quarterly window is reached and no allowlist change is warranted, still record the check: a short note in the living watch-list issue (or the next `chore` PR touching `.claude/settings.json`) stating `Q<n>-<YYYY> drift check ran, no change warranted` satisfies the SHOULD.
+
+When this skill is invoked from a [`spec-drift-audit`](spec-drift-audit.md) run, treat the cadence-review change for that quarter as the quarter's drift check and say so explicitly in the PR body, so the two specs' quarterly requirements are satisfied by a single recorded run.
+
+**Q2-2026 drift check:** performed under the `chore/full-audit-closeout` audit close-out. The three prefix-form `task` entries (`Bash(task lint *)`, `Bash(task test *)`, `Bash(task docs *)`) were pruned (no observed flag variance; the exact forms already cover all usage, including CI's `task lint` / `task test`); no new read-only candidates warranted addition this quarter.
+
 ### Examples
 
 - Read `examples/01-add-task-lint-from-fewer-prompts.md` when adding a new allowlist entry sourced from the `fewer-permission-prompts` skill output.
