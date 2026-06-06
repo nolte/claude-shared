@@ -185,4 +185,5 @@ Die phasen- und tag-orientierten Indizes setzen einen Leser voraus, der das Kata
 - [ ] Klartext-Vorkommen von Artefakt-Namen, die **nicht** in Inline-Code-Spans (Backticks) eingeschlossen sind, werden auf keiner gerenderten Katalog-Seite in Markdown-Links transformiert—nur Inline-Code-Erwähnungen sind für den Cross-Linking-Rewrite zulässig
 
 ## Offene Fragen
-- §Generierungs-Mechanismus von „Pre-Build erforderlich unter Folder-Strategy-i18n" auf „beide Formen funktionieren" lockern, sobald ein `mkdocs-static-i18n`-Release (oberhalb des `>=1.2`-Pins in `docs/requirements.txt`; aktuell 1.3.1) eine `reconfigure.py` ausliefert, die Dateien mit `abs_src_path` außerhalb von `docs_dir` nicht mehr verwirft—das heißt, sie lässt `mkdocs-gen-files`-Ausgabe unter `docs_structure: folder` nicht mehr fallen. Verfolgt über <https://github.com/ultrabug/mkdocs-static-i18n> (Changelog und die `reconfigure.py`-gen-files-Interaktion). Verifizieren, indem der Katalog-Generator als `mkdocs-gen-files`-Skript verdrahtet wird und bestätigt wird, dass generierte Seiten unter Folder-Strategy-i18n in die gebaute Seite gelangen.
+
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

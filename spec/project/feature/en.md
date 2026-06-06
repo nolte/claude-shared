@@ -122,4 +122,4 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 
 ## Open Questions
 
-- Cross-feature dependencies (`F-7 needs F-3 first`) carry no schema field today; sprint membership plus the `roadmap_item` link express the only sequencing that exists. Revisit when a real feature chain appears that sprint ordering can't express—concretely, two features land where the later one's `## Acceptance criteria` or `## Test hooks` reference a behaviour the earlier one introduces, both are scheduled into the SAME `sprint` (so sprint ordering can't sequence them), AND the consistency check can't capture the ordering as a `prior-art`/`revisit-after` finding. The first such occurrence unblocks adding `depends_on` to BOTH the feature schema and the sibling `sprint` spec in lockstep (the sprint spec carries no dependency or ordering field today, so a feature-side-only addition would be a one-sided invariant).
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

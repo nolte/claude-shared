@@ -127,4 +127,5 @@ Claude Code supports running a skill itself in an isolated subagent context by s
 - [R6] Subagents in the Claude Agent SDK (four benefits—context isolation, parallelism, specialized instructions, tool restrictions—with parallelism and context management as the two primary drivers): <https://code.claude.com/docs/en/agent-sdk/subagents>
 
 ## Open Questions
-- Watch for a Claude Code release that ships a distinct command/CLI artifact format with its own on-disk shape and frontmatter (that is, a slash command that isn't just the invocation surface of a skill). Concretely measurable as: (a) the Claude Code skills/subagents docs ([R2](#references) <https://code.claude.com/docs/en/skills>, [R1](#references) <https://code.claude.com/docs/en/sub-agents>) gain a separately documented command artifact with its own file location and frontmatter schema, OR (b) `.claude-plugin/plugin.json` / the plugin manifest schema adds a first-class `commands` declaration distinct from `skills`. On either event: add a third branch to this spec's decision rule and stand up a sibling `command-management` spec alongside skill-management/agent-management.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

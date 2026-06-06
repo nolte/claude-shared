@@ -145,4 +145,4 @@ Readers: (1) maintainers of `nolte/*` repositories—who decide which dispatched
 
 ## Open Questions
 
-- Should the GitHub Discussions data source also include user-discussions outside the per-repository surface—for example portfolio-wide announcement or feedback channels? Unblocks only when BOTH hold: (a) `portfolio-management` (or a new portfolio spec) declares a canonical "portfolio-wide discussion locations" artefact—today `portfolio-management` §Portfolio scope is purely repository-level (it queries org repos via `gh api orgs/nolte/repos`) and its §Open Questions reads "None at this time," so no such source of truth exists; AND (b) an actual org-level GitHub Discussions channel exists that accumulates untriaged threads (for example a `nolte` org-profile or discussion-only repo with more than zero stale untriaged threads at audit time). Upstream anchor: a future requirement under `spec/portfolio/portfolio-management/` §Portfolio scope.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

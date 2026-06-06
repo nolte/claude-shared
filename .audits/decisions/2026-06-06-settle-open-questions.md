@@ -99,3 +99,27 @@ Each entry: the spec, the open question, and the now-standing decision.
 
 ### project/mkdocs-structure (None/Resolved notes retained)
 - **Q2 (`prerequisites` MAY→SHOULD):** Settled — `prerequisites` stays MAY on tutorial/how-to pages.
+
+## Welle 6 — external-watch & genuinely-open (full settle)
+
+Each default is the standing rule; a platform/upstream/consumer change re-opens via the normal spec process.
+
+- **ansible/playbook-development** Q1 (split single-environment-bootstrap spec) + Q3 (sops MAY→SHOULD): no split, sops stays MAY; revisit only if a second Ansible adopter / a committed key-store spec lands.
+- **claude/plugin-scoping** Q2 (skill-count discipline) + Q3 (second plugin split): single `nolte-shared` plugin, full-body preload discipline stands; revisit on the upstream claude-code#14882 outcome or a genuinely divergent distribution contract.
+- **claude/skill-agent-catalog** Q3 (pre-build vs gen-files under folder-i18n): pre-build stays required; revisit on a mkdocs-static-i18n release that stops dropping out-of-docs_dir gen-files.
+- **claude/skill-review** Q6 (reserved-command overlap check): not added; revisit when a queryable reserved-command list exists or skill-vs-agent makes commands a first-class artifact.
+- **claude/skill-vs-agent** Q3 (third command artifact class): two-class decision rule stands; revisit on a Claude Code release shipping a distinct command artifact format.
+- **project/audience-identification** Q5 (security/privacy/SLA cross-ref): no bidirectional wiring until the first such spec exists; that spec's author wires it then.
+- **project/code-security-audit** Q3 (threat-modeling delimitation): no reciprocal Non-Goal until a threat-modeling spec or roadmap item exists.
+- **project/dependency-audit** Q4 (compliance-regime cadence): MAY stays MAY; revisit when a repo declares a named compliance regime.
+- **project/blog-author-trigger** Q3 (start-of-work trigger) + Q4 (sprint-summary trigger): single feature-to-done trigger stands; revisit on an explicit operator request or a roadmap item.
+- **project/feature** Q2 (`depends_on` field): no dependency field; sprint membership + roadmap link express ordering. Revisit on a real same-sprint feature chain.
+- **project/post-audience-communication** Q3 (corpus distribution gate), Q4 (correction-channel formalism), Q5 (permission threshold), Q6 (Diátaxis frontmatter signal): all defaults stand (50/20/30 model, public-form correction, reactive tightening, implicit-in-lede Diátaxis).
+- **project/post-writing-style** Q1 (quantitative FK gate), Q2 (DE readability target), Q4 (override-procedure formalism): reviewer-judgement readability stands; prose override mechanism stays prose. Revisit on real corpus growth.
+- **project/release-skill-layer** Q2 (pre-release bundle), Q3 (release-drafter rerun safety): stable-only bundles stand, marker-block re-run safety stands; revisit on a first pre-release tag / observed rerun-strip.
+- **portfolio/portfolio-inflight-management** Q7 (org-level discussions source): repository-level discussion scope stands; revisit when a portfolio-wide discussion-locations artefact is declared.
+
+## Welle 6 — partial (blog-author)
+- **project/blog-author** Q2 (handover-contract YAML schema) + Q3 (hero-image corpus policy): both settled (prose contract stands; hero policy stays consumer-side). Q1 (resolved 2026-06-06 as standing two-route design) and the "Intentionally not open" subsection are retained.
+- **project/github-issue-templates** Q3 (security-report routing): chooser routes via `config.yml` contact_links to GitHub private vulnerability reporting; revisit when project-structure defines a concrete SECURITY.md convention.
+- **project/lektorat** Q3 (API-reference scope) + Q5 (batched-vs-per-file dispatch): generated reference text stays out of scope; batched dispatch stays the default.
