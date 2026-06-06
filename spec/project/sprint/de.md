@@ -13,7 +13,7 @@ Die Geschwister-Spec `roadmap` definiert die Arbeits-Warteschlange und verknüpf
 - Die Datei-Form eines Sprints als eine einzige Markdown-Datei unter `project/sprints/<NNNN>-<slug>.md` festlegen, eine Datei pro Sprint, niemals gesplittet.
 - Das Sprint-Frontmatter-Schema festlegen (Sprint-Nummer, Status, Mehrwert-Statement, Artefakt-Referenz, Feature-Liste), damit konsumierende Skills Sprints ohne Ad-hoc-Parser parsen und ändern können.
 - Den Mehrwert-Vertrag erzwingen: jeder Sprint **MUSS [MUST]** ein einzeiliges `value_statement` aus Endnutzer-Sicht tragen, und mindestens ein Feature im Sprint **MUSS [MUST]** ein Akzeptanzkriterium tragen, das genau dieses Statement direkt prüft.
-- Den Artefakt-Vertrag erzwingen: jeder geschlossene Sprint **MUSS [MUST]** auf ein konkretes ausrollbares Artefakt zeigen (Release-Tag, Container-Image-Tag, Plugin-Version oder Doc-Site-Deploy), das das Mehrwert-Statement materialisiert; die Detailregeln dazu liegen in der Geschwister-Spec `release-artifact`.
+- Den Artefakt-Vertrag erzwingen: jeder geschlossene Sprint **MUSS [MUST]** auf ein konkretes ausrollbares Artefakt zeigen (Release-Tag, Container-Image-Tag, Plugin-Version oder Doc-Site-Deploy), das das Mehrwert-Statement materialisiert; die Detailregeln dazu liegen in der Geschwister-Spec [`release-artifact`](../release-artifact/de.md).
 - Den Sprint-Lifecycle festlegen (`planned → active → review → closed`) und welche Übergänge zulässig sind, damit `sprint-plan`, `sprint-execute` und `sprint-review` nicht überlappende Zuständigkeiten haben.
 - Portfolio-weit wiederverwendbar bleiben über Hobby-Skala-Varianz: Sprint-Dauer ist ein Output der Arbeit, kein Input, und die Spec toleriert Pausen und unregelmäßige Kadenz ausdrücklich.
 

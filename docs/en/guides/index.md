@@ -14,7 +14,11 @@ Task-oriented how-tos and explanatory background pages for `claude-shared`, from
 
 - [Development](development.md): getting started as a contributor
 - [Project Structure](project-structure.md): where things live and why
+- [Architecture overview](architecture.md): context, building blocks, load-bearing decisions
+- [Interfaces and contracts](interfaces.md): every interface the project exposes
 - [Contributing](contributing.md): workflow, conventions, commits
+- [Troubleshooting](troubleshooting.md): common contributor/operator failure modes
+- [Glossary](glossary.md): project-specific terminology
 
 ## Understanding the concepts
 

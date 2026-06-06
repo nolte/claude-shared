@@ -2,8 +2,14 @@
 title: Startseite
 audience: [maintainer, downstream-user]
 content_mode: meta
+# track-override: this page mixes audiences that map to different tracks
+# (maintainer → developer-docs, downstream-user → user-docs). As a
+# content_mode: meta page it is exempt from the audience-to-track
+# no-contradiction rule per spec/project/docs-audience-tracks/ §Per-page
+# contract (meta pages route readers across tracks). track is set to the
+# portfolio default for meta pages (developer-docs) per §Per-page contract.
 track: developer-docs
-last_updated: 2026-05-19
+last_updated: 2026-06-06
 ---
 
 # Startseite

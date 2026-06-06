@@ -14,7 +14,11 @@ Aufgaben-orientierte How-tos und erklärende Hintergrund-Seiten rund um `claude-
 
 - [Entwicklung](development.md) — Einstieg für Mitwirkende
 - [Projektstruktur](project-structure.md) — wo liegt was und warum
+- [Architekturüberblick](architecture.md) — Kontext, Bausteine, tragende Entscheidungen
+- [Schnittstellen und Verträge](interfaces.md) — jede Schnittstelle, die das Projekt bereitstellt
 - [Beitragen](contributing.md) — Workflow, Konventionen, Commits
+- [Fehlerbehebung](troubleshooting.md) — häufige Fehlerbilder für Mitwirkende/Betreiber
+- [Glossar](glossary.md) — projektspezifische Terminologie
 
 ## Konzepte verstehen
 

@@ -86,6 +86,8 @@ For each roadmap item collected in step 4, walk `project/features/` and find fea
 
 After confirming the final feature list with the user, set each chosen feature's `sprint` frontmatter field to the new sprint number in the same write operation that adds the feature's `id` to the sprint's `features` list. The bidirectional invariant (feature side ↔ sprint side) is the canonical check per `spec/project/feature/` §Frontmatter schema; partial updates are forbidden.
 
+**Flip `draft → ready` under the gate.** Setting `feature.sprint = N` is the moment a `draft` feature becomes schedulable, so this skill is the canonical write authority for the `draft → ready` transition per `spec/project/feature/` §Lifecycle and gates. For every feature pulled in whose `status` is `draft`, before flipping it to `ready` verify the full gate: a non-empty `## Description`, at least one `**acceptance-<n>**` criterion bullet, a populated `consistency_check` frontmatter object whose `findings` array is non-empty, and a populated `## Consistency notes` section. If any gate condition fails, **don't flip the status and don't pull the feature in** — surface the missing precondition and route the operator back to `feature-decompose` to complete the decomposition (the consistency check in particular is `feature-decompose`'s territory, never something to fabricate here). Flip `status: draft → ready` only on features that clear the gate, in the same write that assigns `sprint`. A feature already in `ready` (or any later state) keeps its status; only `draft` features are flipped here.
+
 ### 6. Name the value-verifying feature
 
 Exactly one feature in the sprint **MUST** carry a non-null `verifies_sprint_value: acceptance-<n>` frontmatter field per `spec/project/sprint/` §Value-delivery contract. Walk the candidate features:
@@ -163,6 +165,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 - **Never** reuse a sprint number from a `cancelled` or `closed` sprint. Numbers are strictly monotonic per `spec/project/sprint/` §Directory layout and file shape.
 - **Never** write a sprint with `status` other than `planned`. Activation is `sprint-execute`'s authority.
+- **Never** flip a feature `draft → ready` without verifying the full §Lifecycle gate (non-empty `## Description`, ≥ 1 `acceptance-<n>` bullet, populated `consistency_check` with a non-empty `findings` array, populated `## Consistency notes`). A `draft` feature that fails the gate is reported as a gap and routed to `feature-decompose`; it is never pulled into the sprint nor silently flipped.
 - **Never** invent roadmap items, features, or audiences inline. Missing decompositions are reported as gaps; missing audiences are a `roadmap`-side concern, not a sprint-side fix.
 - **Never** persist a `value_statement` that begins with an operator-internal verb without an explicit user-supplied override rationale recorded in `## Goal`.
 - **Never** write a `features` frontmatter list that diverges from the `## Features` body bullet list at initial creation.
