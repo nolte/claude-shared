@@ -161,7 +161,7 @@ def count_tokens(text: str) -> tuple[int, int]:
     long_words = 0
     for raw in _WORD_RE.findall(text):
         # Strip leading/trailing punctuation so it never inflates the length.
-        token = raw.strip("\"'()[]{}.,;:!?…—–-«»„“”‚�’")
+        token = raw.strip("\"'()[]{}.,;:!?…—–-«»„“”‚’")
         if not any(ch.isalnum() for ch in token):
             continue
         words += 1
