@@ -61,13 +61,30 @@ Before doing anything:
 
 ### Operations
 
-Operations 2 to 4 form a Plan-validate-execute cycle: Operation 2 walks every pre-publish gate, Operation 3 surfaces the validated state for explicit operator confirmation, and Operation 4 dispatches `release-publish.yml`. Operation 5 verifies the dispatch landed and reports the run URL without polling to completion (unless wait mode is opted in).
+Operation 1 resolves the open draft and Operation 1b detects the project type (the index into `release-automation` §Version-bearing files, shared with Skill A per the spec's §Skill split and shared shape MUST). Operations 2 to 4 then form a Plan-validate-execute cycle: Operation 2 walks every pre-publish gate, Operation 3 surfaces the validated state for explicit operator confirmation, and Operation 4 dispatches `release-publish.yml`. Operation 5 verifies the dispatch landed and reports the run URL without polling to completion (unless wait mode is opted in).
 
 #### 1. Resolve the open draft
 
 - Run `gh release list --json isDraft,tagName,targetCommitish,createdAt,name`.
 - Filter to drafts whose `targetCommitish` equals the default branch.
 - **Refuse and report** when zero drafts match (operator should run `release-drafter.yml` first) or when more than one matches without an explicit `--tag` argument from the operator (no "newest wins" heuristic, per `release-automation` §Operational contract).
+
+#### 1b. Detect project type
+
+Per `spec/project/release-skill-layer/` §Skill split and shared shape (MUST), both release-layer skills follow the **same** six project-type detection signals used by [`github-issue-templates-apply`](github-issue-templates-apply.md) and by [`release-notes-curate`](release-notes-curate.md) (Skill A). Walk these six signals in order and stop at the first match. Read the files via the standard read tools — never via filename heuristics alone:
+
+1. **Claude Code plugin** — `.claude-plugin/plugin.json` exists; top-level `skills/` and / or `agents/` folder present.
+2. **Python application** — `pyproject.toml` declares `[project.scripts]` (or equivalent application entry point), no library distribution metadata.
+3. **Python library** — `pyproject.toml` declares a distributable package without an application entry point.
+4. **Node / TypeScript library or app** — `package.json` exists; `main` / `exports` indicates library, `bin` / `scripts.start` indicates app.
+5. **CLI tool** — declared CLI entry point in `pyproject.toml` (`[project.scripts]`), `package.json` (`bin`), or `Cargo.toml` (`[[bin]]`).
+6. **Documentation-only repo** — `mkdocs.yml`, `docusaurus.config.*`, or similar exists with no application source.
+
+When `.github/release-skill-layer.yml` declares an explicit `project_type:` value, use it instead of the autodetection (override path) — the same override that Skill A honours.
+
+When no signal matches, stop and ask the operator to declare the project type manually. Never proceed with a generic fallback.
+
+The detected type is the index into `release-automation` §Version-bearing files: gate 2b uses it to select the correct default version-bearing-file rows for this repo (Claude Code plugin, Python package, Node.js package, HACS integration, etc.) before reading and comparing each file.
 
 #### 2. Validate every pre-publish gate
 
@@ -82,7 +99,7 @@ Walk these gates in order. **The skill MUST NOT proceed past a failed gate**; su
 
 ##### 2b. Version-bearing files aligned
 
-- Read the version-bearing file list per `release-automation` §Version-bearing files: the default table by repo type, or the override at `.github/release-automation.yml` when the repo declares one.
+- Read the version-bearing file list per `release-automation` §Version-bearing files: select the default-table rows for the project type detected in step 1b, or use the override at `.github/release-automation.yml` when the repo declares one.
 - For every declared file, read the value at the `target-sha` (`git show <target-sha>:<path>` plus the spec's selector) and compare against the target tag under the file's value transform (typically "strip leading `v`" if the existing convention omits it).
 - **Failure**: any file whose value does not equal the target tag under transform. Remediation: open a `chore(release): <tag>` PR (fallback path) or wait for the workflow-driven primary path to land its alignment commit.
 

@@ -75,7 +75,9 @@ You are **read-only**. `Read`, `Glob`, and `Grep` serve only to load locale file
 
 #### Step 2 — Cross-locale parity
 
-Flatten each locale file to dotted key paths. Against the reference locale, compute keys missing in another locale, keys present in another locale but absent from the reference, and **structural mismatches** (a key path resolving to different value types across locales).
+**Per-tree isolation (MUST, per spec §Audit dimensions).** When multiple independent locale trees are discovered (for example one per package or subroot in a monorepo), treat each tree as a **separate audit scope**: flatten, diff, and scan each tree independently, and **never merge key sets across trees**. Each scope computes its own reference locale, parity, and orphan/missing math within that tree alone — a key present in tree A but absent from tree B is not a parity gap, because the two trees are unrelated. The scope boundary is the discovered locale-tree root, or the per-scope entries when the optional `project/i18n-audit.yml` config declares them. Emit one report section per scope.
+
+Within each scope: flatten each locale file to dotted key paths. Against that scope's reference locale, compute keys missing in another locale, keys present in another locale but absent from the reference, and **structural mismatches** (a key path resolving to different value types across locales).
 
 #### Step 3 — Code-usage scan
 
@@ -91,7 +93,7 @@ Empty string values per locale; values identical between the reference and anoth
 
 #### Step 5 — Report
 
-Emit a single severity-sorted report:
+Emit a single severity-sorted report. When more than one independent locale tree was audited (§Step 2 per-tree isolation), repeat the body below once per scope under a scope heading (for example `## Scope: packages/web/locales`), so each tree's metrics and findings stay separated and no cross-tree merge is implied:
 
 ~~~markdown
 ## i18n Completeness Report
@@ -125,7 +127,8 @@ Sort by severity (critical > warning > info). When a category exceeds N entries,
 ### Quality rules
 
 1. Read-only — never edit a file.
-2. Dynamic keys are reported, never counted as misses.
-3. Every used-but-undefined finding carries a source file:line.
-4. The report always states the audit scope (locales, reference, roots, patterns) so it is reproducible.
-5. Cap per-category output so a large drift stays readable.
+2. Per-tree isolation — when multiple independent locale trees exist, audit each as a separate scope and never merge keys across trees; parity, orphan, and missing math is computed within one tree alone.
+3. Dynamic keys are reported, never counted as misses.
+4. Every used-but-undefined finding carries a source file:line.
+5. The report always states the audit scope (locales, reference, roots, patterns) so it is reproducible.
+6. Cap per-category output so a large drift stays readable.
