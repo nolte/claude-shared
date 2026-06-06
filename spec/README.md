@@ -58,6 +58,7 @@ Canonical language: `en` · Translations: `de`
 | project | prose-style | Prose Style | Textstil | draft | 2026-04-24 |
 | project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | 2026-04-23 |
 | project | quality-gate | Quality Gate | Quality-Gate | draft | unversioned |
+| project | readability-lix | Readability (LIX) | Lesbarkeit (LIX) | draft | unversioned |
 | project | readme-structure | Repository README Structure | Repository-README-Struktur | draft | 2026-04-23 |
 | project | release-artifact | Project Release Artifact | Projekt-Release-Artefakt | draft | unversioned |
 | project | release-automation | Release Automation | Release-Automation | draft | 2026-04-24 |

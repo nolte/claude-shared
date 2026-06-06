@@ -51,25 +51,25 @@ The five dimensions below are the **authoritative** list. Each finding produced 
 
 #### D1—Readability
 
-- **MUST** evaluate readability against named metrics with explicit per-language target corridors:
-  - **English text**: Flesch Reading Ease (FRE) and Flesch–Kincaid Grade Level (FKGL)
-  - **German text**: Wiener Sachtextformel (WSTF) variant 1 and LIX
-- **MUST** declare per-`content_mode` target corridors so a `tutorial` page isn't held to the same density as a `reference` page; the default corridors are:
+- **MUST** evaluate readability against named metrics with explicit per-language target corridors. **LIX (Läsbarhetsindex) is the primary, cross-language readability metric**, computed identically for English and German per [`spec/project/readability-lix/`](../readability-lix/en.md), which is the authoritative source for the LIX formula, the long-word rule, the tokenization and segmentation pipeline, the cross-language calibration (the German offset), and the corridor values reproduced below. The Flesch-family and Wiener metrics are **supplementary, advisory signals** that **MAY** be computed and reported alongside LIX but **MUST NOT** override, escalate, or suppress a LIX-based D1 finding:
+  - **English text**: LIX (primary); Flesch Reading Ease (FRE) and Flesch–Kincaid Grade Level (FKGL) (supplementary)
+  - **German text**: LIX (primary); Wiener Sachtextformel (WSTF) variant 1 (supplementary)
+- **MUST** declare per-`content_mode` target corridors so a `tutorial` page isn't held to the same density as a `reference` page; the default corridors are (the LIX columns are governed by [`spec/project/readability-lix/`](../readability-lix/en.md) §Target corridors and reproduced here for convenience—when the two disagree, `readability-lix` wins):
 
-  | `content_mode` (per `spec/project/mkdocs-structure/`) | EN: FRE warn / crit | EN: FKGL warn / crit | DE: WSTF warn / crit | DE: LIX warn / crit |
-  | --- | --- | --- | --- | --- |
-  | `tutorial`, `how-to`, `troubleshooting` | < 60 / < 45 | > 10 / > 14 | > 7 / > 10 | > 50 / > 60 |
-  | `explanation`, `reference`, `glossary` | < 45 / < 30 | > 14 / > 18 | > 10 / > 13 | > 60 / > 70 |
+  | `content_mode` (per `spec/project/mkdocs-structure/`) | EN: FRE warn / crit | EN: FKGL warn / crit | EN: LIX warn / crit | DE: WSTF warn / crit | DE: LIX warn / crit |
+  | --- | --- | --- | --- | --- | --- |
+  | `tutorial`, `how-to`, `troubleshooting` | < 60 / < 45 | > 10 / > 14 | > 45 / > 55 | > 7 / > 10 | > 50 / > 60 |
+  | `explanation`, `reference`, `glossary` | < 45 / < 30 | > 14 / > 18 | > 55 / > 65 | > 10 / > 13 | > 60 / > 70 |
 
-  The `crit` column is derived by extending the `warn` bound by one **corridor width** (the absolute gap between the two `content_mode` rows for the same metric): FRE width = 15, FKGL width = 4, WSTF width = 3, LIX width = 10. The `crit` thresholds above are the operative values; the derivation is documented so a future content-mode row can be added consistently.
+  The `crit` column is derived by extending the `warn` bound by one **corridor width** (the absolute gap between the two `content_mode` rows for the same metric): FRE width = 15, FKGL width = 4, WSTF width = 3, LIX width = 10. The English and German LIX columns differ by the cross-language offset Δ = 5 defined in `readability-lix` §Cross-language calibration (German corridors sit higher because German compounding inflates the long-word ratio). The `crit` thresholds above are the operative values; the derivation is documented so a future content-mode row can be added consistently.
 
 - **MUST** classify a metric whose value crosses the `warn` threshold (but not the `crit` threshold) as a `warning` finding, and a metric whose value crosses the `crit` threshold as a `critical` finding; thresholds are read from the per-`content_mode` row above
-- **MUST NOT** apply D1 evaluation to a page whose `content_mode` is `meta` (per `spec/project/mkdocs-structure/`); meta pages (Home, per-section index) are exempt from readability metrics because their prose is navigational rather than instructional, and no corridor row applies. Top-level repository Markdown without a `content_mode` frontmatter key (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) **MUST** default to `content_mode: meta` for D1 purposes; this default does **not** propagate to D3/D4/D5, which evaluate the text per their own rules
+- **MUST NOT** apply D1 evaluation to a page whose `content_mode` is `meta` (per `spec/project/mkdocs-structure/`); meta pages (Home, per-section index) are exempt from readability metrics because their prose is navigational rather than instructional, and no corridor row applies. Top-level repository Markdown without a `content_mode` frontmatter key (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) **MUST** default to `content_mode: meta` for D1 purposes; this default **doesn't** propagate to D3/D4/D5, which evaluate the text per their own rules
 - **MAY** override the per-`content_mode` corridors **per file** via a `Lektorat`-local configuration entry of the form `{path: <glob>, FRE_warn: <int>, FRE_crit: <int>, FKGL_warn: <int>, FKGL_crit: <int>, WSTF_warn: <float>, WSTF_crit: <float>, LIX_warn: <int>, LIX_crit: <int>}`. The override **MUST** name a concrete rationale (declared inline in the configuration) and **MUST** stay within ±50 % of the default corridor value; an override outside that band is a spec violation and the operator **MUST** revisit the source text instead. The portfolio-wide re-calibration of the default corridors is an Open Question, gated on at least three Portfolio-Member repos contributing audit data
 - **MUST** report the computed metric value, the corridor, and at least one offending sample (longest sentence, deepest nesting) so the finding is auditable
 - **MUST NOT** rewrite a passage on readability grounds alone in `patch` mode without a metric value or a named heuristic citation in the finding; an opinion isn't a finding
 - **SHOULD** complement metric findings with **structural heuristics** (paragraphs longer than three sentences, lists with more than seven peers, headings deeper than `####`)—these are `suggestion`-level by default
-- **SHOULD** compute the named metrics by consuming a maintained per-language readability library (a `textstat`-class library for English, a `readability-de`-class library for German) rather than re-implementing the classic formulas; the spec constrains only the metric names and the corridors above, not the implementation, and the chosen library **MAY** be recorded alongside the pipeline metadata (§Outputs) for reproducibility
+- **SHOULD** compute the supplementary metrics (FRE/FKGL for English, WSTF for German) by consuming a maintained per-language readability library (a `textstat`-class library for English, a `readability-de`-class library for German) rather than re-implementing the classic formulas; the spec constrains only the metric names and the corridors above, not the implementation, and the chosen library **MAY** be recorded alongside the pipeline metadata (§Outputs) for reproducibility. **LIX specifically MUST** be computed per [`spec/project/readability-lix/`](../readability-lix/en.md) §Reproducibility—a single pinned library and tokenizer/segmenter used identically for both languages, validated against the canonical formula (not a library docstring), with the recorded evidence carrying the `lix`, `asl`, `lwp`, and raw `words`/`sentences`/`long_words` counts
 
 #### D2—Comprehensibility
 
@@ -93,7 +93,7 @@ The five dimensions below are the **authoritative** list. Each finding produced 
 #### D3—Spelling and grammar
 
 - **MUST** apply **language-specific** spelling and grammar checks:
-  - **English text**: defer to the Vale-driven mechanics already governed by `prose-style`; `Lektorat` does **not** re-implement spelling/grammar for English, it consumes Vale's output and surfaces it as `D3` findings in the unified report
+  - **English text**: defer to the Vale-driven mechanics already governed by `prose-style`; `Lektorat` **doesn't** re-implement spelling/grammar for English, it consumes Vale's output and surfaces it as `D3` findings in the unified report
   - **German text**: apply a `Lektorat`-owned DE pipeline (portfolio default: LanguageTool HTTP API; see §Language handling) because `prose-style` explicitly scopes Vale to English only and a DE alternative isn't available portfolio-wide
 - **MUST** protect **proper nouns, product names, technical identifiers, command names, file paths, URLs, and project-specific jargon** from spelling correction by sourcing the protected set from the audience artefact and the `nolte/vale-style` vocabulary (for English) or from [`spec/project/lektorat/protected-terms-de.yml`](protected-terms-de.yml) (for German); the protected-terms file is YAML, versioned, and additions require a one-line rationale comment so reviewers can judge each entry
 - **MUST** classify a spelling or grammar finding as `critical` when it would change rendered meaning or is visible in a published artefact (release-note body, README, top-level docs), and as `warning` otherwise
@@ -210,12 +210,27 @@ The `Lektorat` layer **MUST** distinguish exactly three operations. The names be
       "en": {
         "tool": "vale",
         "version": "<output of `vale --version`>",
-        "configured_path": "<repo-relative path to the active .vale.ini or vale.yml>"
+        "configured_path": "<repo-relative path to the active .vale.ini or vale.yml>",
+        "readability": {
+          "library": "<LIX library name>",
+          "library_version": "<version>",
+          "tokenizer": "<tokenizer/segmenter name>",
+          "tokenizer_version": "<version>",
+          "long_word_threshold": 6
+        }
       },
       "de": {
         "tool": "languagetool-http",
         "version": "<value of LanguageTool /v2/info `buildDate` or the self-hosted release tag>",
-        "configured_path": "<HTTP endpoint URL (Public or self-hosted) or, for an alternative tool, the resolved binary path>"
+        "configured_path": "<HTTP endpoint URL (Public or self-hosted) or, for an alternative tool, the resolved binary path>",
+        "readability": {
+          "library": "<LIX library name>",
+          "library_version": "<version>",
+          "tokenizer": "<tokenizer/segmenter name>",
+          "tokenizer_version": "<version>",
+          "long_word_threshold": 6,
+          "decompounding": false
+        }
       }
     },
     "inventory_findings": [
@@ -245,7 +260,8 @@ The `Lektorat` layer **MUST** distinguish exactly three operations. The names be
   }
   ```
 
-- **MUST** populate `pipeline_metadata.<language>` for every language present in `language_summary` whose pipeline could be resolved; the three sub-fields `tool`, `version`, and `configured_path` are all required and load-bearing for the reproducibility Acceptance Criterion. Placeholder values are forbidden: when one of the three can't be resolved (for example the binary is missing), the corresponding `pipeline_metadata.<language>` block is **omitted** and the scan condition is recorded in `inventory_findings` instead (see below)
+- **MUST** populate `pipeline_metadata.<language>` for every language present in `language_summary` whose pipeline could be resolved; the three sub-fields `tool`, `version`, and `configured_path` (the D3 spelling/grammar pipeline) are all required and load-bearing for the reproducibility Acceptance Criterion. Placeholder values are forbidden: when one of the three can't be resolved (for example the binary is missing), the corresponding `pipeline_metadata.<language>` block is **omitted** and the scan condition is recorded in `inventory_findings` instead (see below)
+- **MUST** also populate the `readability` sub-block of `pipeline_metadata.<language>` per [`spec/project/readability-lix/`](../readability-lix/en.md) §Reproducibility, populating `library`, `library_version`, `tokenizer`, `tokenizer_version`, `long_word_threshold` (always `6`), and, for German only, `decompounding`, using the **same** LIX library and tokenizer for both languages so EN and DE values stay comparable
 - **MUST** surface every infrastructure-level scan condition in the `inventory_findings` array, **never** in `findings`. The `findings` array carries only editorial findings classified under the closed severity set (`critical` / `warning` / `suggestion`) of §Severity classification; `inventory_findings` carries pre-evaluation conditions that prevented part of the scan from completing. The `kind` field is a closed enumeration with exactly these five values:
   - `vale-unavailable`: Vale binary not callable but English files are in scope; D3/D4 EN mechanics are skipped. `file: null`.
   - `language-pipeline-missing`: German files are in scope but no DE pipeline config was passed (or the configured endpoint/binary isn't callable); D3 for the affected file is skipped. `file` names the affected file; emit one entry per affected file.
@@ -278,6 +294,7 @@ The spec deliberately leaves the exact implementation shape **open**, but **SHOU
 - **MUST** reference `spec/project/prose-style/` as the authoritative source of EN voice/tone rules and Vale mechanics; `Lektorat` consumes them and **MUST NOT** redefine them
 - **MUST** reference `spec/project/audience-identification/` as the authoritative source of audience identifiers and audience properties; `Lektorat` reads the artefact and **MUST NOT** invent audiences
 - **MUST** reference `spec/project/docs-audience-tracks/` for the per-page `audience` / `track` / `content_mode` frontmatter contract; `Lektorat` resolves applicable audiences through that contract
+- **MUST** reference [`spec/project/readability-lix/`](../readability-lix/en.md) as the authoritative source of the LIX metric (formula, long-word rule, tokenization pipeline, cross-language calibration, corridor values, and the improvement transformations); `Lektorat` §D1 consumes LIX from it and **MUST NOT** redefine the metric or its corridors
 - **MUST** reference `spec/project/mkdocs-structure/` for the `content_mode` enum that drives readability corridors and for the `_`-prefixed snippet-folder convention
 - **MUST** reference `spec/project/docs-multilingual-authoring/` for the cross-language parity contract; `Lektorat` **MUST NOT** synchronise translations
 - **MUST** reference `spec/project/docs-freshness/` for cross-language drift detection; `Lektorat` **MUST NOT** detect parity drift
@@ -293,7 +310,7 @@ The spec deliberately leaves the exact implementation shape **open**, but **SHOU
 - [ ] Re-running the same `audit` invocation produces a byte-identical JSON `findings` array (modulo `ran_at`) on an unchanged repository
 - [ ] An English file produces at least one D1 finding when Flesch Reading Ease drops below its content-mode corridor, with the metric value and corridor included in the finding
 - [ ] A German file produces at least one D1 finding when WSTF exceeds its content-mode corridor, with the metric value and corridor included in the finding
-- [ ] A page whose `content_mode` is `meta` does **not** produce a D1 finding (the meta exemption is honoured)
+- [ ] A page whose `content_mode` is `meta` **doesn't** produce a D1 finding (the meta exemption is honoured)
 - [ ] A top-level Markdown file without a frontmatter `content_mode` key (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) is treated as `content_mode: meta` for D1 only; the file **doesn't** generate a `content-mode-missing` inventory finding
 - [ ] A file with an unexplained abbreviation produces at least one D2 finding naming the abbreviation, the absent expansion, and the line of first occurrence
 - [ ] A file with a hidden prerequisite (an instruction referencing a tool or environment state not mentioned on the page) produces a D2 finding identifying the missing prerequisite

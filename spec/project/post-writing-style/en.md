@@ -63,6 +63,7 @@ Where this spec refers to a "post body", a "post pair", a "frontmatter field `ai
 - **MUST** keep the average sentence length in the post body between **14 and 20 words** (American Press Institute comprehension data: ≥ 90 % at 14 words, drops sharply above 25). Individual sentences **MAY** exceed 30 words when a single long sentence serves rhythm or precision, but never two in a row.
 - **MUST** keep body paragraphs to **at most 4 sentences** (gov.uk research: people read 20–28 % of text on a page; long paragraphs amplify drop-off). One-sentence paragraphs are explicitly allowed when they carry a beat.
 - **MUST** target Flesch–Kincaid Grade Level between **7 and 10** for the EN body excluding code blocks and frontmatter. Posts that drop below 7 read childish; posts above 10 lose readers who skim the post for a fast portfolio signal.
+- **MUST** target the **LIX** corridor for the blog-post content type defined in [`spec/project/readability-lix/`](../readability-lix/en.md) §Target corridors on **both** language bodies (EN aim ≤ 45, DE aim ≤ 50; the German aim is higher by the cross-language offset Δ = 5 because German compounding inflates the long-word ratio). LIX is the primary, cross-language readability target — it gives the DE body a readability number it previously lacked, and its blog-post `aim` is calibrated to coincide with the EN Flesch–Kincaid 7–10 target so the two metrics agree rather than compete. Flesch–Kincaid stays a supplementary EN signal.
 - **MUST** prefer active voice. The rule of thumb: if a passive sentence's grammatical subject is missing or "by the system / by the framework / by the user", rewrite to active. Passive is acceptable for sentences where the actor is genuinely unknown or where the object is the topic and the actor is incidental.
 - **SHOULD** target a measured active-voice ratio of ≥ 70 % over the post body. The ratio is a target, not a hard gate, because some technical descriptions read more naturally in passive (for example, "the request is signed with HMAC-SHA256").
 
@@ -195,7 +196,8 @@ A post conforms to this spec when **all** of the per-post criteria below hold. T
 - [ ] **a-1** The body opens with an inverted-pyramid lead paragraph (≤ 80 words) that names the post's claim, scope, or question.
 - [ ] **a-2** Average sentence length in the body falls within 14–20 words; no two consecutive sentences exceed 30 words.
 - [ ] **a-3** No body paragraph exceeds 4 sentences (excluding bullet lists, which aren't paragraphs for this rule).
-- [ ] **a-4** Flesch–Kincaid Grade Level on the EN body (code blocks excluded) falls within 7–10. **Provisional**: until a `textstat`-or-equivalent lint hook ships (see §Open questions), the check is reviewer judgement, and the 7–10 threshold itself is subject to recalibration after the first 10 EN posts in a given consumer repository. The DE body is exempt from this criterion pending a DE-specific readability target (see §Open questions).
+- [ ] **a-4** Flesch–Kincaid Grade Level on the EN body (code blocks excluded) falls within 7–10. **Provisional**: until a `textstat`-or-equivalent lint hook ships (see §Open questions), the check is reviewer judgement, and the 7–10 threshold itself is subject to recalibration after the first 10 EN posts in a given consumer repository. Flesch–Kincaid is a supplementary EN signal; the cross-language readability target is LIX (a-4a).
+- [ ] **a-4a** LIX on **both** language bodies (code blocks excluded) sits within the blog-post corridor of [`spec/project/readability-lix/`](../readability-lix/en.md) §Target corridors (EN aim ≤ 45 / warn 50; DE aim ≤ 50 / warn 55). This replaces the former DE readability exemption — the DE body now carries the primary cross-language readability target. **Provisional**: the corridor and the offset Δ = 5 are subject to recalibration per `readability-lix` §Open Questions.
 - [ ] **a-5** Every fenced code block declares a supported language identifier.
 - [ ] **a-6** Every link's text describes its destination on its own (passes WCAG 2.4.4).
 - [ ] **a-7** Headings are sentence case throughout; the body declares no second H1; heading levels don't skip going deeper.
@@ -235,7 +237,7 @@ Other consumers adopting this spec carry an analogous annex in their own reposit
 
 ## Open questions
 
-_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale. The former DE-side-readability-target question is additionally resolved on the implementation side by the cross-language LIX target (`a-4a`) per [`spec/project/readability-lix/`](../readability-lix/en.md)._
 
 ## References
 

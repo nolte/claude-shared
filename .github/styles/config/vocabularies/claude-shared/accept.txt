@@ -37,3 +37,14 @@ Syft
 Zlib
 Unlicense
 copyrightability
+LIX
+Komposita
+tokenization
+tokenizer
+tokenizers
+segmenter
+segmenters
+decompounding
+decompounder
+nominalisation
+nominalisations

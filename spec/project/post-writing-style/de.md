@@ -59,6 +59,7 @@ Wo diese Spec auf einen „Post-Body", ein „Post-Paar", ein „Frontmatter-Fel
 - **MUSS [MUST]** die durchschnittliche Satzlänge im Post-Body zwischen **14 und 20 Wörtern** halten (American-Press-Institute-Verständlichkeitsdaten: ≥ 90 % bei 14 Wörtern, scharfer Abfall über 25). Einzelne Sätze **DÜRFEN [MAY]** 30 Wörter überschreiten, wenn ein einzelner langer Satz dem Rhythmus oder der Präzision dient, aber niemals zwei in Folge.
 - **MUSS [MUST]** Body-Absätze auf **höchstens 4 Sätze** halten (gov.uk-Forschung: Menschen lesen 20–28 % des Texts auf einer Seite; lange Absätze verstärken Drop-off). Ein-Satz-Absätze sind ausdrücklich erlaubt, wenn sie einen Akzent tragen.
 - **MUSS [MUST]** für den EN-Body (Code-Blöcke und Frontmatter ausgenommen) eine Flesch–Kincaid-Grade-Stufe zwischen **7 und 10** anzielen. Posts unter 7 lesen kindlich; Posts über 10 verlieren Leser, die den Post für ein schnelles Portfolio-Signal skimmen.
+- **MUSS [MUST]** den **LIX**-Korridor für den Blog-Post-Texttyp aus [`spec/project/readability-lix/`](../readability-lix/de.md) §Zielkorridore auf **beiden** Sprach-Bodys anzielen (EN aim ≤ 45, DE aim ≤ 50; das deutsche aim liegt um den sprachübergreifenden Offset Δ = 5 höher, weil deutsche Kompositabildung den Langwort-Anteil aufbläht). LIX ist das primäre, sprachübergreifende Lesbarkeitsziel — es gibt dem DE-Body eine Lesbarkeitszahl, die er zuvor nicht hatte, und sein Blog-Post-`aim` ist so kalibriert, dass es mit dem EN-Flesch–Kincaid-7–10-Ziel zusammenfällt, sodass die beiden Metriken übereinstimmen statt zu konkurrieren. Flesch–Kincaid bleibt ein ergänzendes EN-Signal.
 - **MUSS [MUST]** Aktiv-Voice bevorzugen. Faustregel: wenn das grammatikalische Subjekt eines Passiv-Satzes fehlt oder „vom System / vom Framework / vom Nutzer" lautet, in Aktiv umschreiben. Passiv ist akzeptabel für Sätze, in denen der Akteur wirklich unbekannt ist oder in denen das Objekt das Thema ist und der Akteur beiläufig ist.
 - **SOLLTE [SHOULD]** einen gemessenen Aktiv-Anteil von ≥ 70 % über den Post-Body anstreben. Der Anteil ist ein Ziel, kein hartes Gate, weil einige technische Beschreibungen natürlicher im Passiv lesen (z. B. „die Anfrage wird mit HMAC-SHA256 signiert").
 
@@ -191,7 +192,8 @@ Ein Post erfüllt diese Spec, wenn **alle** der Per-Post-Kriterien unten gelten.
 - [ ] **a-1** Der Body öffnet mit einem Inverted-Pyramid-Lead-Absatz (≤ 80 Wörter), der die Behauptung, den Geltungsbereich oder die Frage des Posts benennt.
 - [ ] **a-2** Die durchschnittliche Satzlänge im Body fällt zwischen 14 und 20 Wörter; keine zwei aufeinanderfolgenden Sätze überschreiten 30 Wörter.
 - [ ] **a-3** Kein Body-Absatz überschreitet 4 Sätze (Bullet-Listen ausgenommen, die für diese Regel keine Absätze sind).
-- [ ] **a-4** Flesch–Kincaid-Grade-Stufe auf dem EN-Body (Code-Blöcke ausgenommen) fällt zwischen 7 und 10. **Vorläufig**: bis ein `textstat`-oder-Äquivalent-Lint-Hook ausgeliefert wird (siehe §Offene Fragen), ist die Prüfung Reviewer-Urteil, und die Schwelle 7–10 selbst unterliegt einer Rekalibrierung nach den ersten 10 EN-Posts in einem gegebenen Konsumenten-Repo. Der DE-Body ist von diesem Kriterium ausgenommen, bis ein DE-spezifisches Lesbarkeitsziel vorliegt (siehe §Offene Fragen).
+- [ ] **a-4** Flesch–Kincaid-Grade-Stufe auf dem EN-Body (Code-Blöcke ausgenommen) fällt zwischen 7 und 10. **Vorläufig**: bis ein `textstat`-oder-Äquivalent-Lint-Hook ausgeliefert wird (siehe §Offene Fragen), ist die Prüfung Reviewer-Urteil, und die Schwelle 7–10 selbst unterliegt einer Rekalibrierung nach den ersten 10 EN-Posts in einem gegebenen Konsumenten-Repo. Flesch–Kincaid ist ein ergänzendes EN-Signal; das sprachübergreifende Lesbarkeitsziel ist LIX (a-4a).
+- [ ] **a-4a** LIX auf **beiden** Sprach-Bodys (Code-Blöcke ausgenommen) liegt im Blog-Post-Korridor aus [`spec/project/readability-lix/`](../readability-lix/de.md) §Zielkorridore (EN aim ≤ 45 / warn 50; DE aim ≤ 50 / warn 55). Das ersetzt die frühere DE-Lesbarkeits-Ausnahme — der DE-Body trägt jetzt das primäre sprachübergreifende Lesbarkeitsziel. **Vorläufig**: der Korridor und der Offset Δ = 5 unterliegen einer Rekalibrierung gemäß `readability-lix` §Offene Fragen.
 - [ ] **a-5** Jeder umzäunte Code-Block deklariert einen unterstützten Sprach-Identifikator.
 - [ ] **a-6** Jeder Link-Text beschreibt sein Ziel selbständig (besteht WCAG 2.4.4).
 - [ ] **a-7** Überschriften sind durchgängig Sentence-Case; der Body deklariert keine zweite H1; Überschrifts-Stufen werden nicht nach unten übersprungen.
@@ -231,7 +233,7 @@ Andere Konsumenten, die diese Spec übernehmen, tragen einen analogen Annex in d
 
 ## Offene Fragen
 
-_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen. Die frühere Frage zum DE-seitigen Lesbarkeitsziel ist zusätzlich auf der Implementierungsseite durch das sprachübergreifende LIX-Ziel (`a-4a`) gemäß [`spec/project/readability-lix/`](../readability-lix/de.md) aufgelöst._
 
 ## Referenzen
 
