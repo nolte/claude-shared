@@ -23,6 +23,11 @@ _Convert a PNG that uses a baked-in checkerboard (or single-color) background as
 - you want to convert a PNG with baked-in checkerboard background to a transparent SVG
 - you want to vectorise an AI-generated icon and drop the fake background
 
+## Referenziert von
+
+- [`graphic-prompt-generator`](graphic-prompt-generator.md)
+- [`image-generate`](../../skills/nolte-shared/image-generate.md)
+
 ---
 
 ## PNG to Transparent SVG

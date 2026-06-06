@@ -32,6 +32,11 @@ _Run the project's lint + typecheck + test gate in parallel, tabulate the result
 
 - [`dependency-audit`](dependency-audit.md)
 
+## Referenziert von
+
+- [`quality-gate-enforcer`](../../agents/nolte-shared/quality-gate-enforcer.md)
+- [`test-case-extractor`](../../agents/nolte-shared/test-case-extractor.md)
+
 ---
 
 ## Quality Gate

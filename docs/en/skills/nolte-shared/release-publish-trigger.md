@@ -33,6 +33,11 @@ _Validates every release-automation pre-publish gate locally, then dispatches re
 - [`release-notes-curate`](release-notes-curate.md)
 - [`workflow-health-triage`](workflow-health-triage.md)
 
+## Referenced by
+
+- [`release-notes-curate`](release-notes-curate.md)
+- [`sprint-review`](sprint-review.md)
+
 ---
 
 ## Release Publish Trigger

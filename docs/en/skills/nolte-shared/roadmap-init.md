@@ -35,6 +35,12 @@ _Scaffold the project planning pair `project/goals.md` and `project/roadmap.md` 
 - [`audience-identify`](audience-identify.md)
 - [`mission-define`](mission-define.md)
 
+## Referenced by
+
+- [`mission-define`](mission-define.md)
+- [`roadmap-plan`](roadmap-plan.md)
+- [`roadmap-refine`](roadmap-refine.md)
+
 ---
 
 ## Roadmap Init

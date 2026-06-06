@@ -37,6 +37,10 @@ _Operationalises spec/project/continuous-improvement/ by triaging portfolio audi
 - [`skills-agents-sweep`](skills-agents-sweep.md)
 - [`workflow-health-triage`](workflow-health-triage.md)
 
+## Referenziert von
+
+- [`spec-drift-audit`](spec-drift-audit.md)
+
 ---
 
 ## Continuous Improvement Triage

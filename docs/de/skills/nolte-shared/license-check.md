@@ -33,6 +33,10 @@ _Run an end-to-end license-compliance check on the current project per spec/proj
 - [`license-check-scanner`](../../agents/nolte-shared/license-check-scanner.md)
 - [`dependency-audit`](dependency-audit.md)
 
+## Referenziert von
+
+- [`license-check-scanner`](../../agents/nolte-shared/license-check-scanner.md)
+
 ---
 
 ## License Check

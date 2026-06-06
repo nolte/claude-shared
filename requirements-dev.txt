@@ -1,0 +1,19 @@
+# Development- and tooling-only dependencies for this repository's Python
+# surface, per spec/project/project-structure/ §Python development (the
+# requirements-dev SHOULD) and §Requirements file format. Installed into the
+# project-local virtual environment by `task install`; never chained from
+# requirements.txt via -r (the Taskfile installs both files independently).
+#
+# What needs these:
+#   - scripts/validate_schemas.py        -> jsonschema, PyYAML
+#   - scripts/docs/gen_catalog.py        -> PyYAML
+#   - scripts/docs/gen_portfolio.py      -> PyYAML
+#   - tests/ (eval-harness unit tests)   -> pytest
+# (scripts/validate_skills.py and scripts/validate_features.py are stdlib-only.)
+#
+# The docs-build toolchain (MkDocs + plugins) stays in docs/requirements.txt and
+# the behavioural-eval extras stay in evals/requirements-eval.txt, so each
+# component keeps its own focused install set.
+jsonschema>=4.21,<5
+PyYAML==6.0.3
+pytest>=8,<9

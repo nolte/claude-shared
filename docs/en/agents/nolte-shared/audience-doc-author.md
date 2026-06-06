@@ -37,6 +37,17 @@ _Draft or refine an audience-tailored documentation artifact (README, release no
 - [`readme-structure-apply`](../../skills/nolte-shared/readme-structure-apply.md)
 - [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 
+## Referenced by
+
+- [`audience-review`](audience-review.md)
+- [`docs-freshness-checker`](docs-freshness-checker.md)
+- [`prose-vale-curator`](prose-vale-curator.md)
+- [`audience-identify`](../../skills/nolte-shared/audience-identify.md)
+- [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
+- [`lektorat-auto-revise`](../../skills/nolte-shared/lektorat-auto-revise.md)
+- [`readme-structure-apply`](../../skills/nolte-shared/readme-structure-apply.md)
+- [`release-notes-curate`](../../skills/nolte-shared/release-notes-curate.md)
+
 ---
 
 ## Audience Documentation Author

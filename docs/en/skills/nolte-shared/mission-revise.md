@@ -32,6 +32,10 @@ _Revises an existing `project/mission.md` per the canonical-language file under 
 - [`mission-define`](mission-define.md)
 - [`roadmap-plan`](roadmap-plan.md)
 
+## Referenced by
+
+- [`mission-define`](mission-define.md)
+
 ---
 
 ## Mission Revise
@@ -149,5 +153,5 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** auto-generate the post-stabilisation rationale paragraph. The operator writes it.
 - **Never** name an audience in `## Audiences` that's absent from `audiences`, or vice versa. The two surfaces are bidirectionally validated after every revision.
 - **Never** invent audience identifiers, outcome IDs, or feature-acceptance pairs in a revision. Every reference **MUST** resolve to an existing artefact at write time.
-- **Never** allow a post-MVP roadmap item (`mvp: false`) to start while `mvp_status` is `defining`, `in_progress`, or `achieved`; surface this as a violation when the user reports it but never alter the roadmap from this skill — [`roadmap-refine`](roadmap-refine.md) is the canonical write authority for that surface.
+- **Never** allow a post-MVP roadmap item (`mvp: false`) to start while `mvp_status` is `defining`, `in_progress`, or `achieved`. After any `mvp_status` read or write, proactively scan `project/roadmap.md` yourself for a post-MVP item in `status: active` that the gate forbids — do not wait for the user to report it — and surface every such item as a violation citing `spec/project/mission/` §Stabilisation gate. Never alter the roadmap from this skill, though: [`roadmap-refine`](roadmap-refine.md) is the canonical write authority for that surface.
 - When `spec/project/mission/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.

@@ -20,6 +20,7 @@ see_also:
   - spec-readiness-reviewer
   - feature-consistency-reviewer
   - workflow-health-triage
+  - continuous-improvement-triage
 resumable: true
 ---
 
@@ -70,7 +71,10 @@ Interactive. Confirm scope and trigger with the user before proceeding.
 5. **Per-criterion check.** For each remaining spec criterion not covered by a dispatched tool, evaluate against the implementation: produce one of `pass`, `fail`, `blocked` (tooling missing), or `not-applicable` (with reason). Record the result. For each `fail` or `blocked` finding, the auditor **MUST** additionally record a **Specialist** disposition (mandatory field in the finding template per `spec/project/continuous-improvement/<canonical_language>.md` AC "No in-scope finding from the most recent `spec-drift-audit` run is recorded as 'no specialist considered'"): either (a) the dispatched specialist that will handle the remediation, naming both its display name and its `subagent_type` (or matching skill name), or (b) the explicit note `no matching specialist exists — generalist handled`. A finding recorded without one of these two values is incomplete and **MUST NOT** be written.
 6. **Draft the artifact.** Read `templates/audit.template.md` for the Markdown template. Fill every frontmatter field. List all findings with `fail` or `blocked` status in `## Findings`. Leave `## Decisions` empty at creation.
 7. **Write the artifact** to `.audits/spec-drift/<YYYY>-Q<n>.md` (or `.audits/spec-drift/<YYYY>-Q<n>-<topic>.md` for thematic audits). Confirm the path with the user.
-8. **Offer to stage and commit.** Show the artifact path. Do not commit without explicit user confirmation.
+8. **Fold the specialist-coverage review (continuous-improvement integration).** Per `spec/project/continuous-improvement/<canonical_language>.md` §"Continuous loop and quarterly coverage review", the quarterly **specialist-coverage review** SHOULD be folded into this `spec-drift-audit` run by default. On a quarterly full-scope audit (and on any audit run in a quarter that has no coverage-review artifact yet), prompt the user: *"Fold the quarterly specialist-coverage review into this artifact, or keep it standalone under `.audits/continuous-improvement/<YYYY-QN>.md`?"* — default to folding.
+   - **Folded:** keep the template's `## Specialist coverage review` section (it is the named landing spot mandated by the spec's "present it as a named, dedicated section" MUST), then dispatch `continuous-improvement-triage` (`audit` operation) to produce the review content and populate that section. The section **MUST** stay full-portfolio in scope even on a thematic partial audit — partial-audit narrowing applies to drift, not to coverage, and a narrowed audit that suppresses it is itself a finding for the next cycle.
+   - **Standalone:** delete the `## Specialist coverage review` section from this artifact and dispatch `continuous-improvement-triage` to write its own `.audits/continuous-improvement/<YYYY-QN>.md` artifact for the same quarter.
+9. **Offer to stage and commit.** Show the artifact path. Do not commit without explicit user confirmation.
 
 Read `examples/01-quarterly-audit.md` when running a full-scope quarterly audit to see a realistic walkthrough.
 Read `examples/02-spec-change-trigger.md` when running a thematic partial audit triggered by a spec update.

@@ -69,9 +69,11 @@ You are **read-only**. `Read`, `Glob`, and `Grep` serve only to load locale file
 
 #### Step 1 — Discover inputs
 
-- Locate the per-locale translation files (operator-named directory, else the conventional locale tree such as `**/locales/<lang>/*.json`, `**/i18n/<lang>.json`, `**/lang/*.yaml`).
-- Determine the **reference locale**: operator-named, else the project's declared default, else a documented heuristic — and state which you picked.
+- **Read the optional config first.** If `project/i18n-audit.yml` exists, read it; it MAY declare locale paths, reference locale, source globs, and the i18n library (per spec §Inputs). Config values take precedence over discovery; an operator argument takes precedence over both. When the file is absent, per-invocation discovery is the documented default.
+- Locate the per-locale translation files (operator-named directory, else config-declared paths, else the conventional locale tree such as `**/locales/<lang>/*.json`, `**/i18n/<lang>.json`, `**/lang/*.yaml`).
+- Determine the **reference locale**: operator-named, else config-declared, else the project's declared default, else a documented heuristic — and state which you picked.
 - Determine the source roots and file globs to scan, and the project's i18n library (to pick call-site patterns). When the library is undeterminable, state the assumed pattern set.
+- **Per-input source attribution (MUST, per spec §Inputs).** For *each* resolved input (locale paths, reference locale, source globs, i18n library) record whether the value came from the **config file**, an **operator argument**, or **discovery**, and surface that attribution in the report's scope line so the audit is reproducible.
 
 #### Step 2 — Cross-locale parity
 
@@ -91,6 +93,8 @@ Treat dynamic/template-string lookups (`` t(`enums.${type}`) ``) as "dynamic, no
 
 Empty string values per locale; values identical between the reference and another locale (likely untranslated); interpolation-placeholder parity (same `{{var}}` / `{var}` / `%s` across locales for a key). If the project declares a key-naming convention, report violations; otherwise do not invent one.
 
+**ICU-opaque caveat (MUST, per spec §Audit dimensions / §Report).** Placeholder-parity checking is performed at simple-placeholder granularity only (`{{var}}` / `{var}` / `%s`). ICU MessageFormat plural and select bodies such as `{count, plural, one {…} other {…}}` are compared as **opaque strings**, not parsed — their internal branches are never structurally validated. Whenever the report carries placeholder-parity findings it MUST state this caveat, so a consumer is not misled into thinking ICU bodies were structurally checked.
+
 #### Step 5 — Report
 
 Emit a single severity-sorted report. When more than one independent locale tree was audited (§Step 2 per-tree isolation), repeat the body below once per scope under a scope heading (for example `## Scope: packages/web/locales`), so each tree's metrics and findings stay separated and no cross-tree merge is implied:
@@ -99,6 +103,8 @@ Emit a single severity-sorted report. When more than one independent locale tree
 ## i18n Completeness Report
 
 > Scope: locales {…}, reference {…}, source roots {…}, patterns {…}
+> Input sources: locales {config|operator|discovery}, reference {…}, source roots {…}, library {…}
+> Placeholder parity: simple `{{var}}` / `{var}` / `%s` only; ICU plural/select bodies compared as opaque strings, not parsed.
 
 ### Summary
 | Metric | Value |

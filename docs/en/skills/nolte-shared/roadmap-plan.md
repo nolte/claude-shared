@@ -35,6 +35,15 @@ _Adds, retargets, and reshapes roadmap items in `project/roadmap.md` per `spec/p
 - [`feature-decompose`](feature-decompose.md)
 - [`sprint-plan`](sprint-plan.md)
 
+## Referenced by
+
+- [`roadmap-coherence-reviewer`](../../agents/nolte-shared/roadmap-coherence-reviewer.md)
+- [`feature-decompose`](feature-decompose.md)
+- [`issue-orchestrate`](issue-orchestrate.md)
+- [`mission-revise`](mission-revise.md)
+- [`roadmap-init`](roadmap-init.md)
+- [`roadmap-refine`](roadmap-refine.md)
+
 ---
 
 ## Roadmap Plan

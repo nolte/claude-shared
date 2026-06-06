@@ -33,6 +33,10 @@ _Reviews an existing audience-analysis artifact against spec/project/audience-id
 - [`audience-identify`](../../skills/nolte-shared/audience-identify.md)
 - [`audience-doc-author`](audience-doc-author.md)
 
+## Referenziert von
+
+- [`audience-identify`](../../skills/nolte-shared/audience-identify.md)
+
 ---
 
 ## Audience Review Agent

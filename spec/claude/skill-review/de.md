@@ -124,7 +124,7 @@ Spiegelt `skill-management` §„Evaluations-Disziplin"; die ursprüngliche Rege
 ### Review-Prozedur
 
 - **MUSS [MUST]** damit beginnen, die kanonischen Specs `skill-management`, `skill-vs-agent` und `review-plan` zu lesen, bevor ein Finding erzeugt wird; Findings ohne Anker in einer dieser Specs sind keine gültige Ausgabe dieser Prozedur
-- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: externe-Validator-Findings → Frontmatter → Description/Trigger → System-Prompt-Body → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → Best-Practices-Checks → INFO-Beobachtungen
+- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: externe-Validator-Findings → Frontmatter → Description/Trigger → System-Prompt-Body → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → Best-Practices-Checks → Spec-Anchor-Check → INFO-Beobachtungen
 - **MUSS [MUST]** genau eine `review-plan`-Datei unter `.audits/skill-review/<skill-name>.md` emittieren; der Reviewer **MUSS [MUST]** jede Lifecycle-Regel aus `review-plan` befolgen, einschließlich der Single-Plan-pro-Ziel-Invariante und des Löschungs-Commit-Message-Formats
 - **SOLLTE [SHOULD]** im `## Scope`-Abschnitt des Plans die Git-SHAs der angewandten Spec-Versionen einbetten, damit ein späteres Re-Review erkennen kann, ob Findings durch eine Spec-Revision veraltet sein könnten
 - **KANN [MAY]** rein stilistische Beobachtungen (Vale, Markdown-Linting) als `Info`-Findings aufnehmen, wenn sie dem Autor helfen, **MUSS NICHT [MUST NOT]** sie aber zu `Warning` oder `Critical` erheben — die bleiben bei ihrem eigenen Tooling

@@ -1,0 +1,43 @@
+# Root project metadata and Python tooling configuration for the nolte-shared
+# Claude Code plugin, per spec/project/project-structure/ §Python development.
+#
+# This repository ships a Claude Code plugin (skills, agents, specs, docs), not
+# an installable Python library: its Python surface is the repository's own
+# tooling (frontmatter/schema validators under scripts/, the docs catalog/
+# portfolio generators, and the eval-harness tests). There are therefore no
+# *runtime* package dependencies — requirements.txt is a documented placeholder
+# (per §Requirements file format) and the script toolchain lives in
+# requirements-dev.txt. Run everything inside a project-local virtual
+# environment (`task install`), never against system Python.
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nolte-shared-tooling"
+version = "0.1.4"
+description = "Repository tooling for the nolte-shared Claude Code plugin (validators, docs generators, eval harness). Not a published library."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "nolte", email = "nolte07@gmail.com" }]
+classifiers = [
+  "Private :: Do Not Upload",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://github.com/nolte/claude-shared"
+Repository = "https://github.com/nolte/claude-shared"
+
+[tool.pytest.ini_options]
+# Migrated from the former pytest.ini so there is a single tooling-config source
+# in pyproject.toml per spec/project/project-structure/ §Python development.
+pythonpath = ["."]
+addopts = "--import-mode=importlib"
+testpaths = ["tests"]
+markers = [
+  "behavioural: live LLM eval driving a skill/agent; skipped unless RUN_EVALS=1 (incurs API cost)",
+]

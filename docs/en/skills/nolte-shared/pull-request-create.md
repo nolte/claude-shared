@@ -31,6 +31,11 @@ _Create a GitHub pull request that conforms to the repository's pull-request-wor
 
 - [`pull-request-merge`](pull-request-merge.md)
 
+## Referenced by
+
+- [`issue-orchestrate`](issue-orchestrate.md)
+- [`pull-request-merge`](pull-request-merge.md)
+
 ## Examples
 
 - **Prompt:** Open a PR for this branch

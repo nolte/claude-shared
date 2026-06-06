@@ -35,6 +35,10 @@ _Audits a repository's declared tech-stack manifest (`project/portfolio.yml` und
 - [`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md)
 - [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
 
+## Referenziert von
+
+- [`tech-stack-capture`](../../skills/nolte-shared/tech-stack-capture.md)
+
 ---
 
 ## Tech Stack Drift Reviewer

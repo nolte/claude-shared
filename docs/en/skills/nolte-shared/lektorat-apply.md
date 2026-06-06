@@ -34,6 +34,14 @@ _Reviews existing Markdown prose against five editorial dimensions (readability,
 - [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
 - [`lektorat-scanner`](../../agents/nolte-shared/lektorat-scanner.md)
 
+## Referenced by
+
+- [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
+- [`lektorat-scanner`](../../agents/nolte-shared/lektorat-scanner.md)
+- [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
+- [`blog-author`](blog-author.md)
+- [`lektorat-auto-revise`](lektorat-auto-revise.md)
+
 ---
 
 ## Lektorat Apply

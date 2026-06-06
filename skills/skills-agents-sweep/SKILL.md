@@ -34,6 +34,10 @@ The sweep supplements per-artefact reviews with cross-cutting analysis that no s
 - **Orchestration role** — this skill dispatches `skill-review` and `agent-review` as sub-procedures for phase 1 and chains to `pull-request-create` when waves are committed. The skill-orchestrates pattern defaults the orchestrator to skill form per `spec/claude/skill-vs-agent/`.
 - Counter-dimension considered: *context-window load* from reading 30-plus skill files plus cross-cutting analysis could bias toward an agent. However, the sweep is inherently interactive — the user controls which artefacts are in scope, approves the consolidated report before phase 4 begins, and decides per-wave. The incremental, user-confirmed structure rules out fire-and-forget agent execution.
 
+## Triggers
+
+Per `spec/claude/skills-agents-sweep/` §Triggers, this skill MUST run as a gate before each **major plugin release** (a release that increments the first version segment): run the full sweep to a closed consolidated report before promoting a major release, since `release-publish-trigger` anchors its machine-readable gate set to `spec/project/release-automation/` §Pre-publish verification and does not read the sweep report. Beyond the major-release gate, the sweep SHOULD run when more than five new skills or agents have landed on `develop` since the last sweep closed, and MAY run ad hoc on suspected cross-artefact drift.
+
 ## German trigger phrases
 
 This skill also triggers on equivalent German-language requests, including:

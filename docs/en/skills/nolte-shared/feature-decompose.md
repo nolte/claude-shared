@@ -36,6 +36,15 @@ _Decompose a roadmap item into feature files under project/features/ per spec/pr
 - [`sprint-execute`](sprint-execute.md)
 - [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md)
 
+## Referenced by
+
+- [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md)
+- [`sprint-readiness-reviewer`](../../agents/nolte-shared/sprint-readiness-reviewer.md)
+- [`issue-orchestrate`](issue-orchestrate.md)
+- [`roadmap-plan`](roadmap-plan.md)
+- [`sprint-execute`](sprint-execute.md)
+- [`sprint-plan`](sprint-plan.md)
+
 ---
 
 ## Feature Decompose

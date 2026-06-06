@@ -32,6 +32,11 @@ _Turn a short graphic brief into a brand-conformant, generator-ready AI image-ge
 - [`image-generate`](../../skills/nolte-shared/image-generate.md)
 - [`png-to-transparent-svg`](png-to-transparent-svg.md)
 
+## Referenced by
+
+- [`gemini-image-handoff`](../../skills/nolte-shared/gemini-image-handoff.md)
+- [`image-generate`](../../skills/nolte-shared/image-generate.md)
+
 ---
 
 ## Graphic Prompt Generator

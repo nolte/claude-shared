@@ -34,6 +34,11 @@ _Augments the open release-drafter draft on develop with project-context-aware s
 - [`audience-identify`](audience-identify.md)
 - [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
 
+## Referenced by
+
+- [`release-publish-trigger`](release-publish-trigger.md)
+- [`sprint-review`](sprint-review.md)
+
 ---
 
 ## Release Notes Curate

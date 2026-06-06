@@ -35,6 +35,10 @@ _Audits the repository's `README.md` against the canonical-language file under s
 - [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
 - [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
 
+## Referenziert von
+
+- [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
+
 ---
 
 ## README Structure Apply

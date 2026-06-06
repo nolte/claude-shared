@@ -32,6 +32,19 @@ _Scan the current project's dependency tree for known vulnerabilities (CVEs) and
 
 - [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md)
 
+## Referenziert von
+
+- [`code-security-reviewer`](../../agents/nolte-shared/code-security-reviewer.md)
+- [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md)
+- [`gdpr-data-protection-reviewer`](../../agents/nolte-shared/gdpr-data-protection-reviewer.md)
+- [`quality-gate-enforcer`](../../agents/nolte-shared/quality-gate-enforcer.md)
+- [`tech-stack-drift-reviewer`](../../agents/nolte-shared/tech-stack-drift-reviewer.md)
+- [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md)
+- [`license-check`](license-check.md)
+- [`quality-gate`](quality-gate.md)
+- [`webview-ui-optimize`](webview-ui-optimize.md)
+- [`workflow-health-triage`](workflow-health-triage.md)
+
 ---
 
 ## Dependency Audit

@@ -37,6 +37,11 @@ _Audits one or more specifications under a target spec topic for downstream read
 - [`spec-drift-audit`](../../skills/nolte-shared/spec-drift-audit.md)
 - [`audience-identify`](../../skills/nolte-shared/audience-identify.md)
 
+## Referenziert von
+
+- [`spec`](../../skills/nolte-shared/spec.md)
+- [`spec-drift-audit`](../../skills/nolte-shared/spec-drift-audit.md)
+
 ## Beispiele
 
 - **Prompt:** Audit spec/claude/skill-agent-catalog/ before implementation begins
@@ -63,6 +68,7 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 
 - `git rev-parse --is-inside-work-tree` — single Precondition check to confirm the working directory is a git repository before the audit begins
 - `git rev-parse HEAD` — capture the Git revision (commit SHA) of the audited working-tree state, recorded in the report so the audit artifact satisfies `spec/project/spec-readiness/` §Audit artifact (MUST: the Git revision audited); read-only, no working-tree mutation
+- `git rev-parse --git-common-dir` and `git rev-parse --git-dir` — detect whether the audit is running inside a linked worktree (the two paths differ in that case) so the report can carry the §Audit-artifact worktree-disambiguation hint; read-only, no working-tree mutation
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation.
 
@@ -121,6 +127,7 @@ Before auditing:
 - Specs requested but not found: <list or "none">
 - Canonical language: <lang>
 - Git revision audited: <40-char SHA from `git rev-parse HEAD`, or "unknown">
+- Working tree: <"primary checkout" | "linked worktree — see spec/project/parallel-working-copies/ §Audit artefacts in multiple worktrees before persisting">
 - Prior audit referenced: <path or "none">
 
 ### Summary
@@ -195,7 +202,9 @@ Omit any severity section that's empty except **Scope**, **Summary**, **Health**
 
 #### Option B — single-spec pre-promotion review
 
-When the caller explicitly asks for a pre-promotion check on one spec, produce the report in the `review-plan` artifact format declared by `spec/claude/review-plan/<canonical>.md`, and return it in your final message for the caller to persist at `.audits/spec-readiness/<slug>.md`. Record the Git revision captured in §Preconditions in the `review-plan` `repo-revision` frontmatter slot (and, if the format lacks one, in the report's Scope section), so the §Audit artifact MUST — the Git revision audited — is met in the Option B output as well. This agent is read-only and **does not** write that file itself (see §Hard rules); persistence is the caller's responsibility, per the `review-plan` §Relationship-to-other-specs SHOULD that an audit report is persisted by whoever runs the review. Both this agent and `review-plan` now share the same canonical severity scale (`Critical` / `Warning` / `Suggestion` / `Info` in Title Case), so no per-finding remap is needed: file each finding under its `### Critical`, `### Warning`, `### Suggestion`, or `### Info` subsection in `## Findings`, in that order. A SHOULD-class one-line fix that doesn't rise to Warning **MAY** be filed as `Suggestion` when that's the more accurate classification — the canonical scale offers the bucket for exactly that case.
+When the caller explicitly asks for a pre-promotion check on one spec, produce the report in the `review-plan` artifact format declared by `spec/claude/review-plan/<canonical>.md`, and return it in your final message for the caller to persist at `.audits/spec-readiness/<slug>.md`.
+
+**Worktree disambiguation (per `spec/project/spec-readiness/` §Audit artifact SHOULD).** When the audit is run inside a git worktree rather than the primary checkout, note this in the Scope block (see §Output shape Option A) and remind the caller to consult `spec/project/parallel-working-copies/` §"Audit artefacts in multiple worktrees" before persisting: the artifact's per-repository uniqueness is only observable inside one working tree at a time, and the worktree-local commit, transfer, and cleanup rules live there. Detect the worktree case with the read-only `git rev-parse --git-common-dir` / `--git-dir` pairing already covered by §"Read-only Bash justification" (the two paths differ inside a linked worktree); this introduces no working-tree mutation. Record the Git revision captured in §Preconditions in the `review-plan` `repo-revision` frontmatter slot (and, if the format lacks one, in the report's Scope section), so the §Audit artifact MUST — the Git revision audited — is met in the Option B output as well. This agent is read-only and **does not** write that file itself (see §Hard rules); persistence is the caller's responsibility, per the `review-plan` §Relationship-to-other-specs SHOULD that an audit report is persisted by whoever runs the review. Both this agent and `review-plan` now share the same canonical severity scale (`Critical` / `Warning` / `Suggestion` / `Info` in Title Case), so no per-finding remap is needed: file each finding under its `### Critical`, `### Warning`, `### Suggestion`, or `### Info` subsection in `## Findings`, in that order. A SHOULD-class one-line fix that doesn't rise to Warning **MAY** be filed as `Suggestion` when that's the more accurate classification — the canonical scale offers the bucket for exactly that case.
 
 Don't duplicate the output into both Option A and Option B; pick the one the caller requested.
 

@@ -15,6 +15,22 @@ env:
   # Task gates that experimental feature behind this flag.
   TASK_X_REMOTE_TASKFILES: "1"
 
+# spec/project/quality-gate/ §Invocation contract ("MUST run the gate
+# identically from a local workstation and from CI") and §Acceptance Criteria
+# ("The documented invocation for the gate is identical between the README and
+# its CI workflow"): the local gate is `task check`, which is composed of
+# exactly `task lint` and `task test` (see Taskfile.yml `check.deps`). CI runs
+# those same two targets, but as separate jobs rather than the single `task
+# check` aggregate, on purpose:
+#   - each becomes its own named required status check in .github/settings.yml,
+#   - each gets isolated, minimal per-job dependency installs (pre-commit/Vale
+#     for lint; pytest for test; MkDocs for docs),
+#   - the jobs run in parallel, matching `task check`'s parallel `deps`.
+# No environment branching makes CI stricter or looser than local — the gate is
+# the identical set of Taskfile targets in both places. This comment is the
+# documented CI↔local equivalence the spec calls for; do not collapse the jobs
+# into a single `task check` step, which would erase the granular required-check
+# names and per-job dependency isolation above.
 jobs:
   lint:
     runs-on: ubuntu-latest

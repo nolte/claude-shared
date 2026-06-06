@@ -28,6 +28,11 @@ _Audit repository-local Vale vocabularies against the pinned upstream release of
 - [`vocab-drift-scanner`](../../agents/nolte-shared/vocab-drift-scanner.md)
 - [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
 
+## Referenziert von
+
+- [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
+- [`vocab-drift-scanner`](../../agents/nolte-shared/vocab-drift-scanner.md)
+
 ---
 
 ## Vocab Drift Audit

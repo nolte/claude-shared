@@ -77,6 +77,27 @@ status: open
 
 <!-- No decisions recorded yet — audit is open. -->
 
+## Specialist coverage review
+
+<!--
+Quarterly specialist-coverage review per spec/project/continuous-improvement/ §"Continuous loop
+and quarterly coverage review". Keep this section ONLY when the coverage review is folded into
+this drift-audit artifact (the SHOULD default per the spec); delete it when the repository keeps
+the coverage review as a standalone artifact under .audits/continuous-improvement/<YYYY-QN>.md.
+
+This section MUST stay full-portfolio in scope even when the hosting drift audit is a thematic
+partial audit — partial-audit narrowing applies to drift, not to coverage. A narrowed drift audit
+that suppresses this section is itself a finding for the next cycle.
+
+The review itself is produced by the continuous-improvement-triage skill; this is the named landing
+spot so it is findable by heading. Populate the table below from the last quarter's merged
+remediation PRs (Risk / rollout notes fields), grouped by finding class.
+-->
+
+| Finding class | Generalist-handled count | Matching specialist | Gap-closure action |
+|---------------|--------------------------|---------------------|--------------------|
+| <class label> | <N> | <plugin>:<agent> / skill / none | none / track (1–2) / author-or-extend (≥3) |
+
 ## Processing log
 
 <!-- One line per action taken after initial artifact creation. Appended by `update` and `close`. -->

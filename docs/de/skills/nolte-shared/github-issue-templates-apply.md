@@ -31,6 +31,10 @@ _Apply the canonical-language file under spec/project/github-issue-templates/ to
 
 - [`project-structure-apply`](project-structure-apply.md)
 
+## Referenziert von
+
+- [`project-structure-apply`](project-structure-apply.md)
+
 ---
 
 ## GitHub Issue Templates Apply

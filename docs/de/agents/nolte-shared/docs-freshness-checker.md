@@ -35,6 +35,13 @@ _Audit the MkDocs documentation of the current repository for freshness — mult
 - [`audience-doc-author`](audience-doc-author.md)
 - [`prose-vale-curator`](prose-vale-curator.md)
 
+## Referenziert von
+
+- [`lektorat-scanner`](lektorat-scanner.md)
+- [`mermaid-diagram-reviewer`](mermaid-diagram-reviewer.md)
+- [`docs-audience-tracks-apply`](../../skills/nolte-shared/docs-audience-tracks-apply.md)
+- [`docs-dry-refactor`](../../skills/nolte-shared/docs-dry-refactor.md)
+
 ---
 
 ## Documentation Freshness Checker

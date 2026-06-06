@@ -34,6 +34,11 @@ _Audits and applies the MkDocs Mermaid setup of the current repository against `
 - [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
 - [`mermaid-diagram-reviewer`](../../agents/nolte-shared/mermaid-diagram-reviewer.md)
 
+## Referenced by
+
+- [`diagram-opportunity-reviewer`](../../agents/nolte-shared/diagram-opportunity-reviewer.md)
+- [`mermaid-diagram-reviewer`](../../agents/nolte-shared/mermaid-diagram-reviewer.md)
+
 ---
 
 ## Mermaid Diagrams Apply

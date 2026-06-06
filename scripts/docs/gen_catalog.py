@@ -97,6 +97,7 @@ CHROME = {
         "use_when_label": "Anwenden wenn",
         "dont_use_when_label": "Nicht anwenden wenn",
         "see_also_label": "Siehe auch",
+        "referenced_by_label": "Referenziert von",
         "examples_label": "Beispiele",
         "example_prompt_label": "Prompt",
         "example_outcome_label": "Ergebnis",
@@ -153,6 +154,7 @@ CHROME = {
         "use_when_label": "Use when",
         "dont_use_when_label": "Don't use when",
         "see_also_label": "See also",
+        "referenced_by_label": "Referenced by",
         "examples_label": "Examples",
         "example_prompt_label": "Prompt",
         "example_outcome_label": "Outcome",
@@ -773,6 +775,29 @@ def _build_link_index(skills: list[Artifact], agents: list[Artifact]) -> dict[st
     return index
 
 
+def _build_referenced_by_index(
+    skills: list[Artifact], agents: list[Artifact]
+) -> dict[str, list[Artifact]]:
+    """Return ``{name: [Artifact, ...]}`` mapping each artifact name to every
+    artifact whose ``see_also`` lists it — the inverse of the forward cross-link
+    index, per spec §Cross-linking "Referenced by" SHOULD.
+
+    Built in a single in-memory pass over the already-parsed artifacts; each
+    referencing list is sorted (kind, plugin, name) for stable output. This
+    surfaces one-directional ``see_also`` asymmetries authors miss.
+    """
+
+    referenced_by: dict[str, list[Artifact]] = {}
+    for art in [*skills, *agents]:
+        if not art.see_also:
+            continue
+        for target in art.see_also:
+            referenced_by.setdefault(target, []).append(art)
+    for target in referenced_by:
+        referenced_by[target].sort(key=lambda a: (a.kind, a.plugin, a.name))
+    return referenced_by
+
+
 def _resolve_use_case_references(
     skills: list[Artifact], agents: list[Artifact]
 ) -> None:
@@ -924,6 +949,7 @@ def render_page(
     chrome: dict,
     lang: str,
     link_index: dict[str, list[Artifact]],
+    referenced_by_index: dict[str, list[Artifact]],
     warnings: list[tuple[str, str, list[Artifact]]],
 ) -> str:
     phase_label = chrome["phase_labels"][artifact.phase]
@@ -991,6 +1017,16 @@ def render_page(
         for target in artifact.see_also:
             target_link = _resolve_structured_link(target, artifact, link_index)
             lines.append(f"- {target_link}")
+        lines.append("")
+    # Inverted cross-link pass per spec §Cross-linking "Referenced by" SHOULD:
+    # list every artifact whose see_also points at this one.
+    referencing = referenced_by_index.get(artifact.name)
+    if referencing:
+        lines.append(f"## {chrome['referenced_by_label']}")
+        lines.append("")
+        for ref in referencing:
+            url = _relative_link(artifact, ref)
+            lines.append(f"- [`{ref.name}`]({url})")
         lines.append("")
     if artifact.examples:
         lines.append(f"## {chrome['examples_label']}")
@@ -1064,6 +1100,7 @@ def emit_section(
     artefacts: list[Artifact],
     chrome: dict,
     link_index: dict[str, list[Artifact]],
+    referenced_by_index: dict[str, list[Artifact]],
     warnings: list[tuple[str, str, list[Artifact]]],
 ) -> None:
     section_dir = DOCS_DIR / lang / section
@@ -1078,7 +1115,9 @@ def emit_section(
     for art in artefacts:
         write_page(
             section_dir / art.plugin / f"{art.name}.md",
-            render_page(art, chrome, lang, link_index, warnings),
+            render_page(
+                art, chrome, lang, link_index, referenced_by_index, warnings
+            ),
         )
 
     title_key = f"{section}_title"
@@ -1243,12 +1282,18 @@ def main() -> int:
         # One cross-link index drives the inline-code rewrite on every rendered
         # page; warnings collected here are flushed to stderr after the run.
         link_index = _build_link_index(skills, agents)
+        # Inverted index for the "Referenced by" pass per spec §Cross-linking.
+        referenced_by_index = _build_referenced_by_index(skills, agents)
         warnings: list[tuple[str, str, list[Artifact]]] = []
 
         for lang in languages:
             chrome = CHROME.get(lang, CHROME["en"])
-            emit_section(lang, "skills", skills, chrome, link_index, warnings)
-            emit_section(lang, "agents", agents, chrome, link_index, warnings)
+            emit_section(
+                lang, "skills", skills, chrome, link_index, referenced_by_index, warnings
+            )
+            emit_section(
+                lang, "agents", agents, chrome, link_index, referenced_by_index, warnings
+            )
             emit_tag_index(lang, skills + agents, chrome)
             emit_landing_skeleton(lang, skills, agents, chrome)
     except CatalogError as exc:

@@ -36,6 +36,15 @@ _Curates prose in the current project so it passes Vale, prefers terms from the 
 - [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
 - [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 
+## Referenziert von
+
+- [`docs-freshness-checker`](docs-freshness-checker.md)
+- [`webview-ui-expert`](webview-ui-expert.md)
+- [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
+- [`readme-structure-apply`](../../skills/nolte-shared/readme-structure-apply.md)
+- [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
+- [`webview-ui-optimize`](../../skills/nolte-shared/webview-ui-optimize.md)
+
 ---
 
 ## Prose Vale Curator

@@ -20,7 +20,7 @@ Welcher Skill oder Agent gehört zu welcher Zyklus-Phase, und wie kehrt der Krei
 
 <!-- diagram-source: user-described — eight-phase lifecycle with skills and agents grouped per phase; agents are marked with a parenthetical (A) suffix; return edges from Close to Plan (next sprint) and from Close to Vision (MVP achieved) -->
 ```mermaid
-graph TD
+flowchart TD
   subgraph V["1 Vision"]
     mdef[mission-define]
     mrev[mission-revise]

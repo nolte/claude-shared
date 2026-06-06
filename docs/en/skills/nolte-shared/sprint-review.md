@@ -35,6 +35,11 @@ _Close an active sprint per the project sprint spec, validating the deployable a
 - [`release-notes-curate`](release-notes-curate.md)
 - [`release-publish-trigger`](release-publish-trigger.md)
 
+## Referenced by
+
+- [`sprint-execute`](sprint-execute.md)
+- [`sprint-plan`](sprint-plan.md)
+
 ---
 
 ## Sprint Review

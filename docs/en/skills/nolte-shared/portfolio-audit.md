@@ -34,6 +34,14 @@ _Audits, renders, and bootstraps the cross-repository capability portfolio acros
 - [`portfolio-manifest-collector`](../../agents/nolte-shared/portfolio-manifest-collector.md)
 - [`portfolio-inflight-triage`](portfolio-inflight-triage.md)
 
+## Referenced by
+
+- [`portfolio-manifest-collector`](../../agents/nolte-shared/portfolio-manifest-collector.md)
+- [`tech-stack-drift-reviewer`](../../agents/nolte-shared/tech-stack-drift-reviewer.md)
+- [`continuous-improvement-triage`](continuous-improvement-triage.md)
+- [`portfolio-inflight-triage`](portfolio-inflight-triage.md)
+- [`tech-stack-capture`](tech-stack-capture.md)
+
 ---
 
 ## Portfolio Audit

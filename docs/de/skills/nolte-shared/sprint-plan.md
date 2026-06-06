@@ -36,6 +36,15 @@ _Create a new sprint file under project/sprints/ per the project sprint spec. In
 - [`sprint-readiness-reviewer`](../../agents/nolte-shared/sprint-readiness-reviewer.md)
 - [`feature-decompose`](feature-decompose.md)
 
+## Referenziert von
+
+- [`sprint-readiness-reviewer`](../../agents/nolte-shared/sprint-readiness-reviewer.md)
+- [`feature-decompose`](feature-decompose.md)
+- [`roadmap-plan`](roadmap-plan.md)
+- [`roadmap-refine`](roadmap-refine.md)
+- [`sprint-execute`](sprint-execute.md)
+- [`sprint-review`](sprint-review.md)
+
 ---
 
 ## Sprint Plan

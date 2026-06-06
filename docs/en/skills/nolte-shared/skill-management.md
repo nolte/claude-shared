@@ -33,6 +33,12 @@ _Authors or revises Claude Code skills in the nolte-shared plugin source tree. I
 - [`skill-review`](skill-review.md)
 - [`claude-plugin-developer`](../../agents/nolte-shared/claude-plugin-developer.md)
 
+## Referenced by
+
+- [`claude-plugin-developer`](../../agents/nolte-shared/claude-plugin-developer.md)
+- [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md)
+- [`skill-review`](skill-review.md)
+
 ## Examples
 
 - **Prompt:** Create a new skill for X

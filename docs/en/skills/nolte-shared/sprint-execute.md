@@ -35,6 +35,14 @@ _Drive the daily mechanics of an active sprint per the project sprint spec. Invo
 - [`sprint-review`](sprint-review.md)
 - [`feature-decompose`](feature-decompose.md)
 
+## Referenced by
+
+- [`sprint-readiness-reviewer`](../../agents/nolte-shared/sprint-readiness-reviewer.md)
+- [`blog-author-trigger`](blog-author-trigger.md)
+- [`feature-decompose`](feature-decompose.md)
+- [`sprint-plan`](sprint-plan.md)
+- [`sprint-review`](sprint-review.md)
+
 ---
 
 ## Sprint Execute

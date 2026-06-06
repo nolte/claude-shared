@@ -33,6 +33,10 @@ _Read-only inventory collector dispatched by portfolio-audit to gather per-repo 
 - [`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md)
 - [`tech-stack-capture`](../../skills/nolte-shared/tech-stack-capture.md)
 
+## Referenced by
+
+- [`portfolio-audit`](../../skills/nolte-shared/portfolio-audit.md)
+
 ---
 
 ## Portfolio Manifest Collector

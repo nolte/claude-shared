@@ -31,6 +31,11 @@ _Drafts a bilingual EN-canonical + DE-translated blog-post pair per this plugin'
 
 - [`lektorat-apply`](lektorat-apply.md)
 
+## Referenced by
+
+- [`blog-author-trigger`](blog-author-trigger.md)
+- [`lektorat-auto-revise`](lektorat-auto-revise.md)
+
 ---
 
 ## Blog Author

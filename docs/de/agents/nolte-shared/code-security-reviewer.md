@@ -31,6 +31,10 @@ _Read-only, whole-codebase OWASP security audit that correlates findings across 
 
 - [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
 
+## Referenziert von
+
+- [`gdpr-data-protection-reviewer`](gdpr-data-protection-reviewer.md)
+
 ---
 
 ## Code Security Reviewer

@@ -36,6 +36,11 @@ _Performs a read-only, cross-file deep review of one named target against the ca
 - [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
 - [`prose-vale-curator`](prose-vale-curator.md)
 
+## Referenziert von
+
+- [`i18n-completeness-checker`](i18n-completeness-checker.md)
+- [`webview-ui-optimize`](../../skills/nolte-shared/webview-ui-optimize.md)
+
 ---
 
 ## Web-View UI Expert
