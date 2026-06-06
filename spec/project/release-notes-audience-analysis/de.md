@@ -1,6 +1,6 @@
 # Zielgruppenanalyse für Release Notes
 
-Status: draft
+Status: accepted
 
 ## Kontext
 <!-- Warum existiert diese Spec? Welches Problem, welcher Bedarf oder welche Einschränkung treibt sie? -->
@@ -46,7 +46,7 @@ Jedes GitHub-Release eines Projekts liefert ein Release-Notes-Dokument aus — h
   - Call-to-Action (Upgrade-Befehl, Migrations-Link, Deprecation-Deadline, Verweis auf Security Advisory)
   - Vorgaben zur Maschinenlesbarkeit (stabile Kategorienamen, PR-Referenzen, CVE-IDs, SemVer-Labels)
 - **MUSS [MUST]** Breaking-Change- und Security-Disclosure-Zielgruppen als primär klassifizieren, sobald der Scope des Projekts eine der beiden Änderungsklassen erzeugen kann — Release Notes sind der kanonische Disclosure-Kanal für beide, und eine niedrigere Priorisierung riskiert unangekündigte Nutzer-Auswirkungen
-- **MUSS [MUST]** die einzige Release-Zeit-Pflicht dieser Spec für eine Security-Disclosure-Zielgruppe auf die Inhaltsabdeckung beschränken: Die Zielgruppe wird primär gerankt, und ihre Inhaltsdimensionen (Advisory-Verweis, CVE-IDs) werden vor dem Dispatch von `release-publish.yml` verifiziert, gemäß §Abnahmekriterien. Der Security-Review auf Code-Ebene bleibt an den diff-bezogenen `security-review`-Skill delegiert, der im PR-Flow aufgerufen wird (der Pfad, über den `pull-request-workflow` security-sensitive Diffs bereits routet); diese Spec fügt kein separates verpflichtendes Pre-Publish-Security-Gate hinzu
+- **MUSS [MUST]** die einzige Release-Zeit-Pflicht dieser Spec für eine Security-Disclosure-Zielgruppe auf die Inhaltsabdeckung beschränken: Die Zielgruppe wird primär gerankt, und ihre Inhaltsdimensionen (Advisory-Verweis, CVE-IDs) werden vor dem Dispatch von `release-publish.yml` verifiziert, gemäß §Abnahmekriterien. Der Security-Review auf Code-Ebene bleibt an den diff-bezogenen `security-review`-Skill delegiert, den der `pull-request-merge`-Skill aufruft, wenn der Diff einen security-sensitiven Pfad berührt, während des PR-Merge-Flows (gemäß `skills/pull-request-merge/SKILL.md`); diese Spec fügt kein separates verpflichtendes Pre-Publish-Security-Gate hinzu
 - **MUSS [MUST]** jede Zielgruppe gemäß `audience-identification` als `confirmed` oder `assumed` kennzeichnen; eine Release-Notes-Zielgruppe, die ohne Beleg (reale Vertretung, Subscriber-Signal, Nachweis eines automatisierten Konsumenten, referenzierendes Issue) beansprucht wird, bleibt `assumed`
 - **SOLLTE [SHOULD]** die `release-drafter`-Kategoriekonfiguration des Projekts an den identifizierten Zielgruppen ausrichten — jede Kategorie existiert, weil mindestens eine Zielgruppe sie braucht; Kategorien ohne zugeordnete Zielgruppe werden entfernt
 - **SOLLTE [SHOULD]** die PR-Label-Taxonomie und die Conventional-Commits-Scopes des Projekts so ausrichten, dass `release-drafter` die zielgruppengetriebenen Kategorien ohne manuelle Nachbearbeitung zusammenstellt
