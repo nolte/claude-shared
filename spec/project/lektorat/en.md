@@ -1,6 +1,6 @@
 # Lektorat
 
-Status: draft
+Status: accepted
 
 ## Context
 

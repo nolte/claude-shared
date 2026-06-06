@@ -45,7 +45,7 @@ Canonical language: `en` · Translations: `de`
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | unversioned |
 | project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | unversioned |
-| project | lektorat | Lektorat | Lektorat | draft | unversioned |
+| project | lektorat | Lektorat | Lektorat | accepted | unversioned |
 | project | lektorat-auto-revise | Lektorat Auto-Revise | Lektorat Auto-Revise | draft | unversioned |
 | project | license-check | License Check | Lizenzprüfung | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
@@ -53,7 +53,7 @@ Canonical language: `en` · Translations: `de`
 | project | mkdocs-structure | MkDocs Site Structure | MkDocs-Site-Struktur | draft | unversioned |
 | project | parallel-working-copies | Parallel Working Copies | Parallele Working Copies | draft | unversioned |
 | project | post-audience-communication | Post audience communication | Audience-Kommunikation für Posts | draft | unversioned |
-| project | post-writing-style | Post writing style | Post-Schreibstil | draft | unversioned |
+| project | post-writing-style | Post writing style | Post-Schreibstil | accepted | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | 2026-05-01 |
 | project | prose-style | Prose Style | Textstil | draft | 2026-04-24 |
 | project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | 2026-04-23 |
