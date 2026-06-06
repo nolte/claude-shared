@@ -51,7 +51,7 @@ The plugin is designed for these scenarios:
   the portfolio baseline.
 
 Explicitly **out of scope**: `nolte-shared` is tooling, not a managed service. It
-ships no SLA, gives no warranty on its advisory outputs (a clean report isn't a
+ships no service-level agreement (SLA), gives no warranty on its advisory outputs (a clean report isn't a
 guarantee that a change is safe to ship), and offers no support contract.
 Release, code, and security accountability stay with your project.
 

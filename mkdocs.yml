@@ -156,7 +156,7 @@ nav:
   - Erste Schritte:
       - de/getting-started/index.md
       - Installation: de/getting-started/installation.md
-      - Nutzung: de/getting-started/nutzung.md
+      - Nutzung: de/getting-started/usage.md
   - Guides:
       - de/guides/index.md
       - Entwicklung: de/guides/development.md

@@ -31,7 +31,7 @@ flowchart LR
 | **Quellbaum Skills** | `skills/<name>/` |
 | **Quellbaum Agents** | `agents/<name>.md` |
 | **Spezifikationen** | `spec/claude/<topic>/<lang>.md` |
-| **Status** | Frühphase — Inhalte werden konsolidiert |
+| **Status** | Aktive Entwicklung; Schnittstellen können sich ändern |
 
 ## Was ist enthalten
 
@@ -41,7 +41,7 @@ flowchart LR
 - :hammer_and_wrench: **Konventionen** — geteilte `CLAUDE.md`-Bausteine und Prompt-Fragmente
 
 !!! info "Was dieses Repository *nicht* ist"
-    Es ist keine End-User-App, kein Framework und kein Ersatz für Claude Code. Es ist eine **Sammlung geteilter Konfigurationen**, die in Claude Code einsteckt werden.
+    Es ist keine End-User-App, kein Framework und kein Ersatz für Claude Code. Es ist eine **Sammlung geteilter Konfigurationen**, die in Claude Code eingesteckt werden.
 
 ## Weiter
 

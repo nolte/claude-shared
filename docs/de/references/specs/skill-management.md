@@ -8,18 +8,18 @@ last_updated: 2026-05-19
 
 # Skill-Autorenschaft
 
-Diese Seite fasst die Spezifikation aus `spec/claude/skill-management/de.md` zusammen. Kanonische Quelle ist `spec/claude/skill-management/en.md`.
+Diese Seite fasst die Spezifikation aus `spec/claude/skill-management/de.md` zusammen. Die kanonische Quelle ist `spec/claude/skill-management/en.md`.
 
 **Status:** draft
 
 ## Kontext
 
-Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents für nachgelagerte Projekte. Ein Skill hat zwei Ausprägungen:
+Das Repository claude-shared sammelt Skills und Agents für Claude Code. Sie sind wiederverwendbar. Sie dienen nachgelagerten Projekten. Ein Skill hat zwei Ausprägungen:
 
 - **Quell-Form** in diesem Repository: `skills/<name>/`
 - **Laufzeit-Form** im konsumierenden Projekt: `.claude/skills/<name>/` oder `~/.claude/skills/<name>/`
 
-Ohne einheitliche Form driften Skills in Benennung, Trigger-Beschreibungen und innerer Struktur auseinander. Wiederverwendung wird dann brüchig.
+Ohne einheitliche Form driften Skills auseinander: in der Benennung, in den Trigger-Beschreibungen und in der inneren Struktur. Wiederverwendung wird dann brüchig.
 
 ## Ziele und Nicht-Ziele
 
@@ -50,7 +50,7 @@ Ohne einheitliche Form driften Skills in Benennung, Trigger-Beschreibungen und i
 
 ### Ablageorte
 
-Quelle: `skills/<name>/` in claude-shared. Laufzeit: `.claude/skills/<name>/`, `~/.claude/skills/<name>/`, oder der Plugin-Pfad. Keine hartkodierten absoluten Pfade.
+Die Quelle liegt unter `skills/<name>/` in claude-shared. Zur Laufzeit greift einer dieser Pfade: `.claude/skills/<name>/`, `~/.claude/skills/<name>/` oder der Plugin-Pfad. Keine fest verdrahteten absoluten Pfade.
 
 ### Empfehlungen
 

@@ -18,7 +18,7 @@ last_updated: 2026-05-19
 ## Voraussetzungen
 
 - [Claude Code](https://docs.claude.com/en/docs/claude-code) installiert
-- Lokaler Checkout dieses Repositorys (oder ein Ort, auf den Claude Code Zugriff hat)
+- Lokale Kopie (Klon) dieses Repositorys (oder ein Ort, auf den Claude Code Zugriff hat)
 
 ## In einem nachgelagerten Projekt laden
 

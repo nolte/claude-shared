@@ -18,7 +18,7 @@ Im Quellbaum von `claude-shared` liegen sie unter `agents/<name>.md`. Zur Laufze
 |-------|-------|
 | `claude-plugin-developer` | Entwirft spec-konforme Plugin-Skills und -Agents für `nolte-shared` |
 | `audience-doc-author` | Erzeugt oder überarbeitet zielgruppengetriebene Dokumentation gegen ein vorhandenes Audience-Artefakt |
-| `audience-review` | Reviewt Audience-Artefakte aus `audience-identify` (nur lesend) |
+| `audience-review` | Prüft Audience-Artefakte aus `audience-identify` (nur lesend) |
 | `spec-readiness-reviewer` | Prüft Specs auf Widersprüche, Audience-Fit und Requirement-vs-Acceptance-Vollständigkeit |
 | `docs-freshness-checker` | Auditiert MkDocs-Dokumentation auf Sprach-Parität, tote Links, stale Pfadverweise, ADR-Hygiene |
 | `prose-vale-curator` | Pflegt Prosa Vale-konform, ohne technische Aussagen zu verändern |

@@ -24,7 +24,7 @@ Sub-Agents) plus geteilte **Konventionen** — sodass jedes Projekt, das das Plu
 installiert, dieselben spec-konformen Workflows erhält, ohne sie neu zu
 implementieren.
 
-## Für wen das gedacht ist
+## Für wen ist das gedacht?
 
 - **Downstream-Claude-Code-Nutzer** (`downstream-user`): Entwickler, die die
   Slash-Commands des Plugins (zum Beispiel `/nolte-shared:spec`,
@@ -57,7 +57,7 @@ Das Plugin ist für diese Szenarien ausgelegt:
   Portfolio-Basis ausgerichtet halten.
 
 Ausdrücklich **außerhalb des Scopes**: `nolte-shared` ist Tooling, kein Managed
-Service. Es liefert kein SLA, keine Garantie auf seine beratenden Outputs (ein
+Service. Es liefert kein SLA (Service-Level-Agreement), keine Garantie auf seine beratenden Outputs (ein
 sauberer Report ist keine Zusicherung, dass eine Änderung sicher auslieferbar
 ist) und keinen Support-Vertrag. Release-, Code- und Security-Verantwortung
 bleiben bei deinem Projekt.

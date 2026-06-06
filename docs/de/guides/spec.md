@@ -96,7 +96,7 @@ Standalone oder als Schritt 2 von Create:
 ## Hard Rules
 
 - Kanon und Übersetzungen werden **immer zusammen** angelegt und aktualisiert.
-- Nach jeder Änderung: Übersetzungen sind synchron zum Kanon — kein Drift.
+- Nach jeder Änderung: Übersetzungen sind synchron zum Kanon — ohne Drift.
 - Slugs sind ASCII-Kebab-Case und ändern sich nie still.
 - `spec/.spec-config.yml` nicht ohne Ansage ändern.
 - `Status`, Datumsangaben und Requirement-Inhalte nie erfinden — lesen oder als unbekannt markieren.

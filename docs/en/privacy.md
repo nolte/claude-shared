@@ -10,7 +10,8 @@ provider.
 
 ## Controller
 
-The controller within the meaning of the GDPR is the maintainer role of the
+The controller within the meaning of the General Data Protection Regulation
+(GDPR) is the maintainer role of the
 `claude-shared` project. Contact is exclusively through the project's public
 issue tracker:
 
@@ -41,7 +42,9 @@ The site sets **no** analytics or tracking cookies and embeds **no** third-party
 trackers, tag managers, or fingerprinting scripts. It uses only technically
 necessary local storage in your browser (for example the chosen light/dark theme
 and the client-side search index). This storage is strictly necessary for
-operation and therefore exempt from consent under § 25(2) TDDDG—no cookie banner
+operation and therefore exempt from consent under § 25(2) TDDDG (German Act on
+Data Protection in Telecommunications and Digital Services /
+Telekommunikation-Digitale-Dienste-Datenschutz-Gesetz)—no cookie banner
 is required.
 
 ## Your rights
