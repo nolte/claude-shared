@@ -14,8 +14,8 @@ Repository state when the skill is invoked:
 - `gh auth status` — authenticated as `nolte`.
 - `gh pr list --state merged --limit 50 --json number,title,body,labels` returns 12 merged PRs from the last quarter. Three of them contain **Risk / rollout notes** that reference in-scope finding sources:
   - PR #108: source `spec-drift-audit`, dispatched specialist `nolte-shared:spec` — correctly traced.
-  - PR #112: source `project-structure-apply`, specialist field reads "no matching specialised agent—generalist remediation".
-  - PR #115: source `vocab-drift-audit`, specialist field reads "no matching specialised agent—generalist remediation". This is the second such vocab-drift occurrence this quarter; combined with one from Q1, the recurrence count for `vocab-drift` is now 3.
+  - PR #112: source `project-structure-apply`, `Dispatched specialist:` field reads "no matching specialist existed — generalist handled".
+  - PR #115: source `vocab-drift-audit`, `Dispatched specialist:` field reads "no matching specialist existed — generalist handled". This is the second such vocab-drift occurrence this quarter; combined with one from Q1, the recurrence count for `vocab-drift` is now 3.
   - PR #117: source `workflow-health` incident, dispatched specialist `nolte-shared:workflow-health-triage` — correctly traced.
 - `agents/` directory at runtime (discovered via `Glob`):
   - `agents/claude-plugin-developer.md` — description mentions "spec-conformant authoring of Claude Code skills, agents, and plugin manifests".

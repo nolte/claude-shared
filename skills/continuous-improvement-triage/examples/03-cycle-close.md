@@ -23,7 +23,7 @@ Repository state when the skill is invoked:
 
 2. **Verify fix-PR audit trails.**
    - PR #118 (F2): run `gh pr view 118 --json body`. Parse **Risk / rollout notes**: originating source field present (`vocab-drift-audit` finding from PRs #115 and Q1 predecessor), dispatched specialist field present (`nolte-shared:vocab-drift-audit`). Check passes.
-   - PR #119 (F3): run `gh pr view 119 --json body`. Parse **Risk / rollout notes**: originating source field present (prose-style lint findings from PRs #104, #109, #116), dispatched specialist field present ("gap-closure initiated—`audience-doc-author` description extended; prior occurrences used `generalist remediation`"). Check passes.
+   - PR #119 (F3): run `gh pr view 119 --json body`. Parse **Risk / rollout notes**: originating source field present (prose-style lint findings from PRs #104, #109, #116), dispatched specialist field present ("gap-closure initiated—`audience-doc-author` description extended; prior occurrences read `no matching specialist existed — generalist handled`"). Check passes.
    - F1 is deferred with no fix PR — skip audit-trail verification for deferred findings.
 
 3. **No blocking issues found.** All required fields are present; no amendment needed.

@@ -81,7 +81,7 @@ Interactive. Confirm scope and trigger with the user before proceeding.
    - Run [`vocab-drift-audit`](vocab-drift-audit.md) to check Vale vocabulary against the pinned upstream release.
    - Run `task lint` and record the result.
    Record each tool's name and version (or git SHA) in the artifact's `tools-used` list.
-5. **Per-criterion check.** For each remaining spec criterion not covered by a dispatched tool, evaluate against the implementation: produce one of `pass`, `fail`, `blocked` (tooling missing), or `not-applicable` (with reason). Record the result.
+5. **Per-criterion check.** For each remaining spec criterion not covered by a dispatched tool, evaluate against the implementation: produce one of `pass`, `fail`, `blocked` (tooling missing), or `not-applicable` (with reason). Record the result. For each `fail` or `blocked` finding, the auditor **MUST** additionally record a **Specialist** disposition (mandatory field in the finding template per `spec/project/continuous-improvement/<canonical_language>.md` AC "No in-scope finding from the most recent `spec-drift-audit` run is recorded as 'no specialist considered'"): either (a) the dispatched specialist that will handle the remediation, naming both its display name and its `subagent_type` (or matching skill name), or (b) the explicit note `no matching specialist exists — generalist handled`. A finding recorded without one of these two values is incomplete and **MUST NOT** be written.
 6. **Draft the artifact.** Read `templates/audit.template.md` for the Markdown template. Fill every frontmatter field. List all findings with `fail` or `blocked` status in `## Findings`. Leave `## Decisions` empty at creation.
 7. **Write the artifact** to `.audits/spec-drift/<YYYY>-Q<n>.md` (or `.audits/spec-drift/<YYYY>-Q<n>-<topic>.md` for thematic audits). Confirm the path with the user.
 8. **Offer to stage and commit.** Show the artifact path. Do not commit without explicit user confirmation.
@@ -95,7 +95,7 @@ When the user reports decisions for one or more findings:
 
 1. **Read** the current audit artifact from `.audits/spec-drift/`.
 2. **Verify** each claimed closure: re-read the relevant spec criterion and the referenced implementation file. Do not accept "done" without spot-checking.
-3. **Record the decision** per finding: `adjust-impl`, `adjust-spec`, or `open-question`. Update the `## Decisions` section.
+3. **Record the decision** per finding: `adjust-impl`, `adjust-spec`, or `open-question`. Update the `## Decisions` section. **Carry the Specialist disposition forward** from the finding into the decision entry: each `## Decisions` block **MUST** restate the dispatched specialist (display name + `subagent_type` / skill name) or the `no matching specialist exists — generalist handled` note recorded in step 5 of `audit`, so the remediation PR's **Risk / rollout notes** can name it per `spec/project/continuous-improvement/<canonical_language>.md`.
 4. **Append one log line** to `## Processing log` per decision: `YYYY-MM-DD — <finding-id> — <decision> — verified: <method>`.
 5. **Flip `status`** in artifact frontmatter to `in-progress` on first decision.
 6. **Show the diff.** Do not commit automatically.

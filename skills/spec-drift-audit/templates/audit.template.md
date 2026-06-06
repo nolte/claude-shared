@@ -38,9 +38,9 @@ status: open
 <!-- One row per spec acceptance criterion. Use result values: pass | fail | blocked | not-applicable -->
 <!-- blocked = tooling missing or inaccessible; not-applicable requires a reason. -->
 
-| Spec | Criterion (short) | Result | Notes |
-|------|--------------------|--------|-------|
-| `spec/<topic>/<slug>/` | AC: … | pass / fail / blocked / not-applicable | |
+| Spec | Criterion (short) | Result | Specialist (fail/blocked only) | Notes |
+|------|--------------------|--------|--------------------------------|-------|
+| `spec/<topic>/<slug>/` | AC: … | pass / fail / blocked / not-applicable | <specialist + subagent_type / skill, or "no matching specialist exists — generalist handled"; blank for pass/N-A> | |
 
 ## Findings
 
@@ -55,6 +55,7 @@ status: open
 **Observed state:** <What the implementation actually does or has>
 **Expected state:** <What the spec requires>
 **Severity:** critical (security/release blocker) | standard
+**Specialist:** <!-- MANDATORY (continuous-improvement). Either: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>) — OR — "no matching specialist exists — generalist handled". A finding without this field is incomplete. -->
 
 ---
 
@@ -69,6 +70,7 @@ status: open
 ### F1 — <Short title>
 **Decision:** adjust-impl
 **Action:** <What was changed or will be changed>
+**Specialist:** <carried forward from the finding — <display-name> (subagent_type: <plugin>:<agent> | skill: <name>) OR "no matching specialist exists — generalist handled">
 **PR/Commit:** <link or SHA>
 **Resolved:** YYYY-MM-DD
 -->
