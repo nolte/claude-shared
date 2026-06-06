@@ -14,7 +14,7 @@ The planning suite bundles skills and one agent that operationalise the `mission
 
 Adoption is voluntary. A repository without a `project/` directory is untouched by any of these skills.
 
-### Lifecycle overview
+**Lifecycle overview**
 
 In what order are the planning-suite skills invoked, and which artefact does each one write?
 

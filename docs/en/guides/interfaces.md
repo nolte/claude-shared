@@ -55,5 +55,5 @@ tooling (`docs-freshness`, the catalog generator) relies on.
 
 - `spec/project/docs-audience-tracks/` §Developer-docs content contract (interface block)
 - `spec/project/mkdocs-structure/` §Per-page structure
-- `spec/claude/skill-agent-catalog/` — the generator that carries the per-item interface detail
+- `spec/claude/skill-agent-catalog/`: the generator that carries the per-item interface detail
 - `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`

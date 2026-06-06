@@ -11,11 +11,11 @@ last_updated: 2026-06-06
 A one-screen view of how `claude-shared` is put together, for a newcomer who
 needs to navigate the codebase.
 
-## Context: what's inside, what's outside
+## Context: What's inside, what's outside
 
 `claude-shared` is a single Claude Code plugin (`nolte-shared`) plus the tooling
-that authors, validates, and publishes it. It is a documentation-and-automation
-project — there is no runtime service.
+that authors, validates, and publishes it. It's a documentation-and-automation
+project—there is no runtime service.
 
 - **Inside**: the plugin's skills, agents, and specs; the MkDocs site; the
   Taskfile-driven automation; the planning suite under `project/`.
@@ -34,7 +34,7 @@ project — there is no runtime service.
 - **Specs** (`spec/`): the EN-canonical, DE-translated conventions that govern
   how skills, agents, docs, and the project itself are authored.
 - **Docs** (`docs/<lang>/`): the bilingual MkDocs site, including the
-  auto-generated skill/agent catalog.
+  generated skill/agent catalog.
 - **Automation** (`Taskfile.yml`, `scripts/`): the quality gate, catalog
   generation, validation, and the dogfooding entry point.
 
@@ -44,16 +44,16 @@ The non-trivial trade-offs are recorded as conventions in `spec/` and in
 `CLAUDE.md` rather than as standalone ADRs (the repo keeps no `docs/<lang>/adrs/`
 tree yet):
 
-- **Plugin-only distribution** — skills are never copied into consumers; the
+- **Plugin-only distribution**—skills are never copied into consumers; the
   marketplace is the single delivery path.
-- **EN-canonical specs, bilingual docs** — one source of truth per spec, kept in
+- **EN-canonical specs, bilingual docs**—one source of truth per spec, kept in
   strict translation sync.
-- **Primary-checkout-on-`develop` rule** — all feature work happens in worktrees;
+- **Primary-checkout-on-`develop` rule**—all feature work happens in worktrees;
   the primary checkout is an integration-only launchpad (see `CLAUDE.md`
   §Parallel working copies and `spec/project/parallel-working-copies/`).
 
 ## Sources
 
-- `CLAUDE.md` — repository orientation and the load-bearing conventions
-- `spec/project/parallel-working-copies/` — the worktree decision
-- [Project Structure](project-structure.md) — the on-disk building-block map
+- `CLAUDE.md`: repository orientation and the load-bearing conventions
+- `spec/project/parallel-working-copies/`: the worktree decision
+- [Project Structure](project-structure.md): the on-disk building-block map

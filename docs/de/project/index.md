@@ -14,7 +14,7 @@ Die Planning-Suite umfasst mehrere Skills sowie einen Agenten. Damit operational
 
 Adoption ist freiwillig. Ein Repository ohne `project/`-Verzeichnis bleibt von jedem dieser Skills unberührt.
 
-### Lifecycle-Übersicht
+**Lifecycle-Übersicht**
 
 In welcher Reihenfolge werden die Planning-Suite-Skills aufgerufen, und welches Artefakt schreibt jeder davon?
 

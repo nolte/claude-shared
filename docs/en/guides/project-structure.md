@@ -88,5 +88,5 @@ Pinning intent: every MkDocs plugin is pinned in `docs/requirements.txt`, the Va
 
 ## Sources
 
-- `portfolio/tech-stack.yml` — canonical portfolio tech-stack inventory (per `spec/portfolio/tech-stack/`)
-- `Taskfile.yml`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml` — the per-component source-of-truth files referenced above
+- `portfolio/tech-stack.yml`: canonical portfolio tech-stack inventory (per `spec/portfolio/tech-stack/`)
+- `Taskfile.yml`, `mkdocs.yml`, `.vale.ini`, `.pre-commit-config.yaml`: the per-component source-of-truth files referenced above

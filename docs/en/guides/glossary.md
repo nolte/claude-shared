@@ -15,7 +15,7 @@ this glossary captures only the project-specific delta.
 - **Agent**: a focused Claude Code sub-agent defined in `agents/<name>.md`,
   dispatchable by `subagent_type`, with its own tool allow-list and system
   prompt.
-- **Catalog**: the auto-generated skill/agent reference pages under
+- **Catalog**: the generated skill/agent reference pages under
   `docs/<lang>/skills/` and `docs/<lang>/agents/`, produced by the
   skill-agent-catalog generator.
 - **Dogfooding**: running this repository's own plugin against itself via
@@ -38,6 +38,6 @@ this glossary captures only the project-specific delta.
 
 ## Sources
 
-- `spec/project/prose-style/` — the upstream `nolte/vale-style` vocabulary baseline
-- `CLAUDE.md` — definitions of primary checkout, worktree, dogfooding
-- `spec/project/docs-audience-tracks/` — track definition
+- `spec/project/prose-style/`: the upstream `nolte/vale-style` vocabulary baseline
+- `CLAUDE.md`: definitions of primary checkout, worktree, dogfooding
+- `spec/project/docs-audience-tracks/`: track definition

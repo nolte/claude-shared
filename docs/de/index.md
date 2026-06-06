@@ -16,7 +16,7 @@ last_updated: 2026-06-06
 
 `claude-shared` ist eine gemeinsame Basis aus [Claude Code](https://docs.claude.com/en/docs/claude-code)-**Agents** und **Skills**, die über mehrere Projekte hinweg wiederverwendet wird. Paketiert als Plugin **`nolte-shared`**, damit Teams überall dieselben Review-Gewohnheiten, Coding-Richtlinien und Helfer-Workflows nutzen — ohne sie in jedem Repository neu zu bauen.
 
-### Auslieferungsweg: vom Quell-Repository zu den konsumierenden Projekten
+**Auslieferungsweg: vom Quell-Repository zu den konsumierenden Projekten**
 
 Wie gelangt das `nolte-shared`-Plugin aus diesem Repository in die Projekte, die es nutzen?
 

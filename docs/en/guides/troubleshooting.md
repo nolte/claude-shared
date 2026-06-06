@@ -34,7 +34,7 @@ Common failure modes a contributor or operator hits while working on
   reason.
 - **Resolution**: add the missing frontmatter (`title`, `audience`,
   `content_mode`, `track`, `last_updated`), create the missing language
-  counterpart at the same relative path, or fix the include marker — then
+  counterpart at the same relative path, or fix the include marker—then
   rebuild.
 
 ## Pre-commit / Vale blocks the commit
@@ -62,5 +62,5 @@ Common failure modes a contributor or operator hits while working on
 ## Sources
 
 - `spec/project/mkdocs-structure/` §Build verification
-- `spec/project/parallel-working-copies/` — the primary-checkout guard
+- `spec/project/parallel-working-copies/`: the primary-checkout guard
 - [Contributing](contributing.md), [Installation](../getting-started/installation.md)

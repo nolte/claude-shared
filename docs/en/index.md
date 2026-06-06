@@ -16,7 +16,7 @@ last_updated: 2026-06-06
 
 `claude-shared` is a shared foundation of [Claude Code](https://docs.claude.com/en/docs/claude-code) **agents** and **skills**, intended to be reused across multiple projects. It's packaged as the **`nolte-shared`** plugin so teams get the same review habits, coding guidelines and helper workflows everywhere—without rebuilding them in every repository.
 
-### Distribution path: from source repo to consumer projects
+**Distribution path: from source repo to consumer projects**
 
 How does the `nolte-shared` plugin get from this repository into the projects that use it?
 
@@ -57,9 +57,9 @@ flowchart LR
 
 If you want to **consume** the plugin in your own project, start at [Using nolte-shared](using.md). If you want to **develop** this repository, start at [Getting Started](getting-started/index.md).
 
-- [Using nolte-shared](using.md): install and use the plugin downstream — _audience:_ `downstream-user`
-- [Getting Started](getting-started/index.md): load the plugin and use the skills — _audience:_ `downstream-user`, `dogfooding-author`
-- [Skills](skills/index.md): overview of bundled skills — _audience:_ `downstream-user`, `maintainer`
-- [Agents](agents/index.md): overview of bundled agents — _audience:_ `downstream-user`, `maintainer`
-- [Specifications](references/specs/index.md): authoring rules — _audience:_ `maintainer`, `external-contributor`
-- [Development](guides/development.md): work on this repository — _audience:_ `external-contributor`, `maintainer`
+- [Using nolte-shared](using.md): install and use the plugin downstream (audience: `downstream-user`)
+- [Getting Started](getting-started/index.md): load the plugin and use the skills (audience: `downstream-user`, `dogfooding-author`)
+- [Skills](skills/index.md): overview of bundled skills (audience: `downstream-user`, `maintainer`)
+- [Agents](agents/index.md): overview of bundled agents (audience: `downstream-user`, `maintainer`)
+- [Specifications](references/specs/index.md): authoring rules (audience: `maintainer`, `external-contributor`)
+- [Development](guides/development.md): work on this repository (audience: `external-contributor`, `maintainer`)

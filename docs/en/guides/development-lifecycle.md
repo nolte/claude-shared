@@ -14,7 +14,7 @@ The lifecycle has seven sequential phases plus an eighth, **Cross-cutting**. The
 
 Every skill and agent declares its phase in its frontmatter (`phase:`). The catalog generator groups the [Skills](../skills/index.md) and [Agents](../agents/index.md) catalog pages by that field. This page and the catalog stay in lock-step.
 
-### Lifecycle phases and their skills and agents
+**Lifecycle phases and their skills and agents**
 
 Which skill or agent belongs to which lifecycle phase, and how does the loop return at sprint close and at MVP?
 
