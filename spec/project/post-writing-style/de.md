@@ -231,9 +231,7 @@ Andere Konsumenten, die diese Spec übernehmen, tragen einen analogen Annex in d
 
 ## Offene Fragen
 
-- **Quantitatives Lesbarkeits-Gate.** Erneut prüfen, wenn `nolte/blog` (oder ein beliebiger übernehmender Konsument) 10 veröffentlichte EN-Posts erreicht: die FK-Grade-Verteilung über diese Posts als Kalibrierungs-Input berechnen, dann ein Feature unter `project/features/` anlegen, um (a) `textstat`-oder-Äquivalent in `task check` zu verdrahten und (b) das 7–10-Band gegen die gemessene Verteilung zu rekalibrieren. Heute hält das Korpus 2 EN-Posts (`src/content/posts/en/`: `welcome.md`, `claude-shared-baseline.md`), die Datenschwelle ist also noch nicht erreicht und das Gate bleibt Reviewer-Urteil gemäß `a-4`.
-- **DE-seitiges Lesbarkeitsziel.** Erneut prüfen, wenn ein einzelner Konsument 5 veröffentlichte DE-Posts erreicht: sowohl die Wiener-Sachtextformel- als auch die Amstad-justierte-Flesch-Verteilung über sie messen, die Formel wählen, deren Band das Korpus am besten trennt, eine §Lesbarkeits-Schwellenwerte-DE-Klausel ergänzen, die sie fixiert, und die `a-4`-DE-Ausnahme aufheben. Heute hält das Korpus 2 DE-Posts (`src/content/posts/de/`: `welcome.md`, `claude-shared-baseline.md`).
-- **Override-Verfahrens-Formalismus.** Erneut prüfen beim dritten dokumentierten in-Prosa-Verbotswort-Override-Fall über das Konsumenten-Korpus, der eine Beförderung von §Override-Verfahren zu einem strukturierten, im Diff reviewfähigen `style_overrides`-Frontmatter-Feld rechtfertigen würde. Ein Grep der `nolte/blog`-Posts nach `seamless`/`style_overrides`/ironischer-Rahmungs-Override-Prosa liefert derzeit 0 Fälle, der Prosa-Mechanismus in §Override-Verfahren wurde also überhaupt nicht ausgeübt, geschweige denn als nicht-skalierend gezeigt.
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._
 
 ## Referenzen
 

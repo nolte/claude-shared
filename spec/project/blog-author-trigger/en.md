@@ -151,8 +151,8 @@ Other consumer pairs adopting this spec carry an analogous annex in the source c
 
 ## Open questions
 
-- **Trigger from `ready → in_progress` (start-of-work post).** Some posts make more sense when work starts (a "here's the problem I'm taking on" post) than when work finishes. Whether this spec grows a second trigger event for the start-of-work case stays open. Revisit when: an explicit operator request for a start-of-work post arrives, OR a roadmap item or feature in the source consumer asks for a `ready → in_progress` trigger event. As of 2026-05-29 neither exists. Both `project/roadmap.md` and `project/features/` contain no start-of-work or `ready → in_progress`-post entry, and no `project/blog-triggers/` artefact references one. Until then, start-of-work posts are operator-initiated like any other.
-- **Sprint-summary trigger.** A sprint-level summary post (one post per sprint, covering all features in that sprint) is a different shape than a per-feature post. Whether this spec grows a `sprint → review` trigger event for sprint summaries—wired to [`sprint-review`](../../../skills/sprint-review/SKILL.md)—stays open; the §Operator decision contract derived-suggestion heuristic already anticipates the compose-with-sprint-summary case. Default: keep the current single-event design (`feature → done` only); don't add a sprint-summary trigger yet. Revisit when: the per-feature trigger has actually fired in at least one full sprint and produced a real Choice 1/2/3 decision, evidenced by an artefact under `project/blog-triggers/`, AND that sprint has reached `status: closed`. As of 2026-05-29 the gate is unmet in substance—although sprint 0004 closed after the trigger wiring landed, `project/blog-triggers/` holds only `README.md` (zero deferral or briefing artefacts), so the per-feature trigger has never genuinely run.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
+
 ## References
 
 Sibling specs (in this plugin):

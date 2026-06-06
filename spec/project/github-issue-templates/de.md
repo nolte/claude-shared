@@ -128,4 +128,4 @@ Ein nachgelagerter Skill, der diese Spec anwendet, **MUSS [MUST]**:
 
 ## Open Questions
 
-- Default: Der Chooser leitet Security-Meldungen über `config.yml` `contact_links` auf GitHub Private Vulnerability Reporting, weil noch keine `SECURITY.md`-Konvention existiert, auf die verlinkt werden könnte. Revisit, wenn: `spec/project/project-structure/en.md` (deren Open Question in Zeile 164 zu CODEOWNERS / SECURITY.md / SUPPORT.md) ein MUST/SHOULD für einen konkreten `SECURITY.md`-Pfad erhält. Ab dann MUSS Schritt 6 hier automatisch einen `contact_link` ergänzen, der auf diese `SECURITY.md` zeigt.
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

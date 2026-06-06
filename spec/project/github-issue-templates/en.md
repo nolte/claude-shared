@@ -132,4 +132,4 @@ A downstream skill that applies this spec **MUST**:
 
 ## Open Questions
 
-- Default: the chooser routes security reports through `config.yml` `contact_links` pointed at GitHub private vulnerability reporting, because no `SECURITY.md` convention exists to link to yet. Revisit when: `spec/project/project-structure/en.md` (its open question at line 164 about CODEOWNERS / SECURITY.md / SUPPORT.md) gains a MUST/SHOULD for a concrete `SECURITY.md` path. At that point step 6 here MUST add a `contact_link` automatically pointing at that `SECURITY.md`.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

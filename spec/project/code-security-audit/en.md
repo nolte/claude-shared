@@ -80,4 +80,4 @@ Readers: agent authors maintaining the auditor; reviewers who consume its report
 
 ## Open Questions
 
-- Reciprocal boundary to a future architecture-level threat-modeling spec. Revisit when a `spec/project/threat-modeling/` (or an equivalently-named architecture-level threat-modeling spec) is created under `spec/`, OR a roadmap item for one is opened in `project/roadmap.md`. At that moment, add a reciprocal delimitation bullet to both this spec's §Non-Goals and the threat-modeling spec's Non-Goals/Goals. Checkable predicate today: `test -d spec/project/threat-modeling` and grep `project/roadmap.md` for a threat-modeling entry—both false at 2026-05-29 (post-#228).
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

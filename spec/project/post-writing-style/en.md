@@ -235,9 +235,7 @@ Other consumers adopting this spec carry an analogous annex in their own reposit
 
 ## Open questions
 
-- **Quantitative readability gate.** Revisit when `nolte/blog` (or any adopting consumer) reaches 10 published EN posts: compute the FK-grade distribution across those posts as the calibration input, then file a feature under `project/features/` to (a) wire `textstat`-or-equivalent into `task check` and (b) recalibrate the 7–10 band against the measured distribution. Today the corpus holds 2 EN posts (`src/content/posts/en/`: `welcome.md`, `claude-shared-baseline.md`), so the data bar isn't yet met and the gate stays reviewer-judgement per `a-4`.
-- **DE-side readability target.** Revisit when a single consumer reaches 5 published DE posts: measure both the Wiener Sachtextformel and the Amstad-adjusted Flesch distribution across them, pick the formula whose band best separates the corpus, add a §Readability thresholds DE clause pinning it, and lift the `a-4` DE exemption. Today the corpus holds 2 DE posts (`src/content/posts/de/`: `welcome.md`, `claude-shared-baseline.md`).
-- **Override-procedure formalism.** Revisit at the third documented in-prose forbidden-word override case across the consumer corpus, which would justify promoting §Override procedure to a structured `style_overrides` frontmatter field reviewable in diff. A grep of `nolte/blog` posts for `seamless`/`style_overrides`/ironic-framing override prose currently returns 0 cases, so the prose mechanism in §Override procedure hasn't been exercised at all, let alone shown to fail to scale.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
 
 ## References
 
