@@ -83,6 +83,16 @@ tasks:
     cmds:
       - python3 scripts/validate_skills.py
 
+  validate:schemas:
+    desc: |
+      Validate every *.schema.yaml against the JSON Schema 2020-12 meta-schema
+      and every schema-bound data file against its schema, per
+      spec/project/yaml-json-schema/ §Validation contract. A missing validator
+      fails with an install hint rather than skipping. Wired into `task lint`
+      via the validate-schemas pre-commit hook; this target runs it directly.
+    cmds:
+      - python3 scripts/validate_schemas.py
+
   image:generate:
     desc: |
       Generate an image from a text prompt via a pluggable provider backend
