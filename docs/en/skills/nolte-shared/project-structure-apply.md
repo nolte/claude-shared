@@ -37,6 +37,7 @@ _Audits a repository against the canonical-language file under spec/project/proj
 ## Referenced by
 
 - [`project-structure-reviewer`](../../agents/nolte-shared/project-structure-reviewer.md)
+- [`backstage-catalog-generate`](backstage-catalog-generate.md)
 - [`github-issue-templates-apply`](github-issue-templates-apply.md)
 - [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md)
 

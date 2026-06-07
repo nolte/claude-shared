@@ -143,6 +143,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+- [backstage-catalog-generate](../skills/nolte-shared/backstage-catalog-generate.md) — nolte-shared
 - [cookiecutter-template-manage](../skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
 - [docs-audience-tracks-apply](../skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](../skills/nolte-shared/docs-dry-refactor.md) — nolte-shared

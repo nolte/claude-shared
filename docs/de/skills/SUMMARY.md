@@ -35,6 +35,7 @@ last_updated: generated
     * [webview-ui-optimize](nolte-shared/webview-ui-optimize.md)
     * [yaml-json-schema](nolte-shared/yaml-json-schema.md)
 * 4 Build
+    * [backstage-catalog-generate](nolte-shared/backstage-catalog-generate.md)
     * [blog-author](nolte-shared/blog-author.md)
     * [blog-author-trigger](nolte-shared/blog-author-trigger.md)
     * [gemini-image-handoff](nolte-shared/gemini-image-handoff.md)

@@ -58,3 +58,10 @@ param(s)?
 [Ss]napshot(s|ted|ting)?
 stdlib
 Wayback
+Spotify
+slugify
+charset
+subcommand
+[Ss]caffolder
+colocated
+alphanumerics

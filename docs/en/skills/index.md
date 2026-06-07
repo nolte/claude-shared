@@ -47,6 +47,7 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 
 ## 4 Build
 
+- [`backstage-catalog-generate`](nolte-shared/backstage-catalog-generate.md) — Generates a schema-valid Backstage catalog-info.yaml from an existing project by inferring per-kind MUST-floor fields from repo signals, confirming the rest with the operator, and self-validating.
 - [`blog-author`](nolte-shared/blog-author.md) — Drafts a bilingual EN-canonical + DE-translated blog-post pair per this plugin's blog-author specs, writing into a consumer blog repo.
 - [`blog-author-trigger`](nolte-shared/blog-author-trigger.md) — On a feature→done transition, derives a blog-post briefing, suggests new/update/defer, and either dispatches blog-author or writes a deferral artefact.
 - [`gemini-image-handoff`](nolte-shared/gemini-image-handoff.md) — Authors a Gemini-optimised prompt and guides the operator through pasting it into the Gemini web UI and downloading the image — a semi-automatic, no-API, no-billing handoff.
