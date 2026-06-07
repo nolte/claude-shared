@@ -39,6 +39,7 @@ _Curates prose in the current project so it passes Vale, prefers terms from the 
 ## Referenced by
 
 - [`docs-freshness-checker`](docs-freshness-checker.md)
+- [`link-rot-scanner`](link-rot-scanner.md)
 - [`webview-ui-expert`](webview-ui-expert.md)
 - [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 - [`readme-structure-apply`](../../skills/nolte-shared/readme-structure-apply.md)

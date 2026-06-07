@@ -50,6 +50,7 @@ Canonical language: `en` · Translations: `de`
 | project | lektorat | Lektorat | Lektorat | accepted | unversioned |
 | project | lektorat-auto-revise | Lektorat Auto-Revise | Lektorat Auto-Revise | draft | unversioned |
 | project | license-check | License Check | Lizenzprüfung | draft | unversioned |
+| project | link-validation | Link Validation | Link-Validierung | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
 | project | mkdocs-structure | MkDocs Site Structure | MkDocs-Site-Struktur | draft | unversioned |

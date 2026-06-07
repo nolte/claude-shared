@@ -48,3 +48,13 @@ decompounding
 decompounder
 nominalisation
 nominalisations
+backoff
+CDNs?
+IPs?
+liveness
+param(s)?
+[Pp]ermalink(s|'s)?
+[Rr]enderers?
+[Ss]napshot(s|ted|ting)?
+stdlib
+Wayback

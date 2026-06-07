@@ -32,6 +32,7 @@ last_updated: generated
 * 6 Quality
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
     * [i18n-completeness-checker](nolte-shared/i18n-completeness-checker.md)
+    * [link-rot-scanner](nolte-shared/link-rot-scanner.md)
     * [mermaid-diagram-reviewer](nolte-shared/mermaid-diagram-reviewer.md)
     * [project-structure-reviewer](nolte-shared/project-structure-reviewer.md)
     * [prose-vale-curator](nolte-shared/prose-vale-curator.md)

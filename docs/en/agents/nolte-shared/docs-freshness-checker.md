@@ -38,6 +38,7 @@ _Audit the MkDocs documentation of the current repository for freshness — mult
 ## Referenced by
 
 - [`lektorat-scanner`](lektorat-scanner.md)
+- [`link-rot-scanner`](link-rot-scanner.md)
 - [`mermaid-diagram-reviewer`](mermaid-diagram-reviewer.md)
 - [`docs-audience-tracks-apply`](../../skills/nolte-shared/docs-audience-tracks-apply.md)
 - [`docs-dry-refactor`](../../skills/nolte-shared/docs-dry-refactor.md)
@@ -58,6 +59,7 @@ Permitted `Bash` invocations (exhaustive list — anything outside this set is a
 - `git rev-parse HEAD` — read the audited commit SHA recorded in the report's **Scope** block (Precondition step 2, required by `spec/project/docs-freshness/` §Audit artifact).
 - `git log -1 --format=%ai -- <file>` — read the last-commit ISO timestamp of a documentation file (DE/EN parity step).
 - `git log -1 --format=%cs -- <file>` — read the last-commit short date of a markdown file or its derived-Mermaid-source (Mermaid drift step).
+- `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_links.py" --offline …` (or `python3 scripts/check_links.py --offline …` inside the source repo) — the deterministic link checker that owns internal-link-rot and cross-tree-reference-rot detection per `spec/project/link-validation/`. The `--offline` slice never touches the network and never edits files (it may write only its own uncommitted cache; pass `--no-cache` to suppress it). This agent delegates those two drift categories to the checker rather than re-detecting them by hand.
 
 The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add` / `git commit` / `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation. The body's hard rules reinforce this: the agent is read-only by stated responsibility, and the `Bash` declaration exists exclusively to read git metadata that the audit fundamentally depends on. Without this exception, the agent's core function (date-based parity and drift detection) couldn't ship.
 
@@ -254,19 +256,20 @@ Only run when at least two language trees exist.
 
 Don't translate anything. This phase reports parity gaps; closing them is an author task.
 
-#### Phase 3: Internal markdown links
+#### Phase 3+4: Internal-link rot and cross-tree reference rot (delegated)
 
-- `Grep` every `*.md` under the docs dir for the patterns `](.+?)` and `]: .+` (reference-style links).
-- For every link, classify:
-  - **External** (starts with `http://`, `https://`, `mailto:`): skip (out of scope — this agent doesn't hit the network).
-  - **Anchor only** (starts with `#`): skip.
-  - **Internal** (relative path, possibly with `#anchor`): resolve against the containing file's directory, strip any `#anchor`, check existence on disk. Broken link → finding.
-- Also check reference-style link targets (`[id]: path`) the same way.
+Detection of these two categories is **delegated** to the deterministic checker that owns link resolution per `spec/project/link-validation/` — don't re-grep and re-resolve links by hand.
 
-#### Phase 4: Cross-tree references
+- Run the checker's offline slice in JSON mode, scoped to the internal and cross-tree classes:
+  - `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_links.py" --offline --internal --cross-tree --format json` (consumer repo)
+  - `python3 scripts/check_links.py --offline --internal --cross-tree --format json` (this source repo)
+- Map the checker's `findings` straight into the report:
+  - class `internal` / `anchor` (critical) → **Broken internal links** / **Unresolved anchors**.
+  - class `cross-tree` (critical) → **Broken cross-tree references**.
+- The checker resolves intra-page and cross-file anchors with the Material-slugify algorithm and applies the GitHub-slugify variant for files rendered on GitHub (README, files outside `docs_dir`), so the anchor check is now a `MUST`, not a heuristic grep.
+- If the checker isn't installed (neither path resolves), record that the internal/cross-tree slice was skipped because the deterministic detector is unavailable, and fall back to a best-effort `Grep` only as a stop-gap — note the degradation in the report.
 
-- For every link that resolves to a path under `spec/`, `src/`, `scripts/`, `docker/`, `helm/`, `tests/`, `tools/`: verify the path still exists in the current working tree.
-- Broken cross-tree references are typically the highest-severity findings because they usually mean the referenced asset was renamed or removed without a docs update.
+This agent still owns the *external*-link surface's absence: external links remain out of scope here and are audited by the [`link-rot-scanner`](link-rot-scanner.md) agent (`spec/project/link-validation/`).
 
 #### Phase 5: ADR hygiene
 

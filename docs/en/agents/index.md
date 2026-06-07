@@ -44,6 +44,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 
 - [`docs-freshness-checker`](nolte-shared/docs-freshness-checker.md) — Read-only freshness audit of MkDocs docs: language parity, dead links, stale spec/code refs, ADR hygiene, Mermaid derived-source drift.
 - [`i18n-completeness-checker`](nolte-shared/i18n-completeness-checker.md) — Read-only completeness audit of translation files against each other and against code usage, as a severity-sorted report.
+- [`link-rot-scanner`](nolte-shared/link-rot-scanner.md) — Read-only link-rot audit: internal, anchor, cross-tree, and external links via scripts/check_links.py, triaged into a severity-sorted report.
 - [`mermaid-diagram-reviewer`](nolte-shared/mermaid-diagram-reviewer.md) — Static audit of every Mermaid block in docs/<lang>/ against the spec plus MkDocs setup; structured findings, no rendering.
 - [`project-structure-reviewer`](nolte-shared/project-structure-reviewer.md) — Read-only audit of the repository's layout against the project-structure spec; severity-sorted findings on disk only.
 - [`prose-vale-curator`](nolte-shared/prose-vale-curator.md) — Curates prose to pass Vale, prefers shipped vocabularies, extends accept.txt only inside vocabulary-owning repos.
