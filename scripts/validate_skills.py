@@ -36,6 +36,42 @@ STARTER_TAGS = {
 RESERVED_TOKENS = {"anthropic", "claude"}
 GENERIC_NAMES = {"helper", "utils", "tools", "documents", "data", "files"}
 NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
+
+# --- Name-form convention --------------------------------------------------
+# spec/claude/skill-management/ §"Frontmatter validation" and
+# spec/claude/agent-management/ §Structure fix one name form per artefact type:
+#   skills  -> <object-noun>-<action>   (trailing token names the action,
+#              a finite verb like `apply`/`create` or a deverbal action noun
+#              like `audit`/`review`/`handoff`/`management`)
+#   agents  -> <subject>-<role-noun>    (trailing token names the actor role,
+#              in English almost always carrying -er/-or/-ist morphology)
+# Both checks below are Suggestion-grade: a form deviation is a discoverability
+# smell, never a platform-validator failure, so it never breaks CI. The
+# allowlists are bootstrapped from the current surface; a genuinely new action
+# verb or role noun is added here in the same PR that introduces the artefact.
+#
+# Trailing action tokens established across the skill surface. Extend when a new
+# skill legitimately introduces a new action token.
+SKILL_ACTION_TOKENS = {
+    "apply", "audit", "author", "capture", "check", "create", "curate",
+    "decompose", "define", "execute", "generate", "handoff", "identify",
+    "init", "maintain", "manage", "management", "merge", "optimize",
+    "orchestrate", "plan", "refactor", "refine", "review", "revise",
+    "sweep", "triage", "trigger",
+}
+# Closed exception list: established skill names whose trailing token is not an
+# action token and that predate or otherwise outweigh a breaking rename. Kept in
+# sync with skill-management §Frontmatter validation §"Documented exceptions".
+SKILL_NAME_FORM_EXCEPTIONS = {"spec", "yaml-json-schema", "quality-gate"}
+# Agent role-noun morphology: an object-role name ends in an actor noun, which
+# in English almost always carries one of these derivational suffixes.
+AGENT_ROLE_SUFFIXES = ("er", "or", "ist", "ian", "eur")
+# Actor nouns that name a role without -er/-or/-ist morphology.
+AGENT_ROLE_NOUNS = {"expert"}
+# Closed exception list: established agent names that don't fit
+# <subject>-<role-noun>. Kept in sync with agent-management §Structure
+# §"Documented exceptions".
+AGENT_NAME_FORM_EXCEPTIONS = {"png-to-transparent-svg", "audience-review"}
 DOUBLE_HYPHEN_RE = re.compile(r"--")
 # Match only HTML-shaped tags that the upstream Anthropic platform validator
 # rejects: a known HTML-element name (lowercased) optionally followed by
@@ -167,6 +203,40 @@ def check_name(name: str | None, target: str, kind: str, expected_basename: str,
         findings.append(Finding("Critical", target, f"{kind}-management.frontmatter-name-filename",
                                 f"`name` `{name}` does not match expected basename `{expected_basename}`"))
     return findings
+
+
+def check_name_form(name: str | None, target: str, kind: str) -> list[Finding]:
+    """Suggestion-grade name-form check.
+
+    Skills are `<object-noun>-<action>`; agents are `<subject>-<role-noun>`
+    (`skill-management` §Frontmatter validation, `agent-management` §Structure).
+    Never emits Critical: a form deviation is a discoverability smell, not a
+    platform-validator failure. Names in the closed per-kind exception lists are
+    silent; the lists themselves are the audit trail.
+    """
+    if not name:
+        return []
+    last = name.rsplit("-", 1)[-1]
+    if kind == "skill":
+        if name in SKILL_NAME_FORM_EXCEPTIONS or last in SKILL_ACTION_TOKENS:
+            return []
+        return [Finding(
+            "Suggestion", target, "skill-management.name-form",
+            f"`name` `{name}` does not end in a known action token "
+            f"(`<object-noun>-<action>`, e.g. `…-apply`); if `{last}` is a "
+            f"legitimate action, add it to SKILL_ACTION_TOKENS, otherwise rename "
+            f"or record a closed exception (skill-management §Frontmatter validation)",
+        )]
+    if name in AGENT_NAME_FORM_EXCEPTIONS or last in AGENT_ROLE_NOUNS \
+            or last.endswith(AGENT_ROLE_SUFFIXES):
+        return []
+    return [Finding(
+        "Suggestion", target, "agent-management.name-form",
+        f"`name` `{name}` does not end in a role noun "
+        f"(`<subject>-<role-noun>`, e.g. `…-reviewer`); if `{last}` names an "
+        f"actor role, add it to AGENT_ROLE_NOUNS, otherwise rename or record a "
+        f"closed exception (agent-management §Structure)",
+    )]
 
 
 def check_description(desc: str | None, target: str, kind: str) -> list[Finding]:
@@ -317,6 +387,7 @@ def check_skill(path: Path) -> list[Finding]:
     body = _split_body(text)
     findings = []
     findings += check_name(fm.get("name"), rel, "skill", expected_name, body)
+    findings += check_name_form(fm.get("name"), rel, "skill")
     findings += check_description(fm.get("description"), rel, "skill")
     findings += check_tags(fm.get("tags"), rel, "skill")
     findings += check_phase(fm.get("phase"), rel, "skill")
@@ -336,6 +407,7 @@ def check_agent(path: Path) -> list[Finding]:
     body = _split_body(text)
     findings = []
     findings += check_name(fm.get("name"), rel, "agent", expected_name, body)
+    findings += check_name_form(fm.get("name"), rel, "agent")
     findings += check_description(fm.get("description"), rel, "agent")
     findings += check_tags(fm.get("tags"), rel, "agent")
     findings += check_distribution(fm.get("distribution"), rel)
