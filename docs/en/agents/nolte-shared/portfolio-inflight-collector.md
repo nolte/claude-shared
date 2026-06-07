@@ -31,6 +31,10 @@ _Read-only in-flight data collector dispatched by portfolio-inflight-triage to g
 
 - [`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md)
 
+## Referenced by
+
+- [`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md)
+
 ---
 
 ## Portfolio In-Flight Collector

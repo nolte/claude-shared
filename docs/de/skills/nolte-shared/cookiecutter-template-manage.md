@@ -28,6 +28,10 @@ _Manages the lifecycle of a Cookiecutter template: scaffolds a new template or r
 
 - [`cookiecutter-template-author`](../../agents/nolte-shared/cookiecutter-template-author.md)
 
+## Referenziert von
+
+- [`cookiecutter-template-author`](../../agents/nolte-shared/cookiecutter-template-author.md)
+
 ---
 
 ## Cookiecutter Template Manage

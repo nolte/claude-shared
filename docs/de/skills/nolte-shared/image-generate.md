@@ -33,6 +33,11 @@ _Generates an image from a text prompt via a pluggable provider backend, writing
 - [`graphic-prompt-generator`](../../agents/nolte-shared/graphic-prompt-generator.md)
 - [`png-to-transparent-svg`](../../agents/nolte-shared/png-to-transparent-svg.md)
 
+## Referenziert von
+
+- [`graphic-prompt-generator`](../../agents/nolte-shared/graphic-prompt-generator.md)
+- [`gemini-image-handoff`](gemini-image-handoff.md)
+
 ---
 
 ## Image Generate

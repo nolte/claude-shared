@@ -31,6 +31,10 @@ _Read-only scanner that diffs repository-local Vale vocabulary files against the
 
 - [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
 
+## Referenziert von
+
+- [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
+
 ---
 
 ## Vocab Drift Scanner

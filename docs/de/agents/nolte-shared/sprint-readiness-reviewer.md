@@ -35,6 +35,10 @@ _Reviews a target sprint file under `project/sprints/` for readiness against `sp
 - [`sprint-execute`](../../skills/nolte-shared/sprint-execute.md)
 - [`feature-decompose`](../../skills/nolte-shared/feature-decompose.md)
 
+## Referenziert von
+
+- [`sprint-plan`](../../skills/nolte-shared/sprint-plan.md)
+
 ---
 
 ## Sprint Readiness Reviewer

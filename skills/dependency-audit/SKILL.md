@@ -89,6 +89,20 @@ Run every detected auditor per subroot. Use `--json` / equivalent machine-readab
 
 Record per finding: `package`, `installed_version`, `advisory_id` (GHSA/CVE/PYSEC), `severity` (`critical` / `high` / `medium` / `low` / `unknown`), `path` (direct or transitive), `fixed_in`, `summary_url`.
 
+**Severity classification (CVSS scale).** Per `spec/project/dependency-audit/` §Severity classification, take the auditor's native classification as the source of truth and map it onto the shared scale by CVSS threshold:
+
+| Severity | CVSS | Auditor tag | Response window |
+|---|---|---|---|
+| `critical` | ≥ 9.0 | `critical` | within 7 days |
+| `high` | 7.0–8.9 | `high` | within 30 days |
+| `medium` | 4.0–6.9 | `moderate` / `medium` | within the current calendar quarter |
+| `low` | < 4.0 | `low` | best effort, revisited next quarterly audit |
+| `unknown` | unclassified | — | treat as `high` until classified otherwise |
+
+When the auditor couldn't classify a finding, record it as `unknown` and **treat it as `high`** for triage and response-window purposes — never as a lower tier. Never downgrade a severity on local judgement alone (disagreement is a dated ignore entry with a rationale, not a reclassification).
+
+**Gate outcome: `blocked`, not `pass`.** When a subroot can't be audited because its auditor isn't installed (or a lockfile is missing), the audit MUST report that subroot's verdict as `blocked` with the install/remediation hint — never `pass`. A `blocked` subroot is not a clean result: the gate fails closed. Only a subroot the auditor actually scanned can return `pass`.
+
 ### 4. Run a license audit (auto-on when an allowlist is discoverable)
 
 First check for a license allowlist. Locations to check, in order:
@@ -188,7 +202,8 @@ Per `spec/claude/research-triangulate/`, before this skill presents any **repo-e
 
 - **Never** modify dependency manifests, lockfiles, or ignore lists without explicit user confirmation. This skill reports; mutations are a follow-up step.
 - **Never** upgrade dependencies autonomously, even when a fix version is obvious. That's an author decision with test-suite consequences.
-- **Never** silently skip an auditor that isn't installed. Emit an install hint and record the skip in the `Health` section.
+- **Never** silently skip an auditor that isn't installed. Emit an install hint and record the skip in the `Health` section, and report that subroot's verdict as `blocked`, **never `pass`** — the gate fails closed on an un-auditable subroot.
+- **Always** treat an `unknown`-severity finding as `high` until it is classified otherwise; never let an unclassified finding fall into a lower tier.
 - **Never** invent a license policy when the project has no allowlist. Flag findings as `review`, not as failure.
 - **Never** report findings below the requested severity floor. Keep the report signal-heavy.
 - **Always** prefer a repository-declared Taskfile target over invoking auditors directly, when one exists and wraps the same auditor. This honours any project-specific ignore list the Taskfile applies.
@@ -203,3 +218,4 @@ This skill follows the hybrid pattern: the read-only scan phase is delegated to 
 - **Orchestration role**: typical callers run this as one step inside a larger flow (pre-PR gate, release cut, periodic security review); the output flows back into the main conversation so the user can triage.
 - **Interactivity**: the follow-up actions in Step 6 need user approval — bumping a dependency, adding an advisory ignore entry, drafting a license allowlist — so mid-flow interactivity favours the skill side.
 - **Hybrid split**: the pure scanning half (detect lockfile, run auditor, normalise JSON) is self-contained and benefits from context-window isolation; the `dependency-audit-scanner` agent handles it. The follow-up-action half stays here so the user can approve each change interactively.
+- **Counter-dimension**: the self-contained, summary-returning shape of the scan phase points toward a pure agent, and its verbose JSON output is exactly the context-window pressure that favours isolation. That pull is honoured — but only for the scan half, which is delegated to `dependency-audit-scanner`. The interactivity of the follow-up actions outweighs it for the capability as a whole, so the orchestrating surface stays a skill.

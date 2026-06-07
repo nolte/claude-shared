@@ -4,7 +4,7 @@ description: Read-only, whole-codebase OWASP security audit that correlates find
 distribution: plugin
 tools: Read, Grep, Glob
 phase: review
-tags: [review, audit, security]
+tags: [review, audit]
 model: opus
 summary: "Read-only whole-codebase OWASP audit correlating findings across files into a severity-classified report."
 summary_de: "Read-only Whole-Codebase-OWASP-Audit, das Befunde über Dateien hinweg zu einem nach Schweregrad klassifizierten Report korreliert."
@@ -65,6 +65,7 @@ Cover the OWASP Top 10, reading related files together rather than per-file:
 - **Broken access control (A01):** authorization on every state-changing endpoint, **multi-tenant isolation** (every tenant-scoped path filters by the tenant id; cross-tenant access returns not-found, not forbidden), and IDOR.
 - **Security misconfiguration (A05):** permissive CORS, missing security headers, debug flags in production, and information disclosure in error responses (stack traces, internal paths, query fragments).
 - **Cryptographic failures (A02):** weak hashing, weak/Default secrets, unencrypted secret storage.
+- **Software and data integrity failures (A08):** insecure deserialization of untrusted input (`pickle`, `yaml.load`, `eval`-based parsers), unsigned/unverified updates or plugins, untrusted CI/CD inputs and build-pipeline integrity (unpinned actions, untrusted artifact sources), and dependency-fetch over insecure channels.
 - **Secret handling (whole tree):** hard-coded credentials; secrets in source, compose, chart values, seed data, logs, or error responses.
 - **Input validation & rate limiting:** request-body schema validation, field bounds, file-upload validation, pagination/sort allowlists; rate limits on login/registration/password-reset.
 - **AI/LLM/RAG (when present):** prompt injection (user input must not reach the system prompt as instructions), SSRF via embedding/model service URLs, API-key handling, resource-exhaustion limits.

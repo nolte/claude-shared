@@ -31,6 +31,11 @@ _Promote an open draft pull request on the current branch to a merged state on `
 
 - [`pull-request-create`](pull-request-create.md)
 
+## Referenced by
+
+- [`pull-request-create`](pull-request-create.md)
+- [`workflow-health-triage`](workflow-health-triage.md)
+
 ## Examples
 
 - **Prompt:** Merge the open PR

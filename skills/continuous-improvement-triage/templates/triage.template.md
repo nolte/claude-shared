@@ -48,7 +48,7 @@ status: open
 - **Originating source**: <!-- named finding source for PR Risk / rollout notes -->
 - **Fix PR Risk/rollout note (verbatim)**:
   - Originating source: <!-- named finding source -->
-  - Dispatched specialist: <!-- subagent_type literal, or "no matching specialised agent—generalist remediation" -->
+  - Dispatched specialist: <!-- subagent_type literal, or "no matching specialist existed — generalist handled" -->
 -->
 
 ## Processing log

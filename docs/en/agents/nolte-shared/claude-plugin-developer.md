@@ -35,6 +35,10 @@ _Draft a new Claude Code plugin artifact (skill or agent) for the nolte-shared p
 - [`skill-review`](../../skills/nolte-shared/skill-review.md)
 - [`agent-review`](../../skills/nolte-shared/agent-review.md)
 
+## Referenced by
+
+- [`skill-management`](../../skills/nolte-shared/skill-management.md)
+
 ---
 
 ## Claude Plugin Developer

@@ -14,9 +14,13 @@ The lifecycle has seven sequential phases plus an eighth, **Cross-cutting**. The
 
 Every skill and agent declares its phase in its frontmatter (`phase:`). The catalog generator groups the [Skills](../skills/index.md) and [Agents](../agents/index.md) catalog pages by that field. This page and the catalog stay in lock-step.
 
+**Lifecycle phases and their skills and agents**
+
+Which skill or agent belongs to which lifecycle phase, and how does the loop return at sprint close and at MVP?
+
 <!-- diagram-source: user-described — eight-phase lifecycle with skills and agents grouped per phase; agents are marked with a parenthetical (A) suffix; return edges from Close to Plan (next sprint) and from Close to Vision (MVP achieved) -->
 ```mermaid
-graph TD
+flowchart TD
   subgraph V["1 Vision"]
     mdef[mission-define]
     mrev[mission-revise]

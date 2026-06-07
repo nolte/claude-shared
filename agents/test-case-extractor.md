@@ -4,7 +4,7 @@ description: Derive structured, framework-agnostic test cases from a requirement
 distribution: plugin
 tools: Read, Write, Glob, Grep
 phase: design
-tags: [testing, requirements, scaffolding]
+tags: [quality-gate, scaffolding]
 model: sonnet
 summary: "Derives structured, framework-agnostic, traceable test cases from a requirement document, written from the user-observable-behaviour perspective."
 summary_de: "Leitet strukturierte, framework-agnostische, rückverfolgbare Testfälle aus einem Anforderungsdokument ab, aus der Perspektive nutzer-beobachtbaren Verhaltens."
@@ -78,6 +78,7 @@ generated: {date}
 **Requirement**: {id} — {section reference}
 **Priority**: Critical | High | Medium | Low
 **Category**: {happy-path | validation | error | state-transition | navigation | …}
+**Technique**: {boundary-value | equivalence-partition | state-transition | user-journey | navigation | visual-feedback | error-guessing}  <!-- the standard derivation technique this case exercises, per spec §Derivation discipline -->
 **Preconditions**:
 - {required state, data, configuration}
 **Steps**:
@@ -86,14 +87,23 @@ generated: {date}
 - {user-observable outcome}
 **Postconditions**:
 - {observable state after success}
+**Related Cases**: [{TC-id of a precondition, follow-on, or variant case}, …]  <!-- explicit cross-references to related cases, per spec §Output contract; "none" when standalone -->
 **Tags**: [{requirement-id}, {domain-area}, {test-type}]
 ~~~
+
+The **Related Cases** field carries explicit cross-references to related cases (a shared-precondition case, a follow-on flow, a positive/negative counterpart, or a state-transition predecessor) so each case survives ingestion into a retrieval system as an independent but linkable chunk, per `spec/project/test-case-derivation/` §Output contract. Write `none` when a case is genuinely standalone — never omit the field.
 
 Write test cases in the **source document's language**, preserving domain terms (with an optional code-identifier gloss in parentheses). Keep each case self-contained and retrieval-friendly (one-line intent summary, prominent tags, explicit cross-references).
 
 ### Phase 4 — Coverage and summary
 
-End each document with a coverage table mapping requirement sections to the cases that cover them, and an explicit list of sections from which no case could be derived (open requirements) — never omit them silently. Return a chat summary listing each derived case id with a one-line title, plus the open requirements.
+End each document with a coverage table mapping requirement sections to the cases that cover them, and an explicit list of sections from which no case could be derived (open requirements) — never omit them silently.
+
+Return a chat summary that lists, in this order:
+
+1. **Processed source documents** — every requirement document that was read for this derivation, by path (per `spec/project/test-case-derivation/` §Inputs and discovery, MUST: report which documents it processed); when the project's interface surface was consulted, name it too, and when it was not discoverable, say the cases were derived from the requirement text alone.
+2. **Derived cases** — each derived case id with a one-line title.
+3. **Open requirements** — every requirement section from which no case could be derived.
 
 ## Hard rules
 

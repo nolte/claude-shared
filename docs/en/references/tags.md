@@ -68,17 +68,8 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 ## `design`
 
-- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [gemini-image-handoff](../skills/nolte-shared/gemini-image-handoff.md) — nolte-shared
 - [image-generate](../skills/nolte-shared/image-generate.md) — nolte-shared
-
-## `frontend`
-
-- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
-
-## `i18n`
-
-- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 
 ## `lifecycle`
 
@@ -114,6 +105,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 ## `quality-gate`
 
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
+- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [quality-gate](../skills/nolte-shared/quality-gate.md) — nolte-shared
 
 ## `release`
@@ -121,10 +113,6 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [release-notes-curate](../skills/nolte-shared/release-notes-curate.md) — nolte-shared
 - [release-publish-trigger](../skills/nolte-shared/release-publish-trigger.md) — nolte-shared
 - [sprint-review](../skills/nolte-shared/sprint-review.md) — nolte-shared
-
-## `requirements`
-
-- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 
 ## `review`
 
@@ -174,14 +162,6 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [tech-stack-capture](../skills/nolte-shared/tech-stack-capture.md) — nolte-shared
 - [webview-ui-optimize](../skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [yaml-json-schema](../skills/nolte-shared/yaml-json-schema.md) — nolte-shared
-
-## `security`
-
-- [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
-
-## `testing`
-
-- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 
 ## `triage`
 

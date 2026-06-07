@@ -119,12 +119,14 @@ When running tools directly (Step 2 fallback), **don't** add project-local ignor
 ```
 | Check | Status | Runner | Details |
 |---|---|---|---|
-| Lint | pass/fail | `task lint` | <n> errors, <m> warnings |
-| Typecheck | pass/fail | `tsc -b` (detected) | <n> type errors |
-| Tests | pass/fail | `task test` | <passed>/<total> passed |
+| Lint | pass/fail | `task lint` | <n> errors, <m> warnings (exit <code>) |
+| Typecheck | pass/fail | `tsc -b` (detected) | <n> type errors (exit <code>) |
+| Tests | pass/fail | `task test` | <passed>/<total> passed (exit <code>) |
 ```
 
 The **Runner** column shows exactly what was invoked — the Taskfile target name or the detected command — so the caller can reproduce the failure locally.
+
+The **Details** column **should** surface the underlying tool's exit code (the `EXIT:$?` value captured in Step 4) per `spec/project/quality-gate/` §Timeouts and failure handling, so the caller can tell "lint found 3 errors" (exit 1) apart from "lint crashed" (exit > 1).
 
 Below the table, for every `fail` or `timeout` row, append a one-paragraph excerpt from the captured output (≤10 lines, fenced in a code block). Group excerpts by check.
 
@@ -132,7 +134,8 @@ Below the table, for every `fail` or `timeout` row, append a one-paragraph excer
 
 - **All `pass`**: one-line green summary (`Quality gate passed — N checks green.`).
 - **Any `fail` / `timeout`**: red summary naming the failed checks and pointing at the excerpts below the table.
-- **Any `skipped: no tooling detected`**: mention them explicitly in the summary so the caller can decide whether they're acceptable (a pure-Python repo genuinely has no frontend lint) or a misconfiguration (missing `ruff` config).
+- **`fast` scope (tests deliberately skipped)**: when the caller ran the `fast` scope (lint + typecheck, tests skipped), report the Tests row as `skipped` with the **Details** noting the deliberate fast-scope reason (for example `skipped: fast scope (pre-commit), tests deferred`), and have the verdict explicitly state that tests were skipped by design — for example `Quality gate (fast scope) passed — lint + typecheck green; tests skipped (fast scope).`. This is a **distinct** verdict note from `skipped: no tooling detected` below: the fast-scope skip is an intentional scoping decision, not a missing-tooling gap, and the caller must be able to tell the two apart per `spec/project/quality-gate/` §Triggers and §Output shape. A `fast` run is never reported as a full `pass`.
+- **Any `skipped: no tooling detected`**: mention them explicitly in the summary so the caller can decide whether they're acceptable (a pure-Python repo genuinely has no frontend lint) or a misconfiguration (missing `ruff` config). Keep this distinct from the deliberate fast-scope skip above — the two skip reasons must never be collapsed into one undifferentiated `skipped`.
 
 ## Examples
 
@@ -151,6 +154,7 @@ Below the table, for every `fail` or `timeout` row, append a one-paragraph excer
 - **Never** fix failures automatically. This skill surfaces them; fixing is a separate step the caller owns.
 - **Never** run checks sequentially when parallel execution is possible and the project doesn't explicitly forbid it. Parallel is the default so feedback is fast.
 - **Never** claim `pass` for a check that was skipped. `skipped` is a distinct status.
+- **Never** report a `fast`-scope run (tests deliberately skipped) as a plain `pass`, and never collapse the deliberate fast-scope skip into the same verdict note as `skipped: no tooling detected`. The verdict must distinguish "tests skipped by design (fast scope), with the reason recorded in Details" from "tests skipped because no test tooling was detected." Both surface in the verdict; they are never merged.
 - **Never** apply a project-specific lint ignore the skill guessed at. Respect Taskfile targets; run the raw tool when falling back.
 - **Never** retry a timed-out check; report the timeout so the caller can decide whether the timeout was wrong or the test truly hangs.
 - **Always** prefer Taskfile targets over direct tool invocation when a suitable target exists. That keeps project conventions in charge.

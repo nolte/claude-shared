@@ -34,6 +34,21 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 
 ## Requirements
 
+### MkDocs extension-hook declaration
+
+This spec is a project-type-specific extension of `spec/project/mkdocs-structure/` and bolts onto its skeleton through the two declared extension hooks (§Extension hooks). It declares both hooks explicitly here so the additions are reviewable and additive, never a silent fork:
+
+- **Section extension** (per `spec/project/mkdocs-structure/` §Extension hooks → Section extension):
+  - **Adds** two top-level nav sections, **Skills** and **Agents**.
+  - **Insertion position**: immediately after the standard **References** section (so the seven-section skeleton order is preserved and the two catalog sections trail it).
+  - **Primary audience**: `contributor` (the `developer-docs` track); every generated catalog page is fixed to `track: developer-docs` per §Generation mechanism, so the sections never carry `user-docs` content.
+  - **Per-page frontmatter shape**: the five baseline keys (`title`, `audience`, `content_mode`, `track`, `last_updated`) on every generated page, with `last_updated: generated` and `track: developer-docs` generator-fixed; no extra per-page keys beyond the baseline are required.
+  - **Language parity**: the sections follow the standard language-parity rule (a counterpart page at the same relative path in every configured `docs/<lang>/` tree). Page **bodies** quote EN-canonical source frontmatter and therefore declare `source_language: en` per `spec/project/mkdocs-structure/` §i18n and parity, while the surrounding chrome (section intros, index pages, nav labels via `nav_translations`) is translated.
+- **Plugin extension** (per `spec/project/mkdocs-structure/` §Extension hooks → Plugin extension):
+  - **Requires** `mkdocs-literate-nav` and (in the `mkdocs-gen-files` form) `mkdocs-gen-files`, each pinned in the project's Python dependency manifest (`docs/requirements.txt`); no floating versions.
+  - **Rationale**: the baseline ships neither plugin because catalog navigation (literate-nav `SUMMARY.md` files) and programmatic page emission are catalog-specific concerns, not skeleton-wide ones.
+  - **Baseline interaction**: `mkdocs-static-i18n` with `docs_structure: folder` (a baseline MUST) discards files whose `abs_src_path` isn't under `docs_dir`, so the `mkdocs-gen-files` form silently drops generated pages; this spec's §Generation mechanism therefore recommends the pre-build form (a `task docs` dependency that writes physical files under `docs/<lang>/<section>/`) for repositories on that i18n setup. The extension **MUST NOT** disable any baseline plugin.
+
 ### Scope of the catalog
 - **MUST** include exactly one catalog entry per skill folder under any configured plugin source root that contains a valid `SKILL.md`
 - **MUST** include exactly one catalog entry per agent file (`<name>.md`) under any configured plugin source root
@@ -95,7 +110,9 @@ The `description` field collapses every routing signal—positive triggers, nega
 
 ### Generation mechanism
 - **MUST** generate catalog pages from the source files
-- The repository **MUST NOT** commit generated catalog markdown back into `docs/`; the catalog is regenerated on every build. The docs-deploy pipeline (the workflow that produces the GitHub Pages output) **MUST** invoke the catalog generator on the deploy build, where `reusable-mkdocs.yaml` runs `task docs` when a Taskfile with a `docs` target exists and otherwise falls back to `mkdocs build` with the generator wired as a `mkdocs-gen-files` script—so no committed-artifact freshness check is needed
+- **MUST** keep the published catalog current by one of two mechanisms, chosen by whether the docs-deploy pipeline actually runs the generator on the deploy build:
+  - **Deploy-time generation (preferred):** when the deploy pipeline invokes the catalog generator on the deploy build (for example a `reusable-mkdocs.yaml` that runs `task docs` when a Taskfile with a `docs` target exists, or `mkdocs build` with the generator wired as a `mkdocs-gen-files` script), the repository **MUST NOT** commit generated catalog markdown into `docs/`—the catalog is regenerated on every build and no committed-artifact freshness check is needed.
+  - **Committed catalog with a freshness gate (fallback):** when the shared deploy reusable **doesn't** run the generator—for example `nolte/gh-plumbing`'s `reusable-mkdocs.yaml@v1.1.19` deploys through `mhausenblas/mkdocs-deploy-gh-pages`, which runs `mkdocs build` only and never invokes `task docs`, and so the repository **MUST** commit the generated catalog tree and **MUST** enforce a CI freshness check that fails when the committed tree has drifted from a fresh regeneration (the generator still runs locally via the `task docs` pre-build dependency and the `docs-catalog-fresh` pre-commit hook). This keeps the published GitHub Pages output complete despite the deploy build skipping the generator. A repository on this fallback **MUST** retire it in favour of deploy-time generation once the shared deploy reusable invokes the generator.
 - **MUST** wire catalog navigation through `mkdocs-literate-nav` declared in `mkdocs.yml`
 - **MUST** invoke a catalog generator that produces the per-artifact pages, per-section index pages, per-section `SUMMARY.md` files for literate-nav, and the tag index. The generator **MAY** be a `mkdocs-gen-files` plugin script OR a standalone pre-build step (for example a Taskfile target invoked before `mkdocs build`) that writes physical files under `docs/<lang>/<section>/`. The pre-build form is the recommended choice whenever the repo also uses `mkdocs-static-i18n` with `docs_structure: folder`, because `mkdocs-static-i18n` 1.3.x discards files whose `abs_src_path` isn't under `docs_dir` and therefore silently drops every page emitted by `mkdocs-gen-files`
 - **MUST** read plugin source roots from a configured list—each entry pairing the local source path with the public repository URL used for source links—so additional plugins can be added without changing generator code. The configured list of source roots lives in `docs/catalog-sources.yml` (a sibling YAML file under `docs_dir`), not inline in `mkdocs.yml`

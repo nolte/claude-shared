@@ -34,6 +34,11 @@ _Reviews a draft feature file under project/features/ for overlap, duplication, 
 - [`feature-decompose`](../../skills/nolte-shared/feature-decompose.md)
 - [`spec-drift-audit`](../../skills/nolte-shared/spec-drift-audit.md)
 
+## Referenced by
+
+- [`feature-decompose`](../../skills/nolte-shared/feature-decompose.md)
+- [`spec-drift-audit`](../../skills/nolte-shared/spec-drift-audit.md)
+
 ---
 
 ## Feature Consistency Reviewer

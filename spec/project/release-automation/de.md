@@ -123,6 +123,7 @@ Anwendbar, wenn nur `GITHUB_TOKEN` zur Verfügung steht und `develop` vollständ
 - **DARF NICHT [MUST NOT]** neu spezifizieren, was bereits in `branching-model` abgedeckt ist (Tag-Herkunft, `main`-Refresh, Workflow-Pinning) — stattdessen referenzieren
 - **SOLLTE [SHOULD]** die Open Question in `project-structure` (zur Zeit Zeile 124) durch eine Querverlinkung aus `project-structure` §Release and documentation workflows in diese Spec auflösen
 - **MUSS [MUST]** von `release-artifact` als Autorität für den Übergang Draft → Veröffentlicht querreferenziert werden. `release-artifact` §Dispatch-Grenze zur Release-Maschinerie leitet sprint-seitige Artefakt-Validierungs-Ergebnisse in den Workflow weiter, den diese Spec regiert; die Grenze ist einseitig (diese Spec ist die untere Schicht, `release-artifact` ist die obere), und die konsumierende Spec **DARF NICHT [MUST NOT]** eine hier deklarierte Regel neu definieren
+- Das lokale Skill-Gegenstück zu diesem Workflow liegt in [`spec/project/release-skill-layer/`](../release-skill-layer/de.md): Skill A (`release-notes-curate`) übernimmt die Body-Kuratierung via `gh release edit` außerhalb dieses Workflows, und Skill B (`release-publish-trigger`) ist der lokale ergonomische Einstiegspunkt, der jeden Gate aus §Pre-Publish-Verifikation validiert und dann diesen Workflow via `gh workflow run` dispatcht. Diese Spec **DARF NICHT [MUST NOT]** `gh release edit --draft=false` aufrufen; der einzige Veröffentlichungsweg ist der Dispatch dieses Workflows.
 
 ### Beobachtbarkeit und Audit
 

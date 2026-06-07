@@ -36,6 +36,15 @@ _Audits a repository against the canonical-language file under spec/project/mkdo
 - [`docs-dry-refactor`](docs-dry-refactor.md)
 - [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md)
 
+## Referenziert von
+
+- [`docs-audience-tracks-apply`](docs-audience-tracks-apply.md)
+- [`docs-dry-refactor`](docs-dry-refactor.md)
+- [`mermaid-diagrams-apply`](mermaid-diagrams-apply.md)
+- [`project-structure-apply`](project-structure-apply.md)
+- [`readme-structure-apply`](readme-structure-apply.md)
+- [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md)
+
 ---
 
 ## MkDocs Structure Apply

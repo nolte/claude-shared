@@ -41,7 +41,7 @@ KI-Bildgeneratoren (Gemini, DALL-E, Midjourney und ähnliche — diese Liste ist
 - [ ] Die Pro-Datei-Zusammenfassung enthält Pixel-Entfernungs-Zählungen, die dem Aufrufer erlauben, Detektor-Ausreißer zu kennzeichnen (zum Beispiel triggert eine Schwelle unter 5 % einen Aufrufer-Review)
 - [ ] Eine Invocation gegen ein PNG, das der Detektor nicht klassifizieren kann (gemischte Eckfarben, teilweise Alpha), warnt und überspringt diese Datei im Pro-Datei-Bericht, statt eine Schwelle zu raten oder den Batch mit einer Frage zu blockieren
 - [ ] Der Agent unter `agents/png-to-transparent-svg.md` zitiert diese Spec in seiner `description` oder seinem Body, sodass der Link auffindbar ist
-- [ ] Die Tools-Liste des Agents ist das Minimum (`Read`, `Write`, `Bash`, `Glob`) — kein `Edit`, keine Netzwerk-Tools
+- [ ] Die Tools-Liste des Agents ist das Minimum (`Read`, `Bash`, `Glob`) — kein `Write` (Bilddatei-Schreibvorgänge passieren in den über `Bash` aufgerufenen Python-Helfern), kein `Edit`, keine Netzwerk-Tools
 
 ## Offene Fragen
 

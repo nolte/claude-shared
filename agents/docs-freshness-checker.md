@@ -33,9 +33,10 @@ The agent declares `Bash` in `tools` even though it is a read-only audit agent (
 
 Permitted `Bash` invocations (exhaustive list — anything outside this set is a hard violation of this section):
 
-- `git rev-parse --is-inside-work-tree` — single Precondition check (line 56).
-- `git log -1 --format=%ai -- <file>` — read the last-commit ISO timestamp of a documentation file (DE/EN parity step, line 76).
-- `git log -1 --format=%cs -- <file>` — read the last-commit short date of a markdown file or its derived-Mermaid-source (Mermaid drift step, line 121).
+- `git rev-parse --is-inside-work-tree` — single Precondition check.
+- `git rev-parse HEAD` — read the audited commit SHA recorded in the report's **Scope** block (Precondition step 2, required by `spec/project/docs-freshness/` §Audit artifact).
+- `git log -1 --format=%ai -- <file>` — read the last-commit ISO timestamp of a documentation file (DE/EN parity step).
+- `git log -1 --format=%cs -- <file>` — read the last-commit short date of a markdown file or its derived-Mermaid-source (Mermaid drift step).
 
 The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add` / `git commit` / `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation. The body's hard rules reinforce this: the agent is read-only by stated responsibility, and the `Bash` declaration exists exclusively to read git metadata that the audit fundamentally depends on. Without this exception, the agent's core function (date-based parity and drift detection) couldn't ship.
 
@@ -81,20 +82,32 @@ Return a single report:
 # Documentation Freshness Report
 
 ## Scope
+- Date: <YYYY-MM-DD>
+- Trigger: <quarterly | pre-release | PR-change | manual>
+- Git revision: <full SHA from `git rev-parse HEAD`>
 - Repo root: <path>
 - mkdocs.yml: <path>
 - Language trees: <list or "single-language">
-- Phases run: <list>
+- Phases run: <list, naming any categories narrowed out>
 
 ## Summary
+One row per category in `spec/project/docs-freshness/` §Categories of drift, so the
+artifact maps 1-to-1 onto the spec (§AC6). Use `n/a` for a category that doesn't
+apply to this repo (for example a parity category in a single-language repo).
+
 | Category | Critical | Warning | Info |
 |---|---|---|---|
-| Internal links | … | … | … |
-| Cross-tree references | … | … | … |
-| Language parity | … | … | … |
-| ADR hygiene | … | … | … |
-| Mermaid diagrams | … | … | … |
+| Internal-link rot | … | … | … |
+| Cross-tree reference rot | … | … | … |
+| Language-parity gap | … | … | … |
+| Content-staleness delta | … | … | … |
+| Mermaid diagram-source drift | … | … | … |
+| ADR index drift | … | … | … |
+| ADR status hygiene | … | … | … |
 | Stale markers | … | … | … |
+| Track-frontmatter drift | … | … | … |
+| Content-mode drift | … | … | … |
+| Audience-track mismatch | … | … | … |
 | **Total** | **…** | **…** | **…** |
 
 ## Critical
@@ -194,9 +207,10 @@ The caller provides:
 Before auditing:
 
 1. Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
-2. Locate `mkdocs.yml` at the repo root (or under common alternatives — `docs/mkdocs.yml`). If absent, stop and report: this agent operates on what MkDocs sees, and it needs the config.
-3. Parse `mkdocs.yml` to read: `docs_dir` (default `docs`), `nav`, any i18n / static-i18n plugin configuration that names the language trees.
-4. Derive the list of language trees. If the repo follows the portfolio convention `docs/en/` + `docs/de/`, use both. If MkDocs is single-language (no i18n plugin, no language subfolders), record that and skip the parity phase.
+2. Capture the audited Git revision (`git rev-parse HEAD`) and the current date; both are recorded in the report's **Scope** block per `spec/project/docs-freshness/` §Audit artifact (date, trigger, the Git revision audited). Derive the trigger from how the caller invoked the audit (quarterly cadence, pre-release gate, PR-change gate, or manual).
+3. Locate `mkdocs.yml` at the repo root (or under common alternatives — `docs/mkdocs.yml`). If absent, stop and report: this agent operates on what MkDocs sees, and it needs the config.
+4. Parse `mkdocs.yml` to read: `docs_dir` (default `docs`), `nav`, any i18n / static-i18n plugin configuration that names the language trees.
+5. Derive the list of language trees. If the repo follows the portfolio convention `docs/en/` + `docs/de/`, use both. If MkDocs is single-language (no i18n plugin, no language subfolders), record that and skip the parity phase.
 
 ## Working procedure
 
@@ -241,7 +255,8 @@ For each language tree that contains an `adr/` folder:
 
 - List ADR files (conventionally `ADR-NNN-*.md` or `NNN-*.md`).
 - Read `adr/index.md` if present; `Grep` it for ADR filenames.
-- **Index drift** findings:
+- **Generated-index skip:** before checking index drift, inspect `adr/index.md`'s frontmatter. When it declares `last_updated: generated` (the generator marker per `spec/project/mkdocs-structure/` §Per-page structure, also indicated by a generator hook), **skip the index-drift check entirely** for this tree — the freshness of a generated index is owned by the generator's own CI `git diff --exit-code` check, not by this read-only audit (`spec/project/docs-freshness/` §Categories of drift → ADR index drift; §Read-only discipline; §Delimitation). Record in the report that the ADR index for that tree was skipped as generated. Status hygiene and supersedes-chain checks below still run on the ADR files themselves.
+- **Index drift** findings (only when `adr/index.md` is *not* a generated index):
   - ADR file on disk but not referenced in `index.md` (missing from index).
   - ADR filename referenced in `index.md` but the file doesn't exist (stale index entry).
 - **Status hygiene**: `Grep` each ADR for `status:` (frontmatter) or `**Status**:` (body heading). Flag ADRs with no declared status, or with a non-standard status value. Accepted status values: `proposed`, `accepted`, `superseded`, `deprecated`, `rejected`.

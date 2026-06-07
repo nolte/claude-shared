@@ -117,7 +117,7 @@ When the source consumer **is** the blog consumer, the handover collapses: dispa
 
 ## Automatic dispatch from sprint-execute
 
-`sprint-execute` Operation C (`in_progress → done`), step 5, dispatches this skill for the just-completed feature after it surfaces the updated sprint state. The dispatch is the reference wiring for the spec's `feature → done` trigger event; the operator then walks Operations 3 to 5 here. A feature done via a direct invocation of this skill (not through `sprint-execute`) follows the identical path.
+`sprint-execute` Operation C (`in_progress → done`), step 6, dispatches this skill for the just-completed feature after it surfaces the updated sprint state. The dispatch is the reference wiring for the spec's `feature → done` trigger event; the operator then walks Operations 3 to 5 here. A feature done via a direct invocation of this skill (not through `sprint-execute`) follows the identical path.
 
 ## Resumability
 

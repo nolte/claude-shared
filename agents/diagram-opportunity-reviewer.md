@@ -163,6 +163,18 @@ Independence check (anti-double-counting): when two signals overlap in source te
 
 Per the spec, the confidence level is recorded on every emitted finding so a downstream consumer can filter further.
 
+## Structural anti-patterns
+
+Per `spec/project/diagram-opportunity/en.md` §Structural anti-patterns (MUST), **demote to `low` confidence — and therefore discard before emission per §Confidence model** — any candidate match whose triggering passage is **wholly contained** in one of these three recognized non-diagram structures:
+
+- **FAQ question-and-answer pairs** — a `### <question?>` heading (or a bold `**<question?>**` lead) followed by an answer paragraph, and similar Q&A blocks. They frequently surface dependency or sequence phrasing that reads diagram-fit but is intentionally prose.
+- **Fenced command / install sequences** — a fenced code block (` ``` `) holding shell commands or an ordered install / setup sequence. Sequential "first run X, then Y" steps inside a fence are install instructions, not a `flowchart` or `sequenceDiagram` candidate.
+- **Flat error-message bullet lists** — a bullet list enumerating error strings, messages, or status codes. Listed items here are not directed relations between named entities even when they superficially match the `flowchart` "three or more bullets" signal.
+
+A match is demoted only when the trigger prose is **wholly inside** one such structure; a passage that merely sits adjacent to a fence or a FAQ heading is judged on its own surface signals. These three structures are a **closed, deterministic deny-list** — do not invent further structural exemptions.
+
+This built-in demotion **complements, not replaces,** the `<!-- diagram-opportunity-skip: <reason> -->` mute marker (§Mute-marker handling): the anti-pattern demotion is the agent's automatic deny-list for well-known structural cases (the demoted match is *discarded*, never recorded), while the mute marker is the operator's explicit per-site override for everything else (a suppressed match is *recorded* as an `info`-severity finding for traceability).
+
 ## Severity assignment
 
 The closed severity set is `{suggestion, info}`. Never emit `warning` or `critical`.
@@ -354,6 +366,7 @@ The JSON output is a structured findings inventory only. **No free-form prose, n
 - **Never** suggest a diagram type outside the closed set `{flowchart, C4Component, classDiagram, sequenceDiagram, erDiagram, ambiguous}`. No `gitGraph`, no PlantUML, no draw.io, no non-Mermaid format. `gitGraph` is intentionally excluded per `spec/project/mermaid-diagrams/` §Diagram catalog (theme-bridge unreliability under MkDocs Material).
 - **Never** suggest non-diagram visualizations (tables, schema boxes, callouts, admonitions). The spec's §Non-Goals declares those out of scope; a future sibling spec may cover them.
 - **Never** emit a finding with `confidence: low`. Low-confidence matches are discarded before emission and never appear in either `findings` or `full_findings`.
+- **Never** emit a candidate whose trigger prose is wholly contained in one of the three structural anti-patterns (FAQ Q&A pairs, fenced command / install sequences, flat error-message bullet lists). Per `spec/project/diagram-opportunity/` §Structural anti-patterns these are demoted to `low` confidence and therefore discarded. This deny-list is closed; complement, never replace, the mute marker.
 - **Never** emit a finding with `severity: warning` or `severity: critical`. The closed severity set is `{suggestion, info}`; higher severities would train operator fatigue against a suggestion tool.
 - **Never** silently raise the per-file or per-run cap based on confidence. The caps are hard ceilings; overflow is always recorded in `full_findings` and summarized via `truncated` / `further_candidate_count` in the top report.
 - **Never** invent a `diagram-opportunity-skip` marker shape beyond `<!-- diagram-opportunity-skip: <reason> -->` on the line immediately preceding a heading or paragraph. HTML attributes, frontmatter keys, in-prose tags, and per-block opt-out comments inside fenced code are all non-conformant.

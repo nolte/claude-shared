@@ -36,6 +36,10 @@ _Audits a repository against the canonical-language file under spec/project/docs
 - [`audience-identify`](audience-identify.md)
 - [`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md)
 
+## Referenziert von
+
+- [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+
 ---
 
 ## Documentation Audience Tracks Apply

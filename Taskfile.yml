@@ -32,6 +32,22 @@ tasks:
     cmds:
       - task: pre-commit:install
 
+  install:
+    desc: |
+      Create the project-local virtual environment (.venv) and install the
+      repository's Python tooling into it, per spec/project/project-structure/
+      §Python development: dependencies live in a project-local venv, never
+      system-wide. Installs requirements.txt (runtime placeholder) and
+      requirements-dev.txt (the script/test toolchain) independently — no -r
+      chaining. The docs-build toolchain has its own install set in
+      docs/requirements.txt.
+    cmds:
+      - python3 -m venv .venv
+      - .venv/bin/python -m pip install --upgrade pip
+      - .venv/bin/python -m pip install -r requirements.txt
+      - .venv/bin/python -m pip install -r requirements-dev.txt
+      - 'echo "Virtual environment ready: source .venv/bin/activate"'
+
   lint:
     desc: Run pre-commit across all files
     cmds:
@@ -57,9 +73,17 @@ tasks:
       Run the develop quality gate locally: lint + test. The docs category
       is a separate CI job (the documentation-freshness gate, not the code
       gate). Exits zero on a clean tree and non-zero when any category fails.
-    cmds:
-      - task: lint
-      - task: test
+    # spec/project/quality-gate/ §Invocation contract SHOULD: "run the three
+    # categories in parallel when the ecosystem permits it; sequential fallback
+    # is acceptable when a category produces inputs another category consumes."
+    # lint (pre-commit) and test (frontmatter validation + pytest) are
+    # independent — neither consumes the other's output — so they run as
+    # parallel `deps`. Task waits for every dep and fails `check` if any fails,
+    # so a failing category is never masked; running both surfaces all failures
+    # in one pass instead of stopping at the first.
+    deps:
+      - lint
+      - test
 
   license:sbom:
     desc: |
@@ -82,6 +106,16 @@ tasks:
       on any Critical-grade finding.
     cmds:
       - python3 scripts/validate_skills.py
+
+  validate:schemas:
+    desc: |
+      Validate every *.schema.yaml against the JSON Schema 2020-12 meta-schema
+      and every schema-bound data file against its schema, per
+      spec/project/yaml-json-schema/ §Validation contract. A missing validator
+      fails with an install hint rather than skipping. Wired into `task lint`
+      via the validate-schemas pre-commit hook; this target runs it directly.
+    cmds:
+      - python3 scripts/validate_schemas.py
 
   image:generate:
     desc: |

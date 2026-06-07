@@ -92,7 +92,11 @@ plugins:
             Bildgenerierung: Image Generation
             Entwicklung: Development
             Projektstruktur: Project Structure
+            Architekturüberblick: Architecture overview
+            Schnittstellen: Interfaces
             Beitragen: Contributing
+            Fehlerbehebung: Troubleshooting
+            Glossar: Glossary
             Datenschutz: Privacy
 
   - literate-nav:
@@ -161,7 +165,11 @@ nav:
       - de/guides/index.md
       - Entwicklung: de/guides/development.md
       - Projektstruktur: de/guides/project-structure.md
+      - Architekturüberblick: de/guides/architecture.md
+      - Schnittstellen: de/guides/interfaces.md
       - Beitragen: de/guides/contributing.md
+      - Fehlerbehebung: de/guides/troubleshooting.md
+      - Glossar: de/guides/glossary.md
       - Skills-Konzept: de/guides/skills-concept.md
       - Skill-Management: de/guides/skill-management.md
       - Spec: de/guides/spec.md

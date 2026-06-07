@@ -2,13 +2,23 @@
 title: Startseite
 audience: [maintainer, downstream-user]
 content_mode: meta
+# track-override: this page mixes audiences that map to different tracks
+# (maintainer → developer-docs, downstream-user → user-docs). As a
+# content_mode: meta page it is exempt from the audience-to-track
+# no-contradiction rule per spec/project/docs-audience-tracks/ §Per-page
+# contract (meta pages route readers across tracks). track is set to the
+# portfolio default for meta pages (developer-docs) per §Per-page contract.
 track: developer-docs
-last_updated: 2026-05-19
+last_updated: 2026-06-06
 ---
 
 # Startseite
 
 `claude-shared` ist eine gemeinsame Basis aus [Claude Code](https://docs.claude.com/en/docs/claude-code)-**Agents** und **Skills**, die über mehrere Projekte hinweg wiederverwendet wird. Paketiert als Plugin **`nolte-shared`**, damit Teams überall dieselben Review-Gewohnheiten, Coding-Richtlinien und Helfer-Workflows nutzen — ohne sie in jedem Repository neu zu bauen.
+
+**Auslieferungsweg: vom Quell-Repository zu den konsumierenden Projekten**
+
+Wie gelangt das `nolte-shared`-Plugin aus diesem Repository in die Projekte, die es nutzen?
 
 <!-- diagram-source: user-described — claude-shared als nolte-shared-Plugin verpackt, das Skills/Agents/Specs an konsumierende Projekte ausliefert -->
 ```mermaid
@@ -47,9 +57,9 @@ flowchart LR
 
 Wenn du das Plugin in deinem eigenen Projekt **nutzen** willst, beginne bei [nolte-shared nutzen](using.md). Wenn du an diesem Repository **entwickeln** willst, beginne bei [Erste Schritte](getting-started/index.md).
 
-- [nolte-shared nutzen](using.md) — das Plugin downstream installieren und nutzen (User-Docs)
-- [Erste Schritte](getting-started/index.md) — Plugin laden und eigene Skills nutzen
-- [Skills](skills/index.md) — Überblick der mitgelieferten Skills
-- [Agents](agents/index.md) — Überblick der mitgelieferten Agents
-- [Spezifikationen](references/specs/index.md) — verbindliche Regeln für Autoren
-- [Entwicklung](guides/development.md) — am Repository selbst arbeiten
+- [nolte-shared nutzen](using.md) — das Plugin downstream installieren und nutzen — _Zielgruppe:_ `downstream-user`
+- [Erste Schritte](getting-started/index.md) — Plugin laden und eigene Skills nutzen — _Zielgruppe:_ `downstream-user`, `dogfooding-author`
+- [Skills](skills/index.md) — Überblick der mitgelieferten Skills — _Zielgruppe:_ `downstream-user`, `maintainer`
+- [Agents](agents/index.md) — Überblick der mitgelieferten Agents — _Zielgruppe:_ `downstream-user`, `maintainer`
+- [Spezifikationen](references/specs/index.md) — verbindliche Regeln für Autoren — _Zielgruppe:_ `maintainer`, `external-contributor`
+- [Entwicklung](guides/development.md) — am Repository selbst arbeiten — _Zielgruppe:_ `external-contributor`, `maintainer`

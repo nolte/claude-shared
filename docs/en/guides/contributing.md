@@ -10,6 +10,38 @@ last_updated: 2026-05-19
 
 **Prerequisite:** plugin loaded locally (see [Installation](../getting-started/installation.md)). Skills `skill-management` and `spec` become available only after that.
 
+## Setup and prerequisites
+
+Before you can run the repository's checks locally you need the following toolchain. The repository is documentation-and-automation only—there is no application build step—so the toolchain is intentionally small.
+
+| Tool | Version | Why |
+|------|---------|-----|
+| Python | 3.x | Runs the validation and catalog scripts under `scripts/` and the test suite |
+| Task | latest | Task runner; every check is exposed as a `task <target>` (see `Taskfile.yml`) |
+| pre-commit | latest | Hook framework that gates whitespace, YAML, Markdown, and Vale |
+| Vale | latest | Prose linter (pulls the pinned `nolte/vale-style` vocabulary on `vale sync`) |
+| Git | 2.x | Worktree-based workflow per the parallel-working-copies convention |
+
+You also need a GitHub account with fork/PR access; no other external accounts are required.
+
+First-time bootstrap sequence, run once after cloning:
+
+```bash
+task setup                              # installs the pre-commit hooks
+pip install -r evals/requirements-dev.txt   # test-suite dependencies (pytest)
+```
+
+After bootstrap, the day-to-day checks are:
+
+```bash
+task lint     # pre-commit across all files
+task test     # skill/agent frontmatter validation + the eval-harness unit tests
+task check    # the develop quality gate locally: lint + test
+task docs     # build the bilingual MkDocs site (mkdocs build --strict)
+```
+
+A newcomer who can run `task check` cleanly has a workable repository.
+
 ## Workflow
 
 1. **Read the spec first**: every skill or agent follows a [specification](../references/specs/index.md).

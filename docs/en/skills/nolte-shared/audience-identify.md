@@ -32,6 +32,17 @@ _Runs the audience-identification methodology from spec/project/audience-identif
 - [`audience-review`](../../agents/nolte-shared/audience-review.md)
 - [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
 
+## Referenced by
+
+- [`audience-doc-author`](../../agents/nolte-shared/audience-doc-author.md)
+- [`audience-review`](../../agents/nolte-shared/audience-review.md)
+- [`spec-readiness-reviewer`](../../agents/nolte-shared/spec-readiness-reviewer.md)
+- [`docs-audience-tracks-apply`](docs-audience-tracks-apply.md)
+- [`mission-define`](mission-define.md)
+- [`release-notes-curate`](release-notes-curate.md)
+- [`roadmap-init`](roadmap-init.md)
+- [`spec`](spec.md)
+
 ---
 
 ## Audience Identification Skill

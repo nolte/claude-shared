@@ -34,6 +34,11 @@ _Statically audits every Mermaid block in `docs/<lang>/` against `spec/project/m
 - [`mermaid-diagrams-apply`](../../skills/nolte-shared/mermaid-diagrams-apply.md)
 - [`docs-freshness-checker`](docs-freshness-checker.md)
 
+## Referenced by
+
+- [`diagram-opportunity-reviewer`](diagram-opportunity-reviewer.md)
+- [`mermaid-diagrams-apply`](../../skills/nolte-shared/mermaid-diagrams-apply.md)
+
 ---
 
 ## Mermaid Diagram Reviewer

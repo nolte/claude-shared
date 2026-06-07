@@ -13,7 +13,7 @@ The sibling `roadmap` spec defines the queue of work and ties every item back to
 - Define the on-disk shape of a sprint as a single markdown file at `project/sprints/<NNNN>-<slug>.md`, one file per sprint, never split.
 - Specify the per-sprint frontmatter schema (sprint number, status, value statement, artifact reference, feature list) so consuming skills can parse and mutate sprints without ad-hoc parsers.
 - Mandate the value-delivery contract: every sprint **MUST** have a one-sentence `value_statement` from the end-user perspective, and at least one feature in the sprint **MUST** carry an acceptance criterion that directly verifies that statement.
-- Mandate the artefact contract: every closed sprint **MUST** point at a concrete deployable artefact (release tag, container image tag, plugin version, or doc-site deploy) that materialises the value statement, governed in detail by the sibling `release-artifact` spec.
+- Mandate the artefact contract: every closed sprint **MUST** point at a concrete deployable artefact (release tag, container image tag, plugin version, or doc-site deploy) that materialises the value statement, governed in detail by the sibling [`release-artifact`](../release-artifact/en.md) spec.
 - Define the sprint lifecycle (`planned → active → review → closed`) and which transitions are legal, so that sprint-plan, sprint-execute, and sprint-review have non-overlapping authority.
 - Stay portfolio-reusable across hobby-scale variability: sprint duration is an output of the work, not an input, and the spec explicitly tolerates pauses and irregular cadence.
 

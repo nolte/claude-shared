@@ -36,6 +36,10 @@ _Create, translate, index, deduplicate, and drift-check multilingual specificati
 - [`spec-drift-audit`](spec-drift-audit.md)
 - [`audience-identify`](audience-identify.md)
 
+## Referenced by
+
+- [`spec-readiness-reviewer`](../../agents/nolte-shared/spec-readiness-reviewer.md)
+
 ## Examples
 
 - **Prompt:** Write a new spec for the foo workflow under spec/project/foo/

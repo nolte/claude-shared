@@ -32,6 +32,10 @@ _Read-only scanner dispatched by the license-check skill to build the license in
 
 - [`license-check`](../../skills/nolte-shared/license-check.md)
 
+## Referenziert von
+
+- [`license-check`](../../skills/nolte-shared/license-check.md)
+
 ---
 
 ## License Check Scanner

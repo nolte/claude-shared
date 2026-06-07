@@ -50,6 +50,21 @@ repos:
         files: '^(skills/.*/SKILL\.md|agents/.*\.md)$'
         pass_filenames: false
 
+      - id: validate-features
+        name: validate feature frontmatter and slug-rename gate
+        entry: python3 scripts/validate_features.py
+        language: system
+        files: '^project/features/.*\.md$'
+        pass_filenames: false
+
+      - id: validate-schemas
+        name: validate JSON schema files and governed data
+        entry: python scripts/validate_schemas.py
+        language: python
+        additional_dependencies: ["jsonschema>=4.20", "PyYAML>=6"]
+        always_run: true
+        pass_filenames: false
+
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.42.0
     hooks:

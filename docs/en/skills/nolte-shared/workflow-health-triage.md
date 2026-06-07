@@ -33,6 +33,15 @@ _Triages a failing GitHub Actions workflow run on `develop` or `main` per `spec/
 - [`pull-request-merge`](pull-request-merge.md)
 - [`dependency-audit`](dependency-audit.md)
 
+## Referenced by
+
+- [`quality-gate-enforcer`](../../agents/nolte-shared/quality-gate-enforcer.md)
+- [`continuous-improvement-triage`](continuous-improvement-triage.md)
+- [`issue-orchestrate`](issue-orchestrate.md)
+- [`portfolio-inflight-triage`](portfolio-inflight-triage.md)
+- [`release-publish-trigger`](release-publish-trigger.md)
+- [`spec-drift-audit`](spec-drift-audit.md)
+
 ---
 
 ## Workflow Health Triage

@@ -1,6 +1,6 @@
 ---
 name: feature-decompose
-description: Decompose a roadmap item into feature files under project/features/ per spec/project/feature/. Invoke when the user asks to decompose a roadmap item, break down a roadmap entry into features, draft features, scaffold a feature file, plan features for the next sprint, or write a new feature. Also handles equivalent German-language requests. Walks the operator through title, description, 3-7 testable acceptance criteria, and test hooks per feature; identifies which carries `verifies_sprint_value`; dispatches `feature-consistency-reviewer` (or records a manual fallback) before allowing the feature to leave `draft`. Don't use to transition feature status (`ready → in_progress` / `in_progress → done` is `sprint-execute` / `sprint-review`) or to author roadmap items, sprints, or the mission file. Supports resume per `spec/claude/resumable-work/`.
+description: Decompose a roadmap item into feature files under project/features/ per spec/project/feature/. Invoke when the user asks to decompose a roadmap item, break down a roadmap entry into features, draft features, scaffold a feature file, plan features for the next sprint, or write a new feature. Also handles equivalent German-language requests. Walks the operator through title, description, 3-7 testable acceptance criteria, and test hooks per feature; identifies which carries `verifies_sprint_value`; dispatches `feature-consistency-reviewer` (or records a manual fallback) before allowing the feature to leave `draft`. Don't use to transition feature status (`ready → in_progress` / `in_progress → done` is `sprint-execute` / `sprint-review`) or to author roadmap items, sprints, or the mission file. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: plan
 summary: "Decomposes a roadmap item into feature files with testable acceptance criteria and test hooks."
@@ -163,13 +163,45 @@ feature is malformed.
    decomposition for that feature; record the choice and skip writing the
    redundant file.
 5. **Record the manual-pass author** in `## Consistency notes` when
-   `agent_version` starts with `manual-`. The fallback is already
+   `agent_version` starts with `manual-`. The spec's §Consistency check
+   requires the notes section to name the operator who performed the
+   fallback; capture it as a dedicated line of the exact form
+   `Manual pass performed by: <name>` (the operator's name or handle) at
+   the top of `## Consistency notes`, so an auditor can attribute the
+   resolution decisions without parsing prose. The fallback is already
    deprecated as of the commit that ships this skill alongside the
    `feature-consistency-reviewer` agent. Every manual pass on a repo
    whose plugin runtime can resolve the agent is a workflow-health
    finding per `spec/project/feature/` §Consistency check; the right
    resolution is to upgrade the plugin runtime and rerun the check via
    the agent path.
+
+### 3. Re-run the consistency check on a material change
+
+The consistency check is not a one-shot at decomposition. Per
+`spec/project/feature/` §Consistency check, the check **MUST** be re-run
+while the feature is in `ready` or `in_progress` whenever **any** of these
+material changes occur:
+
+- the `## Description` section changes by more than typo-level wording;
+- an acceptance criterion is added, or its core wording (excluding the
+  checkbox state) is altered;
+- the `roadmap_item` or `sprint` frontmatter field is changed;
+- a feature with overlapping scope is added or removed elsewhere under
+  `project/features/`.
+
+Cosmetic edits — typo fixes, formatting, link-target normalisation, and
+flipping the checkbox state of an existing acceptance criterion — **MUST
+NOT** trigger a re-run. When a re-run is required, repeat Operation 2 but
+**append** a new dated `findings` block (keyed by its own `performed_at`)
+to the existing `consistency_check` object; **never overwrite** the
+historical findings. The `## Consistency notes` section gains a new dated
+paragraph per re-run finding, preserving the prior notes. Re-invoking this
+skill on a feature that already carries a `consistency_check` is the
+canonical entry point for that re-run; when a downstream skill
+(`sprint-plan` retargeting `sprint`, or `sprint-execute` adding the feature
+mid-sprint) makes one of the triggering edits, it routes back here rather
+than re-running the check itself.
 
 ## Examples
 
@@ -216,5 +248,12 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** write the feature file when the operator declines to resolve an
   `overlap` or `duplication` finding; the partial write would silently
   break the `draft → ready` gate downstream.
+- **Never** record a manual-fallback consistency pass without a
+  `Manual pass performed by: <name>` line in `## Consistency notes`; the
+  spec requires the notes section to name the operator who performed it.
+- **Never** overwrite historical `consistency_check.findings` on a re-run;
+  append a new dated `findings` block and a new dated `## Consistency notes`
+  paragraph per `spec/project/feature/` §Consistency check, and never
+  trigger a re-run on a cosmetic-only edit.
 - When `spec/project/feature/` disagrees with this skill, the spec wins.
   Propose updating this skill rather than silently diverging.

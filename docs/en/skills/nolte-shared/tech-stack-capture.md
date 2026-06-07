@@ -33,6 +33,12 @@ _Captures or refreshes the `tech_stack:` block in a Portfolio-Member's `project/
 - [`portfolio-audit`](portfolio-audit.md)
 - [`tech-stack-drift-reviewer`](../../agents/nolte-shared/tech-stack-drift-reviewer.md)
 
+## Referenced by
+
+- [`portfolio-manifest-collector`](../../agents/nolte-shared/portfolio-manifest-collector.md)
+- [`tech-stack-drift-reviewer`](../../agents/nolte-shared/tech-stack-drift-reviewer.md)
+- [`portfolio-audit`](portfolio-audit.md)
+
 ---
 
 ## Tech Stack Capture

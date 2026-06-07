@@ -33,6 +33,11 @@ _Read-only editorial scanner dispatched by lektorat-apply. Walks an in-scope Mar
 - [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 - [`docs-freshness-checker`](docs-freshness-checker.md)
 
+## Referenced by
+
+- [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
+- [`lektorat-auto-revise`](../../skills/nolte-shared/lektorat-auto-revise.md)
+
 ---
 
 ## Lektorat Scanner
