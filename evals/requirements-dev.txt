@@ -1,0 +1,4 @@
+# Always-on test dependencies (deterministic harness unit tests).
+# The behavioural eval layer additionally needs evals/requirements-eval.txt,
+# but only when RUN_EVALS=1.
+pytest>=8,<9

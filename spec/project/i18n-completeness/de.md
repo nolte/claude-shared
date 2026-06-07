@@ -34,14 +34,16 @@ Leser: Agent-Autoren, die den Checker pflegen; Reviewer, die seine Befunde prüf
 - **MUSS [MUST]** eine einzelne **Referenz-Locale** bestimmen (die Source-of-Truth-Sprache, gegen die andere Locales gemessen werden): die vom Operator benannte verwenden, sonst die deklarierte Default-Locale des Projekts, sonst auf eine dokumentierte Heuristik zurückfallen und angeben, welche Locale gewählt wurde
 - **MUSS [MUST]** die zu scannenden Source-Roots für Key-Verwendung entdecken, statt den Pfad einer App hartzucodieren, und berichten, welche Roots und Datei-Globs gescannt wurden
 - **MUSS [MUST]** die Call-Site-Lookup-Patterns an die i18n-Bibliothek des Projekts anpassen (react-i18next / i18next `t('…')` und `i18nKey="…"`, vue-i18n `$t('…')` / `<i18n-t>`, FormatJS / react-intl `formatMessage`/`<FormattedMessage id>` und vergleichbare); wenn die Bibliothek nicht bestimmt werden kann, das angenommene Pattern-Set im Report angeben
+- **DARF [MAY]** eine optionale repository-lokale Config-Datei (`project/i18n-audit.yml`) lesen, die Locale-Pfade, Referenz-Locale, Source-Globs und i18n-Bibliothek deklariert; wenn vorhanden, haben ihre Werte Vorrang vor der Discovery, wenn abwesend, ist Pro-Invocation-Discovery der dokumentierte Default. Der Report **MUSS** pro aufgelöster Eingabe angeben, ob der Wert aus der Config-Datei, einem Operator-Argument oder der Discovery stammt
 
 ### Audit-Dimensionen
 
+- **MUSS [MUST]** jeden unabhängigen Locale-Baum (pro Paket / Subroot) als separaten Audit-Scope behandeln und Keys nie über Bäume hinweg zusammenführen; die Referenz-Locale, Parität und Orphan-/Fehlend-Mathematik jedes Scopes wird allein innerhalb dieses Baums berechnet. Die Grenze ist der entdeckte Locale-Baum-Root oder die Pro-Scope-Einträge, wenn die optionale Config-Datei sie deklariert
 - **MUSS [MUST]** jede Locale-Datei zu gepunkteten Key-Pfaden flachklopfen und gegen die Referenz-Locale berechnen: Keys, die in der Referenz vorhanden, aber in einer anderen Locale fehlen, und Keys, die in einer anderen Locale vorhanden, aber in der Referenz fehlen (strukturelle Divergenz)
 - **MUSS [MUST]** einen **strukturellen Mismatch** berichten, wenn derselbe Key-Pfad über Locales hinweg zu unterschiedlichen Werttypen auflöst (String in einer, Objekt/verschachtelt in einer anderen)
 - **MUSS [MUST]** die Source-Roots nach Key-Referenzen scannen und klassifizieren: ein im Code verwendeter, aber in keiner Locale definierter Key (**kritisch** — ein Laufzeit-Miss) und ein in den Locales definierter, aber nirgends im Code referenzierter Key (**Orphan**, informativ)
 - **MUSS [MUST]** statisch unentscheidbare dynamische Keys (Template-String- oder Variablen-Lookups wie `` t(`enums.${type}`) ``) als notierten Vorbehalt behandeln, nie als harten Miss — sie als „dynamisch, nicht statisch verifizierbar" berichten, sodass sie weder den Kritisch-Zähler aufblähen noch still verschwinden
-- **SOLLTE [SHOULD]** Qualitäts-Heuristiken laufen lassen: leere String-Werte pro Locale; Werte, die zwischen Referenz und einer anderen Locale identisch sind (vermutlich unübersetzt); und Interpolations-Platzhalter-Parität (dieselben `{{var}}` / `{var}` / `%s`-Platzhalter erscheinen im Wert jeder Locale für einen Key)
+- **SOLLTE [SHOULD]** Qualitäts-Heuristiken laufen lassen: leere String-Werte pro Locale; Werte, die zwischen Referenz und einer anderen Locale identisch sind (vermutlich unübersetzt); und Interpolations-Platzhalter-Parität (dieselben `{{var}}` / `{var}` / `%s`-Platzhalter erscheinen im Wert jeder Locale für einen Key). Es wird keine Ausnahme-Allowlist bereitgestellt; identische Werte werden nur auf Info-Level berichtet und enthalten erwartungsgemäß einige legitim-by-design-Übereinstimmungen wie Eigennamen, Markennamen und Einheiten. Die Platzhalter-Parität deckt nur Platzhalter im einfachen Stil `{{var}}` / `{var}` / `%s` ab; ICU-MessageFormat-Plural- und Select-Bodies wie `{count, plural, …}` werden als opake Strings verglichen, nicht geparst
 - **DARF [MAY]**, wenn das Projekt eine Key-Namens-Konvention deklariert, Keys berichten, die sie verletzen; ohne deklarierte Konvention erfindet der Agent keine
 
 ### Ausgabe und Seiteneffekte
@@ -51,6 +53,7 @@ Leser: Agent-Autoren, die den Checker pflegen; Reviewer, die seine Befunde prüf
 - **MUSS [MUST]** die Pro-Kategorie-Ausgabe deckeln (zum Beispiel: die ersten N Einträge zeigen und den Rest als „… und {n} weitere" zusammenfassen), sodass ein großer Drift keine unlesbare Key-Wand erzeugt
 - **SOLLTE [SHOULD]** jeden verwendet-aber-undefinierten Key einer Source-Location (Datei und Zeile) zuordnen, sodass der Befund umsetzbar ist
 - **MUSS [MUST]** berichten, welche Locale-Dateien, Source-Roots, Globs, Referenz-Locale und Call-Site-Patterns verwendet wurden, sodass der Scope des Audits auditierbar und reproduzierbar ist
+- **MUSS [MUST]** dort, wo es Platzhalter-Paritäts-Befunde berichtet, angeben, dass die Parität auf Simple-Platzhalter-Granularität (`{{var}}` / `{var}` / `%s`) geprüft wird und dass ICU-MessageFormat-Plural- und Select-Bodies als opake Strings behandelt werden, sodass ein Konsument nicht zu der Annahme verleitet wird, ICU-Bodies seien strukturell validiert worden
 
 ## Akzeptanzkriterien
 
@@ -74,7 +77,4 @@ Leser: Agent-Autoren, die den Checker pflegen; Reviewer, die seine Befunde prüf
 
 ## Offene Fragen
 
-- Soll das Audit eine projektweite Config-Datei unterstützen (die Locale-Pfade, Referenz-Locale, Source-Globs und i18n-Bibliothek deklariert), sodass Wiederholungsläufe keine Operator-Argumente brauchen, oder genügt Pro-Invocation-Discovery?
-- Soll das Audit bei Monorepos mit mehreren unabhängigen Locale-Bäumen (pro Paket) jeden Baum separat behandeln oder zusammenführen, und wie wird die Grenze deklariert?
-- Soll die „identisch über Locales"-Heuristik Locales ausnehmen, die legitim nah sind (zum Beispiel Eigennamen, Markennamen, Einheiten), und wenn ja via Allowlist?
-- Soll die Platzhalter-Paritätsprüfung ICU-MessageFormat-Plural-/Select-Syntax verstehen, oder bei Simple-Platzhalter-Granularität bleiben, bis ein ICU-bewusster Pass gerechtfertigt ist?
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

@@ -8,18 +8,18 @@ last_updated: 2026-05-19
 
 # Skill Authoring
 
-This page summarizes the specification at `spec/claude/skill-management/en.md` (canonical source).
+This page sums up the spec at `spec/claude/skill-management/en.md` (canonical source).
 
 **Status:** draft
 
 ## Context
 
-The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives:
+The `claude-shared` repository collects reusable Claude Code skills and agents. Downstream projects then use them. A skill has two lives:
 
 - **Source form** in this repository: `skills/<name>/`
 - **Runtime form** in a consuming project: `.claude/skills/<name>/` or `~/.claude/skills/<name>/`
 
-Without a consistent shape, skills drift in naming, trigger descriptions, and internal structure—reuse becomes fragile and maintenance harder.
+Without a consistent shape, skills drift in naming, in trigger text, and in structure. Reuse then breaks. Skills become harder to keep.
 
 ## Goals and Non-Goals
 
@@ -40,17 +40,19 @@ Without a consistent shape, skills drift in naming, trigger descriptions, and in
 
 ### Structure
 
+The keywords MUST, SHOULD, and MAY follow RFC 2119 (normative-requirement convention).
+
 - **MUST** be authored as a folder `<name>/` in ASCII kebab-case
 - **MUST** contain `SKILL.md` at the folder root
 - **MUST** include YAML frontmatter with `name` and `description`
 - **MUST** set `name` to match the folder name exactly
 - **MUST** write a `description` that names concrete user triggers, not abstract capabilities
-- **MUST** keep instructions in `SKILL.md` in English for token efficiency
+- **MUST** keep instructions in `SKILL.md` in English (this keeps Claude's processing cost low)
 - **MUST** be self-contained—supporting assets live inside the skill folder
 
 ### Locations
 
-Source: `skills/<name>/` in `claude-shared`. Runtime: `.claude/skills/<name>/`, `~/.claude/skills/<name>/`, or the plugin path. No hard-coded absolute paths.
+Source: `skills/<name>/` in `claude-shared`. Runtime: `.claude/skills/<name>/`, `~/.claude/skills/<name>/`, or the plugin path. Use no hard-coded absolute paths.
 
 ### Recommendations
 

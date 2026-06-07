@@ -35,19 +35,21 @@ Spezifikationen unter `spec/<topic>/<slug>/` sind die Quelle der Wahrheit für n
 - **MUSS** als `Warning` flaggen: ein Ziel, das einem Nicht-Ziel derselben Spec direkt widerspricht (zum Beispiel ein Ziel, das Ausgaben impliziert, die die Nicht-Ziele ausdrücklich ausschließen)
 - **SOLLTE** als `Info` flaggen: Ketten von Abschwächung (ein MAY, das ein SHOULD effektiv umkehrt, das bereits konditional war), wenn sie das Regel-Set für einen Leser undurchsichtig machen
 - **DARF** pro Befund eine Lösungsrichtung vorschlagen — eine Regel verstärken, die andere abschwächen, den Scope aufteilen — ohne die finale Wahl vorzuschreiben
+- **MUSS** einen Cross-Spec-Widerspruch symmetrisch berichten (beide Specs benannt, keine bevorzugt); eine bevorzugte Lösungsrichtung ist das beratende DARF oben, niemals ein automatisches Urteil, das einen Sieger nach Spec-Alter, Stabilität oder Topic kürt — die Wahl des Siegers ist die Entscheidung des menschlichen Reviewers (siehe §Abgrenzung)
 - **DARF NICHT** einen Widerspruch auf Basis von Prosa allein deklarieren, wenn kein RFC-2119-Verb im Spiel ist; reine Prosa-Inkonsistenzen sind Prosa-Lint-Anliegen, keine Reife-Anliegen
+- Cross-Spec-Widerspruchs-Erkennung ist **emergent** aus dem Spec-Bestand im Geltungsbereich; das Audit leitet Kandidaten-Paare dynamisch ab, und ein gepflegtes „Widerspruchs-Korpus" ist ausdrücklich außerhalb des Geltungsbereichs, bis akkumulierte `Recurring`-Befunde belegen, dass der dynamische Check wiederkehrende Spannungspaare verfehlt (Info)
 
 ### Dimension 2 — Audience-Fit
 - **MUSS** die impliziten Leser jeder Spec aus ihrer Prosa ableiten (typische Sets: Implementor\:innen, Reviewer\:innen, Tooling-Autor\:innen, Release-Manager\:innen, Product-Owner\:innen, Betreiber\:innen); die Ableitung ist Beobachtung, keine Audience-Analyse auf leerem Blatt
 - **MUSS** prüfen, dass es für jede abgeleitete Audience Inhalte gibt, auf die sie handeln kann — Anforderungen für Implementor\:innen, Akzeptanzkriterien für Reviewer\:innen, schnittstellen-seitige MUSTs für Tooling-Autor\:innen, sichtbar gemachte Open Questions für Product-Owner\:innen
 - **MUSS** als `Warning` flaggen: eine Spec, deren Audience nicht ableitbar ist („für wen ist das geschrieben?") oder deren Anforderungen die Entscheidungen der abgeleiteten Audience nicht adressieren
-- **SOLLTE** ein existierendes `audience-identify`-Artefakt querverweisen, wenn das Modul der Spec eines hat; wenn die Spec eine Audience anspricht, die das Artefakt nennt, die Anforderungen der Spec diese aber nicht bedienen, ist der Befund `Warning`, nicht `Critical`
+- **SOLLTE** ein existierendes `audience-identify`-Artefakt querverweisen, wenn das Modul der Spec eines hat; wenn die Spec eine Audience anspricht, die das Artefakt nennt, die Anforderungen der Spec diese aber nicht bedienen, ist der Befund `Warning`, nicht `Critical`. Der Schweregrad entscheidet sich hier an der Substanz, nicht an der bloßen Referenz: eine nicht bediente, artefakt-benannte Audience ist `Warning`, während das bloße Nicht-Zitieren eines Artefakts bei dennoch bedienter abgeleiteter Audience höchstens ein Info-Hinweis ist (siehe die §Dimension 2 Info-Regel unten)
 - **SOLLTE** als `Info` flaggen: eine Spec, deren Audience implizit, aber nur mit Aufwand ableitbar ist; die Lösung ist meist ein einzeiliger „Leser:"-Hinweis, kein Umbau
 - **DARF** `audience-identify` als Folge-Werkzeug nennen, wenn das Modul der Spec kein Audience-Artefakt hat und das Reife-Audit Audiences nicht zuverlässig ableiten kann
 - **DARF NICHT** Audience-Artefakte als Teil dieses Audits erstellen oder schreiben; das ist außerhalb des Geltungsbereichs (siehe §Abgrenzung)
 
 ### Dimension 3 — Fachliche Vollständigkeit
-- **MUSS** verifizieren, dass jede Anforderung mindestens ein Akzeptanzkriterium hat, das testbar ist (messbares Ergebnis, beobachtbarer Zustand oder durchsetzbares Gate) — eine Anforderung ohne testbares AK ist `Warning`
+- **MUSS** verifizieren, dass jede Anforderung mindestens ein Akzeptanzkriterium hat, das testbar ist (messbares Ergebnis, beobachtbarer Zustand oder durchsetzbares Gate) — eine Anforderung ohne testbares AK ist `Warning`; „mindestens eines pro Anforderung" ist die bewusste Grenze und eine AK-Quote pro MUSS ist außerhalb des Geltungsbereichs, weil feinere Quoten zum Gaming einladen (ein AK in N triviale aufspalten), ohne die echte Abdeckung zu verbessern
 - **MUSS** verifizieren, dass jedes Akzeptanzkriterium auf eine Anforderung oder ein Ziel zurückführbar ist — ein verwaistes AK (nicht an eine Anforderung oder ein Ziel bindbar) ist `Warning`
 - **MUSS** jede Open Question als entweder **tragend** (Implementierung oder nachgelagerte Arbeit kann nicht verantwortlich ohne Antwort fortfahren) oder **Ablage-Liste** (nice-to-have-Verfeinerung, nachgelagerte Arbeit kann mit einem vernünftigen Default fortfahren) klassifizieren; eine tragende OQ in einer Spec, die zur Beförderung erwogen wird, ist ein `Critical`-Befund
 - **MUSS** als `Critical` flaggen: jede Referenz von Spec A auf Spec B, bei der Spec B nicht existiert oder existiert, aber nicht die Sektion enthält, die die Referenz impliziert
@@ -66,7 +68,7 @@ Spezifikationen unter `spec/<topic>/<slug>/` sind die Quelle der Wahrheit für n
 - **DARF NICHT** einen Schweregrad allein auf Basis lokaler Einschätzung absenken; Abweichung von der Klassifikation ist eine dokumentierte Waiver-Notiz im Audit-Artefakt, keine stille Re-Klassifikation
 
 ### Auslöser
-- **MUSS** vor jeder Beförderung einer Spec aus `Status: draft` heraus laufen; eine Spec mit unerledigten `Critical`-Reife-Befunden **DARF NICHT** befördert werden, bis diese Befunde gelöst oder ausdrücklich verzichtet sind
+- **MUSS** vor jeder Beförderung einer Spec aus `Status: draft` heraus laufen; eine Spec mit unerledigten `Critical`-Reife-Befunden **DARF NICHT** befördert werden, bis diese Befunde gelöst oder ausdrücklich verzichtet sind. Dieses Beförderungs-Gate wird von der Betreiberin zum Beförderungszeitpunkt durchgesetzt, NICHT von CI; spec-readiness bleibt ein beratendes periodisches Audit (parallel zu `spec/project/spec-drift-audit/` §Abgrenzung, das der periodische Tiefgang ist, während `spec/project/workflow-health/` die kontinuierliche-CI-Spur besitzt). CI-Durchsetzung wird erst dann erneut erwogen, wenn mindestens vier abgeschlossene Quartals-Audits unter `.audits/spec-readiness/` eine gemessene Falsch-Critical-Rate unter 10% zeigen UND ein Einzel-Spec-Beförderungslauf ein stabiles `review-plan`-Format-Artefakt erzeugt hat (AK Zeile 102)
 - **MUSS** mindestens einmal pro Kalenderquartal für jede Spec laufen, deren Status noch `draft` ist — Drafts, die ohne Neubewertung altern, driften
 - **SOLLTE** als Same-Merge- oder Folge-Teilaudit laufen, wenn ein PR eine Spec ändert (neues MUST, geändertes AK, neuer Scope); der Teilaudit-Scope entspricht den im PR berührten Specs
 - **DARF** portfolioweit auf derselben Kadenz wie `spec-drift-audit` laufen — die beiden sind komplementäre Quartals-Durchgänge und können sich das Audit-Ritual teilen, ohne sich den Scope zu teilen
@@ -81,6 +83,7 @@ Spezifikationen unter `spec/<topic>/<slug>/` sind die Quelle der Wahrheit für n
 - **MUSS** im Artefakt enthalten: Datum, Auslöser (quartalsweise, pre-promotion, PR-change), Scope (welche Specs auditiert wurden, welche ausgenommen), die auditierte Git-Revision, Schweregrad-Zählungen pro Spec und die vollständige Befundliste sortiert nach Schweregrad
 - **SOLLTE** auf das vorherige Audit-Artefakt verlinken, damit der Reife-Verlauf des Portfolios über Quartale hinweg nachvollziehbar bleibt
 - **SOLLTE** dem `review-plan`-Artefaktformat folgen, wenn das Audit eine einzelne Spec vor einer Beförderungsentscheidung anvisiert, damit die Ausgabe in dieselbe Audit-Mechanik wie Skill-Review und Agent-Review passt
+- **SOLLTE** `spec/project/parallel-working-copies/` §Audit artefacts in multiple worktrees heranziehen, wenn das Audit in einem Worktree statt im primären Checkout läuft, da die Repository-weite Eindeutigkeit des Artefakts nur innerhalb eines Arbeitsbaums zugleich beobachtbar ist und die Worktree-lokalen Commit-, Transfer- und Aufräum-Regeln dort leben
 
 ### Abgrenzung
 - **MUSS** vom `spec`-Skill getrennt bleiben: dieser Skill erstellt, übersetzt, indiziert, dedupliziert Übersetzungen und prüft Übersetzungs-Drift; dieses Audit prüft die Reife des **Inhalts**
@@ -99,8 +102,5 @@ Spezifikationen unter `spec/<topic>/<slug>/` sind die Quelle der Wahrheit für n
 - [ ] Reife-Audit-Artefakte für Einzel-Spec-Beförderungsläufe entsprechen dem `review-plan`-Artefaktformat, damit sie von derselben Review-Closure-Mechanik wie Skill- und Agent-Review konsumierbar sind
 
 ## Offene Fragen
-- Soll das Audit ein kanonisches „Widerspruchs-Korpus" definieren (eine gepflegte Liste bekannter Spec-Paar-Spannungspunkte, die das Audit immer prüft) oder rein emergent aus dem aktuellen Spec-Bestand bleiben?
-- Soll die Audience-Ableitung laut scheitern (Warnung), sobald das Modul der Spec ein `audience-identify`-Artefakt hat, das die Spec nicht referenziert, oder ist die Referenzierung des Artefakts ein SOLLTE, das das Audit nur als Info sichtbar macht?
-- Will das Portfolio eine Mindestzahl an Akzeptanzkriterien pro Anforderung (zum Beispiel ≥1 pro MUSS, ≥1 pro Cluster von SOLLTEs), oder bleibt „mindestens eines pro Anforderung" die Grenze?
-- Soll das Audit die Draft→Accepted-Beförderung automatisch gaten (CI erzwingt die Null-kritisch-Invariante) oder beratend bleiben, bis das Portfolio mehr Erfahrung mit der Reife-Metrik hat?
-- Wenn zwei Specs sich widersprechen, soll das Audit eine bevorzugen nach Spec-Alter / Stabilität / Topic, oder den Widerspruch immer symmetrisch berichten und die Auflösung dem menschlichen Reviewer überlassen?
+
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

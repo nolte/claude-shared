@@ -72,7 +72,7 @@ This spec closes that gap. It defines (a) the portfolio-wide MkDocs skeleton—s
   - `audience`: one or more audience IDs declared in the project's audience artifact (`AUDIENCES.md` or the documented alternative location per `spec/project/audience-identification/`)
   - `content_mode`: exactly one value from the closed enumeration declared in §Content modes (Diátaxis alignment) (or an explicitly opted-in extension value)
   - `track`: exactly one of `user-docs` or `developer-docs` (or an explicitly opted-in extension value), per `spec/project/docs-audience-tracks/` §Per-page contract—this key is the audience-track signal that runs orthogonally to `audience` and `content_mode`
-  - `last_updated`: ISO-8601 date the content was last revised, or the literal `generated` for pages emitted by a catalog generator
+  - `last_updated`: ISO-8601 date the content was last revised, or the literal `generated` for pages emitted by a catalog generator. The literal `generated` declares the date as generator-maintained: `spec/project/docs-freshness/` treats it as a skip-trigger and **MUST NOT** flag content-staleness on such a page, since its freshness is owned by the generator's own CI freshness check rather than the read-only audit
 - **SHOULD** include a `## Sources` section as the page's last section, linking back to the authoritative source (`spec/<path>`, `src/<path>`, an ADR, an external URL) when the page derives from a single source of truth
 - **MAY** declare additional frontmatter keys: `tags` for cross-page lookups, `status` for explicitly marking `draft` / `stable` / `deprecated`, `summary` for a one-line abstract used in section index pages
 - **MUST NOT** invent frontmatter keys with portfolio-wide meaning without proposing them via a spec amendment
@@ -107,7 +107,7 @@ The portfolio adopts the Diátaxis four-mode model (tutorials, how-to guides, re
 - **SHOULD** front-load the page with the answer or the first command before any background; background and rationale belong on an `explanation` page that the reader can follow when they want it
 - **SHOULD** keep `reference` pages structured to mirror the artefact they describe (configuration schema → field by field; CLI → command by command; API → endpoint by endpoint) so the structure itself doubles as a lookup index (Diátaxis Reference: "respect the structure of the machinery")
 - **SHOULD** include at least one runnable example per `reference` entry that illustrates without instructing (Diátaxis Reference: "Provide examples to illustrate without instructing"; The Good Docs Project Reference template)
-- **MAY** declare a `prerequisites` frontmatter key on `tutorial` and `how-to` pages listing the assumed knowledge or prior pages a reader needs before this one; the audit surface uses it to verify that prerequisites form a non-cyclic chain (WtD: "Order content cumulatively, covering prerequisites first")
+- **MAY** declare a `prerequisites` frontmatter key on `tutorial` and `how-to` pages listing the assumed knowledge or prior pages a reader needs before this one; the audit surface uses it to verify that prerequisites form a non-cyclic chain (WtD: "Order content cumulatively, covering prerequisites first"). This key stays `MAY` until `spec/project/docs-freshness/` ships a prerequisite-chain drift category (cycle plus reachability detection); promoting it to `SHOULD` before then would create an unenforceable obligation, breaking the repo convention that every frontmatter `MUST`/`SHOULD` is backed by a docs-freshness drift category
 - **MAY** introduce additional `content_mode` values via a project-type-specific extension spec; the extension **MUST** name the new value, the Diátaxis quadrant or CTRT category it descends from (or explain why it doesn't), and the no-mixing rule that still applies
 
 The `content_mode` value and the nav section a page lives in are independent: the **Getting Started** section is *typically* `tutorial`, **Guides** is *typically* `how-to`, **References** is *typically* `reference`, but the spec doesn't tie modes to sections—a single section may host pages of mixed modes (each individually disciplined per the no-mixing rule), and a single mode may appear in several sections. The audit surface checks that the value is present and valid; it doesn't enforce a section-to-mode lookup.
@@ -181,10 +181,12 @@ Two declared extension points let project-type-specific specs add to the skeleto
 - [ ] No two portfolio repositories' `mkdocs.yml` files declare conflicting `nav:` shapes for the seven standard sections (extension sections may vary by project type)
 
 ## Open Questions
+
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
 - None at draft time. The seven initial design questions (ADR-section trigger, Project-section opt-in, extension discovery mechanism, audience baseline, source-language descriptor, extension-section cap, Skills/Agents absolute position) were resolved during initial authoring; see the PR that introduces this spec for the rationale of each.
-- Should the `content_mode` no-mixing rule be enforced statically (a marker scan of the page body looking for instructional verbs inside a `reference` page, recipe lists inside an `explanation`, …) or only flagged at audit time as a Reviewer-judgement call? The rule itself is normative; the enforcement mechanism is deferred until the `docs-freshness` audit accumulates enough false-positive cost to decide.
-- Does the `prerequisites` frontmatter key on `tutorial` / `how-to` pages stay optional (`MAY`), or does it harden to `SHOULD` once the audit surface can verify the prerequisite chain is acyclic and reachable?
+- Resolved: the no-mixing rule is detected at audit time as a Reviewer-judgement signal at warning severity, never via a static marker scan—see `spec/project/docs-freshness/` §Drift categories (Content-mode drift).
+
+_The `prerequisites` deferral (from MAY to SHOULD) was settled on 2026-06-06 (see `.audits/decisions/2026-06-06-settle-open-questions.md`)._
 
 ## Sources
 <!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->

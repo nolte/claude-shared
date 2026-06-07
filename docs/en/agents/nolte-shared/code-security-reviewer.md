@@ -15,7 +15,7 @@ _Read-only, whole-codebase OWASP security audit that correlates findings across 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
 - **Distribution:** `plugin`
-- **Tags:** `review`, `audit`, `security`
+- **Tags:** `review`, `audit`
 - **Source:** [agents/code-security-reviewer.md](https://github.com/nolte/claude-shared/blob/main/agents/code-security-reviewer.md)
 
 ## Use when
@@ -30,6 +30,10 @@ _Read-only, whole-codebase OWASP security audit that correlates findings across 
 ## See also
 
 - [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
+
+## Referenced by
+
+- [`gdpr-data-protection-reviewer`](gdpr-data-protection-reviewer.md)
 
 ---
 
@@ -80,6 +84,7 @@ Cover the OWASP Top 10, reading related files together rather than per-file:
 - **Broken access control (A01):** authorization on every state-changing endpoint, **multi-tenant isolation** (every tenant-scoped path filters by the tenant id; cross-tenant access returns not-found, not forbidden), and IDOR.
 - **Security misconfiguration (A05):** permissive CORS, missing security headers, debug flags in production, and information disclosure in error responses (stack traces, internal paths, query fragments).
 - **Cryptographic failures (A02):** weak hashing, weak/Default secrets, unencrypted secret storage.
+- **Software and data integrity failures (A08):** insecure deserialization of untrusted input (`pickle`, `yaml.load`, `eval`-based parsers), unsigned/unverified updates or plugins, untrusted CI/CD inputs and build-pipeline integrity (unpinned actions, untrusted artifact sources), and dependency-fetch over insecure channels.
 - **Secret handling (whole tree):** hard-coded credentials; secrets in source, compose, chart values, seed data, logs, or error responses.
 - **Input validation & rate limiting:** request-body schema validation, field bounds, file-upload validation, pagination/sort allowlists; rate limits on login/registration/password-reset.
 - **AI/LLM/RAG (when present):** prompt injection (user input must not reach the system prompt as instructions), SSRF via embedding/model service URLs, API-key handling, resource-exhaustion limits.
@@ -104,15 +109,15 @@ Emit a single severity-classified report:
 | Broken access control (A01) | … | n |
 | … | … | n |
 
-### P0 — critical
+### Critical
 #### SEC-001: {title}
 - **File:** `path:line`  **OWASP:** {category}  **Confidence:** {confirmed|suspected}
 - **Problem:** …
 - **Recommended remediation (not applied):** …
 
-### P1 — high
-### P2 — medium
-### P3 — low / hardening
+### Warning
+### Suggestion
+### Info
 
 ### Tenant-isolation matrix (multi-tenant projects)
 | Endpoint group | Tenant filter | AuthZ check | Status |
@@ -120,7 +125,14 @@ Emit a single severity-classified report:
 | … | yes/no | yes/no | OK/at-risk |
 ~~~
 
-Sort by severity (P0 → P3). State the scope. Keep per-category output readable.
+Classify every finding with the portfolio-wide severity vocabulary from `spec/claude/review-plan/` §Severity scale (verbatim Title Case), applied to the security context:
+
+- **Critical** — exploitable vulnerability or MUST-fix issue that blocks release: injection, broken authentication or access control, a hard-coded credential or secret in source / config / logs, a tenant-scoped path missing its tenant filter.
+- **Warning** — a real weakness that should be fixed before the next release but is not directly exploitable on its own (defence-in-depth gap with a plausible escalation path).
+- **Suggestion** — a hardening opportunity or one-line improvement that raises the security posture without addressing a concrete weakness.
+- **Info** — an observation or context note; no action required.
+
+Never invent a `P0–P3` or `critical/high/medium/low` scale. Sort by severity (Critical → Info). State the scope. Keep per-category output readable.
 
 ### Hard rules
 

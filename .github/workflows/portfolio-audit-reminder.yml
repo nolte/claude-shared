@@ -1,0 +1,74 @@
+# Quarterly portfolio-audit reminder.
+#
+# spec/portfolio/portfolio-management/ §Portfolio audit requires the portfolio
+# audit to "run on a quarterly cadence at minimum". The audit itself is an
+# LLM-driven skill (`/nolte-shared:portfolio-audit`) — it performs semantic
+# duplicate detection and mid-flow operator confirmation, so it cannot be run
+# unattended by a GitHub Actions job. This workflow therefore implements the
+# cadence trigger as a reminder: on the first day of each calendar quarter it
+# opens (or refreshes) a tracking issue prompting the operator to run the audit
+# on-demand. The on-demand and cadence triggers produce the same artefact shape
+# under .audits/portfolio/<YYYY-MM-DD>.md.
+name: portfolio-audit-reminder
+
+on:
+  schedule:
+    # 06:00 UTC on the first day of January, April, July, and October.
+    - cron: "0 6 1 1,4,7,10 *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  open-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open or refresh the quarterly portfolio-audit reminder issue
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const now = new Date();
+            const quarter = `${now.getUTCFullYear()} Q${Math.floor(now.getUTCMonth() / 3) + 1}`;
+            const title = `Quarterly portfolio audit — ${quarter}`;
+
+            // Stay idempotent: skip if an open reminder for this quarter exists.
+            const existing = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "${title}"`,
+            });
+            if (existing.data.total_count > 0) {
+              core.info(`Reminder issue for ${quarter} already open; nothing to do.`);
+              return;
+            }
+
+            const body = [
+              "The quarterly portfolio-audit cadence is due (per",
+              "`spec/portfolio/portfolio-management/` §Portfolio audit, which requires",
+              "the audit to run on a quarterly cadence at minimum).",
+              "",
+              "## Action",
+              "",
+              "Run the audit on-demand from a worktree:",
+              "",
+              "```",
+              "/nolte-shared:portfolio-audit",
+              "```",
+              "",
+              "The audit dispatches the read-only manifest collector, performs",
+              "semantic duplicate detection, and writes a Findings-Report to",
+              "`.audits/portfolio/<YYYY-MM-DD>.md` (the same artefact shape the",
+              "on-demand trigger produces).",
+              "",
+              "## Close criteria",
+              "",
+              "Close this issue once the Findings-Report for this quarter is",
+              "committed and any `Critical` findings are triaged.",
+            ].join("\n");
+
+            const created = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+            });
+            core.info(`Opened quarterly portfolio-audit reminder #${created.data.number} for ${quarter}.`);

@@ -33,6 +33,11 @@ _Read-only editorial scanner dispatched by lektorat-apply. Walks an in-scope Mar
 - [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 - [`docs-freshness-checker`](docs-freshness-checker.md)
 
+## Referenziert von
+
+- [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
+- [`lektorat-auto-revise`](../../skills/nolte-shared/lektorat-auto-revise.md)
+
 ---
 
 ## Lektorat Scanner
@@ -117,7 +122,13 @@ Each dimension below maps directly onto `spec/project/lektorat/` §Quality dimen
 
 #### D1 — Readability
 
-Compute the language-appropriate metrics per file: Flesch Reading Ease (FRE) and Flesch–Kincaid Grade Level (FKGL) for EN; Wiener Sachtextformel Variante 1 (WSTF) and LIX for DE. Look up the `warn` / `crit` corridor from the per-`content_mode` table in the spec (the two-row table covering tutorial/how-to/troubleshooting vs. explanation/reference/glossary). Pages whose `content_mode` is `meta` are exempt; emit no D1 finding for them. A metric value crossing the `warn` bound but not `crit` is `warning`; crossing `crit` is `critical`. Include the computed metric value, the corridor, and one offending sample (longest sentence or deepest nesting) in `evidence`. Add `suggestion`-level structural-heuristic findings (paragraphs longer than three sentences, lists with more than seven peers, headings deeper than `####`) only when they survive the spec's "metric or named heuristic" gate.
+**LIX is the primary, cross-language readability metric** and is computed identically for EN and DE per `spec/project/readability-lix/` (the authoritative source for the formula `LIX = A/B + (C × 100)/A`, the `> 6`-letter long-word rule, the tokenization/segmentation pipeline, and the cross-language calibration). Compute LIX by invoking the bundled reference implementation rather than computing it in-prompt:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/readability_lix.py" --file <path> --language <en|de> --content-mode <mode>
+```
+
+It returns a JSON object carrying `lix`, `asl`, `lwp`, `words`, `sentences`, `long_words`, `corridor`, `severity`, `dominant_lever`, and a `pipeline_metadata` block (`library`, `library_version`, `tokenizer`, `tokenizer_version`, `long_word_threshold`, and `decompounding` for DE) — copy those straight into the finding `evidence` and the run's `pipeline_metadata.<language>.readability` sub-block. `${CLAUDE_PLUGIN_ROOT}` is load-bearing: the script ships inside the installed plugin, not the consumer's working tree, so a bare `scripts/…` path silently misses it. Run it for every non-`meta` in-scope file in both languages, and compute the **supplementary** metrics alongside it — Flesch Reading Ease (FRE) and Flesch–Kincaid Grade Level (FKGL) for EN; Wiener Sachtextformel Variante 1 (WSTF) for DE — but a supplementary metric **never** overrides, escalates, or suppresses the LIX finding. Look up the `warn` / `crit` corridor from the per-`content_mode`, per-language table in the spec (the LIX columns differ by the German offset Δ = 5). Pages whose `content_mode` is `meta` are exempt; emit no D1 finding for them. A metric value crossing the `warn` bound but not `crit` is `warning`; crossing `crit` is `critical`. Compute LIX over prose only: strip fenced code, inline code, HTML comments, frontmatter, and Markdown link/image targets (per `spec/project/lektorat/` §Language handling) before counting `A`/`B`/`C`. Include in `evidence` the computed `lix` (integer), `asl`, `lwp`, the raw `words` (`A`) / `sentences` (`B`) / `long_words` (`C`) counts, the corridor, and the **dominant lever** (whichever of `ASL` or `LWP` contributes more distance above the corridor) so the downstream author knows which lever to pull; also include one offending sample (longest sentence or deepest nesting). Add `suggestion`-level structural-heuristic findings (paragraphs longer than three sentences, lists with more than seven peers, headings deeper than `####`) only when they survive the spec's "metric or named heuristic" gate.
 
 #### D2 — Comprehensibility
 
@@ -150,12 +161,27 @@ Return the inventory as a single fenced JSON block. The top-level shape is **byt
     "en": {
       "tool": "vale",
       "version": "<output of `vale --version`>",
-      "configured_path": "<repo-relative path to the active .vale.ini or vale.yml>"
+      "configured_path": "<repo-relative path to the active .vale.ini or vale.yml>",
+      "readability": {
+        "library": "<LIX library name>",
+        "library_version": "<version>",
+        "tokenizer": "<tokenizer/segmenter name>",
+        "tokenizer_version": "<version>",
+        "long_word_threshold": 6
+      }
     },
     "de": {
       "tool": "languagetool-http",
       "version": "<value of LanguageTool /v2/info `buildDate` or the self-hosted release tag>",
-      "configured_path": "<HTTP endpoint URL (Public or self-hosted) or, for an alternative tool, the resolved binary path>"
+      "configured_path": "<HTTP endpoint URL (Public or self-hosted) or, for an alternative tool, the resolved binary path>",
+      "readability": {
+        "library": "<LIX library name>",
+        "library_version": "<version>",
+        "tokenizer": "<tokenizer/segmenter name>",
+        "tokenizer_version": "<version>",
+        "long_word_threshold": 6,
+        "decompounding": false
+      }
     }
   },
   "inventory_findings": [
@@ -187,7 +213,7 @@ Return the inventory as a single fenced JSON block. The top-level shape is **byt
 
 Sort `findings` by severity (`critical` first, then `warning`, then `suggestion`), then by `file` ascending, then by `dimension` ascending. Keep the `id` field stable across runs for the same finding on the same file + dimension + line, so the caller can record dismissals by `id`. The `language_summary` array enumerates every language that contributed at least one file to the scan; languages with zero in-scope files are omitted.
 
-Populate `pipeline_metadata.<language>` for every language that contributed at least one file *and* whose pipeline could be resolved. Omit the per-language block entirely when the pipeline could not be resolved — never invent placeholder values. The condition that caused the omission goes in `inventory_findings` (see below).
+Populate `pipeline_metadata.<language>` for every language that contributed at least one file *and* whose pipeline could be resolved. Omit the per-language block entirely when the pipeline could not be resolved — never invent placeholder values. The condition that caused the omission goes in `inventory_findings` (see below). The `readability` sub-block records the LIX computation pipeline per `spec/project/readability-lix/` §Reproducibility (`library`, `library_version`, `tokenizer`, `tokenizer_version`, `long_word_threshold` — always `6` — and, for DE only, `decompounding`); use the **same** library and tokenizer for both languages so EN and DE LIX values stay comparable.
 
 When the scan surfaces **zero** content findings across the whole file set, emit the JSON with `findings: []` rather than refusing to produce output — an empty scan is still a recorded scan, and the caller persists the empty inventory for the audit trail. The `inventory_findings` array is independently empty (`[]`) when no infrastructure-level conditions arose.
 
@@ -225,6 +251,7 @@ These five values are the entire closed set per `spec/project/lektorat/` §Outpu
 - **Vale exit codes:** Vale returns a non-zero exit code when findings exist. Treat any exit code as success as long as the JSON parses; only an unparseable response or a missing binary triggers `kind: vale-unavailable`.
 - **DE pipeline output shapes vary:** LanguageTool emits a `matches` array, Hunspell emits a flat per-line wordlist of misspellings, project wrappers may emit anything. The caller pins the tool; the scanner consumes the documented shape for that tool and normalises into the spec's finding-object shape. When the caller's pinned shape is unknown to the scanner, emit a single `kind: language-pipeline-missing` entry into `inventory_findings` and stop DE D3 for that file.
 - **Determinism on floating-point metrics:** FRE and FKGL are floating-point; round to one decimal in `evidence` and the metric value, and treat re-runs whose value differs by ≤ 0.1 as identical findings (same `id`). This honours the spec's "deterministic for the same input (±1 for floating-point)" Acceptance Criterion.
+- **LIX comes from the bundled script, not in-prompt arithmetic:** `${CLAUDE_PLUGIN_ROOT}/scripts/readability_lix.py` is the pinned reference implementation (stdlib-only, no `pip install` in the consumer repo) and is covered by `tests/test_readability_lix.py`, which asserts the **canonical** formula `A/B + (C × 100)/A` against hand-computed fixtures. Don't re-derive LIX by hand and don't trust a third-party docstring: the widely used `textstat` ships a transposed, wrong docstring (`A/B + A*100/C`). The script reports `lix` as a rounded integer while retaining `asl`, `lwp`, and the raw `A`/`B`/`C`; it counts a long word by its **Unicode letters** (`> 6`, `ä ö ü ß` included, bounding punctuation excluded) and uses one tokenizer for both languages so EN and DE stay comparable.
 - **Per-file vs. batched dispatch:** the JSON output shape is identical whether the caller invokes the scanner once per file or once for the whole repository. When invoked per file, set `language_summary` from that one file's resolved language; when batched, aggregate per language. Either mode satisfies the spec's open question on dispatch strategy.
 - **`audience` is a stable identifier across languages:** never localise an audience ID into the file's language. `evaluators` stays `evaluators` on a DE file, never `Evaluierer`.
 - **Line ranges on multi-line findings:** for D1 readability findings whose offending sample is the longest sentence, set `line_start` to the sentence's first line and `line_end` to its last line; for D2 hidden-prerequisite findings, set both to the line where the unfulfilled prerequisite is first invoked.

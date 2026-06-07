@@ -48,6 +48,7 @@ Triangulation unterscheidet vier Quellenklassen:
 - **MUSS [MUST]** in jeder Triangulation **mindestens eine** Quelle der Klasse Primär ODER Sekundär enthalten; drei Web-Aggregator-Treffer allein erfüllen die Anforderung nicht
 - **MUSS [MUST]** Quellen nur dann als unabhängig behandeln, wenn ihre Provenance wirklich verschieden ist: zwei Treffer vom selben Domain-Root, dieselbe Nachricht über mehrere Mirrors hinweg neu veröffentlicht oder mehrere Aggregator-Snippets, die alle auf denselben Aggregator zurückverweisen, zählen als **eine** Quelle
 - **DARF NICHT [MUST NOT]** Modellgedächtnis als eine der erforderlichen Quellen zählen; es DARF die zu triangulierende Hypothese vorschlagen, MUSS aber von mindestens einer Primär- oder Sekundärquelle bestätigt werden, bevor die Aussage als verifiziert gilt
+- **DARF NICHT [MUST NOT]** eine Quelle, die ein noch nicht ausgeliefertes Verhalten ankündigt (Release-Notes für eine geplante Version, Roadmap-Einträge, Pre-Release-Changelogs), zur Schwelle unabhängiger Quellen zählen; eine solche Quelle ist eine Hypothese—sie DARF die zu triangulierende Hypothese vorschlagen, aber das Verhalten MUSS in einer Primärquelle beobachtbar sein (veröffentlichte Version, Live-Schema, ausgelieferter Endpoint), bevor die Aussage als verifiziert gilt
 - **SOLLTE [SHOULD]** mindestens eine Quelle ein verifizierbares Datum tragen (Last-Modified-Header, Commit-Zeitstempel, Veröffentlichungsdatum), damit ein veralteter Pin oder eine deprecated API erkennbar wird
 
 ### Mindest-Quellenzahl skaliert mit Blast Radius
@@ -89,6 +90,7 @@ Der Findings-Report-Pfad nutzt das Per-Run-Snapshot-Muster (`.audits/<skill>/<ru
 - **MUSS [MUST]** die Quellenliste im Artefakt sichtbar machen, das die triangulierte Aussage trägt—entweder inline (Fußnote, Quellenliste am Ende, Referenzen im `[R1]`-Stil) oder in einem assoziierten Findings-Report unter dem Audit-Verzeichnis des aufrufenden Skills (`.audits/<skill>/<run>/`), je nach Träger-Format
 - **MUSS [MUST]** für jede Quelle mindestens festhalten: URL oder Pfad, Quellenklasse und Abrufdatum
 - **SOLLTE [SHOULD]** die Quellenliste nach Gewichtung sortieren (Primärquelle zuerst), damit ein Leser, der die Provenance überfliegt, die stärkste Quelle sofort sieht
+- **SOLLTE [SHOULD]** jede festgehaltene Quelle als Träger einer beratenden Time-to-Live behandeln, die am Aussagetyp ausgerichtet ist—30 Tage für Versions-Pin-Quellen, 90 Tage für API-Verhalten- oder Schema-Quellen (an den Staleness-Schwellen in `spec/project/docs-freshness` ausgerichtet); wenn ein tragender Skill eine Aussage wiederverwendet, deren neueste Quelle älter als ihre TTL ist, um einen Schreibvorgang oberhalb der "Lokaler Edit"-Stufe zu gatten, SOLLTE er vor dem Schreibvorgang gegen eine aktuelle Quelle erneut validieren
 - **DARF [MAY]** die Quellenliste bei späteren Re-Runs auffrischen—Triangulation altert, und das erneute Bestätigen einer alten Aussage gegen eine aktuelle Quelle ist eine legitime Pflegeaufgabe
 
 ### Wechselwirkung mit bestehenden Skills und Agents
@@ -110,5 +112,4 @@ Der Findings-Report-Pfad nutzt das Per-Run-Snapshot-Muster (`.audits/<skill>/<ru
 - [ ] Eine Author-Time-Aussage, die in `SKILL.md`, einer `agents/*.md`-Datei oder einer Spec-Datei fest verdrahtet ist und das Verhalten eines Skills oder Agents in Richtung repo-externer Schreibvorgänge lenkt, wird auf mindestens der Release/Dispatch-Stufe (drei unabhängige Quellen) trianguliert, bevor der Authoring-Pull-Request gemerged wird
 
 ## Offene Fragen
-- Wie geht diese Methodik mit Quellen um, die ein **zukünftiges** Verhalten ankündigen (eine Release-Note für eine geplante Version, die noch nicht ausgeliefert ist)? Aktueller Default: Solche Quellen zählen nicht zur Schwelle, bis das Verhalten in einer Primärquelle beobachtbar ist; soll das explizit gemacht werden oder eine per-Skill-Entscheidung bleiben?
-- Sollten triangulierte Quellen eine Time-to-Live tragen, nach deren Ablauf die Aussage erneut validiert werden muss? Kandidaten-Defaults: 30 Tage für Versions-Pin-Quellen, 90 Tage für API-Verhalten-Quellen—offen, ob der Spec eine TTL erzwingt oder sie dem tragenden Skill überlässt
+_Derzeit keine._

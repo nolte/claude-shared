@@ -10,6 +10,19 @@ use_when:
   - "you want to classify a portfolio-improvement opportunity against the specialist catalog"
   - "you want to run the quarterly specialist-coverage review"
   - "you want to check whether a finding class needs a new specialist"
+dont_use_when:
+  - situation: "You want to produce the audit findings rather than triage and dispatch them"
+    alternative: portfolio-audit
+  - situation: "You want a cross-cutting skills-and-agents sweep with a remediation roadmap"
+    alternative: skills-agents-sweep
+  - situation: "You want spec-versus-implementation drift reconciliation"
+    alternative: spec-drift-audit
+  - situation: "You want to triage a failing CI workflow run"
+    alternative: workflow-health-triage
+see_also:
+  - portfolio-audit
+  - skills-agents-sweep
+  - workflow-health-triage
 resumable: true
 ---
 
@@ -49,12 +62,12 @@ A triage artifact must exist for `update` and `close`; if none exists, start wit
 
 Perform the periodic specialist-coverage review mandated by the spec (at minimum once per calendar quarter).
 
-1. **Locate merged remediation PRs.** Run `gh pr list --state merged --limit 50 --json number,title,body,labels` and filter for PRs whose body contains a **Risk / rollout notes** section that references an in-scope finding source (`spec-drift-audit`, `workflow-health`, `project-structure-apply`, `vocab-drift-audit`, `prose-style`, manual review Issue, or ad-hoc contributor observation).
+1. **Locate merged remediation PRs.** Run `gh pr list --state merged --limit 50 --json number,title,body,labels` and filter for PRs whose body contains a **Risk / rollout notes** section that references an in-scope finding source (`spec-drift-audit`, `workflow-health`, `project-structure-apply`, `vocab-drift-audit`, `portfolio-audit`, `portfolio-inflight-triage`, `dependency-audit`, `prose-style`, manual review Issue, or ad-hoc contributor observation).
 
 2. **Extract dispatch signals.** For each matched PR, parse the **Risk / rollout notes** section for:
-   - The named specialist (or the literal phrase "no matching specialised agent—generalist remediation").
-   - The originating finding source.
-   - If neither appears, flag the PR as **missing audit trail**—this is itself a finding under the spec.
+   - The `Dispatched specialist:` field — the named specialist, or the literal `no matching specialist existed — generalist handled`.
+   - The `Originating source:` field — the named originating finding source.
+   - If either field is absent, flag the PR as **missing audit trail**—this is itself a finding under the spec.
 
 3. **Identify generalist-handled finding classes.** Group the PRs by finding class (derived from the finding source and the nature of the fix). For each class, count how many times it was handled by a generalist (no specialist named). Classes at three or more generalist-handled occurrences trigger the gap-closure rule.
 
@@ -79,10 +92,10 @@ Record decisions on open findings and dispatch specialists.
 
 3. **Dispatch hands-on remediation.** For each finding with a dispatch decision, call `Agent(subagent_type="<plugin>:<agent>")` with the finding class, the finding source reference, and a fix-PR-title hint. Wait for the agent's report. Never perform the specialist remediation inline.
 
-4. **Record every dispatch.** For each dispatched specialist, the eventual fix PR **MUST** include in its **Risk / rollout notes**:
-   - The originating finding source (by name and, where available, link).
-   - The dispatched specialist (`subagent_type` argument literal), or the phrase "no matching specialised agent—generalist remediation".
-   Append these two lines to a `## Decisions` entry in the triage artifact immediately after dispatch.
+4. **Record every dispatch.** For each dispatched specialist, the eventual fix PR **MUST** include in its **Risk / rollout notes** the two MUST-fields from `spec/project/continuous-improvement/<canonical_language>.md` §"Traceability in remediation artifacts", written with these exact field labels so they are grep-stable across the portfolio:
+   - `Originating source: <named finding source>` — the originating finding source by name and, where available, link.
+   - `Dispatched specialist: <subagent_type or skill name>` — the dispatched specialist literal, or the explicit note `Dispatched specialist: no matching specialist existed — generalist handled` when none matched.
+   Append these two lines verbatim to a `## Decisions` entry in the triage artifact immediately after dispatch, so the triage record and the fix PR carry identical text.
 
 5. **Gap-closure authoring.** When a new specialist is authored via `claude-plugin-developer`, record the decision in `## Decisions` with the gap-closure justification (three-recurrence threshold, or explicit high-impact rationale for pre-threshold creation). The fix PR for the new specialist itself MUST carry the high-impact justification if created before the threshold.
 
@@ -94,7 +107,7 @@ Terminate the triage cycle after all decisions are recorded.
 
 1. **Verify completeness.** Confirm every finding in `## Findings` carries a decision: dispatched / deferred-with-reason / gap-closure-initiated. Findings with no decision block closing; prompt the user for each.
 
-2. **Verify fix PRs carry the audit trail.** For each dispatched finding, run `gh pr view <number> --json body` and confirm the **Risk / rollout notes** section contains the required two lines. If any are missing, block closing and prompt the user to amend the PR before proceeding.
+2. **Verify fix PRs carry the audit trail.** For each dispatched finding, run `gh pr view <number> --json body` and confirm the **Risk / rollout notes** section contains both the `Originating source:` and `Dispatched specialist:` lines. If either is missing, block closing and prompt the user to amend the PR before proceeding.
 
 3. **Flip status to closed.** Update the triage artifact's frontmatter: set `status: closed`, append a `closed` entry to `## Processing log` with the date and a one-line summary (number of findings, dispatched / deferred / gap-closure counts).
 
@@ -123,7 +136,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** perform specialist remediation inline when a matching specialist exists; classify, dispatch, verify.
 - **Never** record a gap-closure decision as "no action needed" when the three-recurrence threshold is met; the spec's MUST applies.
 - **Never** close a triage cycle while any finding is still undecided; every finding must carry dispatched / deferred-with-reason / gap-closure-initiated.
-- **Never** let a fix PR merge without the two required **Risk / rollout notes** fields (originating source + specialist name or explicit generalist note).
+- **Never** let a fix PR merge without the two required **Risk / rollout notes** fields: `Originating source:` and `Dispatched specialist:` (the latter naming the specialist or the explicit `no matching specialist existed — generalist handled`).
 - **Never** collapse multiple unrelated findings into a single remediation PR; one PR per finding class (same-class grouping is allowed when the fix is genuinely atomic).
 - **Never** use this skill to weaken another spec—a finding whose remediation would require violating another spec is an Open Question, not a shortcut.
 - **Always** prefer a plugin-distributed specialist over a project-local one when the finding class has been observed in two or more repositories.

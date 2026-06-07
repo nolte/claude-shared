@@ -15,6 +15,8 @@ This section is for contributors working on the `claude-shared` repository itsel
 
 ## Dogfooding
 
+Dogfooding means using the plugin inside this repository's own development workflow.
+
 When working on the repo, launch Claude Code with the plugin pointing at the repo root:
 
 ```bash

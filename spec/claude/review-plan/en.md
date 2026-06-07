@@ -22,6 +22,7 @@ Reviews of Claude Code artifacts—a skill against `skill-management`, an agent 
 - Versioning plans across time—one plan per (target, review-type) at a time; a rerun **replaces** the plan rather than revising it
 - Long-lived audit registers—this spec's plans are disposable; use `spec-drift-audit` artifacts when a permanent per-quarter audit record is needed
 - Continuous-integration reporting formats (SARIF, JUnit, …)—the plan is a human- and LLM-friendly markdown file, not a CI result interchange format
+- A `.audits/` index/registry file—open plans are enumerated by scanning the directory (for example `grep -l "status: open" .audits/**/*.md`); an index would be a drift-prone second source of truth that contradicts the disposable, no-accumulation lifecycle
 
 ## Requirements
 <!-- Use RFC 2119 keywords: MUST, SHOULD, MAY. One atomic requirement per bullet. -->
@@ -31,6 +32,7 @@ Reviews of Claude Code artifacts—a skill against `skill-management`, an agent 
 - **MUST** live under `.audits/<review-type>/<target-slug>.md`, where:
   - `<review-type>` is the review spec slug (for example `skill-review`, `agent-review`)
   - `<target-slug>` is an ASCII kebab-case derivation of the reviewed artifact's identifier (for a skill: the skill name; for an agent: the agent name)
+- **MUST** encode the `<review-type>` by the subdirectory only; the basename **MUST NOT** repeat it (no `skill-review-<target>.md`)—consuming specs cite the bare `<target-slug>.md` basename and the deletion-commit message already carries the review-type
 - **MUST NOT** include a timestamp or sequence number in the filename—there is exactly **one** plan per (review-type, target) at any moment; a rerun overwrites the existing plan
 - **MUST** keep `.audits/` checked into git (not `.gitignore`-d), so plans are visible in pull-request diffs and the review trail is shared
 - **SHOULD**, when the reviewed artifact lives outside the current repository (for example reviewing a plugin consumer's copy of a skill), record the absolute or repo-relative path of the target in the frontmatter `target` field, while the filename still uses only the slug
@@ -90,18 +92,21 @@ This section is the single canonical source for severity vocabulary across every
 ### Lifecycle
 
 - **MUST** be created fresh per review invocation; a rerun against the same target **MUST** overwrite the existing plan in a single commit and set the prior plan's `status` to `superseded` in the overwriting commit message, never edit the old plan into the new one
+- **MUST**, when the review target is renamed mid-cycle, rename the plan file via `git mv` (preserving `git log --follow` lineage), update the `target` frontmatter field, and note the move in the commit message; **don't** regenerate, so partial check-off state and the `## Processing log` survive. This is distinct from the supersede path above, which is scoped to a rerun that produces new findings, not a target rename that keeps the same findings under a new identifier
 - **MUST** have items marked `- [x]` only when both the fix has landed and the `Verify` step has been executed; partial fixes stay `- [ ]`
-- **MUST** append one line to `## Processing log` per closure, in the shape: `YYYY-MM-DD—<item-shorthand>—<action taken>—<verified by>`
+- **MUST** append one line to `## Processing log` per closure, in the shape: `YYYY-MM-DD—<item-shorthand>—<action taken>—<verified by>`; `<verified by>` is a single free-text actor label (for example `human:nolte`, `agent:agent-review`) and **MUST NOT** be decomposed into structured username / session / agent sub-fields—per §Non-Goals the spec doesn't prescribe who or what processes the plan, and the commit author already carries machine identity
 - **MUST NOT** delete the plan file while any `- [ ]` `Critical` remains open; `Warning` / `Suggestion` / `Info` items **MAY** be deferred to tracked issues to unblock deletion
 - **MUST** delete the plan file when every item is either `- [x]` or carries a `→ deferred: <url>` annotation; the deletion commit message **MUST** be `review(<review-type>): close <target>—<C>C/<W>W/<S>S/<I>I` (counts of Critical, Warning, Suggestion, Info at creation time), so the git log is the searchable audit trail
 - **SHOULD**, when the plan is deleted, also close any tracked issues referenced by deferred items if the underlying fix has landed elsewhere—the plan's deletion commit names those issues in its body
+- **SHOULD** be considered stale and re-evaluated—reprocessed against the current `repo-revision`, or explicitly set to `superseded` instead—if the plan has been open for more than six months without a new `## Processing log` entry. This mirrors `spec/claude/skills-agents-sweep/` §Lifecycle so both audit-artefact specs carry one consistent staleness vocabulary; it's a detect-and-surface convention, not a hard expiry or automatic deletion
 
 ### Relationship to other specs
 
 - **MUST** reference this spec from every review spec that produces a plan (`skill-review`, `agent-review`, and any future review type)—the review spec owns the criteria, this spec owns the artifact shape
-- **MUST NOT** be used as the output of `spec-drift-audit`; that spec persists a quarterly audit record that isn't meant to be deleted on processing completion
+- **MUST NOT** be used as the output of a **dated periodic audit record**: `spec-drift-audit` (`.audits/spec-drift/<YYYY>-Q<n>.md`) and `portfolio-inflight-management` (`.audits/portfolio-inflight/<YYYY-MM-DD>.md`) reuse this spec's four-section structure and severity vocabulary but follow their own dated-filename and non-disposable lifecycle; this spec's no-timestamp and one-plan-per-target rules **don't** apply to those records, which aren't meant to be deleted on processing completion
 - **SHOULD**, when a review agent (for example `audience-review`) emits a report in the main conversation, still persist the structured plan to `.audits/<review-type>/<target>.md` so the processing contract is consistent regardless of who ran the review
 - **SHOULD** consult `spec/project/parallel-working-copies/` §Audit artefacts in multiple worktrees when the plan is produced inside a worktree rather than the primary checkout; the per-(review-type, target) uniqueness rule from this spec is only observable inside one working tree at a time, and the worktree-local commit, transfer, and cleanup rules live there
+- **SHOULD**, in repositories that forbid direct pushes to `develop`, land the plan and the fix it describes on the same feature-branch PR—create, check-off, `## Processing log` updates, and the deletion commit all in one diff—per `spec/project/parallel-working-copies/` §Audit artefacts; a standalone earlier PR is reserved for reviews run before any fix is scoped
 
 ## Acceptance Criteria
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
@@ -115,10 +120,5 @@ This section is the single canonical source for severity vocabulary across every
 - [ ] The `skill-review` and `agent-review` specs both reference this spec as the authoritative output format
 
 ## Open Questions
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should a plan's `## Processing log` capture the actor identity (human username, Claude session, agent type) as structured fields, or is free-form sufficient for the current scale?
-- Is there a need for a `.audits/` index file that enumerates open plans, or is `ls .audits/**/*.md` adequate?
-- Should plan filenames include the review-type prefix in the basename as well (`skill-review-<target>.md`) for flatter `ls` views, or is the subdirectory grouping preferable?
-- When a review target is renamed mid-cycle, is the plan file renamed (and the filename change commit notes the move) or regenerated from scratch?
-- Does this spec need to prescribe a maximum plan age beyond which an open plan is considered stale and either reprocessed or explicitly superseded?
-- How does plan lifecycle interact with repositories that forbid direct pushes to `develop`: does the plan land on the same PR as the fix it describes, or as a separate earlier PR?
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

@@ -38,9 +38,9 @@ status: open
 <!-- One row per spec acceptance criterion. Use result values: pass | fail | blocked | not-applicable -->
 <!-- blocked = tooling missing or inaccessible; not-applicable requires a reason. -->
 
-| Spec | Criterion (short) | Result | Notes |
-|------|--------------------|--------|-------|
-| `spec/<topic>/<slug>/` | AC: … | pass / fail / blocked / not-applicable | |
+| Spec | Criterion (short) | Result | Specialist (fail/blocked only) | Notes |
+|------|--------------------|--------|--------------------------------|-------|
+| `spec/<topic>/<slug>/` | AC: … | pass / fail / blocked / not-applicable | <specialist + subagent_type / skill, or "no matching specialist exists — generalist handled"; blank for pass/N-A> | |
 
 ## Findings
 
@@ -55,6 +55,7 @@ status: open
 **Observed state:** <What the implementation actually does or has>
 **Expected state:** <What the spec requires>
 **Severity:** critical (security/release blocker) | standard
+**Specialist:** <!-- MANDATORY (continuous-improvement). Either: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>) — OR — "no matching specialist exists — generalist handled". A finding without this field is incomplete. -->
 
 ---
 
@@ -69,11 +70,33 @@ status: open
 ### F1 — <Short title>
 **Decision:** adjust-impl
 **Action:** <What was changed or will be changed>
+**Specialist:** <carried forward from the finding — <display-name> (subagent_type: <plugin>:<agent> | skill: <name>) OR "no matching specialist exists — generalist handled">
 **PR/Commit:** <link or SHA>
 **Resolved:** YYYY-MM-DD
 -->
 
 <!-- No decisions recorded yet — audit is open. -->
+
+## Specialist coverage review
+
+<!--
+Quarterly specialist-coverage review per spec/project/continuous-improvement/ §"Continuous loop
+and quarterly coverage review". Keep this section ONLY when the coverage review is folded into
+this drift-audit artifact (the SHOULD default per the spec); delete it when the repository keeps
+the coverage review as a standalone artifact under .audits/continuous-improvement/<YYYY-QN>.md.
+
+This section MUST stay full-portfolio in scope even when the hosting drift audit is a thematic
+partial audit — partial-audit narrowing applies to drift, not to coverage. A narrowed drift audit
+that suppresses this section is itself a finding for the next cycle.
+
+The review itself is produced by the continuous-improvement-triage skill; this is the named landing
+spot so it is findable by heading. Populate the table below from the last quarter's merged
+remediation PRs (Risk / rollout notes fields), grouped by finding class.
+-->
+
+| Finding class | Generalist-handled count | Matching specialist | Gap-closure action |
+|---------------|--------------------------|---------------------|--------------------|
+| <class label> | <N> | <plugin>:<agent> / skill / none | none / track (1–2) / author-or-extend (≥3) |
 
 ## Processing log
 

@@ -30,8 +30,8 @@ rephrase before continuing. No file is written until the rephrase passes.
 `project/features/release-pipeline-cleanup.md` exists, links
 `roadmap_item: R-22`, has `sprint: null`, `status: ready`.
 
-No `.github/sprint-rejection-rules.yml` exists, so the default rejection
-verb list applies.
+No `sprint_rejection_verbs:` key is set in `.github/release-skill-layer.yml`,
+so the default rejection verb list applies.
 
 ## Expected behaviour
 

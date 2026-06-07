@@ -79,6 +79,8 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
   - `findings` (list, required)—each finding with `kind` (`overlap`, `duplication`, `drift`, `prior-art`, `clean`), `target` (file path or feature ID it relates to), and `resolution` (`merge-into <id>`, `supersede <id>`, `split-out <ids>`, `proceed`, `revisit-after <event>`).
 - **MUST** treat any finding with `kind: overlap` or `kind: duplication` as a blocker for the `draft → ready` transition unless its `resolution` is `proceed` with an explicit one-paragraph rationale in `## Consistency notes`.
 - **MUST** re-run the consistency check when, while the feature is in `ready` or `in_progress`, any of the following occur: the `## Description` section is changed by more than typo-level wording, an acceptance criterion is added or its core wording (excluding the checkbox state) is altered, the `roadmap_item` or `sprint` frontmatter field is changed, or a feature with overlapping scope is added or removed elsewhere in `project/features/`. The re-run **MUST** preserve historical findings (append a new `findings` block dated by `performed_at`, don't overwrite). Cosmetic edits (typo fixes, formatting, link target normalisation, the bullet checkbox flipping for an existing acceptance criterion) **MUST NOT** trigger a re-run.
+- **MUST** record findings inline on the feature (in `consistency_check` frontmatter and `## Consistency notes`), never as a separate `.audits/feature-consistency/` artefact. Unlike the transient `skill-review`/`agent-review` plans under `.audits/` (which `spec/claude/review-plan/` defines as deletable-on-completion working documents), consistency findings are durable, append-only feature metadata that gate the `draft → ready` lifecycle, so they live on the feature itself.
+- **MUST** keep the `consistency_check` object inline on the feature regardless of `findings` history length; externalising it to a separate file is settled-against, because findings gate the lifecycle and have to stay diffable on the feature itself.
 
 ### Lifecycle and gates
 
@@ -100,6 +102,7 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 - **MUST NOT** require effort estimates, due dates, or velocity tracking on features; like roadmap items and sprints, features are author-paced.
 - **SHOULD** tolerate long stretches between consistency check and execution; if more than two sprints pass without execution, the consistency check **SHOULD** be re-run before `ready → in_progress`.
 - **MAY** mark a feature `cancelled` when the consistency check reveals that an existing feature already covers it; cancellation with `resolution: merge-into <id>` is a first-class outcome, not a failure state.
+- **MUST** apply the identical schema and lifecycle to documentation-only features (a how-to page, a runbook); the no-per-type-branching rule (Goal 6) admits no doc-feature exception, and a doc feature remains an internal planning artefact carrying the same acceptance-criteria, test-hook, and consistency contract as any other feature.
 
 ## Acceptance Criteria
 
@@ -119,7 +122,4 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 
 ## Open Questions
 
-- Should the consistency check produce a separate audit file under `.audits/feature-consistency/<slug>.md` (mirroring `skill-review` and `agent-review`) instead of recording the findings inline, so re-runs can be compared as separate documents? Inline is simpler today; revisit if findings outgrow the section.
-- How does the spec interact with cross-feature dependencies (`F-7 needs F-3 first`)? A frontmatter list (`depends_on: [F-3]`) is the obvious shape, but a hobby-scale project usually expresses dependency by sprint ordering; revisit if a real chain appears.
-- Should features that are pure documentation (a how-to page, a runbook) follow the same lifecycle, or get a lighter shape? Same shape for now; project-type-specific lightening is a future concern if doc-only features dominate a real project.
-- Should the consistency-check frontmatter object eventually move to a separate file once `findings` lists exceed a reasonable size, or stay inline indefinitely? Inline is sufficient at hobby scale; defer.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

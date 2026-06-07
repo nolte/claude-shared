@@ -15,7 +15,7 @@ _Read-only audit of a localized app's translation files for completeness against
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
 - **Distribution:** `plugin`
-- **Tags:** `review`, `audit`, `i18n`, `frontend`
+- **Tags:** `review`, `audit`
 - **Source:** [agents/i18n-completeness-checker.md](https://github.com/nolte/claude-shared/blob/main/agents/i18n-completeness-checker.md)
 
 ## Use when
@@ -69,13 +69,17 @@ You are **read-only**. `Read`, `Glob`, and `Grep` serve only to load locale file
 
 #### Step 1 — Discover inputs
 
-- Locate the per-locale translation files (operator-named directory, else the conventional locale tree such as `**/locales/<lang>/*.json`, `**/i18n/<lang>.json`, `**/lang/*.yaml`).
-- Determine the **reference locale**: operator-named, else the project's declared default, else a documented heuristic — and state which you picked.
+- **Read the optional config first.** If `project/i18n-audit.yml` exists, read it; it MAY declare locale paths, reference locale, source globs, and the i18n library (per spec §Inputs). Config values take precedence over discovery; an operator argument takes precedence over both. When the file is absent, per-invocation discovery is the documented default.
+- Locate the per-locale translation files (operator-named directory, else config-declared paths, else the conventional locale tree such as `**/locales/<lang>/*.json`, `**/i18n/<lang>.json`, `**/lang/*.yaml`).
+- Determine the **reference locale**: operator-named, else config-declared, else the project's declared default, else a documented heuristic — and state which you picked.
 - Determine the source roots and file globs to scan, and the project's i18n library (to pick call-site patterns). When the library is undeterminable, state the assumed pattern set.
+- **Per-input source attribution (MUST, per spec §Inputs).** For *each* resolved input (locale paths, reference locale, source globs, i18n library) record whether the value came from the **config file**, an **operator argument**, or **discovery**, and surface that attribution in the report's scope line so the audit is reproducible.
 
 #### Step 2 — Cross-locale parity
 
-Flatten each locale file to dotted key paths. Against the reference locale, compute keys missing in another locale, keys present in another locale but absent from the reference, and **structural mismatches** (a key path resolving to different value types across locales).
+**Per-tree isolation (MUST, per spec §Audit dimensions).** When multiple independent locale trees are discovered (for example one per package or subroot in a monorepo), treat each tree as a **separate audit scope**: flatten, diff, and scan each tree independently, and **never merge key sets across trees**. Each scope computes its own reference locale, parity, and orphan/missing math within that tree alone — a key present in tree A but absent from tree B is not a parity gap, because the two trees are unrelated. The scope boundary is the discovered locale-tree root, or the per-scope entries when the optional `project/i18n-audit.yml` config declares them. Emit one report section per scope.
+
+Within each scope: flatten each locale file to dotted key paths. Against that scope's reference locale, compute keys missing in another locale, keys present in another locale but absent from the reference, and **structural mismatches** (a key path resolving to different value types across locales).
 
 #### Step 3 — Code-usage scan
 
@@ -89,14 +93,18 @@ Treat dynamic/template-string lookups (`` t(`enums.${type}`) ``) as "dynamic, no
 
 Empty string values per locale; values identical between the reference and another locale (likely untranslated); interpolation-placeholder parity (same `{{var}}` / `{var}` / `%s` across locales for a key). If the project declares a key-naming convention, report violations; otherwise do not invent one.
 
+**ICU-opaque caveat (MUST, per spec §Audit dimensions / §Report).** Placeholder-parity checking is performed at simple-placeholder granularity only (`{{var}}` / `{var}` / `%s`). ICU MessageFormat plural and select bodies such as `{count, plural, one {…} other {…}}` are compared as **opaque strings**, not parsed — their internal branches are never structurally validated. Whenever the report carries placeholder-parity findings it MUST state this caveat, so a consumer is not misled into thinking ICU bodies were structurally checked.
+
 #### Step 5 — Report
 
-Emit a single severity-sorted report:
+Emit a single severity-sorted report. When more than one independent locale tree was audited (§Step 2 per-tree isolation), repeat the body below once per scope under a scope heading (for example `## Scope: packages/web/locales`), so each tree's metrics and findings stay separated and no cross-tree merge is implied:
 
 ~~~markdown
 ## i18n Completeness Report
 
 > Scope: locales {…}, reference {…}, source roots {…}, patterns {…}
+> Input sources: locales {config|operator|discovery}, reference {…}, source roots {…}, library {…}
+> Placeholder parity: simple `{{var}}` / `{var}` / `%s` only; ICU plural/select bodies compared as opaque strings, not parsed.
 
 ### Summary
 | Metric | Value |
@@ -125,7 +133,8 @@ Sort by severity (critical > warning > info). When a category exceeds N entries,
 ### Quality rules
 
 1. Read-only — never edit a file.
-2. Dynamic keys are reported, never counted as misses.
-3. Every used-but-undefined finding carries a source file:line.
-4. The report always states the audit scope (locales, reference, roots, patterns) so it is reproducible.
-5. Cap per-category output so a large drift stays readable.
+2. Per-tree isolation — when multiple independent locale trees exist, audit each as a separate scope and never merge keys across trees; parity, orphan, and missing math is computed within one tree alone.
+3. Dynamic keys are reported, never counted as misses.
+4. Every used-but-undefined finding carries a source file:line.
+5. The report always states the audit scope (locales, reference, roots, patterns) so it is reproducible.
+6. Cap per-category output so a large drift stays readable.

@@ -1,3 +1,5 @@
+# yaml-language-server: $schema=schemas/tech-stack-v1.0.schema.yaml
+#
 # Portfolio Tech Stack — single source of truth for portfolio-wide technical
 # building blocks.
 #
@@ -14,7 +16,7 @@ entries:
     role: Documentation generator producing the bilingual MkDocs site under docs/.
     status: active
     lifecycle: build
-    since: 2026-04-23
+    since: "2026-04-23"
     source_of_truth: mkdocs.yml
 
   - name: renovate
@@ -23,7 +25,7 @@ entries:
     role: Automated dependency-update bot extending the nolte/gh-plumbing common preset.
     status: active
     lifecycle: development
-    since: 2026-04-23
+    since: "2026-04-23"
     source_of_truth: renovate.json5
 
   - name: github-actions
@@ -32,7 +34,7 @@ entries:
     role: Continuous-integration provider running lint, test, docs, release-drafter, and release-publish workflows.
     status: active
     lifecycle: build
-    since: 2026-04-23
+    since: "2026-04-23"
     source_of_truth: .github/workflows/
 
   - name: task
@@ -41,7 +43,7 @@ entries:
     role: Task orchestrator running quality-gate, docs, plugin-reload, and lint targets via a portfolio-wide Taskfile convention.
     status: active
     lifecycle: build
-    since: 2026-04-23
+    since: "2026-04-23"
     source_of_truth: Taskfile.yml
 
   - name: vale
@@ -50,7 +52,7 @@ entries:
     role: Prose linter using the pinned nolte/vale-style vocabularies and the Microsoft style ruleset.
     status: active
     lifecycle: development
-    since: 2026-04-23
+    since: "2026-04-23"
     source_of_truth: .vale.ini
 
   - name: pre-commit
@@ -59,7 +61,7 @@ entries:
     role: Pre-commit hook framework wiring trailing-whitespace, end-of-files, yamllint, markdownlint, and Vale checks.
     status: active
     lifecycle: development
-    since: 2026-04-23
+    since: "2026-04-23"
     source_of_truth: .pre-commit-config.yaml
 
   - name: markdownlint
@@ -68,7 +70,7 @@ entries:
     role: Markdown style linter run via the pre-commit hook framework.
     status: active
     lifecycle: development
-    since: 2026-04-23
+    since: "2026-04-23"
     source_of_truth: .pre-commit-config.yaml
 
   - name: gh-plumbing
@@ -79,7 +81,7 @@ entries:
       consumed by every nolte/* repository.
     status: active
     lifecycle: build
-    since: 2026-05-18
+    since: "2026-05-18"
     source_of_truth: .github/workflows/
 
   - name: release-drafter
@@ -90,7 +92,7 @@ entries:
       workflow.
     status: active
     lifecycle: build
-    since: 2026-05-18
+    since: "2026-05-18"
     source_of_truth: .github/release-drafter.yml
 
   - name: probot-settings
@@ -100,7 +102,7 @@ entries:
       protection, labels, required checks) onto every nolte/* repository.
     status: active
     lifecycle: development
-    since: 2026-05-18
+    since: "2026-05-18"
     source_of_truth: .github/settings.yml
 
   - name: boring-cyborg
@@ -110,7 +112,7 @@ entries:
       welcomes first-time contributors per .github/boring-cyborg.yml.
     status: active
     lifecycle: development
-    since: 2026-05-18
+    since: "2026-05-18"
     source_of_truth: .github/boring-cyborg.yml
 
   - name: stale-bot
@@ -120,7 +122,7 @@ entries:
       .github/stale.yml.
     status: active
     lifecycle: development
-    since: 2026-05-18
+    since: "2026-05-18"
     source_of_truth: .github/stale.yml
 
   - name: claude-code
@@ -130,7 +132,7 @@ entries:
       this plugin in contributor and end-user sessions.
     status: active
     lifecycle: all
-    since: 2026-05-18
+    since: "2026-05-18"
     source_of_truth: .claude-plugin/plugin.json
 
   - name: claude-code-plugin
@@ -140,7 +142,7 @@ entries:
       agents/<name>.md source layout plus the plugin/marketplace manifests.
     status: active
     lifecycle: all
-    since: 2026-05-18
+    since: "2026-05-18"
     source_of_truth: .claude-plugin/plugin.json
 
 notes: |

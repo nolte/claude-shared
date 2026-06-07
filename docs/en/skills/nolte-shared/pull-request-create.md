@@ -31,6 +31,11 @@ _Create a GitHub pull request that conforms to the repository's pull-request-wor
 
 - [`pull-request-merge`](pull-request-merge.md)
 
+## Referenced by
+
+- [`issue-orchestrate`](issue-orchestrate.md)
+- [`pull-request-merge`](pull-request-merge.md)
+
 ## Examples
 
 - **Prompt:** Open a PR for this branch
@@ -130,6 +135,9 @@ Render exactly these five sections, in this order, with these exact headings:
 ### Risk / rollout notes
 
 <risk class, migrations, feature flags, or the literal text `None`>
+<!-- Audit-triggered remediation PRs additionally add, per continuous-improvement §Traceability:
+Originating source: <named finding source + link>
+Dispatched specialist: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>) — or "no matching specialist existed — generalist handled" -->
 ```
 
 Rules for the body:
@@ -138,6 +146,10 @@ Rules for the body:
 - **Summary**, **Changes**, and **Testing** must not be empty and must not contain only `None`: if the user can't fill them in, stop and ask.
 - Use imperative mood in Summary and Changes (`Add …`, not `Added …`).
 - If the diff touches any file under `spec/`, append a `Refs spec/<path>` line in **Linked issues** for each touched spec topic (deduplicated by `<area>/<slug>/`), unless the user explicitly declines.
+- **Audit-triggered remediation PRs carry two extra lines in Risk / rollout notes.** When this PR remediates an in-scope finding from a portfolio audit ([`spec-drift-audit`](spec-drift-audit.md), `workflow-health`, [`project-structure-apply`](project-structure-apply.md), [`vocab-drift-audit`](vocab-drift-audit.md), [`portfolio-audit`](portfolio-audit.md), [`portfolio-inflight-triage`](portfolio-inflight-triage.md), [`dependency-audit`](dependency-audit.md), `prose-style`/`markdown-formatting` lint, or a manual review Issue), `spec/project/continuous-improvement/<canonical_language>.md` §"Traceability in remediation artifacts" **MUST**-requires the **Risk / rollout notes** section to additionally record both of the following lines:
+  - `Originating source: <named finding source>` — the audit entry, workflow incident, project-structure report, or manual review Issue (with a link where available) that triggered the fix, so the PR is traceable back to its trigger.
+  - `Dispatched specialist: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>)` — the specialised agent or skill that produced the fix; or, when none matched, the literal `Dispatched specialist: no matching specialist existed — generalist handled`. This is the primary signal for portfolio-level coverage gaps.
+  Ask the user for these two values whenever the change context (branch name, commit log, linked audit artifact) indicates an audit-triggered remediation; do not invent them. For non-audit PRs these two lines are omitted.
 - Repository-specific sections **may** be appended *after* the five required sections, never interleaved.
 
 Derive section content from the commit log, file list, and diff collected in step 1. Present the drafted title and body back to the user and iterate until they approve.
@@ -191,6 +203,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** target `main` as the base branch. The integration branch is `develop`.
 - **Never** invent a Conventional-Commits type that disagrees with the branch prefix. If the branch is `feat/foo`, the type is `feat`: no translation.
 - **Never** leave Summary, Changes, or Testing empty or equal to `None`. Stop and ask the user for content instead.
+- **Never** open an audit-triggered remediation PR without both the `Originating source:` and `Dispatched specialist:` lines in **Risk / rollout notes**. `spec/project/continuous-improvement/` makes both MUST-fields; the specialist line uses the explicit `no matching specialist existed — generalist handled` form when none matched, never an empty value.
 - **Never** silently force-push. Use `--force-with-lease` and only after explicit user confirmation; on an open non-draft PR, also document the rebase in a PR comment per pull-request-workflow §Fix-forward on red checks.
 - **Never** amend a commit that has already been pushed. When iterating on an open PR to fix a red required check, push a **new** commit (fix-forward); `git commit --amend` after the push is prohibited by pull-request-workflow §Fix-forward on red checks because it destroys review context and breaks comment anchoring.
 - **Never** mark a PR as ready for review while a required status check is red or pending on the head commit. Keep the PR as Draft (or return it to Draft) until every required check on the head commit is green.

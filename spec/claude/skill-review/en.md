@@ -43,14 +43,15 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
   - A failed SHOULD → `Warning`
   - A failed MAY that the skill clearly would benefit from → `Suggestion`
   - An observation that no rule covers but that a future reviewer would want to know → `Info`
-- **MUST** explicitly cover these high-impact areas even when the corresponding rule in `skill-management` is expressed only as a SHOULD: frontmatter field presence (`name`, `description`), description-contains-concrete-triggers, absence of hard-coded absolute paths in referenced assets, existence of every template the skill references
+- **MUST** explicitly cover these high-impact areas even when the corresponding rule in `skill-management` is expressed only as a SHOULD: frontmatter field presence (`name`, `description`), description-contains-concrete-triggers, absence of hard-coded absolute paths in referenced assets, existence of every template the skill references—a referenced template/asset that doesn't exist is a `Critical` (broken reference); intent to add it before merge is tracked by the plan item remaining open, not by a lower severity
 - **SHOULD** flag as `Info` any part of the skill body that could be factored into a sibling file to keep the main prompt under the soft length target named in `skill-management`
 
 ### Checks derived from `skill-vs-agent`
 
 - **MUST** confirm the skill body contains a **rationale section** that names at least one decisive dimension for the skill-over-agent choice; its absence is a `Critical`
+- **SHOULD** verify at least one counter-dimension is named when the decision was a close call; absence is a `Suggestion`, consistent with the SHOULD in `skill-vs-agent` and symmetric with the matching rule in `agent-review`
 - **MUST** verify the skill doesn't dispatch the Skill tool on behalf of an agent (not applicable in this direction, but the reverse direction—a skill calling an agent via the Agent tool—is expected and isn't a finding)
-- **MUST** run a duplicate-capability check: grep every other `skills/*/SKILL.md` and `agents/*.md` `description` line for semantic overlap; any plausible overlap produces a `Warning` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing
+- **MUST** run a duplicate-capability check: grep every other `skills/*/SKILL.md` and `agents/*.md` `description` line **in the current repository only** for semantic overlap; any plausible overlap produces a `Warning` naming the peer artifact and the overlap, so the author can propose a merge, rename, or clearer split before landing. Cross-plugin overlap is out of scope here—the `skill-vs-agent` duplicate-prevention rule is scoped to this plugin, and portfolio-wide reconciliation across installed plugins is owned by `spec-drift-audit` / `portfolio-audit`. The duplicate-capability severity is `Warning` irrespective of whether the target is a new or revised skill; the new-vs-revision context is recorded in the plan's `## Scope`, not encoded in severity
 
 ### Checks derived from the multilingual-template default
 
@@ -60,7 +61,7 @@ The `skill-management` spec defines how a skill is *authored*: on-disk shape, fr
 
 - **MUST** run an external skill-structure validator that checks `SKILL.md` frontmatter, body shape, and referenced-asset reachability before emitting the plan; Anthropic's `skills-ref` CLI is the canonical example, but the requirement isn't bound to a specific binary
 - **MUST** map any error reported by the validator to a `Critical` finding and any warning to a `Warning` finding, citing the validator's rule identifier in the bracketed prefix per `review-plan`
-- **MUST** record in the plan's `## Scope` section which validator and which version was used, so a later re-review can detect validator drift the same way it detects spec drift
+- **MUST** record in the plan's `## Scope` section which validator and which version was used, so a later re-review can detect validator drift the same way it detects spec drift; the validator and its version are provisioned by repository tooling (for this repo, the Taskfile `validate:skills` target as the `skills-ref` stop-gap) and recorded per-review in `## Scope`, and this spec deliberately pins no specific binary or version
 - **MUST NOT** skip this check on the grounds that other checks in this spec already cover overlapping ground; the external validator runs in addition to the spec-derived checks because it catches structural issues a spec-reading reviewer can miss
 - **MAY** suppress an individual validator finding only by recording an explicit override in the plan's `## Scope` with a one-line justification anchored in another spec or a documented project decision
 
@@ -78,7 +79,7 @@ Mirrors the authoring requirements added to `skill-management` §"Authoring qual
 Mirrors `skill-management` §"Frontmatter validation"; cite the originating rule when a finding pins one.
 
 - **MUST** verify `name` is 1–64 characters, lowercase ASCII letters/digits/hyphens only, doesn't start or end with `-`, and contains no `--`; any violation is a `Critical`
-- **MUST** verify neither `name` nor any other frontmatter value contains the reserved tokens `anthropic` or `claude`; a violation is a `Critical` (the upstream platform validator rejects the skill)
+- **MUST** verify `name` doesn't contain the reserved tokens `anthropic` or `claude` (the reserved-word rule applies to `name` only, per `skill-management` §Frontmatter validation, because descriptive fields like `description` may legitimately mention `claude`); a violation is a `Critical` (the upstream platform validator rejects the skill), unless the artefact body carries a `## Reserved-token rationale` section claiming the narrow Claude/Anthropic-surface exception
 - **MUST** verify neither `name` nor `description` contains XML tags; a violation is a `Critical`
 - **MUST** verify `description` is non-empty and ≤1024 characters; over-cap or empty is a `Critical`
 - **MUST** verify `description` is written in **third person**: presence of the pronouns "I," "you," or "we" (or other non-third-person markers) in the description text is a `Critical`. Citation: `skill-management` §Frontmatter validation, derived from the upstream platform best practices ([R5](#references))
@@ -123,10 +124,12 @@ Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule 
 ### Review procedure
 
 - **MUST** begin by reading the canonical `skill-management`, `skill-vs-agent`, and `review-plan` specs before producing any finding; findings without an anchor in one of those specs aren't valid output of this procedure
-- **MUST** produce findings in this order: external-validator findings → frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → best-practices checks → INFO observations
+- **MUST** produce findings in this order: external-validator findings → frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → best-practices checks → spec-anchor check → INFO observations
 - **MUST** emit exactly one `review-plan` file at `.audits/skill-review/<skill-name>.md`; the reviewer **MUST** follow every lifecycle rule from `review-plan`, including the single-plan-per-target invariant and the deletion-commit message format
 - **SHOULD** embed, in the plan's `## Scope` section, the git SHA of the spec versions applied so a later re-review can tell whether findings may have become outdated by a spec revision
 - **MAY** fold purely stylistic observations (Vale, markdown linting) into `Info` findings when they aid the author, but **MUST NOT** promote them to `Warning` or `Critical`: those stay with their own tooling
+
+This procedure is delivered as a skill (`skills/skill-review/`), per `skill-vs-agent`'s orchestrator-is-a-skill rule; the plan persists to `.audits/skill-review/` regardless of entry point per `review-plan`.
 
 ### Relationship to other specs
 
@@ -159,11 +162,5 @@ Sources for the additional checks above. Cite the relevant entry in finding brac
 - [R6] Agent Skills, formal specification: <https://agentskills.io/specification>
 
 ## Open Questions
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should the duplicate-prevention check read agent descriptions from `agents/*.md` in the same repository only, or should it also query the MkDocs-rendered catalog across installed plugins when a consumer reviews a downstream copy?
-- Does the review distinguish "new skill being proposed" from "existing skill being revised"? The same requirements apply to both, but the severity of a duplicate-capability finding differs (blocker vs. warning) depending on whether the peer pre-exists or is being introduced alongside.
-- Should the rationale-section check also validate that at least one *counter-dimension* is named, per `skill-vs-agent`'s SHOULD rule, or is the current "at least one decisive dimension" bar sufficient for skill review?
-- When the skill under review depends on a template or asset file that doesn't yet exist, is the finding a `Critical` (broken reference) or a `Warning` (template to be added before merge)?
-- How's this spec invoked—as a `review` skill run from the main conversation, as a sub-agent comparable to `audience-review`, or both? The output is the same plan either way, but the entry point affects whether the review persists automatically.
-- Should reviewing a skill also verify that the skill's `description` triggers don't overlap with a runtime slash command or a Claude Code built-in command, and if so against which authoritative list?
-- Where does the validator pin (which version is treated as ground truth) live—in this spec, in `skill-management`, or in repository tooling configuration?
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

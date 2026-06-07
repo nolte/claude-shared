@@ -40,7 +40,7 @@ Repository state when the skill is invoked:
    - Fix PR: `#<number>`
    - The fix PR's **Risk / rollout notes** must carry:
      - Originating source: prose-style lint findings from PRs #104, #109, #116.
-     - Dispatched specialist: gap-closure initiated—`audience-doc-author` description extended; prior occurrences used "generalist remediation".
+     - Dispatched specialist: gap-closure initiated—`audience-doc-author` description extended; prior occurrences read "no matching specialist existed — generalist handled".
 
 7. **No pre-threshold early-creation path taken.** The decision was made at the threshold, not before it; no special high-impact justification is required. (Had the user chosen to act after only one occurrence, the justification field in the authoring PR would be mandatory.)
 

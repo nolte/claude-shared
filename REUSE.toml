@@ -1,0 +1,11 @@
+version = 1
+
+# The entire repository is MIT-licensed (see LICENSE). This blanket annotation
+# gives every file deterministic SPDX licensing information per FSFE REUSE 3.3
+# without per-file headers, satisfying spec/project/license-check §Own-code.
+
+[[annotations]]
+path = "**"
+precedence = "aggregate"
+SPDX-FileCopyrightText = "2026 nolte"
+SPDX-License-Identifier = "MIT"

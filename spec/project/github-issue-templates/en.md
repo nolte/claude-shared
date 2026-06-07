@@ -22,7 +22,7 @@ The `project-structure` spec leaves this gap explicitly open: community-health f
 - Authoring concrete templates for every imaginable project type. This spec defines the *method*; templates themselves are generated per repo.
 - Discussion templates (`.github/DISCUSSION_TEMPLATE/`). Out of scope; can be a follow-up spec.
 - Localisation of issue templates. The GitHub issue UI is English-only in practice; templates remain English regardless of the repo's documentation language.
-- CODEOWNERS, SECURITY.md, SUPPORT.md. Tracked separately under the `project-structure` open questions.
+- CODEOWNERS, SECURITY.md, SUPPORT.md. Tracked separately under the `project-structure` open questions. Community-health ownership splits three ways: issue templates are owned here, pull-request templates by `pull-request-workflow`, and CODEOWNERS / SECURITY.md / SUPPORT.md by `project-structure`.
 
 ## Requirements
 
@@ -72,7 +72,8 @@ A template-generation skill **MUST** follow this derivation procedure, in order:
    - Multiple-of choice → `checkboxes`.
    - Acknowledgement gates (code of conduct, search check) → `checkboxes` with `required: true`.
 5. **Set labels and assignees.** Pre-fill `labels:` from the project's label taxonomy (often a `.github/labels.yml` or Probot `settings.yml`). Only pre-fill `assignees:` when the repo has a stable triage owner.
-6. **Wire the chooser.** Update `.github/ISSUE_TEMPLATE/config.yml` with `contact_links` for any external destinations (Discussions, support forum, security policy) so the chooser surfaces them alongside the templates.
+6. **Wire the chooser.** Update `.github/ISSUE_TEMPLATE/config.yml` with `contact_links` for any external destinations (Discussions, support forum, security policy) so the chooser surfaces them alongside the templates. A security `contact_link` is **REQUIRED**: until `project-structure` specifies a `SECURITY.md` location, point it at GitHub private vulnerability reporting; once that location is specified, point it at the repo's `SECURITY.md` instead.
+7. **Record the applied derivation.** The applied derivation **MUST** be recorded as a YAML comment block at the top of `config.yml` (project type, audience artefact path + date, generated-template list, audience-set identifier), so a re-run can re-read it inline.
 
 ### Field hygiene
 
@@ -81,6 +82,7 @@ Bug reports and feature requests share the same storage mechanism (`.github/ISSU
 #### Common to every template
 
 - **MUST** include a search-before-filing acknowledgement on every template (a single required `checkboxes` entry pointing at the issue tracker).
+- **MUST NOT** ship a public security-vulnerability Issue Form; route security reports privately via `config.yml` `contact_links` (GitHub private vulnerability reporting or `SECURITY.md`).
 - **SHOULD** keep each template under ten total components; longer forms reduce reporter completion rate.
 - **MAY** pre-fill the issue title via the form's top-level `title:` key when the project type has a strong title convention (for example `[bug] <area>: <summary>` or `[feat] <summary>`).
 
@@ -130,7 +132,4 @@ A downstream skill that applies this spec **MUST**:
 
 ## Open Questions
 
-- Should the derivation record (project type, audiences, chosen templates) live inline as a YAML comment block in `config.yml`, or in a separate file (for example `.github/ISSUE_TEMPLATE/.derivation.yml`)? Inline is simpler; a sibling file is easier for the skill to parse.
-- How does this spec interact with the open `project-structure` question on community-health files? Once CODEOWNERS / SECURITY.md are also specified, should the issue-template chooser link to SECURITY.md via `config.yml.contact_links` automatically?
-- Should a "security vulnerability" template be allowed at all, or always routed to a private channel via `contact_links`? Current default: route privately, no public template.
-- Discussion templates: defer to a follow-up spec, or fold them in here?
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

@@ -10,13 +10,17 @@ last_updated: 2026-05-19
 
 Die `nolte-shared`-Skills und -Agents decken den vollständigen Entwicklungszyklus eines Projekts ab — vom ersten Mission-Statement bis zum veröffentlichten Release-Artefakt. Diese Seite zeigt, wo jedes Artefakt greift.
 
-Der Zyklus hat sieben sequenzielle Phasen plus eine achte, **Cross-cutting**, die phasenagnostische Artefakte sammelt. Die ersten sieben Phasen bilden einen **Zyklus**: am Ende eines Sprints kehrt der Lauf zurück zu **Plan**, um den nächsten Sprint zu planen; sobald das MVP erreicht ist, kehrt der Lauf zurück zu **Vision**, damit die Mission Richtung Stabilisierung revidiert werden kann.
+Der Zyklus hat sieben sequenzielle Phasen plus eine achte, **Cross-cutting**, die phasenagnostische Artefakte sammelt. Die ersten sieben Phasen bilden einen Kreislauf. Am Ende eines Sprints kehrt der Lauf zurück zu **Plan**, um den nächsten Sprint zu planen. Sobald das MVP erreicht ist, kehrt der Lauf zurück zu **Vision** — die Mission wird Richtung Stabilisierung revidiert.
 
-Jeder Skill und jeder Agent deklariert seine Phase im Frontmatter (`phase:`); der Katalog-Generator gruppiert die [Skills](../skills/index.md)- und [Agents](../agents/index.md)-Katalog-Seiten nach diesem Feld, sodass diese Seite und der Katalog im Gleichschritt bleiben.
+Jeder Skill und jeder Agent deklariert seine Phase im Frontmatter (`phase:`). Der Katalog-Generator gruppiert die [Skills](../skills/index.md)- und [Agents](../agents/index.md)-Katalog-Seiten nach diesem Feld. So bleiben diese Seite und der Katalog im Gleichschritt.
+
+**Zyklus-Phasen und ihre Skills und Agents**
+
+Welcher Skill oder Agent gehört zu welcher Zyklus-Phase, und wie kehrt der Kreislauf bei Sprint-Abschluss und bei MVP zurück?
 
 <!-- diagram-source: user-described — eight-phase lifecycle with skills and agents grouped per phase; agents are marked with a parenthetical (A) suffix; return edges from Close to Plan (next sprint) and from Close to Vision (MVP achieved) -->
 ```mermaid
-graph TD
+flowchart TD
   subgraph V["1 Vision"]
     mdef[mission-define]
     mrev[mission-revise]
@@ -137,7 +141,7 @@ Design ist die Phase, in der Konventionen, Scaffolds und Spezifikationen geschri
 
 ### 4 Build
 
-Ein geplanter Sprint wird aktiv, sobald das erste Feature startet. `sprint-execute` ist der Daily-Driver: er steuert den Feature-Status und hält die Frontmatter der Sprint-Datei mit der Realität synchron.
+Ein geplanter Sprint wird aktiv, sobald das erste Feature startet. `sprint-execute` ist der Daily-Driver: Er steuert den Feature-Status und hält die Frontmatter der Sprint-Datei mit der Realität synchron.
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
@@ -180,7 +184,7 @@ Ein Sprint wird geschlossen, indem sein deployment-fähiges Artefakt validiert w
 
 ### 8 Cross-cutting
 
-Cross-cutting-Artefakte sind phasenagnostisch: sie werden situativ gerufen, unabhängig davon, in welcher Lebenszyklus-Phase die umgebende Arbeit gerade steckt. Beide aktuellen Cross-cutting-Artefakte sind Agents.
+Cross-cutting-Artefakte sind phasenagnostisch: Sie werden situativ gerufen, unabhängig davon, in welcher Lebenszyklus-Phase die umgebende Arbeit gerade steckt. Beide aktuellen Cross-cutting-Artefakte sind Agents.
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
@@ -196,6 +200,6 @@ Cross-cutting-Artefakte sind phasenagnostisch: sie werden situativ gerufen, unab
 
 Diese Seite handelt vom Projekt-Lifecycle; Querschnitts-Themen und Per-Artefakt-Katalog-Sichten haben eigene Seiten:
 
-- Der [Agent-Katalog](../agents/index.md) listet jeden ausgelieferten Agent, gruppiert nach Phase, mit den vollständigen Metadaten.
+- Der [Agent-Katalog](../agents/index.md) listet jeden ausgelieferten Agenten, gruppiert nach Phase, mit den vollständigen Metadaten.
 - Der [Skill-Katalog](../skills/index.md) listet jeden ausgelieferten Skill, gruppiert nach Phase, mit den vollständigen Metadaten.
 - Der [Tag-Index](../references/tags.md) verknüpft Skills und Agents, die denselben Tag deklarieren.

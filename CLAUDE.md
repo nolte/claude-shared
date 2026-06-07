@@ -52,10 +52,23 @@ Use `/reload-plugins` inside the session to pick up changes without restarting.
 
 ## Parallel working copies (worktrees)
 
-`spec/project/parallel-working-copies/` is the single source of truth. Two operational reminders for any session running inside this repository:
+`spec/project/parallel-working-copies/` is the single source of truth. The core rule and the operational reminders for any session running inside this repository:
 
-- Create worktrees under `~/repos/.worktrees/claude-shared/<slug>/` (or, for harness-/agent-initiated worktrees, `~/repos/.worktrees/claude-shared/agents/<slug>/`). Never nest a worktree under `.claude/worktrees/` — the spec's §Path layout forbids it explicitly.
-- Before the first `Agent({isolation: "worktree"})` call in a session, set `CLAUDE_AGENT_WORKTREE_ROOT` (or the equivalent Claude Code settings hook) to a spec-conformant root if the harness default would otherwise materialize the worktree under `.claude/worktrees/`.
+- **The primary checkout (`~/repos/github/claude-shared/`) is for integration only and MUST stay on `develop` at all times.** Never create, switch to, or commit a feature branch (`feat/`, `fix/`, `chore/`, `docs/`, `exp/`) here — not even when only one feature is in flight. *Every* change to specs, skills, agents, or docs happens in a dedicated worktree that branches off `develop`; the primary checkout is the stable launchpad you branch *from* and merge *into*, never the place you work in. This is the MUST in the spec's §Branch-to-worktree mapping. If you find the primary checkout on a feature branch, that is drift to repair (migrate the branch into a worktree, reset the primary checkout to `origin/develop`), not a state to extend.
+- Create worktrees under the per-machine-configurable root `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/claude-shared/<slug>/` (or, for harness-/agent-initiated worktrees, `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/claude-shared/agents/<slug>/`). The root is read from the `NOLTE_WORKTREE_ROOT` environment variable — each machine sets it freely — and defaults to `~/repos/.worktrees`. The conformant way to create one is `task worktree:add -- <branch> [slug]`, which reads that variable, derives the repo from the `origin` remote, and branches off `origin/develop`. Never nest a worktree under `.claude/worktrees/` — the spec's §Path layout forbids it explicitly.
+- Before the first `Agent({isolation: "worktree"})` call in a session, set `CLAUDE_AGENT_WORKTREE_ROOT` (or the equivalent Claude Code settings hook) to a spec-conformant root — pointing it under the same `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/claude-shared/agents/` root — if the harness default would otherwise materialize the worktree under `.claude/worktrees/`.
+
+## Crash recovery / resuming interrupted work
+
+A notebook crash, terminal close, or session expiry does **not** destroy in-flight work — Claude Code persists every top-level session transcript under `~/.claude/projects/<encoded-cwd>/`. Two on-disk safety nets make recovery routine:
+
+- **Session-level (covers everything, including free-form work):** run `task resume` in the affected working copy to list its resumable sessions newest-first with their opening prompt, then `claude --resume <id>` (or `claude --continue` for the most recent). This is the first thing to reach for after a crash.
+- **Always-on journal:** `scripts/wip_journal.py` is wired as a `SessionStart` / `PostToolUse` / `PreCompact` hook in `.claude/settings.json` and appends a "where was I" trail to the gitignored `.resume/session-journal.md`. `cat .resume/session-journal.md` shows the last files touched and when, per session.
+- **Skill-level (structured decision log):** in-scope skills/agents checkpoint to `.resume/<name>/<run-id>.yml` per `spec/claude/resumable-work/`; re-invoking a resumable skill with the same inputs surfaces the resume prompt.
+
+Operational rule: prefer running long feature work as a **top-level session inside the worktree** (`cd <worktree> && claude`) over a dispatched worktree-isolated subagent — only top-level sessions can be `claude --resume`'d; a subagent's transcript lives under its parent and cannot be resumed on its own.
+
+For multi-source **research** that must survive a crash, prefer the Workflow harness over the built-in `deep-research` skill: a Workflow run persists every dispatched agent transcript and supports `resumeFromRunId`, whereas `deep-research` (a sealed harness built-in) holds fetched sources and verified claims only in conversation context and writes nothing to disk until its final report.
 
 ## Blog-author trigger (feature → done)
 

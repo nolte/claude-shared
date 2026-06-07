@@ -43,6 +43,10 @@ Der Agent matched Prosa gegen die folgenden Muster. Jedes Muster ist aus dem ent
 
 Eine Passage, die mit vergleichbarer Konfidenz auf mehr als ein Muster passt, **MUSS [MUST]** als einzelner Befund mit `diagram_type: ambiguous` emittiert werden, der beide Kandidaten-Typen in einem `candidates`-Array auflistet; der Agent wählt nie still einen aus.
 
+#### Strukturelle Anti-Muster
+- **MUSS [MUST]** jeden Kandidaten-Match auf `low`-Konfidenz herabstufen (und damit gemäß §Konfidenz-Modell verwerfen), dessen auslösende Passage vollständig in einer erkannten Nicht-Diagramm-Struktur enthalten ist: FAQ-Frage-Antwort-Paare, eingefasste Befehls- / Install-Sequenzen und flache Fehlermeldungs-Listen. Diese Strukturen liefern häufig Signale, die diagrammfähig aussehen, aber bewusst Prosa sind; das Herabstufen hält die Falsch-Positiv-Rate niedrig, ohne Aufwand der Betreiberin
+- Diese eingebaute Anti-Muster-Herabstufung **ergänzt den §Per-Stellen-Mute-Marker, ersetzt ihn nicht:** die Herabstufung ist die geschlossene, deterministische Deny-Liste des Agents für bekannte strukturelle Fälle, während `<!-- diagram-opportunity-skip: <grund> -->` das explizite Pro-Stellen-Override der Betreiberin für alles Übrige bleibt
+
 ### Konfidenz-Modell
 - **MUSS [MUST]** jedem Kandidaten-Match eine von drei Konfidenz-Stufen zuweisen: `high`, `medium` oder `low`. `high` verlangt mindestens zwei unabhängige Oberflächen-Signale aus demselben Diagrammtyp-Muster in derselben Passage; `medium` verlangt ein starkes Signal; `low` verlangt nur ein schwaches Oberflächen-Signal
 - **MUSS [MUST]** `low`-Konfidenz-Matches verwerfen, bevor Befunde emittiert werden; die Betreiberin sieht sie nie. Das ist der primäre Rauschen-Kontroll-Hebel
@@ -54,6 +58,7 @@ Eine Passage, die mit vergleichbarer Konfidenz auf mehr als ein Muster passt, **
 - **MUSS [MUST]** Befunde für den Top-Report-Cap priorisieren nach (1) Konfidenz (`high` vor `medium`), dann (2) Heading-Prominenz (höhere Heading-Ebene zuerst), dann (3) Dateipfad (lexikografisch), um die Ordnung über Läufe hinweg deterministisch zu halten
 - **MUSS [MUST]** das vollständige, ungedeckelte Befund-Inventar als `full.json` unter `.audits/diagram-opportunity/<YYYY-MM-DD-HHMM>/` persistieren, damit der Cap nie Daten versteckt; der Aufrufer (Skill, Agent oder Betreiberin) ist verantwortlich, die Datei zu platzieren
 - **DARF NICHT [MUST NOT]** den Pro-Datei- oder Pro-Lauf-Cap still aufgrund von Konfidenz erhöhen; der Cap ist eine harte Obergrenze und Überlauf wird immer zusammengefasst, nicht durchgereicht
+- **DARF NICHT [MUST NOT]** die Caps als Invocation-Zeit-Overrides freilegen; die Defaults (3 pro Datei, 15 pro Lauf) sind die einzig unterstützten Werte, portfolio-weit fixiert, damit die „Betreiberin wird nie überfordert"-Garantie einheitlich gilt. Das `caps`-Objekt in §Ausgabe-Form hält die fixierten Defaults zur Nachvollziehbarkeit fest und ist rein informativ; eine Betreiberin, die die vollständige Menge braucht, liest das ungekappte `full_findings`- / `full.json`-Inventar
 
 ### Severity-Bereich
 - **MUSS [MUST]** jedem Befund eine Severity aus der geschlossenen Menge `{suggestion, info}` zuweisen: `suggestion` für Matches, auf die der Agent ein Handeln der Betreiberin erwartet, `info` für rein kontextuelle Matches (zum Beispiel eine via `<!-- diagram-opportunity-skip: ... -->` unterdrückte Passage, zur Nachvollziehbarkeit festgehalten)
@@ -68,6 +73,7 @@ Eine Passage, die mit vergleichbarer Konfidenz auf mehr als ein Muster passt, **
 - **MUSS [MUST]** einen Markdown-Kommentar `<!-- diagram-opportunity-skip: <grund> -->`, der auf der Zeile unmittelbar vor einem Heading oder Absatz steht, als Direktive behandeln, Befunde zu unterdrücken, die sonst aus diesem Heading / Absatz und seiner umschlossenen Prosa entstehen würden—bis zum nächsten Heading gleicher oder höherer Ebene
 - **MUSS [MUST]** den unterdrückten Match als `info`-Severity-Befund festhalten, der den zitierten Grund referenziert, damit die Unterdrückung im vollständigen Inventar sichtbar bleibt, ohne den Top-Report zu verunreinigen
 - **DARF NICHT [MUST NOT]** irgendeine andere Marker-Form (HTML-Attribut, Frontmatter-Schlüssel, In-Prosa-Tag) als Skip-Direktive behandeln; die Kommentar-auf-vorangehender-Zeile-Form ist die einzig unterstützte Form
+- **DARF NICHT [MUST NOT]** ein `--quiet`-Flag (oder Äquivalent) anbieten, das `info`-Severity-Unterdrückungs-Befunde weglässt; diese Befunde bleiben stets im vollständigen Inventar erhalten, damit die Unterdrückung nachvollziehbar bleibt, und—weil der Top-Report volumengedeckelt und gemäß §Volumen-Kontrolle nach `suggestion` zuerst priorisiert ist—verursachen sie keine Zeilen-Kosten im Top-Report
 
 ### Ausgabe-Form
 - **MUSS [MUST]** Befunde als JSON emittieren, mit mindestens den folgenden Feldern pro Befund: `file` (repo-relativer Pfad), `line_start`, `line_end`, `excerpt` (wortgetreuer Prosa-Trigger, ≤ 240 Zeichen), `diagram_type` (einer der Mermaid-§Diagramm-Katalog-Einträge oder das Literal `ambiguous`), `candidates` (Array aus genau zwei Diagrammtyp-Strings, nur vorhanden bei `diagram_type == ambiguous`), `confidence` (`high` oder `medium`), `severity` (`suggestion` oder `info`), `source_classification` (`user-described` oder `derived`; vorhanden bei `suggestion`-Severity-Befunden), `source_candidate` (String oder String-Array; ein-Zeilen-Zusammenfassung für `user-described`, repo-relativer Pfad oder Pfade für `derived`)
@@ -95,6 +101,4 @@ Eine Passage, die mit vergleichbarer Konfidenz auf mehr als ein Muster passt, **
 - [ ] Die Tools-Liste des Agents ist das Minimum, das für read-only-Scannen nötig ist: `Read`, `Grep`, `Glob`, `Bash`; kein `Edit`, kein `Write`
 
 ## Offene Fragen
-- Soll der Trigger-Katalog eine Deny-Liste bekannter Prosa-Muster bekommen, die diagrammfähig aussehen, es aber bewusst nicht sind (FAQ-Frage-Antwort-Paare, Install-Befehls-Sequenzen, Fehlermeldungs-Listen), oder ist der `<!-- diagram-opportunity-skip -->`-Marker das einzig sanktionierte Auslass-Ventil?
-- Soll der Agent die Pro-Datei- und Pro-Lauf-Caps als Invocation-Zeit-Overrides freilegen, oder sind die Spec-Defaults (3 / 15) die einzig unterstützten Werte, um die „Betreiberin wird nie überfordert"-Garantie als portfolio-weite Eigenschaft zu wahren?
-- Sollen `info`-Severity-Befunde für unterdrückte Passagen vollständig weggelassen werden, wenn die Betreiberin ein `--quiet`-Argument übergibt, oder ist der Nachvollziehbarkeits-Wert die (geringen) Zeilen-Kosten im Top-Report immer wert?
+_Derzeit keine._

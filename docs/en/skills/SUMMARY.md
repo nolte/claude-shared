@@ -13,6 +13,7 @@ last_updated: generated
 * 2 Plan
     * [audience-identify](nolte-shared/audience-identify.md)
     * [feature-decompose](nolte-shared/feature-decompose.md)
+    * [issue-orchestrate](nolte-shared/issue-orchestrate.md)
     * [roadmap-init](nolte-shared/roadmap-init.md)
     * [roadmap-plan](nolte-shared/roadmap-plan.md)
     * [roadmap-refine](nolte-shared/roadmap-refine.md)
@@ -36,6 +37,8 @@ last_updated: generated
 * 4 Build
     * [blog-author](nolte-shared/blog-author.md)
     * [blog-author-trigger](nolte-shared/blog-author-trigger.md)
+    * [gemini-image-handoff](nolte-shared/gemini-image-handoff.md)
+    * [image-generate](nolte-shared/image-generate.md)
     * [sprint-execute](nolte-shared/sprint-execute.md)
 * 5 Review
     * [agent-review](nolte-shared/agent-review.md)
@@ -49,6 +52,8 @@ last_updated: generated
 * 6 Quality
     * [dependency-audit](nolte-shared/dependency-audit.md)
     * [lektorat-apply](nolte-shared/lektorat-apply.md)
+    * [lektorat-auto-revise](nolte-shared/lektorat-auto-revise.md)
+    * [license-check](nolte-shared/license-check.md)
     * [portfolio-audit](nolte-shared/portfolio-audit.md)
     * [quality-gate](nolte-shared/quality-gate.md)
     * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)

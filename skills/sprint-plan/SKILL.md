@@ -63,7 +63,7 @@ Ask the user for a one-sentence value statement phrased from the end-user perspe
 - English: `refactor`, `restructure`, `set up`, `configure`, `clean up`, `migrate`, `bump`, `update dependency`
 - German: `refaktorieren`, `umbauen`, `einrichten`, `konfigurieren`, `aufräumen`, `migrieren`, `aktualisieren`, `Abhängigkeit erneuern`
 
-The list **MAY** be widened per project; consult `.github/sprint-rejection-rules.yml` if it exists. The check is heuristic: when the user genuinely delivers an end-user-facing change whose phrasing happens to start with one of these verbs, they **MAY** override with a one-line rationale that is then recorded verbatim in the sprint's `## Goal` section.
+The list **MAY** be widened per project via a `sprint_rejection_verbs:` key in the shared `.github/release-skill-layer.yml` override surface (the same file the sibling `release-artifact` and `release-skill-layer` specs use); a project **MUST NOT** introduce a separate `.github/sprint-rejection-rules.yml` for this purpose. The check is heuristic: when the user genuinely delivers an end-user-facing change whose phrasing happens to start with one of these verbs, they **MAY** override with a one-line rationale that is then recorded verbatim in the sprint's `## Goal` section.
 
 ### 3. Derive the slug
 
@@ -85,6 +85,8 @@ For each roadmap item collected in step 4, walk `project/features/` and find fea
 - **No features exist** — surface the gap to the user and offer to dispatch `feature-decompose` (the skill that decomposes a roadmap item into one or more features per `spec/project/feature/`). Don't fabricate features inline; if the user declines decomposition, drop the roadmap item back out of the sprint and move on.
 
 After confirming the final feature list with the user, set each chosen feature's `sprint` frontmatter field to the new sprint number in the same write operation that adds the feature's `id` to the sprint's `features` list. The bidirectional invariant (feature side ↔ sprint side) is the canonical check per `spec/project/feature/` §Frontmatter schema; partial updates are forbidden.
+
+**Flip `draft → ready` under the gate.** Setting `feature.sprint = N` is the moment a `draft` feature becomes schedulable, so this skill is the canonical write authority for the `draft → ready` transition per `spec/project/feature/` §Lifecycle and gates. For every feature pulled in whose `status` is `draft`, before flipping it to `ready` verify the full gate: a non-empty `## Description`, at least one `**acceptance-<n>**` criterion bullet, a populated `consistency_check` frontmatter object whose `findings` array is non-empty, and a populated `## Consistency notes` section. If any gate condition fails, **don't flip the status and don't pull the feature in** — surface the missing precondition and route the operator back to `feature-decompose` to complete the decomposition (the consistency check in particular is `feature-decompose`'s territory, never something to fabricate here). Flip `status: draft → ready` only on features that clear the gate, in the same write that assigns `sprint`. A feature already in `ready` (or any later state) keeps its status; only `draft` features are flipped here.
 
 ### 6. Name the value-verifying feature
 
@@ -163,6 +165,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 - **Never** reuse a sprint number from a `cancelled` or `closed` sprint. Numbers are strictly monotonic per `spec/project/sprint/` §Directory layout and file shape.
 - **Never** write a sprint with `status` other than `planned`. Activation is `sprint-execute`'s authority.
+- **Never** flip a feature `draft → ready` without verifying the full §Lifecycle gate (non-empty `## Description`, ≥ 1 `acceptance-<n>` bullet, populated `consistency_check` with a non-empty `findings` array, populated `## Consistency notes`). A `draft` feature that fails the gate is reported as a gap and routed to `feature-decompose`; it is never pulled into the sprint nor silently flipped.
 - **Never** invent roadmap items, features, or audiences inline. Missing decompositions are reported as gaps; missing audiences are a `roadmap`-side concern, not a sprint-side fix.
 - **Never** persist a `value_statement` that begins with an operator-internal verb without an explicit user-supplied override rationale recorded in `## Goal`.
 - **Never** write a `features` frontmatter list that diverges from the `## Features` body bullet list at initial creation.

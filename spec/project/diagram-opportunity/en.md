@@ -43,6 +43,10 @@ The agent matches prose against the following patterns. Each pattern is derived 
 
 A passage that matches more than one pattern with comparable confidence **MUST [MUST]** be emitted as a single finding with `diagram_type: ambiguous` listing both candidate types in a `candidates` array; the agent never silently picks one.
 
+#### Structural anti-patterns
+- **MUST [MUST]** demote to `low` confidence (and thus discard per §Confidence model) any candidate match whose triggering passage is wholly contained in a recognized non-diagram structure: FAQ question-and-answer pairs, fenced command / install sequences, and flat error-message bullet lists. These structures frequently surface signals that look diagram-fit but are intentionally prose, and demoting them keeps the false-positive rate low without operator effort
+- This built-in anti-pattern demotion **complements, not replaces,** the §Per-site mute marker: the demotion is the agent's closed, deterministic deny-list for well-known structural cases, while `<!-- diagram-opportunity-skip: <reason> -->` remains the operator's explicit per-site override for everything else
+
 ### Confidence model
 - **MUST [MUST]** assign each candidate match one of three confidence levels: `high`, `medium`, or `low`. `high` requires at least two independent surface signals from the same diagram-type pattern in the same passage; `medium` requires one strong signal; `low` requires only a weak surface signal
 - **MUST [MUST]** discard `low`-confidence matches before emitting findings; the operator never sees them. This is the primary noise-control lever
@@ -54,6 +58,7 @@ A passage that matches more than one pattern with comparable confidence **MUST [
 - **MUST [MUST]** prioritize findings for the top-report cap by (1) confidence (`high` before `medium`), then (2) heading prominence (higher heading level first), then (3) file path (lexicographic) to keep the ordering deterministic across runs
 - **MUST [MUST]** persist the complete unbounded findings inventory as `full.json` under `.audits/diagram-opportunity/<YYYY-MM-DD-HHMM>/` so the cap never hides data; the caller (skill, agent, or operator) is responsible for placing the file
 - **MUST NOT [MUST NOT]** raise the per-file or per-run cap silently based on confidence; the cap is a hard ceiling and overflow is always summarized rather than streamed
+- **MUST NOT [MUST NOT]** expose the caps as invocation-time overrides; the defaults (3 per file, 15 per run) are the only supported values, fixed portfolio-wide so the "operator never overwhelmed" guarantee holds uniformly. The `caps` object in §Output shape records the fixed defaults for traceability and is informational only; an operator who needs the complete set reads the uncapped `full_findings` / `full.json` inventory
 
 ### Severity range
 - **MUST [MUST]** assign every finding a severity from the closed set `{suggestion, info}`: `suggestion` for matches the agent expects the operator to act on, `info` for context-only matches (for example a passage suppressed via `<!-- diagram-opportunity-skip: ... -->`, recorded for traceability)
@@ -68,6 +73,7 @@ A passage that matches more than one pattern with comparable confidence **MUST [
 - **MUST [MUST]** treat a Markdown comment `<!-- diagram-opportunity-skip: <reason> -->` placed on the line immediately preceding a heading or paragraph as a directive to suppress any findings that would otherwise originate from that heading / paragraph and its enclosed prose, until the next heading of equal or higher level
 - **MUST [MUST]** record the suppressed match as an `info`-severity finding referencing the cited reason, so the suppression remains visible in the full inventory without polluting the top report
 - **MUST NOT [MUST NOT]** treat any other marker form (HTML attribute, frontmatter key, in-prose tag) as a skip directive; the comment-on-preceding-line form is the only supported shape
+- **MUST NOT [MUST NOT]** offer a `--quiet` (or equivalent) flag that omits `info`-severity suppression findings; these findings always persist in the full inventory so suppression stays traceable, and—because the top report is volume-capped and prioritised by `suggestion` first per §Volume control—they impose no line-count cost on the top report
 
 ### Output shape
 - **MUST [MUST]** emit findings as JSON with at least the following fields per finding: `file` (repo-relative path), `line_start`, `line_end`, `excerpt` (verbatim prose trigger, ≤ 240 characters), `diagram_type` (one of the Mermaid §Diagram catalog entries or the literal `ambiguous`), `candidates` (array of exactly two diagram-type strings, present only when `diagram_type == ambiguous`), `confidence` (`high` or `medium`), `severity` (`suggestion` or `info`), `source_classification` (`user-described` or `derived`; present on `suggestion`-severity findings), `source_candidate` (string or array of strings; one-line summary for `user-described`, repo-relative path or paths for `derived`)
@@ -95,6 +101,4 @@ A passage that matches more than one pattern with comparable confidence **MUST [
 - [ ] The agent's tool list is the minimum needed for read-only scanning: `Read`, `Grep`, `Glob`, `Bash`; no `Edit`, no `Write`
 
 ## Open Questions
-- Should the trigger catalog grow a deny-list of well-known prose patterns that look diagram-fit but are intentionally not (FAQ Q-and-A pairs, install command sequences, error-message lists), or is the `<!-- diagram-opportunity-skip -->` marker the only sanctioned escape valve?
-- Should the agent expose the per-file and per-run caps as invocation-time overrides, or are the spec defaults (3 / 15) the only supported values to preserve the "operator never overwhelmed" guarantee as a portfolio-wide property?
-- Should `info`-severity findings for suppressed passages be omitted entirely when the operator passes a `--quiet` argument, or is the traceability value always worth the (small) line-count cost in the top report?
+_None at this time._

@@ -28,12 +28,22 @@ _Curates prose in the current project so it passes Vale, prefers terms from the 
 
 - **You want net-new documentation rather than rephrasing** → [`audience-doc-author`](audience-doc-author.md)
 - **You want to audit whether local vocabulary entries should be retired** → [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
+- **You want a five-dimension editorial review (readability, audience-fit) rather than Vale-clean rephrasing** → [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 
 ## Siehe auch
 
 - [`audience-doc-author`](audience-doc-author.md)
 - [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
 - [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
+
+## Referenziert von
+
+- [`docs-freshness-checker`](docs-freshness-checker.md)
+- [`webview-ui-expert`](webview-ui-expert.md)
+- [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
+- [`readme-structure-apply`](../../skills/nolte-shared/readme-structure-apply.md)
+- [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
+- [`webview-ui-optimize`](../../skills/nolte-shared/webview-ui-optimize.md)
 
 ---
 

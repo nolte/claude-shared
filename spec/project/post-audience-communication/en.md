@@ -33,6 +33,7 @@ The hard problem this spec solves: **a single blog post can't maximally optimise
 - Defining **content selection**. Which projects, decisions, or experiences make it into a post is a roadmap / sprint concern, not an audience-communication concern. Once a topic is chosen, this spec defines whom the post is for.
 - Defining **SEO / metadata for the search-engine / crawler audience**. The crawler-facing surface is structured-data shape, not body prose; it belongs in a separate metadata or robots-policy spec.
 - Substituting **journalistic editorial standards**. The author isn't a journalist; the spec borrows the BBC / Reuters / AP norms that apply to third-party portrayal but doesn't mandate the full editorial governance those organisations carry.
+- Rendering the **audience signal on the page** (a visible "for developers" / "for portfolio readers" badge near the post header). That's a consumer-side presentation concern on the consumer's docs / UX roadmap, and the spec's default is to keep the signal internal-only (frontmatter)—visible badges risk reading as defensive. This mirrors how [`blog-author`](../blog-author/en.md) delegates hero-image rendering and style policy to a consumer-side roadmap item rather than carrying it as a spec-level open question.
 
 ## Consumer audience contract
 
@@ -155,7 +156,7 @@ When the audiences want incompatible things—`A` wants more depth, `B` wants br
 
 A post conforms to this spec when **all** of the following hold. The criteria are written so a reviewer (the author, the `blog-author` skill, or a future lint skill) can mark each one done / not done without ambiguity.
 
-**Enforcement status (open question—see §Open questions, "Frontmatter schema impact").** Criteria `a-1` and `a-2` reference frontmatter fields (`primaryAudience`, `secondaryAudiences`) that the consumer's static-site schema may not yet declare. Until the consumer's schema gap is closed, `a-1` and `a-2` apply to posts authored or updated after this spec is adopted by the consumer, and remain author-side conventions that the build won't enforce. Legacy posts pre-dating that transition are exempt; reviewers and lint skills **MUST** treat the absence of these fields on a legacy post as outside the spec's scope rather than as a failed criterion.
+**Enforcement status.** Criteria `a-1` and `a-2` are build-enforced: the reference consumer declares `primaryAudience` and `secondaryAudiences` in its static-site content schema (`nolte/blog`'s `src/content.config.ts`), so a post that omits or mis-types either field fails the build. A consumer's schema **SHOULD** default a missing `primaryAudience` to `A` (peer-technical reader), the corpus's most common shape. The remaining criteria are reviewer-checked (the author, the `blog-author` skill, or a future lint skill).
 
 - [ ] **a-1** Frontmatter declares exactly one `primaryAudience` from the consumer's direct-end-reader-subgroup identifiers (reference: `{A, B, C}`).
 - [ ] **a-2** Frontmatter declares a `secondaryAudiences` list from the same identifier set that doesn't contain the primary value.
@@ -192,12 +193,7 @@ Other consumers adopting this spec carry an analogous annex in their own reposit
 
 ## Open questions
 
-- **Frontmatter schema impact.** This spec assumes two frontmatter fields, `primaryAudience` and `secondaryAudiences`. The consumer's static-site engine schema (the reference consumer's Astro Zod schema in `src/content.config.ts`) may not yet declare them. Adding them is a downstream task in the consumer: a feature item that updates the schema and decides whether legacy posts without the fields are accepted (probably yes, defaulting to the peer-technical-reader identifier). Until that resolves in a given consumer, the spec's MUSTs at §Primary-audience declaration are author-side conventions that the build won't enforce.
-- **Per-post audience badge UI.** The audience signal is currently internal-only (frontmatter); whether to surface it on the rendered page (for example, a small "for developers" / "for portfolio readers" tag near the post header) is a UX decision deferred to a future feature. Visible audience badges would risk being read as defensive ("I know this post is too technical for you")—the default is to keep it internal until a real reader-confusion case shows otherwise.
-- **Corpus distribution gate.** The reference `50/20/30` A/B/C target in §Primary-audience declaration is an inference from the reference consumer's audience criticality plus realistic hobby-blog cadence. It has no data backing yet. After the first 20 posts ship in a given consumer, the distribution **MUST** be re-checked against actual traffic / referrer data; the target may need to drop the peer-technical-reader share if portfolio-reviewer traffic from LinkedIn is materially higher than expected.
-- **Correction-channel formalism.** §Named-third-party treatment leans on an implicit correction path (public repo issues + About-page email). When the consumer's audience artefact declares a dedicated channel, this spec **MUST** be updated to name the channel directly.
-- **Threshold for permission on non-private but personal characterisations.** §Named-third-party treatment requires explicit permission for private-communication quotes. The threshold for non-private but personal characterisations (for example, a maintainer's blog post the author critiques) is "use the public form, link to the public statement". Whether that threshold needs hardening to "notify the person before publish" is open and depends on how often L-affected posts ship in practice.
-- **Diátaxis frontmatter signal.** §Diátaxis positioning declares the stance is implicit in the lede. If post linting matures, a frontmatter field `diataxis: explanation | how-to | blend` may become useful. Deferred until at least one downstream skill or audit needs to read the position machine-readably.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
 
 ## References
 

@@ -1,6 +1,6 @@
 # Blog author
 
-Status: draft
+Status: accepted
 
 <!-- vale Microsoft.Quotes = NO -->
 <!-- vale Microsoft.Contractions = NO -->
@@ -185,7 +185,7 @@ The **editor** is the downstream copy-editing stage governed by [`spec/project/l
 
 The author **MUST** apply exactly one of the two routes below at step 7, and **MUST** name the chosen route in the handover manifest (see §Handover manifest) so the route is auditable in the merge commit.
 
-- **Target-state route**: run the `audit` operation from [`lektorat-apply`](../../../skills/lektorat-apply/SKILL.md) over the EN + DE post pair. Every finding of severity **`critical`** is resolved before the post pair is merged (via `patch` operations, via author edits, or via the finding's built-in `skip-and-record` dismissal with a documented reason). The author **SHOULD** address findings of severity **`warning`**, with the right to a documented dismissal in individual cases. Findings of severity **`suggestion`** are optional.
+- **Target-state route**: run the `audit` operation from [`lektorat-apply`](../../../skills/lektorat-apply/SKILL.md) over the EN + DE post pair (blog posts are an opt-in `Lektorat` scope surface for a `blog-author`-adopting consumer, per [`spec/project/lektorat/`](../lektorat/en.md) §Scope and applicability). Every finding of severity **`critical`** is resolved before the post pair is merged (via `patch` operations, via author edits, or via the finding's built-in `skip-and-record` dismissal with a documented reason). The author **SHOULD** address findings of severity **`warning`**, with the right to a documented dismissal in individual cases. Findings of severity **`suggestion`** are optional.
 - **Transitional route**: run the `prose-vale-curator` agent from `nolte-shared` over the **English** language file (covers EN Vale mechanics; no DE pipeline) **and** record a documented **reviewer judgement** by the human author against the self-check, explicitly noted as "transitional self copy-edit" in the handover manifest. This route is allowed only while [`spec/project/lektorat/`](../lektorat/en.md) hasn't yet been released for the consumer's adoption.
 
 A consumer **MUST NOT** carry a third route. The transitional route is explicitly time-bounded and is replaced by the target-state route once the consumer signals adoption (by removing the transitional clause from its `CLAUDE.md` or equivalent contract document).
@@ -237,14 +237,13 @@ Other consumers adopting this spec carry an analogous annex in their own reposit
 
 ## Open questions
 
-- **Per-consumer adoption of the target-state handover route.** §Handover routes allows either the target-state route (`lektorat-apply`) or the transitional route (`prose-vale-curator` + reviewer judgement). A consumer's adoption signal is "remove the transitional clause from `CLAUDE.md`"—the trigger that flips this spec's contract surface from "two routes" to "one route" is per consumer, not portfolio-wide. Triggered when the first consumer (likely `nolte/blog`) ships the adoption signal.
-- **Briefing and delivery contract as YAML schema.** §Briefing inputs and §Delivery contract are prose today, with mandatory-field and mandatory-artefact lists respectively. A machine-readable form for both sides—`project/briefings/<slug>.yml` with schema validation as **input**, `project/handovers/<slug>.yml` (or an embedded frontmatter sub-object) as **output**: would be more convenient for the `blog-author` skill than prose and would make the delivery contract automatically checkable rather than just attestable. Until then the prose form is sufficient on both sides. When the machine-readable form is introduced, the three artefacts named in §Delivery contract (self-check manifest, sources-to-claim mapping, handover manifest) are the natural top-level schemas. Triggered by the second contested handover attestation.
-- **Hero-image corpus policy.** The mandatoriness, corpus-wide style, generation pipeline, and layout rendering of the hero-image field are open across consumers. The spec still carries the alt-text rule and the lede-substitution MUST-NOT in §Hero and OG image; the broader policy belongs to a consumer-side roadmap item (the reference consumer tracks this in `project/roadmap.md`).
-- **Triggering integration.** This spec defines what the author produces; it deliberately doesn't define when the author is invoked. The companion spec [`spec/project/blog-author-trigger/`](../blog-author-trigger/en.md) defines the trigger conditions (`feature → done` and similar). Their interface is the §Briefing inputs of this spec—the trigger spec must produce a briefing that satisfies the mandatory-field set here.
+- **Per-consumer adoption of the target-state handover route — resolved (2026-06-06).** §Handover routes keeps the two-route surface by design (target-state `lektorat-apply`, or transitional `prose-vale-curator` + reviewer judgement). Condition (1) is now met: [`spec/project/lektorat/`](../lektorat/en.md) is `Status: accepted` and admits blog posts as an opt-in scope surface, so the target-state route is available to any consumer that opts in. Condition (2) stays per-consumer by design: a consumer flips to a one-route surface when its `CLAUDE.md` names `lektorat-apply` as the editor entry point and drops the transitional clause; until it does, the transitional route remains valid for that consumer. The reference consumer `nolte/blog` (`~/repos/github/blog/CLAUDE.md`) has not yet made that change and keeps the two-route surface. The two-route surface is therefore the standing design, not an open decision.
+_The handover-contract-as-YAML-schema and hero-image-corpus-policy deferrals were settled on 2026-06-06 (see [`.audits/decisions/2026-06-06-settle-open-questions.md`](../../../.audits/decisions/2026-06-06-settle-open-questions.md)): the prose handover contract stands, and the hero-image corpus policy stays a consumer-side product decision. The resolved item above and the Intentionally-not-open notes below are retained._
 
 ### Intentionally not open
 
 - **Update-vs-new-post threshold** isn't an open question but a deliberately reactive decision; the threshold is author judgement (see §Briefing inputs, update vs. new-post fields). A concrete contested case would trigger a later spec tightening.
+- **Triggering integration is resolved, not open.** The companion spec [`spec/project/blog-author-trigger/`](../blog-author-trigger/en.md) is published; its §Briefing derivation satisfies this spec's §Briefing inputs, and the reference wiring (`sprint-execute` Operation C step 6 → `blog-author-trigger`) is implemented. The standing interface between the two specs remains §Briefing inputs.
 
 ## References
 

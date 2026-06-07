@@ -34,6 +34,10 @@ _Operationalises spec/project/mkdocs-structure/ §Snippet inclusion (DRY). Detec
 - [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
 - [`docs-freshness-checker`](../../agents/nolte-shared/docs-freshness-checker.md)
 
+## Referenced by
+
+- [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+
 ---
 
 ## Docs DRY Refactor

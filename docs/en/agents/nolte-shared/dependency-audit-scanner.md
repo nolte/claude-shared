@@ -31,6 +31,10 @@ _Read-only scanner dispatched by the dependency-audit skill to detect project ty
 
 - [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
 
+## Referenced by
+
+- [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
+
 ---
 
 ## Dependency Audit Scanner

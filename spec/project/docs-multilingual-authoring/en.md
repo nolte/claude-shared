@@ -4,7 +4,7 @@ Status: draft
 
 ## Context
 
-Portfolio repositories ship MkDocs sites that are bilingual by default: `spec/project/mkdocs-structure/` §Per-language layout already mandates `docs/<lang>/` subdirectories with structurally identical file trees, and `spec/project/docs-freshness/` §Finding categories audits the resulting drift as a `Language-parity gap` finding. What neither spec defines is the **authoring protocol**: how and when a documentation-producing skill or agent puts a page into every configured language tree. The result is asymmetric authoring: a skill writes `docs/en/foo.md`, leaves `docs/de/foo.md` for later, and the gap only surfaces in the next quarterly `docs-freshness` audit. By that point the canonical page has drifted, the author has paged out the context, and the translation is reconstructed from a stale snapshot.
+Portfolio repositories ship MkDocs sites that are bilingual by default: `spec/project/mkdocs-structure/` §Per-language layout already mandates `docs/<lang>/` subdirectories with structurally identical file trees, and `spec/project/docs-freshness/` §Categories of drift audits the resulting drift as a `Language-parity gap` finding. What neither spec defines is the **authoring protocol**: how and when a documentation-producing skill or agent puts a page into every configured language tree. The result is asymmetric authoring: a skill writes `docs/en/foo.md`, leaves `docs/de/foo.md` for later, and the gap only surfaces in the next quarterly `docs-freshness` audit. By that point the canonical page has drifted, the author has paged out the context, and the translation is reconstructed from a stale snapshot.
 
 This spec closes that gap by lifting the canonical-and-translation contract that already governs `spec/<topic>/<slug>/` (one file per language, written atomically, English canonical, drift-managed) to every Markdown page under `docs_dir`. It's the **authoring counterpart** to the `mkdocs-structure` shape contract and the `docs-freshness` audit contract: shape says "the trees must be parallel," audit says "we detect when they aren't," and this spec says "every authoring step keeps them parallel from the start."
 
@@ -59,14 +59,18 @@ This spec closes that gap by lifting the canonical-and-translation contract that
 
 ### Coordination with neighbouring specs
 
-- **MUST** reference `spec/project/mkdocs-structure/` §Per-language layout for the file-tree parity contract and `spec/project/docs-freshness/` §Finding categories for the audit-time detection of violations; this spec **MUST NOT** restate either contract
+- **MUST** reference `spec/project/mkdocs-structure/` §Per-language layout for the file-tree parity contract and `spec/project/docs-freshness/` §Categories of drift for the audit-time detection of violations; this spec **MUST NOT** restate either contract
 - **MUST** reference `spec/project/readme-structure/` §File and language as the source of the README EN-only exemption; this spec **MUST NOT** restate the README rule
 - **MUST NOT** override or relax any MUST declared in `mkdocs-structure`, `docs-freshness`, `readme-structure`, `docs-audience-tracks`, or `audience-identification`; conflicts are resolved by amending the upstream spec, not by exception in this one
+- **MUST** treat generated catalog pages under `docs/<lang>/skills/` and `docs/<lang>/agents/` as documentation-producing output bound by the §Authoring protocol structural MUSTs (one page per language per artefact, parallel trees); `spec/claude/skill-agent-catalog/` owns their per-language rendering and uses its reserved `_translation-pending` auto-tag and "translation pending" badge as the catalog-specific form of the `needs-review` escape hatch. This spec **MUST NOT** restate the catalog's summary-resolution or fallback rules
 
 ### Translation quality and review
 
 - **SHOULD** ship the canonical edit and every translation in the same commit so a reviewer reads both sides together; staging them in separate commits is a smell that defeats the atomic-write MUST above
 - **SHOULD** mark a translation with an inline HTML comment `<!-- translation-status: needs-review -->` when the producing skill can't itself guarantee semantic fidelity (for example, a generator that emits canonical content from structured data and a best-effort target-language rendering); the marker is a `docs-freshness` finding (warning severity) until a reviewer removes it
+- This spec defines exactly one author-set translation-debt marker, `needs-review`. Generator best-effort output is signalled by `spec/claude/skill-agent-catalog/`'s `_translation-pending` auto-tag; canonical-versus-translation staleness is detected by `spec/project/docs-freshness/`. A richer closed set lands in `docs-freshness` §Severity classification only when an audit pattern shows the binary marker is insufficient (see Open Questions)
+- **MUST** place the `<!-- translation-status: needs-review -->` marker as an HTML comment on the first body line immediately after the frontmatter block, so it stays invisible in the rendered MkDocs page yet greppable from CI (the same content-scan detection `spec/project/docs-freshness/` §Categories of drift already uses for stale markers); the marker **MUST NOT** be expressed as a frontmatter key, which would break the §Structural parity of the translation frontmatter-key-set MUST (the canonical page carries no such key)
+- **MUST** treat an author who can't yet guarantee a still-drafting page's translation—including an ADR under `docs/<lang>/adr/` with `proposed` status—as bound by the §Authoring protocol atomic-write MUST like every other page: both language files ship in the same step, with `<!-- translation-status: needs-review -->` on the translation as the escape hatch; there is no status-conditional exemption
 - **MAY** delegate the per-token translation to `audience-doc-author` (or a comparable agent that already owns translation in the portfolio) as a sub-step of the producing capability, rather than re-implementing translation in every skill
 
 ### Single-language repositories
@@ -82,15 +86,10 @@ This spec closes that gap by lifting the canonical-and-translation contract that
 - [ ] A simulated single-language write (deliberately removing one of the language files after the authoring step) is flagged by `docs-freshness` as a `Language-parity gap` finding with severity `warning`
 - [ ] `README.md` at the repository root remains English-only across the whole skill and agent corpus; no skill or agent that implements this spec produces `README.de.md` or any other localised README variant
 - [ ] `spec/project/mkdocs-structure/` §Per-language layout cross-references this spec as the authoring counterpart (additive sentence, no contract change)
-- [ ] `spec/project/docs-freshness/` §Finding categories cross-references this spec as the authoring counterpart (additive sentence, no contract change)
+- [ ] `spec/project/docs-freshness/` §Categories of drift cross-references this spec as the authoring counterpart (additive sentence, no contract change)
 - [ ] `spec/project/readme-structure/` §Non-Goals cross-references this spec as the canonical declaration that the README exemption is portfolio-wide (additive sentence, no contract change)
 - [ ] A rename of a canonical page (`git mv docs/en/foo.md docs/en/bar.md`) performed through a documentation-producing skill renames the counterpart in every configured language tree in the same step
 
 ## Open Questions
 
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-
-- Where exactly should the `<!-- translation-status: needs-review -->` marker live—as a fenced HTML comment at the top of the translation file, as a frontmatter key, or as both? Default for now: HTML comment at the top of the translation body so it's invisible in the rendered page but searchable from CI
-- Should ADRs under `docs/<lang>/adr/` whose status is `proposed` be exempted from atomic-write (a proposal often lives in one language while the author drafts), or do they follow the same protocol as every other page? Default for now: no exemption—atomic write applies, and the `<!-- translation-status: needs-review -->` marker is the escape hatch
-- Should this spec also govern catalog pages generated by `spec/claude/skill-agent-catalog/`'s generator hook (per-skill / per-agent pages under `docs/<lang>/skills/` and `docs/<lang>/agents/`)? Default for now: yes, the generator is itself a documentation-producing capability and is bound by this spec; the catalog-generator implementation reads `spec/.spec-config.yml` and emits one page per language per artefact
-- Is `<!-- translation-status: needs-review -->` the only allowed translation-debt marker, or should the spec enumerate a small closed set (`needs-review`, `auto-translated`, `outdated`)? Default for now: single marker keeps the contract small; if a richer taxonomy is needed, it lands in `docs-freshness` as a finding-classification refinement, not here
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

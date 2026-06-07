@@ -44,6 +44,8 @@ Documentation, specifications, READMEs, release notes, and other human-readable 
 - **SHOULD** open a pull request against `nolte/vale-style` with a one-line justification per new entry, so additions are reviewable
 - **MAY** keep a term in a repository-local vocabulary only while the upstream PR is pending; once the upstream change is released, the local entry **MUST** be removed and the pinned `nolte/vale-style` release **MUST** be bumped
 
+The drift between repository-local vocabularies and the pinned `nolte/vale-style` release is audited by the `vocab-drift-audit` skill rather than by a periodic CI cron.
+
 ### Pull-request descriptions and release notes
 - **MUST** apply the same shared Vale rule set to pull-request descriptions and to GitHub Release notes (drafted by release-drafter, edited before publishing), because this prose flows directly into external changelogs and user-facing release pages
 - **MUST** check pull-request descriptions in CI (for example via a PR-check workflow) at the repository's configured `MinAlertLevel`, failing on `error`-level alerts the same way documentation does
@@ -67,6 +69,8 @@ The Vale rule sets enforce a mechanical baseline, but the rules below codify the
 - **MUST NOT** ship **exclamation marks** outside genuine emphasis (release-note "🎉 Released!" style is allowed in release notes; documentation prose isn't the place) (Google Voice "Avoid exclamation marks")
 - **MUST NOT** ship **emoji** in spec, ADR, or reference prose; emoji **MAY** appear in release notes, README badge rows, and informal blog posts when the project's voice supports it (portfolio convention; not contradicted by upstream style guides)
 - **MAY** use **microcopy patterns** ratified by Microsoft Top-10 (verb-first list items, "you can" pruned away, two-or-three-word headings without end punctuation)
+
+By default these §Voice and tone rules stay **editorial guidance**: they're enforced by the human or AI lektorat pass (`spec/project/lektorat/` §Detection dimensions, which surfaces them as D4 style findings) and by pull-request review, not by bespoke Vale rules. The portfolio doesn't author a general active-voice detector, a title-case detector, or a gendered-pronoun detector in `nolte/vale-style` until recorded drift justifies the rule cost; the [`spec/project/lektorat/`](../lektorat/en.md) §Non-Goals defers this same decision back to this spec as the owner. The one exception already automated is the bias-free substitution table, which `nolte/vale-style` carries upstream (see the inclusive-language bullet above and the §Acceptance Criteria entry for it). When automation does become justified, deposit targeted upstream rules in this order—gendered generic pronouns, exclamation marks, and title-case headings first, because they're the lowest-false-positive classes—and keep the general active-voice class manual, because it's the most false-positive-prone. The countable revisit trigger is recorded in §Open Questions.
 
 ### Multilingual text
 - **MUST** scope Vale to English-authored content only; files authored in any language other than English **MUST NOT** be included in Vale's lint scope
@@ -95,8 +99,8 @@ The Vale rule sets enforce a mechanical baseline, but the rules below codify the
 - [ ] The shared Vale vocabulary at `nolte/vale-style` carries Microsoft's bias-free substitutions (`primary` / `subordinate`, `stop responding`, `perimeter network`, …) so a per-repo override isn't needed to enforce them
 
 ## Open Questions
-- _None—all prior open points have been resolved. The drift audit between repository-local vocabularies and the pinned `nolte/vale-style` release is delegated to a dedicated Claude Skill rather than enforced through a periodic CI cron._
-- Should the §Voice and tone rules be automatically enforced via additional Vale rules deposited in `nolte/vale-style` (an active-voice detector, a title-case detector, a gendered-pronoun detector), or do they stay editorial guidance for now? Vale rule authoring is non-trivial and false-positive-prone; defer until enough drift is recorded to justify the rule cost.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
 
 ## Sources
 <!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->

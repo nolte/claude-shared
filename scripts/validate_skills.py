@@ -96,7 +96,7 @@ def parse_frontmatter(text: str) -> dict | None:
     out: dict = {}
 
     # description / name / distribution / model / when_to_use / phase are scalar
-    for key in ("name", "description", "distribution", "model", "when_to_use", "phase"):
+    for key in ("name", "description", "distribution", "model", "when_to_use", "phase", "resumable"):
         m = re.search(
             rf'^{key}:\s*(.+?)(?=\n[a-z_-]+:\s|\n---|\Z)',
             fm, re.M | re.S,
@@ -262,6 +262,51 @@ def _split_body(text: str) -> str:
     return parts[2] if len(parts) >= 3 else text
 
 
+def check_resumable_wiring(
+    resumable: str | None,
+    description: str | None,
+    name: str | None,
+    body: str,
+    target: str,
+    kind: str,
+) -> list[Finding]:
+    """Guard the resume contract from spec/claude/resumable-work/.
+
+    A `resumable: true` declaration that the body never backs with a concrete
+    `.resume/<name>/` checkpoint instruction is exactly the failure that left the
+    convention inert (41 skills declared it, zero ever wrote a file). This is the
+    static, regression-catching slice: it cannot prove a checkpoint *fires* at
+    runtime (the spec notes that has no post-hoc observable — that is the
+    behavioural eval's job), but it refuses a flag with no wiring behind it.
+    """
+    findings: list[Finding] = []
+    if (resumable or "").strip().lower() != "true":
+        return findings
+
+    expected_path = f".resume/{name}/" if name else ".resume/"
+    if expected_path not in body and ".resume/" not in body:
+        findings.append(Finding(
+            "Critical", target, f"{kind}-management.resumable-no-persistence",
+            f"frontmatter declares `resumable: true` but the body never references "
+            f"`{expected_path}` per spec/claude/resumable-work/ §Persistence location",
+        ))
+
+    if "resume" not in (description or "").lower():
+        findings.append(Finding(
+            "Critical", target, f"{kind}-management.resumable-description-silent",
+            "`resumable: true` requires a resume clause in `description` "
+            "(spec/claude/resumable-work/ §Scope of applicability)",
+        ))
+
+    if not re.search(r"start-new|discard|resume detection|on re-invocation", body, re.I):
+        findings.append(Finding(
+            "Warning", target, f"{kind}-management.resumable-no-detection",
+            "`resumable: true` body has no resume-detection step "
+            "(expected `resume / start-new / discard` prompt on re-invocation)",
+        ))
+    return findings
+
+
 def check_skill(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix()
     text = path.read_text(encoding="utf-8")
@@ -276,6 +321,8 @@ def check_skill(path: Path) -> list[Finding]:
     findings += check_tags(fm.get("tags"), rel, "skill")
     findings += check_phase(fm.get("phase"), rel, "skill")
     findings += check_when_to_use(fm.get("description"), fm.get("when_to_use"), rel, "skill")
+    findings += check_resumable_wiring(
+        fm.get("resumable"), fm.get("description"), fm.get("name"), body, rel, "skill")
     return findings
 
 
@@ -293,6 +340,8 @@ def check_agent(path: Path) -> list[Finding]:
     findings += check_tags(fm.get("tags"), rel, "agent")
     findings += check_distribution(fm.get("distribution"), rel)
     findings += check_phase(fm.get("phase"), rel, "agent")
+    findings += check_resumable_wiring(
+        fm.get("resumable"), fm.get("description"), fm.get("name"), body, rel, "agent")
     return findings
 
 

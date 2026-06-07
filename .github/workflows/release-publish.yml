@@ -4,6 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       tag:
+        # The reusable workflow this job consumes
+        # (nolte/gh-plumbing reusable-release-publish.yml) declares `tag` as
+        # required and owns the draft-resolve / multi-draft-guard logic. Per
+        # spec/project/release-automation/ §Operational contract the input is
+        # conceptually optional with a resolve path, but that resolution lives
+        # in the reusable, not here; keeping this passthrough required matches
+        # the reusable's contract (passing an empty tag would fail its
+        # Resolve-draft step).
         description: "Draft tag to publish. Must match an existing release-drafter draft."
         required: true
         type: string

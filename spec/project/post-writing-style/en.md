@@ -1,6 +1,6 @@
 # Post writing style
 
-Status: draft
+Status: accepted
 
 <!-- vale Microsoft.Quotes = NO -->
 <!-- vale Microsoft.Contractions = NO -->
@@ -63,6 +63,7 @@ Where this spec refers to a "post body", a "post pair", a "frontmatter field `ai
 - **MUST** keep the average sentence length in the post body between **14 and 20 words** (American Press Institute comprehension data: ≥ 90 % at 14 words, drops sharply above 25). Individual sentences **MAY** exceed 30 words when a single long sentence serves rhythm or precision, but never two in a row.
 - **MUST** keep body paragraphs to **at most 4 sentences** (gov.uk research: people read 20–28 % of text on a page; long paragraphs amplify drop-off). One-sentence paragraphs are explicitly allowed when they carry a beat.
 - **MUST** target Flesch–Kincaid Grade Level between **7 and 10** for the EN body excluding code blocks and frontmatter. Posts that drop below 7 read childish; posts above 10 lose readers who skim the post for a fast portfolio signal.
+- **MUST** target the **LIX** corridor for the blog-post content type defined in [`spec/project/readability-lix/`](../readability-lix/en.md) §Target corridors on **both** language bodies (EN aim ≤ 45, DE aim ≤ 50; the German aim is higher by the cross-language offset Δ = 5 because German compounding inflates the long-word ratio). LIX is the primary, cross-language readability target — it gives the DE body a readability number it previously lacked, and its blog-post `aim` is calibrated to coincide with the EN Flesch–Kincaid 7–10 target so the two metrics agree rather than compete. Flesch–Kincaid stays a supplementary EN signal.
 - **MUST** prefer active voice. The rule of thumb: if a passive sentence's grammatical subject is missing or "by the system / by the framework / by the user", rewrite to active. Passive is acceptable for sentences where the actor is genuinely unknown or where the object is the topic and the actor is incidental.
 - **SHOULD** target a measured active-voice ratio of ≥ 70 % over the post body. The ratio is a target, not a hard gate, because some technical descriptions read more naturally in passive (for example, "the request is signed with HMAC-SHA256").
 
@@ -103,7 +104,7 @@ Where this spec refers to a "post body", a "post pair", a "frontmatter field `ai
 ### AI-disclosure tone
 
 - **MUST** keep the consumer's AI-disclosure frontmatter flag (the reference name is `aiGenerated: true`) set on every AI-drafted post; removing this flag is forbidden per the consumer's `CLAUDE.md` and re-iterated here as a style invariant because the **textual tone** depends on the flag being honest. Removing the flag while leaving the tone unchanged would deceive the post's reader and any named third party.
-- **MUST NOT** wrap the post in an apologetic framing about being AI-drafted ("This was written with Claude, please be lenient…"). Direct end-reader audiences expect AI-drafted content to meet the same standard as hand-written content. The disclosure is structural—today via the AI-disclosure frontmatter flag; consumers that ship a visible per-post AI-disclosure badge (linking to an About-page explanation) make that badge part of the disclosure structure. The MUST is in force on the frontmatter flag today; the badge half becomes verifiable per the consumer's own roadmap signal.
+- **MUST NOT** wrap the post in an apologetic framing about being AI-drafted ("This was written with Claude, please be lenient…"). Direct end-reader audiences expect AI-drafted content to meet the same standard as hand-written content. The disclosure is structural—today via the AI-disclosure frontmatter flag, and additionally via a visible per-post badge for consumers that ship one. A consumer that ships a visible AI-disclosure badge **MUST** render it (text content: a short literal label such as "AI"; position: in or adjacent to the post-meta line at the top of the rendered post, alongside the published and updated dates; visibility: shown exactly when the AI-disclosure frontmatter flag is true). The badge **SHOULD** link to an About-page explanation of the AI-drafted-human-curated workflow; the reference consumer `nolte/blog` currently renders an unlinked label (see §Reference example annex), and a small follow-up in that consumer wraps the label span in an anchor to satisfy the SHOULD.
 - **MUST NOT** claim the post is hand-written when it's AI-drafted, including indirect claims via first-person memory framings ("when I sat down to write this…") that imply the keystrokes were the author's. Acceptable: first-person framings about decisions, opinions, and verifications the author actually made.
 - **MUST** ground every concrete technical claim (a project does X, a library behaves Y, a tool emits Z) in a verifiable source—source code, README, release notes, command output, or an explicit user briefing—per the consumer's hard rule against inventing technical facts. Where the claim is the author's own opinion or experience, that **SHOULD** be signalled with phrasing like "I found that…", "in my use of X, …", not stated as an external fact.
 - **SHOULD** position the AI-drafted-human-curated framing as a working method, not a novelty. The blog as a whole declares the workflow via its About page (or equivalent disclosure surface); individual posts don't need to re-explain it.
@@ -164,7 +165,7 @@ The list above is the spec's authoritative inventory. Changes to it aren't per-p
 
 - **MUST** carry a source citation in the spec diff for any **addition** to any sub-list (Hype words, AI-tell additions, Corporate-speak, LLM-emphasis tics). Acceptable sources are documented AI-tell catalogues, plain-language style guides, or a recorded incident in a consumer repository where the word produced a known failure mode; the citation belongs in the commit message that introduces the addition, not necessarily in the spec body.
 - **MUST** carry a one-line rationale in the spec diff for any **removal** from a sub-list (for example, "word entered everyday neutral usage; promoted off the list as of 2026-Qx").
-- **MUST** re-review the entire list at every Claude model-family transition (for example, Claude 4.x → 5.x); the re-review is recorded as a continuous-improvement entry or a dedicated commit, not silently elided.
+- **MUST** re-review the entire list at every Claude model-family transition (for example, Claude 4.x → 5.x). The model-family transition is the capture event for an ad-hoc finding under [`spec/project/continuous-improvement/`](../continuous-improvement/en.md): the re-review is opened as a tracked remediation entry there, landed as a commit tagged `forbidden-list re-review` (the form `a-20` greps for in `git log`), and its closure is recorded in the triggering PR's Risk / rollout notes per that spec. The re-review **MUST NOT** be silently elided.
 - **SHOULD** version the list implicitly via the spec's `Status:` line plus git history—no `version:` field is added; the audit trail lives in `git log -- spec/project/post-writing-style/`.
 
 ### Editing pass (pre-publish)
@@ -195,7 +196,8 @@ A post conforms to this spec when **all** of the per-post criteria below hold. T
 - [ ] **a-1** The body opens with an inverted-pyramid lead paragraph (≤ 80 words) that names the post's claim, scope, or question.
 - [ ] **a-2** Average sentence length in the body falls within 14–20 words; no two consecutive sentences exceed 30 words.
 - [ ] **a-3** No body paragraph exceeds 4 sentences (excluding bullet lists, which aren't paragraphs for this rule).
-- [ ] **a-4** Flesch–Kincaid Grade Level on the EN body (code blocks excluded) falls within 7–10. **Provisional**: until a `textstat`-or-equivalent lint hook ships (see §Open questions), the check is reviewer judgement, and the 7–10 threshold itself is subject to recalibration after the first 10 EN posts in a given consumer repository. The DE body is exempt from this criterion pending a DE-specific readability target (see §Open questions).
+- [ ] **a-4** Flesch–Kincaid Grade Level on the EN body (code blocks excluded) falls within 7–10. **Provisional**: until a `textstat`-or-equivalent lint hook ships (see §Open questions), the check is reviewer judgement, and the 7–10 threshold itself is subject to recalibration after the first 10 EN posts in a given consumer repository. Flesch–Kincaid is a supplementary EN signal; the cross-language readability target is LIX (a-4a).
+- [ ] **a-4a** LIX on **both** language bodies (code blocks excluded) sits within the blog-post corridor of [`spec/project/readability-lix/`](../readability-lix/en.md) §Target corridors (EN aim ≤ 45 / warn 50; DE aim ≤ 50 / warn 55). This replaces the former DE readability exemption — the DE body now carries the primary cross-language readability target. **Provisional**: the corridor and the offset Δ = 5 are subject to recalibration per `readability-lix` §Open Questions.
 - [ ] **a-5** Every fenced code block declares a supported language identifier.
 - [ ] **a-6** Every link's text describes its destination on its own (passes WCAG 2.4.4).
 - [ ] **a-7** Headings are sentence case throughout; the body declares no second H1; heading levels don't skip going deeper.
@@ -208,7 +210,7 @@ A post conforms to this spec when **all** of the per-post criteria below hold. T
 - [ ] **a-14** The consumer's build command (reference: `task build`) succeeds on the working tree containing both files.
 - [ ] **a-15** The EN body uses contractions (`it's`, `you'll`, `don't`, `I've`, `we're`) in running prose; expanded forms appear only inside direct quotations, code blocks, or where a contraction would create real ambiguity.
 - [ ] **a-16** When the post describes a non-obvious decision, the body names what made the decision hard **before** naming the choice that was taken (the "show the thinking" MUST in §Person, voice, and tone).
-- [ ] **a-17** A consumer that ships a visible AI-disclosure badge in addition to the frontmatter flag carries the badge on the rendered page; consumers that haven't yet shipped the badge are exempt from this criterion, with the `aiGenerated: true` frontmatter flag covered by `a-10` as the in-force part of §AI-disclosure tone.
+- [ ] **a-17** A consumer that ships a visible AI-disclosure badge renders it on the post page when `aiGenerated` is true, with the badge text and position per §AI-disclosure tone. Consumers that don't ship a badge satisfy §AI-disclosure tone through the `aiGenerated: true` frontmatter flag covered by `a-10`.
 
 ### Spec-level criteria
 
@@ -225,6 +227,7 @@ The reference consumer is the `nolte/blog` repository (a bilingual Astro static 
 - Post-pair location: `src/content/posts/en/<slug>.md` and `src/content/posts/de/<slug>.md`.
 - Cross-language binding key: frontmatter field `translationKey`.
 - AI-disclosure flag: frontmatter field `aiGenerated: true`.
+- AI-disclosure badge: amber "AI" span in the post-meta line, rendered by `src/layouts/PostLayout.astro` when `aiGenerated` is true; unlinked as of 2026-05.
 - Frontmatter schema source: Astro Zod schema at `src/content.config.ts`.
 - Audience artefact: `AUDIENCES.md` at the repository root, with identifiers `A` (technical readers), `B` (portfolio reviewers), `C` (author as future-self), `L` (named third parties), `M` (search engines).
 - Author-facing contract document: `CLAUDE.md` at the repository root.
@@ -234,11 +237,7 @@ Other consumers adopting this spec carry an analogous annex in their own reposit
 
 ## Open questions
 
-- **Quantitative readability gate.** §Readability thresholds pins Flesch–Kincaid 7–10 as a target. A lint hook that measures FK grade per post hasn't shipped. Until it does, the gate is reviewer-judgement; a future feature item should wire `textstat` (or equivalent) into the consumer's build pipeline. The threshold itself may need recalibration once real measurements come in across the first 10 posts in a given consumer.
-- **DE-side readability target.** Flesch–Kincaid is calibrated for English. The German equivalent is the Wiener Sachtextformel or the Amstad-adjusted Flesch. This spec doesn't pin a DE-side threshold pending data; the reviewer relies on §Person, voice, and tone + §Bilingual typography alone for DE posts. A follow-up revision **SHOULD** add a DE-specific readability target once at least 5 DE posts exist in a given consumer for calibration.
-- **Forbidden-word list maintenance.** The closed list under §Forbidden words is research-derived as of the spec's `Status: draft` date. New AI-tell tics will surface as Claude versions and prompting patterns shift. The list **MUST** be re-reviewed at every model-family transition (for example, Claude 4.x → 5.x); the mechanism for that re-review isn't defined here and should be picked up by [`spec/project/continuous-improvement/`](../continuous-improvement/en.md) or a dedicated triage entry.
-- **Override-procedure formalism.** §Override procedure currently allows in-prose justification of a forbidden word. A stricter mechanism—frontmatter field `style_overrides: [`seamless`]` with rationale—would make overrides reviewable in diff rather than buried in prose. Deferred until the third documented override case shows the prose mechanism doesn't scale.
-- **AI-disclosure-badge wiring.** §AI-disclosure tone today MUSTs the frontmatter flag and leaves the badge half consumer-conditional. A future revision should name a portable badge contract (text content, position, link target) so consumers wiring the badge follow the same convention. Triggered by the first consumer shipping the badge.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale. The former DE-side-readability-target question is additionally resolved on the implementation side by the cross-language LIX target (`a-4a`) per [`spec/project/readability-lix/`](../readability-lix/en.md)._
 
 ## References
 

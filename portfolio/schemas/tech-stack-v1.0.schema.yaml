@@ -1,0 +1,141 @@
+# Schema for the portfolio-wide global tech-stack manifest; consumed by
+# portfolio/tech-stack.yml. Each item under entries[] is a tech-stack entry
+# carrying the five mandatory fields (name, kind, group, role, status) plus
+# the optional descriptive fields defined in spec/portfolio/tech-stack/
+# §Entry schema. The closed kind (12) and group (5) enums and per-entry
+# additionalProperties: false reject the parse-error classes the spec's
+# §Portfolio audit integration grades Critical.
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/nolte/claude-shared/blob/main/portfolio/schemas/tech-stack-v1.0.schema.yaml
+title: Portfolio Tech Stack Manifest
+description: >-
+  Validates portfolio/tech-stack.yml, the single source of truth for the
+  portfolio-wide global tech stack. Refs spec/portfolio/tech-stack/ §Entry
+  schema, §Kind enum, and §Group enum; the methodology and audience model live
+  in spec/portfolio/tech-stack-discovery/.
+type: object
+required:
+  - entries
+additionalProperties: false
+properties:
+  entries:
+    type: array
+    description: >-
+      The list of tech-stack entries; each entry conforms to the §Entry schema
+      and is hand-authored by the claude-shared maintainer.
+    minItems: 1
+    items:
+      type: object
+      description: >-
+        One tech-stack entry carrying the five mandatory fields plus the
+        optional descriptive fields from §Entry schema.
+      additionalProperties: false
+      required:
+        - name
+        - kind
+        - group
+        - role
+        - status
+      properties:
+        name:
+          type: string
+          description: >-
+            Kebab-case identifier, unique across portfolio/tech-stack.yml.
+          pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+        kind:
+          type: string
+          description: >-
+            Closed twelve-value classification of the tool slot the entry
+            occupies, per §Kind enum.
+          enum:
+            - language
+            - runtime
+            - framework
+            - build
+            - package-manager
+            - ci
+            - dep-bot
+            - docs
+            - lint
+            - test
+            - deploy-target
+            - other
+        group:
+          type: string
+          description: >-
+            Closed five-value coarse purpose classification for reader
+            orientation, per §Group enum.
+          enum:
+            - documentation
+            - quality
+            - automation
+            - build-tooling
+            - plugin-platform
+        role:
+          type: string
+          description: >-
+            One prose sentence naming what the entry does for the repository
+            or portfolio.
+          minLength: 1
+        status:
+          type: string
+          description: >-
+            Lifecycle status of the entry per §Entry schema.
+          enum:
+            - active
+            - experimental
+            - deprecated
+        version:
+          type: string
+          description: >-
+            Free-form descriptive version string (SemVer, range, or label);
+            not enforced and not the place to manage upgrades.
+        since:
+          type: string
+          description: >-
+            ISO date when the entry first appeared in the global stack.
+          format: date
+        source_of_truth:
+          type: string
+          description: >-
+            Repository-relative path or portfolio-wide URL pointing at the
+            authoritative declaration for the entry.
+        deprecated_in_favor_of:
+          type: string
+          description: >-
+            When status is deprecated, a name reference to the replacement
+            entry in the same layer.
+        lifecycle:
+          type: string
+          description: >-
+            The lifecycle phase in which this entry is active, per §Entry
+            schema.
+          enum:
+            - development
+            - build
+            - runtime
+            - all
+        rationale:
+          type: string
+          description: >-
+            Prose sentence naming why this entry belongs in this layer;
+            optional at the entry level but required on overrides.
+  notes:
+    type: string
+    description: >-
+      Optional prose explaining curation conventions for the global stack, per
+      the MAY clause in §Global tech-stack manifest.
+examples:
+  - entries:
+      - name: mkdocs
+        kind: docs
+        group: documentation
+        role: Documentation generator producing the bilingual MkDocs site under docs/.
+        status: active
+        lifecycle: build
+        since: "2026-04-23"
+        source_of_truth: mkdocs.yml
+    notes: |
+      The portfolio standardises on MkDocs for documentation. Per-repository
+      extensions belong in each consumer's project/portfolio.yml under
+      tech_stack:.

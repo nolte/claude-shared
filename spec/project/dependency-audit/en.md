@@ -24,7 +24,7 @@ Every repository in the portfolio pulls in third-party packages through one or m
 - **MUST** treat as "dependencies" every package declared in a manifest the repository tracks: for Python the `pyproject.toml` / `requirements*.txt` / `poetry.lock` / `uv.lock` / `Pipfile.lock`, for Node the `package.json` + matching lockfile (`package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`), for Go `go.mod`, for Rust `Cargo.toml` + `Cargo.lock`
 - **MUST** include every subroot in a monorepo that carries its own manifest (for example `backend/`, `frontend/`, `packages/*`); audits run per subroot so findings can be attributed to the owning team / package
 - **MUST** cover transitive dependencies, not just direct ones—a finding in a transitive package is still a finding; the report distinguishes the two so triage can start at the right layer
-- **MAY** additionally run a license audit when the repository enables it, using an allowlist located at `.license-allowlist.txt`, under `tool.*` in the manifest, or equivalent; absence of an allowlist means license findings are reported as `review`, not as failure
+- **MAY** additionally run a license audit when the repository enables it, using an allowlist located at `.license-allowlist.txt`, under `tool.*` in the manifest, or equivalent; absence of an allowlist means license findings are reported as `review`, not as failure. License auditing counts as "enabled" whenever an allowlist is discoverable per §License audit: the quarterly and full audits then **MUST** run the license pass automatically, while ad-hoc invocations stay opt-in
 
 ### Triggers and cadence
 - **MUST** run a full audit at least once per calendar quarter in every repository with a dependency manifest; the calendar follows calendar quarters, not individual availability
@@ -58,15 +58,18 @@ Every repository in the portfolio pulls in third-party packages through one or m
 ### Ignore discipline
 - **MUST** store the ignore list in a location the auditor reads natively, for example `pyproject.toml` under `[tool.pip-audit]`, `.npm-audit-ignore.json`, or an equivalent, not as free-form prose that only the audit artifact sees
 - **MUST** declare for every ignore entry: advisory ID, affected package, `valid-until` date (ISO 8601), and a one-line rationale; entries without these fields **MUST** fail the audit
-- **SHOULD** keep the total number of active ignore entries small (guideline: fewer than ten per subroot); a growing ignore list signals that the dependency strategy itself needs revision
+- **SHOULD** keep the total number of active ignore entries small (guideline: fewer than ten per subroot); a growing ignore list signals that the dependency strategy itself needs revision—this is a guideline, not an enforced cap; a count above it triggers a dependency-strategy review rather than a gate failure
 - **MUST NOT** silence a finding globally (`--ignore-vuln <id>` without a date) just to make the gate green; that pattern defeats the spec's purpose
 
 ### Audit artifact
-- **MUST** persist the result of every full audit as a commit, issue, or file in the repository; the artifact location **SHOULD** be consistent per repository (for example `docs/audits/dependencies-YYYY-Q<n>.md`, or a GitHub issue with label `security-audit`)
+- **MUST** persist the result of every full audit as a commit, issue, or file in the repository; the artifact location stays a per-repository choice rather than a portfolio-wide hard-coded path (mirroring the per-repository freedom `spec/project/spec-drift-audit/` deliberately preserves)
+- **SHOULD** default to the canonical path `.audits/dependency-audit/dependencies-YYYY-Q<n>.md` (the portfolio-wide `.audits/<audit-type>/` standard, per `spec/project/spec-drift-audit/`); a GitHub issue labelled `security-audit` is an accepted alternative, and any cross-repo aggregation tooling built later keys off either form
 - **MUST** include in the artifact: date, trigger (quarterly, pre-release, manifest-change), scope (which subroots were audited, which were skipped and why), the tools used and their versions, the per-finding severity and response decision, and the Git revision audited
 - **SHOULD** link to the prior audit artifact so the progression is traceable across quarters
 
 ### License audit (when enabled)
+- **MUST** apply the classification and the allow/review/deny policy defined in `spec/project/license-check/`; this pass implements that spec's policy for the dependency slice rather than defining its own, and the portfolio-default policy there counts as the "explicit policy with named disallowed licenses" required below
+- **MUST** treat license auditing as "enabled" whenever an allowlist is discoverable (at `.license-allowlist.txt`, under `tool.*` in the manifest, or equivalent); in that case the quarterly and full audits run the license pass automatically and only ad-hoc invocations may opt out
 - **MUST** document the allowlist location in the repository's README or equivalent so the rule set is discoverable
 - **MUST** classify every package whose license isn't on the allowlist as `review`, not as failure, when no explicit policy exists; a hard failure requires an explicit policy with named disallowed licenses
 - **SHOULD** pair a license finding with the response options from §Response to findings, adapted: `replace` (swap to a compatibly-licensed alternative), `add to allowlist` (with rationale and approval), or `accept as known` where that's defensible
@@ -86,7 +89,5 @@ Every repository in the portfolio pulls in third-party packages through one or m
 - [ ] The audit artifact for any release tag references the dependency-audit state at the release revision, so post-release supply-chain triage can start from a known baseline
 
 ## Open Questions
-- Should the portfolio mandate a single artifact location (for example `docs/audits/dependencies.md` with quarterly sections) to make cross-repo aggregation easier, or does per-repository freedom stay?
-- Is there a portfolio-wide maximum for active ignore-list entries (hard cap vs guideline), or does the "small, shrinking, never silent" principle suffice?
-- Should the license-audit switch be on by default once an allowlist exists, or should it stay opt-in per invocation?
-- Does the quarterly cadence need to tighten (to monthly) for repositories in scope of specific compliance regimes, and if so, which regimes warrant the tightening?
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

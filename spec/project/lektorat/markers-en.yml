@@ -1,0 +1,53 @@
+# lektorat — D2 marker words (English)
+#
+# Source for the "implicit-assumption" detector in
+# spec/project/lektorat/en.md §D2. These tokens trigger a finding ONLY when
+# paired with an imperative step the reader must execute (per spec D2
+# escalation table). The list is editorial vocabulary, not Vale style.
+#
+# Schema:
+#   version: <int> — bump when entries are removed; additions don't bump
+#   markers: list of objects
+#     - token: <str>             # canonical surface form
+#       aliases: [<str>, ...]    # case-insensitive variants; optional
+#       severity_floor: <str>    # suggestion | warning  — the highest
+#                                # severity this marker can reach when
+#                                # paired with an imperative step
+#       rationale: <str>         # one short line for reviewers
+
+version: 1
+markers:
+  - token: simply
+    severity_floor: warning
+    rationale: Hides difficulty; classic ESL trip word.
+  - token: just
+    aliases: [just-a, just-the]
+    severity_floor: warning
+    rationale: Hides difficulty; assumes shared base knowledge.
+  - token: obviously
+    severity_floor: warning
+    rationale: Direct presumption of reader knowledge.
+  - token: clearly
+    severity_floor: suggestion
+    rationale: Soft presumption; suggestion-level by default.
+  - token: of course
+    severity_floor: suggestion
+    rationale: Soft presumption.
+  - token: as everyone knows
+    severity_floor: warning
+    rationale: Direct presumption.
+  - token: trivially
+    severity_floor: warning
+    rationale: Hides difficulty; common in academic prose.
+  - token: easily
+    severity_floor: suggestion
+    rationale: Soft hidden-difficulty marker.
+  - token: naturally
+    severity_floor: suggestion
+    rationale: Soft presumption.
+  - token: needless to say
+    severity_floor: warning
+    rationale: Direct presumption; usually flagged in style guides.
+  - token: it goes without saying
+    severity_floor: warning
+    rationale: Direct presumption.

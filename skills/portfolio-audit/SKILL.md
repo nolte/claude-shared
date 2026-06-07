@@ -1,6 +1,6 @@
 ---
 name: portfolio-audit
-description: "Audits, renders, and bootstraps the cross-repository capability portfolio across `nolte/*` per `spec/portfolio/portfolio-management/`. Audit dispatches portfolio-manifest-collector agent for read-only inventory collection, then detects capability duplicates, surfaces gaps (broken peer references, spec-demanded gaps, copy-paste smells), and writes a Findings-Report under `.audits/portfolio/` with Critical / Warning / Suggestion / Info severities. Render regenerates the aggregated inventory under the per-language docs/ portfolio subtree. Bootstrap creates a repository's first `project/portfolio.yml`. Invoke when the user asks to \"audit the portfolio\", \"check for portfolio duplicates\", \"render the portfolio inventory\", or equivalent German-language requests. Don't use to consolidate duplicates (operator opens cross-repo PRs), to author new capabilities, or for per-repo tech_stack capture or refresh (use tech-stack-capture). Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Audits, renders, and bootstraps the cross-repository capability portfolio across `nolte/*` per `spec/portfolio/portfolio-management/`. Audit dispatches portfolio-manifest-collector agent for read-only inventory collection, then detects capability duplicates, surfaces gaps, verifies tech-stack consistency per `spec/portfolio/tech-stack/`, and writes a Findings-Report under `.audits/portfolio/` using Critical / Warning / Suggestion / Info severities. Render regenerates the aggregated inventory under the per-language docs/ portfolio subtree. Bootstrap creates a repository's first `project/portfolio.yml`. Invoke when the user asks to \"audit the portfolio\", \"check for portfolio duplicates\", \"render the portfolio inventory\", or equivalent German-language requests. Don't use to consolidate duplicates (operator opens cross-repo PRs), to author new capabilities, or for per-repo tech_stack capture or refresh (use tech-stack-capture). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [audit]
 phase: quality
 summary: "Audits, renders, and bootstraps the cross-repository capability portfolio across nolte/*."
@@ -12,9 +12,12 @@ use_when:
 dont_use_when:
   - situation: "You want per-repo tech-stack capture or refresh"
     alternative: tech-stack-capture
+  - situation: "You want in-flight state triage (stalled PRs, issues, review threads) rather than capability allocation"
+    alternative: portfolio-inflight-triage
 see_also:
   - tech-stack-capture
   - portfolio-manifest-collector
+  - portfolio-inflight-triage
 resumable: true
 ---
 
@@ -50,94 +53,28 @@ If the active repository is neither, stop and ask the user whether to switch to 
 
 ## Operations
 
+Four dispatchable operations. The full step-by-step runbook for each — including the exact `gh api` calls, the four audit checks with their severity grammar, the tech-stack-consistency classification table, the snapshot schema, and the spec anchors — lives in `references/operations.md`. **Read `references/operations.md` when you execute any operation below**; the summaries here are routing only.
+
+- **Audit** is read-only and never mutates a Portfolio-Member, consolidates duplicates, or opens cross-repo PRs.
+- **Render** authors only `portfolio/aggregate.yml`; the generator owns the rendered pages.
+- **Bootstrap** writes `project/portfolio.yml` only in the active checkout and never edits mission/roadmap/audience artefacts.
+- **Discover tech stack** is read-only and never amends the baseline spec.
+
 ### 1. Audit (primary path)
 
-Runs the cross-repository capability audit per `spec/portfolio/portfolio-management/` §Portfolio audit.
-
-1. **Detect Portfolio-Member set** — query the GitHub API for the active set of public, non-archived repositories under `nolte` via `gh api orgs/nolte/repos --paginate --jq '.[] | select(.archived==false and .private==false) | .name'`. Cross-check each repository for an opt-out marker (`portfolio: excluded` at the top of `CLAUDE.md`); excluded repositories drop out of the audit set with their rationale recorded.
-2. **Collect per-repository manifests via agent** — Dispatch `portfolio-manifest-collector` (Agent) to gather manifests from all portfolio members. Wait for its inventory report before proceeding to duplicate-detection and gap-classification. The agent fetches `project/portfolio.yml` for each member via `gh api`, reduces raw YAML to structured per-repository summaries (declared capabilities, audiences, peer references, missing-manifest indicator), and returns the full manifest-inventory report. Repositories without `project/portfolio.yml` produce a `missing-manifest` entry rather than an error.
-3. **Run the four checks against the collected summary**:
-   - **Manifest presence**: every Portfolio-Member repository ships a `project/portfolio.yml` or has the opt-out marker. Missing manifests on opted-in repositories are `Warning` findings.
-   - **Manifest validity**: each manifest parses as YAML and contains the required fields (`name`, `description`, `audience`, `status`, `rationale`) per `spec/portfolio/portfolio-management/` §Capability inventory per repository. Schema violations are `Critical` findings.
-   - **Cross-repository duplicate detection**: every pair of capabilities across all manifests gets a semantic-overlap comparison on `description` (not keyword-overlap). Fresh duplicates are `Warning`; duplicates persisting beyond the one-closed-sprint tolerance window are `Critical`. Resolution path is documented in the spec; this skill emits the finding, the operator makes the consolidation PR.
-   - **Gap analysis** (three sub-classes per spec):
-     - Broken peer reference: a `peers:` entry pointing to a non-existent `<repo>:<capability-name>` is a `Warning`.
-     - Spec-demanded gap: a sibling spec under `spec/` declares a capability as a precondition that no manifest provides. `Warning`.
-     - Cross-repository copy-paste smell: same workflow file / config block / non-trivial code pattern duplicated across three or more repositories without a corresponding shared capability is a `Suggestion` (under threshold) or `Warning` (at and above the 3-recurrence threshold from `skill-vs-agent` §Portfolio-wide consistency).
-4. **Write the Findings-Report** at `.audits/portfolio/<YYYY-MM-DD>.md` in the `claude-shared` repository, conforming to `spec/claude/review-plan/`:
-   - Required sections: `## Scope`, `## Summary`, `## Findings`, `## Processing log`
-   - Severity vocabulary: `Critical` / `Warning` / `Suggestion` / `Info` exactly (Title Case, never ALL-CAPS) per `review-plan` §Severity scale
-   - Each finding cites the originating spec rule in the bracketed prefix (e.g. `[portfolio-management §Cross-repository duplicate detection]`) so a downstream reader can trace it
-5. **Confirm in the user's language** with: the path of the new Findings-Report, the per-severity counts, and the next step (typically: open the Findings-Report and start triaging the `Critical`-grade items first via `continuous-improvement`'s specialist-dispatch loop).
-
-Audit operation **never** consolidates duplicates, never deletes capabilities, never opens PRs against Portfolio-Member repositories. It identifies and reports; the operator (or a future remediation skill) acts.
+Runs the cross-repository capability audit per `spec/portfolio/portfolio-management/` §Portfolio audit: detect the Portfolio-Member set via the GitHub API, dispatch `portfolio-manifest-collector` (Agent) for manifest collection, run the four checks (manifest presence, manifest validity, cross-repository duplicate detection, gap analysis) plus tech-stack consistency per `spec/portfolio/tech-stack/` §Portfolio audit integration, then write the Findings-Report at `.audits/portfolio/<YYYY-MM-DD>.md` (sections `## Scope` / `## Summary` / `## Findings` / `## Tech stack` / `## Processing log`, canonical severities, spec-cited findings) per `spec/claude/review-plan/`. See `references/operations.md` §Audit for the full runbook.
 
 ### 2. Render (regenerate the inventory docs)
 
-Regenerates the aggregated portfolio inventory pages under `claude-shared/docs/<lang>/portfolio/` from the same manifests collected in Audit.
-
-1. **Manifest collection** — when the same conversation has already collected manifests (operation 1 step 2) within this turn, reuse the cached structured summary; otherwise dispatch `portfolio-manifest-collector` (Agent) afresh to collect the manifests via the same `gh api` flow as operation 1 step 2.
-2. **Generate per-repository sections** for each Portfolio-Member: mission statement (quoted from `project/mission.md`), capability list with status badges (`active` / `experimental` / `deprecated`), audiences served (cross-referenced to the repository's audience artefact per `audience-identification`), outbound-peer-reference list.
-3. **Generate the Mermaid diagram** (per `spec/project/mermaid-diagrams/`) visualizing the capability-to-repository mapping and cross-repository peer references. Pick the diagram type from the supported catalog; default to `flowchart` direction `LR` for the cross-repo map.
-4. **Generate the `historical capabilities` appendix** if any archived repositories had registered capabilities; capabilities listed here keep peer references resolvable but are marked with the archival date.
-5. **Write the rendered files** under `docs/<canonical_language>/portfolio/` and the corresponding translation under `docs/<other_language>/portfolio/` for every configured documentation language. Files **MUST** be marked auto-generated (header comment per `mkdocs-gen-files` convention so `task docs` doesn't treat them as drift).
-6. **Verify** by running `task docs` (mkdocs `--strict`); if the build fails, surface the error and stop — don't commit broken renders.
-7. **Confirm in the user's language** with: which files were written, which Portfolio-Member sections were included, and a one-line note when the rendered output didn't change (the regeneration is idempotent when manifests didn't change).
-
-Render operation **never** modifies the source-of-truth manifests, never edits the spec, never publishes the docs (publication is the existing `task docs` / MkDocs pipeline's job).
+Regenerates the aggregated portfolio inventory under `claude-shared/docs/<lang>/portfolio/` via the two-stage deterministic mechanism: assemble the committed snapshot `portfolio/aggregate.yml`, then run `task docs:portfolio` (`scripts/docs/gen_portfolio.py`) which renders the per-language pages as a pure function of that snapshot. Verify with `task docs` (mkdocs `--strict`) and a portfolio-subtree `git diff --exit-code`. See `references/operations.md` §Render for the full runbook.
 
 ### 3. Bootstrap (initial portfolio.yml for one repository)
 
-Helps a single Portfolio-Member repository author its first `project/portfolio.yml` interactively.
-
-1. **Check the active repository** is a plausible Portfolio-Member candidate: it lives under `nolte/`, isn't archived, doesn't already carry the opt-out marker, and doesn't already have a `project/portfolio.yml`.
-2. **Read the existing context**: `project/mission.md` (the mission statement constrains capability scope per `spec/project/mission/`), the audience artefact per `audience-identification`, and `project/roadmap.md` (active capabilities should align with active roadmap items).
-3. **Walk the user through capability identification** — for each candidate capability:
-   - Propose `name` (kebab-case, derived from the user's description) and confirm
-   - Confirm `description` (one or two sentences naming what + for whom)
-   - Map `audience` to entries in the existing audience artefact; new audiences need to be added to `project/audiences.md` first via `audience-identification`, this skill doesn't invent audiences inline
-   - Default `status` to `active`; the user can override to `experimental` for early-stage capabilities
-   - Collect `rationale` (one or two sentences naming why this repository owns the capability — never accept an empty or template rationale)
-   - Optional: collect `peers` (list of `<repo>:<capability-name>` cross-references) and `since` (ISO date)
-4. **Write `project/portfolio.yml`** at the repository root with the collected entries. Verify the file parses as YAML before declaring success.
-5. **Confirm in the user's language** with: the file path, the capability list as a concise summary, and a follow-up reminder that the next `portfolio-audit` run from the `claude-shared` side will pick up the new manifest.
-
-Bootstrap operation **never** modifies `project/mission.md`, `project/roadmap.md`, or the audience artefact — those are owned by their own dedicated skills and authoring flows. If the user discovers during Bootstrap that their mission or audience list needs updating first, this skill stops and routes them to the appropriate skill.
+Helps a single Portfolio-Member repository author its first `project/portfolio.yml` interactively: confirm the candidate, read the mission / audience / roadmap context, walk capability identification (name, description, audience, status, rationale, optional peers/since), then write and YAML-validate the file. See `references/operations.md` §Bootstrap for the full runbook.
 
 ### 4. Discover tech stack
 
-Runs the tech-stack-discovery methodology from `spec/portfolio/tech-stack-discovery/` against a single repository or across every Portfolio-Member repository.
-
-1. **Determine the scope** the user asked for: single-repo (the active checkout, or a user-supplied path) versus portfolio-wide (every Portfolio-Member repository known via the GitHub API).
-2. **For each in-scope repository, read the canonical detection sources** declared in `spec/portfolio/tech-stack-discovery/` (typically `pyproject.toml`, `package.json`, `Taskfile.yml`, `.github/workflows/`, `Dockerfile`, language-specific lockfiles). Don't invent detection sources the spec doesn't sanction.
-3. **Extract the tech-stack signal per layer** the spec defines (language runtime, package manager, build tool, lint stack, test stack, CI runner, deployment target, plugin engines, external services). Report the detected value plus the source path and line.
-4. **Cross-validate against the portfolio baseline** declared in `spec/portfolio/tech-stack/`. Findings shape:
-   - **In-baseline** — the detected value matches what the portfolio baseline ratifies.
-   - **Drift** — the detected value diverges from the baseline (`pyproject.toml` pins a Python version different from the baseline, or a Taskfile uses a different lint target).
-   - **Net-new** — the detected value isn't in the baseline at all (the repository introduces a tool the portfolio hasn't ratified yet).
-5. **Persist the result** under `.audits/tech-stack/<YYYY-Q<n>>.md` (or the per-repo equivalent) — same severity grammar as Audit, same `Caller follow-ups` shape.
-
-Discover-tech-stack is read-only — it doesn't modify the portfolio baseline in `spec/portfolio/tech-stack/`. When the user discovers a net-new tool worth ratifying, this skill stops and routes them to the `spec` skill to propose a baseline extension, rather than silently amending the spec from here.
-
-## Reference: spec anchors
-
-This skill implements rules declared in `spec/portfolio/portfolio-management/`. Read those rules when in doubt:
-
-- §Portfolio scope — defines what counts as a Portfolio-Member repository, including the opt-out marker
-- §Capability inventory per repository — defines the `project/portfolio.yml` schema
-- §Cross-repository duplicate detection — defines the duplicate semantic-overlap rule and the tolerance window
-- §Gap analysis — defines the three gap classes (broken peer reference, spec-demanded gap, copy-paste smell)
-- §Portfolio audit — defines this skill's required output shape and integration with `continuous-improvement`
-- §Documentation rendering — defines what the rendered inventory under `docs/<lang>/portfolio/` must contain
-- §Decision documentation — defines the `rationale` field requirement and the re-allocation atomic-operation rule
-
-The Discover-tech-stack operation implements `spec/portfolio/tech-stack-discovery/`:
-
-- §Detection sources — defines which on-disk files are canonical signals for which stack layer
-- §Cross-validation against baseline — defines the in-baseline / drift / net-new finding classes against `spec/portfolio/tech-stack/`
-- §Audit persistence — defines the per-repo audit artefact shape under `.audits/tech-stack/`
-
-When the spec disagrees with this skill's instructions, the spec wins. Propose a skill update rather than silently diverging.
+Runs the tech-stack-discovery methodology from `spec/portfolio/tech-stack-discovery/` against one repository or the whole portfolio: read the canonical detection sources, extract the per-layer signal, cross-validate against the baseline in `spec/portfolio/tech-stack/` (in-baseline / drift / net-new), then persist under `.audits/tech-stack/<YYYY-Q<n>>.md` in the `review-plan` section vocabulary and severity grammar. See `references/operations.md` §Discover tech stack for the full runbook.
 
 ## Examples
 
@@ -162,6 +99,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - Never use a severity outside the canonical four (`Critical` / `Warning` / `Suggestion` / `Info`). ALL-CAPS variants (`BLOCKER`, `WARNING`, `SUGGESTION`, `INFO`) are forbidden per `spec/claude/review-plan/` §Severity scale and are themselves a `review-plan` violation if they appear in the Findings-Report.
 - Never fetch `project/portfolio.yml` from repositories outside the resolved Portfolio-Member set. Scope drift here is a confidentiality risk — private repositories or non-`nolte/*` forks must never enter the manifest collection.
 - Never write the Findings-Report or the rendered inventory outside the `claude-shared` repository. Both artefacts live in `claude-shared`; misrouted writes are a structural error, not a typo.
+- Never hand-write or hand-edit the rendered `docs/<lang>/portfolio/*.md` pages from the Render operation. Render authors only the `portfolio/aggregate.yml` snapshot; the deterministic generator `scripts/docs/gen_portfolio.py` (via `task docs:portfolio`) owns the pages. Editing the rendered pages directly breaks the CI freshness gate, which diffs them against a fresh generator run.
 - Never bypass `continuous-improvement` for routing portfolio findings. The audit emits the report; the triage and specialist-dispatch live in `continuous-improvement`'s loop.
 - Never invent a `mission` quote or an `audience` entry for the rendered inventory; quote verbatim from the source files, and if a Portfolio-Member repository lacks a mission or audience artefact, render a placeholder noting the gap and emit a `Warning` finding in the next Audit run.
 - When `spec/portfolio/portfolio-management/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.

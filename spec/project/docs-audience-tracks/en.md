@@ -35,6 +35,7 @@ This spec closes that gap. It declares two canonical documentation tracks (`user
   - `user-docs`: the functional view: what the product *is* for end users / consumers and how they use it. Written in the product's domain language, free of repository-local toolchain assumptions (no "clone this repo," no "run `task lint`"). A reader on a published MkDocs site is the canonical audience.
   - `developer-docs`: the technical view: how contributors, maintainers, operators, and release managers build, extend, configure, and operate the project itself. Written in the project's engineering language; references the local toolchain, internal modules, extension hooks, ADRs, and release / operations procedures.
 - **MUST NOT** introduce additional `track` values without a project-type-specific spec opt-in; the closed enumeration `{user-docs, developer-docs}` is portfolio-default. A project-type-specific spec **MAY** widen the enumeration (for example a future `release-docs` track), but the widening **MUST** name the new value, its semantic distinction from the two canonical tracks, and its placement in the nav.
+- The closed enumeration is authoritative in this spec; `spec/project/mkdocs-structure/` references it rather than restating it, so a future enumeration widening only touches one spec file.
 
 ### User-docs content contract
 
@@ -88,6 +89,7 @@ A repository whose audience artefact maps at least one audience to `developer-do
 
 - **SHOULD** name both tracks on the Home page (`docs/<lang>/index.md`) when the repository serves both—a single paragraph that points end users at the user-docs entry point and contributors at the developer-docs entry point—so a reader on a fresh page load can self-route in one step
 - **MAY** omit the track-routing paragraph on the Home page when the repository serves only one track (the omission of the other track is already recorded in the audience artefact and is therefore visible at audit time)
+- A reader on the published MkDocs site discovers a page's track through nav grouping, the Home-page track-routing paragraph above, and the optional `tags` mirror (§Per-page contract MAY); a visible per-page track badge stays **MAY**, not a SHOULD or MUST. The portfolio default is nav-only signalling—mandating a visible badge is a deliberate product / UX call deferred to a future spec revision, not the baseline.
 
 ### Content-mode mapping
 
@@ -101,6 +103,7 @@ The `track` axis (this spec) and the `content_mode` axis (`spec/project/mkdocs-s
 
 - **MAY** introduce a project-type-specific track via a follow-up spec under `spec/`, conforming to `spec/project/mkdocs-structure/` §Extension hooks. The extension spec **MUST** name the new track value, its semantic distinction from `user-docs` and `developer-docs`, the audiences it covers, and the per-page frontmatter contract (if any) it adds beyond the baseline.
 - **MUST NOT** silently widen the enumeration in any other way—neither by free-form values in `track`, nor by allowing multiple tracks on a single page, nor by renaming a canonical track
+- Per-type interface granularity (per-flag, per-key, or per-field detail) is deliberately out of scope for this portfolio-wide spec; the portfolio floor is the interface-block **MUST** with generated reference surfaces carrying the bulk (§Developer-docs content contract). A follow-up project-type-specific spec (`library-api-docs`, `cli-reference-docs`) codifies per-type granularity.
 
 ## Acceptance Criteria
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
@@ -118,14 +121,8 @@ The `track` axis (this spec) and the `content_mode` axis (`spec/project/mkdocs-s
 - [ ] At least one portfolio repository (worked example: `nolte-shared` itself, or another repo of choice) has migrated its `docs/<lang>/` tree to the `track` frontmatter contract and recorded the audience-to-track mapping in its audience artefact, and `mkdocs build --strict` still passes.
 
 ## Open Questions
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should the `track` enumeration be ratified inside `spec/project/mkdocs-structure/` once this spec stabilises (collapsing the closed set into the per-page MUST list), or should it stay authoritative here in `docs-audience-tracks` so a future enumeration widening only touches one spec file? Default for now: authoritative here, referenced from `mkdocs-structure`.
-- Does `release-manager` belong in `developer-docs` permanently, or does a future `release-docs` track make sense once `spec/project/release-skill-layer/` produces enough material to fill a separate nav surface? Defer until a portfolio repository genuinely accumulates that volume.
-- How does a third party who reads only the published MkDocs site discover the track of a given page when they don't see the frontmatter? Is a small per-page header badge ("for end users" / "for developers") worth mandating, or is the nav grouping enough? Defer until a real reader-facing complaint exists.
-- How deep must the user-docs installation / onboarding block go—is a single command snippet enough, or **MUST** every project ship a runnable end-to-end quickstart (verifying installation + first success) before the block counts as complete? Defer until a portfolio repository ships a quickstart we can codify as the reference shape.
-- How granular does the developer-docs interface / contract block need to be—does every CLI flag, every plugin frontmatter key, and every config schema field require an individual entry, or is a section-level summary with a pointer to source / generated reference sufficient? Likely project-type-specific; a follow-up extension spec (`library-api-docs`, future `cli-reference-docs`) may codify per-type granularity.
-- Is the architecture-overview block sufficient as a single page, or should the portfolio adopt a full arc42-style section set (Context, Building Blocks, Runtime View, Deployment, Crosscutting Concepts, ADRs, Quality, Risks, Glossary) for repositories above a size threshold? Deferred until a portfolio repository hits that threshold; the one-page overview is the floor, full arc42 is an opt-in extension via `spec/project/mkdocs-structure/` §Extension hooks.
-- Should the quickstart block harden from `SHOULD` to `MUST` for repositories whose audience artefact lists a `user` audience with "first observable success" as the deciding evaluation criterion? Defer until the audience-identification artefact carries a structured "decision criterion" field that the audit can read.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
 
 ## Sources
 <!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->

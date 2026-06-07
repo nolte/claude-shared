@@ -36,7 +36,7 @@ Die Spec begrenzt sich bewusst auf **JSON Schema 2020-12 in YAML**. JSON-codiert
 - Schemata als JSON-codierte Dateien (`*.json` oder `*.schema.json`) autorisieren. Die Portfolio-Autorisierungsregel ist YAML-only — `*.schema.yaml` ist die einzige Autorisierungsform, die diese Spec anerkennt. JSON-codierte Schemata bleiben verboten, bis eine eigene Spec sie regiert; nachgelagerte Konsumenten, die ein JSON-Artefakt brauchen, erzeugen es zur Build-Zeit aus der YAML-Quelle via `yq -o json` (oder einer äquivalenten Transformation).
 - `spec/project/feature/` (welche den *Inhalt* von Feature-Frontmatter regiert) durch eine Schema-Spec ersetzen. Diese Spec handelt von Form und Lebenszyklus der Schema-Dateien; die Frontmatter-Spec bleibt verbindlich dafür, *was* Feature-Frontmatter enthält.
 - Häufig geteilte Schemata in einem portfolio-weiten Registry-Verzeichnis zentralisieren. Die Portfolio-Policy ist Repo-lokale Ablage; repository-übergreifendes Teilen wird durch `$id`-Disziplin und absolute `$ref`-URIs in den GitHub-Pfad des besitzenden Repos gelöst, nicht durch ein gemeinsames Verzeichnis unter `spec/portfolio/<topic>/schemas/`.
-- Code-Generierung aus Schemata vorschreiben (Pydantic-Modelle, TypeScript-Typen, Go-Structs). Generierung ist erlaubt, bleibt aber außerhalb der MUSS/SOLL/DARF-Fläche dieser Spec — das ist eine künftige Spec.
+- Code-Generierung aus Schemata vorschreiben (Pydantic-Modelle, TypeScript-Typen, Go-Structs). Generierung ist erlaubt, bleibt aber außerhalb der MUSS/SOLL/DARF-Fläche dieser Spec — das ist eine künftige Spec. Diese Zurückstellung ist entschieden: Wird Generierung befördert, wird sie ein **SOLL pro Sprache**, das einen Generator pro Ökosystem benennt (zum Beispiel `datamodel-code-generator`/Pydantic für Python, `json-schema-to-typescript` für TypeScript) — analog dazu, wie diese Spec die Validator-Wahl pro Repo offen lässt —, statt einen einzigen portfolio-weiten Generator vorzuschreiben. Der Auslöser, diese künftige Spec zu schreiben, ist der erste Konsument, der eine `*.schema.yaml` ausliefert und generierte Typen verlangt.
 
 ## Anforderungen
 
@@ -70,7 +70,7 @@ Jede Schema-Datei **MUSS** als YAML lesbar, als JSON Schema 2020-12 parsbar und 
 4. `description` — ein bis drei Sätze, die erklären, was das Schema regiert und wo es konsumiert wird. Die Description **MUSS** die regierende Spec benennen (`Refs spec/<topic>/<slug>/`), sodass das Schema zu seiner Governing-Spec rückverfolgbar ist.
 5. `type` — das JSON-Schema-Type-Keyword. Für Schemata, die Objekte beschreiben, ist der Wert `object`; für Schemata, die Arrays beschreiben, `array`. Schemata, die eine Typ-Union beschreiben, verwenden auf der obersten Ebene stattdessen `oneOf` oder `anyOf` und lassen das `type` auf oberster Ebene weg.
 6. `required` — die Liste der erforderlichen Property-Namen, alphabetisch. Entfällt für Schemata, deren oberster Typ nicht `object` ist.
-7. `additionalProperties` — explizites `false` oder ein Inline-Schema. Der Portfolio-Default ist `false` für geschlossene Objekt-Formen; `true` ist nur erlaubt, wenn die `description` des Schemas erklärt, warum das Objekt absichtlich erweiterbar ist.
+7. `additionalProperties` — explizites `false` oder ein Inline-Schema. Der Portfolio-Default ist `false` für geschlossene Objekt-Formen; `true` ist nur erlaubt, wenn die `description` des Schemas erklärt, warum das Objekt absichtlich erweiterbar ist. Wenn das Schema Sub-Schemata via `allOf` komponiert, **MUSS** die Geschlossenheits-Garantie stattdessen mit `unevaluatedProperties: false` ausgedrückt werden, weil `additionalProperties: false` unter 2020-12 die von `allOf`-Mitgliedern beigesteuerten Properties nicht sieht.
 8. `properties` — die Sub-Schemata pro Property, in der Reihenfolge, in der die konsumierende Spec sie aufzählt. Property-Namen verwenden **snake_case**, sofern nicht die beschriebenen Daten selbst durch externen Standard camelCase sind (zum Beispiel GitHub-Actions-Inputs).
 9. `$defs` — die Map wiederverwendbarer Sub-Schemata. Nur vorhanden, wenn mindestens ein Eintrag per `$ref` aus anderer Stelle im Dokument referenziert wird; nie leer vorhanden.
 10. `examples` — eine Liste mit mindestens einem voll-gültigen Beispiel-Objekt. Das Beispiel **MUSS** gegen das Schema validieren; das Meta-Validierungs-Gate beweist es.
@@ -136,11 +136,11 @@ Innerhalb von `properties` und innerhalb von `$defs` **MUSS** jedes einzelne Pro
 - [ ] Jede `*.schema.yaml`-Datei trägt die zehn Top-Level-Schlüssel aus §Dokument-Skelett in der deklarierten Reihenfolge; der Lint-Schritt weist eine Datei mit einem fehl-geordneten Schlüssel, einem fehlenden Pflicht-Schlüssel oder einem zusätzlichen Top-Level-Schlüssel (zum Beispiel jegliche `x-…`-Erweiterung) mit nicht-null Exit-Code zurück.
 - [ ] Jedes Property-Sub-Schema innerhalb der obersten `properties` trägt entweder ein `type`-Keyword oder eine `oneOf` / `anyOf` / `enum`-Komposition, die die Form einschränkt; Sub-Schemata ohne beides werden vom Lint-Schritt gemeldet (das JSON-Schema-Meta-Schema erzwingt das nicht von sich aus).
 - [ ] Keine `*.schema.yaml`-Datei wird nach ihrem ersten Commit in-place editiert; jede Revision erscheint im Diff als neue Datei `<slug>-v<major>.<minor+1>.schema.yaml` (Minor-Bump) oder `<slug>-v<major+1>.0.schema.yaml` (Major-Bump) neben der vorherigen Datei, und die vorherige Datei wird erst in einem Folge-Commit entfernt, sobald kein Konsument ihre `$id` mehr pinnt.
+- [ ] Jedes geschlossene Objekt-Schema, das `allOf` verwendet, deklariert `unevaluatedProperties: false`; der Lint-Schritt weist ein komponiertes Schema zurück, das sich allein auf `additionalProperties: false` verlässt.
 
 ## Offene Fragen
 
-- Soll die Spec `unevaluatedProperties: false` zusätzlich zu `additionalProperties: false` für geschlossene Objekt-Schemata mit `allOf`-Komposition vorschreiben, oder reicht die einfachere Regel, bis Komposition häufig wird?
-- Soll Code-Generierung aus Schemata (Pydantic, TypeScript, Go) in einer Folge-Revision zu einem SOLL werden, und welcher Generator wird der Portfolio-Default?
+_Derzeit keine._
 
 ## Referenzen
 

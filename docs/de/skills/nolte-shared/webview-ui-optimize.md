@@ -34,6 +34,10 @@ _Audits a browser-rendered frontend against the canonical-language file under sp
 - [`dependency-audit`](dependency-audit.md)
 - [`prose-vale-curator`](../../agents/nolte-shared/prose-vale-curator.md)
 
+## Referenziert von
+
+- [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md)
+
 ---
 
 ## Web-View UI Optimize
@@ -50,7 +54,7 @@ This skill also triggers on equivalent German-language requests, including:
 - "WebView optimieren"
 - "a11y-Audit"
 
-### Rationale (why a skill, not just an agent)
+### Why this is a skill, not an agent
 
 Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a skill because:
 

@@ -56,7 +56,7 @@ If the file is missing, defaults apply. It's created on the first `create` opera
 1. Take the user's description (any language).
 2. **Duplicate check first**: clear overlap → stop and ask: extend, supersede, or create new.
 3. Draft the canonical spec from `templates/spec.template.md`, filling each section with user input. Mark unknowns explicitly instead of inventing.
-4. Translate into every other configured language. Structure stays identical. RFC 2119 keywords stay English and are glossed in-language, for example `MUSS [MUST]`, `SOLLTE [SHOULD]`, `KANN [MAY]`.
+4. Translate into every other configured language. Structure stays identical. RFC (Request for Comments) 2119 keywords stay English and are glossed in-language, for example `MUSS [MUST]`, `SOLLTE [SHOULD]`, `KANN [MAY]`.
 5. Write all language files in **one** operation—never half-written.
 6. Regenerate the index.
 

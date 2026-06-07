@@ -31,6 +31,12 @@ _Review a Claude Code agent against spec/claude/agent-management/ and spec/claud
 
 - [`skill-review`](skill-review.md)
 
+## Referenced by
+
+- [`claude-plugin-developer`](../../agents/nolte-shared/claude-plugin-developer.md)
+- [`skill-review`](skill-review.md)
+- [`skills-agents-sweep`](skills-agents-sweep.md)
+
 ---
 
 ## Agent Review Skill
@@ -92,10 +98,14 @@ Interactive. Confirm each decision with the user before acting on it.
    2. `tools` scoping: declared-vs-used bidirectional check (declared-unused → `Warning`, used-undeclared → `Critical`), read-only-agent invariant (if the `description` verbs are review / audit / research / lint / report, `tools` must NOT contain `Edit`, `Write`, `Bash`, or `NotebookEdit` → otherwise `Critical`).
    3. System-prompt body: single responsibility, output shape stated, no hard-coded absolute paths, English-only frontmatter and body.
    4. No-Skill-dispatch check: `Grep` the body for `Skill(`, `Skill tool`, or equivalent phrasings → any match is a `Critical` per `skill-vs-agent`.
-   5. Rationale section: at least one decisive dimension named → absence is `Critical`; at least one counter-dimension named → absence is `Suggestion`.
-   6. Referenced assets exist.
-   7. Duplicate-prevention: `Grep` the `description:` line of every other `agents/*.md` and `skills/*/SKILL.md` for semantic overlap with the target — keyword hits are candidates, not verdicts; read each candidate and judge.
-   8. Info observations for body-length or asset-factoring opportunities.
+   5. Subagent-boundary check: `Grep` the body for `Agent(`, `subagent_type`, `Task(`, or equivalent dispatch phrasings → any match is a `Critical` (Claude Code subagents can't spawn subagents) per `agent-review` §Subagent-boundary checks.
+   6. Model-choice check (`agent-review` §Model-choice checks): when `model` is declared, its value is exactly `opus`, `sonnet`, or `haiku` → otherwise `Critical`; a pinned `model` without a stated rationale is a `Warning`; an implausible pin (read-only/reporting agent on `opus`, or complex audit/planning agent on `haiku`) without rationale is a `Suggestion`.
+   7. Spec-anchor check (`agent-review` §spec-driven-development): the body cites at least one `spec/...` path → absence is a `Critical` per `spec/project/spec-driven-development/`.
+   8. Plugin-distribution constraint check (`agent-review` §Plugin-distribution constraint checks): when `distribution: plugin`, the frontmatter does NOT set `hooks`, `mcpServers`, or `permissionMode` → any of those is a `Critical`; for `distribution: project` those fields are valid. Flag a `Warning` when the body describes behavior requiring those fields but the distribution is `plugin`, or when a `distribution: project` agent references a plugin-co-located asset (`${CLAUDE_PLUGIN_ROOT}`).
+   9. Rationale section: at least one decisive dimension named → absence is `Critical`; at least one counter-dimension named → absence is `Suggestion`.
+   10. Referenced assets exist.
+   11. Duplicate-prevention: `Grep` the `description:` line of every other `agents/*.md` and `skills/*/SKILL.md` for semantic overlap with the target — keyword hits are candidates, not verdicts; read each candidate and judge.
+   12. Info observations for body-length or asset-factoring opportunities.
 6. **Map severities.** MUST failure → `Critical`, SHOULD failure → `Warning`, applicable MAY → `Suggestion`, observation without a rule → `Info`. The severity vocabulary itself is fixed by `spec/claude/review-plan/` §Severity scale — Title Case, no abbreviations, no portfolio-local extensions. Never promote Vale / markdown-style observations above `Info`.
 7. **Draft the plan** from `templates/plan.template.md`, filling every field. `repo-revision` is `git rev-parse HEAD` (or `unknown`). `created` is today's ISO date.
 8. **Write the plan** to `.audits/agent-review/<name>.md`. Confirm the path back to the user. Do not mark any item `- [x]` on creation.

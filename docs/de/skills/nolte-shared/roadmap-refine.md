@@ -34,6 +34,12 @@ _Enforces the detail-level invariant on `project/roadmap.md` per `spec/project/r
 - [`roadmap-init`](roadmap-init.md)
 - [`sprint-plan`](sprint-plan.md)
 
+## Referenziert von
+
+- [`roadmap-coherence-reviewer`](../../agents/nolte-shared/roadmap-coherence-reviewer.md)
+- [`roadmap-init`](roadmap-init.md)
+- [`roadmap-plan`](roadmap-plan.md)
+
 ---
 
 ## Roadmap Refine

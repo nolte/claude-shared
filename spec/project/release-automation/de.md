@@ -22,9 +22,9 @@ Diese Spec schließt die Lücke zwischen `release-drafter` (baut und pflegt den 
 
 - Publizieren von Artefakten an externe Registries (npm, PyPI, Container-Registries, HACS-ZIP-Uploads) — das bleibt bei repository-spezifischen `release: [published]`-Packaging-Workflows, wie `project-structure` sie beschreibt.
 - Binary-Builds, Signing, SBOM-Generierung.
-- Erzeugung von Release-Notes-Inhalten — bleibt Aufgabe von `release-drafter`, gespeist durch Conventional-Commits-PR-Titel.
+- Erzeugung von Release-Notes-Inhalten — bleibt Aufgabe von `release-drafter`, gespeist durch Conventional-Commits-PR-Titel. Für die Zielgruppenanalyse, die festlegt, welche Inhalte diese Notes abdecken müssen, siehe [`spec/project/release-notes-audience-analysis/`](../release-notes-audience-analysis/de.md).
 - Versionierungspolitik (SemVer-Ableitung von major/minor/patch) — geerbt aus der `release-drafter`-Konfiguration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
-- Hotfix-Flow (Release von `main` zurück nach `develop`) — offen als Open Question auf `branching-model` und außerhalb des Scopes hier.
+- Hotfix-Flow — gehört zu `branching-model` §Hotfix flow, das ihn als Standard-`fix/`-Pull-Request gegen `develop` mit nachfolgendem gewöhnlichem Patch-Release festlegt; außerhalb des Scopes hier.
 - Vollständige Abschaffung des manuellen `gh release edit --draft=false`-Pfads; der manuelle Pfad bleibt als dokumentierter Fallback für Incident-Response, wenn der Workflow selbst kaputt ist.
 - Vorschrift darüber, welche Ökosysteme in die Portfolio-Konventions-Tabelle in §Versionstragende Dateien aufgenommen werden; die Tabelle wächst organisch, sobald Repos neuer Typen ins Portfolio kommen, jede Ergänzung ist eine kleine Spec-Änderung, keine neue Spec.
 
@@ -123,6 +123,7 @@ Anwendbar, wenn nur `GITHUB_TOKEN` zur Verfügung steht und `develop` vollständ
 - **DARF NICHT [MUST NOT]** neu spezifizieren, was bereits in `branching-model` abgedeckt ist (Tag-Herkunft, `main`-Refresh, Workflow-Pinning) — stattdessen referenzieren
 - **SOLLTE [SHOULD]** die Open Question in `project-structure` (zur Zeit Zeile 124) durch eine Querverlinkung aus `project-structure` §Release and documentation workflows in diese Spec auflösen
 - **MUSS [MUST]** von `release-artifact` als Autorität für den Übergang Draft → Veröffentlicht querreferenziert werden. `release-artifact` §Dispatch-Grenze zur Release-Maschinerie leitet sprint-seitige Artefakt-Validierungs-Ergebnisse in den Workflow weiter, den diese Spec regiert; die Grenze ist einseitig (diese Spec ist die untere Schicht, `release-artifact` ist die obere), und die konsumierende Spec **DARF NICHT [MUST NOT]** eine hier deklarierte Regel neu definieren
+- Das lokale Skill-Gegenstück zu diesem Workflow liegt in [`spec/project/release-skill-layer/`](../release-skill-layer/de.md): Skill A (`release-notes-curate`) übernimmt die Body-Kuratierung via `gh release edit` außerhalb dieses Workflows, und Skill B (`release-publish-trigger`) ist der lokale ergonomische Einstiegspunkt, der jeden Gate aus §Pre-Publish-Verifikation validiert und dann diesen Workflow via `gh workflow run` dispatcht. Diese Spec **DARF NICHT [MUST NOT]** `gh release edit --draft=false` aufrufen; der einzige Veröffentlichungsweg ist der Dispatch dieses Workflows.
 
 ### Beobachtbarkeit und Audit
 

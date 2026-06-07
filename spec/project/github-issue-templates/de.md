@@ -22,7 +22,7 @@ Die `project-structure`-Spec lässt diese Lücke explizit offen: Community-Healt
 - Konkrete Templates für jeden denkbaren Projekttyp autoren. Diese Spec definiert die *Methode*; die Templates selbst werden je Repo scaffoldet.
 - Discussion-Templates (`.github/DISCUSSION_TEMPLATE/`). Out of Scope; kann eine Folge-Spec werden.
 - Lokalisierung der Issue-Templates. Die GitHub-Issue-UI ist in der Praxis englisch; Templates bleiben unabhängig von der Dokumentationssprache des Repos auf Englisch.
-- CODEOWNERS, SECURITY.md, SUPPORT.md. Werden separat unter den Open Questions von `project-structure` geführt.
+- CODEOWNERS, SECURITY.md, SUPPORT.md. Werden separat unter den Open Questions von `project-structure` geführt. Die Zuständigkeit für Community-Health-Dateien teilt sich dreifach auf: Issue-Templates gehören hierher, Pull-Request-Templates zu `pull-request-workflow` und CODEOWNERS / SECURITY.md / SUPPORT.md zu `project-structure`.
 
 ## Requirements
 
@@ -70,7 +70,8 @@ Ein Template-erzeugender Skill **MUSS [MUST]** dieses Ableitungsverfahren in der
    - Mehrere-aus-vielen → `checkboxes`.
    - Bestätigungsgates (Code of Conduct, Suchprüfung) → `checkboxes` mit `required: true`.
 5. **Labels und Assignees setzen.** `labels:` aus der Label-Taxonomie des Projekts vorbelegen (häufig `.github/labels.yml` oder Probot `settings.yml`). `assignees:` nur dann vorbelegen, wenn das Repo einen stabilen Triage-Owner hat.
-6. **Den Chooser verdrahten.** `.github/ISSUE_TEMPLATE/config.yml` mit `contact_links` für externe Ziele (Discussions, Support-Forum, Security-Policy) ergänzen, damit der Chooser sie neben den Templates anzeigt.
+6. **Den Chooser verdrahten.** `.github/ISSUE_TEMPLATE/config.yml` mit `contact_links` für externe Ziele (Discussions, Support-Forum, Security-Policy) ergänzen, damit der Chooser sie neben den Templates anzeigt. Ein Security-`contact_link` ist **ERFORDERLICH [REQUIRED]**: Solange `project-structure` keinen `SECURITY.md`-Ort spezifiziert, auf GitHub Private Vulnerability Reporting zeigen; sobald dieser Ort spezifiziert ist, stattdessen auf die `SECURITY.md` des Repos zeigen.
+7. **Die angewendete Ableitung festhalten.** Die angewendete Ableitung **MUSS [MUST]** als YAML-Kommentarblock am Anfang der `config.yml` festgehalten werden (Projekttyp, Pfad + Datum des Audience-Artefakts, Liste der generierten Templates, Audience-Set-Bezeichner), damit ein erneuter Lauf sie inline wieder lesen kann.
 
 ### Feld-Hygiene
 
@@ -79,6 +80,7 @@ Bug-Reports und Feature-Requests teilen sich denselben Speichermechanismus (`.gi
 #### Gemeinsam für jedes Template
 
 - **MUSS [MUST]** auf jedem Template eine Suchen-vor-Anlegen-Bestätigung enthalten (ein einzelner Pflicht-`checkboxes`-Eintrag, der auf den Issue-Tracker verweist).
+- **DARF NICHT [MUST NOT]** ein öffentliches Security-Vulnerability-Issue-Form ausliefern; Security-Meldungen über `config.yml` `contact_links` privat leiten (GitHub Private Vulnerability Reporting oder `SECURITY.md`).
 - **SOLLTE [SHOULD]** jedes Template unter zehn Komponenten halten; längere Formulare senken die Abschlussrate.
 - **KANN [MAY]** den Issue-Titel über den Top-Level-Schlüssel `title:` des Forms vorbelegen, wenn der Projekttyp eine strikte Titel-Konvention hat (zum Beispiel `[bug] <area>: <summary>` oder `[feat] <summary>`).
 
@@ -126,7 +128,4 @@ Ein nachgelagerter Skill, der diese Spec anwendet, **MUSS [MUST]**:
 
 ## Open Questions
 
-- Soll der Ableitungs-Record (Projekttyp, Audiences, gewählte Templates) als YAML-Kommentarblock inline in `config.yml` leben oder in einer separaten Datei (zum Beispiel `.github/ISSUE_TEMPLATE/.derivation.yml`)? Inline ist einfacher; eine separate Datei ist für den Skill leichter parsebar.
-- Wie spielt diese Spec mit der offenen `project-structure`-Frage zu Community-Health-Dateien zusammen? Sobald CODEOWNERS / SECURITY.md ebenfalls spezifiziert sind, soll der Issue-Template-Chooser via `config.yml.contact_links` automatisch auf SECURITY.md verlinken?
-- Soll ein "security vulnerability"-Template überhaupt zulässig sein oder immer über `contact_links` an einen privaten Kanal geleitet werden? Aktueller Default: privat leiten, kein öffentliches Template.
-- Discussion-Templates: in eine Folge-Spec auslagern oder hier mit aufnehmen?
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

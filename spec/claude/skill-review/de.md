@@ -43,14 +43,15 @@ Die `skill-management`-Spec definiert, wie ein Skill *erstellt* wird — On-Disk
   - Ein fehlgeschlagenes SHOULD → `Warning`
   - Ein fehlgeschlagenes MAY, von dem der Skill klar profitieren würde → `Suggestion`
   - Eine Beobachtung, die keine Regel abdeckt, die ein künftiger Reviewer aber kennen möchte → `Info`
-- **MUSS [MUST]** folgende hochwirksamen Bereiche auch dann explizit abdecken, wenn die entsprechende Regel in `skill-management` nur als SHOULD formuliert ist: Vorhandensein der Frontmatter-Felder (`name`, `description`), description-enthält-konkrete-Trigger, Fehlen hartcodierter absoluter Pfade in referenzierten Assets, Existenz jedes vom Skill referenzierten Templates
+- **MUSS [MUST]** folgende hochwirksamen Bereiche auch dann explizit abdecken, wenn die entsprechende Regel in `skill-management` nur als SHOULD formuliert ist: Vorhandensein der Frontmatter-Felder (`name`, `description`), description-enthält-konkrete-Trigger, Fehlen hartcodierter absoluter Pfade in referenzierten Assets, Existenz jedes vom Skill referenzierten Templates — ein referenziertes Template/Asset, das nicht existiert, ist ein `Critical` (gebrochene Referenz); die Absicht, es vor dem Merge zu ergänzen, wird dadurch verfolgt, dass der Plan-Punkt offen bleibt, nicht durch einen niedrigeren Schweregrad
 - **SOLLTE [SHOULD]** jeden Teil des Skill-Bodys, der in eine Geschwister-Datei ausgelagert werden könnte, um den Haupt-Prompt unter dem in `skill-management` genannten Soft-Längen-Ziel zu halten, als `Info` flaggen
 
 ### Checks aus `skill-vs-agent`
 
 - **MUSS [MUST]** bestätigen, dass der Skill-Body einen **Rationale-Abschnitt** enthält, der mindestens eine entscheidende Dimension für die Skill-statt-Agent-Wahl benennt; dessen Fehlen ist ein `Critical`
+- **SOLLTE [SHOULD]** verifizieren, dass mindestens eine Gegen-Dimension benannt ist, wenn die Entscheidung knapp war; das Fehlen ist ein `Suggestion`, konsistent mit dem SHOULD in `skill-vs-agent` und symmetrisch zur entsprechenden Regel in `agent-review`
 - **MUSS [MUST]** verifizieren, dass der Skill das Skill-Tool nicht im Namen eines Agents dispatched (in dieser Richtung nicht anwendbar, aber die Gegenrichtung — ein Skill, der einen Agent via Agent-Tool ruft — ist erwartet und ist kein Finding)
-- **MUSS [MUST]** einen Duplikat-Capability-Check fahren: jede andere `skills/*/SKILL.md` und `agents/*.md` `description`-Zeile auf semantische Überlappung grepen; jede plausible Überlappung erzeugt ein `Warning`, das das Peer-Artefakt und die Überlappung benennt, damit der Autor vor dem Landen einen Merge, Rename oder klareren Split vorschlagen kann
+- **MUSS [MUST]** einen Duplikat-Capability-Check fahren: jede andere `skills/*/SKILL.md` und `agents/*.md` `description`-Zeile **nur im aktuellen Repository** auf semantische Überlappung grepen; jede plausible Überlappung erzeugt ein `Warning`, das das Peer-Artefakt und die Überlappung benennt, damit der Autor vor dem Landen einen Merge, Rename oder klareren Split vorschlagen kann. Plugin-übergreifende Überlappung liegt hier außerhalb des Scopes — die Duplikat-Präventions-Regel aus `skill-vs-agent` ist auf dieses Plugin beschränkt, und die portfolioweite Reconciliation über installierte Plugins gehört zu `spec-drift-audit` / `portfolio-audit`. Der Duplikat-Capability-Schweregrad ist `Warning`, unabhängig davon, ob das Ziel ein neuer oder überarbeiteter Skill ist; der Kontext neu-vs-überarbeitet wird im `## Scope` des Plans festgehalten, nicht im Schweregrad kodiert
 
 ### Checks aus dem Mehrsprachigkeits-Template-Default
 
@@ -60,7 +61,7 @@ Die `skill-management`-Spec definiert, wie ein Skill *erstellt* wird — On-Disk
 
 - **MUSS [MUST]** einen externen Skill-Struktur-Validator laufen lassen, der `SKILL.md`-Frontmatter, Body-Form und Erreichbarkeit referenzierter Assets prüft, bevor der Plan emittiert wird; Anthropics `skills-ref`-CLI ist das kanonische Beispiel, die Anforderung ist aber nicht an ein bestimmtes Binary gebunden
 - **MUSS [MUST]** jeden vom Validator gemeldeten Fehler auf ein `Critical`-Finding und jede Warnung auf ein `Warning`-Finding mappen und die Regel-Kennung des Validators im eckigen Klammerpräfix gemäß `review-plan` zitieren
-- **MUSS [MUST]** im `## Scope`-Abschnitt des Plans festhalten, welcher Validator und welche Version verwendet wurden, damit ein späteres Re-Review Validator-Drift genauso erkennen kann wie Spec-Drift
+- **MUSS [MUST]** im `## Scope`-Abschnitt des Plans festhalten, welcher Validator und welche Version verwendet wurden, damit ein späteres Re-Review Validator-Drift genauso erkennen kann wie Spec-Drift; Validator und Version werden vom Repository-Tooling bereitgestellt (für dieses Repo das Taskfile-Target `validate:skills` als `skills-ref`-Stop-Gap) und pro Review im `## Scope` festgehalten, und diese Spec pinnt bewusst kein bestimmtes Binary und keine bestimmte Version
 - **MUSS NICHT [MUST NOT]** diesen Check mit der Begründung überspringen, dass andere Checks in dieser Spec bereits überlappende Bereiche abdecken; der externe Validator läuft zusätzlich zu den spec-abgeleiteten Checks, weil er strukturelle Probleme fängt, die einem spec-lesenden Reviewer entgehen können
 - **KANN [MAY]** ein einzelnes Validator-Finding nur dann unterdrücken, wenn ein expliziter Override im `## Scope` des Plans mit einer einzeiligen Begründung festgehalten wird, die in einer anderen Spec oder einer dokumentierten Projektentscheidung verankert ist
 
@@ -78,7 +79,7 @@ Spiegelt die Autoren-Anforderungen aus `skill-management` §„Autoren-Qualität
 Spiegelt `skill-management` §„Frontmatter-Validierung"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
 
 - **MUSS [MUST]** verifizieren, dass `name` 1–64 Zeichen hat, nur ASCII-Kleinbuchstaben/-Ziffern/-Bindestriche, nicht mit `-` beginnt oder endet und kein `--` enthält; jede Verletzung ist ein `Critical`
-- **MUSS [MUST]** verifizieren, dass weder `name` noch ein anderer Frontmatter-Wert die reservierten Tokens `anthropic` oder `claude` enthält; eine Verletzung ist ein `Critical` (der Upstream-Plattform-Validator weist den Skill ab)
+- **MUSS [MUST]** verifizieren, dass `name` nicht die reservierten Tokens `anthropic` oder `claude` enthält (die Reserved-Word-Regel gilt nur für `name`, gemäß `skill-management` §Frontmatter validation, da beschreibende Felder wie `description` legitim `claude` erwähnen dürfen); eine Verletzung ist ein `Critical` (der Upstream-Plattform-Validator weist den Skill ab), außer der Artefakt-Body trägt einen `## Reserved-token rationale`-Abschnitt, der die enge Claude/Anthropic-Surface-Ausnahme beansprucht
 - **MUSS [MUST]** verifizieren, dass weder `name` noch `description` XML-Tags enthält; eine Verletzung ist ein `Critical`
 - **MUSS [MUST]** verifizieren, dass `description` nicht-leer und ≤1024 Zeichen ist; Über-Cap oder leer ist ein `Critical`
 - **MUSS [MUST]** verifizieren, dass `description` in der **dritten Person** verfasst ist: das Vorkommen der Pronomen „I", „you" oder „we" (oder anderer Nicht-Dritte-Person-Marker) im Description-Text ist ein `Critical`. Zitat: `skill-management` §Frontmatter-Validierung, abgeleitet aus den Upstream-Plattform-Best-Practices ([R5](#referenzen))
@@ -123,10 +124,12 @@ Spiegelt `skill-management` §„Evaluations-Disziplin"; die ursprüngliche Rege
 ### Review-Prozedur
 
 - **MUSS [MUST]** damit beginnen, die kanonischen Specs `skill-management`, `skill-vs-agent` und `review-plan` zu lesen, bevor ein Finding erzeugt wird; Findings ohne Anker in einer dieser Specs sind keine gültige Ausgabe dieser Prozedur
-- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: externe-Validator-Findings → Frontmatter → Description/Trigger → System-Prompt-Body → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → Best-Practices-Checks → INFO-Beobachtungen
+- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: externe-Validator-Findings → Frontmatter → Description/Trigger → System-Prompt-Body → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → Best-Practices-Checks → Spec-Anchor-Check → INFO-Beobachtungen
 - **MUSS [MUST]** genau eine `review-plan`-Datei unter `.audits/skill-review/<skill-name>.md` emittieren; der Reviewer **MUSS [MUST]** jede Lifecycle-Regel aus `review-plan` befolgen, einschließlich der Single-Plan-pro-Ziel-Invariante und des Löschungs-Commit-Message-Formats
 - **SOLLTE [SHOULD]** im `## Scope`-Abschnitt des Plans die Git-SHAs der angewandten Spec-Versionen einbetten, damit ein späteres Re-Review erkennen kann, ob Findings durch eine Spec-Revision veraltet sein könnten
 - **KANN [MAY]** rein stilistische Beobachtungen (Vale, Markdown-Linting) als `Info`-Findings aufnehmen, wenn sie dem Autor helfen, **MUSS NICHT [MUST NOT]** sie aber zu `Warning` oder `Critical` erheben — die bleiben bei ihrem eigenen Tooling
+
+Diese Prozedur wird als Skill (`skills/skill-review/`) ausgeliefert, gemäß der Orchestrator-ist-ein-Skill-Regel aus `skill-vs-agent`; der Plan persistiert unabhängig vom Einstiegspunkt unter `.audits/skill-review/` gemäß `review-plan`.
 
 ### Bezug zu anderen Specs
 
@@ -159,11 +162,5 @@ Quellen für die zusätzlichen Checks oben. Bei Findings, die eine konkrete Upst
 - [R6] Agent Skills, formale Spezifikation — <https://agentskills.io/specification>
 
 ## Offene Fragen
-<!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Soll der Duplikat-Präventions-Check nur Agent-Descriptions aus `agents/*.md` im selben Repository lesen, oder auch den MkDocs-gerenderten Katalog über installierte Plugins abfragen, wenn ein Consumer eine Downstream-Kopie reviewt?
-- Unterscheidet das Review "neuer Skill wird vorgeschlagen" von "bestehender Skill wird überarbeitet"? Dieselben Anforderungen gelten für beide, aber die Schwere eines Duplikat-Capability-Findings unterscheidet sich (Blocker vs. Warning) je nachdem, ob das Peer schon existiert oder erst mit eingeführt wird
-- Soll der Rationale-Abschnitts-Check auch prüfen, dass mindestens eine *Gegen-Dimension* benannt ist, gemäß der SHOULD-Regel in `skill-vs-agent`, oder reicht die aktuelle Hürde "mindestens eine entscheidende Dimension" für das Skill-Review?
-- Wenn der zu reviewende Skill von einem Template oder Asset abhängt, das noch nicht existiert: Ist das Finding ein `Critical` (gebrochene Referenz) oder ein `Warning` (Template vor Merge zu ergänzen)?
-- Wie wird diese Spec aufgerufen — als `review`-Skill aus der Hauptkonversation, als Sub-Agent vergleichbar mit `audience-review` oder beides? Der Output ist in beiden Fällen derselbe Plan, aber der Einstiegspunkt beeinflusst, ob das Review automatisch persistiert
-- Soll das Review eines Skills auch verifizieren, dass die `description`-Trigger des Skills nicht mit einem Runtime-Slash-Command oder einem Claude-Code-Built-in-Command überlappen, und wenn ja gegen welche autoritative Liste?
-- Wo lebt das Validator-Pinning (welche Version als Ground Truth gilt) — in dieser Spec, in `skill-management` oder in der Tooling-Konfiguration des Repositories?
+
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

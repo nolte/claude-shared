@@ -15,7 +15,7 @@ Claude Code (CLI, Plugin und Agent-SDK-Läufe) fragt den/die Nutzer:in bei jedem
 - Benutzer-globale Konfiguration unter `~/.claude/settings.json` — gehört zur/zum einzelnen Entwickler:in und ist nicht im Scope
 - Entwicklerlokale Overrides in `.claude/settings.local.json` — sind absichtlich unreguliert, spiegeln die persönliche Risikobereitschaft und sind nicht im Scope
 - Hooks, Umgebungsvariablen oder beliebige andere `.claude/settings.json`-Felder jenseits von `permissions.allow` — die deckt der Skill `update-config` und ggf. spätere Specs ab, nicht dieser hier
-- Portfolio-weite Verteilung einer gemeinsamen Basis-Allowlist (etwa via eines `_extends`-ähnlichen Mechanismus wie bei `.github/settings.yml`) — siehe Offene Fragen
+- Portfolio-weite Verteilung einer gemeinsamen Basis-Allowlist (etwa via eines `_extends`-ähnlichen Mechanismus wie bei `.github/settings.yml`). Default (Revisit): Jedes Repository besitzt seine eigene `.claude/settings.json`-Allowlist; es gibt keine zentrale oder `_extends`-artige Basis-Liste, weil der Claude-Code-Harness keinen Vererbungsmechanismus hat. Erst dann revisiten, wenn ein `portfolio-audit`-Lauf den Allowlist-Block unter `portfolio-management` §Cross-repository copy-paste smell markiert (derselbe Basis-Block über drei oder mehr Portfolio-Member-Repos), woraufhin ein Generator- oder Sync-Skill—nicht eine `_extends`-Config-Änderung—die Kandidatenlösung wird.
 
 ## Anforderungen
 
@@ -59,4 +59,5 @@ Claude Code (CLI, Plugin und Agent-SDK-Läufe) fragt den/die Nutzer:in bei jedem
 - [ ] Keine Spec-interne MUSS-Regel wird durch einen Eintrag in `.claude/settings.json` unterlaufen — insbesondere erlaubt kein Eintrag `gh pr merge *` oder eine Entsprechung, die das Automerge-Trigger-Protokoll der pull-request-workflow-Spec umgehen würde
 
 ## Offene Fragen
-- Braucht das Portfolio eine zentral verteilte Basis-Allowlist (analog zu `.github/commons-settings.yml` mit `_extends`) — aktuell kopiert jedes Repository seine eigene? Für spätere Entscheidung; nicht Teil dieses Initialspecs.
+
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

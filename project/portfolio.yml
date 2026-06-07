@@ -10,8 +10,8 @@ capabilities:
       through the plugin marketplace to get consistent, spec-compliant
       authoring, review, planning, and release workflows.
     audience:
-      - Downstream Claude Code users in portfolio projects
-      - Plugin author dogfooding inside this repo
+      - downstream-user
+      - dogfooding-author
     status: active
     rationale: >-
       claude-shared is the single source of Claude Code skill distribution in
@@ -27,8 +27,8 @@ capabilities:
       downstream projects invoke through
       Agent(subagent_type=<plugin>:<agent>).
     audience:
-      - Downstream Claude Code users in portfolio projects
-      - Plugin author dogfooding inside this repo
+      - downstream-user
+      - dogfooding-author
     status: active
     rationale: >-
       Agents complement skills as the read-only or specialised counterpart; the
@@ -45,9 +45,9 @@ capabilities:
       releases, audience identification, and portfolio management for the
       nolte portfolio.
     audience:
-      - Plugin author dogfooding inside this repo
-      - Other Nolte portfolio repos as passive consumers of the conventions
-      - External contributors via pull request
+      - dogfooding-author
+      - portfolio-peer
+      - external-contributor
     status: active
     rationale: >-
       claude-shared is the only repo running the spec-driven-development
@@ -63,8 +63,8 @@ capabilities:
       Portfolio-Member repos see the planning suite in action before adopting
       it.
     audience:
-      - Plugin author dogfooding inside this repo
-      - Downstream Claude Code users in portfolio projects
+      - dogfooding-author
+      - downstream-user
     status: experimental
     rationale: >-
       The planning suite is new (sprint 0001 opened 2026-05-11); claude-shared
@@ -83,9 +83,9 @@ capabilities:
       downstream readers discover what the plugin ships without reading the
       source tree directly.
     audience:
-      - Downstream Claude Code users in portfolio projects
-      - Plugin author dogfooding inside this repo
-      - External contributors via pull request
+      - downstream-user
+      - dogfooding-author
+      - external-contributor
     status: active
     rationale: >-
       The catalog is implemented as a portfolio-distributable skill
@@ -104,8 +104,8 @@ capabilities:
       similar) so prose under README.md, docs/en/, and spec/**/en.md passes
       Vale across the portfolio.
     audience:
-      - Plugin author dogfooding inside this repo
-      - Other Nolte portfolio repos as passive consumers of the conventions
+      - dogfooding-author
+      - portfolio-peer
     status: active
     rationale: >-
       The vocabulary lives under
@@ -115,6 +115,7 @@ capabilities:
       auditable.
     peers:
       - claude-shared:portfolio-spec-corpus
+      - vale-style:vale-style-package
     since: 2026-04-24
 
 # Schema for tech_stack: spec/portfolio/tech-stack/ §Per-repository tech-stack block.

@@ -15,10 +15,38 @@ tasks:
       - task -l
     silent: true
 
+  resume:
+    desc: |
+      List resumable Claude Code sessions for THIS working copy (newest first,
+      with their opening prompt) and print the exact `claude --resume` command.
+      Use after a notebook crash, terminal close, or session expiry to get back
+      to an interrupted run — covers all top-level work, including free-form work
+      no resumable skill governs. See also `.resume/session-journal.md` for the
+      always-on "where was I" trail written by scripts/wip_journal.py.
+    cmds:
+      - python3 scripts/resume_sessions.py
+    silent: true
+
   setup:
     desc: Install pre-commit hooks (run once after cloning)
     cmds:
       - task: pre-commit:install
+
+  install:
+    desc: |
+      Create the project-local virtual environment (.venv) and install the
+      repository's Python tooling into it, per spec/project/project-structure/
+      §Python development: dependencies live in a project-local venv, never
+      system-wide. Installs requirements.txt (runtime placeholder) and
+      requirements-dev.txt (the script/test toolchain) independently — no -r
+      chaining. The docs-build toolchain has its own install set in
+      docs/requirements.txt.
+    cmds:
+      - python3 -m venv .venv
+      - .venv/bin/python -m pip install --upgrade pip
+      - .venv/bin/python -m pip install -r requirements.txt
+      - .venv/bin/python -m pip install -r requirements-dev.txt
+      - 'echo "Virtual environment ready: source .venv/bin/activate"'
 
   lint:
     desc: Run pre-commit across all files
@@ -29,21 +57,45 @@ tasks:
     desc: Run Vale prose linter across English-language Markdown
     cmds:
       - vale sync
-      - vale --minAlertLevel=error README.md docs/en/ $(find spec -name 'en.md')
+      - vale README.md docs/en/ $(find spec -name 'en.md')
 
   test:
-    desc: Run the test suite — validates every skill and agent frontmatter
+    desc: |
+      Run the test suite: skill/agent frontmatter validation (static Layer 0) plus the
+      eval-harness unit tests. Behavioural evals that drive a skill/agent are skipped
+      unless RUN_EVALS=1. Requires pytest: `pip install -r evals/requirements-dev.txt`.
     cmds:
       - task: validate:skills
+      - python3 -m pytest tests -q
 
   check:
     desc: |
       Run the develop quality gate locally: lint + test. The docs category
       is a separate CI job (the documentation-freshness gate, not the code
       gate). Exits zero on a clean tree and non-zero when any category fails.
+    # spec/project/quality-gate/ §Invocation contract SHOULD: "run the three
+    # categories in parallel when the ecosystem permits it; sequential fallback
+    # is acceptable when a category produces inputs another category consumes."
+    # lint (pre-commit) and test (frontmatter validation + pytest) are
+    # independent — neither consumes the other's output — so they run as
+    # parallel `deps`. Task waits for every dep and fails `check` if any fails,
+    # so a failing category is never masked; running both surfaces all failures
+    # in one pass instead of stopping at the first.
+    deps:
+      - lint
+      - test
+
+  license:sbom:
+    desc: |
+      Generate a CycloneDX SBOM with resolved licenses (including transitive
+      dependencies) for the Python toolchain, per spec/project/license-check.
+      Writes sbom.cdx.json (gitignored, reproducible). Requires uv.
     cmds:
-      - task: lint
-      - task: test
+      - uv venv .sbom-venv
+      - uv pip install --python .sbom-venv -r docs/requirements.txt -r evals/requirements-dev.txt
+      - uvx --from cyclonedx-bom cyclonedx-py environment .sbom-venv -o sbom.cdx.json
+      - rm -rf .sbom-venv
+      - 'echo "CycloneDX SBOM (with licenses) written to sbom.cdx.json"'
 
   validate:skills:
     desc: |
@@ -55,15 +107,43 @@ tasks:
     cmds:
       - python3 scripts/validate_skills.py
 
+  validate:schemas:
+    desc: |
+      Validate every *.schema.yaml against the JSON Schema 2020-12 meta-schema
+      and every schema-bound data file against its schema, per
+      spec/project/yaml-json-schema/ §Validation contract. A missing validator
+      fails with an install hint rather than skipping. Wired into `task lint`
+      via the validate-schemas pre-commit hook; this target runs it directly.
+    cmds:
+      - python3 scripts/validate_schemas.py
+
+  image:generate:
+    desc: |
+      Generate an image from a text prompt via a pluggable provider backend
+      (skills/image-generate/scripts/image_generate.py). Default provider is
+      cloudflare (free tier, needs CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID);
+      --provider pollinations is auth-free; --provider gemini requires billing.
+      Pass script args after `--`, e.g.:
+        task image:generate -- --prompt "a teal fox icon, flat" --out fox.png
+        task image:generate -- --provider pollinations --prompt "a tree" --out tree.jpg
+    cmds:
+      - python3 skills/image-generate/scripts/image_generate.py {{.CLI_ARGS}}
+
   docs:catalog:
     desc: Generate the Skills/Agents catalog under docs/<lang>/{skills,agents}/
     cmds:
       - python3 scripts/docs/gen_catalog.py
 
+  docs:portfolio:
+    desc: Generate the portfolio inventory under docs/<lang>/portfolio/ from portfolio/aggregate.yml
+    cmds:
+      - python3 scripts/docs/gen_portfolio.py
+
   docs:
-    desc: Build the MkDocs site (regenerates the catalog first)
+    desc: Build the MkDocs site (regenerates the catalog and portfolio inventory first)
     deps:
       - docs:catalog
+      - docs:portfolio
     cmds:
       - mkdocs build --strict
 
@@ -71,3 +151,23 @@ tasks:
     desc: Start Claude Code with this repo loaded as a plugin (dogfooding)
     cmds:
       - claude --plugin-dir .
+
+  worktree:root:
+    desc: |
+      Print the resolved worktree root for this machine. Reads
+      NOLTE_WORKTREE_ROOT (the per-machine, freely chosen path) and falls
+      back to ~/repos/.worktrees. See spec/project/parallel-working-copies/.
+    silent: true
+    cmds:
+      - 'echo "${NOLTE_WORKTREE_ROOT:-$HOME/repos/.worktrees}"'
+
+  worktree:add:
+    desc: |
+      Create a parallel working copy under the configurable worktree root,
+      always in the same predictable place: ${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/<slug>/.
+      The branch is created off origin/develop with an explicit base ref.
+      Usage: task worktree:add -- <branch> [slug]
+        task worktree:add -- feat/parser-fix
+        task worktree:add -- chore/ci-tidy ci
+    cmds:
+      - ./scripts/worktree_add.sh {{.CLI_ARGS}}

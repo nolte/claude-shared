@@ -23,7 +23,7 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 - Review von Skills — das deckt `skill-review` mit symmetrischer Struktur ab
 - Ersetzung der quartalsweisen portfolioweiten Reconciliation — das gehört zu `spec-drift-audit`
 - Linter- und Markdown-Style-Checks, die bereits von `task lint` / Vale / Pre-Commit-Hooks erzwungen werden — diese bleiben bei ihrem eigenen Tooling
-- Laufzeit- oder Verhaltens-Korrektheit des Agents (ob ein Dispatch tatsächlich die behauptete Report-Form liefert) — diese Spec reviewt das **erstellte Artefakt**, nicht eine Live-Ausführung
+- Laufzeit- oder Verhaltens-Korrektheit des Agents (ob ein Dispatch tatsächlich die behauptete Report-Form liefert) — diese Spec reviewt das **erstellte Artefakt**, nicht eine Live-Ausführung — einschließlich der Frage, ob ein in `description` benannter negativer Trigger das aufrufende Claude tatsächlich dazu bringt, den Agent für den ausgeschlossenen Fall *nicht* zu dispatchen; das Review verifiziert nur, dass der negative Trigger vorhanden ist und ein bestehendes Peer-Artefakt benennt (siehe §„Description-Qualität und proaktive-Delegation-Absicht" und §„Checks aus `skill-vs-agent`"), nicht seine Routing-Wirkung
 
 ## Anforderungen
 <!-- RFC-2119-Schlüsselwörter verwenden: MUST, SHOULD, MAY. Eine atomare Anforderung pro Bullet. -->
@@ -49,7 +49,7 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
   - `description` nennt konkrete Trigger (mindestens positive; negative Trigger SOLLTEN vorhanden sein, wenn Überlappung mit anderen Artefakten plausibel ist)
   - `distribution` ist genau `plugin` oder `project` — kein anderer Wert, kein fehlendes Feld
   - `tools` fehlt (volle Tool-Oberfläche im Body begründet) oder ist auf das für die deklarierte Verantwortung nötige Minimum beschränkt
-  - Read-only-Agents (Agents, deren deklarierte Verantwortung Research, Review, Audit oder Reporting ist) haben **keine** Write-, Edit- oder Execution-Tools — das Vorhandensein von Edit, Write, Bash, NotebookEdit in der `tools`-Liste eines Read-only-Agents ist ein `Critical`. **Enge Ausnahme** gemäß `agent-management` §Tool-Zugriff: `Bash` auf einem Read-only-Agent wird von `Critical` zu `Info` herabgestuft, wenn der Agent-Body einen `## Read-only Bash justification`-Abschnitt mitführt, der die exakte Teilmenge seiteneffektfreier Kommandos benennt (typischerweise `git log`, `git rev-parse`, `git ls-files`, `gh api ... --jq` gegen Read-only-Endpunkte) und jegliches Schreiben oder Mutieren explizit verbietet. `Edit`, `Write` und `NotebookEdit` bleiben unbedingte `Critical`s — die Ausnahme gilt nur für `Bash`
+  - Read-only-Agents (Agents, deren deklarierte Verantwortung Research, Review, Audit oder Reporting ist) haben **keine** Write-, Edit- oder Execution-Tools — das Vorhandensein von Edit, Write, Bash, NotebookEdit in der `tools`-Liste eines Read-only-Agents ist ein `Critical`. **Enge Ausnahme** gemäß `agent-management` §Tool-Zugriff: `Bash` auf einem Read-only-Agent wird von `Critical` zu `Info` herabgestuft, wenn der Agent-Body einen `## Read-only Bash justification`-Abschnitt mitführt, der die exakte Teilmenge seiteneffektfreier Kommandos benennt (typischerweise `git log`, `git rev-parse`, `git ls-files`, `gh api ... --jq` gegen Read-only-Endpunkte) und jegliches Schreiben oder Mutieren explizit verbietet. `Edit`, `Write` und `NotebookEdit` bleiben unbedingte `Critical`s — die Ausnahme gilt nur für `Bash`. Der Read-only-Status wird an den Verantwortlichkeits-Verben in `description` / System-Prompt erkannt (review, audit, research, lint, report); ein `read-only`-Frontmatter-Flag existiert nicht. Wenn die Klassifikation wirklich mehrdeutig ist, hält der Reviewer die Entscheidung im `## Scope` des Plans fest
   - Agent-Body ruft das Skill-Tool **nicht** im Namen des Nutzers — erkannt durch Grep im Body nach `Skill(`, `Skill tool` oder äquivalenten Dispatch-Phrasen; jeder Treffer ist ein `Critical` gemäß `skill-vs-agent`
   - Keine hartcodierten absoluten Pfade im Body oder in Geschwister-Assets
   - Frontmatter-Feldnamen und Werte technischer Bezeichner (`name`, `distribution`, `tools`, `model`, `tags`) sind in Englisch; der `description`-Wert und der System-Prompt-Body folgen `agent-management.Struktur` — standardmäßig Englisch, mit Projektsprachen-Ausnahme für `distribution: project`-Agents, deren konsumierendes Projekt eine nicht-englische Dokumentationssprache deklariert und sie für Agent-Prosa autorisiert. Verifiziere die Projekt-Autorisierung (typischerweise `CLAUDE.md`) bevor ein ansonsten als `Critical` zu wertender Befund auf `Info` heruntergestuft wird
@@ -65,7 +65,7 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 
 - **MUSS [MUST]** bestätigen, dass der Agent-Body einen **Rationale-Abschnitt** enthält, der mindestens eine entscheidende Dimension für die Agent-statt-Skill-Wahl benennt; dessen Fehlen ist ein `Critical`
 - **SOLLTE [SHOULD]** verifizieren, dass mindestens eine Gegen-Dimension benannt ist, wenn die Entscheidung knapp war — Fehlen ist ein `Suggestion`, kein `Critical`, konsistent zur SHOULD-Formulierung in `skill-vs-agent`
-- **MUSS [MUST]** einen Duplikat-Capability-Check fahren: jede andere `agents/*.md` und `skills/*/SKILL.md` `description`-Zeile auf semantische Überlappung grepen; jede plausible Überlappung erzeugt ein `Warning`, das das Peer-Artefakt und die Überlappung benennt, damit der Autor vor dem Landen einen Merge, Rename oder klareren Split vorschlagen kann
+- **MUSS [MUST]** einen Duplikat-Capability-Check fahren: jede andere `agents/*.md` und `skills/*/SKILL.md` `description`-Zeile auf semantische Überlappung grepen; jede plausible Überlappung erzeugt ein `Warning`, das das Peer-Artefakt und die Überlappung benennt, damit der Autor vor dem Landen einen Merge, Rename oder klareren Split vorschlagen kann. Der Check ist auf den reviewten Quellbaum beschränkt (repo-interne `agents/*.md` und `skills/*/SKILL.md`); Cross-Plugin-Äquivalenz wird gemäß `skill-vs-agent` §Duplikat-Prävention ausdrücklich toleriert und ist kein Finding
 
 ### Checks aus Spec-Driven-Development
 
@@ -75,7 +75,7 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 
 ### Tool-Scope-Checks
 
-- **MUSS [MUST]** für jedes in `tools` deklarierte Werkzeug verifizieren, dass der Agent-Body dieses Werkzeug in seiner Prozedur nachweislich benutzt — deklarierte, aber nicht genutzte Tools sind `Warning`-Findings (tote Berechtigung)
+- **MUSS [MUST]** für jedes in `tools` deklarierte Werkzeug verifizieren, dass der Agent-Body dieses Werkzeug in seiner Prozedur nachweislich benutzt (die Arbeitsweise des Agents, nicht bloß ein illustrativer Beispiel-Abschnitt) — ein Tool, das nur innerhalb eines Beispiels erscheint, ist tote Berechtigung und ein `Warning`; deklarierte, aber nicht genutzte Tools sind `Warning`-Findings (tote Berechtigung)
 - **MUSS [MUST]** für jedes Werkzeug, das der Agent-Body klar benötigt, verifizieren, dass es in `tools` deklariert ist — genutzte, aber nicht deklarierte Tools sind `Critical`-Findings (der Agent wird nicht laufen)
 - **MUSS [MUST]** verifizieren, dass der Agent das `tools`-Feld nicht **unbeabsichtigt weglässt**: Ein fehlendes `tools`-Feld erteilt die geerbte volle Tool-Oberfläche — das ist Permission-Sprawl. Wenn die Verantwortlichkeit des Agents „research" / „review" / „audit" / „report" ist und `tools` fehlt, ist das ein `Critical`; bei jedem anderen Agent ist das Fehlen ein `Warning`, sofern der Body das Erben aller Tools nicht ausdrücklich begründet ([R5](#referenzen), [R6](#referenzen))
 - **SOLLTE [SHOULD]** dedizierte Tools (`Read`, `Grep`, `Glob`, `Edit`) gegenüber `Bash`-Äquivalenten bevorzugen; ein Agent, der `Bash` für Operationen nutzt, die ein dediziertes Tool abdeckt, bekommt ein `Warning`, sofern der Body die Wahl nicht begründet
@@ -88,6 +88,7 @@ Spiegelt `agent-management` §„Plugin-Verteilungs-Sicherheits-Constraints"; di
 - **MUSS [MUST]** verifizieren, wenn `distribution: plugin` deklariert ist, dass das Frontmatter `hooks`, `mcpServers` oder `permissionMode` **nicht** setzt; jedes dieser Felder ist ein `Critical` (die Laufzeit ignoriert sie für Plugin-Agents stillschweigend, und der Autor wird in die Irre geführt zu glauben, sie seien aktiv) ([R5](#referenzen))
 - **MUSS [MUST]**, wenn `distribution: project` deklariert ist, diese Felder als gültig akzeptieren; ihr Vorhandensein ist für project-distribuierte Agents **kein** Finding
 - **SOLLTE [SHOULD]**, wenn ein Agent `distribution: plugin` deklariert UND der Body Verhalten beschreibt, das offensichtlich `hooks` / `mcpServers` / `permissionMode` benötigt (z. B. „dieser Agent installiert einen PreToolUse-Hook", „dieser Agent verbindet sich mit eigenem MCP-Server", „dieser Agent läuft im Plan-Modus"), ein `Warning` flaggen, auch wenn die Felder fehlen — Beschreibung und Distribution sind inkonsistent
+- **SOLLTE [SHOULD]** verifizieren, wenn `distribution: project` deklariert ist, dass der Body kein plugin-ko-lokalisiertes Asset referenziert (`${CLAUDE_PLUGIN_ROOT}` oder Pfade unter dem eigenen `agents/`- oder `skills/`-Baum des Plugin-Quellbaums, marketplace-relative Assets), das in einer Projekt-Laufzeit nicht auflösen würde; eine solche Referenz ist ein `Warning`
 
 ### Subagent-Grenzen-Checks
 
@@ -99,7 +100,7 @@ Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hyb
 ### Description-Qualität und proaktive-Delegation-Absicht
 
 - **MUSS [MUST]** verifizieren, wenn die `description` die Phrase „use proactively" (oder das Äquivalent „use this proactively", „should be used proactively", „invoke proactively") enthält, dass die Verantwortlichkeit des Agents tatsächlich rechtfertigt, dass Claude ihn ohne explizite Nutzeraufforderung anbietet — Anzeichen, dass der Check besteht: Der Agent löst eine Problemklasse, die der Nutzer wahrscheinlich nicht explizit benennt (Security-Review bei jedem PR, Audit bei jedem Commit). Anzeichen, dass der Check scheitert: Der Agent hat destruktive Seiteneffekte, benötigt Credentials oder geht Verpflichtungen mit externen Systemen ein. Eine „proactively"-Behauptung an einem destruktiven oder credential-tragenden Agent ist ein `Critical` ([R5](#referenzen))
-- **SOLLTE [SHOULD]** verifizieren, wenn der Agent klare Überlappung mit einem anderen bestehenden Artefakt (Skill oder Agent) hat, dass die `description` die Überlappung als **negativen Trigger** benennt („don't use for X, use the `<peer>` agent / skill instead"); das Fehlen des Negativs ist ein `Warning` ([R5](#referenzen))
+- **SOLLTE [SHOULD]** verifizieren, wenn der Agent klare Überlappung mit einem anderen bestehenden Artefakt (Skill oder Agent) hat, dass die `description` die Überlappung als **negativen Trigger** benennt („don't use for X, use the `<peer>` agent / skill instead"); das Fehlen des Negativs ist ein `Warning` ([R5](#referenzen)). Der Check verifiziert nur, dass der negative Trigger *vorhanden* ist und ein bestehendes Peer benennt; ob er das aufrufende Claude tatsächlich dazu bringt, den Agent für den ausgeschlossenen Fall zu überspringen, ist Dispatch-Zeit-Routing-Verhalten und liegt bewusst außerhalb des Scopes (siehe §Nicht-Ziele)
 
 ### Prompt-Struktur-Checks
 
@@ -126,7 +127,7 @@ Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hyb
 
 ## Abnahmekriterien
 <!-- Testbare, abhakbare Bedingungen. Reviewer müssen pro Punkt "erfüllt / nicht erfüllt" markieren können. -->
-- [ ] Ein durchgearbeitetes Beispiel existiert, das diese Review-Prozedur auf einen Agent in `nolte-shared` anwendet (z. B. `audience-review`) und einen konformen Plan unter `.audits/agent-review/` erzeugt
+- [ ] Ein durchgearbeitetes Beispiel existiert, das diese Review-Prozedur auf einen Agent in `nolte-shared` anwendet (z. B. `audience-review`) und einen konformen Plan unter `.audits/agent-review/` erzeugt; `audience-review` wird als gewöhnlicher Einzel-Ziel-Lauf reviewt — `agent-review` ist ein Skill, kein sich selbst reviewender Agent, sodass keine Rekursions-Terminierungs-Logik nötig ist
 - [ ] Jeder Agent in `agents/` wurde seit Adoption dieser Spec mindestens einmal gegen die aktuelle `agent-management`-Revision reviewt, verifizierbar entweder durch einen offenen Plan unter `.audits/agent-review/` oder durch einen schließenden Commit in `git log`, der dem `review-plan`-Löschmuster entspricht
 - [ ] Kein Agent in `agents/` fehlt ein Rationale-Abschnitt; der Rationale-Abschnitts-Check über alle Agents erzeugt null `Critical`
 - [ ] Kein Agent in `agents/` ruft das Skill-Tool im Namen des Nutzers; ein Grep nach `Skill(` über alle Agent-Body-Dateien liefert null Treffer
@@ -157,9 +158,4 @@ Quellen für die zusätzlichen Checks oben. Bei Findings, die eine konkrete Upst
 
 ## Offene Fragen
 <!-- Ungelöste Entscheidungen, bekannte Unbekannte, Punkte, die eine Stakeholder-Antwort brauchen. -->
-- Soll der Duplikat-Präventions-Check nur Skill-Descriptions aus `skills/*/SKILL.md` im selben Repository lesen, oder auch den MkDocs-gerenderten Katalog über installierte Plugins abfragen, wenn ein Consumer eine Downstream-Kopie reviewt?
-- Wie wird "Read-only-Agent" mechanisch erkannt — an den Verben in der `description` (review, audit, research, lint, report), an einem expliziten `read-only: true`-Flag im Frontmatter, das noch nicht existiert, oder durch ein im `## Scope` des Plans festgehaltenes menschliches Urteil?
-- Soll der Tools-genutzt-vs-Tools-deklariert-Check den Fall tolerieren, in dem ein Tool nur in einem Beispiel-Abschnitt des Bodys erscheint und nicht in der Prozedur selbst, oder ist Nur-in-Beispielen-Nutzung ein Zeichen für tote Berechtigung?
-- Wenn `distribution: project` deklariert ist, soll das Review mehr als den Wert selbst verifizieren — zum Beispiel, dass der Agent keine Plugin-ko-lokalisierten Assets referenziert, was Projekt-Level-Nutzung brechen würde?
-- Soll das Review eines Agents, dessen `description` negative Trigger nennt, auch verifizieren, dass diese Negativen die benannten Fälle tatsächlich ausschließen — und wenn ja, wie wird das verifiziert, ohne den Agent laufen zu lassen?
-- Wie interagiert diese Spec-Invokation mit `audience-review` — dem ersten Agent im Portfolio — denn das Reviewen eines Review-Agents ist ein Rekursionsfall, der explizite Behandlung verdient: Wird der erste jemals geschriebene Plan vom Review oder von einem Menschen erzeugt, und wie wird die Rekursion terminiert?
+_Derzeit keine._

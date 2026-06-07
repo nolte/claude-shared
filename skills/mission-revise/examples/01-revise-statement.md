@@ -1,11 +1,11 @@
-# Example 01 — Operation A: revise `mission_statement` and `audiences`
+# Example 01 — Operation 1: revise `mission_statement` and `audiences`
 
 The operator wants to refine the mission statement (sharper "what for
 whom" wording) and add a newly-identified audience to the existing
-mission file. Exercises operation A's two most common surfaces: a
+mission file. Exercises operation 1's two most common surfaces: a
 prose edit on `mission_statement` and a structural change on
 `audiences` that demands a new per-audience paragraph in
-`## Audiences`. `mvp_status` stays at `in_progress`, so branch C does
+`## Audiences`. `mvp_status` stays at `in_progress`, so operation 3 does
 **not** apply.
 
 ## Input prompt
@@ -68,9 +68,9 @@ resolves `O-1` and `O-3`. `project/features/F-7.md` exists with
    sections in declared order), `project/audiences.md` and
    `project/goals.md` are reachable, and reads `project/roadmap.md` plus
    `project/sprints/` so cross-spec invariants are available even
-   though branch B isn't selected.
-2. **Operation routing.** Skill asks which of A / B / C is intended;
-   the user picks A. Skill enumerates which fields they want to
+   though operation 2 isn't selected.
+2. **Operation routing.** Skill asks which of 1 / 2 / 3 is intended;
+   the user picks 1. Skill enumerates which fields they want to
    change — `mission_statement` and `audiences` — and walks them one
    at a time.
 3. **`mission_statement` walk-through.** Skill re-applies the Specific
@@ -92,7 +92,7 @@ resolves `O-1` and `O-3`. `project/features/F-7.md` exists with
    `## Audiences` headings exactly — both surfaces in lockstep, no
    stragglers either way.
 6. **No `mvp_status` change.** Skill explicitly leaves `mvp_status: in_progress`
-   untouched and confirms branch C does **not** trigger (current
+   untouched and confirms operation 3 does **not** trigger (current
    status is not `stabilised`).
 7. **`revised_at` bump.** Skill sets `revised_at: 2026-05-10`, leaves
    `created: 2026-02-14` untouched.
@@ -101,7 +101,7 @@ resolves `O-1` and `O-3`. `project/features/F-7.md` exists with
    delta (new `## Statement` prose, new `### plugin-reviewers`
    subsection) in German per the operator's language, iterates until
    approval, then writes `project/mission.md` in place. No `## Source`
-   entry is appended for an operation-A revision (only B and C touch
+   entry is appended for an operation-1 revision (only 2 and 3 touch
    `## Source`).
 9. **Closing message** confirms the path and reminds the operator
    that `mvp_status` is unchanged and that adding the new audience to

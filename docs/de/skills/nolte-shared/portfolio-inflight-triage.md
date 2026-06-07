@@ -34,6 +34,11 @@ _Runs the read-only periodic in-flight audit across nolte/* per `spec/portfolio/
 - [`workflow-health-triage`](workflow-health-triage.md)
 - [`portfolio-inflight-collector`](../../agents/nolte-shared/portfolio-inflight-collector.md)
 
+## Referenziert von
+
+- [`portfolio-inflight-collector`](../../agents/nolte-shared/portfolio-inflight-collector.md)
+- [`portfolio-audit`](portfolio-audit.md)
+
 ---
 
 ## Portfolio In-Flight Triage

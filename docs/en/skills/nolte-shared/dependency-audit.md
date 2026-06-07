@@ -32,6 +32,19 @@ _Scan the current project's dependency tree for known vulnerabilities (CVEs) and
 
 - [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md)
 
+## Referenced by
+
+- [`code-security-reviewer`](../../agents/nolte-shared/code-security-reviewer.md)
+- [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md)
+- [`gdpr-data-protection-reviewer`](../../agents/nolte-shared/gdpr-data-protection-reviewer.md)
+- [`quality-gate-enforcer`](../../agents/nolte-shared/quality-gate-enforcer.md)
+- [`tech-stack-drift-reviewer`](../../agents/nolte-shared/tech-stack-drift-reviewer.md)
+- [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md)
+- [`license-check`](license-check.md)
+- [`quality-gate`](quality-gate.md)
+- [`webview-ui-optimize`](webview-ui-optimize.md)
+- [`workflow-health-triage`](workflow-health-triage.md)
+
 ---
 
 ## Dependency Audit
@@ -55,7 +68,7 @@ Detect the user's language from their message and respond in it. The report itse
 ### Inputs
 
 - **Repo root**: default is the current working directory.
-- **License audit toggle**: opt-in via the caller ("also check licenses," "include license compliance"). Off by default because it's slower and often needs an allowlist the project doesn't yet declare.
+- **License audit toggle**: defaults to **on** whenever a license allowlist is discoverable in the repo (at `.license-allowlist.txt`, `.licenses/allowed.txt`, under `tool.*` in the manifest, or equivalent) — per `spec/project/dependency-audit/`, a discoverable allowlist means license auditing is "enabled" and the pass runs automatically. When no allowlist is discoverable, the toggle is off by default and the caller opts in explicitly ("also check licenses," "include license compliance"). The caller may always opt out of an automatic license pass for an ad-hoc invocation.
 - **Severity floor**: defaults to `low` (report every finding). Caller may narrow to `medium` or `high` to de-noise pre-release gates.
 
 ### Operations
@@ -104,30 +117,48 @@ Run every detected auditor per subroot. Use `--json` / equivalent machine-readab
 
 Record per finding: `package`, `installed_version`, `advisory_id` (GHSA/CVE/PYSEC), `severity` (`critical` / `high` / `medium` / `low` / `unknown`), `path` (direct or transitive), `fixed_in`, `summary_url`.
 
-#### 4. Run a license audit (optional)
+**Severity classification (CVSS scale).** Per `spec/project/dependency-audit/` §Severity classification, take the auditor's native classification as the source of truth and map it onto the shared scale by CVSS threshold:
 
-Only when the caller asked for it:
+| Severity | CVSS | Auditor tag | Response window |
+|---|---|---|---|
+| `critical` | ≥ 9.0 | `critical` | within 7 days |
+| `high` | 7.0–8.9 | `high` | within 30 days |
+| `medium` | 4.0–6.9 | `moderate` / `medium` | within the current calendar quarter |
+| `low` | < 4.0 | `low` | best effort, revisited next quarterly audit |
+| `unknown` | unclassified | — | treat as `high` until classified otherwise |
 
-- **Python**: `pip-licenses --format=json --with-urls --with-license-file=false` (install hint: `pip install pip-licenses`).
-- **Node**: `npx --yes license-checker --json --production` (or `pnpm licenses list --long --json` for pnpm).
+When the auditor couldn't classify a finding, record it as `unknown` and **treat it as `high`** for triage and response-window purposes — never as a lower tier. Never downgrade a severity on local judgement alone (disagreement is a dated ignore entry with a rationale, not a reclassification).
 
-Compare the discovered licenses against the project's allowlist. Locations to check, in order:
+**Gate outcome: `blocked`, not `pass`.** When a subroot can't be audited because its auditor isn't installed (or a lockfile is missing), the audit MUST report that subroot's verdict as `blocked` with the install/remediation hint — never `pass`. A `blocked` subroot is not a clean result: the gate fails closed. Only a subroot the auditor actually scanned can return `pass`.
+
+#### 4. Run a license audit (auto-on when an allowlist is discoverable)
+
+First check for a license allowlist. Locations to check, in order:
 
 1. `.license-allowlist.txt` or `.licenses/allowed.txt` at the repo root.
 2. A `licenses:` array under `tool.pip-audit` or an equivalent config block in `pyproject.toml`.
 3. The project's README if it explicitly lists accepted licenses (uncommon).
 
-If no allowlist exists, flag every non-permissive license (GPL / AGPL / LGPL / SSPL / unknown) as `review`, not as failure. Don't invent a policy.
+Per `spec/project/dependency-audit/`, license auditing counts as "enabled" whenever an allowlist is discoverable. When one is found, **run the license pass automatically** (the caller may still opt out for an ad-hoc invocation). When no allowlist is discoverable, run the license pass only when the caller explicitly asked for it.
+
+When the license pass runs:
+
+- **Python**: `pip-licenses --format=json --with-urls --with-license-file=false` (install hint: `pip install pip-licenses`).
+- **Node**: `npx --yes license-checker --json --production` (or `pnpm licenses list --long --json` for pnpm).
+
+Compare the discovered licenses against the allowlist. If no allowlist exists (and the caller opted in anyway), flag every non-permissive license (GPL / AGPL / LGPL / SSPL / unknown) as `review`, not as failure. Don't invent a policy.
 
 #### 5. Render the report
 
 ```
 ## Dependency Audit
 
-Scope: <repo root>, <n> manifests across <m> subroots
+Scope: <repo root>, <n> manifests across <m> subroots (skipped: <list with reasons>)
+Trigger: <quarterly | pre-release | manifest-change>
 Severity floor: <level>
 License audit: <on|off>
-Auditors run: <list>
+Auditors run (with versions): <list>
+Git revision: <sha>
 
 ### Findings (sorted: critical → high → medium → low)
 
@@ -136,6 +167,7 @@ Auditors run: <list>
   - Advisory: <GHSA / CVE / PYSEC id> — <short summary>
   - Fixed in: <version range or "no fix yet">
   - Reference: <url>
+  - Response: <fix | ignore with rationale (valid-until <date>) | accept as known>
 
 (repeat per finding)
 
@@ -153,13 +185,19 @@ Auditors run: <list>
 
 Sort findings by severity first, then package name alphabetically, so diffs of the rendered report stay stable across runs.
 
-#### 6. Offer follow-up actions
+#### 6. Triage and respond
 
-Don't execute these without explicit confirmation:
+Per `spec/project/dependency-audit/` §Response to findings, every finding gets exactly one of three responses inside its severity's response window. Never silently downgrade a severity — disagreement with the auditor's classification is an ignore entry with an explicit rationale, not a reclassification.
 
-- For each finding with a `fixed_in` version: suggest the smallest dependency bump that crosses the fix boundary.
-- For findings without a fix yet: offer to add the advisory to the auditor's ignore list with a `valid-until` date (for example the `--ignore-vuln` argument of `pip-audit` wired into a Taskfile target) so the gate stays meaningful.
-- For license `review` entries: offer to draft an `.license-allowlist.txt` with the accepted licenses the user names.
+- **`fix`**: bump to the smallest version that crosses the `fixed_in` boundary. For a `critical` or `high` finding this is the only response, unless an accepted, dated ignore entry exists.
+- **`ignore with rationale`**: record the advisory in the auditor's **native ignore location** (for example `pyproject.toml` under `[tool.pip-audit]`, or `.npm-audit-ignore.json`) — never as free-form prose only the report sees. Every entry MUST carry the advisory ID, the affected package, a `valid-until` ISO-8601 date, and a one-line rationale; an entry missing any of these fails the audit. Revisit each entry at the latest on its `valid-until` date and never renew it without a fresh rationale. Never silence a finding globally (`--ignore-vuln <id>` with no date) just to green the gate.
+- **`accept as known`**: permitted only for the `medium` / `low` tiers. A `critical` or `high` finding **MUST NOT** be marked `accept as known`.
+
+Don't execute a bump, write an ignore entry, or draft a `.license-allowlist.txt` without explicit confirmation. Keep the active ignore list small (guideline: fewer than ten per subroot); a growing list signals the dependency strategy itself needs review rather than another one-off ignore.
+
+#### 7. Persist the audit artifact
+
+Per `spec/project/dependency-audit/` §Audit artifact, persist every full audit as a git-tracked artifact (a commit or a `security-audit`-labelled issue are accepted alternatives). Default to the canonical path `.audits/dependency-audit/dependencies-YYYY-Q<n>.md` (the portfolio-wide `.audits/<audit-type>/` standard). The artifact MUST record: date; trigger (quarterly / pre-release / manifest-change); scope (which subroots were audited, which were skipped and why); the tools used and their versions; the per-finding severity and response decision; and the Git revision audited. Link to the prior quarter's artifact so the progression stays traceable. The quarterly [`spec-drift-audit`](spec-drift-audit.md) references this artifact rather than re-running the scan.
 
 ### Gotchas
 
@@ -179,11 +217,21 @@ Don't execute these without explicit confirmation:
 
 Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/dependency-audit/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
+### Source triangulation
+
+Per `spec/claude/research-triangulate/`, before this skill presents any **repo-external assertion** that goes beyond the auditor's own machine-readable output — a recommended fix version, an interpretation of an advisory's affected range, or a licence's compatibility — triangulate it instead of trusting a single source:
+
+- **Independent sources by blast radius.** At least two independent sources; **at least three** (the Release/dispatch tier) when the assertion will direct a write outside the working copy (a version pin, a sister-repo path, a third-party API signature, an external tool default).
+- **Record provenance.** For every source record the URL or path, the source class, and the retrieval date in the audit artifact's source list; at least one source SHOULD carry a verifiable date so a stale advisory or pin is detectable.
+- **Surface conflicts, never silent-vote.** When sources disagree, name the most likely explanation and let the operator decide; never apply a majority vote or auto-pick by source class.
+- **Mark `unverified` when under-triangulated.** If the required source count is unreachable, mark the assertion `unverified` and hand back to the operator; in an autonomous run with no reachable operator, abort the write and persist the conflict as a findings report.
+
 ### Hard rules
 
 - **Never** modify dependency manifests, lockfiles, or ignore lists without explicit user confirmation. This skill reports; mutations are a follow-up step.
 - **Never** upgrade dependencies autonomously, even when a fix version is obvious. That's an author decision with test-suite consequences.
-- **Never** silently skip an auditor that isn't installed. Emit an install hint and record the skip in the `Health` section.
+- **Never** silently skip an auditor that isn't installed. Emit an install hint and record the skip in the `Health` section, and report that subroot's verdict as `blocked`, **never `pass`** — the gate fails closed on an un-auditable subroot.
+- **Always** treat an `unknown`-severity finding as `high` until it is classified otherwise; never let an unclassified finding fall into a lower tier.
 - **Never** invent a license policy when the project has no allowlist. Flag findings as `review`, not as failure.
 - **Never** report findings below the requested severity floor. Keep the report signal-heavy.
 - **Always** prefer a repository-declared Taskfile target over invoking auditors directly, when one exists and wraps the same auditor. This honours any project-specific ignore list the Taskfile applies.
@@ -198,3 +246,4 @@ This skill follows the hybrid pattern: the read-only scan phase is delegated to 
 - **Orchestration role**: typical callers run this as one step inside a larger flow (pre-PR gate, release cut, periodic security review); the output flows back into the main conversation so the user can triage.
 - **Interactivity**: the follow-up actions in Step 6 need user approval — bumping a dependency, adding an advisory ignore entry, drafting a license allowlist — so mid-flow interactivity favours the skill side.
 - **Hybrid split**: the pure scanning half (detect lockfile, run auditor, normalise JSON) is self-contained and benefits from context-window isolation; the [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md) agent handles it. The follow-up-action half stays here so the user can approve each change interactively.
+- **Counter-dimension**: the self-contained, summary-returning shape of the scan phase points toward a pure agent, and its verbose JSON output is exactly the context-window pressure that favours isolation. That pull is honoured — but only for the scan half, which is delegated to [`dependency-audit-scanner`](../../agents/nolte-shared/dependency-audit-scanner.md). The interactivity of the follow-up actions outweighs it for the capability as a whole, so the orchestrating surface stays a skill.

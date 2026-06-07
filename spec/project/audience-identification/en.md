@@ -1,6 +1,6 @@
 # Audience Identification
 
-Status: draft
+Status: accepted
 
 ## Context
 <!-- Why does this spec exist? What problem, user need, or constraint drives it? -->
@@ -21,7 +21,7 @@ Software modules and projects are consumed, operated, constrained, or observed b
 - Prescribing how to engage or communicate with audiences once identified
 - Producing a permanent, organization-wide master audience list (this spec is scoped per context, not per org)
 - Threat modeling—audiences feed into it but aren't equivalent to threat actors
-- Mandating a single artifact format for every context. The canonical default for a stand-alone bounded context is `AUDIENCES.md` at the root of that context (see Requirements §Artifact location), but small or sub-module contexts MAY embed the list in a README section or an ADR; this spec ratifies the default rather than forbidding the alternatives
+- Mandating a single artifact format for every context. The canonical default for a stand-alone bounded context is `AUDIENCES.md` at the root of that context (see the artifact-storage SHOULD in Requirements), but small or sub-module contexts MAY embed the list in a README section or an ADR; this spec ratifies the default rather than forbidding the alternatives
 
 ## Requirements
 <!-- Use RFC 2119 keywords: MUST, SHOULD, MAY. One atomic requirement per bullet. -->
@@ -41,9 +41,11 @@ Software modules and projects are consumed, operated, constrained, or observed b
   - any open question or assumption where information is missing
 - **MUST** tag every audience as `confirmed` (validated with a real representative or an authoritative source) or `assumed` (inferred by the author)
 - **MUST** produce the audience list before downstream artifacts that claim an audience are written (READMEs, specs, threat models, release notes, SLAs, documentation tracks per `spec/project/docs-audience-tracks/`, …), so those artifacts can reference it rather than restate it; the documentation-tracks artefact is one of the downstream consumers and the per-audience `track` field is the consuming surface
+- **MUST** apply this spec portfolio-wide: any repository that produces an audience-claiming downstream artifact (README, mission, roadmap, docs tracks, release notes, SLAs) MUST have an audience artifact. There is no per-repository opt-in or opt-out; opt-out is per relationship category only (record "none" with a reason). The artifact's *format* scales with context size (see the artifact-storage SHOULD in Requirements), but the method itself is never skipped
 - **SHOULD** rank audiences by criticality to the success of the context (primary / secondary / peripheral)
-- **SHOULD** store the audience artifact at `AUDIENCES.md` at the root of the bounded context as the canonical default; for small modules or sub-contexts where a stand-alone file is overkill, a README section ("## Audiences" or "## Intended consumers") or an ADR is an acceptable alternative. Whichever location is chosen, the artifact lives **alongside** the context it describes—not in a central registry—so consuming specs (for example `mission`, `roadmap`, `release-notes-audience-analysis`, `release-skill-layer`, and tooling like `github-issue-templates-apply`) can locate it deterministically; the list isn't exhaustive, and `spec-drift-audit` is the canonical detector for newly-added consumers that cite the artefact
+- **SHOULD** store the audience artifact at `AUDIENCES.md` at the root of the bounded context as the canonical default; for small modules or sub-contexts where a stand-alone file is overkill, a README section ("## Audiences" or "## Intended consumers") or an ADR is an acceptable alternative. Whichever location is chosen, the artifact lives **alongside** the context it describes—not in a central registry—so consuming specs (for example `mission`, `roadmap`, `release-notes-audience-analysis`, `release-skill-layer`, and tooling like `github-issue-templates-apply`) can locate it deterministically; the list isn't exhaustive, and `spec-drift-audit` is the canonical detector for newly-added consumers that cite the artefact. There is no minimum size below which the method is skipped; for contexts too small to warrant their own artifact, fold the audience list into the parent context's artifact or a README section. The format scales with size, the method doesn't
 - **SHOULD** revisit the audience list whenever the context's scope materially changes—new public API, new deployment target, new regulated data class, new stakeholder
+- **SHOULD** version the audience artifact through the repository's git history; there is no separate version field or per-release snapshot. The revision cadence is event-driven per the §revisit-triggers bullet above, and `spec-drift-audit` detects when the artifact has drifted from the actual interaction surface
 - **MAY** link each audience entry to the specs, docs, or SLAs produced for it, so coverage is visible
 - **MAY** subdivide audiences further by geography, organizational unit, or tenancy when such distinctions change the expected deliverable
 
@@ -59,9 +61,5 @@ Software modules and projects are consumed, operated, constrained, or observed b
 - [ ] Every stand-alone bounded context that has produced an audience artifact ships it as `AUDIENCES.md` at the context root, OR the chosen alternative location (a README section "## Audiences" / "## Intended consumers" or an ADR) is justified by the context's small size or by pre-existing repo precedent. Verifiable by `find . -name AUDIENCES.md -not -path './node_modules/*' -not -path './.venv/*'` plus a grep of README files for the section headings
 
 ## Open Questions
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Is there a minimum context size below which this method is overkill (for example a 50-line internal utility)?
-- Does this spec apply portfolio-wide, or only to repositories that explicitly opt in?
-- How should an audience list be versioned—per release, per major API change, or continuously through git history?
-- Is the "Governing parties" category mandatory even for purely internal, single-team modules, or optional there?
-- How does this spec interact with future threat-modeling, privacy-impact, or SLA specs that will also consume the same audience list?
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

@@ -1,0 +1,12 @@
+# Behavioural eval layer (RUN_EVALS=1).
+#
+# v1 needs NO extra Python packages: every live call (both the skill/agent runner and
+# the LLM-as-judge) goes through the `claude` CLI via `claude -p`. The only requirements
+# for a live run are therefore:
+#   - the `claude` CLI on PATH
+#   - an authenticated Claude Code login — a Pro/Max subscription OR an API key.
+#     No separate Anthropic API key / Console account is required.
+#
+# The multi-turn Agent-SDK path (interactive approval skills) is not yet implemented;
+# when it is, it will additionally need:
+# claude-agent-sdk>=0.1

@@ -21,7 +21,7 @@ A Cookiecutter template in this portfolio is a project-scaffold artefact that re
 <!-- Explicitly out of scope. Prevents creep. -->
 - Consuming an existing template (a plain `cookiecutter <url>` invocation needs no spec or agent)
 - Generic Python-project bootstrap unrelated to Cookiecutter (use the standard Python project structure under `spec/project/project-structure/`)
-- Copier or cruft templates—those have different anti-patterns and different hook contracts; cross-references to them belong in the agent's body, not this spec
+- Copier or cruft templates—those have different anti-patterns and different hook contracts; cross-references to them belong in the agent's body, not this spec. A dedicated `copier-template-authoring` / `cruft-template-authoring` spec is created only if and when the portfolio ships such a template.
 - Templates that intentionally diverge from the nolte portfolio specs (those are out-of-scope for the agent and for this spec; the divergence requires an explicit waiver recorded outside this surface)
 - The render-time `cookiecutter.json` variable schema (it varies per template by design—the spec governs the shape of the resulting project, not the input shape)
 - Visual identity or branding of the rendered project (per-template decision, gated by the rendered project's own `mkdocs-material` palette settings)
@@ -46,12 +46,12 @@ A Cookiecutter template in this portfolio is a project-scaffold artefact that re
 - **MUST** restrict `post_gen_project.py` to operations that finalise the rendered project: removing files / folders the user opted out of via `cookiecutter.json` variables, initialising a git repository (`git init` is permitted; `git remote add` and `git push` are forbidden), running `pre-commit install`, and printing a final "next steps" banner. The hook **MUST NOT** install dependencies (Python, Node, system), **MUST NOT** make network calls, and **MUST NOT** modify files outside the rendered project tree.
 - **MUST** make every hook side-effect verifiable by a `pytest-cookies` test (see §Test harness below); a hook that mutates the rendered tree without a covering test is an authoring failure
 - **SHOULD** keep each hook under ~100 lines of Python; longer hooks indicate the responsibility belongs to a separate skill or a runtime tool, not to the template
-- **MAY** dispatch the rendered project to the `audience-identify` skill as the post-generation next step (printed in the banner, not automatically invoked), so the operator follows the spec-mandated audience-identification flow right after generation
+- **MAY** dispatch the rendered project to the `audience-identify` skill as the post-generation next step (printed in the banner, not automatically invoked), so the operator follows the spec-mandated audience-identification flow right after generation. This stays MAY (banner-only) by design: the rendered-project hook isn't a skill and MUST NOT invoke the Skill tool (see `spec/claude/skill-vs-agent/`, which forbids an agent from invoking the Skill tool on the user's behalf), and the authoring-time `cookiecutter-template-manage` skill can't reach the consumer's generation-time context. Upgrading to automatic dispatch requires a new generation-time wrapper, not a change to the hook contract.
 
 ### Test harness
 
 - **MUST** ship a `pytest-cookies` test suite that renders the template with a representative variable set and asserts the rendered tree satisfies every MUST in §Rendered-project conformance
-- **MUST** wire the test suite into a GitHub Actions matrix that exercises the template on at least the Python versions declared in `pyproject.toml` (or equivalent) and at least the OS that matches the rendered project's target—typically `ubuntu-latest`
+- **MUST** wire the test suite into a GitHub Actions matrix that exercises the template on at least the Python versions declared in `pyproject.toml` (or equivalent) and at least the OS that matches the rendered project's target—typically `ubuntu-latest`. When a template's rendered target implies Windows execution (Windows binary releases, a Home Assistant integration), "the OS that matches the rendered project's target" resolves to including `windows-latest` in that template's matrix.
 - **MUST** assert post-generation hook outcomes mechanically (file presence, file absence, `pre-commit` install state, …) rather than via printed banner inspection
 - **SHOULD** include a "render twice with the same variables yields identical trees" idempotency test, so non-deterministic hooks are caught at template-CI time
 - **MAY** include a "render with optional features off then on" matrix dimension when the template's `cookiecutter.json` exposes feature-toggle variables; this catches features that secretly depend on each other
@@ -84,10 +84,8 @@ The template **MUST NOT** render any of the following:
 - [ ] The `cookiecutter-template-author` agent's body cites this spec as its normative source instead of restating the requirements
 
 ## Open Questions
-<!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should this spec extend to Copier and cruft templates as well, or stay Cookiecutter-only with cross-references to a future `copier-template-authoring` and `cruft-template-authoring`? Defer until the portfolio actually ships a non-Cookiecutter template; the agent's existing scope is Cookiecutter-only.
-- Does the post-generation hook need to dispatch the `audience-identify` skill automatically (one-step generation + audience identification), or does the banner-only "next step" pointer suffice? Defer until a portfolio template has run for 5+ generations and we know whether operators actually follow the banner.
-- Should the `pytest-cookies` matrix be required to cover Windows when the rendered project's target audience may include Windows users (Home Assistant integrations, CLIs with binary releases), or stay Linux-only as the portfolio convention? Defer until a portfolio repository renders a Windows-targeted artefact.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
 
 ## Sources
 <!-- Authoritative external references the requirements above were validated against (≥2 independent sources per claim). -->

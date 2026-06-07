@@ -2,9 +2,9 @@
 
 [![CI](https://github.com/nolte/claude-shared/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/nolte/claude-shared/actions/workflows/ci.yml)
 
-The `ci` workflow bundles the three required status checks that gate `develop`: `lint`, `test`, and `docs`. A green badge means all three passed on the latest `develop` commit.
-
 A shared foundation of [Claude Code](https://docs.claude.com/en/docs/claude-code) agents and skills, intended to be reused across multiple software development projects.
+
+The `ci` workflow bundles the three required status checks that gate `develop`: `lint`, `test`, and `docs`. A green badge means all three passed on the latest `develop` commit.
 
 ## Purpose
 
@@ -16,9 +16,20 @@ This repository provides a single source for:
 - **Skills**: reusable slash commands and workflows invoked via the `Skill` tool.
 - **Conventions**: shared guidance (`CLAUDE.md` snippets, prompt fragments) that projects can compose into their own setup.
 
+The plugin's primary readers are **`downstream-user`** (Claude Code users in portfolio projects who install this plugin), **`dogfooding-author`** (the plugin author developing it in this repo), plus **`maintainer`** and **`external-contributor`** for the codebase itself. The full audience list—with criticality, expectations, and per-audience track—lives in [`AUDIENCES.md`](AUDIENCES.md).
+
+**When to use this plugin** (typical scenarios):
+
+- Enforce a consistent pull-request workflow across multiple repositories in the same portfolio.
+- Apply a uniform pre-merge review baseline (`review`, `security-review`) before shipping.
+- Bootstrap or refresh a project's MkDocs documentation skeleton with audience-track frontmatter.
+- Run a portfolio-wide `dependency-audit` / `docs-freshness` / `vocab-drift` pass on a recurring schedule.
+
+Out-of-scope cases are listed under [§Scope & guarantees](#scope--guarantees). In short, the plugin ships tooling, not a managed service, and it doesn't own downstream release accountability.
+
 ## What this plugin ships
 
-The plugin is distributed as a single bundle. After install, every skill below is callable as `/nolte-shared:<name>`. Agents are dispatched by skills, or directly via the `Task` tool when the caller knows which agent it wants.
+The plugin is distributed as a single bundle. After install, every skill below is callable as `/nolte-shared:<name>`. Agents are dispatched by skills, or directly via Claude Code's `Task` tool (the API skills use to launch agents programmatically) when the caller knows which agent it wants.
 
 ### Skills
 
@@ -113,7 +124,7 @@ The `ci` workflow gates the same three categories on `develop` as separate requi
 - **Self-hosted marketplace source**: The plugin entry in `marketplace.json` uses `"source": "."` (relative path). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
 - **Contact**: No email is published in `plugin.json` or `marketplace.json`. Use the GitHub repository (`https://github.com/nolte/claude-shared`) for issues and contact.
 - **Dogfooding requires `--plugin-dir .`**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from. Without the flag, `/skills` in this repo won't list the bundled skills.
-- **Workflow cascade constraint**: GitHub Actions doesn't cascade workflow runs from events produced by a `GITHUB_TOKEN`-authenticated step. In this repo that means `release-drafter.yml` doesn't fire after an `automerge.yaml` squash-merge, and `release-cd-refresh-master.yml` doesn't fire after a `release-publish.yml` publish. The constraint is documented in `spec/project/workflow-health/` §Known platform constraints; the portfolio-level fix lives in `nolte/gh-plumbing`. Until that ships, a user-authored commit re-fires `release-drafter`, and `main` is fast-forwarded manually after a publish.
+- **Workflow cascade constraint**: GitHub Actions doesn't cascade workflow runs from events produced by a `GITHUB_TOKEN`-authenticated step. In this repo that means `release-drafter.yml` doesn't fire after an `automerge.yaml` squash-merge, and `release-cd-refresh-master.yml` doesn't fire after a `release-publish.yml` publish. The constraint is documented in `spec/project/workflow-health/` §Known platform constraints; the portfolio-level fix lives in `nolte/gh-plumbing` (tracking: [`nolte/gh-plumbing#330`](https://github.com/nolte/gh-plumbing/issues/330), the portfolio App/PAT for the `GITHUB_TOKEN` cascade gap). Until that ships, a user-authored commit re-fires `release-drafter`, and `main` is fast-forwarded manually after a publish.
 - **Changelog**: The authoritative per-release content lives on the [GitHub Releases page](https://github.com/nolte/claude-shared/releases); no Markdown changelog is kept in git.
 
 ## Structure
@@ -149,7 +160,7 @@ Early stage—the repository currently serves as the anchor point for consolidat
 
 This plugin ships tooling—skills, agents, specs—not a managed service. It helps maintainers of downstream projects keep their workflows consistent, but it doesn't take responsibility for downstream outcomes:
 
-- **No SLA.** Skills and agents are best-effort automation. Release quality, code quality and security posture of a downstream project remain the accountability of that project's maintainers.
+- **No service-level agreement (SLA).** Skills and agents are best-effort automation. Release quality, code quality and security posture of a downstream project remain the accountability of that project's maintainers.
 - **No warranty on recommendations.** Outputs from `quality-gate`, `dependency-audit`, and review-style skills are advisory. A clean report isn't a guarantee that the reviewed change is safe to ship.
 - **No support contract.** Issues and pull requests are triaged on a best-effort basis (see [`CONTRIBUTING.md`](CONTRIBUTING.md)). There is no published response-time commitment.
 - **Vulnerability handling** follows [`SECURITY.md`](SECURITY.md); the plugin's threat scope is limited to what this repository itself ships, not to downstream use of its outputs.

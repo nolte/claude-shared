@@ -20,6 +20,7 @@ see_also:
   - spec-readiness-reviewer
   - feature-consistency-reviewer
   - workflow-health-triage
+  - continuous-improvement-triage
 resumable: true
 ---
 
@@ -30,7 +31,7 @@ Operationalises `spec/project/spec-drift-audit/<canonical_language>.md` — reco
 ## Why this is a skill, not an agent
 
 - **Mid-flow interactivity** — the user decides per finding: adjust the implementation, adjust the spec, or flag as an Open Question. An agent's fire-and-forget contract loses that deliberation loop.
-- **Persistent on-disk output** — the audit artifact under `docs/audits/YYYY-Q<n>.md` (or a GitHub issue) must survive past the current turn and be worked off incrementally; skills own persistent artifacts, agents return ephemeral reports.
+- **Persistent on-disk output** — the audit artifact under `.audits/spec-drift/YYYY-Q<n>.md` (or a GitHub issue) must survive past the current turn and be worked off incrementally; skills own persistent artifacts, agents return ephemeral reports.
 - **Orchestration role** — the audit dispatches `project-structure-apply` and `vocab-drift-audit` as partial auditors in the same session; the skill-orchestrates-agent-executes pattern defaults the orchestrator to skill form.
 - Counter-dimension considered: *context-window load* from reading all specs plus their implementation surfaces could bias toward an agent, but the audit is inherently interactive and scoped per cycle — the user controls which specs are in scope and confirms each finding disposition. Inline execution in the skill form wins.
 
@@ -51,7 +52,7 @@ Before any operation, verify:
 
 1. `spec/.spec-config.yml` is present — read it to determine `canonical_language` (fall back to `en`).
 2. `spec/project/spec-drift-audit/<canonical_language>.md` is present — this is the governing spec; stop if missing.
-3. `docs/audits/` exists or can be created (check `git ls-files docs/audits/.gitkeep`); create `docs/audits/.gitkeep` if the folder is absent.
+3. `.audits/spec-drift/` exists or can be created (check `git ls-files .audits/spec-drift/.gitkeep`); create `.audits/spec-drift/.gitkeep` if the folder is absent.
 
 ## Operations
 
@@ -67,10 +68,18 @@ Interactive. Confirm scope and trigger with the user before proceeding.
    - Run `vocab-drift-audit` to check Vale vocabulary against the pinned upstream release.
    - Run `task lint` and record the result.
    Record each tool's name and version (or git SHA) in the artifact's `tools-used` list.
-5. **Per-criterion check.** For each remaining spec criterion not covered by a dispatched tool, evaluate against the implementation: produce one of `pass`, `fail`, `blocked` (tooling missing), or `not-applicable` (with reason). Record the result.
+5. **Per-criterion check.** For each remaining spec criterion not covered by a dispatched tool, evaluate against the implementation: produce one of `pass`, `fail`, `blocked` (tooling missing), or `not-applicable` (with reason). Record the result. For each `fail` or `blocked` finding, the auditor **MUST** additionally record a **Specialist** disposition (mandatory field in the finding template per `spec/project/continuous-improvement/<canonical_language>.md` AC "No in-scope finding from the most recent `spec-drift-audit` run is recorded as 'no specialist considered'"): either (a) the dispatched specialist that will handle the remediation, naming both its display name and its `subagent_type` (or matching skill name), or (b) the explicit note `no matching specialist exists — generalist handled`. A finding recorded without one of these two values is incomplete and **MUST NOT** be written.
+5b. **Audience-surface drift check.** Per `spec/project/audience-identification/<canonical_language>.md` (its AC "The `spec-drift-audit` skill can flag a module whose documented audiences no longer match its actual interaction surface"), reconcile each in-scope bounded context's audience artifact against its real interaction surface:
+   - Locate the audience artifact for each context: `AUDIENCES.md` at the context root, or the acceptable alternatives that spec permits (a README `## Audiences` / `## Intended consumers` section, or an ADR). A context that ships an audience-claiming downstream artifact (README, mission, roadmap, docs tracks, release notes, SLAs) but has *no* audience artifact is itself a `fail`.
+   - For each documented audience, confirm its recorded `interaction surface` (API, CLI, config, docs, dashboard, incident channel, …) still exists in the repository. A documented surface that no longer exists is drift (`fail`).
+   - Scan for *undocumented* interaction surfaces — a new public CLI command, a new config schema, a new dashboard or API — that no audience entry accounts for. An interaction surface with no documented audience is drift (`fail`).
+   - Record each mismatch as a finding with the standard Specialist disposition; the natural remediation specialist is `audience-identify` (re-run the audience methodology), so name it (or the `no matching specialist exists — generalist handled` note).
 6. **Draft the artifact.** Read `templates/audit.template.md` for the Markdown template. Fill every frontmatter field. List all findings with `fail` or `blocked` status in `## Findings`. Leave `## Decisions` empty at creation.
-7. **Write the artifact** to `docs/audits/<YYYY>-Q<n>.md` (or `docs/audits/<YYYY>-Q<n>-<topic>.md` for thematic audits). Confirm the path with the user.
-8. **Offer to stage and commit.** Show the artifact path. Do not commit without explicit user confirmation.
+7. **Write the artifact** to `.audits/spec-drift/<YYYY>-Q<n>.md` (or `.audits/spec-drift/<YYYY>-Q<n>-<topic>.md` for thematic audits). Confirm the path with the user.
+8. **Fold the specialist-coverage review (continuous-improvement integration).** Per `spec/project/continuous-improvement/<canonical_language>.md` §"Continuous loop and quarterly coverage review", the quarterly **specialist-coverage review** SHOULD be folded into this `spec-drift-audit` run by default. On a quarterly full-scope audit (and on any audit run in a quarter that has no coverage-review artifact yet), prompt the user: *"Fold the quarterly specialist-coverage review into this artifact, or keep it standalone under `.audits/continuous-improvement/<YYYY-QN>.md`?"* — default to folding.
+   - **Folded:** keep the template's `## Specialist coverage review` section (it is the named landing spot mandated by the spec's "present it as a named, dedicated section" MUST), then dispatch `continuous-improvement-triage` (`audit` operation) to produce the review content and populate that section. The section **MUST** stay full-portfolio in scope even on a thematic partial audit — partial-audit narrowing applies to drift, not to coverage, and a narrowed audit that suppresses it is itself a finding for the next cycle.
+   - **Standalone:** delete the `## Specialist coverage review` section from this artifact and dispatch `continuous-improvement-triage` to write its own `.audits/continuous-improvement/<YYYY-QN>.md` artifact for the same quarter.
+9. **Offer to stage and commit.** Show the artifact path. Do not commit without explicit user confirmation.
 
 Read `examples/01-quarterly-audit.md` when running a full-scope quarterly audit to see a realistic walkthrough.
 Read `examples/02-spec-change-trigger.md` when running a thematic partial audit triggered by a spec update.
@@ -79,9 +88,9 @@ Read `examples/02-spec-change-trigger.md` when running a thematic partial audit 
 
 When the user reports decisions for one or more findings:
 
-1. **Read** the current audit artifact from `docs/audits/`.
+1. **Read** the current audit artifact from `.audits/spec-drift/`.
 2. **Verify** each claimed closure: re-read the relevant spec criterion and the referenced implementation file. Do not accept "done" without spot-checking.
-3. **Record the decision** per finding: `adjust-impl`, `adjust-spec`, or `open-question`. Update the `## Decisions` section.
+3. **Record the decision** per finding: `adjust-impl`, `adjust-spec`, or `open-question`. Update the `## Decisions` section. **Carry the Specialist disposition forward** from the finding into the decision entry: each `## Decisions` block **MUST** restate the dispatched specialist (display name + `subagent_type` / skill name) or the `no matching specialist exists — generalist handled` note recorded in step 5 of `audit`, so the remediation PR's **Risk / rollout notes** can name it per `spec/project/continuous-improvement/<canonical_language>.md`.
 4. **Append one log line** to `## Processing log` per decision: `YYYY-MM-DD — <finding-id> — <decision> — verified: <method>`.
 5. **Flip `status`** in artifact frontmatter to `in-progress` on first decision.
 6. **Show the diff.** Do not commit automatically.
@@ -107,7 +116,7 @@ Read `examples/03-finding-resolution.md` when working off findings via update an
 - **`spec/.spec-config.yml` must be read first.** The canonical language for spec paths depends on `canonical_language` in that config. Defaulting to `en` without reading the config silently routes to the wrong language in repos with a different canonical.
 - **`Status: draft` specs are in scope.** The governing spec explicitly includes draft specs in the audit perimeter. Do not skip them.
 - **Partial auditors only cover their slice.** `project-structure-apply` and `vocab-drift-audit` are delegated tools but each covers only one surface. Remaining spec criteria need direct per-criterion evaluation — never assume "dispatched means done".
-- **Artifact location is repository-consistent.** If `docs/audits/` already contains prior artifacts, match the existing naming convention rather than inventing a new one. Check for prior artifacts before writing.
+- **Artifact location is repository-consistent.** If `.audits/spec-drift/` already contains prior artifacts, match the existing naming convention rather than inventing a new one. Check for prior artifacts before writing.
 - **Calendar quarter, not rolling.** Q1 = Jan–Mar, Q2 = Apr–Jun, Q3 = Jul–Sep, Q4 = Oct–Dec. A `2026-Q2` audit covers the April–June window regardless of the actual date within the quarter.
 
 ## Resumability

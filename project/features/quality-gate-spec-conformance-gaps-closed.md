@@ -1,11 +1,11 @@
 ---
 id: F-3
 title: Quality-gate documentation and Taskfile composite close the spec gaps
-status: draft
+status: done
 roadmap_item: R-3
 sprint: 3
 created: 2026-05-27
-ended: null
+ended: 2026-05-29
 verifies_sprint_value: acceptance-1
 consistency_check:
   performed_at: 2026-05-27
@@ -51,7 +51,7 @@ the spec at HEAD and are explicitly out of scope for this feature.
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** A reader of the repo's `README.md` finds, in the
+- [x] **acceptance-1** A reader of the repo's `README.md` finds, in the
   Usage section, the canonical local invocation of the gate (the
   `task` target name) and a one-paragraph description of the output
   shape per `spec/project/quality-gate/` §Output shape (the four
@@ -59,12 +59,12 @@ the spec at HEAD and are explicitly out of scope for this feature.
   columns `Check`/`Status`/`Runner`/`Details`); no contributor needs
   to open the Taskfile or `ci.yml` to learn how to run the gate
   locally.
-- [ ] **acceptance-2** The README lists every gate category named in
+- [x] **acceptance-2** The README lists every gate category named in
   `ci.yml`'s `lint` / `test` / `docs` jobs, marking each as
   `covered by pre-commit` or `contributor-invoked`; the list resolves
   one-to-one against the job names so a reader can confirm
   completeness by string match.
-- [ ] **acceptance-3** `Taskfile.yml` declares a `check` task that
+- [x] **acceptance-3** `Taskfile.yml` declares a `check` task that
   invokes the lint and test categories the repo has relevant code for;
   `task check` exits zero on a clean tree and non-zero when any
   category fails.
@@ -74,16 +74,20 @@ the spec at HEAD and are explicitly out of scope for this feature.
 - **acceptance-1** — manual: open `README.md`, locate the gate
   invocation and the output-shape paragraph in the Usage section;
   cross-reference against `spec/project/quality-gate/` §Output shape —
-  `pending`
+  `passing` (README §"Running the quality gate" names `task check` and
+  the output-shape table per PR #224, shipped in v0.1.4)
 - **acceptance-2** — manual: extract the README's gap list; assert
   one-to-one match between its entries and the job names in
   `ci.yml`'s `lint` / `test` / `docs` jobs; assert each entry's
   marker is one of `covered by pre-commit` or `contributor-invoked` —
-  `pending`
+  `passing` (README lists `lint`=covered-by-pre-commit,
+  `test`/`docs`=contributor-invoked, one-to-one with ci.yml jobs)
 - **acceptance-3** — manual: on a clean tree, run `task check`;
   assert exit 0 plus the table-shape output; introduce a deliberate
   lint failure (e.g., a Vale-banned token in a tracked Markdown
-  file), re-run `task check`, assert exit non-zero — `pending`
+  file), re-run `task check`, assert exit non-zero — `passing`
+  (verified locally: clean tree exits 0; a deliberate Vale error in
+  README exits 1)
 
 ## Consistency notes
 

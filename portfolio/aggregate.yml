@@ -1,0 +1,358 @@
+# Aggregated portfolio snapshot — the single source of truth for
+# scripts/docs/gen_portfolio.py. Populated by the portfolio-audit skill's
+# Render operation, which collects each active nolte/* member's
+# project/portfolio.yml + project/mission.md via gh api. Per
+# spec/portfolio/portfolio-management/ §Documentation rendering the rendered
+# docs/<lang>/portfolio/ pages MUST NOT be hand-edited; edit this snapshot
+# (or re-run Render) and regenerate via `task docs:portfolio`.
+
+schema_version: 1
+snapshot_source: portfolio-audit Render (portfolio-manifest-collector via gh api)
+members:
+- repo: nolte/blog
+  repo_url: https://github.com/nolte/blog
+  mission_statement: >-
+    A bilingual AI-drafted and human-curated knowledge base that turns the
+    author's software-project work into durable English and German posts for
+    technical readers, portfolio reviewers, and the author's own future-self.
+  capabilities:
+  - name: bilingual-blog-knowledge-base
+    description: >-
+      A bilingual (English-canonical, German-translated) Astro blog and personal
+      knowledge base, deployed to GitHub Pages, that publishes durable posts as
+      real EN+DE pairs without translation drift for technical readers, portfolio
+      reviewers, and the author's own future-self.
+    status: experimental
+    audience:
+    - A — Technical readers
+    - B — Portfolio reviewers
+    - C — Author as knowledge-base user
+    since: 2026-05-21
+  - name: transparent-ai-authoring
+    description: >-
+      Per-post AI-disclosure (the aiGenerated frontmatter flag, with a planned
+      visible badge and About-page explanation) that keeps AI-drafted content
+      transparently distinct from hand-curated content.
+    status: experimental
+    audience:
+    - A — Technical readers
+    - B — Portfolio reviewers
+    - L — People and projects named in posts
+    since: 2026-05-21
+  peers:
+  - nolte/claude-shared
+- repo: nolte/claude-shared
+  repo_url: https://github.com/nolte/claude-shared
+  mission_statement: >-
+    claude-shared (the nolte-shared Claude Code plugin) gives downstream Claude
+    Code users in nolte portfolio projects plus the plugin's own dogfooding
+    maintainer a consistent, spec-compliant set of skills, agents, and bilingual
+    specifications they can apply without per-repository reimplementation.
+  capabilities:
+  - name: shared-claude-code-skills
+    description: >-
+      Bundles reusable Claude Code skills (slash commands) under
+      skills/<name>/SKILL.md that downstream nolte portfolio projects install
+      through the plugin marketplace to get consistent, spec-compliant authoring,
+      review, planning, and release workflows.
+    status: active
+    audience:
+    - Downstream Claude Code users in portfolio projects
+    - Plugin author dogfooding inside this repo
+    since: 2026-04-24
+  - name: shared-claude-code-agents
+    description: >-
+      Bundles reusable Claude Code sub-agents under agents/<name>.md
+      (context-window-protective read-only or write-narrow specialists) that
+      downstream projects invoke through Agent(subagent_type=<plugin>:<agent>).
+    status: active
+    audience:
+    - Downstream Claude Code users in portfolio projects
+    - Plugin author dogfooding inside this repo
+    since: 2026-04-24
+  - name: portfolio-spec-corpus
+    description: >-
+      Bilingual (EN-canonical with DE translation) specs under spec/ that govern
+      Claude Code skill and agent authoring, project layout, branching, releases,
+      audience identification, and portfolio management for the nolte portfolio.
+    status: active
+    audience:
+    - Plugin author dogfooding inside this repo
+    - Other Nolte portfolio repos as passive consumers of the conventions
+    - External contributors via pull request
+    since: 2026-04-24
+  - name: planning-suite-reference-adopter
+    description: >-
+      Applies the planning-suite specs (mission, goals, roadmap, features,
+      sprints) to claude-shared itself under project/, so other Portfolio-Member
+      repos see the planning suite in action before adopting it.
+    status: experimental
+    audience:
+    - Plugin author dogfooding inside this repo
+    - Downstream Claude Code users in portfolio projects
+    since: 2026-05-09
+  - name: auto-generated-skill-agent-catalog
+    description: >-
+      Generates a navigable MkDocs catalog of every skill and agent in the
+      nolte-shared plugin (and optionally external plugin source roots) so
+      downstream readers discover what the plugin ships without reading the
+      source tree directly.
+    status: active
+    audience:
+    - Downstream Claude Code users in portfolio projects
+    - Plugin author dogfooding inside this repo
+    - External contributors via pull request
+    since: 2026-05-09
+  - name: shared-vale-vocabulary-extension
+    description: >-
+      Extends the nolte/vale-style baseline vocabulary with portfolio-specific
+      terms (autoload, autolink, Probot, Renovate, vtracer, retarget, and
+      similar) so prose under README.md, docs/en/, and spec/**/en.md passes Vale
+      across the portfolio.
+    status: active
+    audience:
+    - Plugin author dogfooding inside this repo
+    - Other Nolte portfolio repos as passive consumers of the conventions
+    since: 2026-04-24
+  peers:
+  - nolte/vale-style
+- repo: nolte/vale-style
+  repo_url: https://github.com/nolte/vale-style
+  mission_statement: >-
+    vale-style ships a single curated Vale style package that consuming nolte/*
+    repositories integrate via one .vale.ini entry to lint markdown consistently
+    across the portfolio.
+  capabilities:
+  - name: vale-style-package
+    description: >-
+      A curated Vale style package distributed as `nolte-styles.zip` via GitHub
+      releases. Consumer repositories integrate it via a single `.vale.ini`
+      `Packages` entry to lint markdown consistently across the portfolio.
+    status: active
+    audience:
+    - nolte/* consumer repositories
+    - CI pipelines in consumer repos
+    - local developers in consumer repos
+  - name: vocabulary-curation-spec
+    description: >-
+      A written specification under `spec/vocabulary-and-style-curation/{en,de}.md`
+      that codifies inclusion criteria, removal policy, and group scoping for the
+      vocabularies shipped in `vale-style-package`. Curator agents from
+      `nolte/claude-shared` (`prose-vale-curator`, `vocab-drift-audit`) cite this
+      spec to ground automated curation decisions.
+    status: experimental
+    audience:
+    - nolte (primary maintainer)
+    - Claude Code agents / skills
+    - External contributors
+  peers: []
+- repo: nolte/workstation
+  repo_url: https://github.com/nolte/workstation
+  mission_statement: >-
+    nolte/workstation lets the workstation-operator bring any developer machine
+    to an identical, reproducible state from a single chezmoi source tree, so
+    every machine and the downstream tooling running on it behave the same.
+  capabilities:
+  - name: developer-workstation-provisioning
+    description: >-
+      A chezmoi source tree that provisions a developer workstation to an
+      identical, reproducible state from a single `chezmoi init --apply`:
+      asdf-pinned CLI tool versions, a baseline git config, a curated zsh setup,
+      the reusable Taskfile collection, and the pre-commit / cookiecutter /
+      MkDocs Python virtualenvs.
+    status: active
+    audience:
+    - workstation-operator
+    - downstream-tooling-consumers
+    since: 2026-06-01
+  peers: []
+- repo: nolte/gh-plumbing
+  repo_url: https://github.com/nolte/gh-plumbing
+  mission_statement: ""
+  capabilities:
+  - name: reusable-github-actions-workflows
+    description: >-
+      A library of reusable GitHub Actions workflows (reusable-*.yaml:
+      pre-commit, mkdocs deploy, spelling/Vale, automerge, release-drafter/publish,
+      Docker lint/build/publish, Ansible molecule/galaxy, Terraform lint, Trivy,
+      chain-bench, dependency-review) that downstream nolte/* repositories call
+      to get consistent CI/CD without reimplementing pipelines.
+    status: active
+    audience:
+    - Downstream repositories consuming reusable workflows
+    - Repository maintainer (nolte)
+  - name: probot-commons-config
+    description: >-
+      Shared Probot app configuration commons (settings, release-drafter,
+      boring-cyborg, stale presets) that downstream nolte/* repositories extend
+      so repository governance stays uniform across the portfolio.
+    status: active
+    audience:
+    - Downstream repositories extending Probot configurations
+    - Repository maintainer (nolte)
+  - name: renovate-shared-presets
+    description: >-
+      Shared Renovate configuration presets (renovate-configs/) that downstream
+      nolte/* repositories extend for consistent dependency-update grouping,
+      scheduling, and labelling.
+    status: active
+    audience:
+    - Downstream repositories consuming Renovate presets
+    - Renovate bot
+  peers: []
+- repo: nolte/taskfiles
+  repo_url: https://github.com/nolte/taskfiles
+  mission_statement: ""
+  capabilities:
+  - name: reusable-taskfile-collection
+    description: >-
+      A collection of remotely-includable Taskfiles (src/taskfile-include-*.yaml
+      for mkdocs, pre-commit, kind, and k8s) that downstream nolte/* projects
+      include via the Task includes: mechanism to get consistent task targets
+      without copying Taskfile logic into each repository.
+    status: active
+    audience:
+    - Taskfile-consumer project
+    - Consumer-side developer running tasks locally
+    - Consumer-side CI/CD pipeline
+  peers: []
+- repo: nolte/ansible-reachy-mini-bootstrap
+  repo_url: https://github.com/nolte/ansible-reachy-mini-bootstrap
+  mission_statement: ""
+  capabilities:
+  - name: reachy-mini-ansible-provisioning
+    description: >-
+      An Ansible playbook and role collection that bootstraps a Reachy Mini WiFi
+      device (Raspberry Pi OS) to a working state — network, system
+      dependencies, and the Pollen/Reachy runtime — from a single inventory plus
+      playbook run.
+    status: active
+    audience:
+    - "`nolte` (repo author, first operator on his own device)"
+    - "Reachy Mini owner / hobbyist"
+  peers: []
+- repo: nolte/claude-home-assistant
+  repo_url: https://github.com/nolte/claude-home-assistant
+  mission_statement: ""
+  capabilities:
+  - name: claude-code-skills-and-agents-for-home-assistant
+    description: >-
+      A Claude Code plugin bundling skills and agents for Home Assistant
+      development — custom integrations, Lovelace cards, blueprints and
+      automations, and ESPHome / add-on work — that authors HA artefacts against
+      Home Assistant Core and HACS conventions.
+    status: active
+    audience:
+    - "Plugin-Autor beim Dogfooding in diesem Repo (nolte)"
+    - "Spätere öffentliche Nutzer (HA-Custom-Integration- und Card-Autoren-Community)"
+  peers: []
+- repo: nolte/claude-reachy-mini
+  repo_url: https://github.com/nolte/claude-reachy-mini
+  mission_statement: ""
+  capabilities:
+  - name: claude-code-skills-and-agents-for-reachy-mini
+    description: >-
+      A Claude Code plugin bundling skills and agents for Reachy Mini robot
+      development — dance-to-music behaviours and Home Assistant integration —
+      so the operator builds Reachy Mini apps with consistent, spec-grounded
+      tooling.
+    status: active
+    audience:
+    - "Plugin-Autor beim Dogfooding in diesem Repo (nolte)"
+    - "Spätere öffentliche Nutzer (Reachy-Mini-Hobby- und Maker-Community)"
+  peers: []
+- repo: nolte/reachy-mini-mcp
+  repo_url: https://github.com/nolte/reachy-mini-mcp
+  mission_statement: ""
+  capabilities:
+  - name: reachy-mini-mcp-server
+    description: >-
+      A Model Context Protocol server that wraps the Pollen Reachy Mini daemon
+      behind a REST interface, exposing the robot's behaviours to MCP clients
+      and LLM end users.
+    status: active
+    audience:
+    - "MCP clients"
+    - "Reachy Mini owners / developers"
+  peers: []
+- repo: nolte/kamerplanter
+  repo_url: https://github.com/nolte/kamerplanter
+  mission_statement: ""
+  capabilities:
+  - name: plant-lifecycle-management-system
+    description: >-
+      A self-hosted, multi-tenant plant lifecycle management system —
+      seed-to-harvest tracking with a growth-phase state machine
+      (GDD/VPD/photoperiod), nutrient planning, adaptive care reminders,
+      integrated pest management, a RAG knowledge assistant, and a Home
+      Assistant integration — for home growers, hobby gardeners, and community
+      gardens.
+    status: active
+    audience:
+    - Home grower / hobby gardener / houseplant owner
+    - Community-garden administrator
+    - Self-hoster
+  peers: []
+- repo: nolte/kamerplanter-ha
+  repo_url: https://github.com/nolte/kamerplanter-ha
+  mission_statement: ""
+  capabilities:
+  - name: kamerplanter-home-assistant-integration
+    description: >-
+      A HACS-distributed Home Assistant custom integration that connects a
+      Kamerplanter instance to Home Assistant — exposing plant monitoring
+      (growth phases, days-in-phase, next-phase predictions, nutrient-plan
+      assignments), per-channel nutrient dosages, tank management, and
+      per-location overviews as sensors and services.
+    status: active
+    audience:
+    - "Home Assistant user running Kamerplanter"
+    - "Self-hoster running both Kamerplanter and Home Assistant"
+  peers:
+  - nolte/kamerplanter
+- repo: nolte/reachy-mini-app
+  repo_url: https://github.com/nolte/reachy-mini-app
+  mission_statement: ""
+  capabilities:
+  - name: reachy-mini-behavior-app
+    description: >-
+      A Reachy Mini behavior package built on the Pollen Robotics / Hugging Face
+      reachy_mini SDK — packaging robot behaviours (for example dance-to-music)
+      that run on the Reachy Mini and distributed as a Hugging Face app.
+    status: experimental
+    audience:
+    - "Reachy Mini owner / maker"
+  peers: []
+- repo: nolte/cookiecutter-gh-project
+  repo_url: https://github.com/nolte/cookiecutter-gh-project
+  mission_statement: ""
+  capabilities:
+  - name: github-project-cookiecutter-template
+    description: >-
+      A Cookiecutter template that scaffolds a standardised nolte-style GitHub
+      project — pre-wired GitHub Actions and settings based on nolte/gh-plumbing
+      (release process, MkDocs docs publishing, static tests, labelling) — from
+      a single cookiecutter run.
+    status: active
+    audience:
+    - "Developer scaffolding a new nolte-style GitHub project"
+  peers:
+  - nolte/gh-plumbing
+- repo: nolte/terraform-github-bootstrap
+  repo_url: https://github.com/nolte/terraform-github-bootstrap
+  mission_statement: ""
+  capabilities:
+  - name: github-config-as-code
+    description: >-
+      Terraform (integrations/github provider) that manages the nolte GitHub
+      account's repository inventory (existence, description, topics,
+      visibility, feature flags) and per-repo repository rulesets (modern branch
+      protection) as code — the deliberate complement to gh-plumbing's
+      Probot-managed per-repo settings.
+    status: active
+    audience:
+    - "Terraform operator / maintainer (nolte)"
+    - "The nolte GitHub account and its repositories"
+  peers:
+  - nolte/gh-plumbing
+historical: []

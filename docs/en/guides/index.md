@@ -14,7 +14,11 @@ Task-oriented how-tos and explanatory background pages for `claude-shared`, from
 
 - [Development](development.md): getting started as a contributor
 - [Project Structure](project-structure.md): where things live and why
+- [Architecture overview](architecture.md): context, building blocks, load-bearing decisions
+- [Interfaces and contracts](interfaces.md): every interface the project exposes
 - [Contributing](contributing.md): workflow, conventions, commits
+- [Troubleshooting](troubleshooting.md): common contributor/operator failure modes
+- [Glossary](glossary.md): project-specific terminology
 
 ## Understanding the concepts
 
@@ -26,3 +30,7 @@ Task-oriented how-tos and explanatory background pages for `claude-shared`, from
 ## Lifecycle
 
 - [Development Lifecycle](development-lifecycle.md): where each skill and agent fits in the delivery lifecycle
+
+## Capabilities
+
+- [Image Generation](image-generation.md): generate an image from a prompt via swappable providers (Cloudflare, Pollinations, Gemini), and which token each one needs

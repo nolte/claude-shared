@@ -45,6 +45,8 @@ A playbook repository **MUST** declare itself as exactly one of the two profiles
 - **MUST** install `ansible-core` and every Python helper used by the toolchain (`ansible-lint`, `yamllint`, related plugins) inside a project-local Python virtual environment per `spec/project/project-structure/` §Python development; never rely on a system-wide or user-global Ansible install
 - **MUST** pin runtime dependencies (`ansible-core`, plus any collection-side Python dependencies such as `requests`, `netaddr`, `kubernetes` for the relevant collections) in `requirements.txt`, and pin tooling-only dependencies (`ansible-lint`, `yamllint`) in `requirements-dev.txt`
 - **SHOULD** wire Taskfile targets so `task install` provisions the virtual environment from those files and CI invokes the same target before running lint, syntax, and dry-run stages, so developer workstation and CI share one entry point
+- There is deliberately **no** portfolio-wide minimum `ansible-core` version: the version floor stays per-repo (edge/Raspberry-Pi targets and control-node Python versions differ), and the explicit `requirements.txt` pin above is what guarantees reproducibility
+- The CI runtime is left to the consuming repo; this spec deliberately doesn't mandate an execution-environment (EE) image. The load-bearing reproducibility guarantee is the project-local venv pinned via `requirements.txt` / `requirements-dev.txt` and the single shared install entry point above, not a container image
 
 ### Idempotent runs and check mode
 - **MUST** make every play idempotent; a second invocation against an already-converged host reports zero changed tasks
@@ -89,8 +91,8 @@ A playbook repository **MUST** declare itself as exactly one of the two profiles
 
 ### CI pipeline
 - **MUST** include in CI: a lint stage (`ansible-lint`, `yamllint`), a syntax stage (`ansible-playbook --syntax-check`), and a dry-run stage (`ansible-playbook --check --diff`) against a representative test inventory
-- **SHOULD** run a real apply against a Staging environment from CI (or via an explicit gated workflow) before any apply against Production
-- **SHOULD** publish the dry-run diff as a PR artifact so reviewers can read what would change without rerunning locally
+- **SHOULD** run a real apply against a Staging environment from CI (or via an explicit gated workflow) before any apply against Production; this stays a **SHOULD** (not a **MUST**), because not every multi-environment-fleet repo declares a staging environment that mirrors production, and concrete release-promotion is out of scope per §Non-Goals
+- **SHOULD** publish the dry-run diff as a PR artifact so reviewers can read what would change without rerunning locally; the artifact's file format and retention are left to per-repo discretion (the spec mandates only that the diff is published, not how it's stored)
 
 ### Cross-references
 - For role-internal conventions (Galaxy directory layout, `meta/argument_specs.yml`, `defaults/` vs `vars/`, Molecule, Galaxy publishing), see [`spec/ansible/role-development/`](../role-development/en.md)
@@ -112,9 +114,5 @@ A playbook repository **MUST** declare itself as exactly one of the two profiles
 - [ ] No playbook `vars:` block redefines a variable that already exists in any consumed role's `defaults/main.yml`
 
 ## Open Questions
-- Should the *single-environment-bootstrap* profile graduate into its own dedicated spec (`spec/ansible/edge-device-bootstrap/`) once a second repository adopts it, or remain a profile inside this spec?
-- Should the dry-run diff artifact be standardized (file format, retention) across the portfolio, or left to per-repo discretion?
-- Should `sops` integration be elevated from **MAY** to **SHOULD** once a portfolio-wide pattern (kustomize-style key store) emerges?
-- Should there be a portfolio-wide minimum Ansible / `ansible-core` version, or stay per-repo?
-- Should the spec mandate execution-environment images (EE) for CI, or leave the runtime to the consuming repo?
-- Should an explicit Staging-before-Production gate be a **MUST** rather than a **SHOULD** for repos that touch production hosts?
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

@@ -10,7 +10,7 @@ last_updated: generated
 
 > Revises an existing project/mission.md: statement, audiences, time bound, or mvp_status lifecycle flips.
 
-_Revises an existing `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests. Supports three operations: (A) revise statement, audiences, verifying-feature pointer, or time_bound; (B) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (C) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`. Supports resume on re-invocation per `spec/claude/resumable-work/`._
+_Revises an existing `project/mission.md` per the canonical-language file under spec/project/mission/. Invoke when the user says \"revise the mission\", \"update project/mission.md\", \"flip mvp_status\", \"the MVP is achieved\", \"the stabilisation gate is satisfied\", or equivalent German-language requests. Supports three operations: (1) revise statement, audiences, verifying-feature pointer, or time_bound; (2) flip `mvp_status` along the legal lifecycle (`defining→in_progress→achieved→stabilised`, plus regression path); (3) revise after stabilisation with the mandatory rationale. Verifies the stabilisation-gate conditions by reading `project/roadmap.md` and `project/sprints/` before allowing a flip to `stabilised`. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 1 Vision (`vision`)
@@ -31,6 +31,10 @@ _Revises an existing `project/mission.md` per the canonical-language file under 
 
 - [`mission-define`](mission-define.md)
 - [`roadmap-plan`](roadmap-plan.md)
+
+## Referenced by
+
+- [`mission-define`](mission-define.md)
 
 ---
 
@@ -70,7 +74,7 @@ Before any revision:
 
 Ask the user which operation they intend; offer the three branches below.
 
-#### A. Revise the statement, audiences, verification, or time_bound
+#### 1. Revise the statement, audiences, verification, or time_bound
 
 Walk through the field(s) the user wants to change, one at a time:
 
@@ -80,9 +84,9 @@ Walk through the field(s) the user wants to change, one at a time:
 - **`relevant_outcomes`** — every entry **MUST** resolve to an `O-<n>` in `goals.md`; reject empty lists and unresolved entries.
 - **`time_bound`** — only the two legal shapes are allowed (`{ kind: outcome, ref: O-<n> }` or `{ kind: mvp_completion }`). Reject calendar dates and free-text deadlines.
 
-After every accepted change: update `revised_at` to today's ISO date; never edit `created`. If `mvp_status` is currently `stabilised`, route the operation through branch C below before writing.
+After every accepted change: update `revised_at` to today's ISO date; never edit `created`. If `mvp_status` is currently `stabilised`, route the operation through operation 3 below before writing.
 
-#### B. Flip `mvp_status`
+#### 2. Flip `mvp_status`
 
 Legal transitions, per the spec:
 
@@ -107,17 +111,17 @@ For each requested flip:
 4. **For `stabilised → in_progress` (regression)** — record which MVP item re-opened and on what date in `## Source` so the audit trail is unbroken. Post-MVP items already in `status: active` at the moment of the revert **MAY** finish per the spec; don't touch them. Surface to the user that no new post-MVP item may start until stabilisation is restored.
 5. After the flip is confirmed: update `mvp_status`, update `revised_at` to today's ISO date, and append a one-line entry to `## Source` (date, transition, evidence summary).
 
-#### C. Revise after `mvp_status: stabilised` (rationale-required path)
+#### 3. Revise after `mvp_status: stabilised` (rationale-required path)
 
-When the current `mvp_status` is `stabilised` and operation A or B mutates the statement, audiences, verification, or time_bound, the spec **mandates** a one-paragraph rationale in `## Source` because the change redefines what the stabilised MVP was for.
+When the current `mvp_status` is `stabilised` and operation 1 or 2 mutates the statement, audiences, verification, or time_bound, the spec **mandates** a one-paragraph rationale in `## Source` because the change redefines what the stabilised MVP was for.
 
 - Block the write until the user supplies the rationale paragraph.
 - Append the paragraph to `## Source` with today's ISO date and a short heading like `### Revision rationale (<date>)`.
 - Never auto-generate the rationale text; it's an operator statement, not skill output.
 
-A bare `mvp_status: stabilised → in_progress` regression flip from operation B does not by itself trigger this branch (the regression is recorded in `## Source` per branch B step 4 above); branch C applies when the *content* of the mission is being mutated while `mvp_status` is `stabilised`.
+A bare `mvp_status: stabilised → in_progress` regression flip from operation 2 does not by itself trigger this branch (the regression is recorded in `## Source` per operation 2 step 4 above); operation 3 applies when the *content* of the mission is being mutated while `mvp_status` is `stabilised`.
 
-#### Final write
+#### 4. Final write
 
 For every operation: present the diff (frontmatter delta plus body delta) back to the user, iterate until approval, then write `project/mission.md` in place. Never write a partial file; either every spec invariant holds or the write is deferred.
 
@@ -149,5 +153,5 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** auto-generate the post-stabilisation rationale paragraph. The operator writes it.
 - **Never** name an audience in `## Audiences` that's absent from `audiences`, or vice versa. The two surfaces are bidirectionally validated after every revision.
 - **Never** invent audience identifiers, outcome IDs, or feature-acceptance pairs in a revision. Every reference **MUST** resolve to an existing artefact at write time.
-- **Never** allow a post-MVP roadmap item (`mvp: false`) to start while `mvp_status` is `defining`, `in_progress`, or `achieved`; surface this as a violation when the user reports it but never alter the roadmap from this skill — [`roadmap-refine`](roadmap-refine.md) is the canonical write authority for that surface.
+- **Never** allow a post-MVP roadmap item (`mvp: false`) to start while `mvp_status` is `defining`, `in_progress`, or `achieved`. After any `mvp_status` read or write, proactively scan `project/roadmap.md` yourself for a post-MVP item in `status: active` that the gate forbids — do not wait for the user to report it — and surface every such item as a violation citing `spec/project/mission/` §Stabilisation gate. Never alter the roadmap from this skill, though: [`roadmap-refine`](roadmap-refine.md) is the canonical write authority for that surface.
 - When `spec/project/mission/` disagrees with this skill, the spec wins. Propose updating this skill rather than silently diverging.

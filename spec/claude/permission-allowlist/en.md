@@ -15,7 +15,7 @@ Claude Code (CLI, plugin, and Agent SDK runs) prompts the user for confirmation 
 - User-global configuration at `~/.claude/settings.json`: that belongs to the individual developer and is out of scope
 - Developer-local overrides in `.claude/settings.local.json`: these are deliberately ungoverned, reflecting per-developer risk appetite, and are out of scope
 - Hooks, environment variables, or any `.claude/settings.json` field other than `permissions.allow`: those are covered by the `update-config` skill and potentially future specs, not here
-- Portfolio-wide distribution of a shared base allowlist (whether via an `_extends`-style mechanism like `.github/settings.yml`): see Open Questions
+- Portfolio-wide distribution of a shared base allowlist (whether via an `_extends`-style mechanism like `.github/settings.yml`). Default (revisit): each repository owns its `.claude/settings.json` allowlist; there's no central or `_extends`-style base list, because the Claude Code harness has no inheritance mechanism. Revisit only when a `portfolio-audit` run flags the allowlist block under `portfolio-management` §Cross-repository copy-paste smell (the same base block across three or more Portfolio-Member repos), at which point a generator or sync skill—not an `_extends` config edit—becomes the candidate solution.
 
 ## Requirements
 
@@ -59,4 +59,5 @@ Claude Code (CLI, plugin, and Agent SDK runs) prompts the user for confirmation 
 - [ ] No spec-internal MUST rule is undermined by an entry in `.claude/settings.json`: in particular, no entry permits `gh pr merge *` or an equivalent that would bypass the pull-request-workflow `Automerge trigger protocol`
 
 ## Open Questions
-- Does the portfolio need a centrally distributed base allowlist (analogous to `.github/commons-settings.yml` with `_extends`): today each repository copies its own? To be decided later; not part of this initial spec.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

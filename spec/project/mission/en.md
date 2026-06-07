@@ -124,8 +124,4 @@ The mission statement **MUST** satisfy each of the following five constraints, i
 
 ## Open Questions
 
-- Should the `verifies_via` field eventually allow multiple feature-plus-criterion pairs (a list rather than a single string), so that compound missions whose verification genuinely splits across two features remain expressible? Defer until a real project hits a mission that can't be expressed as one verifying acceptance criterion; today the constraint is a forcing function for tight mission scope.
-- Should the stabilisation gate's "one full subsequent sprint" condition be tunable per project (some projects might want two)? Defer until a real project argues for it; one is the conservative default and matches hobby-scale cadence.
-- Should `mvp_status: stabilised → in_progress` reversion automatically halt every post-MVP item already in `status: active`, or only block new starts? The current rule blocks new starts and lets in-flight items finish; revisit if a real defect cascade shows the softer rule masks risk.
-- Should the spec eventually carry a machine-readable mission-coverage report (which audiences the MVP serves, with verification status per audience)? Defer until at least one project has run a full mission cycle and a downstream consumer (`audience-doc-author`, release notes) needs the report.
-- Should the `mission-define` and `mission-revise` skills be authored as a single skill with two operations, or as two separate skills? Skill authoring is out of scope for this spec; revisit during skill scaffolding.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

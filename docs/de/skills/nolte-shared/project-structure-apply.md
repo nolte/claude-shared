@@ -34,6 +34,12 @@ _Audits a repository against the canonical-language file under spec/project/proj
 - [`github-issue-templates-apply`](github-issue-templates-apply.md)
 - [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md)
 
+## Referenziert von
+
+- [`project-structure-reviewer`](../../agents/nolte-shared/project-structure-reviewer.md)
+- [`github-issue-templates-apply`](github-issue-templates-apply.md)
+- [`skill-agent-catalog-apply`](skill-agent-catalog-apply.md)
+
 ---
 
 ## Project Structure Apply
@@ -100,6 +106,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** automatically move source files out of the repository root. Report the drift and let the user decide.
 - **Never** scaffold or rewrite content inside the `project/` planning tree (`project/roadmap.md`, `project/goals.md`, `project/sprints/`, `project/features/`, `project/release-artifacts/`, `project/mission.md`). The audit verifies the layout only; per-file authoring is delegated to the planning skills ([`roadmap-init`](roadmap-init.md), [`sprint-plan`](sprint-plan.md), [`feature-decompose`](feature-decompose.md), [`mission-define`](mission-define.md)) per the matching specs.
 - **Never** commit a real `.env`. When creating `.env.example`, simultaneously ensure `.env` is listed in `.gitignore`.
+- **Always** ensure `.gitignore` carries a `/.resume/` entry per `spec/claude/resumable-work/` §Persistence location, so the in-flight resume state of resumable skills and agents stays out of version control.
 - **Never** attempt to install a GitHub App programmatically. Report the install status and link to the app's marketplace page so a human can approve the install.
 - When `spec/project/project-structure/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.
 - When the Probot app installation check can't run because the token lacks scope, report that explicitly: **never** treat an API error as "app is installed."

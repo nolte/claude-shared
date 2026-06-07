@@ -33,6 +33,10 @@ _Reviews an existing audience-analysis artifact against spec/project/audience-id
 - [`audience-identify`](../../skills/nolte-shared/audience-identify.md)
 - [`audience-doc-author`](audience-doc-author.md)
 
+## Referenziert von
+
+- [`audience-identify`](../../skills/nolte-shared/audience-identify.md)
+
 ---
 
 ## Audience Review Agent
@@ -46,14 +50,6 @@ You review an existing audience-analysis artifact in the current project against
 - **Tool restriction is a safety win** — review is read-only, so the agent declares `Read, Grep, Glob` only and has no way to accidentally rewrite the artifact it is auditing.
 - **Specialization sharpens output** — a narrow system prompt that maps spec requirements to a pass/fail matrix produces a noticeably more actionable report than the same work inline.
 - Counter-dimension considered: *interactivity* would bias toward a skill, but this review has no step that genuinely needs mid-flow confirmation — the report is the interaction. The [`audience-identify`](../../skills/nolte-shared/audience-identify.md) skill already owns the interactive authoring path, so this agent stays on the non-interactive review side.
-
-### German trigger phrases
-
-The frontmatter `description` keeps the trigger lexicon English-only per `spec/claude/agent-management/` §Structure (plugin-distributed agents). Treat the following German paraphrases as equivalent and discoverable through this agent:
-
-- "prüfe diese Zielgruppenliste"
-- "Audit der Zielgruppenanalyse"
-- "validiere das Zielgruppen-Artefakt"
 
 ### Output shape
 

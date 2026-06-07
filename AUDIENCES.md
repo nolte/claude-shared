@@ -77,6 +77,36 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
 - **Other Nolte portfolio repos as passive consumers of the conventions** — _id_: `portfolio-peer` · _category_: indirect · _track_: `developer-docs` · _surface_: none direct — they do not install the plugin but are shaped by the specs codified here (PR workflow, project structure, prose style) as de-facto portfolio standards · _expects_: specs do not change silently in ways that would force existing repos to follow; breaking changes come with release notes · _status_: `assumed` · _criticality_: peripheral
   - Open questions: Is the effect on other portfolio repos actually passive today, or do some of those repos install the plugin (in which case they belong under Direct consumers)?
 
+### Portfolio-baseline coverage notes
+
+`spec/project/mkdocs-structure/` §Audience targeting and
+`spec/project/audience-identification/` ask the artefact to cover the portfolio
+audience baseline (`user`, `contributor`, `operator`, `release-manager`) or to
+explicitly note the exclusion of any baseline audience the context genuinely
+doesn't serve. The four baseline names are not used verbatim as entry labels
+here; the mapping below records, per baseline name, the covering entry or the
+reasoned exclusion:
+
+- **`user`** — covered, not excluded. The functional end-user role is served by
+  **`downstream-user`** (direct consumer, _track_: `user-docs`) — the Claude Code
+  users in portfolio projects who invoke the plugin's slash commands — and, at
+  one remove, by **`downstream-end-user`** (indirect, `user-docs`). The baseline
+  `user` is therefore covered under context-specific labels; no separate `user`
+  entry is added because it would duplicate `downstream-user`.
+- **`contributor`** — covered by **`maintainer`**, **`external-contributor`**,
+  **`claude-coauthor`** (all `developer-docs`).
+- **`operator`** — covered by **`ci-operator`** (`developer-docs`).
+- **`release-manager`** — **excluded with reason.** This repository has no
+  separate release-manager surface: the sole maintainer (`maintainer`, nolte)
+  also holds release authority, and the release mechanics are automated
+  (release-drafter, automerge, the `main` fast-forward inherited from
+  `nolte/gh-plumbing`) rather than driven by a dedicated release-manager role.
+  Release-facing concerns are therefore already covered by the `maintainer`
+  (release authority) and `ci-operator` (release automation surface) entries.
+  Should release responsibility ever split from maintenance, add a
+  `release-manager` entry (default _track_: `developer-docs`) — this is listed as
+  a revisit trigger below.
+
 ## Open questions (cross-cutting)
 
 - Only "Plugin author dogfooding inside this repo" is tagged `confirmed` so far (validated by the author's first end-to-end dogfood sprint on 2026-05-11). All other entries remain `assumed` until they are validated against a real representative or an authoritative source.
@@ -90,6 +120,7 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
 - Claude Code changes its plugin or skill schema in a way that breaks compatibility.
 - The repo accepts its first external PR, or publishes a `CONTRIBUTING.md`.
 - A new governing constraint appears (legal, security, compliance) that the current single-entry governing-party category no longer covers.
+- Release responsibility splits from maintenance (a dedicated release-manager role appears), in which case add the currently-excluded `release-manager` baseline audience as its own entry (default _track_: `developer-docs`).
 - `spec/project/audience-identification/` moves out of `draft` status or materially changes its requirements.
 - `spec/portfolio/tech-stack-discovery/` §Audiences materially changes; that spec owns the audience model for the portfolio-wide tech-stack inventory, and additions or removals there propagate back here as new revisit work.
 - The planning suite under `project/` materially changes its scope (new top-level artefact kind, change in how `mission`, `goals`, `roadmap`, `features`, or `sprints` are produced or consumed).

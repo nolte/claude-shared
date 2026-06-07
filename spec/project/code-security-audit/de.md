@@ -24,7 +24,7 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer, die seinen Report konsu
 - CVE-/Dependency-/Lockfile-Schwachstellen-Scanning — im Besitz von `spec/project/dependency-audit/`; dieses Audit betrifft den eigenen Code des Projekts, nicht die bekannten CVEs seiner Dependencies
 - Security-Review von *Anforderungen oder Spezifikationen* (die beabsichtigte Security-Posture) statt von implementiertem Code — ein separates Anliegen; dieses Audit liest Code, nicht die Security-Anforderungen der Spec
 - **Anwenden von Fixes** — der projektlokale Vorgänger editierte Quellcode; der Portfolio-Agent ist read-only, und der Fix-Schritt gehört einem Menschen oder einem separaten Skill, sodass das Audit single-responsibility bleibt
-- Ausführen von Third-Party-SAST-Tooling (semgrep, bandit, CodeQL) — der Agent führt LLM-getriebene Pattern-Analyse durch; das Verdrahten eines SAST-Runners ist ein möglicher künftiger Skill, hier außer Scope
+- Ausführen von Third-Party-SAST-Tooling (semgrep, bandit, CodeQL) — der Agent führt LLM-getriebene Pattern-Analyse durch; dies bleibt hier außer Scope. Ein künftiger `sast-runner`-Skill kann Befunde emittieren, die der Operator diesem Agent als zusätzlichen Kontext bereitstellt — der read-only-Agent führt den Runner niemals selbst aus
 
 ## Anforderungen
 
@@ -32,7 +32,7 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer, die seinen Report konsu
 
 - **MUSS [MUST]** strikt read-only sein: nur Lese- und Such-Tools (`Read`, `Grep`, `Glob`) deklarieren, kein `Edit`, `Write`, `NotebookEdit` deklarieren und keine Fixes anwenden; die einzige Ausgabe ist der Audit-Report
 - **DARF NICHT [MUST NOT]** Befunde im Quellcode unterdrücken, herabstufen oder annotieren (kein Einfügen von `# nosec` / `# noqa` / eslint-disable); Berichten ist die einzige Aktion
-- **MUSS [MUST]** den Report in seiner finalen Nachricht zurückgeben; ihn nach `.audits/` zu persistieren (per `spec/claude/review-plan/`) ist Aufgabe des aufrufenden Skills oder Operators, nicht des read-only-Agents
+- **MUSS [MUST]** den Report in seiner finalen Nachricht zurückgeben; ihn nach `.audits/` zu persistieren (per `spec/claude/review-plan/`) ist Aufgabe des aufrufenden Skills oder Operators, nicht des read-only-Agents. Wenn ein aufrufender Skill ihn persistiert, liegt der Report unter `.audits/code-security-audit/<target-slug>.md` per `spec/claude/review-plan/` §File location and naming; ein Re-Run überschreibt die einzige kanonische Datei, statt timestamped Snapshots zu akkumulieren
 
 ### Discovery und Stack-Anpassung
 
@@ -51,7 +51,7 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer, die seinen Report konsu
 
 ### Ausgabe
 
-- **MUSS [MUST]** einen einzigen nach Schweregrad klassifizierten Report emittieren: ein Vier-Stufen-Prioritäts-Schema (zum Beispiel P0 kritisch / P1 hoch / P2 mittel / P3 niedrig oder äquivalent kritisch→niedrig), wobei jeder Befund einen Titel, eine OWASP-Kategorie, eine Datei:Zeile-Zuordnung, das Problem und eine konkrete Remediation-Empfehlung trägt (beschrieben, nicht angewendet)
+- **MUSS [MUST]** einen einzigen nach Schweregrad klassifizierten Report emittieren, der das portfolioweite Schweregrad-Vokabular aus `spec/claude/review-plan/` §Severity scale verwendet (Critical / Warning / Suggestion / Info, wortgetreu in Title Case) — er DARF NICHT [MUST NOT] ein P0–P3- oder kritisch/hoch/mittel/niedrig-Schema erfinden; jeder Befund trägt einen Titel, eine OWASP-Kategorie, eine Datei:Zeile-Zuordnung, das Problem und eine konkrete Remediation-Empfehlung (beschrieben, nicht angewendet)
 - **MUSS [MUST]** mit einer Gesamtbewertungs-Tabelle anführen (pro OWASP-Kategorie: Bewertung + Befund-Anzahl) und, für Multi-Tenant-Projekte, einer Tenant-Isolations-Matrix (Endpunkt-Gruppe × Tenant-Filter × Autorisierungs-Check × Status)
 - **MUSS [MUST]** den Audit-Scope angeben (gescannte Roots, Globs, erkannter Stack, deklarierte Posture oder OWASP-Default-Annahme), sodass das Audit reproduzierbar ist
 - **SOLLTE [SHOULD]** bestätigte Befunde von vermuteten-aber-unsicheren unterscheiden, sodass der Konsument triagieren kann; ein unsicherer Befund wird berichtet, nicht still verworfen
@@ -60,10 +60,10 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer, die seinen Report konsu
 ## Akzeptanzkriterien
 
 - [ ] Der Agent deklariert nur `Read`, `Grep`, `Glob` (keine Schreib-/Edit-/Ausführungs-Tools) und wendet keine Quellcode-Edits an und fügt keine Befund-Unterdrückungs-Kommentare ein
-- [ ] Das Audit laufen zu lassen erzeugt einen nach Schweregrad klassifizierten Report, dessen Befunde jeweils einen Titel, OWASP-Kategorie, Datei:Zeile, Problem und eine beschriebene (nicht angewendete) Remediation tragen
+- [ ] Das Audit laufen zu lassen erzeugt einen Report, klassifiziert nach dem Schweregrad-Vokabular aus `spec/claude/review-plan/` §Severity scale (Critical / Warning / Suggestion / Info), dessen Befunde jeweils einen Titel, OWASP-Kategorie, Datei:Zeile, Problem und eine beschriebene (nicht angewendete) Remediation tragen
 - [ ] Der Report führt mit einer Pro-OWASP-Kategorie-Bewertungs-Tabelle an und gibt die gescannten Roots, Globs und den erkannten Stack an
-- [ ] Der Report eines Multi-Tenant-Projekts enthält eine Tenant-Isolations-Matrix und markiert jeden tenant-scoped Pfad ohne Tenant-Filter als kritisch
-- [ ] Ein hartcodiertes Credential oder ein Secret in Quellcode / Config / Logs wird als kritisch mit einer Datei:Zeile berichtet
+- [ ] Der Report eines Multi-Tenant-Projekts enthält eine Tenant-Isolations-Matrix und markiert jeden tenant-scoped Pfad ohne Tenant-Filter als Critical
+- [ ] Ein hartcodiertes Credential oder ein Secret in Quellcode / Config / Logs wird als Critical mit einer Datei:Zeile berichtet
 - [ ] Ein injection-anfälliger Data-Access-Aufruf (string-interpolierte Query) wird mit der beschriebenen parametrisierten Remediation berichtet
 - [ ] Ein Projekt mit AI/RAG-Pipeline hat Prompt-Injection- und SSRF-Checks im Report repräsentiert; ein Projekt ohne eine solche lässt sie ohne spuriosen Befund weg
 - [ ] Der Report unterscheidet bestätigte von vermuteten Befunden
@@ -76,10 +76,8 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer, die seinen Report konsu
 - [R3] CVE-/Dependency-Schwachstellen-Audit (gegen diese Spec abgegrenzt): `spec/project/dependency-audit/`
 - [R4] Review-Plan-/Audit-Ausgabe-Persistenz-Konventionen: `spec/claude/review-plan/`
 - [R5] OWASP Top 10 (2021): <https://owasp.org/Top10/>
+- [R6] Kanonisches portfolioweites Schweregrad-Vokabular (Critical / Warning / Suggestion / Info): `spec/claude/review-plan/` §Severity scale
 
 ## Offene Fragen
 
-- Soll das Audit optional einen SAST-Runner (semgrep / bandit / CodeQL) über einen separaten Skill antreiben, wobei dieser Agent die SAST-Ausgabe als zusätzliches Signal konsumiert, oder rein LLM-getriebene Pattern-Analyse bleiben?
-- Soll ein aufrufender Skill die Persistenz des Reports unter `.audits/code-security-audit/` besitzen, und sollen Re-Runs einen einzigen kanonischen Report ersetzen oder timestamped Snapshots akkumulieren?
-- Wo liegt die Grenze zwischen diesem Whole-Codebase-Audit und einer künftigen Architektur-Level-Threat-Modeling-Spec, die über Trust-Boundaries und Datenflüsse statt über Code-Patterns räsoniert?
-- Soll das Schweregrad-Schema auf ein einziges portfolioweites Vokabular festgelegt werden (P0–P3 vs kritisch/hoch/mittel/niedrig) für Cross-Repo-Aggregation, oder dem Agent überlassen bleiben?
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

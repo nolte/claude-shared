@@ -29,6 +29,7 @@ The portfolio maintains a growing set of specifications under `spec/<topic>/<slu
 - **MUST** perform a full-scope audit at least once per calendar quarter; the audit calendar follows calendar quarters, not individual availability
 - **MUST** additionally trigger a thematically matching partial audit whenever a spec changes significantly (a new MUST rule, a modified acceptance criterion, a shift in scope boundaries): at the latest in the follow-up merge after the spec update
 - **SHOULD** include the spec coupling of every newly introduced skill or agent in the same audit cycle, so new artifacts don't start their life already drifting
+- **MUST** run as a local, operator-invoked audit per repository (quarterly plus spec-change-triggered); cross-repository aggregation is out of scope here and is governed by `spec/portfolio/portfolio-management`, so this audit **MUST NOT** be wired to a cron-triggered central run
 
 ### Execution
 - **MUST** run each audit reproducibly: the audit result **MUST** name the tools used (`project-structure-apply`, `vocab-drift-audit`, `task lint`, and equivalents) and the exact Git revision of the repository under audit
@@ -42,13 +43,16 @@ The portfolio maintains a growing set of specifications under `spec/<topic>/<slu
 - **SHOULD** address repeating findings at the same location with a structural fix (an automated check, a stricter pre-commit rule, a spec clarification) after the second occurrence, instead of shipping another one-off fix
 
 ### Audit result artifact
-- **MUST** persist the result of every audit as a commit or issue in the repository (a PR body counts only when the PR is merged); the artifact location **SHOULD** be chosen consistently per repository (for example always `docs/audits/YYYY-Q<n>.md`, or a GitHub issue with label `audit`)
+- **MUST** persist the result of every audit as a Markdown file tracked in git at `.audits/spec-drift/<YYYY>-Q<n>.md` (a PR body counts only when the PR is merged); this is the portfolio-wide standard artifact location, replacing any prior `docs/audits/` convention
+- **MUST** structure the artifact per the four required sections (`## Scope`, `## Summary`, `## Findings`, `## Processing log`, in that order, with those exact English headings) and the canonical four-level severity scale (`Critical`, `Warning`, `Suggestion`, `Info`) mandated by `spec/claude/review-plan` §Severity scale and §Required sections (the same artifact contract that `spec/portfolio/portfolio-management` persists under `.audits/portfolio/`), so spec-drift findings read identically to every other audit artifact in the portfolio
+- **MAY** additionally surface the result as a GitHub issue with label `audit` as a secondary, human-facing form, but the git-tracked `.audits/spec-drift/` file remains the authoritative artifact
 - **MUST** record at least: date, trigger (quarterly, spec-change, new skill), scope, tools executed, per-criterion results, and the decisions taken per §Feedback loop
 
 ### Delimitation from other specs and skills
 - **MUST** treat `spec/project/workflow-health/` as the *continuous* health check (keeping CI consistently green, triaging flakes) while this spec is the *periodic* deep audit; the two complement each other and **MUST NOT** be conflated
 - **SHOULD** run the skills `project-structure-apply` and `vocab-drift-audit` as partial auditors inside the audit, while noting that each of them covers only one slice of the overall surface
 - **MUST NOT** use this audit process as a justification to undermine other specs (for example `pull-request-workflow`) at the spec level—audit findings flow through the regular pull-request process
+- **MUST** defer cross-repository, portfolio-wide aggregation to `spec/portfolio/portfolio-management` (the centralized, quarterly + on-demand portfolio audit that runs from `claude-shared`, never via cron); this spec stays repo-local and the two **MUST NOT** be conflated
 
 ## Acceptance Criteria
 - [ ] The repository contains a traceable audit history (commits, issues, or audit files) with at least one entry per calendar quarter since this spec was introduced—or a documented exception stating why a given quarter was skipped
@@ -58,5 +62,4 @@ The portfolio maintains a growing set of specifications under `spec/<topic>/<slu
 - [ ] Audit entries reference the Git revision of the audited repository state and the version of the audit skills used, so the audit can be reproduced
 
 ## Open Questions
-- Should the audit artifact form be standardized portfolio-wide (a shared Markdown template under `docs/audits/` in every repository) or remain per-repository choice? Intentionally left open for a later decision.
-- Does the portfolio need a central, cross-repository audit run (for example a cron-triggered action in `nolte/gh-plumbing`), or does the audit stay local per repository? Depends on whether central aggregation justifies the overhead.
+_None at this time._

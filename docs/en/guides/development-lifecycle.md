@@ -8,15 +8,19 @@ last_updated: 2026-05-19
 
 # Development lifecycle
 
-The `nolte-shared` skills and agents are designed to cover the full development lifecycle of a project, from first mission statement to released artefact. This page shows where each artefact fits in.
+The `nolte-shared` skills and agents are designed to cover the full development lifecycle of a project. That span runs from the first mission statement to the released artefact. This page shows where each artefact fits in.
 
-The lifecycle has seven sequential phases plus an eighth, **Cross-cutting**, that collects artefacts whose responsibility is genuinely phase-agnostic. The first seven phases form a **cycle**: at the end of a sprint, the loop returns to **Plan** to schedule the next sprint. Once the project reaches its minimum viable product (MVP), the loop returns to **Vision** so the mission can be revised toward stabilisation.
+The lifecycle has seven sequential phases plus an eighth, **Cross-cutting**. The eighth phase collects artefacts whose responsibility is genuinely phase-agnostic. The first seven phases form a loop. At the end of a sprint, the loop returns to **Plan** to schedule the next sprint. Once the project reaches its minimum viable product (MVP), the loop returns to **Vision**. The mission is then revised toward stabilisation.
 
-Every skill and agent declares its phase in its frontmatter (`phase:`); the catalog generator groups the [Skills](../skills/index.md) and [Agents](../agents/index.md) catalog pages by that field, so this page and the catalog stay in lock-step.
+Every skill and agent declares its phase in its frontmatter (`phase:`). The catalog generator groups the [Skills](../skills/index.md) and [Agents](../agents/index.md) catalog pages by that field. This page and the catalog stay in lock-step.
+
+**Lifecycle phases and their skills and agents**
+
+Which skill or agent belongs to which lifecycle phase, and how does the loop return at sprint close and at MVP?
 
 <!-- diagram-source: user-described — eight-phase lifecycle with skills and agents grouped per phase; agents are marked with a parenthetical (A) suffix; return edges from Close to Plan (next sprint) and from Close to Vision (MVP achieved) -->
 ```mermaid
-graph TD
+flowchart TD
   subgraph V["1 Vision"]
     mdef[mission-define]
     mrev[mission-revise]
@@ -96,11 +100,11 @@ The mission frames the entire effort: who the project serves, what counts as suc
 | Artefact | Type | When to invoke |
 |---|---|---|
 | [`mission-define`](../skills/nolte-shared/mission-define.md) | skill | Author the first `project/mission.md` once the audience artefact and `project/goals.md` exist. |
-| [`mission-revise`](../skills/nolte-shared/mission-revise.md) | skill | Update the SMART statement, flip `mvp_status` along its legal lifecycle, or revise after stabilisation. |
+| [`mission-revise`](../skills/nolte-shared/mission-revise.md) | skill | Update the SMART (Specific, Measurable, Achievable, Relevant, Time-bound) statement, flip `mvp_status` along its legal lifecycle, or revise after stabilisation. |
 
 ### 2 Plan
 
-Plan turns the mission's outcomes into concrete, sprint-targeted work. Roadmap items decompose into features, features feed sprints. Two agents support this phase: `audience-review` audits the audience artefact before it underwrites planning, and `feature-consistency-reviewer` is dispatched mid-flow by `feature-decompose`.
+Plan turns the mission's outcomes into concrete, sprint-targeted work. Roadmap items decompose into features, features feed sprints. Two agents support this phase. `audience-review` audits the audience artefact before it underwrites planning. `feature-consistency-reviewer` is dispatched mid-flow by `feature-decompose`.
 
 | Artefact | Type | When to invoke |
 |---|---|---|
@@ -156,7 +160,7 @@ Code change reaches `develop` only through a reviewed pull request. Skill and ag
 
 ### 6 Quality
 
-Quality skills and agents run mostly in CI and pre-push contexts, but several are also invoked ad-hoc when an audit is due. `quality-gate` is typically called from `pull-request-create` before push. Two agents support this phase: `docs-freshness-checker` audits the docs for drift, and `prose-vale-curator` curates prose against the Vale style.
+Quality skills and agents run mostly in CI and pre-push contexts. Several are also invoked ad-hoc when an audit is due. `quality-gate` is typically called from `pull-request-create` before push. Two agents support this phase. `docs-freshness-checker` audits the docs for drift. `prose-vale-curator` curates prose against the Vale style.
 
 | Artefact | Type | When to invoke |
 |---|---|---|

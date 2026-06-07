@@ -1,6 +1,6 @@
 ---
 name: skill-management
-description: Author or revise Claude Code skills in the nolte-shared plugin source tree. Invoke when the user asks to create a new skill, scaffold a skill, add a skill to this repo, or revise an existing skill (weak description, missing Hard rules, overlong instructions). Also handles equivalent German-language requests. Scaffolds the target folder under skills/ (distribution via the plugin mechanism, not .claude/skills copies) and writes SKILL.md with valid frontmatter. Don't use to review or audit an existing skill (use `skill-review` for the persistent spec-cited plan), to bump the plugin version in a skill-change PR (`release-automation` owns that), or for a full spec-conformant draft of a skill or agent (this skill chains to claude-plugin-developer after name/purpose decisions). Supports resume per `spec/claude/resumable-work/`.
+description: Authors or revises Claude Code skills in the nolte-shared plugin source tree. Invoke when the user asks to create a new skill, scaffold a skill, add a skill to this repo, or revise an existing skill (weak description, missing Hard rules, overlong instructions). Also handles equivalent German-language requests. Scaffolds the target folder under skills/ (distribution via the plugin mechanism, not .claude/skills copies) and writes SKILL.md with valid frontmatter. Don't use to review or audit an existing skill (use `skill-review` for the persistent spec-cited plan), to bump the plugin version in a skill-change PR (`release-automation` owns that), or for a full spec-conformant draft of a skill or agent (this skill chains to claude-plugin-developer after name/purpose decisions). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: design
 summary: "Scaffolds or revises a nolte-shared Claude Code skill folder."
@@ -52,7 +52,7 @@ After creating a skill in the source tree, remind the user that a new plugin rel
 
 ## Operations
 
-### 1. Create a new skill
+### 1. Scaffold
 
 1. Collect from the user (in any language):
    - **Purpose**: what the skill does, one or two sentences.
@@ -65,11 +65,11 @@ After creating a skill in the source tree, remind the user that a new plugin rel
 4. Create subfolders (`templates/`, `references/`, `examples/`) only if the user actually needs them. Don't scaffold empty placeholders.
 5. Confirm in the user's language with the created paths and the follow-up needed for runtime discovery.
 
-### 2. Revise
+### 2. Update
 
-Targeted edits to an existing skill — for example rewriting a weak `description`, adding a Hard rules section, trimming overly long instructions, moving long-form content into `templates/` or `references/`. After a revise, invoke `skill-review` to verify the revised skill still conforms to the spec; this skill does not perform its own validation pass.
+Targeted edits to an existing skill — for example rewriting a weak `description`, adding a Hard rules section, trimming overly long instructions, moving long-form content into `templates/` or `references/`. After an update, invoke `skill-review` to verify the updated skill still conforms to the spec; this skill does not perform its own validation pass.
 
-### Review / audit
+### 3. Audit
 
 Out of scope. Invoke `skill-review` — it applies every MUST / SHOULD / MAY from `spec/claude/skill-management/` and `spec/claude/skill-vs-agent/`, maps findings to severities (Critical / Warning / Suggestion / Info), and writes a persistent plan to `.audits/skill-review/<name>.md` per `spec/claude/review-plan/`.
 

@@ -22,9 +22,9 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 
 - Publishing artifacts to external registries (npm, PyPI, container registries, HACS ZIP uploads)—those stay with repository-specific `release: [published]` packaging workflows as `project-structure` describes.
 - Binary builds, signing, SBOM generation.
-- Release-notes content generation—that remains `release-drafter`'s responsibility, fed by Conventional-Commits PR titles.
+- Release-notes content generation—that remains `release-drafter`'s responsibility, fed by Conventional-Commits PR titles. For the audience analysis that governs what content those notes must cover, see [`spec/project/release-notes-audience-analysis/`](../release-notes-audience-analysis/en.md).
 - Versioning policy (SemVer major/minor/patch derivation)—inherited from `release-drafter` configuration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
-- hotfix flow (release from `main` back to `develop`)—tracked as an Open Question on `branching-model` and out of scope here.
+- The hotfix flow—owned by `branching-model` `§Hotfix flow`, which settles it as a standard `fix/` pull request against `develop` followed by an ordinary patch release; out of scope here.
 - Deprecating the manual `gh release edit --draft=false` path entirely; the manual path remains a documented fallback for incident response when the workflow itself is broken.
 - Prescribing which ecosystems are included in the portfolio convention table for §Version-bearing files; the table grows as repos of new types enter the portfolio, each addition being a minor spec amendment rather than a new spec.
 
@@ -123,6 +123,7 @@ Applicable when only `GITHUB_TOKEN` is available and `develop` is fully protecte
 - **MUST NOT** re-specify anything already covered by `branching-model` (tag origin, `main` refresh, workflow pinning)—reference instead
 - **SHOULD** resolve the Open Question in `project-structure` (line 124 at the time of writing) by cross-linking from `project-structure` §Release and documentation workflows into this spec
 - **MUST** be cross-referenced by `release-artifact` as the authority for the Draft → Published transition. `release-artifact` §Dispatch boundary to release machinery routes sprint-side artefact validation outcomes into the workflow this spec governs; the boundary is one-way (this spec is the lower layer, `release-artifact` is the higher one), and the consuming spec **MUST NOT** redefine any rule declared here
+- The local-skill counterpart to this workflow lives in [`spec/project/release-skill-layer/`](../release-skill-layer/en.md): Skill A (`release-notes-curate`) handles body curation via `gh release edit` outside this workflow, and Skill B (`release-publish-trigger`) is the local ergonomic entry point that validates every §Pre-publish verification gate and then dispatches this workflow via `gh workflow run`. That spec **MUST NOT** call `gh release edit --draft=false`; the only publish path is dispatching this workflow.
 
 ### Observability and audit
 

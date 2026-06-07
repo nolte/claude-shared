@@ -22,6 +22,13 @@ repos:
 
   - repo: local
     hooks:
+      - id: guard-primary-checkout
+        name: primary checkout must stay on develop
+        entry: scripts/guard_primary_checkout.sh
+        language: system
+        always_run: true
+        pass_filenames: false
+
       - id: vale-prose
         name: vale (prose style)
         entry: task lint:prose
@@ -41,6 +48,21 @@ repos:
         entry: python3 scripts/validate_skills.py
         language: system
         files: '^(skills/.*/SKILL\.md|agents/.*\.md)$'
+        pass_filenames: false
+
+      - id: validate-features
+        name: validate feature frontmatter and slug-rename gate
+        entry: python3 scripts/validate_features.py
+        language: system
+        files: '^project/features/.*\.md$'
+        pass_filenames: false
+
+      - id: validate-schemas
+        name: validate JSON schema files and governed data
+        entry: python scripts/validate_schemas.py
+        language: python
+        additional_dependencies: ["jsonschema>=4.20", "PyYAML>=6"]
+        always_run: true
         pass_filenames: false
 
   - repo: https://github.com/igorshubovych/markdownlint-cli

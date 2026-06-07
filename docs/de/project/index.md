@@ -14,7 +14,9 @@ Die Planning-Suite umfasst mehrere Skills sowie einen Agenten. Damit operational
 
 Adoption ist freiwillig. Ein Repository ohne `project/`-Verzeichnis bleibt von jedem dieser Skills unberührt.
 
-## Lifecycle-Übersicht
+**Lifecycle-Übersicht**
+
+In welcher Reihenfolge werden die Planning-Suite-Skills aufgerufen, und welches Artefakt schreibt jeder davon?
 
 <!-- diagram-source: user-described — Planning suite skills mapped to their lifecycle stage plus the artefact each writes -->
 ```mermaid
@@ -53,7 +55,7 @@ flowchart TB
     rmap --> rp
 ```
 
-Stadium-Form (`feature-consistency-reviewer`) markiert den einzigen Agent in der Suite; alle Rechtecke sind Skills oder On-disk-Artefakte. Gestrichelte Kanten markieren Dispatch- oder Lifecycle-Beziehungen, durchgezogene Kanten markieren Schreib-Operationen.
+Stadium-Form (`feature-consistency-reviewer`) markiert den einzigen Agenten in der Suite; alle Rechtecke sind Skills oder On-disk-Artefakte. Gestrichelte Kanten markieren Dispatch- oder Lifecycle-Beziehungen, durchgezogene Kanten markieren Schreib-Operationen.
 
 ## Skill-zu-Stage-Karte
 

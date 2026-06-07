@@ -25,6 +25,7 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 - **MUST** be authored as a single markdown file named `<name>.md` where `<name>` is ASCII kebab-case
 - **MUST** include YAML frontmatter with the fields `name`, `description`, and `distribution`
 - **MUST** set `name` to match the filename without the `.md` suffix
+  - **`nolte-shared` plugin choice**: this repository names every agent in **object-role form**—`<subject>-<role-noun>`, where the trailing token is the role the agent plays over the leading subject (`code-security-reviewer`, `feature-consistency-reviewer`, `portfolio-manifest-collector`, `vocab-drift-scanner`, `lektorat-scanner`). This is the agent-side counterpart to skill-management's verb-noun convention for skills; the choice is recorded here so a reviewer doesn't flag it on every iteration. New agents in this plugin **MUST** follow the object-role convention, keeping the naming pattern consistent across the whole agent surface (mixing in a verb-noun or gerund agent name would itself be the discoverability anti-pattern `plugin-scoping` §Namespace and naming coherence warns against). A future coordinated portfolio rename (with a deprecation period) **MAY** flip the choice; until that ships, object-role is the rule
 - **MUST NOT** use the reserved words `anthropic` or `claude` as the value of `name` or anywhere within `name`, per the upstream platform validator. The same narrow-exception clause from `skill-management` §Frontmatter validation applies: an agent whose primary responsibility is authoring or maintaining a Claude Code or Anthropic platform surface (for example a `claude-plugin-developer` agent) **MAY** waive the ban when the agent body carries a `## Reserved-token rationale` section that names the platform surface
 - **MUST** write a `description` that names concrete user-facing triggers and task shapes ("use when the user asks X," "invoke for Y") rather than abstract capabilities, so the calling Claude can reliably decide when to dispatch
 - **MUST** set `distribution` to exactly one of `plugin` or `project`, declaring the intended delivery form (see "Distribution" below); the author chooses this consciously at creation time and changes it only by re-authoring the agent for the new form
@@ -61,6 +62,8 @@ An agent is authored for exactly one of two delivery forms. The choice is made u
 - `project`: direct reuse in a single project or user environment. The agent is copied or symlinked into the consuming setup and stands alone, without assuming any plugin context.
 
 Every agent declares this intent so authors, reviewers, and consumers all see from the file itself whether it belongs to a plugin bundle or is meant for standalone project use.
+
+Agents carry no per-file version metadata; versioning is handled at the plugin level (`.claude-plugin/plugin.json`) and via git history. A per-agent `version` frontmatter field is deferred until the distribution mechanism supports independent per-agent pinning (see `plugin-scoping`).
 
 ### Tool access
 - **MUST** declare a `tools` field in frontmatter when the agent should be restricted; omit the field only when the agent genuinely needs the full tool surface, because **omitting `tools` implicitly grants every tool inherited from the caller**, which is a permission-sprawl trap, not a safe default ([R1](#references), [R3](#references))
@@ -126,6 +129,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 ### Recommendations
 - **SHOULD** begin the system prompt with the agent's role and boundaries, then the expected output format, then the working procedure
 - **SHOULD** state explicitly in the system prompt whether the agent writes code or only researches, since the calling Claude is responsible for that distinction at dispatch time
+- Each agent declares its own output contract in the system prompt (already required by §Structure); there is no single repo-wide report schema. Review, audit, and research agents **SHOULD** return a structured report (for example severity-classified findings or a coverage map) and **SHOULD** close with an explicit caller follow-ups / handoff section; free-form summaries are acceptable only for trivial single-fact responses
 - **SHOULD** keep the system prompt focused; if it grows past roughly 200 lines, tighten the prose rather than splitting it out—an agent stays a single file (see §Structure), so long-form material stays inline or, only when genuinely too large, moves outside the `agents/` tree (for example `agent-assets/<name>/`). The ~200-line figure is a local `nolte-shared` convention; Anthropic documents no agent-file size budget, in contrast to the soft ~500-line `SKILL.md` guideline that `skill-management` codifies for skills
 - **SHOULD** include in `description` both positive triggers ("use when…") and common negative cases ("don't use for…") when overlap with other agents is likely
 - **MAY** include example invocations and expected reports inline in the agent body; when they're too large to inline, place them outside the `agents/` tree (for example `agent-assets/<name>/examples/`) and reference them by relative path—never in a sibling `agents/<name>/` folder, which recursive discovery would register as a phantom agent
@@ -176,8 +180,4 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [R6] Best practices for Claude Code subagents, PubNub Engineering: <https://www.pubnub.com/blog/best-practices-for-claude-code-sub-agents/>
 
 ## Open Questions
-- Should the filename (and thus `name`) match the `subagent_type` string exactly, or is a mapping layer allowed?
-- Do agents need version or compatibility metadata as they evolve, or is the git history of the agent file sufficient?
-- Where's the boundary between a skill and an agent? When should a capability be one versus the other?
-- Should agents declare which other agents they may delegate to, or is delegation left entirely to the calling Claude?
-- Is there a shared convention for how agents report back (structured vs. free-form summary), or is that per-agent?
+_None at this time._

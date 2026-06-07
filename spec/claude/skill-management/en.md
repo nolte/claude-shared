@@ -16,6 +16,7 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 - Prescribing specific skill contents beyond structural rules
 - The exact Claude Code marketplace / plugin-installation UX (owned by Claude Code itself, not by this repository)
 - Plugin-level scoping—when a capability belongs in this plugin versus a separate one, and how the plugin stays scannable as its skill count grows (covered by `plugin-scoping`)
+- The skill-vs-agent format decision—whether a given capability should be a skill or an agent (covered by `skill-vs-agent`)
 
 ## Requirements
 
@@ -47,6 +48,7 @@ Tracks the formal Agent Skills specification ([R1](#references)) and Anthropic's
 - **SHOULD**, when also using Claude Code's optional `when_to_use` field ([R3](#references)), keep the combined `description` + `when_to_use` text under 1,536 characters; the runtime truncates anything beyond that cap and the truncation typically eats the trigger phrases
 - **SHOULD** prefer the **gerund form** for the skill name (verb + `-ing`: `processing-pdfs`, `analyzing-spreadsheets`, `managing-databases`) per Anthropic's published convention; verb-noun (`process-pdfs`) and noun phrases (`pdf-processing`) are acceptable alternatives, mixed forms across one repository aren't ([R2](#references))
   - **`nolte-shared` plugin choice**: this repository ships every skill in **verb-noun form** (`pull-request-create`, `roadmap-init`, `feature-decompose`, `dependency-audit`, `quality-gate`, plus the rest of the surface). The choice is recorded here so a reviewer doesn't flag the convention on every iteration. Renaming the existing surface to gerund form would be a breaking change for every downstream consumer's `subagent_type:` callers and isn't planned. New skills in this plugin **MUST** follow the verb-noun convention; mixing in a gerund-form name would itself violate the "mixed forms across one repository aren't acceptable" half of the upstream rule. A future coordinated portfolio rename (with a deprecation period) **MAY** flip the choice; until that ships, verb-noun is the rule
+    - **Documented exceptions** to the verb-noun rule: two established skill names predate the convention and are deliberately left as-is—`spec` (a bare noun) and `yaml-json-schema` (a noun-compound). Renaming them would be a breaking change for every consumer call site and, in the case of `spec`, for the `$ref`/cross-reference machinery that points at it; the breakage cost outweighs the naming-coherence gain. A reviewer **MUST NOT** flag these two names as verb-noun violations. The exception is closed: it covers exactly `spec` and `yaml-json-schema`, and every *new* skill **MUST** still follow the verb-noun convention
 - **MUST NOT** use vague or generic names like `helper`, `utils`, `tools`, `documents`, `data`, or `files`; they defeat discovery because Claude can't tell what the skill does from its name alone ([R2](#references))
 
 ### Tag vocabulary
@@ -73,9 +75,10 @@ Starter vocabulary:
 - **MUST NOT** be distributed by copying the folder into a consuming project's `.claude/skills/<name>/`, by symlinking, by vendoring, or by any other out-of-band path; such copies drift from the source and defeat the point of a shared plugin
 - **MUST NOT** manually bump the plugin version in `.claude-plugin/plugin.json` or the corresponding marketplace entry as part of a PR that adds, renames, removes, or materially changes a skill; the version is derived from the published GitHub Release tag and updated on the default branch exclusively by the release workflow—see `release-automation` §Version-bearing file alignment for the mechanism (including the fallback path where a maintainer opens a dedicated `chore(release): <tag>` PR)
 - **MAY** coexist in a consuming project alongside project-local skills under that project's own `.claude/skills/`; such project-local skills are outside the scope of this spec and **MUST NOT** reuse a name already owned by the `nolte-shared` plugin
+- **MUST NOT** carry a per-skill `version` or compatibility-metadata field; versioning is plugin-scoped (the single `nolte-shared` manifest version, release-tag-derived per `release-automation` §Version-bearing file alignment), per-skill change history is git history, and compatibility is a plugin-level concern
 
 ### Runtime discovery (consuming project)
-- **MUST** be loadable by Claude Code from the plugin's skills path once the plugin is installed; the skill surfaces to the user as `nolte-shared:<name>`
+- **MUST** be loadable by Claude Code from the plugin's skills path once the plugin is installed; the skill surfaces to the user as `nolte-shared:<name>`. The user-facing slash command is derived directly from `name` (`/nolte-shared:<name>`); there is no separate command identifier, so the folder name, frontmatter `name`, and slash command are necessarily identical
 - **MUST NOT** assume any specific absolute or project-relative runtime path; all internal paths stay relative to the skill folder and work wherever Claude Code extracts or mounts the plugin
 
 ### Recommendations
@@ -105,19 +108,20 @@ Tracks the public guidance at <https://agentskills.io/skill-creation/best-practi
 
 ### Operations vocabulary
 
-Skills with multiple named operations use a `## Operations` block. This section governs the naming and heading form of that block so that skill authors, reviewers, and the sweep tooling share a consistent vocabulary.
+A skill that exposes more than one **dispatchable operation** (a user-selectable mode the caller picks between, such as `audit` vs. `migrate` vs. `patch`) documents them in a `## Operations` block. This section governs the naming and heading form of that block so that skill authors, reviewers, and the sweep tooling share a consistent vocabulary. It binds the *dispatchable operations* a skill offers, not the sequential procedure steps of a single operation.
 
 - **MUST** use `## Operations` (plural) as the heading for the operations block; singular `## Operation` is non-conformant
-- **MUST** name each operation with one verb from the closed vocabulary: `audit` (read-only check), `scaffold` (greenfield create), `patch` (additive fix), `apply` (audit + scaffold + patch in one flow), `migrate` (brownfield → conforming), `run` (default verb for skills with one operation), `update` (mutate an existing artefact), `close` (terminate a lifecycle)
-- **MUST NOT** introduce new operation verbs without amending this list
-- **MUST** title sub-operations as `### N. <verb>` (numbered) or as a level-3 heading followed by a backtick-quoted command verb; alphabetic letters (`A.`/`B.`/`C.`) and `### Step N` are non-conformant
+- **SHOULD** name an operation that performs a standard scaffolding-lifecycle action with the matching verb from the lifecycle vocabulary, so artefacts in the same cluster read alike: `audit` (read-only check), `scaffold` (greenfield create), `patch` (additive fix), `apply` (audit + scaffold + patch in one flow), `migrate` (brownfield → conforming), `run` (default verb for a skill with one operation), `update` (mutate an existing artefact), `close` (terminate a lifecycle)
+- **MAY** name an operation with a domain-specific verb when it has no clean lifecycle equivalent or when the domain verb is materially clearer (for example a planning skill's `add` / `promote` / `retarget`, a sprint skill's `transition` / `decline`, a content skill's `revise` / `propose`); the lifecycle list is the recommended default, not a closed set that forbids every other verb. Still prefer a lifecycle verb when one fits cleanly (`audit` over `validate` or `scan`, `update` over `revisit`, `migrate` over `refactor`) so the surface stays predictable
+- **Procedure steps are exempt from the vocabulary.** A skill with a single dispatchable operation that documents it as an ordered runbook (for example `### 1. Detect project kind`, `### 2. Run auditors`, `### 3. Render the report`) draws its step headings from the task, not from any verb list; those are steps of one operation, not dispatchable operations. Only the heading-form rule below applies to them
+- **MUST** title sub-operations and procedure steps as `### N. <verb-or-step>` (numbered) or as a level-3 heading followed by a backtick-quoted command verb; alphabetic letters (`A.`/`B.`/`C.`) and `### Step N` are non-conformant
 - **SHOULD** retain operation names short (single word) and consistent within a skill cluster (for example, lifecycle skills should align verbs)
 
 ### Progressive disclosure & file references
 
 Skills are loaded in three stages by Claude—metadata at startup (~100 tokens per skill), full `SKILL.md` body when triggered, supporting files only when explicitly read ([R5](#references), [R1](#references)). The on-disk shape **MUST** support that loading model. Because only the ~100-token metadata is preloaded, a plugin can ship many skills with no per-skill context penalty beyond that metadata ([R5](#references)); a plugin's thematic breadth is therefore not a context cost, which is why plugin scope is governed by distribution rather than count (see `plugin-scoping`). Caveat: an open Claude Code bug (`anthropics/claude-code#14882`, filed 2025-12-20, unconfirmed) reports full `SKILL.md` bodies preloaded at startup, contradicting the documented metadata-only design; until it's resolved, treat aggressive skill-count growth with some caution.
 
-- **MUST** keep file references inside `SKILL.md` **at most one level deep**: `SKILL.md` → `references/foo.md` is fine; `SKILL.md` → `references/foo.md` → `references/bar.md` is forbidden, because Claude tends to use partial reads (`head -100`) on nested references and then misses content ([R2](#references))
+- **MUST** keep file references inside `SKILL.md` **at most one level deep**: `SKILL.md` → `references/foo.md` is fine; `SKILL.md` → `references/foo.md` → `references/bar.md` is forbidden, because Claude tends to use partial reads (`head -100`) on nested references and then misses content ([R2](#references)). Physical subfolder nesting under `references/` etc. isn't itself capped, but because every asset **MUST** be directly load-triggered from `SKILL.md` and reference chains **MUST** stay one hop deep, deeply nested support trees are effectively unreachable and **SHOULD** be avoided
 - **MUST** include a **table of contents** at the top of any reference file longer than 100 lines, so partial-read previews still surface the file's full scope ([R2](#references))
 - **MUST**, every time `SKILL.md` references a supporting file, name **what the file contains** and **when to load it** (for example "Read `references/api-errors.md` if the API returns a non-200 status code"); generic "see `references/` for details" defeats progressive disclosure because Claude has no signal for *when* to load ([R2](#references), [R4](#references))
 - **MUST** carry an explicit load-trigger phrase in `SKILL.md` for every asset under `references/`, `templates/`, `assets/`, `scripts/`, or `examples/`. Pattern: `"Read <relative-path> when <trigger condition>"` or `"See <relative-path> for <specific concern>"` (with an explicit "when" or "for" clause). Implicit references without a load-trigger are non-conformant since Claude won't surface the asset under progressive disclosure.
@@ -189,7 +193,4 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - [R6] anthropics/skills (canonical Anthropic skill repository): <https://github.com/anthropics/skills>
 
 ## Open Questions
-- Should the folder name be required to match any user-facing slash-command name, or may they differ?
-- Do skills need version or compatibility metadata as they evolve?
-- Where's the boundary between a skill and an agent? When should a capability be one versus the other?
-- Is there a maximum nesting depth for supporting subfolders, or does that stay loose?
+_None at this time._

@@ -153,7 +153,7 @@ Required MUST directories at the repository root:
 - `.github/` with at least `.github/workflows/` — `missing-directory` (`severity: critical`) when either is absent.
 - `docs/` — `missing-directory` (`severity: critical`) when absent.
 - `spec/` — `missing-directory` (`severity: critical`) when absent.
-- `tests/` — `missing-directory` (`severity: critical`) when absent.
+- `tests/` — for a repository with runtime source, `missing-directory` (`severity: critical`) when absent. For a Claude Code plugin / prompt-only repository (the `.claude-plugin/` + `skills/` layout with no runtime source), `tests/` is **SHOULD**, not **MUST**, per `spec/project/project-structure/` §Tests: emit at most `missing-directory` (`severity: warning`) when absent, and suppress even that — treating the directory as `not-applicable` — when the `Taskfile.yml` `test` target runs a frontmatter/contract validation (for example `scripts/validate_skills.py`). Never emit a `critical` for a missing `tests/` on a plugin / prompt-only repository.
 
 Optional but spec-governed:
 

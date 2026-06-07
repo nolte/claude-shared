@@ -4,7 +4,7 @@ description: Turn a short graphic brief into a brand-conformant, generator-ready
 distribution: plugin
 tools: Read, Write, Glob, Grep
 phase: design
-tags: [design, prose, scaffolding]
+tags: [prose, scaffolding]
 model: sonnet
 summary: "Authors brand-conformant, generator-ready AI image prompts as durable Markdown documents from a short graphic brief."
 summary_de: "Verfasst brand-konforme, generatorfertige KI-Bild-Prompts als dauerhafte Markdown-Dokumente aus einem kurzen Grafik-Briefing."
@@ -15,6 +15,7 @@ dont_use_when:
   - situation: "you want to remove a fake-transparency background or vectorise a generated PNG"
     alternative: png-to-transparent-svg
 see_also:
+  - "image-generate"
   - "png-to-transparent-svg"
 ---
 
@@ -72,6 +73,8 @@ If no brand bundle or `brand-vocabulary.md` is discoverable, **stop and report t
 
 Determine the asset type from the documented vocabulary (`app-icon`, `logo`, `nav-icon`, `illustration`, `empty-state`, `onboarding`, `hero`, `badge`, `pattern`, `diagram`), the variants needed (light / dark / neutral), the target dimensions and file format, and the single target generator. Name the generator explicitly (for example `gemini-2.5-flash-image`, `midjourney-v7`).
 
+When that generator is FLUX or Gemini, consult its model-level baseline before assembling — `spec/design/flux-image-generation/` or `spec/design/gemini-image-generation/` — and author the prompt to that model's rules: FLUX takes a terse, front-loaded natural-language description with no negative prompts and no prompt weights; Gemini takes narrative prose plus a stated intent and always embeds a SynthID watermark. A prompt isn't portable between them — the same brief yields a materially different prompt per model.
+
 ### Phase 2 — Assemble the prompt
 
 Build each prompt in the order mandated by `corporate-design-colors` §AI image color contract:
@@ -80,7 +83,7 @@ Build each prompt in the order mandated by `corporate-design-colors` §AI image 
 3. the brand hex values appended as final reinforcement;
 4. a seed slot for reproducibility (record it even when `unset`).
 
-Add a negative-prompt / avoidance clause appropriate to the generator (no embedded text, no other companies' logos, no watermark). Do not ask the generator to render legible copy — record text overlay as a post-processing step. For light/dark assets, produce two variants by re-pulling the per-mode brand tokens, never by inverting colors. For size-sensitive types, add scalability guidance (smallest target size, what to simplify).
+Add an avoidance clause appropriate to the generator (no embedded text, no other companies' logos, no watermark). Express it through the generator's own negative mechanism only where one exists (Midjourney's `--no`); for FLUX and Gemini, which expose no negative-prompt parameter, encode the avoidance as positive phrasing of the desired state (`a clean, uncluttered background` over `no clutter`), never as a negative-prompt parameter. Do not ask the generator to render legible copy — record text overlay as a post-processing step. For light/dark assets, produce two variants by re-pulling the per-mode brand tokens, never by inverting colors. For size-sensitive types, add scalability guidance (smallest target size, what to simplify).
 
 ### Phase 3 — Write the prompt document
 
@@ -111,7 +114,7 @@ Write one Markdown document per asset, named `<asset-type>_<slug>.md`, under the
 ```
 
 ## Avoidance clause
-{negative-prompt text}
+{avoidance text — positive phrasing for FLUX/Gemini; `--no` only where the generator supports it}
 
 ## Post-processing checklist
 - [ ] {e.g. remove background via png-to-transparent-svg}

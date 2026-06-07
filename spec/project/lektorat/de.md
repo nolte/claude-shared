@@ -1,6 +1,6 @@
 # Lektorat
 
-Status: draft
+Status: accepted
 
 ## Kontext
 
@@ -31,18 +31,19 @@ Zwei Designvorgaben prägen die Spec. Erstens ist die Ebene **operativ**, nicht 
 - Lektorat von Quellcode, Code-Kommentaren, Docstrings, API-Referenz-Texten, generierten Manifesten, generierten Configs oder YAML/JSON-Config-Bodys; die Ebene prüft Prosa **in Markdown** und behandelt umzäunte Code-Blöcke als unantastbar
 - Lektorat von Dateien unter `spec/` — sie folgen dem Übersetzungs-Flow der `spec`-Skill und haben eigene autoritative Drift-Checks; eine Aufnahme hier würde eine zweite Quelle der Wahrheit für Spec-Prosa erzeugen
 - Autorschaft von Vale-Regeln (Active-Voice-Detektor, gendered-pronoun-Detektor und Ähnliches): `prose-style` führt das bereits als aufgeschobene Entscheidung und `Lektorat` greift dem nicht vor
-- Slack-Nachrichten, Wiki-Seiten, Blog-Posts oder andere Nicht-Markdown-Prosa-Flächen für Menschen — `Lektorat` deckt GitHub-Issue- und Pull-Request-Bodys als bewusste Scope-Erweiterung ab (sie sind nutzersichtbares Markdown, das in Suchmaschinen und Projekt-Historie landet). Anmerkung: `prose-style` §Pull-request descriptions and release notes verlangt bereits Vale-Abdeckung auf EN-PR-Bodys und EN-Release-Note-Bodys; `Lektorat` führt diese Abdeckung dort **nicht** ein, sondern erweitert sie um die D1/D2/D5-Dimensionen und die DE-Pipeline. Befunde aus dem Vale-CI-Gate von `prose-style` werden gemäß §Koordination mit Nachbarspecs per Vale-Regel-ID dedupliziert. Andere Prosa-Flächen bleiben außerhalb des Scopes, bis sie separat spezifiziert sind
-- Ein blockierendes Gate für redaktionelle Befunde der Severity `suggestion`; nur `critical`-Befunde sind gate-tauglich, und selbst dann opt-in pro Repository (siehe offene Fragen)
+- Slack-Nachrichten, Wiki-Seiten oder andere Nicht-Markdown-Prosa-Flächen für Menschen — `Lektorat` deckt GitHub-Issue- und Pull-Request-Bodys als bewusste Scope-Erweiterung ab (sie sind nutzersichtbares Markdown, das in Suchmaschinen und Projekt-Historie landet). Anmerkung: `prose-style` §Pull-request descriptions and release notes verlangt bereits Vale-Abdeckung auf EN-PR-Bodys und EN-Release-Note-Bodys; `Lektorat` führt diese Abdeckung dort **nicht** ein, sondern erweitert sie um die D1/D2/D5-Dimensionen und die DE-Pipeline. Befunde aus dem Vale-CI-Gate von `prose-style` werden gemäß §Koordination mit Nachbarspecs per Vale-Regel-ID dedupliziert. Andere Prosa-Flächen bleiben außerhalb des Scopes, bis sie separat spezifiziert sind. **Blog-Posts** (Markdown unter dem Content-Baum eines Konsumenten, zum Beispiel `src/content/posts/`) sind **standardmäßig** außerhalb des Scopes, aber ein Konsument, der `spec/project/blog-author/` übernimmt, **DARF** sie über die Opt-in-Konsumenten-Flächen-Erweiterung in §Scope and applicability in den Scope aufnehmen
+- Ein blockierendes Gate für redaktionelle Befunde der Severity `suggestion`; nur `critical`-Befunde sind gate-tauglich, und selbst dann opt-in pro Repository (siehe §Severity-Klassifikation)
 
 ## Anforderungen
 
 ### Geltungsbereich und Anwendbarkeit
 
 - **MUSS [MUST]** die folgenden Artefakt-Typen als **im Scope** von `Lektorat` behandeln: MkDocs-Seiten unter `docs/<lang>/` (ausschließlich `_`-präfigierter Snippet-Ordner, die mit ihrer einbindenden Seite geprüft werden), Top-Level-Repository-Markdown (`README.md`, `ONBOARDING.md`, `CONTRIBUTING.md`, `CHANGELOG.md`, `SECURITY.md`), den Body von GitHub Releases (Release-Notes) sowie den Body von GitHub Issues und Pull-Requests
+- **DARF [MAY]** zusätzlich Markdown-Blog-Posts unter einem konsumenten-deklarierten Content-Pfad (zum Beispiel `src/content/posts/`) als im Scope behandeln, **wenn der Konsument `spec/project/blog-author/` übernimmt** (dessen §Handover-routes-Target-State-Route `lektorat-apply` über das Post-Paar laufen lässt); diese Opt-in-Konsumenten-Flächen-Erweiterung ist die einzige Ausnahme zum Erweiterungs-Verbot unten, und ein Konsument, der `blog-author` nicht übernimmt, hält Blog-Posts außerhalb des Scopes
 - **DARF NICHT [MUST NOT]** Dateien unter `spec/` in den `Lektorat`-Scope aufnehmen; Spec-Prosa wird durch den autoritativen Flow der `spec`-Skill und ihre Übersetzungs-Sync-Regeln regiert. Ein Befund, der die Bearbeitung einer Spec-Datei erfordert, ist ein Befund **gegen die Anweisungen der aufrufenden Skill**, nicht gegen die Spec
 - **DARF NICHT [MUST NOT]** Quellcode, Code-Kommentare, Docstrings, generierte Konfiguration (`.github/*.yml` aus `project-structure-apply`, `mkdocs.yml`, `Taskfile.yml`, Lockfiles), LLM-Instruktions-Artefakte (`skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, `agents/*.md`) oder irgendein binäres Artefakt in den `Lektorat`-Scope aufnehmen
 - **MUSS [MUST]** umzäunte Code-Blöcke (```` ``` ```` … ```` ``` ````), Inline-Code (`` ` `` … `` ` ``), HTML-Kommentare (`<!-- … -->`) und YAML-Frontmatter (` --- … --- ` am Dateianfang) als **read-only** behandeln: die Ebene liest sie für Kontext, **DARF** sie aber **NICHT** umschreiben, umformatieren oder annotieren
-- **MUSS [MUST]** einem Repository erlauben, den In-Scope-Satz über eine `Lektorat`-lokale Konfiguration (Pfad-Globs, Artefakt-Typ-Allowlist) zu **verengen**, **DARF** einem Repository aber **NICHT** erlauben, den Scope um Artefakt-Typen zu erweitern, die die Spec oben ausdrücklich verbietet
+- **MUSS [MUST]** einem Repository erlauben, den In-Scope-Satz über eine `Lektorat`-lokale Konfiguration (Pfad-Globs, Artefakt-Typ-Allowlist) zu **verengen**, **DARF** einem Repository aber **NICHT** erlauben, den Scope um Artefakt-Typen zu erweitern, die die Spec oben ausdrücklich verbietet, **außer** über die oben deklarierte Opt-in-Konsumenten-Flächen-Erweiterung (Blog-Posts unter `blog-author`-Übernahme)
 
 ### Qualitätsdimensionen
 
@@ -50,23 +51,25 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 
 #### D1 — Lesbarkeit
 
-- **MUSS [MUST]** Lesbarkeit gegen benannte Metriken mit expliziten sprach­spezifischen Zielkorridoren bewerten:
-  - **Englischer Text**: Flesch Reading Ease (FRE) und Flesch–Kincaid Grade Level (FKGL)
-  - **Deutscher Text**: Wiener Sachtextformel (WSTF) Variante 1 und LIX
-- **MUSS [MUST]** Zielkorridore pro `content_mode` ausweisen, sodass eine `tutorial`-Seite nicht an derselben Dichte gemessen wird wie eine `reference`-Seite; die Default-Korridore sind:
+- **MUSS [MUST]** Lesbarkeit gegen benannte Metriken mit expliziten sprach­spezifischen Zielkorridoren bewerten. **LIX (Läsbarhetsindex) ist die primäre, sprachübergreifende Lesbarkeitsmetrik**, identisch berechnet für Englisch und Deutsch gemäß [`spec/project/readability-lix/`](../readability-lix/de.md), die die autoritative Quelle für die LIX-Formel, die Langwort-Regel, die Tokenisierungs- und Segmentierungs-Pipeline, die sprachübergreifende Kalibrierung (den Deutsch-Offset) und die unten reproduzierten Korridorwerte ist. Die Flesch-Familien- und Wiener-Metriken sind **ergänzende, beratende Signale**, die **DÜRFEN [MAY]** neben LIX berechnet und berichtet werden, aber **DÜRFEN NICHT [MUST NOT]** einen LIX-basierten D1-Befund überstimmen, eskalieren oder unterdrücken:
+  - **Englischer Text**: LIX (primär); Flesch Reading Ease (FRE) und Flesch–Kincaid Grade Level (FKGL) (ergänzend)
+  - **Deutscher Text**: LIX (primär); Wiener Sachtextformel (WSTF) Variante 1 (ergänzend)
+- **MUSS [MUST]** Zielkorridore pro `content_mode` ausweisen, sodass eine `tutorial`-Seite nicht an derselben Dichte gemessen wird wie eine `reference`-Seite; die Default-Korridore sind (die LIX-Spalten werden von [`spec/project/readability-lix/`](../readability-lix/de.md) §Zielkorridore regiert und hier zur Bequemlichkeit reproduziert — bei Widerspruch gewinnt `readability-lix`):
 
-  | `content_mode` (per `spec/project/mkdocs-structure/`) | EN: FRE warn / crit | EN: FKGL warn / crit | DE: WSTF warn / crit | DE: LIX warn / crit |
-  | --- | --- | --- | --- | --- |
-  | `tutorial`, `how-to`, `troubleshooting` | < 60 / < 45 | > 10 / > 14 | > 7 / > 10 | > 50 / > 60 |
-  | `explanation`, `reference`, `glossary` | < 45 / < 30 | > 14 / > 18 | > 10 / > 13 | > 60 / > 70 |
+  | `content_mode` (per `spec/project/mkdocs-structure/`) | EN: FRE warn / crit | EN: FKGL warn / crit | EN: LIX warn / crit | DE: WSTF warn / crit | DE: LIX warn / crit |
+  | --- | --- | --- | --- | --- | --- |
+  | `tutorial`, `how-to`, `troubleshooting` | < 60 / < 45 | > 10 / > 14 | > 45 / > 55 | > 7 / > 10 | > 50 / > 60 |
+  | `explanation`, `reference`, `glossary` | < 45 / < 30 | > 14 / > 18 | > 55 / > 65 | > 10 / > 13 | > 60 / > 70 |
 
-  Die `crit`-Spalte ist abgeleitet, indem die `warn`-Grenze um eine **Korridor­breite** (den absoluten Abstand zwischen den beiden `content_mode`-Zeilen derselben Metrik) verlängert wird: FRE-Breite = 15, FKGL-Breite = 4, WSTF-Breite = 3, LIX-Breite = 10. Die `crit`-Schwellen oben sind die operativen Werte; die Herleitung ist dokumentiert, damit eine künftige `content_mode`-Zeile konsistent ergänzt werden kann.
+  Die `crit`-Spalte ist abgeleitet, indem die `warn`-Grenze um eine **Korridor­breite** (den absoluten Abstand zwischen den beiden `content_mode`-Zeilen derselben Metrik) verlängert wird: FRE-Breite = 15, FKGL-Breite = 4, WSTF-Breite = 3, LIX-Breite = 10. Die englische und die deutsche LIX-Spalte unterscheiden sich um den sprachübergreifenden Offset Δ = 5 aus `readability-lix` §Sprachübergreifende Kalibrierung (deutsche Korridore liegen höher, weil deutsche Kompositabildung den Langwort-Anteil aufbläht). Die `crit`-Schwellen oben sind die operativen Werte; die Herleitung ist dokumentiert, damit eine künftige `content_mode`-Zeile konsistent ergänzt werden kann.
 
 - **MUSS [MUST]** eine Metrik, deren Wert die `warn`-Schwelle überschreitet (aber nicht die `crit`-Schwelle), als `warning`-Befund klassifizieren, und eine Metrik, deren Wert die `crit`-Schwelle überschreitet, als `critical`-Befund; die Schwellen werden aus der Per-`content_mode`-Zeile oben gelesen
-- **DARF NICHT [MUST NOT]** D1-Bewertung auf eine Seite anwenden, deren `content_mode` `meta` ist (gemäß `spec/project/mkdocs-structure/`); Meta-Seiten (Home, Per-Section-Index) sind von Lesbarkeits-Metriken ausgenommen, weil ihre Prosa navigatorisch und nicht instruktiv ist und keine Korridor-Zeile auf sie passt
+- **DARF NICHT [MUST NOT]** D1-Bewertung auf eine Seite anwenden, deren `content_mode` `meta` ist (gemäß `spec/project/mkdocs-structure/`); Meta-Seiten (Home, Per-Section-Index) sind von Lesbarkeits-Metriken ausgenommen, weil ihre Prosa navigatorisch und nicht instruktiv ist und keine Korridor-Zeile auf sie passt. Top-Level-Repository-Markdown ohne `content_mode`-Frontmatter-Key (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) **MUSS [MUST]** für D1-Zwecke auf `content_mode: meta` defaulten; dieser Default propagiert **nicht** in D3/D4/D5, die den Text gemäß ihrer eigenen Regeln bewerten
+- **DARF [MAY]** die Per-`content_mode`-Korridore **pro Datei** über einen `Lektorat`-lokalen Konfigurations-Eintrag der Form `{path: <glob>, FRE_warn: <int>, FRE_crit: <int>, FKGL_warn: <int>, FKGL_crit: <int>, WSTF_warn: <float>, WSTF_crit: <float>, LIX_warn: <int>, LIX_crit: <int>}` überschreiben. Das Override **MUSS [MUST]** eine konkrete Begründung benennen (inline in der Konfiguration deklariert) und **MUSS [MUST]** innerhalb ±50 % des Default-Korridor-Werts bleiben; ein Override außerhalb dieses Bands ist ein Spec-Verstoß, und der Operator **MUSS [MUST]** stattdessen den Quelltext überarbeiten. Die portfolio-weite Re-Kalibrierung der Default-Korridore ist eine Open Question, gated auf mindestens drei Portfolio-Member-Repos, die Audit-Daten liefern
 - **MUSS [MUST]** den berechneten Metrik-Wert, den Korridor und mindestens ein verstoßendes Beispiel (längster Satz, tiefste Schachtelung) im Befund nennen, damit er auditierbar ist
 - **DARF NICHT [MUST NOT]** im `patch`-Modus eine Passage aus reinen Lesbarkeits-Gründen umschreiben, ohne einen Metrik-Wert oder eine benannte Heuristik-Quelle im Befund; eine Meinung ist kein Befund
 - **SOLLTE [SHOULD]** Metrik-Befunde durch **strukturelle Heuristiken** ergänzen (Absätze länger als drei Sätze, Listen mit mehr als sieben Peers, Überschriften tiefer als `####`) — diese sind per Default `suggestion`
+- **SOLLTE [SHOULD]** die ergänzenden Metriken (FRE/FKGL für Englisch, WSTF für Deutsch) berechnen, indem eine gepflegte sprach­spezifische Lesbarkeits-Bibliothek konsumiert wird (eine `textstat`-Klasse-Bibliothek für Englisch, eine `readability-de`-Klasse-Bibliothek für Deutsch), statt die klassischen Formeln neu zu implementieren; die Spec schränkt nur die Metrik-Namen und die Korridore oben ein, nicht die Implementierung, und die gewählte Bibliothek **KANN [MAY]** neben den Pipeline-Metadaten (§Ausgaben) zur Reproduzierbarkeit aufgezeichnet werden. **LIX im Speziellen MUSS [MUST]** gemäß [`spec/project/readability-lix/`](../readability-lix/de.md) §Reproduzierbarkeit berechnet werden — eine einzige gepinnte Bibliothek und ein Tokenizer/Segmentierer, identisch für beide Sprachen verwendet, gegen die kanonische Formel validiert (nicht gegen einen Library-Docstring), wobei die aufgezeichnete Evidenz die Zählungen `lix`, `asl`, `lwp` sowie die rohen `words`/`sentences`/`long_words` trägt
 
 #### D2 — Verständlichkeit
 
@@ -74,7 +77,7 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
   - **Jargon-Last**: ein Fachterm taucht ohne vorherige Definition auf, wobei „Fachterm" alles abdeckt, was nicht im audience-passenden Grundvokabular des Projekts steht (siehe §Audience-Bindung)
   - **Ungeklärte Abkürzungen**: eine Abkürzung (`SRE`, `RTO`, `CSP`) erscheint ohne Auflösung bei Erstnennung auf der Seite
   - **Versteckte Vorannahmen**: eine Anweisung oder Aussage hängt von einer früheren Datei, einem Umgebungs­zustand oder einem Werkzeug ab, das auf der aktuellen Seite nicht genannt wird
-  - **Implizite Annahmen**: ein Satz unterstellt Rolle, Tooling oder Background der Leserschaft, ohne es zu sagen (typische Marker: „einfach", „nur", „bekanntlich")
+  - **Implizite Annahmen**: ein Satz unterstellt Rolle, Tooling oder Background der Leserschaft, ohne es zu sagen. Die Markerwort-Liste liegt in [`spec/project/lektorat/markers-de.yml`](markers-de.yml) (Deutsch) und [`spec/project/lektorat/markers-en.yml`](markers-en.yml) (Englisch) als versionierte, pflegbare Liste statt einer inline-Aufzählung; das per-Eintrag `severity_floor` (`suggestion` oder `warning`) bestimmt die höchste Severity, die der Marker unter der §D2-Eskalationstabelle erreichen kann
 - **MUSS [MUST]** jedes D2-Muster mit der unten genannten Default-Severity klassifizieren und nur über die genannte Regel eskalieren. Das Severity-Bucket-Vokabular `critical` / `warning` / `suggestion` ist in §Severity-Klassifikation definiert; diese Tabelle ist die pro-Muster-Auflösung und das, was Implementierungen anwenden:
 
   | D2-Muster | Default-Severity | Eskalation |
@@ -92,7 +95,7 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 - **MUSS [MUST]** **sprach­spezifische** Rechtschreib- und Grammatikprüfung anwenden:
   - **Englischer Text** — delegiert an die von `prose-style` regierte Vale-Mechanik; `Lektorat` implementiert Rechtschreibung/Grammatik für Englisch **nicht** neu, sondern konsumiert die Vale-Ausgabe und surfaced sie als `D3`-Befunde im einheitlichen Report
   - **Deutscher Text** — wendet eine `Lektorat`-eigene DE-Pipeline an (Portfolio-Default: LanguageTool HTTP API; siehe §Sprach-Handhabung), weil `prose-style` Vale ausdrücklich auf Englisch beschränkt und eine DE-Alternative portfolio-weit nicht verfügbar ist
-- **MUSS [MUST]** die folgenden Klassen vor jeder Rechtschreib-Korrektur schützen: **Eigennamen, Produktnamen, technische Identifier, Befehlsnamen, Dateipfade, URLs, projektspezifischer Jargon** — die Quelle der geschützten Menge ist das Audience-Artefakt und das `nolte/vale-style`-Vokabular (für Englisch) bzw. die `Lektorat`-lokale Geschützte-Begriffe-Liste (für Deutsch)
+- **MUSS [MUST]** die folgenden Klassen vor jeder Rechtschreib-Korrektur schützen: **Eigennamen, Produktnamen, technische Identifier, Befehlsnamen, Dateipfade, URLs, projektspezifischer Jargon** — die Quelle der geschützten Menge ist das Audience-Artefakt und das `nolte/vale-style`-Vokabular (für Englisch) bzw. [`spec/project/lektorat/protected-terms-de.yml`](protected-terms-de.yml) (für Deutsch); die Geschützte-Begriffe-Datei ist YAML, versioniert, und Hinzufügungen verlangen einen einzeiligen Rationale-Kommentar, damit Reviewer jeden Eintrag beurteilen können
 - **MUSS [MUST]** einen Rechtschreib- oder Grammatik-Befund als `critical` klassifizieren, wenn er die gerenderte Bedeutung verändern würde oder in einem publizierten Artefakt sichtbar ist (Release-Note-Body, README, Top-Level-Docs); andernfalls als `warning`
 - **DARF NICHT [MUST NOT]** eine Schreibweise korrigieren, die das Audience-Artefakt oder die Geschützte-Begriffe-Liste als beabsichtigt markiert (Markenname, Produkt-Schreibweise, bewusste Stilisierung)
 
@@ -122,6 +125,7 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
   - `suggestion`: qualifiziert eine Heuristik, schlägt eine stilistische Verfeinerung vor oder weitet einen Satz für Klarheit, ohne die Bedeutung zu verändern
 - **MUSS [MUST]** diese Severity-Namen wörtlich in maschinenlesbarer Ausgabe verwenden (JSON-Keys, Frontmatter-Values, CLI-Exit-Code-Mapping); `info`, `error`, `notice` und ähnliche Synonyme sind **DARF NICHT [MUST NOT]**
 - **MUSS [MUST]** Severity-Klassifikation **dimensions­bewusst** halten: ein D3-Tippfehler in einem publizierten Release-Note ist `critical`, derselbe Tippfehler in einem Markdown-Kommentar als Entwurf ist `warning`, derselbe Tippfehler innerhalb eines Code-Identifiers ist **kein Befund** (außer Scope gemäß §Geltungsbereich)
+- **MUSS [MUST]** `critical`-Befunde in nachgelagerten Gates (`sprint-review`, `release-publish-trigger`) **per Default beratend** behandeln: ein `critical`-Befund **DARF NICHT [MUST NOT]** für sich allein einen Sprint-Review oder ein Release blockieren. Ein Repository **KANN [MAY]** über ein `Lektorat`-lokales Flag in das Blockieren bei `critical` opt-in gehen — analog dazu, wie `docs-freshness` Befunde surfaced, ohne Releases zu blockieren. Die portfolio-weite Promotion von `critical` von beratend zu blockierend ist ein nachverfolgter Follow-up, gated auf das erste Quartal akkumulierter Audit-Daten, und ist noch nicht in Kraft
 
 ### Operationen
 
@@ -173,6 +177,7 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
   3. Repository-Default aus `spec/.spec-config.yml` (`canonical_language`) — für Top-Level-Markdown ohne Sprachsegment (`README.md` löst typischerweise auf die canonical-Sprache auf)
   4. Im letzten Fall wählt der Operator interaktiv; `Lektorat` **DARF NICHT [MUST NOT]** die Sprache aus dem Text-Inhalt für Scope-Entscheidungen autodetektieren
 - **MUSS [MUST]** **englisch-only-Mechanik** (Vale, prose-style §Voice and tone, FRE/FKGL) auf englisch-aufgelöste Dateien anwenden und **deutsch-only-Mechanik** (DE-Rechtschreib/Grammatik-Pipeline, WSTF/LIX, deutsche Ton-Heuristiken) auf deutsch-aufgelöste Dateien
+- **MUSS [MUST]** YAML-Frontmatter, umzäunte Code-Blöcke, Inline-Code-Spans, HTML-Kommentare und Markdown-Link- / Bild-Ziele aus der Prosa entfernen, **bevor** der Text an eine satzweise Grammatik-Pipeline geht (Vale auf Englisch, die DE-Pipeline auf Deutsch); die entfernten Tokens **MÜSSEN [MUST]** byte-restlos entfernt werden (keine Ersetzung durch Whitespace), damit die Pipeline Strip-Artefakte nicht als Typografie-Befunde interpretieren kann. Die Zeilennummerierung des gestrippten Textes **MUSS [MUST]** auf die Quelldatei zurückführbar bleiben (Leerzeilen stehen für entfernte strukturelle Elemente), damit Befund-Positionen operator-auditierbar bleiben
 - **MUSS [MUST]** die folgenden Klassen vor jeder sprach-mechanischen Korrektur in jeder Operation schützen: Code-Blöcke (gemäß §Geltungsbereich), Inline-Code, URL-Ziele, Kommandozeilen-Aufrufe, Dateipfade, identifier-artige Tokens (`camelCase`, `snake_case`, `kebab-case`-Sequenzen, die sichtbar Identifier sind), im Audience-Artefakt oder in der Geschützte-Begriffe-Liste deklarierte Produktnamen sowie Eigennamen aus denselben Quellen
 - **DARF NICHT [MUST NOT]** eine nicht-englische Passage innerhalb einer englisch-aufgelösten Datei umschreiben (oder umgekehrt); eine solche Passage ist ein Befund (`D3` für Rechtschreibung, `D5` für Register), und die Auflösung wird **dem Operator geflaggt**, nicht still korrigiert
 - **MUSS [MUST]** die gewählte DE-Pipeline in der `Lektorat`-lokalen Konfiguration als `{tool: <name>, version: <version>, configured_path: <Endpoint-oder-Binary-Pfad>}` aufzeichnen, sodass der Operator einen Lauf reproduzieren kann; der **Portfolio-Default** ist die **LanguageTool HTTP API** (`tool: "languagetool-http"`, mit `configured_path` entweder auf den Public-Endpoint `https://api.languagetool.org/v2` oder eine selbst gehostete Bereitstellung derselben Engine zeigend — der API-Vertrag ist in beiden Formen identisch). Ein Repository **KANN [MAY]** den Default überschreiben, indem es ein alternatives Werkzeug in seiner `Lektorat`-lokalen Konfiguration pinnt; der lastentragende Vertrag ist die in §Outputs deklarierte JSON-Ausgabe-Form, nicht die Werkzeug-Identität
@@ -205,12 +210,27 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
       "en": {
         "tool": "vale",
         "version": "<Ausgabe von `vale --version`>",
-        "configured_path": "<repo-relativer Pfad zur aktiven .vale.ini oder vale.yml>"
+        "configured_path": "<repo-relativer Pfad zur aktiven .vale.ini oder vale.yml>",
+        "readability": {
+          "library": "<LIX-Library-Name>",
+          "library_version": "<version>",
+          "tokenizer": "<Tokenizer/Segmentierer-Name>",
+          "tokenizer_version": "<version>",
+          "long_word_threshold": 6
+        }
       },
       "de": {
         "tool": "languagetool-http",
         "version": "<Wert von LanguageTool /v2/info `buildDate` oder das selbst gehostete Release-Tag>",
-        "configured_path": "<HTTP-Endpoint-URL (Public oder self-hosted) oder, bei alternativem Werkzeug, der aufgelöste Binary-Pfad>"
+        "configured_path": "<HTTP-Endpoint-URL (Public oder self-hosted) oder, bei alternativem Werkzeug, der aufgelöste Binary-Pfad>",
+        "readability": {
+          "library": "<LIX-Library-Name>",
+          "library_version": "<version>",
+          "tokenizer": "<Tokenizer/Segmentierer-Name>",
+          "tokenizer_version": "<version>",
+          "long_word_threshold": 6,
+          "decompounding": false
+        }
       }
     },
     "inventory_findings": [
@@ -240,17 +260,19 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
   }
   ```
 
-- **MUSS [MUST]** `pipeline_metadata.<sprache>` für jede in `language_summary` vertretene Sprache befüllen, deren Pipeline aufgelöst werden konnte; die drei Unterfelder `tool`, `version` und `configured_path` sind sämtlich erforderlich und lasttragend für das Reproduzierbarkeits-Akzeptanzkriterium. Platzhalter-Werte sind verboten — wenn eines der drei nicht auflösbar ist (z. B. die Binary fehlt), wird der entsprechende `pipeline_metadata.<sprache>`-Block **weggelassen** und der Scan-Zustand stattdessen in `inventory_findings` aufgezeichnet (siehe unten)
+- **MUSS [MUST]** `pipeline_metadata.<sprache>` für jede in `language_summary` vertretene Sprache befüllen, deren Pipeline aufgelöst werden konnte; die drei Unterfelder `tool`, `version` und `configured_path` (die D3-Rechtschreib-/Grammatik-Pipeline) sind sämtlich erforderlich und lasttragend für das Reproduzierbarkeits-Akzeptanzkriterium. Platzhalter-Werte sind verboten — wenn eines der drei nicht auflösbar ist (z. B. die Binary fehlt), wird der entsprechende `pipeline_metadata.<sprache>`-Block **weggelassen** und der Scan-Zustand stattdessen in `inventory_findings` aufgezeichnet (siehe unten)
+- **MUSS [MUST]** außerdem den `readability`-Sub-Block von `pipeline_metadata.<sprache>` gemäß [`spec/project/readability-lix/`](../readability-lix/de.md) §Reproduzierbarkeit befüllen — `library`, `library_version`, `tokenizer`, `tokenizer_version`, `long_word_threshold` (immer `6`) und, nur für Deutsch, `decompounding` — unter Verwendung **derselben** LIX-Library und desselben Tokenizers für beide Sprachen, damit EN- und DE-Werte vergleichbar bleiben
 - **MUSS [MUST]** jede Infrastruktur-Level-Scan-Bedingung im Array `inventory_findings` surfacen, **niemals** in `findings`. Das `findings`-Array trägt ausschließlich redaktionelle Befunde, klassifiziert nach der closed-Severity-Menge (`critical` / `warning` / `suggestion`) aus §Severity-Klassifikation; `inventory_findings` trägt Vorbedingungen, die einen Teil des Scans verhindert haben. Das `kind`-Feld ist eine geschlossene Aufzählung mit genau diesen fünf Werten:
   - `vale-unavailable`: Vale-Binary nicht aufrufbar, obwohl englische Dateien im Scope sind; D3/D4-EN-Mechanik wird übersprungen. `file: null`.
   - `language-pipeline-missing`: deutsche Dateien sind im Scope, aber keine DE-Pipeline-Konfiguration wurde übergeben (oder der konfigurierte Endpoint/die Binary ist nicht aufrufbar); D3 für die betroffene Datei wird übersprungen. `file` benennt die betroffene Datei; pro betroffener Datei ein Eintrag.
   - `language-ambiguous`: die Sprach-Auflösungs-Prioritätenkette (siehe §Sprach-Handhabung) kann die Datei nicht auflösen; der Operator entscheidet interaktiv. `file` benennt die betroffene Datei.
-  - `content-mode-missing`: die Datei hat keinen `content_mode` in der Caller-übergebenen Map; D1 für diese Datei wird übersprungen (die `meta`-Ausnahme hängt von einem bekannten Mode ab). `file` benennt die betroffene Datei.
+  - `content-mode-missing`: die Datei ist eine Seite im `docs/<lang>/`-Baum, die keinen `content_mode` in der Caller-übergebenen Map hat; D1 für diese Datei wird übersprungen (die `meta`-Ausnahme hängt von einem bekannten Mode ab). `file` benennt die betroffene Datei. Top-Level-Repository-Markdown (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) erzeugt diesen Inventory-Befund **nicht** — es defaultet gemäß §D1 auf `content_mode: meta`, unabhängig davon, ob ein Frontmatter-Key vorhanden ist.
   - `audience-artefact-missing`: der Audience-Artefakt-Pfad löst sich zu nichts auf; D5 wird für jede Datei im Scope übersprungen. `file: null`.
 - **DARF NICHT [MUST NOT]** weitere `kind`-Werte ohne vorherige Änderung dieser Spec einführen; ein unbekanntes `kind` in `inventory_findings` ist ein Spec-Konformitäts-Verstoß, kein Erweiterungspunkt
 - **MUSS [MUST]** `id` über Läufe hinweg stabil halten für denselben Befund auf derselben Datei/Zeile/Dimension, sodass eine Verwerfung per `id` aufgezeichnet werden kann
 - **MUSS [MUST]** zusätzlich eine **menschenlesbare** Markdown-Zusammenfassung (severity-sortiert) für den Operator-Review emittieren; JSON ist für Maschinen, Markdown ist für Menschen
 - **SOLLTE [SHOULD]** beide Ausgaben unter `.audits/lektorat/<YYYY-MM-DD-HHMM>/` schreiben, sodass ein Repository einen prüfbaren Audit-Verlauf akkumuliert (spiegelt `spec/project/spec-drift-audit/` und ähnliche geschichtete Audits)
+- Das `.audits/lektorat/`-JSON ist der **Vertrag**; das Rendern von Befunden als **Pull-Request-Zeilenkommentare** (oder CI-Annotationen) ist für diese Spec ausdrücklich **außerhalb des Scopes** und eine nachgelagerte CI-/Rendering-Entscheidung über jenem JSON — konsistent damit, wie die übrigen Audit-Specs des Portfolios ihren On-Disk-Audit-Verlauf als das Liefergut behandeln
 
 #### Edit-Diff (für `patch` und `revise`)
 
@@ -265,12 +287,14 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 - **`lektorat-apply`-Skill** — User-Facing Einstieg; orchestriert `audit` / `patch` / `revise`; verantwortet alle Operator-Dialoge (Approvals, Verwerfungen, Sprach-Disambiguierung); komponiert die finalen Ausgaben; liest für den Audit-Schritt selbst keine Quelldateien
 - **`lektorat-scanner`-Agent** — Read-only-Scanner; führt D1–D5-Erkennung über ein oder mehrere In-Scope-Artefakte aus; gibt das strukturierte Befunde-Inventar zurück, das die Skill rendert; ediert nie, fragt nie
 - Die Skill **DARF [MAY]** den vorhandenen `prose-vale-curator`-Agent für D3/D4-Mechanik auf englischem Text und den `audience-review`-Agent für beratende D5-Zweitlesen dispatchen; beide Dispatches sind **opt-in** pro Repository
+- Als Default-Erstimplementierungsform **SOLLTE [SHOULD]** die Skill `lektorat-scanner` einmal für den gesamten In-Scope-Satz dispatchen (gebatcht), dabei `language_summary` pro Sprache aggregieren und die Vale-Regel-ID-Deduplikation aus §Koordination in einem Durchlauf anwenden; Per-Datei-Dispatch (optional parallel) bleibt zulässig und erzeugt identisches JSON, und ein Repository **DARF [MAY]** ihn übernehmen, sobald ein gemessenes Audit zeigt, dass gebatchte Latenz oder Kosten nicht akzeptabel sind
 
 ### Koordination mit Nachbarspecs
 
 - **MUSS [MUST]** `spec/project/prose-style/` als autoritative Quelle für EN-Voice/Tone-Regeln und Vale-Mechanik referenzieren; `Lektorat` konsumiert sie und **DARF NICHT [MUST NOT]** sie neu definieren
 - **MUSS [MUST]** `spec/project/audience-identification/` als autoritative Quelle für Audience-Identifier und Audience-Eigenschaften referenzieren; `Lektorat` liest das Artefakt und **DARF NICHT [MUST NOT]** Audiences erfinden
 - **MUSS [MUST]** `spec/project/docs-audience-tracks/` für den Per-Seite-`audience`/`track`/`content_mode`-Frontmatter-Vertrag referenzieren; `Lektorat` löst anwendbare Audiences darüber auf
+- **MUSS [MUST]** [`spec/project/readability-lix/`](../readability-lix/de.md) als autoritative Quelle der LIX-Metrik referenzieren (Formel, Langwort-Regel, Tokenisierungs-Pipeline, sprachübergreifende Kalibrierung, Korridorwerte und die Verbesserungs-Transformationen); `Lektorat` §D1 konsumiert LIX daraus und **DARF NICHT [MUST NOT]** die Metrik oder ihre Korridore neu definieren
 - **MUSS [MUST]** `spec/project/mkdocs-structure/` für das `content_mode`-Enum referenzieren, das die Lesbarkeits-Korridore treibt, und für die `_`-präfigierte Snippet-Ordner-Konvention
 - **MUSS [MUST]** `spec/project/docs-multilingual-authoring/` für den sprachübergreifenden Paritätsvertrag referenzieren; `Lektorat` **DARF NICHT [MUST NOT]** Übersetzungen synchronisieren
 - **MUSS [MUST]** `spec/project/docs-freshness/` für die sprachübergreifende Drift-Erkennung referenzieren; `Lektorat` **DARF NICHT [MUST NOT]** Paritäts-Drift erkennen
@@ -287,6 +311,7 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 - [ ] Eine englische Datei produziert mindestens einen D1-Befund, wenn Flesch Reading Ease unter ihren content-mode-Korridor fällt — mit Metrik-Wert und Korridor im Befund
 - [ ] Eine deutsche Datei produziert mindestens einen D1-Befund, wenn WSTF ihren content-mode-Korridor überschreitet — mit Metrik-Wert und Korridor im Befund
 - [ ] Eine Seite, deren `content_mode` `meta` ist, produziert **keinen** D1-Befund (die Meta-Ausnahme wird beachtet)
+- [ ] Eine Top-Level-Markdown-Datei ohne `content_mode`-Frontmatter-Key (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) wird ausschließlich für D1 als `content_mode: meta` behandelt; die Datei erzeugt **keinen** `content-mode-missing`-Inventory-Befund
 - [ ] Eine Datei mit einer ungeklärten Abkürzung produziert mindestens einen D2-Befund, der die Abkürzung, die fehlende Auflösung und die Zeile der Erstnennung benennt
 - [ ] Eine Datei mit einer versteckten Vorannahme (eine Anweisung, die auf ein Werkzeug oder einen Umgebungszustand verweist, der auf der Seite nicht erwähnt ist) produziert einen D2-Befund, der die fehlende Voraussetzung identifiziert
 - [ ] Ein Jargon-Last-D2-Befund in einem Artefakt auf publizierter Fläche (`README.md`, Release-Note-Body, Top-Level-Docs), dessen aufgelöste Audience eine Nicht-Operator-Rolle enthält, wird `critical` klassifiziert; derselbe Jargon-Last-Befund in einem internen Entwurfs-Doc oder in einer publizierten Fläche mit Operator-only-Audience bleibt `warning` (D2-Jargon-Last-Eskalation honoriert)
@@ -314,12 +339,7 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 
 ## Offene Fragen
 
-- Sollen Befunde der Severity `critical` als **blockierendes Gate** in `sprint-review` und `release-publish-trigger` wirken, oder beratend bleiben? Default vorerst: **beratend**, mit Opt-in pro Repository über ein `Lektorat`-lokales Flag — analog dazu, wie `docs-freshness` Befunde aktuell surfaced ohne Releases zu blockieren. Promotion zu blockierend nach dem ersten Quartal Audit-Daten.
-- ~~Auf welche konkrete **deutsche Pipeline** soll das Portfolio sich für D3 (deutsche Rechtschreibung/Grammatik) einigen?~~ **Aufgelöst**: der Portfolio-Default ist die **LanguageTool HTTP API** — Public-Endpoint `https://api.languagetool.org/v2` für Open-Source-Repositories, oder eine selbst gehostete Bereitstellung derselben Engine für Repositories mit Sensitivitäts-, Durchsatz- oder Air-Gap-Anforderungen. Der HTTP-API-Vertrag ist in beiden Formen identisch; der lauf-spezifische Pin in `pipeline_metadata` (siehe §Outputs) hält fest, welcher Endpoint tatsächlich verwendet wurde, sodass ein Lauf reproduzierbar bleibt. Repositories **KÖNNEN [MAY]** den Default überschreiben, indem sie ein alternatives Werkzeug in ihrer `Lektorat`-lokalen Konfiguration pinnen; der lastentragende Vertrag ist die JSON-Ausgabe-Form, nicht die Werkzeug-Identität. **Hinweis**: der Public-Endpoint hat bekannte Rate-Limits (kleine Per-Request-Payload, ~20 Anfragen/Minute für anonymen Zugriff) und sendet Prosa an einen Drittanbieter-Server; beides sind Implementierungs-Belange der konsumierenden Skill (`lektorat-apply`), nicht Spec-Belange.
-- Soll `Lektorat` seinen Scope auf **API-Referenz-Text aus Quellcode** (typedoc, sphinx, godoc-Output) ausweiten? Default vorerst: **nein**, generierte Referenz ist eine Code-Tooling-Sache und ein eigenes Spec-Topic; erneut bewerten, sobald ein Portfolio-Repo eine Referenz-Site liefert, deren Audience über Entwickler hinausgeht.
-- Soll `Lektorat` eine **eigene Lesbarkeits-Metrik-Bibliothek** mitbringen oder pro Sprache einen externen Dienst konsumieren (textstat für EN, readability-de für DE)? Default vorerst: gepflegte Bibliotheken konsumieren, um klassische Formeln nicht neu zu implementieren; die Spec schränkt nur die **Metrik-Namen** und **Korridore** ein, nicht die Implementierung.
-- Soll der `lektorat-scanner`-Agent **parallel pro Datei** dispatchbar sein (ein Agent-Run pro Artefakt, Ergebnisse durch die Skill zusammengeführt) oder **gebatcht** (ein Agent-Run für das ganze Repository)? Default vorerst: offen — die erste Implementierung soll messen; die JSON-Ausgabe ist beidseitig dieselbe.
-- Soll `Lektorat` **Diff-Annotationen auf Pull-Requests** produzieren (z.B. als PR-Zeilenkommentare) zusätzlich zum `.audits/lektorat/`-Audit-Verlauf? Default vorerst: **nein**, der Audit-Verlauf ist der Vertrag; PR-Zeilenkommentare sind eine nachgelagerte Rendering-Entscheidung, die nicht in diese Spec gehört.
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._
 
 ## Quellen
 

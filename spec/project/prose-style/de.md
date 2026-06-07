@@ -44,6 +44,8 @@ Dokumentation, Spezifikationen, READMEs, Release-Notes und sonstiges menschenles
 - **SOLLTE [SHOULD]** einen Pull Request gegen `nolte/vale-style` eröffnen, mit einer einzeiligen Begründung je neuem Eintrag, damit Ergänzungen prüfbar sind
 - **KANN [MAY]** einen Begriff nur übergangsweise in einem repository-lokalen Vokabular halten, solange der Upstream-PR offen ist; nach Release der Upstream-Änderung **MUSS [MUST]** der lokale Eintrag entfernt und das gepinnte `nolte/vale-style`-Release **MUSS [MUST]** angehoben werden
 
+Die Drift zwischen repository-lokalen Vokabularen und dem gepinnten `nolte/vale-style`-Release wird über den `vocab-drift-audit`-Skill geprüft statt über einen periodischen CI-Cron.
+
 ### Pull-Request-Beschreibungen und Release-Notes
 - **MUSS [MUST]** dasselbe gemeinsame Vale-Regelwerk auf Pull-Request-Beschreibungen und GitHub-Release-Notes anwenden (vom release-drafter entworfen, vor der Veröffentlichung bearbeitet), denn diese Prosa fließt direkt in externe Changelogs und nutzerseitige Release-Seiten
 - **MUSS [MUST]** Pull-Request-Beschreibungen in der CI prüfen (zum Beispiel über einen PR-Check-Workflow) auf dem im Repository konfigurierten `MinAlertLevel` und auf `error`-Stufe genauso scheitern wie die Dokumentation
@@ -67,6 +69,8 @@ Die Vale-Regelsätze erzwingen eine mechanische Basislinie, aber die folgenden R
 - **DARF NICHT [MUST NOT]** **Ausrufezeichen** außerhalb echter Betonung ausliefern (Release-Note-Stil ist in Release-Notes erlaubt; Dokumentations-Prosa ist nicht der Ort dafür) (Google Voice „Avoid exclamation marks")
 - **DARF NICHT [MUST NOT]** **Emoji** in Spec-, ADR- oder Reference-Prosa ausliefern; Emoji **DÜRFEN [MAY]** in Release-Notes, README-Badge-Zeilen und informellen Blog-Posts auftauchen, wenn die Stimme des Projekts es trägt (Portfolio-Konvention; nicht im Widerspruch zu Upstream-Style-Guides)
 - **KANN [MAY]** **Microcopy-Muster** verwenden, die Microsoft Top-10 ratifiziert (verb-first List-Items, „you can" gestrichen, zwei-oder-drei-Wort-Überschriften ohne Schluss-Punktion)
+
+Standardmäßig bleiben diese §Stimme-und-Ton-Regeln **redaktionelle Leitlinien**: Sie werden über den menschlichen oder KI-gestützten Lektorat-Lauf (`spec/project/lektorat/` §Erkennungs-Dimensionen, der sie als D4-Stilbefunde aufzeigt) und über das Pull-Request-Review durchgesetzt, nicht über maßgeschneiderte Vale-Regeln. Das Portfolio verfasst keinen allgemeinen Aktiv-Detektor, keinen Title-Case-Detektor und keinen Pronomen-Detektor in `nolte/vale-style`, bis dokumentierte Drift die Regel-Kosten rechtfertigt; die [`spec/project/lektorat/`](../lektorat/de.md) §Nicht-Ziele verweisen dieselbe Entscheidung an diese Spec als Eigentümerin zurück. Die einzige bereits automatisierte Ausnahme ist die Bias-Free-Ersetzungs-Tabelle, die `nolte/vale-style` upstream trägt (siehe den Inklusiv-Sprach-Punkt oben und den zugehörigen §Akzeptanzkriterien-Eintrag). Wird die Automatisierung gerechtfertigt, deponiere gezielte Upstream-Regeln in dieser Reihenfolge – zuerst generische geschlechts-gebundene Pronomen, Ausrufezeichen und Title-Case-Überschriften, weil sie die Klassen mit den wenigsten False-Positives sind – und halte die allgemeine Aktiv-Klasse manuell, weil sie am anfälligsten für False-Positives ist. Der zählbare Revisit-Trigger ist in §Offene Fragen festgehalten.
 
 ### Mehrsprachige Texte
 - **MUSS [MUST]** Vale ausschließlich auf englischsprachig verfassten Inhalt anwenden; Dateien, die in einer anderen Sprache als Englisch verfasst sind, **DÜRFEN NICHT [MUST NOT]** in den Vale-Lint-Scope aufgenommen werden
@@ -95,8 +99,8 @@ Die Vale-Regelsätze erzwingen eine mechanische Basislinie, aber die folgenden R
 - [ ] Das gemeinsame Vale-Vokabular unter `nolte/vale-style` trägt Microsofts Bias-Free-Ersetzungen (`primary` / `subordinate`, `stop responding`, `perimeter network`, …), damit zur Durchsetzung kein Per-Repo-Override nötig ist
 
 ## Offene Fragen
-- _Keine – alle vorherigen offenen Punkte sind geklärt. Der Drift-Audit zwischen repository-lokalen Vokabularen und dem gepinnten `nolte/vale-style`-Release wird über einen dedizierten Claude-Skill abgedeckt statt über einen periodischen CI-Cron erzwungen._
-- Sollen die §Stimme-und-Ton-Regeln über zusätzliche Vale-Regeln in `nolte/vale-style` automatisch durchgesetzt werden (ein Aktiv-Detektor, ein Title-Case-Detektor, ein Pronomen-Detektor), oder bleiben sie vorerst redaktionelle Leitlinien? Vale-Regel-Autorenschaft ist nicht trivial und neigt zu False-Positives; verschoben, bis genug Drift dokumentiert ist, um die Regel-Kosten zu rechtfertigen.
+
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._
 
 ## Quellen
 <!-- Autoritative externe Referenzen, gegen die die obigen Anforderungen validiert wurden (≥2 unabhängige Quellen pro Aussage). -->

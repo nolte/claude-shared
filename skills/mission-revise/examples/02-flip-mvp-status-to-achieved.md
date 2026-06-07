@@ -1,8 +1,8 @@
-# Example 02 — Operation B: flip `mvp_status: in_progress → achieved`
+# Example 02 — Operation 2: flip `mvp_status: in_progress → achieved`
 
 Every `mvp: true` roadmap item has reached `status: done` and the
 `verifies_via` acceptance criterion is checked on its feature. The
-operator asks for the lifecycle flip. Exercises branch B's evidence
+operator asks for the lifecycle flip. Exercises operation 2's evidence
 walk for the `in_progress → achieved` transition (which is **not**
 the stabilisation gate — that's example 03).
 

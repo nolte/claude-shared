@@ -91,6 +91,8 @@ At the trigger point, the operator answers exactly one of the three choices belo
 
 The operator **MUST** make the choice within the same Claude Code session in which the trigger fires; the trigger doesn't span sessions. If the session ends without a choice, the trigger is implicitly deferred per Choice 3.
 
+When multiple `feature → done` transitions fire in one session, the trigger **MUST** surface them sequentially—one three-way choice per feature—rather than batching several features into a single decision; this keeps a-4's "exactly three choices per trigger point" intact per feature. The trigger **MAY** offer a skip-all-remaining shortcut that defers every remaining feature via Choice 3.
+
 The trigger **MAY** carry a **derived suggestion** (per §Trigger event) recommending Choice 1, 2, or 3 based on the existing-post index lookup. Example heuristics (not normative):
 
 - Derived slug not in the existing-post index → suggest Choice 1.
@@ -103,7 +105,7 @@ A Choice-3 deferral writes a backlog entry that survives across Claude Code sess
 
 - **MUST** the deferral artefact live in the **source consumer's** repository (not the blog consumer's), under `project/blog-triggers/<feature-slug>.yml`. The path keeps the deferral co-located with the feature record it refers to.
 - **MUST** the deferral YAML carry the full trigger-event payload (per §Trigger event) plus a `deferred_at` timestamp, a `deferral_reason` (free-text, operator-supplied at decision time), and a `status` field with one of the values `deferred`, `cancelled`, `consumed`.
-- **MUST** a later trigger-run that re-encounters the same feature `id` consume the existing deferral artefact rather than create a second one. The trigger updates `status: deferred → consumed` when the operator chooses Choice 1 or Choice 2 on the second pass; `status: cancelled` is operator-set and never trigger-set.
+- **MUST** a later trigger-run that re-encounters the same feature `id` consume the existing deferral artefact rather than create a second one. The trigger updates `status: deferred → consumed` when the operator chooses Choice 1 or Choice 2 on the second pass; `status: cancelled` is operator-set and never trigger-set. A deferral artefact can never become stale through feature cancellation: it is written only after `feature → done`, and [`spec/project/feature/`](../feature/en.md) §Lifecycle makes `cancelled` reachable only from `draft`, `ready`, or `in_progress`—never from `done`—so a feature carrying a deferral can never reach `cancelled` through the legal lifecycle.
 - **SHOULD** the source consumer's `sprint-review` skill (per [`spec/project/sprint/`](../sprint/en.md) lifecycle) surface unconsumed deferrals at sprint close, so deferrals don't accumulate silently. The mechanism is the source consumer's choice; this spec describes the contract, not the wiring.
 
 ### Cross-repository handover
@@ -116,6 +118,8 @@ When the source consumer and the blog consumer are **different repositories**, t
 - **MAY** the trigger pre-stage the derived briefing as a Markdown file under the source consumer's `project/blog-triggers/<feature-slug>.briefing.md` for the operator to copy or open in the blog consumer's session. The pre-staged file uses the briefing shape that [`blog-author`](../blog-author/en.md) §Briefing inputs expects.
 
 When the source consumer **is** the blog consumer (a single repository hosts both source work and the blog), the cross-repository handover collapses: the trigger dispatches `blog-author` in-place, with no working-directory switch.
+
+The unconditional no-silent-write stance above is settled: this spec carries **no** opt-in for fully automatic cross-repo posting, and the operator confirmation **MUST** precede every write into the blog consumer's working tree regardless of how single-handed the consumer pair is. A future iteration that trades this safety margin for convenience (for example a `cross_repo_autopost` declaration that lets the trigger open the blog-consumer session automatically) is a deliberate owner-authorised change to this section, not a default the trigger may assume.
 
 ## Acceptance criteria
 
@@ -139,7 +143,7 @@ The reference consumer pair is:
 
 The cross-repository handover for this pair is: the operator runs the trigger from the `claude-shared` clone; on Choice 1 or 2 the trigger writes a pre-staged briefing under `claude-shared/project/blog-triggers/<feature-slug>.briefing.md`, surfaces the path to `~/repos/github/blog`, and the operator opens a new Claude Code session in `~/repos/github/blog` and invokes `blog-author` with the pre-staged briefing as input.
 
-The reference wiring that fires the trigger is the [`blog-author-trigger`](../../../skills/blog-author-trigger/SKILL.md) skill, automatically dispatched from [`sprint-execute`](../../../skills/sprint-execute/SKILL.md) Operation C (`in_progress → done`) step 6. The skill owns the briefing derivation, the three-way operator choice, and the deferral artefact; `sprint-execute` only fires it after marking the feature `done`.
+The reference wiring that fires the trigger is the [`blog-author-trigger`](../../../skills/blog-author-trigger/SKILL.md) skill, automatically dispatched from [`sprint-execute`](../../../skills/sprint-execute/SKILL.md) Operation C (`in_progress → done`) step 6. The skill owns the briefing derivation, the three-way operator choice, and the deferral artefact; `sprint-execute` only fires it after marking the feature `done`. This pairing (a dedicated skill, dispatched in-session from `sprint-execute` per [`sprint/en.md`](../sprint/en.md)) is the reference choice only; the spec stays wiring-agnostic and other consumers remain free to pick a different mechanism.
 
 Portfolio-project mapping for this pair: any feature in `nolte/claude-shared` maps to `portfolioProject: claude-shared` in the blog consumer's portfolio collection. The mapping is declared in the blog consumer's `CLAUDE.md`.
 
@@ -147,12 +151,7 @@ Other consumer pairs adopting this spec carry an analogous annex in the source c
 
 ## Open questions
 
-- **Wiring mechanism.** The spec is deliberately wiring-agnostic. The four candidate mechanisms are: (a) a Claude Code `settings.json` `Stop` hook that fires after `sprint-execute` writes the feature's `done` status; (b) a follow-up dispatch inside `sprint-execute` itself (the existing skill grows a "trigger blog-author?" prompt after marking a feature `done`); (c) a separate dedicated trigger skill (`/nolte-shared:blog-author-trigger`) the operator invokes after `sprint-execute`; (d) a GitHub Action that watches `project/features/*.md` commits and posts a reminder issue. Each has trade-offs (a is most automatic but rigid; b couples `sprint-execute` to blog concerns; c is most explicit but adds a step; d crosses into out-of-session territory). Resolved by the first implementation; the choice may depend on the source consumer's appetite for automation. **Resolved (reference implementation):** `nolte/claude-shared` combines mechanisms **c + b** — a dedicated `blog-author-trigger` skill (c) that `sprint-execute` automatically dispatches from its `in_progress → done` step (b), pairing an explicit reusable unit with in-session automation while keeping the operator's three-way choice intact. The spec stays wiring-agnostic; other consumers remain free to choose a different mechanism.
-- **Multi-feature batch triggers.** A sprint with five features done-in-quick-succession could fire five triggers in one Claude Code session. The spec describes a per-feature trigger; whether the implementation batches them (one operator decision covering "what about these five?") or surfaces them sequentially is open. Likely the implementation walks them sequentially with a "skip all remaining → defer to backlog" shortcut.
-- **Trigger from `ready → in_progress` (start-of-work post).** Some posts make more sense when work starts (a "here's the problem I'm taking on" post) than when work finishes. Whether this spec grows a second trigger event for the start-of-work case is open. Triggered by the first operator who asks for it; until then, start-of-work posts are operator-initiated like any other.
-- **Sprint-summary trigger.** A sprint-level summary post (one post per sprint, covering all features in that sprint) is a different shape than a per-feature post. Whether this spec grows a `sprint → review` trigger event for sprint summaries—wired to [`sprint-review`](../../../skills/sprint-review/SKILL.md)—is open. The two could compose: a sprint with five features would fire five per-feature triggers (most deferred), and one sprint-summary trigger at sprint close. Deferred until the operator has run at least one full sprint with this spec wired.
-- **Deferral artefact lifecycle on feature cancellation.** When a feature transitions `done → cancelled` (rare but allowed), the deferral artefact for that feature becomes stale. Whether the trigger marks it `status: cancelled` automatically at the cancellation event is open; today the spec puts the burden on the operator's `sprint-review` surfacing.
-- **Cross-repository write authority.** §Cross-repository handover refuses silent writes into the blog consumer's working tree; whether a future iteration carries an opt-in for fully automatic cross-repo posting (suitable for a single-operator portfolio where switching contexts is friction) is open. Today the safety-first stance is unconditional.
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
 
 ## References
 

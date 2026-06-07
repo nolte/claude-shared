@@ -14,6 +14,7 @@ Authority: this file reproduces the rules declared in `spec/portfolio/tech-stack
 - [Signal-source map](#signal-source-map)
   - [Table of contents](#table-of-contents)
   - [Per-signal mapping](#per-signal-mapping)
+  - [JS/TS-ecosystem curated allowlist](#jsts-ecosystem-curated-allowlist)
   - [Deterministic group proposal](#deterministic-group-proposal)
   - [Deterministic lifecycle proposal](#deterministic-lifecycle-proposal)
   - [Version extraction](#version-extraction)
@@ -56,6 +57,29 @@ The probe reads each signal file at most once. A missing file is an absence (no 
 A signal not in this table doesn't produce a candidate. Adding a new row is a coordinated edit of this file plus a one-sentence rationale in the PR body; don't ship a candidate-emitting probe without the table row to document it.
 
 **`kind: deploy-target` is operator-curated, never auto-emitted.** Deploy targets (a GitHub Pages site, a PyPI package, a Docker image, a Claude Code marketplace channel) are too repo-specific to derive from a single signal file: the same `.github/workflows/release-cd-deliver-docs.yml` could deliver to GitHub Pages, Netlify, or S3 depending on the workflow body. The skill therefore doesn't emit any `kind: deploy-target` candidate from the probe; the operator authors these `additions[]` entries by hand in the step-7 confirmation pass. An existing `kind: deploy-target` addition presented during a refresh is preserved per the Gotcha "Refresh preserves operator-edited entries that survived a prior round".
+
+## JS/TS-ecosystem curated allowlist
+
+The per-signal table above maps `package.json` only to `node` (`kind: runtime`) and the lockfiles to their package managers. It does **not** sweep `package.json:dependencies` / `devDependencies` wholesale — that would emit every transitive helper as a candidate. Instead, a **closed, curated allowlist** of well-known framework / language / build-tool markers is matched against `dependencies` and `devDependencies`; a hit emits a signal-backed candidate (no `acknowledged-missing-signal:` marker needed). This list reproduces the allowlist ratified in `spec/portfolio/tech-stack-discovery/` §Discovery sequence per repository; when this file and the spec disagree, the spec wins.
+
+| `package.json` dependency marker             | Candidate `name` | `kind`      | Default `group`   | Default `lifecycle` | Notes                                                              |
+| -------------------------------------------- | ---------------- | ----------- | ----------------- | ------------------- | ------------------------------------------------------------------ |
+| `astro`                                      | `astro`          | `framework` | *ask*             | *ask*               | Group/lifecycle ask: a framework may ship a service, only build artefacts, or both. |
+| `next`                                       | `next`           | `framework` | *ask*             | *ask*               |                                                                    |
+| `nuxt`                                       | `nuxt`           | `framework` | *ask*             | *ask*               |                                                                    |
+| `@sveltejs/kit`                              | `sveltekit`      | `framework` | *ask*             | *ask*               |                                                                    |
+| `@remix-run/react`                           | `remix`          | `framework` | *ask*             | *ask*               |                                                                    |
+| `gatsby`                                     | `gatsby`         | `framework` | *ask*             | *ask*               |                                                                    |
+| `@angular/core`                              | `angular`        | `framework` | *ask*             | *ask*               |                                                                    |
+| `vue`                                        | `vue`            | `framework` | *ask*             | *ask*               |                                                                    |
+| `react`                                      | `react`          | `framework` | *ask*             | *ask*               | Emit only when present as a direct dependency, not a transitive.   |
+| `solid-js`                                   | `solidjs`        | `framework` | *ask*             | *ask*               |                                                                    |
+| `qwik`                                       | `qwik`           | `framework` | *ask*             | *ask*               |                                                                    |
+| `tailwindcss`                                | `tailwindcss`    | `framework` | *ask*             | *ask*               | CSS toolkit; group is the application's call (styling build vs. docs theme). |
+| `typescript`                                 | `typescript`     | `language`  | *ask*             | *ask*               | Also signalled by `tsconfig.json`; the `package.json` pin owns `version:`. |
+| `vite`                                       | `vite`           | `build`     | `build-tooling`   | `build`             | JS bundler / dev server; deterministic group + lifecycle.          |
+
+`version:` for every allowlist hit is the dependency's version range copied verbatim from `package.json` (for example `^5.7.10`). `source_of_truth:` is `package.json` for all of these except `typescript`, where either `package.json` or `tsconfig.json` is acceptable (prefer `package.json` for the version pin). Extending this list is a coordinated edit of this file **and** the spec's §Discovery sequence allowlist in the same PR — a row here without a spec entry (or vice-versa) is the drift the spec's Acceptance Criteria forbids.
 
 ## Deterministic group proposal
 
@@ -105,6 +129,7 @@ Ask-the-maintainer mapping:
 - `pyproject.toml:[project].requires-python` → `python` candidate's `version`
 - `package.json:engines.node` → `node` candidate's `version`
 - `.tool-versions` row → the row's version literal goes into the matching candidate's `version`
+- `package.json:dependencies` / `devDependencies` allowlist marker → the marker's version range, copied verbatim (for example `^5.7.10`), goes into the matching JS/TS-allowlist candidate's `version`
 
 When the signal is ambiguous or absent (a lockfile pinning a transitive dep but not the top-level tool, a `pyproject.toml` without `requires-python`, a `package.json` without `engines.node`), leave `version:` blank. Don't guess.
 

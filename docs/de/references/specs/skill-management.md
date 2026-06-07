@@ -8,18 +8,18 @@ last_updated: 2026-05-19
 
 # Skill-Autorenschaft
 
-Diese Seite fasst die Spezifikation aus `spec/claude/skill-management/de.md` zusammen. Kanonische Quelle ist `spec/claude/skill-management/en.md`.
+Diese Seite fasst die Spezifikation aus `spec/claude/skill-management/de.md` zusammen. Die kanonische Quelle ist `spec/claude/skill-management/en.md`.
 
 **Status:** draft
 
 ## Kontext
 
-Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents, die von nachgelagerten Projekten genutzt werden. Ein Skill hat zwei Ausprägungen:
+Das Repository claude-shared sammelt Skills und Agents für Claude Code. Sie sind wiederverwendbar. Sie dienen nachgelagerten Projekten. Ein Skill hat zwei Ausprägungen:
 
 - **Quell-Form** in diesem Repository: `skills/<name>/`
 - **Laufzeit-Form** im konsumierenden Projekt: `.claude/skills/<name>/` oder `~/.claude/skills/<name>/`
 
-Ohne einheitliche Form driften Skills in Benennung, Trigger-Beschreibungen und innerer Struktur auseinander, was Wiederverwendung brüchig macht.
+Ohne einheitliche Form driften Skills auseinander: in der Benennung, in den Trigger-Beschreibungen und in der inneren Struktur. Wiederverwendung wird dann brüchig.
 
 ## Ziele und Nicht-Ziele
 
@@ -45,12 +45,12 @@ Ohne einheitliche Form driften Skills in Benennung, Trigger-Beschreibungen und i
 - **MUSS [MUST]** YAML-Frontmatter mit `name` und `description` enthalten
 - **MUSS [MUST]** `name` exakt gleich dem Ordnernamen setzen
 - **MUSS [MUST]** eine `description` schreiben, die konkrete User-Trigger benennt, keine abstrakten Fähigkeiten
-- **MUSS [MUST]** die Anweisungen in `SKILL.md` aus Token-Effizienzgründen auf Englisch halten
+- **MUSS [MUST]** die Anweisungen in `SKILL.md` auf Englisch halten (senkt Claudes Verarbeitungskosten)
 - **MUSS [MUST]** in sich geschlossen sein — alle unterstützenden Assets im Skill-Ordner
 
 ### Ablageorte
 
-Quelle: `skills/<name>/` in claude-shared. Laufzeit: `.claude/skills/<name>/`, `~/.claude/skills/<name>/`, oder der Plugin-Pfad. Keine hartkodierten absoluten Pfade.
+Die Quelle liegt unter `skills/<name>/` in claude-shared. Zur Laufzeit greift einer dieser Pfade: `.claude/skills/<name>/`, `~/.claude/skills/<name>/` oder der Plugin-Pfad. Keine fest verdrahteten absoluten Pfade.
 
 ### Empfehlungen
 

@@ -44,7 +44,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 #### React-19-Rendering
 
-- **MUSS** den React Compiler (`babel-plugin-react-compiler` 1.x) in der Vite-Pipeline aktivieren und `eslint-plugin-react-compiler` verdrahten; manuelle `useMemo` / `useCallback` / `React.memo` **MÜSSEN** als reine Escape-Hatches behandelt werden.
+- **MUSS** den React Compiler (`babel-plugin-react-compiler` 1.x) in der Vite-Pipeline aktivieren und `eslint-plugin-react-compiler` verdrahten (portfolioweit ratifiziert am 29.05.2026; der Compiler ist stable, der Referenz-Stack pinnt React 19 + Vite 8, und `eslint-plugin-react-compiler` ist das erzwungene Guardrail, daher bleibt das MUSS ein MUSS); manuelle `useMemo` / `useCallback` / `React.memo` **MÜSSEN** als reine Escape-Hatches behandelt werden.
 - **MUSS** State-Updates, die teure Re-Renders auslösen (Filterwechsel, Tab-Switches, Chart-Eingaben), in `startTransition` wickeln; das resultierende `isPending` wird mit einem nicht blockierenden Indikator gepaart, nie mit einem ganzseitigen Skeleton.
 - **SOLLTE** `useDeferredValue` auf Props anwenden, die `memo()`-gewrappte langsame Kinder speisen, wenn der Quell-Setter nicht in eine Transition verschoben werden kann.
 - **MUSS** Routen via React-Router-v7-Lazy-Route-Module code-splitten und jede asynchrone Daten-Boundary mit `<Suspense>` + einer `<ErrorBoundary>` paaren, die eine Retry-Aktion exponiert.
@@ -95,7 +95,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
   - `Cross-Origin-Resource-Policy: same-origin` auf app-eigenen Assets.
   - `Permissions-Policy`, das jedes mächtige Feature ablehnt, das die SPA nicht aktiv nutzt (Kamera, Mikrofon, Geolocation, Payment, USB, Serial, Bluetooth, Accelerometer, Gyroscope, Magnetometer, MIDI usw.) und nur die Features auf `'self'` opt-in setzt, die tatsächlich benötigt werden.
   - `X-Frame-Options: DENY` als Belt-and-Braces-Fallback zu `frame-ancestors 'none'`.
-- **SOLLTE** `Cross-Origin-Embedder-Policy: require-corp` nur dann hinzufügen, wenn die SPA Cross-Origin-Isolation braucht (SharedArrayBuffer, hochauflösende Timer); COEP ist opt-in, weil es naiv eingebettete Ressourcen bricht.
+- **SOLLTE** `Cross-Origin-Embedder-Policy: require-corp` nur dann hinzufügen, wenn die SPA Cross-Origin-Isolation braucht (SharedArrayBuffer, hochauflösende Timer); COEP ist opt-in, weil es naiv eingebettete Ressourcen bricht. Sobald Cross-Origin-Isolation tatsächlich benötigt wird, **MUSS** COEP `require-corp` (gepaart mit `Cross-Origin-Opener-Policy: same-origin`) für diese Fläche gesetzt werden.
 
 #### React-Rendering-Sicherheit
 
@@ -118,7 +118,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 #### Supply-Chain und Verifikation
 
-- **MUSS** `package-lock.json` (oder `pnpm-lock.yaml`) committen und in CI mit `npm ci` / `pnpm install --frozen-lockfile` installieren; **MUSS** Releases auf null bekannte High-/Critical-CVEs in Produktions-Abhängigkeiten gaten via `npm audit --omit=dev` (oder Äquivalent).
+- Supply-Chain-Hygiene — Lockfile-Commit, Frozen-Lockfile-Installation in CI, CVE-Schweregrad-Klassifizierung und release-blockierende Schwellen — wird von `spec/project/dependency-audit/` geregelt; diese Spec verweist auf diesen Eigentümer und fügt nur die frontend-spezifischen SRI-, HTTP-Observatory- und Source-Map-Regeln unten hinzu, anstatt Lockfile- oder Audit-Schwellen erneut festzuschreiben.
 - **MUSS** den ausgelieferten Header-Satz nach jedem Produktions-Deploy gegen Mozilla HTTP Observatory verifizieren; jeder Grade-Abfall blockiert das Release.
 - **MUSS** Subresource Integrity (`integrity` + `crossorigin="anonymous"`) auf jeden `<script>` und `<link rel="stylesheet">` von einer fremden Origin anwenden; die Default-Haltung ist Self-Hosting via Vite, sodass SRI gegenstandslos wird.
 
@@ -196,7 +196,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 - **MUSS** `i18next-browser-languagedetector` mit expliziter `order` (`['querystring', 'cookie', 'localStorage', 'navigator', 'htmlTag']`) und expliziten `caches` (`['cookie', 'localStorage']`) konfigurieren; deterministischer Cookie-Name (`i18next`) und Storage-Key (`i18nextLng`).
 - **MUSS** eine persistierte Nutzerwahl immer die automatische Erkennung schlagen lassen: `i18n.changeLanguage(lng)` schreibt in die Caches, aus denen der Detector liest.
 - **MUSS** `supportedLngs` (kanonische Sprache zuerst) und `fallbackLng` explizit in `i18n.init` deklarieren; Resource-Path-Injection über den Querystring-Slot wird nur durch diese Allow-List entschärft.
-- **MUSS** die Locale in der URL via einem React-Router-v7-Dynamiksegment (`/:locale/*`) oder einer `prefix(...)`-Route kodieren; der Router ist die einzige Quelle der Wahrheit für die aktive Locale und **MUSS** i18next bei jeder Navigation synchronisieren.
+- **MUSS** die Locale in der URL via einem React-Router-v7-Dynamiksegment (`/:locale/*`) oder einer `prefix(...)`-Route kodieren; der Router ist die einzige Quelle der Wahrheit für die aktive Locale und **MUSS** i18next bei jeder Navigation synchronisieren. Die kanonische Locale **DARF** prefix-los an der `x-default`-Wurzel ausgeliefert werden, während jede nicht-kanonische Locale ihren Prefix trägt; Cookies bleiben ausschließlich ein Erkennungs-Input und **DÜRFEN NICHT** die alleinige Locale-Quelle sein.
 - **MUSS** `Content-Language: <locale>` aus nginx auf jeder lokalisierten Response senden; **SOLLTE** einen bestehenden `i18next`-Cookie vor `Accept-Language`-basierten Root-Redirects respektieren.
 - **MUSS** statische `<link rel="alternate" hreflang="…" href="…">`-Tags (einer pro Locale plus `x-default`) im initialen `index.html` server-side oder zur Build-Zeit emittieren, bidirektional. React-Runtime-Injektion von `hreflang` ist verboten.
 
@@ -252,7 +252,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 - **MUSS** React Router v7 `<ScrollRestoration/>` einmal am Layout-Root mounten.
 - **MUSS** einen globalen Pending-Indikator (subtiler Top-of-Layout-Progress-Bar) zeigen, der von `useNavigation().state` getrieben wird, erst nach einer Verzögerung von ≥ 200 ms, damit schnelle Navigationen nicht aufblitzen.
 - **DARF** den Browser-Back-Button **NICHT** abfangen: Modal-Close bindet ESC und einen expliziten Close-Button; Route-Guards redirecten via `<Navigate replace />`, damit die geschützte URL nicht zweimal im Back-Stack steht.
-- **SOLLTE** `<NavLink prefetch="intent">` für Navigations-Links innerhalb der Hauptschale verwenden, wenn im Framework-Mode betrieben; **DARF NICHT** `prefetch="render"` oder `prefetch="viewport"` auf großen Listen nutzen.
+- **SOLLTE** `<NavLink prefetch="intent">` für Navigations-Links innerhalb der Hauptschale verwenden, wenn im Framework-Mode betrieben; **DARF NICHT** `prefetch="render"` oder `prefetch="viewport"` auf großen Listen nutzen. Jede nur-im-Framework-Mode-geltende Regel **MUSS** den Qualifikator `wenn im Framework-Mode betrieben` tragen; der Referenz-Stack liefert eine CSR-SPA aus, daher ist eine routing-spezifische Schwester-Spec aufgeschoben, bis ein Portfolio-Repo den React-Router-Framework-Mode in größerem Umfang adoptiert.
 
 #### Formulare
 
@@ -307,12 +307,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 ## Offene Fragen
 
-- Soll die Spec den React Compiler heute schon vorschreiben (er ist stable, aber die Reife der ESLint-Regel variiert), oder bei SHOULD bleiben, bis eine portfolioweite Rollout-Entscheidung gefallen ist?
-- Soll `Cross-Origin-Embedder-Policy: require-corp` auf MUSS hochgehen, sobald Cross-Origin-Isolation für hochauflösende Timer / `SharedArrayBuffer` gewünscht wird, oder explizit opt-in bleiben angesichts des Drittanbieter-CORP-Aufwands?
-- Soll die i18n-Locale-Prefix-Regel von MUSS zu MUSS-NICHT-NUR-COOKIE verschärft werden, gegeben dass einige Betreiber bewusst kanonisch-sprachige URLs ohne Locale-Prefix halten?
-- Soll die Spec eine einzige projektweite Spinner-Show-Verzögerung benennen (z. B. 250 ms) oder den Bereich 200 – 300 ms beibehalten, damit einzelne Repositories konsistent darin wählen?
-- Wo genau endet diese Spec, und wo beginnt `spec/project/dependency-audit/` für Supply-Chain-Hygiene — die Lockfile- und `npm audit`-Regeln erscheinen aktuell in beiden; soll die eine die andere referenzieren?
-- Sollen React-Router-v7-Framework-Mode-Regeln (`<NavLink prefetch="intent">`, Route-Module-File-Konvention) in dieser Spec stehen oder in einer Schwester-Routing-Spec, gegeben dass SPA-Mode und Framework-Mode merklich divergieren?
+_Derzeit keine._
 
 ## Quellen
 

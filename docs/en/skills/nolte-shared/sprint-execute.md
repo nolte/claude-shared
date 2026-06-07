@@ -35,6 +35,14 @@ _Drive the daily mechanics of an active sprint per the project sprint spec. Invo
 - [`sprint-review`](sprint-review.md)
 - [`feature-decompose`](feature-decompose.md)
 
+## Referenced by
+
+- [`sprint-readiness-reviewer`](../../agents/nolte-shared/sprint-readiness-reviewer.md)
+- [`blog-author-trigger`](blog-author-trigger.md)
+- [`feature-decompose`](feature-decompose.md)
+- [`sprint-plan`](sprint-plan.md)
+- [`sprint-review`](sprint-review.md)
+
 ---
 
 ## Sprint Execute
@@ -112,7 +120,7 @@ Steps:
 
 1. Read the sprint file. Diff the `features` frontmatter list against the `## Features` body bullets (each bullet is expected to link to `project/features/<slug>.md` and show the feature's current status).
 2. **Refuse partial updates.** If the user's request mutates only the body or only the frontmatter, stop and report; the body and the frontmatter list **MUST** be updated in the same operation per `spec/project/sprint/` §Roadmap and feature linkage.
-3. Apply the requested addition or removal to both surfaces atomically. When adding a feature mid-sprint, also set the feature file's `sprint` field to this sprint's number (and check that no other sprint already references it). When removing, clear the feature file's `sprint` field (set to null).
+3. Apply the requested addition or removal to both surfaces atomically. When adding a feature mid-sprint, also set the feature file's `sprint` field to this sprint's number (and check that no other sprint already references it). When the added feature is still `draft`, this skill is the mid-active-sprint write authority for the `draft → ready` flip per `spec/project/feature/` §Frontmatter schema; before flipping, verify the full §Lifecycle gate (non-empty `## Description`, ≥ 1 `acceptance-<n>` bullet, populated `consistency_check` with a non-empty `findings` array, populated `## Consistency notes`). If the gate fails, refuse the addition and route the operator to [`feature-decompose`](feature-decompose.md); never fabricate the consistency check here. When removing, clear the feature file's `sprint` field (set to null).
 
 #### 5. Decline transitions outside this skill's scope
 

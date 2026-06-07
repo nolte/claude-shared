@@ -24,8 +24,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
+- [license-check-scanner](../agents/nolte-shared/license-check-scanner.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [portfolio-inflight-collector](../agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
 - [portfolio-manifest-collector](../agents/nolte-shared/portfolio-manifest-collector.md) — nolte-shared
@@ -41,7 +43,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [continuous-improvement-triage](../skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
 - [docs-audience-tracks-apply](../skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
 - [docs-dry-refactor](../skills/nolte-shared/docs-dry-refactor.md) — nolte-shared
+- [issue-orchestrate](../skills/nolte-shared/issue-orchestrate.md) — nolte-shared
 - [lektorat-apply](../skills/nolte-shared/lektorat-apply.md) — nolte-shared
+- [lektorat-auto-revise](../skills/nolte-shared/lektorat-auto-revise.md) — nolte-shared
+- [license-check](../skills/nolte-shared/license-check.md) — nolte-shared
 - [mermaid-diagrams-apply](../skills/nolte-shared/mermaid-diagrams-apply.md) — nolte-shared
 - [mkdocs-structure-apply](../skills/nolte-shared/mkdocs-structure-apply.md) — nolte-shared
 - [permission-allowlist-maintain](../skills/nolte-shared/permission-allowlist-maintain.md) — nolte-shared
@@ -63,15 +68,8 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `design`
 
-- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
-
-## `frontend`
-
-- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
-
-## `i18n`
-
-- [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
+- [gemini-image-handoff](../skills/nolte-shared/gemini-image-handoff.md) — nolte-shared
+- [image-generate](../skills/nolte-shared/image-generate.md) — nolte-shared
 
 ## `lifecycle`
 
@@ -81,6 +79,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `planning`
 
 - [roadmap-plan](../skills/nolte-shared/roadmap-plan.md) — nolte-shared
+
+## `privacy`
+
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 
 ## `prose`
 
@@ -92,6 +94,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [blog-author](../skills/nolte-shared/blog-author.md) — nolte-shared
 - [blog-author-trigger](../skills/nolte-shared/blog-author-trigger.md) — nolte-shared
 - [lektorat-apply](../skills/nolte-shared/lektorat-apply.md) — nolte-shared
+- [lektorat-auto-revise](../skills/nolte-shared/lektorat-auto-revise.md) — nolte-shared
 
 ## `pull-request`
 
@@ -102,6 +105,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `quality-gate`
 
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
+- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [quality-gate](../skills/nolte-shared/quality-gate.md) — nolte-shared
 
 ## `release`
@@ -110,10 +114,6 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [release-publish-trigger](../skills/nolte-shared/release-publish-trigger.md) — nolte-shared
 - [sprint-review](../skills/nolte-shared/sprint-review.md) — nolte-shared
 
-## `requirements`
-
-- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
-
 ## `review`
 
 - [audience-review](../agents/nolte-shared/audience-review.md) — nolte-shared
@@ -121,6 +121,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](../agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
@@ -162,17 +163,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [webview-ui-optimize](../skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [yaml-json-schema](../skills/nolte-shared/yaml-json-schema.md) — nolte-shared
 
-## `security`
-
-- [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
-
-## `testing`
-
-- [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
-
 ## `triage`
 
 - [continuous-improvement-triage](../skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
+- [issue-orchestrate](../skills/nolte-shared/issue-orchestrate.md) — nolte-shared
 
 ## `validation`
 

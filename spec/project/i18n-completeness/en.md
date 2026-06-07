@@ -34,14 +34,16 @@ Readers: agent authors maintaining the checker; reviewers verifying its findings
 - **MUST** determine a single **reference locale** (the source-of-truth language other locales are measured against): use the operator-named one, else the project's declared default locale, else fall back to a documented heuristic and state which locale it picked
 - **MUST** discover the source roots to scan for key usage rather than hard-coding one app's path, and report which roots and file globs it scanned
 - **MUST** adapt the call-site lookup patterns to the project's i18n library (react-i18next / i18next `t('…')` and `i18nKey="…"`, `vue-i18n` `$t('…')` / `<i18n-t>`, FormatJS / react-intl `formatMessage`/`<FormattedMessage id>`, and comparable); when the library can't be determined, state the assumed pattern set in the report
+- **MAY** read an optional repository-local config file (`project/i18n-audit.yml`) declaring locale paths, reference locale, source globs, and i18n library; when present its values take precedence over discovery, when absent per-invocation discovery is the documented default. The report **MUST** state, per resolved input, whether the value came from the config file, an operator argument, or discovery
 
 ### Audit dimensions
 
+- **MUST** treat each independent locale tree (per package / subroot) as a separate audit scope and never merge keys across trees; each scope's reference locale, parity, and orphan/missing math is computed within that tree alone. The boundary is the discovered locale-tree root, or the per-scope entries when the optional config file declares them
 - **MUST** flatten every locale file to dotted key paths and compute, against the reference locale: keys present in the reference but missing in another locale, and keys present in another locale but missing from the reference (structural divergence)
 - **MUST** report a **structural mismatch** when the same key path resolves to different value types across locales (string in one, object/nested in another)
 - **MUST** scan the source roots for key references and classify: a key used in code but defined in no locale (**critical**: a runtime miss), and a key defined in the locales but referenced nowhere in code (**orphan**, informational)
 - **MUST** treat statically-undecidable dynamic keys (template-string or variable lookups such as `` t(`enums.${type}`) ``) as a noted caveat, never as a hard miss—report them as "dynamic, not statically verifiable" so they neither inflate the critical count nor get silently dropped
-- **SHOULD** run quality heuristics: empty string values per locale; values identical across the reference and another locale (likely untranslated); and interpolation-placeholder parity (the same `{{var}}` / `{var}` / `%s` placeholders appear in every locale's value for a key)
+- **SHOULD** run quality heuristics: empty string values per locale; values identical across the reference and another locale (likely untranslated); and interpolation-placeholder parity (the same `{{var}}` / `{var}` / `%s` placeholders appear in every locale's value for a key). No exemption allowlist is provided; identical values are reported at info level only and are expected to include some legitimate-by-design matches such as proper nouns, brand names, and units. Placeholder parity covers simple `{{var}}` / `{var}` / `%s` style placeholders only; ICU MessageFormat plural and select bodies such as `{count, plural, …}` are compared as opaque strings, not parsed
 - **MAY**, when the project declares a key-naming convention, report keys that violate it; absent a declared convention the agent doesn't invent one
 
 ### Output and side effects
@@ -51,6 +53,7 @@ Readers: agent authors maintaining the checker; reviewers verifying its findings
 - **MUST** cap per-category output (for example: show the first N entries and summarise the remainder as "… and {n} more") so a large drift doesn't produce an unreadable wall of keys
 - **SHOULD** attribute each used-but-undefined key to a source location (file and line) so the finding is actionable
 - **MUST** report which locale files, source roots, globs, reference locale, and call-site patterns it used, so the audit's scope is auditable and reproducible
+- **MUST** state, where it reports placeholder-parity findings, that parity is checked at simple-placeholder granularity (`{{var}}` / `{var}` / `%s`) and that ICU MessageFormat plural and select bodies are treated as opaque strings, so a consumer isn't misled into thinking ICU bodies were structurally validated
 
 ## Acceptance Criteria
 
@@ -74,7 +77,4 @@ Readers: agent authors maintaining the checker; reviewers verifying its findings
 
 ## Open Questions
 
-- Should the audit support a project-level config file (declaring locale paths, reference locale, source globs, and i18n library) so repeat runs need no operator arguments, or is per-invocation discovery sufficient?
-- For monorepos with multiple independent locale trees (per package), should the audit treat each tree separately or merge them, and how's the boundary declared?
-- Should the "identical across locales" heuristic exempt locales that are legitimately close (for example proper nouns, brand names, units), and if so via an allowlist?
-- Should placeholder-parity checking understand ICU MessageFormat plural/select syntax, or stay at simple-placeholder granularity until an ICU-aware pass is warranted?
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

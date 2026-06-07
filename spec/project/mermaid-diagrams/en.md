@@ -40,6 +40,7 @@ Mermaid renders text-described diagrams inline in MkDocs Material via the `pymdo
 - **MUST** include `pymdown-extensions` in `docs/requirements.txt` (or the equivalent docs install set) with an explicit version specifier per `spec/project/project-structure/` "Requirements file format"
 - **MUST** keep `mkdocs-material` as the configured theme; Mermaid rendering relies on Material's built-in JavaScript bridge that loads the Mermaid runtime on demand
 - **MUST NOT** add a separate Mermaid MkDocs plugin (for example, `mkdocs-mermaid2-plugin`); Material's native superfences-based integration is the portfolio standard, and a second plugin only duplicates the runtime
+- **MUST** inject any brand Mermaid theme variables through exactly one global configuration that sets the Mermaid theme config once for the whole site—a single MkDocs hook or a single `extra_javascript` entry in the `mkdocs.yml` config—never through a per-diagram `%%{init: {'theme': …, 'themeVariables': …}}%%` directive inside individual Mermaid blocks; this is the canonical wiring path that `spec/design/corporate-design-colors/` §Per-artifact application points at for the concrete rule, and it keeps the light/dark theme bridge swapping theme variables per mode from one place
 - **SHOULD** rely on Material's automatic light/dark theme bridge for Mermaid rendering rather than overriding Mermaid colors per diagram
 - **SHOULD** verify rendering by running `task docs` (which invokes `mkdocs build --strict`) before merging any change that introduces or modifies a Mermaid block
 

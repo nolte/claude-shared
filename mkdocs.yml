@@ -70,12 +70,14 @@ plugins:
           build: true
           nav_translations:
             Startseite: Home
+            Plugin nutzen: Using nolte-shared
             Erste Schritte: Getting Started
             Installation: Installation
             Nutzung: Usage
             Guides: Guides
             References: References
             Projekt: Project
+            Portfolio: Portfolio
             Skills: Skills
             Agents: Agents
             Tags: Tags
@@ -87,9 +89,15 @@ plugins:
             Skills-Konzept: Skills Concept
             Agents-Konzept: Agents Concept
             Entwicklungszyklus: Development Lifecycle
+            Bildgenerierung: Image Generation
             Entwicklung: Development
             Projektstruktur: Project Structure
+            Architekturüberblick: Architecture overview
+            Schnittstellen: Interfaces
             Beitragen: Contributing
+            Fehlerbehebung: Troubleshooting
+            Glossar: Glossary
+            Datenschutz: Privacy
 
   - literate-nav:
       nav_file: SUMMARY.md
@@ -148,20 +156,26 @@ extra:
 
 nav:
   - Startseite: de/index.md
+  - Plugin nutzen: de/using.md
   - Erste Schritte:
       - de/getting-started/index.md
       - Installation: de/getting-started/installation.md
-      - Nutzung: de/getting-started/nutzung.md
+      - Nutzung: de/getting-started/usage.md
   - Guides:
       - de/guides/index.md
       - Entwicklung: de/guides/development.md
       - Projektstruktur: de/guides/project-structure.md
+      - Architekturüberblick: de/guides/architecture.md
+      - Schnittstellen: de/guides/interfaces.md
       - Beitragen: de/guides/contributing.md
+      - Fehlerbehebung: de/guides/troubleshooting.md
+      - Glossar: de/guides/glossary.md
       - Skills-Konzept: de/guides/skills-concept.md
       - Skill-Management: de/guides/skill-management.md
       - Spec: de/guides/spec.md
       - Agents-Konzept: de/guides/agents-concept.md
       - Entwicklungszyklus: de/guides/development-lifecycle.md
+      - Bildgenerierung: de/guides/image-generation.md
   - References:
       - de/references/index.md
       - Spezifikationen:
@@ -170,5 +184,7 @@ nav:
           - Agent-Autorenschaft: de/references/specs/agent-management.md
       - Tags: de/references/tags.md
   - Projekt: de/project/index.md
+  - Portfolio: de/portfolio/index.md
   - Skills: de/skills/
   - Agents: de/agents/
+  - Datenschutz: de/privacy.md

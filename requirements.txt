@@ -1,0 +1,12 @@
+# Direct *runtime* dependencies of this repository, per
+# spec/project/project-structure/ §Python development and §Requirements file
+# format.
+#
+# This repository ships a Claude Code plugin (skills, agents, specs, docs), not
+# an installable Python package — there is no runtime install set to pin here.
+# This file is the documented placeholder permitted by §Requirements file
+# format; replace it with real, version-pinned entries as soon as a genuine
+# runtime dependency lands.
+#
+# The repository's *tooling* dependencies (schema/frontmatter validators, docs
+# generators, eval-harness tests) live in requirements-dev.txt, not here.

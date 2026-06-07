@@ -8,15 +8,15 @@ last_updated: 2026-05-29
 
 # Agent Authoring
 
-This page summarizes the specification at `spec/claude/agent-management/en.md` (canonical source).
+This page sums up the spec at `spec/claude/agent-management/en.md` (canonical source).
 
 **Status:** draft
 
 ## Context
 
-The `claude-shared` repository collects reusable Claude Code skills and agents. An agent has two lives: a **source form** here (`agents/`) and a **runtime form** in a consuming project (`.claude/agents/` or `~/.claude/agents/`) where Claude Code loads it and the `Agent` tool dispatches via `subagent_type`.
+The `claude-shared` repository collects reusable Claude Code skills and agents. An agent has two lives. The first is a **source form** here (`agents/`). The second is a **runtime form** in a host project (`.claude/agents/` or `~/.claude/agents/`). Claude Code loads the agent from the runtime form. The `Agent` tool then dispatches it via `subagent_type`.
 
-Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality—reuse becomes fragile and routing unreliable.
+Without a steady shape, agents drift in naming, trigger wording, tool scoping, and system-prompt quality. Reuse then turns fragile. Routing turns flaky too.
 
 ## Goals and Non-Goals
 
@@ -24,7 +24,7 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 
 - Consistent shape on disk
 - Routable through precise, trigger-oriented `description`s
-- Minimum necessary tool access (principle of least authority)
+- Least tool access needed (principle of least authority)
 - Portable across projects, no hidden dependencies
 - Clear checklist and template
 
@@ -37,19 +37,21 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 
 ## Requirements (excerpt)
 
+The keywords MUST, MUST NOT, SHOULD, and MAY follow RFC 2119 (the normative-requirement rule).
+
 ### Structure
 
 - **MUST** be a single Markdown file `<name>.md` in ASCII kebab-case
 - **MUST** include YAML frontmatter with `name` and `description`
 - **MUST** set `name` to match the filename without `.md`
-- **MUST** write a `description` naming concrete triggers ("use when …"): not abstract capabilities
-- **MUST** include a system prompt in the body scoped to a single responsibility and stating its output shape
-- **MUST** keep frontmatter and system prompt in English (token efficiency)
-- **MUST** be self-contained—a single top-level `agents/<name>.md`; no sibling `agents/<name>/` folder (recursive discovery would register nested markdown as a phantom agent)
+- **MUST** write a `description` that names concrete triggers ("use when …"). Don't name abstract powers
+- **MUST** include a system prompt in the body. Scope it to a single job and state its output shape
+- **MUST** keep frontmatter and system prompt in English. This keeps Claude's parsing cost low
+- **MUST** be self-contained: a single top-level `agents/<name>.md` with no sibling `agents/<name>/` folder. Otherwise a recursive scan registers the nested markdown as a phantom agent
 
 ### Tool access
 
-- **MUST** declare `tools` when restricted; omit only when the agent genuinely needs full access
+- **MUST** declare `tools` when restricted. Omit `tools` only when the agent truly needs full access
 - **MUST** scope `tools` to the minimum set required (principle of least authority)
 - **MUST NOT** give read-only agents write/edit/execution tools
 - **SHOULD** prefer dedicated tools (`Read`, `Grep`, `Glob`, `Edit`) over `Bash` equivalents when either would work
@@ -62,13 +64,13 @@ Without a consistent shape, agents drift in naming, trigger descriptions, tool s
 ### Locations
 
 - **MUST** place source at `agents/<name>.md`
-- **MUST** be loadable at runtime from `.claude/agents/<name>.md`, `~/.claude/agents/<name>.md`, or the plugin path
+- **MUST** be loadable at runtime from one of three paths: `.claude/agents/<name>.md`, `~/.claude/agents/<name>.md`, or the plugin path
 - **MUST NOT** assume a particular install location
 
 ### Recommendations
 
 - **SHOULD** order the system prompt: role/boundaries → output format → procedure
-- **SHOULD** state explicitly whether the agent writes code or only researches
+- **SHOULD** state plainly whether the agent writes code or only researches
 - **SHOULD** keep the system prompt under ~200 lines
 - **SHOULD** list positive triggers and—when overlap is likely—negative cases in `description`
 

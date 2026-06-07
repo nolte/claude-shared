@@ -1,6 +1,6 @@
 # Release Notes Audience Analysis
 
-Status: draft
+Status: accepted
 
 ## Context
 <!-- Why does this spec exist? What problem, user need, or constraint drives it? -->
@@ -23,7 +23,7 @@ Every GitHub release of a project ships a release-notes document—today typical
 - Marketing or launch-campaign planning around a release
 - Release cadence or versioning policy (inherited from `branching-model` and `release-drafter` configuration)
 - CVE or security-advisory disclosure workflow—referenced as a consuming audience, not specified here
-- Declaring where the audience artifact physically lives (dedicated file, README section, ADR, inline comments in `release-drafter.yml`)—an implementation choice left open, consistent with `audience-identification`
+- Declaring a new location rule for the audience artifact: this spec adds none and inherits `audience-identification` §Requirements (artifact location)—canonical default `AUDIENCES.md` at the context root, with an "Audiences" README section or a dedicated `docs/release-audiences.md` as accepted alternatives (the same set `release-skill-layer` consumes). Embedding the list only as inline comments in `release-drafter.yml` is excluded, because it isn't deterministically locatable by consuming specs
 
 ## Requirements
 <!-- Use RFC 2119 keywords: MUST, SHOULD, MAY. One atomic requirement per bullet. -->
@@ -46,11 +46,15 @@ Every GitHub release of a project ships a release-notes document—today typical
   - call-to-action (upgrade command, migration link, deprecation deadline, security-advisory pointer)
   - machine-readability constraints (stable category names, PR references, CVE IDs, SemVer labels)
 - **MUST** classify breaking-change and security-disclosure audiences as primary whenever the project's scope can produce either class of change, because release notes are the canonical disclosure channel for both and downgrading those audiences risks undisclosed user impact
+- **MUST** scope this spec's only release-time obligation for a security-disclosure audience to content coverage: the audience is ranked primary and its content dimensions (advisory pointer, CVE IDs) are verified before `release-publish.yml` is dispatched, per §Acceptance Criteria. The code-level security review stays delegated to the diff-scoped `security-review` skill, which the `pull-request-merge` skill invokes when the diff touches a security-sensitive path during the PR-merge flow (per `skills/pull-request-merge/SKILL.md`); this spec adds no separate mandatory pre-publish security gate
 - **MUST** tag each audience as `confirmed` or `assumed` per `audience-identification`; a release-notes audience claimed without evidence (real representative, subscriber signal, automated-consumer detection, referring issue) stays `assumed`
 - **SHOULD** align the project's `release-drafter` category configuration with the identified audiences—every configured category exists because at least one audience needs it, and categories that no audience needs are removed
 - **SHOULD** align the project's PR-label taxonomy and Conventional-Commits scope so that `release-drafter` can assemble the audience-driven categories without manual post-editing
-- **SHOULD** record per audience the consumption signal it actually uses—GitHub release feed / Atom, email subscription, in-product banner, dependency-bot PR body, release-tracking service—because the signal constrains acceptable length, formatting, and linkability
+- **SHOULD** record per audience the consumption signal it actually uses—GitHub release feed / Atom, email subscription, in-product banner, dependency-bot PR body, release-tracking service—because the signal constrains acceptable length, formatting, and linkability. For automated consumers, discovery is manual enumeration of the project's known bot set (Renovate, Dependabot, release-tracking bots)—not a GitHub API subscriber audit, which isn't reliably available—and validation flips the entry `confirmed` / `assumed` via inspection of an incoming dependency-bot PR body or observation of which fields the bot parsed from one real release (per §Acceptance Criteria worked example)
 - **SHOULD** re-evaluate the release-notes audience list whenever the project gains a new consumption channel (public HACS listing, first package-registry publish, container-registry push), adds a regulated data class, or crosses the threshold from internal to public consumption
+- **MUST** apply the audience list forward-only: it governs release notes from the first release published after adoption, and already-published release notes are an immutable audit-trail artifact that's not re-audited or rewritten against a newly derived list, consistent with `release-automation`'s immutable-publish posture
+- **SHOULD** treat a mid-release-cycle change to the audience list as non-blocking by default—a follow-up reconciled against the next release—EXCEPT when it adds or re-ranks a primary breaking-change or security-disclosure audience whose content dimension is now unmet, which blocks publish per §Acceptance Criteria (every primary audience's content dimensions verified before `release-publish.yml` is dispatched). Reconciliation is performed by re-running the draft-notes curation skill (`release-notes-curate`), which re-derives the audiences-served block from the artifact idempotently
+- **MAY**, for a small internal-only project, inherit a minimal portfolio-default release-notes audience list (Upgraders + Automated consumers + Contributors) published from `nolte/gh-plumbing` instead of producing its own, recording the inheritance as a one-line reference; every project that publishes public GitHub releases owns its own list, because `audience-identification` is per-context, not org-wide
 - **MAY** subdivide a release-notes audience by deployment scale (self-hoster vs. managed), expertise (end user vs. integrator), or tenancy when those distinctions change the required detail depth or language register
 - **MAY** record a minimal "release-notes contract" per audience—a one-line statement of what every release of this project must give that audience (for example "every release must link an upgrade command for Upgraders")
 
@@ -68,10 +72,4 @@ Every GitHub release of a project ships a release-notes document—today typical
 
 ## Open Questions
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
-- Should the release-notes audience artifact live in a dedicated file (for example `docs/release-audiences.md`), be a section of the project's general audience artifact, or be embedded as commented rationale inside `.github/release-drafter.yml`?
-- Does every repository in the portfolio need its own release-notes audience list, or can small, internal-only projects inherit a portfolio default published by `nolte/gh-plumbing`?
-- Should security-sensitive release-notes audiences automatically require a stricter pre-publish review path (for example mandatory `security-review`) or is that delegated to `pull-request-workflow`?
-- How are automated-consumer requirements (machine-readable categories, parseable CVE IDs, stable PR-reference format) discovered and validated—through GitHub API audit of release-feed subscribers, through inspection of incoming dependency-bot PRs, or by manual enumeration?
-- How does this spec interact with future SLA, privacy-impact, or threat-modeling specs that will also consume the project's audience list?
-- Does this spec apply retroactively—do projects audit already-published release notes against a newly derived audience list—or only from the first release after adoption?
-- When the audience list changes mid-release-cycle, who reconciles: is it a release-blocking task or a follow-up issue tracked against the next release?
+_None at this time._

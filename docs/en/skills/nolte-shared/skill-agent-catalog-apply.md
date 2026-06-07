@@ -34,6 +34,11 @@ _Wires up the MkDocs skill-and-agent catalog in the current Claude Code plugin r
 - [`skill-management`](skill-management.md)
 - [`project-structure-apply`](project-structure-apply.md)
 
+## Referenced by
+
+- [`mkdocs-structure-apply`](mkdocs-structure-apply.md)
+- [`project-structure-apply`](project-structure-apply.md)
+
 ---
 
 ## Skill and Agent Catalog Apply

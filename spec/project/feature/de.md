@@ -79,6 +79,8 @@ Die Geschwister-Spec `roadmap` definiert, welche Arbeit ansteht und warum; die G
   - `findings` (Liste, verpflichtend) — jeder Befund mit `kind` (`overlap`, `duplication`, `drift`, `prior-art`, `clean`), `target` (Dateipfad oder Feature-ID, auf die er sich bezieht) und `resolution` (`merge-into <id>`, `supersede <id>`, `split-out <ids>`, `proceed`, `revisit-after <event>`).
 - **MUSS [MUST]** jeden Befund mit `kind: overlap` oder `kind: duplication` als Blocker für den Übergang `draft → ready` behandeln, sofern seine `resolution` nicht `proceed` mit einer expliziten ein-absätzigen Begründung in `## Consistency notes` ist.
 - **MUSS [MUST]** die Konsistenzprüfung erneut laufen lassen, sobald während des Status `ready` oder `in_progress` eines der folgenden Ereignisse eintritt: die `## Description`-Section ändert sich über Tippfehler-Niveau hinaus, ein Akzeptanzkriterium wird hinzugefügt oder seine Kern-Formulierung (ohne den Checkbox-Zustand) geändert, das Frontmatter-Feld `roadmap_item` oder `sprint` wird geändert, oder ein Feature mit überlappendem Scope wird anderswo unter `project/features/` hinzugefügt oder entfernt. Der Re-Run **MUSS [MUST]** historische Befunde bewahren (einen neuen `findings`-Block mit `performed_at`-Datum anhängen, nicht überschreiben). Kosmetische Änderungen (Tippfehler-Korrekturen, Formatierung, Link-Ziel-Normalisierung, das Umschalten der Bullet-Checkbox eines bestehenden Akzeptanzkriteriums) **DÜRFEN NICHT [MUST NOT]** einen Re-Run auslösen.
+- **MUSS [MUST]** die Befunde inline am Feature dokumentieren (im `consistency_check`-Frontmatter und in `## Consistency notes`), niemals als separates `.audits/feature-consistency/`-Artefakt. Anders als die transienten `skill-review`/`agent-review`-Pläne unter `.audits/` (die `spec/claude/review-plan/` als nach Abschluss löschbare Arbeitsdokumente definiert) sind Konsistenz-Befunde dauerhafte, nur-anhängende Feature-Metadaten, die den Lifecycle `draft → ready` gaten und daher am Feature selbst leben.
+- **MUSS [MUST]** das `consistency_check`-Objekt unabhängig von der Länge der `findings`-Historie inline am Feature halten; eine Auslagerung in eine separate Datei ist entschieden-dagegen, weil die Befunde den Lifecycle gaten und am Feature selbst diffbar bleiben müssen.
 
 ### Lifecycle und Gates
 
@@ -100,6 +102,7 @@ Die Geschwister-Spec `roadmap` definiert, welche Arbeit ansteht und warum; die G
 - **DARF NICHT [MUST NOT]** Aufwandsschätzungen, Fälligkeitsdaten oder Velocity-Tracking auf Features verlangen; wie Roadmap-Items und Sprints sind Features im Tempo des Autors.
 - **SOLLTE [SHOULD]** lange Strecken zwischen Konsistenzprüfung und Ausführung tolerieren; vergehen mehr als zwei Sprints ohne Ausführung, **SOLLTE [SHOULD]** die Konsistenzprüfung vor `ready → in_progress` erneut laufen.
 - **KANN [MAY]** ein Feature `cancelled` markieren, wenn die Konsistenzprüfung zeigt, dass ein bestehendes Feature es bereits abdeckt; Abbruch mit `resolution: merge-into <id>` ist ein erstklassiges Ergebnis, kein Fehlerzustand.
+- **MUSS [MUST]** auf dokumentations-only-Features (eine How-to-Seite, ein Runbook) das identische Schema und denselben Lifecycle anwenden; die No-per-Type-Branching-Regel (Ziel 6) lässt keine Doc-Feature-Ausnahme zu, und ein Doc-Feature bleibt ein internes Planungs-Artefakt, das denselben Akzeptanzkriterien-, Test-Hook- und Konsistenz-Vertrag trägt wie jedes andere Feature.
 
 ## Akzeptanzkriterien
 
@@ -119,7 +122,4 @@ Die Geschwister-Spec `roadmap` definiert, welche Arbeit ansteht und warum; die G
 
 ## Offene Fragen
 
-- Soll die Konsistenzprüfung eine separate Audit-Datei unter `.audits/feature-consistency/<slug>.md` erzeugen (analog zu `skill-review` und `agent-review`), statt die Befunde inline einzubetten, damit Re-Runs als separate Dokumente diffbar sind? Inline ist heute einfacher; revisitieren, falls Befunde die Section sprengen.
-- Wie interagiert die Spec mit Cross-Feature-Abhängigkeiten (`F-7 braucht F-3 zuerst`)? Eine Frontmatter-Liste (`depends_on: [F-3]`) wäre die naheliegende Form, aber ein Hobby-Projekt drückt Abhängigkeit meist über Sprint-Reihenfolge aus; revisitieren, falls eine echte Kette auftaucht.
-- Sollen Features, die reine Dokumentation sind (eine How-to-Seite, ein Runbook), demselben Lifecycle folgen oder eine leichtere Form bekommen? Vorerst dieselbe Form; typ-spezifische Erleichterung ist eine Zukunftsfrage, falls Doc-only-Features in einem echten Projekt dominieren.
-- Soll das Konsistenzprüfungs-Frontmatter-Objekt irgendwann in eine separate Datei wandern, sobald `findings`-Listen eine vernünftige Größe übersteigen, oder unbegrenzt inline bleiben? Inline reicht auf Hobby-Skala; verschoben.
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

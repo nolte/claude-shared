@@ -34,6 +34,21 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 
 ## Requirements
 
+### MkDocs extension-hook declaration
+
+This spec is a project-type-specific extension of `spec/project/mkdocs-structure/` and bolts onto its skeleton through the two declared extension hooks (§Extension hooks). It declares both hooks explicitly here so the additions are reviewable and additive, never a silent fork:
+
+- **Section extension** (per `spec/project/mkdocs-structure/` §Extension hooks → Section extension):
+  - **Adds** two top-level nav sections, **Skills** and **Agents**.
+  - **Insertion position**: immediately after the standard **References** section (so the seven-section skeleton order is preserved and the two catalog sections trail it).
+  - **Primary audience**: `contributor` (the `developer-docs` track); every generated catalog page is fixed to `track: developer-docs` per §Generation mechanism, so the sections never carry `user-docs` content.
+  - **Per-page frontmatter shape**: the five baseline keys (`title`, `audience`, `content_mode`, `track`, `last_updated`) on every generated page, with `last_updated: generated` and `track: developer-docs` generator-fixed; no extra per-page keys beyond the baseline are required.
+  - **Language parity**: the sections follow the standard language-parity rule (a counterpart page at the same relative path in every configured `docs/<lang>/` tree). Page **bodies** quote EN-canonical source frontmatter and therefore declare `source_language: en` per `spec/project/mkdocs-structure/` §i18n and parity, while the surrounding chrome (section intros, index pages, nav labels via `nav_translations`) is translated.
+- **Plugin extension** (per `spec/project/mkdocs-structure/` §Extension hooks → Plugin extension):
+  - **Requires** `mkdocs-literate-nav` and (in the `mkdocs-gen-files` form) `mkdocs-gen-files`, each pinned in the project's Python dependency manifest (`docs/requirements.txt`); no floating versions.
+  - **Rationale**: the baseline ships neither plugin because catalog navigation (literate-nav `SUMMARY.md` files) and programmatic page emission are catalog-specific concerns, not skeleton-wide ones.
+  - **Baseline interaction**: `mkdocs-static-i18n` with `docs_structure: folder` (a baseline MUST) discards files whose `abs_src_path` isn't under `docs_dir`, so the `mkdocs-gen-files` form silently drops generated pages; this spec's §Generation mechanism therefore recommends the pre-build form (a `task docs` dependency that writes physical files under `docs/<lang>/<section>/`) for repositories on that i18n setup. The extension **MUST NOT** disable any baseline plugin.
+
 ### Scope of the catalog
 - **MUST** include exactly one catalog entry per skill folder under any configured plugin source root that contains a valid `SKILL.md`
 - **MUST** include exactly one catalog entry per agent file (`<name>.md`) under any configured plugin source root
@@ -49,7 +64,7 @@ Every requirement in this spec applies to both modes unless explicitly qualified
 - **MUST**, when the artifact's frontmatter declares any of `use_when`, `dont_use_when`, `see_also`, or `examples`, render the corresponding scannable section using the chrome-localized labels (see "Use-case metadata" below)
 - **MUST** include the `distribution` field for agents (`plugin` or `project`)
 - **MUST** label each entry with the source plugin it comes from (for example `nolte-shared`)
-- **MUST** link to the source file in the originating plugin's repository on its main branch; the link base URL is configured per plugin source root (for example `https://github.com/nolte/claude-shared/blob/main/...`)
+- **MUST** link to the source file in the originating plugin's repository on its main branch; the link base URL is configured per plugin source root (for example `https://github.com/nolte/claude-shared/blob/main/...`). This source-file link is also the catalog's history surface: the catalog **MUST NOT** record per-artifact version or changelog metadata, consistent with the `skill-management` and `agent-management` specs—the link reaches the file's full git history (the per-artifact change record) and versioning is plugin-level only (the single `.claude-plugin/plugin.json` manifest version, maintained per `release-automation` §Version-bearing file alignment)
 - **MUST** render any `tags` declared in the artifact's frontmatter as visible tags on the entry page; `tags` are normalized per `skill-management` / `agent-management` (lowercase ASCII kebab-case, ≤30 characters, ≤5 entries)
 - **MUST** render the artifact's `phase` (see "Phase classification" below) as a visible badge on the entry page, using the phase label from the localized chrome
 - **SHOULD** render the body of `SKILL.md` (or the agent system-prompt markdown) as the page's main content so authors' instructions are visible to readers
@@ -90,15 +105,17 @@ The `description` field collapses every routing signal—positive triggers, nega
 - **MAY** declare a `see_also:` field; the value is a YAML list of skill or agent names (each a plain string matching a discoverable artifact's `name`). Limits: ≤8 entries; every entry **MUST** resolve to a discoverable artifact
 - **MAY** declare an `examples:` field; the value is a YAML list of mappings, each with the keys `prompt` (plain string, ≤200 characters, illustrating the kind of request that triggers the artifact) and `outcome` (plain string, ≤200 characters, describing the artifact's response). Limits: ≤4 entries
 - **MUST** render each declared field on the catalog page as its own scannable section using the chrome-localized labels (for English: `Use when`, `Don't use when`, `See also`, `Examples`; for German: `Anwenden wenn`, `Nicht anwenden wenn`, `Siehe auch`, `Beispiele`)
-- **MUST** treat all four fields as optional in this spec; their authoring requirement (when authors **SHOULD** declare them) is owned by `skill-management` and `agent-management`
+- **MUST** treat all four fields as optional in this spec; their authoring requirement (when authors **SHOULD** declare them) is owned by `skill-management` and `agent-management`. This spec owns only the schema and validation, so the fields stay optional here permanently; any decision to strengthen the authoring `SHOULD` (or flip it to a `MUST` for new artifacts within a known peer cluster) belongs to those owner specs, not here
 - **MUST** validate every field's shape (list type, element type, key set, character limits) and the resolvability of `dont_use_when[].alternative` and `see_also[]` against the discovered catalog; on any violation the docs build fails with a clear error naming the offending file, field, and value
 
 ### Generation mechanism
 - **MUST** generate catalog pages from the source files
-- The repository **MUST NOT** commit generated catalog markdown back into `docs/` _unless_ the docs-deploy pipeline (the workflow that produces the GitHub Pages output) bypasses `task docs` / the configured catalog generator and invokes `mkdocs build` directly. In that case the repository **MUST** commit the generated catalog files so the deploy build picks them up from the checkout, AND **MUST** ship a CI freshness check that fails the build when the committed catalog drifts from a fresh re-generation (typical shape: `task docs:catalog && git diff --exit-code docs/<lang>/{skills,agents} docs/<lang>/tags.md`)
+- **MUST** keep the published catalog current by one of two mechanisms, chosen by whether the docs-deploy pipeline actually runs the generator on the deploy build:
+  - **Deploy-time generation (preferred):** when the deploy pipeline invokes the catalog generator on the deploy build (for example a `reusable-mkdocs.yaml` that runs `task docs` when a Taskfile with a `docs` target exists, or `mkdocs build` with the generator wired as a `mkdocs-gen-files` script), the repository **MUST NOT** commit generated catalog markdown into `docs/`—the catalog is regenerated on every build and no committed-artifact freshness check is needed.
+  - **Committed catalog with a freshness gate (fallback):** when the shared deploy reusable **doesn't** run the generator—for example `nolte/gh-plumbing`'s `reusable-mkdocs.yaml@v1.1.19` deploys through `mhausenblas/mkdocs-deploy-gh-pages`, which runs `mkdocs build` only and never invokes `task docs`, and so the repository **MUST** commit the generated catalog tree and **MUST** enforce a CI freshness check that fails when the committed tree has drifted from a fresh regeneration (the generator still runs locally via the `task docs` pre-build dependency and the `docs-catalog-fresh` pre-commit hook). This keeps the published GitHub Pages output complete despite the deploy build skipping the generator. A repository on this fallback **MUST** retire it in favour of deploy-time generation once the shared deploy reusable invokes the generator.
 - **MUST** wire catalog navigation through `mkdocs-literate-nav` declared in `mkdocs.yml`
 - **MUST** invoke a catalog generator that produces the per-artifact pages, per-section index pages, per-section `SUMMARY.md` files for literate-nav, and the tag index. The generator **MAY** be a `mkdocs-gen-files` plugin script OR a standalone pre-build step (for example a Taskfile target invoked before `mkdocs build`) that writes physical files under `docs/<lang>/<section>/`. The pre-build form is the recommended choice whenever the repo also uses `mkdocs-static-i18n` with `docs_structure: folder`, because `mkdocs-static-i18n` 1.3.x discards files whose `abs_src_path` isn't under `docs_dir` and therefore silently drops every page emitted by `mkdocs-gen-files`
-- **MUST** read plugin source roots from a configured list—each entry pairing the local source path with the public repository URL used for source links—so additional plugins can be added without changing generator code
+- **MUST** read plugin source roots from a configured list—each entry pairing the local source path with the public repository URL used for source links—so additional plugins can be added without changing generator code. The configured list of source roots lives in `docs/catalog-sources.yml` (a sibling YAML file under `docs_dir`), not inline in `mkdocs.yml`
 - **MUST** expose catalog generation through `task docs` so local builds and CI produce identical output; in the pre-build form this is wired by declaring the generator step as a Taskfile dependency of the docs task
 - **MUST NOT** require a separate manual "regenerate catalog" step outside the normal docs build
 - **MUST** write the five per-page MUST frontmatter keys (`title`, `audience`, `content_mode`, `track`, `last_updated`) per `spec/project/mkdocs-structure/` §Per-page structure on every generated catalog file (per-artifact page, per-section `index.md`, literate-nav `SUMMARY.md`, tag index, task-oriented landing page). The generator **MUST** fix `track: developer-docs` for every catalog file (rather than reading the value per-artifact from source frontmatter) per `spec/project/docs-audience-tracks/` §Audience-to-track mapping, so the catalog audience stays consistent across source plugins and per-page `track` values don't drift
@@ -113,6 +130,7 @@ The catalog is a network of related artifacts, but a reader can only follow that
 - **MUST NOT** transform plain-text occurrences of artifact names outside inline-code spans, to avoid false positives on generic words that coincidentally collide with an artifact name
 - **MUST**, when an inline-code mention matches more than one artifact (for example a skill and an agent share the same short label, or two plugins ship artifacts of the same name), leave the mention unlinked AND emit a generator warning naming the file, the ambiguous mention, and the colliding artifacts
 - **MUST**, when a structured peer reference (`dont_use_when[].alternative` or `see_also[]`) doesn't resolve to any discovered artifact, fail the docs build (per "Use-case metadata" above); inline-code mentions that don't resolve are left as plain inline code without a warning
+- **SHOULD** render a "Referenced by" section on each artifact page listing every artifact whose `see_also` includes this artifact, derived by inverting the cross-link index in a single in-memory pass over the already-parsed data, under a chrome-localized label; this surfaces one-directional `see_also` asymmetries authors miss
 
 ### Navigation and layout
 - **MUST** expose the catalog under stable top-level sections in the MkDocs navigation—at minimum a `Skills` section and an `Agents` section
@@ -160,8 +178,7 @@ The phase- and tag-oriented indexes assume a reader who already speaks the catal
 - [ ] The catalog generator is either declared as a `mkdocs-gen-files` script in `mkdocs.yml` or wired into `task docs` as a standalone pre-build step
 - [ ] In plugin mode, the local plugin appears as one of the configured plugin source roots
 - [ ] In consumer mode, at least one external plugin source root is configured
-- [ ] Generated catalog markdown isn't committed under `docs/` **unless** the repo's docs-deploy pipeline bypasses `task docs`; in that case the catalog **is** committed and a CI freshness check guards against drift
-- [ ] When the catalog is committed, a CI job runs the catalog generator and fails when its output differs from the committed tree
+- [ ] Generated catalog markdown isn't committed under `docs/`; the docs-deploy pipeline regenerates the catalog on every build (via `task docs` when a Taskfile `docs` target exists, else `mkdocs build` with the generator wired as a `mkdocs-gen-files` script)
 - [ ] A skill or agent with invalid frontmatter causes `task docs` to fail with an error that names the offending file and its plugin source root
 - [ ] Catalog entries appear grouped first by phase (in the canonical phase order) and then alphabetically by `name` within each plugin sub-group of each phase
 - [ ] Every skill and agent declares a `phase` from the closed eight-value vocabulary (`vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`); a missing or out-of-vocabulary `phase` fails `task docs`
@@ -176,6 +193,7 @@ The phase- and tag-oriented indexes assume a reader who already speaks the catal
 - [ ] When an artifact declares `use_when`, `dont_use_when`, `see_also`, or `examples`, the catalog page renders each declared field as a scannable section under a chrome-localized label
 - [ ] `dont_use_when[].alternative` and `see_also[]` values render as Markdown links pointing to the referenced artifact's catalog page; an unresolvable name fails the docs build
 - [ ] Inline-code mentions (`` `name` ``) of known artifact names in `description`, `summary`, `summary_<lang>`, and body render as Markdown links to the matching catalog page; ambiguous mentions stay unlinked and emit a generator warning naming the file and colliding artifacts
+- [ ] Each artifact page renders a chrome-localized "Referenced by" section listing every artifact whose `see_also` includes this artifact, derived by inverting the cross-link index
 - [ ] A `summary` or `summary_<lang>` longer than 200 characters or empty after whitespace stripping fails the docs build with a file-and-field error
 - [ ] A malformed `use_when`, `dont_use_when`, `see_also`, or `examples` (wrong type, wrong key set, over the limit) fails the docs build with a file-and-field error
 - [ ] The catalog generator parses source frontmatter with a standard YAML parser that supports nested mappings (rejecting the older flat-only line parser)
@@ -184,9 +202,5 @@ The phase- and tag-oriented indexes assume a reader who already speaks the catal
 - [ ] Plain-text occurrences of artifact names that aren't wrapped in inline-code spans (backticks) are never transformed into Markdown links on any rendered catalog page—only inline-code mentions are eligible for the cross-linking rewrite
 
 ## Open Questions
-- Should versions of skills and agents (history, changelogs) appear in the catalog, or is the git history sufficient?
-- How are plugin source roots configured exactly—inline in `mkdocs.yml` under the `gen-files` plugin config, or in a sibling YAML file referenced from there?
-- How should this spec evolve once `mkdocs-static-i18n` upstream supports files emitted by `mkdocs-gen-files`? As of May 2026 (`mkdocs-static-i18n` 1.3.1) those files are silently dropped in `reconfigure.py` because their `abs_src_path` is outside `docs_dir`, which forces the pre-build form whenever folder-strategy i18n is in use.
-- The docs-deploy detour: should we standardise on bumping the `nolte/gh-plumbing` `reusable-mkdocs.yaml` upstream to call `task docs` instead, so every consumer can stay on the cleaner "no committed catalog" form? The conditional rule above exists because `reusable-mkdocs.yaml@v1.1.12` invokes `mhausenblas/mkdocs-deploy-gh-pages@1.26` directly, which runs `mkdocs build` and never sees `task docs`.
-- Should `use_when`, `dont_use_when`, `see_also`, and `examples` graduate from optional to required for newly authored artifacts after the pilot migration validates the format, or should they remain perpetually optional with `description` still doing double duty?
-- Should the catalog ever surface peer references *into* an artifact (that is, an artifact `A` lists `B` in `see_also`; should `B`'s catalog page show a back-reference to `A`)? Useful for navigation, costs an extra render pass.
+
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._

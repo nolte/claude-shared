@@ -124,8 +124,4 @@ Das Mission Statement **MUSS [MUST]** jede der folgenden fünf Bedingungen erfü
 
 ## Offene Fragen
 
-- Soll das Feld `verifies_via` irgendwann mehrere Feature-plus-Kriterium-Paare zulassen (eine Liste statt eines einzelnen Strings), damit zusammengesetzte Missionen, deren Verifikation tatsächlich auf zwei Features fällt, ausdrückbar bleiben? Verschoben, bis ein echtes Projekt eine Mission trifft, die sich nicht über ein verifizierendes Akzeptanzkriterium ausdrücken lässt; heute ist die Einschränkung eine erzwingende Funktion für engen Mission-Scope.
-- Soll die Bedingung „ein voller Folgesprint" im Stabilisierungs-Gate pro Projekt konfigurierbar sein (manche Projekte wollen vielleicht zwei)? Verschoben, bis ein echtes Projekt es einfordert; eins ist der konservative Default und passt zur Hobby-Skala-Kadenz.
-- Soll der Rückweg `mvp_status: stabilised → in_progress` automatisch jedes Post-MVP-Item, das bereits in `status: active` ist, anhalten, oder nur neue Starts blockieren? Die aktuelle Regel blockiert neue Starts und lässt Items im Flug zu Ende laufen; revisitieren, falls eine echte Defekt-Kaskade zeigt, dass die weichere Regel Risiko maskiert.
-- Soll die Spec irgendwann einen maschinen-lesbaren Mission-Coverage-Report tragen (welche Audiences das MVP bedient, mit Verifikations-Status pro Audience)? Verschoben, bis mindestens ein Projekt einen vollen Mission-Zyklus durchlaufen hat und ein nachgelagerter Konsument (`audience-doc-author`, Release Notes) den Report braucht.
-- Sollen die Skills `mission-define` und `mission-revise` als ein Skill mit zwei Operationen oder als zwei getrennte Skills authored werden? Skill-Authoring ist außerhalb des Scopes dieser Spec; revisitieren beim Skill-Scaffolding.
+_Alle zuvor zurückgestellten offenen Fragen wurden am 2026-06-06 entschieden: jeder vorläufige Default ist nun die geltende Regel. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für die Einzelentscheidungen und Begründungen._

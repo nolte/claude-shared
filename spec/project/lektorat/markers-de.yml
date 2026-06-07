@@ -1,0 +1,66 @@
+# lektorat — D2 Markerwörter (Deutsch)
+#
+# Quelle für den „implizite-Annahme"-Detektor in
+# spec/project/lektorat/de.md §D2. Diese Tokens lösen NUR dann einen Befund
+# aus, wenn sie mit einem imperativen Schritt gepaart sind, den die
+# Leserschaft ausführen muss (gemäß D2-Eskalationstabelle). Die Liste ist
+# redaktionelles Vokabular, nicht Vale-Style.
+#
+# Schema:
+#   version: <int>      — wird hochgezählt, wenn Einträge entfernt werden;
+#                         Hinzufügungen erhöhen die Version nicht
+#   markers: Liste von Objekten
+#     - token: <str>             # kanonische Schreibweise
+#       aliases: [<str>, ...]    # case-insensitive Varianten; optional
+#       severity_floor: <str>    # suggestion | warning — die höchste
+#                                # Severity, die der Marker bei Paarung
+#                                # mit einem imperativen Schritt erreicht
+#       rationale: <str>         # ein kurzer Satz für Reviewer
+
+version: 1
+markers:
+  - token: einfach
+    severity_floor: warning
+    rationale: Verschleiert Schwierigkeitsgrad; klassisches DE-Stilproblem.
+  - token: nur
+    severity_floor: warning
+    rationale: Verschleiert Aufwand.
+  - token: offensichtlich
+    severity_floor: warning
+    rationale: Direkte Wissensvoraussetzung an Leser:in.
+  - token: bekanntlich
+    severity_floor: warning
+    rationale: Setzt geteiltes Vorwissen voraus.
+  - token: natürlich
+    severity_floor: suggestion
+    rationale: Weiche Voraussetzung; in technischer Prosa oft unkritisch.
+  - token: selbstverständlich
+    severity_floor: warning
+    rationale: Direkte Voraussetzung.
+  - token: klar
+    severity_floor: suggestion
+    rationale: Weicher Marker; oft idiomatisch.
+  - token: schlichtweg
+    severity_floor: warning
+    rationale: Verschleiert Komplexität.
+  - token: lediglich
+    severity_floor: suggestion
+    rationale: Weicher Marker; oft präzise gemeint.
+  - token: problemlos
+    severity_floor: warning
+    rationale: Verspricht Reibungslosigkeit ohne Beleg.
+  - token: intuitiv
+    severity_floor: suggestion
+    rationale: Subjektiv; oft als Killerphrase.
+  - token: im Grunde
+    severity_floor: suggestion
+    rationale: Vereinfachender Marker.
+  - token: eh
+    severity_floor: warning
+    rationale: Umgangssprachlich; setzt Vorwissen voraus.
+  - token: sowieso
+    severity_floor: warning
+    rationale: Umgangssprachlich; setzt Vorwissen voraus.
+  - token: ohne weiteres
+    severity_floor: suggestion
+    rationale: Weicher Marker.

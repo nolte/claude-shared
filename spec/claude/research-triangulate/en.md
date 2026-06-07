@@ -48,6 +48,7 @@ Triangulation distinguishes four source classes:
 - **MUST** include **at least one** Primary OR Secondary source in every triangulation; three Web-aggregator hits don't satisfy the requirement on their own
 - **MUST** treat sources as independent only when their provenance is genuinely different: two hits from the same domain root, the same news item reposted across mirrors, or multiple aggregator snippets that all point back to the same aggregator count as **one** source
 - **MUST NOT** count Model memory as one of the required sources—it MAY suggest the hypothesis to be triangulated, but it MUST be confirmed by at least one Primary or Secondary source before the assertion is treated as verified
+- **MUST NOT** count a source announcing a behaviour not yet shipped (release notes for a planned version, roadmap entries, pre-release changelogs) toward the independent-source threshold; such a source is a hypothesis—it MAY suggest the hypothesis to be triangulated, but the behaviour MUST be observable in a Primary source (published version, live schema, shipped endpoint) before the assertion is treated as verified
 - **SHOULD** require at least one source to carry a verifiable date (last-modified header, commit timestamp, publication date), so a stale pin or deprecated API is detectable
 
 ### Minimum source count scales with blast radius
@@ -89,6 +90,7 @@ The findings-report path uses the per-run snapshot pattern (`.audits/<skill>/<ru
 - **MUST** make the source list visible in the artifact that carries the triangulated assertion—either inline (footnote, sources list at the end, `[R1]`-style references) or in an associated findings report under the calling skill's audit directory (`.audits/<skill>/<run>/`), depending on the carrier format
 - **MUST** record for each source at minimum: the URL or path, the source class, the retrieval date
 - **SHOULD** order the source list by weight (Primary first), so a reader skimming for provenance sees the strongest source immediately
+- **SHOULD** treat each recorded source as carrying an advisory time-to-live keyed to the assertion type—30 days for version-pin sources, 90 days for API-behaviour or schema sources (aligned with the staleness thresholds in `spec/project/docs-freshness`); when a carrier skill re-uses an assertion whose newest source is older than its TTL to gate a write above the Local-edit tier, it SHOULD re-validate against a current source before the write
 - **MAY** refresh the source list on later re-runs—triangulation ages, and re-confirming an old claim against a current source is a legitimate maintenance task
 
 ### Interaction with existing skills and agents
@@ -110,5 +112,4 @@ The findings-report path uses the per-run snapshot pattern (`.audits/<skill>/<ru
 - [ ] An author-time assertion hard-coded in `SKILL.md`, an `agents/*.md` file, or a spec file that will direct skill or agent behaviour toward repo-external writes is triangulated to at least the Release/dispatch tier (three independent sources) before the authoring pull request is merged
 
 ## Open Questions
-- How does this methodology handle sources that announce a **future** behaviour (a release note for a planned version that hasn't shipped yet)? Current default: such sources don't count toward the threshold until the behaviour is observable in a Primary source; should this be made explicit or remain a per-skill judgement?
-- Should triangulated sources carry a time-to-live, after which the assertion must be re-validated? Candidate defaults: 30 days for version-pin sources, 90 days for API-behaviour sources—open whether the spec enforces a TTL or leaves it to the carrier skill
+_None at this time._
