@@ -1,0 +1,19 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: claude-shared
+  description: Shared Claude Code skills and agents for consistent development workflows across projects.
+  annotations:
+    github.com/project-slug: nolte/claude-shared
+    backstage.io/source-location: url:https://github.com/nolte/claude-shared/
+    backstage.io/techdocs-ref: dir:.
+  tags:
+    - claude-code
+    - plugin
+    - skills
+    - agents
+    - developer-tooling
+spec:
+  type: library
+  lifecycle: experimental
+  owner: user:default/nolte
