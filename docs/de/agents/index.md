@@ -44,6 +44,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 
 - [`docs-freshness-checker`](nolte-shared/docs-freshness-checker.md) — Nur-Lese-Frische-Audit der MkDocs-Doku: Sprach-Parität, tote Links, veraltete spec-/code-Refs, ADR-Hygiene, Mermaid-Derived-Source-Drift.
 - [`i18n-completeness-checker`](nolte-shared/i18n-completeness-checker.md) — Read-only-Vollständigkeits-Audit der Übersetzungsdateien gegeneinander und gegen die Code-Verwendung als nach Schweregrad sortierter Report.
+- [`link-rot-scanner`](nolte-shared/link-rot-scanner.md) — Nur-Lese-Link-Rot-Audit: interne, Anker-, Cross-Tree- und externe Links über scripts/check_links.py, triagiert in einen schweregrad-sortierten Report.
 - [`mermaid-diagram-reviewer`](nolte-shared/mermaid-diagram-reviewer.md) — Statisches Audit jedes Mermaid-Blocks in docs/<lang>/ gegen die Spec plus MkDocs-Setup; strukturierte Findings, kein Rendering.
 - [`project-structure-reviewer`](nolte-shared/project-structure-reviewer.md) — Nur-Lese-Audit des Repo-Layouts gegen die Project-Structure-Spec; Severity-sortierte Findings nur auf Disk-Basis.
 - [`prose-vale-curator`](nolte-shared/prose-vale-curator.md) — Kuratiert Prosa, damit Vale grün ist, bevorzugt mitgelieferte Vokabularien, erweitert accept.txt nur in Vokabular-eigenden Repos.

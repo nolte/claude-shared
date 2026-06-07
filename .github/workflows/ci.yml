@@ -102,19 +102,43 @@ jobs:
           git diff --exit-code \
             docs/de/portfolio docs/en/portfolio
 
+  # spec/project/link-validation/ §Triggers, cadence, and gating: the offline
+  # slice (internal + intra-page-anchor + cross-tree links) is deterministic and
+  # MUST run as a blocking CI gate on every PR. It runs unconditionally (not
+  # paths-filtered): the run is sub-second, and a docs-only path filter would
+  # miss a PR that renames a file under a referenced root (spec/, scripts/, …)
+  # and so breaks a doc link without touching docs/. This is the "deterministic
+  # link-rot detector" the docs-freshness deferral below was waiting for. The
+  # external (networked) slice is NOT wired here — flakiness would make the gate
+  # non-deterministic; it runs as the link-rot-scanner agent's periodic /
+  # pre-release audit instead.
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      - run: task --yes check:links
+
   # spec/project/docs-freshness/ §Triggers and cadence SHOULD: a docs-freshness
   # run as a pre-PR gate whenever the PR modifies documentation. The full audit
   # is performed by the `docs-freshness-checker` LLM agent, which cannot run
   # unattended in CI (it needs a model, not a deterministic script). The two
   # `git diff --exit-code` freshness checks in the `docs` job above already
   # enforce the deterministic, machine-checkable slice of freshness (generated
-  # catalog + portfolio inventory). The remaining SHOULD slice (internal-link
-  # rot, parity, ADR/stale-marker drift) is consciously deferred to the
-  # quarterly / pre-release agent run per spec/project/docs-freshness/
-  # §Read-only discipline rather than wired as a CI script here; this comment
-  # records that deliberate deferral so the missing pre-PR job is not mistaken
-  # for an oversight. Promote to a real paths-filtered job once a deterministic
-  # link-rot detector ships under scripts/.
+  # catalog + portfolio inventory), and the `links` job above now owns the
+  # deterministic internal-link-rot + cross-tree-reference-rot slice per
+  # spec/project/link-validation/ (which docs-freshness delegates to it). The
+  # remaining SHOULD slice (parity, ADR/stale-marker drift, Mermaid drift) is
+  # consciously deferred to the quarterly / pre-release agent run per
+  # spec/project/docs-freshness/ §Read-only discipline rather than wired as a CI
+  # script here; this comment records that deliberate deferral so the missing
+  # pre-PR job is not mistaken for an oversight.
   docs-freshness:
     if: false # deferred — see comment above
     runs-on: ubuntu-latest

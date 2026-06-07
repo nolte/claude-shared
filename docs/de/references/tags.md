@@ -28,6 +28,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [license-check-scanner](../agents/nolte-shared/license-check-scanner.md) — nolte-shared
+- [link-rot-scanner](../agents/nolte-shared/link-rot-scanner.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [portfolio-inflight-collector](../agents/nolte-shared/portfolio-inflight-collector.md) — nolte-shared
 - [portfolio-manifest-collector](../agents/nolte-shared/portfolio-manifest-collector.md) — nolte-shared
@@ -105,6 +106,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `quality-gate`
 
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
+- [link-rot-scanner](../agents/nolte-shared/link-rot-scanner.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [quality-gate](../skills/nolte-shared/quality-gate.md) — nolte-shared
 
