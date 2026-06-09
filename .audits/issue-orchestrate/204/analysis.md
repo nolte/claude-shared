@@ -5,7 +5,7 @@ issue: "#204"
 classification: "spec-change"
 secondary-classes: ["infra"]
 route: "direct"
-status: draft
+status: orchestrated
 created: "2026-06-09"
 ---
 
@@ -85,3 +85,4 @@ none — scope confirmed with the operator (route: "Härtung + Close-out").
 
 2026-06-09 P1 dispatched to nolte-shared:spec — DONE. Extended §Data sources (line 50) + §Stalling thresholds (line 63) in en.md (canonical) and de.md to exclude the `gh-pages` deploy branch. EN/DE drift check passed (2 gh-pages occurrences each, 16 headings, 94 bullets — in sync).
 2026-06-09 P2 dispatched to nolte-shared:claude-plugin-developer — DONE. Updated agents/portfolio-inflight-collector.md at 4 spots (§Read-only Bash justification line 46, §Scope line 60, output-shape example line 145, §Working procedure step 4c line 233) to pre-filter the gh-pages deploy branch. validate_skills.py green (78 artifacts, 0C). No agent-vs-spec drift; primary checkout untouched.
+2026-06-09 verify — quality gate green: validate_skills.py 78 artifacts / 0 Critical; Vale `task lint:prose` 0 errors/0 warnings/0 suggestions (182 files); catalog regenerated + committed. No security-sensitive path → no security-review. Draft PR opened: https://github.com/nolte/claude-shared/pull/295 (Closes #204). Close-out comment posted on #204 (supersession by 2026-06-07 audit). Next action: invoke `pull-request-merge` after CI is green.
