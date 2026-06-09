@@ -128,13 +128,13 @@ This dimension is the **detection-side counterpart** to the authoring rules in [
   - **Unidiomatic collocation**: a word pairing no native author would use, typically the residue of word-for-word substitution
   - **Awkward coinage or over-nominalisation**: an invented derivation (for example clustered German `-bar` adjectives such as *„umbaubar und aus Git neu aufbaubar"*) where a verbal paraphrase reads naturally
   - **Literal idiom**: a source-language idiom rendered word-for-word instead of replaced with a host-language equivalent or rewritten
-- **MAY** consume a versioned, per-language list of known recurring calques and loanword-gender corrections—[`spec/project/lektorat/calque-de.yml`](calque-de.yml) for German—as a maintainable detection aid, mirroring how D2 consumes `markers-<lang>.yml`; each entry carries a `severity_floor` and a one-line rationale, and the list is a **supplement** to the native-reader judgement, never its replacement (the calque space is open and no list can enumerate it)
+- **MAY** consume a versioned, per-language list of known recurring calques and loanword-gender corrections ([`spec/project/lektorat/calque-de.yml`](calque-de.yml) for German) as a maintainable detection aid, mirroring how D2 consumes `markers-<lang>.yml`; each entry carries a `severity_floor` and a one-line rationale, and the list is a **supplement** to the native-reader judgement, never its replacement (the calque space is open and no list can enumerate it)
 - **MUST** classify a D6 finding as:
   - `critical` when the non-idiomatic rendering **changes or obscures the meaning** for a native reader **and** the artefact is a published surface (`README.md`, release-note body, top-level docs, or an in-scope blog post) whose resolved audience includes a non-operator role
   - `warning` when a native reader registers the passage as "translated" (calque, unidiomatic collocation, loanword-gender error) but can still parse the intended meaning, or when any of the above appears in a non-published / internal artefact
   - `suggestion` when a mild coinage or over-nominalisation reads slightly non-native but stays fully clear
 - **MUST** ground every D6 finding in a **quoted offending span** plus the **named suspected pattern** (one of the five above) so the finding is auditable and its `id` stays stable across runs; an unsupported "this feels translated" remark isn't a finding
-- **MUST** prefer a **rewrite-to-idiom** resolution (replace the calque with the equivalent host-language phrasing) over a **delete** resolution; D6 fixes how something is said, not whether it is said
+- **MUST** prefer a **rewrite-to-idiom** resolution (replace the calque with the equivalent host-language phrasing) over a **delete** resolution; D6 fixes how something is said, not whether it's said
 - **MUST NOT** fire on a host-language-accepted loanword or anglicised technical verb that the protected-terms list ([`protected-terms-de.yml`](protected-terms-de.yml)) marks as intentional (for example the portfolio-idiomatic *scaffolden*, *dispatchen*, *mergen*); a protected term is idiomatic by declaration
 
 ### Severity classification
@@ -357,7 +357,7 @@ The spec deliberately leaves the exact implementation shape **open**, but **SHOU
 - [ ] When the audience artefact is missing, every `Lektorat` operation stops with a message pointing at the `audience-identify` skill, and **MUST NOT** invent audiences
 - [ ] Every Markdown link's `[text](target)` is byte-identical across every operation that doesn't explicitly produce a finding against that link
 - [ ] Every heading-text change surfaced by a `patch` or `revise` operation announces the slug change to the operator before the write is approved
-- [ ] A German file containing a calque (a phrase mirroring an English idiom, for example „Was die Kosten kaufen, ist Eigentum.") produces a D6 finding that quotes the offending span and names the `calque` pattern
+- [ ] A German file containing a calque (a phrase mirroring an English idiom, for example *„Was die Kosten kaufen, ist Eigentum."*) produces a D6 finding that quotes the offending span and names the `calque` pattern
 - [ ] A German file with a loanword-gender error (for example „das Bridge") produces a D6 finding naming the loanword-gender pattern; a protected, intentionally-anglicised term (for example „dispatchen") produces no D6 finding
 - [ ] No `Lektorat` operation performs back-translation or compares a file against its sibling-language version; D6 is computed monolingually (cross-language fidelity stays out of scope)
 - [ ] A meaning-obscuring calque in a published surface whose resolved audience includes a non-operator role is classified `critical`; the same calque in an internal draft, or one that stays parseable, is classified `warning` (D6 escalation honoured)
