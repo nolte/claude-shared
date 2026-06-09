@@ -68,7 +68,7 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 ## 6 Quality
 
 - [`dependency-audit`](nolte-shared/dependency-audit.md) — Scannt den Dependency-Baum des Projekts nach bekannten CVEs und optional Lizenz-Compliance-Issues; Severity-sortierter Report.
-- [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Prüft bestehende Markdown-Prosa gegen fünf Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit).
+- [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Prüft bestehende Markdown-Prosa gegen sechs Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit, Idiomatik).
 - [`lektorat-auto-revise`](nolte-shared/lektorat-auto-revise.md) — Arbeitet einen Lektorat-Audit-Report autonom ab, indem es jedes Artefakt an den passenden Author routet und bis zur Konvergenz re-auditiert.
 - [`license-check`](nolte-shared/license-check.md) — End-to-End-Lizenz-Compliance-Check: SBOM, SPDX-Klassifizierung, allow/review/deny-Gate, Remediation, NOTICE und ein Audit-Artefakt.
 - [`portfolio-audit`](nolte-shared/portfolio-audit.md) — Auditiert, rendert und bootstrappt das cross-repo Capability-Portfolio über nolte/*.

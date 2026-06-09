@@ -163,7 +163,7 @@ Die heute gültige Form für alle drei Artefakte ist Markdown-Prosa (handgeschri
 
 ### Übergabe an den Lektor
 
-Der **Lektor** ist die nachgelagerte Korrekturlese-Stufe, geregelt von [`spec/project/lektorat/`](../lektorat/de.md). Aus Sicht des Autors ist der Lektor eine Black Box mit einer `audit`-Eingangsstufe; was innen geschieht (fünf Dimensionen, Severity-Klassifikation, JSON-Reportform), ist außerhalb des Geltungsbereichs dieser Spec. Die Übergabe ist ein **Vertragspunkt**: der Autor liefert einen Post, der die Eingangsbedingungen erfüllt, und übergibt die redaktionelle Endverantwortung an den Lektor.
+Der **Lektor** ist die nachgelagerte Korrekturlese-Stufe, geregelt von [`spec/project/lektorat/`](../lektorat/de.md). Aus Sicht des Autors ist der Lektor eine Black Box mit einer `audit`-Eingangsstufe; was innen geschieht (sechs Dimensionen, Severity-Klassifikation, JSON-Reportform), ist außerhalb des Geltungsbereichs dieser Spec. Die Übergabe ist ein **Vertragspunkt**: der Autor liefert einen Post, der die Eingangsbedingungen erfüllt, und übergibt die redaktionelle Endverantwortung an den Lektor.
 
 #### Eingangsbedingungen für die `audit`-Stufe des Lektors
 

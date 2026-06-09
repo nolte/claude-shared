@@ -65,3 +65,4 @@ subcommand
 [Ss]caffolder
 colocated
 alphanumerics
+monolingually

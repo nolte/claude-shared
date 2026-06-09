@@ -167,7 +167,7 @@ The form valid today for all three artefacts is Markdown prose (hand-written) or
 
 ### Handover to the editor
 
-The **editor** is the downstream copy-editing stage governed by [`spec/project/lektorat/`](../lektorat/en.md). From the author's perspective, the editor is a black box with an `audit` entry stage; what happens inside (five dimensions, severity classification, JSON report shape) is out of scope for this spec. The handover is a **contract point**: the author hands over a post that meets the entry conditions and hands over editorial final responsibility to the editor.
+The **editor** is the downstream copy-editing stage governed by [`spec/project/lektorat/`](../lektorat/en.md). From the author's perspective, the editor is a black box with an `audit` entry stage; what happens inside (six dimensions, severity classification, JSON report shape) is out of scope for this spec. The handover is a **contract point**: the author hands over a post that meets the entry conditions and hands over editorial final responsibility to the editor.
 
 #### Entry conditions for the editor's `audit` stage
 

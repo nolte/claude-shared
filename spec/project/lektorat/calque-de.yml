@@ -1,0 +1,115 @@
+# lektorat — D6 Calque- und Lehnwort-Genus-Liste (Deutsch)
+#
+# Erkennungshilfe für den D6-Detektor "Idiomatik und Natürlichkeit" in
+# spec/project/lektorat/de.md §D6. Die Liste ist eine ERGÄNZUNG zum
+# muttersprachlichen Urteil des Scanners, nie sein Ersatz: der Calque-Raum
+# ist offen und keine Liste kann ihn aufzählen. Sie kodifiziert nur die
+# wiederkehrenden, bereits beobachteten Muster, damit sie zuverlässig und
+# severity-stabil erkannt werden.
+#
+# Sie ist redaktionelles Vokabular, nicht Vale-Style. Geschützte, bewusst
+# anglisierte Fachbegriffe (scaffolden, dispatchen, mergen …) stehen in
+# protected-terms-de.yml und DÜRFEN NICHT als D6-Befund feuern.
+#
+# Schema:
+#   version: <int>      — wird hochgezählt, wenn Einträge entfernt werden;
+#                         Hinzufügungen erhöhen die Version nicht
+#
+#   loanword_gender: Liste von Objekten — etablierte Lehnwörter mit dem in
+#                    der DACH-Fachsprache korrekten Artikel/Genus. Ein
+#                    abweichender Artikel im Text ist das Muster
+#                    "loanword-gender".
+#     - term: <str>              # das Lehnwort (Nominativ Singular)
+#       article: <str>           # der | die | das  (korrektes Genus)
+#       wrong: [<str>, ...]       # beobachtete falsche Artikel; optional
+#       severity_floor: <str>    # suggestion | warning
+#       rationale: <str>
+#
+#   calques: Liste von Objekten — wiederkehrende Lehnübersetzungen und
+#            wörtlich gerenderte Redewendungen. `match` ist ein Hinweis-
+#            Fragment (case-insensitive Teilstring ODER die spiegelnde
+#            EN-Wendung als Kommentar), KEIN vollständiger Regex-Zwang.
+#     - de: <str>                # die calque-verdächtige DE-Wendung/Struktur
+#       mirrors_en: <str>        # die gespiegelte EN-Wendung (Beleg)
+#       prefer: <str>            # idiomatische DE-Alternative (Beispiel)
+#       pattern: <str>           # calque | collocation | coinage | idiom
+#       severity_floor: <str>    # suggestion | warning
+#       rationale: <str>
+
+version: 1
+
+loanword_gender:
+  - term: Bridge
+    article: die
+    wrong: [das, der]
+    severity_floor: warning
+    rationale: Smart-Home-/Netzwerk-Bridge ist im DE feminin (die Brücke).
+  - term: Hub
+    article: der
+    wrong: [das]
+    severity_floor: warning
+    rationale: Etabliert maskulin in DE-Fachsprache.
+  - term: Repository
+    article: das
+    wrong: [der, die]
+    severity_floor: suggestion
+    rationale: Neutrum; "das Repo" analog.
+  - term: Cluster
+    article: der
+    wrong: [das]
+    severity_floor: suggestion
+    rationale: Maskulin in DE-Fachsprache.
+  - term: Pipeline
+    article: die
+    wrong: [der, das]
+    severity_floor: warning
+    rationale: Feminin (die Leitung).
+  - term: Commit
+    article: der
+    wrong: [das]
+    severity_floor: suggestion
+    rationale: Maskulin; "der Commit" portfolio-üblich.
+
+calques:
+  - de: Was die Kosten kaufen, ist …
+    mirrors_en: What the costs buy is …
+    prefer: Der Preis dafür ist … / Was du dafür bekommst, ist …
+    pattern: calque
+    severity_floor: warning
+    rationale: '"kaufen" mit unbelebtem Subjekt "Kosten" ist im DE sinnleer.'
+  - de: … schlägt einen Screenshot
+    mirrors_en: … beats a screenshot
+    prefer: … ist mehr wert als ein Screenshot / … übertrifft einen Screenshot
+    pattern: calque
+    severity_floor: suggestion
+    rationale: '"schlagen" im Sinne von "übertreffen" ist im DE umgangssprachlich-schief.'
+  - de: ein echter Einstieg
+    mirrors_en: a real commitment / undertaking
+    prefer: ein echtes Unterfangen / ein ordentliches Stück Arbeit
+    pattern: collocation
+    severity_floor: suggestion
+    rationale: '"Einstieg" trifft "commitment/undertaking" nicht.'
+  - de: am Ende des Tages
+    mirrors_en: at the end of the day
+    prefer: letztlich / unterm Strich
+    pattern: idiom
+    severity_floor: warning
+    rationale: Wörtlich gerenderte EN-Redewendung.
+  - de: macht Sinn
+    mirrors_en: makes sense
+    prefer: ergibt Sinn / ist sinnvoll
+    pattern: idiom
+    severity_floor: suggestion
+    rationale: Verbreiteter Anglizismus; "ergibt Sinn" ist sauberer.
+  - de: in keiner Weise
+    mirrors_en: in no way
+    prefer: keineswegs / auf keinen Fall
+    pattern: collocation
+    severity_floor: suggestion
+    rationale: Steife Lehnübersetzung.
+  - de: aus Git neu aufbaubar
+    mirrors_en: rebuildable from Git
+    prefer: lässt sich aus Git neu aufbauen
+    pattern: coinage
+    severity_floor: suggestion
+    rationale: Geballte "-bar"-Wortprägung; verbale Umschreibung liest natürlich.
