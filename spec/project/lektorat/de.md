@@ -6,7 +6,7 @@ Status: accepted
 
 Portfolio-Repositories setzen bereits einen mechanischen Prosa-Standard durch: [`spec/project/prose-style/`](../prose-style/de.md) verdrahtet Vale (Microsoft + RedHat + `nolte/vale-style`) über jede englischsprachige Markdown-Fläche, und [`spec/project/docs-multilingual-authoring/`](../docs-multilingual-authoring/de.md) garantiert, dass die DE/EN-Seitenbäume strukturell parallel bleiben. Was keine der beiden Specs beantwortet, ist die **redaktionelle** Frage, sobald ein Entwurf existiert: ist die Seite tatsächlich **lesbar** für ihre Zielgruppe, ist sie **ohne versteckte Vorannahmen verständlich**, ist die **deutsche** Seite korrekt geschrieben, und passt die **Tonalität** zu der Audience, für die das Dokument verfasst wurde?
 
-`Lektorat` schließt diese Lücke. Es ist die operative Ebene, die bereits **vorhandene** Prosa **auditiert, patcht oder überarbeitet** — entlang vier Qualitätsdimensionen (Lesbarkeit, Verständlichkeit, Rechtschreibung/Grammatik, Schreibstil) plus einer fünften **Zielgruppen-Fit**-Dimension, die die Prosa an das Audience-Artefakt aus [`spec/project/audience-identification/`](../audience-identification/de.md) und an den Per-Seite-Track-Vertrag aus [`spec/project/docs-audience-tracks/`](../docs-audience-tracks/de.md) zurückbindet. Vale bleibt für seine Regelmechanik zuständig; `audience-doc-author` bleibt für Erstautorschaft zuständig; diese Spec definiert, was **nachdem** ein Text existiert und **bevor** er als fertige Arbeit behandelt wird, geschieht.
+`Lektorat` schließt diese Lücke. Es ist die operative Ebene, die bereits **vorhandene** Prosa **auditiert, patcht oder überarbeitet** — entlang vier Qualitätsdimensionen (Lesbarkeit, Verständlichkeit, Rechtschreibung/Grammatik, Schreibstil) plus einer fünften **Zielgruppen-Fit**-Dimension, die die Prosa an das Audience-Artefakt aus [`spec/project/audience-identification/`](../audience-identification/de.md) und an den Per-Seite-Track-Vertrag aus [`spec/project/docs-audience-tracks/`](../docs-audience-tracks/de.md) zurückbindet, und einer sechsten **Idiomatik-und-Natürlichkeit**-Dimension, die Prosa flaggt, die sich mechanisch übersetzt statt nativ in der eigenen Sprache verfasst liest. Vale bleibt für seine Regelmechanik zuständig; `audience-doc-author` bleibt für Erstautorschaft zuständig; diese Spec definiert, was **nachdem** ein Text existiert und **bevor** er als fertige Arbeit behandelt wird, geschieht.
 
 Zwei Designvorgaben prägen die Spec. Erstens ist die Ebene **operativ**, nicht deskriptiv: sie verlangt drei Operationen (`audit`, `patch`, `revise`) mit expliziten Vor- und Nachbedingungen, sodass nachgelagerte Skills und Agents den Vertrag implementieren können, ohne die Semantik neu verhandeln zu müssen. Zweitens ist die Ebene **pro Sprache**: jede Sprachfassung wird gegen die Regeln ihrer eigenen Sprache geprüft (DE-Regeln auf DE-Text, EN-Regeln auf EN-Text), und Übersetzungs-Synchronisation bleibt Aufgabe von `spec` und `docs-freshness`.
 
@@ -47,7 +47,7 @@ Zwei Designvorgaben prägen die Spec. Erstens ist die Ebene **operativ**, nicht 
 
 ### Qualitätsdimensionen
 
-Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Lektorat`-Operation erzeugte Befund **MUSS [MUST]** genau eine Dimension nennen. Severitäten mappen auf eine dimensionsspezifische Rubrik unter §Severity-Klassifikation.
+Die sechs Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Lektorat`-Operation erzeugte Befund **MUSS [MUST]** genau eine Dimension nennen. Severitäten mappen auf eine dimensionsspezifische Rubrik unter §Severity-Klassifikation. Die Nummerierung ist **additiv**: D1–D5 behalten ihre etablierten Identifier und D6 ist die angehängte Schluss-Dimension, obwohl sie — wie D1–D4 — intrinsische Prosa bewertet statt der Audience-Bindung, die D5 leistet.
 
 #### D1 — Lesbarkeit
 
@@ -117,11 +117,31 @@ Die fünf Dimensionen unten sind die **autoritative** Liste. Jeder von einer `Le
 - **MUSS [MUST]** Register-Mismatch und fehlenden audience-pflichtigen Inhalt als `critical` klassifizieren für jedes Artefakt, dessen deklarierte Audience eine Nicht-Operator-Audience einschließt (Endnutzer, Kunden, Evaluatoren); eine Dokumentations-Lücke, die ein zahlender Konsument bemerkt, ist kein `suggestion`
 - **DARF NICHT [MUST NOT]** Inhalt umschreiben, um eine **andere** Audience zu treffen als die deklarierte; die Auflösung für einen Falsche-Audience-Abschnitt ist, **ihn dem Operator zur Verschiebung zu flaggen**, nicht ihn still neu zu rahmen
 
+#### D6 — Idiomatik und Natürlichkeit
+
+Diese Dimension ist das **Erkennungs-Gegenstück** zu den Authoring-Regeln in [`spec/project/post-writing-style/`](../post-writing-style/de.md) §Zweisprachige Typografie (idiom-für-idiom, kein Calque, zielsprachliches Lehnwort-Genus): sie flaggt Prosa, die sich **mechanisch übersetzt oder anderweitig nicht-muttersprachlich** liest, statt original in der eigenen Sprache der Datei verfasst. Eine Passage kann D3 (mechanisch korrekte Rechtschreibung und Grammatik) und D4 (konformer Voice, Tempus, Anrede) bestehen und dennoch D6 verfehlen, weil idiomatische Natürlichkeit weder eine Rechtschreib- noch eine Stilregel ist.
+
+- **MUSS [MUST]** D6 **monolingual** bewerten: der Text wird gegen die idiomatischen Normen seiner **eigenen** Sprache beurteilt, so wie ein kompetenter muttersprachlicher Autor ihn beurteilen würde. D6 **DARF NICHT [MUST NOT]** die Datei mit einer Fassung in einer Schwestersprache vergleichen, **DARF NICHT [MUST NOT]** Rückübersetzung durchführen und **DARF NICHT [MUST NOT]** eine Treue-Aussage über ein Übersetzungspaar treffen — sprachübergreifende semantische Parität gehört dem Authoring-Gate in [`spec/project/blog-author/`](../blog-author/de.md) (wo beide Sprachfassungen in einer Hand liegen) und Paritäts-Drift gehört `docs-freshness`. D6 fragt immer nur: „Liest sich das als natürliches *<Sprache>*?"
+- **MUSS [MUST]** die folgenden Muster als D6-Befunde flaggen:
+  - **Calque (Lehnübersetzung)**: eine Wendung, deren Struktur eine fremdsprachliche Redewendung spiegelt und einen wörtlich-grammatischen, aber semantisch schiefen Zielsatz erzeugt (deutsches Beispiel: *„Was die Kosten kaufen, ist Eigentum."* als Spiegel des englischen *„What the costs buy is ownership."*; *„Offen schlägt einen Screenshot."* als Spiegel von *„Open beats a screenshot."*)
+  - **Genus- oder Flexionsfehler bei Lehnwörtern**: ein entlehnter Term mit falschem Artikel, Genus oder falscher Flexion in der Zielsprache (deutsches Beispiel: *„das Bridge"* statt *„die Bridge"*) oder ein anglisiertes Verb, das gegen die Zielsprach-Morphologie fehlflektiert ist
+  - **Unidiomatische Kollokation**: eine Wortpaarung, die kein muttersprachlicher Autor verwenden würde — typischerweise der Rückstand einer Wort-für-Wort-Ersetzung
+  - **Holprige Wortprägung oder Über-Nominalisierung**: eine erfundene Ableitung (zum Beispiel geballte deutsche `-bar`-Adjektive wie *„umbaubar und aus Git neu aufbaubar"*), wo eine verbale Umschreibung natürlich liest
+  - **Wörtliche Redewendung**: eine ausgangssprachliche Redewendung Wort-für-Wort gerendert, statt durch ein zielsprachliches Äquivalent ersetzt oder umgeschrieben
+- **DARF [MAY]** eine versionierte, sprachspezifische Liste bekannter wiederkehrender Calques und Lehnwort-Genus-Korrekturen konsumieren — [`spec/project/lektorat/calque-de.yml`](calque-de.yml) für Deutsch — als pflegbare Erkennungshilfe, analog dazu, wie D2 `markers-<lang>.yml` konsumiert; jeder Eintrag trägt ein `severity_floor` und eine einzeilige Begründung, und die Liste ist eine **Ergänzung** zum muttersprachlichen Urteil, nie sein Ersatz (der Calque-Raum ist offen und keine Liste kann ihn aufzählen)
+- **MUSS [MUST]** einen D6-Befund klassifizieren als:
+  - `critical`, wenn die nicht-idiomatische Wendung die Bedeutung für einen muttersprachlichen Leser **verändert oder verschleiert** **und** das Artefakt eine publizierte Fläche ist (`README.md`, Release-Note-Body, Top-Level-Docs oder ein In-Scope-Blog-Post), deren aufgelöste Audience eine Nicht-Operator-Rolle enthält
+  - `warning`, wenn ein muttersprachlicher Leser die Passage als „übersetzt" registriert (Calque, unidiomatische Kollokation, Lehnwort-Genus-Fehler), die gemeinte Bedeutung aber noch parsen kann, oder wenn eines der obigen in einem nicht-publizierten / internen Artefakt erscheint
+  - `suggestion`, wenn eine milde Wortprägung oder Über-Nominalisierung leicht nicht-muttersprachlich liest, aber vollständig klar bleibt
+- **MUSS [MUST]** jeden D6-Befund in einer **zitierten verstoßenden Passage** plus dem **benannten vermuteten Muster** (eines der fünf oben) verankern, damit der Befund auditierbar ist und seine `id` über Läufe stabil bleibt; eine unbelegte „das fühlt sich übersetzt an"-Bemerkung ist kein Befund
+- **MUSS [MUST]** eine **Umschreiben-zum-Idiom**-Auflösung (den Calque durch die äquivalente zielsprachliche Formulierung ersetzen) gegenüber einer **Streichen**-Auflösung bevorzugen; D6 korrigiert, *wie* etwas gesagt wird, nicht *ob* es gesagt wird
+- **DARF NICHT [MUST NOT]** bei einem zielsprachlich akzeptierten Lehnwort oder anglisierten technischen Verb feuern, das die Geschützte-Begriffe-Liste ([`protected-terms-de.yml`](protected-terms-de.yml)) als beabsichtigt markiert (zum Beispiel das portfolio-idiomatische *scaffolden*, *dispatchen*, *mergen*); ein geschützter Term ist per Deklaration idiomatisch
+
 ### Severity-Klassifikation
 
 - **MUSS [MUST]** jeden Befund in genau eine von drei Severitäten klassifizieren:
-  - `critical`: würde gerenderte Bedeutung verändern, ist in einem publizierten Artefakt sichtbar oder verfehlt das Zielgruppen-Fit-Gate oben
-  - `warning`: verfehlt einen benannten Metrik-Korridor, verfehlt eine `prose-style`-MUSS, die nicht in `critical` kippte, oder bricht interne Konsistenz
+  - `critical`: würde gerenderte Bedeutung verändern, ist in einem publizierten Artefakt sichtbar, verfehlt das Zielgruppen-Fit-Gate oben oder ist eine bedeutungsverschleiernde nicht-idiomatische Wendung (D6) auf einer publizierten Nicht-Operator-Fläche
+  - `warning`: verfehlt einen benannten Metrik-Korridor, verfehlt eine `prose-style`-MUSS, die nicht in `critical` kippte, bricht interne Konsistenz oder liest sich nicht-idiomatisch für seine Sprache (D6), ohne die Bedeutung zu verschleiern
   - `suggestion`: qualifiziert eine Heuristik, schlägt eine stilistische Verfeinerung vor oder weitet einen Satz für Klarheit, ohne die Bedeutung zu verändern
 - **MUSS [MUST]** diese Severity-Namen wörtlich in maschinenlesbarer Ausgabe verwenden (JSON-Keys, Frontmatter-Values, CLI-Exit-Code-Mapping); `info`, `error`, `notice` und ähnliche Synonyme sind **DARF NICHT [MUST NOT]**
 - **MUSS [MUST]** Severity-Klassifikation **dimensions­bewusst** halten: ein D3-Tippfehler in einem publizierten Release-Note ist `critical`, derselbe Tippfehler in einem Markdown-Kommentar als Entwurf ist `warning`, derselbe Tippfehler innerhalb eines Code-Identifiers ist **kein Befund** (außer Scope gemäß §Geltungsbereich)
@@ -245,7 +265,7 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
       {
         "id": "<stabiler Hash aus Datei + Dimension + Zeile>",
         "severity": "critical|warning|suggestion",
-        "dimension": "D1|D2|D3|D4|D5",
+        "dimension": "D1|D2|D3|D4|D5|D6",
         "file": "<repo-relativer Pfad>",
         "line_start": 1,
         "line_end": 1,
@@ -285,13 +305,14 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
 Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** aber als der folgende Split umgesetzt werden, der dem hybriden Portfolio-Muster entspricht (zum Beispiel `dependency-audit`-Skill + `dependency-audit-scanner`-Agent, `vocab-drift-audit`-Skill + `vocab-drift-scanner`-Agent):
 
 - **`lektorat-apply`-Skill** — User-Facing Einstieg; orchestriert `audit` / `patch` / `revise`; verantwortet alle Operator-Dialoge (Approvals, Verwerfungen, Sprach-Disambiguierung); komponiert die finalen Ausgaben; liest für den Audit-Schritt selbst keine Quelldateien
-- **`lektorat-scanner`-Agent** — Read-only-Scanner; führt D1–D5-Erkennung über ein oder mehrere In-Scope-Artefakte aus; gibt das strukturierte Befunde-Inventar zurück, das die Skill rendert; ediert nie, fragt nie
+- **`lektorat-scanner`-Agent** — Read-only-Scanner; führt D1–D6-Erkennung über ein oder mehrere In-Scope-Artefakte aus; gibt das strukturierte Befunde-Inventar zurück, das die Skill rendert; ediert nie, fragt nie
 - Die Skill **DARF [MAY]** den vorhandenen `prose-vale-curator`-Agent für D3/D4-Mechanik auf englischem Text und den `audience-review`-Agent für beratende D5-Zweitlesen dispatchen; beide Dispatches sind **opt-in** pro Repository
 - Als Default-Erstimplementierungsform **SOLLTE [SHOULD]** die Skill `lektorat-scanner` einmal für den gesamten In-Scope-Satz dispatchen (gebatcht), dabei `language_summary` pro Sprache aggregieren und die Vale-Regel-ID-Deduplikation aus §Koordination in einem Durchlauf anwenden; Per-Datei-Dispatch (optional parallel) bleibt zulässig und erzeugt identisches JSON, und ein Repository **DARF [MAY]** ihn übernehmen, sobald ein gemessenes Audit zeigt, dass gebatchte Latenz oder Kosten nicht akzeptabel sind
 
 ### Koordination mit Nachbarspecs
 
 - **MUSS [MUST]** `spec/project/prose-style/` als autoritative Quelle für EN-Voice/Tone-Regeln und Vale-Mechanik referenzieren; `Lektorat` konsumiert sie und **DARF NICHT [MUST NOT]** sie neu definieren
+- **MUSS [MUST]** `spec/project/post-writing-style/` §Zweisprachige Typografie (die Calque- / Lehnwort-Genus- / Idiom-MUSTs) als autoritative **Authoring-seitige** Regel referenzieren, deren Verstöße D6 auf der **Erkennungs-Seite** detektiert; `Lektorat` D6 konsumiert ihre Intention, **DARF NICHT [MUST NOT]** sie neu definieren und **DARF NICHT [MUST NOT]** in sprachübergreifenden Treue-Vergleich ausgreifen — Rückübersetzung und EN↔DE-Parität gehören dem Pre-Handover-Gate von `spec/project/blog-author/` bzw. `spec/project/docs-freshness/`, niemals `Lektorat`
 - **MUSS [MUST]** `spec/project/audience-identification/` als autoritative Quelle für Audience-Identifier und Audience-Eigenschaften referenzieren; `Lektorat` liest das Artefakt und **DARF NICHT [MUST NOT]** Audiences erfinden
 - **MUSS [MUST]** `spec/project/docs-audience-tracks/` für den Per-Seite-`audience`/`track`/`content_mode`-Frontmatter-Vertrag referenzieren; `Lektorat` löst anwendbare Audiences darüber auf
 - **MUSS [MUST]** [`spec/project/readability-lix/`](../readability-lix/de.md) als autoritative Quelle der LIX-Metrik referenzieren (Formel, Langwort-Regel, Tokenisierungs-Pipeline, sprachübergreifende Kalibrierung, Korridorwerte und die Verbesserungs-Transformationen); `Lektorat` §D1 konsumiert LIX daraus und **DARF NICHT [MUST NOT]** die Metrik oder ihre Korridore neu definieren
@@ -336,6 +357,10 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 - [ ] Wenn das Audience-Artefakt fehlt, stoppt jede `Lektorat`-Operation mit einer Meldung, die auf die `audience-identify`-Skill zeigt, und **DARF NICHT [MUST NOT]** Audiences erfinden
 - [ ] Jeder Markdown-Link `[text](target)` ist byte-identisch über jede Operation hinweg, die nicht explizit einen Befund gegen diesen Link produziert
 - [ ] Jede Heading-Text-Änderung, die ein `patch`- oder `revise`-Lauf surfaced, kündigt dem Operator den Slug-Wechsel vor der Write-Zustimmung an
+- [ ] Eine deutsche Datei mit einem Calque (eine Wendung, die eine englische Redewendung spiegelt, zum Beispiel „Was die Kosten kaufen, ist Eigentum.") produziert einen D6-Befund, der die verstoßende Passage zitiert und das `calque`-Muster benennt
+- [ ] Eine deutsche Datei mit einem Lehnwort-Genus-Fehler (zum Beispiel „das Bridge") produziert einen D6-Befund, der das Lehnwort-Genus-Muster benennt; ein geschützter, bewusst anglisierter Term (zum Beispiel „dispatchen") produziert keinen D6-Befund
+- [ ] Keine `Lektorat`-Operation führt Rückübersetzung durch oder vergleicht eine Datei mit ihrer Schwestersprach-Fassung; D6 wird monolingual berechnet (sprachübergreifende Treue bleibt außerhalb des Scopes)
+- [ ] Ein bedeutungsverschleiernder Calque auf einer publizierten Fläche, deren aufgelöste Audience eine Nicht-Operator-Rolle enthält, wird `critical` klassifiziert; derselbe Calque in einem internen Entwurf, oder einer, der parsebar bleibt, wird `warning` klassifiziert (D6-Eskalation honoriert)
 
 ## Offene Fragen
 

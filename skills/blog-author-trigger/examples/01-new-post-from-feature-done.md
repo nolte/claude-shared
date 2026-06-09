@@ -9,7 +9,7 @@ project/features/add-lektorat-scanner-agent.md
   id: F-7
   status: done           # confirmed — feature → done fires
   title: Add lektorat-scanner agent
-  description: Read-only scanner that walks Markdown artefacts and returns D1–D5 findings.
+  description: Read-only scanner that walks Markdown artefacts and returns D1–D6 findings.
   roadmap_item: R-8
 done-transition commit: 3b7fc1d
 repo: nolte/claude-shared
@@ -19,7 +19,7 @@ repo: nolte/claude-shared
 
 | Field | Derived value |
 | --- | --- |
-| topic-as-thesis | "The read-only lektorat-scanner agent walks Markdown artefacts and returns D1–D5 findings." |
+| topic-as-thesis | "The read-only lektorat-scanner agent walks Markdown artefacts and returns D1–D6 findings." |
 | grounded artefact | `nolte/claude-shared@3b7fc1d` |
 | primary audience | *unset* — operator selects at intake |
 | source list | `https://github.com/nolte/claude-shared/commit/3b7fc1d` |
