@@ -47,7 +47,7 @@ Leser: (1) Maintainer von `nolte/*`-Repositories — die entscheiden, welcher di
 - **MUST** bei jedem Audit-Lauf die vier Primärdatenquellen aus jedem in-scope Portfolio-Mitglied-Repository erheben:
   - **Offene Issues** — jedes Issue mit `state: open`, das kein ausschließendes Label (`triage-done`, `wontfix`, `parking-lot`) trägt.
   - **Offene Pull Requests** — jeder PR mit `state: open`, einschließlich Drafts.
-  - **Branches ohne aktiven PR** — jeder Branch auf dem Remote, der keinen offenen PR in Richtung `develop` hat und nicht der Default-Branch ist.
+  - **Branches ohne aktiven PR** — jeder Branch auf dem Remote, der keinen offenen PR in Richtung `develop` hat, nicht der Default-Branch ist und nicht der `gh-pages`-Deploy-Branch ist (der per Design keinen PR trägt und sich nur beim Deploy ändert).
   - **Ungelöste Review-Kommentare und GitHub-Discussions** — Review-Threads auf offenen PRs mit `resolved: false`, plus offene Discussions ohne Maintainer-Antwort innerhalb des letzten Triage-Fensters.
 - **MUST** über read-only-`gh api`-Aufrufe erheben (oder die Äquivalente `gh issue list`, `gh pr list`, `gh api repos/.../branches`, `gh api graphql` für Discussions). Der Audit ruft niemals eine mutierende GitHub-API-Operation auf.
 - **SHOULD** die Per-Repository-Erhebung parallelisieren, soweit möglich, um innerhalb der GitHub-API-Rate-Limits zu bleiben; ein Fan-out über einen read-only Agent (analog zu `portfolio-manifest-collector`) ist die empfohlene Implementierungsform.
@@ -60,7 +60,7 @@ Leser: (1) Maintainer von `nolte/*`-Repositories — die entscheiden, welcher di
 - **MUST** die folgenden Default-Schwellen anwenden, wenn entschieden wird, ob ein Item *festgefahren* ist und im Report auftaucht:
   - **Issue**: länger als 30 Tage offen ohne Prioritäts-Label, ohne Assignee und ohne Maintainer-Kommentar in den letzten 30 Tagen.
   - **Pull Request**: länger als 7 Tage offen mit roten Required-Checks, ODER länger als 14 Tage als Draft, ODER länger als 14 Tage ohne Reviewer-Aktivität, ODER Konflikte gegen `develop` tragend.
-  - **Branch ohne aktiven PR**: letzter Push älter als 30 Tage UND kein offener PR in Richtung `develop` UND nicht der Default-Branch.
+  - **Branch ohne aktiven PR**: letzter Push älter als 30 Tage UND kein offener PR in Richtung `develop` UND nicht der Default-Branch UND nicht der `gh-pages`-Deploy-Branch.
   - **Ungelöster Review-Kommentar**: Thread älter als 7 Tage ohne Maintainer-Antwort.
   - **Discussion**: länger als 30 Tage offen ohne Maintainer-Antwort.
 - **MAY** die Default-Schwellen pro Repository über eine `project/inflight.yml`-Konfigurationsdatei im Repository-Root überschreiben; Overrides **MUST** im gerenderten Report inspizierbar sein (der Report hält sowohl den Default als auch den Per-Repo-Override fest), sodass der Operator Abweichungen vom Portfolio-Baseline sieht.

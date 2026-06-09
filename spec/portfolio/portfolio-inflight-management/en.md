@@ -47,7 +47,7 @@ Readers: (1) maintainers of `nolte/*` repositories—who decide which dispatched
 - **MUST**, on every audit run, collect the four primary data sources from each in-scope Portfolio-Member repository:
   - **Open issues**: every issue with `state: open` that has no exclusionary label (`triage-done`, `wontfix`, `parking-lot`).
   - **Open pull requests**: every PR with `state: open`, including drafts.
-  - **Branches without an active PR**: every branch on the remote that has no open PR pointing to `develop` and isn't the default branch.
+  - **Branches without an active PR**: every branch on the remote that has no open PR pointing to `develop`, isn't the default branch, and isn't the `gh-pages` deploy branch (which carries no PR by design and only changes on deploy).
   - **Unresolved review comments and GitHub Discussions**: review threads on open PRs whose `resolved: false`, plus open Discussions with no maintainer reply in the last triage window.
 - **MUST** collect via read-only `gh api` calls (or the equivalent `gh issue list`, `gh pr list`, `gh api repos/.../branches`, `gh api graphql` for Discussions). The audit never invokes a mutating GitHub API call.
 - **SHOULD** parallelise the per-repository collection where possible to stay within GitHub API rate limits; a fan-out via a read-only agent (analogous to `portfolio-manifest-collector`) is the recommended implementation shape.
@@ -60,7 +60,7 @@ Readers: (1) maintainers of `nolte/*` repositories—who decide which dispatched
 - **MUST** apply the following default thresholds when deciding whether an item is *stalled* and thus surfaces in the report:
   - **Issue**: open longer than 30 days with no priority label, no assignee, and no maintainer comment in the last 30 days.
   - **Pull request**: open longer than 7 days with red required checks, OR open longer than 14 days as a draft, OR open longer than 14 days with no reviewer activity, OR carrying conflicts against `develop`.
-  - **Branch without active PR**: last push older than 30 days AND no open PR pointing to `develop` AND not the default branch.
+  - **Branch without active PR**: last push older than 30 days AND no open PR pointing to `develop` AND not the default branch AND not the `gh-pages` deploy branch.
   - **Unresolved review comment**: thread older than 7 days without a maintainer reply.
   - **Discussion**: open longer than 30 days without a maintainer reply.
 - **MAY** override the default thresholds per repository via a `project/inflight.yml` config file at the repository root; overrides **MUST** be inspectable in the rendered report (the report records both the default and the per-repo override) so the operator sees deviations from the portfolio baseline.
