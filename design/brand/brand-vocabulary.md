@@ -40,6 +40,8 @@ spec-conformant. No fifth brand identity slot name is introduced.
 | "soft cobalt-violet"    | dark | Primary fills in dark mode (lighter/lower chroma per spec §Light/dark) | `oklch(0.72 0.10 275)`  | `#8E92E6`     |
 | "warm moss green"       | light| Secondary foliage accents                 | `oklch(0.62 0.11 150)`  | `#4F9D69`     |
 | "soft fern green"       | dark | Secondary foliage accents in dark mode    | `oklch(0.72 0.10 150)`  | `#6FBF8A`     |
+| "cool silver-grey"      | light| Signature grey fur streak (figure marking, not a brand fill) | `oklch(0.74 0.010 275)` | `#AEB2BE`     |
+| "pale silver"           | dark | Signature grey fur streak in dark mode    | `oklch(0.84 0.008 275)` | `#C9CDD6`     |
 
 ## Canonical style reference
 
@@ -47,14 +49,23 @@ spec-conformant. No fifth brand identity slot name is introduced.
   Midjourney `--sref` mechanism) use the **per-model equivalent**: a fixed canonical
   style paragraph (and, once approved, a fixed reference image) per
   `corporate-design-colors` §AI image color contract.
-- **Current reference:** `BRAND-STYLE-REF v1` — the canonical figure is defined
+- **Current reference:** `BRAND-STYLE-REF v1.1` — the canonical figure is defined
   **textually** by the CHARACTER block in `../prompts/illustration_sloth-mascot.md`
   (self-contained; no external reference image is stored in the repo). The style block
   is repeated verbatim inside each prompt document so a batch stays one visual register.
-  A later reference refresh is a major brand-version bump.
+  A later reference refresh is a major brand-version bump. **v1.0 → v1.1** added the cool
+  silver-grey signature side streak (see §Signature marking below); the committed
+  `design/assets/` renders predate it and are re-render-pending.
 - **Key identity rule:** the cream warm-bone is **only on the face mask**; the entire
   body (chest, belly, back, sides) is solid indigo — there is **no belly patch**. The
   only other pale areas are the three claws per hand/foot.
+- **Signature marking (since v1.1):** a single **cool silver-grey fur streak** — the
+  "grey lock" — runs down **one side of the head** (from the tuft, past temple and cheek
+  toward the jaw), lying on the indigo fur **beside** the cream mask, never across it. It
+  is the only intentional asymmetry of the figure and the strongest recognition cue after
+  the diagonal eye-stripes. The streak is a **cool neutral silver-grey** (`#AEB2BE`
+  light / `#C9CDD6` dark) — clearly cooler and greyer than the warm cream mask so the two
+  never read as one patch.
 - **Observed render note:** FLUX.1-schnell rendered the fur a touch darker and bluer
   than the `brand-primary` token (`#5B5FC7`) — closer to a deep slate-indigo
   (`~#4A4E6B`). The token stays canonical; prompts describe the observed look so new
