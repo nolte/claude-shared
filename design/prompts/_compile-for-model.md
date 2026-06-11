@@ -42,9 +42,9 @@ deterministic script — semantic compression needs judgement. Claude or the
 
 ## Compile rules (general)
 
-1. **Extract the recognition anchors** from the canonical description — the 3–5
+1. **Extract the recognition anchors** from the canonical description — the few
    features that MUST survive (here: blue-indigo fur, heart-shaped cream face mask,
-   diagonal eye-stripes, no belly patch, three claws).
+   diagonal eye-stripes, the cool silver-grey side streak, no belly patch, three claws).
 2. **Order by priority** (front-loaded): subject + dominant colour *with its
    anti-drift assertion* → anchors → style → background. The front of the prompt
    carries the most weight and survives truncation.
@@ -80,7 +80,9 @@ deterministic script — semantic compression needs judgement. Claude or the
 **Compiled — flux-1-schnell** (~187 tokens, hex-free, anchors first):
 
 ```
-A chibi cartoon three-toed sloth sitting upright facing the viewer, symmetrical, with deep blue-indigo plush fur (a blue-violet indigo, definitely NOT brown). A big heart-shaped cream face mask with a small V-notch holds two large round dark-brown eyes; two broad dark diagonal stripes cross over the eyes like a mask, pale between them. Small dark nose, a gentle closed smile, two round coral-orange blush cheeks, a small jagged head tuft on top. The cream is only on the face — the whole body is solid indigo with no belly patch. Exactly three pale cream claws on each hand and foot. Bold even dark outline, smooth matte fills with soft cel-shading, flat warm bone-white background, soft oval shadow beneath. Modern flat kawaii vector cartoon style.
+A chibi cartoon three-toed sloth sitting upright facing the viewer, near-symmetrical, with deep blue-indigo plush fur (a blue-violet indigo, definitely NOT brown). A big heart-shaped cream face mask with a small V-notch holds two large round dark-brown eyes; two broad dark diagonal stripes cross over the eyes like a mask, pale between them. Small dark nose, a gentle closed smile, two round coral-orange blush cheeks, a small jagged head tuft on top. A single cool silver-grey fur streak runs down one side of the head beside the mask — a grey lock, the only asymmetry. The cream is only on the face — the whole body is solid indigo with no belly patch. Exactly three pale cream claws on each hand and foot. Bold even dark outline, smooth matte fills with soft cel-shading, flat warm bone-white background, soft oval shadow beneath. Modern flat kawaii vector cartoon style.
 ```
 
-Every prompt document's `## Compiled — flux-1-schnell` block is produced this way.
+Every prompt document's `## Compiled — flux-1-schnell` block is produced this way. (Note
+the canonical figure is now **near-symmetrical**: the silver-grey side streak is the one
+intentional break — keep the word "near-symmetrical", not "fully symmetrical", in compiles.)

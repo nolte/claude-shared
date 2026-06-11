@@ -34,9 +34,9 @@ modern flat-design kawaii vector cartoon, bold clean dark outlines, smooth matte
 
 A cute chibi cartoon sloth sitting on the floor behind a small low wooden table, viewed from the front and centered, typing on an open laptop that stands on the table. The sloth leans forward and rests both small three-clawed hands on the laptop keyboard. The laptop is a chunky matte DARK CHARCOAL-GREY laptop with a plain smooth lid and rounded corners — a generic dark laptop, definitely not a silver metal laptop, with no logo, no apple, no emblem and no text on it. A small cream mug sits on the floor to the right of the table. The sloth's two clawed feet peek out below the table. Happy focused expression.
 
-The sloth has DEEP BLUE-INDIGO fur (a blue-violet indigo, NOT brown), a large round head with a small jagged head tuft, a heart-shaped cream face mask with two broad dark diagonal eye-stripes, two big round dark eyes with small white highlights, a small dark nose, a gentle closed smile, two coral-orange blush cheeks. Its body is solid indigo with no belly patch.
+The sloth has DEEP BLUE-INDIGO fur (a blue-violet indigo, NOT brown), a large round head with a small jagged head tuft, a heart-shaped cream face mask with two broad dark diagonal eye-stripes, a single cool silver-grey streak of fur running down one side of the head beside the mask (a grey lock, cool grey not cream, the only asymmetry), two big round dark eyes with small white highlights, a small dark nose, a gentle closed smile, two coral-orange blush cheeks. Its body is solid indigo with no belly patch.
 
-Flat warm bone-white background, a soft oval shadow under the whole scene. Fur indigo #5B5FC7 / #4A4E6B (NOT brown), cream face mask #F4F1EA, coral cheeks #E8825A, dark charcoal laptop, warm wood-brown table.
+Flat warm bone-white background, a soft oval shadow under the whole scene. Fur indigo #5B5FC7 / #4A4E6B (NOT brown), cream face mask #F4F1EA, coral cheeks #E8825A, signature side streak cool silver-grey #AEB2BE, dark charcoal laptop, warm wood-brown table.
 ```
 
 ## Generation notes
@@ -61,4 +61,5 @@ no photorealism; avoid teal-cyan, pure red, or neon.
 - [ ] Remove the flat background → transparency via `png-to-transparent-svg`
 - [ ] Confirm the laptop lid carries no logo or trademark
 - [ ] Confirm fur reads blue-indigo and the face mask + eye-stripes survived
+- [ ] Confirm the cool silver-grey side streak is present on one side and reads grey, not cream
 - [ ] If the screen is visible, confirm it shows no text

@@ -9,9 +9,9 @@
 
 ## Context
 Defines the mascot's facial expressions (Mimik) for use across the portfolio's UI and
-content states. The body, mask, eye-stripes, head tuft, indigo fur and three claws stay
-invariant; only the **eyes, mouth, brows and blush** change per expression. Compose:
-`STYLE + HEAD block + EXPRESSION slot + TAIL block + COLOR LOCK`.
+content states. The body, mask, eye-stripes, head tuft, the cool silver-grey side streak,
+indigo fur and three claws stay invariant; only the **eyes, mouth, brows and blush**
+change per expression. Compose: `STYLE + HEAD block + EXPRESSION slot + TAIL block + COLOR LOCK`.
 
 ## Fixed blocks (verbatim)
 
@@ -24,7 +24,7 @@ modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, 
 **HEAD (invariant identity, up to the face):**
 
 ```
-a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, NOT natural brown tan or beige sloth fur. Front view, facing the viewer, symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A small rounded dark nose centered.
+a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, NOT natural brown tan or beige sloth fur. Front view, facing the viewer, near-symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A single cool silver-grey streak of fur runs down one side of the head, from the tuft past the temple and cheek beside the mask — a grey lock, cool grey not cream, on one side only. A small rounded dark nose centered.
 ```
 
 **TAIL (invariant body):**
@@ -36,7 +36,7 @@ The cream is ONLY on the face mask; the whole body — chest, belly, back and si
 **COLOR LOCK:**
 
 ```
-Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black.
+Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
 ```
 
 ## Expressions (insert one slot between HEAD and TAIL)
@@ -67,9 +67,9 @@ smile. The best approximation is the wide-round-eyes + raised-brows variant
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 
-a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, NOT natural brown tan or beige sloth fur. Front view, facing the viewer, symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A small rounded dark nose centered. Two large shiny near-black eyes, a wide open cheerful smile, two coral-orange blush patches, a bright happy expression. The cream is ONLY on the face mask; the whole body — chest, belly, back and sides — is solid deep blue-indigo with no belly patch. Compact rounded body with no visible neck, short arms at the sides, exactly three pale cream elongated rounded claws on each hand and foot. Bold even-weight dark-indigo outline, small soft-grey oval shadow beneath.
+a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, NOT natural brown tan or beige sloth fur. Front view, facing the viewer, near-symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A single cool silver-grey streak of fur runs down one side of the head, from the tuft past the temple and cheek beside the mask — a grey lock, cool grey not cream, on one side only. A small rounded dark nose centered. Two large shiny near-black eyes, a wide open cheerful smile, two coral-orange blush patches, a bright happy expression. The cream is ONLY on the face mask; the whole body — chest, belly, back and sides — is solid deep blue-indigo with no belly patch. Compact rounded body with no visible neck, short arms at the sides, exactly three pale cream elongated rounded claws on each hand and foot. Bold even-weight dark-indigo outline, small soft-grey oval shadow beneath.
 
-Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black.
+Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
 ```
 
 ## Generation notes
@@ -90,4 +90,6 @@ teal-cyan, pure red, or neon.
 - [ ] Remove the flat background → transparency via `png-to-transparent-svg`
 - [ ] Confirm fur read as blue-indigo
 - [ ] Verify mask + eye-stripe + head-tuft cues survived in every expression
+- [ ] Confirm the silver-grey side streak survived on a consistent side, reads cool grey
+      (not cream), and is never mirrored to both sides
 - [ ] Keep one seed across the set for body consistency
