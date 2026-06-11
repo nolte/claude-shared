@@ -10,7 +10,7 @@ unvermeidbare Verarbeitung durch den Hosting-Anbieter.
 
 ## Verantwortlicher
 
-Verantwortlich im Sinne der DSGVO ist die Maintainer-Rolle des Projekts
+Verantwortlich im Sinne der Datenschutz-Grundverordnung (DSGVO) ist die Maintainer-Rolle des Projekts
 `claude-shared`. Kontakt ausschließlich über die öffentliche Issue-Verwaltung
 des Projekts:
 
@@ -43,7 +43,7 @@ Drittanbieter-Tracker, Tag-Manager oder Fingerprinting-Skripte ein. Verwendet
 wird ausschließlich technisch notwendige lokale Speicherung im Browser
 (z. B. die gewählte Hell-/Dunkel-Darstellung und der clientseitige Suchindex).
 Diese Speicherung ist für den Betrieb unbedingt erforderlich und damit nach
-§ 25 Abs. 2 TDDDG **einwilligungsfrei**—ein Cookie-Banner ist nicht erforderlich.
+§ 25 Abs. 2 des Telekommunikation-Digitale-Dienste-Datenschutz-Gesetzes (TDDDG) **einwilligungsfrei**—ein Cookie-Banner ist nicht erforderlich.
 
 ## Ihre Rechte
 

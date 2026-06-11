@@ -1,6 +1,6 @@
 ---
 title: nolte-shared nutzen
-audience: [downstream-user]
+audience: [downstream-user, downstream-end-user]
 content_mode: explanation
 track: user-docs
 last_updated: 2026-05-30
@@ -18,8 +18,7 @@ Plugin selbst *entwickeln* möchte, beginnt bei der
 Software-Teams wollen meist eine konsistente Claude-Code-Basis über alle
 Repositories hinweg: dieselben Review-Gewohnheiten, dieselben Coding-Richtlinien,
 dieselben Helfer-Agents. Diese Basis in jedem Repository neu zu bauen, führt zu
-Drift und doppeltem Aufwand. `nolte-shared` bündelt die Basis einmal — wiederver­
-wendbare **Skills** (Slash-Commands und Workflows) und **Agents** (fokussierte
+Drift und doppeltem Aufwand. `nolte-shared` bündelt die Basis einmal — wiederverwendbare **Skills** (Slash-Commands und Workflows) und **Agents** (fokussierte
 Sub-Agents) plus geteilte **Konventionen** — sodass jedes Projekt, das das Plugin
 installiert, dieselben spec-konformen Workflows erhält, ohne sie neu zu
 implementieren.

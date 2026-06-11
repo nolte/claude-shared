@@ -8,7 +8,7 @@ last_updated: 2026-05-19
 
 # Nutzung
 
-Sobald das Plugin geladen ist, stehen seine Skills als Slash-Commands im Claude-Code-Prompt bereit. Diese Seite klärt die wichtigsten Aufrufmuster und den Namespace.
+Sobald das Plugin geladen ist, stehen seine Skills als Slash-Commands im Claude-Code-Prompt bereit. Diese Seite zeigt die wichtigsten Aufrufe und den Namespace.
 
 ## Skills aufrufen
 
@@ -30,11 +30,11 @@ Claude Code zeigt sie außerdem unter `/skills` an. Von dort lassen sie sich mit
 
 ## Antwortsprache
 
-Die Skill-Dateien sind konsequent auf Englisch — das senkt Claudes Verarbeitungskosten. Claude erkennt die Sprache deiner Eingabe und antwortet in ihr. Deutsch fragen ergibt Deutsch als Antwort.
+Die Skill-Dateien sind konsequent auf Englisch — das senkt Claudes Kosten. Claude erkennt die Sprache deiner Eingabe und antwortet in ihr. Deutsch fragen ergibt Deutsch als Antwort.
 
 ## Namespace-Kollisionen
 
-Hat ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version erreichbar. Bei Mehrdeutigkeit immer die namensraum-qualifizierte Form `/nolte-shared:<skill>` nutzen.
+Hat ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version erreichbar. Ist der Name mehrdeutig, immer die volle Form `/nolte-shared:<skill>` nutzen.
 
 ## Nächste Schritte
 

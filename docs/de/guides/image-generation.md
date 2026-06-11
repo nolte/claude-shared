@@ -10,7 +10,7 @@ last_updated: 2026-05-30
 
 Der Skill `image-generate` verwandelt einen Text-Prompt in eine Bilddatei auf der Platte. Das läuft vollständig über die Kommandozeile. So fügt er sich in jede Pipeline ein. Er hat **austauschbare Provider-Backends** (gewählt über `--provider`). So ist die Fähigkeit nicht an Preise oder Verfügbarkeit eines einzelnen Anbieters gebunden.
 
-Die deterministische Engine ist ein reines Stdlib-Skript: `skills/image-generate/scripts/image_generate.py`. Der Skill ist die betreiberseitige Hülle.
+Die deterministische Engine ist ein reines Stdlib-Skript: `skills/image-generate/scripts/image_generate.py`. Der Skill ist die Hülle, über die Betreiber diese Engine bedienen.
 
 ## Provider im Überblick
 
@@ -91,7 +91,7 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" 
 
 Nur der *Skript*-Pfad ist plugin-relativ. Daten-Pfade (`--out`, `--from-prompt-doc`) bleiben relativ zum Arbeitsverzeichnis des Consumers. Die Abkürzung `task image:generate` ist `claude-shared`-lokal: sie führt das repo-relative Skript außerhalb von Claude aus. Consumer-Repos nutzen stattdessen den Slash-Command.
 
-## Fügt sich in eine Pipeline
+## Teil einer Asset-Pipeline
 
 Das Tool schließt eine dreistufige Asset-Pipeline:
 

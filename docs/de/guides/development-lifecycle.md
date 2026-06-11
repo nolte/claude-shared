@@ -126,7 +126,7 @@ Design ist die Phase, in der Konventionen, Scaffolds und Spezifikationen geschri
 | [`spec`](../skills/nolte-shared/spec.md) | Skill | Multilinguale Spezifikation unter `spec/` schreiben, übersetzen, deduplizieren oder Drift prüfen. |
 | [`spec-readiness-reviewer`](../agents/nolte-shared/spec-readiness-reviewer.md) | Agent | Eine Spec auf Widersprüche, Audience-Fit und Domain-Vollständigkeit prüfen, bevor sie weiterzieht. |
 | [`skill-management`](../skills/nolte-shared/skill-management.md) | Skill | Einen Claude-Code-Skill im Plugin-Source-Tree schreiben oder überarbeiten. |
-| [`claude-plugin-developer`](../agents/nolte-shared/claude-plugin-developer.md) | Agent | Ein neues Plugin-Skill oder einen neuen Agent in strikter Konformität mit allen Specs unter `spec/claude/` entwerfen. |
+| [`claude-plugin-developer`](../agents/nolte-shared/claude-plugin-developer.md) | Agent | Einen neuen Plugin-Skill oder einen neuen Agent in strikter Konformität mit allen Specs unter `spec/claude/` entwerfen. |
 | [`project-structure-apply`](../skills/nolte-shared/project-structure-apply.md) | Skill | `.github/`, Taskfile, MkDocs, Renovate-Config und Probot-Integrationen auditieren und scaffolden. |
 | [`skill-agent-catalog-apply`](../skills/nolte-shared/skill-agent-catalog-apply.md) | Skill | MkDocs-Skill-und-Agent-Katalog verdrahten, damit Docs jedes Artefakt sichtbar machen. |
 | [`mkdocs-structure-apply`](../skills/nolte-shared/mkdocs-structure-apply.md) | Skill | Per-Sprache-MkDocs-Skelett, Plugin-Baseline und Frontmatter-Kontrakt prüfen und scaffolden. |
@@ -141,7 +141,7 @@ Design ist die Phase, in der Konventionen, Scaffolds und Spezifikationen geschri
 
 ### 4 Build
 
-Ein geplanter Sprint wird aktiv, sobald das erste Feature startet. `sprint-execute` ist der Daily-Driver: Er steuert den Feature-Status und hält die Frontmatter der Sprint-Datei mit der Realität synchron.
+Ein geplanter Sprint wird aktiv, sobald das erste Feature startet. `sprint-execute` ist der zentrale Alltags-Skill: Er steuert den Feature-Status und hält die Frontmatter der Sprint-Datei mit der Realität synchron.
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|

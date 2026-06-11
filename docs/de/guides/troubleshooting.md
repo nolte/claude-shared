@@ -8,7 +8,7 @@ last_updated: 2026-06-06
 
 # Fehlerbehebung
 
-Häufige Fehlerbilder, auf die Mitwirkende oder Betreiber bei der Arbeit an
+Häufige Fehler, auf die Mitwirkende oder Betreiber bei der Arbeit an
 `claude-shared` stoßen. Jeder Eintrag nutzt das kanonische Vokabular
 `symptom` / `cause` / `workaround` / `resolution`.
 
@@ -20,8 +20,8 @@ Häufige Fehlerbilder, auf die Mitwirkende oder Betreiber bei der Arbeit an
   die alte Definition.
 - **Workaround**: `/reload-plugins` in der Session ausführen, um Änderungen zu
   übernehmen.
-- **Resolution**: die Session mit `claude --plugin-dir .` aus dem Repo starten,
-  damit Edits aus dem Arbeitsbaum geladen werden (siehe
+- **Resolution**: die Session mit `claude --plugin-dir .` aus dem Repo starten.
+  Dann werden Edits aus dem Arbeitsbaum geladen (siehe
   [Installation](../getting-started/installation.md)).
 
 ## `task docs` / `mkdocs build --strict` schlägt fehl
@@ -29,10 +29,10 @@ Häufige Fehlerbilder, auf die Mitwirkende oder Betreiber bei der Arbeit an
 - **Symptom**: der Docs-Build endet mit Exit-Code ungleich null, oft wegen eines
   fehlenden Frontmatter-Schlüssels, eines kaputten Links oder eines nicht
   aufgelösten Include-Markers.
-- **Cause**: einer Seite unter `docs/<lang>/` fehlt einer der fünf
-  Pflicht-Frontmatter-Schlüssel, eine neue Seite hat kein Gegenstück im anderen
-  Sprachbaum, oder ein `include-markdown`-Start-/End-Marker existiert in der
-  Quelle nicht mehr.
+- **Cause**: Einer Seite unter `docs/<lang>/` fehlt einer der fünf
+  Pflicht-Frontmatter-Schlüssel. Oder eine neue Seite hat kein Gegenstück im
+  anderen Sprachbaum. Oder ein `include-markdown`-Start-/End-Marker existiert in
+  der Quelle nicht mehr.
 - **Workaround**: die Strict-Mode-Fehlermeldung lesen; sie nennt die betroffene
   Datei und den Grund.
 - **Resolution**: das fehlende Frontmatter ergänzen (`title`, `audience`,
