@@ -14,6 +14,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [audience-doc-author](../agents/nolte-shared/audience-doc-author.md) — nolte-shared
 - [audience-review](../agents/nolte-shared/audience-review.md) — nolte-shared
+- [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
 - [audience-identify](../skills/nolte-shared/audience-identify.md) — nolte-shared
 - [blog-author](../skills/nolte-shared/blog-author.md) — nolte-shared
 
@@ -58,6 +59,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [skill-agent-catalog-apply](../skills/nolte-shared/skill-agent-catalog-apply.md) — nolte-shared
 - [skills-agents-sweep](../skills/nolte-shared/skills-agents-sweep.md) — nolte-shared
 - [spec-drift-audit](../skills/nolte-shared/spec-drift-audit.md) — nolte-shared
+- [test-pyramid-check](../skills/nolte-shared/test-pyramid-check.md) — nolte-shared
 - [vocab-drift-audit](../skills/nolte-shared/vocab-drift-audit.md) — nolte-shared
 - [webview-ui-optimize](../skills/nolte-shared/webview-ui-optimize.md) — nolte-shared
 - [workflow-health-triage](../skills/nolte-shared/workflow-health-triage.md) — nolte-shared
@@ -106,9 +108,13 @@ Cross-reference: each tag links to every skill and agent that declares it.
 ## `quality-gate`
 
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
+- [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
+- [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
+- [e2e-test-reviewer](../agents/nolte-shared/e2e-test-reviewer.md) — nolte-shared
 - [link-rot-scanner](../agents/nolte-shared/link-rot-scanner.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [quality-gate](../skills/nolte-shared/quality-gate.md) — nolte-shared
+- [test-pyramid-check](../skills/nolte-shared/test-pyramid-check.md) — nolte-shared
 
 ## `release`
 
@@ -122,6 +128,8 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
+- [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
+- [e2e-test-reviewer](../agents/nolte-shared/e2e-test-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
 - [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
@@ -140,6 +148,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
+- [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared

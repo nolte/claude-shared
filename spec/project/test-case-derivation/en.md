@@ -8,7 +8,7 @@ A requirement document describes what a system must do, but it doesn't verify it
 
 This spec governs that reusable derivation, operationalised by the `test-case-extractor` agent (`distribution: plugin`). It's the generalised core of a project-local extractor that hard-coded one app's agricultural domain, its German-only requirement format, its React/MUI assumption, and its `spec/test-cases/` path. The portfolio form derives framework-agnostic, structured, traceable test-case documents from any requirement document, in the source document's own language, for whatever user-facing interface the project exposes.
 
-This is deliberately the only test-related capability extracted to the plugin: the project-local predecessors that generate or review automation code (Selenium/Playwright/Cypress page objects), run test suites and fix failures, or audit a project's specific test-tier shape are too stack-coupled or already covered by `quality-gate`, and stay project-local.
+This spec is delimited from its sibling test capabilities by **responsibility**, not by a shared-vs-project-local split. Generating or reviewing E2E automation code, reviewing a run's outputs against the specs, and auditing test-tier completeness are governed by `spec/project/e2e-test-automation/` and its agents and skill (`e2e-test-generator`, `e2e-test-reviewer`, `e2e-result-reviewer`, `test-pyramid-check`), which generalise that work behind a framework-neutral core with a Selenium reference profile. Running test suites and classifying failures stay with `quality-gate`. This spec owns only the upstream step: deriving the abstract, framework-agnostic cases those downstream capabilities consume (via their TC-IDs).
 
 Readers: agent authors maintaining the extractor; QA engineers and developers who derive test cases after a requirement is specified; reviewers verifying coverage and traceability.
 
@@ -22,11 +22,11 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 
 ## Non-Goals
 
-- Generating test-automation **code** (Selenium/Playwright/Cypress page objects, fixtures)—stack-specific, stays project-local
+- Generating test-automation **code** (Selenium/Playwright/Cypress page objects, fixtures)—governed by `spec/project/e2e-test-automation/` (agent `e2e-test-generator`); this spec produces the abstract cases such a suite automates
 - Running test suites, classifying failures, or fixing test code—owned by `spec/project/quality-gate/` and project-local runners
-- Auditing a project's test-tier distribution (the "test pyramid" shape)—a separate, opinion-bearing concern that stays project-local
+- Auditing a project's test-tier distribution (the "test pyramid" shape)—governed by `spec/project/e2e-test-automation/` (skill `test-pyramid-check`)
 - Authoring or editing the requirement documents themselves—the agent reads requirements, it doesn't write them
-- Visual review of a test run's screenshots or logs against a spec—a separate, stack-coupled concern
+- Visual review of a test run's screenshots or logs against a spec—governed by `spec/project/e2e-test-automation/` (agent `e2e-result-reviewer`)
 - Batch orchestration across many requirements (selection and commit policy) is a consuming-project skill that dispatches this agent per requirement (the skill-orchestrates/agent-executes hybrid), not a responsibility of this agent
 
 ## Requirements
