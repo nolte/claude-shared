@@ -7,19 +7,21 @@ Brand assets for the portfolio's heraldic-animal identity (a sloth), authored pe
 prompt documents are **self-contained** — the figure is fully described in text, so no
 external reference image is needed (and none is committed to the repo).
 
-> **v1.1 figure change (in flight):** the canonical figure gained a **cool silver-grey
-> signature streak** down one side of the head (see one-line recall below). All prompt
-> documents below carry the v1.1 wording; the committed `design/assets/` renders still
-> show the v1.0 figure **without** the streak and are therefore **re-render-pending**
-> until each is regenerated and re-verified against the updated canonical description.
+> **v1.1 figure change:** the canonical figure gained a **cool silver-grey signature
+> streak** down one side of the head (see one-line recall below). All prompt documents
+> carry the v1.1 wording. The **front mascot** and the **logo emblem** are rendered at
+> their canonical seeds and ship as committed transparent-SVG vectors under
+> `../brand/mascot/` and `../brand/logo/`. The remaining sheets (turnaround, expressions,
+> coding) carry the v1.1 wording but are **re-render-pending** — their gitignored
+> `design/assets/` renders still show the v1.0 figure without the streak.
 
 | Document                                  | Type           | Subject                              | Status (v1.1)        |
 | ----------------------------------------- | -------------- | ------------------------------------ | -------------------- |
-| `illustration_sloth-mascot.md`            | illustration   | Full sloth mascot (front, light/dark) | prompt updated · re-render pending ⬜ |
+| `illustration_sloth-mascot.md`            | illustration   | Full sloth mascot (front, light/dark) | rendered + vectorised ✅ (seed 8505) |
 | `illustration_sloth-mascot-turnaround.md` | model sheet    | All angles (front/side/back/3-4) + poses | prompt updated · re-render pending ⬜ |
 | `illustration_sloth-mascot-expressions.md`| expression sheet | 12 facial expressions + UI mapping  | prompt updated · re-render pending ⬜ |
 | `illustration_sloth-coding.md`            | scene          | Sloth coding at a laptop (tech-twist) | prompt updated · re-render pending ⬜ |
-| `logo_sloth-emblem.md`                    | logo           | Compact heraldic sloth mark          | prompt ready ⬜       |
+| `logo_sloth-emblem.md`                    | logo           | Compact heraldic sloth mark          | rendered + vectorised ✅ (seed 8521/8505) |
 
 ## The canonical figure (one-line recall)
 

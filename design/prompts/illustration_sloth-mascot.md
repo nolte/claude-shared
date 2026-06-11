@@ -6,7 +6,7 @@
 > **Target size:** 1024×1024px (master)
 > **Format:** PNG (transparent) after post-processing
 > **Authoring model:** canonical description below → compiled per `_compile-for-model.md`
-> **Seed:** unset (fix after the reproducible seed round — see Consistency workflow)
+> **Seed:** **8505** (canonical v1.1 — fixed via the reproducible seed round; see Rendered v1.1 asset)
 
 ## Context
 The full character expression of the heraldic animal: a friendly, approachable
@@ -79,6 +79,28 @@ A chibi cartoon three-toed sloth sitting upright facing the viewer, near-symmetr
 ```
 A chibi cartoon three-toed sloth sitting upright facing the viewer, near-symmetrical, with soft cobalt-violet plush fur (a light blue-violet, definitely NOT brown), styled for dark mode. A big heart-shaped cream face mask with a small V-notch holds two large round dark-brown eyes; two broad dark diagonal stripes cross over the eyes like a mask, pale between them. Small dark nose, a gentle closed smile, two round coral-orange blush cheeks, a small jagged head tuft on top. A single pale silver-grey streak of fur runs down one side of the head beside the mask, from the tuft past the cheek — a grey lock, the only asymmetry, grey not cream. The cream is only on the face — the whole body is solid cobalt-violet with no belly patch. Exactly three pale cream claws on each hand and foot. Bold even warm-bone outline so it stays crisp, smooth matte fills with soft cel-shading, flat deep warm charcoal background, soft shadow beneath. Modern flat kawaii vector cartoon style.
 ```
+
+## Rendered v1.1 asset (committed)
+
+The curated front mascot ships as transparent SVG vectors:
+
+- `../brand/mascot/mascot-front-light.svg` and `../brand/mascot/mascot-front-dark.svg`.
+
+Reproduction (the streak renders reliably only when front-loaded and described as a
+sweeping lock — the compiled blocks above already do this):
+
+1. **Vector-master prompt variant.** Use the compiled Light/Dark block above, but swap
+   the background clause for a clean-cutout background: replace `flat warm bone-white
+   background, soft oval shadow beneath` with `plain solid pure-white background, fully
+   isolated with no shadow and no ground plane, nothing beneath the character` (dark:
+   `plain solid deep warm charcoal background, …`). The shadow is dropped because a
+   scalable vector master carries no baked ground shadow.
+2. **Render** at the canonical seed: `image_generate.py --provider cloudflare
+   --prompt-file <variant> --seed 8505 --out master-<mode>-8505.png`.
+3. **Vectorise** with the committed pipeline: `python3 ../brand/vectorize.py
+   master-<mode>-8505.png clean.png out.svg <thresh>` — threshold **60** (light),
+   **18** (dark; the lower value stops the charcoal flood from leaking into the dark
+   figure parts).
 
 ## Pose variants (append after "near-symmetrical" in the Light prompt)
 

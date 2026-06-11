@@ -64,8 +64,12 @@ desktop.ini
 
 # Generated brand/mascot image renders — reproducible from design/prompts/*.md.
 # Kept out of git on purpose; the .meta.json sidecars also embed the Cloudflare account id.
+# Curated SVG vector masters under design/brand/**/*.svg are NOT ignored — they ARE committed.
 design/assets/
 design/**/*.jpg
 design/**/*.jpeg
 design/**/*.png
 design/**/*.meta.json
+
+# Local scratch workspace for asset render/cutout iteration (never committed).
+.scratch/
