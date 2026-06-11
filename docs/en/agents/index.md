@@ -28,11 +28,17 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`test-case-extractor`](nolte-shared/test-case-extractor.md) — Derives structured, framework-agnostic, traceable test cases from a requirement document, written from the user-observable-behaviour perspective.
 - [`webview-ui-expert`](nolte-shared/webview-ui-expert.md) — Read-only deep cross-file review of one named frontend target across Performance, Security, A11y, i18n, UX.
 
+## 4 Build
+
+- [`e2e-test-generator`](nolte-shared/e2e-test-generator.md) — Scaffolds a spec-conformant E2E suite (page objects, waits, screenshots, markers, protocol) for a feature, defaulting to the Selenium + pytest reference profile.
+
 ## 5 Review
 
 - [`code-security-reviewer`](nolte-shared/code-security-reviewer.md) — Read-only whole-codebase OWASP audit correlating findings across files into a severity-classified report.
 - [`dependency-audit-scanner`](nolte-shared/dependency-audit-scanner.md) — Read-only CVE scanner per project type (pip-audit, npm audit, govulncheck, cargo audit); returns structured drift inventory.
 - [`diagram-opportunity-reviewer`](nolte-shared/diagram-opportunity-reviewer.md) — Read-only prose scanner that flags Markdown passages which would be expressed better as a Mermaid diagram.
+- [`e2e-result-reviewer`](nolte-shared/e2e-result-reviewer.md) — Reviews an E2E run's screenshots and protocol visually against the requirement/UI specs and returns prioritised, read-only findings.
+- [`e2e-test-reviewer`](nolte-shared/e2e-test-reviewer.md) — Reviews an existing E2E suite against the spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`gdpr-data-protection-reviewer`](nolte-shared/gdpr-data-protection-reviewer.md) — Read-only whole-repository GDPR data-protection audit; separates code-verifiable findings from legal-review-required ones.
 - [`lektorat-scanner`](nolte-shared/lektorat-scanner.md) — Read-only editorial scanner across the six lektorat dimensions (D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness).
 - [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Read-only license-inventory scanner: SBOM with resolved licenses, SPDX identification, and category classification per stack.

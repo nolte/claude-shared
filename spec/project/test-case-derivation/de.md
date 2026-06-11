@@ -8,7 +8,7 @@ Ein Anforderungsdokument beschreibt, was ein System tun muss, aber es verifizier
 
 Diese Spec regelt diese wiederverwendbare Ableitung, operationalisiert durch den `test-case-extractor`-Agent (`distribution: plugin`). Sie ist der generalisierte Kern eines projektlokalen Extractors, der die Agrar-Domäne einer App, ihr deutsch-only Anforderungsformat, ihre React/MUI-Annahme und ihren `spec/test-cases/`-Pfad hartcodiert hatte. Die Portfolio-Form leitet framework-agnostische, strukturierte, rückverfolgbare Testfall-Dokumente aus jedem Anforderungsdokument ab, in der eigenen Sprache des Quelldokuments, für welches nutzerseitige Interface das Projekt auch exponiert.
 
-Dies ist bewusst die einzige test-bezogene Capability, die ins Plugin extrahiert wird: Die projektlokalen Vorgänger, die Automatisierungs-Code generieren oder reviewen (Selenium/Playwright/Cypress-Page-Objects), Test-Suiten laufen lassen und Fehler beheben oder die spezifische Test-Tier-Form eines Projekts auditieren, sind zu stack-gekoppelt oder bereits von `quality-gate` abgedeckt und bleiben projektlokal.
+Diese Spec wird von ihren benachbarten Test-Capabilities entlang der **Verantwortung** abgegrenzt, nicht entlang einer Trennung in geteilt vs. projektlokal. E2E-Automatisierungscode erzeugen oder reviewen, die Ausgaben eines Laufs gegen die Specs prüfen und die Teststufen-Vollständigkeit auditieren werden von `spec/project/e2e-test-automation/` und seinen Agents und seinem Skill geregelt (`e2e-test-generator`, `e2e-test-reviewer`, `e2e-result-reviewer`, `test-pyramid-check`), die diese Arbeit hinter einem framework-neutralen Kern mit Selenium-Referenzprofil verallgemeinern. Test-Suiten laufen lassen und Fehler klassifizieren bleiben bei `quality-gate`. Diese Spec besitzt nur den vorgelagerten Schritt: die abstrakten, framework-agnostischen Fälle abzuleiten, die jene nachgelagerten Capabilities (über ihre TC-IDs) konsumieren.
 
 Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, die Testfälle ableiten, nachdem eine Anforderung spezifiziert ist; Reviewer, die Abdeckung und Rückverfolgbarkeit prüfen.
 
@@ -22,11 +22,11 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 
 ## Nicht-Ziele
 
-- Test-Automatisierungs-**Code** generieren (Selenium/Playwright/Cypress-Page-Objects, Fixtures) — stack-spezifisch, bleibt projektlokal
+- Test-Automatisierungs-**Code** generieren (Selenium/Playwright/Cypress-Page-Objects, Fixtures) — geregelt von `spec/project/e2e-test-automation/` (Agent `e2e-test-generator`); diese Spec erzeugt die abstrakten Fälle, die eine solche Suite automatisiert
 - Test-Suiten laufen lassen, Fehler klassifizieren oder Test-Code beheben — im Besitz von `spec/project/quality-gate/` und projektlokalen Runnern
-- Die Test-Tier-Verteilung eines Projekts auditieren (die „Test-Pyramide"-Form) — ein separates, meinungsbehaftetes Anliegen, das projektlokal bleibt
+- Die Test-Tier-Verteilung eines Projekts auditieren (die „Test-Pyramide"-Form) — geregelt von `spec/project/e2e-test-automation/` (Skill `test-pyramid-check`)
 - Die Anforderungsdokumente selbst verfassen oder editieren — der Agent liest Anforderungen, er schreibt sie nicht
-- Visuelles Review der Screenshots oder Logs eines Testlaufs gegen eine Spec — ein separates, stack-gekoppeltes Anliegen
+- Visuelles Review der Screenshots oder Logs eines Testlaufs gegen eine Spec — geregelt von `spec/project/e2e-test-automation/` (Agent `e2e-result-reviewer`)
 - Die Batch-Orchestrierung über viele Anforderungen (Auswahl- und Commit-Politik) ist ein Konsumenten-Projekt-Skill, der diesen Agent pro Anforderung dispatcht (der Skill-orchestriert/Agent-führt-aus-Hybrid), keine Verantwortung dieses Agents
 
 ## Anforderungen
