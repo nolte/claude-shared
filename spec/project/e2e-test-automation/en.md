@@ -4,18 +4,18 @@ Status: draft
 
 ## Context
 
-An end-to-end (E2E) test drives the real user-facing surface of a running system and asserts on what the user can observe. The valuable, reusable part of E2E work is not the test code itself but the **discipline** that keeps a suite trustworthy: every interaction goes through a page object so selectors live in one place, every wait is a condition rather than a sleep so the suite is not flaky, every test leaves a screenshot trail and a machine-generated protocol so a run is auditable, every test traces back to the requirement it verifies, and the suite as a whole covers all the test tiers rather than piling everything into slow browser tests. That discipline is framework-independent. The throwaway part is the stack glue: which library drives the browser, which directory holds the suite, which domain selectors and routes a given app exposes.
+An end-to-end (E2E) test drives the real user-facing surface of a running system and asserts on what the user can observe. The valuable, reusable part of E2E work isn't the test code itself but the **discipline** that keeps a suite trustworthy: every interaction goes through a page object so selectors live in one place, every wait is a condition rather than a sleep so the suite isn't flaky, every test leaves a screenshot trail and a machine-generated protocol so a run is auditable, every test traces back to the requirement it verifies, and the suite as a whole covers all the test tiers rather than piling everything into slow browser tests. That discipline is framework-independent. The throwaway part is the stack glue: which library drives the browser, which directory holds the suite, which domain selectors and routes a given app exposes.
 
-This spec governs that reusable discipline. It is the generalised core of a project-local E2E toolchain (kamerplanter's `NFR-008` test strategy and `NFR-008a` Selenium standard) that hard-coded one app's Python/Selenium/pytest stack, its German requirement-ID scheme (`REQ-NNN`), its routes (`/pflanzen/…`), and its `http://localhost:5173` dev server. The portfolio form states the discipline framework-neutrally as the binding core, then pins one concrete, fully worked **reference profile** (Selenium + pytest) as a normative appendix so a Python project gets a batteries-included default while other stacks (Playwright, Cypress) implement the same core.
+This spec governs that reusable discipline. It's the generalised core of a project-local E2E toolchain (kamerplanter's `NFR-008` test strategy and `NFR-008a` Selenium standard) that hard-coded one app's Python/Selenium/pytest stack, its German requirement-ID scheme (`REQ-NNN`), its routes (`/pflanzen/…`), and its `http://localhost:5173` dev server. The portfolio form states the discipline framework-neutrally as the binding core, then pins one concrete, fully worked **reference profile** (Selenium + pytest) as a normative appendix so a Python project gets a batteries-included default while other stacks (Playwright, Cypress) implement the same core.
 
-It is operationalised by three agents and one skill:
+It's operationalised by three agents and one skill:
 
-- `e2e-test-generator` (`distribution: plugin`) — scaffolds a spec-conformant E2E suite for a feature
-- `e2e-test-reviewer` (`distribution: plugin`) — reviews and minimally repairs an existing suite against this spec
-- `e2e-result-reviewer` (`distribution: plugin`) — visually reviews a run's screenshots and protocol against the requirement specs
-- `test-pyramid-check` (skill) — audits a feature's test-tier completeness against this spec
+- `e2e-test-generator` (`distribution: plugin`)—scaffolds a spec-conformant E2E suite for a feature
+- `e2e-test-reviewer` (`distribution: plugin`)—reviews and minimally repairs an existing suite against this spec
+- `e2e-result-reviewer` (`distribution: plugin`)—visually reviews a run's screenshots and protocol against the requirement specs
+- `test-pyramid-check` (skill)—audits a feature's test-tier completeness against this spec
 
-**Relationship to `test-case-derivation`.** That spec deliberately scoped E2E-automation code generation/review, test-tier auditing, and screenshot review *out* of the plugin, on the grounds that they are "too stack-coupled" and "stay project-local". This spec revises that position. The only cited reason was stack coupling, and a framework-neutral binding core with the concrete library demoted to a reference profile resolves exactly that: the discipline is portfolio-reusable, only the profile is stack-specific. `test-case-derivation` is updated in lockstep so the two specs do not contradict each other; the boundary between them is now drawn by responsibility (derive abstract cases vs. automate, run-review, and audit them), not by "shared vs. project-local".
+**Relationship to `test-case-derivation`.** That spec deliberately scoped E2E-automation code generation/review, test-tier auditing, and screenshot review *out* of the plugin, on the grounds that they're "too stack-coupled" and "stay project-local." This spec revises that position. The only cited reason was stack coupling, and a framework-neutral binding core with the concrete library demoted to a reference profile resolves exactly that: the discipline is portfolio-reusable, only the profile is stack-specific. `test-case-derivation` is updated in lockstep so the two specs don't contradict each other; the boundary between them is now drawn by responsibility (derive abstract cases vs. automate, run-review, and audit them), not by "shared vs. project-local."
 
 Readers: agent/skill authors maintaining this toolchain; QA engineers and developers who scaffold, review, or audit E2E suites; reviewers verifying that a suite is non-flaky, traceable, and tier-complete.
 
@@ -30,8 +30,8 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 ## Non-Goals
 
-- Deriving abstract, framework-agnostic **test cases** from a requirement document — owned by `spec/project/test-case-derivation/` and its `test-case-extractor` agent; this spec consumes such cases (via their TC-IDs) but does not produce them
-- Running the unit/lint/typecheck gate and classifying its failures — owned by `spec/project/quality-gate/`; this spec covers the E2E tier's *shape and discipline*, not the gate that executes the fast tiers in CI
+- Deriving abstract, framework-agnostic **test cases** from a requirement document—owned by `spec/project/test-case-derivation/` and its `test-case-extractor` agent; this spec consumes such cases (via their TC-IDs) but doesn't produce them
+- Running the unit/lint/typecheck gate and classifying its failures—owned by `spec/project/quality-gate/`; this spec covers the E2E tier's *shape and discipline*, not the gate that executes the fast tiers in CI
 - Mandating a specific browser-automation library: the core is framework-neutral; Selenium is the shipped reference profile, not a requirement
 - Authoring or editing the requirement/spec documents a suite traces to
 - Generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work)
@@ -46,15 +46,15 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 ### Test-tier completeness (the pyramid)
 
-- A feature's automated tests **MUST** cover the applicable tiers — unit, integration, contract/API (where the system exposes one), and E2E — rather than concentrating coverage in slow browser tests; the E2E tier **MUST** be reserved for user-journey verification, not for logic better tested a tier down
+- A feature's automated tests **MUST** cover the applicable tiers—unit, integration, contract/API (where the system exposes one), and E2E—rather than concentrating coverage in slow browser tests; the E2E tier **MUST** be reserved for user-journey verification, not for logic better tested a tier down
 - Fast-tier coverage targets (for example a line/branch floor on business logic) **MUST** be project-declared; this spec fixes the *requirement that they exist and are checked*, not their numeric values
 - The `test-pyramid-check` skill **MUST** be able to report, per feature, which tiers are present, which are missing, and whether the E2E tier follows the disciplines below
 
 ### Page-object encapsulation
 
-- Every UI interaction in a test **MUST** go through a page object; tests **MUST NOT** call the driver's element-lookup primitives directly — raw locator calls live only inside page objects
+- Every UI interaction in a test **MUST** go through a page object; tests **MUST NOT** call the driver's element-lookup primitives directly—raw locator calls live only inside page objects
 - Page objects **MUST** share a common base providing the navigation, waiting, and interaction helpers, so a test reads as intent (open, act, assert) and never as raw automation plumbing
-- A page object **MUST** expose page state and interactions as named methods; tests assert on returned state, they do not reach into the DOM
+- A page object **MUST** expose page state and interactions as named methods; tests assert on returned state, they don't reach into the DOM
 
 ### Deterministic waiting
 
@@ -63,7 +63,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 ### Locator strategy
 
-- Locators **MUST** follow a robustness hierarchy, most-stable first: a dedicated test hook (e.g. `data-testid`) → element id → semantic/role selector → CSS → XPath as the last resort
+- Locators **MUST** follow a robustness hierarchy, most-stable first: a dedicated test hook (for example `data-testid`) → element id → semantic/role selector → CSS → XPath as the last resort
 - Position-based XPath (`//div[3]/span[2]`) **MUST NOT** be used; selectors **MUST** survive cosmetic markup changes
 
 ### Screenshot checkpoints
@@ -84,7 +84,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 ### Assertions and preconditions
 
 - Every assertion **MUST** carry a descriptive failure message that includes the TC-ID and the observed value; empty or tautological assertions (`assert True`, `assert page is not None`) are forbidden
-- A missing precondition (absent seed data) **MUST** cause an explicit, reasoned skip — never a silent early return that lets a test pass without exercising anything
+- A missing precondition (absent seed data) **MUST** cause an explicit, reasoned skip—never a silent early return that lets a test pass without exercising anything
 - Test-created data **MUST** use a unique suffix to stay isolated and reproducible across runs; session-scoped seed data **MUST** be idempotent (check-before-create)
 
 ### Spec traceability
@@ -104,7 +104,7 @@ This profile is the binding realisation of the core for Python projects and the 
 ### Consuming agents and skill
 
 - `e2e-test-generator` **MUST** cite this spec, scaffold against the declared stack (defaulting to the reference profile), wire data-testid-first locators, screenshot checkpoints, markers, and protocol integration, and keep raw locator calls inside page objects only
-- `e2e-test-reviewer` **MUST** review an existing suite against this spec's core (and the reference profile when that is the stack), report a checklisted conformance verdict, and apply only minimal, surgical fixes rather than regenerating
+- `e2e-test-reviewer` **MUST** review an existing suite against this spec's core (and the reference profile when that's the stack), report a checklist-based conformance verdict, and apply only minimal, surgical fixes rather than regenerating
 - `e2e-result-reviewer` **MUST** read a run's protocol and screenshots and review them visually against the requirement/TC specs, returning prioritised findings; it **MUST NOT** edit code or tests (read-only)
 - `test-pyramid-check` **MUST** audit tier completeness and E2E discipline against this spec and return a gap report; it **MUST NOT** generate or modify tests
 

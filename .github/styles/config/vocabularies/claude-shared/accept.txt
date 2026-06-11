@@ -66,3 +66,6 @@ subcommand
 colocated
 alphanumerics
 monolingually
+[Pp]ytest
+XPath
+clickability

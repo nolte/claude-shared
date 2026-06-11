@@ -38,7 +38,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`dependency-audit-scanner`](nolte-shared/dependency-audit-scanner.md) — Read-only CVE scanner per project type (pip-audit, npm audit, govulncheck, cargo audit); returns structured drift inventory.
 - [`diagram-opportunity-reviewer`](nolte-shared/diagram-opportunity-reviewer.md) — Read-only prose scanner that flags Markdown passages which would be expressed better as a Mermaid diagram.
 - [`e2e-result-reviewer`](nolte-shared/e2e-result-reviewer.md) — Reviews an E2E run's screenshots and protocol visually against the requirement/UI specs and returns prioritised, read-only findings.
-- [`e2e-test-reviewer`](nolte-shared/e2e-test-reviewer.md) — Reviews an existing E2E suite against the spec, returns a checklisted conformance verdict, and applies only minimal surgical fixes.
+- [`e2e-test-reviewer`](nolte-shared/e2e-test-reviewer.md) — Reviews an existing E2E suite against the spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`gdpr-data-protection-reviewer`](nolte-shared/gdpr-data-protection-reviewer.md) — Read-only whole-repository GDPR data-protection audit; separates code-verifiable findings from legal-review-required ones.
 - [`lektorat-scanner`](nolte-shared/lektorat-scanner.md) — Read-only editorial scanner across the six lektorat dimensions (D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness).
 - [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Read-only license-inventory scanner: SBOM with resolved licenses, SPDX identification, and category classification per stack.

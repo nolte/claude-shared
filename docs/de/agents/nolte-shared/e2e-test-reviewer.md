@@ -10,7 +10,7 @@ last_updated: generated
 
 > Prüft eine bestehende E2E-Suite gegen die Spec, liefert ein checklistenbasiertes Konformitätsurteil und wendet nur minimale, gezielte Korrekturen an.
 
-_Reviews an existing end-to-end test suite against spec/project/e2e-test-automation/ (and the Selenium + pytest reference profile when that is the stack), returns a checklisted conformance verdict, and applies only minimal, surgical fixes rather than regenerating. Checks page-object encapsulation, condition-based waits, the locator hierarchy, screenshot checkpoints, markers, TC-ID traceability, descriptive assertions, and anti-patterns (fixed sleeps, raw element lookups in tests, position-based XPath, empty assertions, silent skips). Use when the user asks to review, audit, debug, or repair existing E2E/browser tests. Don't use to scaffold a new suite (use e2e-test-generator), to review a run's screenshots/logs (use e2e-result-reviewer), to audit test-tier completeness (use test-pyramid-check), or to run the unit/lint/typecheck gate (use quality-gate)._
+_Reviews an existing end-to-end test suite against spec/project/e2e-test-automation/ (and the Selenium + pytest reference profile when that is the stack), returns a checklist-based conformance verdict, and applies only minimal, surgical fixes rather than regenerating. Checks page-object encapsulation, condition-based waits, the locator hierarchy, screenshot checkpoints, markers, TC-ID traceability, descriptive assertions, and anti-patterns (fixed sleeps, raw element lookups in tests, position-based XPath, empty assertions, silent skips). Use when the user asks to review, audit, debug, or repair existing E2E/browser tests. Don't use to scaffold a new suite (use e2e-test-generator), to review a run's screenshots/logs (use e2e-result-reviewer), to audit test-tier completeness (use test-pyramid-check), or to run the unit/lint/typecheck gate (use quality-gate)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
@@ -84,7 +84,7 @@ Read `spec/project/e2e-test-automation/` fully. Locate the suite (reference prof
 
 #### Phase 2 — Grade conformance
 
-Walk the spec's core requirement by requirement and record a checklisted verdict per area: structure present, page-object encapsulation (no raw lookups in tests), waits (no fixed sleeps in tests), locator hierarchy, screenshot checkpoints, markers, TC-ID traceability, descriptive assertions, test-data isolation, explicit skips. Grep for the anti-patterns the spec forbids and cite each hit by file and line.
+Walk the spec's core requirement by requirement and record a checklist-based verdict per area: structure present, page-object encapsulation (no raw lookups in tests), waits (no fixed sleeps in tests), locator hierarchy, screenshot checkpoints, markers, TC-ID traceability, descriptive assertions, test-data isolation, explicit skips. Grep for the anti-patterns the spec forbids and cite each hit by file and line.
 
 #### Phase 3 — Apply minimal fixes
 
@@ -92,12 +92,12 @@ Apply only narrow, mechanical fixes that bring a finding into conformance withou
 
 #### Phase 4 — Report
 
-Verify the suite still collects (reference profile: `--collect-only`). Return a chat summary: the checklisted conformance verdict with a go/no-go statement; each fix applied, by file and line; and each finding left for regeneration or for the user (e.g. missing application hooks).
+Verify the suite still collects (reference profile: `--collect-only`). Return a chat summary: the checklist-based conformance verdict with a go/no-go statement; each fix applied, by file and line; and each finding left for regeneration or for the user (e.g. missing application hooks).
 
 ### Hard rules
 
 1. Grade against the binding core of `spec/project/e2e-test-automation/`, using the reference templates as the structural baseline only when that is the suite's stack.
 2. Apply only minimal, intent-preserving fixes; never regenerate a file wholesale — hand that to [`e2e-test-generator`](e2e-test-generator.md).
-3. Cite every finding by file and line; the verdict is checklisted and ends with a go/no-go statement.
+3. Cite every finding by file and line; the verdict is checklist-based and ends with a go/no-go statement.
 4. Never edit the application under test or add `data-testid` hooks; flag missing hooks for the user.
 5. Use `Bash` only for read-only collection/syntax checks; do not run the full suite or mutate files outside the E2E directory.
