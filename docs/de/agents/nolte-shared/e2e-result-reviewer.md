@@ -38,6 +38,7 @@ _Visually reviews the outputs of an end-to-end test run — the screenshots and 
 
 - [`e2e-test-generator`](e2e-test-generator.md)
 - [`e2e-test-reviewer`](e2e-test-reviewer.md)
+- [`test-result-analyzer`](test-result-analyzer.md)
 
 ---
 

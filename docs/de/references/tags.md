@@ -37,9 +37,11 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [prose-vale-curator](../agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [quality-gate-enforcer](../agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
 - [roadmap-coherence-reviewer](../agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
+- [security-requirements-reviewer](../agents/nolte-shared/security-requirements-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](../agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared
+- [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
 - [vocab-drift-scanner](../agents/nolte-shared/vocab-drift-scanner.md) — nolte-shared
 - [webview-ui-expert](../agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [continuous-improvement-triage](../skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
@@ -67,12 +69,17 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `dependency`
 
+- [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
 - [dependency-audit](../skills/nolte-shared/dependency-audit.md) — nolte-shared
 
 ## `design`
 
 - [gemini-image-handoff](../skills/nolte-shared/gemini-image-handoff.md) — nolte-shared
 - [image-generate](../skills/nolte-shared/image-generate.md) — nolte-shared
+
+## `frontend`
+
+- [frontend-usability-optimizer](../agents/nolte-shared/frontend-usability-optimizer.md) — nolte-shared
 
 ## `lifecycle`
 
@@ -86,6 +93,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `privacy`
 
 - [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
+- [security-requirements-reviewer](../agents/nolte-shared/security-requirements-reviewer.md) — nolte-shared
 
 ## `prose`
 
@@ -107,13 +115,25 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `quality-gate`
 
+- [component-test-generator](../agents/nolte-shared/component-test-generator.md) — nolte-shared
+- [component-test-reviewer](../agents/nolte-shared/component-test-reviewer.md) — nolte-shared
+- [contract-test-generator](../agents/nolte-shared/contract-test-generator.md) — nolte-shared
+- [contract-test-reviewer](../agents/nolte-shared/contract-test-reviewer.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
 - [e2e-test-reviewer](../agents/nolte-shared/e2e-test-reviewer.md) — nolte-shared
+- [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared
+- [integration-test-generator](../agents/nolte-shared/integration-test-generator.md) — nolte-shared
+- [integration-test-reviewer](../agents/nolte-shared/integration-test-reviewer.md) — nolte-shared
 - [link-rot-scanner](../agents/nolte-shared/link-rot-scanner.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+- [test-code-adapter](../agents/nolte-shared/test-code-adapter.md) — nolte-shared
+- [test-result-analyzer](../agents/nolte-shared/test-result-analyzer.md) — nolte-shared
+- [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared
+- [unit-test-reviewer](../agents/nolte-shared/unit-test-reviewer.md) — nolte-shared
 - [quality-gate](../skills/nolte-shared/quality-gate.md) — nolte-shared
+- [test-cycle-orchestrate](../skills/nolte-shared/test-cycle-orchestrate.md) — nolte-shared
 - [test-pyramid-check](../skills/nolte-shared/test-pyramid-check.md) — nolte-shared
 
 ## `release`
@@ -122,24 +142,36 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [release-publish-trigger](../skills/nolte-shared/release-publish-trigger.md) — nolte-shared
 - [sprint-review](../skills/nolte-shared/sprint-review.md) — nolte-shared
 
+## `requirements`
+
+- [requirements-elicit](../skills/nolte-shared/requirements-elicit.md) — nolte-shared
+
 ## `review`
 
 - [audience-review](../agents/nolte-shared/audience-review.md) — nolte-shared
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
+- [component-test-reviewer](../agents/nolte-shared/component-test-reviewer.md) — nolte-shared
+- [contract-test-reviewer](../agents/nolte-shared/contract-test-reviewer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
 - [e2e-test-reviewer](../agents/nolte-shared/e2e-test-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [frontend-usability-optimizer](../agents/nolte-shared/frontend-usability-optimizer.md) — nolte-shared
 - [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
+- [integration-test-reviewer](../agents/nolte-shared/integration-test-reviewer.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](../agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
 - [quality-gate-enforcer](../agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
 - [roadmap-coherence-reviewer](../agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
+- [security-requirements-reviewer](../agents/nolte-shared/security-requirements-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](../agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared
+- [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
+- [test-result-analyzer](../agents/nolte-shared/test-result-analyzer.md) — nolte-shared
+- [unit-test-reviewer](../agents/nolte-shared/unit-test-reviewer.md) — nolte-shared
 - [webview-ui-expert](../agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [agent-review](../skills/nolte-shared/agent-review.md) — nolte-shared
 - [skill-review](../skills/nolte-shared/skill-review.md) — nolte-shared
@@ -147,11 +179,17 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 ## `scaffolding`
 
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
+- [component-test-generator](../agents/nolte-shared/component-test-generator.md) — nolte-shared
+- [contract-test-generator](../agents/nolte-shared/contract-test-generator.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
+- [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
+- [integration-test-generator](../agents/nolte-shared/integration-test-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+- [test-code-adapter](../agents/nolte-shared/test-code-adapter.md) — nolte-shared
+- [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared
 - [backstage-catalog-generate](../skills/nolte-shared/backstage-catalog-generate.md) — nolte-shared
 - [cookiecutter-template-manage](../skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
 - [docs-audience-tracks-apply](../skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
@@ -179,6 +217,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [continuous-improvement-triage](../skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
 - [issue-orchestrate](../skills/nolte-shared/issue-orchestrate.md) — nolte-shared
+
+## `ui`
+
+- [frontend-usability-optimizer](../agents/nolte-shared/frontend-usability-optimizer.md) — nolte-shared
 
 ## `validation`
 

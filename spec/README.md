@@ -69,12 +69,24 @@ Canonical language: `en` · Translations: `de`
 | project | release-automation | Release Automation | Release-Automation | draft | 2026-04-24 |
 | project | release-notes-audience-analysis | Release Notes Audience Analysis | Zielgruppenanalyse für Release Notes | accepted | 2026-04-24 |
 | project | release-skill-layer | Local Release Skill Layer | Lokale Release-Skill-Schicht | draft | unversioned |
+| project | requirements-elicitation | Requirements Elicitation Interview | Anforderungserfassung per Interview | draft | unversioned |
 | project | roadmap | Project Roadmap | Projekt-Roadmap | draft | unversioned |
 | project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | 2026-04-23 |
 | project | spec-driven-development | Spec-Driven Development | Spezifikations-getriebene Entwicklung | accepted | unversioned |
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | unversioned |
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | unversioned |
+| project | test-cycle-case-determination | Test Cycle: Case Determination | Test-Zyklus: Testfall-Ermittlung | draft | unversioned |
+| project | test-cycle-code-adaptation | Test Cycle: Code Adaptation | Test-Zyklus: Code-Anpassung | draft | unversioned |
+| project | test-cycle-execution | Test Cycle: Execution | Test-Zyklus: Ausführung | draft | unversioned |
+| project | test-cycle-foundation | Test Cycle Foundation | Fundament des Test-Zyklus | draft | unversioned |
+| project | test-cycle-result-analysis | Test Cycle: Result Analysis | Test-Zyklus: Ergebnis-Analyse | draft | unversioned |
+| project | test-pyramid-foundation | Test Pyramid Foundation | Fundament der Testpyramide | draft | unversioned |
+| project | test-tier-component | Test Tier: Component | Test-Stufe: Component | draft | unversioned |
+| project | test-tier-contract | Test Tier: Contract | Test-Stufe: Contract | draft | unversioned |
+| project | test-tier-integration | Test Tier: Integration | Test-Stufe: Integration | draft | unversioned |
+| project | test-tier-static-analysis | Test Tier: Static Analysis | Test-Stufe: Static Analysis | draft | unversioned |
+| project | test-tier-unit | Test Tier: Unit | Test-Stufe: Unit | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |
 | project | yaml-json-schema | YAML JSON Schema | YAML JSON Schema | draft | unversioned |
 | tools | image-generation | Image Generation (Multi-Provider) | Bildgenerierung (Multi-Provider) | draft | 2026-05-30 |

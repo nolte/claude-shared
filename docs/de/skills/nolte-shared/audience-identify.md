@@ -40,6 +40,7 @@ _Runs the audience-identification methodology from spec/project/audience-identif
 - [`docs-audience-tracks-apply`](docs-audience-tracks-apply.md)
 - [`mission-define`](mission-define.md)
 - [`release-notes-curate`](release-notes-curate.md)
+- [`requirements-elicit`](requirements-elicit.md)
 - [`roadmap-init`](roadmap-init.md)
 - [`spec`](spec.md)
 

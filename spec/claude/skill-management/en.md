@@ -65,6 +65,7 @@ Starter vocabulary:
 - `release`: release-automation, changelogs, versioning
 - `quality-gate`: lint, typecheck, test
 - `dependency`: CVE scans, license compliance, lockfile hygiene
+- `requirements`: requirements elicitation and downstream planning input
 
 ### Source location (`claude-shared` repository)
 - **MUST** live at `skills/<name>/` in the `claude-shared` source tree

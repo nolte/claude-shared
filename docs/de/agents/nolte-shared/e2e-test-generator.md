@@ -38,6 +38,7 @@ _Scaffolds a spec-conformant end-to-end test suite for a feature against spec/pr
 
 - [`e2e-result-reviewer`](e2e-result-reviewer.md)
 - [`e2e-test-reviewer`](e2e-test-reviewer.md)
+- [`fullstack-developer`](fullstack-developer.md)
 - [`test-pyramid-check`](../../skills/nolte-shared/test-pyramid-check.md)
 
 ---

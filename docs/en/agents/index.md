@@ -17,7 +17,9 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`audience-review`](nolte-shared/audience-review.md) — Reviews an existing audience-analysis artifact against the spec; read-only structured findings report.
 - [`feature-consistency-reviewer`](nolte-shared/feature-consistency-reviewer.md) — Reviews a draft feature file for overlap, duplication, and prior art against features, source code, and the spec corpus.
 - [`roadmap-coherence-reviewer`](nolte-shared/roadmap-coherence-reviewer.md) — Read-only roadmap-coherence audit against goals, mission, sprints, and features; structured findings list.
+- [`security-requirements-reviewer`](nolte-shared/security-requirements-reviewer.md) — Read-only security architect's review of a requirement/spec set for security & privacy completeness: findings, data-minimization & authorization matrices, GDPR rights checklist.
 - [`sprint-readiness-reviewer`](nolte-shared/sprint-readiness-reviewer.md) — Read-only sprint-readiness gate: go/no-go report on a sprint before sprint-execute promotes it planned → active.
+- [`tech-stack-fitness-reviewer`](nolte-shared/tech-stack-fitness-reviewer.md) — Read-only architect's review of a stack's fitness against requirements: coverage matrix, gaps, over-/under-engineering, risks, prioritized recommendations.
 
 ## 3 Design
 
@@ -30,20 +32,32 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 
 ## 4 Build
 
+- [`component-test-generator`](nolte-shared/component-test-generator.md) — Scaffolds spec-conformant component tests in the right flavour (frontend render-and-query, or service-through-its-API with externals doubled), with determinism and TC-IDs.
+- [`contract-test-generator`](nolte-shared/contract-test-generator.md) — Scaffolds spec-conformant contract tests (consumer-driven by default: consumer expectations + provider verification, broker, can-i-deploy), asserting agreement compatibility only.
 - [`e2e-test-generator`](nolte-shared/e2e-test-generator.md) — Scaffolds a spec-conformant E2E suite (page objects, waits, screenshots, markers, protocol) for a feature, defaulting to the Selenium + pytest reference profile.
+- [`frontend-usability-optimizer`](nolte-shared/frontend-usability-optimizer.md) — Senior UX engineer that improves the usability of existing frontend code in place against the project's own detected stack and documented UI conventions.
+- [`fullstack-developer`](nolte-shared/fullstack-developer.md) — Senior full-stack engineer that implements a scoped requirement as production-ready code against the project's own detected stack, layout, and quality bar.
+- [`integration-test-generator`](nolte-shared/integration-test-generator.md) — Scaffolds spec-conformant narrow integration tests (one real ephemeral collaborator, the rest doubled, seam-only assertions, per-test isolation, readiness waits, TC-IDs).
+- [`test-code-adapter`](nolte-shared/test-code-adapter.md) — Turns a confirmed-red case into the minimal correct production-code change under the no-cheating invariant (simplest-change-then-refactor, root-cause, verify by re-execution).
+- [`unit-test-generator`](nolte-shared/unit-test-generator.md) — Scaffolds spec-conformant unit tests (FIRST, AAA, observable-behaviour assertions, disciplined doubles, TC-IDs) for a module, defaulting to a pytest reference profile.
 
 ## 5 Review
 
 - [`code-security-reviewer`](nolte-shared/code-security-reviewer.md) — Read-only whole-codebase OWASP audit correlating findings across files into a severity-classified report.
+- [`component-test-reviewer`](nolte-shared/component-test-reviewer.md) — Reviews existing component tests (frontend or service) against the component-tier spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
+- [`contract-test-reviewer`](nolte-shared/contract-test-reviewer.md) — Reviews existing contract tests against the contract-tier spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`dependency-audit-scanner`](nolte-shared/dependency-audit-scanner.md) — Read-only CVE scanner per project type (pip-audit, npm audit, govulncheck, cargo audit); returns structured drift inventory.
 - [`diagram-opportunity-reviewer`](nolte-shared/diagram-opportunity-reviewer.md) — Read-only prose scanner that flags Markdown passages which would be expressed better as a Mermaid diagram.
 - [`e2e-result-reviewer`](nolte-shared/e2e-result-reviewer.md) — Reviews an E2E run's screenshots and protocol visually against the requirement/UI specs and returns prioritised, read-only findings.
 - [`e2e-test-reviewer`](nolte-shared/e2e-test-reviewer.md) — Reviews an existing E2E suite against the spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`gdpr-data-protection-reviewer`](nolte-shared/gdpr-data-protection-reviewer.md) — Read-only whole-repository GDPR data-protection audit; separates code-verifiable findings from legal-review-required ones.
+- [`integration-test-reviewer`](nolte-shared/integration-test-reviewer.md) — Reviews existing integration tests against the integration-tier spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`lektorat-scanner`](nolte-shared/lektorat-scanner.md) — Read-only editorial scanner across the six lektorat dimensions (D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness).
 - [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Read-only license-inventory scanner: SBOM with resolved licenses, SPDX identification, and category classification per stack.
 - [`portfolio-inflight-collector`](nolte-shared/portfolio-inflight-collector.md) — Read-only in-flight data collector: open issues, PRs (incl. drafts), branches without PR, unresolved review threads + Discussions across nolte/*.
 - [`portfolio-manifest-collector`](nolte-shared/portfolio-manifest-collector.md) — Read-only inventory collector: gathers per-repo project/portfolio.yml manifests across nolte/*.
+- [`test-result-analyzer`](nolte-shared/test-result-analyzer.md) — Classifies a test run's raw results into routed categories (defect/flake/test-bug/infra/...) with evidence, per the result-analysis spec, so the cycle knows the next phase.
+- [`unit-test-reviewer`](nolte-shared/unit-test-reviewer.md) — Reviews existing unit tests against the unit-tier spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`vocab-drift-scanner`](nolte-shared/vocab-drift-scanner.md) — Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release.
 
 ## 6 Quality

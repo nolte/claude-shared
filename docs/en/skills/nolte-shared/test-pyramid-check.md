@@ -8,9 +8,9 @@ last_updated: generated
 
 # test-pyramid-check
 
-> Audits a feature's test-tier completeness (unit/integration/contract/E2E) and E2E discipline against the e2e-test-automation spec, returning a gap report.
+> Audits a feature's tier completeness against the test-pyramid-foundation taxonomy (unit/component/integration/contract/E2E) and E2E discipline against e2e-test-automation; returns a gap report.
 
-_Audit a feature's or module's test-tier completeness against spec/project/e2e-test-automation/ — are the applicable tiers (unit, integration, contract/API, E2E) present, is fast-tier coverage gated, and does the E2E tier follow the spec's disciplines (page-object encapsulation, condition-based waits, screenshot checkpoints, markers, TC-ID traceability)? Detects the stack, globs the test files per tier, and returns a gap report. Invoke when the user asks to "check the test pyramid," "audit test-tier completeness," "verify all test levels exist," after a feature is implemented, or before a release; also handles equivalent German-language requests. Don't use to scaffold E2E tests (use e2e-test-generator), to review/repair an E2E suite (use e2e-test-reviewer), to review a run's screenshots (use e2e-result-reviewer), or to run the lint/typecheck/test gate (use quality-gate)._
+_Audit a feature's or module's test-tier completeness against the closed functional-tier taxonomy in spec/project/test-pyramid-foundation/ (are the applicable tiers — unit, component, integration, contract, E2E — present and written at the lowest tier that gives confidence?) and whether the E2E tier follows the disciplines in spec/project/e2e-test-automation/ (page-object encapsulation, condition-based waits, screenshot checkpoints, markers, TC-ID traceability). Detects the stack, globs the test files per tier, and returns a gap report. Invoke when the user asks to "check the test pyramid," "audit test-tier completeness," "verify all test levels exist," after a feature is implemented, or before a release; also handles equivalent German-language requests. Don't use to scaffold E2E tests (use e2e-test-generator), to review/repair an E2E suite (use e2e-test-reviewer), to review a run's screenshots (use e2e-result-reviewer), or to run the lint/typecheck/test gate (use quality-gate)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
@@ -35,7 +35,11 @@ _Audit a feature's or module's test-tier completeness against spec/project/e2e-t
 
 ## Referenced by
 
+- [`component-test-reviewer`](../../agents/nolte-shared/component-test-reviewer.md)
+- [`contract-test-reviewer`](../../agents/nolte-shared/contract-test-reviewer.md)
 - [`e2e-test-reviewer`](../../agents/nolte-shared/e2e-test-reviewer.md)
+- [`integration-test-reviewer`](../../agents/nolte-shared/integration-test-reviewer.md)
+- [`unit-test-reviewer`](../../agents/nolte-shared/unit-test-reviewer.md)
 
 ---
 
@@ -43,7 +47,7 @@ _Audit a feature's or module's test-tier completeness against spec/project/e2e-t
 
 Audit whether `$ARGUMENTS` (a feature or module) carries the test tiers it should, and whether its E2E tier follows the disciplines the spec requires. This skill **reads and reports** — it generates and modifies nothing.
 
-Implements `spec/project/e2e-test-automation/` §"Test-tier completeness (the pyramid)" and the E2E-discipline requirements. The spec fixes *that* the tiers must exist and be gated; the numeric coverage targets are project-declared, so read them from the project rather than assuming a number.
+Implements the closed functional-tier taxonomy of `spec/project/test-pyramid-foundation/` (tier completeness) and the E2E-discipline requirements of `spec/project/e2e-test-automation/`. The foundation owns coverage governance — coverage is a guide, not a target — so read any project-declared coverage targets from the project rather than assuming a number.
 
 ### German trigger phrases
 
@@ -51,7 +55,7 @@ Also triggers on equivalent German-language requests, including "Testpyramide pr
 
 ### Step 1 — Read the spec and detect the stack
 
-Read `spec/project/e2e-test-automation/` (the tier model and E2E disciplines). Detect the project's stack from its manifests and layout (e.g. `pyproject.toml` + `tests/`, `package.json` + `*.test.ts`, `go.mod` + `*_test.go`) so you glob the right paths for each tier. Read the project's declared coverage targets where they live (CI config, `pyproject.toml` `[tool.coverage]`, a project test spec) — do not assume a fixed percentage.
+Read `spec/project/test-pyramid-foundation/` (the closed functional-tier taxonomy) and `spec/project/e2e-test-automation/` (the E2E disciplines). Detect the project's stack from its manifests and layout (e.g. `pyproject.toml` + `tests/`, `package.json` + `*.test.ts`, `go.mod` + `*_test.go`) so you glob the right paths for each tier. Read the project's declared coverage targets where they live (CI config, `pyproject.toml` `[tool.coverage]`, a project test spec) — do not assume a fixed percentage.
 
 ### Step 2 — Locate each tier (in parallel)
 
@@ -59,12 +63,13 @@ Glob the test files for `$ARGUMENTS` across the applicable tiers, scoping by the
 
 | Tier | Scope | Typical signal |
 |---|---|---|
-| Unit | business logic in isolation | unit test files next to / mirroring the module |
-| Integration | critical paths with real dependencies | integration test dir, testcontainers, DB fixtures |
-| Contract/API | each endpoint, happy + error paths | API/contract test files (only if the system exposes an API) |
+| Unit | one unit of behaviour in isolation | unit test files next to / mirroring the module |
+| Component | a single shippable component in isolation (externals doubled) | component / render test files; service-in-isolation tests |
+| Integration | code against one real external collaborator | integration test dir, Testcontainers, DB fixtures |
+| Contract | a service-boundary agreement, no live partner | contract / pact test files (only where a service boundary exists) |
 | E2E | user journeys through the real UI | the E2E suite (reference profile: `tests/e2e/`) |
 
-A tier that does not apply (no API surface → no contract tier) is **not** a gap; record it as `n/a` with the reason.
+These are the foundation's functional tiers above static analysis. The **static-analysis** tier (lint / type-check / format) is audited by the quality gate, not here. A tier that does not apply (no service boundary → no contract tier; no UI → no E2E) is **not** a gap; record it as `n/a` with the reason.
 
 ### Step 3 — Check fast-tier gating
 
@@ -91,8 +96,9 @@ Flag violations by file; for a deep per-line review or repairs, hand off to [`e2
 | Tier | Present | Tests | Assessment |
 |------|---------|-------|------------|
 | Unit | yes/no/n-a | N | ... |
+| Component | yes/no/n-a | N | ... |
 | Integration | yes/no/n-a | N | ... |
-| Contract/API | yes/no/n-a | N | ... |
+| Contract | yes/no/n-a | N | ... |
 | E2E | yes/no/n-a | N | ... |
 
 ### Fast-tier gating
@@ -114,7 +120,7 @@ Flag violations by file; for a deep per-line review or repairs, hand off to [`e2
 2. A non-applicable tier is `n/a` with a reason, never a gap — don't demand an API tier from a system with no API.
 3. Report the project's *declared* coverage target and whether it is enforced; never invent a percentage.
 4. Keep the E2E check at grep/structure level; route deep review and fixes to [`e2e-test-reviewer`](../../agents/nolte-shared/e2e-test-reviewer.md).
-5. When `spec/project/e2e-test-automation/` and this skill disagree, the spec wins; this skill needs the update.
+5. When `spec/project/test-pyramid-foundation/` (tier taxonomy / completeness) or `spec/project/e2e-test-automation/` (E2E discipline) and this skill disagree, the spec wins; this skill needs the update.
 
 ### Why this is a skill, not an agent
 

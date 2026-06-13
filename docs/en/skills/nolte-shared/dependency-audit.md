@@ -39,6 +39,7 @@ _Scan the current project's dependency tree for known vulnerabilities (CVEs) and
 - [`gdpr-data-protection-reviewer`](../../agents/nolte-shared/gdpr-data-protection-reviewer.md)
 - [`quality-gate-enforcer`](../../agents/nolte-shared/quality-gate-enforcer.md)
 - [`tech-stack-drift-reviewer`](../../agents/nolte-shared/tech-stack-drift-reviewer.md)
+- [`tech-stack-fitness-reviewer`](../../agents/nolte-shared/tech-stack-fitness-reviewer.md)
 - [`webview-ui-expert`](../../agents/nolte-shared/webview-ui-expert.md)
 - [`license-check`](license-check.md)
 - [`quality-gate`](quality-gate.md)

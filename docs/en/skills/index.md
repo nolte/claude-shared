@@ -22,6 +22,7 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 - [`audience-identify`](nolte-shared/audience-identify.md) — Runs the audience-identification methodology against a bounded context and produces an authoritative audience artifact.
 - [`feature-decompose`](nolte-shared/feature-decompose.md) — Decomposes a roadmap item into feature files with testable acceptance criteria and test hooks.
 - [`issue-orchestrate`](nolte-shared/issue-orchestrate.md) — Takes a raw GitHub issue end-to-end: comprehend, classify, decompose into specialist-ready work packages, route or dispatch, and verify to an open PR.
+- [`requirements-elicit`](nolte-shared/requirements-elicit.md) — Runs the requirements-elicitation interview and produces an authoritative requirement artifact gated by a confidence/gap-matrix KPI.
 - [`roadmap-init`](nolte-shared/roadmap-init.md) — Scaffolds the project planning pair project/goals.md and project/roadmap.md for the first time.
 - [`roadmap-plan`](nolte-shared/roadmap-plan.md) — Adds, retargets, and reshapes roadmap items in project/roadmap.md with full lifecycle validation.
 - [`roadmap-refine`](nolte-shared/roadmap-refine.md) — Enforces the detail-level invariant on project/roadmap.md (current and next sprint items must be 'fine').
@@ -73,7 +74,8 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 - [`license-check`](nolte-shared/license-check.md) — End-to-end license-compliance check: SBOM, SPDX classification, allow/review/deny gate, remediation, NOTICE, and an audit artifact.
 - [`portfolio-audit`](nolte-shared/portfolio-audit.md) — Audits, renders, and bootstraps the cross-repository capability portfolio across nolte/*.
 - [`quality-gate`](nolte-shared/quality-gate.md) — Runs the project's lint + typecheck + test gate in parallel and tabulates which checks failed.
-- [`test-pyramid-check`](nolte-shared/test-pyramid-check.md) — Audits a feature's test-tier completeness (unit/integration/contract/E2E) and E2E discipline against the e2e-test-automation spec, returning a gap report.
+- [`test-cycle-orchestrate`](nolte-shared/test-cycle-orchestrate.md) — Drives the iterative test cycle (determine → execute → analyse → adapt → re-execute) for a feature, dispatching each phase and looping to green under the no-cheating invariant.
+- [`test-pyramid-check`](nolte-shared/test-pyramid-check.md) — Audits a feature's tier completeness against the test-pyramid-foundation taxonomy (unit/component/integration/contract/E2E) and E2E discipline against e2e-test-automation; returns a gap report.
 - [`vocab-drift-audit`](nolte-shared/vocab-drift-audit.md) — Audits repository-local Vale vocabularies against the pinned upstream nolte/vale-style release to detect drift.
 - [`workflow-health-triage`](nolte-shared/workflow-health-triage.md) — Triages a failing GitHub Actions workflow on develop/main and dispatches the most specialised agent to remediate.
 

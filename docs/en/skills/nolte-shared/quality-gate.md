@@ -34,8 +34,19 @@ _Run the project's lint + typecheck + test gate in parallel, tabulate the result
 
 ## Referenced by
 
+- [`component-test-reviewer`](../../agents/nolte-shared/component-test-reviewer.md)
+- [`contract-test-generator`](../../agents/nolte-shared/contract-test-generator.md)
+- [`contract-test-reviewer`](../../agents/nolte-shared/contract-test-reviewer.md)
+- [`fullstack-developer`](../../agents/nolte-shared/fullstack-developer.md)
+- [`integration-test-generator`](../../agents/nolte-shared/integration-test-generator.md)
+- [`integration-test-reviewer`](../../agents/nolte-shared/integration-test-reviewer.md)
 - [`quality-gate-enforcer`](../../agents/nolte-shared/quality-gate-enforcer.md)
 - [`test-case-extractor`](../../agents/nolte-shared/test-case-extractor.md)
+- [`test-code-adapter`](../../agents/nolte-shared/test-code-adapter.md)
+- [`test-result-analyzer`](../../agents/nolte-shared/test-result-analyzer.md)
+- [`unit-test-generator`](../../agents/nolte-shared/unit-test-generator.md)
+- [`unit-test-reviewer`](../../agents/nolte-shared/unit-test-reviewer.md)
+- [`test-cycle-orchestrate`](test-cycle-orchestrate.md)
 - [`test-pyramid-check`](test-pyramid-check.md)
 
 ---
