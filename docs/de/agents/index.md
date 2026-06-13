@@ -36,6 +36,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 - [`e2e-test-generator`](nolte-shared/e2e-test-generator.md) — Erzeugt das Grundgerüst einer spec-konformen E2E-Suite (Page Objects, Waits, Screenshots, Marker, Protokoll) für ein Feature, mit dem Selenium-+-pytest-Referenzprofil als Vorgabe.
 - [`frontend-usability-optimizer`](nolte-shared/frontend-usability-optimizer.md) — Senior-UX-Engineer, der die Usability bestehenden Frontend-Codes direkt verbessert — gegen den selbst erkannten Stack und die dokumentierten UI-Konventionen des Projekts.
 - [`fullstack-developer`](nolte-shared/fullstack-developer.md) — Senior-Full-Stack-Entwickler, der eine scharf umrissene Anforderung als produktionsreifen Code gegen den selbst erkannten Stack, das Layout und die Qualitätsmesslatte des Projekts umsetzt.
+- [`integration-test-generator`](nolte-shared/integration-test-generator.md) — Erzeugt spec-konforme schmale Integrationstests (ein echter ephemerer Kollaborateur, der Rest gedoubelt, seam-only-Assertions, Per-Test-Isolation, Readiness-Waits, TC-IDs).
 - [`unit-test-generator`](nolte-shared/unit-test-generator.md) — Erzeugt spec-konforme Unit-Tests (FIRST, AAA, beobachtbares-Verhalten-Assertions, disziplinierte Doubles, TC-IDs) für ein Modul, mit pytest-Referenzprofil als Vorgabe.
 
 ## 5 Review
@@ -47,6 +48,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 - [`e2e-result-reviewer`](nolte-shared/e2e-result-reviewer.md) — Prüft Screenshots und Protokoll eines E2E-Laufs visuell gegen die Anforderungs-/UI-Specs und liefert priorisierte, rein lesende Befunde.
 - [`e2e-test-reviewer`](nolte-shared/e2e-test-reviewer.md) — Prüft eine bestehende E2E-Suite gegen die Spec, liefert ein checklistenbasiertes Konformitätsurteil und wendet nur minimale, gezielte Korrekturen an.
 - [`gdpr-data-protection-reviewer`](nolte-shared/gdpr-data-protection-reviewer.md) — Read-only repository-weites DSGVO-Datenschutzaudit; trennt code-verifizierbare Befunde von rechtsprüfungs-erforderlichen.
+- [`integration-test-reviewer`](nolte-shared/integration-test-reviewer.md) — Prüft bestehende Integrationstests gegen die Integration-Stufen-Spec, liefert ein checklistenbasiertes Konformitätsurteil und wendet nur minimale, gezielte Korrekturen an.
 - [`lektorat-scanner`](nolte-shared/lektorat-scanner.md) — Nur-Lese-Lektorats-Scanner über die sechs Dimensionen (D1 Lesbarkeit, D2 Verständlichkeit, D3 Grammatik, D4 Stil, D5 Audience-Fit, D6 Idiomatik).
 - [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Nur-Lese-Lizenz-Inventar-Scanner: SBOM mit aufgelösten Lizenzen, SPDX-Identifikation und Kategorie-Klassifizierung pro Stack.
 - [`portfolio-inflight-collector`](nolte-shared/portfolio-inflight-collector.md) — Nur-Lese-In-Flight-Datensammler: offene Issues, PRs (inkl. Drafts), Branches ohne PR, ungelöste Review-Threads + Discussions über nolte/*.

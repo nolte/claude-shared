@@ -37,6 +37,7 @@ _Scaffolds spec-conformant component tests for a single shippable component agai
 ## Referenziert von
 
 - [`component-test-reviewer`](component-test-reviewer.md)
+- [`integration-test-generator`](integration-test-generator.md)
 
 ---
 

@@ -36,6 +36,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`e2e-test-generator`](nolte-shared/e2e-test-generator.md) — Scaffolds a spec-conformant E2E suite (page objects, waits, screenshots, markers, protocol) for a feature, defaulting to the Selenium + pytest reference profile.
 - [`frontend-usability-optimizer`](nolte-shared/frontend-usability-optimizer.md) — Senior UX engineer that improves the usability of existing frontend code in place against the project's own detected stack and documented UI conventions.
 - [`fullstack-developer`](nolte-shared/fullstack-developer.md) — Senior full-stack engineer that implements a scoped requirement as production-ready code against the project's own detected stack, layout, and quality bar.
+- [`integration-test-generator`](nolte-shared/integration-test-generator.md) — Scaffolds spec-conformant narrow integration tests (one real ephemeral collaborator, the rest doubled, seam-only assertions, per-test isolation, readiness waits, TC-IDs).
 - [`unit-test-generator`](nolte-shared/unit-test-generator.md) — Scaffolds spec-conformant unit tests (FIRST, AAA, observable-behaviour assertions, disciplined doubles, TC-IDs) for a module, defaulting to a pytest reference profile.
 
 ## 5 Review
@@ -47,6 +48,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`e2e-result-reviewer`](nolte-shared/e2e-result-reviewer.md) — Reviews an E2E run's screenshots and protocol visually against the requirement/UI specs and returns prioritised, read-only findings.
 - [`e2e-test-reviewer`](nolte-shared/e2e-test-reviewer.md) — Reviews an existing E2E suite against the spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`gdpr-data-protection-reviewer`](nolte-shared/gdpr-data-protection-reviewer.md) — Read-only whole-repository GDPR data-protection audit; separates code-verifiable findings from legal-review-required ones.
+- [`integration-test-reviewer`](nolte-shared/integration-test-reviewer.md) — Reviews existing integration tests against the integration-tier spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`lektorat-scanner`](nolte-shared/lektorat-scanner.md) — Read-only editorial scanner across the six lektorat dimensions (D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness).
 - [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Read-only license-inventory scanner: SBOM with resolved licenses, SPDX identification, and category classification per stack.
 - [`portfolio-inflight-collector`](nolte-shared/portfolio-inflight-collector.md) — Read-only in-flight data collector: open issues, PRs (incl. drafts), branches without PR, unresolved review threads + Discussions across nolte/*.
