@@ -6,3 +6,5 @@
 Adzic
 Wynne
 combinational
+Bazel
+[Pp]arallelisation
