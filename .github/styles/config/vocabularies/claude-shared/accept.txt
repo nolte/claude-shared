@@ -70,3 +70,15 @@ monolingually
 XPath
 clickability
 rebased
+Cohn
+Vocke
+Dodds
+Meszaros
+Thoughtworks
+pitest
+mutmut
+Stryker
+Testcontainers
+Goodhart('s)?
+operationalisation
+unautomated
