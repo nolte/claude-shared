@@ -17,6 +17,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 - [`audience-review`](nolte-shared/audience-review.md) — Prüft ein vorhandenes Audience-Analyse-Artefakt gegen die Spec; nur-Lese strukturierter Findings-Report.
 - [`feature-consistency-reviewer`](nolte-shared/feature-consistency-reviewer.md) — Prüft eine Draft-Feature-Datei auf Überlappung, Duplikate und Vorarbeit gegen Features, Source-Code und das Spec-Corpus.
 - [`roadmap-coherence-reviewer`](nolte-shared/roadmap-coherence-reviewer.md) — Nur-Lese-Roadmap-Kohärenz-Audit gegen Goals, Mission, Sprints und Features; strukturierte Findings-Liste.
+- [`security-requirements-reviewer`](nolte-shared/security-requirements-reviewer.md) — Read-only Security-Architektur-Review eines Anforderungs-/Spec-Sets auf Security- und Datenschutz-Vollständigkeit: Findings, Datensparsamkeits- und Autorisierungs-Matrix, DSGVO-Rechte-Checkliste.
 - [`sprint-readiness-reviewer`](nolte-shared/sprint-readiness-reviewer.md) — Nur-Lese-Sprint-Readiness-Gate: Go/No-Go-Report zu einem Sprint, bevor sprint-execute ihn planned → active befördert.
 - [`tech-stack-fitness-reviewer`](nolte-shared/tech-stack-fitness-reviewer.md) — Read-only Architektur-Review der Stack-Eignung gegen Anforderungen: Abdeckungsmatrix, Lücken, Über-/Unterarchitektur, Risiken, priorisierte Empfehlungen.
 

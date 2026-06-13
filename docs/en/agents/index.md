@@ -17,6 +17,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`audience-review`](nolte-shared/audience-review.md) — Reviews an existing audience-analysis artifact against the spec; read-only structured findings report.
 - [`feature-consistency-reviewer`](nolte-shared/feature-consistency-reviewer.md) — Reviews a draft feature file for overlap, duplication, and prior art against features, source code, and the spec corpus.
 - [`roadmap-coherence-reviewer`](nolte-shared/roadmap-coherence-reviewer.md) — Read-only roadmap-coherence audit against goals, mission, sprints, and features; structured findings list.
+- [`security-requirements-reviewer`](nolte-shared/security-requirements-reviewer.md) — Read-only security architect's review of a requirement/spec set for security & privacy completeness: findings, data-minimization & authorization matrices, GDPR rights checklist.
 - [`sprint-readiness-reviewer`](nolte-shared/sprint-readiness-reviewer.md) — Read-only sprint-readiness gate: go/no-go report on a sprint before sprint-execute promotes it planned → active.
 - [`tech-stack-fitness-reviewer`](nolte-shared/tech-stack-fitness-reviewer.md) — Read-only architect's review of a stack's fitness against requirements: coverage matrix, gaps, over-/under-engineering, risks, prioritized recommendations.
 

@@ -39,6 +39,7 @@ _Audits one or more specifications under a target spec topic for downstream read
 
 ## Referenced by
 
+- [`security-requirements-reviewer`](security-requirements-reviewer.md)
 - [`spec`](../../skills/nolte-shared/spec.md)
 - [`spec-drift-audit`](../../skills/nolte-shared/spec-drift-audit.md)
 

@@ -36,6 +36,10 @@ _Read-only architect's review evaluating a project's declared technology stack f
 - [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
 - [`code-security-reviewer`](code-security-reviewer.md)
 
+## Referenced by
+
+- [`security-requirements-reviewer`](security-requirements-reviewer.md)
+
 ---
 
 ## Tech Stack Fitness Reviewer
