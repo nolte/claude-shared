@@ -8,3 +8,4 @@ Wynne
 combinational
 Bazel
 [Pp]arallelisation
+Codecov
