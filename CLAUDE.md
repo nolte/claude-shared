@@ -14,6 +14,9 @@ Orientation for Claude Code and contributors working inside this repository.
 - `agents/<name>.md` — reusable sub-agents (when present)
 - `spec/` — bilingual specifications that govern skill/agent authoring and project conventions
 - `docs/` — MkDocs source, bilingual (`docs/de/`, `docs/en/`)
+- `project/` — this repo's own planning surface: `mission.md`, `goals.md`, `roadmap.md`, plus `features/`, `sprints/`, and `blog-triggers/` (driven by `sprint-execute`, `feature-decompose`, `roadmap-plan`)
+- `portfolio/` — portfolio-level data (`tech-stack.yml`, `aggregate.yml`, `schemas/`)
+- `scripts/` — repo automation behind the Taskfile targets (`validate_skills.py`, `wip_journal.py`, `check_links.py`, `worktree_add.sh`, …)
 
 Plugin skills are namespaced by plugin name — e.g. `/nolte-shared:spec`, `/nolte-shared:skill-management`.
 
@@ -26,6 +29,8 @@ Local automation runs through `Taskfile.yml`:
 - `task test` — validate every skill/agent frontmatter (`scripts/validate_skills.py`)
 - `task docs` — build the MkDocs site
 - `task plugin:reload` — launch Claude Code with this repo loaded as a plugin (dogfooding)
+- `task worktree:add -- <branch> [slug]` — create a spec-conformant worktree off `origin/develop` (see §Parallel working copies)
+- `task resume` — list this working copy's resumable Claude Code sessions (see §Crash recovery)
 
 ## Dogfooding
 
