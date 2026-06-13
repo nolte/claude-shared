@@ -36,6 +36,7 @@ _Audit a feature's or module's test-tier completeness against the closed functio
 ## Referenced by
 
 - [`e2e-test-reviewer`](../../agents/nolte-shared/e2e-test-reviewer.md)
+- [`unit-test-reviewer`](../../agents/nolte-shared/unit-test-reviewer.md)
 
 ---
 

@@ -25,6 +25,7 @@ last_updated: generated
     * [e2e-test-generator](nolte-shared/e2e-test-generator.md)
     * [frontend-usability-optimizer](nolte-shared/frontend-usability-optimizer.md)
     * [fullstack-developer](nolte-shared/fullstack-developer.md)
+    * [unit-test-generator](nolte-shared/unit-test-generator.md)
 * 5 Review
     * [code-security-reviewer](nolte-shared/code-security-reviewer.md)
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)
@@ -36,6 +37,7 @@ last_updated: generated
     * [license-check-scanner](nolte-shared/license-check-scanner.md)
     * [portfolio-inflight-collector](nolte-shared/portfolio-inflight-collector.md)
     * [portfolio-manifest-collector](nolte-shared/portfolio-manifest-collector.md)
+    * [unit-test-reviewer](nolte-shared/unit-test-reviewer.md)
     * [vocab-drift-scanner](nolte-shared/vocab-drift-scanner.md)
 * 6 Quality
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
