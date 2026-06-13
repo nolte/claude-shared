@@ -22,12 +22,14 @@ last_updated: generated
     * [test-case-extractor](nolte-shared/test-case-extractor.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 4 Build
+    * [component-test-generator](nolte-shared/component-test-generator.md)
     * [e2e-test-generator](nolte-shared/e2e-test-generator.md)
     * [frontend-usability-optimizer](nolte-shared/frontend-usability-optimizer.md)
     * [fullstack-developer](nolte-shared/fullstack-developer.md)
     * [unit-test-generator](nolte-shared/unit-test-generator.md)
 * 5 Review
     * [code-security-reviewer](nolte-shared/code-security-reviewer.md)
+    * [component-test-reviewer](nolte-shared/component-test-reviewer.md)
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)
     * [diagram-opportunity-reviewer](nolte-shared/diagram-opportunity-reviewer.md)
     * [e2e-result-reviewer](nolte-shared/e2e-result-reviewer.md)
