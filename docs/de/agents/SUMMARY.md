@@ -21,6 +21,7 @@ last_updated: generated
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
 * 4 Build
     * [e2e-test-generator](nolte-shared/e2e-test-generator.md)
+    * [fullstack-developer](nolte-shared/fullstack-developer.md)
 * 5 Review
     * [code-security-reviewer](nolte-shared/code-security-reviewer.md)
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)

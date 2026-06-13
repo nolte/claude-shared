@@ -33,6 +33,7 @@ _Read-only, whole-codebase OWASP security audit that correlates findings across 
 
 ## Referenced by
 
+- [`fullstack-developer`](fullstack-developer.md)
 - [`gdpr-data-protection-reviewer`](gdpr-data-protection-reviewer.md)
 
 ---

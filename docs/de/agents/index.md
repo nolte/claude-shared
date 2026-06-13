@@ -31,6 +31,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 ## 4 Build
 
 - [`e2e-test-generator`](nolte-shared/e2e-test-generator.md) — Erzeugt das Grundgerüst einer spec-konformen E2E-Suite (Page Objects, Waits, Screenshots, Marker, Protokoll) für ein Feature, mit dem Selenium-+-pytest-Referenzprofil als Vorgabe.
+- [`fullstack-developer`](nolte-shared/fullstack-developer.md) — Senior-Full-Stack-Entwickler, der eine scharf umrissene Anforderung als produktionsreifen Code gegen den selbst erkannten Stack, das Layout und die Qualitätsmesslatte des Projekts umsetzt.
 
 ## 5 Review
 
