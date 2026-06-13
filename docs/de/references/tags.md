@@ -74,6 +74,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [gemini-image-handoff](../skills/nolte-shared/gemini-image-handoff.md) — nolte-shared
 - [image-generate](../skills/nolte-shared/image-generate.md) — nolte-shared
 
+## `frontend`
+
+- [frontend-usability-optimizer](../agents/nolte-shared/frontend-usability-optimizer.md) — nolte-shared
+
 ## `lifecycle`
 
 - [blog-author-trigger](../skills/nolte-shared/blog-author-trigger.md) — nolte-shared
@@ -132,6 +136,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
 - [e2e-test-reviewer](../agents/nolte-shared/e2e-test-reviewer.md) — nolte-shared
 - [feature-consistency-reviewer](../agents/nolte-shared/feature-consistency-reviewer.md) — nolte-shared
+- [frontend-usability-optimizer](../agents/nolte-shared/frontend-usability-optimizer.md) — nolte-shared
 - [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
@@ -181,6 +186,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 - [continuous-improvement-triage](../skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
 - [issue-orchestrate](../skills/nolte-shared/issue-orchestrate.md) — nolte-shared
+
+## `ui`
+
+- [frontend-usability-optimizer](../agents/nolte-shared/frontend-usability-optimizer.md) — nolte-shared
 
 ## `validation`
 
