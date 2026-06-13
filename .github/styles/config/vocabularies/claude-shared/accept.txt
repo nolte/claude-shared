@@ -6,3 +6,6 @@
 Polanyi
 Rimay
 arXiv
+Boehm
+Gnesi
+Spoletini
