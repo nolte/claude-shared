@@ -31,7 +31,7 @@ REPO = Path(__file__).resolve().parent.parent
 
 STARTER_TAGS = {
     "pull-request", "review", "audit", "scaffolding", "prose",
-    "audience", "release", "quality-gate", "dependency",
+    "audience", "release", "quality-gate", "dependency", "requirements",
 }
 RESERVED_TOKENS = {"anthropic", "claude"}
 GENERIC_NAMES = {"helper", "utils", "tools", "documents", "data", "files"}
@@ -54,7 +54,7 @@ NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
 # skill legitimately introduces a new action token.
 SKILL_ACTION_TOKENS = {
     "apply", "audit", "author", "capture", "check", "create", "curate",
-    "decompose", "define", "execute", "generate", "handoff", "identify",
+    "decompose", "define", "elicit", "execute", "generate", "handoff", "identify",
     "init", "maintain", "manage", "management", "merge", "optimize",
     "orchestrate", "plan", "refactor", "refine", "review", "revise",
     "sweep", "triage", "trigger",

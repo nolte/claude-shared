@@ -10,3 +10,9 @@ Bazel
 [Pp]arallelisation
 Codecov
 [Oo]verfitting
+Polanyi
+Rimay
+arXiv
+Boehm
+Gnesi
+Spoletini

@@ -135,6 +135,10 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [release-publish-trigger](../skills/nolte-shared/release-publish-trigger.md) — nolte-shared
 - [sprint-review](../skills/nolte-shared/sprint-review.md) — nolte-shared
 
+## `requirements`
+
+- [requirements-elicit](../skills/nolte-shared/requirements-elicit.md) — nolte-shared
+
 ## `review`
 
 - [audience-review](../agents/nolte-shared/audience-review.md) — nolte-shared

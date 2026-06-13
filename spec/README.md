@@ -69,6 +69,7 @@ Canonical language: `en` · Translations: `de`
 | project | release-automation | Release Automation | Release-Automation | draft | 2026-04-24 |
 | project | release-notes-audience-analysis | Release Notes Audience Analysis | Zielgruppenanalyse für Release Notes | accepted | 2026-04-24 |
 | project | release-skill-layer | Local Release Skill Layer | Lokale Release-Skill-Schicht | draft | unversioned |
+| project | requirements-elicitation | Requirements Elicitation Interview | Anforderungserfassung per Interview | draft | unversioned |
 | project | roadmap | Project Roadmap | Projekt-Roadmap | draft | unversioned |
 | project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | 2026-04-23 |
 | project | spec-driven-development | Spec-Driven Development | Spezifikations-getriebene Entwicklung | accepted | unversioned |
