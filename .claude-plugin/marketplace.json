@@ -12,7 +12,7 @@
       "name": "nolte-shared",
       "source": ".",
       "description": "Shared Claude Code skills and agents for consistent development workflows across projects.",
-      "version": "0.1.6"
+      "version": "0.1.7"
     }
   ]
 }
