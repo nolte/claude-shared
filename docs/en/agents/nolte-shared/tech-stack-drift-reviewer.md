@@ -37,6 +37,7 @@ _Audits a repository's declared tech-stack manifest (`project/portfolio.yml` und
 
 ## Referenced by
 
+- [`tech-stack-fitness-reviewer`](tech-stack-fitness-reviewer.md)
 - [`tech-stack-capture`](../../skills/nolte-shared/tech-stack-capture.md)
 
 ---
