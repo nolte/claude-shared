@@ -111,6 +111,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
 - [e2e-test-reviewer](../agents/nolte-shared/e2e-test-reviewer.md) — nolte-shared
+- [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared
 - [link-rot-scanner](../agents/nolte-shared/link-rot-scanner.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [quality-gate](../skills/nolte-shared/quality-gate.md) — nolte-shared
@@ -149,6 +150,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
+- [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
