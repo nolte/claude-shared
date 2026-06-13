@@ -65,6 +65,7 @@ Starter-Vokabular:
 - `release` — Release-Automation, Changelogs, Versionierung
 - `quality-gate` — Lint, Typecheck, Test
 - `dependency` — CVE-Scans, Lizenz-Compliance, Lockfile-Hygiene
+- `requirements` — Anforderungserfassung und nachgelagerter Planungs-Input
 
 ### Quell-Ablageort (Repository claude-shared)
 - **MUSS [MUST]** im Quellbaum von claude-shared unter `skills/<name>/` liegen

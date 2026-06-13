@@ -35,6 +35,7 @@ _Orchestrates a raw GitHub issue to an open, audit-trailed pull request per `spe
 
 - [`feature-decompose`](feature-decompose.md)
 - [`roadmap-plan`](roadmap-plan.md)
+- [`requirements-elicit`](requirements-elicit.md)
 - [`pull-request-create`](pull-request-create.md)
 - [`workflow-health-triage`](workflow-health-triage.md)
 
@@ -99,6 +100,12 @@ Before any operation:
   `gh issue list --state open --limit 20` and ask which issue to orchestrate. If the
   reference is ambiguous, list the candidate open issues and ask the operator to pick
   one.
+- When the issue describes a feature or change whose requirements are not yet
+  precisely stated, a requirement artefact under `project/requirements/` should
+  exist before decomposition, per `spec/project/requirements-elicitation/`
+  SS Consumer contract. If the issue body is vague and no artefact exists (so
+  `U_gate` would be below `tau_high`), dispatch [`requirements-elicit`](requirements-elicit.md) first, or
+  record an explicit operator override, rather than decomposing against guesses.
 
 ### Operations
 

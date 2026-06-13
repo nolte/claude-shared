@@ -14,6 +14,7 @@ last_updated: generated
     * [audience-identify](nolte-shared/audience-identify.md)
     * [feature-decompose](nolte-shared/feature-decompose.md)
     * [issue-orchestrate](nolte-shared/issue-orchestrate.md)
+    * [requirements-elicit](nolte-shared/requirements-elicit.md)
     * [roadmap-init](nolte-shared/roadmap-init.md)
     * [roadmap-plan](nolte-shared/roadmap-plan.md)
     * [roadmap-refine](nolte-shared/roadmap-refine.md)

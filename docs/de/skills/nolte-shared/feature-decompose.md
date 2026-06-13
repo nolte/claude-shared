@@ -31,6 +31,7 @@ _Decompose a roadmap item into feature files under project/features/ per spec/pr
 
 ## Siehe auch
 
+- [`requirements-elicit`](requirements-elicit.md)
 - [`roadmap-plan`](roadmap-plan.md)
 - [`sprint-plan`](sprint-plan.md)
 - [`sprint-execute`](sprint-execute.md)
@@ -41,6 +42,7 @@ _Decompose a roadmap item into feature files under project/features/ per spec/pr
 - [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md)
 - [`sprint-readiness-reviewer`](../../agents/nolte-shared/sprint-readiness-reviewer.md)
 - [`issue-orchestrate`](issue-orchestrate.md)
+- [`requirements-elicit`](requirements-elicit.md)
 - [`roadmap-plan`](roadmap-plan.md)
 - [`sprint-execute`](sprint-execute.md)
 - [`sprint-plan`](sprint-plan.md)
@@ -70,6 +72,7 @@ Before any write, confirm:
 - `project/roadmap.md` exists and the target `roadmap_item` (passed by the user as `R-<n>`) is present in it; resolve its `outcomes`, `detail`, `target_sprint`, and `mvp` fields so they can be quoted into per-feature context.
 - `project/goals.md` exists and the roadmap item's `outcomes` list resolves; if not, stop and surface the broken outcome reference rather than guessing.
 - An audience artefact exists when the project carries `project/mission.md`; missing audiences block feature authoring the same way they block outcome and mission authoring (per `spec/project/roadmap/` and `spec/project/mission/`). Dispatch [`audience-identify`](audience-identify.md) first if needed.
+- A requirement artefact under `project/requirements/` covers the work being decomposed, with `U_gate >= tau_high`, per `spec/project/requirements-elicitation/` SS Consumer contract. When none exists or it is below threshold, dispatch [`requirements-elicit`](requirements-elicit.md) first, or record an explicit operator override; decomposing against unstated or weakly-understood requirements is the failure this gate prevents.
 - The [`feature-consistency-reviewer`](../../agents/nolte-shared/feature-consistency-reviewer.md) agent is reachable in the current plugin runtime, **or** the operator explicitly acknowledges the manual-fallback path and provides a manual-pass identifier of the form `manual-<YYYY-MM-DD>` (per `spec/project/feature/` §Consistency check). The fallback is permitted only until the agent ships; once the agent is reachable, refuse to fall back.
 - The next free `F-<n>` ID is determinable by reading the highest existing ID under `project/features/`; never reuse a retired ID.
 

@@ -22,6 +22,7 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 - [`audience-identify`](nolte-shared/audience-identify.md) — Runs the audience-identification methodology against a bounded context and produces an authoritative audience artifact.
 - [`feature-decompose`](nolte-shared/feature-decompose.md) — Decomposes a roadmap item into feature files with testable acceptance criteria and test hooks.
 - [`issue-orchestrate`](nolte-shared/issue-orchestrate.md) — Takes a raw GitHub issue end-to-end: comprehend, classify, decompose into specialist-ready work packages, route or dispatch, and verify to an open PR.
+- [`requirements-elicit`](nolte-shared/requirements-elicit.md) — Runs the requirements-elicitation interview and produces an authoritative requirement artifact gated by a confidence/gap-matrix KPI.
 - [`roadmap-init`](nolte-shared/roadmap-init.md) — Scaffolds the project planning pair project/goals.md and project/roadmap.md for the first time.
 - [`roadmap-plan`](nolte-shared/roadmap-plan.md) — Adds, retargets, and reshapes roadmap items in project/roadmap.md with full lifecycle validation.
 - [`roadmap-refine`](nolte-shared/roadmap-refine.md) — Enforces the detail-level invariant on project/roadmap.md (current and next sprint items must be 'fine').

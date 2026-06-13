@@ -13,7 +13,7 @@ When an AI agent is asked to build, change, or specify something, the request it
 
 An agent that simply pattern-matches the request to the nearest plausible solution amplifies all three failures. The cheap, high-leverage intervention is a **disciplined elicitation interview**: a bounded, adaptive dialogue that drives the agent's *understanding* up to a measured threshold before it commits to building anything, paired with a **quantified understanding KPI** that tells the agent, per requirement dimension, how well it actually understands, so it can ask *targeted* clarifying questions exactly where understanding is weak and stop asking where it's strong.
 
-This spec defines that interview method and that KPI. The KPI is a **confidence score per requirement dimension** plus a **gap matrix** over a closed set of dimensions; together they gate whether the agent asks a clarifying question, which question it asks, and when the interview is complete. The method is model- and domain-agnostic: it prescribes the *form* of the interview and the *shape* of the metric, not a particular ML implementation or prompt.
+This spec defines that interview method and that KPI. The KPI is a **confidence score per requirement dimension** plus a **gap matrix** over a closed set of dimensions; together they gate whether the agent asks a clarifying question, which question it asks, and when the interview is complete. The method is model- and domain-agnostic: it prescribes the *form* of the interview and the *shape* of the metric, not a particular ML implementation or prompt. The realizing capability in this plugin is the `requirements-elicit` skill, which runs the interview, maintains the gap matrix, applies the gating, and writes the artifact.
 
 The model is grounded in established literature, not invented: the empirical typology of elicitation-interview questions and the open→specific sequencing heuristic [R1]; the measured baseline that an LLM interviewer reaches ~74% requirement recall at a human-comparable error rate (a single simulated study; parity, not superiority) and that lightweight one-question-at-a-time prompting beats heavy procedural scripting [R3]; clarification-question selection as Bayesian experimental design maximizing expected information gain over the *solution space* [R4]; the separation of *specification uncertainty* (what the user wants) from *model uncertainty* (what the agent predicts) and EVPI-scored, cost-aware question selection [R5], [R12]; the behavioral self-consistency proxy for ambiguity—sample multiple interpretations, treat divergence as the ambiguity signal [R6]; controlled-natural-language target structures (EARS, Rimay) that force atomic, unambiguous, complete requirements [R7], [R9]; and the recall-favored ambiguity-detection trade-off with its named, trigger-word-backed defect-trigger list [R8], [R10]; the IKIWISI syndrome with concurrent prototyping as its remedy (Boehm [R13]); and ambiguity treated as a *resource* that surfaces tacit knowledge, with misunderstanding caught as a consistency check against the analyst's knowledge base (Ferrari, Spoletini, Gnesi [R14]).
 
@@ -106,9 +106,16 @@ The model is grounded in established literature, not invented: the empirical typ
 ### G. Output artifact
 
 - **MUST** emit, as the interview's deliverable: (1) the elicited **requirement list** in the normalized target structure (§C), (2) the **filled gap matrix** with final per-dimension confidences and the aggregate `U_gate`, and (3) the explicit list of **surviving assumptions / open risks** (§F)
+- **MUST** persist the artifact at `project/requirements/<slug>.md`, pluralized like `project/features/` so multiple requirement sets (per scope, outcome, or feature) coexist and a downstream consumer can reference exactly one deterministically
 - **MUST** tag every requirement `confirmed` (validated via teach-back or an authoritative user answer) or `assumed` (inferred and not yet confirmed), mirroring the matrix
 - **SHOULD** attach **traceability** from each elicited requirement back to the user utterances that produced it, so a reviewer can audit how an interpretation arose
 - **SHOULD** hand the artifact to the downstream consumer (feature decomposition, spec authoring) in a form those consumers can reference rather than re-eliciting
+
+### H. Consumer contract
+
+- **MUST** apply to the downstream planning capabilities that presuppose requirements, at minimum `roadmap-plan`, `feature-decompose`, and `issue-orchestrate`: before substantive decomposition each MUST check whether a requirement artifact (§G) exists for the work at hand and whether its `U_gate` meets `τ_high`. When no artifact exists, or `U_gate` is below `τ_high`, the consumer MUST dispatch `requirements-elicit` first, or record an explicit operator override, rather than decomposing against unstated or weakly-understood requirements. This mirrors the upstream gate that `audience-identification` places on audience-claiming artifacts.
+- **MUST NOT** treat the gate as hard-blocking once the operator explicitly accepts the surviving gaps; the gate surfaces weak understanding, it doesn't forbid proceeding, and the override is recorded rather than silent.
+- **SHOULD** reference the artifact by its path (`project/requirements/<slug>.md`) rather than re-eliciting, so one elicitation feeds roadmap planning, feature decomposition, and issue orchestration alike.
 
 ## Acceptance Criteria
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
@@ -123,6 +130,8 @@ The model is grounded in established literature, not invented: the empirical typ
 - [ ] On a budget-capped stop, every below-`τ_high` cell appears in the output as a named residual risk
 - [ ] Each output requirement is tagged `confirmed` / `assumed` consistently with its matrix cell
 - [ ] The thresholds `τ_low`, `τ_high`, the self-consistency `k`, and the question budget are stated explicitly in the artifact and are overridable per project with a recorded rationale
+- [ ] The elicited artifact is written to `project/requirements/<slug>.md`
+- [ ] At least one downstream consumer (`roadmap-plan`, `feature-decompose`, or `issue-orchestrate`) gates on the artifact's presence and `U_gate`, dispatching `requirements-elicit` when it's missing or below `τ_high`, with any operator override recorded
 
 ## References
 <!-- Cited sources from the deep-research pass. Adversarial verification didn't complete (session-limit abstention), so claims are sourced but not independently triangulated; treat methods as well-attested primary-source reports, thresholds as defaults to calibrate. -->
@@ -151,6 +160,4 @@ The model is grounded in established literature, not invented: the empirical typ
 - No surveyed source validates a saturation/termination criterion for elicitation interviews; §F's rule is constructed over the confidence/EVPI machinery rather than measured.
 - Whether a calibrated LLM confidence measure can be fused with the self-consistency proxy and stay well-calibrated for *requirements understanding* specifically is unaddressed in the literature; until then, `c_d` stays a proxy (§D).
 - The gap-matrix artifact and its per-turn KPI mechanics have no worked schema in any surveyed source; the schema in §D/§G is original to this spec and should be validated against real elicitation transcripts.
-- Should this spec ship a companion skill/agent that *operationalizes* the interview (runs the dialogue, maintains the gap matrix, applies the gating), analogous to how `audience-identification` is paired with the `audience-identify` skill? The spec currently defines the method; the executing capability is a likely next step.
-- Where exactly should the output artifact live, and in what format (a structured `REQUIREMENTS.md` next to the work, frontmatter on a feature file, or an ADR-style record)? This should align with whatever downstream consumer (`feature`, `spec-driven-development`) ingests it.
 - How does the gap matrix interact with multi-party elicitation (several users with conflicting requirements)? This spec scopes a single interviewed party; conflict reconciliation is deferred to a future spec.

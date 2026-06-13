@@ -17,6 +17,7 @@ dont_use_when:
 see_also:
   - roadmap-init
   - roadmap-refine
+  - requirements-elicit
   - feature-decompose
   - sprint-plan
 resumable: true
@@ -45,6 +46,7 @@ Before any mutation:
 - The roadmap parses end-to-end; a partially-parsed file is rejected because partial writes risk corrupting items the parser couldn't reach.
 - `project/sprints/` is reachable when the requested mutation cites a `target_sprint`; otherwise the cross-reference can't be validated and the mutation is refused.
 - `project/mission.md` may or may not exist. When it exists, every roadmap item carries the `mvp` field; when it does not, items **MAY** carry `mvp: false` uniformly or omit the field entirely. This skill respects whichever shape the file already uses and refuses to mix the two on a single write.
+- A new or retargeted item whose scope is not yet precisely understood should be informed by a requirement artefact under `project/requirements/`, per `spec/project/requirements-elicitation/` SS Consumer contract. When the item's requirements are unstated or its `U_gate` is below `tau_high`, dispatch `requirements-elicit` first, or record an explicit operator override; the roadmap should queue understood work, not guesses.
 
 ## Operations
 
