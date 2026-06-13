@@ -3,3 +3,6 @@
 # v0.1.17. This repository-local override is therefore intentionally empty;
 # add a new term here only when it is not yet accepted upstream, then PR it to
 # nolte/vale-style and remove it here once released (see spec/project/prose-style).
+Polanyi
+Rimay
+arXiv
