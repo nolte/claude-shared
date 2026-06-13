@@ -35,6 +35,10 @@ _Reviews the quality-gate wiring (Taskfile targets, `.pre-commit-config.yaml`, `
 - [`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md)
 - [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
 
+## Referenziert von
+
+- [`frontend-usability-optimizer`](frontend-usability-optimizer.md)
+
 ---
 
 ## Quality Gate Enforcer

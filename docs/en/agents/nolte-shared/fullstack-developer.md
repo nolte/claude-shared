@@ -35,6 +35,10 @@ _Senior full-stack engineer that turns a sharply-scoped requirement into product
 - [`quality-gate`](../../skills/nolte-shared/quality-gate.md)
 - [`e2e-test-generator`](e2e-test-generator.md)
 
+## Referenced by
+
+- [`frontend-usability-optimizer`](frontend-usability-optimizer.md)
+
 ---
 
 ## Full-Stack Developer
