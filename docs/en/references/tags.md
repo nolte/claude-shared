@@ -117,6 +117,8 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [component-test-generator](../agents/nolte-shared/component-test-generator.md) — nolte-shared
 - [component-test-reviewer](../agents/nolte-shared/component-test-reviewer.md) — nolte-shared
+- [contract-test-generator](../agents/nolte-shared/contract-test-generator.md) — nolte-shared
+- [contract-test-reviewer](../agents/nolte-shared/contract-test-reviewer.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
@@ -147,6 +149,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [code-security-reviewer](../agents/nolte-shared/code-security-reviewer.md) — nolte-shared
 - [component-test-reviewer](../agents/nolte-shared/component-test-reviewer.md) — nolte-shared
+- [contract-test-reviewer](../agents/nolte-shared/contract-test-reviewer.md) — nolte-shared
 - [diagram-opportunity-reviewer](../agents/nolte-shared/diagram-opportunity-reviewer.md) — nolte-shared
 - [e2e-result-reviewer](../agents/nolte-shared/e2e-result-reviewer.md) — nolte-shared
 - [e2e-test-reviewer](../agents/nolte-shared/e2e-test-reviewer.md) — nolte-shared
@@ -173,6 +176,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [component-test-generator](../agents/nolte-shared/component-test-generator.md) — nolte-shared
+- [contract-test-generator](../agents/nolte-shared/contract-test-generator.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
 - [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared

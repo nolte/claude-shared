@@ -35,6 +35,8 @@ _Run the project's lint + typecheck + test gate in parallel, tabulate the result
 ## Referenced by
 
 - [`component-test-reviewer`](../../agents/nolte-shared/component-test-reviewer.md)
+- [`contract-test-generator`](../../agents/nolte-shared/contract-test-generator.md)
+- [`contract-test-reviewer`](../../agents/nolte-shared/contract-test-reviewer.md)
 - [`fullstack-developer`](../../agents/nolte-shared/fullstack-developer.md)
 - [`integration-test-generator`](../../agents/nolte-shared/integration-test-generator.md)
 - [`integration-test-reviewer`](../../agents/nolte-shared/integration-test-reviewer.md)
