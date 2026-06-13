@@ -91,3 +91,8 @@ ruleset
 untyped
 superset
 [Ss]uppressions?
+mockist
+Mockito
+Sinon
+Ottinger
+Schuchert
