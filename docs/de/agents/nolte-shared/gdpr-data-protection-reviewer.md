@@ -33,6 +33,10 @@ _Read-only, whole-repository GDPR/DSGVO data-protection audit. Discovers a proje
 - [`code-security-reviewer`](code-security-reviewer.md)
 - [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
 
+## Referenziert von
+
+- [`security-requirements-reviewer`](security-requirements-reviewer.md)
+
 ---
 
 ## GDPR Data-Protection Reviewer

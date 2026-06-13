@@ -37,6 +37,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [prose-vale-curator](../agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [quality-gate-enforcer](../agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
 - [roadmap-coherence-reviewer](../agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
+- [security-requirements-reviewer](../agents/nolte-shared/security-requirements-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](../agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared
@@ -92,6 +93,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 ## `privacy`
 
 - [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
+- [security-requirements-reviewer](../agents/nolte-shared/security-requirements-reviewer.md) — nolte-shared
 
 ## `prose`
 
@@ -145,6 +147,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [project-structure-reviewer](../agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
 - [quality-gate-enforcer](../agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
 - [roadmap-coherence-reviewer](../agents/nolte-shared/roadmap-coherence-reviewer.md) — nolte-shared
+- [security-requirements-reviewer](../agents/nolte-shared/security-requirements-reviewer.md) — nolte-shared
 - [spec-readiness-reviewer](../agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared

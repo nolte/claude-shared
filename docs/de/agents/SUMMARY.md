@@ -11,6 +11,7 @@ last_updated: generated
     * [audience-review](nolte-shared/audience-review.md)
     * [feature-consistency-reviewer](nolte-shared/feature-consistency-reviewer.md)
     * [roadmap-coherence-reviewer](nolte-shared/roadmap-coherence-reviewer.md)
+    * [security-requirements-reviewer](nolte-shared/security-requirements-reviewer.md)
     * [sprint-readiness-reviewer](nolte-shared/sprint-readiness-reviewer.md)
     * [tech-stack-fitness-reviewer](nolte-shared/tech-stack-fitness-reviewer.md)
 * 3 Design
