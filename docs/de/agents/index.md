@@ -33,6 +33,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 ## 4 Build
 
 - [`component-test-generator`](nolte-shared/component-test-generator.md) — Erzeugt spec-konforme Component-Tests in der passenden Ausprägung (Frontend render-and-query oder Service-über-eigene-API mit gedoubelten Externen), mit Determinismus und TC-IDs.
+- [`contract-test-generator`](nolte-shared/contract-test-generator.md) — Erzeugt spec-konforme Contract-Tests (consumer-driven als Vorgabe: Consumer-Erwartungen + Provider-Verifikation, Broker, can-i-deploy), die nur Agreement-Kompatibilität prüfen.
 - [`e2e-test-generator`](nolte-shared/e2e-test-generator.md) — Erzeugt das Grundgerüst einer spec-konformen E2E-Suite (Page Objects, Waits, Screenshots, Marker, Protokoll) für ein Feature, mit dem Selenium-+-pytest-Referenzprofil als Vorgabe.
 - [`frontend-usability-optimizer`](nolte-shared/frontend-usability-optimizer.md) — Senior-UX-Engineer, der die Usability bestehenden Frontend-Codes direkt verbessert — gegen den selbst erkannten Stack und die dokumentierten UI-Konventionen des Projekts.
 - [`fullstack-developer`](nolte-shared/fullstack-developer.md) — Senior-Full-Stack-Entwickler, der eine scharf umrissene Anforderung als produktionsreifen Code gegen den selbst erkannten Stack, das Layout und die Qualitätsmesslatte des Projekts umsetzt.
@@ -43,6 +44,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 
 - [`code-security-reviewer`](nolte-shared/code-security-reviewer.md) — Read-only Whole-Codebase-OWASP-Audit, das Befunde über Dateien hinweg zu einem nach Schweregrad klassifizierten Report korreliert.
 - [`component-test-reviewer`](nolte-shared/component-test-reviewer.md) — Prüft bestehende Component-Tests (Frontend oder Service) gegen die Component-Stufen-Spec, liefert ein checklistenbasiertes Konformitätsurteil und wendet nur minimale, gezielte Korrekturen an.
+- [`contract-test-reviewer`](nolte-shared/contract-test-reviewer.md) — Prüft bestehende Contract-Tests gegen die Contract-Stufen-Spec, liefert ein checklistenbasiertes Konformitätsurteil und wendet nur minimale, gezielte Korrekturen an.
 - [`dependency-audit-scanner`](nolte-shared/dependency-audit-scanner.md) — Nur-Lese-CVE-Scanner pro Projekttyp (pip-audit, npm audit, govulncheck, cargo audit); liefert strukturiertes Drift-Inventar.
 - [`diagram-opportunity-reviewer`](nolte-shared/diagram-opportunity-reviewer.md) — Nur-Lese-Prosa-Scanner, der Markdown-Passagen markiert, die als Mermaid-Diagramm besser ausgedrückt wären.
 - [`e2e-result-reviewer`](nolte-shared/e2e-result-reviewer.md) — Prüft Screenshots und Protokoll eines E2E-Laufs visuell gegen die Anforderungs-/UI-Specs und liefert priorisierte, rein lesende Befunde.

@@ -36,6 +36,7 @@ _Scaffolds spec-conformant narrow integration tests against spec/project/test-ti
 
 ## Referenziert von
 
+- [`contract-test-generator`](contract-test-generator.md)
 - [`integration-test-reviewer`](integration-test-reviewer.md)
 
 ---
