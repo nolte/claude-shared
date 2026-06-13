@@ -122,6 +122,8 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
 - [e2e-test-reviewer](../agents/nolte-shared/e2e-test-reviewer.md) — nolte-shared
 - [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared
+- [integration-test-generator](../agents/nolte-shared/integration-test-generator.md) — nolte-shared
+- [integration-test-reviewer](../agents/nolte-shared/integration-test-reviewer.md) — nolte-shared
 - [link-rot-scanner](../agents/nolte-shared/link-rot-scanner.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared
@@ -152,6 +154,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [frontend-usability-optimizer](../agents/nolte-shared/frontend-usability-optimizer.md) — nolte-shared
 - [gdpr-data-protection-reviewer](../agents/nolte-shared/gdpr-data-protection-reviewer.md) — nolte-shared
 - [i18n-completeness-checker](../agents/nolte-shared/i18n-completeness-checker.md) — nolte-shared
+- [integration-test-reviewer](../agents/nolte-shared/integration-test-reviewer.md) — nolte-shared
 - [mermaid-diagram-reviewer](../agents/nolte-shared/mermaid-diagram-reviewer.md) — nolte-shared
 - [project-structure-reviewer](../agents/nolte-shared/project-structure-reviewer.md) — nolte-shared
 - [quality-gate-enforcer](../agents/nolte-shared/quality-gate-enforcer.md) — nolte-shared
@@ -174,6 +177,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
 - [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
+- [integration-test-generator](../agents/nolte-shared/integration-test-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared
