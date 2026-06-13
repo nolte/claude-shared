@@ -103,8 +103,8 @@ Before any operation:
 - When the issue describes a feature or change whose requirements are not yet
   precisely stated, a requirement artefact under `project/requirements/` should
   exist before decomposition, per `spec/project/requirements-elicitation/`
-  SS Consumer contract. If the issue body is vague and no artefact exists (so
-  `U_gate` would be below `tau_high`), dispatch [`requirements-elicit`](requirements-elicit.md) first, or
+  § Consumer contract. If the issue body is vague and no artefact exists (so
+  `U_gate` would be below `τ_high`), dispatch [`requirements-elicit`](requirements-elicit.md) first, or
   record an explicit operator override, rather than decomposing against guesses.
 
 ### Operations
