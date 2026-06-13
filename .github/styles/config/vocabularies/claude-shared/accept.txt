@@ -97,3 +97,4 @@ Sinon
 Ottinger
 Schuchert
 [Dd]atastores?
+[Dd]eserialise[sd]?
