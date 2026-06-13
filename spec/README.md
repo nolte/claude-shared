@@ -76,6 +76,7 @@ Canonical language: `en` · Translations: `de`
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | unversioned |
 | project | test-pyramid-foundation | Test Pyramid Foundation | Fundament der Testpyramide | draft | unversioned |
+| project | test-tier-component | Test Tier: Component | Test-Stufe: Component | draft | unversioned |
 | project | test-tier-static-analysis | Test Tier: Static Analysis | Test-Stufe: Static Analysis | draft | unversioned |
 | project | test-tier-unit | Test Tier: Unit | Test-Stufe: Unit | draft | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | 2026-04-24 |
