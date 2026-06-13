@@ -82,3 +82,12 @@ Testcontainers
 Goodhart('s)?
 operationalisation
 unautomated
+Habib
+Pradel
+Sadowski
+deserialisation
+hardcoded
+ruleset
+untyped
+superset
+[Ss]uppressions?
