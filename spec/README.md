@@ -77,6 +77,7 @@ Canonical language: `en` · Translations: `de`
 | project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | unversioned |
 | project | test-pyramid-foundation | Test Pyramid Foundation | Fundament der Testpyramide | draft | unversioned |
 | project | test-tier-component | Test Tier: Component | Test-Stufe: Component | draft | unversioned |
+| project | test-tier-contract | Test Tier: Contract | Test-Stufe: Contract | draft | unversioned |
 | project | test-tier-integration | Test Tier: Integration | Test-Stufe: Integration | draft | unversioned |
 | project | test-tier-static-analysis | Test Tier: Static Analysis | Test-Stufe: Static Analysis | draft | unversioned |
 | project | test-tier-unit | Test Tier: Unit | Test-Stufe: Unit | draft | unversioned |
