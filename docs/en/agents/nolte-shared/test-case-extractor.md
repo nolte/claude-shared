@@ -34,6 +34,7 @@ _Derive structured, framework-agnostic test cases from a requirement or specific
 ## Referenced by
 
 - [`e2e-test-generator`](e2e-test-generator.md)
+- [`unit-test-generator`](unit-test-generator.md)
 
 ---
 

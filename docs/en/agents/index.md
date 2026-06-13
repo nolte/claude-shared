@@ -35,6 +35,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`e2e-test-generator`](nolte-shared/e2e-test-generator.md) — Scaffolds a spec-conformant E2E suite (page objects, waits, screenshots, markers, protocol) for a feature, defaulting to the Selenium + pytest reference profile.
 - [`frontend-usability-optimizer`](nolte-shared/frontend-usability-optimizer.md) — Senior UX engineer that improves the usability of existing frontend code in place against the project's own detected stack and documented UI conventions.
 - [`fullstack-developer`](nolte-shared/fullstack-developer.md) — Senior full-stack engineer that implements a scoped requirement as production-ready code against the project's own detected stack, layout, and quality bar.
+- [`unit-test-generator`](nolte-shared/unit-test-generator.md) — Scaffolds spec-conformant unit tests (FIRST, AAA, observable-behaviour assertions, disciplined doubles, TC-IDs) for a module, defaulting to a pytest reference profile.
 
 ## 5 Review
 
@@ -48,6 +49,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Read-only license-inventory scanner: SBOM with resolved licenses, SPDX identification, and category classification per stack.
 - [`portfolio-inflight-collector`](nolte-shared/portfolio-inflight-collector.md) — Read-only in-flight data collector: open issues, PRs (incl. drafts), branches without PR, unresolved review threads + Discussions across nolte/*.
 - [`portfolio-manifest-collector`](nolte-shared/portfolio-manifest-collector.md) — Read-only inventory collector: gathers per-repo project/portfolio.yml manifests across nolte/*.
+- [`unit-test-reviewer`](nolte-shared/unit-test-reviewer.md) — Reviews existing unit tests against the unit-tier spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`vocab-drift-scanner`](nolte-shared/vocab-drift-scanner.md) — Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release.
 
 ## 6 Quality

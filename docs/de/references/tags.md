@@ -122,6 +122,8 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared
 - [link-rot-scanner](../agents/nolte-shared/link-rot-scanner.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+- [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared
+- [unit-test-reviewer](../agents/nolte-shared/unit-test-reviewer.md) — nolte-shared
 - [quality-gate](../skills/nolte-shared/quality-gate.md) — nolte-shared
 - [test-pyramid-check](../skills/nolte-shared/test-pyramid-check.md) — nolte-shared
 
@@ -152,6 +154,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared
 - [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
+- [unit-test-reviewer](../agents/nolte-shared/unit-test-reviewer.md) — nolte-shared
 - [webview-ui-expert](../agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [agent-review](../skills/nolte-shared/agent-review.md) — nolte-shared
 - [skill-review](../skills/nolte-shared/skill-review.md) — nolte-shared
@@ -165,6 +168,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+- [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared
 - [backstage-catalog-generate](../skills/nolte-shared/backstage-catalog-generate.md) — nolte-shared
 - [cookiecutter-template-manage](../skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
 - [docs-audience-tracks-apply](../skills/nolte-shared/docs-audience-tracks-apply.md) — nolte-shared
