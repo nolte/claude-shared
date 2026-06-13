@@ -76,7 +76,11 @@ Canonical language: `en` · Translations: `de`
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | unversioned |
 | project | sprint | Project Sprint | Projekt-Sprint | draft | unversioned |
 | project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | unversioned |
+| project | test-cycle-case-determination | Test Cycle: Case Determination | Test-Zyklus: Testfall-Ermittlung | draft | unversioned |
+| project | test-cycle-code-adaptation | Test Cycle: Code Adaptation | Test-Zyklus: Code-Anpassung | draft | unversioned |
+| project | test-cycle-execution | Test Cycle: Execution | Test-Zyklus: Ausführung | draft | unversioned |
 | project | test-cycle-foundation | Test Cycle Foundation | Fundament des Test-Zyklus | draft | unversioned |
+| project | test-cycle-result-analysis | Test Cycle: Result Analysis | Test-Zyklus: Ergebnis-Analyse | draft | unversioned |
 | project | test-pyramid-foundation | Test Pyramid Foundation | Fundament der Testpyramide | draft | unversioned |
 | project | test-tier-component | Test Tier: Component | Test-Stufe: Component | draft | unversioned |
 | project | test-tier-contract | Test Tier: Contract | Test-Stufe: Contract | draft | unversioned |

@@ -37,6 +37,8 @@ _Run the project's lint + typecheck + test gate in parallel, tabulate the result
 - [`fullstack-developer`](../../agents/nolte-shared/fullstack-developer.md)
 - [`quality-gate-enforcer`](../../agents/nolte-shared/quality-gate-enforcer.md)
 - [`test-case-extractor`](../../agents/nolte-shared/test-case-extractor.md)
+- [`unit-test-generator`](../../agents/nolte-shared/unit-test-generator.md)
+- [`unit-test-reviewer`](../../agents/nolte-shared/unit-test-reviewer.md)
 - [`test-pyramid-check`](test-pyramid-check.md)
 
 ---
