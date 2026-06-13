@@ -58,6 +58,7 @@ last_updated: generated
     * [license-check](nolte-shared/license-check.md)
     * [portfolio-audit](nolte-shared/portfolio-audit.md)
     * [quality-gate](nolte-shared/quality-gate.md)
+    * [test-cycle-orchestrate](nolte-shared/test-cycle-orchestrate.md)
     * [test-pyramid-check](nolte-shared/test-pyramid-check.md)
     * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)
     * [workflow-health-triage](nolte-shared/workflow-health-triage.md)

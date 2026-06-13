@@ -128,9 +128,12 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [integration-test-reviewer](../agents/nolte-shared/integration-test-reviewer.md) — nolte-shared
 - [link-rot-scanner](../agents/nolte-shared/link-rot-scanner.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+- [test-code-adapter](../agents/nolte-shared/test-code-adapter.md) — nolte-shared
+- [test-result-analyzer](../agents/nolte-shared/test-result-analyzer.md) — nolte-shared
 - [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared
 - [unit-test-reviewer](../agents/nolte-shared/unit-test-reviewer.md) — nolte-shared
 - [quality-gate](../skills/nolte-shared/quality-gate.md) — nolte-shared
+- [test-cycle-orchestrate](../skills/nolte-shared/test-cycle-orchestrate.md) — nolte-shared
 - [test-pyramid-check](../skills/nolte-shared/test-pyramid-check.md) — nolte-shared
 
 ## `release`
@@ -167,6 +170,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared
 - [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
+- [test-result-analyzer](../agents/nolte-shared/test-result-analyzer.md) — nolte-shared
 - [unit-test-reviewer](../agents/nolte-shared/unit-test-reviewer.md) — nolte-shared
 - [webview-ui-expert](../agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [agent-review](../skills/nolte-shared/agent-review.md) — nolte-shared
@@ -184,6 +188,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [integration-test-generator](../agents/nolte-shared/integration-test-generator.md) — nolte-shared
 - [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
+- [test-code-adapter](../agents/nolte-shared/test-code-adapter.md) — nolte-shared
 - [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared
 - [backstage-catalog-generate](../skills/nolte-shared/backstage-catalog-generate.md) — nolte-shared
 - [cookiecutter-template-manage](../skills/nolte-shared/cookiecutter-template-manage.md) — nolte-shared
