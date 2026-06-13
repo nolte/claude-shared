@@ -13,7 +13,7 @@ It's operationalised by three agents and one skill:
 - `e2e-test-generator` (`distribution: plugin`)—scaffolds a spec-conformant E2E suite for a feature
 - `e2e-test-reviewer` (`distribution: plugin`)—reviews and minimally repairs an existing suite against this spec
 - `e2e-result-reviewer` (`distribution: plugin`)—visually reviews a run's screenshots and protocol against the requirement specs
-- `test-pyramid-check` (skill)—audits a feature's test-tier completeness against this spec
+- `test-pyramid-check` (skill)—audits a feature's test-tier completeness against the tier taxonomy in `spec/project/test-pyramid-foundation/` and the E2E discipline in this spec
 
 **Relationship to `test-case-derivation`.** That spec deliberately scoped E2E-automation code generation/review, test-tier auditing, and screenshot review *out* of the plugin, on the grounds that they're "too stack-coupled" and "stay project-local." This spec revises that position. The only cited reason was stack coupling, and a framework-neutral binding core with the concrete library demoted to a reference profile resolves exactly that: the discipline is portfolio-reusable, only the profile is stack-specific. `test-case-derivation` is updated in lockstep so the two specs don't contradict each other; the boundary between them is now drawn by responsibility (derive abstract cases vs. automate, run-review, and audit them), not by "shared vs. project-local."
 
@@ -25,7 +25,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - Keep the core executable on any browser-automation stack by demoting the concrete library to a swappable reference profile rather than a requirement
 - Ship one fully worked, normative **Selenium + pytest** reference profile so a Python project is productive immediately
 - Make every E2E suite auditable (screenshot checkpoints + machine-generated protocol) and traceable (each test names the requirement it verifies)
-- Make test-tier completeness (the "pyramid") an explicit, checkable property rather than an implicit hope
+- Keep the E2E tier reserved for user-journey verification, deferring the full tier model and taxonomy to `spec/project/test-pyramid-foundation/`
 - Adapt to the project's stack, paths, routes, and language instead of assuming one app
 
 ## Non-Goals
@@ -46,9 +46,10 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 ### Test-tier completeness (the pyramid)
 
-- A feature's automated tests **MUST** cover the applicable tiers—unit, integration, contract/API (where the system exposes one), and E2E—rather than concentrating coverage in slow browser tests; the E2E tier **MUST** be reserved for user-journey verification, not for logic better tested a tier down
-- Fast-tier coverage targets (for example a line/branch floor on business logic) **MUST** be project-declared; this spec fixes the *requirement that they exist and are checked*, not their numeric values
-- The `test-pyramid-check` skill **MUST** be able to report, per feature, which tiers are present, which are missing, and whether the E2E tier follows the disciplines below
+- The full tier model and the closed functional-tier taxonomy are owned by `spec/project/test-pyramid-foundation/`; this spec **MUST NOT** restate them. A feature's suite **MUST** be tier-complete per that foundation—each behaviour tested at the lowest tier that gives confidence—while this spec governs only the **E2E tier's** shape and discipline
+- The **E2E tier MUST** be reserved for user-journey verification, not for logic better tested a tier down; this is the foundation's lowest-tier-that-gives-confidence rule applied at the apex
+- Coverage governance (coverage as a guide not a target, mutation score as the stronger signal, no fixed cross-tier ratios) is owned by the foundation; this spec **MUST NOT** set numeric coverage targets
+- The `test-pyramid-check` skill **MUST** audit tier completeness against the foundation's taxonomy and the E2E discipline defined below, and report, per feature, which tiers are present, which are missing, and whether the E2E tier follows those disciplines
 
 ### Page-object encapsulation
 
@@ -106,7 +107,7 @@ This profile is the binding realisation of the core for Python projects and the 
 - `e2e-test-generator` **MUST** cite this spec, scaffold against the declared stack (defaulting to the reference profile), wire data-testid-first locators, screenshot checkpoints, markers, and protocol integration, and keep raw locator calls inside page objects only
 - `e2e-test-reviewer` **MUST** review an existing suite against this spec's core (and the reference profile when that's the stack), report a checklist-based conformance verdict, and apply only minimal, surgical fixes rather than regenerating
 - `e2e-result-reviewer` **MUST** read a run's protocol and screenshots and review them visually against the requirement/TC specs, returning prioritised findings; it **MUST NOT** edit code or tests (read-only)
-- `test-pyramid-check` **MUST** audit tier completeness and E2E discipline against this spec and return a gap report; it **MUST NOT** generate or modify tests
+- `test-pyramid-check` **MUST** audit tier completeness against `spec/project/test-pyramid-foundation/` and E2E discipline against this spec, returning a gap report; it **MUST NOT** generate or modify tests
 
 ## Acceptance Criteria
 
@@ -127,6 +128,7 @@ This profile is the binding realisation of the core for Python projects and the 
 - [R3] Abstract test-case derivation, delimited against this spec: `spec/project/test-case-derivation/`
 - [R4] Fast-tier execution gate, delimited against this spec: `spec/project/quality-gate/`
 - [R5] Page Object Model (background methodology): <https://martinfowler.com/bliki/PageObject.html>
+- [R6] Test pyramid foundation (the tier model and taxonomy the E2E tier sits atop; owner of tier-completeness and coverage governance): `spec/project/test-pyramid-foundation/`
 
 ## Open Questions
 

@@ -13,7 +13,7 @@ Operationalisiert wird sie durch drei Agents und einen Skill:
 - `e2e-test-generator` (`distribution: plugin`) — erzeugt das Grundgerüst einer spec-konformen E2E-Suite für ein Feature
 - `e2e-test-reviewer` (`distribution: plugin`) — prüft eine bestehende Suite gegen diese Spec und repariert minimal-invasiv
 - `e2e-result-reviewer` (`distribution: plugin`) — prüft Screenshots und Protokoll eines Laufs visuell gegen die Anforderungs-Specs
-- `test-pyramid-check` (Skill) — auditiert die Teststufen-Vollständigkeit eines Features gegen diese Spec
+- `test-pyramid-check` (Skill) — auditiert die Teststufen-Vollständigkeit eines Features gegen die Stufen-Taxonomie in `spec/project/test-pyramid-foundation/` und die E2E-Disziplin in dieser Spec
 
 **Verhältnis zu `test-case-derivation`.** Jene Spec schloss E2E-Automatisierungscode-Erzeugung/-Review, Teststufen-Audit und Screenshot-Review bewusst aus dem Plugin aus — mit der Begründung, sie seien „zu stack-gekoppelt" und „bleiben projektlokal". Diese Spec revidiert diese Position. Der einzige genannte Grund war die Stack-Kopplung, und ein framework-neutraler bindender Kern mit der konkreten Bibliothek als bloßem Referenzprofil löst genau das auf: Die Disziplin ist portfolio-weit wiederverwendbar, nur das Profil ist stack-spezifisch. `test-case-derivation` wird im Gleichschritt angepasst, damit sich die beiden Specs nicht widersprechen; die Grenze zwischen ihnen verläuft jetzt entlang der Verantwortung (abstrakte Fälle ableiten vs. sie automatisieren, ihr Ergebnis reviewen und auditieren), nicht entlang „geteilt vs. projektlokal".
 
@@ -25,7 +25,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 - Den Kern auf jedem Browser-Automatisierungs-Stack ausführbar halten, indem die konkrete Bibliothek zu einem austauschbaren Referenzprofil herabgestuft wird statt zur Pflicht
 - Ein voll ausgearbeitetes, normatives **Selenium-+-pytest**-Referenzprofil mitliefern, damit ein Python-Projekt sofort produktiv ist
 - Jede E2E-Suite nachvollziehbar (Screenshot-Checkpoints + maschinelles Protokoll) und rückverfolgbar (jeder Test benennt die geprüfte Anforderung) machen
-- Teststufen-Vollständigkeit (die „Pyramide") zu einer expliziten, prüfbaren Eigenschaft machen statt zu einer stillen Hoffnung
+- Die E2E-Stufe der Verifikation von User-Journeys vorbehalten und das vollständige Stufenmodell samt Taxonomie an `spec/project/test-pyramid-foundation/` delegieren
 - Sich an Stack, Pfade, Routen und Sprache des Projekts anpassen, statt eine App vorauszusetzen
 
 ## Nicht-Ziele
@@ -46,9 +46,10 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 
 ### Teststufen-Vollständigkeit (die Pyramide)
 
-- Die automatisierten Tests eines Features **MÜSSEN** die zutreffenden Stufen abdecken — Unit, Integration, Contract/API (sofern das System eine bereitstellt) und E2E — statt die Abdeckung in langsamen Browser-Tests zu bündeln; die E2E-Stufe **MUSS** der Verifikation von User-Journeys vorbehalten bleiben, nicht für Logik, die eine Stufe tiefer besser getestet ist
-- Abdeckungsziele der schnellen Stufen (etwa eine Line-/Branch-Untergrenze für Geschäftslogik) **MÜSSEN** projektseitig festgelegt werden; diese Spec fixiert die *Anforderung, dass es sie gibt und dass sie geprüft werden*, nicht ihre Zahlenwerte
-- Der Skill `test-pyramid-check` **MUSS** pro Feature berichten können, welche Stufen vorhanden sind, welche fehlen und ob die E2E-Stufe den Disziplinen unten folgt
+- Das vollständige Stufenmodell und die geschlossene funktionale Stufen-Taxonomie gehören `spec/project/test-pyramid-foundation/`; diese Spec **DARF** sie **NICHT** wiederholen. Die Suite eines Features **MUSS** gemäß diesem Fundament stufen-vollständig sein — jedes Verhalten auf der niedrigsten Stufe getestet, die Vertrauen gibt — während diese Spec nur Form und Disziplin der **E2E-Stufe** regelt
+- Die **E2E-Stufe MUSS** der Verifikation von User-Journeys vorbehalten bleiben, nicht für Logik, die eine Stufe tiefer besser getestet ist; das ist die Regel der niedrigsten-Stufe-die-Vertrauen-gibt des Fundaments, an der Spitze angewandt
+- Coverage-Governance (Coverage als Leitlinie statt Ziel, Mutationsscore als stärkeres Signal, keine festen stufenübergreifenden Verhältnisse) gehört dem Fundament; diese Spec **DARF** keine numerischen Coverage-Ziele setzen
+- Der Skill `test-pyramid-check` **MUSS** die Stufen-Vollständigkeit gegen die Taxonomie des Fundaments und die unten definierte E2E-Disziplin auditieren und pro Feature berichten, welche Stufen vorhanden sind, welche fehlen und ob die E2E-Stufe diesen Disziplinen folgt
 
 ### Page-Object-Kapselung
 
@@ -106,7 +107,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die 
 - `e2e-test-generator` **MUSS** diese Spec zitieren, gegen den angegebenen Stack aufsetzen (mit dem Referenzprofil als Vorgabe), data-testid-priorisierte Locators, Screenshot-Checkpoints, Marker und Protokoll-Integration verdrahten und rohe Locator-Aufrufe ausschließlich in Page Objects halten
 - `e2e-test-reviewer` **MUSS** eine bestehende Suite gegen den Kern dieser Spec (und das Referenzprofil, wenn das der Stack ist) prüfen, ein checklistenbasiertes Konformitäts-Urteil berichten und nur minimale, gezielte Korrekturen anwenden statt neu zu generieren
 - `e2e-result-reviewer` **MUSS** Protokoll und Screenshots eines Laufs lesen und sie visuell gegen die Anforderungs-/TC-Specs prüfen und priorisierte Befunde zurückgeben; er **DARF** keinen Code und keine Tests bearbeiten (read-only)
-- `test-pyramid-check` **MUSS** die Stufen-Vollständigkeit und E2E-Disziplin gegen diese Spec auditieren und einen Lückenbericht zurückgeben; er **DARF** keine Tests erzeugen oder verändern
+- `test-pyramid-check` **MUSS** die Stufen-Vollständigkeit gegen `spec/project/test-pyramid-foundation/` und die E2E-Disziplin gegen diese Spec auditieren und einen Lückenbericht zurückgeben; er **DARF** keine Tests erzeugen oder verändern
 
 ## Akzeptanzkriterien
 
@@ -127,6 +128,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die 
 - [R3] Abstrakte Testfall-Ableitung, abgegrenzt gegen diese Spec: `spec/project/test-case-derivation/`
 - [R4] Ausführungs-Gate der schnellen Stufen, abgegrenzt gegen diese Spec: `spec/project/quality-gate/`
 - [R5] Page Object Model (Hintergrund-Methodik): <https://martinfowler.com/bliki/PageObject.html>
+- [R6] Test-Pyramide-Fundament (Stufenmodell und Taxonomie, auf denen die E2E-Stufe dieser Spec aufsitzt; Eigentümer von Stufen-Vollständigkeit und Coverage-Governance): `spec/project/test-pyramid-foundation/`
 
 ## Offene Fragen
 
