@@ -35,6 +35,7 @@ last_updated: generated
     * [webview-ui-optimize](nolte-shared/webview-ui-optimize.md)
     * [yaml-json-schema](nolte-shared/yaml-json-schema.md)
 * 4 Build
+    * [backstage-catalog-generate](nolte-shared/backstage-catalog-generate.md)
     * [blog-author](nolte-shared/blog-author.md)
     * [blog-author-trigger](nolte-shared/blog-author-trigger.md)
     * [gemini-image-handoff](nolte-shared/gemini-image-handoff.md)
@@ -56,6 +57,7 @@ last_updated: generated
     * [license-check](nolte-shared/license-check.md)
     * [portfolio-audit](nolte-shared/portfolio-audit.md)
     * [quality-gate](nolte-shared/quality-gate.md)
+    * [test-pyramid-check](nolte-shared/test-pyramid-check.md)
     * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)
     * [workflow-health-triage](nolte-shared/workflow-health-triage.md)
 * 7 Close & Release

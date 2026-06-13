@@ -31,6 +31,7 @@ Canonical language: `en` · Translations: `de`
 | portfolio | tech-stack | Portfolio Tech Stack Capture | Portfolio-Tech-Stack-Erfassung | draft | unversioned |
 | portfolio | tech-stack-discovery | Portfolio Tech-Stack Discovery | Portfolio-Tech-Stack-Discovery | draft | unversioned |
 | project | audience-identification | Audience Identification | Zielgruppen-Identifikation | accepted | 2026-04-24 |
+| project | backstage-catalog-generation | Backstage catalog-info.yaml Generation | Backstage-catalog-info.yaml-Generierung | draft | unversioned |
 | project | blog-author | Blog author | Blog-Autor | accepted | unversioned |
 | project | blog-author-trigger | Blog author trigger | Blog-Autor-Trigger | draft | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | 2026-04-23 |
@@ -42,6 +43,7 @@ Canonical language: `en` · Translations: `de`
 | project | docs-audience-tracks | Documentation Audience Tracks | Dokumentations-Zielgruppen-Spuren | draft | unversioned |
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | unversioned |
 | project | docs-multilingual-authoring | Multilingual Documentation Authoring | Mehrsprachige Dokumentations-Autorenschaft | draft | unversioned |
+| project | e2e-test-automation | End-to-End Test Automation Standard | Standard für End-to-End-Test-Automatisierung | draft | unversioned |
 | project | feature | Project Feature | Projekt-Feature | draft | unversioned |
 | project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | unversioned |
@@ -50,6 +52,7 @@ Canonical language: `en` · Translations: `de`
 | project | lektorat | Lektorat | Lektorat | accepted | unversioned |
 | project | lektorat-auto-revise | Lektorat Auto-Revise | Lektorat Auto-Revise | draft | unversioned |
 | project | license-check | License Check | Lizenzprüfung | draft | unversioned |
+| project | link-validation | Link Validation | Link-Validierung | draft | unversioned |
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
 | project | mkdocs-structure | MkDocs Site Structure | MkDocs-Site-Struktur | draft | unversioned |

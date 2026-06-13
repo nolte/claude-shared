@@ -12,7 +12,7 @@ last_updated: 2026-05-19
 
 ## Setup und Voraussetzungen
 
-Bevor du die Checks des Repositorys lokal ausführen kannst, brauchst du die folgende Toolchain. Das Repository ist reine Dokumentation und Automatisierung — es gibt keinen Anwendungs-Build —, daher ist die Toolchain bewusst klein.
+Bevor du die Checks des Repos lokal ausführen kannst, brauchst du diese Tools. Das Repo ist reine Dokumentation und Automatisierung — es gibt keinen App-Build —, daher bleiben die Tools bewusst klein.
 
 | Tool | Version | Wofür |
 |------|---------|-------|
@@ -22,7 +22,7 @@ Bevor du die Checks des Repositorys lokal ausführen kannst, brauchst du die fol
 | Vale | aktuell | Prosa-Linter (zieht beim `vale sync` das gepinnte `nolte/vale-style`-Vokabular) |
 | Git | 2.x | Worktree-basierter Workflow gemäß der Parallel-Working-Copies-Konvention |
 
-Außerdem brauchst du ein GitHub-Konto mit Fork-/PR-Zugriff; weitere externe Konten sind nicht erforderlich.
+Außerdem brauchst du ein GitHub-Konto mit Zugriff für Forks und Pull Requests (PRs); weitere externe Konten sind nicht erforderlich.
 
 Erstmalige Bootstrap-Sequenz, einmal nach dem Klonen auszuführen:
 
@@ -40,7 +40,7 @@ task check    # das develop-Quality-Gate lokal: lint + test
 task docs     # baut die zweisprachige MkDocs-Site (mkdocs build --strict)
 ```
 
-Wer `task check` sauber durchlaufen lässt, hat ein lauffähiges Repository.
+Wer `task check` sauber durchläuft, hat ein lauffähiges Repo.
 
 ## Workflow
 
@@ -54,7 +54,7 @@ Wer `task check` sauber durchlaufen lässt, hat ein lauffähiges Repository.
 
 - **Namen**: ASCII-Kebab-Case.
 - **Beschreibungen**: konkrete User-Trigger ("einsetzen, wenn der Nutzer X sagt"), keine abstrakten Fähigkeiten.
-- **Tool-Zugriff bei Agents**: Prinzip der minimalen Rechte. Nur-Lese-Agents (read-only) erhalten keine Schreib-Tools.
+- **Tool-Zugriff bei Agents**: Prinzip der minimalen Rechte. Nur-Lese-Agents erhalten keine Schreib-Tools.
 - **Keine absoluten Pfade** in Skill- oder Agent-Inhalten.
 - **Inhaltssprache**: Skills und Agents in Englisch, User-Antwort in Nutzersprache.
 

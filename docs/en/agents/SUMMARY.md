@@ -19,10 +19,14 @@ last_updated: generated
     * [spec-readiness-reviewer](nolte-shared/spec-readiness-reviewer.md)
     * [test-case-extractor](nolte-shared/test-case-extractor.md)
     * [webview-ui-expert](nolte-shared/webview-ui-expert.md)
+* 4 Build
+    * [e2e-test-generator](nolte-shared/e2e-test-generator.md)
 * 5 Review
     * [code-security-reviewer](nolte-shared/code-security-reviewer.md)
     * [dependency-audit-scanner](nolte-shared/dependency-audit-scanner.md)
     * [diagram-opportunity-reviewer](nolte-shared/diagram-opportunity-reviewer.md)
+    * [e2e-result-reviewer](nolte-shared/e2e-result-reviewer.md)
+    * [e2e-test-reviewer](nolte-shared/e2e-test-reviewer.md)
     * [gdpr-data-protection-reviewer](nolte-shared/gdpr-data-protection-reviewer.md)
     * [lektorat-scanner](nolte-shared/lektorat-scanner.md)
     * [license-check-scanner](nolte-shared/license-check-scanner.md)
@@ -32,6 +36,7 @@ last_updated: generated
 * 6 Quality
     * [docs-freshness-checker](nolte-shared/docs-freshness-checker.md)
     * [i18n-completeness-checker](nolte-shared/i18n-completeness-checker.md)
+    * [link-rot-scanner](nolte-shared/link-rot-scanner.md)
     * [mermaid-diagram-reviewer](nolte-shared/mermaid-diagram-reviewer.md)
     * [project-structure-reviewer](nolte-shared/project-structure-reviewer.md)
     * [prose-vale-curator](nolte-shared/prose-vale-curator.md)

@@ -38,6 +38,7 @@ _Performs a read-only, cross-file deep review of one named target against the ca
 
 ## Referenced by
 
+- [`e2e-result-reviewer`](e2e-result-reviewer.md)
 - [`i18n-completeness-checker`](i18n-completeness-checker.md)
 - [`webview-ui-optimize`](../../skills/nolte-shared/webview-ui-optimize.md)
 

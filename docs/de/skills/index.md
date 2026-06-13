@@ -47,6 +47,7 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 
 ## 4 Build
 
+- [`backstage-catalog-generate`](nolte-shared/backstage-catalog-generate.md) — Erzeugt aus einem Projekt eine schema-valide Backstage-catalog-info.yaml: inferiert per-Kind-MUST-Floor-Felder aus Repo-Signalen, klärt den Rest mit dem Operator und validiert selbst.
 - [`blog-author`](nolte-shared/blog-author.md) — Verfasst ein zweisprachiges Blog-Post-Paar (EN-canonical + DE-übersetzt) nach den blog-author-Specs dieses Plugins und schreibt es in ein Konsumenten-Blog-Repo.
 - [`blog-author-trigger`](nolte-shared/blog-author-trigger.md) — Bei einem feature→done-Übergang leitet es ein Blog-Post-Briefing ab, schlägt neu/update/defer vor und dispatched entweder blog-author oder schreibt ein Deferral-Artefakt.
 - [`gemini-image-handoff`](nolte-shared/gemini-image-handoff.md) — Erzeugt einen Gemini-optimierten Prompt und führt den Operator durch das Einfügen in die Gemini-Web-UI und den Bild-Download — ein halbautomatischer Handoff ohne API und ohne Billing.
@@ -67,11 +68,12 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 ## 6 Quality
 
 - [`dependency-audit`](nolte-shared/dependency-audit.md) — Scannt den Dependency-Baum des Projekts nach bekannten CVEs und optional Lizenz-Compliance-Issues; Severity-sortierter Report.
-- [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Prüft bestehende Markdown-Prosa gegen fünf Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit).
+- [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Prüft bestehende Markdown-Prosa gegen sechs Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit, Idiomatik).
 - [`lektorat-auto-revise`](nolte-shared/lektorat-auto-revise.md) — Arbeitet einen Lektorat-Audit-Report autonom ab, indem es jedes Artefakt an den passenden Author routet und bis zur Konvergenz re-auditiert.
 - [`license-check`](nolte-shared/license-check.md) — End-to-End-Lizenz-Compliance-Check: SBOM, SPDX-Klassifizierung, allow/review/deny-Gate, Remediation, NOTICE und ein Audit-Artefakt.
 - [`portfolio-audit`](nolte-shared/portfolio-audit.md) — Auditiert, rendert und bootstrappt das cross-repo Capability-Portfolio über nolte/*.
 - [`quality-gate`](nolte-shared/quality-gate.md) — Führt das Lint-+-Typecheck-+-Test-Gate des Projekts parallel aus und tabelliert, welche Checks gescheitert sind.
+- [`test-pyramid-check`](nolte-shared/test-pyramid-check.md) — Prüft die Teststufen-Vollständigkeit (Unit/Integration/Contract/E2E) und E2E-Disziplin eines Features gegen die e2e-test-automation-Spec und liefert einen Lückenbericht.
 - [`vocab-drift-audit`](nolte-shared/vocab-drift-audit.md) — Auditiert lokale Vale-Vokabularien gegen den gepinnten Upstream-Release nolte/vale-style auf Drift.
 - [`workflow-health-triage`](nolte-shared/workflow-health-triage.md) — Triagiert einen roten GitHub-Actions-Workflow auf develop/main und dispatched den passendsten spezialisierten Agent zur Behebung.
 

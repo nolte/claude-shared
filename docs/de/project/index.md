@@ -87,7 +87,7 @@ Die Chain-Entscheidung (chained oder skipped) **MUSS** wortgetreu in `## Review 
 
 ## Wann Adoption sich lohnt
 
-Die Suite zahlt sich aus, sobald ein Hobby-Projekt mehr als ein paar Releases ausliefert. Dann entsteht der Bedarf, die Frage „warum bauen wir das eigentlich?" formell zu beantworten. Reine Bibliotheken oder Tools ohne klare User-Audience brauchen Audience-Identifikation und Mission-Statement nicht. Die Specs erlauben deren Abwesenheit ausdrücklich.
+Die Suite zahlt sich aus, sobald ein Hobby-Projekt mehr als ein paar Releases ausliefert. Dann entsteht der Bedarf, die Frage „warum bauen wir das eigentlich?“ formell zu beantworten. Reine Bibliotheken oder Tools ohne klare User-Audience brauchen Audience-Identifikation und Mission-Statement nicht. Die Specs erlauben deren Abwesenheit ausdrücklich.
 
 Eine Adoption beginnt typischerweise so:
 

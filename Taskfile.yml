@@ -70,20 +70,34 @@ tasks:
 
   check:
     desc: |
-      Run the develop quality gate locally: lint + test. The docs category
-      is a separate CI job (the documentation-freshness gate, not the code
-      gate). Exits zero on a clean tree and non-zero when any category fails.
-    # spec/project/quality-gate/ §Invocation contract SHOULD: "run the three
+      Run the develop quality gate locally: lint + test + link check. The
+      docs-freshness category is a separate (non-deterministic, LLM-agent) gate,
+      not part of the code gate; the deterministic offline link check, by
+      contrast, belongs here per spec/project/link-validation/ §Triggers.
+      Exits zero on a clean tree and non-zero when any category fails.
+    # spec/project/quality-gate/ §Invocation contract SHOULD: "run the
     # categories in parallel when the ecosystem permits it; sequential fallback
     # is acceptable when a category produces inputs another category consumes."
-    # lint (pre-commit) and test (frontmatter validation + pytest) are
-    # independent — neither consumes the other's output — so they run as
-    # parallel `deps`. Task waits for every dep and fails `check` if any fails,
-    # so a failing category is never masked; running both surfaces all failures
-    # in one pass instead of stopping at the first.
+    # lint (pre-commit), test (frontmatter validation + pytest), and the offline
+    # link check are independent — none consumes another's output — so they run
+    # as parallel `deps`. Task waits for every dep and fails `check` if any
+    # fails, so a failing category is never masked.
     deps:
       - lint
       - test
+      - check:links
+
+  check:links:
+    desc: |
+      Validate internal, intra-page-anchor, and cross-tree documentation links
+      offline (deterministic, no network) per spec/project/link-validation/.
+      Fails on any critical finding (a link whose target doesn't resolve). The
+      external (networked) slice is the link-rot-scanner agent's job, not this
+      gate. Run the full online checker directly with:
+        python3 scripts/check_links.py            # internal + cross-tree + external
+        python3 scripts/check_links.py --external  # external only
+    cmds:
+      - python3 scripts/check_links.py --offline
 
   license:sbom:
     desc: |

@@ -47,6 +47,7 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 
 ## 4 Build
 
+- [`backstage-catalog-generate`](nolte-shared/backstage-catalog-generate.md) — Generates a schema-valid Backstage catalog-info.yaml from an existing project by inferring per-kind MUST-floor fields from repo signals, confirming the rest with the operator, and self-validating.
 - [`blog-author`](nolte-shared/blog-author.md) — Drafts a bilingual EN-canonical + DE-translated blog-post pair per this plugin's blog-author specs, writing into a consumer blog repo.
 - [`blog-author-trigger`](nolte-shared/blog-author-trigger.md) — On a feature→done transition, derives a blog-post briefing, suggests new/update/defer, and either dispatches blog-author or writes a deferral artefact.
 - [`gemini-image-handoff`](nolte-shared/gemini-image-handoff.md) — Authors a Gemini-optimised prompt and guides the operator through pasting it into the Gemini web UI and downloading the image — a semi-automatic, no-API, no-billing handoff.
@@ -67,11 +68,12 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 ## 6 Quality
 
 - [`dependency-audit`](nolte-shared/dependency-audit.md) — Scans the project's dependency tree for known CVEs and (optionally) license-compliance issues; severity-sorted report.
-- [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Reviews existing Markdown prose against five editorial dimensions (readability, comprehensibility, grammar, style, audience-fit).
+- [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Reviews existing Markdown prose against six editorial dimensions (readability, comprehensibility, grammar, style, audience-fit, idiomatic naturalness).
 - [`lektorat-auto-revise`](nolte-shared/lektorat-auto-revise.md) — Autonomously works off a lektorat audit report by routing each artefact to the matching author and re-auditing until it converges.
 - [`license-check`](nolte-shared/license-check.md) — End-to-end license-compliance check: SBOM, SPDX classification, allow/review/deny gate, remediation, NOTICE, and an audit artifact.
 - [`portfolio-audit`](nolte-shared/portfolio-audit.md) — Audits, renders, and bootstraps the cross-repository capability portfolio across nolte/*.
 - [`quality-gate`](nolte-shared/quality-gate.md) — Runs the project's lint + typecheck + test gate in parallel and tabulates which checks failed.
+- [`test-pyramid-check`](nolte-shared/test-pyramid-check.md) — Audits a feature's test-tier completeness (unit/integration/contract/E2E) and E2E discipline against the e2e-test-automation spec, returning a gap report.
 - [`vocab-drift-audit`](nolte-shared/vocab-drift-audit.md) — Audits repository-local Vale vocabularies against the pinned upstream nolte/vale-style release to detect drift.
 - [`workflow-health-triage`](nolte-shared/workflow-health-triage.md) — Triages a failing GitHub Actions workflow on develop/main and dispatches the most specialised agent to remediate.
 

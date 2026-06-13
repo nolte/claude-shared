@@ -4,3 +4,10 @@
 # and must keep the 4-space form so literate-nav can parse them.
 docs/*/skills/SUMMARY.md
 docs/*/agents/SUMMARY.md
+
+# Raw research reports under .audits/backstage-research/ are generated working
+# artifacts (Workflow-harness synthesis), not curated docs. They use an inline
+# [n] citation style with a trailing Sources list, which markdownlint reads as
+# undefined reference links (MD052) and bare URLs (MD034). They are tracked so
+# spec/ and skill-review references resolve, but are intentionally not prose-linted.
+.audits/backstage-research/*.md

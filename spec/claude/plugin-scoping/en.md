@@ -62,7 +62,7 @@ This section is a **local `nolte-shared` convention**.
 
 ### Namespace and naming coherence
 - **MUST** choose a plugin `name` that's a stable, collision-resistant **namespace**: plugin skills are always namespaced as `/<plugin-name>:<skill-name>`, and the `plugin.json` `name` field *is* the skill namespace ([R1](#references))
-- **MUST** keep artifact naming consistent across the **whole** plugin—one naming convention per artefact type. For this plugin that means **verb-noun for skills** (per `skill-management` §Frontmatter validation) and **object-role (`<subject>-<role-noun>`) for agents** (per `agent-management` §Structure); each artefact type stays internally consistent and neither type mixes conventions. Inconsistent naming patterns within a single collection are a documented discoverability anti-pattern ([R2](#references))
+- **MUST** keep artifact naming consistent across the **whole** plugin—one naming convention per artefact type. For this plugin that means **verb-noun (`<object-noun>-<action>`) for skills** (per `skill-management` §Frontmatter validation) and **object-role (`<subject>-<role-noun>`) for agents** (per `agent-management` §Structure); each artefact type stays internally consistent and neither type mixes conventions. Inconsistent naming patterns within a single collection are a documented discoverability anti-pattern ([R2](#references))
 - **MUST NOT** rename the plugin namespace casually: the namespace prefix is part of every consumer's `subagent_type:` and `/<plugin>:<skill>` call sites, so a namespace change is a breaking change governed by the same deprecation discipline `skill-vs-agent` §Portfolio-wide consistency applies to artifact reclassification
 
 ## Acceptance Criteria

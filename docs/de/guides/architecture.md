@@ -8,13 +8,13 @@ last_updated: 2026-06-06
 
 # Architekturüberblick
 
-Ein Überblick auf einen Blick, wie `claude-shared` aufgebaut ist — für
+Ein Kurzüberblick, wie `claude-shared` aufgebaut ist — für
 Neueinsteiger, die sich im Code zurechtfinden müssen.
 
 ## Kontext: was drinnen, was draußen ist
 
 `claude-shared` ist ein einzelnes Claude-Code-Plugin (`nolte-shared`) plus das
-Tooling, das es autort, validiert und veröffentlicht. Es ist ein
+Tooling, das es erstellt, validiert und veröffentlicht. Es ist ein
 Dokumentations- und Automatisierungsprojekt — es gibt keinen Laufzeitdienst.
 
 - **Drinnen**: die Skills, Agents und Specs des Plugins; die MkDocs-Site; die
@@ -32,7 +32,7 @@ Dokumentations- und Automatisierungsprojekt — es gibt keinen Laufzeitdienst.
 - **Agents** (`agents/<name>.md`): fokussierte Sub-Agents mit einer
   Tool-Allow-List und einem System-Prompt.
 - **Specs** (`spec/`): die EN-kanonischen, DE-übersetzten Konventionen, die
-  regeln, wie Skills, Agents, Docs und das Projekt selbst autort werden.
+  regeln, wie Skills, Agents, Docs und das Projekt selbst erstellt werden.
 - **Docs** (`docs/<lang>/`): die zweisprachige MkDocs-Site inklusive des
   automatisch generierten Skill-/Agent-Katalogs.
 - **Automatisierung** (`Taskfile.yml`, `scripts/`): das Quality-Gate, die

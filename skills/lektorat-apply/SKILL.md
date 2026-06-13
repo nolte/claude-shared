@@ -1,10 +1,10 @@
 ---
 name: lektorat-apply
-description: Reviews existing Markdown prose against five editorial dimensions (readability, comprehensibility, grammar, style, audience-fit) defined in `spec/project/lektorat/`. Three operations — `audit` (read-only report), `patch` (one finding, one diff, one approval), `revise` (full-artefact rewrite with diff review); dispatches `lektorat-scanner` for the detection phase. Invoke when the user asks to "lektoriere README.md", "audit docs for audience-fit", "revise this page with Lektorat", "prüfe auf Lesbarkeit", or equivalent EN/DE requests. Writes outputs to `.audits/lektorat/<YYYY-MM-DD-HHMM>/`. Don't use to author new prose (use `audience-doc-author`), curate Vale rules (use `prose-vale-curator`), lektor `spec/` files (out of scope), or edit code, configs, or LLM-instruction artefacts (SKILL.md, agents/*.md). Supports resume on re-invocation per `spec/claude/resumable-work/`.
+description: Reviews existing Markdown prose against six editorial dimensions (readability, comprehensibility, grammar, style, audience-fit, idiomatic naturalness) defined in `spec/project/lektorat/`. Three operations — `audit` (read-only report), `patch` (one finding, one diff, one approval), `revise` (full-artefact rewrite with diff review); dispatches `lektorat-scanner` for the detection phase. Invoke when the user asks to "lektoriere README.md", "audit docs for audience-fit", "revise this page with Lektorat", "prüfe auf Lesbarkeit", or equivalent EN/DE requests. Writes outputs to `.audits/lektorat/<YYYY-MM-DD-HHMM>/`. Don't use to author new prose (use `audience-doc-author`), curate Vale rules (use `prose-vale-curator`), lektor `spec/` files (out of scope), or edit code, configs, or LLM-instruction artefacts (SKILL.md, agents/*.md). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [prose, audit]
 phase: quality
-summary: "Reviews existing Markdown prose against five editorial dimensions (readability, comprehensibility, grammar, style, audience-fit)."
-summary_de: "Prüft bestehende Markdown-Prosa gegen fünf Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit)."
+summary: "Reviews existing Markdown prose against six editorial dimensions (readability, comprehensibility, grammar, style, audience-fit, idiomatic naturalness)."
+summary_de: "Prüft bestehende Markdown-Prosa gegen sechs Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit, Idiomatik)."
 use_when:
   - "you want to audit existing docs for editorial quality"
   - "you want to apply a single editorial fix as a one-finding, one-diff change"
@@ -23,7 +23,7 @@ resumable: true
 
 # Lektorat Apply
 
-Operationalises `spec/project/lektorat/` for the `nolte-shared` plugin: the editorial layer that audits, patches, or revises already-existing human-readable Markdown prose against five named quality dimensions, with a per-language rule set and explicit operator dialogue at every mutating step.
+Operationalises `spec/project/lektorat/` for the `nolte-shared` plugin: the editorial layer that audits, patches, or revises already-existing human-readable Markdown prose against six named quality dimensions, with a per-language rule set and explicit operator dialogue at every mutating step.
 
 This skill binds the spec's contract to an on-disk procedure. It does not redefine the rules; when this skill and the spec disagree, the spec wins and this skill needs the update.
 
@@ -47,7 +47,7 @@ The artefact being reviewed is **not** translated by this skill. Each file is re
 
 - **Mid-flow user approval is load-bearing**: `patch` requires explicit per-finding approval before any write (one finding, one diff, one OK), and `revise` requires diff review on the full-artefact rewrite. Agents have no stable way to surface that dialogue back to the parent.
 - **Externally visible writes**: outputs land under `.audits/lektorat/<YYYY-MM-DD-HHMM>/` and, in `patch` / `revise`, modify in-scope Markdown artefacts. The skill owns the persistent on-disk state.
-- **Orchestration role**: this skill dispatches the `lektorat-scanner` agent for the read-only D1–D5 detection (context-window protection, tool restriction) and stays in the main thread to render results, run operator dialogues, and write outputs.
+- **Orchestration role**: this skill dispatches the `lektorat-scanner` agent for the read-only D1–D6 detection (context-window protection, tool restriction) and stays in the main thread to render results, run operator dialogues, and write outputs.
 - **Counter-dimension considered and accepted**: the `audit` operation alone fits the agent shape cleanly (self-contained input, structured output, no interactivity). It still lives in this skill because `patch` and `revise` reuse the same detection inventory and consolidating the three operations behind one entry point keeps the operator's mental model coherent. The scan half is delegated to the agent; the orchestration half stays in the skill per the hybrid pattern from `spec/claude/skill-vs-agent/`.
 
 ## Inputs
@@ -139,7 +139,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ## Hard rules
 
-- The five quality dimensions (D1–D5), the three operations (`audit` / `patch` / `revise`), the three severities (`critical` / `warning` / `suggestion`), the JSON output shape, the per-language readability corridors, the refactor-safety invariants, the audience-binding priority chain, and the language-resolution chain are defined in `spec/project/lektorat/`. This skill **must not** redefine, relax, or extend them; when this skill and the spec disagree, the spec wins.
+- The six quality dimensions (D1–D6), the three operations (`audit` / `patch` / `revise`), the three severities (`critical` / `warning` / `suggestion`), the JSON output shape, the per-language readability corridors, the refactor-safety invariants, the audience-binding priority chain, and the language-resolution chain are defined in `spec/project/lektorat/`. This skill **must not** redefine, relax, or extend them; when this skill and the spec disagree, the spec wins.
 - Never lektor a file under `spec/`, `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, or `agents/*.md`. Reject with a single-sentence message naming the responsible authoring flow (the `spec` skill for `spec/`, `skill-management` for skill artefacts, `agent-management` for agent artefacts).
 - Never lektor source code, code comments, docstrings, generated configuration (`.github/*.yml`, `mkdocs.yml`, `Taskfile.yml`, lockfiles), or binary artefacts. The scope is **Markdown prose**.
 - Never write to any in-scope artefact during `audit`. The operation is read-only and must run unattended.

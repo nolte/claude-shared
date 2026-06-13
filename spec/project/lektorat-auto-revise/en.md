@@ -4,7 +4,7 @@ Status: draft
 
 ## Context
 
-[`spec/project/lektorat/`](../lektorat/en.md) defines the editorial layer: an `audit` produces a structured findings report (D1–D5, severity-classified, audience-bound), a `patch` applies one finding per operator approval, and a `revise` rewrites a full artefact behind an operator diff gate. All three mutating paths put a human in the loop on every write, and `revise` performs the rewrite **inside the `lektorat-apply` skill itself**: a generic, lexical rewrite that has no audience-specific depth model and no binding to the writing-style specs an author would consult.
+[`spec/project/lektorat/`](../lektorat/en.md) defines the editorial layer: an `audit` produces a structured findings report (D1–D6, severity-classified, audience-bound), a `patch` applies one finding per operator approval, and a `revise` rewrites a full artefact behind an operator diff gate. All three mutating paths put a human in the loop on every write, and `revise` performs the rewrite **inside the `lektorat-apply` skill itself**: a generic, lexical rewrite that has no audience-specific depth model and no binding to the writing-style specs an author would consult.
 
 What's missing is the **autonomous bridge** from an existing audit report to a finished, re-verified artefact, where the rewrite is performed by the **author best suited to the artefact type**: the author whose own contract already mandates reading the audience artefact and the writing-style spec, so that *style* and *audience-fit* compliance is structural rather than re-implemented. The `audience-doc-author` agent already anticipates this: it names a *"future orchestrating skill"* as the driver that turns its fire-and-forget executor contract into a closed loop. `Lektorat Auto-Revise` is that driver.
 
@@ -23,7 +23,7 @@ The layer is **operative**: it mandates one process—consume an audit report, r
 
 ## Non-Goals
 
-- Defining, re-classifying, or re-weighting editorial findings, severities (`critical` / `warning` / `suggestion`), or the five quality dimensions (D1–D5)—all owned by [`spec/project/lektorat/`](../lektorat/en.md); `Lektorat Auto-Revise` consumes the findings report and **MUST NOT** redefine any field of it
+- Defining, re-classifying, or re-weighting editorial findings, severities (`critical` / `warning` / `suggestion`), or the six quality dimensions (D1–D6)—all owned by [`spec/project/lektorat/`](../lektorat/en.md); `Lektorat Auto-Revise` consumes the findings report and **MUST NOT** redefine any field of it
 - Performing the editorial **detection** itself—the input is a findings report produced by a prior `lektorat audit`; this spec never re-implements the scan, it consumes its output and re-invokes it for the convergence check
 - First authorship of new artefacts—owned by the `audience-doc-author` agent and the `blog-author` skill; this layer only drives **revision of artefacts that already exist** and already carry findings
 - Defining the writing-style rules (EN voice/tone, blog forbidden-words list, bilingual typography) or the audience model—owned by `prose-style`, `post-writing-style`, `post-audience-communication`, and `audience-identification`; the process binds those specs **through the dispatched author**, it doesn't restate them
@@ -61,7 +61,7 @@ The layer is **operative**: it mandates one process—consume an audit report, r
   1. the **subset of findings** for that file, verbatim from the input report (severity, dimension, line range, message, `rule`, `audience`, `evidence`, `suggested_resolution`)
   2. the file's **resolved audience set**, obtained through the **same priority chain** as `lektorat` §Audience binding (frontmatter `audience:` → artefact-type defaults → whole audience set); this process **MUST NOT** resolve audiences by any other rule
   3. the **bound writing-style specs** for the route (see §Mandatory style and audience binding)
-  4. the **target dimensions**: the distinct D1–D5 values present in the file's findings—so the author knows which editorial axes the revision must move
+  4. the **target dimensions**: the distinct D1–D6 values present in the file's findings—so the author knows which editorial axes the revision must move
   5. for any file carrying a **D1 readability finding**, the file's **LIX target inputs** per [`spec/project/readability-lix/`](../readability-lix/en.md) §Iterative improvement loop: the current `lix`, the resolved corridor (`aim` / `warn` / `crit` for the file's `content_mode` and language), and the **dominant lever** (`ASL` or `LWP`)—so the author's pass is directed at the right readability lever (split sentences versus shorten long words) rather than rewriting blind
 - **MUST** read the **audience artefact** from its canonical location exactly as `lektorat` §Audience binding mandates, and **MUST** stop the **per-file** remediation (not the whole run) with the same operator-facing message pointing at the `audience-identify` skill when the artefact is missing; the process **MUST NOT** invent audiences and **MUST NOT** dispatch an author without a resolved audience set
 - **MUST** pass the briefing in a form the dispatched author's own input contract accepts: for `audience-doc-author`, the audience-artefact path, the doc-type spec, the `prose-style` baseline, and the source material (the file under revision); for `blog-author`, the briefing inputs its skill contract requires (see §Autonomy and human interactions for the assisted-interaction rule)
@@ -132,7 +132,7 @@ The spec leaves the implementation shape **open** but **SHOULD** be implemented 
 - [ ] A documentation artefact (MkDocs page or top-level Markdown) is routed to `audience-doc-author`; a blog-post artefact (carrying the consumer's cross-language binding key) is routed to `blog-author`; the routing class and dispatched author are recorded in `routing.json`
 - [ ] A file under `spec/`, `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, or `agents/*.md` is hard-rejected with a message naming the owning authoring flow, and no author is dispatched at it
 - [ ] A file matching none of the three routing classes stops the run with an operator-facing message rather than being silently skipped
-- [ ] Each dispatched author receives a briefing containing the file's findings, the resolved audience set, the bound writing-style specs, and the target D1–D5 dimensions
+- [ ] Each dispatched author receives a briefing containing the file's findings, the resolved audience set, the bound writing-style specs, and the target D1–D6 dimensions
 - [ ] The audience set is resolved through the `lektorat` §Audience binding priority chain (frontmatter → artefact-type default → whole set), identical to a standalone `lektorat audit`
 - [ ] When the audience artefact is missing, the per-file remediation stops with the message pointing at `audience-identify`, and no author is dispatched
 - [ ] No author is dispatched without both a resolved audience set and a bound writing-style spec; a missing either is a per-file stop condition

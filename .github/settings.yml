@@ -33,6 +33,7 @@ branches:
           - lint
           - test
           - docs
+          - links
       enforce_admins: true
       restrictions: null
   - name: main

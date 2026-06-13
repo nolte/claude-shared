@@ -31,6 +31,10 @@ _Derive structured, framework-agnostic test cases from a requirement or specific
 
 - [`quality-gate`](../../skills/nolte-shared/quality-gate.md)
 
+## Referenced by
+
+- [`e2e-test-generator`](e2e-test-generator.md)
+
 ---
 
 ## Test-Case Extractor

@@ -6,7 +6,7 @@ Status: accepted
 
 Portfolio repositories already enforce a mechanical prose baseline: [`spec/project/prose-style/`](../prose-style/en.md) wires Vale (Microsoft + RedHat + `nolte/vale-style`) across every English-scoped Markdown surface, and [`spec/project/docs-multilingual-authoring/`](../docs-multilingual-authoring/en.md) guarantees that DE/EN page trees stay structurally parallel. What neither spec answers is the **editorial** question once a draft exists: is the page actually **readable** for its audience, does it **make sense without hidden prerequisites**, is the **German** side spelled correctly, and does the **tone** match the audience the document was written for?
 
-`Lektorat` (editorial review) closes that gap. It's the operative layer that **audits, patches, or revises** already-existing prose against four quality dimensions—readability, comprehensibility, spelling/grammar, writing style—plus a fifth **audience-fit** dimension that ties the prose back to the audience artefact produced by [`spec/project/audience-identification/`](../audience-identification/en.md) and the per-page track contract from [`spec/project/docs-audience-tracks/`](../docs-audience-tracks/en.md). Vale stays responsible for its rule mechanics; `audience-doc-author` stays responsible for first authorship; this spec defines what happens **after** a text exists and **before** it's treated as finished work.
+`Lektorat` (editorial review) closes that gap. It's the operative layer that **audits, patches, or revises** already-existing prose against four quality dimensions—readability, comprehensibility, spelling/grammar, writing style—plus a fifth **audience-fit** dimension that ties the prose back to the audience artefact produced by [`spec/project/audience-identification/`](../audience-identification/en.md) and the per-page track contract from [`spec/project/docs-audience-tracks/`](../docs-audience-tracks/en.md), and a sixth **idiomatic-naturalness** dimension that flags prose reading as mechanically translated rather than natively composed in its own language. Vale stays responsible for its rule mechanics; `audience-doc-author` stays responsible for first authorship; this spec defines what happens **after** a text exists and **before** it's treated as finished work.
 
 Two design constraints shape the spec. First, the layer is **operative**, not descriptive: it mandates three operations (`audit`, `patch`, `revise`) with explicit pre- and postconditions, so a downstream skill and agent can implement the contract without re-litigating semantics. Second, the layer is **per-language**: each language file is reviewed against the rules of its own language (DE-rules on DE-text, EN-rules on EN-text), and translation synchronisation remains the responsibility of `spec` and `docs-freshness`.
 
@@ -47,7 +47,7 @@ Two design constraints shape the spec. First, the layer is **operative**, not de
 
 ### Quality dimensions
 
-The five dimensions below are the **authoritative** list. Each finding produced by a `Lektorat` operation **MUST** name exactly one dimension. The severities map to a dimension-specific rubric defined under §Severity classification.
+The six dimensions below are the **authoritative** list. Each finding produced by a `Lektorat` operation **MUST** name exactly one dimension. The severities map to a dimension-specific rubric defined under §Severity classification. The numbering is **additive**: D1–D5 keep their established identifiers and D6 is the appended tail dimension, even though it evaluates intrinsic prose (like D1–D4) rather than the audience binding D5 performs.
 
 #### D1—Readability
 
@@ -117,11 +117,31 @@ The five dimensions below are the **authoritative** list. Each finding produced 
 - **MUST** classify register mismatch and missing audience-required content as `critical` for any artefact whose declared audience includes a non-operator audience (end-users, customers, evaluators); a documentation gap that a paying consumer notices isn't a `suggestion`
 - **MUST NOT** rewrite content to match a different audience than the one declared; the resolution for a wrong-audience section is to **flag it for the operator to move**, not to silently re-frame the section
 
+#### D6—Idiomatic naturalness
+
+This dimension is the **detection-side counterpart** to the authoring rules in [`spec/project/post-writing-style/`](../post-writing-style/en.md) §Bilingual typography (idiom-for-idiom not word-for-word, no calque, host-language loanword gender): it flags prose that reads as **mechanically translated or otherwise non-native** rather than originally composed in the file's own language. A passage can pass D3 (mechanically correct spelling and grammar) and D4 (conformant voice, tense, and address) and still fail D6, because idiomatic naturalness is neither a spelling rule nor a style rule.
+
+- **MUST** evaluate D6 **monolingually**: the text is judged against the idiomatic norms of its **own** language, as a competent native author would judge it. D6 **MUST NOT** compare the file against a sibling-language version, **MUST NOT** perform back-translation, and **MUST NOT** assert a fidelity claim about a translation pair—cross-language semantic parity is owned by the authoring gate in [`spec/project/blog-author/`](../blog-author/en.md) (where both language versions are in hand) and parity drift by `docs-freshness`. D6 only ever asks: "does this read as natural *<language>*?"
+- **MUST** detect and flag the following patterns as D6 findings:
+  - **Calque (loan translation)**: a phrase whose structure mirrors another language's idiom, producing a literally-grammatical but semantically odd target sentence (German example: *„Was die Kosten kaufen, ist Eigentum."* mirroring English *"What the costs buy is ownership."*; *„Offen schlägt einen Screenshot."* mirroring *"Open beats a screenshot."*)
+  - **Loanword gender or inflection error**: a borrowed term carrying the wrong article, gender, or inflection in the host language (German example: *„das Bridge"* instead of *„die Bridge"*), or an anglicised verb mis-conjugated against host-language morphology
+  - **Unidiomatic collocation**: a word pairing no native author would use, typically the residue of word-for-word substitution
+  - **Awkward coinage or over-nominalisation**: an invented derivation (for example clustered German `-bar` adjectives such as *„umbaubar und aus Git neu aufbaubar"*) where a verbal paraphrase reads naturally
+  - **Literal idiom**: a source-language idiom rendered word-for-word instead of replaced with a host-language equivalent or rewritten
+- **MAY** consume a versioned, per-language list of known recurring calques and loanword-gender corrections ([`spec/project/lektorat/calque-de.yml`](calque-de.yml) for German) as a maintainable detection aid, mirroring how D2 consumes `markers-<lang>.yml`; each entry carries a `severity_floor` and a one-line rationale, and the list is a **supplement** to the native-reader judgement, never its replacement (the calque space is open and no list can enumerate it)
+- **MUST** classify a D6 finding as:
+  - `critical` when the non-idiomatic rendering **changes or obscures the meaning** for a native reader **and** the artefact is a published surface (`README.md`, release-note body, top-level docs, or an in-scope blog post) whose resolved audience includes a non-operator role
+  - `warning` when a native reader registers the passage as "translated" (calque, unidiomatic collocation, loanword-gender error) but can still parse the intended meaning, or when any of the above appears in a non-published / internal artefact
+  - `suggestion` when a mild coinage or over-nominalisation reads slightly non-native but stays fully clear
+- **MUST** ground every D6 finding in a **quoted offending span** plus the **named suspected pattern** (one of the five above) so the finding is auditable and its `id` stays stable across runs; an unsupported "this feels translated" remark isn't a finding
+- **MUST** prefer a **rewrite-to-idiom** resolution (replace the calque with the equivalent host-language phrasing) over a **delete** resolution; D6 fixes how something is said, not whether it's said
+- **MUST NOT** fire on a host-language-accepted loanword or anglicised technical verb that the protected-terms list ([`protected-terms-de.yml`](protected-terms-de.yml)) marks as intentional (for example the portfolio-idiomatic *scaffolden*, *dispatchen*, *mergen*); a protected term is idiomatic by declaration
+
 ### Severity classification
 
 - **MUST** classify every finding into one of exactly three severities:
-  - `critical`: would change rendered meaning, is visible in a published artefact, or fails the audience-fit gate above
-  - `warning`: fails a named metric corridor, fails a `prose-style` MUST that didn't flip into `critical`, or breaks internal consistency
+  - `critical`: would change rendered meaning, is visible in a published artefact, fails the audience-fit gate above, or is a meaning-obscuring non-idiomatic rendering (D6) on a published non-operator surface
+  - `warning`: fails a named metric corridor, fails a `prose-style` MUST that didn't flip into `critical`, breaks internal consistency, or reads as non-idiomatic for its language (D6) without obscuring meaning
   - `suggestion`: qualifies a heuristic, proposes a stylistic refinement, or expands a sentence for clarity without changing meaning
 - **MUST** use these severity names verbatim in machine-readable output (JSON keys, frontmatter values, CLI exit-code mapping); `info`, `error`, `notice`, and similar synonyms are **MUST NOT**
 - **MUST** keep severity classification **dimension-aware**: a D3 misspelling in a published release note is `critical`, the same misspelling in a draft Markdown comment is `warning`, the same misspelling inside a code identifier produces **no finding** (out of scope per §Scope and applicability)
@@ -245,7 +265,7 @@ The `Lektorat` layer **MUST** distinguish exactly three operations. The names be
       {
         "id": "<stable hash of file + dimension + line>",
         "severity": "critical|warning|suggestion",
-        "dimension": "D1|D2|D3|D4|D5",
+        "dimension": "D1|D2|D3|D4|D5|D6",
         "file": "<repo-relative path>",
         "line_start": 1,
         "line_end": 1,
@@ -285,13 +305,14 @@ The `Lektorat` layer **MUST** distinguish exactly three operations. The names be
 The spec deliberately leaves the exact implementation shape **open**, but **SHOULD** be implemented as the following split, mirroring the portfolio's hybrid pattern (for example `dependency-audit` skill + `dependency-audit-scanner` agent, `vocab-drift-audit` skill + `vocab-drift-scanner` agent):
 
 - **`lektorat-apply` skill**—user-facing entry point; orchestrates `audit` / `patch` / `revise`; owns all operator dialogue (approvals, dismissals, language disambiguation); composes the final outputs; never reads source files itself for the audit step
-- **`lektorat-scanner` agent**—read-only scanner; performs D1–D5 detection across one or more in-scope artefacts; returns the structured findings inventory the skill renders; never edits, never asks
+- **`lektorat-scanner` agent**—read-only scanner; performs D1–D6 detection across one or more in-scope artefacts; returns the structured findings inventory the skill renders; never edits, never asks
 - The skill **MAY** dispatch the existing `prose-vale-curator` agent for D3/D4 mechanics on English text and the `audience-review` agent for advisory D5 second-line reads; both dispatches are **opt-in** per repository
 - As the default first-implementation shape, the skill **SHOULD** dispatch `lektorat-scanner` once for the whole in-scope set (batched), aggregating `language_summary` per language and applying the §Coordination Vale-rule-ID de-duplication in a single pass; per-file (optionally parallel) dispatch stays legal and produces identical JSON, and a repository **MAY** adopt it once a measured audit shows batched latency or cost is unacceptable
 
 ### Coordination with neighbouring specs
 
 - **MUST** reference `spec/project/prose-style/` as the authoritative source of EN voice/tone rules and Vale mechanics; `Lektorat` consumes them and **MUST NOT** redefine them
+- **MUST** reference `spec/project/post-writing-style/` §Bilingual typography (the calque / loanword-gender / idiom MUSTs) as the authoritative **authoring-side** rule whose violations D6 detects on the **detection side**; `Lektorat` D6 consumes its intent, **MUST NOT** redefine it, and **MUST NOT** extend into cross-language fidelity comparison—back-translation and EN↔DE parity are owned by `spec/project/blog-author/`'s pre-handover gate and `spec/project/docs-freshness/` respectively, never by `Lektorat`
 - **MUST** reference `spec/project/audience-identification/` as the authoritative source of audience identifiers and audience properties; `Lektorat` reads the artefact and **MUST NOT** invent audiences
 - **MUST** reference `spec/project/docs-audience-tracks/` for the per-page `audience` / `track` / `content_mode` frontmatter contract; `Lektorat` resolves applicable audiences through that contract
 - **MUST** reference [`spec/project/readability-lix/`](../readability-lix/en.md) as the authoritative source of the LIX metric (formula, long-word rule, tokenization pipeline, cross-language calibration, corridor values, and the improvement transformations); `Lektorat` §D1 consumes LIX from it and **MUST NOT** redefine the metric or its corridors
@@ -336,6 +357,10 @@ The spec deliberately leaves the exact implementation shape **open**, but **SHOU
 - [ ] When the audience artefact is missing, every `Lektorat` operation stops with a message pointing at the `audience-identify` skill, and **MUST NOT** invent audiences
 - [ ] Every Markdown link's `[text](target)` is byte-identical across every operation that doesn't explicitly produce a finding against that link
 - [ ] Every heading-text change surfaced by a `patch` or `revise` operation announces the slug change to the operator before the write is approved
+- [ ] A German file containing a calque (a phrase mirroring an English idiom, for example *„Was die Kosten kaufen, ist Eigentum."*) produces a D6 finding that quotes the offending span and names the `calque` pattern
+- [ ] A German file with a loanword-gender error (for example „das Bridge") produces a D6 finding naming the loanword-gender pattern; a protected, intentionally-anglicised term (for example „dispatchen") produces no D6 finding
+- [ ] No `Lektorat` operation performs back-translation or compares a file against its sibling-language version; D6 is computed monolingually (cross-language fidelity stays out of scope)
+- [ ] A meaning-obscuring calque in a published surface whose resolved audience includes a non-operator role is classified `critical`; the same calque in an internal draft, or one that stays parseable, is classified `warning` (D6 escalation honoured)
 
 ## Open Questions
 

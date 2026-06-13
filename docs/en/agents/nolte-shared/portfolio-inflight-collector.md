@@ -62,7 +62,7 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `gh api repos/nolte/<repo>/contents/project/inflight.yml --jq .content | base64 -d` — read-only fetch of an optional per-repository threshold-override config, surfaced as a verbatim YAML string to the calling skill (the skill applies the overrides; the agent only fetches).
 - `gh issue list --repo nolte/<repo> --state open --json number,title,createdAt,updatedAt,labels,assignees,comments --limit <n>` — read-only enumeration of open issues for data source 1 (open issues). Optional `--search` filter is applied to drop issues carrying `triage-done`, `wontfix`, or `parking-lot` labels per the §Data sources exclusion rules.
 - `gh pr list --repo nolte/<repo> --state open --json number,title,isDraft,createdAt,updatedAt,headRefOid,headRefName,baseRefName,mergeable,statusCheckRollup,reviewDecision,labels,latestReviews --limit <n>` — read-only enumeration of open PRs (including drafts) for data source 2 (open PRs).
-- `gh api repos/nolte/<repo>/branches --paginate --jq '...'` — read-only enumeration of remote branches for data source 3 (branches without active PR), cross-referenced against the open-PR list to filter out branches with an open PR pointing to `develop` and the default branch.
+- `gh api repos/nolte/<repo>/branches --paginate --jq '...'` — read-only enumeration of remote branches for data source 3 (branches without active PR), cross-referenced against the open-PR list to filter out branches with an open PR pointing to `develop`, the default branch, and the `gh-pages` deploy branch.
 - `gh api repos/nolte/<repo> --jq .default_branch` — read-only fetch of the repository's default branch name, needed to exclude the default branch from data source 3.
 - `gh api repos/nolte/<repo>/pulls/<number>/comments --paginate --jq '...'` and `gh api graphql -f query='...' -F owner=nolte -F repo=<repo> -F pr=<number>` — read-only fetch of review-thread comments and resolved state (the REST endpoint surfaces individual review comments; the GraphQL `pullRequest.reviewThreads` connection surfaces the `isResolved` flag) for data source 4a (unresolved review threads on open PRs).
 - `gh api graphql -f query='{ repository(owner:"nolte", name:"<repo>") { discussions(first:50, states:OPEN) { nodes { number title createdAt updatedAt comments(first:1, orderBy:{field:UPDATED_AT, direction:DESC}) { nodes { author { login } updatedAt } } } } } }'` — read-only GraphQL fetch of open Discussions for data source 4b (open Discussions with no maintainer reply in the triage window).
@@ -76,7 +76,7 @@ The agent **does**:
 
 - Accept a pre-resolved Portfolio-Member list, the instruction to resolve it fresh via `gh api orgs/nolte/repos`, or a single `nolte/<repo>` for a targeted collection run (see §Inputs).
 - For each in-scope Portfolio-Member repository, fetch the four primary data sources via the read-only `gh` commands enumerated in §Read-only Bash justification.
-- Apply the data-source exclusion rules from §Data sources verbatim: drop issues carrying `triage-done`, `wontfix`, or `parking-lot` labels; drop branches that have an open PR pointing to `develop` or are the default branch; drop discussions that have a maintainer reply in the last triage window (the agent records the data; the skill applies the window threshold).
+- Apply the data-source exclusion rules from §Data sources verbatim: drop issues carrying `triage-done`, `wontfix`, or `parking-lot` labels; drop branches that have an open PR pointing to `develop`, are the default branch, or are the `gh-pages` deploy branch; drop discussions that have a maintainer reply in the last triage window (the agent records the data; the skill applies the window threshold).
 - Reduce every collected item to a structured per-repository summary keyed by data source.
 - Persist a per-finding identifier of the form `<repo>/<source>/<id>` (for example `claude-shared/issue/142`, `vale-style/branch/feat-decompound-fix`) on every collected item per §Data sources, so trend-tracking across audit runs works.
 - Discard raw issue / PR / branch / review-comment / discussion bodies once the structured summary is in hand, so the calling skill's context stays clean — verbatim source bodies stay in GitHub and are reachable via the finding identifier per §Findings-Report shape.
@@ -161,6 +161,7 @@ Per-source opt-outs honoured: <list of <repo>:<source> or "none">
   - lastPushAt: <ISO-8601>
   - daysSinceLastPush: <n>
   - isDefaultBranch: no (default branch entries are pre-filtered)
+  - isDeployBranch: no (the gh-pages deploy branch is pre-filtered)
   - hasOpenPRToDevelop: no (entries with an open PR to develop are pre-filtered)
 - ...
 
@@ -248,7 +249,7 @@ Before collecting:
 
    b. **Open pull requests (`pr`):** Run `gh pr list --repo nolte/<repo> --state open --json number,title,isDraft,createdAt,updatedAt,headRefOid,headRefName,baseRefName,mergeable,statusCheckRollup,reviewDecision,labels,latestReviews --limit 500`. Include drafts. For each PR, derive `daysOpen`, `daysSinceLastReviewerActivity`, `requiredChecksState` from the `statusCheckRollup` field, and the `mergeable` flag (the skill uses `CONFLICTING` to set the conflicts-against-`develop` driver). Assign identifier `<repo>/pr/<number>`.
 
-   c. **Branches without active PR to develop (`branch`):** Run `gh api repos/nolte/<repo> --jq .default_branch` to learn the default branch name, then `gh api repos/nolte/<repo>/branches --paginate --jq '.[] | {name, lastPushAt: .commit.commit.committer.date}'` to enumerate all branches. Cross-reference against the open-PR list collected in step 4b: filter out branches that (i) are the default branch or (ii) have an open PR with `baseRefName == "develop"` and `headRefName == <branch-name>`. For each remaining branch, derive `daysSinceLastPush`. Assign identifier `<repo>/branch/<branch-name>`.
+   c. **Branches without active PR to develop (`branch`):** Run `gh api repos/nolte/<repo> --jq .default_branch` to learn the default branch name, then `gh api repos/nolte/<repo>/branches --paginate --jq '.[] | {name, lastPushAt: .commit.commit.committer.date}'` to enumerate all branches. Cross-reference against the open-PR list collected in step 4b: filter out branches that (i) are the default branch, (ii) have an open PR with `baseRefName == "develop"` and `headRefName == <branch-name>`, or (iii) are the `gh-pages` deploy branch. For each remaining branch, derive `daysSinceLastPush`. Assign identifier `<repo>/branch/<branch-name>`.
 
    d. **Unresolved review-comment threads (`review-thread`):** For each open PR collected in step 4b, run `gh api graphql` against the `pullRequest.reviewThreads` connection to fetch each thread's `isResolved` flag, last comment timestamp, and last comment author. Filter out resolved threads. For each unresolved thread, derive `daysSinceLastComment` and `hasMaintainerReply`. Assign identifier `<repo>/review-thread/<pr-number>:<thread-id>`.
 

@@ -8,9 +8,9 @@ last_updated: 2026-06-06
 
 # Glossar
 
-Projektspezifische Terminologie für `claude-shared`. Allgemeine Prosa-Begriffe
+Begriffe, die nur in `claude-shared` gelten. Allgemeine Prosa-Begriffe
 gehören zum upstream `nolte/vale-style`-Vokabular (gemäß
-`spec/project/prose-style/`); dieses Glossar erfasst nur das projektspezifische
+`spec/project/prose-style/`); dieses Glossar erfasst nur das eigene
 Delta.
 
 - **Agent**: ein fokussierter Claude-Code-Sub-Agent, definiert in
@@ -19,7 +19,7 @@ Delta.
 - **Catalog (Katalog)**: die automatisch generierten Skill-/Agent-Referenzseiten
   unter `docs/<lang>/skills/` und `docs/<lang>/agents/`, erzeugt vom
   skill-agent-catalog-Generator.
-- **Dogfooding**: das eigene Plugin dieses Repositories beim Entwickeln über
+- **Dogfooding**: das eigene Plugin dieses Repos beim Entwickeln über
   `claude --plugin-dir .` gegen sich selbst betreiben.
 - **Plugin-Marketplace**: der Auslieferungskanal, über den `nolte-shared` die
   Consumer-Projekte erreicht; der einzige Auslieferungsweg (kein Kopieren in
