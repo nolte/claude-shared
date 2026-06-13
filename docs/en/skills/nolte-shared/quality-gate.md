@@ -42,8 +42,11 @@ _Run the project's lint + typecheck + test gate in parallel, tabulate the result
 - [`integration-test-reviewer`](../../agents/nolte-shared/integration-test-reviewer.md)
 - [`quality-gate-enforcer`](../../agents/nolte-shared/quality-gate-enforcer.md)
 - [`test-case-extractor`](../../agents/nolte-shared/test-case-extractor.md)
+- [`test-code-adapter`](../../agents/nolte-shared/test-code-adapter.md)
+- [`test-result-analyzer`](../../agents/nolte-shared/test-result-analyzer.md)
 - [`unit-test-generator`](../../agents/nolte-shared/unit-test-generator.md)
 - [`unit-test-reviewer`](../../agents/nolte-shared/unit-test-reviewer.md)
+- [`test-cycle-orchestrate`](test-cycle-orchestrate.md)
 - [`test-pyramid-check`](test-pyramid-check.md)
 
 ---

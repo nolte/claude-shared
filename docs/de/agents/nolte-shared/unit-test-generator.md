@@ -37,6 +37,7 @@ _Scaffolds spec-conformant unit tests for a module or feature against spec/proje
 ## Referenziert von
 
 - [`component-test-generator`](component-test-generator.md)
+- [`test-code-adapter`](test-code-adapter.md)
 - [`unit-test-reviewer`](unit-test-reviewer.md)
 
 ---

@@ -38,6 +38,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 - [`frontend-usability-optimizer`](nolte-shared/frontend-usability-optimizer.md) — Senior-UX-Engineer, der die Usability bestehenden Frontend-Codes direkt verbessert — gegen den selbst erkannten Stack und die dokumentierten UI-Konventionen des Projekts.
 - [`fullstack-developer`](nolte-shared/fullstack-developer.md) — Senior-Full-Stack-Entwickler, der eine scharf umrissene Anforderung als produktionsreifen Code gegen den selbst erkannten Stack, das Layout und die Qualitätsmesslatte des Projekts umsetzt.
 - [`integration-test-generator`](nolte-shared/integration-test-generator.md) — Erzeugt spec-konforme schmale Integrationstests (ein echter ephemerer Kollaborateur, der Rest gedoubelt, seam-only-Assertions, Per-Test-Isolation, Readiness-Waits, TC-IDs).
+- [`test-code-adapter`](nolte-shared/test-code-adapter.md) — Verwandelt einen bestätigt-roten Fall in die minimale korrekte Produktions-Code-Änderung unter der No-Cheating-Invariante (einfachste-Änderung-dann-Refactor, Wurzelursache, Verify per Re-Execution).
 - [`unit-test-generator`](nolte-shared/unit-test-generator.md) — Erzeugt spec-konforme Unit-Tests (FIRST, AAA, beobachtbares-Verhalten-Assertions, disziplinierte Doubles, TC-IDs) für ein Modul, mit pytest-Referenzprofil als Vorgabe.
 
 ## 5 Review
@@ -55,6 +56,7 @@ Auto-generierter Katalog aller Agents aus den konfigurierten Plugin-Source-Roots
 - [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Nur-Lese-Lizenz-Inventar-Scanner: SBOM mit aufgelösten Lizenzen, SPDX-Identifikation und Kategorie-Klassifizierung pro Stack.
 - [`portfolio-inflight-collector`](nolte-shared/portfolio-inflight-collector.md) — Nur-Lese-In-Flight-Datensammler: offene Issues, PRs (inkl. Drafts), Branches ohne PR, ungelöste Review-Threads + Discussions über nolte/*.
 - [`portfolio-manifest-collector`](nolte-shared/portfolio-manifest-collector.md) — Nur-Lese-Inventar-Sammler: erfasst per-Repo project/portfolio.yml-Manifeste über nolte/*.
+- [`test-result-analyzer`](nolte-shared/test-result-analyzer.md) — Klassifiziert die rohen Ergebnisse eines Testlaufs in geroutete Kategorien (Defekt/Flake/Test-Bug/Infra/…) mit Evidenz gemäß der Ergebnis-Analyse-Spec, damit der Zyklus die nächste Phase kennt.
 - [`unit-test-reviewer`](nolte-shared/unit-test-reviewer.md) — Prüft bestehende Unit-Tests gegen die Unit-Stufen-Spec, liefert ein checklistenbasiertes Konformitätsurteil und wendet nur minimale, gezielte Korrekturen an.
 - [`vocab-drift-scanner`](nolte-shared/vocab-drift-scanner.md) — Nur-Lese-Diff der lokalen Vale-Vocab-Dateien gegen den gepinnten Upstream-Release nolte/vale-style.
 

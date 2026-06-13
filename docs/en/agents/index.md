@@ -38,6 +38,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`frontend-usability-optimizer`](nolte-shared/frontend-usability-optimizer.md) — Senior UX engineer that improves the usability of existing frontend code in place against the project's own detected stack and documented UI conventions.
 - [`fullstack-developer`](nolte-shared/fullstack-developer.md) — Senior full-stack engineer that implements a scoped requirement as production-ready code against the project's own detected stack, layout, and quality bar.
 - [`integration-test-generator`](nolte-shared/integration-test-generator.md) — Scaffolds spec-conformant narrow integration tests (one real ephemeral collaborator, the rest doubled, seam-only assertions, per-test isolation, readiness waits, TC-IDs).
+- [`test-code-adapter`](nolte-shared/test-code-adapter.md) — Turns a confirmed-red case into the minimal correct production-code change under the no-cheating invariant (simplest-change-then-refactor, root-cause, verify by re-execution).
 - [`unit-test-generator`](nolte-shared/unit-test-generator.md) — Scaffolds spec-conformant unit tests (FIRST, AAA, observable-behaviour assertions, disciplined doubles, TC-IDs) for a module, defaulting to a pytest reference profile.
 
 ## 5 Review
@@ -55,6 +56,7 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`license-check-scanner`](nolte-shared/license-check-scanner.md) — Read-only license-inventory scanner: SBOM with resolved licenses, SPDX identification, and category classification per stack.
 - [`portfolio-inflight-collector`](nolte-shared/portfolio-inflight-collector.md) — Read-only in-flight data collector: open issues, PRs (incl. drafts), branches without PR, unresolved review threads + Discussions across nolte/*.
 - [`portfolio-manifest-collector`](nolte-shared/portfolio-manifest-collector.md) — Read-only inventory collector: gathers per-repo project/portfolio.yml manifests across nolte/*.
+- [`test-result-analyzer`](nolte-shared/test-result-analyzer.md) — Classifies a test run's raw results into routed categories (defect/flake/test-bug/infra/...) with evidence, per the result-analysis spec, so the cycle knows the next phase.
 - [`unit-test-reviewer`](nolte-shared/unit-test-reviewer.md) — Reviews existing unit tests against the unit-tier spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
 - [`vocab-drift-scanner`](nolte-shared/vocab-drift-scanner.md) — Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release.
 
