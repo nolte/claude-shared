@@ -33,6 +33,7 @@ _Derive structured, framework-agnostic test cases from a requirement or specific
 
 ## Referenziert von
 
+- [`component-test-generator`](component-test-generator.md)
 - [`e2e-test-generator`](e2e-test-generator.md)
 - [`unit-test-generator`](unit-test-generator.md)
 
