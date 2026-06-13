@@ -12,6 +12,7 @@ last_updated: generated
     * [feature-consistency-reviewer](nolte-shared/feature-consistency-reviewer.md)
     * [roadmap-coherence-reviewer](nolte-shared/roadmap-coherence-reviewer.md)
     * [sprint-readiness-reviewer](nolte-shared/sprint-readiness-reviewer.md)
+    * [tech-stack-fitness-reviewer](nolte-shared/tech-stack-fitness-reviewer.md)
 * 3 Design
     * [audience-doc-author](nolte-shared/audience-doc-author.md)
     * [claude-plugin-developer](nolte-shared/claude-plugin-developer.md)

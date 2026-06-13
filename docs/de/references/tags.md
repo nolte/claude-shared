@@ -40,6 +40,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [spec-readiness-reviewer](../agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared
+- [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
 - [vocab-drift-scanner](../agents/nolte-shared/vocab-drift-scanner.md) — nolte-shared
 - [webview-ui-expert](../agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [continuous-improvement-triage](../skills/nolte-shared/continuous-improvement-triage.md) — nolte-shared
@@ -67,6 +68,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `dependency`
 
+- [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
 - [dependency-audit](../skills/nolte-shared/dependency-audit.md) — nolte-shared
 
 ## `design`
@@ -146,6 +148,7 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 - [spec-readiness-reviewer](../agents/nolte-shared/spec-readiness-reviewer.md) — nolte-shared
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared
+- [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
 - [webview-ui-expert](../agents/nolte-shared/webview-ui-expert.md) — nolte-shared
 - [agent-review](../skills/nolte-shared/agent-review.md) — nolte-shared
 - [skill-review](../skills/nolte-shared/skill-review.md) — nolte-shared
