@@ -1,4 +1,4 @@
-"""Unit tests for skills/image-generate/scripts/image_generate.py.
+"""Unit tests for plugins/nolte-media/skills/image-generate/scripts/image_generate.py.
 
 No real network calls: every test that exercises a provider mocks
 `urllib.request.urlopen`. Covers the shared layer plus the three MVP providers
@@ -17,7 +17,7 @@ from unittest import mock
 
 import pytest
 
-SCRIPTS = Path(__file__).resolve().parent.parent / "skills" / "image-generate" / "scripts"
+SCRIPTS = Path(__file__).resolve().parent.parent / "plugins" / "nolte-media" / "skills" / "image-generate" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
 import image_generate as ig  # noqa: E402
