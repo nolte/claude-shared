@@ -1,6 +1,6 @@
 ---
 name: lektorat-scanner
-description: "Read-only editorial scanner dispatched by lektorat-apply. Walks an in-scope Markdown set and returns a structured findings inventory across six dimensions — D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness — with severities `critical` / `warning` / `suggestion`. Invoke when lektorat-apply needs an `audit` pass, D1–D6 findings on one or many files, or the JSON report that gates `patch` and `revise`. Also handles equivalent German-language requests. Returns the findings JSON in the top-level shape defined in `spec/project/lektorat/` §Outputs. Don't use for `patch` / `revise` (lektorat-apply owns disk writes), to persist the report to `.audits/lektorat/` (skill's job), to translate prose, to author new pages, or to detect cross-language parity drift (use docs-freshness)."
+description: "Read-only editorial scanner dispatched by `lektorat-apply`: walks an in-scope Markdown set and returns a structured findings inventory across six dimensions — D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness — with severities critical/warning/suggestion. Detection only; disk writes (`patch`/`revise`) and persisting the report stay with `lektorat-apply`."
 distribution: plugin
 tools: Read, Grep, Glob, Bash
 model: sonnet

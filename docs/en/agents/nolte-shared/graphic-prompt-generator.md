@@ -10,7 +10,7 @@ last_updated: generated
 
 > Authors brand-conformant, generator-ready AI image prompts as durable Markdown documents from a short graphic brief.
 
-_Turn a short graphic brief into a brand-conformant, generator-ready AI image-generation prompt document on disk. Reads the consuming repository's published brand tokens and descriptive-color vocabulary, assembles the prompt in the mandated style-reference → descriptive-phrases → hex-reinforcement → seed order, targets one named generator (Gemini, Midjourney, or a successor), and writes a structured Markdown prompt document under design/prompts/. Use when the user asks to draft an image prompt, create a hero/empty-state/onboarding illustration prompt, generate an app icon or logo prompt, or produce brand-aware Gemini/Midjourney prompts. Don't use to actually generate the image (that is a downstream image-generation tool), to clean a generated PNG's background (use png-to-transparent-svg), or to define the brand color system (that lives in the design tokens)._
+_Turns a short graphic brief into a brand-conformant, generator-ready AI image-generation prompt document on disk. Reads the repository's published brand tokens and descriptive-color vocabulary, assembles the prompt in the mandated style-reference → descriptive-phrases → hex-reinforcement → seed order for one named generator (Gemini, Midjourney, or successor), and writes it under design/prompts/. Invoke when the user asks to draft an image prompt for a hero/empty-state/onboarding illustration, app icon, or logo. Don't use to generate the image itself, to clean a PNG background ([`png-to-transparent-svg`](png-to-transparent-svg.md)), or to define the brand color system._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 3 Design (`design`)

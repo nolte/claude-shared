@@ -10,7 +10,7 @@ last_updated: generated
 
 > Nur-Lese-Lektorats-Scanner über die sechs Dimensionen (D1 Lesbarkeit, D2 Verständlichkeit, D3 Grammatik, D4 Stil, D5 Audience-Fit, D6 Idiomatik).
 
-_Read-only editorial scanner dispatched by lektorat-apply. Walks an in-scope Markdown set and returns a structured findings inventory across six dimensions — D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness — with severities `critical` / `warning` / `suggestion`. Invoke when lektorat-apply needs an `audit` pass, D1–D6 findings on one or many files, or the JSON report that gates `patch` and `revise`. Also handles equivalent German-language requests. Returns the findings JSON in the top-level shape defined in `spec/project/lektorat/` §Outputs. Don't use for `patch` / `revise` (lektorat-apply owns disk writes), to persist the report to `.audits/lektorat/` (skill's job), to translate prose, to author new pages, or to detect cross-language parity drift (use docs-freshness)._
+_Read-only editorial scanner dispatched by [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md): walks an in-scope Markdown set and returns a structured findings inventory across six dimensions — D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness — with severities critical/warning/suggestion. Detection only; disk writes (`patch`/`revise`) and persisting the report stay with [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)

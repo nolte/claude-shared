@@ -10,7 +10,7 @@ last_updated: generated
 
 > Read-only-Vollständigkeits-Audit der Übersetzungsdateien gegeneinander und gegen die Code-Verwendung als nach Schweregrad sortierter Report.
 
-_Read-only audit of a localized app's translation files for completeness against each other and against code usage. Flattens every per-locale file to dotted key paths, diffs them against a reference locale, scans the source roots for key references, and reports three drifts — cross-locale parity gaps, keys used in code but undefined (critical), and keys defined but unused (orphan) — plus quality heuristics (empty values, identical-across-locales, placeholder parity). Discovers locale files and source roots and adapts call-site patterns to the project's i18n library. Use when the user asks to check translations for gaps, find missing/orphan i18n keys, audit DE/EN (or any locale) completeness, or run an i18n check after a feature, before a release, or in a pre-PR check. Don't use to author or fix translations, or for the broad web-UI i18n/RTL/bootstrap review._
+_Read-only audit of a localized app's translation files for completeness against each other and against code usage. Flattens each locale file to dotted key paths, diffs them against a reference locale, scans source roots for key references, and reports cross-locale parity gaps, keys used in code but undefined (critical), and orphan keys — plus quality heuristics (empty values, identical-across-locales, placeholder parity). Adapts to the project's i18n library. Invoke when the user asks to check translations for gaps, find missing/orphan i18n keys, or audit locale completeness. Don't use to author or fix translations, or for the broad web-UI i18n/RTL review._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)

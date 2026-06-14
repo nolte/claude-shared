@@ -1,6 +1,6 @@
 ---
 name: license-check-scanner
-description: Read-only scanner dispatched by the license-check skill to build the license inventory of a project. Detects the stack (Python / Node / Go) from manifests, reads the CycloneDX SBOM the skill generates (or resolves licenses read-only from lockfiles and registry metadata when none is provided), maps every component to a canonical SPDX identifier, classifies each into a license category, and returns a structured inventory with the project's own outbound license and REUSE state. Invoke when the license-check skill needs the read-only inventory step or a per-component SPDX-and-category list. Returns the inventory only; SBOM generation, the policy gate, remediation, NOTICE generation, and the audit-artifact write stay with the license-check skill. Don't use for the allow/review/deny decision or any follow-up action — those are the skill's.
+description: "Read-only license-inventory scanner dispatched by the `license-check` skill: detects the stack (Python/Node/Go), reads the CycloneDX SBOM (or resolves licenses from lockfiles and registry metadata), maps each component to a canonical SPDX id and category, and returns the inventory plus the project's own outbound license and REUSE state. The policy gate, remediation, NOTICE generation, and audit-artifact write stay with the skill."
 distribution: plugin
 tools: Read, Bash
 model: sonnet

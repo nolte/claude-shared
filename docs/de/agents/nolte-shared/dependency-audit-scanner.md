@@ -10,7 +10,7 @@ last_updated: generated
 
 > Nur-Lese-CVE-Scanner pro Projekttyp (pip-audit, npm audit, govulncheck, cargo audit); liefert strukturiertes Drift-Inventar.
 
-_Read-only scanner dispatched by the dependency-audit skill to detect project type from lockfiles, run the matching auditor (pip-audit for Python, npm audit / pnpm audit / yarn audit for Node, govulncheck for Go, cargo audit for Rust), and return a structured CVE drift inventory. Invoke when the dependency-audit skill needs to run a vulnerability scan, execute pip-audit / npm audit / cargo audit per project type, or produce a dependency-audit drift inventory. Returns a per-package CVE list with severity and fixed-in version. Don't use for the severity-triage and follow-up actions — those are owned by the dependency-audit skill._
+_Read-only scanner dispatched by the [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md) skill: detects project type from lockfiles, runs the matching auditor (pip-audit, npm/pnpm/yarn audit, govulncheck, or cargo audit), and returns a structured per-package CVE drift inventory with severity and fixed-in version. Severity triage and follow-up actions stay with the skill._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
