@@ -10,6 +10,8 @@ Orientation for Claude Code and contributors working inside this repository.
 - **`nolte-media`** (`plugins/nolte-media/`) — brand-aware image generation and media processing. Split on a different **runtime/dependency** requirement: it needs external image-generation credentials and binaries (Cloudflare / Gemini / Pollinations API access, `vtracer`) that most consumers neither have nor want.
 - **`nolte-engineering`** (`plugins/nolte-engineering/`) — engineering capabilities for code-bearing projects: full-stack implementation, the test-tier and test-cycle suite, the quality gate, frontend/web-UI optimization, and code-security / dependency / license auditing. Split on a different **consumer audience**: code repositories adopt it on top of `nolte-shared`, while non-code repos (docs, content, config) take `nolte-shared` alone.
 
+All three plugins version in **lockstep** — one release line equal to the repository's release tag (the splits are about install-time audience/dependencies, not release cadence). `.github/release-automation.yml` declares each plugin's `plugin.json` `version` plus `marketplace.json` `metadata.version` as the version-bearing files the pre-publish gate aligns; the `chore(release): <tag>` alignment bumps all of them together. Marketplace `plugins[].version` entries are intentionally absent — plugin-version resolution takes each plugin's own `plugin.json` first.
+
 ## Layout
 
 - `.claude-plugin/plugin.json` — `nolte-shared` plugin manifest (name, version, author)
