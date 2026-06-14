@@ -189,7 +189,7 @@ Cross-cutting-Artefakte sind phasenagnostisch: Sie werden situativ gerufen, unab
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
 | [`cookiecutter-template-author`](../agents/nolte-shared/cookiecutter-template-author.md) | Agent | Ein Cookiecutter-Template scaffolden oder refactoren, das ein nolte-spec-konformes Projekt rendert; Hooks härten; `pytest-cookies` und CI-Matrix aufsetzen. |
-| [`png-to-transparent-svg`](../agents/nolte-shared/png-to-transparent-svg.md) | Agent | Eine PNG mit eingebackenem Checkerboard-Pseudo-Hintergrund in ein SVG mit echter Alpha-Transparenz konvertieren. |
+| [`png-to-transparent-svg`](../agents/nolte-media/png-to-transparent-svg.md) | Agent | Eine PNG mit eingebackenem Checkerboard-Pseudo-Hintergrund in ein SVG mit echter Alpha-Transparenz konvertieren. |
 
 ## Rück-Kanten im Zyklus
 

@@ -10,7 +10,7 @@ last_updated: 2026-05-30
 
 The `image-generate` skill turns a text prompt into an image file on disk, fully from the command line, so it drops into any pipeline. It has **swappable provider backends** (selected with `--provider`) so the capability isn't locked to one vendor's pricing or availability.
 
-The deterministic engine is a stdlib-only script, `skills/image-generate/scripts/image_generate.py`; the skill is the operator-facing wrapper.
+The deterministic engine is a stdlib-only script, `plugins/nolte-media/skills/image-generate/scripts/image_generate.py`; the skill is the operator-facing wrapper.
 
 ## Providers at a glance
 
@@ -82,7 +82,7 @@ Useful flags: `--from-prompt-doc <doc> --variant light|dark` (render a `graphic-
 
 ## Using it in another repo
 
-When the `nolte-shared` plugin is installed in another repository, this capability is reachable there as `/nolte-shared:image-generate`; nothing is copied into the consumer repo. The skill invokes the bundled script through `${CLAUDE_PLUGIN_ROOT}`, which resolves to the installed plugin's directory in any context (marketplace install and `claude --plugin-dir .` dogfooding), so the same command works everywhere:
+When the `nolte-media` plugin is installed in another repository, this capability is reachable there as `/nolte-media:image-generate`; nothing is copied into the consumer repo. The skill invokes the bundled script through `${CLAUDE_PLUGIN_ROOT}`, which resolves to the installed plugin's directory in any context (marketplace install and `claude --plugin-dir ./plugins/nolte-media` dogfooding), so the same command works everywhere:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \

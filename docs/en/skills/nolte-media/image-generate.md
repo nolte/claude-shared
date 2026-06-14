@@ -8,34 +8,34 @@ last_updated: generated
 
 # image-generate
 
-> Erzeugt aus einem Text-Prompt ein Bild über ein austauschbares Provider-Backend (Cloudflare/Pollinations/Gemini) und schreibt Bild plus Metadaten-Sidecar an einen gewählten Pfad.
+> Generates an image from a text prompt via a swappable provider backend (Cloudflare/Pollinations/Gemini), writing the image plus a metadata sidecar to a chosen path.
 
 _Generates an image from a text prompt via a pluggable provider backend, writing the image plus a `<image>.meta.json` sidecar to an operator-chosen path. Backends are swappable via `--provider`: cloudflare (Cloudflare Workers AI FLUX.1-schnell, real free tier, DEFAULT), pollinations (auth-free, but public-feed/undocumented-licence — the tool forces private=true and shows a disclaimer), gemini (gemini-2.5-flash-image, requires billing). Wraps the bundled, stdlib-only `scripts/image_generate.py`. Invoke when the user asks to \"generate an image\", \"create a hero image or icon from a prompt\", \"render this prompt to a PNG\", \"turn a graphic-prompt-generator document into an image\", or equivalent German-language requests. Don't use for image editing, in-painting, or multi-turn refinement; for batch pipelines; or to author the prompt itself (use graphic-prompt-generator). Supports resume is not applicable: a generation is a single terminal call._
 
-- **Plugin:** `nolte-shared`
+- **Plugin:** `nolte-media`
 - **Phase:** 4 Build (`build`)
 - **Tags:** `design`
-- **Quelle:** [skills/image-generate/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/image-generate/SKILL.md)
+- **Source:** [skills/image-generate/SKILL.md](https://github.com/nolte/claude-shared/blob/main/skills/image-generate/SKILL.md)
 
-## Anwenden wenn
+## Use when
 
 - you want to generate an image from a text prompt to a chosen file path
 - you want a free, terminal-driven text-to-image call without a chat UI
 - you want to render a graphic-prompt-generator prompt document into an image
 
-## Nicht anwenden wenn
+## Don't use when
 
-- **You want to author the prompt rather than render it** → [`graphic-prompt-generator`](../../agents/nolte-shared/graphic-prompt-generator.md)
-- **You want to remove a fake-transparency background or vectorise the result** → [`png-to-transparent-svg`](../../agents/nolte-shared/png-to-transparent-svg.md)
+- **You want to author the prompt rather than render it** → [`graphic-prompt-generator`](../../agents/nolte-media/graphic-prompt-generator.md)
+- **You want to remove a fake-transparency background or vectorise the result** → [`png-to-transparent-svg`](../../agents/nolte-media/png-to-transparent-svg.md)
 
-## Siehe auch
+## See also
 
-- [`graphic-prompt-generator`](../../agents/nolte-shared/graphic-prompt-generator.md)
-- [`png-to-transparent-svg`](../../agents/nolte-shared/png-to-transparent-svg.md)
+- [`graphic-prompt-generator`](../../agents/nolte-media/graphic-prompt-generator.md)
+- [`png-to-transparent-svg`](../../agents/nolte-media/png-to-transparent-svg.md)
 
-## Referenziert von
+## Referenced by
 
-- [`graphic-prompt-generator`](../../agents/nolte-shared/graphic-prompt-generator.md)
+- [`graphic-prompt-generator`](../../agents/nolte-media/graphic-prompt-generator.md)
 - [`gemini-image-handoff`](gemini-image-handoff.md)
 
 ---
@@ -46,9 +46,9 @@ Turns a text prompt into an image file on disk — no chat UI, scriptable into a
 
 ### Why this is a skill, not an agent
 
-- **Operator-invoked slash command.** Reached as `/nolte-shared:image-generate` with a prompt, a provider, and a target path; the operator drives it directly rather than a parent dispatching a fire-and-forget worker.
+- **Operator-invoked slash command.** Reached as `/nolte-media:image-generate` with a prompt, a provider, and a target path; the operator drives it directly rather than a parent dispatching a fire-and-forget worker.
 - **Mid-flow confirmation is part of the contract.** Some providers surface a one-time data/licence notice the operator must acknowledge, and an existing target file must not be overwritten without confirmation. Those are interactive gates an agent's structured-report shape can't carry.
-- **The result flows back into the conversation.** Written image and sidecar paths land in the operator's context so the next step (vectorising via [`png-to-transparent-svg`](../../agents/nolte-shared/png-to-transparent-svg.md), embedding) can follow inline.
+- **The result flows back into the conversation.** Written image and sidecar paths land in the operator's context so the next step (vectorising via [`png-to-transparent-svg`](../../agents/nolte-media/png-to-transparent-svg.md), embedding) can follow inline.
 - Counter-dimension: the generation itself is a single deterministic script call; that engine is isolated in the bundled script, while the load-bearing dimensions (operator invocation, the acknowledgement/overwrite gates) make this a skill.
 
 ### German trigger phrases
@@ -110,4 +110,4 @@ Generate one image (or `n`) from the resolved prompt to the target path.
 
 - Read `examples/01-cloudflare-default.md` for the default free-tier path (Cloudflare token + account id → PNG).
 - Read `examples/02-pollinations-disclaimer.md` for the auth-free path and the public-feed/licence disclaimer.
-- Read `examples/03-from-prompt-doc.md` for rendering a [`graphic-prompt-generator`](../../agents/nolte-shared/graphic-prompt-generator.md) document's Dark-Mode section.
+- Read `examples/03-from-prompt-doc.md` for rendering a [`graphic-prompt-generator`](../../agents/nolte-media/graphic-prompt-generator.md) document's Dark-Mode section.

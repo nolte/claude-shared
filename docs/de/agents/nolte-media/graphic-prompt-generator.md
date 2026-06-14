@@ -8,34 +8,34 @@ last_updated: generated
 
 # graphic-prompt-generator
 
-> Authors brand-conformant, generator-ready AI image prompts as durable Markdown documents from a short graphic brief.
+> Verfasst brand-konforme, generatorfertige KI-Bild-Prompts als dauerhafte Markdown-Dokumente aus einem kurzen Grafik-Briefing.
 
 _Turns a short graphic brief into a brand-conformant, generator-ready AI image-generation prompt document on disk. Reads the repository's published brand tokens and descriptive-color vocabulary, assembles the prompt in the mandated style-reference → descriptive-phrases → hex-reinforcement → seed order for one named generator (Gemini, Midjourney, or successor), and writes it under design/prompts/. Invoke when the user asks to draft an image prompt for a hero/empty-state/onboarding illustration, app icon, or logo. Don't use to generate the image itself, to clean a PNG background ([`png-to-transparent-svg`](png-to-transparent-svg.md)), or to define the brand color system._
 
-- **Plugin:** `nolte-shared`
+- **Plugin:** `nolte-media`
 - **Phase:** 3 Design (`design`)
 - **Distribution:** `plugin`
 - **Tags:** `prose`, `scaffolding`
-- **Source:** [agents/graphic-prompt-generator.md](https://github.com/nolte/claude-shared/blob/main/agents/graphic-prompt-generator.md)
+- **Quelle:** [agents/graphic-prompt-generator.md](https://github.com/nolte/claude-shared/blob/main/agents/graphic-prompt-generator.md)
 
-## Use when
+## Anwenden wenn
 
 - you want a copy-paste-ready Gemini or Midjourney prompt that matches the project's brand
 - you need a hero, empty-state, onboarding, icon, logo, or badge image prompt as a durable, reproducible document
 
-## Don't use when
+## Nicht anwenden wenn
 
 - **you want to remove a fake-transparency background or vectorise a generated PNG** → [`png-to-transparent-svg`](png-to-transparent-svg.md)
 
-## See also
+## Siehe auch
 
-- [`image-generate`](../../skills/nolte-shared/image-generate.md)
+- [`image-generate`](../../skills/nolte-media/image-generate.md)
 - [`png-to-transparent-svg`](png-to-transparent-svg.md)
 
-## Referenced by
+## Referenziert von
 
-- [`gemini-image-handoff`](../../skills/nolte-shared/gemini-image-handoff.md)
-- [`image-generate`](../../skills/nolte-shared/image-generate.md)
+- [`gemini-image-handoff`](../../skills/nolte-media/gemini-image-handoff.md)
+- [`image-generate`](../../skills/nolte-media/image-generate.md)
 
 ---
 

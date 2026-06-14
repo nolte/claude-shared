@@ -14,10 +14,14 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 
 ## 1 Vision
 
+### nolte-shared
+
 - [`mission-define`](nolte-shared/mission-define.md) — Verfasst die erste project/mission.md eines Projekts entlang des SMART-Walks und der vier Pflicht-Sektionen.
 - [`mission-revise`](nolte-shared/mission-revise.md) — Überarbeitet eine bestehende project/mission.md: Statement, Audiences, Time-Bound oder mvp_status-Lifecycle-Flips.
 
 ## 2 Plan
+
+### nolte-shared
 
 - [`audience-identify`](nolte-shared/audience-identify.md) — Führt die Audience-Identifikation gegen einen abgegrenzten Kontext aus und erzeugt ein autoritatives Audience-Artefakt.
 - [`feature-decompose`](nolte-shared/feature-decompose.md) — Zerlegt einen Roadmap-Eintrag in Feature-Dateien mit testbaren Akzeptanzkriterien und Test-Hooks.
@@ -29,6 +33,8 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 - [`sprint-plan`](nolte-shared/sprint-plan.md) — Erstellt eine neue Sprint-Datei unter project/sprints/ mit Value-Statement, Features und value-verifizierendem Akzeptanzkriterium.
 
 ## 3 Design
+
+### nolte-shared
 
 - [`cookiecutter-template-manage`](nolte-shared/cookiecutter-template-manage.md) — Verwaltet den Cookiecutter-Template-Lebenszyklus: scaffolden, überarbeiten, Hooks absichern, pytest-cookies einrichten.
 - [`docs-audience-tracks-apply`](nolte-shared/docs-audience-tracks-apply.md) — Verdrahtet Per-Page-Track-Frontmatter und Audience-zu-Track-Mapping in MkDocs docs/; Audit-, Migrate- oder Patch-Operationen.
@@ -48,14 +54,21 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 
 ## 4 Build
 
+### nolte-media
+
+- [`gemini-image-handoff`](nolte-media/gemini-image-handoff.md) — Erzeugt einen Gemini-optimierten Prompt und führt den Operator durch das Einfügen in die Gemini-Web-UI und den Bild-Download — ein halbautomatischer Handoff ohne API und ohne Billing.
+- [`image-generate`](nolte-media/image-generate.md) — Erzeugt aus einem Text-Prompt ein Bild über ein austauschbares Provider-Backend (Cloudflare/Pollinations/Gemini) und schreibt Bild plus Metadaten-Sidecar an einen gewählten Pfad.
+
+### nolte-shared
+
 - [`backstage-catalog-generate`](nolte-shared/backstage-catalog-generate.md) — Erzeugt aus einem Projekt eine schema-valide Backstage-catalog-info.yaml: inferiert per-Kind-MUST-Floor-Felder aus Repo-Signalen, klärt den Rest mit dem Operator und validiert selbst.
 - [`blog-author`](nolte-shared/blog-author.md) — Verfasst ein zweisprachiges Blog-Post-Paar (EN-canonical + DE-übersetzt) nach den blog-author-Specs dieses Plugins und schreibt es in ein Konsumenten-Blog-Repo.
 - [`blog-author-trigger`](nolte-shared/blog-author-trigger.md) — Bei einem feature→done-Übergang leitet es ein Blog-Post-Briefing ab, schlägt neu/update/defer vor und dispatched entweder blog-author oder schreibt ein Deferral-Artefakt.
-- [`gemini-image-handoff`](nolte-shared/gemini-image-handoff.md) — Erzeugt einen Gemini-optimierten Prompt und führt den Operator durch das Einfügen in die Gemini-Web-UI und den Bild-Download — ein halbautomatischer Handoff ohne API und ohne Billing.
-- [`image-generate`](nolte-shared/image-generate.md) — Erzeugt aus einem Text-Prompt ein Bild über ein austauschbares Provider-Backend (Cloudflare/Pollinations/Gemini) und schreibt Bild plus Metadaten-Sidecar an einen gewählten Pfad.
 - [`sprint-execute`](nolte-shared/sprint-execute.md) — Treibt das Tagesgeschäft eines aktiven Sprints: Lifecycle-Übergänge, Feature-Listen-Sync, last_commit-Updates.
 
 ## 5 Review
+
+### nolte-shared
 
 - [`agent-review`](nolte-shared/agent-review.md) — Prüft einen Claude-Code-Agent gegen die Spec und erzeugt einen umsetzbaren Review-Plan unter .audits/agent-review/.
 - [`continuous-improvement-triage`](nolte-shared/continuous-improvement-triage.md) — Triagiert Portfolio-Audit-Findings und dispatched die Behebung an den passendsten spezialisierten Agent oder Skill.
@@ -67,6 +80,8 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 - [`spec-drift-audit`](nolte-shared/spec-drift-audit.md) — Auditiert jede Spec gegen die Repo-Implementierung und erzeugt ein traceable Spec-Drift-Audit-Artefakt.
 
 ## 6 Quality
+
+### nolte-shared
 
 - [`dependency-audit`](nolte-shared/dependency-audit.md) — Scannt den Dependency-Baum des Projekts nach bekannten CVEs und optional Lizenz-Compliance-Issues; Severity-sortierter Report.
 - [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Prüft bestehende Markdown-Prosa gegen sechs Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit, Idiomatik).
@@ -80,6 +95,8 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 - [`workflow-health-triage`](nolte-shared/workflow-health-triage.md) — Triagiert einen roten GitHub-Actions-Workflow auf develop/main und dispatched den passendsten spezialisierten Agent zur Behebung.
 
 ## 7 Close & Release
+
+### nolte-shared
 
 - [`release-notes-curate`](nolte-shared/release-notes-curate.md) — Reichert den offenen release-drafter-Draft auf develop mit projektkontext-bewussten Sektionen via gh release edit an.
 - [`release-publish-trigger`](nolte-shared/release-publish-trigger.md) — Prüft jeden Pre-Publish-Gate lokal und dispatched dann release-publish.yml für den offenen Release-Drafter-Draft auf develop.

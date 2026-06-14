@@ -74,8 +74,8 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `design`
 
-- [gemini-image-handoff](../skills/nolte-shared/gemini-image-handoff.md) — nolte-shared
-- [image-generate](../skills/nolte-shared/image-generate.md) — nolte-shared
+- [gemini-image-handoff](../skills/nolte-media/gemini-image-handoff.md) — nolte-media
+- [image-generate](../skills/nolte-media/image-generate.md) — nolte-media
 
 ## `frontend`
 
@@ -97,9 +97,9 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `prose`
 
+- [graphic-prompt-generator](../agents/nolte-media/graphic-prompt-generator.md) — nolte-media
 - [audience-doc-author](../agents/nolte-shared/audience-doc-author.md) — nolte-shared
 - [docs-freshness-checker](../agents/nolte-shared/docs-freshness-checker.md) — nolte-shared
-- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [lektorat-scanner](../agents/nolte-shared/lektorat-scanner.md) — nolte-shared
 - [prose-vale-curator](../agents/nolte-shared/prose-vale-curator.md) — nolte-shared
 - [blog-author](../skills/nolte-shared/blog-author.md) — nolte-shared
@@ -178,15 +178,15 @@ Querverweise: jeder Tag listet alle Skills und Agents, die ihn deklarieren.
 
 ## `scaffolding`
 
+- [graphic-prompt-generator](../agents/nolte-media/graphic-prompt-generator.md) — nolte-media
+- [png-to-transparent-svg](../agents/nolte-media/png-to-transparent-svg.md) — nolte-media
 - [claude-plugin-developer](../agents/nolte-shared/claude-plugin-developer.md) — nolte-shared
 - [component-test-generator](../agents/nolte-shared/component-test-generator.md) — nolte-shared
 - [contract-test-generator](../agents/nolte-shared/contract-test-generator.md) — nolte-shared
 - [cookiecutter-template-author](../agents/nolte-shared/cookiecutter-template-author.md) — nolte-shared
 - [e2e-test-generator](../agents/nolte-shared/e2e-test-generator.md) — nolte-shared
 - [fullstack-developer](../agents/nolte-shared/fullstack-developer.md) — nolte-shared
-- [graphic-prompt-generator](../agents/nolte-shared/graphic-prompt-generator.md) — nolte-shared
 - [integration-test-generator](../agents/nolte-shared/integration-test-generator.md) — nolte-shared
-- [png-to-transparent-svg](../agents/nolte-shared/png-to-transparent-svg.md) — nolte-shared
 - [test-case-extractor](../agents/nolte-shared/test-case-extractor.md) — nolte-shared
 - [test-code-adapter](../agents/nolte-shared/test-code-adapter.md) — nolte-shared
 - [unit-test-generator](../agents/nolte-shared/unit-test-generator.md) — nolte-shared

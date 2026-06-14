@@ -442,8 +442,25 @@ def check_agent_tree(agents_dir: Path) -> list[Finding]:
     return findings
 
 
+def discover_default_targets() -> list[str]:
+    """Default scan scope: the root plugin's skills/ + agents/, plus every
+    in-repo plugin under plugins/<name>/ that ships a skills/ or agents/ tree.
+    Keeps `task test` and CI (which call this script with no arguments) covering
+    every plugin in a multi-plugin repo without per-plugin wiring."""
+    targets = ["skills/", "agents/"]
+    plugins_dir = REPO / "plugins"
+    if plugins_dir.is_dir():
+        for plugin in sorted(plugins_dir.iterdir()):
+            if not plugin.is_dir():
+                continue
+            for sub in ("skills", "agents"):
+                if (plugin / sub).is_dir():
+                    targets.append(f"plugins/{plugin.name}/{sub}/")
+    return targets
+
+
 def main() -> int:
-    targets = sys.argv[1:] or ["skills/", "agents/"]
+    targets = sys.argv[1:] or discover_default_targets()
     paths: list[Path] = []
     for t in targets:
         p = REPO / t
@@ -464,20 +481,22 @@ def main() -> int:
     all_findings: list[Finding] = []
     for path in paths:
         rel = path.relative_to(REPO).as_posix()
-        if rel.startswith("skills/") and path.name == "SKILL.md":
+        # Classify by path segment, not a root-anchored prefix, so a skill or
+        # agent living under an in-repo plugin root (plugins/<name>/skills/...,
+        # plugins/<name>/agents/...) is validated exactly like the root plugin's.
+        if path.name == "SKILL.md" and path.parent.parent.name == "skills":
             all_findings.extend(check_skill(path))
-        elif rel.startswith("agents/") and path.suffix == ".md":
+        elif path.suffix == ".md" and path.parent.name == "agents":
             all_findings.extend(check_agent(path))
 
-    # Phantom-agent leak scan: only the top-level `agents/*.md` glob above visits
-    # legitimate agents, so nested companion markdown would slip through. Run the
-    # recursive tree check whenever the agents/ directory is in scope.
-    agents_dir = REPO / "agents"
-    scope_includes_agents = any(
-        (REPO / t).resolve() in (agents_dir.resolve(), REPO.resolve()) for t in targets
-    )
-    if scope_includes_agents and agents_dir.is_dir():
-        all_findings.extend(check_agent_tree(agents_dir))
+    # Phantom-agent leak scan: the per-file glob above only visits top-level
+    # `agents/*.md`, so nested companion markdown would slip through. Run the
+    # recursive tree check over every agents/ tree in scope — the root plugin's
+    # and each in-repo plugin's (plugins/<name>/agents/).
+    for t in targets:
+        p = REPO / t
+        if p.is_dir() and p.name == "agents":
+            all_findings.extend(check_agent_tree(p))
 
     if not all_findings:
         print(f"validate_skills: {len(paths)} artifacts checked, no findings")
