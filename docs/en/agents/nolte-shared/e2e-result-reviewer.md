@@ -10,7 +10,7 @@ last_updated: generated
 
 > Reviews an E2E run's screenshots and protocol visually against the requirement/UI specs and returns prioritised, read-only findings.
 
-_Visually reviews the outputs of an end-to-end test run — the screenshots and the machine-generated protocol — against the requirement, test-case, and UI specs, per spec/project/e2e-test-automation/. Reads each screenshot as an image and compares layout, content, state display, and i18n against what the specs require, then returns prioritised findings (critical/high/medium/low) keyed to requirement/TC IDs. Read-only: it inspects run outputs and never edits code or tests. Use after an E2E run when the user asks to review the screenshots/protocol, check a run against the specs, or find UI/spec deviations in test outputs. Don't use to scaffold tests (use e2e-test-generator), to review or repair the test code itself (use e2e-test-reviewer), or to audit test-tier completeness (use test-pyramid-check)._
+_Visually reviews an end-to-end run's outputs — screenshots and the machine-generated protocol — against the requirement, test-case, and UI specs, per spec/project/e2e-test-automation/. Reads each screenshot as an image, compares layout, content, state, and i18n against the specs, and returns prioritised findings (critical/high/medium/low) keyed to requirement/TC IDs. Read-only. Invoke after an E2E run when the user asks to review the screenshots/protocol or find UI/spec deviations. Don't use to scaffold tests ([`e2e-test-generator`](e2e-test-generator.md)), to repair the test code ([`e2e-test-reviewer`](e2e-test-reviewer.md)), or to audit pyramid shape ([`test-pyramid-check`](../../skills/nolte-shared/test-pyramid-check.md))._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)

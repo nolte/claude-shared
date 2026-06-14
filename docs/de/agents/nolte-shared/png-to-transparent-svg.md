@@ -10,7 +10,7 @@ last_updated: generated
 
 > Konvertiert ein PNG mit Fake-Transparency-Hintergrund (Checkerboard oder Einfarbig) in ein sauberes SVG mit echtem Alpha.
 
-_Convert a PNG that uses a baked-in checkerboard (or single-color) background as fake transparency into a clean SVG with real alpha transparency. Detects the fake-transparency pattern in RGB, removes it by setting those pixels to alpha=0, writes a cleaned PNG, and then vectorises the cleaned PNG with vtracer. Use when the user says "convert this PNG to a transparent SVG," "turn this AI-generated image into a vector," "the transparency looks like a checkerboard in my icon, fix it," "vectorise this logo and drop the background," or equivalent German-language requests. Don't use for PNGs that already carry real alpha transparency (those can be vectorised directly without this agent), and don't use for photographic content where the background isn't a flat fake-transparency pattern._
+_Converts a PNG that uses a baked-in checkerboard (or single-color) background as fake transparency into a clean SVG with real alpha. Detects the fake-transparency pattern in RGB, sets those pixels to alpha=0, writes a cleaned PNG, then vectorises it with vtracer. Invoke when the user asks to convert a PNG to a transparent SVG, vectorise an AI-generated image or logo, or fix a checkerboard background; also German requests. Don't use for PNGs that already carry real alpha (vectorise directly), or for photographic content where the background isn't a flat fake-transparency pattern._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 8 Cross-cutting (`cross-cutting`)

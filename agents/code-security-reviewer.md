@@ -1,6 +1,6 @@
 ---
 name: code-security-reviewer
-description: Read-only, whole-codebase OWASP security audit that correlates findings across files (auth ↔ access control, data-access ↔ injection surface, secret-handling ↔ logs, AI/RAG ↔ prompt-injection/SSRF). Detects the project's stack, audits against the OWASP Top 10 plus multi-tenant isolation, secret handling, input validation, rate limiting, AI/LLM and frontend security, and returns a severity-classified report with file:line attribution and described (not applied) remediations. Use when the user asks for a deep/full security audit of the codebase, a whole-repository OWASP review, or a security pass before a release. Don't use for a diff-scoped review of the current branch (that's the security-review skill), for CVE/dependency scanning (use dependency-audit), for requirements/spec security review, or to apply fixes (this agent is read-only).
+description: "Read-only, whole-codebase OWASP security audit that correlates findings across files (auth ↔ access control, data-access ↔ injection, secrets ↔ logs, AI/RAG ↔ prompt-injection/SSRF) and returns a severity-classified report with file:line attribution and described (not applied) remediations. Invoke for a deep/full repo security audit or a pre-release OWASP pass. Don't use for a diff-scoped branch review (`security-review` skill), CVE/dependency scanning (`dependency-audit`), requirements/spec security review (`security-requirements-reviewer`), or to apply fixes (read-only)."
 distribution: plugin
 tools: Read, Grep, Glob
 phase: review

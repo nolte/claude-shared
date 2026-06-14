@@ -1,6 +1,6 @@
 ---
 name: portfolio-manifest-collector
-description: "Read-only inventory collector dispatched by portfolio-audit to gather per-repo project/portfolio.yml manifests across all nolte portfolio members. Invoke when the portfolio-audit skill needs to collect portfolio manifests, gather tech-stack inventory from all nolte repos, or list portfolio.yml across repos. Don't use to author or modify portfolio.yml files (use portfolio-audit Bootstrap), to detect duplicates or gaps (that is the calling skill's responsibility), or for any write operation against portfolio members."
+description: "Read-only inventory collector dispatched by `portfolio-audit`: gathers each repo's project/portfolio.yml manifest across all nolte portfolio members and returns the raw tech-stack and capability inventory. Detection only — duplicate/gap analysis and any writes stay with the calling skill."
 distribution: plugin
 tools: [Bash]
 model: sonnet

@@ -10,7 +10,7 @@ last_updated: generated
 
 > Nur-Lese-In-Flight-Datensammler: offene Issues, PRs (inkl. Drafts), Branches ohne PR, ungelöste Review-Threads + Discussions über nolte/*.
 
-_Read-only in-flight data collector dispatched by portfolio-inflight-triage to gather open issues, open PRs (including drafts), branches without an active PR pointing to develop, and unresolved review-comment threads plus open GitHub Discussions across the nolte portfolio. Invoke when the portfolio-inflight-triage skill needs to collect per-repository in-flight data across all nolte Portfolio-Member repositories, fetch the four primary data sources defined in spec/portfolio/portfolio-inflight-management/ §Data sources, or refresh a per-repository in-flight snapshot for the audit. Don't use to classify findings by severity (that is the calling skill's responsibility), to apply the stalling thresholds or matrix-axis evaluation (also the skill's job), to author or modify the Findings-Report, or for any write operation against any Portfolio-Member repository._
+_Read-only in-flight data collector dispatched by [`portfolio-inflight-triage`](../../skills/nolte-shared/portfolio-inflight-triage.md): gathers open issues, open PRs (incl. drafts), branches without an active PR to develop, and unresolved review threads plus open Discussions across the nolte portfolio. Returns raw per-repo data only — severity classification, stalling thresholds, and report authoring stay with the calling skill. Performs no writes against any repository._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)
