@@ -26,12 +26,12 @@ _Triages a failing GitHub Actions workflow run on `develop` or `main` per `spec/
 ## Don't use when
 
 - **You want to merge the fix PR after triage** → [`pull-request-merge`](pull-request-merge.md)
-- **You want a per-repo CVE audit, not CI triage** → [`dependency-audit`](dependency-audit.md)
+- **You want a per-repo CVE audit, not CI triage** → [`dependency-audit`](../nolte-engineering/dependency-audit.md)
 
 ## See also
 
 - [`pull-request-merge`](pull-request-merge.md)
-- [`dependency-audit`](dependency-audit.md)
+- [`dependency-audit`](../nolte-engineering/dependency-audit.md)
 
 ## Referenced by
 

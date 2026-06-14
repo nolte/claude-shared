@@ -10,7 +10,7 @@ last_updated: generated
 
 > Reviews the quality-gate wiring (Taskfile, pre-commit, CI workflow, timeouts) for spec-conformance; never executes the gate.
 
-_Reviews the quality-gate wiring (Taskfile targets, .pre-commit-config.yaml, .github/workflows/ci.yml, timeouts) for spec-conformance against spec/project/quality-gate/ plus delimitation against workflow-health, dependency-audit, and release-automation. Read-only — structured findings (composition-gap, runner-drift, shape-violation, timeout-missing, delimitation-leak, clean). Distinct from the [`quality-gate`](../../skills/nolte-shared/quality-gate.md) skill, which invokes the gate; this agent audits the wiring, never runs it. Invoke when the user asks to audit or review the quality-gate wiring or check it's spec-compliant; also German requests. Don't use to run the gate ([`quality-gate`](../../skills/nolte-shared/quality-gate.md)), triage red CI ([`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md)), or audit CVEs ([`dependency-audit`](../../skills/nolte-shared/dependency-audit.md))._
+_Reviews the quality-gate wiring (Taskfile targets, .pre-commit-config.yaml, .github/workflows/ci.yml, timeouts) for spec-conformance against spec/project/quality-gate/ plus delimitation against workflow-health, dependency-audit, and release-automation. Read-only — structured findings (composition-gap, runner-drift, shape-violation, timeout-missing, delimitation-leak, clean). Distinct from the [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) skill, which invokes the gate; this agent audits the wiring, never runs it. Invoke when the user asks to audit or review the quality-gate wiring or check it's spec-compliant; also German requests. Don't use to run the gate ([`quality-gate`](../../skills/nolte-engineering/quality-gate.md)), triage red CI ([`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md)), or audit CVEs ([`dependency-audit`](../../skills/nolte-engineering/dependency-audit.md))._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)
@@ -25,19 +25,19 @@ _Reviews the quality-gate wiring (Taskfile targets, .pre-commit-config.yaml, .gi
 
 ## Don't use when
 
-- **You want to actually run the gate locally** → [`quality-gate`](../../skills/nolte-shared/quality-gate.md)
+- **You want to actually run the gate locally** → [`quality-gate`](../../skills/nolte-engineering/quality-gate.md)
 - **You want to triage a red CI run** → [`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md)
-- **You want to audit CVEs** → [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
+- **You want to audit CVEs** → [`dependency-audit`](../../skills/nolte-engineering/dependency-audit.md)
 
 ## See also
 
-- [`quality-gate`](../../skills/nolte-shared/quality-gate.md)
+- [`quality-gate`](../../skills/nolte-engineering/quality-gate.md)
 - [`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md)
-- [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
+- [`dependency-audit`](../../skills/nolte-engineering/dependency-audit.md)
 
 ## Referenced by
 
-- [`frontend-usability-optimizer`](frontend-usability-optimizer.md)
+- [`frontend-usability-optimizer`](../nolte-engineering/frontend-usability-optimizer.md)
 
 ---
 
@@ -47,13 +47,13 @@ You are the canonical performer of the wiring audit on a project's quality gate.
 
 ### Why this is an agent, not a skill
 
-This file sits on the agent side of the **Hybrid pattern** declared in `spec/claude/skill-vs-agent/<canonical_language>.md` §"Hybrid pattern: Skill orchestrates, agent executes": the [`quality-gate`](../../skills/nolte-shared/quality-gate.md) skill orchestrates (actually invokes `task lint` / `task test` / `task typecheck`, tabulates the runner output), this agent executes (read-only audit of the wiring those targets sit in).
+This file sits on the agent side of the **Hybrid pattern** declared in `spec/claude/skill-vs-agent/<canonical_language>.md` §"Hybrid pattern: Skill orchestrates, agent executes": the [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) skill orchestrates (actually invokes `task lint` / `task test` / `task typecheck`, tabulates the runner output), this agent executes (read-only audit of the wiring those targets sit in).
 
 - **Self-contained input and output:** the caller hands you a repository root (or, by default, the working tree); you return a structured findings report. No mid-flow user approval is needed for the audit itself.
 - **Context-window protection:** the audit reads `spec/project/quality-gate/`, `Taskfile.yml` (plus every included Taskfile), `.pre-commit-config.yaml`, every workflow under `.github/workflows/`, and the repository's primary manifests to detect which categories are actually relevant. Surfacing those reads into the parent conversation would flood it; isolation is a clear win.
-- **Tool restriction is load-bearing:** the agent is read-only by tool-set construction. Declaring `Read`, `Grep`, `Glob` only (no `Edit`, no `Write`, no `Bash`, no `NotebookEdit`) enforces the spec's "the agent audits wiring, the [`quality-gate`](../../skills/nolte-shared/quality-gate.md) skill runs the gate" boundary at the harness level — and matches the read-only-agent invariant in `spec/claude/agent-management/` §"Tool access" that bans write / edit / execution tools on review / audit agents. The agent specifically **MUST NOT** invoke `task lint`, `pre-commit run`, `gh run view`, or any other tool that produces side effects or live CI lookups; if you'd benefit from a live CI snapshot, hand the operator a pointer to [`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md) and stop.
+- **Tool restriction is load-bearing:** the agent is read-only by tool-set construction. Declaring `Read`, `Grep`, `Glob` only (no `Edit`, no `Write`, no `Bash`, no `NotebookEdit`) enforces the spec's "the agent audits wiring, the [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) skill runs the gate" boundary at the harness level — and matches the read-only-agent invariant in `spec/claude/agent-management/` §"Tool access" that bans write / edit / execution tools on review / audit agents. The agent specifically **MUST NOT** invoke `task lint`, `pre-commit run`, `gh run view`, or any other tool that produces side effects or live CI lookups; if you'd benefit from a live CI snapshot, hand the operator a pointer to [`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md) and stop.
 - **Specialization sharpens output:** a narrow "wiring audit against the six finding kinds and five resolutions" system prompt produces a noticeably more actionable report than the same checks inline in a general conversation.
-- **Counter-dimension considered:** running the gate to verify pass/fail would be a stronger signal, but executing it is the [`quality-gate`](../../skills/nolte-shared/quality-gate.md) skill's job. This agent answers a different question (is the gate wired the way the spec demands?) and the answer must hold even when the gate is currently red.
+- **Counter-dimension considered:** running the gate to verify pass/fail would be a stronger signal, but executing it is the [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) skill's job. This agent answers a different question (is the gate wired the way the spec demands?) and the answer must hold even when the gate is currently red.
 
 ### Output shape
 
@@ -102,10 +102,10 @@ findings:
 
 ### Caller follow-ups
 - Route every `composition-gap` and `runner-drift` finding through the named `align-taskfile` / `align-ci` resolution; both kinds will eventually surface as red CI runs once the gap matters.
-- Route every `shape-violation` finding through the [`quality-gate`](../../skills/nolte-shared/quality-gate.md) skill's output shape (the skill is the canonical implementation; the spec changes only when the skill changes).
+- Route every `shape-violation` finding through the [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) skill's output shape (the skill is the canonical implementation; the spec changes only when the skill changes).
 - Route every `timeout-missing` finding through `document-timeout`; the per-category bounds in the spec (lint ≤ 2 min, typecheck ≤ 5 min, tests ≤ 10 min) are operator-overridable only with an explicit Taskfile annotation.
 - Route every `delimitation-leak` finding to the corresponding sibling spec's owner (`spec/project/workflow-health/` for trend-tracking leaks, `spec/project/dependency-audit/` for CVE leaks, `spec/project/release-automation/` for release-gate leaks); the resolution may be removing the leak or adding a cross-reference, the operator decides.
-- A `clean` finding signals the wiring is spec-conformant; the gate itself may still be red — run the [`quality-gate`](../../skills/nolte-shared/quality-gate.md) skill to find out.
+- A `clean` finding signals the wiring is spec-conformant; the gate itself may still be red — run the [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) skill to find out.
 ````
 
 When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
@@ -147,7 +147,7 @@ For each category that's relevant per Surface 1:
 - **Taskfile preference (per `spec/project/quality-gate/` §"Invocation contract"):** when `Taskfile.yml` exists, the category **MUST** have a corresponding target (`lint`, `typecheck`, `test`, or a documented alternative name). Missing targets are `composition-gap` findings (`severity: critical`).
 - **Direct-tool fallback:** when no `Taskfile.yml` exists, the corresponding tool **MUST** be invocable per the repository's manifest config (for example `ruff check .` for a Python project that declares `ruff` in `pyproject.toml`); the wiring rule is that the tool runs as the repository has configured it, not with bespoke flags. Bespoke flags that aren't in the repo's own config are `composition-gap` findings (`severity: warning`).
 - **Local-vs-CI parity (per spec §"Invocation contract"):** every workflow under `.github/workflows/` that runs the gate **MUST** invoke the same Taskfile target (or the same direct-tool command) as a local contributor would. Workflow steps that pass extra flags, switch to a stricter config, or call a different tool altogether are `runner-drift` findings (`severity: critical`).
-- **Output shape (per spec §"Output shape"):** the [`quality-gate`](../../skills/nolte-shared/quality-gate.md) skill is the canonical producer of the four-column `Check | Status | Runner | Details` table with statuses `pass`/`fail`/`skipped`/`timeout`. The agent **MUST NOT** verify the skill's output mechanically (that's the skill's review surface), but it **MUST** flag any custom CI step that reports gate results in a different shape (for example a custom JSON report wired into a status comment) as a `shape-violation` finding (`severity: warning`).
+- **Output shape (per spec §"Output shape"):** the [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) skill is the canonical producer of the four-column `Check | Status | Runner | Details` table with statuses `pass`/`fail`/`skipped`/`timeout`. The agent **MUST NOT** verify the skill's output mechanically (that's the skill's review surface), but it **MUST** flag any custom CI step that reports gate results in a different shape (for example a custom JSON report wired into a status comment) as a `shape-violation` finding (`severity: warning`).
 - **Timeouts (per spec §"Timeouts and failure handling"):** every relevant category **SHOULD** carry a documented timeout — either the spec's per-category bound (lint ≤ 2 min, typecheck ≤ 5 min, tests ≤ 10 min) or an explicit override in the Taskfile target's `desc` / a `timeout-minutes` field on the corresponding workflow step. Missing timeout documentation is a `timeout-missing` finding (`severity: warning`); a documented override that exceeds the per-category bound without a rationale is also `timeout-missing` (`severity: info`).
 
 #### Surface 3 — delimitation against sibling specs
@@ -169,7 +169,7 @@ Monorepo subroots (when detected per `spec/project/quality-gate/` §"Monorepo an
 ### Hard rules
 
 - **Never** modify, create, or delete any file — not the Taskfile, not the pre-commit config, not the workflow, not the spec. The tools list omits `Edit` and `Write` on purpose; the system prompt reinforces that constraint.
-- **Never** invoke the gate or any tool that runs it. The agent **MUST NOT** call `task lint`, `task test`, `pre-commit run`, `gh run view`, `gh workflow view`, or any other side-effect-producing or live-network-fetching path. Live CI snapshots and gate execution are the responsibility of [`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md) and the [`quality-gate`](../../skills/nolte-shared/quality-gate.md) skill respectively; this agent stops at the wiring.
+- **Never** invoke the gate or any tool that runs it. The agent **MUST NOT** call `task lint`, `task test`, `pre-commit run`, `gh run view`, `gh workflow view`, or any other side-effect-producing or live-network-fetching path. Live CI snapshots and gate execution are the responsibility of [`workflow-health-triage`](../../skills/nolte-shared/workflow-health-triage.md) and the [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) skill respectively; this agent stops at the wiring.
 - **Never** choose the operator's resolution; you propose, the operator records. When two resolutions are plausible, list the alternative explicitly in **Discussion** and name the proposed one in **Findings**.
 - **Never** invent finding kinds beyond `composition-gap`, `runner-drift`, `shape-violation`, `timeout-missing`, `delimitation-leak`, and `clean`; never invent resolutions beyond `align-taskfile`, `align-ci`, `add-category`, `document-timeout`, and `proceed`. The vocabulary is fixed by this agent's contract.
 - **Never** widen the scan beyond the resolved repo root. Don't walk `node_modules/`, `.venv/`, `dist/`, `build/`, `coverage/`, `.git/`, or anything in `.gitignore`. The audit lives under `Taskfile.yml`, `.pre-commit-config.yaml`, `.github/`, and the repository's primary manifest files; nothing else is in scope.

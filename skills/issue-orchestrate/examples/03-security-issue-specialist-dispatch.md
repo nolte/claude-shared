@@ -39,7 +39,7 @@ Repository state when the skill is invoked:
 4. **Decompose with a review-first ordering.**
    - `P1` — audit the injection surface and its blast radius; acceptance: a
      `code-security-reviewer` report enumerating every tainted call path; specialist
-     `nolte-shared:code-security-reviewer` (read-only).
+     `nolte-engineering:code-security-reviewer` (read-only).
    - `P2` — sanitise the filename input / switch to an argument-array invocation;
      acceptance: the tainted path is closed and `quality-gate` passes; touches the
      bundled script; specialist resolved by description match for the code fix;
@@ -53,7 +53,7 @@ Repository state when the skill is invoked:
    approval before dispatch.
 6. **Route `direct`.** One coherent outcome (close the injection), a single PR strand,
    no new roadmap item → bounded → direct.
-7. **Dispatch in DAG order.** `P1`: `Agent(subagent_type="nolte-shared:code-security-reviewer")`
+7. **Dispatch in DAG order.** `P1`: `Agent(subagent_type="nolte-engineering:code-security-reviewer")`
    produces the audit; its report is recorded. `P2`: dispatch the code-fix specialist
    resolved at runtime, passing the audit findings; record the result. Each dispatch
    gates on operator confirmation.
@@ -63,7 +63,7 @@ Repository state when the skill is invoked:
 9. **Open the PR with the full audit trail.** `pull-request-create` with `Closes #298`
    and **Risk / rollout notes**:
    - `Issue: #298 — classification: security`
-   - `P1 dispatched specialist: nolte-shared:code-security-reviewer`
+   - `P1 dispatched specialist: nolte-engineering:code-security-reviewer`
    - `P2 dispatched specialist: <runtime-resolved code-fix specialist>`
    - `P3 verification: security-review (built-in skill) — no remaining high/critical finding`
    The operator confirms title and body before push.

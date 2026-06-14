@@ -38,13 +38,13 @@ _Curates prose in the current project so it passes Vale, preferring terms from t
 
 ## Referenced by
 
+- [`webview-ui-expert`](../nolte-engineering/webview-ui-expert.md)
 - [`docs-freshness-checker`](docs-freshness-checker.md)
 - [`link-rot-scanner`](link-rot-scanner.md)
-- [`webview-ui-expert`](webview-ui-expert.md)
+- [`webview-ui-optimize`](../../skills/nolte-engineering/webview-ui-optimize.md)
 - [`lektorat-apply`](../../skills/nolte-shared/lektorat-apply.md)
 - [`readme-structure-apply`](../../skills/nolte-shared/readme-structure-apply.md)
 - [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md)
-- [`webview-ui-optimize`](../../skills/nolte-shared/webview-ui-optimize.md)
 
 ---
 

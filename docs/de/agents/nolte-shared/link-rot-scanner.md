@@ -26,7 +26,7 @@ _Audits the repository's documentation for dead links — internal relative link
 
 ## Nicht anwenden wenn
 
-- **You want the deterministic offline gate (internal/cross-tree only)** → [`quality-gate`](../../skills/nolte-shared/quality-gate.md)
+- **You want the deterministic offline gate (internal/cross-tree only)** → [`quality-gate`](../../skills/nolte-engineering/quality-gate.md)
 - **You want the broader docs drift audit (parity, ADR, Mermaid)** → [`docs-freshness-checker`](docs-freshness-checker.md)
 - **You want prose / Vale linting** → [`prose-vale-curator`](prose-vale-curator.md)
 

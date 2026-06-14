@@ -34,6 +34,10 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 
 ## 3 Design
 
+### nolte-engineering
+
+- [`webview-ui-optimize`](nolte-engineering/webview-ui-optimize.md) — Auditiert und patcht ein Browser-gerendertes Frontend über Performance, Security, Barrierefreiheit (WCAG 2.2 AA), i18n und UX.
+
 ### nolte-shared
 
 - [`cookiecutter-template-manage`](nolte-shared/cookiecutter-template-manage.md) — Verwaltet den Cookiecutter-Template-Lebenszyklus: scaffolden, überarbeiten, Hooks absichern, pytest-cookies einrichten.
@@ -49,7 +53,6 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 - [`skill-management`](nolte-shared/skill-management.md) — Scaffoldet oder überarbeitet einen nolte-shared Claude-Code-Skill-Ordner.
 - [`spec`](nolte-shared/spec.md) — Verfasst, übersetzt, indiziert und prüft mehrsprachige Spezifikationen unter spec/.
 - [`tech-stack-capture`](nolte-shared/tech-stack-capture.md) — Erfasst oder aktualisiert den tech_stack-Block in project/portfolio.yml durch Sondieren von Lockfiles, Taskfile, CI und Tooling-Configs.
-- [`webview-ui-optimize`](nolte-shared/webview-ui-optimize.md) — Auditiert und patcht ein Browser-gerendertes Frontend über Performance, Security, Barrierefreiheit (WCAG 2.2 AA), i18n und UX.
 - [`yaml-json-schema`](nolte-shared/yaml-json-schema.md) — Verfasst, auditiert, refaktoriert und validiert YAML-codierte JSON-Schema-2020-12-Dokumente.
 
 ## 4 Build
@@ -81,16 +84,19 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 
 ## 6 Quality
 
+### nolte-engineering
+
+- [`dependency-audit`](nolte-engineering/dependency-audit.md) — Scannt den Dependency-Baum des Projekts nach bekannten CVEs und optional Lizenz-Compliance-Issues; Severity-sortierter Report.
+- [`license-check`](nolte-engineering/license-check.md) — End-to-End-Lizenz-Compliance-Check: SBOM, SPDX-Klassifizierung, allow/review/deny-Gate, Remediation, NOTICE und ein Audit-Artefakt.
+- [`quality-gate`](nolte-engineering/quality-gate.md) — Führt das Lint-+-Typecheck-+-Test-Gate des Projekts parallel aus und tabelliert, welche Checks gescheitert sind.
+- [`test-cycle-orchestrate`](nolte-engineering/test-cycle-orchestrate.md) — Treibt den iterativen Test-Zyklus (ermitteln → ausführen → analysieren → anpassen → erneut ausführen) für ein Feature, dispatcht jede Phase und schleift bis Grün unter der No-Cheating-Invariante.
+- [`test-pyramid-check`](nolte-engineering/test-pyramid-check.md) — Prüft die Stufen-Vollständigkeit gegen die test-pyramid-foundation-Taxonomie (Unit/Component/Integration/Contract/E2E) und E2E-Disziplin gegen e2e-test-automation; liefert einen Lückenbericht.
+
 ### nolte-shared
 
-- [`dependency-audit`](nolte-shared/dependency-audit.md) — Scannt den Dependency-Baum des Projekts nach bekannten CVEs und optional Lizenz-Compliance-Issues; Severity-sortierter Report.
 - [`lektorat-apply`](nolte-shared/lektorat-apply.md) — Prüft bestehende Markdown-Prosa gegen sechs Lektorats-Dimensionen (Lesbarkeit, Verständlichkeit, Grammatik, Stil, Audience-Fit, Idiomatik).
 - [`lektorat-auto-revise`](nolte-shared/lektorat-auto-revise.md) — Arbeitet einen Lektorat-Audit-Report autonom ab, indem es jedes Artefakt an den passenden Author routet und bis zur Konvergenz re-auditiert.
-- [`license-check`](nolte-shared/license-check.md) — End-to-End-Lizenz-Compliance-Check: SBOM, SPDX-Klassifizierung, allow/review/deny-Gate, Remediation, NOTICE und ein Audit-Artefakt.
 - [`portfolio-audit`](nolte-shared/portfolio-audit.md) — Auditiert, rendert und bootstrappt das cross-repo Capability-Portfolio über nolte/*.
-- [`quality-gate`](nolte-shared/quality-gate.md) — Führt das Lint-+-Typecheck-+-Test-Gate des Projekts parallel aus und tabelliert, welche Checks gescheitert sind.
-- [`test-cycle-orchestrate`](nolte-shared/test-cycle-orchestrate.md) — Treibt den iterativen Test-Zyklus (ermitteln → ausführen → analysieren → anpassen → erneut ausführen) für ein Feature, dispatcht jede Phase und schleift bis Grün unter der No-Cheating-Invariante.
-- [`test-pyramid-check`](nolte-shared/test-pyramid-check.md) — Prüft die Stufen-Vollständigkeit gegen die test-pyramid-foundation-Taxonomie (Unit/Component/Integration/Contract/E2E) und E2E-Disziplin gegen e2e-test-automation; liefert einen Lückenbericht.
 - [`vocab-drift-audit`](nolte-shared/vocab-drift-audit.md) — Auditiert lokale Vale-Vokabularien gegen den gepinnten Upstream-Release nolte/vale-style auf Drift.
 - [`workflow-health-triage`](nolte-shared/workflow-health-triage.md) — Triagiert einen roten GitHub-Actions-Workflow auf develop/main und dispatched den passendsten spezialisierten Agent zur Behebung.
 

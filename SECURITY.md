@@ -41,4 +41,4 @@ Out of scope:
 
 ## Dependency monitoring
 
-Dependencies that ship with this plugin (docs-build toolchain, pre-commit hooks, pinned Actions versions) are watched by Renovate and the `/nolte-shared:dependency-audit` skill we dogfood. Findings with a security impact are treated under this policy.
+Dependencies that ship with this plugin (docs-build toolchain, pre-commit hooks, pinned Actions versions) are watched by Renovate and the `/nolte-engineering:dependency-audit` skill we dogfood. Findings with a security impact are treated under this policy.

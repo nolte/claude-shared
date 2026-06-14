@@ -10,7 +10,7 @@ last_updated: generated
 
 > Takes a raw GitHub issue end-to-end: comprehend, classify, decompose into specialist-ready work packages, route or dispatch, and verify to an open PR.
 
-_Orchestrates a raw GitHub issue to an open, audit-trailed pull request per `spec/project/issue-orchestration/`. Comprehends the issue (body, comments, labels, linked items, repo surface), classifies it (`bug / feature-request / spec-change / security / docs / refactor / question / infra`), decomposes it into atomic specialist-ready work packages persisted as a pre-analysis artifact, routes large issues into the formal roadmap→feature→sprint pipeline, dispatches each package to the most specialised available skill or agent resolved by runtime lookup, and verifies via [`quality-gate`](quality-gate.md) and the standard PR flow. Invoke when the user asks to \"analyse this issue\", \"orchestrate issue #N\", \"take this issue end-to-end\", or equivalent German requests. Don't use to merge the PR (use [`pull-request-merge`](pull-request-merge.md)), to triage a red CI run (use [`workflow-health-triage`](workflow-health-triage.md)), or to decompose an existing roadmap item (use [`feature-decompose`](feature-decompose.md)). Supports resume per `spec/claude/resumable-work/`._
+_Orchestrates a raw GitHub issue to an open, audit-trailed pull request per `spec/project/issue-orchestration/`. Comprehends the issue (body, comments, labels, linked items, repo surface), classifies it (`bug / feature-request / spec-change / security / docs / refactor / question / infra`), decomposes it into atomic specialist-ready work packages persisted as a pre-analysis artifact, routes large issues into the formal roadmap→feature→sprint pipeline, dispatches each package to the most specialised available skill or agent resolved by runtime lookup, and verifies via [`quality-gate`](../nolte-engineering/quality-gate.md) and the standard PR flow. Invoke when the user asks to \"analyse this issue\", \"orchestrate issue #N\", \"take this issue end-to-end\", or equivalent German requests. Don't use to merge the PR (use [`pull-request-merge`](pull-request-merge.md)), to triage a red CI run (use [`workflow-health-triage`](workflow-health-triage.md)), or to decompose an existing roadmap item (use [`feature-decompose`](feature-decompose.md)). Supports resume per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
@@ -61,7 +61,7 @@ it completely.
 - **Orchestrator pattern (per `skill-vs-agent`).** The work is *analyse, decompose,
   route, dispatch, verify*; the dispatched specialist does the editing. The
   orchestrator stays in the main thread and chains other skills ([`feature-decompose`](feature-decompose.md)
-  or [`roadmap-plan`](roadmap-plan.md) for the pipeline route, [`quality-gate`](quality-gate.md), [`pull-request-create`](pull-request-create.md)).
+  or [`roadmap-plan`](roadmap-plan.md) for the pipeline route, [`quality-gate`](../nolte-engineering/quality-gate.md), [`pull-request-create`](pull-request-create.md)).
 - **Multi-phase state accumulates across prompts.** A decomposition, a route
   decision, and a sequence of per-package dispatches span many turns; a skill's
   persistent instruction context and the resumable-work envelope fit this naturally.
@@ -195,7 +195,7 @@ body.
    spec authoring (the [`spec`](spec.md) skill); a documentation package to whichever agent names
    an audience-targeted documentation responsibility; a feature-shaped package to
    [`feature-decompose`](feature-decompose.md). A `security` package is not a single dispatch — it follows the
-   audit→fix→verify chain in operation 6: the read-only [`code-security-reviewer`](../../agents/nolte-shared/code-security-reviewer.md) agent
+   audit→fix→verify chain in operation 6: the read-only [`code-security-reviewer`](../../agents/nolte-engineering/code-security-reviewer.md) agent
    scopes the surface, a coding-capable specialist (or the generalist under the gap
    rule) authors the fix, and the built-in `security-review` skill verifies the diff.
    These are illustrative anchors — re-resolve by description match each run, never
@@ -221,9 +221,9 @@ the next time the skill runs, with no stale snapshot to mislead the dispatch.
 
 #### 6. verify
 
-Before any PR opens, require [`quality-gate`](quality-gate.md) to pass green on the produced change, and
+Before any PR opens, require [`quality-gate`](../nolte-engineering/quality-gate.md) to pass green on the produced change, and
 for any package touching a security-sensitive path run the read-only
-[`code-security-reviewer`](../../agents/nolte-shared/code-security-reviewer.md) agent to scope the surface and the built-in `security-review`
+[`code-security-reviewer`](../../agents/nolte-engineering/code-security-reviewer.md) agent to scope the surface and the built-in `security-review`
 skill to verify the produced diff. (`security-review` is the Claude Code harness
 built-in, invoked as the `security-review` skill — not
 `Agent(subagent_type="nolte-shared:security-review")`, which does not exist.) Then
@@ -250,7 +250,7 @@ taken, the dispatched specialists, the artifact path, the PR URL, and the one-li
 - Read `examples/02-feature-request-to-pipeline.md` when a large feature-request
   issue is routed into the formal [`feature-decompose`](feature-decompose.md) / [`roadmap-plan`](roadmap-plan.md) pipeline.
 - Read `examples/03-security-issue-specialist-dispatch.md` when a `security`-class
-  issue dispatches [`code-security-reviewer`](../../agents/nolte-shared/code-security-reviewer.md) and runs `security-review` before the PR.
+  issue dispatches [`code-security-reviewer`](../../agents/nolte-engineering/code-security-reviewer.md) and runs `security-review` before the PR.
 
 ### Resumability
 

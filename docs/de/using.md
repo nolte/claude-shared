@@ -47,8 +47,8 @@ Das Plugin ist für diese Szenarien ausgelegt:
   (`/nolte-shared:pull-request-create`, `/nolte-shared:pull-request-merge`) über
   Repositories hinweg anwenden.
 - Ein konsistentes **Quality-Gate** und einen **Dependency-Audit** vor Commit
-  oder Release laufen lassen (`/nolte-shared:quality-gate`,
-  `/nolte-shared:dependency-audit`).
+  oder Release laufen lassen (`/nolte-engineering:quality-gate`,
+  `/nolte-engineering:dependency-audit`).
 - **Skills, Agents und Specs** gegen geteilte Autorenschafts-Regeln verfassen und
   reviewen (`/nolte-shared:skill-management`, `/nolte-shared:spec` sowie die
   Review-Skills).

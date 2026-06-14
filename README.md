@@ -29,7 +29,7 @@ Out-of-scope cases are listed under [§Scope & guarantees](#scope--guarantees). 
 
 ## What these plugins ship
 
-This repository is a **plugin monorepo** shipping two plugins: **`nolte-shared`** (the delivery-lifecycle bundle, at the repo root) and **`nolte-media`** (image generation and media processing, under `plugins/nolte-media/`). After install, every skill is callable as `/<plugin>:<name>`, for example `/nolte-shared:spec` or `/nolte-media:image-generate`. Agents are dispatched by skills, or directly via Claude Code's `Task` tool when the caller knows which agent it wants.
+This repository is a **plugin monorepo** shipping three plugins: **`nolte-shared`** (the common delivery-lifecycle bundle, at the repo root), **`nolte-media`** (image generation and media processing, under `plugins/nolte-media/`), and **`nolte-engineering`** (implementation, test, and code-audit capabilities for code repositories, under `plugins/nolte-engineering/`). After install, every skill is callable as `/<plugin>:<name>`, for example `/nolte-shared:spec`, `/nolte-media:image-generate`, or `/nolte-engineering:quality-gate`. Agents are dispatched by skills, or directly via Claude Code's `Task` tool when the caller knows which agent it wants.
 
 ### Skills
 
@@ -41,8 +41,6 @@ This repository is a **plugin monorepo** shipping two plugins: **`nolte-shared`*
 | `agent-review` | Audit a Claude Code agent against the authoring specs; persist findings as an actionable review plan. |
 | `pull-request-create` | Create a GitHub PR that conforms to the repository's pull-request-workflow spec. |
 | `pull-request-merge` | Promote an open draft PR to merged on `develop`, applying repository-declared labels and every workflow gate. |
-| `quality-gate` | Run lint + typecheck + test in parallel and tabulate the results, so failures surface before a commit or PR. |
-| `dependency-audit` | Scan the dependency tree for known CVEs (and optionally license issues) and produce a severity-sorted report. |
 | `project-structure-apply` | Audit the repo against the project-structure spec and scaffold or patch missing artefacts (README, `.github/*`, Taskfile, Renovate, …). |
 | `skill-agent-catalog-apply` | Wire up the MkDocs catalog that lists every skill and agent in a plugin repo. |
 | `vocab-drift-audit` | Diff repository-local Vale vocabulary against the pinned `nolte/vale-style` release. |
@@ -70,9 +68,13 @@ A separate plugin because it needs external image-generation credentials and bin
 | `graphic-prompt-generator` | agent | Turn a brief into a brand-conformant, generator-ready image prompt document. |
 | `png-to-transparent-svg` | agent | Convert a PNG with baked-in checkerboard transparency into a clean SVG with real alpha. |
 
+### `nolte-engineering` (implementation, test & code audits)
+
+A separate plugin for code-bearing projects, split on a different consumer audience per `spec/claude/plugin-scoping/`: code repos adopt it on top of `nolte-shared`, while non-code repos (docs, content, config) take `nolte-shared` alone. Ships `fullstack-developer`; the full unit / component / integration / contract / E2E test-tier generator + reviewer suite plus the test-cycle agents (`test-result-analyzer`, `test-code-adapter`, `test-case-extractor`); the `quality-gate`, `test-cycle-orchestrate`, and `test-pyramid-check` skills; frontend optimization (`webview-ui-optimize`, `webview-ui-expert`, `frontend-usability-optimizer`, `i18n-completeness-checker`); and code-supply-chain audits (`code-security-reviewer`, `dependency-audit`, `license-check`).
+
 ## Usage
 
-This repository packages two [Claude Code plugins](https://docs.claude.com/en/docs/claude-code/plugins): `nolte-shared` (manifest at `.claude-plugin/plugin.json`; skills under `skills/<name>/`, agents under `agents/<name>.md`) and `nolte-media` (manifest at `plugins/nolte-media/.claude-plugin/plugin.json`, with its own `skills/` and `agents/`). Both are listed in `.claude-plugin/marketplace.json`.
+This repository packages three [Claude Code plugins](https://docs.claude.com/en/docs/claude-code/plugins), each with its own `.claude-plugin/plugin.json` and `skills/` + `agents/`: `nolte-shared` (repo root), `nolte-media` (`plugins/nolte-media/`), and `nolte-engineering` (`plugins/nolte-engineering/`). All three are listed in `.claude-plugin/marketplace.json`.
 
 ### Consume in a downstream project
 
@@ -81,23 +83,24 @@ Add this repository as a plugin marketplace, then install whichever plugins you 
 ```bash
 /plugin marketplace add nolte/claude-shared
 /plugin install nolte-shared@nolte-shared
-/plugin install nolte-media@nolte-shared   # optional; needs image-generation credentials/binaries
+/plugin install nolte-engineering@nolte-shared   # code repos: implementation + test + code audits
+/plugin install nolte-media@nolte-shared         # optional; needs image-generation credentials/binaries
 ```
 
 For local testing without the marketplace flow, load the plugins directly from a checkout (pass `--plugin-dir` once per plugin):
 
 ```bash
-claude --plugin-dir /path/to/claude-shared --plugin-dir /path/to/claude-shared/plugins/nolte-media
+claude --plugin-dir /path/to/claude-shared --plugin-dir /path/to/claude-shared/plugins/nolte-media --plugin-dir /path/to/claude-shared/plugins/nolte-engineering
 ```
 
 Plugin skills are namespaced by plugin name—for example `/nolte-shared:spec`, `/nolte-shared:skill-management`, `/nolte-media:image-generate`.
 
 ### Work on the plugin itself (dogfooding)
 
-When developing inside this repository, launch Claude Code with both in-repo plugins pointed at their roots so the skills are discovered without duplicating files:
+When developing inside this repository, launch Claude Code with all in-repo plugins pointed at their roots so the skills are discovered without duplicating files:
 
 ```bash
-claude --plugin-dir . --plugin-dir ./plugins/nolte-media
+claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering
 ```
 
 Use `/reload-plugins` to pick up changes during a session without restarting.
@@ -120,7 +123,7 @@ task check
 
 `task check` runs the `lint` and `test` categories. The `docs` category stays a separate CI job, because it gates documentation freshness rather than the code itself. The target exits zero on a clean tree and non-zero when any category fails.
 
-For a parseable result, invoke the `/nolte-shared:quality-gate` skill. It renders a single table with the columns `Check`, `Status`, `Runner`, and `Details`, one row per category. Each `Status` is one of `pass`, `fail`, `skipped`, or `timeout`, and the `Runner` column records the exact command that ran (for example `task lint`) so the result stays reproducible.
+For a parseable result, invoke the `/nolte-engineering:quality-gate` skill. It renders a single table with the columns `Check`, `Status`, `Runner`, and `Details`, one row per category. Each `Status` is one of `pass`, `fail`, `skipped`, or `timeout`, and the `Runner` column records the exact command that ran (for example `task lint`) so the result stays reproducible.
 
 The `ci` workflow gates the same three categories on `develop` as separate required status checks. This is where each category is covered locally:
 
@@ -132,9 +135,9 @@ The `ci` workflow gates the same three categories on `develop` as separate requi
 
 ### Notes
 
-- **Self-hosted marketplace source**: `marketplace.json` lists two plugins: `nolte-shared` at `"source": "."` and `nolte-media` at `"source": "./plugins/nolte-media"` (relative paths). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
+- **Self-hosted marketplace source**: `marketplace.json` lists three plugins: `nolte-shared` at `"source": "."`, `nolte-media` at `"source": "./plugins/nolte-media"`, and `nolte-engineering` at `"source": "./plugins/nolte-engineering"` (relative paths). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
 - **Contact**: No email is published in `plugin.json` or `marketplace.json`. Use the GitHub repository (`https://github.com/nolte/claude-shared`) for issues and contact.
-- **Dogfooding requires `--plugin-dir` per plugin**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from, and each in-repo plugin needs its own flag (`--plugin-dir . --plugin-dir ./plugins/nolte-media`). Without them, `/skills` in this repo won't list the bundled skills.
+- **Dogfooding requires `--plugin-dir` per plugin**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from, and each in-repo plugin needs its own flag (`--plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering`). Without them, `/skills` in this repo won't list the bundled skills.
 - **Workflow cascade constraint**: GitHub Actions doesn't cascade workflow runs from events produced by a `GITHUB_TOKEN`-authenticated step. In this repo that means `release-drafter.yml` doesn't fire after an `automerge.yaml` squash-merge, and `release-cd-refresh-master.yml` doesn't fire after a `release-publish.yml` publish. The constraint is documented in `spec/project/workflow-health/` §Known platform constraints; the portfolio-level fix lives in `nolte/gh-plumbing` (tracking: [`nolte/gh-plumbing#330`](https://github.com/nolte/gh-plumbing/issues/330), the portfolio App/PAT for the `GITHUB_TOKEN` cascade gap). Until that ships, a user-authored commit re-fires `release-drafter`, and `main` is fast-forwarded manually after a publish.
 - **Changelog**: The authoritative per-release content lives on the [GitHub Releases page](https://github.com/nolte/claude-shared/releases); no Markdown changelog is kept in git.
 
@@ -144,14 +147,15 @@ The `ci` workflow gates the same three categories on `develop` as separate requi
 .
 ├── .claude-plugin/
 │   ├── plugin.json         # nolte-shared manifest (name, version, author)
-│   └── marketplace.json    # marketplace catalog listing both plugins
+│   └── marketplace.json    # marketplace catalog listing all three plugins
 ├── skills/                 # nolte-shared skills
 │   └── <name>/SKILL.md
 ├── agents/                 # nolte-shared sub-agents
 │   └── <name>.md
 ├── plugins/
-│   └── nolte-media/        # second plugin: own .claude-plugin/, skills/, agents/
-├── spec/                   # bilingual specifications governing both plugins
+│   ├── nolte-media/        # second plugin: own .claude-plugin/, skills/, agents/
+│   └── nolte-engineering/  # third plugin: own .claude-plugin/, skills/, agents/
+├── spec/                   # bilingual specifications governing all three plugins
 └── README.md
 ```
 
