@@ -22,3 +22,12 @@ sources:
     agents_path: agents
     repo_url: https://github.com/nolte/claude-shared
     branch: main
+  # Third in-repo plugin (engineering: implementation + test + quality + code audits).
+  # Scoped to plugins/nolte-engineering/; consumed by code-bearing repos on top of
+  # nolte-shared. See spec/claude/plugin-scoping/ §"When to split into a separate plugin".
+  - name: nolte-engineering
+    local: ./plugins/nolte-engineering
+    skills_path: skills
+    agents_path: agents
+    repo_url: https://github.com/nolte/claude-shared
+    branch: main

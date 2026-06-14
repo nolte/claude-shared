@@ -98,7 +98,7 @@ You **don't**:
 
 The caller gives you one of:
 
-1. **Single spec**: a slug like `project/quality-gate` or just [`quality-gate`](../../skills/nolte-shared/quality-gate.md) (disambiguate by searching under `spec/*/<slug>/`).
+1. **Single spec**: a slug like `project/quality-gate` or just [`quality-gate`](../../skills/nolte-engineering/quality-gate.md) (disambiguate by searching under `spec/*/<slug>/`).
 2. **List of specs**: comma-separated slugs.
 3. **Topic**: `project` or `claude` — audits every spec under that topic.
 4. **All**: the literal string `all` — audits every in-scope spec in the repo.

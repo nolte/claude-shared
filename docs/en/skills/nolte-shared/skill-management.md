@@ -80,7 +80,7 @@ After creating a skill in the source tree, remind the user that a new plugin rel
 1. Collect from the user (in any language):
    - **Purpose**: what the skill does, one or two sentences.
    - **Triggers**: concrete user phrasings or situations that should invoke it. If vague, ask for examples until you have at least three distinct ones.
-   - **Name**: if not given, propose an ASCII-kebab-case name in **verb-noun form** — `<object-noun>-<action>` with the action token **last** ([`pull-request-create`](pull-request-create.md), [`mission-define`](mission-define.md), [`feature-decompose`](feature-decompose.md)), per `skill-management` §Frontmatter validation. Never propose a gerund (`-ing`) or noun-only name; the only action-less names are the closed exceptions [`spec`](spec.md), [`yaml-json-schema`](yaml-json-schema.md), [`quality-gate`](quality-gate.md).
+   - **Name**: if not given, propose an ASCII-kebab-case name in **verb-noun form** — `<object-noun>-<action>` with the action token **last** ([`pull-request-create`](pull-request-create.md), [`mission-define`](mission-define.md), [`feature-decompose`](feature-decompose.md)), per `skill-management` §Frontmatter validation. Never propose a gerund (`-ing`) or noun-only name; the only action-less names are the closed exceptions [`spec`](spec.md), [`yaml-json-schema`](yaml-json-schema.md), [`quality-gate`](../nolte-engineering/quality-gate.md).
 2. Check the target path doesn't already exist. If it does, stop and report.
 3. Write `SKILL.md` with:
    - YAML frontmatter: `name` matches folder; `description` enumerates triggers explicitly.
@@ -119,7 +119,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - Never create a skill at a non-standard path. Inside a plugin source tree the only accepted location is `skills/<name>/`; everywhere else, stop and ask the user whether to switch to the plugin repository instead.
 - Never distribute a plugin-owned skill by copying it into a consuming project's `.claude/skills/`, by symlinking, or by any other out-of-band path. Distribution is the plugin mechanism's job.
 - Never write a vague `description` like "helps with X" or "for Y tasks." It must enumerate concrete user phrasings so Claude's routing is reliable.
-- Name new skills in **verb-noun form** (`<object-noun>-<action>`, action token last), never gerund (`-ing`) or noun-only — per `skill-management` §Frontmatter validation. The only allowed action-less names are the closed exceptions [`spec`](spec.md), [`yaml-json-schema`](yaml-json-schema.md), [`quality-gate`](quality-gate.md); `scripts/validate_skills.py` (`SKILL_NAME_FORM_EXCEPTIONS`) flags any other as a `Suggestion`.
+- Name new skills in **verb-noun form** (`<object-noun>-<action>`, action token last), never gerund (`-ing`) or noun-only — per `skill-management` §Frontmatter validation. The only allowed action-less names are the closed exceptions [`spec`](spec.md), [`yaml-json-schema`](yaml-json-schema.md), [`quality-gate`](../nolte-engineering/quality-gate.md); `scripts/validate_skills.py` (`SKILL_NAME_FORM_EXCEPTIONS`) flags any other as a `Suggestion`.
 - Never assume the user's purpose—if triggers aren't stated, ask.
 - When `spec/claude/skill-management/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.
 - Never leave a skill half-written. Either all required files are present, or none.

@@ -19,6 +19,12 @@
       "source": "./plugins/nolte-media",
       "description": "Brand-aware image generation and media processing: provider-pluggable text-to-image, manual Gemini handoff, brand-conformant prompt authoring, and PNG-to-transparent-SVG vectorisation. Requires external image-generation credentials and binaries.",
       "version": "0.1.0"
+    },
+    {
+      "name": "nolte-engineering",
+      "source": "./plugins/nolte-engineering",
+      "description": "Engineering capabilities for code-bearing projects: full-stack implementation, the test-tier and test-cycle suite, the quality gate, frontend/web-UI optimization, and code-security / dependency / license auditing. Code repositories adopt this on top of nolte-shared.",
+      "version": "0.1.0"
     }
   ]
 }

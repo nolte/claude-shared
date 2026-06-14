@@ -79,7 +79,7 @@ A triage artifact must exist for `update` and `close`; if none exists, start wit
 
 Perform the periodic specialist-coverage review mandated by the spec (at minimum once per calendar quarter).
 
-1. **Locate merged remediation PRs.** Run `gh pr list --state merged --limit 50 --json number,title,body,labels` and filter for PRs whose body contains a **Risk / rollout notes** section that references an in-scope finding source ([`spec-drift-audit`](spec-drift-audit.md), `workflow-health`, [`project-structure-apply`](project-structure-apply.md), [`vocab-drift-audit`](vocab-drift-audit.md), [`portfolio-audit`](portfolio-audit.md), [`portfolio-inflight-triage`](portfolio-inflight-triage.md), [`dependency-audit`](dependency-audit.md), `prose-style`, manual review Issue, or ad-hoc contributor observation).
+1. **Locate merged remediation PRs.** Run `gh pr list --state merged --limit 50 --json number,title,body,labels` and filter for PRs whose body contains a **Risk / rollout notes** section that references an in-scope finding source ([`spec-drift-audit`](spec-drift-audit.md), `workflow-health`, [`project-structure-apply`](project-structure-apply.md), [`vocab-drift-audit`](vocab-drift-audit.md), [`portfolio-audit`](portfolio-audit.md), [`portfolio-inflight-triage`](portfolio-inflight-triage.md), [`dependency-audit`](../nolte-engineering/dependency-audit.md), `prose-style`, manual review Issue, or ad-hoc contributor observation).
 
 2. **Extract dispatch signals.** For each matched PR, parse the **Risk / rollout notes** section for:
    - The `Dispatched specialist:` field — the named specialist, or the literal `no matching specialist existed — generalist handled`.

@@ -22,6 +22,8 @@ last_updated: generated
         * [roadmap-refine](nolte-shared/roadmap-refine.md)
         * [sprint-plan](nolte-shared/sprint-plan.md)
 * 3 Design
+    * nolte-engineering
+        * [webview-ui-optimize](nolte-engineering/webview-ui-optimize.md)
     * nolte-shared
         * [cookiecutter-template-manage](nolte-shared/cookiecutter-template-manage.md)
         * [docs-audience-tracks-apply](nolte-shared/docs-audience-tracks-apply.md)
@@ -36,7 +38,6 @@ last_updated: generated
         * [skill-management](nolte-shared/skill-management.md)
         * [spec](nolte-shared/spec.md)
         * [tech-stack-capture](nolte-shared/tech-stack-capture.md)
-        * [webview-ui-optimize](nolte-shared/webview-ui-optimize.md)
         * [yaml-json-schema](nolte-shared/yaml-json-schema.md)
 * 4 Build
     * nolte-media
@@ -58,15 +59,16 @@ last_updated: generated
         * [skills-agents-sweep](nolte-shared/skills-agents-sweep.md)
         * [spec-drift-audit](nolte-shared/spec-drift-audit.md)
 * 6 Quality
+    * nolte-engineering
+        * [dependency-audit](nolte-engineering/dependency-audit.md)
+        * [license-check](nolte-engineering/license-check.md)
+        * [quality-gate](nolte-engineering/quality-gate.md)
+        * [test-cycle-orchestrate](nolte-engineering/test-cycle-orchestrate.md)
+        * [test-pyramid-check](nolte-engineering/test-pyramid-check.md)
     * nolte-shared
-        * [dependency-audit](nolte-shared/dependency-audit.md)
         * [lektorat-apply](nolte-shared/lektorat-apply.md)
         * [lektorat-auto-revise](nolte-shared/lektorat-auto-revise.md)
-        * [license-check](nolte-shared/license-check.md)
         * [portfolio-audit](nolte-shared/portfolio-audit.md)
-        * [quality-gate](nolte-shared/quality-gate.md)
-        * [test-cycle-orchestrate](nolte-shared/test-cycle-orchestrate.md)
-        * [test-pyramid-check](nolte-shared/test-pyramid-check.md)
         * [vocab-drift-audit](nolte-shared/vocab-drift-audit.md)
         * [workflow-health-triage](nolte-shared/workflow-health-triage.md)
 * 7 Close & Release
