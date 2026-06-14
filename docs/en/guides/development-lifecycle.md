@@ -189,7 +189,7 @@ Cross-cutting artefacts are phase-agnostic: they're invoked when the situation c
 | Artefact | Type | When to invoke |
 |---|---|---|
 | [`cookiecutter-template-author`](../agents/nolte-shared/cookiecutter-template-author.md) | agent | Scaffold or refactor a `cookiecutter` template that renders a nolte-spec-conformant project; harden hooks; set up `pytest-cookies` plus the CI matrix. |
-| [`png-to-transparent-svg`](../agents/nolte-shared/png-to-transparent-svg.md) | agent | Convert a PNG with baked-in checkerboard fake transparency into a clean SVG with real alpha transparency. |
+| [`png-to-transparent-svg`](../agents/nolte-media/png-to-transparent-svg.md) | agent | Convert a PNG with baked-in checkerboard fake transparency into a clean SVG with real alpha transparency. |
 
 ## Cycle return edges
 

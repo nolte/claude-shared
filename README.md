@@ -27,9 +27,9 @@ The plugin's primary readers are **`downstream-user`** (Claude Code users in por
 
 Out-of-scope cases are listed under [§Scope & guarantees](#scope--guarantees). In short, the plugin ships tooling, not a managed service, and it doesn't own downstream release accountability.
 
-## What this plugin ships
+## What these plugins ship
 
-The plugin is distributed as a single bundle. After install, every skill below is callable as `/nolte-shared:<name>`. Agents are dispatched by skills, or directly via Claude Code's `Task` tool (the API skills use to launch agents programmatically) when the caller knows which agent it wants.
+This repository is a **plugin monorepo** shipping two plugins: **`nolte-shared`** (the delivery-lifecycle bundle, at the repo root) and **`nolte-media`** (image generation and media processing, under `plugins/nolte-media/`). After install, every skill is callable as `/<plugin>:<name>`, for example `/nolte-shared:spec` or `/nolte-media:image-generate`. Agents are dispatched by skills, or directly via Claude Code's `Task` tool when the caller knows which agent it wants.
 
 ### Skills
 
@@ -58,35 +58,46 @@ The plugin is distributed as a single bundle. After install, every skill below i
 | `spec-readiness-reviewer` | Audit specs for contradictions, audience fit, and Requirements-vs-Acceptance-Criteria completeness. |
 | `docs-freshness-checker` | Audit MkDocs documentation for language parity, dead internal links, stale path references, ADR hygiene and placeholder markers. |
 | `prose-vale-curator` | Rephrase prose until it passes Vale, preferring terms the shipped vocabularies already accept. |
-| `png-to-transparent-svg` | Convert a PNG with baked-in checkerboard transparency into a clean SVG with real alpha. |
+
+### `nolte-media` (image generation & media processing)
+
+A separate plugin because it needs external image-generation credentials and binaries that most `nolte-shared` consumers don't have. It's split out on a distribution-contract difference per `spec/claude/plugin-scoping/`.
+
+| Capability | Type | Purpose |
+| --- | --- | --- |
+| `image-generate` | skill | Generate an image from a prompt via a swappable provider backend (Cloudflare FLUX / Pollinations / Gemini). |
+| `gemini-image-handoff` | skill | Semi-automatic Gemini handoff: author a prompt, then guide the operator through the Gemini web UI (no API billing). |
+| `graphic-prompt-generator` | agent | Turn a brief into a brand-conformant, generator-ready image prompt document. |
+| `png-to-transparent-svg` | agent | Convert a PNG with baked-in checkerboard transparency into a clean SVG with real alpha. |
 
 ## Usage
 
-This repository is packaged as a single [Claude Code plugin](https://docs.claude.com/en/docs/claude-code/plugins) named `nolte-shared`. The plugin manifest lives at `.claude-plugin/plugin.json`; skills under `skills/<name>/`; agents under `agents/<name>.md`.
+This repository packages two [Claude Code plugins](https://docs.claude.com/en/docs/claude-code/plugins): `nolte-shared` (manifest at `.claude-plugin/plugin.json`; skills under `skills/<name>/`, agents under `agents/<name>.md`) and `nolte-media` (manifest at `plugins/nolte-media/.claude-plugin/plugin.json`, with its own `skills/` and `agents/`). Both are listed in `.claude-plugin/marketplace.json`.
 
 ### Consume in a downstream project
 
-Add this repository as a plugin marketplace, then install the `nolte-shared` plugin:
+Add this repository as a plugin marketplace, then install whichever plugins you need:
 
 ```bash
 /plugin marketplace add nolte/claude-shared
 /plugin install nolte-shared@nolte-shared
+/plugin install nolte-media@nolte-shared   # optional; needs image-generation credentials/binaries
 ```
 
-For local testing without the marketplace flow, load the plugin directly from a checkout:
+For local testing without the marketplace flow, load the plugins directly from a checkout (pass `--plugin-dir` once per plugin):
 
 ```bash
-claude --plugin-dir /path/to/claude-shared
+claude --plugin-dir /path/to/claude-shared --plugin-dir /path/to/claude-shared/plugins/nolte-media
 ```
 
-Plugin skills are namespaced by plugin name—for example `/nolte-shared:spec`, `/nolte-shared:skill-management`.
+Plugin skills are namespaced by plugin name—for example `/nolte-shared:spec`, `/nolte-shared:skill-management`, `/nolte-media:image-generate`.
 
 ### Work on the plugin itself (dogfooding)
 
-When developing inside this repository, launch Claude Code with the plugin pointed at the repo root so the skills are discovered without duplicating files:
+When developing inside this repository, launch Claude Code with both in-repo plugins pointed at their roots so the skills are discovered without duplicating files:
 
 ```bash
-claude --plugin-dir .
+claude --plugin-dir . --plugin-dir ./plugins/nolte-media
 ```
 
 Use `/reload-plugins` to pick up changes during a session without restarting.
@@ -121,9 +132,9 @@ The `ci` workflow gates the same three categories on `develop` as separate requi
 
 ### Notes
 
-- **Self-hosted marketplace source**: The plugin entry in `marketplace.json` uses `"source": "."` (relative path). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
+- **Self-hosted marketplace source**: `marketplace.json` lists two plugins: `nolte-shared` at `"source": "."` and `nolte-media` at `"source": "./plugins/nolte-media"` (relative paths). This works when the marketplace is added via git (GitHub shorthand like `nolte/claude-shared`, or a `.git` URL). It doesn't work if a downstream user points directly at the raw `marketplace.json` over HTTP.
 - **Contact**: No email is published in `plugin.json` or `marketplace.json`. Use the GitHub repository (`https://github.com/nolte/claude-shared`) for issues and contact.
-- **Dogfooding requires `--plugin-dir .`**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from. Without the flag, `/skills` in this repo won't list the bundled skills.
+- **Dogfooding requires `--plugin-dir` per plugin**: There is no autoload for a plugin that lives in the same repository Claude Code is launched from, and each in-repo plugin needs its own flag (`--plugin-dir . --plugin-dir ./plugins/nolte-media`). Without them, `/skills` in this repo won't list the bundled skills.
 - **Workflow cascade constraint**: GitHub Actions doesn't cascade workflow runs from events produced by a `GITHUB_TOKEN`-authenticated step. In this repo that means `release-drafter.yml` doesn't fire after an `automerge.yaml` squash-merge, and `release-cd-refresh-master.yml` doesn't fire after a `release-publish.yml` publish. The constraint is documented in `spec/project/workflow-health/` §Known platform constraints; the portfolio-level fix lives in `nolte/gh-plumbing` (tracking: [`nolte/gh-plumbing#330`](https://github.com/nolte/gh-plumbing/issues/330), the portfolio App/PAT for the `GITHUB_TOKEN` cascade gap). Until that ships, a user-authored commit re-fires `release-drafter`, and `main` is fast-forwarded manually after a publish.
 - **Changelog**: The authoritative per-release content lives on the [GitHub Releases page](https://github.com/nolte/claude-shared/releases); no Markdown changelog is kept in git.
 
@@ -132,13 +143,15 @@ The `ci` workflow gates the same three categories on `develop` as separate requi
 ```
 .
 ├── .claude-plugin/
-│   ├── plugin.json         # plugin manifest (name, version, author)
-│   └── marketplace.json    # marketplace catalog (downstream install source)
-├── skills/                 # reusable skills
+│   ├── plugin.json         # nolte-shared manifest (name, version, author)
+│   └── marketplace.json    # marketplace catalog listing both plugins
+├── skills/                 # nolte-shared skills
 │   └── <name>/SKILL.md
-├── agents/                 # reusable sub-agents
+├── agents/                 # nolte-shared sub-agents
 │   └── <name>.md
-├── spec/                   # bilingual specifications governing the content
+├── plugins/
+│   └── nolte-media/        # second plugin: own .claude-plugin/, skills/, agents/
+├── spec/                   # bilingual specifications governing both plugins
 └── README.md
 ```
 

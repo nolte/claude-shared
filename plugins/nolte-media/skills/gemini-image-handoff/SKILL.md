@@ -29,7 +29,7 @@ It exists because the `gemini` provider of the `image-generate` tool requires bi
 
 ## Why this is a skill, not an agent
 
-- **Operator-invoked slash command.** Reached as `/nolte-shared:gemini-image-handoff` with a brief; the operator drives it directly.
+- **Operator-invoked slash command.** Reached as `/nolte-media:gemini-image-handoff` with a brief; the operator drives it directly.
 - **A human step sits between the two halves.** The operator must paste the prompt into the UI and download the result before anything else can happen. An agent's fire-and-forget contract can't wait on a manual UI action.
 - **The deliverable flows back into the conversation.** The copy-paste prompt block and the UI steps land in the operator's context to act on immediately.
 - Counter-dimension: prompt authoring on its own could be an agent (`graphic-prompt-generator` is exactly that). The load-bearing dimension here isn't prompt quality but the interactive, operator-in-the-loop handoff — so this is a skill, and it **delegates to `graphic-prompt-generator`** when a brand-conformant prompt document is wanted.

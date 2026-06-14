@@ -14,6 +14,8 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 
 ## 2 Plan
 
+### nolte-shared
+
 - [`audience-review`](nolte-shared/audience-review.md) — Reviews an existing audience-analysis artifact against the spec; read-only structured findings report.
 - [`feature-consistency-reviewer`](nolte-shared/feature-consistency-reviewer.md) — Reviews a draft feature file for overlap, duplication, and prior art against features, source code, and the spec corpus.
 - [`roadmap-coherence-reviewer`](nolte-shared/roadmap-coherence-reviewer.md) — Read-only roadmap-coherence audit against goals, mission, sprints, and features; structured findings list.
@@ -23,14 +25,21 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 
 ## 3 Design
 
+### nolte-media
+
+- [`graphic-prompt-generator`](nolte-media/graphic-prompt-generator.md) — Authors brand-conformant, generator-ready AI image prompts as durable Markdown documents from a short graphic brief.
+
+### nolte-shared
+
 - [`audience-doc-author`](nolte-shared/audience-doc-author.md) — Drafts or refines audience-tailored documentation (README, release notes, MkDocs pages) against an existing audience artifact.
 - [`claude-plugin-developer`](nolte-shared/claude-plugin-developer.md) — Drafts spec-conformant Claude Code plugin artifacts (skill or agent) for nolte-shared, executor in the skill-orchestrates-agent pattern.
-- [`graphic-prompt-generator`](nolte-shared/graphic-prompt-generator.md) — Authors brand-conformant, generator-ready AI image prompts as durable Markdown documents from a short graphic brief.
 - [`spec-readiness-reviewer`](nolte-shared/spec-readiness-reviewer.md) — Read-only audit of a spec for contradictions, audience fit, and AC coverage.
 - [`test-case-extractor`](nolte-shared/test-case-extractor.md) — Derives structured, framework-agnostic, traceable test cases from a requirement document, written from the user-observable-behaviour perspective.
 - [`webview-ui-expert`](nolte-shared/webview-ui-expert.md) — Read-only deep cross-file review of one named frontend target across Performance, Security, A11y, i18n, UX.
 
 ## 4 Build
+
+### nolte-shared
 
 - [`component-test-generator`](nolte-shared/component-test-generator.md) — Scaffolds spec-conformant component tests in the right flavour (frontend render-and-query, or service-through-its-API with externals doubled), with determinism and TC-IDs.
 - [`contract-test-generator`](nolte-shared/contract-test-generator.md) — Scaffolds spec-conformant contract tests (consumer-driven by default: consumer expectations + provider verification, broker, can-i-deploy), asserting agreement compatibility only.
@@ -42,6 +51,8 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 - [`unit-test-generator`](nolte-shared/unit-test-generator.md) — Scaffolds spec-conformant unit tests (FIRST, AAA, observable-behaviour assertions, disciplined doubles, TC-IDs) for a module, defaulting to a pytest reference profile.
 
 ## 5 Review
+
+### nolte-shared
 
 - [`code-security-reviewer`](nolte-shared/code-security-reviewer.md) — Read-only whole-codebase OWASP audit correlating findings across files into a severity-classified report.
 - [`component-test-reviewer`](nolte-shared/component-test-reviewer.md) — Reviews existing component tests (frontend or service) against the component-tier spec, returns a checklist-based conformance verdict, and applies only minimal surgical fixes.
@@ -62,6 +73,8 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 
 ## 6 Quality
 
+### nolte-shared
+
 - [`docs-freshness-checker`](nolte-shared/docs-freshness-checker.md) — Read-only freshness audit of MkDocs docs: language parity, dead links, stale spec/code refs, ADR hygiene, Mermaid derived-source drift.
 - [`i18n-completeness-checker`](nolte-shared/i18n-completeness-checker.md) — Read-only completeness audit of translation files against each other and against code usage, as a severity-sorted report.
 - [`link-rot-scanner`](nolte-shared/link-rot-scanner.md) — Read-only link-rot audit: internal, anchor, cross-tree, and external links via scripts/check_links.py, triaged into a severity-sorted report.
@@ -73,5 +86,10 @@ Auto-generated catalog of every agent discovered across the configured plugin so
 
 ## 8 Cross-cutting
 
+### nolte-media
+
+- [`png-to-transparent-svg`](nolte-media/png-to-transparent-svg.md) — Converts a PNG with fake-transparency background (checkerboard or single colour) into a clean SVG with real alpha.
+
+### nolte-shared
+
 - [`cookiecutter-template-author`](nolte-shared/cookiecutter-template-author.md) — Scaffolds or refactors Cookiecutter templates, hardens hooks, sets up pytest-cookies harness + GitHub Actions matrix.
-- [`png-to-transparent-svg`](nolte-shared/png-to-transparent-svg.md) — Converts a PNG with fake-transparency background (checkerboard or single colour) into a clean SVG with real alpha.

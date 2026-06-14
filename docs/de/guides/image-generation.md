@@ -10,7 +10,7 @@ last_updated: 2026-05-30
 
 Der Skill `image-generate` verwandelt einen Text-Prompt in eine Bilddatei auf der Platte. Das läuft vollständig über die Kommandozeile. So fügt er sich in jede Pipeline ein. Er hat **austauschbare Provider-Backends** (gewählt über `--provider`). So ist die Fähigkeit nicht an Preise oder Verfügbarkeit eines einzelnen Anbieters gebunden.
 
-Die deterministische Engine ist ein reines Stdlib-Skript: `skills/image-generate/scripts/image_generate.py`. Der Skill ist die Hülle, über die Betreiber diese Engine bedienen.
+Die deterministische Engine ist ein reines Stdlib-Skript: `plugins/nolte-media/skills/image-generate/scripts/image_generate.py`. Der Skill ist die Hülle, über die Betreiber diese Engine bedienen.
 
 ## Provider im Überblick
 
@@ -82,7 +82,7 @@ Nützliche Flags: `--from-prompt-doc <doc> --variant light|dark` (ein `graphic-p
 
 ## Nutzung in einem anderen Repo
 
-Wenn das `nolte-shared`-Plugin in einem anderen Repository installiert ist, ist diese Fähigkeit dort als `/nolte-shared:image-generate` erreichbar — es wird nichts ins Consumer-Repo kopiert. Der Skill ruft das mitgelieferte Skript über `${CLAUDE_PLUGIN_ROOT}` auf. Diese Variable zeigt in jedem Kontext auf das installierte Plugin-Verzeichnis (Marketplace-Installation und `claude --plugin-dir .`-Dogfooding). So funktioniert derselbe Befehl überall:
+Wenn das `nolte-media`-Plugin in einem anderen Repository installiert ist, ist diese Fähigkeit dort als `/nolte-media:image-generate` erreichbar — es wird nichts ins Consumer-Repo kopiert. Der Skill ruft das mitgelieferte Skript über `${CLAUDE_PLUGIN_ROOT}` auf. Diese Variable zeigt in jedem Kontext auf das installierte Plugin-Verzeichnis (Marketplace-Installation und `claude --plugin-dir ./plugins/nolte-media`-Dogfooding). So funktioniert derselbe Befehl überall:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \

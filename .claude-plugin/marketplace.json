@@ -13,6 +13,12 @@
       "source": ".",
       "description": "Shared Claude Code skills and agents for consistent development workflows across projects.",
       "version": "0.1.7"
+    },
+    {
+      "name": "nolte-media",
+      "source": "./plugins/nolte-media",
+      "description": "Brand-aware image generation and media processing: provider-pluggable text-to-image, manual Gemini handoff, brand-conformant prompt authoring, and PNG-to-transparent-SVG vectorisation. Requires external image-generation credentials and binaries.",
+      "version": "0.1.0"
     }
   ]
 }

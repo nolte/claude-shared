@@ -13,3 +13,12 @@ sources:
     agents_path: agents
     repo_url: https://github.com/nolte/claude-shared
     branch: main
+  # Second in-repo plugin (media generation). Source root is plugins/nolte-media/;
+  # its skills/ and agents/ are scoped to that root, distinct from the nolte-shared
+  # root above. See spec/claude/plugin-scoping/ §"When to split into a separate plugin".
+  - name: nolte-media
+    local: ./plugins/nolte-media
+    skills_path: skills
+    agents_path: agents
+    repo_url: https://github.com/nolte/claude-shared
+    branch: main

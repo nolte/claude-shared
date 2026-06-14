@@ -8,25 +8,25 @@ last_updated: generated
 
 # png-to-transparent-svg
 
-> Converts a PNG with fake-transparency background (checkerboard or single colour) into a clean SVG with real alpha.
+> Konvertiert ein PNG mit Fake-Transparency-Hintergrund (Checkerboard oder Einfarbig) in ein sauberes SVG mit echtem Alpha.
 
 _Converts a PNG that uses a baked-in checkerboard (or single-color) background as fake transparency into a clean SVG with real alpha. Detects the fake-transparency pattern in RGB, sets those pixels to alpha=0, writes a cleaned PNG, then vectorises it with vtracer. Invoke when the user asks to convert a PNG to a transparent SVG, vectorise an AI-generated image or logo, or fix a checkerboard background; also German requests. Don't use for PNGs that already carry real alpha (vectorise directly), or for photographic content where the background isn't a flat fake-transparency pattern._
 
-- **Plugin:** `nolte-shared`
+- **Plugin:** `nolte-media`
 - **Phase:** 8 Cross-cutting (`cross-cutting`)
 - **Distribution:** `plugin`
 - **Tags:** `scaffolding`
-- **Source:** [agents/png-to-transparent-svg.md](https://github.com/nolte/claude-shared/blob/main/agents/png-to-transparent-svg.md)
+- **Quelle:** [agents/png-to-transparent-svg.md](https://github.com/nolte/claude-shared/blob/main/agents/png-to-transparent-svg.md)
 
-## Use when
+## Anwenden wenn
 
 - you want to convert a PNG with baked-in checkerboard background to a transparent SVG
 - you want to vectorise an AI-generated icon and drop the fake background
 
-## Referenced by
+## Referenziert von
 
 - [`graphic-prompt-generator`](graphic-prompt-generator.md)
-- [`image-generate`](../../skills/nolte-shared/image-generate.md)
+- [`image-generate`](../../skills/nolte-media/image-generate.md)
 
 ---
 
