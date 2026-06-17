@@ -173,6 +173,7 @@ Cross-reference: each tag links to every skill and agent that declares it.
 - [sprint-readiness-reviewer](../agents/nolte-shared/sprint-readiness-reviewer.md) — nolte-shared
 - [tech-stack-drift-reviewer](../agents/nolte-shared/tech-stack-drift-reviewer.md) — nolte-shared
 - [tech-stack-fitness-reviewer](../agents/nolte-shared/tech-stack-fitness-reviewer.md) — nolte-shared
+- [api-error-check](../skills/nolte-engineering/api-error-check.md) — nolte-engineering
 - [agent-review](../skills/nolte-shared/agent-review.md) — nolte-shared
 - [skill-review](../skills/nolte-shared/skill-review.md) — nolte-shared
 

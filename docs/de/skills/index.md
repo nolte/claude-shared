@@ -86,6 +86,7 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 
 ### nolte-engineering
 
+- [`api-error-check`](nolte-engineering/api-error-check.md) — Read-only-Konformitätsprüfung der Fehlerbehandlungs-Oberfläche einer Web-API (Body-Form, Status-Codes, Leckage interner Details) gegen den deklarierten Fehler-Contract des Projekts.
 - [`dependency-audit`](nolte-engineering/dependency-audit.md) — Scannt den Dependency-Baum des Projekts nach bekannten CVEs und optional Lizenz-Compliance-Issues; Severity-sortierter Report.
 - [`license-check`](nolte-engineering/license-check.md) — End-to-End-Lizenz-Compliance-Check: SBOM, SPDX-Klassifizierung, allow/review/deny-Gate, Remediation, NOTICE und ein Audit-Artefakt.
 - [`quality-gate`](nolte-engineering/quality-gate.md) — Führt das Lint-+-Typecheck-+-Test-Gate des Projekts parallel aus und tabelliert, welche Checks gescheitert sind.
