@@ -60,6 +60,7 @@ last_updated: generated
         * [spec-drift-audit](nolte-shared/spec-drift-audit.md)
 * 6 Quality
     * nolte-engineering
+        * [api-error-check](nolte-engineering/api-error-check.md)
         * [dependency-audit](nolte-engineering/dependency-audit.md)
         * [license-check](nolte-engineering/license-check.md)
         * [quality-gate](nolte-engineering/quality-gate.md)

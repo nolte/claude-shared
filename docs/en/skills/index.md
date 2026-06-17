@@ -86,6 +86,7 @@ Auto-generated catalog of every skill discovered across the configured plugin so
 
 ### nolte-engineering
 
+- [`api-error-check`](nolte-engineering/api-error-check.md) — Read-only conformance check of a web API's error-handling surface (body shape, status codes, internal-detail leakage) against the project's declared error contract.
 - [`dependency-audit`](nolte-engineering/dependency-audit.md) — Scans the project's dependency tree for known CVEs and (optionally) license-compliance issues; severity-sorted report.
 - [`license-check`](nolte-engineering/license-check.md) — End-to-end license-compliance check: SBOM, SPDX classification, allow/review/deny gate, remediation, NOTICE, and an audit artifact.
 - [`quality-gate`](nolte-engineering/quality-gate.md) — Runs the project's lint + typecheck + test gate in parallel and tabulates which checks failed.

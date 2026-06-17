@@ -37,6 +37,7 @@ _Read-only, whole-codebase OWASP security audit that correlates findings across 
 - [`gdpr-data-protection-reviewer`](../nolte-shared/gdpr-data-protection-reviewer.md)
 - [`security-requirements-reviewer`](../nolte-shared/security-requirements-reviewer.md)
 - [`tech-stack-fitness-reviewer`](../nolte-shared/tech-stack-fitness-reviewer.md)
+- [`api-error-check`](../../skills/nolte-engineering/api-error-check.md)
 
 ---
 
