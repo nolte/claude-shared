@@ -164,8 +164,8 @@ Quality skills and agents run mostly in CI and pre-push contexts. Several are al
 
 | Artefact | Type | When to invoke |
 |---|---|---|
-| [`quality-gate`](../skills/nolte-shared/quality-gate.md) | skill | Run lint, typecheck, and test in parallel before commit, PR, or release. |
-| [`dependency-audit`](../skills/nolte-shared/dependency-audit.md) | skill | Scan the dependency tree for CVEs, optionally license issues; pre-PR or pre-release gate. |
+| [`quality-gate`](../skills/nolte-engineering/quality-gate.md) | skill | Run lint, typecheck, and test in parallel before commit, PR, or release. |
+| [`dependency-audit`](../skills/nolte-engineering/dependency-audit.md) | skill | Scan the dependency tree for CVEs, optionally license issues; pre-PR or pre-release gate. |
 | [`portfolio-audit`](../skills/nolte-shared/portfolio-audit.md) | skill | Audit the cross-repository capability portfolio for duplicates and gaps. |
 | [`vocab-drift-audit`](../skills/nolte-shared/vocab-drift-audit.md) | skill | Diff the local Vale vocabulary against the pinned `nolte/vale-style` release. |
 | [`workflow-health-triage`](../skills/nolte-shared/workflow-health-triage.md) | skill | Triage a failing required workflow on `develop` or `main` and dispatch the appropriate fix lane. |
@@ -189,7 +189,7 @@ Cross-cutting artefacts are phase-agnostic: they're invoked when the situation c
 | Artefact | Type | When to invoke |
 |---|---|---|
 | [`cookiecutter-template-author`](../agents/nolte-shared/cookiecutter-template-author.md) | agent | Scaffold or refactor a `cookiecutter` template that renders a nolte-spec-conformant project; harden hooks; set up `pytest-cookies` plus the CI matrix. |
-| [`png-to-transparent-svg`](../agents/nolte-shared/png-to-transparent-svg.md) | agent | Convert a PNG with baked-in checkerboard fake transparency into a clean SVG with real alpha transparency. |
+| [`png-to-transparent-svg`](../agents/nolte-media/png-to-transparent-svg.md) | agent | Convert a PNG with baked-in checkerboard fake transparency into a clean SVG with real alpha transparency. |
 
 ## Cycle return edges
 

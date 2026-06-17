@@ -35,7 +35,7 @@ def test_skill_prompt():
         runner.skill_prompt("nolte-shared:readme-structure-apply", "audit")
         == "/nolte-shared:readme-structure-apply audit"
     )
-    assert runner.skill_prompt("nolte-shared:quality-gate") == "/nolte-shared:quality-gate"
+    assert runner.skill_prompt("nolte-shared:spec") == "/nolte-shared:spec"
 
 
 def test_agent_prompt_names_agent_and_forbids_self_doing():

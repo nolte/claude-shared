@@ -10,7 +10,7 @@ last_updated: generated
 
 > Nur-Lese-Frische-Audit der MkDocs-Doku: Sprach-Parität, tote Links, veraltete spec-/code-Refs, ADR-Hygiene, Mermaid-Derived-Source-Drift.
 
-_Audit the MkDocs documentation of the current repository for freshness — multi-language parity between configured language trees (for example `docs/en/` vs `docs/de/`), dead internal markdown links, stale references to paths under `spec/` / `src/` / other repo roots, ADR index completeness and status hygiene, Mermaid `diagram-source: derived` drift (source's last-commit timestamp newer than the hosting markdown), and TODO / placeholder markers. Read-only: produces a severity-sorted report and never edits files. Use when the user asks to "check the docs for drift," "run a freshness audit on the docs," "find dead links in the documentation," "check DE/EN parity," "prep the docs for a release," or equivalent German-language requests. Don't use for writing or updating documentation (that's an author's task) and don't use for vocabulary / Vale linting (that's [`prose-vale-curator`](prose-vale-curator.md))._
+_Audits the MkDocs documentation of the current repository for freshness — multi-language parity (e.g. docs/en vs docs/de), dead internal links, stale references into spec/ or src/, ADR index completeness and status hygiene, Mermaid derived-source drift, and TODO/placeholder markers. Read-only: produces a severity-sorted report, never edits. Invoke when the user asks to check the docs for drift, find dead links, check DE/EN parity, or prep docs for a release; also German requests. Don't use to write or update docs (an author's task) or for Vale/vocabulary linting ([`prose-vale-curator`](prose-vale-curator.md))._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 6 Quality (`quality`)

@@ -10,7 +10,7 @@ last_updated: generated
 
 > Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release.
 
-_Read-only scanner that diffs repository-local Vale vocabulary files against the pinned upstream nolte/vale-style release. Invoke when the vocab-drift-audit skill needs to scan local Vale vocabularies for drift against upstream, compare per-repo accept.txt with nolte/vale-style upstream tag, or produce vocab-drift inventory. Returns a structured drift report with two sections: local entries already accepted upstream (duplicates to remove) and local entries not yet upstream (upstream PR candidates). Don't use for the follow-up actions (deletion or upstream contribution) — those are owned by the vocab-drift-audit skill._
+_Read-only scanner dispatched by the [`vocab-drift-audit`](../../skills/nolte-shared/vocab-drift-audit.md) skill: diffs repository-local Vale vocabulary files against the pinned upstream nolte/vale-style release and returns a two-section drift report — local entries already accepted upstream (delete) and local entries not yet upstream (upstream PR candidates). Follow-up actions stay with the skill._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 5 Review (`review`)

@@ -99,7 +99,7 @@ audit applies the spec defaults.
    `dependency-audit` (the CVE in the dependency surface is the
    actionable driver). The recommended-action line carries the
    verbatim slash-command invocation:
-   `/nolte-shared:dependency-audit against nolte/sensor-bridge (CVE-2025-12345; security-blocking, prioritise over non-security findings)`.
+   `/nolte-engineering:dependency-audit against nolte/sensor-bridge (CVE-2025-12345; security-blocking, prioritise over non-security findings)`.
 7. **Findings-Report written** at
    `.audits/portfolio-inflight/2026-05-23.md` with the four
    `review-plan`-mandated sections in declared order — `## Scope`,
@@ -113,7 +113,7 @@ audit applies the spec defaults.
    axes: security_relevance=true, release_blocking=false,
          age_multiplier=0.7×, cross_repo_blocking=false
    staleness: 5d open, 4d since last reviewer activity (sub-threshold; escalated by security_relevance)
-   recommend: /nolte-shared:dependency-audit against nolte/sensor-bridge (CVE-2025-12345; security-blocking)
+   recommend: /nolte-engineering:dependency-audit against nolte/sensor-bridge (CVE-2025-12345; security-blocking)
    ```
 
 8. **Tracking-issue offer.** Per §Integration with

@@ -164,8 +164,8 @@ Quality-Skills und -Agents laufen vorrangig in CI- und Pre-Push-Kontexten, einig
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
-| [`quality-gate`](../skills/nolte-shared/quality-gate.md) | Skill | Lint, Typecheck und Test parallel vor Commit, PR oder Release ausführen. |
-| [`dependency-audit`](../skills/nolte-shared/dependency-audit.md) | Skill | Dependency-Tree auf CVEs scannen, optional Lizenz-Issues; Pre-PR- oder Pre-Release-Gate. |
+| [`quality-gate`](../skills/nolte-engineering/quality-gate.md) | Skill | Lint, Typecheck und Test parallel vor Commit, PR oder Release ausführen. |
+| [`dependency-audit`](../skills/nolte-engineering/dependency-audit.md) | Skill | Dependency-Tree auf CVEs scannen, optional Lizenz-Issues; Pre-PR- oder Pre-Release-Gate. |
 | [`portfolio-audit`](../skills/nolte-shared/portfolio-audit.md) | Skill | Cross-Repository-Capability-Portfolio auf Duplikate und Lücken prüfen. |
 | [`vocab-drift-audit`](../skills/nolte-shared/vocab-drift-audit.md) | Skill | Lokales Vale-Vokabular gegen das gepinnte `nolte/vale-style`-Release diffen. |
 | [`workflow-health-triage`](../skills/nolte-shared/workflow-health-triage.md) | Skill | Einen failing-required-Workflow auf `develop` oder `main` triagen und in die passende Fix-Lane dispatchen. |
@@ -189,7 +189,7 @@ Cross-cutting-Artefakte sind phasenagnostisch: Sie werden situativ gerufen, unab
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
 | [`cookiecutter-template-author`](../agents/nolte-shared/cookiecutter-template-author.md) | Agent | Ein Cookiecutter-Template scaffolden oder refactoren, das ein nolte-spec-konformes Projekt rendert; Hooks härten; `pytest-cookies` und CI-Matrix aufsetzen. |
-| [`png-to-transparent-svg`](../agents/nolte-shared/png-to-transparent-svg.md) | Agent | Eine PNG mit eingebackenem Checkerboard-Pseudo-Hintergrund in ein SVG mit echter Alpha-Transparenz konvertieren. |
+| [`png-to-transparent-svg`](../agents/nolte-media/png-to-transparent-svg.md) | Agent | Eine PNG mit eingebackenem Checkerboard-Pseudo-Hintergrund in ein SVG mit echter Alpha-Transparenz konvertieren. |
 
 ## Rück-Kanten im Zyklus
 

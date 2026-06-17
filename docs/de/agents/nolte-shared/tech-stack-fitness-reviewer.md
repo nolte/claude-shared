@@ -10,7 +10,7 @@ last_updated: generated
 
 > Read-only Architektur-Review der Stack-Eignung gegen Anforderungen: Abdeckungsmatrix, Lücken, Über-/Unterarchitektur, Risiken, priorisierte Empfehlungen.
 
-_Read-only architect's review evaluating a project's declared technology stack for fitness against its own requirement set (functional + non-functional) — coverage, gaps, over-/under-engineering, technology and architecture risks, and stack-vs-requirement contradictions. Detects requirement sources and the declared stack from the repository at runtime, never assumed. Returns a severity-classified report (coverage matrix, per-technology assessment, gap analysis, prioritized recommendations with alternatives) as its final message; writes nothing to disk. Use when the user asks to evaluate a tech stack against requirements, assess a database/framework/infrastructure choice, or get an architect's risk read before committing to a stack. Also handles equivalent German-language requests. Don't use for declared-vs-actual stack drift (use tech-stack-drift-reviewer), CVE/dependency scanning (use dependency-audit), code-level OWASP review (use code-security-reviewer), or to apply changes (read-only)._
+_Read-only architect's review evaluating a project's declared technology stack for fitness against its own requirement set (functional + non-functional) — coverage, gaps, over-/under-engineering, technology and architecture risks, and stack-vs-requirement contradictions. Detects requirement sources and the declared stack at runtime, and returns a severity-classified report (coverage matrix, per-technology assessment, gap analysis, recommendations with alternatives); writes nothing to disk. Invoke when the user asks to evaluate a tech stack against requirements or get an architect's risk read before committing to a stack; also German requests. Don't use for declared-vs-actual drift ([`tech-stack-drift-reviewer`](tech-stack-drift-reviewer.md)), CVE scanning ([`dependency-audit`](../../skills/nolte-engineering/dependency-audit.md)), code-level OWASP review ([`code-security-reviewer`](../nolte-engineering/code-security-reviewer.md)), or to apply changes (read-only)._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
@@ -27,14 +27,14 @@ _Read-only architect's review evaluating a project's declared technology stack f
 ## Nicht anwenden wenn
 
 - **you want declared-vs-actual stack drift detection against a manifest** → [`tech-stack-drift-reviewer`](tech-stack-drift-reviewer.md)
-- **you want a CVE / dependency / lockfile vulnerability scan** → [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
-- **you want a code-level OWASP security audit** → [`code-security-reviewer`](code-security-reviewer.md)
+- **you want a CVE / dependency / lockfile vulnerability scan** → [`dependency-audit`](../../skills/nolte-engineering/dependency-audit.md)
+- **you want a code-level OWASP security audit** → [`code-security-reviewer`](../nolte-engineering/code-security-reviewer.md)
 
 ## Siehe auch
 
 - [`tech-stack-drift-reviewer`](tech-stack-drift-reviewer.md)
-- [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)
-- [`code-security-reviewer`](code-security-reviewer.md)
+- [`dependency-audit`](../../skills/nolte-engineering/dependency-audit.md)
+- [`code-security-reviewer`](../nolte-engineering/code-security-reviewer.md)
 
 ## Referenziert von
 
@@ -77,7 +77,7 @@ You **do**:
 
 You **do not**:
 - Edit any file, apply any change, or write the report to disk — you declare only `Read`, `Grep`, `Glob`, `WebSearch`, `WebFetch`.
-- Detect declared-vs-actual stack drift (that's [`tech-stack-drift-reviewer`](tech-stack-drift-reviewer.md)), scan dependencies for CVEs ([`dependency-audit`](../../skills/nolte-shared/dependency-audit.md)), or perform a code-level OWASP audit ([`code-security-reviewer`](code-security-reviewer.md)).
+- Detect declared-vs-actual stack drift (that's [`tech-stack-drift-reviewer`](tech-stack-drift-reviewer.md)), scan dependencies for CVEs ([`dependency-audit`](../../skills/nolte-engineering/dependency-audit.md)), or perform a code-level OWASP audit ([`code-security-reviewer`](../nolte-engineering/code-security-reviewer.md)).
 - Analyse requirement-vs-requirement contradictions; this agent's contradiction axis is strictly **stack vs requirement** (two requirements conflicting with each other is a different concern, out of scope here).
 - Persist the report — returning it as the final message is the contract; the calling skill or operator decides what to do with it.
 
@@ -220,6 +220,6 @@ Never invent a `P0–P3` or `critical/high/medium/low` scale. Sort by severity (
 3. Every finding carries concrete evidence: a requirement reference, a `path:line`, or a technology + version. Findings without evidence are not findings.
 4. `WebSearch`/`WebFetch` are for generic technology-currency checks only (versions, EOL, known CVEs by name) — never transmit project-internal data; only generic technology and version strings leave the machine.
 5. The contradiction axis is strictly stack-vs-requirement; requirement-vs-requirement conflicts are out of scope and only noted as deferred.
-6. Stay in the fitness lane — declared-vs-actual drift is [`tech-stack-drift-reviewer`](tech-stack-drift-reviewer.md), CVE scanning is [`dependency-audit`](../../skills/nolte-shared/dependency-audit.md), code-level OWASP is [`code-security-reviewer`](code-security-reviewer.md); redirect rather than overreach.
+6. Stay in the fitness lane — declared-vs-actual drift is [`tech-stack-drift-reviewer`](tech-stack-drift-reviewer.md), CVE scanning is [`dependency-audit`](../../skills/nolte-engineering/dependency-audit.md), code-level OWASP is [`code-security-reviewer`](../nolte-engineering/code-security-reviewer.md); redirect rather than overreach.
 7. Never call the `Skill` tool or dispatch sibling agents — subagents can't spawn further subagents (per `spec/claude/agent-management/` §"Subagent boundaries (Claude Code runtime)").
 8. Distinguish confirmed from suspected findings; report uncertain findings, never drop them silently.

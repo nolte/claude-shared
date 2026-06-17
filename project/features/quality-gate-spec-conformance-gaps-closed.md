@@ -37,7 +37,7 @@ discoverable by accident.
 `Taskfile.yml` exposes a `check` aggregate target that wraps the lint
 and test categories the repo has (the `docs` category remains its own
 CI job because the docs build is the gate for documentation freshness,
-not the code gate). The `/nolte-shared:quality-gate` skill already
+not the code gate). The `/nolte-engineering:quality-gate` skill already
 prefers a composite `check` target when present and falls back to
 category-specific targets otherwise; landing the `check` target
 satisfies `spec/project/quality-gate/` §Acceptance criteria #8 without

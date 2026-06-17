@@ -40,14 +40,14 @@ repos:
         name: docs:catalog (regenerate skill-agent catalog)
         entry: scripts/docs/precommit_catalog.sh
         language: system
-        files: '^(skills/.*/SKILL\.md|agents/.*\.md)$'
+        files: '^(skills/.*/SKILL\.md|agents/.*\.md|plugins/[^/]+/skills/.*/SKILL\.md|plugins/[^/]+/agents/.*\.md)$'
         pass_filenames: false
 
       - id: validate-skills
         name: validate skill/agent frontmatter
         entry: python3 scripts/validate_skills.py
         language: system
-        files: '^(skills/.*/SKILL\.md|agents/.*\.md)$'
+        files: '^(skills/.*/SKILL\.md|agents/.*\.md|plugins/[^/]+/skills/.*/SKILL\.md|plugins/[^/]+/agents/.*\.md)$'
         pass_filenames: false
 
       - id: validate-features

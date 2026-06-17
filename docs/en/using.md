@@ -44,7 +44,7 @@ The plugin is designed for these scenarios:
 - Apply a uniform **pull-request workflow** (`/nolte-shared:pull-request-create`,
   `/nolte-shared:pull-request-merge`) across repositories.
 - Run a consistent **quality gate** and **dependency audit** before committing
-  or releasing (`/nolte-shared:quality-gate`, `/nolte-shared:dependency-audit`).
+  or releasing (`/nolte-engineering:quality-gate`, `/nolte-engineering:dependency-audit`).
 - Author and review **skills, agents, and specs** against shared authoring rules
   (`/nolte-shared:skill-management`, `/nolte-shared:spec`, and the review skills).
 - Keep **project structure, documentation, and release automation** aligned with

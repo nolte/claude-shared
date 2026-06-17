@@ -10,7 +10,7 @@ last_updated: generated
 
 > Scaffoldet oder überarbeitet Cookiecutter-Templates, härtet Hooks ab, richtet pytest-cookies-Harness + GitHub-Actions-Matrix ein.
 
-_Scaffold or refactor a Cookiecutter template for a nolte-spec-conformant project, author or harden Cookiecutter hooks (`pre_prompt.py`, `pre_gen_project.py`, `post_gen_project.py`), or set up a `pytest-cookies` test harness plus a GitHub Actions matrix. Every template MUST render a project conforming to the bound spec corpus (project-structure, pull-request-workflow, branching-model, release-automation, release-skill-layer). Typically dispatched by the cookiecutter-template-manage skill for the authoring step; the skill owns variable-name and choice-default mid-flow approvals. Don't use for plain template consumption, generic Python bootstrap, Copier or cruft work, or intentionally diverging templates. Returns created or edited files, a conformance audit, anti-pattern rationales, and a caller checklist. Supports resume on re-invocation per `spec/claude/resumable-work/`._
+_Scaffolds or refactors a Cookiecutter template (and its pre_prompt/pre_gen/post_gen hooks plus a pytest-cookies harness) so the rendered project conforms to the bound nolte spec corpus. Typically dispatched by the [`cookiecutter-template-manage`](../../skills/nolte-shared/cookiecutter-template-manage.md) skill for the authoring step. Returns created/edited files, a conformance audit, and a caller checklist. Supports resume on re-invocation per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 8 Cross-cutting (`cross-cutting`)

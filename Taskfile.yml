@@ -162,9 +162,9 @@ tasks:
       - mkdocs build --strict
 
   plugin:reload:
-    desc: Start Claude Code with this repo loaded as a plugin (dogfooding)
+    desc: Start Claude Code with all in-repo plugins loaded (dogfooding)
     cmds:
-      - claude --plugin-dir .
+      - claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering
 
   worktree:root:
     desc: |
