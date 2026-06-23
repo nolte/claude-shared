@@ -24,6 +24,7 @@ All three plugins version in **lockstep** — one release line equal to the repo
 - `project/` — this repo's own planning surface: `mission.md`, `goals.md`, `roadmap.md`, plus `features/`, `sprints/`, and `blog-triggers/` (driven by `sprint-execute`, `feature-decompose`, `roadmap-plan`)
 - `portfolio/` — portfolio-level data (`tech-stack.yml`, `aggregate.yml`, `schemas/`)
 - `scripts/` — repo automation behind the Taskfile targets (`validate_skills.py`, `wip_journal.py`, `check_links.py`, `worktree_add.sh`, …); `validate_skills.py` auto-discovers every in-repo plugin under `plugins/`
+- `.claude/` — this repo's own Claude Code config (not shipped with any plugin): `settings.json` wires the journal/guard/validate hooks and permission allowlist; `rules/*.md` are session-loaded instruction rules — a rule with no `paths:` loads every session like `CLAUDE.md`, a `paths:`-scoped rule loads only when a matching file is touched
 
 Plugin skills are namespaced by plugin name — e.g. `/nolte-shared:spec`, `/nolte-media:image-generate`, `/nolte-engineering:quality-gate`.
 
@@ -69,6 +70,7 @@ claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/
 - **The primary checkout (`~/repos/github/claude-shared/`) is for integration only and MUST stay on `develop` at all times.** Never create, switch to, or commit a feature branch (`feat/`, `fix/`, `chore/`, `docs/`, `exp/`) here — not even when only one feature is in flight. *Every* change to specs, skills, agents, or docs happens in a dedicated worktree that branches off `develop`; the primary checkout is the stable launchpad you branch *from* and merge *into*, never the place you work in. This is the MUST in the spec's §Branch-to-worktree mapping. If you find the primary checkout on a feature branch, that is drift to repair (migrate the branch into a worktree, reset the primary checkout to `origin/develop`), not a state to extend.
 - Create worktrees under the per-machine-configurable root `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/claude-shared/<slug>/` (or, for harness-/agent-initiated worktrees, `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/claude-shared/agents/<slug>/`). The root is read from the `NOLTE_WORKTREE_ROOT` environment variable — each machine sets it freely — and defaults to `~/repos/.worktrees`. The conformant way to create one is `task worktree:add -- <branch> [slug]`, which reads that variable, derives the repo from the `origin` remote, and branches off `origin/develop`. Never nest a worktree under `.claude/worktrees/` — the spec's §Path layout forbids it explicitly.
 - Before the first `Agent({isolation: "worktree"})` call in a session, set `CLAUDE_AGENT_WORKTREE_ROOT` (or the equivalent Claude Code settings hook) to a spec-conformant root — pointing it under the same `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/claude-shared/agents/` root — if the harness default would otherwise materialize the worktree under `.claude/worktrees/`.
+- This rule is enforced at two layers: a `PreToolUse` hook (`scripts/guard_feature_branch_hook.py`, wired in `.claude/settings.json`) refuses any `git checkout`/`switch`/`branch` onto a `feat/ fix/ chore/ docs/ exp/` branch *in the primary checkout* before it runs, and the `guard-primary-checkout` pre-commit hook (`scripts/guard_primary_checkout.sh`) blocks a commit if the primary checkout is somehow off `develop`. Both no-op inside linked worktrees, where feature branches are correct.
 
 ## Crash recovery / resuming interrupted work
 
@@ -84,9 +86,4 @@ For multi-source **research** that must survive a crash, prefer the Workflow har
 
 ## Blog-author trigger (feature → done)
 
-Per `spec/project/blog-author-trigger/` §Consumer contract, this repository declares its trigger roles:
-
-- **Source consumer:** `nolte/claude-shared` (this repository). It hosts features under `project/features/<slug>.md` and drives transitions via `/nolte-shared:sprint-execute`. The `in_progress → done` transition is the trigger event.
-- **Blog consumer:** `nolte/blog` (the bilingual Astro blog), clone path `~/repos/github/blog`. It receives derived briefings; the portfolio mapping (`nolte/claude-shared` → `portfolioProject: claude-shared`) is declared in the blog consumer's own `CLAUDE.md`.
-
-`sprint-execute` Operation C step 6 automatically dispatches `/nolte-shared:blog-author-trigger` after marking a feature `done`; the operator then chooses new post / update / defer. Deferrals are written under `project/blog-triggers/<feature-slug>.yml`. Cross-repository writes into `~/repos/github/blog` require explicit operator confirmation — the trigger never writes there silently.
+This repository's blog-author trigger roles (source consumer, blog consumer, the `in_progress → done` trigger event, and the cross-repo write rule) are documented in `.claude/rules/blog-author-trigger.md`, a path-scoped rule that loads automatically while working under `project/features/`, `project/sprints/`, or `project/blog-triggers/`. The authoritative contract is `spec/project/blog-author-trigger/`.
