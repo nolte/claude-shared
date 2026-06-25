@@ -131,6 +131,18 @@ tasks:
     cmds:
       - python3 scripts/validate_schemas.py
 
+  validate:inheritance:
+    desc: |
+      Run the Local-vs-Inherited spec drift check, per
+      spec/project/portfolio-inherited-spec-layer/ §"Drift detection" and
+      §"Audit and CI integration" (undeclared divergence is a non-zero-exit CI
+      error). On the hub (no inherits:) this validates Portfolio-Scope header
+      hygiene and exits 0. Wired into `task lint` via the check-spec-inheritance
+      pre-commit hook; this target runs it directly. A consumer passes the
+      installed hub plugin's spec tree via --hub-spec-root (or $CLAUDE_PLUGIN_ROOT).
+    cmds:
+      - python3 scripts/check_spec_inheritance.py
+
   image:generate:
     desc: |
       Generate an image from a text prompt via a pluggable provider backend
