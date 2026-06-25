@@ -2,3 +2,4 @@
 # The behavioural eval layer additionally needs evals/requirements-eval.txt,
 # but only when RUN_EVALS=1.
 pytest>=8,<9
+PyYAML==6.0.3  # tests/test_spec_inheritance.py + scripts/check_spec_inheritance.py
