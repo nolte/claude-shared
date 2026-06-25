@@ -1,6 +1,7 @@
 # Release-Automation
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Kontext
 
@@ -22,7 +23,7 @@ Diese Spec schließt die Lücke zwischen `release-drafter` (baut und pflegt den 
 
 - Publizieren von Artefakten an externe Registries (npm, PyPI, Container-Registries, HACS-ZIP-Uploads) — das bleibt bei repository-spezifischen `release: [published]`-Packaging-Workflows, wie `project-structure` sie beschreibt.
 - Binary-Builds, Signing, SBOM-Generierung.
-- Erzeugung von Release-Notes-Inhalten — bleibt Aufgabe von `release-drafter`, gespeist durch Conventional-Commits-PR-Titel. Für die Zielgruppenanalyse, die festlegt, welche Inhalte diese Notes abdecken müssen, siehe [`spec/project/release-notes-audience-analysis/`](../release-notes-audience-analysis/de.md).
+- Erzeugung von Release-Notes-Inhalten — bleibt Aufgabe von `release-drafter`, gespeist durch Conventional-Commits-PR-Titel. Für die Zielgruppenanalyse, die festlegt, welche Inhalte diese Notes abdecken müssen, siehe die Release-Notes-Zielgruppenanalyse-Konventionen des Repositories.
 - Versionierungspolitik (SemVer-Ableitung von major/minor/patch) — geerbt aus der `release-drafter`-Konfiguration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
 - Hotfix-Flow — gehört zu `branching-model` §Hotfix flow, das ihn als Standard-`fix/`-Pull-Request gegen `develop` mit nachfolgendem gewöhnlichem Patch-Release festlegt; außerhalb des Scopes hier.
 - Vollständige Abschaffung des manuellen `gh release edit --draft=false`-Pfads; der manuelle Pfad bleibt als dokumentierter Fallback für Incident-Response, wenn der Workflow selbst kaputt ist.
@@ -99,9 +100,17 @@ Anwendbar, wenn nur `GITHUB_TOKEN` zur Verfügung steht und `develop` vollständ
 
 - **MUSS [MUST]** vor dem `--draft=false`-Aufruf verifizieren, dass jede versionstragende Datei an der Target-SHA des Drafts dem Ziel-Tag unter ihrer Transformation entspricht; jede Drift ist eine publish-blockierende Bedingung, die der Workflow meldet und verweigert
 - **MUSS [MUST]** eine vorab abgeglichene Datei **nur dann** akzeptieren, wenn das jüngste Commit, das diese Datei auf `develop` anfasst, ein Subject trägt, das mit `chore(release): <tag>` **beginnt** — das lässt den `(#N)`-Suffix zu, den GitHub beim Squash-Merge anhängt; ein Fallback-Path-Squash-Merge-Commit mit dem Subject `chore(release): v0.1.1 (#21)` passiert die Prüfung
-- **MUSS [MUST]** jeden anderen vorab abgeglichenen Zustand als verbotenen manuellen Bump zurückweisen; die Skill-Autoren-Spec (`spec/claude/skill-management/`) untersagt Feature-PRs das Anfassen des Versionsfelds, sodass die einzig zulässigen Pre-Alignment-Quellen ein vorheriger Primary-Path-Lauf oder ein Fallback-Path-`chore(release): <tag>`-PR-Merge sind
+- **MUSS [MUST]** jeden anderen vorab abgeglichenen Zustand als verbotenen manuellen Bump zurückweisen; der Skill-Autoren-Vertrag untersagt Feature-PRs das Anfassen des Versionsfelds, sodass die einzig zulässigen Pre-Alignment-Quellen ein vorheriger Primary-Path-Lauf oder ein Fallback-Path-`chore(release): <tag>`-PR-Merge sind
 - **SOLLTE [SHOULD]** die Verifikation innerhalb der Reusable `reusable-release-publish.yml` vornehmen, damit Konsumenten das Verhalten übernehmen, ohne es pro Repository zu wiederholen
 - **SOLLTE [SHOULD]** den in (Primary Path) geschriebenen oder (beide Pfade) verglichenen Wert aus dem Tag ableiten, indem ein führendes `v` entfernt wird, falls die bestehende Konvention des Repos es weglässt, passend zum bisherigen Wert in der Datei — der Workflow **DARF NICHT [MUST NOT]** die Konvention still umschreiben
+
+### Vererbbare Spec-Payload
+
+Die portfolio-vererbte Spec-Schicht erlaubt es einem Consumer-Repository, die portfolioweiten Specs des Hubs an einem gepinnten Release-Tag zu referenzieren statt zu kopieren; jener Mechanismus delegiert das Marketplace-Payload-Packaging an diese Spec, sodass die Auslieferungs-Garantie hier deklariert wird.
+
+- **MUSS [MUST]** den `spec/`-Korpus des Repositories als Teil der Plugin-Payload ausliefern, sodass für ein installiertes Hub-Plugin jede Spec, deren kanonische Datei eine `Portfolio-Scope: portfolio`-Header-Zeile trägt, unter `${CLAUDE_PLUGIN_ROOT}/spec/` lesbar ist (die Bundled-Asset-Pfad-Konvention, die jeder Plugin-Skill bereits nutzt). Die Plugin-Source-Wurzel ist der Resolver-Einstiegspunkt, und `spec/` wird darunter ausgeliefert.
+- **DARF NICHT [MUST NOT]** `spec/` über einen Packaging-Filter aus der Plugin-Payload ausschließen — eine `files`-Allowlist in einem Plugin-Manifest, eine `.gitattributes export-ignore`-Regel, eine `.npmignore`-artige Ausschlussregel oder Äquivalentes. Der Korpus wird vollständig ausgeliefert; die `Portfolio-Scope:`-Header-Zeile ist das einzige Vererbbarkeits-Gate, angewendet zur Auflösungszeit, nie zur Packaging-Zeit. Die nicht-`portfolio`-Specs (`local`) werden mit ausgeliefert, von einem Consumer aber schlicht nie aufgelöst.
+- **MUSS [MUST]** diese Payload an die Plugin-Release-Linie tag-pinnen: der gepinnte `ref` eines Consumers wählt das installierte Hub-Plugin-Release, und der aus diesem Release aufgelöste `spec/`-Korpus ist der regenerierbare Cache, den der Consumer referenziert — niemals eine in den eigenen Baum des Consumers committete Kopie.
 
 ### Berechtigungen und Protection
 
@@ -148,6 +157,7 @@ Anwendbar, wenn nur `GITHUB_TOKEN` zur Verfügung steht und `develop` vollständ
 - [ ] Bei den letzten drei publizierten Releases in jedem Repo, das diese Spec adoptiert hat, beginnt das Subject des `chore(release): <tag>`-Commits auf `develop` (via `git log -1 --pretty=%s`) mit `chore(release): <tag>` — bestätigt, dass das Präfix-Match-Akzeptanzkriterium des Guards sowohl Primary-Path-Commits als auch Fallback-Path-Squash-Merges mit `(#N)`-Suffix erfasst
 - [ ] `nolte/gh-plumbing:.github/commons-release-drafter.yml` schließt `chore(release): <tag>`-Commits oder -PRs aus der Release-Notes-Kategorisierung aus (§Release-Notes-Kategorisierung)
 - [ ] Kein publiziertes Release im Adoption-Fenster hat einen `release-drafter`-Draft, der nach dem Publish zurückgeblieben ist (Bestätigung, dass der Workflow den intendierten Draft konsumiert hat und nicht einen parallelen erzeugt hat)
+- [ ] An einem publizierten Release-Tag stellt das installierte `nolte-shared`-Plugin `spec/` unter `${CLAUDE_PLUGIN_ROOT}/spec/` bereit, ohne dass ein Packaging-Filter es ausschließt, sodass jede Spec, deren kanonische Datei `Portfolio-Scope: portfolio` trägt, dort für einen erbenden Consumer auflösbar ist (§Vererbbare Spec-Payload)
 
 ## Offene Fragen
 

@@ -1,6 +1,7 @@
 # Lokale Release-Skill-Schicht
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Context
 

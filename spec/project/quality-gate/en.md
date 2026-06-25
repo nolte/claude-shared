@@ -1,6 +1,7 @@
 # Quality Gate
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Context
 Every repository in the portfolio runs lint, type-check, and test commands in some form, but the when, the what, and the shape of the output diverge across projects. Some repositories wire it all into a single `task check` target; others expect contributors to remember four separate commands; still others run parts of the gate only in CI and never locally. The cost is twofold: contributors can't tell whether the repo is shippable from their terminal, and CI becomes the first place failures surface—slowing feedback and burning review cycles on issues a local gate would have caught. This spec defines the contract the gate has to meet so the same invocation works anywhere in the portfolio, the output shape is parseable, and Taskfile conventions plus tool-specific ignore lists remain in charge of the details.
@@ -25,7 +26,7 @@ Every repository in the portfolio runs lint, type-check, and test commands in so
 - **MUST** run every category the repository does have; partial gates that silently drop a category **MUST NOT** report `pass`
 - **MUST** expose the aggregate gate as `task check`; the per-category targets (`task lint`, `task test`, `task typecheck`) and per-subroot targets compose into it. A single recognisable name across the portfolio is what makes the documented invocation identical everywhere (§Goals)
 - **SHOULD** compose the gate from those existing Taskfile targets rather than duplicating their work; adding a new top-level target that re-implements lint / type-check / tests is redundant
-- **MAY** extend the gate with additional categories when the repository's nature warrants it (schema validation for a data project, Helm lint for an infra project); additions **MUST** be declared explicitly in the Taskfile and visible in the gate's output. When the schema-validation category runs JSON-Schema meta-validation (per `spec/project/yaml-json-schema/`), it **MUST** reject a schema that composes via `allOf` while relying only on `additionalProperties: false` to close its shape, because `additionalProperties: false` is unsound under `allOf`; the closed-shape guarantee requires `unevaluatedProperties: false`
+- **MAY** extend the gate with additional categories when the repository's nature warrants it (schema validation for a data project, Helm lint for an infra project); additions **MUST** be declared explicitly in the Taskfile and visible in the gate's output. When the schema-validation category runs JSON-Schema meta-validation, it **MUST** reject a schema that composes via `allOf` while relying only on `additionalProperties: false` to close its shape, because `additionalProperties: false` is unsound under `allOf`; the closed-shape guarantee requires `unevaluatedProperties: false`
 - Coverage thresholding is, by design, **NOT** a required gate category; it stays a CI-side concern so the local and CI runs satisfy the "run identically" invariant (§Invocation contract) without forcing coverage instrumentation on every local run. A repository **MAY** expose it as an additional category (per the MAY-extend rule) reported in its own row; when it does, the same target **MUST** run identically locally and in CI
 
 ### Invocation contract
@@ -56,7 +57,7 @@ Every repository in the portfolio runs lint, type-check, and test commands in so
 
 ### Delimitation
 - **MUST** stay separate from `spec/project/workflow-health/`: workflow-health covers the continuous CI state over time (flake triage, trend), the gate is the per-invocation pass/fail
-- **MUST** stay separate from `spec/project/dependency-audit/`: vulnerability scanning has its own cadence and severity scale; the gate doesn't assume responsibility for it
+- **MUST** stay separate from dependency/vulnerability scanning: that scanning has its own cadence and severity scale; the gate doesn't assume responsibility for it
 - **MUST** be independent of `spec/project/release-automation/` in the sense that a green gate is a precondition for a release cut, not a replacement for the release workflow
 
 ### Monorepo and subroot behaviour

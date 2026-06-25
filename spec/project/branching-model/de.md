@@ -1,6 +1,7 @@
 # Branching-Modell
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Kontext
 Repositories in diesem Portfolio verwenden `main` als reinen Präsentations-Branch, der stets das zuletzt veröffentlichte GitHub Release widerspiegelt. Aktive Entwicklung findet auf `develop` statt; Feature-Branches zielen per Pull Request auf `develop`. Wenn ein GitHub Release veröffentlicht wird, führen wiederverwendbare Workflows aus [`nolte/gh-plumbing`](https://github.com/nolte/gh-plumbing) einen Fast-Forward von `main` auf den freigegebenen Tag durch, sodass `main` eine maschinell gepflegte, lesende Sicht auf das zuletzt ausgelieferte Artefakt bleibt. Menschen und KI-Agenten, die auf `main` schauen, sehen genau das, was ausgeliefert wurde — niemals einen Work-in-Progress-Stand.
@@ -45,7 +46,7 @@ Repositories in diesem Portfolio verwenden `main` als reinen Präsentations-Bran
 ### Hotfix-Flow
 - **MUSS [MUST]** einen Notfall-Hotfix als regulären `fix/`-Pull-Request gegen `develop` behandeln, gefolgt von einem neuen Patch-Release, das `main` über `release-cd-refresh-master.yml` wie jedes andere Release per Fast-Forward bringt
 - **MUSS NICHT [MUST NOT]** ab `main` branchen oder einen Hotfix zurück nach `main` mergen; die Regel „keine manuellen Schreibzugriffe auf `main`“ aus §Branch-Rollen und §Release-Flow lässt keine Hotfix-Ausnahme zu
-- **MUSS [MUST]** das resultierende Release als Out-of-Band-Artefakt unter `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` gemäß `spec/project/release-artifact/` §out-of-band erfassen; Mid-Sprint-Hotfixes werden gemäß `spec/project/sprint/` auf dieselbe Weise nachgehalten, und `spec/project/release-automation/` §Nicht-Ziele delegiert den Hotfix-Flow an diesen Unterabschnitt
+- **MUSS [MUST]** das resultierende Release als Out-of-Band-Artefakt unter `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` gemäß `spec/project/release-artifact/` §out-of-band erfassen; Mid-Sprint-Hotfixes werden in den Sprint-Aufzeichnungen des Repositories auf dieselbe Weise nachgehalten, und `spec/project/release-automation/` §Nicht-Ziele delegiert den Hotfix-Flow an diesen Unterabschnitt
 
 ### Erforderliche GitHub-Workflows
 Das Repository **MUSS [MUST]** die folgenden Workflows unter `.github/workflows/` enthalten, jeweils an den entsprechenden wiederverwendbaren Workflow aus `nolte/gh-plumbing` angeschlossen:

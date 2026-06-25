@@ -1,6 +1,7 @@
 # Local Release Skill Layer
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Context
 

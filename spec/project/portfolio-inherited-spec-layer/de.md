@@ -1,7 +1,7 @@
 # Portfolio-vererbte Spec-Schicht
 
 Status: draft
-Portfolio-Scope: portfolio
+Portfolio-Scope: local
 
 ## Context
 
