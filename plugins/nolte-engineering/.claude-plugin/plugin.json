@@ -1,6 +1,6 @@
 {
   "name": "nolte-engineering",
-  "version": "0.1.9",
+  "version": "0.1.8",
   "description": "Engineering capabilities for code-bearing projects: full-stack implementation, the full test-tier and test-cycle suite, the quality gate, frontend/web-UI optimization, and code-security / dependency / license auditing. Consumed by code repositories; non-code repos adopt nolte-shared without it.",
   "author": {
     "name": "nolte",

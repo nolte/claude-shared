@@ -1,6 +1,6 @@
 {
   "name": "nolte-media",
-  "version": "0.1.9",
+  "version": "0.1.8",
   "description": "Brand-aware image generation and media processing for Claude Code: provider-pluggable text-to-image, a manual Gemini handoff, brand-conformant prompt authoring, and PNG-to-transparent-SVG vectorisation. Requires external image-generation credentials and binaries.",
   "author": {
     "name": "nolte",
