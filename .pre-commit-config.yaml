@@ -65,6 +65,14 @@ repos:
         always_run: true
         pass_filenames: false
 
+      - id: check-spec-inheritance
+        name: local-vs-inherited spec drift (portfolio-inherited-spec-layer)
+        entry: python scripts/check_spec_inheritance.py
+        language: python
+        additional_dependencies: ["PyYAML>=6"]
+        always_run: true
+        pass_filenames: false
+
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.42.0
     hooks:
