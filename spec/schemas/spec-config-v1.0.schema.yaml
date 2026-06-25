@@ -91,7 +91,6 @@ properties:
             required:
               - spec
               - section
-              - reason
               - local
             properties:
               spec:
@@ -111,9 +110,11 @@ properties:
               reason:
                 type: string
                 description: >-
-                  Prose sentence justifying the deviation. Required to be present;
-                  an empty reason is a Warning audit finding (not a parse error),
-                  so minLength is intentionally not enforced here.
+                  Prose sentence justifying the deviation. An empty OR missing
+                  reason is a Warning audit finding (not a parse error) per the
+                  spec's §"Precedence and override declaration" and §"Audit and CI
+                  integration"; reason is therefore intentionally absent from this
+                  record's required list and carries no minLength.
               local:
                 type: string
                 minLength: 1
