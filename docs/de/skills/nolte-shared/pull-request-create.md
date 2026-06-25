@@ -35,6 +35,7 @@ _Create a GitHub pull request that conforms to the repository's pull-request-wor
 
 - [`issue-orchestrate`](issue-orchestrate.md)
 - [`pull-request-merge`](pull-request-merge.md)
+- [`working-copy-start`](working-copy-start.md)
 
 ## Beispiele
 
