@@ -16,3 +16,7 @@ arXiv
 Boehm
 Gnesi
 Spoletini
+Kustomize
+linearization
+regenerable
+subtree
