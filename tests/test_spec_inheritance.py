@@ -7,6 +7,7 @@ integration" is verifiable without a real installed plugin.
 """
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 
@@ -197,6 +198,97 @@ def test_unresolved_corpus_is_warning_only(tmp_path):
     findings = csi.run(consumer, None)  # no hub spec root
     assert "inherited-corpus-unresolved" in codes(findings)
     assert "Critical" not in severities(findings)
+
+
+def write_plugin(repo: Path, name: str) -> None:
+    d = repo / ".claude-plugin"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "plugin.json").write_text(json.dumps({"name": name}), encoding="utf-8")
+
+
+def test_cyclic_inheritance_is_critical(tmp_path):
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    write_plugin(consumer, "myself")  # own plugin identity
+    write_config(consumer, inherits=[{"source": "myself", "ref": "v0.1.9"}])
+    findings = csi.run(consumer, hub)
+    assert "cyclic-inheritance" in codes(findings)
+    assert "Critical" in severities(findings)
+
+
+def test_broken_override_ref_is_warning(tmp_path):
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    ov = consumer / "spec" / "project" / "absent" / "override.md"
+    ov.parent.mkdir(parents=True, exist_ok=True)
+    ov.write_text("## X\n\nbody\n", encoding="utf-8")
+    write_config(consumer, inherits=[{
+        "source": "nolte-shared", "ref": "v0.1.9",
+        "overrides": [{
+            "spec": "project/absent", "section": "§X",
+            "reason": "n/a", "local": "spec/project/absent/override.md",
+        }],
+    }])
+    findings = csi.run(consumer, hub)
+    assert "broken-override-ref" in codes(findings)
+    assert "Critical" not in severities(findings)
+
+
+def test_stale_override_is_warning(tmp_path):
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    ov = consumer / "spec" / "project" / "branching-model" / "override.md"
+    ov.parent.mkdir(parents=True, exist_ok=True)
+    ov.write_text("## Gone\n\nbody\n", encoding="utf-8")
+    write_config(consumer, inherits=[{
+        "source": "nolte-shared", "ref": "v0.1.9",
+        "overrides": [{
+            "spec": "project/branching-model", "section": "§Vanished Section",
+            "reason": "n/a", "local": "spec/project/branching-model/override.md",
+        }],
+    }])
+    findings = csi.run(consumer, hub)
+    assert "stale-override" in codes(findings)
+    assert "Critical" not in severities(findings)
+
+
+def test_section_with_anchor_resolves(tmp_path):
+    """An overridden section whose hub heading carries a {#anchor} still matches."""
+    hub = tmp_path / "hub" / "spec"
+    hub.mkdir(parents=True, exist_ok=True)
+    (hub / ".spec-config.yml").write_text(
+        yaml.safe_dump({"canonical_language": "en", "languages": ["en"], "spec_root": "spec"}),
+        encoding="utf-8",
+    )
+    d = hub / "project" / "anchored"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "en.md").write_text(
+        "# anchored\n\nStatus: draft\nPortfolio-Scope: portfolio\n\n## Roles {#roles}\n\n- **MUST** do it.\n",
+        encoding="utf-8",
+    )
+    consumer = tmp_path / "consumer"
+    ov = consumer / "spec" / "project" / "anchored" / "override.md"
+    ov.parent.mkdir(parents=True, exist_ok=True)
+    ov.write_text("## Roles\n\nlocal\n", encoding="utf-8")
+    write_config(consumer, inherits=[{
+        "source": "nolte-shared", "ref": "v0.1.9",
+        "overrides": [{
+            "spec": "project/anchored", "section": "§Roles",
+            "reason": "differ", "local": "spec/project/anchored/override.md",
+        }],
+    }])
+    findings = csi.run(consumer, hub)
+    assert "stale-override" not in codes(findings)
+
+
+def test_schemas_reference_is_not_ghost(tmp_path):
+    hub = make_hub(tmp_path)
+    consumer = tmp_path / "consumer"
+    write_config(consumer, inherits=[{"source": "nolte-shared", "ref": "v0.1.9"}])
+    make_spec(consumer / "spec", "project/mine", scope="local",
+              body="See spec/schemas/spec-config/ for the schema.")
+    findings = csi.run(consumer, hub)
+    assert "ghost-reference" not in codes(findings)
 
 
 def test_hub_itself_passes(tmp_path):

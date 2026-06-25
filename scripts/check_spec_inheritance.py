@@ -40,6 +40,7 @@ downstream tooling can grep deterministically.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import sys
@@ -61,7 +62,13 @@ SCOPE_RE = re.compile(r"^Portfolio-Scope:\s*(.+?)\s*$", re.M)
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.*?)\s*$", re.M)
 # Cross-reference form the corpus uses: spec/<topic>/<slug>/ (one nesting level).
 CROSSREF_RE = re.compile(r"spec/([a-z0-9][a-z0-9-]*)/([a-z0-9][a-z0-9-]*)/")
+# Markdown heading anchors (`## Title {#id}`) are stripped before matching a §Section.
+ANCHOR_RE = re.compile(r"\s*\{#[^}]*\}\s*$")
 VALID_SCOPES = {"portfolio", "local"}
+# Top-level directories under spec/ that are not spec topics; excluded from both
+# the resolvable spec set and the cross-reference namespace so a prose reference
+# to e.g. spec/schemas/ is not mistaken for a ghost reference.
+EXCLUDED_TOPICS = {"schemas"}
 
 
 @dataclass
@@ -99,7 +106,7 @@ def collect_specs(spec_root: Path, lang: str) -> dict[str, Path]:
     for canon in spec_root.rglob(f"{lang}.md"):
         rel = canon.parent.relative_to(spec_root)
         parts = rel.parts
-        if not parts or parts[0] in ("schemas",):
+        if not parts or parts[0] in EXCLUDED_TOPICS:
             continue
         out["/".join(parts)] = canon
     return out
@@ -111,10 +118,10 @@ def section_body(text: str, section: str) -> str | None:
     Returns the text from just after the heading line up to the next heading of
     the same or higher level.
     """
-    want = section.lstrip("§").strip().casefold()
+    want = ANCHOR_RE.sub("", section.lstrip("§")).strip().casefold()
     headings = list(HEADING_RE.finditer(text))
     for i, h in enumerate(headings):
-        if h.group(2).strip().casefold() == want:
+        if ANCHOR_RE.sub("", h.group(2)).strip().casefold() == want:
             level = len(h.group(1))
             start = h.end()
             end = len(text)
@@ -132,11 +139,34 @@ def has_locked(body: str) -> bool:
 
 
 def cross_refs(text: str) -> set[str]:
-    """Every spec/<topic>/<slug>/ cross-reference as a logical key."""
-    return {f"{m.group(1)}/{m.group(2)}" for m in CROSSREF_RE.finditer(text)}
+    """Every spec/<topic>/<slug>/ cross-reference as a logical key.
+
+    Non-topic directories (EXCLUDED_TOPICS, e.g. schemas) are dropped so a prose
+    reference to spec/schemas/ is not later mistaken for a ghost reference.
+    """
+    return {
+        f"{m.group(1)}/{m.group(2)}"
+        for m in CROSSREF_RE.finditer(text)
+        if m.group(1) not in EXCLUDED_TOPICS
+    }
 
 
 # --- resolution ------------------------------------------------------------
+
+def own_plugin_name(repo: Path) -> str | None:
+    """The repository's own plugin identifier, from .claude-plugin/plugin.json.
+
+    Used to detect a cyclic inheritance declaration (a source resolving back to
+    this repository). Returns None when no plugin manifest is present.
+    """
+    manifest = repo / ".claude-plugin" / "plugin.json"
+    if manifest.is_file():
+        try:
+            return json.loads(_read(manifest)).get("name")
+        except (json.JSONDecodeError, OSError):
+            return None
+    return None
+
 
 def resolve_hub_spec_root(cli_value: str | None) -> Path | None:
     if cli_value:
@@ -182,6 +212,9 @@ def check_source(
     hub_spec_root: Path | None,
 ) -> list[Finding]:
     findings: list[Finding] = []
+    if not isinstance(source, dict):
+        return [Finding("Warning", "inherits[]", "malformed-source",
+                        "inherits entry is not a mapping; schema validation should have caught this")]
     src_name = source.get("source", "<unknown>")
     ref = source.get("ref", "")
     target = f"inherits[{src_name}]"
@@ -198,7 +231,12 @@ def check_source(
             f"source '{src_name}' resolves back to this repository (cycle)",
         ))
 
-    overrides = source.get("overrides") or []
+    raw_overrides = source.get("overrides") or []
+    if not isinstance(raw_overrides, list):
+        findings.append(Finding("Warning", target, "malformed-overrides",
+                                "overrides: is not a list; schema validation should have caught this"))
+        raw_overrides = []
+    overrides = [o for o in raw_overrides if isinstance(o, dict)]
     declared_keys = {o.get("spec") for o in overrides}
 
     for ov in overrides:
@@ -293,8 +331,12 @@ def run(repo: Path, hub_spec_root: Path | None) -> list[Finding]:
     if not inherits:
         # Hub root or local-only repo: validate header hygiene only.
         return check_local_scope_headers(local)
+    if not isinstance(inherits, list):
+        return [Finding("Warning", str(cfg_path), "malformed-inherits",
+                        "inherits: is not a list; schema validation should have caught this")]
 
-    own_source = config.get("source")  # repos do not self-declare; cycle guard is best-effort
+    # A source resolving back to this repository's own plugin identity is a cycle.
+    own_source = own_plugin_name(repo)
     findings: list[Finding] = []
     for source in inherits:
         findings.extend(
