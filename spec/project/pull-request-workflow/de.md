@@ -1,6 +1,7 @@
 # Pull-Request-Workflow
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Kontext
 Pull Requests (PRs, entsprechen GitLab Merge Requests / MRs) sind der einzige Weg, über den Änderungen in den Integrations-Branch `develop` gelangen, wie im Branching-Modell-Spec festgelegt. Zwei wiederkehrende Probleme motivieren diese Spezifikation: (1) PR-Beschreibungen haben uneinheitliche Struktur, was das Review erschwert und die Release-Drafter-Zusammenfassung der `develop`-Aktivitäten verschlechtert, und (2) PRs werden gelegentlich nach `develop` gemergt, bevor die CI grün gemeldet hat, was die „immer grüner develop"-Annahme des Release-Flows untergräbt. Diese Spezifikation definiert, wie PRs erstellt werden und welche Gates sie vor dem Merge in `develop` bestehen müssen. Sie ergänzt — und wiederholt nicht — das Branching-Modell-Spec, das den Ziel-Branch und den Automerge-Workflow festlegt, sowie das Project-Structure-Spec, das die `.github/settings.yml`-Mechanik festlegt.

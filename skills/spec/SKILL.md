@@ -138,8 +138,9 @@ Per `spec/project/portfolio-inherited-spec-layer/`, a consumer repo may **refere
 ### 4. Regenerate index
 
 - Write `spec/README.md` with a table:
-  - Slug | Title (per language) | Status | Last updated
+  - Topic | Slug | Title (per language) | Status | Scope | Last updated
 - `Status` is read from the `Status:` line in the canonical file's header. If absent, use `draft`.
+- `Scope` is read from the `Portfolio-Scope:` line in the canonical file's header (`portfolio` | `local`). If absent, use `local` (the default per `spec/project/portfolio-inherited-spec-layer/`). This column makes the inheritable subset visible at a glance.
 - `Last updated` uses `git log -1 --format=%cs -- <canonical file>`. If the file is untracked, use `unversioned`.
 - Don't invent values—if something can't be read, mark it `unknown`.
 

@@ -1,6 +1,7 @@
 # Review-Plan-Artefakt
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Kontext
 <!-- Warum existiert diese Spec? Welches Problem, welcher Bedarf oder welche Einschränkung treibt sie? -->
@@ -52,7 +53,7 @@ Reviews von Claude-Code-Artefakten — ein Skill gegen `skill-management`, ein A
 
 ### Schweregrad-Skala
 
-Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabular über jedes Audit-, Review- und Reife-Artefakt im Portfolio hinweg. Andere Specs (zum Beispiel `spec/project/spec-readiness/`) **MÜSSEN [MUST]** auf diesen Abschnitt verweisen, statt eine eigene Skala zu definieren.
+Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabular über jedes Audit-, Review- und Reife-Artefakt im Portfolio hinweg. Andere Specs **MÜSSEN [MUST]** auf diesen Abschnitt verweisen, statt eine eigene Skala zu definieren.
 
 - **MUSS [MUST]** jedes Finding in genau eine dieser vier Schweregrad-Stufen einordnen, in Title Case, in dieser Reihenfolge abnehmender Auswirkung:
   - **Critical**: verletzt ein MUST in der Quell-Spec oder blockiert direkt die Beförderung / das Mergen des reviewten Artefakts (tragende Open Question in einem Pre-Promotion-Lauf, Geist-Referenz auf eine nicht existierende Spec, MUST↔MUST-Widerspruch zwischen zwei bereits beförderten Specs)
@@ -98,7 +99,7 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 - **MUSS NICHT [MUST NOT]** die Plan-Datei löschen, solange ein offener `- [ ]` `Critical` besteht; `Warning` / `Suggestion` / `Info`-Einträge **KÖNNEN [MAY]** auf getrackte Issues vertagt werden, um das Löschen zu ermöglichen
 - **MUSS [MUST]** die Plan-Datei löschen, wenn jeder Eintrag entweder `- [x]` ist oder eine `→ deferred: <url>`-Annotation trägt; die Commit-Message der Löschung **MUSS [MUST]** `review(<review-type>): close <target> — <C>C/<W>W/<S>S/<I>I` lauten (Zählungen von Critical, Warning, Suggestion, Info zum Zeitpunkt der Erzeugung), sodass das Git-Log der durchsuchbare Audit-Trail ist
 - **SOLLTE [SHOULD]** beim Löschen des Plans auch getrackte Issues schließen, auf die vertagte Einträge verweisen, sofern der zugrundeliegende Fix anderswo gelandet ist — die Commit-Message der Löschung benennt diese Issues in ihrem Body
-- **SOLLTE [SHOULD]** als veraltet gelten und neu bewertet werden — gegen die aktuelle `repo-revision` neu verarbeitet oder explizit auf `superseded` gesetzt —, wenn der Plan länger als sechs Monate offen war, ohne dass ein neuer `## Processing log`-Eintrag hinzukam. Das spiegelt `spec/claude/skills-agents-sweep/` §Lebenszyklus wider, damit beide Audit-Artefakt-Specs ein konsistentes Veraltungs-Vokabular tragen; es ist eine Erkennungs- und Sichtbarmachungs-Konvention, kein hartes Ablaufdatum und kein automatisches Löschen
+- **SOLLTE [SHOULD]** als veraltet gelten und neu bewertet werden — gegen die aktuelle `repo-revision` neu verarbeitet oder explizit auf `superseded` gesetzt —, wenn der Plan länger als sechs Monate offen war, ohne dass ein neuer `## Processing log`-Eintrag hinzukam. Das spiegelt den Lebenszyklus des Geschwister-Sweep-Artefakts wider, damit beide Audit-Artefakt-Specs ein konsistentes Veraltungs-Vokabular tragen; es ist eine Erkennungs- und Sichtbarmachungs-Konvention, kein hartes Ablaufdatum und kein automatisches Löschen
 
 ### Bezug zu anderen Specs
 

@@ -1,7 +1,7 @@
 # Portfolio-Inherited Spec Layer
 
 Status: draft
-Portfolio-Scope: portfolio
+Portfolio-Scope: local
 
 ## Context
 

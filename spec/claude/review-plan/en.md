@@ -1,6 +1,7 @@
 # Review Plan Artifact
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Context
 <!-- Why does this spec exist? What problem, user need, or constraint drives it? -->
@@ -52,7 +53,7 @@ Reviews of Claude Code artifacts—a skill against `skill-management`, an agent 
 
 ### Severity scale
 
-This section is the single canonical source for severity vocabulary across every audit, review, and readiness artefact in the portfolio. Other specs (for example `spec/project/spec-readiness/`) **MUST** reference this section rather than redefining their own scale.
+This section is the single canonical source for severity vocabulary across every audit, review, and readiness artefact in the portfolio. Other specs **MUST** reference this section rather than redefining their own scale.
 
 - **MUST** classify every finding into exactly one of these four severity levels, in Title Case, in this order of decreasing impact:
   - **Critical**: violates a MUST in the source spec, or directly blocks promotion / merge of the reviewed artefact (load-bearing Open Question on a pre-promotion run, ghost reference to a non-existent spec, MUST↔MUST contradiction across two specs both already promoted)
@@ -98,7 +99,7 @@ This section is the single canonical source for severity vocabulary across every
 - **MUST NOT** delete the plan file while any `- [ ]` `Critical` remains open; `Warning` / `Suggestion` / `Info` items **MAY** be deferred to tracked issues to unblock deletion
 - **MUST** delete the plan file when every item is either `- [x]` or carries a `→ deferred: <url>` annotation; the deletion commit message **MUST** be `review(<review-type>): close <target>—<C>C/<W>W/<S>S/<I>I` (counts of Critical, Warning, Suggestion, Info at creation time), so the git log is the searchable audit trail
 - **SHOULD**, when the plan is deleted, also close any tracked issues referenced by deferred items if the underlying fix has landed elsewhere—the plan's deletion commit names those issues in its body
-- **SHOULD** be considered stale and re-evaluated—reprocessed against the current `repo-revision`, or explicitly set to `superseded` instead—if the plan has been open for more than six months without a new `## Processing log` entry. This mirrors `spec/claude/skills-agents-sweep/` §Lifecycle so both audit-artefact specs carry one consistent staleness vocabulary; it's a detect-and-surface convention, not a hard expiry or automatic deletion
+- **SHOULD** be considered stale and re-evaluated—reprocessed against the current `repo-revision`, or explicitly set to `superseded` instead—if the plan has been open for more than six months without a new `## Processing log` entry. This mirrors the sibling sweep-artefact lifecycle so both audit-artefact specs carry one consistent staleness vocabulary; it's a detect-and-surface convention, not a hard expiry or automatic deletion
 
 ### Relationship to other specs
 

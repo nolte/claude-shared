@@ -1,6 +1,7 @@
 # Project Release Artifact
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Context
 

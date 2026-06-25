@@ -1,6 +1,7 @@
 # Release Automation
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Context
 
@@ -22,7 +23,7 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 
 - Publishing artifacts to external registries (npm, PyPI, container registries, HACS ZIP uploads)—those stay with repository-specific `release: [published]` packaging workflows as `project-structure` describes.
 - Binary builds, signing, SBOM generation.
-- Release-notes content generation—that remains `release-drafter`'s responsibility, fed by Conventional-Commits PR titles. For the audience analysis that governs what content those notes must cover, see [`spec/project/release-notes-audience-analysis/`](../release-notes-audience-analysis/en.md).
+- Release-notes content generation—that remains `release-drafter`'s responsibility, fed by Conventional-Commits PR titles. For the audience analysis that governs what content those notes must cover, see the repository's release-notes audience-analysis conventions.
 - Versioning policy (SemVer major/minor/patch derivation)—inherited from `release-drafter` configuration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
 - The hotfix flow—owned by `branching-model` `§Hotfix flow`, which settles it as a standard `fix/` pull request against `develop` followed by an ordinary patch release; out of scope here.
 - Deprecating the manual `gh release edit --draft=false` path entirely; the manual path remains a documented fallback for incident response when the workflow itself is broken.
@@ -99,9 +100,17 @@ Applicable when only `GITHUB_TOKEN` is available and `develop` is fully protecte
 
 - **MUST** verify before `--draft=false` that every version-bearing file at the draft's target SHA equals the target tag under its transform; any drift is a publish-blocking condition the workflow surfaces and refuses to proceed
 - **MUST** accept a pre-aligned file if-and-only-if the last commit touching that file on `develop` has a subject that **starts with** `chore(release): <tag>`; this allows the `(#N)` suffix GitHub appends on squash-merge, so a fallback-path squash-merge commit with subject `chore(release): v0.1.1 (#21)` passes the check
-- **MUST** reject any other pre-aligned state as a forbidden manual bump; the skill-authoring spec (`spec/claude/skill-management/`) forbids feature PRs from touching the version field, so the only acceptable pre-alignment sources are a prior run of the primary path or a fallback-path `chore(release): <tag>` PR merge
+- **MUST** reject any other pre-aligned state as a forbidden manual bump; the skill-authoring contract forbids feature PRs from touching the version field, so the only acceptable pre-alignment sources are a prior run of the primary path or a fallback-path `chore(release): <tag>` PR merge
 - **SHOULD** implement the verification inside the reusable `reusable-release-publish.yml` so consumers inherit the behavior without repeating it per repository
 - **SHOULD** derive the value written into (primary path) or compared against (both paths) the version field from the tag by stripping a leading `v` if the repository's existing convention omits it, matching whatever the current file already uses; the workflow **MUST NOT** silently rewrite the convention
+
+### Inheritable spec payload
+
+The portfolio-inherited spec layer lets a consumer repository reference the hub's portfolio-scoped specs at a pinned release tag instead of copying them; that mechanism defers the marketplace-payload packaging to this spec, so the shipping guarantee is declared here.
+
+- **MUST** ship the repository's `spec/` corpus as part of the plugin payload, so that for an installed hub plugin every spec whose canonical file carries a `Portfolio-Scope: portfolio` header is readable at `${CLAUDE_PLUGIN_ROOT}/spec/` (the bundled-asset path convention every plugin skill already uses). The plugin source root is the resolver entry point and `spec/` is delivered beneath it.
+- **MUST NOT** exclude `spec/` from the plugin payload through a packaging filter—a `files` allowlist in a plugin manifest, a `.gitattributes export-ignore` rule, an `.npmignore`-style exclusion, or any equivalent. The corpus ships wholesale; the `Portfolio-Scope:` header is the only inheritability gate, applied at resolution time, never at packaging time. The non-`portfolio` (`local`) specs ship too but are simply never resolved by a consumer.
+- **MUST** keep this payload tag-pinned to the plugin release line: a consumer's pinned `ref` selects the installed hub-plugin release, and the `spec/` corpus resolved from that release is the regenerable cache the consumer references—never a copy committed into the consumer's own tree.
 
 ### Permissions and protection
 
@@ -148,6 +157,7 @@ Applicable when only `GITHUB_TOKEN` is available and `develop` is fully protecte
 - [ ] For the last three published releases on any repo adopting this spec, the `chore(release): <tag>` commit subject on `develop` (as viewed via `git log -1 --pretty=%s`) starts with `chore(release): <tag>`, confirming the guard's prefix-match acceptance criterion handles both primary-path commits and fallback-path squash-merges with `(#N)` suffix
 - [ ] `nolte/gh-plumbing:.github/commons-release-drafter.yml` excludes `chore(release): <tag>` commits or PRs from release-notes categorization (§Release notes categorization)
 - [ ] No published release in the adoption window has a `release-drafter` draft that remained after publish (confirming the workflow consumed the intended draft rather than creating a parallel one)
+- [ ] At a published release tag, the installed `nolte-shared` plugin exposes `spec/` under `${CLAUDE_PLUGIN_ROOT}/spec/` with no packaging filter excluding it, so every spec whose canonical file carries `Portfolio-Scope: portfolio` is resolvable there for an inheriting consumer (§Inheritable spec payload)
 
 ## Open Questions
 

@@ -1,6 +1,7 @@
 # Projekt-Release-Artefakt
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Kontext
 

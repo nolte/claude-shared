@@ -1,6 +1,7 @@
 # Branching Model
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Context
 Repositories in this portfolio use `main` as a presentation-only branch that always reflects the most recently published GitHub Release. Active development happens on `develop`; feature branches target `develop` via pull request. When a GitHub Release is published, reusable workflows from [`nolte/gh-plumbing`](https://github.com/nolte/gh-plumbing) fast-forward `main` to the released tag, so `main` remains a mechanically-maintained, read-only view of the last shipped artifact. Humans and AI agents that look at `main` see exactly what was released—never a work-in-progress state.
@@ -45,7 +46,7 @@ Repositories in this portfolio use `main` as a presentation-only branch that alw
 ### `Hotfix` flow
 - **MUST** handle an emergency hotfix as a standard `fix/` pull request against `develop`, followed by a new patch release that fast-forwards `main` through `release-cd-refresh-master.yml` like any other release
 - **MUST NOT** branch off `main` or merge a hotfix back into `main`; the "no manual writes to `main`" rule in §Branch roles and §Release flow admits no hotfix carve-out
-- **MUST** record the resulting release as an out-of-band artefact under `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` per `spec/project/release-artifact/` §out-of-band; mid-sprint hot-fixes are tracked the same way per `spec/project/sprint/`, and `spec/project/release-automation/` §Non-Goals defers the hotfix flow to this subsection
+- **MUST** record the resulting release as an out-of-band artefact under `project/release-artifacts/out-of-band/<NNNN>-<slug>.md` per `spec/project/release-artifact/` §out-of-band; mid-sprint hot-fixes are tracked the same way in the repository's sprint records, and `spec/project/release-automation/` §Non-Goals defers the hotfix flow to this subsection
 
 ### Required GitHub workflows
 The repository **MUST** include the following workflows under `.github/workflows/`, each wired to the corresponding reusable workflow from `nolte/gh-plumbing`:
