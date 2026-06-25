@@ -31,6 +31,7 @@ Auto-generierter Katalog aller Skills aus den konfigurierten Plugin-Source-Roots
 - [`roadmap-plan`](nolte-shared/roadmap-plan.md) — Fügt Roadmap-Items hinzu, retargetet sie und passt sie an in project/roadmap.md mit vollständiger Lifecycle-Validierung.
 - [`roadmap-refine`](nolte-shared/roadmap-refine.md) — Erzwingt die Detail-Level-Invariante in project/roadmap.md (Items für aktuellen und nächsten Sprint müssen 'fine' sein).
 - [`sprint-plan`](nolte-shared/sprint-plan.md) — Erstellt eine neue Sprint-Datei unter project/sprints/ mit Value-Statement, Features und value-verifizierendem Akzeptanzkriterium.
+- [`working-copy-start`](nolte-shared/working-copy-start.md) — Legt einen spec-konformen Worktree an, befüllt dessen Plan-vor-der-Arbeit-Stub und übergibt an eine frische, wiederaufnehmbare Session.
 
 ## 3 Design
 

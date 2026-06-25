@@ -3,6 +3,7 @@ name: issue-orchestrate
 description: "Orchestrates a raw GitHub issue to an open, audit-trailed pull request per `spec/project/issue-orchestration/`. Comprehends the issue (body, comments, labels, linked items, repo surface), classifies it (`bug / feature-request / spec-change / security / docs / refactor / question / infra`), decomposes it into atomic specialist-ready work packages persisted as a pre-analysis artifact, routes large issues into the formal roadmap→feature→sprint pipeline, dispatches each package to the most specialised available skill or agent resolved by runtime lookup, and verifies via `quality-gate` and the standard PR flow. Invoke when the user asks to \"analyse this issue\", \"orchestrate issue #N\", \"take this issue end-to-end\", or equivalent German requests. Don't use to merge the PR (use `pull-request-merge`), to triage a red CI run (use `workflow-health-triage`), or to decompose an existing roadmap item (use `feature-decompose`). Supports resume per `spec/claude/resumable-work/`."
 tags: [triage, audit]
 phase: plan
+disable-model-invocation: true
 summary: "Takes a raw GitHub issue end-to-end: comprehend, classify, decompose into specialist-ready work packages, route or dispatch, and verify to an open PR."
 summary_de: "Führt ein rohes GitHub-Issue end-to-end: durchdringen, klassifizieren, in spezialisten-gerechte Arbeitspakete zerlegen, routen oder dispatchen und bis zu einem offenen PR verifizieren."
 use_when:

@@ -1,6 +1,7 @@
 # Quality-Gate
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Kontext
 Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in irgendeiner Form aus, aber das Wann, das Was und die Form der Ausgabe divergieren über die Projekte hinweg. Manche Repositories verdrahten alles in ein einziges `task check`-Target; andere erwarten, dass Beitragende sich vier getrennte Kommandos merken; wieder andere laufen Teile des Gates nur in CI und nie lokal. Die Kosten sind zweifach: Beitragende können von ihrem Terminal aus nicht erkennen, ob das Repo auslieferbar ist, und CI wird zum ersten Ort, an dem Fehler auftauchen — was Feedback verlangsamt und Review-Zyklen auf Probleme verbrennt, die ein lokales Gate abgefangen hätte. Diese Spec definiert den Vertrag, den das Gate erfüllen muss, damit dieselbe Invocation überall im Portfolio funktioniert, die Ausgabeform parseable ist und Taskfile-Konventionen plus werkzeugspezifische Ignore-Listen die Details in der Hand behalten.
@@ -25,7 +26,7 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 - **MUSS** jede Kategorie ausführen, die das Repository tatsächlich besitzt; partielle Gates, die eine Kategorie still weglassen, **DÜRFEN NICHT** `pass` berichten
 - **MUSS** das aggregierte Gate als `task check` bereitstellen; die Pro-Kategorie-Targets (`task lint`, `task test`, `task typecheck`) und die Pro-Unterordner-Targets komponieren hinein. Ein einziger erkennbarer Name über das Portfolio hinweg ist das, was den dokumentierten Aufruf überall identisch macht (§Ziele)
 - **SOLLTE** das Gate aus diesen bestehenden Taskfile-Targets komponieren, statt deren Arbeit zu duplizieren; ein neues Top-Level-Target, das Lint / Typprüfung / Tests neu implementiert, ist redundant
-- **DARF** das Gate um weitere Kategorien erweitern, wenn die Natur des Repositorys es rechtfertigt (Schema-Validation für ein Daten-Projekt, Helm-Lint für ein Infrastruktur-Projekt); Erweiterungen **MÜSSEN** im Taskfile explizit deklariert und in der Ausgabe des Gates sichtbar sein. Wenn die Schema-Validation-Kategorie JSON-Schema-Meta-Validation ausführt (gemäß `spec/project/yaml-json-schema/`), **MUSS** sie ein Schema ablehnen, das via `allOf` komponiert und sich zum Schließen seiner Form allein auf `additionalProperties: false` verlässt, weil `additionalProperties: false` unter `allOf` unzuverlässig ist; die Garantie der geschlossenen Form erfordert `unevaluatedProperties: false`
+- **DARF** das Gate um weitere Kategorien erweitern, wenn die Natur des Repositorys es rechtfertigt (Schema-Validation für ein Daten-Projekt, Helm-Lint für ein Infrastruktur-Projekt); Erweiterungen **MÜSSEN** im Taskfile explizit deklariert und in der Ausgabe des Gates sichtbar sein. Wenn die Schema-Validation-Kategorie JSON-Schema-Meta-Validation ausführt, **MUSS** sie ein Schema ablehnen, das via `allOf` komponiert und sich zum Schließen seiner Form allein auf `additionalProperties: false` verlässt, weil `additionalProperties: false` unter `allOf` unzuverlässig ist; die Garantie der geschlossenen Form erfordert `unevaluatedProperties: false`
 - Coverage-Schwellenprüfung ist **KEINE** erforderliche Gate-Kategorie; sie bleibt ein CI-seitiges Anliegen, damit der lokale und der CI-Lauf die „identisch ausführen"-Invariante (§Invocation-Vertrag) erfüllen, ohne auf jedem lokalen Lauf Coverage-Instrumentierung zu erzwingen. Ein Repository **DARF** sie als zusätzliche Kategorie (gemäß der DARF-Erweitern-Regel) in einer eigenen Zeile berichten; wenn es das tut, **MUSS** dasselbe Target lokal und in CI identisch laufen
 
 ### Invocation-Vertrag
@@ -56,7 +57,7 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 
 ### Abgrenzung
 - **MUSS** getrennt bleiben von `spec/project/workflow-health/`: workflow-health deckt den kontinuierlichen CI-Zustand über die Zeit ab (Flake-Triage, Trend), das Gate ist das Pass/Fail pro Invocation
-- **MUSS** getrennt bleiben von `spec/project/dependency-audit/`: Schwachstellen-Scanning hat eine eigene Kadenz und Schweregrad-Skala; das Gate übernimmt dafür keine Verantwortung
+- **MUSS** getrennt bleiben vom Dependency-/Schwachstellen-Scanning: jenes Scanning hat eine eigene Kadenz und Schweregrad-Skala; das Gate übernimmt dafür keine Verantwortung
 - **MUSS** unabhängig von `spec/project/release-automation/` bleiben in dem Sinne, dass ein grünes Gate eine Vorbedingung eines Release-Schnitts ist, nicht ein Ersatz für den Release-Workflow
 
 ### Monorepo- und Unterordner-Verhalten

@@ -180,6 +180,9 @@ tasks:
       Create a parallel working copy under the configurable worktree root,
       always in the same predictable place: ${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/<slug>/.
       The branch is created off origin/develop with an explicit base ref.
+      Seeds a .resume/<slug>/plan.md plan stub in the worktree (plan-before-work
+      gate) and reminds you to start the work in a fresh, resumable top-level
+      session, per spec/project/parallel-working-copies/ §Lifecycle.
       Usage: task worktree:add -- <branch> [slug]
         task worktree:add -- feat/parser-fix
         task worktree:add -- chore/ci-tidy ci

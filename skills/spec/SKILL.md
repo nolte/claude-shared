@@ -56,15 +56,32 @@ Topic folders group related specs (for example `spec/api/`, `spec/claude/`). Onl
 - Translations: `de`
 - Spec root: `spec/` (relative to project root)
 
-Overridable via `spec/.spec-config.yml`:
+Overridable via `spec/.spec-config.yml` (validated against `spec/schemas/spec-config-v1.0.schema.yaml` by `scripts/validate_schemas.py`):
 
 ```yaml
 canonical_language: en
 languages: [en, de]
 spec_root: spec
+inherits:                         # optional — portfolio-inherited spec layer
+  - source: nolte-shared          # the hub plugin whose portfolio-scope specs are inherited
+    ref: v0.1.8                    # tag-pinned hub release (never a floating branch)
+    overrides:                    # optional declared deviations from inherited specs
+      - spec: project/branching-model
+        section: "§Branch roles"
+        reason: "trunk-based repo; the long-lived develop branch role does not apply"
+        local: spec/project/branching-model/override.md
 ```
 
 If the file is missing, use the defaults. Create it on the first `create` operation so downstream projects have a visible extension point.
+
+### Portfolio-inherited spec layer (the `inherits:` key)
+
+Per `spec/project/portfolio-inherited-spec-layer/`, a consumer repo may **reference** portfolio-wide specs that live canonically in a hub (claude-shared) instead of copying them. The contract this skill must respect:
+
+- `inherits:` is **optional** and absent on the hub itself (the hub is the root; resolution terminates there). A consumer's effective spec set is `local ∪ inherited` — the local `spec/` tree plus every hub spec whose canonical file carries a `Portfolio-Scope: portfolio` header, resolved at each source's pinned `ref` from `${CLAUDE_PLUGIN_ROOT}/spec/`.
+- A spec is inheritable only if its **canonical** file carries a `Portfolio-Scope:` header line (sibling to `Status:`), value `portfolio` or `local`. A spec with no such line defaults to `local`. When creating or editing a spec, preserve any `Portfolio-Scope:` line; do not add `portfolio` scope unprompted (promoting a spec to portfolio-wide is an explicit maintainer act).
+- Inherited specs are **authoritative by default**. A consumer deviates only through a declared `overrides:` record (with a non-empty `reason:`) plus a `local` override file containing only the replaced sections — never by copying the inherited spec into the local tree, and never by an undeclared same-key local spec.
+- A requirement marked `[locked]` immediately after its RFC 2119 keyword (`- **MUST** [locked] …`) is **non-overridable downstream**; never author an override against a locked section.
 
 ## User-language policy
 
@@ -101,17 +118,29 @@ If the file is missing, use the defaults. Create it on the first `create` operat
 
 ### 3. Drift check
 
+**A. Translation-vs-canonical drift** (always):
+
 - For every spec folder, compare each translation to the canonical:
   - Same headings in the same order
   - Same count of requirement bullets and acceptance-criteria checkboxes
   - Same requirement IDs / ordering
 - Report mismatches. Offer to regenerate the affected translations from the canonical.
 
+**B. Local-vs-inherited drift** (only when `spec/.spec-config.yml` carries an `inherits:` key; per `spec/project/portfolio-inherited-spec-layer/` §"Drift detection"):
+
+- Run **against each source's pinned `ref`**, not against the hub's current `develop`, so conformance is judged against the exact upstream the consumer pinned. Resolve the inherited corpus from `${CLAUDE_PLUGIN_ROOT}/spec/` at that release.
+- Run the comparisons **canonical-to-canonical** (in the hub's canonical language); never compare against a translation view, which is derived and never authoritative.
+- For each `inherits:` source, report:
+  - **Critical** — a tracked verbatim copy of an inherited spec in the local `spec/` tree; a local spec sharing a logical key `<topic>/<slug>` with an inherited `portfolio`-scope spec **without** a declared override (undeclared divergence); an `overrides:` record whose `section` contains a `[locked]` requirement; a cross-reference that is a ghost reference or a duplicate-key collision in the combined namespace; a cyclic inheritance declaration.
+  - **Warning** — an `overrides:` `spec` that does not resolve to a `portfolio`-scope spec at the pinned `ref` (broken reference); an overridden `section` that no longer exists upstream (stale override); an empty or missing `reason`; a floating or absent `ref`.
+- Severities are the canonical scale from `spec/claude/review-plan/` §"Severity scale"; surface findings for `spec-drift-audit` to reconcile. Treat any open Critical as a gate failure (the silent fork must not reach `develop`).
+
 ### 4. Regenerate index
 
 - Write `spec/README.md` with a table:
-  - Slug | Title (per language) | Status | Last updated
+  - Topic | Slug | Title (per language) | Status | Scope | Last updated
 - `Status` is read from the `Status:` line in the canonical file's header. If absent, use `draft`.
+- `Scope` is read from the `Portfolio-Scope:` line in the canonical file's header (`portfolio` | `local`). If absent, use `local` (the default per `spec/project/portfolio-inherited-spec-layer/`). This column makes the inheritable subset visible at a glance.
 - `Last updated` uses `git log -1 --format=%cs -- <canonical file>`. If the file is untracked, use `unversioned`.
 - Don't invent values—if something can't be read, mark it `unknown`.
 

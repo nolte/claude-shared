@@ -1,6 +1,7 @@
 # Pflege der Claude-Code-Permission-Allowlist
 
 Status: draft
+Portfolio-Scope: portfolio
 
 ## Kontext
 Claude Code (CLI, Plugin und Agent-SDK-Läufe) fragt den/die Nutzer:in bei jedem Shell- oder MCP-Tool-Aufruf um Bestätigung, der weder vom Harness automatisch erlaubt noch in der Allowlist des aktuellen Projekts gelistet ist. Ohne eine kuratierte, committet-verbindliche Allowlist wird in der täglichen Arbeit immer wieder dieselbe Handvoll read-only `git` / `gh` / `task`-Aufrufe manuell bestätigt, was Aufmerksamkeit abnutzt und dazu erzieht, Bestätigungsdialoge reflexhaft zu akzeptieren. Jedes Repository im Portfolio liefert daher eine versioniert-committete `.claude/settings.json` mit einer expliziten `permissions.allow`-Liste, die die kleine, gut verstandene Menge an read-only-Befehlen abdeckt, deren Bestätigungsdialoge keinen Sicherheitsgewinn bringen. Die Liste ist ein lebendes Artefakt und braucht einen definierten Pflegeprozess, damit sie weder erstarrt (fehlende Befehle, die inzwischen üblich geworden sind) noch stillschweigend ausufert (übernommene gefährliche Wildcards aus entwicklerlokalen Configs).
