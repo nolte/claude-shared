@@ -58,6 +58,7 @@ Canonical language: `en` · Translations: `de`
 | project | mission | Project Mission | Projekt-Mission | draft | unversioned |
 | project | mkdocs-structure | MkDocs Site Structure | MkDocs-Site-Struktur | draft | unversioned |
 | project | parallel-working-copies | Parallel Working Copies | Parallele Working Copies | draft | unversioned |
+| project | portfolio-inherited-spec-layer | Portfolio-Inherited Spec Layer | Portfolio-vererbte Spec-Schicht | draft | unversioned |
 | project | post-audience-communication | Post audience communication | Audience-Kommunikation für Posts | draft | unversioned |
 | project | post-writing-style | Post writing style | Post-Schreibstil | accepted | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | 2026-05-01 |

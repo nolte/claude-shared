@@ -1,0 +1,138 @@
+# Schema for spec/.spec-config.yml, the per-repository spec configuration.
+# Validates the three base keys (canonical_language, languages, spec_root) that
+# the spec skill already reads, plus the optional inherits[] manifest introduced
+# by spec/project/portfolio-inherited-spec-layer/ §"The inheritance manifest".
+#
+# Scope of this schema is the PARSE-ERROR class only: presence and types of
+# fields and rejection of unknown keys (additionalProperties: false). The
+# semantic thresholds the inheritance spec grades at AUDIT time — a floating
+# (non-tag-pinned) ref, an empty reason, a broken override reference — are
+# deliberately NOT hard-failed here; they are Warning-class audit findings per
+# §"Audit and CI integration", not parse errors, so the schema keeps them
+# structurally valid and leaves them to the drift check.
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/nolte/claude-shared/blob/main/spec/schemas/spec-config-v1.0.schema.yaml
+title: Spec Configuration
+description: >-
+  Validates spec/.spec-config.yml. Refs spec/project/portfolio-inherited-spec-layer/
+  §"The inheritance manifest" for the inherits[] source/override record shapes and
+  the spec skill (skills/spec/SKILL.md) for the three base keys.
+type: object
+required:
+  - canonical_language
+  - languages
+  - spec_root
+additionalProperties: false
+properties:
+  canonical_language:
+    type: string
+    description: >-
+      The authoritative language of every spec on disk; the canonical file is
+      the source of truth and translations mirror it. Reference value: en.
+    pattern: "^[a-z]{2}$"
+  languages:
+    type: array
+    description: >-
+      Every language a spec exists in on disk, canonical plus translations.
+    minItems: 1
+    items:
+      type: string
+      pattern: "^[a-z]{2}$"
+  spec_root:
+    type: string
+    description: >-
+      The spec corpus root, relative to the repository root. Reference value: spec.
+  inherits:
+    type: array
+    description: >-
+      Optional. The list of portfolio hubs this repository inherits portfolio-scope
+      specs from. Absent on the hub itself (the root carries no inherits:, so
+      resolution terminates) and on any repository governed solely by its local
+      spec/ tree. Refs §"The inheritance manifest" and §"Shallow chain and root
+      boundary".
+    items:
+      type: object
+      description: >-
+        One inheritance source record: the hub identifier, the tag-pinned release
+        it is pinned to, and any declared per-spec overrides against it.
+      additionalProperties: false
+      required:
+        - source
+        - ref
+      properties:
+        source:
+          type: string
+          minLength: 1
+          description: >-
+            The hub identifier — the plugin/marketplace name whose shipped spec
+            corpus is inherited. Reference value: nolte-shared.
+        ref:
+          type: string
+          minLength: 1
+          description: >-
+            The hub release this source is pinned to (for example v0.1.8). Should
+            be a release tag, never a floating branch; a floating or absent ref is
+            a Warning audit finding (§"Audit and CI integration"), not a parse
+            error, so it is not hard-rejected here.
+        overrides:
+          type: array
+          description: >-
+            Optional. The declared deviations from inherited specs under this
+            source. Every deviation is a visible, reasoned, reviewable override;
+            an undeclared divergence is a Critical audit finding, never expressed
+            here. Refs §"Precedence and override declaration".
+          items:
+            type: object
+            description: >-
+              One override record: the inherited spec being overridden, the
+              section it replaces, the reason, and the local file carrying the
+              replacing section content.
+            additionalProperties: false
+            required:
+              - spec
+              - section
+              - local
+            properties:
+              spec:
+                type: string
+                description: >-
+                  The logical key <topic>/<slug> of the inherited spec being
+                  overridden (for example project/branching-model). Must resolve
+                  to a portfolio-scope spec at the source's pinned ref; a broken
+                  reference is a Warning audit finding, not a parse error.
+                pattern: "^([a-z0-9]+(-[a-z0-9]+)*/)?[a-z0-9]+(-[a-z0-9]+)*$"
+              section:
+                type: string
+                minLength: 1
+                description: >-
+                  The heading of the inherited section this override replaces, in
+                  the §<Section> form the corpus uses for cross-references.
+              reason:
+                type: string
+                description: >-
+                  Prose sentence justifying the deviation. An empty OR missing
+                  reason is a Warning audit finding (not a parse error) per the
+                  spec's §"Precedence and override declaration" and §"Audit and CI
+                  integration"; reason is therefore intentionally absent from this
+                  record's required list and carries no minLength.
+              local:
+                type: string
+                minLength: 1
+                description: >-
+                  Repository-relative path to the local override file carrying the
+                  replacing section content (and only the replaced sections).
+examples:
+  - canonical_language: en
+    languages: [en, de]
+    spec_root: spec
+  - canonical_language: de
+    languages: [de, en]
+    spec_root: spec
+    inherits:
+      - source: nolte-shared
+        ref: v0.1.8
+        overrides:
+          - spec: project/branching-model
+            section: "§Branch roles"
+            reason: "trunk-based repo; the long-lived develop branch role does not apply"
+            local: spec/project/branching-model/override.md
