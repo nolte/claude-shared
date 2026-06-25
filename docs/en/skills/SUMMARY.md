@@ -21,6 +21,7 @@ last_updated: generated
         * [roadmap-plan](nolte-shared/roadmap-plan.md)
         * [roadmap-refine](nolte-shared/roadmap-refine.md)
         * [sprint-plan](nolte-shared/sprint-plan.md)
+        * [working-copy-start](nolte-shared/working-copy-start.md)
 * 3 Design
     * nolte-engineering
         * [webview-ui-optimize](nolte-engineering/webview-ui-optimize.md)
