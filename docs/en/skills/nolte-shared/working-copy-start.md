@@ -8,9 +8,9 @@ last_updated: generated
 
 # working-copy-start
 
-> Creates a spec-conformant worktree, fills its plan-before-work stub, and hands off to a fresh resumable session.
+> Creates a spec-conformant worktree, fills its plan-before-work stub, and hands off to a fresh resumable session with a launch command and a kickoff prompt that leads with requirements-elicit.
 
-_Orchestrates the start of a new parallel working copy (git worktree) and makes it ready for work, per spec/project/parallel-working-copies/. Invoke when the user asks to "start a new working copy", "set up a worktree for feature X", "spin up a worktree and a plan", "begin work on a new branch in its own working copy", or equivalent German-language requests. Creates the worktree via `task worktree:add -- <branch> [slug]` (off origin/develop, keeping the primary checkout on develop), walks the operator through filling the seeded `.resume/<slug>/plan.md` plan-before-work stub (goal, current state, design decision with open questions, work steps, invariants, resume-anchor checklist), then hands off to do the substantive work in a fresh top-level session started from the worktree so it stays `claude --resume`-able. Does not do the feature work itself or open the PR (use [`pull-request-create`](pull-request-create.md)). Supports resume per `spec/claude/resumable-work/`._
+_Orchestrates the start of a new parallel working copy (git worktree) and makes it ready for work, per spec/project/parallel-working-copies/. Invoke when the user asks to "start a new working copy", "set up a worktree for feature X", "spin up a worktree and a plan", "begin work on a new branch in its own working copy", or equivalent German-language requests. Creates the worktree via `task worktree:add -- <branch> [slug]` (off origin/develop, keeping the primary checkout on develop), walks the operator through filling the seeded `.resume/<slug>/plan.md` plan-before-work stub (goal, current state, design decision with open questions, work steps, invariants, resume-anchor checklist), then hands off to do the substantive work in a fresh top-level session started from the worktree so it stays `claude --resume`-able, emitting the launch command and a ready-to-paste kickoff prompt. Does not do the feature work itself or open the PR (use [`pull-request-create`](pull-request-create.md)). Supports resume per `spec/claude/resumable-work/`._
 
 - **Plugin:** `nolte-shared`
 - **Phase:** 2 Plan (`plan`)
@@ -30,12 +30,13 @@ _Orchestrates the start of a new parallel working copy (git worktree) and makes 
 
 ## See also
 
+- [`requirements-elicit`](requirements-elicit.md)
 - [`pull-request-create`](pull-request-create.md)
 
 ## Examples
 
 - **Prompt:** Start a new working copy for feat/parser-fix
-  - **Outcome:** Worktree created off origin/develop, .resume/parser-fix/plan.md filled in with the operator, and a hand-off to start a fresh session in the worktree.
+  - **Outcome:** Worktree created off origin/develop, plan.md filled in, and a hand-off printing the launch command plus a kickoff prompt that leads with requirements-elicit before resuming the plan.
 
 ---
 
@@ -66,7 +67,24 @@ Detect the operator's language and respond in it. The plan stub and any committe
 1. **Collect the branch and optional slug.** The branch MUST carry an allowed prefix (`feat/`, `fix/`, `chore/`, `docs/`, `exp/`) per `spec/project/branching-model/`. Propose a kebab-case slug if the operator does not give one (defaults to the branch name minus its prefix).
 2. **Create the worktree.** Run `task worktree:add -- <branch> [slug]`. This branches off `origin/develop`, seeds `.resume/<slug>/plan.md` with a plan stub, and prints the worktree path. Confirm the worktree path back to the operator.
 3. **Fill the plan-before-work stub.** Open the seeded `.resume/<slug>/plan.md` inside the new worktree and walk the operator through completing every section: the goal, the researched current state, the load-bearing design decision **with the open questions to confirm before work starts**, the ordered work steps, the invariants and guardrails carried over from `CLAUDE.md` and the governing specs, and a status/resume-anchor checklist whose first unchecked box is where the next session resumes. Do not start the substantive work — capturing the plan is the gate.
-4. **Hand off to a fresh resumable session.** Instruct the operator to do the substantive work in a **fresh top-level session started from the worktree** (`cd <worktree> && claude`), not a dispatched subagent or Workflow run, because only a top-level session's transcript is `claude --resume`-able (recoverable later via `task resume`). Point the operator at re-entering the work from the plan's first unchecked box.
+4. **Hand off to a fresh resumable session.** Instruct the operator to do the substantive work in a **fresh top-level session started from the worktree** (`cd <worktree> && claude`), not a dispatched subagent or Workflow run, because only a top-level session's transcript is `claude --resume`-able (recoverable later via `task resume`). Emit both halves of the hand-off so the operator can paste them straight through:
+   - the **launch command**, with the concrete worktree path filled in:
+
+     ```
+     cd <worktree-path> && claude
+     ```
+
+   - a ready-to-paste **kickoff prompt** for that fresh session. It **MUST** lead with an invocation of `/nolte-shared:requirements-elicit`, so the substantive work begins by capturing the working copy's requirement precisely (the same upstream gate [`roadmap-plan`](roadmap-plan.md), [`feature-decompose`](feature-decompose.md), and [`issue-orchestrate`](issue-orchestrate.md) rely on) rather than by acting on the first plausible guess; only then does it pick the work up from the plan. Use this shape:
+
+     ```
+     /nolte-shared:requirements-elicit capture the requirement for this working
+     copy. Once the requirement artifact is at or above threshold, read the plan
+     at .resume/<slug>/plan.md and begin the work from the first unchecked
+     resume-anchor box, keeping the plan's status/resume-anchor checklist up to
+     date as you go.
+     ```
+
+   Substitute the real `<worktree-path>` and `<slug>` so the operator copies a working command and prompt, not placeholders.
 
 ### Resumability
 

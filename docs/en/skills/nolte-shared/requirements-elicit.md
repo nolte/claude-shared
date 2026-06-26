@@ -39,6 +39,7 @@ _Runs the requirements-elicitation interview methodology from spec/project/requi
 - [`feature-decompose`](feature-decompose.md)
 - [`issue-orchestrate`](issue-orchestrate.md)
 - [`roadmap-plan`](roadmap-plan.md)
+- [`working-copy-start`](working-copy-start.md)
 
 ---
 
