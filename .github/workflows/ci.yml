@@ -131,10 +131,12 @@ jobs:
   # spec/project/docs-freshness/ §Triggers and cadence SHOULD: a docs-freshness
   # run as a pre-PR gate whenever the PR modifies documentation. The full audit
   # is performed by the `docs-freshness-checker` LLM agent, which cannot run
-  # unattended in CI (it needs a model, not a deterministic script). The two
-  # `git diff --exit-code` freshness checks in the `docs` job above already
-  # enforce the deterministic, machine-checkable slice of freshness (generated
-  # catalog + portfolio inventory), and the `links` job above now owns the
+  # unattended in CI (it needs a model, not a deterministic script). The
+  # `git diff --exit-code` portfolio freshness check plus the `mkdocs build
+  # --strict` in the `docs` job above already enforce the deterministic,
+  # machine-checkable slice of freshness (the portfolio inventory by diff; the
+  # catalog by the on_pre_build hook firing inside the strict build), and the
+  # `links` job above now owns the
   # deterministic internal-link-rot + cross-tree-reference-rot slice per
   # spec/project/link-validation/ (which docs-freshness delegates to it). The
   # remaining SHOULD slice (parity, ADR/stale-marker drift, Mermaid drift) is

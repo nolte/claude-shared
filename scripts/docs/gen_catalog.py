@@ -25,7 +25,6 @@ the spec forbids silently skipping broken artefacts.
 from __future__ import annotations
 
 import re
-import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -1090,8 +1089,37 @@ def group_by_phase_then_plugin(
 
 
 def write_page(path: Path, content: str) -> None:
+    """Write ``content`` to ``path``, skipping the write when the file already
+    holds identical bytes.
+
+    Preserving the mtime of unchanged pages keeps the generator **idempotent**:
+    when the ``on_pre_build`` hook regenerates the catalog inside the watched
+    ``docs_dir`` on every build, an unchanged run touches no files, so
+    ``mkdocs serve``'s livereload doesn't loop (spec §Generation mechanism;
+    requirement R8, mirroring the verified claude-home-assistant#6 pattern).
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and path.read_text(encoding="utf-8") == content:
+        return
     path.write_text(content, encoding="utf-8")
+
+
+def _prune_stale(root: Path, kept: set[Path]) -> None:
+    """Delete every file under ``root`` not in ``kept``, then remove emptied
+    directories (deepest first).
+
+    Replaces a blanket ``rmtree`` + rewrite: pages for removed artefacts or
+    plugins still disappear on the next build, but unchanged pages keep their
+    mtime so the generator stays idempotent (see :func:`write_page`).
+    """
+    if not root.exists():
+        return
+    for path in root.rglob("*"):
+        if path.is_file() and path not in kept:
+            path.unlink()
+    for path in sorted(root.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        if path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
 
 
 def emit_section(
@@ -1104,21 +1132,22 @@ def emit_section(
     warnings: list[tuple[str, str, list[Artifact]]],
 ) -> None:
     section_dir = DOCS_DIR / lang / section
-    if section_dir.exists():
-        shutil.rmtree(section_dir)
     section_dir.mkdir(parents=True, exist_ok=True)
+    written: set[Path] = set()
 
     by_phase = group_by_phase_then_plugin(artefacts)
     distinct_plugins = {art.plugin for art in artefacts}
     show_plugin_subgroup = len(distinct_plugins) > 1
 
     for art in artefacts:
+        page_path = section_dir / art.plugin / f"{art.name}.md"
         write_page(
-            section_dir / art.plugin / f"{art.name}.md",
+            page_path,
             render_page(
                 art, chrome, lang, link_index, referenced_by_index, warnings
             ),
         )
+        written.add(page_path)
 
     title_key = f"{section}_title"
     intro_key = f"{section}_intro"
@@ -1146,7 +1175,9 @@ def emit_section(
                     f"- [`{art.name}`]({plugin}/{art.name}.md) — {summary_text}"
                 )
             index_lines.append("")
-    write_page(section_dir / "index.md", "\n".join(index_lines).rstrip() + "\n")
+    index_path = section_dir / "index.md"
+    write_page(index_path, "\n".join(index_lines).rstrip() + "\n")
+    written.add(index_path)
 
     # mkdocs-literate-nav reads SUMMARY.md as a nav source, but the page is
     # still a file under docs/<lang>/, so the per-page frontmatter contract
@@ -1174,7 +1205,14 @@ def emit_section(
                     summary_parts.append(
                         f"    * [{art.name}]({plugin}/{art.name}.md)"
                     )
-    write_page(section_dir / "SUMMARY.md", "\n".join(summary_parts) + "\n")
+    summary_path = section_dir / "SUMMARY.md"
+    write_page(summary_path, "\n".join(summary_parts) + "\n")
+    written.add(summary_path)
+
+    # Replaces the old blanket rmtree: drop pages for artefacts/plugins that no
+    # longer exist without rewriting unchanged pages (keeps regeneration
+    # idempotent so `mkdocs serve` doesn't livereload-loop).
+    _prune_stale(section_dir, written)
 
 
 def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> None:
