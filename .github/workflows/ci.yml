@@ -83,16 +83,14 @@ jobs:
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      # `task docs` runs `mkdocs build --strict`, which fires the gen_catalog.py
+      # on_pre_build hook (mkdocs.yml `hooks:`) and so regenerates the catalog
+      # as part of the build. The strict build is the freshness gate: a stale or
+      # malformed catalog fails the build here. The catalog tree is no longer
+      # committed (per spec/claude/skill-agent-catalog/ §Generation mechanism
+      # "Deploy-time generation (preferred)"), so no committed-tree diff check is
+      # needed — the deploy build (mkdocs gh-deploy) regenerates it identically.
       - run: task --yes docs
-      - name: Verify committed catalog is fresh
-        # Per spec/claude/skill-agent-catalog/ §Generation mechanism: the
-        # repo commits the catalog (because reusable-mkdocs.yaml@v1.1.12
-        # bypasses `task docs`); this step fails when the committed tree
-        # has drifted from a fresh re-generation.
-        run: |
-          git diff --exit-code \
-            docs/de/skills docs/de/agents docs/de/references/tags.md \
-            docs/en/skills docs/en/agents docs/en/references/tags.md
       - name: Verify committed portfolio inventory is fresh
         # Per spec/portfolio/portfolio-management/ §Documentation rendering:
         # the rendered docs/<lang>/portfolio/ pages MUST be a pure function of

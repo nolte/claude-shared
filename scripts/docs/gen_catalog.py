@@ -1263,46 +1263,64 @@ def emit_landing_skeleton(
     write_page(path, "\n".join(lines).rstrip() + "\n")
 
 
-def main() -> int:
-    try:
-        sources = load_sources()
-        languages = load_languages()
+def _generate() -> tuple[list[Artifact], list[Artifact]]:
+    """Render the entire catalog to physical files under ``docs/<lang>/``.
 
-        skills: list[Artifact] = []
-        agents: list[Artifact] = []
-        for source in sources:
-            skills.extend(discover_skills(source, languages))
-            agents.extend(discover_agents(source, languages))
+    The single rendering core shared by both invocation surfaces — the CLI
+    ``main()`` / ``__main__`` entry point and the MkDocs ``on_pre_build`` hook
+    (see :func:`on_pre_build`). The form choice concerns the invocation surface
+    only; the generator never forks (spec §Generation mechanism — the DRY
+    single-generator / multi-surface contract). Raises :class:`CatalogError` on
+    any malformed source so the docs build fails loudly rather than publishing a
+    partial catalog.
+    """
+    sources = load_sources()
+    languages = load_languages()
 
-        # Structured peer references (dont_use_when[].alternative, see_also[])
-        # MUST resolve against the discovered catalog; unresolved or ambiguous
-        # ones fail the docs build per spec §Use-case metadata.
-        _resolve_use_case_references(skills, agents)
+    skills: list[Artifact] = []
+    agents: list[Artifact] = []
+    for source in sources:
+        skills.extend(discover_skills(source, languages))
+        agents.extend(discover_agents(source, languages))
 
-        # One cross-link index drives the inline-code rewrite on every rendered
-        # page; warnings collected here are flushed to stderr after the run.
-        link_index = _build_link_index(skills, agents)
-        # Inverted index for the "Referenced by" pass per spec §Cross-linking.
-        referenced_by_index = _build_referenced_by_index(skills, agents)
-        warnings: list[tuple[str, str, list[Artifact]]] = []
+    # Structured peer references (dont_use_when[].alternative, see_also[])
+    # MUST resolve against the discovered catalog; unresolved or ambiguous
+    # ones fail the docs build per spec §Use-case metadata.
+    _resolve_use_case_references(skills, agents)
 
-        for lang in languages:
-            chrome = CHROME.get(lang, CHROME["en"])
-            emit_section(
-                lang, "skills", skills, chrome, link_index, referenced_by_index, warnings
-            )
-            emit_section(
-                lang, "agents", agents, chrome, link_index, referenced_by_index, warnings
-            )
-            emit_tag_index(lang, skills + agents, chrome)
-            emit_landing_skeleton(lang, skills, agents, chrome)
-    except CatalogError as exc:
-        print(f"gen_catalog: {exc}", file=sys.stderr)
-        return 1
+    # One cross-link index drives the inline-code rewrite on every rendered
+    # page; warnings collected here are flushed to stderr after the run.
+    link_index = _build_link_index(skills, agents)
+    # Inverted index for the "Referenced by" pass per spec §Cross-linking.
+    referenced_by_index = _build_referenced_by_index(skills, agents)
+    warnings: list[tuple[str, str, list[Artifact]]] = []
 
-    # Surface ambiguous inline-code mentions as non-fatal build warnings per
-    # spec §Cross-linking. De-duplicate so the same collision reported on
-    # every language doesn't drown the log.
+    for lang in languages:
+        chrome = CHROME.get(lang, CHROME["en"])
+        emit_section(
+            lang, "skills", skills, chrome, link_index, referenced_by_index, warnings
+        )
+        emit_section(
+            lang, "agents", agents, chrome, link_index, referenced_by_index, warnings
+        )
+        emit_tag_index(lang, skills + agents, chrome)
+        emit_landing_skeleton(lang, skills, agents, chrome)
+
+    _flush_link_warnings(warnings)
+    print(
+        f"gen_catalog: wrote {len(skills)} skill(s) and {len(agents)} agent(s) "
+        f"for languages {languages}",
+        file=sys.stderr,
+    )
+    return skills, agents
+
+
+def _flush_link_warnings(
+    warnings: list[tuple[str, str, list[Artifact]]],
+) -> None:
+    """Surface ambiguous inline-code mentions as non-fatal build warnings per
+    spec §Cross-linking. De-duplicate so the same collision reported on every
+    language doesn't drown the log."""
     seen: set[tuple[str, str]] = set()
     for self_label, mention, collisions in warnings:
         key = (self_label, mention)
@@ -1318,11 +1336,39 @@ def main() -> int:
             file=sys.stderr,
         )
 
-    print(
-        f"gen_catalog: wrote {len(skills)} skill(s) and {len(agents)} agent(s) "
-        f"for languages {languages}",
-        file=sys.stderr,
-    )
+
+def on_pre_build(config, **kwargs):  # noqa: ANN001, ANN003, ARG001 — MkDocs hook signature
+    """MkDocs ``on_pre_build`` hook: regenerate the catalog from inside
+    ``mkdocs build`` itself.
+
+    Because MkDocs runs file collection *after* ``on_pre_build``, the physical
+    pages this writes under ``docs/<lang>/`` are collected and localized by
+    ``mkdocs-static-i18n`` exactly like hand-authored pages. The hook fires on
+    every build surface — ``mkdocs build``, ``mkdocs serve``, and the
+    ``mkdocs gh-deploy`` run by the docs-deploy pipeline — so the catalog stays
+    current with no Taskfile or CI wiring. This is the spec's recommended
+    pre-build surface for repositories on ``mkdocs-static-i18n`` folder mode.
+
+    Shares the one render core (:func:`_generate`) with the CLI entry point. A
+    malformed source aborts the build loudly via ``PluginError``. Registered
+    through the ``hooks:`` key in ``mkdocs.yml``.
+    """
+    try:
+        _generate()
+    except CatalogError as exc:
+        # Imported lazily so the CLI / __main__ surface stays importable
+        # without MkDocs installed; on the hook path MkDocs is always present.
+        from mkdocs.exceptions import PluginError
+
+        raise PluginError(f"gen_catalog: {exc}") from exc
+
+
+def main() -> int:
+    try:
+        _generate()
+    except CatalogError as exc:
+        print(f"gen_catalog: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 

@@ -11,6 +11,18 @@ copyright: Copyright &copy; 2026 nolte
 
 docs_dir: docs
 
+# Skill/Agent catalog generator, wired as an on_pre_build hook so the catalog
+# regenerates inside every `mkdocs build` — including the bare `mkdocs gh-deploy`
+# run by the docs-deploy pipeline — without a Taskfile/CI step. The hook shares
+# its render core with the script's CLI entry point (one generator, multiple
+# invocation surfaces). This is the spec's recommended pre-build surface for
+# repos on mkdocs-static-i18n folder mode: physical pages written here are
+# collected by MkDocs (file collection runs after on_pre_build) and localized
+# like hand-authored pages. See spec/claude/skill-agent-catalog/ §Generation
+# mechanism.
+hooks:
+  - scripts/docs/gen_catalog.py
+
 theme:
   name: material
   language: de
