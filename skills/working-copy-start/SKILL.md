@@ -3,8 +3,8 @@ name: working-copy-start
 description: Orchestrates the start of a new parallel working copy (git worktree) and makes it ready for work, per spec/project/parallel-working-copies/. Invoke when the user asks to "start a new working copy", "set up a worktree for feature X", "spin up a worktree and a plan", "begin work on a new branch in its own working copy", or equivalent German-language requests. Creates the worktree via `task worktree:add -- <branch> [slug]` (off origin/develop, keeping the primary checkout on develop), walks the operator through filling the seeded `.resume/<slug>/plan.md` plan-before-work stub (goal, current state, design decision with open questions, work steps, invariants, resume-anchor checklist), then hands off to do the substantive work in a fresh top-level session started from the worktree so it stays `claude --resume`-able, emitting the launch command and a ready-to-paste kickoff prompt. Does not do the feature work itself or open the PR (use `pull-request-create`). Supports resume per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: plan
-summary: "Creates a spec-conformant worktree, fills its plan-before-work stub, and hands off to a fresh resumable session with a ready-to-paste launch command and a kickoff prompt that leads with requirements-elicit."
-summary_de: "Legt einen spec-konformen Worktree an, befüllt dessen Plan-vor-der-Arbeit-Stub und übergibt an eine frische, wiederaufnehmbare Session inklusive fertigem Start-Befehl und Kickoff-Prompt, der mit requirements-elicit beginnt."
+summary: "Creates a spec-conformant worktree, fills its plan-before-work stub, and hands off to a fresh resumable session with a launch command and a kickoff prompt that leads with requirements-elicit."
+summary_de: "Legt einen spec-konformen Worktree an, befüllt dessen Plan-Stub und übergibt an eine frische, wiederaufnehmbare Session mit Start-Befehl und einem Kickoff-Prompt, der mit requirements-elicit beginnt."
 use_when:
   - "you want to start feature work in its own parallel working copy"
   - "you want a worktree plus a foundational plan before any substantive work begins"
@@ -19,7 +19,7 @@ see_also:
   - pull-request-create
 examples:
   - prompt: "Start a new working copy for feat/parser-fix"
-    outcome: "Worktree created off origin/develop, .resume/parser-fix/plan.md filled in with the operator, and a hand-off that prints the `cd <worktree> && claude` launch command plus a ready-to-paste kickoff prompt that leads with `/nolte-shared:requirements-elicit` and then resumes the plan from its first unchecked box."
+    outcome: "Worktree created off origin/develop, plan.md filled in, and a hand-off printing the launch command plus a kickoff prompt that leads with requirements-elicit before resuming the plan."
 resumable: true
 ---
 
