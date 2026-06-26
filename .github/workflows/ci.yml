@@ -83,16 +83,14 @@ jobs:
         with:
           version: 3.x
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+      # `task docs` runs `mkdocs build --strict`, which fires the gen_catalog.py
+      # on_pre_build hook (mkdocs.yml `hooks:`) and so regenerates the catalog
+      # as part of the build. The strict build is the freshness gate: a stale or
+      # malformed catalog fails the build here. The catalog tree is no longer
+      # committed (per spec/claude/skill-agent-catalog/ §Generation mechanism
+      # "Deploy-time generation (preferred)"), so no committed-tree diff check is
+      # needed — the deploy build (mkdocs gh-deploy) regenerates it identically.
       - run: task --yes docs
-      - name: Verify committed catalog is fresh
-        # Per spec/claude/skill-agent-catalog/ §Generation mechanism: the
-        # repo commits the catalog (because reusable-mkdocs.yaml@v1.1.12
-        # bypasses `task docs`); this step fails when the committed tree
-        # has drifted from a fresh re-generation.
-        run: |
-          git diff --exit-code \
-            docs/de/skills docs/de/agents docs/de/references/tags.md \
-            docs/en/skills docs/en/agents docs/en/references/tags.md
       - name: Verify committed portfolio inventory is fresh
         # Per spec/portfolio/portfolio-management/ §Documentation rendering:
         # the rendered docs/<lang>/portfolio/ pages MUST be a pure function of
@@ -119,6 +117,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # `task check:links` regenerates the (uncommitted) catalog via its
+      # `docs:catalog` dependency before scanning, so the offline link checker
+      # sees the generated catalog pages. gen_catalog.py needs PyYAML; install
+      # the pinned docs toolchain (single source of truth, Renovate-managed).
+      - run: pip install -r docs/requirements.txt
       - uses: arduino/setup-task@v2
         with:
           version: 3.x
@@ -128,10 +131,12 @@ jobs:
   # spec/project/docs-freshness/ §Triggers and cadence SHOULD: a docs-freshness
   # run as a pre-PR gate whenever the PR modifies documentation. The full audit
   # is performed by the `docs-freshness-checker` LLM agent, which cannot run
-  # unattended in CI (it needs a model, not a deterministic script). The two
-  # `git diff --exit-code` freshness checks in the `docs` job above already
-  # enforce the deterministic, machine-checkable slice of freshness (generated
-  # catalog + portfolio inventory), and the `links` job above now owns the
+  # unattended in CI (it needs a model, not a deterministic script). The
+  # `git diff --exit-code` portfolio freshness check plus the `mkdocs build
+  # --strict` in the `docs` job above already enforce the deterministic,
+  # machine-checkable slice of freshness (the portfolio inventory by diff; the
+  # catalog by the on_pre_build hook firing inside the strict build), and the
+  # `links` job above now owns the
   # deterministic internal-link-rot + cross-tree-reference-rot slice per
   # spec/project/link-validation/ (which docs-freshness delegates to it). The
   # remaining SHOULD slice (parity, ADR/stale-marker drift, Mermaid drift) is

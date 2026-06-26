@@ -25,7 +25,6 @@ the spec forbids silently skipping broken artefacts.
 from __future__ import annotations
 
 import re
-import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -1090,8 +1089,37 @@ def group_by_phase_then_plugin(
 
 
 def write_page(path: Path, content: str) -> None:
+    """Write ``content`` to ``path``, skipping the write when the file already
+    holds identical bytes.
+
+    Preserving the mtime of unchanged pages keeps the generator **idempotent**:
+    when the ``on_pre_build`` hook regenerates the catalog inside the watched
+    ``docs_dir`` on every build, an unchanged run touches no files, so
+    ``mkdocs serve``'s livereload doesn't loop (spec §Generation mechanism;
+    requirement R8, mirroring the verified claude-home-assistant#6 pattern).
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists() and path.read_text(encoding="utf-8") == content:
+        return
     path.write_text(content, encoding="utf-8")
+
+
+def _prune_stale(root: Path, kept: set[Path]) -> None:
+    """Delete every file under ``root`` not in ``kept``, then remove emptied
+    directories (deepest first).
+
+    Replaces a blanket ``rmtree`` + rewrite: pages for removed artefacts or
+    plugins still disappear on the next build, but unchanged pages keep their
+    mtime so the generator stays idempotent (see :func:`write_page`).
+    """
+    if not root.exists():
+        return
+    for path in root.rglob("*"):
+        if path.is_file() and path not in kept:
+            path.unlink()
+    for path in sorted(root.rglob("*"), key=lambda p: len(p.parts), reverse=True):
+        if path.is_dir() and not any(path.iterdir()):
+            path.rmdir()
 
 
 def emit_section(
@@ -1104,21 +1132,22 @@ def emit_section(
     warnings: list[tuple[str, str, list[Artifact]]],
 ) -> None:
     section_dir = DOCS_DIR / lang / section
-    if section_dir.exists():
-        shutil.rmtree(section_dir)
     section_dir.mkdir(parents=True, exist_ok=True)
+    written: set[Path] = set()
 
     by_phase = group_by_phase_then_plugin(artefacts)
     distinct_plugins = {art.plugin for art in artefacts}
     show_plugin_subgroup = len(distinct_plugins) > 1
 
     for art in artefacts:
+        page_path = section_dir / art.plugin / f"{art.name}.md"
         write_page(
-            section_dir / art.plugin / f"{art.name}.md",
+            page_path,
             render_page(
                 art, chrome, lang, link_index, referenced_by_index, warnings
             ),
         )
+        written.add(page_path)
 
     title_key = f"{section}_title"
     intro_key = f"{section}_intro"
@@ -1146,7 +1175,9 @@ def emit_section(
                     f"- [`{art.name}`]({plugin}/{art.name}.md) — {summary_text}"
                 )
             index_lines.append("")
-    write_page(section_dir / "index.md", "\n".join(index_lines).rstrip() + "\n")
+    index_path = section_dir / "index.md"
+    write_page(index_path, "\n".join(index_lines).rstrip() + "\n")
+    written.add(index_path)
 
     # mkdocs-literate-nav reads SUMMARY.md as a nav source, but the page is
     # still a file under docs/<lang>/, so the per-page frontmatter contract
@@ -1174,7 +1205,14 @@ def emit_section(
                     summary_parts.append(
                         f"    * [{art.name}]({plugin}/{art.name}.md)"
                     )
-    write_page(section_dir / "SUMMARY.md", "\n".join(summary_parts) + "\n")
+    summary_path = section_dir / "SUMMARY.md"
+    write_page(summary_path, "\n".join(summary_parts) + "\n")
+    written.add(summary_path)
+
+    # Replaces the old blanket rmtree: drop pages for artefacts/plugins that no
+    # longer exist without rewriting unchanged pages (keeps regeneration
+    # idempotent so `mkdocs serve` doesn't livereload-loop).
+    _prune_stale(section_dir, written)
 
 
 def emit_tag_index(lang: str, all_artefacts: list[Artifact], chrome: dict) -> None:
@@ -1263,46 +1301,64 @@ def emit_landing_skeleton(
     write_page(path, "\n".join(lines).rstrip() + "\n")
 
 
-def main() -> int:
-    try:
-        sources = load_sources()
-        languages = load_languages()
+def _generate() -> tuple[list[Artifact], list[Artifact]]:
+    """Render the entire catalog to physical files under ``docs/<lang>/``.
 
-        skills: list[Artifact] = []
-        agents: list[Artifact] = []
-        for source in sources:
-            skills.extend(discover_skills(source, languages))
-            agents.extend(discover_agents(source, languages))
+    The single rendering core shared by both invocation surfaces — the CLI
+    ``main()`` / ``__main__`` entry point and the MkDocs ``on_pre_build`` hook
+    (see :func:`on_pre_build`). The form choice concerns the invocation surface
+    only; the generator never forks (spec §Generation mechanism — the DRY
+    single-generator / multi-surface contract). Raises :class:`CatalogError` on
+    any malformed source so the docs build fails loudly rather than publishing a
+    partial catalog.
+    """
+    sources = load_sources()
+    languages = load_languages()
 
-        # Structured peer references (dont_use_when[].alternative, see_also[])
-        # MUST resolve against the discovered catalog; unresolved or ambiguous
-        # ones fail the docs build per spec §Use-case metadata.
-        _resolve_use_case_references(skills, agents)
+    skills: list[Artifact] = []
+    agents: list[Artifact] = []
+    for source in sources:
+        skills.extend(discover_skills(source, languages))
+        agents.extend(discover_agents(source, languages))
 
-        # One cross-link index drives the inline-code rewrite on every rendered
-        # page; warnings collected here are flushed to stderr after the run.
-        link_index = _build_link_index(skills, agents)
-        # Inverted index for the "Referenced by" pass per spec §Cross-linking.
-        referenced_by_index = _build_referenced_by_index(skills, agents)
-        warnings: list[tuple[str, str, list[Artifact]]] = []
+    # Structured peer references (dont_use_when[].alternative, see_also[])
+    # MUST resolve against the discovered catalog; unresolved or ambiguous
+    # ones fail the docs build per spec §Use-case metadata.
+    _resolve_use_case_references(skills, agents)
 
-        for lang in languages:
-            chrome = CHROME.get(lang, CHROME["en"])
-            emit_section(
-                lang, "skills", skills, chrome, link_index, referenced_by_index, warnings
-            )
-            emit_section(
-                lang, "agents", agents, chrome, link_index, referenced_by_index, warnings
-            )
-            emit_tag_index(lang, skills + agents, chrome)
-            emit_landing_skeleton(lang, skills, agents, chrome)
-    except CatalogError as exc:
-        print(f"gen_catalog: {exc}", file=sys.stderr)
-        return 1
+    # One cross-link index drives the inline-code rewrite on every rendered
+    # page; warnings collected here are flushed to stderr after the run.
+    link_index = _build_link_index(skills, agents)
+    # Inverted index for the "Referenced by" pass per spec §Cross-linking.
+    referenced_by_index = _build_referenced_by_index(skills, agents)
+    warnings: list[tuple[str, str, list[Artifact]]] = []
 
-    # Surface ambiguous inline-code mentions as non-fatal build warnings per
-    # spec §Cross-linking. De-duplicate so the same collision reported on
-    # every language doesn't drown the log.
+    for lang in languages:
+        chrome = CHROME.get(lang, CHROME["en"])
+        emit_section(
+            lang, "skills", skills, chrome, link_index, referenced_by_index, warnings
+        )
+        emit_section(
+            lang, "agents", agents, chrome, link_index, referenced_by_index, warnings
+        )
+        emit_tag_index(lang, skills + agents, chrome)
+        emit_landing_skeleton(lang, skills, agents, chrome)
+
+    _flush_link_warnings(warnings)
+    print(
+        f"gen_catalog: wrote {len(skills)} skill(s) and {len(agents)} agent(s) "
+        f"for languages {languages}",
+        file=sys.stderr,
+    )
+    return skills, agents
+
+
+def _flush_link_warnings(
+    warnings: list[tuple[str, str, list[Artifact]]],
+) -> None:
+    """Surface ambiguous inline-code mentions as non-fatal build warnings per
+    spec §Cross-linking. De-duplicate so the same collision reported on every
+    language doesn't drown the log."""
     seen: set[tuple[str, str]] = set()
     for self_label, mention, collisions in warnings:
         key = (self_label, mention)
@@ -1318,11 +1374,39 @@ def main() -> int:
             file=sys.stderr,
         )
 
-    print(
-        f"gen_catalog: wrote {len(skills)} skill(s) and {len(agents)} agent(s) "
-        f"for languages {languages}",
-        file=sys.stderr,
-    )
+
+def on_pre_build(config, **kwargs):  # noqa: ANN001, ANN003, ARG001 — MkDocs hook signature
+    """MkDocs ``on_pre_build`` hook: regenerate the catalog from inside
+    ``mkdocs build`` itself.
+
+    Because MkDocs runs file collection *after* ``on_pre_build``, the physical
+    pages this writes under ``docs/<lang>/`` are collected and localized by
+    ``mkdocs-static-i18n`` exactly like hand-authored pages. The hook fires on
+    every build surface — ``mkdocs build``, ``mkdocs serve``, and the
+    ``mkdocs gh-deploy`` run by the docs-deploy pipeline — so the catalog stays
+    current with no Taskfile or CI wiring. This is the spec's recommended
+    pre-build surface for repositories on ``mkdocs-static-i18n`` folder mode.
+
+    Shares the one render core (:func:`_generate`) with the CLI entry point. A
+    malformed source aborts the build loudly via ``PluginError``. Registered
+    through the ``hooks:`` key in ``mkdocs.yml``.
+    """
+    try:
+        _generate()
+    except CatalogError as exc:
+        # Imported lazily so the CLI / __main__ surface stays importable
+        # without MkDocs installed; on the hook path MkDocs is always present.
+        from mkdocs.exceptions import PluginError
+
+        raise PluginError(f"gen_catalog: {exc}") from exc
+
+
+def main() -> int:
+    try:
+        _generate()
+    except CatalogError as exc:
+        print(f"gen_catalog: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 
