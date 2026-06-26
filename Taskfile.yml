@@ -96,6 +96,13 @@ tasks:
       gate. Run the full online checker directly with:
         python3 scripts/check_links.py            # internal + cross-tree + external
         python3 scripts/check_links.py --external  # external only
+    deps:
+      # The catalog tree under docs/<lang>/{skills,agents}/ is generated, not
+      # committed (the on_pre_build hook produces it during a build). The offline
+      # link checker scans the on-disk docs tree, so it must regenerate the
+      # catalog first — otherwise hand-authored pages that link into the catalog
+      # report false-positive "target does not exist" criticals.
+      - docs:catalog
     cmds:
       - python3 scripts/check_links.py --offline
 
