@@ -37,7 +37,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 
 ### CI and automation
 - **MUST** include a `.github/` directory with workflows under `.github/workflows/`
-- **MUST** include a `Taskfile.yml` (or `Taskfile.yaml`) at the repository root exposing reproducible commands for at least test, lint, and documentation targets
+- **MUST** include a `Taskfile.yml` (or `Taskfile.yaml`) at the repository root exposing reproducible commands for at least test, lint, and documentation targets; the file's canonical target vocabulary, namespacing, argument passthrough, and shared-Taskfile conventions are governed by `spec/project/taskfile/`; beyond requiring the file's presence, this spec only pins the individual target names its own requirements rely on (`task check` and `task setup`, below) and leaves the canonical vocabulary and conventions to that spec
 - **SHOULD** expose the aggregate quality gate under the portfolio-canonical target name `task check`, so the gate's invocation stays identical across the portfolio; the gate's composition and output contract are governed by `spec/project/quality-gate/` and this spec never restates them, only pins the canonical target name
 - **SHOULD** expose a `setup` target that creates the project-local environment and installs hooks/deps, so first-clone onboarding is one command
 - **SHOULD** invoke lint, test, and docs commands from CI through Taskfile targets so local and CI behavior stay identical
@@ -70,7 +70,7 @@ Versioning policy and the Draft→Published release mechanics are governed by `s
 - **MUST** include an `mkdocs.yml` at the repository root
 - **SHOULD** publish the documentation site via a CI workflow (for example GitHub Pages)
 - **MUST** organise `docs/` into per-language subdirectories (`docs/en/`, `docs/de/`, …) per `spec/project/mkdocs-structure/` §language parity, which mandates the per-language layout and cross-language file-tree parity for every repository
-- **SHOULD** structure the MkDocs site per `spec/project/mkdocs-structure/`, which defines the canonical navigation, plugin baseline, per-page structure, i18n parity, and extension hooks for project-type-specific specs
+- **SHOULD** structure the MkDocs site per `spec/project/mkdocs-structure/`, which defines the canonical navigation, plugin baseline, per-page structure, i18n parity, and extension hooks for project-type-specific specs; when a repository is first scaffolded, this site skeleton **SHOULD** be produced in its `mkdocs-structure`-conformant form (the per-language tree, navigation, and plugin baseline) rather than as a flat `index.md` stub, so new projects bootstrap into the standard documentation shape from the start
 
 ### Specifications
 - **MUST** include a `spec/` directory at the repository root for requirements, NFRs, style guides, and domain knowledge

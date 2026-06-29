@@ -77,6 +77,7 @@ Canonical language: `en` · Translations: `de`
 | project | spec-driven-development | Spec-Driven Development | Spezifikations-getriebene Entwicklung | accepted | local | unversioned |
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | local | unversioned |
 | project | sprint | Project Sprint | Projekt-Sprint | draft | local | unversioned |
+| project | taskfile | Taskfile Conventions | Taskfile-Konventionen | draft | portfolio | unversioned |
 | project | test-case-derivation | Test-Case Derivation from Requirements | Testfall-Ableitung aus Anforderungen | draft | local | unversioned |
 | project | test-cycle-case-determination | Test Cycle: Case Determination | Test-Zyklus: Testfall-Ermittlung | draft | local | unversioned |
 | project | test-cycle-code-adaptation | Test Cycle: Code Adaptation | Test-Zyklus: Code-Anpassung | draft | local | unversioned |

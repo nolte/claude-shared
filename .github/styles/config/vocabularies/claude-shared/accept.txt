@@ -22,3 +22,5 @@ regenerable
 subtree
 subpath
 misconfiguration
+[Nn]amespacing
+passthrough
