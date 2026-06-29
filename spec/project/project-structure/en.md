@@ -70,7 +70,7 @@ Versioning policy and the Draft→Published release mechanics are governed by `s
 - **MUST** include an `mkdocs.yml` at the repository root
 - **SHOULD** publish the documentation site via a CI workflow (for example GitHub Pages)
 - **MUST** organise `docs/` into per-language subdirectories (`docs/en/`, `docs/de/`, …) per `spec/project/mkdocs-structure/` §language parity, which mandates the per-language layout and cross-language file-tree parity for every repository
-- **SHOULD** structure the MkDocs site per `spec/project/mkdocs-structure/`, which defines the canonical navigation, plugin baseline, per-page structure, i18n parity, and extension hooks for project-type-specific specs
+- **SHOULD** structure the MkDocs site per `spec/project/mkdocs-structure/`, which defines the canonical navigation, plugin baseline, per-page structure, i18n parity, and extension hooks for project-type-specific specs; when a repository is first scaffolded, this site skeleton **SHOULD** be produced in its `mkdocs-structure`-conformant form (the per-language tree, navigation, and plugin baseline) rather than as a flat `index.md` stub, so new projects bootstrap into the standard documentation shape from the start
 
 ### Specifications
 - **MUST** include a `spec/` directory at the repository root for requirements, NFRs, style guides, and domain knowledge

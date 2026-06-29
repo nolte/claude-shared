@@ -70,7 +70,7 @@ Versionierungs-Policy und die Draft→Published-Release-Mechanik werden von `spe
 - **MUSS [MUST]** eine `mkdocs.yml` im Repository-Wurzelverzeichnis enthalten
 - **SOLLTE [SHOULD]** die Dokumentation über einen CI-Workflow veröffentlichen (zum Beispiel GitHub Pages)
 - **MUSS [MUST]** `docs/` in per-Sprache-Unterverzeichnisse (`docs/en/`, `docs/de/`, …) gemäß `spec/project/mkdocs-structure/` §Sprach-Parität organisieren, die das per-Sprache-Layout und die sprachübergreifende Datei-Baum-Parität für jedes Repository vorschreibt
-- **SOLLTE [SHOULD]** die MkDocs-Site gemäß `spec/project/mkdocs-structure/` strukturieren, die die kanonische Navigation, Plugin-Basis, Per-Page-Struktur, i18n-Parität und Erweiterungs-Hooks für projekt-typ-spezifische Specs definiert
+- **SOLLTE [SHOULD]** die MkDocs-Site gemäß `spec/project/mkdocs-structure/` strukturieren, die die kanonische Navigation, Plugin-Basis, Per-Page-Struktur, i18n-Parität und Erweiterungs-Hooks für projekt-typ-spezifische Specs definiert; wenn ein Repository erstmalig gescaffoldet wird, **SOLLTE** dieses Site-Skelett in seiner `mkdocs-structure`-konformen Form (dem per-Sprache-Baum, der Navigation und der Plugin-Basis) erzeugt werden statt als flacher `index.md`-Stub, damit neue Projekte von Anfang an in die Standard-Dokumentationsform booten
 
 ### Spezifikationen
 - **MUSS [MUST]** ein `spec/`-Verzeichnis im Repository-Wurzelverzeichnis für Anforderungen, NFRs, Style Guides und Domänenwissen enthalten

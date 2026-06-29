@@ -40,7 +40,7 @@ The repo owner `nolte` is a GitHub user (not an org). The user's `gh` token carr
    - Claude integration: `.claude/` directory → **missing**.
    - CI and automation: `renovate.json5` → **missing**.
    - GitHub repository configuration: `.github/settings.yml`, `.github/release-drafter.yml`, `.github/boring-cyborg.yml`, `.github/stale.yml`, `.github/workflows/ci.yml`, `.github/workflows/release-drafter.yml`, `.github/workflows/release-publish.yml`, `.github/workflows/release-cd-refresh-master.yml`, `.github/workflows/automerge.yaml` → all **missing**. `.github/workflows/release-cd-deliver-docs.yml` is **not** flagged because no `mkdocs.yml` exists yet (the spec gates that workflow on MkDocs presence).
-   - Documentation: `mkdocs.yml`, `docs/index.md`, `docs/requirements.txt` → **missing**.
+   - Documentation: `mkdocs.yml` and the `docs/` site skeleton (per-language tree, nav, plugin baseline) → **missing**; the form is owned by `spec/project/mkdocs-structure/` and scaffolded by dispatching `mkdocs-structure-apply`, not written here.
    - Specifications: `spec/` → **missing** (offer to scaffold as `.gitkeep`-only, defer per-spec authoring to the `spec` skill).
    - Project planning artefacts: `project/` → **missing**; route the user to `roadmap-init` / `mission-define` rather than scaffolding any planning file here.
    - Tests: `tests/test_cli.py` → **pass**.
@@ -54,7 +54,7 @@ The repo owner `nolte` is a GitHub user (not an org). The user's `gh` token carr
    - `pyproject.toml` patch: add `[tool.ruff]` and `[tool.pytest.ini_options]` blocks; do **not** add `[project.dependencies]` (those live in `requirements.txt` per the spec's responsibility split).
    - `Taskfile.yml`: include `lint`, `test`, `docs` targets wired to `ruff check .`, `pytest`, and `mkdocs build` respectively.
    - `renovate.json5`: scaffold with `extends: ["github>nolte/gh-plumbing//renovate-configs/common#<tag>"]` where `<tag>` is fetched via `gh api repos/nolte/gh-plumbing/releases/latest --jq '.tag_name'`.
-   - `mkdocs.yml` + `docs/index.md` + `docs/requirements.txt`: scaffold the MkDocs setup pointing at `docs/`; `docs/requirements.txt` lists `mkdocs>=1.6` and `mkdocs-material>=9.5` one entry per line with explicit specifiers.
+   - MkDocs site skeleton: **dispatch `nolte-shared:mkdocs-structure-apply`** (scaffold operation) for the full `mkdocs-structure`-conformant setup — the per-language `docs/<lang>/` tree, the standard navigation, the plugin baseline, `site_url`, and the pinned `docs/requirements.txt` — instead of writing a flat `docs/index.md` stub here. Its own per-item approvals carry through the hand-off; on return, the Documentation group re-audits to **pass**.
    - `.claude/settings.json`: stub with empty `permissions` and `env` objects so the directory isn't empty.
    - `.github/settings.yml`: write with `_extends: nolte/gh-plumbing:.github/commons-settings.yml` plus `name`, `description`, `homepage`, `topics` pre-filled from `gh repo view --json name,description,homepageUrl,repositoryTopics` (asking the user to confirm/edit before write).
    - `.github/release-drafter.yml`, `.github/boring-cyborg.yml`, `.github/stale.yml`: each carries only the `_extends:` pointer to `nolte/gh-plumbing:.github/commons-<name>.yml`.
