@@ -89,7 +89,7 @@ The skill returns to the user, in this order:
 
 1. **Operation + target**: which operation ran (`audit` / `scaffold` / `patch`), absolute target repo root, detected language list, detected active extension specs.
 2. **Pre-state**: brief summary of what was found (`mkdocs.yml` present? per-language trees present? plugin baseline pinned? audience artifact present?).
-3. **Audit findings** (always): grouped per spec area (Site layout, Top-level navigation, Plugin baseline, Per-page structure, Snippet inclusion (DRY), i18n and parity, Build verification, Extension conformance), with one row per Acceptance-Criteria item showing status (`pass` / `missing` / `drift`) and a one-line evidence snippet.
+3. **Audit findings** (always): grouped per spec area (Site layout, Top-level navigation, Plugin baseline, Per-page structure, Snippet inclusion (DRY), Site identity (`site_url`), i18n and parity, Build verification, Extension conformance), with one row per Acceptance-Criteria item showing status (`pass` / `missing` / `drift`) and a one-line evidence snippet.
 4. **Planned edits** (for `scaffold` / `patch`): list of files to create or modify, one line per file, with rationale linking back to the spec line.
 5. **Approval gate** (for `scaffold` / `patch`): explicit user-decision point; nothing is written until the user confirms.
 6. **Applied edits** (after approval): list of files actually written, with absolute paths.
