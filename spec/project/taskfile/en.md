@@ -25,7 +25,7 @@ This spec consolidates the portfolio-wide Taskfile *mechanics* in one place: the
 ## Requirements
 
 ### Canonical target vocabulary
-- A repository **MUST** expose each capability it has under the portfolio-canonical target name rather than a synonym: `task install` (dependencies / environment), `task lint` (linters), `task test` (tests or, for prompt-only repositories, the frontmatter/contract validation), `task check` (the aggregate quality gate), `task docs` (documentation build), and `task release` (release cut, where the repository releases artefacts)
+- A repository **MUST** expose each capability it has under the portfolio-canonical target name rather than a synonym: `task setup` (one-time onboarding—install hooks and bootstrap the project-local environment), `task install` (install or refresh dependencies in that environment), `task lint` (linters), `task test` (tests or, for prompt-only repositories, the frontmatter/contract validation), `task typecheck` (type checks, where the language has them), `task check` (the aggregate quality gate), `task docs` (documentation build), and `task release` (release cut, where the repository releases artefacts)
 - A capability the repository doesn't have (for example `task release` in a library that ships no release artefacts) is simply absent; the rule pins the *name* when the capability exists, not the existence of every capability
 - This spec pins the canonical *names* only. The composition, behaviour, and output of each target stay with the spec that owns the capability—for example `task check` with `spec/project/quality-gate/` and the documentation build with `spec/project/mkdocs-structure/`. A repository **MUST NOT** restate those semantics in this spec's terms; it **MUST** follow the owning spec
 
@@ -45,14 +45,14 @@ This spec consolidates the portfolio-wide Taskfile *mechanics* in one place: the
 - Repository-specific automation that's not shared across the portfolio **MAY** remain a local target in the repository's own `Taskfile.yml`; the shared collection is for portfolio-common behaviour, not for one-off, repo-specific work
 
 ### Local and CI parity
-- CI **MUST** invoke lint, test, and docs through the same Taskfile targets a contributor runs locally (for example `task --yes lint`, `task --yes test`, `task --yes docs`) rather than re-implementing those steps inline, so the local gate and the CI gate can't drift apart. The aggregate `task check` is the local convenience entry point; CI **MAY** keep each category as a separate required check while still calling the same per-category targets
+- CI **MUST** invoke lint, test, and docs through the same Taskfile targets a contributor runs locally (for example `task --yes lint`, `task --yes test`, `task --yes docs`) rather than re-implementing those steps inline, so the local gate and the CI gate can't drift apart. The aggregate `task check` (whose composition is governed by `spec/project/quality-gate/`) is the local convenience entry point; CI **MAY** keep each category as a separate required check while still calling the same per-category targets
 
 ### Permissions
 - Permission allowlists **MUST NOT** grant a `Bash(task *)` wildcard; exact targets (for example `Bash(task lint)`) are granted individually, as governed by `spec/claude/permission-allowlist/`. This spec restates the rule's *location* only, not its content
 
 ## Acceptance Criteria
 - [ ] `spec/project/taskfile/` exists with `en.md` (canonical) and `de.md` (translation) and is listed in `spec/README.md`
-- [ ] The canonical target vocabulary (`install`, `lint`, `test`, `check`, `docs`, `release`) is defined in exactly one place—this spec—and the namespacing, passthrough, and local↔CI-parity conventions are stated here
+- [ ] The canonical target vocabulary (`setup`, `install`, `lint`, `test`, `typecheck`, `check`, `docs`, `release`) is defined in exactly one place—this spec—and the namespacing, passthrough, and local↔CI-parity conventions are stated here
 - [ ] `nolte/taskfiles` is named as the authoritative shared-Taskfile collection, with a SHOULD to consume portfolio-common automation from it, a MUST to pin the include source via a single ref variable, and the `TASK_X_REMOTE_TASKFILES` experiment-flag requirement recorded
 - [ ] The spec delegates rather than duplicates: target *semantics* point to `quality-gate`, file presence and venv wiring to `project-structure`, `worktree:*` helpers to `parallel-working-copies`, and the `task *` wildcard ban to `permission-allowlist`
 - [ ] `spec/project/project-structure/`, `spec/project/quality-gate/`, and `spec/portfolio/tech-stack/` carry a back-reference to this spec as the owner of the Taskfile mechanics

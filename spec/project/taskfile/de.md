@@ -25,7 +25,7 @@ Diese Spec konsolidiert die portfolio-weite Taskfile-*Mechanik* an einem Ort: da
 ## Anforderungen
 
 ### Kanonisches Target-Vokabular
-- Ein Repository **MUSS** jede Capability, die es besitzt, unter dem portfolio-kanonischen Target-Namen bereitstellen statt unter einem Synonym: `task install` (Abhängigkeiten / Environment), `task lint` (Linter), `task test` (Tests oder, für Prompt-only-Repositories, die Frontmatter-/Contract-Validierung), `task check` (das aggregierte Quality-Gate), `task docs` (Doku-Build) und `task release` (Release-Schnitt, wo das Repository Artefakte veröffentlicht)
+- Ein Repository **MUSS** jede Capability, die es besitzt, unter dem portfolio-kanonischen Target-Namen bereitstellen statt unter einem Synonym: `task setup` (einmaliges Onboarding—Hooks installieren und das projektlokale Environment bootstrappen), `task install` (Abhängigkeiten in diesem Environment installieren oder aktualisieren), `task lint` (Linter), `task test` (Tests oder, für Prompt-only-Repositories, die Frontmatter-/Contract-Validierung), `task typecheck` (Typprüfungen, wo die Sprache sie hat), `task check` (das aggregierte Quality-Gate), `task docs` (Doku-Build) und `task release` (Release-Schnitt, wo das Repository Artefakte veröffentlicht)
 - Eine Capability, die das Repository nicht besitzt (zum Beispiel `task release` in einer Bibliothek, die keine Release-Artefakte ausliefert), ist schlicht abwesend; die Regel pinnt den *Namen*, wenn die Capability existiert, nicht die Existenz jeder Capability
 - Diese Spec pinnt ausschließlich die kanonischen *Namen*. Die Zusammensetzung, das Verhalten und die Ausgabe jedes Targets bleiben bei der Spec, die die Capability besitzt — `task check` bei `spec/project/quality-gate/`, der Doku-Build bei `spec/project/mkdocs-structure/` und so weiter. Ein Repository **DARF NICHT** jene Semantik in den Begriffen dieser Spec neu benennen; es **MUSS** der besitzenden Spec folgen
 
@@ -45,14 +45,14 @@ Diese Spec konsolidiert die portfolio-weite Taskfile-*Mechanik* an einem Ort: da
 - Repository-spezifische Automatisierung, die nicht über das Portfolio geteilt wird, **DARF** ein lokales Target in der eigenen `Taskfile.yml` des Repositorys bleiben; die geteilte Sammlung ist für portfolio-gemeinsames Verhalten, nicht für einmalige, repo-spezifische Arbeit
 
 ### Lokal- und CI-Parität
-- CI **MUSS** Lint, Test und Docs über dieselben Taskfile-Targets aufrufen, die eine beitragende Person lokal ausführt (zum Beispiel `task --yes lint`, `task --yes test`, `task --yes docs`), statt diese Schritte inline neu zu implementieren, sodass das lokale Gate und das CI-Gate nicht auseinanderdriften können. Das aggregierte `task check` ist der lokale Komfort-Einstiegspunkt; CI **DARF** jede Kategorie als separaten required-Check behalten, während es weiterhin dieselben Pro-Kategorie-Targets aufruft
+- CI **MUSS** Lint, Test und Docs über dieselben Taskfile-Targets aufrufen, die eine beitragende Person lokal ausführt (zum Beispiel `task --yes lint`, `task --yes test`, `task --yes docs`), statt diese Schritte inline neu zu implementieren, sodass das lokale Gate und das CI-Gate nicht auseinanderdriften können. Das aggregierte `task check` (dessen Zusammensetzung von `spec/project/quality-gate/` geregelt wird) ist der lokale Komfort-Einstiegspunkt; CI **DARF** jede Kategorie als separaten required-Check behalten, während es weiterhin dieselben Pro-Kategorie-Targets aufruft
 
 ### Berechtigungen
 - Permission-Allowlists **DÜRFEN NICHT** ein `Bash(task *)`-Wildcard gewähren; exakte Targets (zum Beispiel `Bash(task lint)`) werden einzeln gewährt, wie durch `spec/claude/permission-allowlist/` geregelt. Diese Spec benennt nur den *Ort* der Regel neu, nicht ihren Inhalt
 
 ## Akzeptanzkriterien
 - [ ] `spec/project/taskfile/` existiert mit `en.md` (canonical) und `de.md` (Übersetzung) und ist in `spec/README.md` gelistet
-- [ ] Das kanonische Target-Vokabular (`install`, `lint`, `test`, `check`, `docs`, `release`) ist an genau einem Ort definiert — dieser Spec — und die Konventionen für Namespacing, Durchreichung und Lokal↔CI-Parität sind hier benannt
+- [ ] Das kanonische Target-Vokabular (`setup`, `install`, `lint`, `test`, `typecheck`, `check`, `docs`, `release`) ist an genau einem Ort definiert — dieser Spec — und die Konventionen für Namespacing, Durchreichung und Lokal↔CI-Parität sind hier benannt
 - [ ] `nolte/taskfiles` ist als autoritative Sammlung geteilter Taskfiles benannt, mit einem SOLLTE, portfolio-gemeinsame Automatisierung daraus zu konsumieren, einem MUSS, die Include-Quelle über eine einzige Ref-Variable zu pinnen, und der festgehaltenen `TASK_X_REMOTE_TASKFILES`-Experiment-Flag-Anforderung
 - [ ] Die Spec delegiert statt zu duplizieren: Target-*Semantik* verweist auf `quality-gate`, Datei-Existenz und venv-Verdrahtung auf `project-structure`, `worktree:*`-Helfer auf `parallel-working-copies` und das `task *`-Wildcard-Verbot auf `permission-allowlist`
 - [ ] `spec/project/project-structure/`, `spec/project/quality-gate/` und `spec/portfolio/tech-stack/` tragen eine Rück-Referenz auf diese Spec als Eigner der Taskfile-Mechanik
