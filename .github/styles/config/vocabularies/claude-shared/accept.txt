@@ -20,3 +20,5 @@ Kustomize
 linearization
 regenerable
 subtree
+subpath
+misconfiguration
