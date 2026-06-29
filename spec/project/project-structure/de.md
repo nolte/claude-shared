@@ -37,7 +37,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 
 ### CI und Automatisierung
 - **MUSS [MUST]** ein `.github/`-Verzeichnis mit Workflows unter `.github/workflows/` enthalten
-- **MUSS [MUST]** eine `Taskfile.yml` (oder `Taskfile.yaml`) im Repository-Wurzelverzeichnis enthalten, die reproduzierbare Kommandos mindestens für Test-, Lint- und Docs-Ziele bereitstellt
+- **MUSS [MUST]** eine `Taskfile.yml` (oder `Taskfile.yaml`) im Repository-Wurzelverzeichnis enthalten, die reproduzierbare Kommandos mindestens für Test-, Lint- und Docs-Ziele bereitstellt; das kanonische Target-Vokabular der Datei, das Namespacing, die Argument-Durchreichung und die Konventionen für geteilte Taskfiles werden von `spec/project/taskfile/` geregelt und diese Spec listet sie nie selbst auf, sondern fordert nur die Existenz der Datei
 - **SOLLTE [SHOULD]** das aggregierte Quality-Gate unter dem portfolio-kanonischen Target-Namen `task check` bereitstellen, damit der Aufruf des Gates portfolioübergreifend identisch bleibt; die Zusammensetzung und der Output-Vertrag des Gates werden von `spec/project/quality-gate/` geregelt und diese Spec listet sie nie selbst auf, sondern fixiert nur den kanonischen Target-Namen
 - **SOLLTE [SHOULD]** ein `setup`-Target bereitstellen, das die projektlokale Umgebung erzeugt und Hooks/Abhängigkeiten installiert, damit das Onboarding nach dem ersten Klonen ein einziges Kommando ist
 - **SOLLTE [SHOULD]** Lint-, Test- und Docs-Kommandos in der CI über Taskfile-Targets aufrufen, damit lokales Verhalten und CI-Verhalten identisch bleiben

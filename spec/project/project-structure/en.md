@@ -37,7 +37,7 @@ Projects in this ecosystem share a recognizable shape on disk: a Python (or mult
 
 ### CI and automation
 - **MUST** include a `.github/` directory with workflows under `.github/workflows/`
-- **MUST** include a `Taskfile.yml` (or `Taskfile.yaml`) at the repository root exposing reproducible commands for at least test, lint, and documentation targets
+- **MUST** include a `Taskfile.yml` (or `Taskfile.yaml`) at the repository root exposing reproducible commands for at least test, lint, and documentation targets; the file's canonical target vocabulary, namespacing, argument passthrough, and shared-Taskfile conventions are governed by `spec/project/taskfile/` and this spec never restates them, only requires the file's presence
 - **SHOULD** expose the aggregate quality gate under the portfolio-canonical target name `task check`, so the gate's invocation stays identical across the portfolio; the gate's composition and output contract are governed by `spec/project/quality-gate/` and this spec never restates them, only pins the canonical target name
 - **SHOULD** expose a `setup` target that creates the project-local environment and installs hooks/deps, so first-clone onboarding is one command
 - **SHOULD** invoke lint, test, and docs commands from CI through Taskfile targets so local and CI behavior stay identical
