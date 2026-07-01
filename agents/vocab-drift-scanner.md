@@ -5,7 +5,7 @@ distribution: plugin
 tools: Read, Bash, Glob, Grep
 model: sonnet
 tags: [audit]
-phase: review
+phase: quality
 summary: "Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release."
 summary_de: "Nur-Lese-Diff der lokalen Vale-Vocab-Dateien gegen den gepinnten Upstream-Release nolte/vale-style."
 use_when:

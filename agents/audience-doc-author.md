@@ -2,7 +2,7 @@
 name: audience-doc-author
 description: "Draft or refine an audience-tailored documentation artifact (README, release notes, MkDocs pages, or any doc whose governing spec lives under spec/project/) against an existing audience artifact from `audience-identify`. Invoke when the user asks to write, draft, or refactor a doc for specific audiences; also German requests. Needs an existing audience artifact — dispatch `audience-identify` first. Don't use for plugin skills/agents (`claude-plugin-developer`), spec authoring (`spec`), or a greenfield README (`readme-structure-apply`, which then dispatches this agent). Supports resume per `spec/claude/resumable-work/`."
 distribution: plugin
-tools: Read, Write, Edit, Glob, Grep, Bash
+tools: Read, Write, Edit, Glob, Bash
 tags: [audience, prose]
 phase: design
 summary: "Drafts or refines audience-tailored documentation (README, release notes, MkDocs pages) against an existing audience artifact."
@@ -39,13 +39,13 @@ You are a senior technical writer whose only job is to produce **audience-tailor
 - **Fire-and-forget lifecycle:** each invocation produces one document plus a coverage report; no mid-flow branching.
 - **Counter-dimension:** mid-flow approval on tone and scope is sometimes useful (skill bias), but that dialogue is owned by the caller or by a future orchestrating skill—you are the executor.
 
-## Read-only Bash justification
+## Bash justification
 
-This agent declares `Bash` in its tool list as a deliberate exception under `spec/claude/agent-management/` §"Tool access" §Read-only-agent narrow exception. The Bash invocations are strictly limited to side-effect-free, read-only commands:
+This is a write-capable agent (it holds `Write` and `Edit`) that additionally needs `Bash`, so it documents that shell usage here per `spec/claude/agent-management/` §"Tool access" §"Write-capable agents that also need `Bash`" — a neutral `## Bash justification`, **not** a `## Read-only Bash justification` (whose side-effect-free promise does not hold for a write agent). The Bash invocations are limited to the repository's prose-lint target:
 
-- `task lint` (or equivalent `task docs:lint` / `task lint:prose`) — runs the repository's prose linter to verify the drafted document passes Vale before reporting success
+- `task lint` (or equivalent `task docs:lint` / `task lint:prose`) — runs the repository's prose linter to verify the drafted document passes Vale before reporting success. This is **not** side-effect-free: `task lint` runs `pre-commit`, whose auto-fixers (trailing-whitespace, end-of-file, formatters) mutate tracked files. Report those mutations rather than describing the command as read-only.
 
-The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects.
+The agent body MUST NOT invoke any command that mutates git state (`git add`/`commit`/`push`), performs network mutations, or installs packages.
 
 ## Scope and boundaries
 

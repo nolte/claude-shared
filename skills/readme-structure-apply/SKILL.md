@@ -27,7 +27,7 @@ resumable: true
 
 Operationalises `spec/project/readme-structure/<canonical_language>.md` inside the current repository. The skill audits the repository-root `README.md` against the spec's section skeleton, the consumer-first ordering rule, and the length / link / language requirements; with explicit per-item user consent it scaffolds a fresh README or patches a single finding at a time on an existing one.
 
-When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent requirements that don't appear in the spec.
+When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from `${CLAUDE_PLUGIN_ROOT}/spec/project/readme-structure/<canonical_language>.md`). Never invent requirements that don't appear in the spec.
 
 ## Why this is a skill, not an agent
 
@@ -127,6 +127,12 @@ The skill returns to the user, in this order:
 - **Patch operations must preserve all existing frontmatter and prose**: when adding a missing section or reordering sections in an existing `README.md`, every other section's content must be carried over verbatim — a patch that truncates or omits existing prose is a data-loss bug, not a style issue.
 - **Uncommitted README changes block the operation**: if `README.md` has unstaged or staged-but-uncommitted changes when the skill starts, it stops and asks the user to stash, commit, or abort — never overwrite a dirty file; confirm the precondition check runs before any `Write` or `Edit`.
 - **CI badge URLs must resolve to actual workflow files**: the skill verifies badge URLs against `.github/workflows/`; a badge pointing at a renamed or deleted workflow silently becomes a broken badge in the rendered README — always re-check workflow file existence after any badge addition.
+
+## Examples
+
+- Read `examples/01-audit-conformance-report.md` when running a read-only `audit` and you need the per-spec-area findings table (consumer-first ordering, ≤200-line budget, relative-`LICENSE` link, delegated Vale check).
+- Read `examples/02-scaffold-fresh-repo.md` when `README.md` is absent and you must `scaffold` the greenfield skeleton: H1 from a marker file, one badge per merge-gating workflow, tagline `# TODO` stubs, the six sections in order, body prose delegated.
+- Read `examples/03-patch-add-related-repos.md` when `README.md` is present and you must additively `patch` findings one approval at a time (add a missing section, fix section order) while preserving all existing prose verbatim.
 
 ## Resumability
 

@@ -1,13 +1,13 @@
 ---
 name: docs-audience-tracks-apply
-description: "Audits a repository against the canonical-language file under spec/project/docs-audience-tracks/ and, with per-item user approval, scaffolds or patches the documentation-tracks layer: per-page `track:` frontmatter across the per-language docs/ tree, required user-docs and developer-docs content blocks, and the audience-to-track mapping in the project's audience artefact. Three operations: `audit` (read-only conformance report), `migrate` (greenfield), `patch` (additive fixes one finding at a time). Invoke when the user asks to apply, audit, migrate, or patch documentation tracks against the spec; also handles equivalent German-language requests. Don't use for the MkDocs skeleton (`mkdocs-structure-apply`), audience artefact (`audience-identify`), page content (`audience-doc-author`), drift detection (`docs-freshness-checker`), or prose mechanics (`prose-vale-curator`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Audits a repository against the canonical-language file under spec/project/docs-audience-tracks/ and, with per-item user approval, scaffolds or patches the documentation-tracks layer: per-page `track:` frontmatter across the per-language docs/ tree, required user-docs and developer-docs content blocks, and the audience-to-track mapping in the project's audience artefact. Three operations: `audit` (read-only conformance report), `migrate` (brownfield), `patch` (additive fixes one finding at a time). Invoke when the user asks to apply, audit, migrate, or patch documentation tracks against the spec; also handles equivalent German-language requests. Don't use for the MkDocs skeleton (`mkdocs-structure-apply`), audience artefact (`audience-identify`), page content (`audience-doc-author`), drift detection (`docs-freshness-checker`), or prose mechanics (`prose-vale-curator`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
 summary: "Wires up per-page track frontmatter and audience-to-track mapping in MkDocs docs/; audit, migrate, or patch operations."
 summary_de: "Verdrahtet Per-Page-Track-Frontmatter und Audience-zu-Track-Mapping in MkDocs docs/; Audit-, Migrate- oder Patch-Operationen."
 use_when:
   - "you want to audit a repo for docs-audience-tracks conformance"
-  - "you want to greenfield-migrate a docs/ tree onto the audience-tracks layer"
+  - "you want to migrate an existing docs/ tree onto the audience-tracks layer (brownfield)"
   - "you want to additively patch one finding at a time"
 dont_use_when:
   - situation: "You need to scaffold the MkDocs skeleton itself"
@@ -27,9 +27,9 @@ resumable: true
 
 # Documentation Audience Tracks Apply
 
-Operationalises `spec/project/docs-audience-tracks/<canonical_language>.md` inside the current repository. The skill audits whether every page under `docs/<lang>/` carries the `track:` frontmatter, whether each track ships the content blocks the spec mandates, and whether the project's audience artefact maps each audience to a track. With explicit per-item user consent it migrates a greenfield documentation tree onto the contract or patches a single finding at a time.
+Operationalises `spec/project/docs-audience-tracks/<canonical_language>.md` inside the current repository. The skill audits whether every page under `docs/<lang>/` carries the `track:` frontmatter, whether each track ships the content blocks the spec mandates, and whether the project's audience artefact maps each audience to a track. With explicit per-item user consent it migrates an existing (brownfield) documentation tree onto the contract or patches a single finding at a time.
 
-When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent requirements that don't appear in the spec.
+When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from `${CLAUDE_PLUGIN_ROOT}/spec/project/docs-audience-tracks/<canonical_language>.md`). Never invent requirements that don't appear in the spec.
 
 ## Why this is a skill, not an agent
 
@@ -85,7 +85,7 @@ Walk through the spec's Acceptance Criteria one item at a time, classify each fi
 
 Audit is read-only — never autofix during audit.
 
-### 2. `migrate` (greenfield: most pages lack `track:`)
+### 2. `migrate` (brownfield: most pages lack `track:`)
 
 For each step below, confirm with the user per file or per group before writing.
 
@@ -123,6 +123,12 @@ The skill returns to the user, in this order:
 - **Dirty `docs/` tree blocks the operation**: if uncommitted changes exist in `docs/<lang>/`, the audience artefact, or `mkdocs.yml` when the skill starts, it stops and asks — never assume the tree is clean; always run the precondition check (step 6) before proposing any edits.
 - **Frontmatter race condition when the audience artefact is extended mid-flow**: if the audience artefact gains a new audience entry while a `migrate` is in progress, pages already proposed with the old mapping may be misclassified — re-read the artefact at the start of each per-page approval step when the session spans multiple turns.
 - **Multilingual symmetry is mandatory**: adding `track:` to a page in the canonical language tree without patching every counterpart in every other language tree configured in `spec/.spec-config.yml` is a spec violation (Hard rule 8); always enumerate all configured languages before writing the first page.
+
+## Examples
+
+- Read `examples/01-audit-track-coverage.md` when running a read-only `audit` and classifying each Acceptance-Criteria item as pass / missing / drift across a bilingual docs tree.
+- Read `examples/02-migrate-brownfield-tree.md` when running `migrate` on a brownfield tree where most pages lack `track:` frontmatter, under per-file approval and symmetric across languages.
+- Read `examples/03-patch-audience-track-mismatch.md` when running `patch` on a single audience-track mismatch finding and offering the two resolutions before writing.
 
 ## Resumability
 

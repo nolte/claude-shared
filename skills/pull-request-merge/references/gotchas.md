@@ -1,0 +1,8 @@
+# Gotchas
+
+Non-obvious environment facts for `pull-request-merge` (the load-bearing versions also live in the Hard rules and the numbered steps).
+
+- **`automerge` label must be spelled exactly**: the label name `automerge` is case-sensitive and must already exist in the repository's label set; applying a near-miss (`auto-merge`, `AutoMerge`) creates a new label silently or fails — always verify the label exists via the `gh label list` call in step 1 before applying it.
+- **`automerge.yaml` `SUCCESS` does not mean the merge happened**: `pascalgn/automerge-action` exits 0 even on `mergeResult: 'merge_failed'`; always confirm `state == MERGED` via `gh pr view` (step 7a) and, when the PR stays `OPEN` with green checks, audit the workflow logs for `merge_failed` (step 7b) before declaring completion.
+- **Required checks list is read from `.github/settings.yml`, not from the GitHub UI**: the UI shows all checks; the spec gates only on checks declared as required in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension) — use that file as the authoritative source when deciding whether all required checks are green.
+- **`Closes #N` autolinks don't fire on `develop` merges**: GitHub's reference-closing keywords (`Closes`, `Fixes`, `Resolves`) fire only when the merge lands on the repository's default branch. Under this branching model the default is `main`, but PRs target `develop`; referenced issues therefore stay `OPEN` after a `develop` squash-merge and close only when `release-cd-refresh-master.yml` fast-forwards `main`. Step 8 closes them manually with operator confirmation rather than waiting for the promotion.

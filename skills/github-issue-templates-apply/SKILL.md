@@ -1,6 +1,6 @@
 ---
 name: github-issue-templates-apply
-description: Apply the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`.
+description: Applies the canonical-language file under spec/project/github-issue-templates/ to a target repository — detect the project type, resolve or dispatch the audience artefact, derive triage questions, and scaffold or update .github/ISSUE_TEMPLATE/ (bug_report.yml, feature_request.yml, config.yml, plus project-type-specific extras) as GitHub Issue Forms. Invoke when the user asks to "generate issue templates for this repo", "scaffold GitHub issue forms", "create bug and feature templates", "set up .github/ISSUE_TEMPLATE", "apply the github-issue-templates spec", or equivalent German-language requests. Don't use for pull-request templates (that's `pull-request-workflow`), CODEOWNERS / SECURITY.md, discussion templates, or generic .github/ scaffolding (that's `project-structure-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: design
 summary: "Scaffolds spec-conformant GitHub Issue Forms (.github/ISSUE_TEMPLATE/) tailored to project type and audience."
@@ -46,7 +46,7 @@ Detect the user's language and respond in it. Generated `.github/ISSUE_TEMPLATE/
 Before doing anything:
 
 - Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
-- Locate `spec/project/github-issue-templates/` — either in the target repo or, when absent, via the `nolte-shared` plugin install path. If neither is reachable, stop and ask the user which spec source to use; do not improvise requirements.
+- Locate `spec/project/github-issue-templates/` — either in the target repo or, when absent, at `${CLAUDE_PLUGIN_ROOT}/spec/project/github-issue-templates/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin). If neither is reachable, stop and ask the user which spec source to use; do not improvise requirements.
 - Check for uncommitted changes under `.github/ISSUE_TEMPLATE/`. If dirty, report and ask whether to stash, commit, or abort — never overwrite uncommitted work.
 - Verify that `pull-request-workflow` is in scope for PR-template authoring and that this skill stays away from `.github/pull_request_template.md`, `CODEOWNERS`, `SECURITY.md`, `SUPPORT.md`, and `.github/DISCUSSION_TEMPLATE/`.
 

@@ -4,7 +4,7 @@ Status: draft
 
 ## Context
 
-AI image generators (Gemini, DALL-E, Midjourney, and similar—this list is illustrative of the pattern, not an exhaustive or normative set) frequently emit PNGs where the checkerboard motif meant to signal "transparent" is actually painted into the RGB channels with `alpha=255` everywhere. Vectorisers like vtracer treat that motif as legitimate image content, so the resulting SVG carries a full-canvas checkerboard behind the motif. Until this spec lands, the `agents/png-to-transparent-svg.md` agent (heritage from earlier image-utility work) operationalises the cleanup-and-vectorise loop without an authorising spec—a `spec-drift-audit` finding (D-3 in the cross-cutting coverage matrix). This spec closes the drift by formalising what the agent does, what it doesn't, and how a downstream consumer judges its output.
+AI image generators (Gemini, DALL-E, Midjourney, and similar—this list is illustrative of the pattern, not an exhaustive or normative set) frequently emit PNGs where the checkerboard motif meant to signal "transparent" is actually painted into the RGB channels with `alpha=255` everywhere. Vectorisers like vtracer treat that motif as legitimate image content, so the resulting SVG carries a full-canvas checkerboard behind the motif. Until this spec lands, the `plugins/nolte-media/agents/png-to-transparent-svg.md` agent (heritage from earlier image-utility work) operationalises the cleanup-and-vectorise loop without an authorising spec—a `spec-drift-audit` finding (D-3 in the cross-cutting coverage matrix). This spec closes the drift by formalising what the agent does, what it doesn't, and how a downstream consumer judges its output.
 
 ## Goals
 
@@ -40,7 +40,7 @@ AI image generators (Gemini, DALL-E, Midjourney, and similar—this list is illu
 - [ ] An invocation against a PNG that already carries real alpha transparency either skips the cleanup step (vectorising directly) or refuses with a clear message—and never silently rewrites alpha values
 - [ ] The per-file summary contains pixel-removal counts that allow the caller to flag detector outliers (for example, a threshold below 5 % triggers caller review)
 - [ ] An invocation against a PNG the detector can't classify (mixed corner colours, partial alpha) warns and skips that file in the per-file report rather than guessing a threshold or blocking the batch on a question
-- [ ] The agent at `agents/png-to-transparent-svg.md` cites this spec in its `description` or body so the link is discoverable
+- [ ] The agent at `plugins/nolte-media/agents/png-to-transparent-svg.md` cites this spec in its `description` or body so the link is discoverable
 - [ ] The agent's tools list is the minimum needed (`Read`, `Bash`, `Glob`)—no `Write` (image-file writes happen inside the Python helpers invoked through `Bash`), no `Edit`, no network tools
 
 ## Open Questions

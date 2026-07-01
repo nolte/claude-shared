@@ -4,7 +4,7 @@ description: "Senior UX engineer that improves the usability of already-implemen
 distribution: plugin
 tools: Read, Write, Edit, Bash, Glob, Grep
 phase: build
-tags: [frontend, ui, review]
+tags: [frontend, ui]
 model: sonnet
 summary: "Senior UX engineer that improves the usability of existing frontend code in place against the project's own detected stack and documented UI conventions."
 summary_de: "Senior-UX-Engineer, der die Usability bestehenden Frontend-Codes direkt verbessert — gegen den selbst erkannten Stack und die dokumentierten UI-Konventionen des Projekts."
@@ -18,10 +18,13 @@ dont_use_when:
     alternative: webview-ui-expert
   - situation: "you want to run the lint/typecheck gate without changing code"
     alternative: quality-gate-enforcer
+  - situation: "you want the spec-driven web-UI optimization loop (single-rule audit then per-item patch against the webview-ui-optimization spec)"
+    alternative: webview-ui-optimize
 see_also:
   - fullstack-developer
   - webview-ui-expert
   - quality-gate-enforcer
+  - webview-ui-optimize
 ---
 
 # Frontend Usability Optimizer

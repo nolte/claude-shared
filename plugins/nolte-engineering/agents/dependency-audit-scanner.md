@@ -2,10 +2,10 @@
 name: dependency-audit-scanner
 description: "Read-only scanner dispatched by the `dependency-audit` skill: detects project type from lockfiles, runs the matching auditor (pip-audit, npm/pnpm/yarn audit, govulncheck, or cargo audit), and returns a structured per-package CVE drift inventory with severity and fixed-in version. Severity triage and follow-up actions stay with the skill."
 distribution: plugin
-tools: Read, Bash
+tools: Read, Bash, Glob, Grep
 model: sonnet
-tags: [audit]
-phase: review
+tags: [audit, dependency]
+phase: quality
 summary: "Read-only CVE scanner per project type (pip-audit, npm audit, govulncheck, cargo audit); returns structured drift inventory."
 summary_de: "Nur-Lese-CVE-Scanner pro Projekttyp (pip-audit, npm audit, govulncheck, cargo audit); liefert strukturiertes Drift-Inventar."
 use_when:
@@ -14,8 +14,11 @@ use_when:
 dont_use_when:
   - situation: "You want severity triage and follow-up actions"
     alternative: dependency-audit
+  - situation: "You want a license / SBOM inventory rather than a CVE scan"
+    alternative: license-check-scanner
 see_also:
   - dependency-audit
+  - license-check-scanner
 ---
 
 # Dependency Audit Scanner
@@ -43,7 +46,10 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `govulncheck ./...` — report Go vulnerabilities, no mutations
 - `cargo audit` — report Rust vulnerabilities, no mutations
 - `task --list-all 2>/dev/null | grep -E '^\* (audit|deps:audit|security:audit)'` — read Taskfile target list, no side effects
-- `find . -maxdepth 3 -name "*.toml" -o -name "*.lock" -o -name "package.json" ...` — discover manifests, no mutations
+
+Manifest and lockfile discovery is done with the dedicated `Glob` / `Grep` tools (preferred over a `Bash` `find` per `spec/claude/agent-management/` §Tool access "prefer dedicated tools"), not by shelling out.
+
+**Read-only cache-fetch exception.** `govulncheck` and `cargo audit` fetch their vulnerability databases (the Go vulnerability DB and the RustSec advisory-db) into the tool's own cache on first run; `pip-audit` likewise reads the PyPI advisory feed. These are read-only advisory-data fetches into a tool cache — no project dependency is installed, no working-tree file is written, and no lockfile is mutated — and are the only network reads this agent performs. They are an allowed exception under the same read-only envelope; anything that would install a project dependency or mutate the tree stays forbidden.
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes outside a temporary file needed for `uv export` input (which is treated as a transient, read-only scan artefact and not committed).
 
@@ -130,7 +136,7 @@ Before scanning:
 
 ### Phase 1: Detect project kind
 
-Search the repo root and common subroots up to two levels deep:
+Discover manifests and lockfiles with `Glob` / `Grep` (not a `Bash` `find`), searching the repo root and common subroots up to two levels deep:
 
 | Indicator | Kind | Auditor |
 |---|---|---|

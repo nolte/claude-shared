@@ -99,6 +99,9 @@ When the spec disagrees with this skill, the spec wins. Propose a skill update r
 - Read `examples/01-stalled-pr-with-red-checks.md` when triaging an audit finding for a PR whose only driver is a red required check (the `workflow-health-triage` exclusivity routing applies).
 - Read `examples/02-release-blocker-detection.md` when an open PR carries a `release-blocker` label or its head SHA appears in an open `release-drafter` draft (the `release_blocking` matrix-axis detection MUSTs apply).
 - Read `examples/03-roster-gap-3-recurrence.md` when a finding class without a matching specialist crosses the 3-recurrence threshold from the prior audit artefact (the "author a new specialist" escalation user-confirmation gate applies).
+- Read `examples/04-security-relevance-lifts-to-critical.md` when a finding touches a security-sensitive surface and the `security_relevance` axis lifts its severity to Critical.
+- Read `examples/05-cross-repo-blocking-lifts-to-critical.md` when a `project/roadmap.md` / `project/sprints/*.md` cross-reference makes an item block another repo and the `cross_repo_blocking` axis lifts it to Critical.
+- Read `examples/06-zero-findings-run.md` when the in-flight surface is empty and the run still writes a valid zero-findings report rather than short-circuiting.
 
 ## Gotchas
 

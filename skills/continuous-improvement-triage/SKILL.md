@@ -37,21 +37,16 @@ Implements `spec/project/continuous-improvement/` §Specialist dispatch, §Portf
 - **Quarterly cadence requires standing-session instructions.** The specialist-coverage review surfaces decisions that accumulate across multiple prompts; a skill's persistent instruction context fits this naturally.
 - Counter-dimension considered: a narrow agent could handle the classification step in isolation and gain context-window protection, but every downstream lane (dispatch, gap-closure decision, PR annotation) is interactive—keeping the whole flow in one skill is simpler than splitting at the classification boundary.
 
-## German trigger phrases
+## User-language policy
 
-- „CI-Findings triagen"
-- „Quarterly Specialist-Coverage Review durchführen"
-- „Findings an Spezialisten dispatchen"
-- „Portfolio-Verbesserungsopportunität klassifizieren"
-- „Dreifach-Wiederholung prüfen, ob ein neuer Spezialist gebraucht wird"
-- „Triage-Zyklus abschließen"
+Detect the user's language and respond in it (the description's trigger list already covers the equivalent German-language requests). All `git`, `gh`, and `Agent(subagent_type=…)` invocations stay English so the audit trail (PR titles, dispatch fields, specialist names) is grep-able portfolio-wide.
 
 ## Preconditions
 
 Before any operation:
 
 - Confirm the working directory is a git repository and `gh auth status` reports authenticated.
-- Confirm `spec/project/continuous-improvement/en.md` exists in the current project. If missing, stop and report—without it the classifications are ad-hoc; this skill is the spec's implementer, not its replacement.
+- Confirm `spec/project/continuous-improvement/<canonical_language>.md` is reachable — in the current project or, when absent there, at `${CLAUDE_PLUGIN_ROOT}/spec/project/continuous-improvement/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin). If neither is reachable, stop and report—without it the classifications are ad-hoc; this skill is the spec's implementer, not its replacement.
 - Read `templates/triage.template.md` to understand the triage artifact format before creating or updating a triage file.
 
 A triage artifact must exist for `update` and `close`; if none exists, start with `audit` first.

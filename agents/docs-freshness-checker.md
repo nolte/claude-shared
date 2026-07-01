@@ -37,11 +37,9 @@ Permitted `Bash` invocations (exhaustive list — anything outside this set is a
 - `git rev-parse HEAD` — read the audited commit SHA recorded in the report's **Scope** block (Precondition step 2, required by `spec/project/docs-freshness/` §Audit artifact).
 - `git log -1 --format=%ai -- <file>` — read the last-commit ISO timestamp of a documentation file (DE/EN parity step).
 - `git log -1 --format=%cs -- <file>` — read the last-commit short date of a markdown file or its derived-Mermaid-source (Mermaid drift step).
-- `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_links.py" --offline …` (or `python3 scripts/check_links.py --offline …` inside the source repo) — the deterministic link checker that owns internal-link-rot and cross-tree-reference-rot detection per `spec/project/link-validation/`. The `--offline` slice never touches the network and never edits files (it may write only its own uncommitted cache; pass `--no-cache` to suppress it). This agent delegates those two drift categories to the checker rather than re-detecting them by hand.
+- `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_links.py" --offline …` (or `python3 scripts/check_links.py --offline …` inside the source repo) — the deterministic link checker that owns internal-link-rot and cross-tree-reference-rot detection per `spec/project/link-validation/`. The `--offline` slice never touches the network and never edits any file. This agent delegates those two drift categories to the checker rather than re-detecting them by hand.
 
-The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add` / `git commit` / `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation. The body's hard rules reinforce this: the agent is read-only by stated responsibility, and the `Bash` declaration exists exclusively to read git metadata that the audit fundamentally depends on. Without this exception, the agent's core function (date-based parity and drift detection) couldn't ship.
-
-The `agent-review` checks honour this exception when a `## Read-only Bash justification` heading is present in the body and downgrade the would-be `Critical` finding to `Info` for this agent.
+The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add` / `git commit` / `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation. The `Bash` declaration exists exclusively to read git metadata the date-based parity and drift checks depend on. `agent-review` honours this exception when the `## Read-only Bash justification` heading is present and downgrades the would-be `Critical` to `Info`.
 
 ## Why this is an agent, not a skill
 
@@ -288,7 +286,7 @@ For every `*.md` under `docs/<lang>/` that lives **outside** an `_`-prefixed sni
 1. Parse the page's YAML frontmatter (a `Grep` for `^---` plus offset Read of the matching block).
 2. **Track-frontmatter drift** findings:
    - Missing `track:` key → warning.
-   - `track:` value isn't `user-docs`, `developer-docs`, or an extension value declared by a project-type-specific spec the repository has opted into (detected by the same marker-file mechanism `mkdocs-structure` uses, for example `.claude-plugin/plugin.json` activates extension values from `spec/claude/skill-agent-catalog/` if it ever introduces any) → critical.
+   - `track:` value isn't `user-docs`, `developer-docs`, or an opted-in extension value (detected via the same marker-file mechanism `mkdocs-structure` uses) → critical.
 3. **Content-mode drift** findings:
    - Missing `content_mode:` key → warning.
    - `content_mode:` value isn't one of `tutorial`, `how-to`, `reference`, `explanation`, `troubleshooting`, `glossary`, `meta`, or an opted-in extension value → critical.
@@ -305,7 +303,7 @@ Per `spec/project/docs-audience-tracks/` §Audience-to-track mapping:
 
 1. Load the project's audience artefact (`AUDIENCES.md` at the bounded-context root, the README-section or ADR alternative per `spec/project/audience-identification/`). If the artefact carries `track:` fields on individual audience entries, build an `audience-id → track` map.
 2. If the artefact is missing or carries no per-audience `track` fields, fall back to the portfolio-baseline default: `user` → `user-docs`; `contributor` / `operator` / `release-manager` → `developer-docs`.
-3. For every page that declares both `audience:` and `track:` frontmatter **and whose `content_mode:` is not `meta`**: when one of the `audience:` IDs maps to a different track than the page's `track:` value, emit an `Audience-track mismatch` finding (warning) so a Reviewer can resolve the contradiction deliberately. **Skip `content_mode: meta` pages** — per `spec/project/docs-audience-tracks/` §Per-page contract, meta pages (the Home page introducing both tracks, per-section index pages, generator-emitted nav stubs, tag indexes, ADRs that motivate the track split) are exempt from the audience-to-track no-contradiction rule, because `content_mode: meta` already signals that the page routes readers across tracks rather than serving one.
+3. For every page that declares both `audience:` and `track:` frontmatter **and whose `content_mode:` is not `meta`**: when one of the `audience:` IDs maps to a different track than the page's `track:` value, emit an `Audience-track mismatch` finding (warning) so a Reviewer can resolve the contradiction deliberately. **Skip `content_mode: meta` pages** — per `spec/project/docs-audience-tracks/` §Per-page contract they route readers across tracks rather than serving one, so they're exempt from the audience-to-track no-contradiction rule.
 
 ### Phase 7: Stale markers
 
@@ -331,7 +329,7 @@ Cap per-category listings at 15 entries and summarise the remainder with a count
 
 ## Hard rules
 
-- **Never** modify, create, or delete any file. This agent is read-only; the absence of `Edit`, `Write`, and `MultiEdit` in the `tools` field enforces that at the harness level, and the system prompt enforces it at the authoring level.
+- **Never** modify, create, or delete any file. This agent is read-only; the absence of `Edit`, `Write`, and `NotebookEdit` in the `tools` field enforces that at the harness level, and the system prompt enforces it at the authoring level.
 - **Never** follow symlinks out of the repo root. The audit stays inside the working tree.
 - **Never** hit the network. External links are out of scope — they require different tradeoffs (rate limits, flakiness, false positives from geoblocking).
 - **Never** run `mkdocs build` or any other build step. The MkDocs build is the authoritative rendering check; this agent is a drift audit that runs before or alongside it.

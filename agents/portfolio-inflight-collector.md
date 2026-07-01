@@ -5,7 +5,7 @@ distribution: plugin
 tools: [Bash]
 model: sonnet
 tags: [audit]
-phase: review
+phase: quality
 summary: "Read-only in-flight data collector: open issues, PRs (incl. drafts), branches without PR, unresolved review threads + Discussions across nolte/*."
 summary_de: "Nur-Lese-In-Flight-Datensammler: offene Issues, PRs (inkl. Drafts), Branches ohne PR, ungelöste Review-Threads + Discussions über nolte/*."
 use_when:
@@ -205,7 +205,7 @@ The calling skill **MAY** additionally specify:
 - Whether to fetch open `release-drafter` drafts alongside the PR collection (default: yes, since the skill needs them for the `release_blocking` matrix-axis evaluation).
 - A `triage window` value in days for the open-Discussions "no maintainer reply in the last triage window" check (default: 30 days, matching §Stalling thresholds for Discussions; the agent records the raw `daysSinceLastMaintainerReply` so the skill can apply any window the operator confirmed).
 
-If none is supplied and the calling context is ambiguous, default to the resolve-fresh path with all four data sources and `release-drafter` drafts on; note this in the `Notes` field of the aggregated overview.
+If none is supplied and the calling context is ambiguous, default to the resolve-fresh path with all four data sources and `release-drafter` drafts on, and record that default choice in the aggregated overview.
 
 ## Preconditions
 
@@ -224,19 +224,19 @@ Before collecting:
 
 3. **Fetch optional `project/inflight.yml`** for each in-scope repository via `gh api repos/nolte/<repo>/contents/project/inflight.yml --jq .content | base64 -d`. On HTTP 404, record `inflight.yml override present: no`. On success, pass through the verbatim YAML to the calling skill in the `inflight.yml raw content` field; do not interpret the override values.
 
-4. **For each in-scope Portfolio-Member repository, collect the four primary data sources** (skipping any source marked `inflight: skip-<source>` for that repository):
+4. **For each in-scope Portfolio-Member repository, collect the four primary data sources** (skipping any source marked `inflight: skip-<source>` for that repository). Each source uses the corresponding read-only command already enumerated in §Read-only Bash justification — don't restate the full flag strings here; the filters and derivations below are the load-bearing part:
 
-   a. **Open issues (`issue`):** Run `gh issue list --repo nolte/<repo> --state open --json number,title,createdAt,updatedAt,labels,assignees,comments --limit 500`. Filter out issues carrying any of `triage-done`, `wontfix`, `parking-lot` labels per §Data sources. For each remaining issue, derive `daysOpen`, `daysSinceLastActivity`, and `hasMaintainerCommentLast30d` from the JSON. Assign identifier `<repo>/issue/<number>`.
+   a. **Open issues (`issue`):** via the `gh issue list` command. Filter out issues carrying any of `triage-done`, `wontfix`, `parking-lot` labels per §Data sources. For each remaining issue, derive `daysOpen`, `daysSinceLastActivity`, and `hasMaintainerCommentLast30d` from the JSON. Assign identifier `<repo>/issue/<number>`.
 
-   b. **Open pull requests (`pr`):** Run `gh pr list --repo nolte/<repo> --state open --json number,title,isDraft,createdAt,updatedAt,headRefOid,headRefName,baseRefName,mergeable,statusCheckRollup,reviewDecision,labels,latestReviews --limit 500`. Include drafts. For each PR, derive `daysOpen`, `daysSinceLastReviewerActivity`, `requiredChecksState` from the `statusCheckRollup` field, and the `mergeable` flag (the skill uses `CONFLICTING` to set the conflicts-against-`develop` driver). Assign identifier `<repo>/pr/<number>`.
+   b. **Open pull requests (`pr`):** via the `gh pr list` command (drafts included). For each PR, derive `daysOpen`, `daysSinceLastReviewerActivity`, `requiredChecksState` from the `statusCheckRollup` field, and the `mergeable` flag (the skill uses `CONFLICTING` to set the conflicts-against-`develop` driver). Assign identifier `<repo>/pr/<number>`.
 
-   c. **Branches without active PR to develop (`branch`):** Run `gh api repos/nolte/<repo> --jq .default_branch` to learn the default branch name, then `gh api repos/nolte/<repo>/branches --paginate --jq '.[] | {name, lastPushAt: .commit.commit.committer.date}'` to enumerate all branches. Cross-reference against the open-PR list collected in step 4b: filter out branches that (i) are the default branch, (ii) have an open PR with `baseRefName == "develop"` and `headRefName == <branch-name>`, or (iii) are the `gh-pages` deploy branch. For each remaining branch, derive `daysSinceLastPush`. Assign identifier `<repo>/branch/<branch-name>`.
+   c. **Branches without active PR to develop (`branch`):** via the `gh api .../default_branch` and `gh api .../branches` commands. Cross-reference against the open-PR list collected in step 4b: filter out branches that (i) are the default branch, (ii) have an open PR with `baseRefName == "develop"` and `headRefName == <branch-name>`, or (iii) are the `gh-pages` deploy branch. For each remaining branch, derive `daysSinceLastPush`. Assign identifier `<repo>/branch/<branch-name>`.
 
-   d. **Unresolved review-comment threads (`review-thread`):** For each open PR collected in step 4b, run `gh api graphql` against the `pullRequest.reviewThreads` connection to fetch each thread's `isResolved` flag, last comment timestamp, and last comment author. Filter out resolved threads. For each unresolved thread, derive `daysSinceLastComment` and `hasMaintainerReply`. Assign identifier `<repo>/review-thread/<pr-number>:<thread-id>`.
+   d. **Unresolved review-comment threads (`review-thread`):** for each open PR collected in step 4b, use the `gh api graphql` `pullRequest.reviewThreads` query to fetch each thread's `isResolved` flag, last comment timestamp, and last comment author. Filter out resolved threads. For each unresolved thread, derive `daysSinceLastComment` and `hasMaintainerReply`. Assign identifier `<repo>/review-thread/<pr-number>:<thread-id>`.
 
-   e. **Open Discussions (`discussion`):** Run the GraphQL query enumerated in §Read-only Bash justification to fetch open Discussions, each with its most recent comment's author and timestamp. For each Discussion, derive `daysOpen` and `daysSinceLastMaintainerReply` (treat "no maintainer in the comment chain" as `"never"`). Assign identifier `<repo>/discussion/<number>`.
+   e. **Open Discussions (`discussion`):** via the Discussions GraphQL query. For each Discussion, derive `daysOpen` and `daysSinceLastMaintainerReply` (treat "no maintainer in the comment chain" as `"never"`). Assign identifier `<repo>/discussion/<number>`.
 
-   f. **Open release-drafter drafts (on request):** When the calling skill enabled release-drafter draft collection (the default), run `gh api repos/nolte/<repo>/releases --jq 'map(select(.draft == true))'`. For each draft, extract `name` and parse the draft body for referenced commit SHAs (`/[0-9a-f]{7,40}/` matches that resolve against the repo's commits). The skill uses these to evaluate `release_blocking` per §Classification and prioritisation; the agent only collects.
+   f. **Open release-drafter drafts (on request):** when the calling skill enabled release-drafter draft collection (the default), via the `gh api .../releases` draft filter. For each draft, extract `name` and parse the draft body for referenced commit SHAs that resolve against the repo's commits. The skill uses these to evaluate `release_blocking` per §Classification and prioritisation; the agent only collects.
 
    g. **Reduce each collected item** to the structured per-source summary described in §Output shape. **Discard raw issue / PR / branch / review-comment / discussion bodies once the summary is extracted.** Never include verbatim source bodies in the returned report.
 

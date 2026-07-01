@@ -55,10 +55,11 @@ Return a single report in this exact structure. The structured findings block at
 ```yaml
 performed_at: <ISO date>
 agent_version: roadmap-coherence-reviewer@<git-sha-or-short; "unknown" when the caller doesn't supply one>
+# severity uses the canonical Title-Case scale from spec/claude/review-plan/ §Severity scale
 findings:
   - kind: <shape-drift | id-violation | cross-ref-missing | detail-invariant | lifecycle-drift | clean>
     target: <R-<n> or roadmap.md:<line>; "n/a" for a clean run>
-    severity: <critical | warning | info>
+    severity: <Critical | Warning | Info>
     resolution: <fix-field <field>=<value> | dispatch-skill <skill-name>:<operation> | retarget-sprint <n|null> | promote-detail | proceed>
     evidence: <one-line quote, path:line, or schema reference>
     rationale: <one short sentence naming the spec rule or cross-document inconsistency>
@@ -87,7 +88,7 @@ findings:
 - A `clean` finding is still a recorded audit pass; no further action required.
 ````
 
-When the audit surfaces zero drift of any other kind, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
+When the audit surfaces zero drift of any other kind, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: Info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
 
 ## Inputs
 
@@ -139,9 +140,9 @@ Cap the scan at the full feature corpus (`project/features/` is hobby-scale per 
 
 ## Severity assignment
 
-- `critical`: violations that would fail a `roadmap-plan` write or a `roadmap-refine` lint exit — empty `outcomes`, non-resolving `O-<n>`, ID collision, `target_sprint` on a non-existent sprint, `proposed → done` history.
-- `warning`: violations that don't fail a write but break the spec's stated invariant — `detail-invariant` breaks, `target_sprint` on a `closed`/`cancelled` sprint, `active` item without backing feature, `mvp: true` outside the mission's `relevant_outcomes`.
-- `info`: cosmetic or "noted for review" findings — phase-heading ordering hints, `id` monotonicity claims that require git-log access the agent doesn't have, deferred-scope notes.
+- `Critical`: violations that would fail a `roadmap-plan` write or a `roadmap-refine` lint exit — empty `outcomes`, non-resolving `O-<n>`, ID collision, `target_sprint` on a non-existent sprint, `proposed → done` history.
+- `Warning`: violations that don't fail a write but break the spec's stated invariant — `detail-invariant` breaks, `target_sprint` on a `closed`/`cancelled` sprint, `active` item without backing feature, `mvp: true` outside the mission's `relevant_outcomes`.
+- `Info`: cosmetic or "noted for review" findings — phase-heading ordering hints, `id` monotonicity claims that require git-log access the agent doesn't have, deferred-scope notes.
 
 ## Hard rules
 
@@ -152,5 +153,5 @@ Cap the scan at the full feature corpus (`project/features/` is hobby-scale per 
 - **Never** call the `Skill` tool or dispatch sibling agents — subagents can't spawn further subagents (per `spec/claude/agent-management/` §"Subagent boundaries (Claude Code runtime)").
 - **Never** flag a `proposed` item without a `target_sprint` as a `detail-invariant` violation regardless of its `detail` value; the invariant applies only when `target_sprint` resolves to the current or next sprint.
 - **Always** ground every finding in a concrete reference: an item `id`, a `path:line`, or a spec section. Findings without a reference aren't findings.
-- **Always** classify the run as `clean` (`target: n/a`, `severity: info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
+- **Always** classify the run as `clean` (`target: n/a`, `severity: Info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
 - **Always** reread `spec/project/roadmap/<canonical_language>.md` and `spec/project/mission/<canonical_language>.md` before producing the report; when this agent disagrees with the spec, the spec wins and the agent's behaviour is updated, not the spec.

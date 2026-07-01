@@ -45,7 +45,7 @@ Before doing anything:
 
 ## Operations
 
-Operation 1 resolves the open draft and Operation 1b detects the project type (the index into `release-automation` §Version-bearing files, shared with Skill A per the spec's §Skill split and shared shape MUST). Operations 2 to 4 then form a Plan-validate-execute cycle: Operation 2 walks every pre-publish gate, Operation 3 surfaces the validated state for explicit operator confirmation, and Operation 4 dispatches `release-publish.yml`. Operation 5 verifies the dispatch landed and reports the run URL without polling to completion (unless wait mode is opted in).
+Operation 1 resolves the open draft and Operation 2 detects the project type (the index into `release-automation` §Version-bearing files, shared with Skill A per the spec's §Skill split and shared shape MUST). Operations 3 to 5 then form a Plan-validate-execute cycle: Operation 3 walks every pre-publish gate, Operation 4 surfaces the validated state for explicit operator confirmation, and Operation 5 dispatches `release-publish.yml`. Operation 6 verifies the dispatch landed and reports the run URL without polling to completion (unless wait mode is opted in).
 
 ### 1. Resolve the open draft
 
@@ -53,7 +53,7 @@ Operation 1 resolves the open draft and Operation 1b detects the project type (t
 - Filter to drafts whose `targetCommitish` equals the default branch.
 - **Refuse and report** when zero drafts match (operator should run `release-drafter.yml` first) or when more than one matches without an explicit `--tag` argument from the operator (no "newest wins" heuristic, per `release-automation` §Operational contract).
 
-### 1b. Detect project type
+### 2. Detect project type
 
 Per `spec/project/release-skill-layer/` §Skill split and shared shape (MUST), both release-layer skills follow the **same** six project-type detection signals used by `github-issue-templates-apply` and by `release-notes-curate` (Skill A). Walk these six signals in order and stop at the first match. Read the files via the standard read tools — never via filename heuristics alone:
 
@@ -68,32 +68,32 @@ When `.github/release-skill-layer.yml` declares an explicit `project_type:` valu
 
 When no signal matches, stop and ask the operator to declare the project type manually. Never proceed with a generic fallback.
 
-The detected type is the index into `release-automation` §Version-bearing files: gate 2b uses it to select the correct default version-bearing-file rows for this repo (Claude Code plugin, Python package, Node.js package, HACS integration, etc.) before reading and comparing each file.
+The detected type is the index into `release-automation` §Version-bearing files: the "Version-bearing files aligned" gate uses it to select the correct default version-bearing-file rows for this repo (Claude Code plugin, Python package, Node.js package, HACS integration, etc.) before reading and comparing each file.
 
-### 2. Validate every pre-publish gate
+### 3. Validate every pre-publish gate
 
 Walk these gates in order. **The skill MUST NOT proceed past a failed gate**; surface the gate name, the failure detail, and the remediation path.
 
-#### 2a. Draft tag reachable from develop
+#### 1. Draft tag reachable from develop
 
 - `git fetch origin develop`.
 - Resolve the draft's `targetCommitish` SHA.
 - Run `git merge-base --is-ancestor <target-sha> origin/develop`.
 - **Failure**: the draft is stale relative to `develop`. Remediation: re-run `release-drafter.yml` to refresh the draft target.
 
-#### 2b. Version-bearing files aligned
+#### 2. Version-bearing files aligned
 
-- Read the version-bearing file list per `release-automation` §Version-bearing files: select the default-table rows for the project type detected in step 1b, or use the override at `.github/release-automation.yml` when the repo declares one.
+- Read the version-bearing file list per `release-automation` §Version-bearing files: select the default-table rows for the project type detected in step 2, or use the override at `.github/release-automation.yml` when the repo declares one.
 - For every declared file, read the value at the `target-sha` (`git show <target-sha>:<path>` plus the spec's selector) and compare against the target tag under the file's value transform (typically "strip leading `v`" if the existing convention omits it).
 - **Failure**: any file whose value does not equal the target tag under transform. Remediation: open a `chore(release): <tag>` PR (fallback path) or wait for the workflow-driven primary path to land its alignment commit.
 
-#### 2c. Alignment commit present
+#### 3. Alignment commit present
 
 - Identify the most recent commit on `develop` that touched any version-bearing file: `git log -1 --pretty=%s --follow -- <path>`.
 - Verify the subject prefix starts with `chore(release): <tag>` (the prefix-match accepts the `(#N)` suffix GitHub appends on squash-merge, per `release-automation` §Pre-publish verification).
-- **Failure**: no `chore(release): <tag>` commit on the path. Remediation: same as 2b.
+- **Failure**: no `chore(release): <tag>` commit on the path. Remediation: same as the "Version-bearing files aligned" gate.
 
-#### 2d. Required status checks SUCCESS on develop tip
+#### 4. Required status checks SUCCESS on develop tip
 
 - Read the required check list from `.github/settings.yml` (`branches[name=develop].protection.required_status_checks.contexts`).
 - For the develop tip SHA, query `gh api repos/<owner>/<repo>/commits/<sha>/check-runs` and confirm every required context appears with `conclusion=success`.
@@ -101,12 +101,12 @@ Walk these gates in order. **The skill MUST NOT proceed past a failed gate**; su
   - red checks → route to `workflow-health` triage (classify as `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`); never retry the dispatch blindly.
   - pending checks → stop and ask the operator to wait, or opt in to wait mode (see "Wait mode" below).
 
-#### 2e. Workflow file present
+#### 5. Workflow file present
 
 - Confirm `.github/workflows/release-publish.yml` exists in the repo.
 - **Failure**: the operator should adopt `release-automation` first; this skill stops and reports.
 
-### 3. Disclose the validated state and confirm
+### 4. Disclose the validated state and confirm
 
 Before dispatch, surface to the operator as a single block:
 
@@ -118,7 +118,7 @@ Before dispatch, surface to the operator as a single block:
 
 Block the dispatch until the operator confirms.
 
-### 4. Dispatch
+### 5. Dispatch
 
 On confirmation:
 
@@ -126,7 +126,7 @@ On confirmation:
 - When the operator opts in to `--dry-run`, dispatch with `-f dry_run=true` so the workflow validates without flipping `draft: false`.
 - **Never** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id>` with `draft=false`, or any other body that flips the draft state from this skill. The workflow is the only path.
 
-### 5. Verify the dispatch landed
+### 6. Verify the dispatch landed
 
 Immediately after `gh workflow run` returns:
 

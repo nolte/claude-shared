@@ -11,7 +11,7 @@ description: >-
   `gitGraph` usage, non-English labels, and derived-source drift. Invoke
   when the user asks to "wire up Mermaid", "audit Mermaid setup", "draft a
   flowchart", or equivalent German-language requests. Don't use for general
-  MkDocs scaffolding (use `project-structure-apply`), spec authoring (use
+  MkDocs scaffolding (use `mkdocs-structure-apply`), spec authoring (use
   `spec`), the docs-freshness audit (use `docs-freshness-checker`), or
   non-Mermaid diagrams. Supports resume on re-invocation per
   `spec/claude/resumable-work/`.
@@ -47,7 +47,7 @@ Audits and repairs a repository so its MkDocs Mermaid setup, its existing diagra
 - **Mid-flow type selection is load-bearing**: choosing between `flowchart` and `C4Component` for a portfolio map, or between `sequenceDiagram` and `flowchart` for a runtime workflow, is an interactive judgment call against the spec's catalog; that gating fits skill form, not an autonomous agent contract.
 - Counter-dimension considered: a narrower agent could specialize on parsing source artifacts (for example `pyproject.toml` → flowchart) and gain on context-window protection, but the high-impact part is the type-and-placement dialogue, not the parsing; skill wins.
 
-When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path, or from the `nolte/claude-shared` repository). Never invent requirements that aren't in the spec.
+When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from `${CLAUDE_PLUGIN_ROOT}/spec/project/mermaid-diagrams/<canonical_language>.md`). Never invent requirements that aren't in the spec.
 
 ## User-language policy
 
@@ -63,7 +63,7 @@ Before doing anything:
 
 - Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
 - Locate `spec/project/mermaid-diagrams/`. The spec lives either in the target repo or in the nolte-shared plugin; if neither is reachable, stop and ask the user which spec source to use.
-- Locate `mkdocs.yml` at the repository root. If it's missing, stop and route the user to `project-structure-apply`. Setting up MkDocs from scratch is that skill's job, not this one.
+- Locate `mkdocs.yml` at the repository root. If it's missing, stop and route the user to `mkdocs-structure-apply`. Setting up the MkDocs skeleton from scratch is that skill's job, not this one.
 - Read `mkdocs.yml`'s `docs_dir` (default `docs/`) and any configured language trees; the audit's scope is everything under that path.
 - Check for uncommitted changes in `mkdocs.yml`, `docs/`, and `docs/requirements.txt`. If the tree is dirty there, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
 
@@ -126,6 +126,8 @@ Add a single Mermaid diagram to a markdown file under `docs_dir`. Two source mod
 
 ### 4. Diagram audit
 
+This read-only scan duplicates the audit the `mermaid-diagram-reviewer` agent performs. Prefer dispatching that agent for the detection pass (hybrid pattern per `spec/claude/skill-vs-agent/`) and stay in this skill to render its findings and drive the per-fix approvals, rather than re-inlining the scan below; the inline procedure is the fallback when the agent isn't reachable.
+
 Scan every markdown file under `docs_dir`, locate Mermaid fences (` ```mermaid `), and report findings classified by category:
 
 - **Missing source marker**: no `<!-- diagram-source: ... -->` comment on the line directly above the fence.
@@ -172,7 +174,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** emit node labels, edge labels, or identifiers in any language other than English inside a Mermaid fence—not even when the hosting markdown is in `docs/de/`.
 - **Never** write a Mermaid block without a preceding `<!-- diagram-source: user-described | derived—<pointer> -->` comment.
 - **Never** perform silent writes. Every file change requires explicit per-item user confirmation; every audit finding is presented to the user before any fix is written.
-- **Never** take on `project-structure-apply` work. If the audit reveals that `mkdocs.yml` is missing entirely, the docs tree is absent, or `theme.name` is something other than `material`, stop and route the user to `project-structure-apply`—don't silently scaffold those out of scope.
+- **Never** take on `mkdocs-structure-apply` work. If the audit reveals that `mkdocs.yml` is missing entirely, the docs tree is absent, or `theme.name` is something other than `material`, stop and route the user to `mkdocs-structure-apply`—don't silently scaffold those out of scope.
 - **Never** modify the spec while applying it. If a real-world need conflicts with `spec/project/mermaid-diagrams/`, report it and ask the user to update the spec via the `nolte-shared:spec` skill before proceeding.
 - **Never** edit a Mermaid block in another markdown file as a side-effect of the current operation. Each operation touches one block (or one config file) at a time, with its own approval.
 - **Always** apply a Mermaid block insertion or audit fix symmetrically to every counterpart page across every language tree configured in `spec/.spec-config.yml`'s `languages` list, per `spec/project/docs-multilingual-authoring/` §Authoring protocol. Mermaid sources are language-neutral (the Hard rule above already mandates English-only labels inside the fence), so the same block text is inserted at the same position in every language counterpart in the same operation; the surrounding markdown chrome that introduces or annotates the block is localised per language.

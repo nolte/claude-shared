@@ -35,7 +35,7 @@ Audits and repairs a repository so it matches the Repository Project Structure s
 - **Orchestrates a sibling skill for the docs skeleton.** The MkDocs site skeleton is not scaffolded inline as a flat stub; it is delegated mid-flow to `mkdocs-structure-apply` (scaffold operation) so a freshly bootstrapped repository lands the full `mkdocs-structure`-conformant shape (per-language tree, navigation, plugin baseline) from the start. Per `spec/claude/skill-vs-agent/` §"Hybrid pattern", calling another skill from a skill in the same thread is allowed and the orchestrator stays a skill, so both the per-item approval surface and the dispatch live in the main conversation.
 - Counter-dimension considered: a narrower agent could specialize on file-template generation and gain on context-window protection, but the high-impact part is the per-item approval dialogue, not the boilerplate; skill wins.
 
-When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path, or from the `nolte/claude-shared` repository). Never invent requirements that aren't in the spec.
+When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin at `${CLAUDE_PLUGIN_ROOT}/spec/project/project-structure/<canonical_language>.md` (or, failing that, the `nolte/claude-shared` repository). Never invent requirements that aren't in the spec.
 
 ## User-language policy
 
@@ -46,7 +46,7 @@ Detect the user's language and respond in it. Generated file contents (`.github/
 Before doing anything:
 
 - Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
-- Locate a `spec/project/project-structure/` folder—either in the target repo or via the nolte-shared plugin. If neither is reachable, stop and ask the user which spec source to use.
+- Locate the project-structure spec—either at `spec/project/project-structure/<canonical_language>.md` in the target repo or, as a fallback, at `${CLAUDE_PLUGIN_ROOT}/spec/project/project-structure/<canonical_language>.md` shipped by the nolte-shared plugin. If neither is reachable, stop and ask the user which spec source to use.
 - Check for uncommitted changes in paths the skill may touch (`.github/`, `docs/`, `spec/`, `tests/`, root configs). If the tree is dirty in those paths, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
 
 ## Operations

@@ -2,7 +2,7 @@
 name: link-rot-scanner
 description: "Audits the repository's documentation for dead links — internal relative links, intra-page anchors, cross-tree references into spec/ src/ scripts/, and external http(s) URLs probed over the network. Wraps the deterministic scripts/check_links.py and triages findings into a severity-sorted report, classifying network flakiness (timeouts, transient 5xx, rate-limits) as warning rather than rot. Read-only. Invoke when the user asks to audit the links, find dead external links, or check docs for broken URLs before a release; also German requests. Don't use for the offline CI gate (call scripts/check_links.py --offline), the broader docs-freshness audit (`docs-freshness-checker`), or Vale linting (`prose-vale-curator`)."
 distribution: plugin
-tools: Read, Glob, Grep, Bash
+tools: Read, Bash
 model: sonnet
 tags: [audit, quality-gate]
 phase: quality
@@ -36,11 +36,11 @@ This agent declares `Bash` in `tools` even though it is a read-only audit agent 
 
 Permitted `Bash` invocations (exhaustive list — anything outside this set is a hard violation of this section):
 
-- `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_links.py" …` (or `python3 scripts/check_links.py …` when run inside this source repo) — the deterministic link checker. It is itself read-only with respect to documentation: it never edits, creates, or deletes an in-scope file. Its external link probes are HTTP `HEAD`/`GET` requests, which are side-effect-free reads of the open web — no mutating network calls. It may write only its own uncommitted response cache under `.audits/link-validation/.cache/`; pass `--no-cache` to suppress even that.
+- `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_links.py" …` (or `python3 scripts/check_links.py …` when run inside this source repo) — the deterministic link checker. It is itself read-only: it never edits, creates, or deletes any file, and writes nothing to disk — its slug and TTL caches are in-memory only. Its external link probes are HTTP `HEAD`/`GET` requests, which are side-effect-free reads of the open web — no mutating network calls.
 - `git rev-parse --is-inside-work-tree` — single Precondition check.
 - `git rev-parse HEAD` — read the audited commit SHA recorded in the report's **Scope** block (required by `spec/project/link-validation/` §Audit artifact).
 
-The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add` / `git commit` / `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes outside the checker's own cache, no mutating network calls (no `curl -X POST`, no archival-service submissions). Unlike `docs-freshness-checker`, this agent **does** reach the network — but only through the checker's read-only HTTP probes, because confirming an external link is alive is the agent's core function and cannot be done offline.
+The agent **MUST NOT** invoke any other shell command via `Bash` — no `git add` / `git commit` / `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes at all, no mutating network calls (no `curl -X POST`, no archival-service submissions). Unlike `docs-freshness-checker`, this agent **does** reach the network — but only through the checker's read-only HTTP probes, because confirming an external link is alive is the agent's core function and cannot be done offline.
 
 The `agent-review` checks honour this exception when a `## Read-only Bash justification` heading is present in the body and downgrade the would-be `Critical` finding to `Info` for this agent.
 
@@ -48,7 +48,7 @@ The `agent-review` checks honour this exception when a `## Read-only Bash justif
 
 - **Self-contained input and output:** the caller hands over the repo root (usually just "this repo") and expects a structured link-rot report. No mid-flow user approval is required.
 - **Context-window protection:** probing every external URL across the docs tree and resolving every internal link produces a large volume of intermediate I/O; surfacing it rawly in the main conversation would flood it. The agent returns only the triaged report.
-- **Tool restriction is deliberate and load-bearing:** read-only tools only (`Read`, `Glob`, `Grep`, `Bash`) — no `Edit`, `Write`, or `NotebookEdit`. A link auditor that can silently rewrite a URL is the wrong shape.
+- **Tool restriction is deliberate and load-bearing:** read-only tools only (`Read`, `Bash`) — no `Edit`, `Write`, or `NotebookEdit`. A link auditor that can silently rewrite a URL is the wrong shape.
 - **Specialisation sharpens output:** the triage judgement — distinguishing reproducing `404`/DNS-failure rot from transient timeouts, rate-limits, and bot-hostile `403`s — measurably improves the signal-to-noise of the report over dumping raw checker output inline.
 - **Model pin (`sonnet`):** the work is running a deterministic tool and triaging structured JSON against a fixed severity table. Sonnet is sufficient and substantially cheaper than Opus for this shape; the pin is justified per `spec/claude/agent-management/` §Model selection.
 - **Counter-dimension:** the caller often wants to fix findings in the same conversation (skill bias), but fixing happens after the report is in hand; the audit itself doesn't need interactivity.
@@ -65,7 +65,7 @@ You **do**:
 
 You **don't**:
 
-- Edit, rewrite, or create any file (other than the checker's own uncommitted cache).
+- Edit, rewrite, or create any file.
 - Fix a dead link, strip a tracking parameter, or substitute a replacement/archived URL — that's the caller's call based on the report.
 - Re-detect internal-link rot or cross-tree reference rot by hand — `scripts/check_links.py` is the single owner of that detection (`spec/project/link-validation/` §Delimitation). `docs-freshness-checker` likewise delegates those two categories here.
 - Run Vale or any prose linter — `prose-vale-curator` owns that.

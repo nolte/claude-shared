@@ -5,7 +5,7 @@ distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet
 tags: [review, audit]
-phase: design
+phase: quality
 summary: "Read-only deep cross-file review of one named frontend target across Performance, Security, A11y, i18n, UX."
 summary_de: "Nur-Lese-Cross-File-Deep-Review eines benannten Frontend-Ziels über Performance, Security, Barrierefreiheit, i18n, UX."
 use_when:
@@ -24,6 +24,8 @@ see_also:
   - webview-ui-optimize
   - dependency-audit
   - prose-vale-curator
+  - frontend-usability-optimizer
+  - i18n-completeness-checker
 ---
 
 # Web-View UI Expert
@@ -85,8 +87,8 @@ If the input is ambiguous or empty, ask once for a target and stop. Don't invent
 Before reviewing:
 
 1. Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
-2. Locate `spec/frontend/webview-ui-optimization/<canonical_language>.md`. If it's missing from the working tree, fall back to the copy shipped by the `nolte-shared` plugin; if neither is reachable, stop with a clear message.
-3. Locate `.audits/webview-ui-expert/`. Read each domain note (`performance.md`, `security.md`, `accessibility.md`, `i18n.md`, `ux.md`) lazily as the domain becomes relevant to the target; don't load all five up-front.
+2. Locate `spec/frontend/webview-ui-optimization/<canonical_language>.md` in the working tree. If it's missing, fall back to the copy this plugin bundles with the orchestrating skill at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/spec/webview-ui-optimization.md` (this agent ships in `nolte-engineering`, which carries no top-level `spec/` tree). If neither is reachable, stop with a clear message.
+3. Locate the domain research notes. Prefer a repo-local `.audits/webview-ui-expert/` set; when absent (the usual case in a consumer repo), fall back to the copies this plugin bundles at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md`. Read each note (`performance.md`, `security.md`, `accessibility.md`, `i18n.md`, `ux.md`) lazily as the domain becomes relevant; don't load all five up-front. If neither the repo-local nor the bundled notes are reachable, still review against the spec rules and emit findings — mark each affected finding's research anchor as "research notes unavailable" rather than suppressing the finding; a missing research note **never** blocks a spec-grounded finding.
 4. Resolve the target:
    - If a path, confirm it exists (or that its glob expands to ≥ 1 file).
    - If a feature description, scope it via grep / glob heuristics (auth → `src/**/auth*`, `src/**/login*`, `src/routes/auth/*`; chart → `**/*Chart*`, `recharts` importers). Surface the scoping rules to the user inside the report.

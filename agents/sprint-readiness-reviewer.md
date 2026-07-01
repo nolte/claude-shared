@@ -63,10 +63,11 @@ Return a single report in this exact structure. The verdict line and the structu
 performed_at: <ISO date>
 agent_version: sprint-readiness-reviewer@<git-sha-or-short; "unknown" when the caller doesn't supply one>
 verdict: <go | no-go>
+# severity uses the canonical Title-Case scale from spec/claude/review-plan/ §Severity scale
 findings:
   - kind: <value-statement-drift | missing-verifier | feature-not-ready | cross-ref-missing | lifecycle-violation | clean>
     target: <sprint frontmatter field, feature ID, or roadmap ID; "n/a" for a clean run>
-    severity: <critical | warning | info>
+    severity: <Critical | Warning | Info>
     resolution: <dispatch-skill <skill-name>:<operation> | fix-field <field>=<value> | complete-feature <feature-id> | add-verifier <feature-id>:acceptance-<n> | proceed>
     evidence: <one-line quote, path:line, or schema reference>
     rationale: <one short sentence citing the spec rule or cross-document gap>
@@ -95,7 +96,7 @@ findings:
 - A `clean` finding plus a **GO** verdict signals `sprint-execute` is safe to invoke; no further action required.
 ````
 
-When the audit surfaces zero drift, the verdict is `GO`, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
+When the audit surfaces zero drift, the verdict is `GO`, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: Info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
 
 ## Inputs
 
@@ -124,36 +125,36 @@ The audit walks three surfaces; each has a bounded scan rule so the agent stays 
 ### Surface 1 — sprint file self-coherence
 
 - Read the target sprint file end-to-end. Verify the frontmatter carries the nine declared keys in the declared order: `number`, `status`, `started`, `ended`, `value_statement`, `artifact_ref`, `last_commit`, `roadmap_items`, `features` (per `spec/project/sprint/` §"Frontmatter schema"). Missing keys or wrong order are `lifecycle-violation` findings.
-- Verify `status` is one of `planned`, `active`, `review`, `closed`, `cancelled`. The readiness gate is intended for `planned` sprints; running on `active` / `review` / `closed` / `cancelled` is itself a `lifecycle-violation` finding (`severity: warning`) — the verdict can still be **GO** when the only issue is "you asked the readiness reviewer about a sprint that's past the gate," but the operator deserves the explicit note.
-- Verify `value_statement` is non-empty and doesn't begin with or centre on an operator-internal verb. Apply the heuristic from `spec/project/sprint/` §"Value-delivery contract": EN tokens `refactor`, `restructure`, `set up`, `configure`, `clean up`, `migrate`, `bump`, `update dependency`; DE tokens `refaktorieren`, `umbauen`, `einrichten`, `konfigurieren`, `aufräumen`, `migrieren`, `aktualisieren`, `Abhängigkeit erneuern`. Hits are `value-statement-drift` findings (`severity: critical`). The heuristic is not a complete classifier — record a note in **Discussion** that the operator may override with a one-line rationale in `## Goal` per the spec.
-- Verify the body carries the level-2 sections required by `spec/project/sprint/` §"Body sections" in the declared order; missing or out-of-order sections are `lifecycle-violation` findings (`severity: warning`).
+- Verify `status` is one of `planned`, `active`, `review`, `closed`, `cancelled`. The readiness gate is intended for `planned` sprints; running on `active` / `review` / `closed` / `cancelled` is itself a `lifecycle-violation` finding (`severity: Warning`) — the verdict can still be **GO** when the only issue is "you asked the readiness reviewer about a sprint that's past the gate," but the operator deserves the explicit note.
+- Verify `value_statement` is non-empty and doesn't begin with or centre on an operator-internal verb. Apply the heuristic from `spec/project/sprint/` §"Value-delivery contract": EN tokens `refactor`, `restructure`, `set up`, `configure`, `clean up`, `migrate`, `bump`, `update dependency`; DE tokens `refaktorieren`, `umbauen`, `einrichten`, `konfigurieren`, `aufräumen`, `migrieren`, `aktualisieren`, `Abhängigkeit erneuern`. Hits are `value-statement-drift` findings (`severity: Critical`). The heuristic is not a complete classifier — record a note in **Discussion** that the operator may override with a one-line rationale in `## Goal` per the spec.
+- Verify the body carries the level-2 sections required by `spec/project/sprint/` §"Body sections" in the declared order; missing or out-of-order sections are `lifecycle-violation` findings (`severity: Warning`).
 
 ### Surface 2 — cross-document references (`roadmap.md`, `goals.md`, `mission.md`)
 
-- For every entry in `roadmap_items`, verify a matching `R-<n>` exists in `project/roadmap.md`. Non-resolving entries are `cross-ref-missing` findings (`severity: critical`).
-- When `project/mission.md` exists, read its `relevant_outcomes`. For each `roadmap_items` entry, read the corresponding item's `outcomes` list from `project/roadmap.md` and verify at least one outcome touches `relevant_outcomes`. A sprint whose roadmap items don't touch any mission-relevant outcome is a `cross-ref-missing` finding (`severity: warning`) — the sprint may still be GO when it's a hardening sprint, but the operator deserves the explicit note in `## Goal`.
-- For every entry in `features`, verify a matching feature file exists under `project/features/` whose frontmatter `id` resolves. Non-resolving entries are `cross-ref-missing` findings (`severity: critical`).
+- For every entry in `roadmap_items`, verify a matching `R-<n>` exists in `project/roadmap.md`. Non-resolving entries are `cross-ref-missing` findings (`severity: Critical`).
+- When `project/mission.md` exists, read its `relevant_outcomes`. For each `roadmap_items` entry, read the corresponding item's `outcomes` list from `project/roadmap.md` and verify at least one outcome touches `relevant_outcomes`. A sprint whose roadmap items don't touch any mission-relevant outcome is a `cross-ref-missing` finding (`severity: Warning`) — the sprint may still be GO when it's a hardening sprint, but the operator deserves the explicit note in `## Goal`.
+- For every entry in `features`, verify a matching feature file exists under `project/features/` whose frontmatter `id` resolves. Non-resolving entries are `cross-ref-missing` findings (`severity: Critical`).
 
 ### Surface 3 — features readiness
 
 For every feature in `features` (capped at the sprint's actual list; hobby-scale features per the spec), read the feature file and verify:
 
-- **Status:** feature is `status: ready` (the readiness gate intent). A feature in `status: draft` is a `feature-not-ready` finding (`severity: critical`) — `sprint-plan` already enforces `ready` at planning time, but a feature can drop back to `draft` between planning and the readiness audit if the operator revised it; the gate catches that. A feature in `status: in_progress` or `done` is a `lifecycle-violation` finding (`severity: warning`) — the sprint shouldn't be promoted via this gate if features have already advanced; the operator likely meant to call `sprint-execute` directly.
-- **Acceptance criteria:** the feature has at least one entry under `## Acceptance criteria` (the count and shape are governed by `spec/project/feature/`). Missing or empty section is a `feature-not-ready` finding (`severity: critical`).
-- **Test hooks:** the feature's `## Test hooks` section is non-empty (per `spec/project/feature/`). A missing or empty section is a `feature-not-ready` finding (`severity: warning`) — the operator may run a sprint without test hooks, but the gate flags the shortfall.
-- **Roadmap trace:** the feature's `roadmap_item` frontmatter field is set and resolves to an `R-<n>` in the sprint's `roadmap_items` list (or to any `R-<n>` in `project/roadmap.md` when the sprint's `roadmap_items` is intentionally empty per `spec/project/sprint/` §"Roadmap and feature linkage"). A missing or non-resolving `roadmap_item` is a `cross-ref-missing` finding (`severity: critical`).
+- **Status:** feature is `status: ready` (the readiness gate intent). A feature in `status: draft` is a `feature-not-ready` finding (`severity: Critical`) — `sprint-plan` already enforces `ready` at planning time, but a feature can drop back to `draft` between planning and the readiness audit if the operator revised it; the gate catches that. A feature in `status: in_progress` or `done` is a `lifecycle-violation` finding (`severity: Warning`) — the sprint shouldn't be promoted via this gate if features have already advanced; the operator likely meant to call `sprint-execute` directly.
+- **Acceptance criteria:** the feature has at least one entry under `## Acceptance criteria` (the count and shape are governed by `spec/project/feature/`). Missing or empty section is a `feature-not-ready` finding (`severity: Critical`).
+- **Test hooks:** the feature's `## Test hooks` section is non-empty (per `spec/project/feature/`). A missing or empty section is a `feature-not-ready` finding (`severity: Warning`) — the operator may run a sprint without test hooks, but the gate flags the shortfall.
+- **Roadmap trace:** the feature's `roadmap_item` frontmatter field is set and resolves to an `R-<n>` in the sprint's `roadmap_items` list (or to any `R-<n>` in `project/roadmap.md` when the sprint's `roadmap_items` is intentionally empty per `spec/project/sprint/` §"Roadmap and feature linkage"). A missing or non-resolving `roadmap_item` is a `cross-ref-missing` finding (`severity: Critical`).
 
 After the per-feature loop, verify the **value-delivery contract**: exactly one feature in the list **MUST** carry the `verifies_sprint_value: acceptance-<n>` frontmatter field, the named criterion **MUST** exist on that feature, and the criterion text **SHOULD** be substantively about the sprint's `value_statement`. Cases:
 
-- Zero features declare `verifies_sprint_value` → `missing-verifier` finding (`severity: critical`), `target: <sprint-id>`, `resolution: add-verifier <feature-id>:acceptance-<n>`.
-- Multiple features declare `verifies_sprint_value` → `missing-verifier` finding (`severity: warning`) listing each, `resolution: dispatch-skill sprint-plan:reconcile-verifier`.
-- One feature declares it but the named criterion doesn't exist → `missing-verifier` finding (`severity: critical`), `resolution: dispatch-skill feature-decompose:fix-acceptance-id`.
+- Zero features declare `verifies_sprint_value` → `missing-verifier` finding (`severity: Critical`), `target: <sprint-id>`, `resolution: add-verifier <feature-id>:acceptance-<n>`.
+- Multiple features declare `verifies_sprint_value` → `missing-verifier` finding (`severity: Warning`) listing each, `resolution: dispatch-skill sprint-plan:reconcile-verifier`.
+- One feature declares it but the named criterion doesn't exist → `missing-verifier` finding (`severity: Critical`), `resolution: dispatch-skill feature-decompose:fix-acceptance-id`.
 
 ## Severity assignment
 
-- `critical`: blockers for `planned → active` — empty `value_statement`, internal-verb-led statement, `missing-verifier` of any class, `feature-not-ready` for `status: draft`, missing acceptance criteria, non-resolving `R-<n>` or feature ID.
-- `warning`: non-blocking but spec-relevant — sprint already past `planned`, body sections in wrong order, missing `## Test hooks`, mission-outcome trace gap, multiple `verifies_sprint_value` declarations.
-- `info`: cosmetic or "noted for review" — heuristic-only value-statement matches the operator may override, deferred-scope notes.
+- `Critical`: blockers for `planned → active` — empty `value_statement`, internal-verb-led statement, `missing-verifier` of any class, `feature-not-ready` for `status: draft`, missing acceptance criteria, non-resolving `R-<n>` or feature ID.
+- `Warning`: non-blocking but spec-relevant — sprint already past `planned`, body sections in wrong order, missing `## Test hooks`, mission-outcome trace gap, multiple `verifies_sprint_value` declarations.
+- `Info`: cosmetic or "noted for review" — heuristic-only value-statement matches the operator may override, deferred-scope notes.
 
 The verdict is **NO-GO** when at least one `critical` finding is present; otherwise **GO** (even with `warning` findings — the operator decides whether to proceed).
 
@@ -167,5 +168,5 @@ The verdict is **NO-GO** when at least one `critical` finding is present; otherw
 - **Never** call the `Skill` tool or dispatch sibling agents — subagents can't spawn further subagents (per `spec/claude/agent-management/` §"Subagent boundaries (Claude Code runtime)").
 - **Never** issue a **GO** verdict when at least one `critical` finding is present, regardless of operator preference; the verdict is mechanically derived from the findings, not negotiated.
 - **Always** ground every finding in a concrete reference: a sprint frontmatter field, a feature `id`, a roadmap `id`, or a `path:line`. Findings without a reference aren't findings.
-- **Always** classify the run as `clean` (`target: n/a`, `severity: info`, `resolution: proceed`) with verdict **GO** when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
+- **Always** classify the run as `clean` (`target: n/a`, `severity: Info`, `resolution: proceed`) with verdict **GO** when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
 - **Always** reread `spec/project/sprint/<canonical_language>.md` and `spec/project/feature/<canonical_language>.md` before producing the report; when this agent disagrees with the spec, the spec wins and the agent's behaviour is updated, not the spec.

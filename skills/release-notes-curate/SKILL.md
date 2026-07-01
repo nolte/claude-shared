@@ -42,7 +42,7 @@ Before doing anything:
 
 - Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`) and the remote resolves to a GitHub repository.
 - Confirm `gh` is authenticated (`gh auth status`).
-- Locate `spec/project/release-skill-layer/` — either in the target repo or, when absent, via the `nolte-shared` plugin install path. Stop and ask which spec source to use if neither is reachable.
+- Locate `spec/project/release-skill-layer/` — either in the target repo or, when absent, at `${CLAUDE_PLUGIN_ROOT}/spec/project/release-skill-layer/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin). Stop and ask which spec source to use if neither is reachable.
 - Confirm the repo ships `release-drafter.yml` and `release-publish.yml` per `branching-model` and `release-automation`. If `release-drafter.yml` is missing, the operator should adopt `release-automation` first; this skill stops and reports.
 
 ## Operations

@@ -414,14 +414,14 @@ def check_frontmatter_yaml(text: str, target: str, kind: str) -> list[Finding]:
 
 # Body-size hard cap per skill-management/en.md §96,138: SKILL.md body ≤ 5,000
 # tokens (AND ≤ 500 lines). Token count is estimated with the spec's 4-char/token
-# heuristic. The ≥5,000 band names a MUST violation, but it is emitted at
-# BODY_TOKEN_CAP_SEVERITY (Warning) so `task test` stays green while the
-# pre-existing over-cap skills (T2 backlog in .audits/skills-agents-sweep/) are
-# split into references/ in a separate PR; flip this constant to "Critical" in
-# that PR to make the cap enforcing.
+# heuristic. The ≥5,000 band names a MUST violation and is emitted at Critical:
+# the T2 backlog of pre-existing over-cap skills (tracked in the 2026-07-01
+# skills/agents sweep) has been split into references/, so the cap is now
+# enforcing — a SKILL.md body crossing 5,000 est. tokens fails CI. The 4,500–4,999
+# band stays a Warning (advisory headroom before the hard cap).
 BODY_TOKEN_WARN = 4500
 BODY_TOKEN_CAP = 5000
-BODY_TOKEN_CAP_SEVERITY = "Warning"
+BODY_TOKEN_CAP_SEVERITY = "Critical"
 
 
 def check_body_token_estimate(body: str, target: str, kind: str) -> list[Finding]:

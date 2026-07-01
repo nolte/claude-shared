@@ -23,6 +23,11 @@ use_when:
   - "you want to audit existing schemas for dialect drift or missing identity"
   - "you want to refactor inline duplicates into a $defs entry"
   - "you want to validate YAML data against a schema"
+dont_use_when:
+  - situation: "You need project-structure scaffolding (missing schemas/ directories, README, or a Taskfile lint target) rather than schema authoring"
+    alternative: project-structure-apply
+see_also:
+  - project-structure-apply
 resumable: true
 ---
 

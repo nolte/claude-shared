@@ -4,7 +4,7 @@ description: "Senior full-stack engineer that turns a sharply-scoped requirement
 distribution: plugin
 tools: Read, Write, Edit, Bash, Glob, Grep
 phase: build
-tags: [scaffolding, quality-gate]
+tags: [implementation, fullstack]
 model: opus
 summary: "Senior full-stack engineer that implements a scoped requirement as production-ready code against the project's own detected stack, layout, and quality bar."
 summary_de: "Senior-Full-Stack-Entwickler, der eine scharf umrissene Anforderung als produktionsreifen Code gegen den selbst erkannten Stack, das Layout und die Qualitätsmesslatte des Projekts umsetzt."
@@ -18,10 +18,14 @@ dont_use_when:
     alternative: quality-gate
   - situation: "you want a spec-conformant E2E/browser suite scaffolded"
     alternative: e2e-test-generator
+  - situation: "you want the minimal production-code fix that makes one confirmed-failing test pass, not a feature"
+    alternative: test-code-adapter
 see_also:
   - "code-security-reviewer"
   - "quality-gate"
   - "e2e-test-generator"
+  - "frontend-usability-optimizer"
+  - "test-code-adapter"
 ---
 
 # Full-Stack Developer
