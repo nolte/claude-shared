@@ -83,3 +83,36 @@ def test_cap_band_beats_warn_band():
     # A body over the cap emits exactly one finding (cap), never both bands.
     body = "x" * (v.BODY_TOKEN_CAP * 4 + 4000)
     assert len(v.check_body_token_estimate(body, "x/SKILL.md", "skill")) == 1
+
+
+# --- Use-case-metadata field caps (mirror gen_catalog.py, the docs/links gate) ---
+
+def test_dont_use_when_situation_over_cap_flags_critical():
+    # This is the exact class that reached the docs build past the fast validator.
+    long = "y" * (v.DONT_USE_WHEN_SITUATION_MAX_LEN + 1)
+    text = (
+        "---\nname: x\ndescription: ok\n"
+        f'dont_use_when:\n  - situation: "{long}"\n    alternative: other\n'
+        "---\nbody\n"
+    )
+    findings = v.check_use_case_field_lengths(text, "x/SKILL.md", "skill")
+    assert len(findings) == 1
+    assert findings[0].severity == "Critical"
+    assert findings[0].rule == "skill-management.frontmatter-use-case-field"
+
+
+def test_use_when_and_summary_within_caps_are_clean():
+    text = (
+        "---\nname: x\ndescription: ok\n"
+        'summary: "a short summary"\n'
+        'use_when:\n  - "a reasonable trigger phrase"\n'
+        "---\nbody\n"
+    )
+    assert v.check_use_case_field_lengths(text, "x/SKILL.md", "skill") == []
+
+
+def test_use_when_over_length_flags_critical():
+    long = "z" * (v.USE_WHEN_MAX_LEN + 1)
+    text = f'---\nname: x\ndescription: ok\nuse_when:\n  - "{long}"\n---\nb\n'
+    findings = v.check_use_case_field_lengths(text, "x/SKILL.md", "skill")
+    assert _rules(findings) == {"skill-management.frontmatter-use-case-field"}

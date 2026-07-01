@@ -16,7 +16,7 @@ dont_use_when:
     alternative: e2e-test-reviewer
   - situation: "you want to scaffold a new E2E suite"
     alternative: e2e-test-generator
-  - situation: "you want the run's raw results (pass/fail/errors/traces) classified into routed categories, not its screenshots visually reviewed"
+  - situation: "you want raw results (pass/fail/errors/traces) classified into routed categories, not screenshots visually reviewed"
     alternative: test-result-analyzer
 see_also:
   - "e2e-test-reviewer"

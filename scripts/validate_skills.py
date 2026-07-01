@@ -448,6 +448,90 @@ def check_body_token_estimate(body: str, target: str, kind: str) -> list[Finding
     return []
 
 
+# Use-case-metadata field limits enforced by the catalog generator
+# (scripts/docs/gen_catalog.py). gen_catalog aborts `mkdocs build` (the `docs`
+# and `links` CI jobs) when a field crosses these, so mirroring them here catches
+# the violation in the fast local validator / pre-commit rather than only in the
+# docs build. Kept in sync with gen_catalog's SUMMARY_MAX_LEN / USE_WHEN_* /
+# DONT_USE_WHEN_* / SEE_ALSO_MAX_ENTRIES / EXAMPLES_* constants.
+SUMMARY_MAX_LEN = 200
+USE_WHEN_MAX_LEN = 120
+USE_WHEN_MAX_ENTRIES = 6
+DONT_USE_WHEN_SITUATION_MAX_LEN = 120
+DONT_USE_WHEN_MAX_ENTRIES = 6
+SEE_ALSO_MAX_ENTRIES = 8
+EXAMPLES_MAX_ENTRIES = 4
+EXAMPLES_FIELD_MAX_LEN = 200
+
+
+def check_use_case_field_lengths(text: str, target: str, kind: str) -> list[Finding]:
+    """Mirror the catalog generator's use-case-metadata field caps.
+
+    Because the frontmatter is guaranteed valid YAML by `check_frontmatter_yaml`,
+    it can be `safe_load`ed and inspected structurally. Each cap here matches a
+    `gen_catalog.py` limit whose violation aborts `mkdocs build` (fatal in CI);
+    emitting Critical keeps the local signal aligned with that hard failure.
+    """
+    if yaml is None or not text.startswith("---"):
+        return []
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return []
+    try:
+        data = yaml.safe_load(parts[1])
+    except yaml.YAMLError:
+        return []  # already reported by check_frontmatter_yaml
+    if not isinstance(data, dict):
+        return []
+    rule = f"{kind}-management.frontmatter-use-case-field"
+    findings: list[Finding] = []
+
+    for key, value in data.items():
+        if (key == "summary" or key.startswith("summary_")) and isinstance(value, str) and len(value) > SUMMARY_MAX_LEN:
+            findings.append(Finding("Critical", target, rule,
+                f"`{key}` is {len(value)} characters; catalog limit is {SUMMARY_MAX_LEN}"))
+
+    uw = data.get("use_when")
+    if isinstance(uw, list):
+        if len(uw) > USE_WHEN_MAX_ENTRIES:
+            findings.append(Finding("Critical", target, rule,
+                f"`use_when` has {len(uw)} entries; catalog limit is {USE_WHEN_MAX_ENTRIES}"))
+        for i, entry in enumerate(uw):
+            if isinstance(entry, str) and len(entry) > USE_WHEN_MAX_LEN:
+                findings.append(Finding("Critical", target, rule,
+                    f"`use_when[{i}]` is {len(entry)} characters; catalog limit is {USE_WHEN_MAX_LEN}"))
+
+    dw = data.get("dont_use_when")
+    if isinstance(dw, list):
+        if len(dw) > DONT_USE_WHEN_MAX_ENTRIES:
+            findings.append(Finding("Critical", target, rule,
+                f"`dont_use_when` has {len(dw)} entries; catalog limit is {DONT_USE_WHEN_MAX_ENTRIES}"))
+        for i, entry in enumerate(dw):
+            situation = entry.get("situation") if isinstance(entry, dict) else None
+            if isinstance(situation, str) and len(situation) > DONT_USE_WHEN_SITUATION_MAX_LEN:
+                findings.append(Finding("Critical", target, rule,
+                    f"`dont_use_when[{i}].situation` is {len(situation)} characters; catalog limit is {DONT_USE_WHEN_SITUATION_MAX_LEN}"))
+
+    sa = data.get("see_also")
+    if isinstance(sa, list) and len(sa) > SEE_ALSO_MAX_ENTRIES:
+        findings.append(Finding("Critical", target, rule,
+            f"`see_also` has {len(sa)} entries; catalog limit is {SEE_ALSO_MAX_ENTRIES}"))
+
+    ex = data.get("examples")
+    if isinstance(ex, list):
+        if len(ex) > EXAMPLES_MAX_ENTRIES:
+            findings.append(Finding("Critical", target, rule,
+                f"`examples` has {len(ex)} entries; catalog limit is {EXAMPLES_MAX_ENTRIES}"))
+        for i, entry in enumerate(ex):
+            if isinstance(entry, dict):
+                for fk, fv in entry.items():
+                    if isinstance(fv, str) and len(fv) > EXAMPLES_FIELD_MAX_LEN:
+                        findings.append(Finding("Critical", target, rule,
+                            f"`examples[{i}].{fk}` is {len(fv)} characters; catalog limit is {EXAMPLES_FIELD_MAX_LEN}"))
+
+    return findings
+
+
 def check_skill(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix()
     text = path.read_text(encoding="utf-8")
@@ -458,6 +542,7 @@ def check_skill(path: Path) -> list[Finding]:
     body = _split_body(text)
     findings = []
     findings += check_frontmatter_yaml(text, rel, "skill")
+    findings += check_use_case_field_lengths(text, rel, "skill")
     findings += check_body_token_estimate(body, rel, "skill")
     findings += check_name(fm.get("name"), rel, "skill", expected_name, body)
     findings += check_name_form(fm.get("name"), rel, "skill")
@@ -480,6 +565,7 @@ def check_agent(path: Path) -> list[Finding]:
     body = _split_body(text)
     findings = []
     findings += check_frontmatter_yaml(text, rel, "agent")
+    findings += check_use_case_field_lengths(text, rel, "agent")
     findings += check_name(fm.get("name"), rel, "agent", expected_name, body)
     findings += check_name_form(fm.get("name"), rel, "agent")
     findings += check_description(fm.get("description"), rel, "agent")

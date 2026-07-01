@@ -18,7 +18,7 @@ dont_use_when:
     alternative: webview-ui-expert
   - situation: "you want to run the lint/typecheck gate without changing code"
     alternative: quality-gate-enforcer
-  - situation: "you want the spec-driven web-UI optimization loop (single-rule audit then per-item patch against the webview-ui-optimization spec)"
+  - situation: "you want the spec-driven web-UI optimization loop (single-rule audit then per-item patch)"
     alternative: webview-ui-optimize
 see_also:
   - fullstack-developer
