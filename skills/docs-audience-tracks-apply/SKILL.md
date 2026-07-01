@@ -45,7 +45,7 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 Detect the user's language from their message and respond in it. Generated artefacts (`docs/<lang>/` frontmatter, content-block placeholder pages, audience-artefact patches) are written in the language the surrounding `docs/<lang>/` tree uses; the `track:` and `content_mode:` keys are English-only because they're enumeration values, not prose.
 
-## Tool selection rationale
+## Tools used
 
 Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 

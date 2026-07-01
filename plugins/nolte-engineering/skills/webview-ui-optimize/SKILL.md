@@ -49,7 +49,7 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 Detect the user's language from their message and respond in it. The audit-table content (rule IDs, file paths, MUST/SHOULD verbatim quotes) stays in the spec's canonical language (English by default per `spec/.spec-config.yml`); prose summaries and approval prompts follow the user's language. Code, ESLint rule names, HTTP header strings, ARIA attribute names, and other technical identifiers stay in English regardless.
 
-## Tool selection rationale
+## Tools used
 
 Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 

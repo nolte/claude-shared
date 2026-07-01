@@ -45,7 +45,7 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 Detect the user's language from their message and respond in it. Generated file contents (`mkdocs.yml`, `docs/<lang>/index.md`, section index stubs, dep-manifest patches, `Taskfile.yml` targets) are always written in English so portfolio-wide automation stays predictable. Comments inside generated files are English as well.
 
-## Tool selection rationale
+## Tools used
 
 Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 

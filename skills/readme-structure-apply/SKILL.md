@@ -43,7 +43,7 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 Detect the user's language from their message and respond in it. The README itself is English-only per `spec/project/readme-structure/` §File and language ("MUST be written in English, regardless of the primary working language of the maintainers"); never produce a `README.de.md` or similar. Multilingual content lives under `docs/<lang>/`.
 
-## Tool selection rationale
+## Tools used
 
 Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 

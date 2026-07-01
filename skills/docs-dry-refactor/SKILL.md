@@ -42,7 +42,7 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 Detect the user's language from their message and respond in it. Generated file contents (marker comments, include directives, new dedicated snippet files under `docs/<lang>/_snippets/`) are always written in English so portfolio-wide automation stays predictable.
 
-## Tool selection rationale
+## Tools used
 
 Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
