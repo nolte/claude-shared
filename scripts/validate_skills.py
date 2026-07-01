@@ -27,6 +27,11 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - PyYAML is a pinned dev dependency
+    yaml = None  # the strict-parse check degrades to a no-op rather than crashing
+
 REPO = Path(__file__).resolve().parent.parent
 
 STARTER_TAGS = {
@@ -377,6 +382,72 @@ def check_resumable_wiring(
     return findings
 
 
+def check_frontmatter_yaml(text: str, target: str, kind: str) -> list[Finding]:
+    """Parse the frontmatter block with a standard YAML parser.
+
+    `parse_frontmatter` above is deliberately lenient (regex, tolerant of `: `
+    inside unquoted scalars) so the other checks always get their values. But the
+    Claude Code runtime loader (js-yaml) and every spec-mandated tool
+    (`skill-agent-catalog/en.md:127` — the catalog generator MUST use a standard
+    YAML parser) apply *strict* YAML: an unquoted `description:` whose value
+    embeds `: ` (a colon-space, e.g. `Read-only: reports…` or `` `status: planned` ``)
+    is a mapping-indicator and makes the whole block unparseable. Such a skill may
+    silently fail to load in a consumer. This check is the regression guard for
+    that class: strict parse failure = Critical.
+    """
+    if yaml is None or not text.startswith("---"):
+        return []
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return []
+    try:
+        yaml.safe_load(parts[1])
+    except yaml.YAMLError as exc:  # noqa: BLE001 - any YAML error is a hard fail
+        detail = str(getattr(exc, "problem", None) or exc).strip().splitlines()[0]
+        return [Finding(
+            "Critical", target, f"{kind}-management.frontmatter-yaml-invalid",
+            f"frontmatter is not valid YAML ({detail}); a standard parser rejects it "
+            f"— quote any scalar value that embeds `: ` (colon-space)",
+        )]
+    return []
+
+
+# Body-size hard cap per skill-management/en.md §96,138: SKILL.md body ≤ 5,000
+# tokens (AND ≤ 500 lines). Token count is estimated with the spec's 4-char/token
+# heuristic. The ≥5,000 band names a MUST violation, but it is emitted at
+# BODY_TOKEN_CAP_SEVERITY (Warning) so `task test` stays green while the
+# pre-existing over-cap skills (T2 backlog in .audits/skills-agents-sweep/) are
+# split into references/ in a separate PR; flip this constant to "Critical" in
+# that PR to make the cap enforcing.
+BODY_TOKEN_WARN = 4500
+BODY_TOKEN_CAP = 5000
+BODY_TOKEN_CAP_SEVERITY = "Warning"
+
+
+def check_body_token_estimate(body: str, target: str, kind: str) -> list[Finding]:
+    """Estimate the SKILL.md body token count and flag the 5,000-token hard cap.
+
+    Content beyond ~5,000 tokens is silently truncated on re-attach after
+    compaction — typically the Hard rules / Gotchas at the end. The estimate uses
+    the spec's 4-char/token heuristic; it is intentionally approximate, which is
+    part of why the cap band ships at Warning rather than Critical for now.
+    """
+    est = len(body) // 4
+    if est >= BODY_TOKEN_CAP:
+        return [Finding(
+            BODY_TOKEN_CAP_SEVERITY, target, f"{kind}-management.body-token-cap",
+            f"body ~{est} tokens (est., 4-char heuristic) exceeds the 5,000-token "
+            f"hard cap; split detail into references/ (skill-management §Body size)",
+        )]
+    if est >= BODY_TOKEN_WARN:
+        return [Finding(
+            "Warning", target, f"{kind}-management.body-token-approaching",
+            f"body ~{est} tokens (est., 4-char heuristic) is approaching the "
+            f"5,000-token hard cap; consider moving detail into references/",
+        )]
+    return []
+
+
 def check_skill(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix()
     text = path.read_text(encoding="utf-8")
@@ -386,6 +457,8 @@ def check_skill(path: Path) -> list[Finding]:
     expected_name = path.parent.name
     body = _split_body(text)
     findings = []
+    findings += check_frontmatter_yaml(text, rel, "skill")
+    findings += check_body_token_estimate(body, rel, "skill")
     findings += check_name(fm.get("name"), rel, "skill", expected_name, body)
     findings += check_name_form(fm.get("name"), rel, "skill")
     findings += check_description(fm.get("description"), rel, "skill")
@@ -406,6 +479,7 @@ def check_agent(path: Path) -> list[Finding]:
     expected_name = path.stem
     body = _split_body(text)
     findings = []
+    findings += check_frontmatter_yaml(text, rel, "agent")
     findings += check_name(fm.get("name"), rel, "agent", expected_name, body)
     findings += check_name_form(fm.get("name"), rel, "agent")
     findings += check_description(fm.get("description"), rel, "agent")
