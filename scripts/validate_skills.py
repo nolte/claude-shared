@@ -429,8 +429,9 @@ def check_body_token_estimate(body: str, target: str, kind: str) -> list[Finding
 
     Content beyond ~5,000 tokens is silently truncated on re-attach after
     compaction — typically the Hard rules / Gotchas at the end. The estimate uses
-    the spec's 4-char/token heuristic; it is intentionally approximate, which is
-    part of why the cap band ships at Warning rather than Critical for now.
+    the spec's 4-char/token heuristic; it is intentionally approximate, so the
+    4,500-token Warning band gives headroom before the enforcing 5,000-token
+    Critical cap (BODY_TOKEN_CAP_SEVERITY).
     """
     est = len(body) // 4
     if est >= BODY_TOKEN_CAP:
@@ -486,10 +487,13 @@ def check_use_case_field_lengths(text: str, target: str, kind: str) -> list[Find
     rule = f"{kind}-management.frontmatter-use-case-field"
     findings: list[Finding] = []
 
+    # gen_catalog measures the *stripped* value (raw.strip()); mirror that so a
+    # value that is within the cap after stripping trailing whitespace is not a
+    # local-only false positive.
     for key, value in data.items():
-        if (key == "summary" or key.startswith("summary_")) and isinstance(value, str) and len(value) > SUMMARY_MAX_LEN:
+        if (key == "summary" or key.startswith("summary_")) and isinstance(value, str) and len(value.strip()) > SUMMARY_MAX_LEN:
             findings.append(Finding("Critical", target, rule,
-                f"`{key}` is {len(value)} characters; catalog limit is {SUMMARY_MAX_LEN}"))
+                f"`{key}` is {len(value.strip())} characters; catalog limit is {SUMMARY_MAX_LEN}"))
 
     uw = data.get("use_when")
     if isinstance(uw, list):
@@ -497,9 +501,9 @@ def check_use_case_field_lengths(text: str, target: str, kind: str) -> list[Find
             findings.append(Finding("Critical", target, rule,
                 f"`use_when` has {len(uw)} entries; catalog limit is {USE_WHEN_MAX_ENTRIES}"))
         for i, entry in enumerate(uw):
-            if isinstance(entry, str) and len(entry) > USE_WHEN_MAX_LEN:
+            if isinstance(entry, str) and len(entry.strip()) > USE_WHEN_MAX_LEN:
                 findings.append(Finding("Critical", target, rule,
-                    f"`use_when[{i}]` is {len(entry)} characters; catalog limit is {USE_WHEN_MAX_LEN}"))
+                    f"`use_when[{i}]` is {len(entry.strip())} characters; catalog limit is {USE_WHEN_MAX_LEN}"))
 
     dw = data.get("dont_use_when")
     if isinstance(dw, list):
@@ -508,9 +512,9 @@ def check_use_case_field_lengths(text: str, target: str, kind: str) -> list[Find
                 f"`dont_use_when` has {len(dw)} entries; catalog limit is {DONT_USE_WHEN_MAX_ENTRIES}"))
         for i, entry in enumerate(dw):
             situation = entry.get("situation") if isinstance(entry, dict) else None
-            if isinstance(situation, str) and len(situation) > DONT_USE_WHEN_SITUATION_MAX_LEN:
+            if isinstance(situation, str) and len(situation.strip()) > DONT_USE_WHEN_SITUATION_MAX_LEN:
                 findings.append(Finding("Critical", target, rule,
-                    f"`dont_use_when[{i}].situation` is {len(situation)} characters; catalog limit is {DONT_USE_WHEN_SITUATION_MAX_LEN}"))
+                    f"`dont_use_when[{i}].situation` is {len(situation.strip())} characters; catalog limit is {DONT_USE_WHEN_SITUATION_MAX_LEN}"))
 
     sa = data.get("see_also")
     if isinstance(sa, list) and len(sa) > SEE_ALSO_MAX_ENTRIES:
@@ -525,9 +529,9 @@ def check_use_case_field_lengths(text: str, target: str, kind: str) -> list[Find
         for i, entry in enumerate(ex):
             if isinstance(entry, dict):
                 for fk, fv in entry.items():
-                    if isinstance(fv, str) and len(fv) > EXAMPLES_FIELD_MAX_LEN:
+                    if isinstance(fv, str) and len(fv.strip()) > EXAMPLES_FIELD_MAX_LEN:
                         findings.append(Finding("Critical", target, rule,
-                            f"`examples[{i}].{fk}` is {len(fv)} characters; catalog limit is {EXAMPLES_FIELD_MAX_LEN}"))
+                            f"`examples[{i}].{fk}` is {len(fv.strip())} characters; catalog limit is {EXAMPLES_FIELD_MAX_LEN}"))
 
     return findings
 

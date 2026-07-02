@@ -75,7 +75,8 @@ def test_body_over_cap_flags_cap_at_configured_severity():
     body = "x" * (v.BODY_TOKEN_CAP * 4)  # exactly CAP tokens
     findings = v.check_body_token_estimate(body, "x/SKILL.md", "skill")
     assert _rules(findings) == {"skill-management.body-token-cap"}
-    # Staged rollout: Warning today so CI stays green; the body-split PR flips it.
+    # The cap is enforcing (Critical) now the T2 backlog is split; assert against
+    # the constant so the test tracks BODY_TOKEN_CAP_SEVERITY.
     assert findings[0].severity == v.BODY_TOKEN_CAP_SEVERITY
 
 
