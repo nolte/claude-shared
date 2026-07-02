@@ -1,6 +1,6 @@
 ---
 name: test-cycle-orchestrate
-description: Drives one or more turns of the iterative test cycle defined in spec/project/test-cycle-foundation/ — case determination → execution → result analysis → code adaptation → re-execute — dispatching each phase to its capability (test-case-extractor and the per-tier test-generators for cases, quality-gate for execution, test-result-analyzer for analysis, test-code-adapter for the fix) and looping until an explicit exit condition holds. Enforces the cycle's integrity rules: a regression case before fixing a defect, a flake quarantined not retried-until-green, and the no-cheating invariant (never weaken/skip a test to force a pass). Invoke when the user asks to run the test cycle for a feature, drive a feature to green, or iterate determine-execute-analyse-fix. Don't use to run the gate once (use quality-gate), to scaffold tests without the loop (use a tier generator), or to classify results without acting (use test-result-analyzer). Supports resume per `spec/claude/resumable-work/`.
+description: "Drives one or more turns of the iterative test cycle defined in spec/project/test-cycle-foundation/ — case determination → execution → result analysis → code adaptation → re-execute — dispatching each phase to its capability (test-case-extractor and the per-tier test-generators for cases, quality-gate for execution, test-result-analyzer for analysis, test-code-adapter for the fix) and looping until an explicit exit condition holds. Enforces the cycle's integrity rules: a regression case before fixing a defect, a flake quarantined not retried-until-green, and the no-cheating invariant (never weaken/skip a test to force a pass). Invoke when the user asks to run the test cycle for a feature, drive a feature to green, or iterate determine-execute-analyse-fix. Don't use to run the gate once (use quality-gate), to scaffold tests without the loop (use a tier generator), or to classify results without acting (use test-result-analyzer). Supports resume per `spec/claude/resumable-work/`."
 argument-hint: "[feature, module, or failing case to drive to green]"
 tags: [quality-gate]
 phase: quality
@@ -39,32 +39,32 @@ Governed by `spec/project/test-cycle-foundation/` (the loop, the inter-phase con
 
 Run the loop for `$ARGUMENTS`. One turn:
 
-### Phase 1 — Determine cases
+### 1. Determine cases
 
 Ensure the cases that should be green exist and currently fail or are absent. Dispatch `test-case-extractor` to derive abstract cases from a requirement, and the per-tier generator (`unit-test-generator`, `component-test-generator`, `integration-test-generator`, `contract-test-generator`, or `e2e-test-generator`) to scaffold the runnable test at the tier the foundation's lowest-tier-that-gives-confidence rule selects. When the trigger is a confirmed defect, a **failing regression case is written first**.
 
-### Phase 2 — Execute
+### 2. Execute
 
 Run the cases. Dispatch `quality-gate` (the fast tiers) and the project's tier runners; collect the structured per-case results. Honour the staged-execution model — fast tiers gate, slow/broad tiers run where the project places them.
 
-### Phase 3 — Analyse results
+### 3. Analyse results
 
-Dispatch `test-result-analyzer` to classify each non-pass into a routed category (real defect / flake / test bug / infra / stale dep / config drift) with evidence. Route a flake to quarantine, a test bug back to phase 1 as a reviewable case change, and infra/stale/config to the environment (via `workflow-health-triage`).
+Dispatch `test-result-analyzer` to classify each non-pass into a routed category (real defect / flake / test bug / infra / stale dep / config drift) with evidence. Route a flake to quarantine, a test bug back to step 1 as a reviewable case change, and infra/stale/config to the environment (via `workflow-health-triage`).
 
-### Phase 4 — Adapt code
+### 4. Adapt code
 
-For each confirmed real failure, dispatch `test-code-adapter` to apply the minimal correct change that satisfies the asserted behaviour, fixing the root cause. The fix **re-enters phase 2** (re-execute); never assume green without re-running.
+For each confirmed real failure, dispatch `test-code-adapter` to apply the minimal correct change that satisfies the asserted behaviour, fixing the root cause. The fix **re-enters step 2** (re-execute); never assume green without re-running.
 
 ### Loop or exit
 
-Repeat from phase 2 until the **exit conditions** hold: every required case is green, no previously-green case regressed, and the coverage/mutation signal is acceptable per the foundation's coverage governance. Surface the per-turn state each round; stop when exit-ready, or hand back when a turn cannot make progress (for example a fix needs a product decision).
+Repeat from step 2 until the **exit conditions** hold: every required case is green, no previously-green case regressed, and the coverage/mutation signal is acceptable per the foundation's coverage governance. Surface the per-turn state each round; stop when exit-ready, or hand back when a turn cannot make progress (for example a fix needs a product decision).
 
 ## Hard rules
 
-1. **Never** make a case pass by weakening, deleting, skipping, or hard-coding to its expected value; resolve a red case by a code adaptation (phase 4) or, when the test was wrong, a reviewable case change (phase 1) — never a silent escape. This is the cycle's central integrity rule.
+1. **Never** make a case pass by weakening, deleting, skipping, or hard-coding to its expected value; resolve a red case by a code adaptation (step 4) or, when the test was wrong, a reviewable case change (step 1) — never a silent escape. This is the cycle's central integrity rule.
 2. **Always** write a failing regression case before fixing a confirmed defect, so the cycle accumulates coverage of real failures over time.
 3. **Never** retry a flaky test until it goes green; route a confirmed flake to quarantine-and-track, not to the gating signal.
-4. **Never** declare a turn complete without re-execution: a code change re-enters phase 2 and all cases must be green with no regression before exit.
+4. **Never** declare a turn complete without re-execution: a code change re-enters step 2 and all cases must be green with no regression before exit.
 5. **Never** restate a phase's internals here; dispatch its capability (`test-case-extractor` / tier generators, `quality-gate`, `test-result-analyzer`, `test-code-adapter`) and orchestrate the loop. When a phase spec disagrees with this skill, the spec wins; propose a skill update rather than diverging.
 
 ## Resumability

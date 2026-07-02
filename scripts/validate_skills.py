@@ -27,6 +27,11 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    import yaml
+except ModuleNotFoundError:  # pragma: no cover - PyYAML is a pinned dev dependency
+    yaml = None  # the strict-parse check degrades to a no-op rather than crashing
+
 REPO = Path(__file__).resolve().parent.parent
 
 STARTER_TAGS = {
@@ -377,6 +382,160 @@ def check_resumable_wiring(
     return findings
 
 
+def check_frontmatter_yaml(text: str, target: str, kind: str) -> list[Finding]:
+    """Parse the frontmatter block with a standard YAML parser.
+
+    `parse_frontmatter` above is deliberately lenient (regex, tolerant of `: `
+    inside unquoted scalars) so the other checks always get their values. But the
+    Claude Code runtime loader (js-yaml) and every spec-mandated tool
+    (`skill-agent-catalog/en.md:127` — the catalog generator MUST use a standard
+    YAML parser) apply *strict* YAML: an unquoted `description:` whose value
+    embeds `: ` (a colon-space, e.g. `Read-only: reports…` or `` `status: planned` ``)
+    is a mapping-indicator and makes the whole block unparseable. Such a skill may
+    silently fail to load in a consumer. This check is the regression guard for
+    that class: strict parse failure = Critical.
+    """
+    if yaml is None or not text.startswith("---"):
+        return []
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return []
+    try:
+        yaml.safe_load(parts[1])
+    except yaml.YAMLError as exc:  # noqa: BLE001 - any YAML error is a hard fail
+        detail = str(getattr(exc, "problem", None) or exc).strip().splitlines()[0]
+        return [Finding(
+            "Critical", target, f"{kind}-management.frontmatter-yaml-invalid",
+            f"frontmatter is not valid YAML ({detail}); a standard parser rejects it "
+            f"— quote any scalar value that embeds `: ` (colon-space)",
+        )]
+    return []
+
+
+# Body-size hard cap per skill-management/en.md §96,138: SKILL.md body ≤ 5,000
+# tokens (AND ≤ 500 lines). Token count is estimated with the spec's 4-char/token
+# heuristic. The ≥5,000 band names a MUST violation and is emitted at Critical:
+# the T2 backlog of pre-existing over-cap skills (tracked in the 2026-07-01
+# skills/agents sweep) has been split into references/, so the cap is now
+# enforcing — a SKILL.md body crossing 5,000 est. tokens fails CI. The 4,500–4,999
+# band stays a Warning (advisory headroom before the hard cap).
+BODY_TOKEN_WARN = 4500
+BODY_TOKEN_CAP = 5000
+BODY_TOKEN_CAP_SEVERITY = "Critical"
+
+
+def check_body_token_estimate(body: str, target: str, kind: str) -> list[Finding]:
+    """Estimate the SKILL.md body token count and flag the 5,000-token hard cap.
+
+    Content beyond ~5,000 tokens is silently truncated on re-attach after
+    compaction — typically the Hard rules / Gotchas at the end. The estimate uses
+    the spec's 4-char/token heuristic; it is intentionally approximate, so the
+    4,500-token Warning band gives headroom before the enforcing 5,000-token
+    Critical cap (BODY_TOKEN_CAP_SEVERITY).
+    """
+    est = len(body) // 4
+    if est >= BODY_TOKEN_CAP:
+        return [Finding(
+            BODY_TOKEN_CAP_SEVERITY, target, f"{kind}-management.body-token-cap",
+            f"body ~{est} tokens (est., 4-char heuristic) exceeds the 5,000-token "
+            f"hard cap; split detail into references/ (skill-management §Body size)",
+        )]
+    if est >= BODY_TOKEN_WARN:
+        return [Finding(
+            "Warning", target, f"{kind}-management.body-token-approaching",
+            f"body ~{est} tokens (est., 4-char heuristic) is approaching the "
+            f"5,000-token hard cap; consider moving detail into references/",
+        )]
+    return []
+
+
+# Use-case-metadata field limits enforced by the catalog generator
+# (scripts/docs/gen_catalog.py). gen_catalog aborts `mkdocs build` (the `docs`
+# and `links` CI jobs) when a field crosses these, so mirroring them here catches
+# the violation in the fast local validator / pre-commit rather than only in the
+# docs build. Kept in sync with gen_catalog's SUMMARY_MAX_LEN / USE_WHEN_* /
+# DONT_USE_WHEN_* / SEE_ALSO_MAX_ENTRIES / EXAMPLES_* constants.
+SUMMARY_MAX_LEN = 200
+USE_WHEN_MAX_LEN = 120
+USE_WHEN_MAX_ENTRIES = 6
+DONT_USE_WHEN_SITUATION_MAX_LEN = 120
+DONT_USE_WHEN_MAX_ENTRIES = 6
+SEE_ALSO_MAX_ENTRIES = 8
+EXAMPLES_MAX_ENTRIES = 4
+EXAMPLES_FIELD_MAX_LEN = 200
+
+
+def check_use_case_field_lengths(text: str, target: str, kind: str) -> list[Finding]:
+    """Mirror the catalog generator's use-case-metadata field caps.
+
+    Because the frontmatter is guaranteed valid YAML by `check_frontmatter_yaml`,
+    it can be `safe_load`ed and inspected structurally. Each cap here matches a
+    `gen_catalog.py` limit whose violation aborts `mkdocs build` (fatal in CI);
+    emitting Critical keeps the local signal aligned with that hard failure.
+    """
+    if yaml is None or not text.startswith("---"):
+        return []
+    parts = text.split("---", 2)
+    if len(parts) < 3:
+        return []
+    try:
+        data = yaml.safe_load(parts[1])
+    except yaml.YAMLError:
+        return []  # already reported by check_frontmatter_yaml
+    if not isinstance(data, dict):
+        return []
+    rule = f"{kind}-management.frontmatter-use-case-field"
+    findings: list[Finding] = []
+
+    # gen_catalog measures the *stripped* value (raw.strip()); mirror that so a
+    # value that is within the cap after stripping trailing whitespace is not a
+    # local-only false positive.
+    for key, value in data.items():
+        if (key == "summary" or key.startswith("summary_")) and isinstance(value, str) and len(value.strip()) > SUMMARY_MAX_LEN:
+            findings.append(Finding("Critical", target, rule,
+                f"`{key}` is {len(value.strip())} characters; catalog limit is {SUMMARY_MAX_LEN}"))
+
+    uw = data.get("use_when")
+    if isinstance(uw, list):
+        if len(uw) > USE_WHEN_MAX_ENTRIES:
+            findings.append(Finding("Critical", target, rule,
+                f"`use_when` has {len(uw)} entries; catalog limit is {USE_WHEN_MAX_ENTRIES}"))
+        for i, entry in enumerate(uw):
+            if isinstance(entry, str) and len(entry.strip()) > USE_WHEN_MAX_LEN:
+                findings.append(Finding("Critical", target, rule,
+                    f"`use_when[{i}]` is {len(entry.strip())} characters; catalog limit is {USE_WHEN_MAX_LEN}"))
+
+    dw = data.get("dont_use_when")
+    if isinstance(dw, list):
+        if len(dw) > DONT_USE_WHEN_MAX_ENTRIES:
+            findings.append(Finding("Critical", target, rule,
+                f"`dont_use_when` has {len(dw)} entries; catalog limit is {DONT_USE_WHEN_MAX_ENTRIES}"))
+        for i, entry in enumerate(dw):
+            situation = entry.get("situation") if isinstance(entry, dict) else None
+            if isinstance(situation, str) and len(situation.strip()) > DONT_USE_WHEN_SITUATION_MAX_LEN:
+                findings.append(Finding("Critical", target, rule,
+                    f"`dont_use_when[{i}].situation` is {len(situation.strip())} characters; catalog limit is {DONT_USE_WHEN_SITUATION_MAX_LEN}"))
+
+    sa = data.get("see_also")
+    if isinstance(sa, list) and len(sa) > SEE_ALSO_MAX_ENTRIES:
+        findings.append(Finding("Critical", target, rule,
+            f"`see_also` has {len(sa)} entries; catalog limit is {SEE_ALSO_MAX_ENTRIES}"))
+
+    ex = data.get("examples")
+    if isinstance(ex, list):
+        if len(ex) > EXAMPLES_MAX_ENTRIES:
+            findings.append(Finding("Critical", target, rule,
+                f"`examples` has {len(ex)} entries; catalog limit is {EXAMPLES_MAX_ENTRIES}"))
+        for i, entry in enumerate(ex):
+            if isinstance(entry, dict):
+                for fk, fv in entry.items():
+                    if isinstance(fv, str) and len(fv.strip()) > EXAMPLES_FIELD_MAX_LEN:
+                        findings.append(Finding("Critical", target, rule,
+                            f"`examples[{i}].{fk}` is {len(fv.strip())} characters; catalog limit is {EXAMPLES_FIELD_MAX_LEN}"))
+
+    return findings
+
+
 def check_skill(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix()
     text = path.read_text(encoding="utf-8")
@@ -386,6 +545,9 @@ def check_skill(path: Path) -> list[Finding]:
     expected_name = path.parent.name
     body = _split_body(text)
     findings = []
+    findings += check_frontmatter_yaml(text, rel, "skill")
+    findings += check_use_case_field_lengths(text, rel, "skill")
+    findings += check_body_token_estimate(body, rel, "skill")
     findings += check_name(fm.get("name"), rel, "skill", expected_name, body)
     findings += check_name_form(fm.get("name"), rel, "skill")
     findings += check_description(fm.get("description"), rel, "skill")
@@ -406,6 +568,8 @@ def check_agent(path: Path) -> list[Finding]:
     expected_name = path.stem
     body = _split_body(text)
     findings = []
+    findings += check_frontmatter_yaml(text, rel, "agent")
+    findings += check_use_case_field_lengths(text, rel, "agent")
     findings += check_name(fm.get("name"), rel, "agent", expected_name, body)
     findings += check_name_form(fm.get("name"), rel, "agent")
     findings += check_description(fm.get("description"), rel, "agent")

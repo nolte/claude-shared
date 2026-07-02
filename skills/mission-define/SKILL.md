@@ -92,14 +92,14 @@ Render the mission file with:
 
 Present the full draft (frontmatter plus body) back to the user in their language and iterate until they approve. Only then write `project/mission.md`. Never write a partial file; either every required field and section is present or the write is deferred.
 
-After writing, remind the user that the next mission-side operation is `mission-revise` (for the `defining → in_progress` flip once the first MVP item enters `status: active`) and that `mvp: true` flags on roadmap items are the authoritative MVP-membership signal — keep them in sync via `roadmap-refine`, never inline-edit them from this skill.
+After writing, remind the user that the next mission-side operation is `mission-revise` (for the `defining → in_progress` flip once the first MVP item enters `status: active`) and that `mvp: true` flags on roadmap items are the authoritative MVP-membership signal — keep them in sync via `roadmap-plan`, never inline-edit them from this skill.
 
 ## Gotchas
 
 - The **Time-bound** letter does **not** map to a date even when the user volunteers one. The two legal shapes are outcome-anchored or `mvp_completion`-anchored; reject calendar dates with the spec's verbatim rejection rather than translating them into a fake `mvp_completion`.
 - The `verifies_via` field names exactly **one** feature plus exactly **one** `acceptance-<n>` ID. The sibling `feature` spec already enforces "at most one feature per sprint carries a non-null `verifies_sprint_value`"; if the user proposes two verifying features, the mission scope is wrong, not the constraint.
 - The audience artefact path is *not* always `AUDIENCES.md` — it's whatever the project's `audience-identification` run picked (README section, dedicated file, or ADR). Read the actual artefact and capture its real path plus last-commit SHA in `## Source`; never hard-code `AUDIENCES.md`.
-- An `mvp: true` flag on a roadmap item without `detail: fine` and a non-null `target_sprint` is a roadmap-side lint violation, not something to silently accept here. Surface it back to the user and ask whether to fix the roadmap first via `roadmap-refine`.
+- An `mvp: true` flag on a roadmap item without `detail: fine` and a non-null `target_sprint` is a roadmap-side lint violation, not something to silently accept here. Surface it back to the user and ask whether to fix the roadmap first via `roadmap-plan` (which owns the MVP flag, the detail promotion, and the sprint retarget).
 - The `## Source` audit trail is part of the spec contract, not optional metadata. A first-write without an audience-artefact SHA, a `goals.md` reference, and an authorship line fails validation downstream.
 
 ## Examples

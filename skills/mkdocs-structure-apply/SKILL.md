@@ -29,7 +29,7 @@ resumable: true
 
 Operationalises `spec/project/mkdocs-structure/<canonical_language>.md` inside the current repository. The skill audits the current MkDocs wiring against the baseline plus every active project-type-specific extension spec, proposes the concrete file-level changes the spec requires, and—with explicit per-item user consent—applies them.
 
-When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent requirements that don't appear in the spec.
+When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from `${CLAUDE_PLUGIN_ROOT}/spec/project/mkdocs-structure/<canonical_language>.md`). Never invent requirements that don't appear in the spec.
 
 ## Why this is a skill, not an agent
 
@@ -37,7 +37,7 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 - **Mid-flow user approval is the contract.** Every scaffold or patch decision (mkdocs.yml plugin additions, docs/<lang>/ section folders, dep-manifest pins, Taskfile wiring) is written only with explicit per-change confirmation; the audit is read-only and the apply step is a sequence of approvals an agent's fire-and-forget shape can't carry.
 - **Persistent on-disk output that flows back into the main conversation.** The audit table, the per-item proposals, and the build-verification output all surface in the conversation so the user can decide; isolating them in a structured-report boundary would obscure the per-file approval surface.
-- **Orchestrator pattern.** The skill can later dispatch the `audience-doc-author` agent for page-content authoring or a future `docs-dry-refactor` skill for DRY refactoring; per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
+- **Orchestrator pattern.** The skill can dispatch the `audience-doc-author` agent for page-content authoring or the `docs-dry-refactor` skill for DRY refactoring; per `spec/claude/skill-vs-agent/` §Hybrid pattern, the orchestrator is always a skill.
 - **Precedent.** Follows the same audit + scaffold + patch shape as `project-structure-apply` and `skill-agent-catalog-apply`; portfolio-wide consistency (`spec/claude/skill-vs-agent/` §Portfolio-wide consistency) favours the same artifact type.
 - **Counter-dimension considered.** A narrower agent could specialise on mkdocs.yml-patch generation and gain on context-window protection, but the high-impact part is the per-item approval dialogue and the build-verification loop, not the boilerplate generation; skill wins.
 
@@ -45,7 +45,7 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 Detect the user's language from their message and respond in it. Generated file contents (`mkdocs.yml`, `docs/<lang>/index.md`, section index stubs, dep-manifest patches, `Taskfile.yml` targets) are always written in English so portfolio-wide automation stays predictable. Comments inside generated files are English as well.
 
-## Tool selection rationale
+## Tools used
 
 Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
@@ -89,12 +89,18 @@ The skill returns to the user, in this order:
 
 1. **Operation + target**: which operation ran (`audit` / `scaffold` / `patch`), absolute target repo root, detected language list, detected active extension specs.
 2. **Pre-state**: brief summary of what was found (`mkdocs.yml` present? per-language trees present? plugin baseline pinned? audience artifact present?).
-3. **Audit findings** (always): grouped per spec area (Site layout, Top-level navigation, Plugin baseline, Per-page structure, Snippet inclusion (DRY), Site identity (`site_url`), i18n and parity, Build verification, Extension conformance), with one row per Acceptance-Criteria item showing status (`pass` / `missing` / `drift`) and a one-line evidence snippet.
+3. **Audit findings** (always): grouped per spec area (Site layout, Top-level navigation, Plugin baseline, Per-page structure, Content modes, Snippet inclusion, Site identity (`site_url`), i18n parity, Build verification, Extension conformance, Cap check) — the same eleven groups the `audit` operation walks — with one row per Acceptance-Criteria item showing status (`pass` / `missing` / `drift`) and a one-line evidence snippet.
 4. **Planned edits** (for `scaffold` / `patch`): list of files to create or modify, one line per file, with rationale linking back to the spec line.
 5. **Approval gate** (for `scaffold` / `patch`): explicit user-decision point; nothing is written until the user confirms.
 6. **Applied edits** (after approval): list of files actually written, with absolute paths.
 7. **Build verification**: `mkdocs build --strict` exit code plus a raw output snippet on failure; on success report the build summary line only.
 8. **Caller follow-ups**: explicit list — commit the working-tree edits, run the proposed `pip install` / `uv pip install` / `poetry add` command to install the new baseline plugins, dispatch `audience-doc-author` to fill in the page content stubs, route to `skill-agent-catalog-apply` when the catalog extension is active and not yet wired, open the PR via `pull-request-create`, and similar.
+
+## Examples
+
+- Read `examples/01-audit-conformance-report.md` when running a read-only `audit` and you need the eleven-group findings table, including the critical missing-`site_url` case under multi-language i18n.
+- Read `examples/02-scaffold-fresh-repo.md` when `mkdocs.yml` is absent and you must `scaffold` the greenfield skeleton: derived `site_url`, baseline plugins, seven nav sections, symmetric per-language docs trees.
+- Read `examples/03-patch-missing-site-url.md` when `mkdocs.yml` is present and you must additively `patch` a single flagged finding (here `site_url`, honouring the `CNAME` custom-domain exception) with a post-write strict build.
 
 ## Resumability
 
@@ -105,11 +111,11 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 1. **Never** modify theme palette, typography, or visual identity. These are per-repo decisions per `spec/project/mkdocs-structure/` §Non-Goals. The skill mandates `mkdocs-material` as the engine but never picks the colour scheme.
 2. **Never** author markdown page content. The skill creates the *containers* (section folders, index pages with frontmatter, H1, and placeholder paragraph), but never the prose body. Page-content authoring belongs to the `audience-doc-author` agent or to the human author.
 3. **Never** silently override existing `mkdocs.yml` decisions. When an existing config diverges from the spec baseline (a custom nav order, an extra plugin, a different theme variant), the skill surfaces the conflict, proposes the resolution, and waits for user approval. Patch mode is additive, not destructive.
-4. **Always** read the spec at runtime: prefer the target repo's `spec/project/mkdocs-structure/<canonical_language>.md`; fall back to the copy shipped by the `nolte-shared` plugin (read from the plugin install path) only when the target repo lacks one. Never carry a baked-in copy inside the skill itself; never invent requirements that don't appear in either reachable copy. When neither is reachable, stop and ask the user which spec source to use (matches the spec's own §Extension hooks §"Project-type discovery" fallback pattern).
+4. **Always** read the spec at runtime: prefer the target repo's `spec/project/mkdocs-structure/<canonical_language>.md`; fall back to the copy shipped by the `nolte-shared` plugin (read from `${CLAUDE_PLUGIN_ROOT}/spec/project/mkdocs-structure/<canonical_language>.md`) only when the target repo lacks one. Never carry a baked-in copy inside the skill itself; never invent requirements that don't appear in either reachable copy. When neither is reachable, stop and ask the user which spec source to use (matches the spec's own §Extension hooks §"Project-type discovery" fallback pattern).
 5. **Always** run `mkdocs build --strict` after every non-trivial edit. The build is the authoritative rendering gate; a passing local build is the floor, not the ceiling. Failures stop the skill and surface the raw output to the user.
 6. **Never** bump versions, commit, push, tag releases, or open pull requests. The skill produces working-tree edits only; commit / PR / release lifecycle is owned by separate skills (`pull-request-create`, `pull-request-merge`, `release-publish-trigger`).
 7. **Never** install Python packages on the caller's machine. When a baseline plugin is missing from the dep manifest, the skill reports the exact `pip install` / `uv pip install` / `poetry add` command appropriate to the project's package manager; the user runs it.
-8. **Never** dispatch the `Skill` tool recursively into this skill (silent loops) or chain to a sibling skill outside the declared hand-off points. The skill **MAY** orchestrate the `audience-doc-author` agent and the future `docs-dry-refactor` skill at the explicit hand-off points named in the Output contract `Caller follow-ups` section; orchestration is allowed per `spec/claude/skill-vs-agent/` §Hybrid pattern, silent recursion isn't.
+8. **Never** dispatch the `Skill` tool recursively into this skill (silent loops) or chain to a sibling skill outside the declared hand-off points. The skill **MAY** orchestrate the `audience-doc-author` agent and the `docs-dry-refactor` skill at the explicit hand-off points named in the Output contract `Caller follow-ups` section; orchestration is allowed per `spec/claude/skill-vs-agent/` §Hybrid pattern, silent recursion isn't.
 9. **Never** create or modify GitHub labels, branch protections, or remote state. The skill is local-only; remote state is owned by `project-structure-apply` and the platform Probot configs.
 10. **Plugin-extension MUSTs from project-type-specific extension specs are additive.** The skill reads every active extension spec (discoverable via marker files per the parent spec's §Extension hooks §"Project-type discovery"), composes their MUSTs with the baseline, and emits a combined audit. The skill never silently relaxes a baseline MUST because an extension is active; explicit relaxation requires a stated rationale in the extension spec.
 11. **Never** duplicate the catalog-generator wiring owned by `skill-agent-catalog-apply`. When the catalog extension is active, route the user to that skill for the `gen-files` + `literate-nav` plumbing; this skill only verifies the catalog extension's MUSTs are honoured at the baseline level.

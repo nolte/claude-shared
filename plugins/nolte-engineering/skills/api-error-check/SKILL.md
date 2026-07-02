@@ -1,6 +1,6 @@
 ---
 name: api-error-check
-description: Statically checks a web API's error-handling surface for conformance against the project's own declared error contract — uniform error-body shape, populated required fields, a dynamically-generated error/correlation id, correct HTTP status-code semantics, and no internal-detail leakage (stack traces, raw driver messages, rendered queries, secrets). Detects the web framework (FastAPI / Flask / Django REST / Express / NestJS / Spring and comparable) and the error contract from project signals, falling back to RFC 9457 defaults only when none is declared. Invoke after adding or changing endpoints, before a release, or as a pre-PR error-handling gate; also on requests like "check the API error handling", "audit error responses", or equivalent German-language requests. Read-only: reports and recommends, never edits handler code. Don't use for the whole-codebase security audit (code-security-reviewer) or general code review (review skill).
+description: 'Statically checks a web API''s error-handling surface for conformance against the project''s own declared error contract — uniform error-body shape, populated required fields, a dynamically-generated error/correlation id, correct HTTP status-code semantics, and no internal-detail leakage (stack traces, raw driver messages, rendered queries, secrets). Detects the web framework (FastAPI / Flask / Django REST / Express / NestJS / Spring and comparable) and the error contract from project signals, falling back to RFC 9457 defaults only when none is declared. Invoke after adding or changing endpoints, before a release, or as a pre-PR error-handling gate; also on requests like "check the API error handling", "audit error responses", or equivalent German-language requests. Read-only: reports and recommends, never edits handler code. Don''t use for the whole-codebase security audit (code-security-reviewer) or general code review (review skill).'
 tags: [review]
 phase: quality
 summary: "Read-only conformance check of a web API's error-handling surface (body shape, status codes, internal-detail leakage) against the project's declared error contract."
@@ -143,6 +143,12 @@ Cap each category at the first N entries and summarise the remainder as "… and
 - **A missing error handler is worse than a wrong one.** A handler with no failure branch falls through to the framework default, which in most frameworks renders a stack trace in non-production mode and a generic 500 in production — report the absence as critical, not as "no findings."
 - **Status `422` vs `400` is framework-convention, not a defect.** FastAPI/Starlette uses `422` for request validation; many other stacks use `400`. Read the project's convention from existing handlers before flagging a status code.
 - **This skill is static.** It reads source; it does not call the running API. A leakage path guarded by a runtime debug flag is still reported (the flag can be misconfigured in production), but mark it as conditional.
+
+## Examples
+
+- Read `examples/01-fastapi-conformant-pass.md` when you expect a clean surface and need the ✅ Conformant path: framework detection, contract discovery, dynamic correlation id, correct status codes, no leakage.
+- Read `examples/02-leak-finding.md` when checking for internal-detail leakage — a raw driver message in the body and an unhandled path falling through to the framework default, both **critical** with file:line and a security-audit pointer.
+- Read `examples/03-missing-correlation-id.md` when the body shape is fine but you must flag **warning** findings: a static (non-dynamic) error id and a wrong HTTP status against the situation table, resolved from a requirement id.
 
 ## Hard rules
 

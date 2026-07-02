@@ -3,7 +3,7 @@ name: gdpr-data-protection-reviewer
 description: "Read-only, whole-repository GDPR/DSGVO data-protection audit. Discovers personal-data surfaces (data models, DTOs, logging, third-party SDKs, cloud regions, frontend tags), detects personal-data classes incl. Art. 9, and audits against Art. 5 principles, lawful basis & consent, data-subject rights, privacy by design/default, RoPA, Art. 32 encryption/PII-in-logs, processors & third-country transfers, and ePrivacy/TDDDG. Classifies each finding code-verifiable (file:line) or legal-review-required. Invoke for a GDPR/DSGVO or privacy audit, or a pre-release privacy pass. Don't use for general security (`code-security-reviewer`), CVE scanning (`dependency-audit`), or to apply fixes (read-only)."
 distribution: plugin
 tools: Read, Grep, Glob
-phase: review
+phase: quality
 tags: [review, audit, privacy]
 model: opus
 summary: "Read-only whole-repository GDPR data-protection audit; separates code-verifiable findings from legal-review-required ones."

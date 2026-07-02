@@ -85,6 +85,20 @@ Run the steps in order. Each maps to a requirement block in the spec; consult th
 - Never route or dispatch an author at a `rejected`-class path; never widen the routing table to a class `lektorat` forbids.
 - Never silently skip an unroutable file or truncate unremediated findings — stop the run or escalate, and record it.
 
+## Gotchas
+
+Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
+
+- **Finding IDs aren't stable across a rewrite, so convergence is judged by count and severity — never by ID diff.** The `findings.json` `id` is a hash of file + dimension + line; once an author rewrite shifts line numbers, the re-audit re-keys every finding. Compare the re-audit's per-file finding count and highest severity against the pre-revision snapshot; matching IDs across passes will spuriously miss both regressions and fixes.
+- **A lower LIX number is not automatically convergence.** A D1 readability finding converges only when the re-audit shows LIX at or below the file's `warn` corridor (`spec/project/readability-lix/` §Iterative improvement loop) *and* the drop was earned by a permitted transformation. A LIX reduction achieved by decompounding an established term, a vaguer-but-shorter swap, or altering a protected term is a semantic-preservation failure — treat it as a failed pass, not a win.
+- **Routing is decided by frontmatter and path, not by reading the prose.** A blog post is identified by the consumer's cross-language binding key (e.g. `translationKey`) in its frontmatter, not by living under `docs/`; a file under `docs/<lang>/` without that key is `documentation`. Misrouting a blog post to the autonomous `audience-doc-author` route skips `blog-author`'s load-bearing briefing touchpoint (topic-as-thesis, source list, slug), which can't be reconstructed from findings.
+
+## Examples
+
+- Read `examples/01-documentation-route-autonomous.md` when a `docs/<lang>/` page with a D1 readability finding routes to the `audience-doc-author` agent fully autonomously and converges on the LIX corridor.
+- Read `examples/02-blog-route-assisted.md` when a file carrying the cross-language binding key routes to the `blog-author` skill and runs assisted, preserving its briefing touchpoint.
+- Read `examples/03-rejected-path-and-escalation.md` when a finding sits at a rejected-class path (e.g. `spec/`) or a file fails to converge within 2 passes and must be escalated and surfaced first in `summary.md`.
+
 ## Resumability
 
 Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/lektorat-auto-revise/<run-id>.yml` after every successful per-file convergence and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope and fail-closed semantics on schema or YAML errors are defined in the spec; don't duplicate them here.

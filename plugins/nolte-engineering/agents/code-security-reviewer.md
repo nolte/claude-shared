@@ -3,7 +3,7 @@ name: code-security-reviewer
 description: "Read-only, whole-codebase OWASP security audit that correlates findings across files (auth ↔ access control, data-access ↔ injection, secrets ↔ logs, AI/RAG ↔ prompt-injection/SSRF) and returns a severity-classified report with file:line attribution and described (not applied) remediations. Invoke for a deep/full repo security audit or a pre-release OWASP pass. Don't use for a diff-scoped branch review (`security-review` skill), CVE/dependency scanning (`dependency-audit`), requirements/spec security review (`security-requirements-reviewer`), or to apply fixes (read-only)."
 distribution: plugin
 tools: Read, Grep, Glob
-phase: review
+phase: quality
 tags: [review, audit]
 model: opus
 summary: "Read-only whole-codebase OWASP audit correlating findings across files into a severity-classified report."
@@ -16,6 +16,7 @@ dont_use_when:
     alternative: dependency-audit
 see_also:
   - "dependency-audit"
+  - "security-requirements-reviewer"
 ---
 
 # Code Security Reviewer

@@ -5,7 +5,7 @@ distribution: plugin
 tools: [Bash]
 model: sonnet
 tags: [audit]
-phase: review
+phase: quality
 summary: "Read-only inventory collector: gathers per-repo project/portfolio.yml manifests across nolte/*."
 summary_de: "Nur-Lese-Inventar-Sammler: erfasst per-Repo project/portfolio.yml-Manifeste über nolte/*."
 use_when:
@@ -110,7 +110,7 @@ The calling skill provides one of:
 2. **Resolve-fresh instruction:** the literal instruction "resolve Portfolio-Member set from GitHub API" — the agent runs `gh api orgs/nolte/repos --paginate` and filters out archived and private repositories itself.
 3. **Single repository:** a single `nolte/<repo>` name for a targeted collection run.
 
-If none is supplied and the calling context is ambiguous, default to the resolve-fresh path and note this in the `Notes` field of the aggregated overview.
+If none is supplied and the calling context is ambiguous, default to the resolve-fresh path and record that default choice in the aggregated overview.
 
 ## Preconditions
 

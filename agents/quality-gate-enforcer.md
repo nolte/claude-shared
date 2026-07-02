@@ -57,10 +57,11 @@ Return a single report in this exact structure. The structured findings block at
 ```yaml
 performed_at: <ISO date>
 agent_version: quality-gate-enforcer@<git-sha-or-short; "unknown" when the caller doesn't supply one>
+# severity uses the canonical Title-Case scale from spec/claude/review-plan/ §Severity scale
 findings:
   - kind: <composition-gap | runner-drift | shape-violation | timeout-missing | delimitation-leak | clean>
     target: <Taskfile target, workflow step, spec rule, or path; "n/a" for a clean run>
-    severity: <critical | warning | info>
+    severity: <Critical | Warning | Info>
     resolution: <align-taskfile <target>=<change> | align-ci <step>=<change> | add-category <name> | document-timeout <target>=<minutes> | proceed>
     evidence: <one-line quote, path:line, or schema reference>
     rationale: <one short sentence citing the spec rule>
@@ -90,7 +91,7 @@ findings:
 - A `clean` finding signals the wiring is spec-conformant; the gate itself may still be red — run the `quality-gate` skill to find out.
 ````
 
-When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
+When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: Info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
 
 ## Inputs
 
@@ -118,7 +119,7 @@ The spec mandates lint, typecheck, and tests **when the repository has relevant 
 
 - **lint** is relevant whenever any code file exists at all. Always required.
 - **typecheck** is relevant when at least one of: `tsconfig.json`, `pyproject.toml` declaring `mypy` / `pyright` config, `go.mod`, `Cargo.toml` (Rust's type system is built-in), or equivalent. Pure-shell / pure-Markdown repos may legitimately omit typecheck — report the omission in **Health** rather than as a `composition-gap`.
-- **tests** is relevant when at least one test file matches the conventional path for the detected stack: `tests/`, `**/__tests__/`, `**/*.test.{ts,tsx,js,jsx}`, `**/*_test.go`, `**/*_test.py`, `**/test_*.py`, `**/spec/**/*.rb`, etc. A repo with **zero** test files reports tests as `composition-gap` (`severity: warning`) — the spec allows omission only when "no relevant code" exists, and a repository with any production code has potential test surface.
+- **tests** is relevant when at least one test file matches the conventional path for the detected stack: `tests/`, `**/__tests__/`, `**/*.test.{ts,tsx,js,jsx}`, `**/*_test.go`, `**/*_test.py`, `**/test_*.py`, `**/spec/**/*.rb`, etc. A repo with **zero** test files reports tests as `composition-gap` (`severity: Warning`) — the spec allows omission only when "no relevant code" exists, and a repository with any production code has potential test surface.
 
 Cap the manifest scan at the repo root plus one level deep; deeper monorepo subroots are walked in Surface 3.
 
@@ -126,27 +127,27 @@ Cap the manifest scan at the repo root plus one level deep; deeper monorepo subr
 
 For each category that's relevant per Surface 1:
 
-- **Taskfile preference (per `spec/project/quality-gate/` §"Invocation contract"):** when `Taskfile.yml` exists, the category **MUST** have a corresponding target (`lint`, `typecheck`, `test`, or a documented alternative name). Missing targets are `composition-gap` findings (`severity: critical`).
-- **Direct-tool fallback:** when no `Taskfile.yml` exists, the corresponding tool **MUST** be invocable per the repository's manifest config (for example `ruff check .` for a Python project that declares `ruff` in `pyproject.toml`); the wiring rule is that the tool runs as the repository has configured it, not with bespoke flags. Bespoke flags that aren't in the repo's own config are `composition-gap` findings (`severity: warning`).
-- **Local-vs-CI parity (per spec §"Invocation contract"):** every workflow under `.github/workflows/` that runs the gate **MUST** invoke the same Taskfile target (or the same direct-tool command) as a local contributor would. Workflow steps that pass extra flags, switch to a stricter config, or call a different tool altogether are `runner-drift` findings (`severity: critical`).
-- **Output shape (per spec §"Output shape"):** the `quality-gate` skill is the canonical producer of the four-column `Check | Status | Runner | Details` table with statuses `pass`/`fail`/`skipped`/`timeout`. The agent **MUST NOT** verify the skill's output mechanically (that's the skill's review surface), but it **MUST** flag any custom CI step that reports gate results in a different shape (for example a custom JSON report wired into a status comment) as a `shape-violation` finding (`severity: warning`).
-- **Timeouts (per spec §"Timeouts and failure handling"):** every relevant category **SHOULD** carry a documented timeout — either the spec's per-category bound (lint ≤ 2 min, typecheck ≤ 5 min, tests ≤ 10 min) or an explicit override in the Taskfile target's `desc` / a `timeout-minutes` field on the corresponding workflow step. Missing timeout documentation is a `timeout-missing` finding (`severity: warning`); a documented override that exceeds the per-category bound without a rationale is also `timeout-missing` (`severity: info`).
+- **Taskfile preference (per `spec/project/quality-gate/` §"Invocation contract"):** when `Taskfile.yml` exists, the category **MUST** have a corresponding target (`lint`, `typecheck`, `test`, or a documented alternative name). Missing targets are `composition-gap` findings (`severity: Critical`).
+- **Direct-tool fallback:** when no `Taskfile.yml` exists, the corresponding tool **MUST** be invocable per the repository's manifest config (for example `ruff check .` for a Python project that declares `ruff` in `pyproject.toml`); the wiring rule is that the tool runs as the repository has configured it, not with bespoke flags. Bespoke flags that aren't in the repo's own config are `composition-gap` findings (`severity: Warning`).
+- **Local-vs-CI parity (per spec §"Invocation contract"):** every workflow under `.github/workflows/` that runs the gate **MUST** invoke the same Taskfile target (or the same direct-tool command) as a local contributor would. Workflow steps that pass extra flags, switch to a stricter config, or call a different tool altogether are `runner-drift` findings (`severity: Critical`).
+- **Output shape (per spec §"Output shape"):** the `quality-gate` skill is the canonical producer of the four-column `Check | Status | Runner | Details` table with statuses `pass`/`fail`/`skipped`/`timeout`. The agent **MUST NOT** verify the skill's output mechanically (that's the skill's review surface), but it **MUST** flag any custom CI step that reports gate results in a different shape (for example a custom JSON report wired into a status comment) as a `shape-violation` finding (`severity: Warning`).
+- **Timeouts (per spec §"Timeouts and failure handling"):** every relevant category **SHOULD** carry a documented timeout — either the spec's per-category bound (lint ≤ 2 min, typecheck ≤ 5 min, tests ≤ 10 min) or an explicit override in the Taskfile target's `desc` / a `timeout-minutes` field on the corresponding workflow step. Missing timeout documentation is a `timeout-missing` finding (`severity: Warning`); a documented override that exceeds the per-category bound without a rationale is also `timeout-missing` (`severity: Info`).
 
 ### Surface 3 — delimitation against sibling specs
 
 The spec carves the gate's scope explicitly (per `spec/project/quality-gate/` §"Delimitation"). Detect leaks:
 
-- **Workflow-health leak:** any wiring under `.github/workflows/` that combines per-invocation gate output with trend-tracking (for example a step that logs to a metrics dashboard inside the same workflow as the gate run) is a `delimitation-leak` finding (`severity: warning`), `resolution: align-ci` — move the metrics step into a separate `workflow-health` workflow.
-- **Dependency-audit leak:** any `task lint` / `task check` target that wraps `pip-audit`, `npm audit`, `cargo audit`, or `govulncheck` is a `delimitation-leak` finding (`severity: warning`) — CVE scanning has its own cadence per `spec/project/dependency-audit/`.
-- **Release-automation leak:** any workflow that conditions a release tag, image push, or registry write on the gate's pass status inside the same workflow file is a `delimitation-leak` finding (`severity: warning`) — gating release on a green gate is fine, but the release workflow is separate per `spec/project/release-automation/`.
+- **Workflow-health leak:** any wiring under `.github/workflows/` that combines per-invocation gate output with trend-tracking (for example a step that logs to a metrics dashboard inside the same workflow as the gate run) is a `delimitation-leak` finding (`severity: Warning`), `resolution: align-ci` — move the metrics step into a separate `workflow-health` workflow.
+- **Dependency-audit leak:** any `task lint` / `task check` target that wraps `pip-audit`, `npm audit`, `cargo audit`, or `govulncheck` is a `delimitation-leak` finding (`severity: Warning`) — CVE scanning has its own cadence per `spec/project/dependency-audit/`.
+- **Release-automation leak:** any workflow that conditions a release tag, image push, or registry write on the gate's pass status inside the same workflow file is a `delimitation-leak` finding (`severity: Warning`) — gating release on a green gate is fine, but the release workflow is separate per `spec/project/release-automation/`.
 
 Monorepo subroots (when detected per `spec/project/quality-gate/` §"Monorepo and subroot behaviour"): each subroot is audited as an additional relevance signal in Surface 1; the wiring in Surface 2 is checked once per Taskfile target (subroots inherit the target unless a subroot-specific target overrides).
 
 ## Severity assignment
 
-- `critical`: violations that would leave the gate silently incomplete or contradictory — missing relevant category in Taskfile, local-vs-CI command drift on a relevant category.
-- `warning`: violations that don't break the gate but break the spec's stated invariant — missing tests, bespoke flags, output-shape divergence in custom CI steps, missing timeout documentation, sibling-spec leaks.
-- `info`: cosmetic or "noted for review" findings — relevance heuristics that may be wrong on edge-case stacks, documented timeouts that exceed the spec bound, deferred-scope notes.
+- `Critical`: violations that would leave the gate silently incomplete or contradictory — missing relevant category in Taskfile, local-vs-CI command drift on a relevant category.
+- `Warning`: violations that don't break the gate but break the spec's stated invariant — missing tests, bespoke flags, output-shape divergence in custom CI steps, missing timeout documentation, sibling-spec leaks.
+- `Info`: cosmetic or "noted for review" findings — relevance heuristics that may be wrong on edge-case stacks, documented timeouts that exceed the spec bound, deferred-scope notes.
 
 ## Hard rules
 
@@ -158,5 +159,5 @@ Monorepo subroots (when detected per `spec/project/quality-gate/` §"Monorepo an
 - **Never** call the `Skill` tool or dispatch sibling agents — subagents can't spawn further subagents (per `spec/claude/agent-management/` §"Subagent boundaries (Claude Code runtime)").
 - **Never** flag a category as a `composition-gap` when the repository genuinely has no relevant code for it (pure-Markdown repo without typecheck, repo without any production code without tests). Report the relevance signal in **Health** and move on.
 - **Always** ground every finding in a concrete reference: a Taskfile target name, a workflow step name with a `path:line`, or a spec section. Findings without a reference aren't findings.
-- **Always** classify the run as `clean` (`target: n/a`, `severity: info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
+- **Always** classify the run as `clean` (`target: n/a`, `severity: Info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
 - **Always** reread `spec/project/quality-gate/<canonical_language>.md` before producing the report; when this agent disagrees with the spec, the spec wins and the agent's behaviour is updated, not the spec.

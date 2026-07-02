@@ -21,6 +21,7 @@ see_also:
   - tech-stack-capture
   - portfolio-audit
   - dependency-audit
+  - tech-stack-fitness-reviewer
 ---
 
 # Tech Stack Drift Reviewer
@@ -66,10 +67,11 @@ Return a single severity-sorted report in this exact structure. The structured f
 ```yaml
 performed_at: <ISO date>
 agent_version: tech-stack-drift-reviewer@<git-sha-or-short; "unknown" when the caller doesn't supply one>
+# severity uses the canonical Title-Case scale from spec/claude/review-plan/ §Severity scale
 findings:
   - kind: <schema-violation | inheritance-drift | signal-missing | signal-orphan | lifecycle-stale | clean>
     target: <entry name, manifest path:line, or signal path; "n/a" for a clean run>
-    severity: <critical | warning | suggestion | info>
+    severity: <Critical | Warning | Suggestion | Info>
     resolution: <dispatch-skill tech-stack-capture:<operation> | fix-entry <field>=<value> | add-override <name>:<rationale> | declare-addition <name>:<kind>:<group> | proceed>
     evidence: <one-line quote, path:line, or schema reference>
     rationale: <one short sentence citing the spec rule>
@@ -100,7 +102,7 @@ findings:
 - A `clean` finding signals the declared manifest and the on-disk signals are in sync; CVE drift on the underlying packages is a separate concern owned by `dependency-audit`.
 ````
 
-When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
+When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: Info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
 
 ## Inputs
 
@@ -116,7 +118,7 @@ If the working tree isn't a git repository, stop and report; the audit needs a r
 Verify, using `Read` and `Glob` only:
 
 1. `spec/portfolio/tech-stack/<canonical_language>.md` **and** `spec/portfolio/tech-stack-discovery/<canonical_language>.md` exist. Read `spec/.spec-config.yml` to resolve the canonical language; fall back to `en` when the config is absent. If either is missing, stop and report — without the oracles, the audit is ad-hoc judgement.
-2. At least one of the following manifests resolves on disk: `project/portfolio.yml` (the Portfolio-Member shape — agent reads the `tech_stack:` block) or `portfolio/tech-stack.yml` (the `claude-shared` global-stack curator shape). When neither exists, emit a single `schema-violation` finding (`severity: warning`, `target: project/portfolio.yml`, `resolution: dispatch-skill tech-stack-capture:bootstrap`) and stop the rest of the audit.
+2. At least one of the following manifests resolves on disk: `project/portfolio.yml` (the Portfolio-Member shape — agent reads the `tech_stack:` block) or `portfolio/tech-stack.yml` (the `claude-shared` global-stack curator shape). When neither exists, emit a single `schema-violation` finding (`severity: Warning`, `target: project/portfolio.yml`, `resolution: dispatch-skill tech-stack-capture:bootstrap`) and stop the rest of the audit.
 3. Determine the repository's role: presence of `portfolio/tech-stack.yml` indicates the `claude-shared` global-stack curator role; presence of `project/portfolio.yml` indicates a Portfolio-Member; both being present is allowed only inside `claude-shared` itself (it both curates the global stack and is a Portfolio-Member). Report the detected role in **Scope**.
 
 ## Investigation surface
@@ -127,31 +129,31 @@ The audit walks four surfaces; each has a bounded scan rule so the agent stays w
 
 For every entry in the declared manifest:
 
-- The entry **MUST** carry the five mandatory fields (`name`, `kind`, `group`, `status`, `rationale`) per §"Entry schema". Missing or empty mandatory field is a `schema-violation` finding (`severity: critical`).
-- `kind` **MUST** be one of the twelve closed enum values per §"Kind enum"; any other value is a `schema-violation` finding (`severity: critical`).
-- `group` **MUST** be one of the five closed enum values per §"Group enum"; any other value is a `schema-violation` finding (`severity: critical`). Multi-group entries are forbidden — declaring `group` as a list is also `schema-violation` (`severity: critical`).
-- `status` **MUST** be one of `active`, `experimental`, `deprecated` per §"Lifecycle"; any other value is a `schema-violation` finding (`severity: critical`).
-- A `kind: other` entry that persists across two consecutive quarterly portfolio audits or 180 days from first appearance is a `schema-violation` finding (`severity: suggestion`) per §"Kind enum" SHOULD — flagged but never blocking.
+- The entry **MUST** carry the five mandatory fields (`name`, `kind`, `group`, `status`, `rationale`) per §"Entry schema". Missing or empty mandatory field is a `schema-violation` finding (`severity: Critical`).
+- `kind` **MUST** be one of the twelve closed enum values per §"Kind enum"; any other value is a `schema-violation` finding (`severity: Critical`).
+- `group` **MUST** be one of the five closed enum values per §"Group enum"; any other value is a `schema-violation` finding (`severity: Critical`). Multi-group entries are forbidden — declaring `group` as a list is also `schema-violation` (`severity: Critical`).
+- `status` **MUST** be one of `active`, `experimental`, `deprecated` per §"Lifecycle"; any other value is a `schema-violation` finding (`severity: Critical`).
+- A `kind: other` entry that persists across two consecutive quarterly portfolio audits or 180 days from first appearance is a `schema-violation` finding (`severity: Suggestion`) per §"Kind enum" SHOULD — flagged but never blocking.
 
 ### Surface 2 — inheritance (per spec §"Inheritance semantics", §"Group regrouping")
 
 For each Portfolio-Member repository (`project/portfolio.yml` present, `tech_stack:` block declared):
 
-- Every `tech_stack.overrides[].name` **MUST** resolve to an existing entry in `portfolio/tech-stack.yml:entries[]`. A non-resolving override is an `inheritance-drift` finding (`severity: warning`).
-- Every `tech_stack.overrides[].inherit` **MUST** be `false` (the field is explicit per spec to leave room for future opt-in semantics). Other values are `inheritance-drift` findings (`severity: critical`).
-- Every `tech_stack.overrides[].rationale` **MUST** be non-empty. Empty rationale is an `inheritance-drift` finding (`severity: warning`).
-- Every `tech_stack.additions[].name` **MUST NOT** collide with an inherited global entry's `name` unless that entry also appears in `tech_stack.overrides[]` with `inherit: false`. A shadow addition without explicit override is an `inheritance-drift` finding (`severity: critical`).
-- Every `tech_stack.regroup[].name` **MUST** resolve to an inherited global entry per §"Group regrouping". A non-resolving regroup record is an `inheritance-drift` finding (`severity: warning`).
+- Every `tech_stack.overrides[].name` **MUST** resolve to an existing entry in `portfolio/tech-stack.yml:entries[]`. A non-resolving override is an `inheritance-drift` finding (`severity: Warning`).
+- Every `tech_stack.overrides[].inherit` **MUST** be `false` (the field is explicit per spec to leave room for future opt-in semantics). Other values are `inheritance-drift` findings (`severity: Critical`).
+- Every `tech_stack.overrides[].rationale` **MUST** be non-empty. Empty rationale is an `inheritance-drift` finding (`severity: Warning`).
+- Every `tech_stack.additions[].name` **MUST NOT** collide with an inherited global entry's `name` unless that entry also appears in `tech_stack.overrides[]` with `inherit: false`. A shadow addition without explicit override is an `inheritance-drift` finding (`severity: Critical`).
+- Every `tech_stack.regroup[].name` **MUST** resolve to an inherited global entry per §"Group regrouping". A non-resolving regroup record is an `inheritance-drift` finding (`severity: Warning`).
 
 ### Surface 3 — signal-vs-declaration (per `spec/portfolio/tech-stack-discovery/` §"Discovery sequence per repository")
 
 For each declared entry in the effective stack (inherited active/experimental ∪ additions − overrides):
 
-- A declared entry **MUST** have a matching on-disk signal per the discovery spec's signal map (for example: `kind: package-manager`, `name: uv` requires `uv.lock` or `[tool.uv]` in `pyproject.toml`; `kind: ci`, `name: github-actions` requires at least one workflow under `.github/workflows/`; `kind: docs`, `name: mkdocs` requires `mkdocs.yml`). Missing signal is a `signal-missing` finding (`severity: warning`); the discovery spec downgrades to `suggestion` when the entry's `rationale` field explicitly acknowledges the gap.
+- A declared entry **MUST** have a matching on-disk signal per the discovery spec's signal map (for example: `kind: package-manager`, `name: uv` requires `uv.lock` or `[tool.uv]` in `pyproject.toml`; `kind: ci`, `name: github-actions` requires at least one workflow under `.github/workflows/`; `kind: docs`, `name: mkdocs` requires `mkdocs.yml`). Missing signal is a `signal-missing` finding (`severity: Warning`); the discovery spec downgrades to `Suggestion` when the entry's `rationale` field explicitly acknowledges the gap.
 
 For each discovered on-disk signal not covered by any declared entry:
 
-- A signal **SHOULD** be either declared in the manifest or explicitly out-of-scope. An undeclared signal that maps to a kind/group recognised by the spec is a `signal-orphan` finding (`severity: warning`). A signal that doesn't fit any of the twelve kind values is a `signal-orphan` finding (`severity: suggestion`) — operator may rationalise as `kind: other` per §"Kind enum" SHOULD.
+- A signal **SHOULD** be either declared in the manifest or explicitly out-of-scope. An undeclared signal that maps to a kind/group recognised by the spec is a `signal-orphan` finding (`severity: Warning`). A signal that doesn't fit any of the twelve kind values is a `signal-orphan` finding (`severity: Suggestion`) — operator may rationalise as `kind: other` per §"Kind enum" SHOULD.
 
 Cap the signal scan at the signal sources enumerated in `spec/portfolio/tech-stack-discovery/` §"Discovery sequence per repository"; deeper transitive walks (every `node_modules/<pkg>/package.json`) are out of scope.
 
@@ -159,15 +161,15 @@ Cap the signal scan at the signal sources enumerated in `spec/portfolio/tech-sta
 
 For each inherited global entry:
 
-- An entry with `status: deprecated` that's still inherited by this consumer after one closed sprint (signal: the consumer has at least one sprint in `status: closed` whose `ended` date is after the global entry's status-flip commit date — best-effort detection from git history; agent reports the constraint in **Health** when git-log access isn't available) is a `lifecycle-stale` finding (`severity: suggestion`).
-- An entry whose `deprecated_in_favor_of` reference points at another entry that's also `deprecated` is a `lifecycle-stale` finding (`severity: warning`) — there's no concrete migration target.
+- An entry with `status: deprecated` that's still inherited by this consumer is a `lifecycle-stale` finding (`severity: Suggestion`). The finer "after one closed sprint" signal (the consumer has at least one sprint in `status: closed` whose `ended` date is after the global entry's status-flip commit date) needs git-history access this agent doesn't have — the tool list omits `Bash` — so the agent **always** reports this staleness dimension as constrained-by-tool-set in **Health** and never conditions the finding on a git-log lookup.
+- An entry whose `deprecated_in_favor_of` reference points at another entry that's also `deprecated` is a `lifecycle-stale` finding (`severity: Warning`) — there's no concrete migration target.
 
 ## Severity assignment
 
-- `critical`: violations that would block a clean `tech-stack-capture` write or a `portfolio-audit` pass — missing mandatory field, kind/group/status enum violation, shadow addition without override, override with `inherit: true`.
-- `warning`: violations that don't fail a write but break the spec's stated invariant — missing repo signal for a declared entry, undeclared repo signal, broken override reference, empty rationale, chained-deprecation reference.
-- `suggestion`: violations from a SHOULD or a soft-rule — `kind: other` persistence past the 180-day window, lifecycle-stale entry past one closed sprint, undeclared signal that doesn't fit the kind enum.
-- `info`: cosmetic or "noted for review" findings — deferred-scope notes, signal coverage gaps the audit can't verify from the available tool set.
+- `Critical`: violations that would block a clean `tech-stack-capture` write or a `portfolio-audit` pass — missing mandatory field, kind/group/status enum violation, shadow addition without override, override with `inherit: true`.
+- `Warning`: violations that don't fail a write but break the spec's stated invariant — missing repo signal for a declared entry, undeclared repo signal, broken override reference, empty rationale, chained-deprecation reference.
+- `Suggestion`: violations from a SHOULD or a soft-rule — `kind: other` persistence past the 180-day window, lifecycle-stale entry past one closed sprint, undeclared signal that doesn't fit the kind enum.
+- `Info`: cosmetic or "noted for review" findings — deferred-scope notes, signal coverage gaps the audit can't verify from the available tool set.
 
 ## Hard rules
 
@@ -180,5 +182,5 @@ For each inherited global entry:
 - **Never** call the `Skill` tool or dispatch sibling agents — subagents can't spawn further subagents (per `spec/claude/agent-management/` §"Subagent boundaries (Claude Code runtime)").
 - **Never** propose a version bump or a CVE remediation. Version currency belongs to `dependency-audit`; this agent only checks declared-vs-discovered presence, not version drift.
 - **Always** ground every finding in a concrete reference: an entry `name`, a `path:line`, or a spec section. Findings without a reference aren't findings.
-- **Always** classify the run as `clean` (`target: n/a`, `severity: info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
+- **Always** classify the run as `clean` (`target: n/a`, `severity: Info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
 - **Always** reread `spec/portfolio/tech-stack/<canonical_language>.md` and `spec/portfolio/tech-stack-discovery/<canonical_language>.md` before producing the report; when this agent disagrees with either spec, the spec wins and the agent's behaviour is updated, not the spec.

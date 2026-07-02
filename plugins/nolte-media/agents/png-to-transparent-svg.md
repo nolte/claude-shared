@@ -4,7 +4,7 @@ description: "Converts a PNG that uses a baked-in checkerboard (or single-color)
 distribution: plugin
 tools: Read, Bash, Glob
 model: sonnet
-tags: [scaffolding]
+tags: [media]
 phase: cross-cutting
 summary: "Converts a PNG with fake-transparency background (checkerboard or single colour) into a clean SVG with real alpha."
 summary_de: "Konvertiert ein PNG mit Fake-Transparency-Hintergrund (Checkerboard oder Einfarbig) in ein sauberes SVG mit echtem Alpha."
@@ -21,11 +21,11 @@ Your work is governed by `spec/claude/png-to-transparent-svg/`; that spec is the
 
 ## Why this is an agent, not a skill
 
-- **Self-contained input and output:** the caller hands over a path (single file, directory, or glob) and a destination, and expects cleaned SVGs plus a short per-file report. No mid-flow user approval is required for the core "analyse → clean → vectorise" loop.
-- **Specialisation sharpens output:** a narrow "detect fake transparency, pick thresholds, vectorise with these vtracer parameters" prompt measurably improves output quality over doing the same work inline from a general conversation.
-- **Tool restriction is deliberate:** `Read`, `Bash`, `Glob` are enough; image-file writes happen inside the Python helpers invoked through `Bash` (so `Write` isn't needed in the harness allow-list), and the agent never edits arbitrary text files (no `Edit` / `NotebookEdit`). No network tools.
-- **Model pin (`sonnet`):** the work is mechanical — corner-pixel sampling, threshold selection, vtracer parameter dispatch — with no open-ended reasoning. Sonnet handles the per-file diagnosis loop reliably and at lower cost than Opus. Haiku is too small for this shape: the threshold-selection step needs to weigh corner-pixel colour-cluster outliers against expected fake-transparency patterns, and edge cases (mixed-corner PNGs, partially-transparent gradients) where Sonnet stays accurate are likely to mis-classify on Haiku. The pin is justified per `spec/claude/agent-management/` §Model selection (SHOULD justify a pinned model).
-- **Counter-dimension:** some callers may want a threshold review per file (skill bias), but the agent reports the per-file diagnosis before cleaning each image and surfaces outliers ("only 2 % of pixels removed") explicitly, so the caller can intervene without needing mid-flow skill-style dialog.
+- **Self-contained input and output:** the caller hands over a path (single file, directory, or glob) and a destination, and expects cleaned SVGs plus a short per-file report. No mid-flow approval is required for the core "analyse → clean → vectorise" loop.
+- **Specialisation sharpens output:** a narrow "detect fake transparency, pick thresholds, vectorise with these vtracer parameters" prompt measurably improves output over doing the same work inline.
+- **Tool restriction is deliberate:** `Read`, `Bash`, `Glob` are enough; image-file writes happen inside the Python helpers invoked through `Bash` (so `Write` isn't needed), and the agent never edits arbitrary text files (no `Edit` / `NotebookEdit`). No network tools.
+- **Model pin (`sonnet`):** the work is mechanical — corner-pixel sampling, threshold selection, vtracer parameter dispatch — with no open-ended reasoning. Sonnet handles the per-file diagnosis loop reliably at lower cost than Opus; Haiku is too small for the threshold-selection step (weighing corner-pixel outliers against expected fake-transparency patterns, and edge cases like mixed-corner PNGs or partially-transparent gradients). Pin justified per `spec/claude/agent-management/` §Model selection.
+- **Counter-dimension:** some callers may want a per-file threshold review (skill bias), but the agent reports the diagnosis before cleaning each image and surfaces outliers ("only 2 % of pixels removed") explicitly, so the caller can intervene without mid-flow dialog.
 
 ## Scope and boundaries
 
@@ -234,22 +234,7 @@ if re.search(bg_pattern, content):
 
 ### Phase 5: Verify and report
 
-For every file:
-
-- Record the input PNG size in bytes.
-- Record the output SVG size in bytes.
-- Read the output SVG back with the `Read` tool so the caller can visualise it.
-
-Produce a final table:
-
-```
-| file | original PNG | pixels removed | SVG size | status |
-|---|---|---|---|---|
-| icon-a | 1.3 MB | 85 % | 287 KB | ok |
-| icon-b | 512 KB | 22 % | 140 KB | warn: low removal |
-```
-
-`status` is `ok` when the pipeline ran clean, `warn: <reason>` when something needs caller attention (low removal percentage, surviving background path the regex didn't catch, SVG larger than the PNG), and `skipped: <reason>` when you chose not to process the file (already transparent, content-like corners).
+For every file, record the input PNG and output SVG sizes in bytes, and read the output SVG back with the `Read` tool so the caller can visualise it. Produce the final summary table defined in **Output shape**, one row per file. `status` is `ok` when the pipeline ran clean, `warn: <reason>` when something needs caller attention (low removal percentage, a surviving background path the regex didn't catch, an SVG larger than the PNG), and `skipped: <reason>` when you chose not to process the file (already transparent, content-like corners).
 
 ## Error cases
 

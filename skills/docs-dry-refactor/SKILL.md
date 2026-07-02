@@ -1,6 +1,6 @@
 ---
 name: docs-dry-refactor
-description: "Operationalises spec/project/mkdocs-structure/ §Snippet inclusion (DRY). Detects paragraph duplication across MkDocs pages and, with per-snippet user approval, extracts duplicates into `mkdocs-include-markdown-plugin` includes pointing at a canonical source (preferring a live source file over a dedicated per-language _snippets/ folder). Three operations: `scan` (read-only ranked findings), `propose` (surface canonical source, markers, include directives for a target snippet ID, await approval), `apply` (write markers, replace consumer blocks, verify via `mkdocs build --strict`). Invoke when the user asks to dedupe, DRY-refactor, extract snippets, or factor out duplicated MkDocs content; also handles equivalent German-language requests. Don't use for non-MkDocs markdown trees, single-file snippet authoring, prose linting (`prose-vale-curator`), structural scaffolding (`mkdocs-structure-apply`), or drift detection (`docs-freshness-checker`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Operationalises spec/project/mkdocs-structure/ §Snippet inclusion (DRY). Detects paragraph duplication across MkDocs pages and, with per-snippet user approval, extracts duplicates into `mkdocs-include-markdown-plugin` includes pointing at a canonical source (preferring a live source file over a dedicated per-language _snippets/ folder). Three operations: `audit` (read-only ranked findings), `propose` (surface canonical source, markers, include directives for a target snippet ID, await approval), `apply` (write markers, replace consumer blocks, verify via `mkdocs build --strict`). Invoke when the user asks to dedupe, DRY-refactor, extract snippets, or factor out duplicated MkDocs content; also handles equivalent German-language requests. Don't use for non-MkDocs markdown trees, single-file snippet authoring, prose linting (`prose-vale-curator`), structural scaffolding (`mkdocs-structure-apply`), or drift detection (`docs-freshness-checker`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding, audit]
 phase: design
 summary: "Detects duplicated MkDocs paragraphs and extracts them into mkdocs-include-markdown-plugin snippets."
@@ -26,7 +26,7 @@ resumable: true
 
 Operationalises `spec/project/mkdocs-structure/<canonical_language>.md` §Snippet inclusion (DRY) inside the current repository. The skill scans the configured `docs/<lang>/` trees for paragraph-level duplication that violates the spec's DRY threshold, proposes a canonical-source extraction for each finding, and—after explicit per-snippet user approval—rewrites the consumer pages to include from that source via `mkdocs-include-markdown-plugin`.
 
-When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent requirements that don't appear in the spec.
+When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from `${CLAUDE_PLUGIN_ROOT}/spec/project/mkdocs-structure/<canonical_language>.md`). Never invent requirements that don't appear in the spec.
 
 ## Why this is a skill, not an agent
 
@@ -42,7 +42,7 @@ Per `spec/claude/skill-vs-agent/` §Decision dimensions, this capability is a sk
 
 Detect the user's language from their message and respond in it. Generated file contents (marker comments, include directives, new dedicated snippet files under `docs/<lang>/_snippets/`) are always written in English so portfolio-wide automation stays predictable.
 
-## Tool selection rationale
+## Tools used
 
 Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
@@ -57,15 +57,15 @@ Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 Before doing anything:
 
 1. Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
-2. Locate `spec/project/mkdocs-structure/<canonical_language>.md`—either in the target repo or via the `nolte-shared` plugin install path. Read the spec's §Snippet inclusion (DRY) subsection and the four DRY-related Acceptance Criteria items at runtime; never bake the thresholds into the skill. When neither copy is reachable, stop and ask the user which spec source to use (matches the parent spec's §Extension hooks §"Project-type discovery" fallback pattern).
+2. Locate `spec/project/mkdocs-structure/<canonical_language>.md`—either in the target repo or via the `nolte-shared` plugin at `${CLAUDE_PLUGIN_ROOT}/spec/project/mkdocs-structure/<canonical_language>.md`. Read the spec's §Snippet inclusion (DRY) subsection and the four DRY-related Acceptance Criteria items at runtime; never bake the thresholds into the skill. When neither copy is reachable, stop and ask the user which spec source to use (matches the parent spec's §Extension hooks §"Project-type discovery" fallback pattern).
 3. Resolve the language list from `spec/.spec-config.yml` `languages`. When that file is absent, ask the user which languages to scan; never default silently.
 4. Verify `mkdocs.yml` declares `mkdocs-include-markdown-plugin` and that the plugin is pinned in the project's Python dep manifest. When the plugin is missing, stop and route the user to `mkdocs-structure-apply patch` to wire the baseline first; this skill never adds the plugin itself.
 5. Check for uncommitted changes in `docs/`, `mkdocs.yml`, and any candidate canonical-source files. When the tree is dirty there, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
-6. Confirm the operation: `scan` (default, read-only), `propose <id>` (surface a proposal and await approval), or `apply <id>` (write after approval).
+6. Confirm the operation: `audit` (default, read-only), `propose <id>` (surface a proposal and await approval), or `apply <id>` (write after approval).
 
 ## Operations
 
-### 1. `scan` (read-only, default)
+### 1. `audit` (read-only, default)
 
 Inputs: target repo root (defaults to the current working directory), optional `--lang <language>` filter.
 
@@ -88,11 +88,11 @@ For each finding, identify the **proposed canonical source**:
 - First, search the repository for the verbatim block in non-docs files (CONTRIBUTING.md, `pyproject.toml`, `.github/workflows/*.yml`, `README.md`, source files). When found, propose that file as the canonical source plus the marker positions needed.
 - Otherwise, propose a new dedicated `docs/<lang>/_snippets/<topic>.md` (one per configured language tree when the content is language-specific; one shared snippet under the canonical language only when the content is language-neutral).
 
-The scan emits a structured findings table only; never writes.
+The `audit` emits a structured findings table only; never writes.
 
 ### 2. `propose <finding-id>`
 
-Inputs: a `finding-id` produced by a prior `scan` in the same session.
+Inputs: a `finding-id` produced by a prior `audit` in the same session.
 
 Surface:
 
@@ -117,14 +117,20 @@ Writes in this order:
 
 The skill returns to the user, in this order:
 
-1. **Operation + target**: which operation ran (`scan` / `propose` / `apply`), absolute target repo root, resolved language scope.
-2. **Pre-state** (for `scan`): page count walked, total markdown lines hashed, pages skipped (catalog generator, `_`-prefixed folders, already-include consumers).
-3. **Findings table** (for `scan`): ranked rows with `id`, `lines`, `occurrences`, `pages` (absolute paths), `snippet_preview` (first 200 chars), `proposed_canonical_source`; followed by the `approve <id>` / `skip <id>` choice list.
+1. **Operation + target**: which operation ran (`audit` / `propose` / `apply`), absolute target repo root, resolved language scope.
+2. **Pre-state** (for `audit`): page count walked, total markdown lines hashed, pages skipped (catalog generator, `_`-prefixed folders, already-include consumers).
+3. **Findings table** (for `audit`): ranked rows with `id`, `lines`, `occurrences`, `pages` (absolute paths), `snippet_preview` (first 200 chars), `proposed_canonical_source`; followed by the `approve <id>` / `skip <id>` choice list.
 4. **Proposed extraction** (for `propose`): full snippet body, canonical source path with marker positions, per-consumer include directive, expected build delta.
 5. **Approval gate** (for `propose`): explicit user-decision point; nothing is written until the user confirms.
 6. **Applied edits** (for `apply`): list of files actually written, with absolute paths and the marker comments inserted (one row per file).
 7. **Build verification** (for `apply`): `mkdocs build --strict` exit code; on failure the raw stderr block verbatim plus the revert log.
-8. **Caller follow-ups**: explicit list — commit the working-tree edits, optionally re-run `scan` to surface residual findings, optionally route to `mkdocs-structure-apply audit` to verify §Snippet inclusion (DRY) conformance end-to-end, open the PR via `pull-request-create`. Never bump the plugin version, commit, push, tag, or open PRs from this skill.
+8. **Caller follow-ups**: explicit list — commit the working-tree edits, optionally re-run `audit` to surface residual findings, optionally route to `mkdocs-structure-apply audit` to verify §Snippet inclusion (DRY) conformance end-to-end, open the PR via `pull-request-create`. Never bump the plugin version, commit, push, tag, or open PRs from this skill.
+
+## Examples
+
+- Read `examples/01-audit-duplicate-paragraphs.md` when running a read-only `audit` that hashes paragraph blocks, ranks duplicates over the DRY threshold, and proposes a canonical source per finding.
+- Read `examples/02-propose-live-source-extraction.md` when running `propose <id>` for a finding whose canonical source is a live non-docs file (e.g. `CONTRIBUTING.md`) and surfacing markers plus include directives at the approval gate.
+- Read `examples/03-apply-new-snippet-file.md` when running `apply <id>` for a finding with no live source, creating a dedicated `_snippets/` fragment and gating the write on `mkdocs build --strict`.
 
 ## Resumability
 
@@ -132,13 +138,13 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ## Hard rules
 
-1. **Never auto-rewrite.** Each proposed extraction requires per-snippet user approval. `approve all` after a `scan` is acceptable when the user explicitly asks for it; silent rewrite is forbidden.
+1. **Never auto-rewrite.** Each proposed extraction requires per-snippet user approval. `approve all` after a `audit` is acceptable when the user explicitly asks for it; silent rewrite is forbidden.
 2. **Never destroy page frontmatter.** When a duplicated block sits next to a page's frontmatter (`title`, `audience`, `last_updated`), preserve the frontmatter intact. Those fields **MUST NOT** ever migrate into a snippet.
 3. **Never commit a page whose `mkdocs build --strict` fails post-extract.** A failing build reverts every write made for the failing finding and surfaces the raw stderr; the finding stays approved but unapplied so the user can retry after fixing the cause.
 4. **Always read the spec at runtime.** Prefer `spec/project/mkdocs-structure/<canonical_language>.md` in the target repo; fall back to the copy shipped by the `nolte-shared` plugin only when the target lacks one. Never bake the DRY thresholds (≥3 lines, ≥2 pages) into the skill. When neither copy is reachable, stop and ask the user which spec source to use.
 5. **Always run `mkdocs build --strict` after every `apply`.** The build is the authoritative rendering gate; a passing local build is the floor, not the ceiling.
-6. **Never touch generated catalog pages.** `docs/<lang>/skills/SUMMARY.md`, `docs/<lang>/skills/<plugin>/<name>.md`, `docs/<lang>/agents/<plugin>/<name>.md`, `docs/<lang>/tags.md` are emitted by the catalog generator and are excluded from `scan`. The skill never rewrites or proposes extractions over them.
-7. **Never break existing include chains.** Pages already containing `{% include-markdown … %}` are flagged as "partial DRY (existing include)" hints in `scan` and skipped from new findings; the skill never overlays a new include over an existing one.
+6. **Never touch generated catalog pages.** `docs/<lang>/skills/SUMMARY.md`, `docs/<lang>/skills/<plugin>/<name>.md`, `docs/<lang>/agents/<plugin>/<name>.md`, `docs/<lang>/tags.md` are emitted by the catalog generator and are excluded from `audit`. The skill never rewrites or proposes extractions over them.
+7. **Never break existing include chains.** Pages already containing `{% include-markdown … %}` are flagged as "partial DRY (existing include)" hints in `audit` and skipped from new findings; the skill never overlays a new include over an existing one.
 8. **Prefer live-source canonical files over dedicated snippet files.** When the duplicated content originates from a non-docs file (CONTRIBUTING.md, `pyproject.toml`, a workflow step name, a source file), surface that file as the canonical source. Only when no such source exists, propose a new `docs/<lang>/_snippets/<topic>.md`.
 9. **Never bump versions, commit, push, tag releases, or open pull requests.** The skill produces working-tree edits only; lifecycle is owned by `pull-request-create`, `pull-request-merge`, and `release-publish-trigger`.
 10. **Never dispatch the `Skill` tool recursively into this skill.** The skill **MAY** orchestrate the `audience-doc-author` agent for snippet-body authoring and chain to the `mkdocs-structure-apply` skill (audit mode) for post-extract verification at the explicit hand-off points named in the Output contract; silent recursion isn't allowed.

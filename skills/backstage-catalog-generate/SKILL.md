@@ -46,7 +46,7 @@ The skill reads these signals and maps them to descriptor fields (every inferred
 
 ## Operations
 
-### Generate a catalog-info.yaml (default)
+### 1. Generate a catalog-info.yaml (default)
 
 1. **Inspect.** Read the repo signals above. Determine the entity kind(s) — almost always a single `Component`, plus an `API` entity when an interface definition is found. Consult the per-kind tables in `spec/project/backstage-catalog-generation/` §"Entity kinds" for the required/optional fields of any other kind.
 2. **Infer.** Fill the MUST-floor for each kind. For a Component that is: `apiVersion: backstage.io/v1alpha1`, `kind: Component`, a valid `metadata.name`, `spec.type`, `spec.lifecycle`, `spec.owner`. Mark each value *inferred* or *needs-confirm*.
@@ -55,7 +55,7 @@ The skill reads these signals and maps them to descriptor fields (every inferred
 5. **Self-validate.** Run the offline `@roadiehq/backstage-entity-validator` when available (`npx @roadiehq/backstage-entity-validator catalog-info.yaml`); otherwise apply the §Hard rules checklist below as a deterministic pre-flight. Treat reference-target existence (owner/system/API) as **unverified** by the offline check — surface those references as claims to confirm, not validated facts.
 6. **Report.** Tell the operator the written path, the inferred-vs-confirmed split, and any references still requiring an existing Group/User/System in the target catalog.
 
-### Generate a Tech Radar JSON (optional secondary)
+### 2. Generate a Tech Radar JSON (optional secondary)
 
 When the operator asks for a Tech Radar output: emit a `TechRadarLoaderResponse` JSON (`quadrants`, `rings`, `entries`) per `spec/project/backstage-catalog-generation/` §"The Tech Radar data model" — **not** a `catalog-info.yaml`, and **never** modelled as a catalog entity. Express each entry's ring placement through its `timeline` (a snapshot with `ringId` and a coercible `date`), not as a direct field. Target the `@backstage-community` package model; never reference the deprecated `@backstage` Tech Radar package or the dead `backstage.io/docs/features/techradar/` URLs.
 
@@ -82,3 +82,7 @@ Backstage's real validation is stricter and less obvious than its prose docs —
 - **Never branch on the old-vs-new frontend system** — `catalog-info.yaml` is a backend, frontend-agnostic concern.
 - **Distinguish inferred from confirmed** in every output; never silently emit a value the operator must own.
 - When `spec/project/backstage-catalog-generation/` disagrees with this body, the spec wins; propose updating this skill rather than diverging.
+
+## Resumability
+
+This skill is deliberately **not** `resumable`: although it walks six steps and one confirmation gate, they form a single cheap-to-restart pass — no externally-visible mutation lands before the final `Emit`, and every inferred field is re-derived deterministically from the same repo signals, so an interruption is recovered by re-invoking rather than by resuming persisted state (`spec/claude/resumable-work/` reserves resume for multi-gate side-effecting flows).

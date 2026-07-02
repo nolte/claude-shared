@@ -62,6 +62,12 @@ Guide the operator through:
 4. **Download the image** from the chat (the download / save-image control on the generated image).
 5. Place and rename the downloaded file wherever the operator needs it — the skill does not move or record it.
 
+## Examples
+
+- Read `examples/01-hand-authored-prompt-handoff.md` for the core one-off path: author a Gemini-optimised prose prompt from a brief, present the copy-paste block, and guide the UI download — no API, no sidecar.
+- Read `examples/02-brand-asset-delegates-graphic-prompt.md` when the asset is brand-conformant and publishable, so the prompt is authored by `graphic-prompt-generator` and this skill only handles the UI handoff.
+- Read `examples/03-watermark-caveat-reroute.md` when the asset must be watermark-free, so the unavoidable SynthID watermark makes the route wrong and the operator is steered to `image-generate --provider cloudflare`.
+
 ## Hard rules
 
 - **Never** call the Gemini API, request a `GEMINI_API_KEY`, or run the `image-generate` script for this flow; the whole point is the no-billing UI route.

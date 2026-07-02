@@ -45,7 +45,7 @@ Detect the operator's language and respond in it. The plan stub and any committe
 
 ## Operations
 
-### Start a working copy
+### 1. Start a working copy
 
 1. **Collect the branch and optional slug.** The branch MUST carry an allowed prefix (`feat/`, `fix/`, `chore/`, `docs/`, `exp/`) per `spec/project/branching-model/`. Propose a kebab-case slug if the operator does not give one (defaults to the branch name minus its prefix).
 2. **Create the worktree.** Run `task worktree:add -- <branch> [slug]`. This branches off `origin/develop`, seeds `.resume/<slug>/plan.md` with a plan stub, and prints the worktree path. Confirm the worktree path back to the operator.
@@ -68,6 +68,14 @@ Detect the operator's language and respond in it. The plan stub and any committe
      ```
 
    Substitute the real `<worktree-path>` and `<slug>` so the operator copies a working command and prompt, not placeholders.
+
+## Gotchas
+
+Per `spec/claude/skill-management/` §Gotchas — concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
+
+- **The worktree root is `NOLTE_WORKTREE_ROOT`, not a fixed path.** `task worktree:add` reads `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}` per machine; the worktree lands under whatever that variable points to. Don't assume `~/repos/.worktrees` when confirming the path back to the operator — read the actual path the `task` command prints.
+- **The primary-checkout guards go silent inside the worktree — that's expected, not a disabled guard.** The `PreToolUse` feature-branch guard and the `guard-primary-checkout` pre-commit hook only fire in the primary checkout; inside a linked worktree feature branches are correct, so both no-op. Don't misread that silence as the guard being off.
+- **A harness subagent worktree can nest under `.claude/worktrees/` unless redirected.** Before the first `Agent({isolation: "worktree"})` call, `CLAUDE_AGENT_WORKTREE_ROOT` must point under the same spec-conformant `NOLTE_WORKTREE_ROOT` root; otherwise the harness default materialises the worktree under `.claude/worktrees/`, which `spec/project/parallel-working-copies/` §Path layout forbids.
 
 ## Resumability
 

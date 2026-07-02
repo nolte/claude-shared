@@ -1,6 +1,6 @@
 ---
 name: cookiecutter-template-manage
-description: Manages the lifecycle of a Cookiecutter template: scaffolds a new template or refactors an existing one (with mid-flow user confirmation of variable names and choice defaults), hardens Cookiecutter hooks, and sets up a pytest-cookies test harness. Invoke when the user says "manage a Cookiecutter template lifecycle", "scaffold or refactor a Cookiecutter template (with name + purpose confirmation)", "harden cookiecutter hooks", "set up pytest-cookies harness", "Cookiecutter-Template anlegen", "Cookiecutter-Template überarbeiten", "Cookiecutter-Hook absichern", or "pytest-cookies einrichten". Don't use for plain template consumption (a bare `cookiecutter <url>` call needs no orchestration), generic Python bootstrap, Copier or cruft work, or intentionally diverging templates. Supports resume on re-invocation per `spec/claude/resumable-work/`.
+description: 'Manages the lifecycle of a Cookiecutter template: scaffolds a new template or refactors an existing one (with mid-flow user confirmation of variable names and choice defaults), hardens Cookiecutter hooks, and sets up a pytest-cookies test harness. Invoke when the user says "manage a Cookiecutter template lifecycle", "scaffold or refactor a Cookiecutter template (with name + purpose confirmation)", "harden cookiecutter hooks", "set up pytest-cookies harness", "Cookiecutter-Template anlegen", "Cookiecutter-Template überarbeiten", "Cookiecutter-Hook absichern", or "pytest-cookies einrichten". Don''t use for plain template consumption (a bare `cookiecutter <url>` call needs no orchestration), generic Python bootstrap, Copier or cruft work, or intentionally diverging templates. Supports resume on re-invocation per `spec/claude/resumable-work/`.'
 tags: [scaffolding]
 phase: design
 summary: "Manages a Cookiecutter template lifecycle: scaffold, refactor, harden hooks, set up the pytest-cookies harness."
@@ -22,7 +22,7 @@ Orchestrates the full Cookiecutter template lifecycle. The skill owns all mid-fl
 ## Why this is a skill, not an agent
 
 - **Mid-flow confirmations are the load-bearing interaction** — variable-name proposals, choice-default selections, and one-way hook additions all require explicit user sign-off before any file is written. An agent's fire-and-forget contract forfeits those checkpoints; a skill's conversational turn model owns them.
-- **Orchestrator role** — per `spec/claude/skill-vs-agent/en.md` §Hybrid pattern, when a workflow's orchestration requires user dialogue but the execution step benefits from a narrow specialist, the orchestrator is a skill and the executor is an agent. This skill is the orchestrator; `cookiecutter-template-author` is the executor.
+- **Orchestrator role** — per `spec/claude/skill-vs-agent/<canonical_language>.md` §Hybrid pattern, when a workflow's orchestration requires user dialogue but the execution step benefits from a narrow specialist, the orchestrator is a skill and the executor is an agent. This skill is the orchestrator; `cookiecutter-template-author` is the executor.
 - **Output flows back into the main conversation** — confirmation of variable names, the pre-dispatch decision summary, and the post-agent follow-up checklist are all part of the user's working context and must not be buried in a structured agent report.
 - Counter-dimension considered: the authoring step itself (reading every template file, running `cookiecutter --no-input`, executing `pytest`) benefits from a narrow system prompt and context-window isolation — that dimension favours an agent for the execution step, which is exactly the hybrid this skill implements.
 
@@ -110,7 +110,7 @@ Per `spec/claude/research-triangulate/`, before this skill acts on any **repo-ex
 - Never install Python packages on the caller's machine; report the exact `pip install` command and stop.
 - Never commit, push, bump versions, tag releases, or open pull requests; these are caller follow-ups.
 - Never re-invoke this skill recursively or dispatch sibling agents other than `cookiecutter-template-author`.
-- When `spec/claude/skill-vs-agent/en.md` or `spec/project/cookiecutter-template-authoring/` disagrees with these instructions, the spec wins. Surface the conflict to the user rather than silently diverging.
+- When `spec/claude/skill-vs-agent/<canonical_language>.md` or `spec/project/cookiecutter-template-authoring/` disagrees with these instructions, the spec wins. Surface the conflict to the user rather than silently diverging.
 
 ## Multi-model testing
 

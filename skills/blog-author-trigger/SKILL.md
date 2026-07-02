@@ -127,6 +127,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 - Read `examples/01-new-post-from-feature-done.md` when a feature reaches `done`, its slug is absent from the blog consumer's index, and the operator chooses to author a new post.
 - Read `examples/02-defer-to-backlog.md` when the operator defers and the skill writes the deferral artefact under `project/blog-triggers/`.
+- Read `examples/03-update-existing-post.md` when the derived slug already exists in the blog consumer's index and the operator picks Choice 2 to update that post.
 
 ## Hard rules
 
