@@ -346,7 +346,10 @@ members:
   - nolte/kamerplanter
 - repo: nolte/reachy-mini-app
   repo_url: https://github.com/nolte/reachy-mini-app
-  mission_statement: ""
+  mission_statement: >-
+    reachy-mini-app packages robot behaviours on the reachy_mini SDK and
+    distributes them as a Hugging Face app, so Reachy Mini owners run
+    behaviours like dance-to-music on their own device.
   capabilities:
   - name: reachy-mini-behavior-app
     description: >-
