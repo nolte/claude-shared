@@ -248,7 +248,7 @@ _None declared._
 
 ## nolte/reachy-mini-app
 
-_No mission statement declared (`project/mission.md` missing)._
+> reachy-mini-app packages robot behaviours on the reachy_mini SDK and distributes them as a Hugging Face app, so Reachy Mini owners run behaviours like dance-to-music on their own device.
 
 ### Capabilities
 
