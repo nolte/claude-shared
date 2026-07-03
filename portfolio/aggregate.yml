@@ -168,7 +168,12 @@ members:
   peers: []
 - repo: nolte/gh-plumbing
   repo_url: https://github.com/nolte/gh-plumbing
-  mission_statement: ""
+  mission_statement: >-
+    gh-plumbing gives downstream nolte/* repositories one centralised,
+    tag-pinned source of reusable GitHub Actions workflows, Probot
+    governance commons, and Renovate presets, so they achieve consistent
+    CI/CD and repository governance without duplicating or copy-pasting
+    pipeline and configuration boilerplate.
   capabilities:
   - name: reusable-github-actions-workflows
     description: >-
@@ -202,7 +207,11 @@ members:
   peers: []
 - repo: nolte/taskfiles
   repo_url: https://github.com/nolte/taskfiles
-  mission_statement: ""
+  mission_statement: >-
+    Taskfiles gives downstream nolte/* projects one centralised, remotely
+    included collection of reusable Taskfile modules, so they get
+    consistent task targets across local and CI runs without copying
+    Taskfile logic into each repository.
   capabilities:
   - name: reusable-taskfile-collection
     description: >-
@@ -218,7 +227,11 @@ members:
   peers: []
 - repo: nolte/ansible-reachy-mini-bootstrap
   repo_url: https://github.com/nolte/ansible-reachy-mini-bootstrap
-  mission_statement: ""
+  mission_statement: >-
+    ansible-reachy-mini-bootstrap provisions a Reachy Mini WiFi device to
+    a working Pollen/Reachy runtime state from a single inventory plus
+    playbook run, so any owner reaches an identical, reproducible device
+    state without manual per-device setup.
   capabilities:
   - name: reachy-mini-ansible-provisioning
     description: >-
@@ -233,7 +246,11 @@ members:
   peers: []
 - repo: nolte/claude-home-assistant
   repo_url: https://github.com/nolte/claude-home-assistant
-  mission_statement: ""
+  mission_statement: >-
+    claude-home-assistant gives the plugin author and later public users a
+    Claude Code skill and agent set that authors Home Assistant artefacts
+    (custom integrations, Lovelace cards, blueprints, automations, ESPHome
+    work) against Home Assistant Core and HACS conventions.
   capabilities:
   - name: claude-code-skills-and-agents-for-home-assistant
     description: >-
@@ -248,7 +265,11 @@ members:
   peers: []
 - repo: nolte/claude-reachy-mini
   repo_url: https://github.com/nolte/claude-reachy-mini
-  mission_statement: ""
+  mission_statement: >-
+    claude-reachy-mini gives the plugin author and later public users a
+    Claude Code skill and agent set that builds Reachy Mini apps (dance-
+    to-music behaviours and Home Assistant integration) with consistent,
+    spec-grounded tooling.
   capabilities:
   - name: claude-code-skills-and-agents-for-reachy-mini
     description: >-
@@ -263,7 +284,11 @@ members:
   peers: []
 - repo: nolte/reachy-mini-mcp
   repo_url: https://github.com/nolte/reachy-mini-mcp
-  mission_statement: ""
+  mission_statement: >-
+    reachy-mini-mcp gives MCP clients and Reachy Mini owners one MCP
+    server that exposes the Pollen Reachy Mini daemon over a stable tool
+    interface, so any MCP-capable LLM frontend can read robot state and
+    trigger motion without generating ad-hoc Python.
   capabilities:
   - name: reachy-mini-mcp-server
     description: >-
@@ -277,7 +302,12 @@ members:
   peers: []
 - repo: nolte/kamerplanter
   repo_url: https://github.com/nolte/kamerplanter
-  mission_statement: ""
+  mission_statement: >-
+    Kamerplanter begleitet Pflanzen-Besitzer, Selbst-Hoster und
+    Mitwirkende in einem selbst-gehosteten, mandantenfähigen System von
+    der Aussaat bis zur Nacherntebehandlung mit phasengenauen Pflege-,
+    Dünge- und Umgebungsempfehlungen, datenschutzfreundlich und
+    vollständig in eigener Hand betreibbar.
   capabilities:
   - name: plant-lifecycle-management-system
     description: >-
@@ -295,7 +325,11 @@ members:
   peers: []
 - repo: nolte/kamerplanter-ha
   repo_url: https://github.com/nolte/kamerplanter-ha
-  mission_statement: ""
+  mission_statement: >-
+    kamerplanter-ha connects a Kamerplanter instance to Home Assistant as
+    a HACS-distributed integration, so Home Assistant users and self-
+    hosters see plant monitoring, nutrient dosages, tank state, and per-
+    location overviews as Home Assistant sensors and services.
   capabilities:
   - name: kamerplanter-home-assistant-integration
     description: >-
@@ -325,7 +359,11 @@ members:
   peers: []
 - repo: nolte/cookiecutter-gh-project
   repo_url: https://github.com/nolte/cookiecutter-gh-project
-  mission_statement: ""
+  mission_statement: >-
+    Cookiecutter-gh-project scaffolds a standardised nolte-style GitHub
+    project, pre-wired with gh-plumbing-based GitHub Actions, settings,
+    and mkdocs documentation, from a single cookiecutter run, so a
+    developer starts a new repository from one consistent baseline.
   capabilities:
   - name: github-project-cookiecutter-template
     description: >-
@@ -340,7 +378,12 @@ members:
   - nolte/gh-plumbing
 - repo: nolte/terraform-github-bootstrap
   repo_url: https://github.com/nolte/terraform-github-bootstrap
-  mission_statement: ""
+  mission_statement: >-
+    terraform-github-bootstrap manages the nolte GitHub account's
+    repository inventory and per-repo rulesets as reviewable Terraform
+    code, so the account's configuration is reproducible and auditable
+    instead of click-ops, complementing gh-plumbing's Probot-managed
+    settings.
   capabilities:
   - name: github-config-as-code
     description: >-

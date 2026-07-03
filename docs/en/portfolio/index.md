@@ -114,7 +114,7 @@ Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 
 ## nolte/ansible-reachy-mini-bootstrap
 
-_No mission statement declared (`project/mission.md` missing)._
+> ansible-reachy-mini-bootstrap provisions a Reachy Mini WiFi device to a working Pollen/Reachy runtime state from a single inventory plus playbook run, so any owner reaches an identical, reproducible device state without manual per-device setup.
 
 ### Capabilities
 
@@ -143,7 +143,7 @@ _None declared._
 
 ## nolte/claude-home-assistant
 
-_No mission statement declared (`project/mission.md` missing)._
+> claude-home-assistant gives the plugin author and later public users a Claude Code skill and agent set that authors Home Assistant artefacts (custom integrations, Lovelace cards, blueprints, automations, ESPHome work) against Home Assistant Core and HACS conventions.
 
 ### Capabilities
 
@@ -157,7 +157,7 @@ _None declared._
 
 ## nolte/claude-reachy-mini
 
-_No mission statement declared (`project/mission.md` missing)._
+> claude-reachy-mini gives the plugin author and later public users a Claude Code skill and agent set that builds Reachy Mini apps (dance- to-music behaviours and Home Assistant integration) with consistent, spec-grounded tooling.
 
 ### Capabilities
 
@@ -190,7 +190,7 @@ _None declared._
 
 ## nolte/cookiecutter-gh-project
 
-_No mission statement declared (`project/mission.md` missing)._
+> Cookiecutter-gh-project scaffolds a standardised nolte-style GitHub project, pre-wired with gh-plumbing-based GitHub Actions, settings, and mkdocs documentation, from a single cookiecutter run, so a developer starts a new repository from one consistent baseline.
 
 ### Capabilities
 
@@ -204,7 +204,7 @@ _No mission statement declared (`project/mission.md` missing)._
 
 ## nolte/gh-plumbing
 
-_No mission statement declared (`project/mission.md` missing)._
+> gh-plumbing gives downstream nolte/* repositories one centralised, tag-pinned source of reusable GitHub Actions workflows, Probot governance commons, and Renovate presets, so they achieve consistent CI/CD and repository governance without duplicating or copy-pasting pipeline and configuration boilerplate.
 
 ### Capabilities
 
@@ -220,7 +220,7 @@ _None declared._
 
 ## nolte/kamerplanter
 
-_No mission statement declared (`project/mission.md` missing)._
+> Kamerplanter begleitet Pflanzen-Besitzer, Selbst-Hoster und Mitwirkende in einem selbst-gehosteten, mandantenfähigen System von der Aussaat bis zur Nacherntebehandlung mit phasengenauen Pflege-, Dünge- und Umgebungsempfehlungen, datenschutzfreundlich und vollständig in eigener Hand betreibbar.
 
 ### Capabilities
 
@@ -234,7 +234,7 @@ _None declared._
 
 ## nolte/kamerplanter-ha
 
-_No mission statement declared (`project/mission.md` missing)._
+> kamerplanter-ha connects a Kamerplanter instance to Home Assistant as a HACS-distributed integration, so Home Assistant users and self- hosters see plant monitoring, nutrient dosages, tank state, and per- location overviews as Home Assistant sensors and services.
 
 ### Capabilities
 
@@ -262,7 +262,7 @@ _None declared._
 
 ## nolte/reachy-mini-mcp
 
-_No mission statement declared (`project/mission.md` missing)._
+> reachy-mini-mcp gives MCP clients and Reachy Mini owners one MCP server that exposes the Pollen Reachy Mini daemon over a stable tool interface, so any MCP-capable LLM frontend can read robot state and trigger motion without generating ad-hoc Python.
 
 ### Capabilities
 
@@ -276,7 +276,7 @@ _None declared._
 
 ## nolte/taskfiles
 
-_No mission statement declared (`project/mission.md` missing)._
+> Taskfiles gives downstream nolte/* projects one centralised, remotely included collection of reusable Taskfile modules, so they get consistent task targets across local and CI runs without copying Taskfile logic into each repository.
 
 ### Capabilities
 
@@ -290,7 +290,7 @@ _None declared._
 
 ## nolte/terraform-github-bootstrap
 
-_No mission statement declared (`project/mission.md` missing)._
+> terraform-github-bootstrap manages the nolte GitHub account's repository inventory and per-repo rulesets as reviewable Terraform code, so the account's configuration is reproducible and auditable instead of click-ops, complementing gh-plumbing's Probot-managed settings.
 
 ### Capabilities
 
