@@ -6,9 +6,11 @@ Status: draft
 
 Readers: Skill- und Agent-Autoren, die den Orchestrator implementieren, und
 Operatoren, die ihn aufrufen, um ein Issue end-to-end zu führen. Der Operator gibt
-sechs Gates frei — Issue-Scope, Klassifikation (für `security` / `spec-change`), die
+sieben Gates frei — Issue-Scope, den Requirements-Verständnis-Check (elicit oder
+Override), Klassifikation (für `security` / `spec-change`), die
 Voranalyse-Dekomposition, die Routing-Entscheidung, jeden Spezialisten-Dispatch und
-den PR — bevor ein Merge erreicht wird.
+den PR — bevor ein Merge erreicht wird. Die gesamte On-Disk-Arbeit der Orchestrierung
+findet in einem dedizierten Worktree off `develop` statt, nie im Primary-Checkout.
 
 Das Portfolio regelt bereits eine vollständige Planungs-Pipeline — `roadmap-plan`
 reiht Outcomes ein, `feature-decompose` zerlegt ein Roadmap-Item in testbare
@@ -100,6 +102,18 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   die das Issue ganz oder teilweise bereits adressieren; ein Issue, das zum
   Analysezeitpunkt bereits durch einen gemergten Fix geschlossen ist, **KANN [MAY]**
   als selbst-aufgelöst ohne Dekomposition gemeldet werden
+- **MUSS [MUST]** vor der Dekomposition den Requirements-Elicitation-Consumer-Vertrag
+  anwenden (`spec/project/requirements-elicitation/` §H Consumer contract, der
+  `issue-orchestrate` als gegateten Consumer benennt): prüfen, ob ein Requirement-
+  Artefakt unter `project/requirements/` für das Issue existiert und ob dessen
+  `U_gate` `τ_high` erreicht. Wenn keines existiert oder `U_gate` unter `τ_high` liegt
+  — der Regelfall für ein rohes Issue, dessen Anforderungen nur als Prosa formuliert
+  sind — **MUSS** zuerst `requirements-elicit` dispatcht werden, um das Issue in ein
+  bestätigtes Requirement-Artefakt zu analysieren, oder ein expliziter Operator-
+  Override im Voranalyse-Artefakt festgehalten werden; gegen ungenannte oder schwach
+  verstandene Anforderungen zu dekomponieren ist verboten. Ein `question`-Issue (das
+  keine Arbeitspakete liefert) und ein bereits durch einen gemergten Fix
+  selbst-aufgelöstes Issue sind ausgenommen, da beide die Dekomposition nicht erreichen
 - **DARF NICHT [MUST NOT]** mit der Dekomposition beginnen, bevor der Operator das
   akquirierte Issue und seinen aufgelösten Scope bestätigt hat, sodass eine
   fehlgelesene Issue-Referenz vor Arbeitsbeginn abgefangen wird
@@ -117,6 +131,35 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
 - **MUSS [MUST]** die Klassifikation mit dem Operator vor der Dekomposition
   mindestens für die Klassen `security` und `spec-change` bestätigen, wo eine
   Fehlklassifikation die höchsten Folgekosten hat
+
+### Working-Copy-Isolation
+- **MUSS [MUST]** jeden versionierten Datei-Write, den die Orchestrierung produziert
+  — das Voranalyse-Artefakt unter `.audits/issue-orchestrate/<issue-number>/`, jede
+  Bearbeitung eines dispatchten Spezialisten und den Feature-Branch, aus dem der Pull
+  Request geöffnet wird — in einem **dedizierten, off `origin/develop` erzeugten
+  Worktree** ausführen, gemäß `spec/project/parallel-working-copies/`
+  §Branch-to-worktree mapping und §Lifecycle: Create; der Referenz-Erzeugungspfad ist
+  `task worktree:add -- <branch> [slug]`. Der Primary-Checkout **MUSS** auf `develop`
+  bleiben und **DARF NICHT** auf den Feature-Branch umgeschaltet werden, auch nicht
+  für ein Ein-Paket-Issue
+- **MUSS [MUST]** den Worktree vor dem ersten versionierten Datei-Write etablieren,
+  sodass keine Orchestrierungs-Ausgabe je im Primary-Checkout landet; das
+  Voranalyse-Artefakt ist dieser erste Write. Wird das Issue stattdessen in die
+  formale Pipeline geroutet, regelt die eigene Working-Copy-Disziplin der
+  nachgelagerten Planungs-Skill die von ihr geschriebenen Artefakte
+- **KANN [MAY]** die Issue-Bearbeitung in einem **dedizierten, worktree-isolierten
+  Agenten ausführen, der die Issue-ID als Parameter übernimmt**
+  (`Agent(..., isolation: "worktree")`), als sanktionierte Alternative zum
+  Fresh-Top-Level-Session-Default von `spec/project/parallel-working-copies/`
+  §Claude Code session scoping. Wenn er das tut, **MUSS** er den Worktree-Root des
+  Agenten auf den spec-konformen Pfad
+  `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/agents/` gemäß §Path layout zeigen
+  (nie unter `.claude/worktrees/`), und er akzeptiert den Resumability-Trade-off, dass
+  ein Subagent-Transkript nicht eigenständig `claude --resume`-bar ist — der Per-Run-
+  Checkpoint unter `.resume/issue-orchestrate/` (siehe §Resumption and operator gating)
+  bleibt daher der Recovery-Anker. Die Operator-Freigabe-Gates verbleiben unabhängig
+  davon bei der orchestrierenden Skill; der dedizierte Agent führt die
+  Hands-on-Arbeit aus, er absorbiert die Gates nicht
 
 ### Dekomposition in Arbeitspakete (der Voranalyse-Kern)
 - **MUSS [MUST]** das Issue in atomare, unabhängig testbare Arbeitspakete zerlegen;
@@ -256,6 +299,13 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
 - [ ] Für jeden als `security` oder `spec-change` klassifizierten Orchestrierungslauf
   hält das Voranalyse-Artefakt einen expliziten Operator-Klassifikations-Bestätigungs-
   Schritt fest, der vor dem Befüllen der Arbeitspaket-Tabelle erfolgte
+- [ ] Für jedes dekomponierte Issue existierte vor der Dekomposition ein
+  Requirement-Artefakt, das `τ_high` erreicht, oder das Voranalyse-Artefakt hält einen
+  expliziten Operator-Override des Requirements-Elicitation-Consumer-Gates fest
+- [ ] Für jedes direkt implementierte Issue lag jeder von der Orchestrierung
+  produzierte versionierte Datei-Write (das Voranalyse-Artefakt, die dispatchten
+  Bearbeitungen, der Feature-Branch) in einem dedizierten Worktree off `develop`, und
+  der Primary-Checkout wurde nie von `develop` weggeschaltet
 - [ ] Kein Arbeitspaket in einem Voranalyse-Artefakt entbehrt eines testbaren
   Akzeptanzkriteriums; ein Paket, das keines formulieren kann, wird stattdessen als
   Routing-Signal in die formale Pipeline festgehalten

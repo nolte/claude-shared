@@ -87,12 +87,30 @@ Before any operation:
   `gh issue list --state open --limit 20` and ask which issue to orchestrate. If the
   reference is ambiguous, list the candidate open issues and ask the operator to pick
   one.
-- When the issue describes a feature or change whose requirements are not yet
-  precisely stated, a requirement artefact under `project/requirements/` should
-  exist before decomposition, per `spec/project/requirements-elicitation/`
-  § Consumer contract. If the issue body is vague and no artefact exists (so
-  `U_gate` would be below `τ_high`), dispatch `requirements-elicit` first, or
-  record an explicit operator override, rather than decomposing against guesses.
+- **Requirements gate (before decomposition).** Per
+  `spec/project/issue-orchestration/` §Issue acquisition and
+  `spec/project/requirements-elicitation/` §H Consumer contract, check whether a
+  requirement artefact under `project/requirements/` exists for the issue and whether
+  its `U_gate` meets `τ_high`. When none exists or `U_gate` is below `τ_high` — the
+  common case for a raw issue whose requirements are stated only as prose — you
+  **MUST** dispatch `requirements-elicit` to analyse the issue into a confirmed
+  requirement artefact first, or record an explicit operator override in the
+  pre-analysis artifact; never decompose against unstated or weakly-understood
+  requirements. `question`-class and already-self-resolved issues are exempt — they
+  never reach decomposition.
+- **Working copy (before the first tracked-file write).** Per
+  `spec/project/issue-orchestration/` §Working-copy isolation and
+  `spec/project/parallel-working-copies/`, every on-disk write the orchestration
+  produces — the pre-analysis artifact, every dispatched specialist's edit, and the
+  feature branch the PR is opened from — **MUST** happen in a dedicated worktree
+  created off `origin/develop` via `task worktree:add -- <branch> [slug]`; the primary
+  checkout stays on `develop`. Create (or confirm) the worktree before operation 3
+  writes the artifact. You **MAY** run the processing as a dedicated worktree-isolated
+  agent taking the issue id as its parameter (`Agent(..., isolation: "worktree")`)
+  instead of a fresh top-level session; when you do, set the agent worktree root under
+  `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/agents/` (never `.claude/worktrees/`),
+  and note that the subagent transcript isn't independently `claude --resume`-able, so
+  the `.resume/issue-orchestrate/` checkpoint stays the recovery anchor.
 
 ## Operations
 
@@ -258,6 +276,12 @@ result is already recorded in the artifact.
 
 - **Never** begin decomposition before the operator confirms the acquired issue and
   its resolved scope; a misread issue reference must be caught before work starts.
+- **Never** decompose against unstated or weakly-understood requirements: when no
+  requirement artefact meets `τ_high`, dispatch `requirements-elicit` first or record
+  an explicit operator override, per the requirements gate above.
+- **Never** write orchestration output into the primary checkout: the pre-analysis
+  artifact, dispatched edits, and the PR branch all live in a dedicated worktree off
+  `develop`, and the primary checkout stays on `develop`.
 - **Never** dispatch on an unapproved pre-analysis artifact; the artifact is the
   reviewable hand-off contract.
 - **Never** perform a work package's hands-on editing inline when a matching

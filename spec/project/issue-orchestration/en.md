@@ -5,9 +5,12 @@ Status: draft
 ## Context
 
 Readers: skill and agent authors implementing the orchestrator, and operators who
-invoke it to take an issue end-to-end. The operator approves six gates—issue scope,
-classification (for `security` / `spec-change`), the pre-analysis decomposition,
-the route decision, each specialist dispatch, and the PR—before a merge is reached.
+invoke it to take an issue end-to-end. The operator approves seven gates—issue scope,
+the requirements-understanding check (whether to elicit or override), classification
+(for `security` / `spec-change`), the pre-analysis decomposition, the route decision,
+each specialist dispatch, and the PR—before a merge is reached. All of the
+orchestration's on-disk work happens in a dedicated worktree off `develop`, never in
+the primary checkout.
 
 The portfolio already declares a full planning pipeline—`roadmap-plan` queues
 outcomes, `feature-decompose` breaks a roadmap item into testable features,
@@ -90,6 +93,17 @@ specialist exists.
   entries, `project/roadmap.md` items, and open pull requests that already address
   the issue in whole or in part; an issue already closed by a merged fix at the
   moment of analysis **MAY** be reported as self-resolved with no decomposition
+- **MUST**, before decomposition, apply the requirements-elicitation consumer
+  contract (`spec/project/requirements-elicitation/` §H Consumer contract, which
+  names `issue-orchestrate` as a gated consumer): check whether a requirement
+  artifact under `project/requirements/` exists for the issue and whether its
+  `U_gate` meets `τ_high`. When none exists or `U_gate` is below `τ_high`—the common
+  case for a raw issue whose requirements are stated only as prose—**MUST** dispatch
+  `requirements-elicit` to analyse the issue into a confirmed requirement artifact
+  first, or record an explicit operator override in the pre-analysis artifact;
+  decomposing against unstated or weakly-understood requirements is forbidden. A
+  `question`-class issue (which yields no work packages) and an issue already
+  self-resolved by a merged fix are exempt, since neither reaches decomposition
 - **MUST NOT** begin decomposition until the operator confirms the acquired issue
   and its resolved scope, so a misread issue reference is caught before work starts
 
@@ -105,6 +119,33 @@ specialist exists.
 - **MUST** confirm the classification with the operator before decomposition for at
   least the `security` and `spec-change` classes, where a misclassification has the
   highest downstream cost
+
+### Working-copy isolation
+- **MUST** perform every tracked-file write the orchestration produces—the
+  pre-analysis artifact under `.audits/issue-orchestrate/<issue-number>/`, every
+  dispatched specialist's edits, and the feature branch the pull request is opened
+  from—inside a **dedicated worktree created off `origin/develop`**, per
+  `spec/project/parallel-working-copies/` §Branch-to-worktree mapping and §Lifecycle:
+  Create; the reference creation path is `task worktree:add -- <branch> [slug]`. The
+  primary checkout **MUST** stay on `develop` and **MUST NOT** be switched onto the
+  feature branch, even for a single-package issue
+- **MUST** establish the worktree before the first tracked-file write, so no
+  orchestration output ever lands in the primary checkout; the pre-analysis artifact
+  is that first write. When the issue is routed to the formal pipeline instead of
+  implemented directly, the downstream planning skill's own working-copy discipline
+  governs the artifacts it writes
+- **MAY** carry out the issue processing inside a **dedicated worktree-isolated agent
+  that takes the issue id as its parameter** (`Agent(..., isolation: "worktree")`), as
+  a sanctioned alternative to the fresh-top-level-session default of
+  `spec/project/parallel-working-copies/` §Claude Code session scoping. When it does,
+  it **MUST** point the agent's worktree root at the spec-conformant
+  `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/agents/` path per §Path layout
+  (never under `.claude/worktrees/`), and it accepts the trade-off that a
+  subagent transcript can't be independently resumed—so the per-run
+  checkpoint under `.resume/issue-orchestrate/` (see §Resumption and operator gating)
+  remains the recovery anchor. The operator-approval gates stay with the orchestrating
+  skill regardless; the dedicated agent executes the hands-on work, it doesn't
+  absorb the gates
 
 ### Decomposition into work packages (the pre-analysis core)
 - **MUST** decompose the issue into atomic, independently testable work packages;
@@ -229,6 +270,13 @@ specialist exists.
 - [ ] For every orchestration run classified `security` or `spec-change`, the
   pre-analysis artifact records an explicit operator classification-confirmation step
   taken before the work-package table was populated
+- [ ] For every decomposed issue, a requirement artifact meeting `τ_high` existed
+  before decomposition, or the pre-analysis artifact records an explicit operator
+  override of the requirements-elicitation consumer gate
+- [ ] For every issue the orchestration implemented directly, every tracked-file
+  write it produced (the pre-analysis artifact, the dispatched edits, the feature
+  branch) lived in a dedicated worktree off `develop`, and the primary checkout was
+  never switched off `develop`
 - [ ] No work package in any pre-analysis artifact lacks a testable acceptance
   criterion; a package that can't state one is instead recorded as a routing signal
   to the formal pipeline
