@@ -24,3 +24,4 @@ subpath
 misconfiguration
 [Nn]amespacing
 passthrough
+plaintext

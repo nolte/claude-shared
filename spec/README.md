@@ -33,6 +33,7 @@ Canonical language: `en` · Translations: `de`
 | project | api-error-handling | API Error-Handling Conformance | API-Fehlerbehandlungs-Konformität | draft | local | 2026-06-17 |
 | project | audience-identification | Audience Identification | Zielgruppen-Identifikation | accepted | local | 2026-04-24 |
 | project | backstage-catalog-generation | Backstage catalog-info.yaml Generation | Backstage-catalog-info.yaml-Generierung | draft | local | unversioned |
+| project | bjw-s-common-chart-deployment | bjw-s Common Chart Deployment | bjw-s-Common-Chart-Deployment | draft | local | unversioned |
 | project | blog-author | Blog author | Blog-Autor | accepted | local | unversioned |
 | project | blog-author-trigger | Blog author trigger | Blog-Autor-Trigger | draft | local | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | portfolio | 2026-04-23 |
