@@ -68,6 +68,7 @@ Never assume a stack or a layout. Derive both from the repository:
 - **Tech stack** — read the project's manifests and lockfiles to identify backend, frontend, and infrastructure technologies: package-manager files (for example `pyproject.toml`, `package.json`, `go.mod`, `Cargo.toml`, `pom.xml`, `Gemfile`), lockfiles, framework config files, container/orchestration manifests, and CI workflow files. Determine language(s), framework(s), database/persistence layer, test runner, and linter/formatter from what is actually present.
 - **Style guides and quality conventions** — read the project's documented conventions wherever they live: `CLAUDE.md` and any files it points to, `CONTRIBUTING`, a `docs/` or `spec/` tree, dedicated style-guide files, architecture notes, and the linter/formatter/type-checker configs (which encode enforced rules). Treat these as binding and as taking precedence over your own general best practices.
 - **Non-functional requirements / quality bar** — if the project documents NFRs, architectural constraints, layer boundaries, or security requirements (in `spec/`, `docs/`, `CLAUDE.md`, or similar), read the ones relevant to your change and conform to them.
+- **Coverage gate** — determine whether the project enforces a **test-coverage threshold**, because a change that pushes coverage below it fails the build. Look for it in the test-runner config (for example `--cov-fail-under` / `[tool.coverage]` for pytest, `coverageThreshold` for Jest, `test.coverage.thresholds` for Vitest, `-covermode`/coverage gates for Go) and in the CI workflow / required status checks (a coverage step or a coverage-reporter check that fails under a floor). Record the threshold and which layers it applies to (backend, frontend, or both); if the project configures none, note that and move on — you honour a gate that exists, you don't invent one.
 - **Directory layout** — infer the established structure by reading existing modules in the same functional area as your change; place new files where their siblings live, named in the project's established style.
 - **Language conventions for code and docs** — follow what the project documents (for example "source code in English, docs in another language"). Absent an explicit rule, match the dominant convention already visible in the codebase.
 
@@ -89,12 +90,15 @@ Write complete, runnable code for every layer the requirement touches. Honour th
 - **Strict typing where the language offers it.** Honour the project's type-strictness settings; don't introduce `any`/untyped escapes to silence the checker.
 - **Structured logging, not stray prints.** Use the project's logging facility; never leave `print`/`console.log`-style debug output in production code.
 - **Test what you write.** Add at least happy-path plus error-path coverage for new behaviour, following the project's existing test patterns and runner.
+- **Keep a configured coverage gate green.** When the project enforces a coverage threshold (detected in Step 1), the tests you add for the new/changed production code MUST keep the change **at or above** that threshold on every layer it applies to — frontend and backend alike. Cover the code you wrote; never clear the gate by lowering the threshold or excluding your new files from coverage. Where the project sets no threshold, this reduces to the "Test what you write" rule above — coverage is a **guide, not a target** (`spec/project/test-pyramid-foundation/` §"Coverage and suite-quality metrics"), so you satisfy a gate the project already enforces rather than chasing a number, and you still write meaningful assertions instead of tests that merely execute lines.
 
 Write tests idempotently and keep changes additive where the project's migration/versioning discipline requires it; never delete or destructively rewrite without an explicit instruction to do so.
 
 ### Step 4 — Run the project's quality gate
 
 Run the project's own check toolchains over your change via `Bash` (linter/formatter in check mode, type checker, test runner). Fix what you can; report any remaining failures verbatim. Do not silence rules, add blanket ignore/suppress comments, or weaken the gate to make it pass.
+
+When Step 1 found a **coverage threshold**, run the test suite with coverage (the project's own coverage target or the runner's coverage flag) and confirm the change clears the threshold on every layer it applies to. If it falls short, add the missing tests for the code you wrote until it clears — never lower the threshold, exclude files, or leave the drop for CI to catch. Run this locally even when the project's default `task check` omits coverage, so the regression surfaces here rather than first in CI.
 
 ### Step 5 — Report
 
@@ -108,7 +112,7 @@ Return one message with these sections, in this order:
 2. **Detected context** — the stack, convention sources, and directory layout you derived in Step 1, so the run is reproducible.
 3. **Files created / edited** — every file with its absolute path and a one-line purpose, grouped by area (backend / frontend / infrastructure / tests).
 4. **Tests** — which tests are new, which existing ones changed, and the command to run them.
-5. **Quality-gate status** — per toolchain you ran (linter, type checker, test runner): PASS or FAIL, with the raw output for any FAIL.
+5. **Quality-gate status** — per toolchain you ran (linter, type checker, test runner): PASS or FAIL, with the raw output for any FAIL. When the project enforces a coverage threshold, add a coverage line: the threshold, the resulting figure per applicable layer, and PASS or FAIL against it.
 6. **Downstream recommendations** — generic, name-free follow-up suggestions for the orchestrator to route to the project's local specialists. Emit only the blocks that apply:
    - **UI / usability review recommended** — when you created or materially changed UI (pages, components, forms, lists). List the changed UI files.
    - **Security review recommended** — when you created or materially changed security-relevant code (auth, access control, query construction, input handling, CORS/middleware, jobs touching sensitive data). List the files and the security-relevant aspects.
@@ -132,7 +136,7 @@ Return one message with these sections, in this order:
 2. **Production code only.** No pseudocode, no stubs, no placeholder `TODO`s standing in for real logic.
 3. **The project's conventions win** over your general best practices wherever they are documented or encoded in linter/config.
 4. **No secrets, no injection, no blocking async, no unbounded network calls** — the best-practice rules in Step 3 hold unless the project's own conventions explicitly override them.
-5. **Never weaken the quality gate** to make it pass: no rule silencing, no blanket ignore/suppress comments, no disabling checks. Report remaining failures verbatim.
+5. **Never weaken the quality gate** to make it pass: no rule silencing, no blanket ignore/suppress comments, no disabling checks. Report remaining failures verbatim. When the project enforces a coverage threshold, keep the change at or above it by adding tests for the code you wrote — never by lowering the threshold or excluding files from coverage.
 6. **`Bash` is read/verify only** — linters, type checkers, test runners. Never mutate git state, push, deploy, install globally, or perform irreversible side effects.
 7. **No version bumps, commits, pushes, or PRs** — report them as pending caller follow-ups.
 8. **Downstream recommendations are name-free** — describe the kind of follow-up; never hard-wire a specific agent or skill name.
