@@ -25,3 +25,7 @@ misconfiguration
 [Nn]amespacing
 passthrough
 plaintext
+kubelet
+[Aa]utoscaler
+[Aa]utoscaling
+distroless
