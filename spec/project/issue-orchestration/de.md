@@ -168,6 +168,21 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   berührt, den Spezialisten, der es umsetzen soll (aufgelöst gemäß
   *Spezialisten-Dispatch* unten), und seine Abhängigkeiten von anderen Paketen (eine
   gerichtete azyklische Ordnung)
+- **MUSS [MUST]** die Dekomposition im **bestätigten Requirement-Artefakt** erden, das
+  das Requirements-Gate produziert hat (§Issue-Akquise; der `requirements-elicit`-Output
+  unter `project/requirements/`), nicht in der rohen Issue-Prosa — die elicitierten,
+  `τ_high`-bestätigten Anforderungen sind der Input der Dekomposition, sodass jedes
+  Arbeitspaket auf eine verstandene Anforderung zurückführt statt auf eine Vermutung
+- **KANN [MAY]** die Dekomposition selbst an einen **dedizierten Planungs-Agenten**
+  delegieren (den Dedicated-Agent-Pfad aus §Working-Copy-Isolation), zur Dispatch-Zeit
+  per Capability aufgelöst: er nimmt die Issue-ID, konsumiert das Requirement-Artefakt
+  und die Repository-Oberfläche und liefert den spezialisten-zugeordneten
+  Arbeitspaket-Plan, den die **spezialisierten Umsetzungs-Agenten** bauen. Das macht die
+  Pipeline explizit — `requirements-elicit` analysiert das Issue in ein bestätigtes
+  Requirement-Artefakt, der Planungs-Agent verfasst daraus den Umsetzungsplan, und die
+  Umsetzungs-Spezialisten führen jedes Paket aus — während das Operator-Freigabe-Gate
+  unten bei der orchestrierenden Skill bleibt und der Planungs-Agent selbst nie
+  dispatcht, implementiert oder einen PR öffnet
 - **MUSS [MUST]** jedes Paket klein genug halten, dass eine einzelne
   Spezialisten-Invocation es bis zu einem verifizierbaren Akzeptanzkriterium
   abschließen kann; ein Paket, das nicht mit einem testbaren Akzeptanzkriterium
@@ -302,6 +317,11 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
 - [ ] Für jedes dekomponierte Issue existierte vor der Dekomposition ein
   Requirement-Artefakt, das `τ_high` erreicht, oder das Voranalyse-Artefakt hält einen
   expliziten Operator-Override des Requirements-Elicitation-Consumer-Gates fest
+- [ ] Jedes Arbeitspaket in einem Voranalyse-Artefakt führt auf das bestätigte
+  Requirement-Artefakt zurück, das das Requirements-Gate produziert hat, nicht auf rohe
+  Issue-Prosa; wo ein dedizierter Planungs-Agent die Dekomposition verfasst hat,
+  konsumierte er dieses Artefakt und hat weder einen Spezialisten dispatcht noch einen
+  PR geöffnet
 - [ ] Für jedes direkt implementierte Issue lag jeder von der Orchestrierung
   produzierte versionierte Datei-Write (das Voranalyse-Artefakt, die dispatchten
   Bearbeitungen, der Feature-Branch) in einem dedizierten Worktree off `develop`, und

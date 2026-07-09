@@ -153,6 +153,20 @@ specialist exists.
   acceptance criteria, the files or artifacts it touches, the specialist that should
   implement it (resolved per *Specialist dispatch* below), and its dependencies on
   other packages (a directed acyclic ordering)
+- **MUST** ground the decomposition in the **confirmed requirement artifact** the
+  requirements gate produced (§Issue acquisition; the `requirements-elicit` output
+  under `project/requirements/`), not in the raw issue prose—the elicited,
+  `τ_high`-confirmed requirements are the decomposition's input, so every work package
+  traces to an understood requirement rather than a guess
+- **MAY** delegate the decomposition itself to a **dedicated planning agent** (the
+  dedicated-agent path of §Working-copy isolation), resolved by capability at dispatch
+  time: it takes the issue id, consumes the requirement artifact and the repository
+  surface, and returns the specialist-mapped work-package plan for the **specialised
+  implementation agents** to build. This makes the pipeline explicit—`requirements-elicit`
+  analyses the issue into a confirmed requirement artifact, the planning agent authors
+  the implementation plan from it, and the implementation specialists execute each
+  package—while the operator-approval gate below stays with the orchestrating skill and
+  the planning agent never dispatches, implements, or opens a PR itself
 - **MUST** keep each package small enough that a single specialist invocation can
   complete it to a verifiable acceptance criterion; a package that can't be stated
   with a testable acceptance criterion is a signal the issue belongs in the formal
@@ -273,6 +287,10 @@ specialist exists.
 - [ ] For every decomposed issue, a requirement artifact meeting `τ_high` existed
   before decomposition, or the pre-analysis artifact records an explicit operator
   override of the requirements-elicitation consumer gate
+- [ ] Every work package in a pre-analysis artifact traces to the confirmed requirement
+  artifact the requirements gate produced, not to raw issue prose; where a dedicated
+  planning agent authored the decomposition, it consumed that artifact and neither
+  dispatched a specialist nor opened a PR
 - [ ] For every issue the orchestration implemented directly, every tracked-file
   write it produced (the pre-analysis artifact, the dispatched edits, the feature
   branch) lived in a dedicated worktree off `develop`, and the primary checkout was
