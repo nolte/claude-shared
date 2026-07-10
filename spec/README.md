@@ -52,6 +52,7 @@ Canonical language: `en` · Translations: `de`
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | local | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | local | unversioned |
 | project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | unversioned |
+| project | kpi-definition-process | KPI Definition Process | KPI-Definitionsprozess | draft | portfolio | unversioned |
 | project | kubernetes-deployment-best-practices | Kubernetes Deployment Best Practices | Kubernetes-Deployment-Best-Practices | draft | local | unversioned |
 | project | lektorat | Lektorat | Lektorat | accepted | local | unversioned |
 | project | lektorat-auto-revise | Lektorat Auto-Revise | Lektorat Auto-Revise | draft | local | unversioned |

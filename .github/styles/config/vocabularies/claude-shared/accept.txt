@@ -42,3 +42,16 @@ SLOs?
 prober
 middleware
 appender
+aggregatable
+referenceable
+dashboarding
+KPIs?
+GQM('s)?
+OKRs?
+Klipfolio
+Geckoboard
+Basili
+Caldiera
+Rombach
+Berghout
+Doran

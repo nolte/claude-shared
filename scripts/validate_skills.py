@@ -59,7 +59,7 @@ NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
 # skill legitimately introduces a new action token.
 SKILL_ACTION_TOKENS = {
     "apply", "audit", "author", "capture", "check", "create", "curate",
-    "decompose", "define", "elicit", "execute", "generate", "handoff", "identify",
+    "decompose", "define", "derive", "elicit", "execute", "generate", "handoff", "identify",
     "init", "maintain", "manage", "management", "merge", "optimize",
     "orchestrate", "plan", "refactor", "refine", "review", "revise",
     "start", "sweep", "triage", "trigger",
