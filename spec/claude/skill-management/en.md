@@ -5,6 +5,8 @@ Status: draft
 ## Context
 The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives: a **source** form in this repository (under `skills/`) and a **runtime** form in a consuming project, where Claude Code actually loads it. The only supported runtime-distribution path is the Claude Code plugin mechanism: this repository is itself a Claude Code plugin (`.claude-plugin/plugin.json` plus a marketplace entry), and consuming projects pick up skills by installing the plugin. Without a consistent shape and a single distribution path, skills drift in naming, trigger descriptions, and internal structure, and consumers end up with ad-hoc copies or symlinks that diverge over time. This spec defines how new skills are authored, how they're distributed, and what existing skills must conform to.
 
+For a consolidated cross-artifact reference of every skill- and agent-frontmatter field, its provenance (portable Claude Code standard versus nolte-local invention), and its normative owner, see `spec/claude/skill-agent-frontmatter/`. That reference maps and points back to this spec; it doesn't restate the rules here.
+
 ## Goals
 - Every skill has the same predictable shape on disk
 - Skills are discoverable by Claude through precise, trigger-oriented descriptions

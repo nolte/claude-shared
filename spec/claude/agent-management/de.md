@@ -5,6 +5,8 @@ Status: draft
 ## Kontext
 Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents, die von nachgelagerten Projekten genutzt werden. Ein Agent hat zwei Ausprägungen: eine **Quell-Form** in diesem Repository (unter `agents/`) und eine **Laufzeit-Form** in einem konsumierenden Projekt (unter `.claude/agents/` oder `~/.claude/agents/`), aus der Claude Code den Agent lädt und das `Agent`-Tool per `subagent_type` an ihn weiterleitet. Ohne einheitliche Form driften Agents in Benennung, Trigger-Beschreibungen, Tool-Scoping und Qualität des System-Prompts auseinander, was Wiederverwendung brüchig und das Routing unzuverlässig macht. Diese Spezifikation definiert, wie neue Agents erstellt werden, wo sie in beiden Formen liegen und woran sich bestehende Agents halten müssen.
 
+Für eine konsolidierte artefaktübergreifende Referenz jedes Skill- und Agent-Frontmatter-Feldes, seiner Provenienz (portabler Claude-Code-Standard gegenüber nolte-lokaler Erfindung) und seines normativen Owners siehe `spec/claude/skill-agent-frontmatter/`. Diese Referenz bildet ab und verweist auf diese Spec zurück; sie wiederholt die Regeln hier nicht.
+
 ## Ziele
 - Jeder Agent hat dieselbe vorhersehbare Form auf der Festplatte
 - Agents sind für Claude über präzise, trigger-orientierte Beschreibungen routbar
