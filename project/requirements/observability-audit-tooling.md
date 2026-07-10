@@ -165,6 +165,6 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
 
 **Constraint reminders (confirmed, not risks):** `nolte-engineering`-only; the scanner is read-only
 (no `Edit`/`Write`); the skill writes nothing into target code — its deliverable is the audit artifact
-+ the implementation plan; spec wins on any conflict (no demoting mandatory→advisory without a spec
+and the implementation plan; spec wins on any conflict (no demoting mandatory→advisory without a spec
 change); primary checkout stays on `develop` (all work in this worktree); ships via the marketplace,
 never copied into a consumer's `.claude/skills/`.
