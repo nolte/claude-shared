@@ -50,7 +50,7 @@ Detect the user's language from their message and respond in it. The audit artif
 
 ### `audit` (default, read-only)
 
-1. **Dispatch the read-only scan agent.** Dispatch `dockerfile-audit-scanner` (Agent) for the detection pass: it discovers every Dockerfile, evaluates the mandatory OCI labels against the final stage (crediting CI-side injection in `.github/workflows/`), checks the four mandatory pillars, runs hadolint, and returns a structured per-Dockerfile findings inventory. Wait for its inventory before triaging.
+1. **Dispatch the read-only scan agent.** Dispatch `dockerfile-audit-scanner` (Agent) for the detection pass: it discovers every Dockerfile, evaluates the mandatory OCI labels against the final stage (crediting CI-side injection in `.github/workflows/`), checks the four mandatory pillars, runs hadolint, checks the GHCR index-annotation wiring (the `index-annotation-wiring` finding: `present` / `MISSING` / `n/a-not-ghcr-published`), and returns a structured per-Dockerfile findings inventory. Wait for its inventory before triaging.
 
 2. **Apply the hard-fail policy.** Per `spec/project/dockerfile-best-practices/`, mark a Dockerfile **fail** when any of these is true; otherwise **pass** (advisory findings never flip a pass to fail):
    - Any of the six mandatory OCI core labels (`source`, `title`, `description`, `version`, `revision`, `created`) is present in **neither** the final stage **nor** CI injection. A label that is a static literal, `ARG`-wired, or CI-injected counts as present. Do **not** hard-fail a required label the scanner credited to CI (`docker/metadata-action` / `docker build --label`).
@@ -58,6 +58,9 @@ Detect the user's language from their message and respond in it. The audit artif
    - A secret is introduced into a layer (secret via `ARG`/`ENV`, or a credential file `COPY`ed in).
    - A `FROM` base image is not pinned by **tag + digest** (floats on `:latest`, an untagged image, or a tag with no digest).
    - No `.dockerignore` ships in the build context.
+   - The image is **published to GHCR via `docker/build-push-action`** and its OCI labels are present, **but** the workflow does not wire index-level annotations (scanner finding `index-annotation-wiring: MISSING`). This dimension is scoped to a detected GHCR/index publication: a Dockerfile the scanner marked `n/a-not-ghcr-published` is governed by the label baseline alone and is **not** failed on it.
+
+   **Severity decision (documented per `spec/project/dockerfile-best-practices/`).** The index-annotation dimension is a **hard fail** for a GHCR/index-published image, and this tier comes directly from the spec — it is not a unilateral promotion. §"OCI image labels" states the annotation rule with a **MUST** ("the OCI core values MUST be propagated as index-level annotations, not only as config `LABEL`s") because `build-push-action@v7`'s default provenance makes the push an OCI image index, and GHCR reads the package page from the index annotations, not the config labels — so a label-only index surfaces "No description provided". The spec frames the MUST as **additive** for the GHCR/index case (the config-`LABEL` contract is retained as the single-manifest / `docker inspect` baseline), which is exactly why the failure is **scoped** to a detected GHCR publication rather than applied to every Dockerfile. Treating it as a hard fail is what stops a clean label verdict from falsely implying GHCR will display the metadata; the "when spec disagrees, spec wins" rule holds, so if the spec later re-tiers this rule, this skill follows.
 
 3. **Score the advisory pillars.** The SHOULD items (multi-stage, `COPY` over `ADD`, package hygiene, single-`RUN` update+install, no `apt-get upgrade`, cache-friendly ordering, `HEALTHCHECK`, `pipefail`, exec-form `CMD`, absolute `WORKDIR`, registry allow-list, and the SHOULD labels `licenses`/`url`/`documentation`/`base.name`/`base.digest`) are scored and surfaced by their hadolint rule ID (or as `custom` for the non-mechanizable ones), never promoted to a hard fail. Also surface a hard-coded `version`/`revision`/`created` literal as a **reproducibility smell** (advisory), not a failure.
 
@@ -112,6 +115,7 @@ Git revision: <sha>
 - Secrets in layers: <PASS | FAIL: <what>> [<file:line>]
 - Base pinned tag+digest: <PASS | FAIL: <FROM ref>> [<file:line>]
 - .dockerignore present: <PASS | FAIL>
+- GHCR index-annotation wiring: <PASS (present) | FAIL: labels present, but index-annotation wiring missing → GHCR will show no metadata | n/a (not GHCR-published)> [<workflow file:line>]
 ### Advisory (scored)
 - <check> (<DL#### | custom>) — <note> [<file:line>]
 
@@ -120,6 +124,7 @@ Git revision: <sha>
 - Dockerfiles skipped (with reason): <list or none>
 - hadolint version: <version | not installed>
 - CI-injected labels credited: <list or none>
+- GHCR index-annotation wiring: <per-Dockerfile: present | MISSING | n/a-not-ghcr-published>
 ```
 
 ## Gotchas
@@ -130,6 +135,7 @@ Git revision: <sha>
 - **hadolint's rule set drifts, so pin the version.** The `DL3005`/`DL3017`/`DL3031` rules were removed upstream; a floating hadolint gives non-reproducible audits. Record the version actually run in the artifact, and remember its default `--failure-threshold` is `info` (Info findings already fail a default run).
 - **Three pillars have no hadolint rule.** No `apt-get upgrade`, single-`RUN` update+install, and secret-in-layer detection are prose/custom checks the scanner does statically — a clean hadolint run does **not** mean these passed. Read the scanner's `custom`-sourced findings, not just the `DL####` ones.
 - **BuildKit provenance/SBOM attestations do not satisfy a label requirement.** A required label is satisfied by a label, not by an in-toto attestation; never credit provenance toward OCI-label presence.
+- **A config `LABEL` does not feed the GHCR package page once the artifact is an image index.** GHCR reads a single-manifest image's `description`/`licenses` from the config labels, but reads an **image index's** package-page metadata from **index-level annotations**. `docker/build-push-action@v7` attaches a provenance attestation by default, so nearly every push — even single-platform — becomes an index, making the label-only route surface "No description provided". A clean OCI-label verdict therefore does **not** imply GHCR will display the metadata: for a GHCR-published image, also require the workflow to wire index annotations (`DOCKER_METADATA_ANNOTATIONS_LEVELS` including `index` on `docker/metadata-action`, and `annotations: ${{ steps.meta.outputs.annotations }}` passed to `docker/build-push-action`). The config-`LABEL` contract stays the single-manifest / `docker inspect` baseline; the annotation wiring is the additive index requirement.
 
 ## Resumability
 
@@ -143,6 +149,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** hard-code a `version`, `revision`, or `created` literal on `apply`; wire them through `ARG` for build-time substitution.
 - **Never** append a duplicate `LABEL` block on `apply`; merge the missing keys into the existing final-stage block (later key wins, custom labels preserved).
 - **Never** promote an advisory (SHOULD) finding to a hard fail, and never demote a mandatory pillar to advisory, without a spec change.
+- **Never** hard-fail the index-annotation dimension for a Dockerfile the scanner marked `index-annotation-wiring: n/a-not-ghcr-published`; the additive MUST is scoped to a detected GHCR/index publication, and the label baseline alone governs a local/single-manifest build.
 - **Always** pin and record the hadolint version used; a floating version gives non-reproducible audits.
 - **Always** persist the audit artifact under `.audits/dockerfile-audit/` with the per-Dockerfile verdict, hard-fail reasons, and Git revision.
 - When `spec/project/dockerfile-best-practices/` and this skill disagree, the spec wins; this skill needs the update.

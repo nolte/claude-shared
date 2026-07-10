@@ -37,7 +37,31 @@ Beyond labels, the defaults of a naively-written `Dockerfile` are the wrong post
 - A label **MUST** be counted as *present* when its value is any of: (a) a static string literal; (b) an `ARG`-wired substitution (`ARG VERSION` + `LABEL org.opencontainers.image.version="$VERSION"`) whose `ARG` is declared in the same stage; or (c) injected by CI via `docker/metadata-action` → `docker/build-push-action` or `docker build --label`/`--annotation`, detectable in the repository's workflow files. The audit **MUST NOT** hard-fail a required label that's absent from the `Dockerfile` but demonstrably injected by CI; it hard-fails only when the label is present in neither place
 - `org.opencontainers.image.version`, `.revision`, and `.created` **SHOULD** be `ARG`-wired or CI-injected rather than hard-coded literals: `.created` is a per-build RFC 3339 timestamp, `.revision` is the source-control commit SHA, and `.version` is the released version—a committed literal for any of these is stale on the next build and is flagged as a reproducibility smell, not a hard failure
 - In a **multi-stage** build the audit **MUST** evaluate the mandatory labels against the **final (publishing) stage** only: a `LABEL` reachable only through `COPY --from=`/`RUN --mount=from=` is discarded from the output image and is a false positive; a label in the final stage (or inherited from the final `FROM` base) is the only one that ships
-- An image **SHOULD** also set `org.opencontainers.image.licenses` (an SPDX license expression), `.url`, and `.documentation` where known; GHCR surfaces `description` and `licenses` on the package page
+- An image **SHOULD** also set `org.opencontainers.image.licenses` (an SPDX license expression), `.url`, and `.documentation` where known. GHCR surfaces `description` and `licenses` on the package page **for a single-manifest image**, reading them from the config-layer labels; for an **image index** (multi-arch, *or* any build carrying a default BuildKit provenance/SBOM attestation) this fails unless the values are also present as index-level *annotations* (see the next rule), and a label-only index image surfaces "No description provided"
+- For an image published to GHCR via **BuildKit / `docker/build-push-action`**, the OCI core values **MUST** be propagated as **index-level annotations**, not only as config `LABEL`s. `docker/build-push-action@v7` attaches a provenance attestation **by default**, so *every* push—even single-platform—is an OCI **image index** (rendered "OS/Arch 2" on the package page), and for an index it's the index annotations, not a child manifest's config labels, that feed the GHCR package page. Wire the annotations through `docker/metadata-action`'s `annotations:` input with the environment variable `DOCKER_METADATA_ANNOTATIONS_LEVELS` including `index` (for example `manifest,index`), and pass the computed annotations to `build-push-action`'s `annotations:` input. The config-`LABEL` contract (above) is **retained** as the single-manifest / `docker inspect` baseline—this annotation requirement is *additive* for the GHCR/index case, it doesn't replace or weaken the label rule. The reference wiring:
+
+  ```yaml
+  - name: Extract metadata
+    id: meta
+    uses: docker/metadata-action@v6
+    env:
+      DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+    with:
+      images: ghcr.io/<owner>/<image>
+      annotations: |
+        org.opencontainers.image.title=<image>
+        org.opencontainers.image.description=<per-image description>
+        org.opencontainers.image.source=https://github.com/<owner>/<repo>
+        org.opencontainers.image.vendor=<vendor>
+
+  - name: Build and push
+    uses: docker/build-push-action@v7
+    with:
+      # ...
+      labels: ${{ steps.meta.outputs.labels }}
+      annotations: ${{ steps.meta.outputs.annotations }}
+  ```
+
 - An image **SHOULD** record `org.opencontainers.image.base.name` (the fully-qualified base reference, no assumed default registry) and `.base.digest` (`sha256:…`); these **MUST** be authored explicitly, because Docker/BuildKit doesn't populate them automatically today (unlike Podman/Buildah)
 - BuildKit provenance and SBOM attestations **MUST NOT** be accepted in place of the required labels: they're separate in-toto manifests, and base-image identity surviving only in provenance doesn't satisfy the `base.*` label SHOULD
 
@@ -85,6 +109,7 @@ Beyond labels, the defaults of a naively-written `Dockerfile` are the wrong post
 - The spec's normative content **MUST** be read against these pinned sources, current as of 2026-07-10: the OCI image-spec `annotations.md` (14 pre-defined `org.opencontainers.image.*` keys, all OPTIONAL); the Docker build best-practices documentation (`docs.docker.com/build/building/best-practices`); the GHCR container-labelling documentation; the CIS Docker Benchmark **v1.7** (controls 4.1 non-root user, 4.6 `HEALTHCHECK`, 4.7 single-`RUN` update+install); and NIST SP 800-190 for the build/runtime least-privilege framing
 - A `dockerfile-audit` implementation **MUST** pin a specific **hadolint** version, because hadolint's rule set drifts (the `DL3005`/`DL3017`/`DL3031` rules were removed); it **SHOULD** note that hadolint's default `--failure-threshold` is `info`, so Info-level findings already fail a default run, and it **MAY** promote Warning/Info mandatory-adjacent rules to `error` via a `.hadolint.yaml` override
 - Build-time label wiring **SHOULD** follow the `docker/metadata-action` model (it derives `title`, `description`, `url`, `source`, `version`, `created`, `revision`, `licenses` from the Git/GitHub context; `version` is the first computed tag, `revision` the commit SHA) so a repository need not hand-maintain the per-build values
+- The **annotations-on-index** behaviour is a load-bearing claim pinned to the GHCR container-registry documentation: GHCR reads a multi-arch/index image's `description` (and the metadata surfaced on the package page) from the `annotations` field of the manifest index, while the config-`LABEL` route surfaces metadata only for the single-manifest ("most images") case; GitHub's own package-page hint states to set `org.opencontainers.image.description` in the annotations field for multi-arch images. `nolte/kamerplanter#455` is the reference implementation applying index annotations across all image build jobs
 
 ## Acceptance Criteria
 
@@ -92,6 +117,7 @@ Beyond labels, the defaults of a naively-written `Dockerfile` are the wrong post
 - [ ] The OCI-label contract is a mandatory section: the six core keys (`source`, `title`, `description`, `version`, `revision`, `created`) are required with RFC 2119 keywords, the five SHOULD keys are listed, and `source` is tied to GHCR repository linkage
 - [ ] The label **presence rule** is stated: static literal OR `ARG`-wired OR CI-injected (`docker/metadata-action`/`--label`) all count, and the audit hard-fails only when a label is present in neither the `Dockerfile` nor CI
 - [ ] The **multi-stage final-stage** rule for labels is stated: a `LABEL` reachable only via `COPY --from=` is a false positive
+- [ ] The **annotation-on-index** rule is stated: for a GHCR image published via BuildKit/`docker/build-push-action` the OCI core values MUST be propagated as index-level annotations (`DOCKER_METADATA_ANNOTATIONS_LEVELS` incl. `index`, passed to `build-push-action` `annotations:`), with the config-`LABEL` contract retained as the single-manifest baseline, and the canonical reference wiring is included
 - [ ] The four mandatory non-label pillars are each stated with RFC 2119 keywords and rationale: non-root **numeric** `USER` (plus the "a `USER` must exist" check beyond `DL3002`), no secrets in layers (with the BuildKit secret-mount remedy), base image pinned by **tag + digest** (plus the required updater), and `.dockerignore` present
 - [ ] The advisory best practices (multi-stage, `COPY` over `ADD`, package hygiene, single-`RUN` update+install, cache ordering, no `apt-get upgrade`, `HEALTHCHECK`, `pipefail`, exec-form `CMD`, absolute `WORKDIR`, registry allow-list) are each stated with their rationale and, where one exists, the hadolint rule ID that checks them
 - [ ] Runtime controls are explicitly delegated to `spec/project/kubernetes-deployment-best-practices/`, with the `Dockerfile`'s feasibility obligations (non-root `USER`, no writable-rootfs dependency) stated

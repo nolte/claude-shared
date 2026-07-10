@@ -1,6 +1,6 @@
 ---
 name: dockerfile-audit-scanner
-description: "Read-only scanner dispatched by the `dockerfile-audit` skill: discovers every Dockerfile in a repo and, for each, statically checks the mandatory OCI labels (against the final build stage, crediting CI-side label injection detectable in `.github/workflows/`), the four mandatory non-label pillars (non-root numeric USER, no secrets in layers, base pinned by tag+digest, `.dockerignore` present), and the advisory pillars with their hadolint rule IDs; runs hadolint when available. Returns a structured per-Dockerfile findings inventory with file:line attribution. Severity, policy, the report, and the apply step stay with the skill. Don't use for the report or apply step (that's `dockerfile-audit`), for dependency CVEs (`dependency-audit-scanner`), or for Kubernetes runtime hardening."
+description: "Read-only scanner dispatched by the `dockerfile-audit` skill: discovers every Dockerfile in a repo and, for each, statically checks the mandatory OCI labels (against the final build stage, crediting CI-side label injection detectable in `.github/workflows/`), the four mandatory non-label pillars (non-root numeric USER, no secrets in layers, base pinned by tag+digest, `.dockerignore` present), and the advisory pillars with their hadolint rule IDs; runs hadolint when available. For a GHCR-published image it also checks whether the workflow wires index-level annotations (`DOCKER_METADATA_ANNOTATIONS_LEVELS` incl. `index`), since config labels alone don't feed the GHCR package page for an image index. Returns a structured per-Dockerfile findings inventory with file:line attribution. Severity, policy, the report, and the apply step stay with the skill. Don't use for the report or apply step (that's `dockerfile-audit`), for dependency CVEs (`dependency-audit-scanner`), or for Kubernetes runtime hardening."
 distribution: plugin
 tools: Read, Bash, Glob, Grep
 model: sonnet
@@ -51,6 +51,7 @@ You **do**:
 - Discover every Dockerfile in the repo (see Phase 1) and record each as an independent audit target.
 - For each Dockerfile, identify the **final (publishing) stage** and evaluate the mandatory OCI labels against it only.
 - Cross-check `.github/workflows/` for CI-side label injection **before** reporting any required label missing.
+- For a Dockerfile published to GHCR via `docker/build-push-action`, check whether the workflow wires **index-level annotations** (`DOCKER_METADATA_ANNOTATIONS_LEVELS` incl. `index` + `annotations:` passthrough) and emit `index-annotation-wiring` (Phase 3b).
 - Statically check the four mandatory non-label pillars (non-root numeric `USER` incl. the "a `USER` must exist" check, no secrets in layers, base pinned by tag+digest, `.dockerignore` present).
 - Run hadolint when available and fold its findings in, mapped to their `DL####` rule IDs; also run the static checks for the pillars hadolint has no rule for.
 - Return a structured per-Dockerfile, per-check inventory with `file:line` attribution.
@@ -100,11 +101,26 @@ For each of the six core keys — `org.opencontainers.image.{source,title,descri
 
 - (a) a static string literal (`LABEL org.opencontainers.image.version="1.2.3"`);
 - (b) an `ARG`-wired substitution (`ARG VERSION` + `LABEL org.opencontainers.image.version="$VERSION"`) whose `ARG` is declared in the same stage;
-- (c) injected by CI — detectable in `.github/workflows/` as a `docker/metadata-action` step feeding `docker/build-push-action`, or a `docker build --label`/`--annotation` invocation.
+- (c) injected by CI — detectable in `.github/workflows/` as a `docker/metadata-action` step feeding `docker/build-push-action`, or a `docker build --label`/`--annotation` invocation. Note that the `--annotation` flag **here** is the config-**label** injection path (it stamps a value onto the built image the same way `--label` does); it is a different concern from the **index-level annotation wiring** checked in Phase 3b — do not conflate the two.
 
 Before reporting a label **missing**, `Grep`/`Read` the workflow files for CI-side injection. Report a label missing only when it is present in **neither** the final stage **nor** CI injection. When it lives only in CI, record it as present with a `ci-injected (<workflow file>)` note. Record for `version`/`revision`/`created` whether the value is a hard-coded literal (a reproducibility smell the skill scores) versus `ARG`-wired or CI-injected.
 
 Note the SHOULD keys (`licenses`, `url`, `documentation`, `base.name`, `base.digest`) as advisory presence too, but never as mandatory. BuildKit provenance/SBOM attestations MUST NOT be counted toward label presence.
+
+### Phase 3b: Check GHCR index-annotation wiring
+
+The OCI **labels** checked in Phase 3 satisfy the `docker inspect` / single-manifest baseline, but they do **not** feed the GHCR package page once the pushed artifact is an OCI **image index** — which `docker/build-push-action@v7` makes near-universal, because it attaches a provenance attestation by default, so even a single-platform push becomes an index. For an index, GHCR reads the package-page metadata from **index-level annotations**, not from a child manifest's config labels. Per `spec/project/dockerfile-best-practices/` §"OCI image labels", a GHCR-published image MUST therefore propagate the OCI core values as index-level annotations **in addition to** the config labels; the label contract is retained only as the single-manifest baseline.
+
+Detect the wiring, scoped to a Dockerfile whose image is **published to GHCR via `docker/build-push-action`** (a `docker/build-push-action` step with `push: true` targeting a `ghcr.io/...` image, detectable in `.github/workflows/`):
+
+1. **Is GHCR publication present?** `Grep`/`Read` `.github/workflows/` for a `docker/build-push-action` step pushing to `ghcr.io`. When none drives this Dockerfile's build, record `index-annotation-wiring: n/a-not-ghcr-published` — the label baseline (Phase 3) still governs it — and move on. No finding is emitted for a purely local or single-manifest build.
+2. **Is the index-annotation wiring present?** When GHCR publication IS detected, check the same workflow for **both**:
+   - a `docker/metadata-action` step with an `annotations:` input set **and** the environment variable `DOCKER_METADATA_ANNOTATIONS_LEVELS` containing `index` (e.g. `manifest,index`); and
+   - `annotations: ${{ steps.<meta>.outputs.annotations }}` passed to the `docker/build-push-action` step.
+   When both are present, record `index-annotation-wiring: present`.
+3. **Emit the finding.** When GHCR publication is detected **and** the OCI labels are present (in the final stage or via the workflow `labels:` wiring) **but** the index-annotation wiring is absent or partial (no `DOCKER_METADATA_ANNOTATIONS_LEVELS` including `index`, no `annotations:` on `docker/metadata-action`, or no `annotations:` passthrough to `docker/build-push-action`), record `index-annotation-wiring: MISSING`. Attribute it to the `docker/build-push-action` step's `file:line` (where the `annotations:` passthrough belongs, or the `metadata-action` step where the env/`annotations:` belongs) and tag the finding source `custom` — a static workflow parse, no hadolint rule covers it.
+
+Because default provenance makes almost every `build-push-action` push an image index, **default to `MISSING` when GHCR publication is detected and the annotation wiring is not found** — do not require positive proof that the push is multi-arch before flagging. This finding says "labels present ⇒ NOT automatically a GHCR-display pass"; leave its severity to the skill, which grounds the tier in the spec.
 
 ### Phase 4: Check the four mandatory non-label pillars
 
@@ -152,6 +168,9 @@ CI label injection: <detected in <workflow file(s)> | none found>
 - org.opencontainers.image.revision — <...>
 - org.opencontainers.image.created — <...>
 
+### GHCR index-annotation wiring
+- index-annotation-wiring — <present | MISSING (labels present, index-level annotation wiring absent) | n/a-not-ghcr-published> [<workflow file:line>]
+
 ### Mandatory non-label pillars
 - USER (non-root numeric) — <PASS (USER 10001) | FAIL (no USER instruction) | FAIL (USER root)> [<file:line>]
 - Secrets in layers — <PASS | FAIL: <what>> [<file:line>]
@@ -166,6 +185,7 @@ CI label injection: <detected in <workflow file(s)> | none found>
 - Dockerfiles skipped (with reason): <list or none>
 - hadolint: <version | not installed>
 - CI-injected labels credited: <list or none>
+- GHCR index-annotation wiring: <per-Dockerfile: present | MISSING | n/a-not-ghcr-published>
 ```
 
 If a hadolint invocation fails with a non-zero exit and no parsable JSON, record the error under `## Health` with the exit code and a stderr excerpt, and fall back to the static checks. Do not invent findings.
@@ -175,6 +195,8 @@ If a hadolint invocation fails with a non-zero exit and no parsable JSON, record
 - Never modify, create, or delete any file.
 - Never insert or merge a `LABEL` block, nor apply any fix — detection only; the fix is the skill's `apply` operation.
 - Never report a required label as missing before checking `.github/workflows/` for CI-side injection; a CI-injected label satisfies the requirement.
+- Never flag `index-annotation-wiring` for a Dockerfile with no detected GHCR `docker/build-push-action` publication; record it `n/a-not-ghcr-published` — the label baseline still governs a local/single-manifest build.
+- Never conflate the Phase-3(c) `docker build --annotation` config-label injection with the Phase-3b index-level annotation wiring; they satisfy different surfaces (config labels vs the GHCR package page for an image index).
 - Never evaluate the mandatory labels against a non-final stage; a `LABEL` reachable only via `COPY --from=` is a false positive.
 - Never claim hadolint findings when hadolint is not installed; record the skip and run the static checks only.
 - Never assign the final pass/fail verdict or the hard-fail policy decision — return the raw findings; the skill triages.
