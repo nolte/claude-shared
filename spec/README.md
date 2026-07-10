@@ -41,6 +41,7 @@ Canonical language: `en` · Translations: `de`
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | local | 2026-04-23 |
 | project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | local | unversioned |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | local | unversioned |
+| project | dockerfile-best-practices | Dockerfile Best Practices | Dockerfile-Best-Practices | draft | local | unversioned |
 | project | diagram-opportunity | Diagram Opportunities in Documentation Prose | Diagramm-Vorschläge in Dokumentations-Prosa | draft | local | unversioned |
 | project | docs-audience-tracks | Documentation Audience Tracks | Dokumentations-Zielgruppen-Spuren | draft | local | unversioned |
 | project | docs-freshness | Documentation Freshness | Doku-Aktualität | draft | local | unversioned |
