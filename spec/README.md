@@ -60,6 +60,7 @@ Canonical language: `en` · Translations: `de`
 | project | mermaid-diagrams | Mermaid Diagrams in MkDocs Documentation | Mermaid-Diagramme in der MkDocs-Dokumentation | draft | local | unversioned |
 | project | mission | Project Mission | Projekt-Mission | draft | local | unversioned |
 | project | mkdocs-structure | MkDocs Site Structure | MkDocs-Site-Struktur | draft | local | unversioned |
+| project | monitoring-observability | Monitoring and Observability | Monitoring und Observability | draft | portfolio | unversioned |
 | project | parallel-working-copies | Parallel Working Copies | Parallele Working Copies | draft | portfolio | unversioned |
 | project | portfolio-inherited-spec-layer | Portfolio-Inherited Spec Layer | Portfolio-vererbte Spec-Schicht | draft | local | unversioned |
 | project | post-audience-communication | Post audience communication | Audience-Kommunikation für Posts | draft | local | unversioned |
