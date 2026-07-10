@@ -5,6 +5,8 @@ Status: draft
 ## Kontext
 Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -Agents, die von nachgelagerten Projekten genutzt werden. Ein Skill hat zwei Ausprägungen: eine **Quell-Form** in diesem Repository (unter `skills/`) und eine **Laufzeit-Form** in einem konsumierenden Projekt, aus der Claude Code den Skill tatsächlich lädt. Der einzige unterstützte Verteilungsweg für die Laufzeit ist der Claude-Code-Plugin-Mechanismus: Dieses Repository ist selbst ein Claude-Code-Plugin (`.claude-plugin/plugin.json` plus Marketplace-Eintrag), und konsumierende Projekte erhalten Skills, indem sie das Plugin installieren. Ohne einheitliche Form und einen einzigen Verteilungspfad driften Skills in Benennung, Trigger-Beschreibungen und interner Struktur auseinander, und Konsumenten landen bei ad-hoc Kopien oder Symlinks, die mit der Zeit divergieren. Diese Spezifikation definiert, wie neue Skills erstellt werden, wie sie verteilt werden und woran sich bestehende Skills halten müssen.
 
+Für eine konsolidierte artefaktübergreifende Referenz jedes Skill- und Agent-Frontmatter-Feldes, seiner Provenienz (portabler Claude-Code-Standard gegenüber nolte-lokaler Erfindung) und seines normativen Owners siehe `spec/claude/skill-agent-frontmatter/`. Diese Referenz bildet ab und verweist auf diese Spec zurück; sie wiederholt die Regeln hier nicht.
+
 ## Ziele
 - Jeder Skill hat dieselbe vorhersehbare Form auf der Festplatte
 - Skills sind für Claude über präzise, trigger-orientierte Beschreibungen auffindbar

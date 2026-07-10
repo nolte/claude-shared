@@ -5,6 +5,8 @@ Status: draft
 ## Context
 The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. An agent has two lives: a **source** form in this repository (under `agents/`), and a **runtime** form in a consuming project (under `.claude/agents/` or `~/.claude/agents/`) where Claude Code actually loads it and the `Agent` tool dispatches to it via `subagent_type`. Without a consistent shape, agents drift in naming, trigger descriptions, tool scoping, and system-prompt quality, which makes reuse fragile and routing unreliable. This spec defines how new agents are authored, where they live in both forms, and what existing agents must conform to.
 
+For a consolidated cross-artifact reference of every skill- and agent-frontmatter field, its provenance (portable Claude Code standard versus nolte-local invention), and its normative owner, see `spec/claude/skill-agent-frontmatter/`. That reference maps and points back to this spec; it doesn't restate the rules here.
+
 ## Goals
 - Every agent has the same predictable shape on disk
 - Agents are routable by Claude through precise, trigger-oriented descriptions

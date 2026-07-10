@@ -1,0 +1,310 @@
+# Schema for skill (SKILL.md) and agent (agents/<name>.md) YAML frontmatter.
+# Companion to spec/claude/skill-agent-frontmatter/ (the descriptive field
+# reference). This schema is the machine-readable mirror of that reference's
+# §Field reference table.
+#
+# Scope is the PARSE-ERROR class only: presence and primitive types of fields,
+# string/list length limits, enum membership, and identifier patterns. Semantic
+# and cross-artifact rules stay with the owner specs and the audit tooling and
+# are DELIBERATELY not encoded here, so this schema never forks an owner rule:
+#   - the reserved-token ban (anthropic/claude in `name`) is a validator check
+#     (scripts/validate_skills.py), not a schema pattern;
+#   - the cross-artifact resolvability of dont_use_when[].alternative and
+#     see_also[] is a docs-build audit in skill-agent-catalog, not a schema rule;
+#   - the earliest-phase heuristic, the description what+when contract, and the
+#     third-person rule are authoring-quality checks, not parse errors.
+#
+# A frontmatter object is either a SKILL or an AGENT (oneOf below). The two
+# variants are mutually exclusive: an agent MUST carry `distribution`, and the
+# skill variant forbids it via additionalProperties:false, so exactly one branch
+# matches. Both variants close their property set (additionalProperties:false);
+# an unknown field is an authoring smell per agent-management §Optional Claude
+# Code frontmatter fields, and a newly-shipped upstream field is a §Maintenance
+# sync event, not a silent pass.
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/nolte/claude-shared/blob/main/spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml
+title: Skill and Agent Frontmatter
+description: >-
+  Validates the YAML frontmatter of a Claude Code skill (SKILL.md) or agent
+  (agents/<name>.md) at the parse-error level. Refs
+  spec/claude/skill-agent-frontmatter/ §Field reference for the field set and
+  provenance, and skill-management / agent-management / skill-agent-catalog for
+  the normative rules the digest points back to.
+
+oneOf:
+  - $ref: "#/$defs/skill"
+  - $ref: "#/$defs/agent"
+
+$defs:
+
+  # ---- Reusable field constraints (shared by both variants) ----
+
+  name:
+    type: string
+    minLength: 1
+    maxLength: 64
+    # Lowercase ASCII letters/digits with single interior hyphens: no leading or
+    # trailing hyphen, no consecutive hyphens. The reserved-token ban
+    # (anthropic/claude) is validator-enforced, NOT expressed here.
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+    description: >-
+      Standard (Agent Skills spec + Anthropic platform). Required. Equals the
+      folder/file name. Owner: skill-management / agent-management §Structure.
+
+  description:
+    type: string
+    minLength: 1
+    maxLength: 1024
+    description: >-
+      Standard (Agent Skills spec + Anthropic platform). Required. Third person,
+      states what + when. Owner: skill-management / agent-management.
+
+  phase:
+    type: string
+    enum: [vision, plan, design, build, review, quality, close-release, cross-cutting]
+    description: >-
+      nolte invention. Required. Exactly one identifier, never a list. Owner:
+      skill-agent-catalog §Phase classification.
+
+  distribution:
+    type: string
+    enum: [plugin, project]
+    description: >-
+      nolte invention. Required for agents only. Owner: agent-management
+      §Distribution.
+
+  tags:
+    type: array
+    maxItems: 5
+    items:
+      type: string
+      maxLength: 30
+      # Lowercase ASCII kebab-case; the pattern excludes a leading underscore,
+      # so the reserved _translation-pending auto-tag can never be author-set.
+      pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+    description: >-
+      nolte invention. Optional. <=5 entries; each lowercase kebab-case, <=30
+      chars, no leading underscore. Owner: skill-management / agent-management
+      §Tag vocabulary and skill-agent-catalog.
+
+  summary:
+    type: string
+    minLength: 1
+    maxLength: 200
+    description: >-
+      nolte invention. Optional. English canonical short summary, <=200 chars.
+      Owner: skill-agent-catalog §Per-language short summary.
+
+  use_when:
+    type: array
+    maxItems: 6
+    items:
+      type: string
+      maxLength: 120
+    description: >-
+      nolte invention. Optional. <=6 trigger scenarios, each <=120 chars. Owner:
+      skill-agent-catalog §Use-case metadata.
+
+  dont_use_when:
+    type: array
+    maxItems: 6
+    items:
+      type: object
+      additionalProperties: false
+      required: [situation, alternative]
+      properties:
+        situation:
+          type: string
+          maxLength: 120
+        alternative:
+          type: string
+          minLength: 1
+          # Resolvability against the discovered catalog is an audit check in
+          # skill-agent-catalog, not a schema rule.
+    description: >-
+      nolte invention. Optional. <=6 mappings of situation (<=120 chars) +
+      alternative (an artifact name). Owner: skill-agent-catalog §Use-case
+      metadata.
+
+  see_also:
+    type: array
+    maxItems: 8
+    items:
+      type: string
+      minLength: 1
+    description: >-
+      nolte invention. Optional. <=8 artifact names. Resolvability is an audit
+      check. Owner: skill-agent-catalog §Use-case metadata.
+
+  examples:
+    type: array
+    maxItems: 4
+    items:
+      type: object
+      additionalProperties: false
+      required: [prompt, outcome]
+      properties:
+        prompt:
+          type: string
+          maxLength: 200
+        outcome:
+          type: string
+          maxLength: 200
+    description: >-
+      nolte invention. Optional. <=4 mappings of prompt (<=200 chars) + outcome
+      (<=200 chars). Owner: skill-agent-catalog §Use-case metadata.
+
+  model:
+    type: string
+    minLength: 1
+    description: >-
+      Standard (Claude Code). Optional. A model alias (sonnet/opus/haiku), a full
+      model ID, or `inherit`; default `inherit` when omitted. Owner:
+      agent-management §Model selection / skill-management §Runtime.
+
+  effort:
+    type: string
+    enum: [low, medium, high, xhigh, max]
+    description: >-
+      Standard (Claude Code). Optional. Overrides the session effort. Owner:
+      agent-management / skill-management.
+
+  resumable:
+    type: boolean
+    description: >-
+      nolte invention. Optional. `true` when the artifact spans more than one
+      approval gate or named phase. Owner: skill-management / agent-management
+      §Resumable runs and resumable-work.
+
+  string_list:
+    type: array
+    items:
+      type: string
+      minLength: 1
+
+  # ---- SKILL variant ----
+
+  skill:
+    type: object
+    additionalProperties: false
+    required: [name, description, phase]
+    # summary_<lang> per additional docs language (e.g. summary_de).
+    patternProperties:
+      "^summary_[a-z]{2}$":
+        type: string
+        minLength: 1
+        maxLength: 200
+    properties:
+      name: {$ref: "#/$defs/name"}
+      description: {$ref: "#/$defs/description"}
+      phase: {$ref: "#/$defs/phase"}
+      summary: {$ref: "#/$defs/summary"}
+      tags: {$ref: "#/$defs/tags"}
+      use_when: {$ref: "#/$defs/use_when"}
+      dont_use_when: {$ref: "#/$defs/dont_use_when"}
+      see_also: {$ref: "#/$defs/see_also"}
+      examples: {$ref: "#/$defs/examples"}
+      model: {$ref: "#/$defs/model"}
+      effort: {$ref: "#/$defs/effort"}
+      resumable: {$ref: "#/$defs/resumable"}
+      # Standard (Claude Code) skill-surface optional fields:
+      when_to_use:
+        type: string
+        description: Standard (Claude Code). Combined with description under 1536 chars.
+      argument-hint:
+        type: string
+      arguments:
+        type: string
+      disable-model-invocation:
+        type: boolean
+      user-invocable:
+        type: boolean
+      allowed-tools:
+        $ref: "#/$defs/string_list"
+      context:
+        type: string
+        enum: [fork]
+      agent:
+        type: string
+        minLength: 1
+      paths:
+        $ref: "#/$defs/string_list"
+      shell:
+        type: string
+      hooks:
+        type: object
+
+  # ---- AGENT variant ----
+
+  agent:
+    type: object
+    additionalProperties: false
+    required: [name, description, phase, distribution]
+    patternProperties:
+      "^summary_[a-z]{2}$":
+        type: string
+        minLength: 1
+        maxLength: 200
+    properties:
+      name: {$ref: "#/$defs/name"}
+      description: {$ref: "#/$defs/description"}
+      phase: {$ref: "#/$defs/phase"}
+      distribution: {$ref: "#/$defs/distribution"}
+      summary: {$ref: "#/$defs/summary"}
+      tags: {$ref: "#/$defs/tags"}
+      use_when: {$ref: "#/$defs/use_when"}
+      dont_use_when: {$ref: "#/$defs/dont_use_when"}
+      see_also: {$ref: "#/$defs/see_also"}
+      examples: {$ref: "#/$defs/examples"}
+      model: {$ref: "#/$defs/model"}
+      effort: {$ref: "#/$defs/effort"}
+      resumable: {$ref: "#/$defs/resumable"}
+      # Standard (Claude Code) agent-surface optional fields:
+      tools:
+        $ref: "#/$defs/string_list"
+      disallowedTools:
+        $ref: "#/$defs/string_list"
+      permissionMode:
+        type: string
+        enum: [default, acceptEdits, auto, dontAsk, bypassPermissions, plan]
+      maxTurns:
+        type: integer
+        minimum: 1
+      skills:
+        $ref: "#/$defs/string_list"
+      mcpServers:
+        type: object
+      hooks:
+        type: object
+      memory:
+        type: string
+        enum: [user, project, local]
+      background:
+        type: boolean
+      isolation:
+        type: string
+        enum: [worktree]
+      color:
+        type: string
+        enum: [red, blue, green, yellow, purple, orange, pink, cyan]
+      initialPrompt:
+        type: string
+
+examples:
+  # A minimal skill frontmatter.
+  - name: pull-request-create
+    description: >-
+      Creates a spec-conformant pull request. Invoke when the user asks to open a
+      PR or draft a PR description.
+    phase: review
+    tags: [pull-request]
+    summary: Open a spec-conformant pull request.
+    resumable: true
+  # A minimal agent frontmatter.
+  - name: code-security-reviewer
+    description: >-
+      Read-only OWASP security audit. Invoke for a deep repository security pass.
+    phase: quality
+    distribution: plugin
+    tools: [Read, Grep, Glob]
+    model: inherit
