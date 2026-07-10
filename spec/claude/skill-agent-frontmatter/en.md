@@ -104,7 +104,6 @@ Provenance markers: **Standard·AgentSkills** (Agent Skills spec [R1], portable 
 | `maxTurns` | agent | integer | caps agentic turns before stopping | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
 | `skills` | agent | list of strings | preloads full skill content at startup; skips `disable-model-invocation: true` skills | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
 | `mcpServers` | agent | mapping / refs | per-subagent MCP servers; **ignored for `distribution: plugin`** (MUST NOT set) | Standard·CC | `agent-management` §Plugin-distribution security constraints |
-| `hooks` | agent | mapping | lifecycle hooks; **ignored for `distribution: plugin`** (MUST NOT set) | Standard·CC | `agent-management` §Plugin-distribution security constraints |
 | `memory` | agent | enum | `user`/`project`/`local`; enables Read/Write/Edit and memory-curation prompt | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
 | `background` | agent | boolean | always run as a background task; permissions pre-approved | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
 | `isolation` | agent | enum | `worktree`: run in a temporary git worktree | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
@@ -117,6 +116,7 @@ Provenance markers: **Standard·AgentSkills** (Agent Skills spec [R1], portable 
 |---|---|---|---|---|---|
 | `model` | both | string | model alias (`sonnet`/`opus`/`haiku`), a full model ID, or `inherit`; **default `inherit`** when omitted | Standard·CC | `agent-management` §Model selection · `skill-management` §Runtime & lifecycle awareness |
 | `effort` | both | enum | `low`/`medium`/`high`/`xhigh`/`max`; overrides session effort | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields · `skill-management` §Runtime & lifecycle awareness |
+| `hooks` | both | mapping | lifecycle hooks; on agents **ignored for `distribution: plugin`** (MUST NOT set) | Standard·CC | `skill-management` §Runtime & lifecycle awareness · `agent-management` §Plugin-distribution security constraints |
 
 ### nolte optional fields—catalog, routing, house convention
 

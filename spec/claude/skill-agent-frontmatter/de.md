@@ -104,7 +104,6 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 | `maxTurns` | agent | integer | begrenzt agentische Turns vor dem Stopp | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
 | `skills` | agent | Liste von Strings | preloaded vollen Skill-Inhalt beim Start; überspringt `disable-model-invocation: true`-Skills | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
 | `mcpServers` | agent | Mapping / Refs | Subagent-eigene MCP-Server; **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `agent-management` §Plugin-distribution security constraints |
-| `hooks` | agent | Mapping | Lifecycle-Hooks; **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `agent-management` §Plugin-distribution security constraints |
 | `memory` | agent | enum | `user`/`project`/`local`; aktiviert Read/Write/Edit und Memory-Curation-Prompt | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
 | `background` | agent | boolean | immer als Background-Task laufen; Berechtigungen vorab-genehmigt | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
 | `isolation` | agent | enum | `worktree`: in einem temporären git-Worktree laufen | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
@@ -117,6 +116,7 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 |---|---|---|---|---|---|
 | `model` | both | string | Modell-Alias (`sonnet`/`opus`/`haiku`), eine volle Modell-ID oder `inherit`; **Default `inherit`** bei Weglassen | Standard·CC | `agent-management` §Model selection · `skill-management` §Runtime & lifecycle awareness |
 | `effort` | both | enum | `low`/`medium`/`high`/`xhigh`/`max`; überschreibt den Session-Effort | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields · `skill-management` §Runtime & lifecycle awareness |
+| `hooks` | both | Mapping | Lifecycle-Hooks; bei Agents **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `skill-management` §Runtime & lifecycle awareness · `agent-management` §Plugin-distribution security constraints |
 
 ### nolte-Optionalfelder — Katalog, Routing, Hauskonvention
 
