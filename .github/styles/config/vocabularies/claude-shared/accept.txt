@@ -30,3 +30,15 @@ kubelet
 [Aa]utoscaling
 distroless
 hadolint('s)?
+OTel
+Grafana
+Weaveworks
+Wilkie
+Protobuf
+traceparent
+tracestate
+SLIs?
+SLOs?
+prober
+middleware
+appender
