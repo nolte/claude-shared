@@ -81,6 +81,14 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   `skill-management` (über `claude-plugin-developer` aufgerufen) bleiben maßgeblich
   für die Gestalt des Spezialisten; diese Spezifikation triggert das Verfassen nur
   unter der Gap-Regel
+- Die eigenständige, Cross-Working-Copy-/Cross-Pull-Request-Trennung von Erfassung und
+  Umsetzung: `spec/project/elicitation-implementation-separation/` ist maßgeblich für
+  diesen **optionalen, benannten Modus** (die Erfassung landet als eigenes gemergtes
+  Anforderungs-Artefakt, bevor irgendeine Umsetzung beginnt). Diese Spezifikation trennt
+  die beiden Phasen *innerhalb eines einzelnen orchestrierten Laufs*; beide sind
+  **komplementär, nicht konkurrierend** — eine Orchestration MAY [KANN] auf einem
+  Anforderungs-Artefakt aufbauen, das jener Modus erzeugt hat, und eine mitwirkende
+  Person wählt je Issue den integrierten oder den getrennten Pfad
 
 ## Requirements
 
