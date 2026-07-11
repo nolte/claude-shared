@@ -75,6 +75,13 @@ specialist exists.
 - Authoring new specialists when none matches: `agent-management` and
   `skill-management` (invoked via `claude-plugin-developer`) remain authoritative for
   the specialist's shape; this spec only triggers the authoring under the gap rule
+- The standalone, cross-working-copy / cross-pull-request separation of elicitation
+  from implementation: `spec/project/elicitation-implementation-separation/` is
+  authoritative for that **optional, named mode** (elicitation lands as its own merged
+  requirements artefact before any implementation begins). This spec separates the two
+  phases *within a single orchestrated run*; the two are **complementary, not
+  competing**—an orchestration MAY be built on a requirements artefact that mode
+  produced, and a contributor chooses the integrated or the separated path per issue
 
 ## Requirements
 
