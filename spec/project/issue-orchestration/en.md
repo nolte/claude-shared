@@ -80,7 +80,7 @@ specialist exists.
   authoritative for that **optional, named mode** (elicitation lands as its own merged
   requirements artefact before any implementation begins). This spec separates the two
   phases *within a single orchestrated run*; the two are **complementary, not
-  competing** — an orchestration MAY be built on a requirements artefact that mode
+  competing**—an orchestration MAY be built on a requirements artefact that mode
   produced, and a contributor chooses the integrated or the separated path per issue
 
 ## Requirements
