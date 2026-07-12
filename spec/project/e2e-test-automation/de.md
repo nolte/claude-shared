@@ -34,7 +34,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 - Das Unit-/Lint-/Typecheck-Gate ausführen und seine Fehler klassifizieren — das regelt `spec/project/quality-gate/`; diese Spec deckt *Form und Disziplin* der E2E-Stufe ab, nicht das Gate, das die schnellen Stufen in der CI ausführt
 - Eine bestimmte Browser-Automatisierungs-Bibliothek vorschreiben: Der Kern ist framework-neutral; Selenium ist das mitgelieferte Referenzprofil, keine Pflicht
 - Die Anforderungs-/Spec-Dokumente schreiben oder bearbeiten, auf die eine Suite verweist
-- Produktiv-Anwendungscode oder `data-testid`-Hooks in der zu testenden Anwendung erzeugen (die Suite *stützt sich* auf solche Hooks; sie hinzuzufügen ist Anwendungsarbeit)
+- Produktiv-Anwendungscode oder `data-testid`-Hooks in der zu testenden Anwendung erzeugen (die Suite *stützt sich* auf solche Hooks; sie hinzuzufügen ist Anwendungsarbeit). Die Bereitstellung dieser Hooks ist das Provider-seitige Pendant, das `spec/frontend/testability-identifiers/` besitzt
 
 ## Anforderungen
 

@@ -26,6 +26,7 @@ Canonical language: `en` · Translations: `de`
 | design | flux-image-generation | FLUX Image Generation | FLUX-Bildgenerierung | draft | local | unversioned |
 | design | gemini-image-generation | Gemini Image Generation | Gemini-Bildgenerierung | draft | local | unversioned |
 | design | graphic-prompt-authoring | Graphic Prompt Authoring | Grafik-Prompt-Autorenschaft | draft | local | unversioned |
+| frontend | testability-identifiers | Frontend Testability: Stable Test Identifiers | Frontend-Testbarkeit: Stabile Test-Identifikatoren | draft | local | unversioned |
 | frontend | webview-ui-optimization | Web-View UI Optimization | Web-View-UI-Optimierung | draft | local | unversioned |
 | portfolio | portfolio-inflight-management | Portfolio In-Flight Management | Portfolio-In-Flight-Management | draft | local | unversioned |
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | local | unversioned |
