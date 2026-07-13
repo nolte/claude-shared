@@ -27,7 +27,7 @@ Without this, every MCP tool call would trigger a permission prompt and the opti
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** `spec/claude/permission-allowlist/` (EN + DE) documents the GitHub MCP read tool names as allowlisted, extending the two already-documented tools (`GitHubMCP:get_me`, `GitHubMCP:list_repository_collaborators`) to the full least-privilege read set from the F-9 decision.
+- [ ] **acceptance-1** `spec/claude/permission-allowlist/` (EN + DE) documents the GitHub MCP read tool names as allowlisted, extending the two already-documented tools (`github:get_me`, `github:list_repository_collaborators`) to the full least-privilege read set from the F-9 decision.
 - [ ] **acceptance-2** The project `.claude/settings.json` allowlist includes the GitHub MCP read tool names.
 - [ ] **acceptance-3** A dry check shows no per-call permission prompt for the allowlisted MCP tools.
 - [ ] **acceptance-4** The allowlisted entries are scoped to the read-only tool set from the F-9 decision; no write-capable MCP tool is allowlisted beyond that set.
@@ -35,7 +35,7 @@ Without this, every MCP tool call would trigger a permission prompt and the opti
 ## Test hooks
 
 - **acceptance-1** — manual: open `spec/claude/permission-allowlist/{en,de}.md`; confirm the MCP read tool names present in both languages — `pending`
-- **acceptance-2** — manual: inspect `.claude/settings.json`; confirm the `GitHubMCP:` read tool names in the allowlist — `pending`
+- **acceptance-2** — manual: inspect `.claude/settings.json`; confirm the `github:` read tool names in the allowlist — `pending`
 - **acceptance-3** — manual: invoke an allowlisted MCP tool; confirm no permission prompt fires — `pending`
 - **acceptance-4** — manual: confirm the allowlist matches the least-privilege read set; assert no write MCP tool is present — `pending`
 
@@ -43,7 +43,7 @@ Without this, every MCP tool call would trigger a permission prompt and the opti
 
 The consistency check ran via the `feature-consistency-reviewer` agent (`agent_version: feature-consistency-reviewer@90d0141`) and returned two non-blocking findings. Neither is `overlap` or `duplication`, so the `draft → ready` gate is not blocked.
 
-- **prior-art** (`spec/claude/permission-allowlist/en.md` + `de.md`; resolution `proceed`): the §Selection-criteria bullet already establishes that read-only GitHub MCP read tools belong in the allowlist and enumerates two of them (`GitHubMCP:get_me`, `GitHubMCP:list_repository_collaborators`, sourced from the trusted-author injection-guard spec) in both languages. F-11 **extends** that documented set to the full least-privilege read set from F-9 rather than creating the mechanism. Following the reviewer's recommendation, acceptance-1 is scoped to the *delta* beyond the two already-documented tools, so settled entries are not re-documented.
+- **prior-art** (`spec/claude/permission-allowlist/en.md` + `de.md`; resolution `proceed`): the §Selection-criteria bullet already establishes that read-only GitHub MCP read tools belong in the allowlist and enumerates two of them (`github:get_me`, `github:list_repository_collaborators`, sourced from the trusted-author injection-guard spec) in both languages. F-11 **extends** that documented set to the full least-privilege read set from F-9 rather than creating the mechanism. Following the reviewer's recommendation, acceptance-1 is scoped to the *delta* beyond the two already-documented tools, so settled entries are not re-documented.
 - **prior-art** (`spec/claude/mcp-tool-preference/en.md`; resolution `proceed`): allowlist membership for any MCP tool an artefact uses is already a MUST in the P3 convention (en.md:51). F-11 operationalises that MUST; it does not contradict it. acceptance-4's read-only / no-write scoping aligns with the P3 §Reads-versus-writes rule and the allowlist spec's §Relationship (mutation-capable wildcards stay out) — so there is no drift.
 
 ## Risks
