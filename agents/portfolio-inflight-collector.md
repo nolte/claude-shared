@@ -2,7 +2,7 @@
 name: portfolio-inflight-collector
 description: "Read-only in-flight data collector dispatched by `portfolio-inflight-triage`: gathers open issues, open PRs (incl. drafts), branches without an active PR to develop, and unresolved review threads plus open Discussions across the nolte portfolio. Returns raw per-repo data only — severity classification, stalling thresholds, and report authoring stay with the calling skill. Performs no writes against any repository."
 distribution: plugin
-tools: [Bash]
+tools: [Bash, mcp__github__list_issues, mcp__github__issue_read, mcp__github__list_pull_requests, mcp__github__pull_request_read, mcp__github__list_branches, mcp__github__list_releases, mcp__github__list_discussions, mcp__github__get_discussion_comments]
 model: sonnet
 tags: [audit]
 phase: quality
@@ -50,6 +50,30 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `gh api repos/nolte/<repo>/releases --jq 'map(select(.draft == true))'` — read-only fetch of open `release-drafter` drafts when the calling skill requests draft-release SHA membership data alongside the PR collection. (The agent only fetches the draft list; the skill applies the `release_blocking` matrix-axis evaluation.)
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`, no `gh api -X PATCH`, no `gh api -X DELETE`, no `gh issue close`, no `gh pr merge`, no `gh pr close`, no `gh pr review --approve`/`--request-changes`/`--comment`, no `gh api graphql` with any mutation operation, no `rm`, no package installs, no file writes, no network mutations. The §Operator authority `MUST NOT` clauses from the spec are reproduced inline here as an extra guardrail.
+
+## GitHub MCP-preferred reads (optional)
+
+This agent **prefers** a connected GitHub MCP server's read tools over parsing `gh` CLI output, and **always** falls back to the `gh` commands enumerated in §Read-only Bash justification when no server is connected, per `spec/claude/mcp-tool-preference/`. The MCP path is strictly optional and strictly additive: the server may be absent in headless, cron, or CI runs, so nothing here requires it. Detect availability and fall back silently — a missing MCP tool MUST NOT cause a prompt, an error, or an abandoned run. The two paths MUST produce the identical deterministic collection payload (the §Output shape body, excluding the per-run `Collected:` timestamp header and the rate-limit footer); that equivalence is the F-13 pilot's acceptance test (acceptance-3).
+
+The server is registered under the server name `github`, so its tools are named `github:<tool>` here (the `ServerName:tool_name` syntax) and appear as `mcp__github__<tool>` in this agent's `tools:` frontmatter and in `.claude/settings.json` per `spec/claude/permission-allowlist/`.
+
+Per data source (the named `gh` command is the retained fallback, never removed):
+
+| Data source | MCP-preferred read | `gh` fallback |
+| --- | --- | --- |
+| 1. Open issues | `github:list_issues` (+ `github:issue_read` method `get_comments` for the comment counters) | `gh issue list` |
+| 2. Open PRs incl. drafts | `github:list_pull_requests` (+ `github:pull_request_read` methods `get_status` / `get_check_runs` / `get_reviews` for the check-rollup and review state) | `gh pr list` |
+| 3. Branches without active PR | `github:list_branches` | `gh api repos/<repo>/branches` |
+| 4b. Open Discussions | `github:list_discussions` (+ `github:get_discussion_comments` for last-comment author/timestamp) **when the connected server exposes the discussions toolset** | `gh api graphql` discussions query |
+| release-drafter drafts | `github:list_releases` (draft filter) | `gh api repos/<repo>/releases` |
+
+Deliberate `gh`-stays exceptions — the OQ-D cases from `.audits/issue-orchestrate/378/analysis.md`, i.e. the very optionality this pilot exercises rather than gaps to hide:
+
+- **Data source 4a — unresolved review-thread `isResolved` state:** the review-thread *comments* can be read via `github:pull_request_read` method `get_review_comments`, but the `pullRequest.reviewThreads.isResolved` flag has no clean MCP tool. The resolved-state read therefore stays on `gh api graphql` on **both** paths.
+- **Repository default branch (data source 3 filter):** `gh api repos/<repo> --jq .default_branch` has no clean single-purpose MCP equivalent; it stays on `gh` on both paths.
+- **Discussions toolset availability:** the discussions read is MCP-preferred *only when the connected server exposes it*. The hosted `api.githubcopilot.com/mcp/` endpoint used in the R-10 pilot did **not** expose the discussions toolset, so data source 4b fell back to `gh api graphql` there — a correct, silent degradation, not a failure. A self-hosted `github-mcp-server` with the discussions toolset enabled takes the MCP path.
+
+Because data sources 4a and (in the pilot session) 4b run on `gh` regardless of MCP presence, they contribute identically to both runs of the acceptance-3 diff; the MCP-vs-`gh` equivalence is proven on data sources 1, 2, 3, and the release-drafter drafts, where the two paths genuinely differ.
 
 ## Scope and boundaries
 
@@ -224,7 +248,7 @@ Before collecting:
 
 3. **Fetch optional `project/inflight.yml`** for each in-scope repository via `gh api repos/nolte/<repo>/contents/project/inflight.yml --jq .content | base64 -d`. On HTTP 404, record `inflight.yml override present: no`. On success, pass through the verbatim YAML to the calling skill in the `inflight.yml raw content` field; do not interpret the override values.
 
-4. **For each in-scope Portfolio-Member repository, collect the four primary data sources** (skipping any source marked `inflight: skip-<source>` for that repository). Each source uses the corresponding read-only command already enumerated in §Read-only Bash justification — don't restate the full flag strings here; the filters and derivations below are the load-bearing part:
+4. **For each in-scope Portfolio-Member repository, collect the four primary data sources** (skipping any source marked `inflight: skip-<source>` for that repository). Each source prefers the corresponding GitHub MCP read tool per §GitHub MCP-preferred reads when a server is connected, otherwise the read-only `gh` command already enumerated in §Read-only Bash justification — don't restate the full flag strings here; the filters and derivations below are the load-bearing part and are identical on both paths:
 
    a. **Open issues (`issue`):** via the `gh issue list` command. Filter out issues carrying any of `triage-done`, `wontfix`, `parking-lot` labels per §Data sources. For each remaining issue, derive `daysOpen`, `daysSinceLastActivity`, and `hasMaintainerCommentLast30d` from the JSON. Assign identifier `<repo>/issue/<number>`.
 
