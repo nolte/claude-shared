@@ -64,4 +64,51 @@ weaken the diff; they are the documented `gh`-stays cases the pilot deliberately
 - **acceptance-3** (identical deterministic payload) — **met** (this proof).
 - **acceptance-4** (cites `spec/claude/mcp-tool-preference/`) — met: agent body §GitHub MCP-preferred reads.
 
+## Tier-1/2/3 rollout (F-14 / F-15 / F-16)
+
+The optional-MCP pattern was broadened from the pilot to the rest of the GitHub-touching
+artefacts. Skills run in the main session and inherit its MCP tools + allowlist, so they
+gain a body tooling-note + P3 citation only; the two collector **agents** additionally get
+additive `tools:` grants. The allowlist grew by four live-verified read tools
+(`search_pull_requests`, `get_file_contents`, `get_latest_release`, `get_release_by_tag`).
+
+Adoption per artefact (verdict from the read/write mapping against the live catalogue):
+
+- **F-14 Tier-1 remainder:** `issue-orchestrate` (issue/PR comprehension → `list_issues`,
+  `issue_read`, `search_pull_requests`, `list_pull_requests`); `portfolio-manifest-collector`
+  agent (manifest fetch → `get_file_contents`); `workflow-health-triage` — **no MCP reads**:
+  its entire GitHub read surface is Actions/workflow-run data, absent on the connected server,
+  so it stays on `gh` (server-agnostic OQ-D note).
+- **F-15 Tier-2:** `vocab-drift-scanner` agent (`get_file_contents`, `get_latest_release`),
+  `vocab-drift-audit` (`get_latest_release`), `release-notes-curate` (`list_releases`,
+  `get_release_by_tag`), `pull-request-merge` (`pull_request_read`, `list_pull_requests`,
+  `list_branches`), `continuous-improvement-triage` (`list_pull_requests`, `pull_request_read`
+  + the already-wired trust reads), `sprint-review` (`get_release_by_tag`);
+  `portfolio-audit` / `portfolio-inflight-triage` inherit their collector agents;
+  `project-structure-apply` — **no MCP reads** (its only read is the GitHub-App install check,
+  no MCP tool → `gh`, OQ-D).
+- **F-16 Tier-3 (per-artefact go/no-go):** both **GO (narrow)** — `pull-request-create`
+  migrates the open-PR collision read (`list_pull_requests`); `release-publish-trigger`
+  migrates draft resolution (`list_releases`) and the post-publish verify (`get_release_by_tag`).
+  The `gh pr create` / `gh workflow run` dispatches, the required-check-runs gate, all
+  workflow-run status reads, and the git-plumbing (push/rebase/reachability) stay on `gh`/git.
+
+Rollout spot-verification (in addition to the pilot's four sources):
+
+- `get_latest_release` (nolte/vale-style) → `v0.1.17`, identical to `gh api …/releases/latest`.
+- `get_file_contents` (nolte/claude-shared `project/portfolio.yml`) → identical content and YAML
+  fields to the `gh api …/contents/…` fetch.
+- **Evidence-driven scope correction:** `search_repositories` was initially mapped as the
+  MCP-preferred read for the manifest collector's Portfolio-Member enumeration, then **removed**
+  — `nolte` is a user account (`gh api orgs/nolte/repos` 404s), the enumeration is a repo
+  *list*, and a ranked eventually-consistent search is not a deterministic list equivalent
+  (it could miss a fresh member and break the identical-output invariant). The enumeration
+  stays on `gh` (OQ-D), mirroring the pilot collector; `search_repositories` is not allowlisted.
+
+Recurring OQ-D `gh`-stays gaps documented across the rollout: Actions/workflow-run reads
+(`gh run`/`gh workflow`, check-run rollup `gh pr checks`), `gh label list` (only single
+`get_label` exists), single-repo default-branch reads (`gh repo view --json defaultBranchRef`),
+GitHub-App install checks (`gh api /user/installations`), `gh api rate_limit`, and the
+Portfolio-Member enumeration. All writes and git-plumbing stay on `gh`/git by contract.
+
 Refs #378, #382.
