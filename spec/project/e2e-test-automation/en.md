@@ -34,7 +34,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - Running the unit/lint/typecheck gate and classifying its failures—owned by `spec/project/quality-gate/`; this spec covers the E2E tier's *shape and discipline*, not the gate that executes the fast tiers in CI
 - Mandating a specific browser-automation library: the core is framework-neutral; Selenium is the shipped reference profile, not a requirement
 - Authoring or editing the requirement/spec documents a suite traces to
-- Generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work)
+- Generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work). Provisioning those hooks is the provider-side complement, owned by `spec/frontend/testability-identifiers/`
 
 ## Requirements
 
