@@ -4,13 +4,13 @@ Status: draft
 
 ## Context
 
-An end-to-end test can only be trustworthy if the surface it drives is addressable: every test-relevant element and page must expose a stable, unique identifier a test can select by. That is the **provider side** of testability, and it is application work—not test work. `spec/project/e2e-test-automation/` governs the **consumer side** (how a suite *selects*: the locator robustness hierarchy, page objects, condition-based waits) and deliberately scopes provisioning *out*: its Non-Goals name "generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work)". This spec claims that scoped-out application work as its subject. The two specs are consumer/provider siblings: one norms how tests select, this one norms what the frontend must provide.
+An end-to-end test can only be trustworthy if the surface it drives is addressable: every test-relevant element and page must expose a stable, unique identifier a test can select by. That's the **provider side** of testability, and it's application work—not test work. `spec/project/e2e-test-automation/` governs the **consumer side** (how a suite *selects*: the locator robustness hierarchy, page objects, condition-based waits) and deliberately scopes provisioning *out*: its Non-Goals name "generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work)." This spec claims that scoped-out application work as its subject. The two specs are consumer/provider siblings: one norms how tests select, this one norms what the frontend must provide.
 
 The reusable part of provisioning is framework-independent: the *obligation* to mark test-relevant elements, the *stability contract* that keeps those marks from silently breaking, the *naming schema* that keeps them predictable, and the rule that repeated collections stay addressable by a business key rather than a position. The throwaway part is the mechanism—which attribute carries the identifier in a given technology. This spec states the obligation framework-neutrally as the binding core, then pins one concrete, fully worked **Web reference profile** (`data-testid` in the DOM) as a normative section, so a web project gets a batteries-included default while other stacks realise the same core.
 
 The content is generalised from the kamerplanter `UI-NFR-022` provisioning standard (`R-001..R-025`) and lifted out of its plant domain: the plant-specific `species-*` examples become `<entity>-*` placeholders so the rules read portfolio-wide rather than as one app's convention.
 
-Readers: frontend developers who build or reshape a portfolio UI (`nolte-engineering` audience); the UX/usability role that edits an existing presentation layer; reviewers verifying that a diff keeps the surface addressable. It is operationalised in lockstep with the frontend build and UX agents that consume it (`fullstack-developer`, `frontend-usability-optimizer`, `webview-ui-expert`).
+Readers: frontend developers who build or reshape a portfolio UI (`nolte-engineering` audience); the UX/usability role that edits an existing presentation layer; reviewers verifying that a diff keeps the surface addressable. It's operationalised in lockstep with the frontend build and UX agents that consume it (`fullstack-developer`, `frontend-usability-optimizer`, `webview-ui-expert`).
 
 ## Goals
 
@@ -23,10 +23,10 @@ Readers: frontend developers who build or reshape a portfolio UI (`nolte-enginee
 
 ## Non-Goals
 
-- **Selecting** by these identifiers in a test suite—the locator robustness hierarchy, page-object encapsulation, and waiting discipline are owned by `spec/project/e2e-test-automation/` §Locator strategy (the consumer sibling). This spec provisions the hooks that hierarchy consumes; it does not govern how tests use them.
-- The **component-test tier's** query philosophy—`spec/project/test-tier-component/` prefers user-facing queries (role, label, text) and treats a test id as a last resort, by Testing-Library design. That is intentionally different from the E2E provider contract here (test-hook-first) and is a delimitation, not a contradiction: the two tiers optimise for different failure modes.
+- **Selecting** by these identifiers in a test suite—the locator robustness hierarchy, page-object encapsulation, and waiting discipline are owned by `spec/project/e2e-test-automation/` §Locator strategy (the consumer sibling). This spec provisions the hooks that hierarchy consumes; it doesn't govern how tests use them.
+- The **component-test tier's** query philosophy: `spec/project/test-tier-component/` prefers user-facing queries (role, label, text) and treats a test id as a last resort, by Testing-Library design. That's intentionally different from the E2E provider contract here (test-hook-first) and is a delimitation, not a contradiction: the two tiers optimise for different failure modes.
 - **Non-web framework profiles** (native mobile, Flutter, desktop)—deferred until a consumer forces one, exactly as `e2e-test-automation` defers non-Selenium profiles. The neutral core already binds them; only the concrete profile is missing.
-- **Naming a concrete linter or enforcement tool**—enforcement is described as an optional MAY (see §Optional enforcement); this spec mandates no specific tooling.
+- **Naming a concrete linter or enforcement tool**: enforcement is described as an optional MAY (see §Optional enforcement); this spec mandates no specific tooling.
 - Authoring or editing the test suites that consume these identifiers.
 
 ## Requirements
@@ -53,12 +53,12 @@ Readers: frontend developers who build or reshape a portfolio UI (`nolte-enginee
 - Interactive elements (buttons, links, toggles, menu items) that a test drives **MUST** each carry a stable identifier.
 - Form fields **MUST** carry a stable identifier of the form `form-field-<name>`, where `<name>` is the field's stable business name, not its position or label text.
 - Dialogs, modals, and overlays **MUST** carry a stable identifier on their root so a test can scope selection to the open dialog.
-- Any status, validation, or result display whose content a test asserts on **MUST** carry a stable identifier; this holds regardless of how the element is mounted (inline, portal, toast, overlay)—mounting context does not exempt a test-relevant element from provisioning.
+- Any status, validation, or result display whose content a test asserts on **MUST** carry a stable identifier; this holds regardless of how the element is mounted (inline, portal, toast, overlay)—mounting context doesn't exempt a test-relevant element from provisioning.
 
 ### Repeated collections addressable by business key
 
 - Rows of a repeated list or table **MUST** be addressable by a stable **business key** (for example `<entity>-row-<businessKey>`), never by list index or DOM position, so a test survives reordering, filtering, and pagination.
-- WHEN no natural business key exists, the frontend **MUST** provide a stable synthetic key that is deterministic across renders; a render-order index or an ephemeral runtime id **MUST NOT** be used as the addressing key.
+- WHEN no natural business key exists, the frontend **MUST** provide a stable synthetic key that's deterministic across renders; a render-order index or an ephemeral runtime id **MUST NOT** be used as the addressing key.
 
 ### Naming schema
 
@@ -69,7 +69,7 @@ Readers: frontend developers who build or reshape a portfolio UI (`nolte-enginee
 
 - A provided identifier **MUST** be deterministic across renders and **MUST** remain stable across an element's states (enabled/disabled, loading/loaded, valid/invalid, empty/populated).
 - A provided identifier **MUST NOT** be silently renamed or removed; a change to an identifier is a breaking change to the test surface and **MUST** be treated as such (announced, coordinated with the consuming suite).
-- Framework auto-generated identifiers, hashed CSS-module class names, and other non-deterministic or non-speaking values **MUST NOT** be used to satisfy the provisioning obligation.
+- Framework autogenerated identifiers, hashed CSS-module class names, and other non-deterministic or non-speaking values **MUST NOT** be used to satisfy the provisioning obligation.
 - An identifier **MUST** survive cosmetic markup changes (style changes, added wrapper elements, layout refactors), mirroring the consumer requirement that selectors survive such changes.
 
 ### Accessibility hooks as a secondary anchor
@@ -89,7 +89,7 @@ Readers: frontend developers who build or reshape a portfolio UI (`nolte-enginee
 
 This profile is the binding realisation of the core for web (DOM) projects and the default consuming agents assume when no other mechanism is declared. A project on another stack replaces this section wholesale but still satisfies the core above.
 
-- The provided identifier **MUST** be carried by the `data-testid` attribute in the DOM; it is the dedicated test hook the consumer hierarchy names first.
+- The provided identifier **MUST** be carried by the `data-testid` attribute in the DOM; it's the dedicated test hook the consumer hierarchy names first.
 - A routable page **MUST** render `data-testid="<entity>-<view>-page"` on its top-level container; a loading region **MUST** render `data-testid="loading-skeleton"` while loading.
 - A form field **MUST** render `data-testid="form-field-<name>"`; an interactive control **MUST** render a `data-testid`; a dialog root **MUST** render a `data-testid`; a test-relevant status or result element **MUST** render a `data-testid`.
 - A repeated row **MUST** render `data-testid="<entity>-row-<businessKey>"` keyed by the business key, never by index.
@@ -102,7 +102,7 @@ This profile is the binding realisation of the core for web (DOM) projects and t
 - [ ] The Web reference profile is concrete enough that a web project can provision a conformant surface from it alone (page markers, `loading-skeleton`, `form-field-<name>`, interactive controls, dialogs, status displays, business-key rows).
 - [ ] The provisioning-vs-selection split is stated and cross-referenced to `e2e-test-automation` §Locator strategy, and that spec carries a forward pointer back to this one.
 - [ ] Page markers, element identifiers, and business-key row addressing are all required, with index-based addressing explicitly forbidden.
-- [ ] The naming schema (kebab-case, English, no volatile facts) and the stability contract (deterministic, state-stable, no silent rename, no auto-generated/hashed values) are both normative.
+- [ ] The naming schema (kebab-case, English, no volatile facts) and the stability contract (deterministic, state-stable, no silent rename, no autogenerated/hashed values) are both normative.
 - [ ] Accessibility hooks are positioned as a secondary anchor that never replaces the primary identifier.
 - [ ] The UX/usability role is bound as an addressed provider, and identifier preservation on a usability edit is required.
 - [ ] Enforcement is mentioned only as an optional MAY, with no linter named.
