@@ -7,9 +7,9 @@ Portfolio-Scope: local
 
 Skills and agents that read from GitHub reach it today by shelling out to the `gh` CLI and parsing its text output. A connected GitHub MCP server exposes the same operations as typed, paginated, structured tools that are cheaper and more reliable to consume than scraped CLI text, especially for read-heavy comprehension: an issue with its comments and linked items, a workflow run with its logs, or issues and pull requests collected across the whole portfolio.
 
-This spec defines the **authoring convention** for adopting that path: how a skill or agent expresses "prefer the GitHub MCP server when it is present, and always fall back to `gh`". The convention is strictly optional and strictly additive. An MCP server may be absent in headless, cron, or CI runs, so nothing may start to *require* it, and no behaviour may change on either path.
+This spec defines the **authoring convention** for adopting that path: how a skill or agent expresses "prefer the GitHub MCP server when it's present, and always fall back to `gh`." The convention is strictly optional and strictly additive. An MCP server may be absent in headless, cron, or CI runs, so nothing may start to *require* it, and no behaviour may change on either path.
 
-It is complementary to three existing rules, and restates none of them: `spec/claude/skill-management/` and `spec/claude/agent-management/` already fix **how** an MCP tool is named in artefact prose (the fully-qualified `ServerName:tool_name` syntax) and note that the `mcpServers` frontmatter field is ignored for plugin-distributed agents; `spec/claude/permission-allowlist/` owns the **allowlist** that keeps the tool calls from prompting. This spec governs only **whether and when** a GitHub-touching artefact prefers an MCP read over `gh`.
+It's complementary to three existing rules, and restates none of them: `spec/claude/skill-management/` and `spec/claude/agent-management/` already fix **how** an MCP tool is named in artefact prose (the fully-qualified `ServerName:tool_name` syntax) and note that the `mcpServers` frontmatter field is ignored for plugin-distributed agents; `spec/claude/permission-allowlist/` owns the **allowlist** that keeps the tool calls from prompting. This spec governs only **whether and when** a GitHub-touching artefact prefers an MCP read over `gh`.
 
 Readers: skill and agent authors in `claude-shared` who maintain GitHub-touching artefacts and the reviewers who verify them.
 
@@ -46,7 +46,7 @@ Readers: skill and agent authors in `claude-shared` who maintain GitHub-touching
 ### Expression in the artefact
 
 - An adopting skill or agent **MUST** state the optional path in its body in one short place (for example a tooling note) and **MUST** reference this spec, so a reader knows the MCP path exists and that `gh`/git stays authoritative.
-- When an artefact references an MCP tool in its prose, it **MUST** use the fully-qualified `ServerName:tool_name` syntax required by `spec/claude/skill-management/` and `spec/claude/agent-management/`; this spec does not restate that rule but depends on it.
+- When an artefact references an MCP tool in its prose, it **MUST** use the fully-qualified `ServerName:tool_name` syntax required by `spec/claude/skill-management/` and `spec/claude/agent-management/`; this spec doesn't restate that rule but depends on it.
 - An agent that calls MCP tools **MUST** have those tool names granted in its `tools:` frontmatter (additive), and the grant **MUST** stay within the agent-description and tool-routing budget governance; the `mcpServers` frontmatter field is ignored for plugin-distributed agents, so the server is provided by the consumer's project configuration, not the agent.
 - The MCP tool names an artefact uses **MUST** appear in the allowlist per `spec/claude/permission-allowlist/` so no per-call confirmation prompt occurs.
 
