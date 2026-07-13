@@ -83,7 +83,7 @@ Adoption per artefact (verdict from the read/write mapping against the live cata
   `vocab-drift-audit` (`get_latest_release`), `release-notes-curate` (`list_releases`,
   `get_release_by_tag`), `pull-request-merge` (`pull_request_read`, `list_pull_requests`,
   `list_branches`), `continuous-improvement-triage` (`list_pull_requests`, `pull_request_read`
-  + the already-wired trust reads), `sprint-review` (`get_release_by_tag`);
+  plus the already-wired trust reads), `sprint-review` (`get_release_by_tag`);
   `portfolio-audit` / `portfolio-inflight-triage` inherit their collector agents;
   `project-structure-apply` — **no MCP reads** (its only read is the GitHub-App install check,
   no MCP tool → `gh`, OQ-D).
