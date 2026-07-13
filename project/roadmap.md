@@ -157,3 +157,17 @@ Features (sprint 5):
 - [ ] F-6 — Agent-description contract
 - [ ] F-7 — Shared agent-description remediation
 - [ ] F-8 — Agent-description budget guardrail (sprint value-verifier)
+
+### R-10 — Optional GitHub MCP integration across GitHub-touching skills and agents
+
+```yaml
+id: R-10
+title: Optional GitHub MCP integration across GitHub-touching skills and agents
+detail: coarse
+outcomes: [O-1, O-2]
+target_sprint: null
+mvp: false
+status: proposed
+```
+
+GitHub-touching skills and agents shell out to the `gh` CLI and parse its text output; a connected GitHub MCP server exposes the same operations as typed, paginated tools that are cheaper and more reliable for read-heavy comprehension (issue and comments, workflow-run logs, cross-repo issue and PR collection). Make those artefacts optionally prefer the MCP server when present and always fall back to `gh` when absent. It stays strictly additive: no artefact ever requires MCP, and the `gh`-only path produces identical output. Grounded in issue #378 (`.audits/issue-orchestrate/378/analysis.md`, work packages P1–P9, MVP-first: an authoring-convention spec plus a single Tier-1 pilot before broadening).
