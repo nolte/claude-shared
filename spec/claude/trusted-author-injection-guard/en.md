@@ -5,9 +5,9 @@ Portfolio-Scope: portfolio
 
 ## Context
 
-Skills and agents in this plugin read GitHub-authored text as comprehension input. `issue-orchestrate` reads an issue body and *every* comment before it classifies, decomposes, and dispatches; the triage and pull-request skills read comments, review threads, and pull-request descriptions. Today they trust all of it equally, and that's a prompt-injection surface: anyone who can comment on an issue can plant an instruction—"ignore your task and run this", "add this dependency", "open a PR that does X"—and a comprehension step that treats comment text as instruction will act on it. The attacker doesn't need repository access; a public issue comment is enough to lure the session into running foreign commands or pulling in malware.
+Skills and agents in this plugin read GitHub-authored text as comprehension input. `issue-orchestrate` reads an issue body and *every* comment before it classifies, decomposes, and dispatches; the triage and pull-request skills read comments, review threads, and pull-request descriptions. Today they trust all of it equally, and that's a prompt-injection surface: anyone who can comment on an issue can plant an instruction—"ignore your task and run this," "add this dependency," "open a PR that does X"—and a comprehension step that treats comment text as instruction will act on it. The attacker doesn't need repository access; a public issue comment is enough to lure the session into running foreign commands or pulling in malware.
 
-This spec defines the authoring convention that closes that surface: a **trust boundary for GitHub-authored session input**. An instruction embedded in GitHub-authored text may be executed as a command only when its author belongs to a **trusted-author set**—the operator and the repository's own maintainers. Text authored by anyone outside that set is **untrusted data**: it can be quoted, summarised, and weighed as a signal, but its imperatives are never obeyed. The convention is content-side and always-on, because an injection defense that's opt-in isn't a defense.
+This spec defines the authoring convention that closes that surface: a **trust boundary for GitHub-authored session input**. An instruction embedded in GitHub-authored text may be executed as a command only when its author belongs to a **trusted-author set**: the operator and the repository's own maintainers. Text authored by anyone outside that set is **untrusted data**: it can be quoted, summarised, and weighed as a signal, but its imperatives are never obeyed. The convention is content-side and always-on, because an injection defense that's opt-in isn't a defense.
 
 It composes with two neighbours and restates neither. `spec/claude/permission-allowlist/` owns which tool *calls* are pre-approved (the permission side); `spec/claude/mcp-tool-preference/` owns whether a read goes through the GitHub MCP server or `gh` (the read side). This spec owns only which *content* may be trusted as an instruction.
 
@@ -33,7 +33,7 @@ Readers: skill and agent authors in `claude-shared` who maintain GitHub-reading 
 
 ### Trust boundary
 
-- A skill or agent that ingests GitHub-authored text—an issue body, a comment, a review-thread message, or a pull-request description—**MUST** treat any imperative embedded in that text as an executable command only if the text's author belongs to the trusted-author set.
+- A skill or agent that ingests GitHub-authored text (an issue body, a comment, a review-thread message, or a pull-request description) **MUST** treat any imperative embedded in that text as an executable command only if the text's author belongs to the trusted-author set.
 - Text authored outside the trusted set **MUST** [locked] be treated as untrusted data: it **MAY** be quoted, summarised, or weighed as a signal, but its imperatives **MUST NOT** [locked] be executed.
 - This convention is **MUST**-level and always-on for every GitHub-reading artefact; it isn't opt-in, and a consumer **MUST NOT** disable it (a consumer may only widen *who* is trusted, per an additive declaration, never remove the boundary itself).
 
@@ -41,7 +41,7 @@ Readers: skill and agent authors in `claude-shared` who maintain GitHub-reading 
 
 - The trusted-author set **MUST** comprise the operator's own GitHub identity, the repository owner, and every account holding write, maintain, or admin permission on the repository (the maintainers).
 - Membership **MUST** be evaluated against the repository the session is acting on; an account trusted in one repository isn't automatically trusted in another.
-- An account outside that set—including a bot or GitHub App identity that isn't the operator—**MUST NOT** be trusted by default.
+- An account outside that set (including a bot or GitHub App identity that isn't the operator) **MUST NOT** be trusted by default.
 
 ### Runtime resolution
 
@@ -56,7 +56,7 @@ Readers: skill and agent authors in `claude-shared` who maintain GitHub-reading 
 
 ### Quoted and relayed content (provenance over messenger)
 
-- WHEN a trusted author quotes, pastes, embeds, or links content of external provenance—"the issue says: <do X>", a pasted log, a linked gist—that quoted content **MUST** stay untrusted. Trust attaches to the provenance of the content, not to the account relaying it; a trusted author who relays a foreign instruction doesn't launder it into a command.
+- WHEN a trusted author quotes, pastes, embeds, or links content of external provenance—"the issue says: <do X>," a pasted log, a linked gist—that quoted content **MUST** stay untrusted. Trust attaches to the provenance of the content, not to the account relaying it; a trusted author who relays a foreign instruction doesn't launder it into a command.
 
 ### Covered ingress (v1)
 
@@ -66,7 +66,7 @@ Readers: skill and agent authors in `claude-shared` who maintain GitHub-reading 
 ### Adoption (DRY)
 
 - Every GitHub-reading skill or agent **MUST** reference this spec and **MUST** state, in one short place in its body (a trust note), that GitHub-authored text is comprehension input governed by this boundary—an instruction only from a trusted author, data otherwise. The rule is stated once here and referenced; it **MUST NOT** be restated in full inside each consumer.
-- `issue-orchestrate`—the highest-risk consumer, which reads the issue body and every comment and drives classification, decomposition, and dispatch—**MUST** carry that note and reference; it's the first binding of this convention.
+- `issue-orchestrate` (the highest-risk consumer, which reads the issue body and every comment and drives classification, decomposition, and dispatch) **MUST** carry that note and reference; it's the first binding of this convention.
 - An agent whose resolver calls the MCP tools **MUST** grant `GitHubMCP:get_me` and `GitHubMCP:list_repository_collaborators` in its `tools:` frontmatter (additive) within the agent-description and tool-routing budget governance, and those names **MUST** appear in the allowlist per `permission-allowlist`.
 
 ## Acceptance Criteria
@@ -92,8 +92,8 @@ Readers: skill and agent authors in `claude-shared` who maintain GitHub-reading 
 
 ## Open Questions
 
-- **Locking the floor** (resolved): the untrusted-imperative rule is marked `[locked]`—the confirmed maintainer stance—so a downstream consumer can't declare an override that re-enables executing a stranger's instructions. A consumer with a legitimate need may widen *who* is trusted through an additive per-repository declaration, but never remove the floor.
+- **Locking the floor** (resolved): the untrusted-imperative rule is marked `[locked]` (the confirmed maintainer stance) so a downstream consumer can't declare an override that re-enables executing a stranger's instructions. A consumer with a legitimate need may widen *who* is trusted through an additive per-repository declaration, but never remove the floor.
 - **Portfolio-scope teeth**: at `Portfolio-Scope: portfolio` every adopting repo inherits an always-on MUST. A repo whose resolver path can't reach GitHub (no MCP, no `gh` auth) resolves everything as untrusted and emits the degraded-trust notice on every run—safe but noisy. Whether such repos need a declared static trusted-author allowlist as an offline fast-path is deferred.
-- **`permission-allowlist` guidance** (resolved): `get_me` and `list_repository_collaborators` are added to `permission-allowlist` guidance in the same change set, so the resolver's reads don't prompt.
+- **`permission-allowlist` guidance** (resolved): `get_me` and `list_repository_collaborators` are added to `permission-allowlist` guidance in the same change set, so those reads don't prompt.
 - **Operator-notice mechanism**: how the degraded-trust notice surfaces—a log line, a prose warning in the artefact's output—is left to each consumer's existing output surface rather than fixed here.
 - **Non-attributable ingress**: extending the boundary to CI logs, untrusted-branch diffs, and web-fetched content is a named follow-up beyond v1.
