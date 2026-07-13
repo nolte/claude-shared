@@ -49,6 +49,8 @@ Before doing anything:
 
 Operations 4 to 6 form a stacked Plan-validate-execute cycle: Operation 4 self-validates the bundle against the audience artefact and the spec's content rules before disclosure, Operation 5 surfaces the planned diff for explicit operator confirmation, and Operation 6 writes via `gh release edit --notes` and verifies the marker pair survived the round-trip. Operation 7 closes the loop on re-runs by detecting in-place updates instead of duplicating the augmentation block.
 
+**Tooling (optional GitHub MCP):** prefer the connected GitHub MCP server's read tools where they exist — `github:list_releases` for draft resolution (Op 1) and `github:get_release_by_tag` for the post-write round-trip re-read (Op 6) — falling back to the `gh` commands shown, per `spec/claude/mcp-tool-preference/`. The write path (`gh release edit`), the `release-drafter.yml` dispatch, and `gh repo view --json defaultBranchRef` (no MCP tool — OQ-D) stay on `gh`; `gh` stays authoritative and output is identical.
+
 ### 1. Resolve the open draft
 
 - Run `gh release list --json isDraft,tagName,targetCommitish,createdAt,name`.

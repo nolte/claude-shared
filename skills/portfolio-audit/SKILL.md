@@ -85,7 +85,7 @@ Runs the tech-stack-discovery methodology from `spec/portfolio/tech-stack-discov
 ## Gotchas
 
 - **Bootstrap blocks if `tech-stack-capture` hasn't run yet**: Bootstrap reads `project/mission.md` and the audience artefact as inputs; if neither exists in the target repository, Bootstrap has nothing to derive capabilities from — route the user to `mission-define` and `audience-identify` first rather than proceeding with empty fields.
-- **`gh api` rate limits can stall portfolio-wide manifest collection**: fetching `project/portfolio.yml` for every public non-archived repository in one call sequence can exhaust the GitHub API rate limit for large portfolios — spread calls across turns or check `gh api rate_limit` before starting a full-portfolio Audit.
+- **`gh api` rate limits can stall portfolio-wide manifest collection**: fetching `project/portfolio.yml` for every public non-archived repository in one call sequence can exhaust the GitHub API rate limit for large portfolios — spread calls across turns or check `gh api rate_limit` before starting a full-portfolio Audit. **Tooling (optional GitHub MCP):** the manifest and member-set reads run inside the dispatched `portfolio-manifest-collector`, which prefers GitHub MCP reads when a server is connected and falls back to `gh` otherwise (per `spec/claude/mcp-tool-preference/`); the `gh api rate_limit` precheck has no MCP tool and stays `gh` (OQ-D).
 - **Findings-Report and rendered inventory must land in `claude-shared`, not in the calling repo**: writing `.audits/portfolio/` or `docs/<lang>/portfolio/` from a non-`claude-shared` working directory is a structural error; confirm `cwd` resolves to the `claude-shared` checkout before any Audit or Render write.
 
 ## Resumability

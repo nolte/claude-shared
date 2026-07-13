@@ -88,6 +88,8 @@ Then confirm: the resolved artefact's commit (when applicable) **MUST** equal th
 
 A bare commit SHA as `artifact_ref` is rejected unless the project explicitly opts in via `.github/release-skill-layer.yml`.
 
+**Tooling (optional GitHub MCP):** prefer `github:get_release_by_tag` for the GitHub-release artefact check when a GitHub MCP server is connected, falling back to `gh release view` otherwise, per `spec/claude/mcp-tool-preference/`; the `git rev-parse <tag>` validations stay local git and the publish dispatch stays `gh`. `gh`/git stays authoritative and output is identical.
+
 Record the verification transcript (commands run, exit codes, key output lines) for later persistence in `## Review notes`. **On any failure, do not proceed to step 4 or 5.** Surface the failed check verbatim, ask the user whether the failure is recoverable (re-cut the artefact and rerun) or unrecoverable (cancel the sprint), and route accordingly: recoverable → stop; unrecoverable → step 7.
 
 ### 4. Confirm `verifies_sprint_value`
