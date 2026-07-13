@@ -62,7 +62,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 - Tests **MUST NOT** use fixed-duration sleeps to synchronise with the UI; every wait **MUST** be expressed as an explicit condition (presence, visibility, clickability, URL change, loading-indicator gone)
 - A fixed sleep **MAY** appear only inside a page object, only for a genuinely time-based concern (a bounded animation or debounce), and **MUST** carry a comment justifying it and a small bound
-- A **global implicit wait MUST NOT** be relied on as a synchronisation mechanism. It couples every element lookup to a hidden fixed timeout, composes non-deterministically with explicit condition waits (mixing the two is itself an anti-pattern), and—most costly—makes every *negative* lookup (an intentionally-absent element, a locator-fallback miss) block for the full timeout. Set the implicit wait to zero (or a small floor) and express every wait explicitly; a large implicit wait is the single most common hidden cause of a slow suite
+- A **global implicit wait MUST NOT** be relied on as a synchronisation mechanism. It couples every element lookup to a hidden fixed timeout, composes non-deterministically with explicit condition waits (mixing the two is itself an anti-pattern), and, most costly, makes every *negative* lookup (an intentionally-absent element, a locator-fallback miss) block for the full timeout. Set the implicit wait to zero (or a small floor) and express every wait explicitly; a large implicit wait is the single most common hidden cause of a slow suite
 
 ### Locator strategy
 
@@ -89,7 +89,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - Every assertion **MUST** carry a descriptive failure message that includes the TC-ID and the observed value; empty or tautological assertions (`assert True`, `assert page is not None`) are forbidden
 - A missing precondition (absent seed data) **MUST** cause an explicit, reasoned skip—never a silent early return that lets a test pass without exercising anything
 - Test-created data **MUST** use a unique suffix to stay isolated and reproducible across runs; session-scoped seed data **MUST** be idempotent (check-before-create)
-- Preconditions **MUST** be established through the fastest reliable path—a seeded API call or fixture—**not** a click-through of the UI. A test drives through the browser only the interaction it asserts; provisioning precondition state (accounts, entities, navigation) via the UI multiplies runtime and couples unrelated flows into every test
+- Preconditions **MUST** be established through the fastest reliable path (a seeded API call or fixture), and **not** by a click-through of the UI. A test drives through the browser only the interaction it asserts; provisioning precondition state (accounts, entities, navigation) via the UI multiplies runtime and couples unrelated flows into every test
 
 ### Spec traceability
 
@@ -101,7 +101,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 This profile is the binding realisation of the core for Python projects and the default the consuming agents assume when no other stack is declared. A project on another stack replaces this section wholesale but still satisfies the core above.
 
 - The suite **MUST** live under `tests/e2e/` with: `conftest.py` (session fixtures, CLI options, idempotent seed data, marker registration), `protocol_plugin.py` (the protocol generator), `requirements.txt`, a `pages/` package with `base_page.py` plus one `<entity>_<view>_page.py` per page, and `test_<req>_<topic>.py` test modules grouped by requirement
-- The browser fixture **MUST** be session-scoped, default to headless Chrome, support Firefox via a `--browser` option, and expose `--base-url` and `--generate-protocol` CLI options; the base URL **MUST** be a configurable option, never a hard-coded host. A project that must drop to a **per-test (function-scoped) browser** to avoid cross-test state bleed **MUST** document the reason and treat the extra per-test session allocation as a known cost to offset elsewhere—fewer, journey-only E2E tests and API-provisioned preconditions rather than UI click-through
+- The browser fixture **MUST** be session-scoped, default to headless Chrome, support Firefox via a `--browser` option, and expose `--base-url` and `--generate-protocol` CLI options; the base URL **MUST** be a configurable option, never a hard-coded host. A project that must drop to a **per-test (function-scoped) browser** to avoid cross-test state bleed **MUST** document the reason and treat the extra per-test session allocation as a known cost to offset elsewhere: fewer journey-only E2E tests and API-provisioned preconditions rather than UI click-through
 - `BasePage` **MUST** provide the waiting/interaction helpers (`navigate`, `wait_for_element`, `wait_for_element_visible`, `wait_for_element_clickable`, `wait_for_loading_complete`, `wait_for_url_contains`, framework-compatible field clear/fill); markers `smoke`, `core_crud`, `requires_auth` **MUST** be registered
 - The reference templates shipped alongside this spec (`templates/`) are the canonical Gen-standard starting point; `e2e-test-generator` **MUST** treat them as the scaffold to adapt, and `e2e-test-reviewer` **MUST** treat them as the conformance baseline
 
