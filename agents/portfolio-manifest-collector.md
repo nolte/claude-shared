@@ -2,7 +2,7 @@
 name: portfolio-manifest-collector
 description: "Read-only inventory collector dispatched by `portfolio-audit`: gathers each repo's project/portfolio.yml manifest across all nolte portfolio members and returns the raw tech-stack and capability inventory. Detection only — duplicate/gap analysis and any writes stay with the calling skill."
 distribution: plugin
-tools: [Bash]
+tools: [Bash, mcp__github__get_file_contents]
 model: sonnet
 tags: [audit]
 phase: quality
@@ -44,6 +44,16 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `gh api rate_limit` — read-only check to detect imminent rate-limit exhaustion before a full-portfolio scan
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutations.
+
+## GitHub MCP-preferred reads (optional)
+
+When a GitHub MCP server (server name `github`) is connected, this agent **prefers** its read tools over parsing `gh` output, and **always** falls back to the `gh` commands in §Read-only Bash justification when the server is absent, per `spec/claude/mcp-tool-preference/`. The path is optional and additive — the server may be absent in headless/CI runs, so nothing here requires it; a missing tool degrades silently, never prompts or aborts. Both paths MUST produce the identical manifest inventory.
+
+| Data source | MCP-preferred read | `gh` fallback |
+| --- | --- | --- |
+| Fetch each repo's `project/portfolio.yml` + `CLAUDE.md` opt-out line | `github:get_file_contents` | `gh api repos/nolte/<repo>/contents/…` |
+
+The Portfolio-Member **enumeration** (`gh api …/repos`) stays on `gh` on both paths: it has no deterministic MCP list equivalent — `github:search_repositories` is a ranked, eventually-consistent search that could miss a freshly-created member and so would break the identical-output invariant — a documented OQ-D coverage gap, mirroring the F-13 pilot collector, which also enumerates via `gh`. The rate-limit preflight (`gh api rate_limit`) and `gh auth status` likewise have no MCP tool and stay on `gh`.
 
 ## Scope and boundaries
 

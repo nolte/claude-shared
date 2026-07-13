@@ -126,6 +126,11 @@ Comprehend the full issue surface before classifying. Run in parallel:
 - `gh issue view <n> --json closedByPullRequestsReferences` (resolve linked PRs);
   `gh search prs --json …` or `gh pr list` to find open PRs that reference the issue
 
+**Tooling (optional GitHub MCP):** prefer the connected server's read tools for the
+reads above (`github:issue_read`, `github:list_issues`, `github:search_pull_requests` /
+`github:list_pull_requests`); fall back to the `gh` commands shown, per
+`spec/claude/mcp-tool-preference/`. `gh` stays authoritative; output is identical.
+
 Then ground the issue in the repository: scan the `spec/`, `skills/`, `agents/`,
 source, and `docs/` paths the issue plausibly touches, and check for prior art —
 existing `project/features/` entries, `project/roadmap.md` items, and open PRs that
