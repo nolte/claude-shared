@@ -54,6 +54,13 @@ Run in parallel:
 - `gh run view <id> --log-failed` (capture the failing-step output for classification)
 - `git log --oneline -1 <headSha>` (resolve the commit under the run)
 
+**Tooling (optional GitHub MCP):** the GitHub reads above are Actions / workflow-run
+reads. When a connected GitHub MCP server exposes an actions read toolset, prefer it
+and verify the exact tool names against the pinned server version, per
+`spec/claude/mcp-tool-preference/`; the reference hosted endpoint exposes no actions
+toolset, so these reads stay on `gh` (a documented OQ-D coverage gap). `gh` stays
+authoritative and the fallback is never removed.
+
 Confirm the run is on `develop` or `main` (the spec's scope) and is `conclusion: failure`. If it's still `in_progress`, stop and ask the user to wait for completion before triage; if it's `cancelled`, classify as `other` with a one-line note and stop.
 
 ### 2. Classify before any re-run

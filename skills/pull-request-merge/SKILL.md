@@ -62,6 +62,8 @@ Run in parallel:
 - `gh pr diff --name-only`
 - `gh label list --limit 200 --json name`
 
+**Tooling (optional GitHub MCP):** prefer `github:pull_request_read` for the PR-state reads and `github:list_pull_requests` / `github:list_branches` for the sibling-PR and branch-existence checks, falling back to the `gh` commands shown, per `spec/claude/mcp-tool-preference/`. `gh pr checks` (check rollup) and `gh label list` have no MCP tool and stay `gh` (OQ-D); every merge/label/ready/delete write stays `gh`/git. `gh` stays authoritative; output identical.
+
 Confirm the PR is open, draft, targets `develop`, and reports `mergeable: MERGEABLE`. If `mergeable: CONFLICTING`, stop and hand back to the user—conflicts are resolved in the working tree, not by this skill.
 
 ### 2. Delegate pre-merge review

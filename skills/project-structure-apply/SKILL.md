@@ -59,7 +59,7 @@ Walk through the spec's Acceptance Criteria one item at a time; classify each fi
 
 ### 2. GitHub App installation check
 
-Verify that the Probot apps (`settings`, `boring-cyborg`, `stale`) and Renovate are installed on the repository via `gh api` against the installations accessible to the owner. Only check apps whose backing config the audit classified as **pass**. Handle 403/404 token-scope errors gracefully; never attempt to install an app programmatically.
+Verify that the Probot apps (`settings`, `boring-cyborg`, `stale`) and Renovate are installed on the repository via `gh api` against the installations accessible to the owner. Only check apps whose backing config the audit classified as **pass**. Handle 403/404 token-scope errors gracefully; never attempt to install an app programmatically. **Tooling (optional GitHub MCP):** the GitHub-App installation check (`gh api /user/installations`) has no MCP tool and stays on `gh` — a documented OQ-D coverage gap under `spec/claude/mcp-tool-preference/`; `gh` remains authoritative.
 
 ### 3. Apply
 

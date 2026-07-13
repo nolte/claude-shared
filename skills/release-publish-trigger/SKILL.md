@@ -53,6 +53,8 @@ Operation 1 resolves the open draft and Operation 2 detects the project type (th
 - Filter to drafts whose `targetCommitish` equals the default branch.
 - **Refuse and report** when zero drafts match (operator should run `release-drafter.yml` first) or when more than one matches without an explicit `--tag` argument from the operator (no "newest wins" heuristic, per `release-automation` §Operational contract).
 
+**Tooling (optional GitHub MCP) — go/no-go: GO (narrow).** Prefer `github:list_releases` for the draft resolution here (Op 1) and `github:get_release_by_tag` for the post-publish verify (Op 6), falling back to the `gh` commands shown, per `spec/claude/mcp-tool-preference/`. The `release-publish.yml` dispatch, the required-check-runs gate, and all workflow-run status reads have no MCP tool and stay `gh` (OQ-D); the reachability / version-file / alignment gates stay local git. `gh`/git stays authoritative; output is identical.
+
 ### 2. Detect project type
 
 Per `spec/project/release-skill-layer/` §Skill split and shared shape (MUST), both release-layer skills follow the **same** six project-type detection signals used by `github-issue-templates-apply` and by `release-notes-curate` (Skill A). Walk these six signals in order and stop at the first match. Read the files via the standard read tools — never via filename heuristics alone:

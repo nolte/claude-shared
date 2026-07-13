@@ -83,7 +83,7 @@ StylesPath: <value>
 - Latest nolte/vale-style release: <tag> (<note whether the pin is behind>)
 ```
 
-The "Latest release" line comes from `gh api repos/nolte/vale-style/releases/latest --jq .tag_name`. If it differs from the pin, flag it but don't bump automatically.
+The "Latest release" line comes from `gh api repos/nolte/vale-style/releases/latest --jq .tag_name`. If it differs from the pin, flag it but don't bump automatically. **Tooling (optional GitHub MCP):** prefer `github:get_latest_release` for that lookup when a GitHub MCP server is connected, falling back to the `gh api` call otherwise, per `spec/claude/mcp-tool-preference/`; the upstream-vs-local diff is inherited from `vocab-drift-scanner`. `gh` stays authoritative and output is identical.
 
 ## Gotchas
 
