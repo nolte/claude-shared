@@ -32,6 +32,7 @@ Claude Code (CLI, Plugin und Agent-SDK-Läufe) fragt den/die Nutzer:in bei jedem
   3. wird noch nicht durch die Claude-Code-Auto-Allow-Liste abgedeckt (siehe `fewer-permission-prompts`-Skill, Schritt 4); redundante Einträge werden weggelassen
 - **SOLLTE [SHOULD]** die engstmögliche Pattern-Form gewählt werden: exakte Form (`Bash(git fetch)`) wenn eine Invocation dominiert, Präfix-Form (`Bash(git fetch *)`) nur wenn Flag-Varianz real beobachtet wurde
 - **DARF [MAY]** beide Formen (exakt und Präfix) parallel gelistet werden, wenn beide Varianten in der beobachteten Nutzung tatsächlich vorkommen
+- **SOLLTE [SHOULD]** ein wiederkehrendes read-only GitHub-MCP-Read-Tool genauso behandeln wie ein read-only `gh`-Kommando: die Trust-Auflösungs-Reads `GitHubMCP:get_me` und `GitHubMCP:list_repository_collaborators`, die `spec/claude/trusted-author-injection-guard/` verlangt, sind read-only und gehören in die Allowlist, damit sie nicht prompten, bewertet gegen dieselben drei Bedingungen oben
 
 ### Turnus und Auslöser der Pflege
 - **MUSS [MUST]** die Allowlist spätestens nach jeder größeren Refaktorierung des Claude-Workflows im Projekt oder bei Einführung neuer Skills, neuer Taskfile-Targets oder neuer Automatisierungsbefehle reviewed werden — anlassbezogen, nicht kalendergetrieben

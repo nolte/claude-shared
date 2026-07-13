@@ -23,6 +23,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skill-review | Claude Skill Review | Claude-Skill-Review | draft | local | 2026-04-24 |
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | local | 2026-04-23 |
 | claude | skills-agents-sweep | Skills and Agents Sweep Audit | Skills-und-Agents-Sweep-Audit | draft | local | unversioned |
+| claude | trusted-author-injection-guard | Trusted-Author Injection Guard | Trusted-Author Injection Guard | draft | portfolio | unversioned |
 | design | corporate-design-colors | Corporate Design — Color System | Corporate Design — Farbsystem | draft | local | unversioned |
 | design | flux-image-generation | FLUX Image Generation | FLUX-Bildgenerierung | draft | local | unversioned |
 | design | gemini-image-generation | Gemini Image Generation | Gemini-Bildgenerierung | draft | local | unversioned |
