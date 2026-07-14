@@ -21,7 +21,6 @@ dont_use_when:
 see_also:
   - release-regression-scope-scanner
   - test-pyramid-check
-  - e2e-test-automation
 resumable: true
 ---
 
