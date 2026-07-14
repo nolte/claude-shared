@@ -9,6 +9,9 @@ use_when:
   - "you want to tidy the .claude/settings.json allowlist"
   - "you want to add a frequent read-only Bash or tool entry to the allowlist"
   - "you want to review an existing allowlist against the spec's three-condition rule"
+see_also:
+  - spec-drift-audit
+  - pull-request-create
 resumable: true
 ---
 
@@ -110,8 +113,6 @@ When the quarterly window is reached and no allowlist change is warranted, still
 
 When this skill is invoked from a `spec-drift-audit` run, treat the cadence-review change for that quarter as the quarter's drift check and say so explicitly in the PR body, so the two specs' quarterly requirements are satisfied by a single recorded run.
 
-**Q2-2026 drift check:** performed under the `chore/full-audit-closeout` audit close-out. The three prefix-form `task` entries (`Bash(task lint *)`, `Bash(task test *)`, `Bash(task docs *)`) were pruned (no observed flag variance; the exact forms already cover all usage, including CI's `task lint` / `task test`); no new read-only candidates warranted addition this quarter.
-
 ## Examples
 
 - Read `examples/01-add-task-lint-from-fewer-prompts.md` when adding a new allowlist entry sourced from the `fewer-permission-prompts` skill output.
@@ -139,6 +140,12 @@ Per `spec/claude/skill-management/` §Gotchas—concrete corrections to non-obvi
 - **The Probot Settings App doesn't manage `.claude/settings.json`.** The file is repository-content, not GitHub repository settings—Probot operates on `.github/settings.yml`, not on `.claude/`. Don't conflate the two surfaces; an outage of the Settings App has no bearing on the allowlist's effect.
 - **Renovate ignores `.claude/settings.json` by default.** No automated bump exists for the patterns; drift is human-detected (the `fewer-permission-prompts` skill is the proposer, this skill is the curator). Don't expect a Renovate PR for "newer Claude Code autoallow list"—the autoallow list isn't versioned at the repository level.
 - **Removing an entry never breaks past sessions.** A removal-only commit is safe to merge anytime; the entry simply moves back to the per-prompt confirmation flow. The spec still requires the removal reason in the commit message so future readers see the trajectory.
+
+## Old patterns
+
+Historical drift-check records live here rather than inline in Operation 8, so the operational steps stay time-agnostic.
+
+- **Q2-2026 drift check:** performed under the `chore/full-audit-closeout` audit close-out. The three prefix-form `task` entries (`Bash(task lint *)`, `Bash(task test *)`, `Bash(task docs *)`) were pruned (no observed flag variance; the exact forms already cover all usage, including CI's `task lint` / `task test`); no new read-only candidates warranted addition this quarter.
 
 ## Resumability
 

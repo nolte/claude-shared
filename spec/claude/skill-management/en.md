@@ -5,6 +5,8 @@ Status: draft
 ## Context
 The `claude-shared` repository collects reusable Claude Code skills and agents that downstream projects consume. A skill has two lives: a **source** form in this repository (under `skills/`) and a **runtime** form in a consuming project, where Claude Code actually loads it. The only supported runtime-distribution path is the Claude Code plugin mechanism: this repository is itself a Claude Code plugin (`.claude-plugin/plugin.json` plus a marketplace entry), and consuming projects pick up skills by installing the plugin. Without a consistent shape and a single distribution path, skills drift in naming, trigger descriptions, and internal structure, and consumers end up with ad-hoc copies or symlinks that diverge over time. This spec defines how new skills are authored, how they're distributed, and what existing skills must conform to.
 
+For a consolidated cross-artifact reference of every skill- and agent-frontmatter field, its provenance (portable Claude Code standard versus nolte-local invention), and its normative owner, see `spec/claude/skill-agent-frontmatter/`. That reference maps and points back to this spec; it doesn't restate the rules here.
+
 ## Goals
 - Every skill has the same predictable shape on disk
 - Skills are discoverable by Claude through precise, trigger-oriented descriptions
@@ -141,6 +143,8 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - **MUST**, when setting `disable-model-invocation: true` for a skill that should only run on explicit user request, accept the consequence that the skill can't be **preloaded into subagents** via a subagent's `skills:` field—Claude Code skips disabled skills there and logs a warning ([R3](#references))
 - **MAY** declare a `model` override on a skill (`model: opus`, `model: haiku`, `model: inherit`); the override applies for the rest of the current turn and **isn't saved to settings**, so the session model resumes on the next prompt ([R3](#references))
 - **MAY** use `context: fork` together with `agent: <type>` to run the skill in a forked subagent context (skill content becomes the prompt, the named agent type provides tools and model). This is the **inverse** of a subagent's `skills:` preload field; both arrive at the same composition through different ownership ([R3](#references)). When to choose it over an `agents/<name>.md` file is governed by `skill-vs-agent`
+- **MUST** read `paths:` as a gate on **automatic invocation, not on the context budget**: when set, Claude invokes the skill automatically only while the session is working with files matching the globs, and an explicit `/<plugin>:<name>` invocation always works regardless ([R3](#references)). It therefore fits a skill whose automatic activation should be bound to a file context; it doesn't suit a skill that operators invoke *cold* by natural language (most `…-apply` and audit operators here are cold-invoked), because outside a path match the model can no longer reach the skill on its own. `paths:` isn't a reliable way to shrink the always-loaded routing surface (the skill's `description` still drives discovery), so reach for `disable-model-invocation: true` plus a tighter `description` when the goal is routing-budget relief, not `paths:`. The two fields are orthogonal: `disable-model-invocation` blocks model invocation entirely, so combining it with `paths:` is redundant
+- **MUST NOT** set `disable-model-invocation: true` on a skill that another skill **dispatches mid-flow as part of its orchestration**. The flag bars model-driven invocation, so the orchestrating skill can no longer reach it and the chain silently dead-ends (for example `sprint-review`'s opt-in dispatch into `release-publish-trigger`, or any skill another skill names in a "then dispatch X" step). Reserve the flag for **terminal, user-invoked** side-effecting skills (`/deploy`-shaped) that no other skill calls, and verify against the skill surface (grep the skill name across sibling `SKILL.md` bodies) before setting it ([R3](#references))
 
 ### Evaluation discipline
 
@@ -169,6 +173,8 @@ Skills shipped by this plugin run inside Claude Code; understanding the runtime 
 - [ ] Frontmatter declares a `phase` field whose value is one of `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, or `cross-cutting`
 - [ ] If `summary` or any `summary_<lang>` is declared, the value is a non-empty plain string ≤200 characters
 - [ ] If `use_when`, `dont_use_when`, `see_also`, or `examples` is declared, the value conforms to the schema in `skill-agent-catalog` §Use-case metadata
+- [ ] If `paths:` is declared, the skill's automatic activation is meant to be file-context-bound (not a cold natural-language operator), and `paths:` isn't being used as a routing-budget lever
+- [ ] No skill sets `disable-model-invocation: true` while another skill dispatches it mid-flow (verified by grepping the skill name across sibling `SKILL.md` bodies)
 - [ ] Skill works when invoked in a downstream project that doesn't contain `claude-shared`-specific context, loaded through the plugin
 - [ ] No hard-coded absolute paths; all internal paths are relative to the skill folder or the project the skill operates on
 - [ ] If the skill writes files, the target locations and preconditions are documented

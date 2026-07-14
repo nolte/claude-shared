@@ -1,6 +1,6 @@
 ---
 name: project-structure-apply
-description: "Audits a repository against the canonical-language file under spec/project/project-structure/ and scaffolds or patches missing artefacts: README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, MkDocs setup, .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, `stale`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests. Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Audits a repository against the canonical-language file under spec/project/project-structure/ and scaffolds or patches missing artefacts: README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, the MkDocs site skeleton (delegated mid-flow to `mkdocs-structure-apply`), .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, `stale`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests. Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [scaffolding]
 phase: design
 summary: "Audits a repository against the project-structure spec and scaffolds missing artefacts (README, .github/, Renovate, Taskfile, MkDocs, .claude/)."
@@ -10,6 +10,8 @@ use_when:
   - "you want to scaffold missing GitHub configs (settings, release-drafter, boring-cyborg, stale)"
   - "you want to check that the backing GitHub Apps (Probot, Renovate) are installed"
 dont_use_when:
+  - situation: "You want only the MkDocs site skeleton (per-language tree, nav, plugin baseline), not the whole repo structure"
+    alternative: mkdocs-structure-apply
   - situation: "You want to wire the skill-and-agent catalog on top of MkDocs"
     alternative: skill-agent-catalog-apply
   - situation: "You want to scaffold issue-template forms specifically"
@@ -30,9 +32,10 @@ Audits and repairs a repository so it matches the Repository Project Structure s
 - **Per-item user approval is the contract.** Every scaffolded file (`.github/settings.yml`, `Taskfile.yml`, `renovate.json5`, …) is written only with explicit per-change confirmation; the audit is read-only and the apply step is a sequence of approvals an agent's fire-and-forget shape can't carry.
 - **Output flows back into the main conversation.** The audit table, the per-item proposals, and the GitHub-App-installation status all surface in the conversation so the user can decide; isolating them in a structured-report boundary would obscure the per-file approval surface.
 - **Network-side calls require user gating.** Probot-app installation checks read GitHub API state, but app installation itself is intentionally a human-approved action; mid-flow interactivity is load-bearing here.
+- **Orchestrates a sibling skill for the docs skeleton.** The MkDocs site skeleton is not scaffolded inline as a flat stub; it is delegated mid-flow to `mkdocs-structure-apply` (scaffold operation) so a freshly bootstrapped repository lands the full `mkdocs-structure`-conformant shape (per-language tree, navigation, plugin baseline) from the start. Per `spec/claude/skill-vs-agent/` §"Hybrid pattern", calling another skill from a skill in the same thread is allowed and the orchestrator stays a skill, so both the per-item approval surface and the dispatch live in the main conversation.
 - Counter-dimension considered: a narrower agent could specialize on file-template generation and gain on context-window protection, but the high-impact part is the per-item approval dialogue, not the boilerplate; skill wins.
 
-When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path, or from the `nolte/claude-shared` repository). Never invent requirements that aren't in the spec.
+When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin at `${CLAUDE_PLUGIN_ROOT}/spec/project/project-structure/<canonical_language>.md` (or, failing that, the `nolte/claude-shared` repository). Never invent requirements that aren't in the spec.
 
 ## User-language policy
 
@@ -43,7 +46,7 @@ Detect the user's language and respond in it. Generated file contents (`.github/
 Before doing anything:
 
 - Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
-- Locate a `spec/project/project-structure/` folder—either in the target repo or via the nolte-shared plugin. If neither is reachable, stop and ask the user which spec source to use.
+- Locate the project-structure spec—either at `spec/project/project-structure/<canonical_language>.md` in the target repo or, as a fallback, at `${CLAUDE_PLUGIN_ROOT}/spec/project/project-structure/<canonical_language>.md` shipped by the nolte-shared plugin. If neither is reachable, stop and ask the user which spec source to use.
 - Check for uncommitted changes in paths the skill may touch (`.github/`, `docs/`, `spec/`, `tests/`, root configs). If the tree is dirty in those paths, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
 
 ## Operations
@@ -56,11 +59,11 @@ Walk through the spec's Acceptance Criteria one item at a time; classify each fi
 
 ### 2. GitHub App installation check
 
-Verify that the Probot apps (`settings`, `boring-cyborg`, `stale`) and Renovate are installed on the repository via `gh api` against the installations accessible to the owner. Only check apps whose backing config the audit classified as **pass**. Handle 403/404 token-scope errors gracefully; never attempt to install an app programmatically.
+Verify that the Probot apps (`settings`, `boring-cyborg`, `stale`) and Renovate are installed on the repository via `gh api` against the installations accessible to the owner. Only check apps whose backing config the audit classified as **pass**. Handle 403/404 token-scope errors gracefully; never attempt to install an app programmatically. **Tooling (optional GitHub MCP):** the GitHub-App installation check (`gh api /user/installations`) has no MCP tool and stays on `gh` — a documented OQ-D coverage gap under `spec/claude/mcp-tool-preference/`; `gh` remains authoritative.
 
 ### 3. Apply
 
-For each **missing** or **drift** item, confirm per item before writing. Scaffold missing top-level files, Renovate config, `.claude/` directory, `.github/` Probot configs, required release-management workflows, Taskfile targets, docs stub, `spec/` / `tests/` placeholders, and Python dev layout. Route planning-artefact and source-layout decisions back to the user. Re-run the affected audit check after each write.
+For each **missing** or **drift** item, confirm per item before writing. Scaffold missing top-level files, Renovate config, `.claude/` directory, `.github/` Probot configs, required release-management workflows, Taskfile targets, the MkDocs site skeleton (by dispatching `mkdocs-structure-apply`, not by writing a flat stub here), `spec/` / `tests/` placeholders, and Python dev layout. Route planning-artefact and source-layout decisions back to the user. Re-run the affected audit check after each write.
 
 ### 4. Re-audit
 
@@ -84,6 +87,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** copy plugin-owned skills into `.claude/skills/`. Distribution is the plugin mechanism's job.
 - **Never** automatically move source files out of the repository root. Report the drift and let the user decide.
 - **Never** scaffold or rewrite content inside the `project/` planning tree (`project/roadmap.md`, `project/goals.md`, `project/sprints/`, `project/features/`, `project/release-artifacts/`, `project/mission.md`). The audit verifies the layout only; per-file authoring is delegated to the planning skills (`roadmap-init`, `sprint-plan`, `feature-decompose`, `mission-define`) per the matching specs.
+- **Never** scaffold the MkDocs site skeleton inline as a flat `mkdocs.yml` + `docs/index.md` stub. The *form* of the site (per-language `docs/<lang>/` tree, the standard navigation, the plugin baseline, `site_url`, the per-page frontmatter contract) is owned by `spec/project/mkdocs-structure/`; dispatch `nolte-shared:mkdocs-structure-apply` (scaffold operation) for it so a freshly bootstrapped repository starts in the standard shape. This skill keeps the `docs/` + `mkdocs.yml` *existence* MUSTs from `spec/project/project-structure/` and re-audits Documentation after the dispatched skill returns; it **MUST NOT** redefine any mkdocs-structure rule. The `release-cd-deliver-docs.yml` workflow stays gated on `mkdocs.yml` presence, so it becomes eligible once the dispatched scaffold lands.
 - **Never** commit a real `.env`. When creating `.env.example`, simultaneously ensure `.env` is listed in `.gitignore`.
 - **Always** ensure `.gitignore` carries a `/.resume/` entry per `spec/claude/resumable-work/` §Persistence location, so the in-flight resume state of resumable skills and agents stays out of version control.
 - **Never** attempt to install a GitHub App programmatically. Report the install status and link to the app's marketplace page so a human can approve the install.

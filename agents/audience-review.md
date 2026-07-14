@@ -91,7 +91,7 @@ If zero findings in a severity, omit that subsection (per `review-plan` §Findin
 
 ### Persistence contract
 
-This agent is read-only and **does not** write the report to disk. The caller (a human user or an invoking skill such as `pull-request-merge`) is responsible for persisting the report to `.audits/audience-review/<artifact-slug>.md`, where `<artifact-slug>` is an ASCII kebab-case derivation of the audience artefact's identifier (typically the basename without extension — `audiences-md`, `release-drafter-yml-comments`, etc.). When the caller is a Claude Code session, the agent's full report appears in the conversation and the caller writes it to the path above per `spec/claude/review-plan/<canonical_language>.md` §90 (the SHOULD that audit reports persist regardless of who emits them).
+This agent is read-only and **does not** write the report to disk. The caller (a human user or an invoking skill such as `pull-request-merge`) is responsible for persisting the report to `.audits/audience-review/<artifact-slug>.md`, where `<artifact-slug>` is an ASCII kebab-case derivation of the audience artefact's identifier (typically the basename without extension — `audiences-md`, `release-drafter-yml-comments`, etc.). When the caller is a Claude Code session, the agent's full report appears in the conversation and the caller writes it to the path above per `spec/claude/review-plan/<canonical_language>.md` §Lifecycle (the SHOULD that audit reports persist regardless of who emits them).
 
 ## Inputs
 

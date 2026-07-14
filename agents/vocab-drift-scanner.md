@@ -2,10 +2,10 @@
 name: vocab-drift-scanner
 description: "Read-only scanner dispatched by the `vocab-drift-audit` skill: diffs repository-local Vale vocabulary files against the pinned upstream nolte/vale-style release and returns a two-section drift report — local entries already accepted upstream (delete) and local entries not yet upstream (upstream PR candidates). Follow-up actions stay with the skill."
 distribution: plugin
-tools: Read, Bash, Glob, Grep
+tools: Read, Bash, Glob, Grep, mcp__github__get_file_contents, mcp__github__get_latest_release
 model: sonnet
 tags: [audit]
-phase: review
+phase: quality
 summary: "Read-only diff of repository-local Vale vocab files against the pinned upstream nolte/vale-style release."
 summary_de: "Nur-Lese-Diff der lokalen Vale-Vocab-Dateien gegen den gepinnten Upstream-Release nolte/vale-style."
 use_when:
@@ -41,6 +41,8 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `git ls-files "*/accept.txt"` — enumerate git-tracked local vocabulary files without reading working-tree noise from `vale sync`
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation.
+
+**Tooling (optional GitHub MCP):** prefer the connected GitHub MCP server's read tools for the upstream fetches above — `github:get_file_contents` (the vocabulary directory listing and each `accept.txt` at the pinned tag) and `github:get_latest_release` (the latest-release check) — falling back to the `gh` commands shown when no server is connected, per `spec/claude/mcp-tool-preference/`. `git ls-files` is a local read and stays git; `gh`/git stays authoritative and the diff output is identical on either path.
 
 ## Scope and boundaries
 

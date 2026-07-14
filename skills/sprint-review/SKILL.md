@@ -1,6 +1,6 @@
 ---
 name: sprint-review
-description: Close an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into `release-notes-curate` and `release-publish-trigger` (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably. Supports resume on re-invocation per `spec/claude/resumable-work/`.
+description: Closes an active sprint per the project sprint spec, validating the deployable artefact and recording the value-delivery audit trail. Invoke when the user asks to close a sprint, review a sprint, finish a sprint, ship a sprint, or wrap a sprint. Also handles equivalent German-language requests. Promotes `active → review`, validates `artifact_ref` per the release-artifact spec's per-project-type rules, confirms the named `verifies_sprint_value` acceptance criterion is checked, optionally chains into `release-notes-curate` and `release-publish-trigger` (operator-opt-in, recorded verbatim in `## Review notes`), then promotes `review → closed`. Falls back to `review → cancelled` with a one-paragraph rationale when artefact validation fails unrecoverably. Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding, release]
 phase: close-release
 summary: "Closes an active sprint per the sprint spec: validates the deployable artefact and records the value-delivery audit trail."
@@ -88,6 +88,8 @@ Then confirm: the resolved artefact's commit (when applicable) **MUST** equal th
 
 A bare commit SHA as `artifact_ref` is rejected unless the project explicitly opts in via `.github/release-skill-layer.yml`.
 
+**Tooling (optional GitHub MCP):** prefer `github:get_release_by_tag` for the GitHub-release artefact check when a GitHub MCP server is connected, falling back to `gh release view` otherwise, per `spec/claude/mcp-tool-preference/`; the `git rev-parse <tag>` validations stay local git and the publish dispatch stays `gh`. `gh`/git stays authoritative and output is identical.
+
 Record the verification transcript (commands run, exit codes, key output lines) for later persistence in `## Review notes`. **On any failure, do not proceed to step 4 or 5.** Surface the failed check verbatim, ask the user whether the failure is recoverable (re-cut the artefact and rerun) or unrecoverable (cancel the sprint), and route accordingly: recoverable → stop; unrecoverable → step 7.
 
 ### 4. Confirm `verifies_sprint_value`
@@ -130,7 +132,7 @@ Triggered when step 3 fails unrecoverably (the underlying release pipeline is br
 
 1. Set `status: cancelled` and `ended: <today's ISO date>`.
 2. Populate `## Review notes` with a one-paragraph rationale that **MUST** name (a) the lifecycle stage at which cancellation occurred (`planned`, `active`, or `review`), and (b) why recovery wasn't feasible at this time. Missing rationale or stage citation is a hard validation failure per `spec/project/sprint/` §Acceptance Criteria.
-3. Re-target every roadmap item still pointing at the cancelled sprint (`target_sprint`) per `spec/project/roadmap/` §Sprint and feature linkage: clear to `null` or point at a `planned` successor. Roadmap items **MUST NOT** advance to `done` from a `cancelled` sprint even when every feature is individually `done`; the items remain `active` until a successor sprint reaches `closed`.
+3. Hand off the `target_sprint` re-targeting of every roadmap item still pointing at the cancelled sprint to `sprint-plan`, which owns clearing or re-targeting terminal-sprint references per `spec/project/roadmap/` §Sprint and feature linkage (valid post-terminal values: `null` or a `planned` successor). Surface the affected roadmap items to the operator and route the fix through `sprint-plan`; this skill doesn't rewrite `target_sprint` itself. Roadmap items **MUST NOT** advance to `done` from a `cancelled` sprint even when every feature is individually `done`; the items remain `active` until a successor sprint reaches `closed`.
 4. Surface the cancelled sprint summary to the user, naming the rationale and the re-targeting outcome.
 
 ## Gotchas

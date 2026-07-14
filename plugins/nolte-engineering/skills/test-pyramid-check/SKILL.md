@@ -1,6 +1,6 @@
 ---
 name: test-pyramid-check
-description: Audit a feature's or module's test-tier completeness against the closed functional-tier taxonomy in spec/project/test-pyramid-foundation/ (are the applicable tiers — unit, component, integration, contract, E2E — present and written at the lowest tier that gives confidence?) and whether the E2E tier follows the disciplines in spec/project/e2e-test-automation/ (page-object encapsulation, condition-based waits, screenshot checkpoints, markers, TC-ID traceability). Detects the stack, globs the test files per tier, and returns a gap report. Invoke when the user asks to "check the test pyramid," "audit test-tier completeness," "verify all test levels exist," after a feature is implemented, or before a release; also handles equivalent German-language requests. Don't use to scaffold E2E tests (use e2e-test-generator), to review/repair an E2E suite (use e2e-test-reviewer), to review a run's screenshots (use e2e-result-reviewer), or to run the lint/typecheck/test gate (use quality-gate).
+description: Audits a feature's or module's test-tier completeness against the closed functional-tier taxonomy in spec/project/test-pyramid-foundation/ (are the applicable tiers — unit, component, integration, contract, E2E — present and written at the lowest tier that gives confidence?) and whether the E2E tier follows the disciplines in spec/project/e2e-test-automation/ (page-object encapsulation, condition-based waits, screenshot checkpoints, markers, TC-ID traceability). Detects the stack, globs the test files per tier, and returns a gap report. Invoke when the user asks to "check the test pyramid," "audit test-tier completeness," "verify all test levels exist," after a feature is implemented, or before a release; also handles equivalent German-language requests. Don't use to scaffold E2E tests (use e2e-test-generator), to review/repair an E2E suite (use e2e-test-reviewer), to review a run's screenshots (use e2e-result-reviewer), or to run the lint/typecheck/test gate (use quality-gate).
 argument-hint: "[feature or module, e.g. REQ-013 or checkout]"
 tags: [quality-gate, audit]
 phase: quality
@@ -30,11 +30,13 @@ Implements the closed functional-tier taxonomy of `spec/project/test-pyramid-fou
 
 Also triggers on equivalent German-language requests, including "Testpyramide prüfen", "Teststufen-Vollständigkeit auditieren", "prüfe ob alle Testebenen vorhanden sind". Detect the user's language and respond in it; the report table uses English headers so it stays diffable.
 
-## Step 1 — Read the spec and detect the stack
+## Operations
+
+### 1. Read the spec and detect the stack
 
 Read `spec/project/test-pyramid-foundation/` (the closed functional-tier taxonomy) and `spec/project/e2e-test-automation/` (the E2E disciplines). Detect the project's stack from its manifests and layout (e.g. `pyproject.toml` + `tests/`, `package.json` + `*.test.ts`, `go.mod` + `*_test.go`) so you glob the right paths for each tier. Read the project's declared coverage targets where they live (CI config, `pyproject.toml` `[tool.coverage]`, a project test spec) — do not assume a fixed percentage.
 
-## Step 2 — Locate each tier (in parallel)
+### 2. Locate each tier (in parallel)
 
 Glob the test files for `$ARGUMENTS` across the applicable tiers, scoping by the feature/module name. Map each to a tier:
 
@@ -48,11 +50,11 @@ Glob the test files for `$ARGUMENTS` across the applicable tiers, scoping by the
 
 These are the foundation's functional tiers above static analysis. The **static-analysis** tier (lint / type-check / format) is audited by the quality gate, not here. A tier that does not apply (no service boundary → no contract tier; no UI → no E2E) is **not** a gap; record it as `n/a` with the reason.
 
-## Step 3 — Check fast-tier gating
+### 3. Check fast-tier gating
 
 Confirm the fast tiers exist for `$ARGUMENTS`'s business logic, and that a coverage gate is actually wired (CI fails below the project's declared floor) rather than merely aspirational. Report the declared target and whether it is enforced — not a number you invented.
 
-## Step 4 — Check E2E discipline
+### 4. Check E2E discipline
 
 If an E2E tier exists for `$ARGUMENTS`, check it against the spec's disciplines (grep-level, not a deep code review — that is `e2e-test-reviewer`):
 
@@ -64,7 +66,7 @@ If an E2E tier exists for `$ARGUMENTS`, check it against the spec's disciplines 
 
 Flag violations by file; for a deep per-line review or repairs, hand off to `e2e-test-reviewer`.
 
-## Step 5 — Report
+### 5. Report
 
 ```markdown
 # Test pyramid review: {feature/module}

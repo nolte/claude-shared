@@ -2,7 +2,7 @@
 name: lektorat-scanner
 description: "Read-only editorial scanner dispatched by `lektorat-apply`: walks an in-scope Markdown set and returns a structured findings inventory across six dimensions — D1 readability, D2 comprehensibility, D3 grammar, D4 style, D5 audience-fit, D6 idiomatic naturalness — with severities critical/warning/suggestion. Detection only; disk writes (`patch`/`revise`) and persisting the report stay with `lektorat-apply`."
 distribution: plugin
-tools: Read, Grep, Glob, Bash
+tools: Read, Glob, Bash
 model: sonnet
 tags: [audit, prose]
 phase: review
@@ -16,9 +16,12 @@ dont_use_when:
     alternative: lektorat-apply
   - situation: "You want cross-language parity drift detection"
     alternative: docs-freshness-checker
+  - situation: "You want Vale-clean rephrasing or vocabulary curation rather than editorial detection"
+    alternative: prose-vale-curator
 see_also:
   - lektorat-apply
   - docs-freshness-checker
+  - prose-vale-curator
 ---
 
 # Lektorat Scanner
@@ -31,7 +34,7 @@ The authoritative source for every rule below is `spec/project/lektorat/en.md` (
 
 - **Self-contained input and output:** the caller (lektorat-apply skill) hands over a file or glob list plus the applicable configuration (language resolution, audience artefact, content-mode map, DE pipeline pin), and you return a complete findings inventory. No mid-flow user approval is required at any point during the scan.
 - **Context-window protection:** an `audit` pass across a bilingual MkDocs tree plus top-level Markdown plus release/issue/PR bodies surfaces large amounts of raw prose, plus the raw JSON output of Vale (EN) and whichever DE pipeline was pinned. Isolating the scan into an agent prevents that raw material from flooding the parent conversation; the skill receives only the final structured inventory.
-- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Grep`, `Glob`, `Bash`). The absence of `Edit`, `Write`, and `NotebookEdit` enforces the spec's `audit`-is-read-only contract at the harness level. An editorial scanner that can silently patch what it finds is the wrong shape — the spec assigns `patch` and `revise` to the orchestrating skill, never to the scanner.
+- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Glob`, `Bash`). The absence of `Edit`, `Write`, and `NotebookEdit` enforces the spec's `audit`-is-read-only contract at the harness level. An editorial scanner that can silently patch what it finds is the wrong shape — the spec assigns `patch` and `revise` to the orchestrating skill, never to the scanner.
 - **Specialization sharpens output:** a narrow "six-dimension detection with a fixed three-severity rubric and a fixed JSON output shape" system prompt produces a noticeably more consistent inventory than running the same checks inline in a general conversation. The dimension vocabulary (`D1`–`D6`) and severity vocabulary (`critical`/`warning`/`suggestion`) are closed sets that benefit from a dedicated executor.
 - **Model pin (`sonnet`):** the scan applies a fixed rule set (named metrics, named heuristics, named dimensions) against structured Markdown and structured tool output — high-volume but low-novelty work. Sonnet handles the pattern matching reliably at substantially lower cost than Opus; portfolio-wide `audit` runs touch many files across many repos, so the cost differential is load-bearing. Pin justified per `spec/claude/agent-management/` §Model selection.
 - **Counter-dimension considered:** mid-flow operator approval is genuinely valuable for `patch` (one finding at a time) and `revise` (full-artefact diff review), which is a strong skill bias for those operations. The spec resolves that tension by assigning approval workflows to `lektorat-apply` and the inventory step to this scanner; the scanner itself has no operator-visible checkpoint, so the agent shape fits cleanly.

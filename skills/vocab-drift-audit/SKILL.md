@@ -1,6 +1,6 @@
 ---
 name: vocab-drift-audit
-description: Audit repository-local Vale vocabularies against the pinned upstream release of nolte/vale-style to detect drift. Dispatches vocab-drift-scanner agent for the read-only diff step; follow-up actions (delete entries, bump pin, draft upstream PR) stay user-controlled in this skill. Invoke when the user asks to audit the Vale vocabulary, check for vocabulary drift, diff the local vocab against nolte/vale-style, or review whether local Vale terms can be retired. Also handles equivalent German-language requests. Reports local entries that are already accepted upstream (should be deleted) and local entries that aren't yet upstream (should be PR'd to nolte/vale-style). Supports resume on re-invocation per `spec/claude/resumable-work/`.
+description: Audits repository-local Vale vocabularies against the pinned upstream release of nolte/vale-style to detect drift. Dispatches vocab-drift-scanner agent for the read-only diff step; follow-up actions (delete entries, bump pin, draft upstream PR) stay user-controlled in this skill. Invoke when the user asks to audit the Vale vocabulary, check for vocabulary drift, diff the local vocab against nolte/vale-style, or review whether local Vale terms can be retired. Also handles equivalent German-language requests. Reports local entries that are already accepted upstream (should be deleted) and local entries that aren't yet upstream (should be PR'd to nolte/vale-style). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [audit]
 phase: quality
 summary: "Audits repository-local Vale vocabularies against the pinned upstream nolte/vale-style release to detect drift."
@@ -38,12 +38,24 @@ Detect the user's language from their message and respond in it. The audit repor
 
 ## Operations
 
-1. **Locate the Vale config.** Read `.vale.ini` from the repo root first, then from common alternative locations (`docs/.vale.ini`, `.github/.vale.ini`). Extract `StylesPath` and the `nolte/vale-style` pin tag. If either is missing, stop with a clear message.
-2. **Dispatch `vocab-drift-scanner` (Agent) for the read-only diff between the repository's local `accept.txt` files and the pinned upstream `nolte/vale-style` tag. Wait for its drift inventory before proceeding to user-confirmation and follow-up actions.**
-3. **Render the report** from the agent's drift inventory as Markdown with three sections in this order: `## Duplicates to remove`, `## Upstream PR candidates`, `## Health`. Group findings under each section by local vocabulary file, and show the file path relative to the repo root.
-4. **Offer follow-up actions** in the response (don't execute them without explicit confirmation):
-   - Delete the duplicate lines from the local `accept.txt` files and bump the pinned tag in `.vale.ini` if a newer `nolte/vale-style` release is available.
-   - Draft a single PR body for `nolte/vale-style` that lists all upstream PR candidates grouped by target vocabulary, with a one-line justification placeholder per entry.
+### 1. Locate the Vale config
+
+Read `.vale.ini` from the repo root first, then from common alternative locations (`docs/.vale.ini`, `.github/.vale.ini`). Extract `StylesPath` and the `nolte/vale-style` pin tag. If either is missing, stop with a clear message.
+
+### 2. Dispatch the scanner
+
+Dispatch `vocab-drift-scanner` (Agent) for the read-only diff between the repository's local `accept.txt` files and the pinned upstream `nolte/vale-style` tag. Wait for its drift inventory before proceeding to user-confirmation and follow-up actions.
+
+### 3. Render the report
+
+Render the report from the agent's drift inventory as Markdown with three sections in this order: `## Duplicates to remove`, `## Upstream PR candidates`, `## Health`. Group findings under each section by local vocabulary file, and show the file path relative to the repo root.
+
+### 4. Offer follow-up actions
+
+Offer follow-up actions in the response (don't execute them without explicit confirmation):
+
+- Delete the duplicate lines from the local `accept.txt` files and bump the pinned tag in `.vale.ini` if a newer `nolte/vale-style` release is available.
+- Draft a single PR body for `nolte/vale-style` that lists all upstream PR candidates grouped by target vocabulary, with a one-line justification placeholder per entry.
 
 ## Report format
 
@@ -71,7 +83,7 @@ StylesPath: <value>
 - Latest nolte/vale-style release: <tag> (<note whether the pin is behind>)
 ```
 
-The "Latest release" line comes from `gh api repos/nolte/vale-style/releases/latest --jq .tag_name`. If it differs from the pin, flag it but don't bump automatically.
+The "Latest release" line comes from `gh api repos/nolte/vale-style/releases/latest --jq .tag_name`. If it differs from the pin, flag it but don't bump automatically. **Tooling (optional GitHub MCP):** prefer `github:get_latest_release` for that lookup when a GitHub MCP server is connected, falling back to the `gh api` call otherwise, per `spec/claude/mcp-tool-preference/`; the upstream-vs-local diff is inherited from `vocab-drift-scanner`. `gh` stays authoritative and output is identical.
 
 ## Gotchas
 

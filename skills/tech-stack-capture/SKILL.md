@@ -10,8 +10,6 @@ use_when:
   - "you want to refresh the tech_stack section after dependency or tooling changes"
   - "you want a probe-driven scaffold rather than hand-curation"
 dont_use_when:
-  - situation: "You want to author the global portfolio/tech-stack.yml (hand-curated only)"
-    alternative: portfolio-audit
   - situation: "You want signal-verification audits across the portfolio"
     alternative: portfolio-audit
 see_also:
@@ -81,7 +79,7 @@ On a fresh capture, all three working sets are empty. The operator's confirmatio
 
 ### 3. Probe repository signals
 
-Read the signal-source set in the order documented in `references/signal-source-map.md`. Read `references/signal-source-map.md` now to ground every kind/group/lifecycle proposal that follows; the prose body below names the rules, but the file carries the authoritative per-signal mapping table and is the only source the skill consults for "what does this signal imply".
+Read the signal-source set in the order documented in `references/signal-source-map.md`, and read that file now to ground every kind/group/lifecycle proposal that follows: it carries the authoritative per-signal mapping table and is the only source the skill consults for "what does this signal imply".
 
 The probe is read-only. Don't shell out to package managers, don't run installers, don't invoke the language runtime. A missing signal file is an absence, not an error.
 
@@ -95,18 +93,11 @@ A candidate whose `name` matches an inherited entry but whose `kind` differs is 
 
 ### 5. Propose `group:` per candidate
 
-`group:` is a MUST on every entry (in both `additions[]` and inherited via the global manifest). For every surviving candidate from step 4, propose a `group:` value:
-
-- **Deterministic mapping** — when the candidate's `kind` is one of `docs`, `test`, `ci`, `dep-bot`, `build`, `package-manager`, `framework` (Claude-Code-plugin-shaped only), or `runtime` (matching `claude-code` only), use the default mapping documented in the discovery spec §Discovery sequence per repository and reproduced in `references/signal-source-map.md`. Auto-fill without prompting.
-- **`lint`-kind subtleties** — a markdown / prose linter running against doc sources defaults to `documentation`; a code-quality linter running against source trees defaults to `quality`. The mapping is decidable from the `source_of_truth` path (signals under `docs/` or scoped to markdown imply `documentation`); when ambiguous, ask.
-- **Ask-the-maintainer cases** — for `language`, `runtime` (non-`claude-code`), `framework` (non-Claude-Code-plugin), `deploy-target`, and `other`, prompt the operator because the choice depends on whether the tool is the application's primary runtime, a docs-only helper, or a delivery channel. Heuristic guesses here mislead and are forbidden by the spec.
+`group:` is a MUST on every entry (in both `additions[]` and inherited via the global manifest). For every surviving candidate from step 4, propose a `group:` value following the **Deterministic group proposal** rules in `references/signal-source-map.md`: auto-fill the deterministic `kind → group` mappings without prompting (`docs`, `test`, `ci`, `dep-bot`, `build`, `package-manager`, plugin-shaped `framework`, `claude-code` `runtime`), decide the `lint`-kind case from the `source_of_truth` path (`docs/`-scoped → `documentation`, source-tree → `quality`), and **prompt the operator** for the ask-the-maintainer cases (`language`, non-`claude-code` `runtime`, non-plugin `framework`, `deploy-target`, `other`, and any ambiguous `lint`). Heuristic guesses on the ask cases mislead and are forbidden by the spec.
 
 ### 6. Propose `lifecycle:` per candidate
 
-`lifecycle:` is optional but SHOULD be proposed:
-
-- **Auto-fill unambiguous mappings** — `test`, `lint`, `dep-bot`, `package-manager` → `development`; `ci`, `build`, `docs` → `build`; `deploy-target` → `runtime`. The mapping is reproduced in `references/signal-source-map.md`.
-- **Ask for ambiguous mappings** — `language`, `runtime`, `framework`, `other` depend on whether the repository ships a service, only build artefacts, or both. Prompt the operator; accept "skip" (leaves the field absent) as a legitimate answer per the SHOULD.
+`lifecycle:` is optional but SHOULD be proposed. Follow the **Deterministic lifecycle proposal** rules in `references/signal-source-map.md`: auto-fill the unambiguous `kind → lifecycle` mappings (`test` / `lint` / `dep-bot` / `package-manager` → `development`; `ci` / `build` / `docs` → `build`; `deploy-target` → `runtime`) and **prompt** for the ambiguous kinds (`language`, `runtime`, `framework`, `other`), accepting "skip" (leaves the field absent) as a legitimate answer per the SHOULD.
 
 ### 7. Interactive per-entry confirmation
 
@@ -116,25 +107,19 @@ Per the discovery spec's MUST, present every proposed delta to the maintainer be
 - **Proposed overrides** — for every inherited entry the operator wants to suppress, build an override record with `name`, `inherit: false`, and a non-empty `rationale`. Empty rationale blocks the write. When the operator wants a different version of an inherited entry, surface the spec's two-step path (`overrides:` suppression PLUS a repo-specific `additions:` replacement) — never edit the inherited entry's fields directly.
 - **Proposed regroup** — for every inherited entry whose repo-specific purpose differs from the portfolio default (for example `python` used only by the MkDocs build pipeline in this repo), offer a regroup record with `name`, the new `group:`, and a non-empty `rationale`. Refuse a no-op regroup (new `group` equals inherited `group`) and refuse a regroup paired with an override on the same `name` (the override already removes the entry, so the regroup would be dead code).
 
-Free-form additions (entries the operator declares despite no matching signal) are permitted under the spec's SHOULD but require an explicit acknowledgement that `portfolio-audit` will produce a `Warning` for the missing signal. Record the acknowledgement verbatim inside the entry's `rationale` field with the marker phrase `acknowledged-missing-signal:` followed by the operator's one-sentence justification; the audit downgrades the finding to `Suggestion` when that marker is present.
+Free-form additions (entries the operator declares despite no matching signal) are permitted under the spec's SHOULD, but the operator must acknowledge that `portfolio-audit` will `Warning` the missing signal. Record that acknowledgement verbatim in the entry's `rationale` with the marker phrase `acknowledged-missing-signal:` plus a one-sentence justification; the marker downgrades the audit finding to `Suggestion`.
 
 Don't proceed to step 8 until every proposed addition, override, and regroup has been individually confirmed, edited, or rejected. An empty `tech_stack: {}` is a legitimate outcome and is written only after explicit confirmation — silent emptiness is forbidden.
 
 ### 8. Compose and write
 
-Compose the final `tech_stack:` block from the three confirmed working sets. Validate locally before writing:
-
-- Every `additions[]` entry carries the five mandatory fields (`name`, `kind`, `group`, `role`, `status`); reject malformed entries with the missing-field name surfaced.
-- No `additions[]` entry shadows an inherited entry without a corresponding `overrides:` record on the same `name`. Shadow-without-override is a `Critical` per the schema spec — block the write.
-- Every `overrides[]` record has a non-empty `rationale` and `inherit: false`.
-- Every `regroup[]` record carries a `group` distinct from the inherited entry's `group` and a non-empty `rationale`, and isn't paired with an `overrides[]` record on the same `name`.
-- All `kind:` values are within the closed 12-value enum; all `group:` values are within the closed 5-value enum; all `status:` values are within `active` / `experimental` / `deprecated`; all `lifecycle:` values (when present) are within `development` / `build` / `runtime` / `all`.
+Compose the final `tech_stack:` block from the three confirmed working sets. Before writing, run the **local validation checklist** in `references/write-validation.md` (mandatory-field, shadow-without-override, override-rationale, regroup, and enum checks); reject or block the write on any failure, surfacing the offending entry.
 
 Then write `project/portfolio.yml` atomically. Preserve unrelated top-level keys (`capabilities:`, `audiences:`, `peers:` — whatever the existing manifest carries); only the `tech_stack:` key is rewritten. Re-parse the file after writing to confirm the result is valid YAML; on parse failure, restore the prior version and surface the parse error.
 
-Confirm in the user's language with the path of the rewritten manifest, a per-section count (`additions:` N, `overrides:` M, `regroup:` K, inherited-confirmed P), and the follow-up reminder that opening a PR via `pull-request-create` is the next step — the skill stops at the write.
+Confirm in the user's language with the path of the rewritten manifest, a per-section count (`additions:` N, `overrides:` M, `regroup:` K, inherited-confirmed P), and the reminder that opening a PR via `pull-request-create` is the next step — the skill stops at the write.
 
-The skill **MAY** emit a "candidates not picked" log alongside the confirmation summary, listing signal-derived candidates the operator rejected during step 7 with a one-phrase rejection reason each. The log is for the operator's audit awareness only; it is **NOT** committed to the repository.
+The skill **MAY** emit a "candidates not picked" log alongside the confirmation summary — signal-derived candidates the operator rejected in step 7, each with a one-phrase reason. The log is for the operator's audit awareness only; it is **NOT** committed to the repository.
 
 ## Gotchas
 

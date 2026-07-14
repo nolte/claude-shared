@@ -111,7 +111,13 @@ Triggered when the user signals a material scope change (new actor, new constrai
 - **Specification uncertainty and interpretation uncertainty need different questions.** A low `c_d` because the *user hasn't decided* calls for a decision-eliciting question; a low `c_d` because *you might have misread* calls for a teach-back. Conflating them wastes turns and fatigues the user.
 - **Over-questioning is a failure mode too.** The EVPI/cost rule and the question budget exist to stop the interview interrogating the user past the point of value. A confidently-understood smaller set beats an exhausted user and a padded one.
 - **Teach-back is not optional flavor.** It is the only mechanism that catches the *confident misread* — an interpretation that is internally acceptable but wrong fails silently unless reflected back. No `confirmed` tag without it.
-- **The German trigger phrases ship in the body, not the description.** The frontmatter `description` is English-only per `agent-management` §Structure (plugin-distributed); German operator-voice triggers live in `## German trigger phrases` so they stay greppable in an open conversation.
+- **The German trigger phrases ship in the body, not the description.** The frontmatter `description` is English-only per `skill-management` §Structure (plugin-distributed); German operator-voice triggers live in `## German trigger phrases` so they stay greppable in an open conversation.
+
+## Examples
+
+- Read `examples/01-vague-greenfield-elicit.md` when running `elicit` on a vague greenfield request and driving the funnel interview to a written, confidence-scored artifact.
+- Read `examples/02-validate-existing-artifact.md` when running `validate` against an existing `project/requirements/<slug>.md` and reporting pass/fail per KPI-checklist item.
+- Read `examples/03-revisit-after-scope-change.md` when running `revisit` after a material scope change and diffing the artifact instead of re-eliciting from scratch.
 
 ## Resumability
 

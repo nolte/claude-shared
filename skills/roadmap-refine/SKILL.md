@@ -7,7 +7,7 @@ summary: "Enforces the detail-level invariant on project/roadmap.md (current and
 summary_de: "Erzwingt die Detail-Level-Invariante in project/roadmap.md (Items für aktuellen und nächsten Sprint müssen 'fine' sein)."
 use_when:
   - "you want to check roadmap items are at the right detail level for the next sprint"
-  - "you want to promote roadmap items from coarse/medium to fine"
+  - "you want to promote roadmap items from coarse or backlog to fine"
   - "you want to verify the roadmap is ready for sprint planning"
 dont_use_when:
   - situation: "You want to add or retarget items"

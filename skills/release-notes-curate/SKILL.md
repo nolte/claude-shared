@@ -42,12 +42,14 @@ Before doing anything:
 
 - Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`) and the remote resolves to a GitHub repository.
 - Confirm `gh` is authenticated (`gh auth status`).
-- Locate `spec/project/release-skill-layer/` — either in the target repo or, when absent, via the `nolte-shared` plugin install path. Stop and ask which spec source to use if neither is reachable.
+- Locate `spec/project/release-skill-layer/` — either in the target repo or, when absent, at `${CLAUDE_PLUGIN_ROOT}/spec/project/release-skill-layer/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin). Stop and ask which spec source to use if neither is reachable.
 - Confirm the repo ships `release-drafter.yml` and `release-publish.yml` per `branching-model` and `release-automation`. If `release-drafter.yml` is missing, the operator should adopt `release-automation` first; this skill stops and reports.
 
 ## Operations
 
 Operations 4 to 6 form a stacked Plan-validate-execute cycle: Operation 4 self-validates the bundle against the audience artefact and the spec's content rules before disclosure, Operation 5 surfaces the planned diff for explicit operator confirmation, and Operation 6 writes via `gh release edit --notes` and verifies the marker pair survived the round-trip. Operation 7 closes the loop on re-runs by detecting in-place updates instead of duplicating the augmentation block.
+
+**Tooling (optional GitHub MCP):** prefer the connected GitHub MCP server's read tools where they exist — `github:list_releases` for draft resolution (Op 1) and `github:get_release_by_tag` for the post-write round-trip re-read (Op 6) — falling back to the `gh` commands shown, per `spec/claude/mcp-tool-preference/`. The write path (`gh release edit`), the `release-drafter.yml` dispatch, and `gh repo view --json defaultBranchRef` (no MCP tool — OQ-D) stay on `gh`; `gh` stays authoritative and output is identical.
 
 ### 1. Resolve the open draft
 

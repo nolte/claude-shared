@@ -65,6 +65,17 @@ All section headings stay in English regardless of the repo's documentation lang
 - **Flag deprecations** — flags marked deprecated in this release; include the removal target version when known.
 - **Default-value changes** — flags whose default changed; mark each as a soft or hard break.
 
+## Pre-commit hook collection
+
+**Detection.** `.pre-commit-hooks.yaml` exists at the repo root and the hooks are self-contained scripts under `hooks/`; no build artifact — the scripts are the product. Autodetection alone is ambiguous (a `mkdocs.yml` may be present for the docs site while the hooks are the actual deliverable), so declare this type explicitly via `.github/release-skill-layer.yml` `project_type: pre-commit-hook-collection`.
+
+**Sections to compose:**
+
+- **Hooks changed** — hook IDs added, renamed, or removed in `.pre-commit-hooks.yaml` since the previous release tag. Source: `git diff <prev-tag>..<draft-sha> -- .pre-commit-hooks.yaml hooks/`. Renames are detected via `git log --follow` on `hooks/<id>.sh`.
+- **Configurable args** — new, renamed, or removed `args:` knobs per hook, with their defaults. Source: each hook's argument parsing plus the `description` in `.pre-commit-hooks.yaml`.
+- **Behaviour & fail-open semantics** — changes to a hook's default values (for example the integration branch), its `CI` fail-open short-circuit, exit-code semantics, or `stages` wiring. Mark each as a soft or hard break for consumers pinning a tag.
+- **Consumer migration notes** — only when a hook ID is renamed / removed or an `args:` contract changes such that a consumer must edit its `.pre-commit-config.yaml`. Include the tag-pin bump guidance (consumers pin `rev:` to a release tag).
+
 ## Documentation-only repo
 
 **Detection.** `mkdocs.yml`, `docusaurus.config.*`, or similar exists; no application source.

@@ -11,6 +11,9 @@ repository:
     - skills
     - agents
     - nolte-shared
+    - nolte-media
+    - nolte-engineering
+    - ai-agents
   allow_squash_merge: true
   allow_merge_commit: false
   allow_rebase_merge: false

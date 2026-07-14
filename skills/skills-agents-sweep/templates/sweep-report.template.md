@@ -10,6 +10,20 @@ per-artefact-plans: <count> (under .audits/skill-review/ and .audits/agent-revie
 
 # Skills & Agents Sweep Audit — <slug>
 
+## Contents
+
+- [Scope](#scope)
+- [Executive Summary](#executive-summary)
+- [Inventory](#inventory)
+- [Abgrenzungs-Matrix](#abgrenzungs-matrix)
+- [Lücken-Inventar](#lücken-inventar)
+- [Adoption-Friction](#adoption-friction)
+- [Skill-vs-Agent-Sortierung](#skill-vs-agent-sortierung)
+- [Konsistenz-Findings](#konsistenz-findings)
+- [Nachgelagerte Umsetzungs-Roadmap](#nachgelagerte-umsetzungs-roadmap)
+- [Hand-off](#hand-off)
+- [Processing log](#processing-log)
+
 ## Scope
 
 Portfolio-wide sweep of all <N> skills (`skills/<name>/SKILL.md`) and <M> agents (`agents/<name>.md`) in the `<namespace>` plugin, run against `spec/claude/skill-management/`, `spec/claude/agent-management/`, `spec/claude/skill-vs-agent/`, `spec/claude/skill-review/`, `spec/claude/agent-review/`, and `spec/claude/review-plan/`.

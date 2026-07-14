@@ -37,7 +37,7 @@ Projekte in diesem Ökosystem haben eine wiedererkennbare Form auf der Festplatt
 
 ### CI und Automatisierung
 - **MUSS [MUST]** ein `.github/`-Verzeichnis mit Workflows unter `.github/workflows/` enthalten
-- **MUSS [MUST]** eine `Taskfile.yml` (oder `Taskfile.yaml`) im Repository-Wurzelverzeichnis enthalten, die reproduzierbare Kommandos mindestens für Test-, Lint- und Docs-Ziele bereitstellt
+- **MUSS [MUST]** eine `Taskfile.yml` (oder `Taskfile.yaml`) im Repository-Wurzelverzeichnis enthalten, die reproduzierbare Kommandos mindestens für Test-, Lint- und Docs-Ziele bereitstellt; das kanonische Target-Vokabular der Datei, das Namespacing, die Argument-Durchreichung und die Konventionen für geteilte Taskfiles werden von `spec/project/taskfile/` geregelt; über die geforderte Existenz der Datei hinaus fixiert diese Spec nur die einzelnen Target-Namen, auf die sich ihre eigenen Anforderungen stützen (`task check` und `task setup`, unten), und überlässt das kanonische Vokabular und die Konventionen jener Spec
 - **SOLLTE [SHOULD]** das aggregierte Quality-Gate unter dem portfolio-kanonischen Target-Namen `task check` bereitstellen, damit der Aufruf des Gates portfolioübergreifend identisch bleibt; die Zusammensetzung und der Output-Vertrag des Gates werden von `spec/project/quality-gate/` geregelt und diese Spec listet sie nie selbst auf, sondern fixiert nur den kanonischen Target-Namen
 - **SOLLTE [SHOULD]** ein `setup`-Target bereitstellen, das die projektlokale Umgebung erzeugt und Hooks/Abhängigkeiten installiert, damit das Onboarding nach dem ersten Klonen ein einziges Kommando ist
 - **SOLLTE [SHOULD]** Lint-, Test- und Docs-Kommandos in der CI über Taskfile-Targets aufrufen, damit lokales Verhalten und CI-Verhalten identisch bleiben
@@ -70,7 +70,7 @@ Versionierungs-Policy und die Draft→Published-Release-Mechanik werden von `spe
 - **MUSS [MUST]** eine `mkdocs.yml` im Repository-Wurzelverzeichnis enthalten
 - **SOLLTE [SHOULD]** die Dokumentation über einen CI-Workflow veröffentlichen (zum Beispiel GitHub Pages)
 - **MUSS [MUST]** `docs/` in per-Sprache-Unterverzeichnisse (`docs/en/`, `docs/de/`, …) gemäß `spec/project/mkdocs-structure/` §Sprach-Parität organisieren, die das per-Sprache-Layout und die sprachübergreifende Datei-Baum-Parität für jedes Repository vorschreibt
-- **SOLLTE [SHOULD]** die MkDocs-Site gemäß `spec/project/mkdocs-structure/` strukturieren, die die kanonische Navigation, Plugin-Basis, Per-Page-Struktur, i18n-Parität und Erweiterungs-Hooks für projekt-typ-spezifische Specs definiert
+- **SOLLTE [SHOULD]** die MkDocs-Site gemäß `spec/project/mkdocs-structure/` strukturieren, die die kanonische Navigation, Plugin-Basis, Per-Page-Struktur, i18n-Parität und Erweiterungs-Hooks für projekt-typ-spezifische Specs definiert; wenn ein Repository erstmalig gescaffoldet wird, **SOLLTE** dieses Site-Skelett in seiner `mkdocs-structure`-konformen Form (dem per-Sprache-Baum, der Navigation und der Plugin-Basis) erzeugt werden statt als flacher `index.md`-Stub, damit neue Projekte von Anfang an in die Standard-Dokumentationsform booten
 
 ### Spezifikationen
 - **MUSS [MUST]** ein `spec/`-Verzeichnis im Repository-Wurzelverzeichnis für Anforderungen, NFRs, Style Guides und Domänenwissen enthalten

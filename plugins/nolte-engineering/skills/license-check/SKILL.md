@@ -1,6 +1,6 @@
 ---
 name: license-check
-description: Run an end-to-end license-compliance check on the current project per spec/project/license-check/ and produce a license-check audit artifact. Dispatches license-check-scanner agent for the read-only inventory (SBOM with resolved licenses, SPDX identification, category classification), then applies the permissive-leaning allow/review/deny policy gate against the project's own outbound license, drives per-finding remediation (replace / exception with rationale / satisfy the obligation), verifies attribution/NOTICE and REUSE, records AI provenance, and writes the artifact under .audits/license-check/. Invoke when the user asks to "run a license check," "check license compliance," "audit licenses," "do a Lizenzcheck," "prüfe die Lizenzen," or for a pre-PR / pre-release license gate. Don't use for CVE / vulnerability scanning (that's dependency-audit) or for choosing the project's own outbound license. Supports resume on re-invocation per spec/claude/resumable-work/.
+description: Runs an end-to-end license-compliance check on the current project per spec/project/license-check/ and produce a license-check audit artifact. Dispatches license-check-scanner agent for the read-only inventory (SBOM with resolved licenses, SPDX identification, category classification), then applies the permissive-leaning allow/review/deny policy gate against the project's own outbound license, drives per-finding remediation (replace / exception with rationale / satisfy the obligation), verifies attribution/NOTICE and REUSE, records AI provenance, and writes the artifact under .audits/license-check/. Invoke when the user asks to "run a license check," "check license compliance," "audit licenses," "do a Lizenzcheck," "prüfe die Lizenzen," or for a pre-PR / pre-release license gate. Don't use for CVE / vulnerability scanning (that's dependency-audit) or for choosing the project's own outbound license. Supports resume on re-invocation per spec/claude/resumable-work/.
 tags: [audit]
 phase: quality
 summary: "End-to-end license-compliance check: SBOM, SPDX classification, allow/review/deny gate, remediation, NOTICE, and an audit artifact."
@@ -12,8 +12,6 @@ use_when:
 dont_use_when:
   - situation: "You want a CVE / vulnerability scan"
     alternative: dependency-audit
-  - situation: "You want to choose or change the project's own outbound license"
-    alternative: project-structure-apply
 see_also:
   - license-check-scanner
   - dependency-audit

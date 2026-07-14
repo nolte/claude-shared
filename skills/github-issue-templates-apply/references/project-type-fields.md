@@ -6,6 +6,15 @@ Each bundle lists the additional Issue Forms components to append to the baselin
 
 All YAML stays English regardless of the repo's documentation language (the GitHub issue UI is English-only in practice).
 
+## Contents
+
+- [Claude Code plugin](#claude-code-plugin)
+- [Python application](#python-application)
+- [Python library](#python-library)
+- [Node / TypeScript library or app](#node--typescript-library-or-app)
+- [CLI tool](#cli-tool)
+- [Documentation-only repository](#documentation-only-repository)
+
 ---
 
 ## Claude Code plugin

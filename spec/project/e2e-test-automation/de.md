@@ -34,7 +34,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 - Das Unit-/Lint-/Typecheck-Gate ausführen und seine Fehler klassifizieren — das regelt `spec/project/quality-gate/`; diese Spec deckt *Form und Disziplin* der E2E-Stufe ab, nicht das Gate, das die schnellen Stufen in der CI ausführt
 - Eine bestimmte Browser-Automatisierungs-Bibliothek vorschreiben: Der Kern ist framework-neutral; Selenium ist das mitgelieferte Referenzprofil, keine Pflicht
 - Die Anforderungs-/Spec-Dokumente schreiben oder bearbeiten, auf die eine Suite verweist
-- Produktiv-Anwendungscode oder `data-testid`-Hooks in der zu testenden Anwendung erzeugen (die Suite *stützt sich* auf solche Hooks; sie hinzuzufügen ist Anwendungsarbeit)
+- Produktiv-Anwendungscode oder `data-testid`-Hooks in der zu testenden Anwendung erzeugen (die Suite *stützt sich* auf solche Hooks; sie hinzuzufügen ist Anwendungsarbeit). Die Bereitstellung dieser Hooks ist das Provider-seitige Pendant, das `spec/frontend/testability-identifiers/` besitzt
 
 ## Anforderungen
 
@@ -48,6 +48,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 
 - Das vollständige Stufenmodell und die geschlossene funktionale Stufen-Taxonomie gehören `spec/project/test-pyramid-foundation/`; diese Spec **DARF** sie **NICHT** wiederholen. Die Suite eines Features **MUSS** gemäß diesem Fundament stufen-vollständig sein — jedes Verhalten auf der niedrigsten Stufe getestet, die Vertrauen gibt — während diese Spec nur Form und Disziplin der **E2E-Stufe** regelt
 - Die **E2E-Stufe MUSS** der Verifikation von User-Journeys vorbehalten bleiben, nicht für Logik, die eine Stufe tiefer besser getestet ist; das ist die Regel der niedrigsten-Stufe-die-Vertrauen-gibt des Fundaments, an der Spitze angewandt
+- Das charakteristische Fehlermuster ist eine **überbevölkerte Spitze**: Einzelflächen-Assertions auf Feldebene (ein Feld ein-/ausgeblendet, ein Button aktiviert/deaktiviert, ein Leerzustand, ein Label, ein i18n-String, eine Validierungsmeldung, ein Berechnungsergebnis) laufen als langsame Browser-Tests statt als schnelle Component-/Unit-Tests. Eine Suite, die in die Hunderte von E2E-Tests abdriftet, ist ein Symptom dafür; jeder solche Test **MUSS** auf die niedrigste Stufe gedrückt werden, die Vertrauen gibt, sodass E2E ein schlanker Satz stufenübergreifender Journeys bleibt
 - Coverage-Governance (Coverage als Leitlinie statt Ziel, Mutationsscore als stärkeres Signal, keine festen stufenübergreifenden Verhältnisse) gehört dem Fundament; diese Spec **DARF** keine numerischen Coverage-Ziele setzen
 - Der Skill `test-pyramid-check` **MUSS** die Stufen-Vollständigkeit gegen die Taxonomie des Fundaments und die unten definierte E2E-Disziplin auditieren und pro Feature berichten, welche Stufen vorhanden sind, welche fehlen und ob die E2E-Stufe diesen Disziplinen folgt
 
@@ -61,6 +62,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 
 - Tests **DÜRFEN** keine festen Pausen verwenden, um sich mit der UI zu synchronisieren; jedes Warten **MUSS** als explizite Bedingung formuliert sein (Präsenz, Sichtbarkeit, Klickbarkeit, URL-Wechsel, Ladeindikator verschwunden)
 - Eine feste Pause **DARF** nur innerhalb eines Page Objects stehen, nur für ein echt zeitbasiertes Anliegen (eine begrenzte Animation oder ein Debounce), und **MUSS** einen begründenden Kommentar und eine kleine Obergrenze tragen
+- Ein **globaler impliziter Wait DARF NICHT** als Synchronisationsmechanismus herangezogen werden. Er koppelt jede Element-Suche an ein verstecktes festes Timeout, verträgt sich nicht-deterministisch mit expliziten Bedingungs-Waits (beide zu vermischen ist selbst ein Anti-Pattern) und macht — am teuersten — jede *negative* Suche (ein absichtlich fehlendes Element, ein Locator-Fallback-Fehlschlag) für das volle Timeout blockierend. Setze den impliziten Wait auf null (oder eine kleine Untergrenze) und formuliere jedes Warten explizit; ein großer impliziter Wait ist die mit Abstand häufigste versteckte Ursache einer langsamen Suite
 
 ### Locator-Strategie
 
@@ -87,6 +89,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 - Jede Assertion **MUSS** eine beschreibende Fehlermeldung tragen, die die TC-ID und den beobachteten Wert enthält; leere oder tautologische Assertions (`assert True`, `assert page is not None`) sind verboten
 - Eine fehlende Vorbedingung (nicht vorhandene Seed-Daten) **MUSS** zu einem expliziten, begründeten Skip führen — nie zu einem stillen vorzeitigen Return, der einen Test bestehen lässt, ohne etwas zu prüfen
 - Vom Test erzeugte Daten **MÜSSEN** ein eindeutiges Suffix verwenden, um über Läufe hinweg isoliert und reproduzierbar zu bleiben; Seed-Daten mit Session-Geltungsbereich **MÜSSEN** idempotent sein (vor dem Anlegen prüfen)
+- Vorbedingungen **MÜSSEN** über den schnellsten zuverlässigen Weg hergestellt werden — einen geseedeten API-Aufruf oder ein Fixture — **nicht** über ein Durchklicken der UI. Ein Test treibt durch den Browser nur die Interaktion, die er prüft; das Herstellen von Vorbedingungs-Zustand (Konten, Entitäten, Navigation) über die UI vervielfacht die Laufzeit und koppelt unbeteiligte Flows in jeden Test
 
 ### Spec-Rückverfolgbarkeit
 
@@ -98,7 +101,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die Vorgabe, die die konsumierenden Agents annehmen, wenn kein anderer Stack angegeben ist. Ein Projekt auf einem anderen Stack ersetzt diesen Abschnitt vollständig, erfüllt aber weiter den Kern oben.
 
 - Die Suite **MUSS** unter `tests/e2e/` liegen, mit: `conftest.py` (Session-Fixtures, CLI-Optionen, idempotente Seed-Daten, Marker-Registrierung), `protocol_plugin.py` (dem Protokoll-Generator), `requirements.txt`, einem `pages/`-Paket mit `base_page.py` plus einem `<entity>_<view>_page.py` pro Seite und `test_<req>_<thema>.py`-Testmodulen, gruppiert nach Anforderung
-- Das Browser-Fixture **MUSS** Session-Geltungsbereich haben, standardmäßig auf Headless-Chrome laufen, Firefox über eine `--browser`-Option unterstützen und die Optionen `--base-url` und `--generate-protocol` bereitstellen; die Base-URL **MUSS** eine konfigurierbare Option sein, nie ein fest verdrahteter Host
+- Das Browser-Fixture **MUSS** Session-Geltungsbereich haben, standardmäßig auf Headless-Chrome laufen, Firefox über eine `--browser`-Option unterstützen und die Optionen `--base-url` und `--generate-protocol` bereitstellen; die Base-URL **MUSS** eine konfigurierbare Option sein, nie ein fest verdrahteter Host. Ein Projekt, das auf ein **Browser-Fixture pro Test (Function-Scope)** ausweichen muss, um Zustands-Verschleppung zwischen Tests zu vermeiden, **MUSS** den Grund dokumentieren und die zusätzliche Session-Allokation pro Test als bekannte Kosten behandeln, die anderswo auszugleichen sind — durch weniger, ausschließlich journey-basierte E2E-Tests und API-geseedete Vorbedingungen statt UI-Durchklicken
 - `BasePage` **MUSS** die Warte-/Interaktions-Helfer bereitstellen (`navigate`, `wait_for_element`, `wait_for_element_visible`, `wait_for_element_clickable`, `wait_for_loading_complete`, `wait_for_url_contains`, framework-kompatibles Leeren/Füllen von Feldern); die Marker `smoke`, `core_crud`, `requires_auth` **MÜSSEN** registriert sein
 - Die neben dieser Spec mitgelieferten Referenz-Templates (`templates/`) sind der kanonische Ausgangspunkt nach Gen-Standard; `e2e-test-generator` **MUSS** sie als anzupassendes Grundgerüst behandeln, und `e2e-test-reviewer` **MUSS** sie als Konformitäts-Basislinie behandeln
 

@@ -40,7 +40,7 @@ Detect the user's language and respond in it. All `git`, `gh`, and `Agent(subage
 Before any classification:
 
 - Confirm the working directory is a git repository and `gh auth status` reports authenticated.
-- Confirm `spec/project/workflow-health/<canonical_language>.md` exists in the current project. If missing, stop and report—without it the classifications are ad-hoc; this skill is the spec's implementer, not its replacement.
+- Confirm `spec/project/workflow-health/<canonical_language>.md` is reachable — in the current project or, when absent there, at `${CLAUDE_PLUGIN_ROOT}/spec/project/workflow-health/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin). If neither is reachable, stop and report—without it the classifications are ad-hoc; this skill is the spec's implementer, not its replacement.
 - The user supplies the failing workflow run (a `gh run view <id>` URL, a workflow file name like `release-publish.yml`, or "the red one on develop"). If nothing is supplied, run `gh run list --status failure --branch develop --limit 5` and ask which run to triage.
 
 ## Operations
@@ -53,6 +53,13 @@ Run in parallel:
 - `gh api repos/<owner>/<repo>/actions/runs/<id>/jobs --jq '.jobs[] | {name, conclusion, html_url}'`
 - `gh run view <id> --log-failed` (capture the failing-step output for classification)
 - `git log --oneline -1 <headSha>` (resolve the commit under the run)
+
+**Tooling (optional GitHub MCP):** the GitHub reads above are Actions / workflow-run
+reads. When a connected GitHub MCP server exposes an actions read toolset, prefer it
+and verify the exact tool names against the pinned server version, per
+`spec/claude/mcp-tool-preference/`; the reference hosted endpoint exposes no actions
+toolset, so these reads stay on `gh` (a documented OQ-D coverage gap). `gh` stays
+authoritative and the fallback is never removed.
 
 Confirm the run is on `develop` or `main` (the spec's scope) and is `conclusion: failure`. If it's still `in_progress`, stop and ask the user to wait for completion before triage; if it's `cancelled`, classify as `other` with a one-line note and stop.
 
@@ -84,10 +91,6 @@ The set of available agents changes over time; never freeze a snapshot of "which
 
 The dynamic-lookup design means a new specialised agent that lands in `agents/` becomes dispatchable immediately, without a coordinated edit to this skill — and a renamed or removed agent stops being a target the next time the skill runs, with no stale snapshot to mislead the dispatch.
 
-## Old patterns
-
-Earlier revisions of this skill enumerated specific agent names inline (for example `workflow-yaml-fixer`, `claude-plugin-developer`, `audience-doc-author`) as the dispatch table. That snapshot rotted whenever a new agent landed or an existing one renamed; the runtime-Glob design above replaces it. The historical mapping is preserved here only so a reader who recognises the prior wording can spot the transition: `defect` in workflow YAML used to fall back to generalist (no matching agent), `defect` in spec / skill / agent files used to dispatch `claude-plugin-developer`, `defect` in documentation used to dispatch `audience-doc-author`. Use the runtime lookup above instead of this snapshot.
-
 ### 4. Verify the fix PR carries the audit trail
 
 Whether the editing was done by a specialised agent or the generalist, the resulting fix PR **MUST** carry both pieces of evidence in its **Risk / rollout notes** section per the `pull-request-workflow` spec:
@@ -106,6 +109,10 @@ After the fix PR opens, the skill stops. The actual merge belongs to `pull-reque
 - waive a still-failing required check on the fix PR (the spec forbids `continue-on-error` masking and required-check removal)
 
 Report back the run ID, the classification, the dispatched agent name (or "generalist"), the fix-PR URL, and a one-line "next action: invoke `pull-request-merge` after CI is green".
+
+## Old patterns
+
+Earlier revisions of this skill enumerated specific agent names inline (for example `workflow-yaml-fixer`, `claude-plugin-developer`, `audience-doc-author`) as the dispatch table. That snapshot rotted whenever a new agent landed or an existing one renamed; the runtime-Glob design in Operation 3 replaces it. The historical mapping is preserved here only so a reader who recognises the prior wording can spot the transition: `defect` in workflow YAML used to fall back to generalist (no matching agent), `defect` in spec / skill / agent files used to dispatch `claude-plugin-developer`, `defect` in documentation used to dispatch `audience-doc-author`. Use the runtime lookup in Operation 3 instead of this snapshot.
 
 ## Examples
 

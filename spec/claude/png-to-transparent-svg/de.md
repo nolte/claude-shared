@@ -4,7 +4,7 @@ Status: draft
 
 ## Kontext
 
-KI-Bildgeneratoren (Gemini, DALL-E, Midjourney und ähnliche — diese Liste ist illustrativ für das Muster, keine erschöpfende oder normative Menge) liefern häufig PNGs aus, in denen das Schachbrettmuster, das eigentlich „transparent" signalisieren soll, tatsächlich in die RGB-Kanäle gemalt ist — mit `alpha=255` überall. Vektorisierer wie vtracer behandeln dieses Muster als legitimen Bildinhalt, sodass das resultierende SVG ein vollflächiges Schachbrett hinter dem Motiv trägt. Bis diese Spec landet, operationalisiert der Agent `agents/png-to-transparent-svg.md` (Erbe früherer Bild-Utility-Arbeit) die Reinigungs-und-Vektorisierungs-Schleife ohne autorisierende Spec — ein `spec-drift-audit`-Befund (D-3 in der Cross-Cutting-Coverage-Matrix). Diese Spec schließt den Drift, indem sie formalisiert, was der Agent tut, was nicht, und wie ein nachgelagerter Konsument seine Ausgabe beurteilt.
+KI-Bildgeneratoren (Gemini, DALL-E, Midjourney und ähnliche — diese Liste ist illustrativ für das Muster, keine erschöpfende oder normative Menge) liefern häufig PNGs aus, in denen das Schachbrettmuster, das eigentlich „transparent" signalisieren soll, tatsächlich in die RGB-Kanäle gemalt ist — mit `alpha=255` überall. Vektorisierer wie vtracer behandeln dieses Muster als legitimen Bildinhalt, sodass das resultierende SVG ein vollflächiges Schachbrett hinter dem Motiv trägt. Bis diese Spec landet, operationalisiert der Agent `plugins/nolte-media/agents/png-to-transparent-svg.md` (Erbe früherer Bild-Utility-Arbeit) die Reinigungs-und-Vektorisierungs-Schleife ohne autorisierende Spec — ein `spec-drift-audit`-Befund (D-3 in der Cross-Cutting-Coverage-Matrix). Diese Spec schließt den Drift, indem sie formalisiert, was der Agent tut, was nicht, und wie ein nachgelagerter Konsument seine Ausgabe beurteilt.
 
 ## Ziele
 
@@ -40,7 +40,7 @@ KI-Bildgeneratoren (Gemini, DALL-E, Midjourney und ähnliche — diese Liste ist
 - [ ] Eine Invocation gegen ein PNG, das bereits echte Alpha-Transparenz trägt, überspringt entweder den Reinigungs-Schritt (direkt vektorisierend) oder lehnt mit klarer Meldung ab — und schreibt niemals stillschweigend Alpha-Werte um
 - [ ] Die Pro-Datei-Zusammenfassung enthält Pixel-Entfernungs-Zählungen, die dem Aufrufer erlauben, Detektor-Ausreißer zu kennzeichnen (zum Beispiel triggert eine Schwelle unter 5 % einen Aufrufer-Review)
 - [ ] Eine Invocation gegen ein PNG, das der Detektor nicht klassifizieren kann (gemischte Eckfarben, teilweise Alpha), warnt und überspringt diese Datei im Pro-Datei-Bericht, statt eine Schwelle zu raten oder den Batch mit einer Frage zu blockieren
-- [ ] Der Agent unter `agents/png-to-transparent-svg.md` zitiert diese Spec in seiner `description` oder seinem Body, sodass der Link auffindbar ist
+- [ ] Der Agent unter `plugins/nolte-media/agents/png-to-transparent-svg.md` zitiert diese Spec in seiner `description` oder seinem Body, sodass der Link auffindbar ist
 - [ ] Die Tools-Liste des Agents ist das Minimum (`Read`, `Bash`, `Glob`) — kein `Write` (Bilddatei-Schreibvorgänge passieren in den über `Bash` aufgerufenen Python-Helfern), kein `Edit`, keine Netzwerk-Tools
 
 ## Offene Fragen

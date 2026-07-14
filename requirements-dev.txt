@@ -16,4 +16,4 @@
 # component keeps its own focused install set.
 jsonschema>=4.21,<5
 PyYAML==6.0.3
-pytest>=8,<9
+pytest>=9,<10

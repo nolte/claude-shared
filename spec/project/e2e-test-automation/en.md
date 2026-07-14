@@ -34,7 +34,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - Running the unit/lint/typecheck gate and classifying its failures—owned by `spec/project/quality-gate/`; this spec covers the E2E tier's *shape and discipline*, not the gate that executes the fast tiers in CI
 - Mandating a specific browser-automation library: the core is framework-neutral; Selenium is the shipped reference profile, not a requirement
 - Authoring or editing the requirement/spec documents a suite traces to
-- Generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work)
+- Generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work). Provisioning those hooks is the provider-side complement, owned by `spec/frontend/testability-identifiers/`
 
 ## Requirements
 
@@ -48,6 +48,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 - The full tier model and the closed functional-tier taxonomy are owned by `spec/project/test-pyramid-foundation/`; this spec **MUST NOT** restate them. A feature's suite **MUST** be tier-complete per that foundation—each behaviour tested at the lowest tier that gives confidence—while this spec governs only the **E2E tier's** shape and discipline
 - The **E2E tier MUST** be reserved for user-journey verification, not for logic better tested a tier down; this is the foundation's lowest-tier-that-gives-confidence rule applied at the apex
+- The characteristic failure mode is an **over-populated apex**: single-surface, field-level assertions (a field shown/hidden, a button enabled/disabled, an empty state, a label, an i18n string, a validation message, a calculation result) run as slow browser tests instead of fast component/unit tests. A suite drifting into the hundreds of E2E tests is a symptom of this; each such test **MUST** be pushed down to the lowest tier that gives confidence, leaving E2E a lean set of cross-layer journeys
 - Coverage governance (coverage as a guide not a target, mutation score as the stronger signal, no fixed cross-tier ratios) is owned by the foundation; this spec **MUST NOT** set numeric coverage targets
 - The `test-pyramid-check` skill **MUST** audit tier completeness against the foundation's taxonomy and the E2E discipline defined below, and report, per feature, which tiers are present, which are missing, and whether the E2E tier follows those disciplines
 
@@ -61,6 +62,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 - Tests **MUST NOT** use fixed-duration sleeps to synchronise with the UI; every wait **MUST** be expressed as an explicit condition (presence, visibility, clickability, URL change, loading-indicator gone)
 - A fixed sleep **MAY** appear only inside a page object, only for a genuinely time-based concern (a bounded animation or debounce), and **MUST** carry a comment justifying it and a small bound
+- A **global implicit wait MUST NOT** be relied on as a synchronisation mechanism. It couples every element lookup to a hidden fixed timeout, composes non-deterministically with explicit condition waits (mixing the two is itself an anti-pattern), and, most costly, makes every *negative* lookup (an intentionally-absent element, a locator-fallback miss) block for the full timeout. Set the implicit wait to zero (or a small floor) and express every wait explicitly; a large implicit wait is the single most common hidden cause of a slow suite
 
 ### Locator strategy
 
@@ -87,6 +89,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - Every assertion **MUST** carry a descriptive failure message that includes the TC-ID and the observed value; empty or tautological assertions (`assert True`, `assert page is not None`) are forbidden
 - A missing precondition (absent seed data) **MUST** cause an explicit, reasoned skip—never a silent early return that lets a test pass without exercising anything
 - Test-created data **MUST** use a unique suffix to stay isolated and reproducible across runs; session-scoped seed data **MUST** be idempotent (check-before-create)
+- Preconditions **MUST** be established through the fastest reliable path (a seeded API call or fixture), and **not** by a click-through of the UI. A test drives through the browser only the interaction it asserts; provisioning precondition state (accounts, entities, navigation) via the UI multiplies runtime and couples unrelated flows into every test
 
 ### Spec traceability
 
@@ -98,7 +101,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 This profile is the binding realisation of the core for Python projects and the default the consuming agents assume when no other stack is declared. A project on another stack replaces this section wholesale but still satisfies the core above.
 
 - The suite **MUST** live under `tests/e2e/` with: `conftest.py` (session fixtures, CLI options, idempotent seed data, marker registration), `protocol_plugin.py` (the protocol generator), `requirements.txt`, a `pages/` package with `base_page.py` plus one `<entity>_<view>_page.py` per page, and `test_<req>_<topic>.py` test modules grouped by requirement
-- The browser fixture **MUST** be session-scoped, default to headless Chrome, support Firefox via a `--browser` option, and expose `--base-url` and `--generate-protocol` CLI options; the base URL **MUST** be a configurable option, never a hard-coded host
+- The browser fixture **MUST** be session-scoped, default to headless Chrome, support Firefox via a `--browser` option, and expose `--base-url` and `--generate-protocol` CLI options; the base URL **MUST** be a configurable option, never a hard-coded host. A project that must drop to a **per-test (function-scoped) browser** to avoid cross-test state bleed **MUST** document the reason and treat the extra per-test session allocation as a known cost to offset elsewhere: fewer journey-only E2E tests and API-provisioned preconditions rather than UI click-through
 - `BasePage` **MUST** provide the waiting/interaction helpers (`navigate`, `wait_for_element`, `wait_for_element_visible`, `wait_for_element_clickable`, `wait_for_loading_complete`, `wait_for_url_contains`, framework-compatible field clear/fill); markers `smoke`, `core_crud`, `requires_auth` **MUST** be registered
 - The reference templates shipped alongside this spec (`templates/`) are the canonical Gen-standard starting point; `e2e-test-generator` **MUST** treat them as the scaffold to adapt, and `e2e-test-reviewer` **MUST** treat them as the conformance baseline
 

@@ -4,8 +4,8 @@ description: "Read-only license-inventory scanner dispatched by the `license-che
 distribution: plugin
 tools: Read, Bash
 model: sonnet
-tags: [audit]
-phase: review
+tags: [audit, dependency]
+phase: quality
 summary: "Read-only license-inventory scanner: SBOM with resolved licenses, SPDX identification, and category classification per stack."
 summary_de: "Nur-Lese-Lizenz-Inventar-Scanner: SBOM mit aufgelösten Lizenzen, SPDX-Identifikation und Kategorie-Klassifizierung pro Stack."
 use_when:
@@ -18,6 +18,7 @@ dont_use_when:
     alternative: dependency-audit-scanner
 see_also:
   - license-check
+  - dependency-audit-scanner
 ---
 
 # License Check Scanner
@@ -37,7 +38,7 @@ Implements the inventory and SPDX-identification stages of `spec/project/license
 
 ## Read-only Bash justification
 
-This agent declares `Bash` as a deliberate exception under `spec/claude/agent-management/` §"Tool access" §Read-only-agent narrow exception. Bash invocations are limited to the following side-effect-free, read-only commands; this agent installs nothing, creates no virtual environment, and writes nothing. SBOM *generation* — the install-and-write step — is the `license-check` skill's job; this agent receives the generated SBOM path and only reads it:
+This agent declares `Bash` as a deliberate exception under `spec/claude/agent-management/` §"Tool access" §Read-only-agent narrow exception. Bash invocations are limited to the following side-effect-free, read-only commands; the agent creates no project virtual environment, adds no project dependency, and writes nothing to the working tree. SBOM *generation* — the install-and-write step — is the `license-check` skill's job; this agent receives the generated SBOM path and only reads it:
 
 - `cat <sbom-path>` — read the CycloneDX SBOM the `license-check` skill generated and passed in
 - `go-licenses report ./...` / `go-licenses csv ./...` — resolve Go licenses, read-only, no mutations
@@ -46,7 +47,9 @@ This agent declares `Bash` as a deliberate exception under `spec/claude/agent-ma
 - `uvx reuse lint` — report REUSE compliance, read-only
 - `find . -maxdepth 3 -name "<manifest>"`, `cat <lockfile>`, `cat LICENSE`, `git ls-files` — discover manifests, lockfiles, and own-license state, no mutations
 
-The agent body MUST NOT invoke any command that installs a package, creates a virtual environment, writes to the working tree, mutates git state, or causes any other side effect: no `uv venv` / `uv pip install`, no SBOM generation, no `git add` / `commit` / `push`, no `gh api -X POST`/`PATCH`/`DELETE`, no `rm`, no edits to `LICENSE`, `REUSE.toml`, or any allowlist. This agent generates nothing and persists nothing; it reads the skill-provided SBOM and resolves any gaps read-only.
+**Ephemeral tool-runner exception.** `npx --yes license-checker-rseidelsohn` and `uvx reuse` fetch the *license-tooling* binary into the runner's own cache (npm's `_npx` cache, uv's tool cache) on first use. This is the one caveat to "installs nothing": these commands may populate a shared tool cache, but they do **not** add or modify any project dependency, do **not** touch `node_modules` / the project virtualenv, and write nothing to the working tree — they only run a resolver read-only over what is already installed. That cache-population is an allowed read-only exception; installing a *project* dependency is not.
+
+The agent body MUST NOT invoke any command that installs a project package, creates a project virtual environment, writes to the working tree, mutates git state, or causes any other side effect: no `uv venv` / `uv pip install`, no SBOM generation, no `git add` / `commit` / `push`, no `gh api -X POST`/`PATCH`/`DELETE`, no `rm`, no edits to `LICENSE`, `REUSE.toml`, or any allowlist. This agent generates nothing and persists nothing to the tree; it reads the skill-provided SBOM and resolves any gaps read-only.
 
 ## Scope and boundaries
 

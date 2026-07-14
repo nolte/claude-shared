@@ -1,4 +1,5 @@
 # Always-on test dependencies (deterministic harness unit tests).
 # The behavioural eval layer additionally needs evals/requirements-eval.txt,
 # but only when RUN_EVALS=1.
-pytest>=8,<9
+pytest>=9,<10
+PyYAML==6.0.3  # tests/test_spec_inheritance.py + scripts/check_spec_inheritance.py
