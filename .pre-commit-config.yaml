@@ -74,7 +74,7 @@ repos:
         pass_filenames: false
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.42.0
+    rev: v0.49.0
     hooks:
       - id: markdownlint
         args:
@@ -87,4 +87,5 @@ repos:
           - MD040  # fenced-code-language
           - MD041  # first-line-h1
           - MD049  # emphasis-style (allow underscore)
+          - MD060  # table-column-style (mixed pipe spacing across existing tables)
           - --
