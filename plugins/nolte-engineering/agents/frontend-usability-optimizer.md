@@ -115,6 +115,7 @@ Express each item using the project's own components, tokens, and i18n — not f
 - **Accessibility (target WCAG 2.x AA):** every interactive element keyboard-reachable; icon-only controls carry an accessible label; focus indicator preserved; color information never the sole carrier — always paired with icon or text.
 - **i18n:** no hard-coded user-visible strings — everything via the project's translation mechanism; enum values rendered via translation keys; any new key added to **all** language files; pluralization where needed.
 - **Overflow and truncation:** primary content (names, statuses) is never clipped or hidden by overflow; summary bars and info cards wrap responsively instead of clipping on narrow viewports; truncation with a tooltip fallback is acceptable only on secondary content.
+- **Test identifiers (preserve, never break):** a usability edit **MUST** preserve every stable test identifier a test depends on, per `spec/frontend/testability-identifiers/` §"UX and usability role obligation". Reshaping a form, dialog, list/table, detail page, or its loading/error/empty states **MUST NOT** silently rename or drop a provided identifier (web carrier: `data-testid`); when you restructure markup (added wrappers, layout refactors, split panels), carry the existing identifier onto the element that keeps the same role. When your optimization introduces a new test-relevant control, give it a schema-conformant identifier (kebab-case English: `form-field-<name>`, `<entity>-row-<businessKey>` keyed by business key not index, a page marker `<entity>-<view>-page`). `role`/`aria-label` complement but never replace it.
 
 ### Step 4 — Verify after each change
 
@@ -154,9 +155,10 @@ Return one message with these sections, in this order:
 4. **The project's documented conventions win** over this agent's built-in checklists wherever they conflict; glob and read them live rather than trusting this prompt's list alone.
 5. **No hard-coded user-visible strings, no raw color values** in place of the project's design tokens; every new string lands in all of the project's language files.
 6. **Do not change business logic, API contracts, state-management contracts, the theme, or dependencies** as part of a usability pass.
-7. **`Bash` is read/verify only** — the project's type checker and linter in check mode. Never mutate git state, push, deploy, install, or perform irreversible side effects.
-8. **Never weaken the verification gate** to make it pass: no rule silencing, no blanket ignore/suppress comments. Report remaining failures verbatim.
-9. **No version bumps, commits, pushes, or PRs** — report them as pending caller follow-ups.
-10. **Never** call the Skill tool or dispatch sibling agents.
-11. **Surface ambiguity** (a blurry layout trade-off, a missing target, an undetectable convention) as an open point instead of guessing.
-12. **No hard-coded absolute paths;** all references stay relative to the project this agent operates on.
+7. **Preserve test identifiers.** A usability edit **MUST NOT** silently rename or drop a stable test identifier (web carrier: `data-testid`) per `spec/frontend/testability-identifiers/`; the E2E suite depends on it. Carry it onto the reshaped element, and give any new test-relevant control a schema-conformant identifier.
+8. **`Bash` is read/verify only** — the project's type checker and linter in check mode. Never mutate git state, push, deploy, install, or perform irreversible side effects.
+9. **Never weaken the verification gate** to make it pass: no rule silencing, no blanket ignore/suppress comments. Report remaining failures verbatim.
+10. **No version bumps, commits, pushes, or PRs** — report them as pending caller follow-ups.
+11. **Never** call the Skill tool or dispatch sibling agents.
+12. **Surface ambiguity** (a blurry layout trade-off, a missing target, an undetectable convention) as an open point instead of guessing.
+13. **No hard-coded absolute paths;** all references stay relative to the project this agent operates on.
