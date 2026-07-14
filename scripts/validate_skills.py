@@ -62,7 +62,7 @@ SKILL_ACTION_TOKENS = {
     "decompose", "define", "derive", "elicit", "execute", "generate", "handoff", "identify",
     "init", "maintain", "manage", "management", "merge", "optimize",
     "orchestrate", "plan", "refactor", "refine", "review", "revise",
-    "start", "sweep", "triage", "trigger",
+    "scope", "start", "sweep", "triage", "trigger",
 }
 # Closed exception list: established skill names whose trailing token is not an
 # action token and that predate or otherwise outweigh a breaking rename. Kept in
