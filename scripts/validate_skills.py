@@ -606,6 +606,55 @@ def check_agent_tree(agents_dir: Path) -> list[Finding]:
     return findings
 
 
+# Per-plugin agent-description routing-budget guardrail (R-9 / sprint 0005).
+# Claude Code loads every agent `description` into its ~15k-token agent-routing
+# budget on every turn, and a consumer installing these plugins inherits that
+# weight. This gate freezes the F-7 post-remediation baseline per plugin so the
+# aggregate cannot silently creep back toward the ceiling. Metric: the 4-char/
+# token estimate (len(concat) // 4) over the concatenated `description` of every
+# agent under a plugin's agents/ root — the single method fixed in F-5 and reused
+# by check_body_token_estimate. Baseline chars are recorded in
+# .audits/shared-plugin-analysis/2026-07-19-post-remediation-baseline.md; raising
+# one requires re-measuring and updating both places with a recorded rationale.
+AGENT_DESC_BUDGET_HEADROOM = 0.15  # +15% slack for legitimately-added agents
+# key = agents/ dir relative to REPO ; value = post-remediation baseline chars (F-7)
+AGENT_DESC_BASELINE_CHARS = {
+    "agents": 11451,                          # nolte-shared (23 agents)
+    "plugins/nolte-engineering/agents": 15700,  # nolte-engineering (29 agents)
+    "plugins/nolte-media/agents": 1108,        # nolte-media (2 agents)
+}
+
+
+def check_agent_description_budget(agents_dir: Path) -> list[Finding]:
+    """Fail when a plugin's aggregate agent-`description` weight exceeds its
+    frozen R-9 ceiling (baseline + headroom). Reuses the 4-char/token estimate.
+
+    A plugin without a recorded baseline is not gated (returns no findings), so a
+    newly-added plugin doesn't fail closed before its baseline is captured.
+    """
+    key = agents_dir.relative_to(REPO).as_posix()
+    baseline = AGENT_DESC_BASELINE_CHARS.get(key)
+    if baseline is None:
+        return []
+    concat = "".join(
+        ((parse_frontmatter(md.read_text(encoding="utf-8")) or {}).get("description") or "")
+        for md in sorted(agents_dir.glob("*.md"))
+    )
+    ceiling = int(baseline * (1 + AGENT_DESC_BUDGET_HEADROOM))
+    if len(concat) > ceiling:
+        return [Finding(
+            "Critical", key, "agent-management.description-budget-regression",
+            f"aggregate agent `description` weight {len(concat)} chars "
+            f"(~{len(concat) // 4} est. tokens) exceeds the frozen R-9 ceiling "
+            f"{ceiling} chars (~{ceiling // 4} tokens = baseline {baseline} + "
+            f"{int(AGENT_DESC_BUDGET_HEADROOM * 100)}% headroom); trim descriptions "
+            f"to agent-management §Description contract, or raise the baseline in "
+            f"AGENT_DESC_BASELINE_CHARS and the post-remediation-baseline artefact "
+            f"with a recorded rationale",
+        )]
+    return []
+
+
 def discover_default_targets() -> list[str]:
     """Default scan scope: the root plugin's skills/ + agents/, plus every
     in-repo plugin under plugins/<name>/ that ships a skills/ or agents/ tree.
@@ -661,6 +710,7 @@ def main() -> int:
         p = REPO / t
         if p.is_dir() and p.name == "agents":
             all_findings.extend(check_agent_tree(p))
+            all_findings.extend(check_agent_description_budget(p))
 
     if not all_findings:
         print(f"validate_skills: {len(paths)} artifacts checked, no findings")
