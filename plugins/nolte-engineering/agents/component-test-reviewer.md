@@ -1,6 +1,6 @@
 ---
 name: component-test-reviewer
-description: "Reviews existing component tests against spec/project/test-tier-component/ (frontend UI or service/backend), returns a checklist-based conformance verdict, and applies only minimal surgical fixes. Checks observable-output assertions, user-facing query priority, the externals-doubled-at-the-boundary rule, the in/out-of-process choice, determinism, and anti-patterns (asserting internals, shallow rendering, snapshot overuse, a real external, flaky time/network). Invoke when the user asks to review, audit, or repair component tests. Don't use to scaffold them (`component-test-generator`), for another tier reviewer, or to audit pyramid shape (`test-pyramid-check`)."
+description: "Reviews existing component tests against spec/project/test-tier-component/ (frontend UI or service/backend), returns a checklist conformance verdict, and applies only minimal surgical fixes. Invoke to review, audit, or repair component tests. Don't use to scaffold them (`component-test-generator`), for another tier reviewer, or to audit pyramid shape (`test-pyramid-check`)."
 distribution: plugin
 tools: Read, Edit, Glob, Grep, Bash
 phase: review

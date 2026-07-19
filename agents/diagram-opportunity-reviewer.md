@@ -1,6 +1,6 @@
 ---
 name: diagram-opportunity-reviewer
-description: "Read-only prose scanner that flags Markdown passages better expressed as a Mermaid diagram. Walks the in-scope set (default docs/<lang>/**/*.md), matches prose against the `spec/project/mermaid-diagrams/` diagram catalog (flowchart, C4Component, classDiagram, sequenceDiagram, erDiagram), and returns JSON findings (suggestion/info) for the dispatching skill to persist under .audits/diagram-opportunity/ — the read-only agent itself writes nothing. Twin of `mermaid-diagram-reviewer`, which audits existing diagrams; this one audits prose for missing ones. Invoke when the user asks to review docs for missing diagrams or find visualization candidates; also German requests. Don't use to generate diagrams (`mermaid-diagrams-apply`) or rewrite prose (read-only)."
+description: "Read-only prose scanner that flags Markdown passages better expressed as a Mermaid diagram. Walks the in-scope set (default docs/<lang>/**/*.md), matches prose against the `spec/project/mermaid-diagrams/` catalog, and returns JSON findings for the dispatching skill to persist; writes nothing. Twin of `mermaid-diagram-reviewer` (audits existing diagrams). Invoke to review docs for missing diagrams or find visualization candidates; also German. Don't use to generate diagrams (`mermaid-diagrams-apply`) or rewrite prose."
 distribution: plugin
 tools: Read, Grep, Glob, Bash
 tags: [review, audit]

@@ -1,6 +1,6 @@
 ---
 name: quality-gate-enforcer
-description: "Reviews the quality-gate wiring (Taskfile targets, .pre-commit-config.yaml, .github/workflows/ci.yml, timeouts) for spec-conformance against spec/project/quality-gate/ plus delimitation against workflow-health, dependency-audit, and release-automation. Read-only — structured findings (composition-gap, runner-drift, shape-violation, timeout-missing, delimitation-leak, clean). Distinct from the `quality-gate` skill, which invokes the gate; this agent audits the wiring, never runs it. Invoke when the user asks to audit or review the quality-gate wiring or check it's spec-compliant; also German requests. Don't use to run the gate (`quality-gate`), triage red CI (`workflow-health-triage`), or audit CVEs (`dependency-audit`)."
+description: "Read-only review of the quality-gate wiring (Taskfile targets, .pre-commit-config.yaml, ci.yml, timeouts) for spec-conformance against spec/project/quality-gate/, plus delimitation against workflow-health, dependency-audit, and release-automation. Returns structured findings; audits the wiring, never runs it. Invoke to audit or review the quality-gate wiring; also German. Don't use to run the gate (`quality-gate`), triage red CI (`workflow-health-triage`), or audit CVEs (`dependency-audit`)."
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]

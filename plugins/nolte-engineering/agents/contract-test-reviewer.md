@@ -1,6 +1,6 @@
 ---
 name: contract-test-reviewer
-description: "Reviews existing contract tests against spec/project/test-tier-contract/, returns a checklist-based conformance verdict, and applies only minimal surgical fixes. Checks the without-both-sides-live model (consumer vs mock, provider by replay), compatibility-only assertions (shape, types, status, protocol), the broker and can-i-deploy gate, and anti-patterns (asserting business logic, full-integration drift, over-specifying, unreconciled versions). Invoke when the user asks to review, audit, or repair contract tests. Don't use to scaffold them (`contract-test-generator`), for another tier reviewer, or to audit pyramid shape (`test-pyramid-check`)."
+description: "Reviews existing contract tests against spec/project/test-tier-contract/, returns a checklist conformance verdict, and applies only minimal surgical fixes. Invoke to review, audit, or repair contract tests. Don't use to scaffold them (`contract-test-generator`), for another tier reviewer, or to audit pyramid shape (`test-pyramid-check`)."
 distribution: plugin
 tools: Read, Edit, Glob, Grep, Bash
 phase: review

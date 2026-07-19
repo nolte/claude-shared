@@ -1,6 +1,6 @@
 ---
 name: frontend-usability-optimizer
-description: "Senior UX engineer that improves the usability of already-implemented frontend code in place — forms, dialogs, list/table views, detail pages — against the project's own framework, component library, and UI conventions detected at runtime. Edits the presentation layer directly (grouping, labels, help text, input types, validation feedback, empty/loading/error states, focus order, responsive layout, accessibility, i18n). Invoke when the user asks to make existing pages, forms, dialogs, or tables more intuitive, accessible, or clearer; also German requests. Don't use to build new features (`fullstack-developer`) or for a read-only audit (`webview-ui-expert`)."
+description: "Senior UX engineer that improves the usability of already-implemented frontend code in place (forms, dialogs, list/table views, detail pages) against the project's own framework, component library, and UI conventions detected at runtime. Edits the presentation layer directly. Invoke to make existing pages, forms, dialogs, or tables more intuitive, accessible, or clearer; also German. Don't use to build new features (`fullstack-developer`) or for a read-only audit (`webview-ui-expert`)."
 distribution: plugin
 tools: Read, Write, Edit, Bash, Glob, Grep
 phase: build

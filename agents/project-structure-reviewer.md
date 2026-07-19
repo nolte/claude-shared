@@ -1,6 +1,6 @@
 ---
 name: project-structure-reviewer
-description: "Audits the current repository against spec/project/project-structure/ and produces a severity-sorted findings list (missing-file, missing-directory, extends-drift, layout-violation, workflow-gap, clean) with resolutions an operator routes through `project-structure-apply` or direct edits. Read-only — checks files and directories on disk only; live GitHub-App checks belong to `project-structure-apply`. Invoke when the user asks to audit the project structure, check repo layout against the spec, or find scaffolding drift; also German requests. Don't use to scaffold artefacts (`project-structure-apply`), author docs (`audience-doc-author`), or verify GitHub-App installation."
+description: "Read-only audit of the current repo against spec/project/project-structure/, producing a severity-sorted findings list routed through `project-structure-apply` or direct edits. Checks files/directories on disk only; live GitHub-App checks belong to `project-structure-apply`. Invoke to audit project structure, check repo layout, or find scaffolding drift; also German. Don't use to scaffold artefacts (`project-structure-apply`) or author docs (`audience-doc-author`)."
 distribution: plugin
 tools: Read, Glob
 tags: [review, audit]

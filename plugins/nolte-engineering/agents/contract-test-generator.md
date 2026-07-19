@@ -1,6 +1,6 @@
 ---
 name: contract-test-generator
-description: "Scaffolds spec-conformant contract tests against spec/project/test-tier-contract/, verifying a service-to-service agreement without standing up both sides live. Defaults to the consumer-driven model (consumer records a contract; provider verified by replay), also provider-driven or bi-directional. Wires the consumer mock, provider states, a broker, and a can-i-deploy gate; asserts agreement compatibility only (shape, types, status, protocol), never business logic. Invoke when the user asks to generate contract or consumer-driven-contract tests. Don't use to review them (`contract-test-reviewer`), for another tier (matching tier generator), or to run the gate (`quality-gate`)."
+description: "Scaffolds spec-conformant contract tests against spec/project/test-tier-contract/, verifying a service-to-service agreement without standing up both sides live. Defaults to consumer-driven (consumer records a contract; provider verified by replay), also provider-driven or bi-directional; asserts compatibility only, never business logic. Invoke to generate contract or consumer-driven-contract tests. Don't use to review them (`contract-test-reviewer`), for another tier (matching tier generator), or to run the gate (`quality-gate`)."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 phase: build

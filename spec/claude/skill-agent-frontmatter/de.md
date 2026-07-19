@@ -75,7 +75,7 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 | Feld | gilt für | Typ | Limits / erlaubte Werte | Provenienz | Owner |
 |---|---|---|---|---|---|
 | `name` | both | string | 1–64 Zeichen; lowercase ASCII Buchstaben/Ziffern/Bindestriche; kein führender/abschließender Bindestrich; kein `--`; kein reserviertes Token `anthropic`/`claude`; keine XML-Tags; gleich dem Ordner-/Dateinamen | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Structure |
-| `description` | both | string | nicht-leer; ≤1024 Zeichen; dritte Person; nennt *was* und *wann*; keine XML-Tags | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Structure |
+| `description` | both | string | nicht-leer; ≤1024 Zeichen; dritte Person; nennt *was* / *wann* / *don't-use-for-X→Y*-Form; keine XML-Tags; Agents zusätzlich: keine `user:`/`assistant:`/`<commentary>`/`<example>`-Blöcke, knappe Delimitations-Ketten | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Structure / §Description contract |
 | `distribution` | agent | enum | genau `plugin` oder `project` | nolte | `agent-management` §Distribution |
 | `phase` | both | enum | eines von `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`; niemals eine Liste | nolte | `skill-agent-catalog` §Phase classification |
 

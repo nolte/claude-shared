@@ -1,11 +1,11 @@
 ---
 id: F-7
 title: Shared agent-description remediation
-status: ready
+status: done
 roadmap_item: R-9
 sprint: 5
 created: 2026-07-11
-ended: null
+ended: 2026-07-19
 verifies_sprint_value: null
 consistency_check:
   performed_at: 2026-07-11
@@ -27,17 +27,17 @@ Every shared agent `description` across the three plugins (`nolte-shared`, `nolt
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** Every shared agent `description` (across `nolte-shared`, `nolte-engineering`, and `nolte-media`) conforms to the F-6 contract shape.
-- [ ] **acceptance-2** No shared agent `description` contains an embedded `user:`/`assistant:`/`<commentary>` example or commentary block.
-- [ ] **acceptance-3** Routing correctness is preserved: the affected agents are spot-checked via `agent-review` and no routing regression is recorded.
-- [ ] **acceptance-4** The post-remediation per-plugin aggregate agent-description token weight is measured using F-5's documented method and recorded as the guardrail baseline consumed by F-8.
+- [x] **acceptance-1** Every shared agent `description` (across `nolte-shared`, `nolte-engineering`, and `nolte-media`) conforms to the F-6 contract shape.
+- [x] **acceptance-2** No shared agent `description` contains an embedded `user:`/`assistant:`/`<commentary>` example or commentary block.
+- [x] **acceptance-3** Routing correctness is preserved: the affected agents are spot-checked via `agent-review` and no routing regression is recorded.
+- [x] **acceptance-4** The post-remediation per-plugin aggregate agent-description token weight is measured using F-5's documented method and recorded as the guardrail baseline consumed by F-8.
 
 ## Test hooks
 
-- **acceptance-1** — manual: sample descriptions across all three plugins; assert each matches the F-6 contract shape — `pending`
-- **acceptance-2** — CLI/grep: search every shared agent `description` for `user:`/`assistant:`/`<commentary>`; assert zero hits — `pending`
-- **acceptance-3** — skill: run `agent-review` on the remediated agents; assert no routing regression finding — `pending`
-- **acceptance-4** — manual: confirm the recorded per-plugin baseline number and that it was produced by F-5's documented method — `pending`
+- **acceptance-1** — manual: sample descriptions across all three plugins; assert each matches the F-6 contract shape — `passing`
+- **acceptance-2** — CLI/grep: search every shared agent `description` for `user:`/`assistant:`/`<commentary>`; assert zero hits — `passing`
+- **acceptance-3** — skill: run `agent-review` on the remediated agents; assert no routing regression finding — `passing`
+- **acceptance-4** — manual: confirm the recorded per-plugin baseline number and that it was produced by F-5's documented method — `passing`
 
 ## Consistency notes
 

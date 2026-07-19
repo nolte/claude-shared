@@ -1,6 +1,6 @@
 ---
 name: tech-stack-drift-reviewer
-description: "Audits a repository's declared tech-stack manifest (project/portfolio.yml tech_stack: for Portfolio-Members; portfolio/tech-stack.yml for the claude-shared global stack) against spec/portfolio/tech-stack/ and tech-stack-discovery/, plus on-disk signals (lockfiles, configs, workflows), to detect drift between declared and actual. Read-only — structured findings (schema-violation, inheritance-drift, signal-missing, signal-orphan, lifecycle-stale, clean). Invoke when the user asks to audit the tech stack, check tech-stack drift, or diff declared stack against repo signals; also German requests. Don't use to author the manifest (`tech-stack-capture`), render the portfolio inventory (`portfolio-audit`), or bump versions (`dependency-audit`/Renovate)."
+description: "Read-only audit of a repo's declared tech-stack manifest (project/portfolio.yml tech_stack: for members; portfolio/tech-stack.yml globally) against spec/portfolio/tech-stack/ and tech-stack-discovery/, plus on-disk signals (lockfiles, configs, workflows), to detect declared-vs-actual drift. Returns structured findings. Invoke to audit the tech stack, check tech-stack drift, or diff declared stack against repo signals; also German. Don't use to author the manifest (`tech-stack-capture`), render the portfolio inventory (`portfolio-audit`), or bump versions (`dependency-audit`)."
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]

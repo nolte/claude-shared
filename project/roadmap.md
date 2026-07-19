@@ -146,7 +146,7 @@ detail: fine
 outcomes: [O-1, O-2]
 target_sprint: 5
 mvp: false
-status: proposed
+status: active
 ```
 
 The three shared plugins load ~9k of Claude Code's ~15k agent-description routing budget into every consumer's context on every turn, leaving repos like `kamerplanter` too little headroom for their own agents. Analyse the marketplace/plugin/agent/skill layout with measured token costs, decide and document the `nolte-shared` boundary (split vs. slim, bound by the distribution-contract rule in `spec/claude/plugin-scoping/`), normalise shared agent descriptions to a documented contract, and add a per-plugin regression guardrail in `scripts/validate_skills.py`; deeper agent/skill rework is deferred to follow-on features. Grounded in issue #371 (`.audits/issue-orchestrate/371/analysis.md`, `project/requirements/shared-plugin-restructure.md`).

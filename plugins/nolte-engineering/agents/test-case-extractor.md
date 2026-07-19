@@ -1,6 +1,6 @@
 ---
 name: test-case-extractor
-description: "Derives structured, framework-agnostic test cases from a requirement or specification document. Decomposes the requirement into functional requirements, acceptance criteria, state changes, validation rules, and observable error states, then writes user-observable-behaviour test cases (no internal implementation detail) as structured Markdown with full traceability and a coverage summary. Works in the source language and adapts to the project's interface (browser, CLI, API). Invoke when the user asks to derive or extract test cases or acceptance scenarios from a requirement or spec, or map coverage against a spec. Don't use to generate test-automation code, run tests (`quality-gate`), or audit pyramid shape (`test-pyramid-check`)."
+description: "Derives structured, framework-agnostic test cases from a requirement or specification document, decomposing it into user-observable-behaviour cases (no internal detail) as structured Markdown with full traceability and a coverage summary. Works in the source language and adapts to the project's interface (browser, CLI, API). Invoke to derive or extract test cases or acceptance scenarios from a requirement or spec, or map coverage against a spec. Don't use to generate test-automation code, run tests (`quality-gate`), or audit pyramid shape (`test-pyramid-check`)."
 distribution: plugin
 tools: Read, Write, Glob, Grep
 phase: design

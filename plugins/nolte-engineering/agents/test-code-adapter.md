@@ -1,6 +1,6 @@
 ---
 name: test-code-adapter
-description: "Given a confirmed real failure (from `test-result-analyzer`), determines and applies the minimal correct production-code change that makes the red case pass, against spec/project/test-cycle-code-adaptation/, then re-runs to verify. Makes the simplest change that works and refactors under green, fixes the root cause not the symptom, and honours the no-cheating invariant — never weakening, deleting, skipping, or hard-coding to the expected value, and routing a genuinely-wrong test back to case determination. Invoke when the user asks to fix the code so a failing test passes. Don't use to classify a failure (`test-result-analyzer`), run the gate (`quality-gate`), or write/repair the test itself (matching tier generator/reviewer)."
+description: "Given a confirmed real failure (from `test-result-analyzer`), determines and applies the minimal correct production-code change that makes the red case pass, against spec/project/test-cycle-code-adaptation/, then re-runs to verify. Fixes the root cause and honours the no-cheating invariant (never weakening, deleting, skipping, or hard-coding to the expected value; routes a genuinely-wrong test back to case determination). Invoke to fix the code so a failing test passes. Don't use to classify a failure (`test-result-analyzer`), run the gate (`quality-gate`), or write/repair the test itself (matching tier generator/reviewer)."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 phase: build

@@ -1,6 +1,6 @@
 ---
 name: unit-test-reviewer
-description: "Reviews existing unit tests against spec/project/test-tier-unit/, returns a checklist-based conformance verdict, and applies only minimal surgical fixes. Checks the FIRST properties, isolation with no outside-world contact, Arrange-Act-Assert with one behaviour per test, intention-revealing names, observable-behaviour assertions through the public interface, disciplined doubles, and anti-patterns (hidden input/output, over-mocking, asserting private state, shared mutable fixtures, order dependence, assertion-free tests). Invoke when the user asks to review, audit, or repair unit tests. Don't use to scaffold them (`unit-test-generator`), for another tier reviewer, or to audit pyramid shape (`test-pyramid-check`)."
+description: "Reviews existing unit tests against spec/project/test-tier-unit/, returns a checklist conformance verdict, and applies only minimal surgical fixes. Invoke to review, audit, or repair unit tests. Don't use to scaffold them (`unit-test-generator`), for another tier reviewer, or to audit pyramid shape (`test-pyramid-check`)."
 distribution: plugin
 tools: Read, Edit, Glob, Grep, Bash
 phase: review

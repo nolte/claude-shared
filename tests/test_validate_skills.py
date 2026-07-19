@@ -117,3 +117,29 @@ def test_use_when_over_length_flags_critical():
     text = f'---\nname: x\ndescription: ok\nuse_when:\n  - "{long}"\n---\nb\n'
     findings = v.check_use_case_field_lengths(text, "x/SKILL.md", "skill")
     assert _rules(findings) == {"skill-management.frontmatter-use-case-field"}
+
+
+# --- R-9 / F-8: per-plugin agent-description budget guardrail ---------------
+
+def test_description_budget_clean_at_frozen_baseline():
+    # Every plugin with a recorded baseline sits at/under baseline+headroom, so
+    # the gate is silent on the current tree (this is the durable-headroom claim).
+    for key in v.AGENT_DESC_BASELINE_CHARS:
+        assert v.check_agent_description_budget(v.REPO / key) == [], key
+
+
+def test_description_budget_fires_on_regression(monkeypatch):
+    # Shrink one plugin's frozen baseline so the current aggregate breaches it:
+    # the value-verifier must fail on regression (F-8 acceptance-1).
+    monkeypatch.setitem(v.AGENT_DESC_BASELINE_CHARS, "agents", 5000)
+    findings = v.check_agent_description_budget(v.REPO / "agents")
+    assert len(findings) == 1
+    assert findings[0].severity == "Critical"
+    assert findings[0].rule == "agent-management.description-budget-regression"
+
+
+def test_description_budget_ungated_dir_noops(monkeypatch):
+    # A plugin without a recorded baseline is not gated (no fail-closed on a new
+    # plugin before its baseline is captured).
+    monkeypatch.delitem(v.AGENT_DESC_BASELINE_CHARS, "agents", raising=False)
+    assert v.check_agent_description_budget(v.REPO / "agents") == []

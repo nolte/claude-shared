@@ -1,7 +1,7 @@
 ---
 number: 0005
-status: planned
-started: null
+status: active
+started: 2026-07-19
 ended: null
 value_statement: "Consumer repositories can enable the shared nolte plugins and still keep enough room for their own agents, without Claude Code's agent-description routing budget tripping the ~15k warning."
 artifact_ref: null
@@ -20,10 +20,10 @@ Deeper agent/skill rework (merge, split, retire, or rewrite beyond descriptions)
 
 ## Features
 
-- [F-5](`../features/shared-plugin-structural-analysis.md`) — status: ready
-- [F-6](`../features/agent-description-contract.md`) — status: ready
-- [F-7](`../features/shared-agent-description-remediation.md`) — status: ready
-- [F-8](`../features/agent-description-budget-guardrail.md`) — status: ready
+- [F-5](`../features/shared-plugin-structural-analysis.md`) — status: done
+- [F-6](`../features/agent-description-contract.md`) — status: done
+- [F-7](`../features/shared-agent-description-remediation.md`) — status: done
+- [F-8](`../features/agent-description-budget-guardrail.md`) — status: done
 
 ## Out of scope
 

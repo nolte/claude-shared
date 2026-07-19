@@ -1,6 +1,6 @@
 ---
 name: prose-vale-curator
-description: "Curates prose in the current project so it passes Vale, preferring terms from the shipped vocabularies, and — only inside a repository that owns Vale vocabulary source (e.g. nolte/vale-style) — extends an accept.txt when a term is a legitimate technical identifier. Invoke when the user asks to make a doc Vale-clean, fix Vale alerts, or rephrase until Vale is green; also German requests. Don't use for net-new documentation (`audience-doc-author`), auditing whether local vocab should be retired or upstreamed (`vocab-drift-audit`), or authoring Vale rule YAML. Supports resume per `spec/claude/resumable-work/`."
+description: "Curates prose so it passes Vale, preferring shipped-vocabulary terms, and (only inside a repo that owns Vale vocabulary source, e.g. nolte/vale-style) extends an accept.txt for a legitimate technical identifier. Invoke to make a doc Vale-clean, fix Vale alerts, or rephrase until Vale is green; also German. Supports resume. Don't use for net-new documentation (`audience-doc-author`), auditing whether local vocab should be retired/upstreamed (`vocab-drift-audit`), or authoring Vale rule YAML."
 distribution: plugin
 tools: Read, Edit, Grep, Glob, Bash
 tags: [prose, audit]

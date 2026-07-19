@@ -1,6 +1,6 @@
 ---
 name: unit-test-generator
-description: "Scaffolds spec-conformant unit tests for a module or feature against spec/project/test-tier-unit/, defaulting to a pytest reference profile. Wires the FIRST properties (fast, isolated, no real input/output), the project's solitary-or-sociable style, Arrange-Act-Assert with one behaviour per test, intention-revealing names, disciplined test doubles (no over-mocking), observable-behaviour assertions through the public interface, and TC-ID traceability. Invoke when the user asks to generate unit tests or turn test cases into runnable unit tests. Don't use to review them (`unit-test-reviewer`), for another tier (matching tier generator), to derive test cases (`test-case-extractor`), or to run the gate (`quality-gate`)."
+description: "Scaffolds spec-conformant unit tests for a module or feature against spec/project/test-tier-unit/, defaulting to a pytest reference profile, with the FIRST properties, Arrange-Act-Assert, observable-behaviour assertions, and TC-ID traceability. Invoke to generate unit tests or turn test cases into runnable unit tests. Don't use to review them (`unit-test-reviewer`), for another tier (matching tier generator), to derive test cases (`test-case-extractor`), or to run the gate (`quality-gate`)."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 phase: build

@@ -1,6 +1,6 @@
 ---
 name: sprint-readiness-reviewer
-description: "Reviews a target sprint file under project/sprints/ for readiness against spec/project/sprint/ before `sprint-execute` promotes it planned → active. Read-only — a go/no-go report plus per-finding list (value-statement-drift, missing-verifier, feature-not-ready, cross-ref-missing, lifecycle-violation, clean) with resolutions routed through `sprint-plan`, `feature-decompose`, or `sprint-execute`. Invoke when the user asks to review a sprint before starting, run the sprint readiness gate, or give a go/no-go on sprint N; also German requests. Don't use to author or mutate sprint files (`sprint-plan`), drive lifecycle transitions (`sprint-execute`, `sprint-review`), or author features (`feature-decompose`)."
+description: "Read-only review of a target sprint file under project/sprints/ for readiness against spec/project/sprint/ before `sprint-execute` promotes it planned to active. Returns a go/no-go report plus a per-finding list routed through `sprint-plan`, `feature-decompose`, or `sprint-execute`. Invoke to review a sprint before starting, run the readiness gate, or give a go/no-go on sprint N; also German. Don't use to author or mutate sprint files (`sprint-plan`), drive lifecycle transitions (`sprint-execute`, `sprint-review`), or author features (`feature-decompose`)."
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]

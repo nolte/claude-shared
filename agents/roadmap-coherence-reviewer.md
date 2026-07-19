@@ -1,6 +1,6 @@
 ---
 name: roadmap-coherence-reviewer
-description: "Reviews project/roadmap.md for coherence against spec/project/roadmap/ plus cross-document consistency with goals.md, mission.md, project/sprints/, and project/features/. Read-only — structured findings (shape-drift, id-violation, cross-ref-missing, detail-invariant, lifecycle-drift, clean) with resolutions an operator routes through `roadmap-plan` or `roadmap-refine`. Invoke when the user asks to review the roadmap, audit roadmap coherence, or check roadmap drift against the spec; also German requests. Don't use to author or transition roadmap items (`roadmap-plan`), enforce the detail-level invariant (`roadmap-refine`), or author goals.md or sprints."
+description: "Read-only review of project/roadmap.md for coherence against spec/project/roadmap/ plus cross-document consistency with goals.md, mission.md, project/sprints/, and project/features/. Returns structured findings routed through `roadmap-plan` or `roadmap-refine`. Invoke to review the roadmap, audit roadmap coherence, or check roadmap drift; also German. Don't use to author or transition roadmap items (`roadmap-plan`), enforce the detail-level invariant (`roadmap-refine`), or author goals.md or sprints."
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
