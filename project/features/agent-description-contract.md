@@ -1,11 +1,11 @@
 ---
 id: F-6
 title: Agent-description contract
-status: ready
+status: done
 roadmap_item: R-9
 sprint: 5
 created: 2026-07-11
-ended: null
+ended: 2026-07-19
 verifies_sprint_value: null
 consistency_check:
   performed_at: 2026-07-11
@@ -24,17 +24,17 @@ The contract specifies the required description shape ("what it does / when to a
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** A specification documents the required agent-`description` shape ("what it does / when to activate / don't use for X → use Y"), EN-canonical, and is present in both configured languages.
-- [ ] **acceptance-2** The contract forbids embedded `user:`/`assistant:`/`<commentary>` example blocks in any `description`, directing such content to the agent body.
-- [ ] **acceptance-3** The contract states the delimitation-chain tightening rule: prefer a cheap cross-reference over an enumerated `don't use for …` chain where the cross-reference suffices.
-- [ ] **acceptance-4** `task validate:skills` passes with the contract's spec added and its translations in sync.
+- [x] **acceptance-1** A specification documents the required agent-`description` shape ("what it does / when to activate / don't use for X → use Y"), EN-canonical, and is present in both configured languages.
+- [x] **acceptance-2** The contract forbids embedded `user:`/`assistant:`/`<commentary>` example blocks in any `description`, directing such content to the agent body.
+- [x] **acceptance-3** The contract states the delimitation-chain tightening rule: prefer a cheap cross-reference over an enumerated `don't use for …` chain where the cross-reference suffices.
+- [x] **acceptance-4** `task validate:skills` passes with the contract's spec added and its translations in sync.
 
 ## Test hooks
 
-- **acceptance-1** — manual: confirm the spec file exists in every configured language and states the description shape — `pending`
-- **acceptance-2** — manual: confirm the spec carries an explicit rule banning `user:`/`assistant:`/`<commentary>` blocks in a `description` — `pending`
-- **acceptance-3** — manual: confirm the spec states the delimitation-chain tightening rule — `pending`
-- **acceptance-4** — CLI: `task validate:skills` exits `0` with the new spec present — `pending`
+- **acceptance-1** — manual: confirm the spec file exists in every configured language and states the description shape — `passing`
+- **acceptance-2** — manual: confirm the spec carries an explicit rule banning `user:`/`assistant:`/`<commentary>` blocks in a `description` — `passing`
+- **acceptance-3** — manual: confirm the spec states the delimitation-chain tightening rule — `passing`
+- **acceptance-4** — CLI: `task validate:skills` exits `0` with the new spec present — `passing`
 
 ## Consistency notes
 

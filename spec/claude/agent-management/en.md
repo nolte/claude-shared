@@ -43,6 +43,14 @@ For a consolidated cross-artifact reference of every skill- and agent-frontmatte
 - **MAY** include an optional `summary` field plus a `summary_<lang>` field per additional docs language; both are short (≤200 character) plain strings the catalog renders as a scannable subtitle above the routing `description`. Resolution and fallback rules live in `skill-agent-catalog` §Per-language short summary
 - **MAY** include any of the optional use-case fields `use_when`, `dont_use_when`, `see_also`, or `examples`; the detailed schema and validation rules live in `skill-agent-catalog` §Use-case metadata. Authors **SHOULD** declare them whenever overlap with other artefacts is likely, so the catalog stays scannable and the cross-linking pass can connect related artefacts
 
+### Description contract
+
+The `description` is the field Claude Code loads into the agent-routing budget on every turn, so it **MUST** be both reliably routable and cheap to load. The rules below consolidate and tighten the description guidance already stated under §Structure and §Recommendations into a single contract, so an author has one place to conform to and a reviewer one place to check. `skill-agent-frontmatter` §Field reference digests this contract and points back here; on any discrepancy this owner wins.
+
+- **MUST** follow the description **shape** in this order: (1) *what it does*, the capability in one clause; (2) *when to activate*, concrete user-facing triggers ("use when the user asks X," "invoke for Y") rather than abstract capabilities; (3) *when not to*, the negative cases as `don't use for X → use <other>`. Parts (1) and (2) are always present; part (3) is required only where overlap with another artefact is likely (§Recommendations). This restates, in one shape, the trigger rule in §Structure and the positive/negative-trigger recommendation below.
+- **MUST NOT** embed an example or commentary block inside a `description`: no `user:` / `assistant:` conversation turns, and no `<commentary>` / `<example>` (or any other) tag pair. This specialises the "no XML tags" rule in §Structure to the routing prose, and additionally bars the tag-free `user:` / `assistant:` transcript form. Worked examples, sample dialogues, and rationale belong in the **agent body**, which the router doesn't load into the routing budget. As of the F-5 shared-plugin structural analysis (`.audits/shared-plugin-analysis/2026-07-19.md`) the shared agent surface already carries no such blocks; this rule **locks that clean state** rather than cleaning up existing violations.
+- **SHOULD** keep delimitation **chains tight**: prefer a single cheap cross-reference (`→ use <other>`) over an enumerated `don't use for A → use X; don't use for B → use Y; …` chain when one cross-reference already routes the reader correctly. A long enumerated chain repeats routing tokens that the peer artefact's own `description` and the catalog's `dont_use_when` metadata already carry; name only the delimitation that's genuinely ambiguous and cross-reference the rest. This is a token-economy rule, not a routing-signal cut—never drop a negative trigger that a reader actually needs to route correctly.
+
 ### Tag vocabulary
 - **SHOULD** prefer a term from the starter vocabulary below when one applies, so artifacts in the same functional cluster share the same tag string
 - **MAY** introduce a new tag that follows the normalization rule above when no starter term fits; avoid proliferation by reusing an existing tag whenever the fit is reasonable
@@ -153,6 +161,9 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [ ] Frontmatter parses as valid YAML and contains at minimum `name`, `description`, and `distribution`
 - [ ] `name` in frontmatter equals the filename without `.md`
 - [ ] `description` names concrete triggers the calling Claude can match against user requests
+- [ ] `description` follows the §Description contract shape, stating *what it does*, then concrete activation triggers, then negative cases as `don't use for X → use <other>`, where overlap with another artefact is likely
+- [ ] No `description` embeds an example or commentary block—no `user:` / `assistant:` transcript turns and no `<commentary>` / `<example>` tag pair; such content lives in the agent body, not the routing prose
+- [ ] Delimitation in `description` stays tight—a single cross-reference is preferred over an enumerated `don't use for …` chain wherever the cross-reference already routes the reader correctly
 - [ ] If `tags` is declared in frontmatter, every entry is a lowercase ASCII kebab-case string ≤30 characters and the list contains at most 5 entries
 - [ ] No `tags` entry begins with `_` (underscore-prefixed tags are reserved for catalog-generator auto-tagging)
 - [ ] Frontmatter declares a `phase` field whose value is one of `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, or `cross-cutting`

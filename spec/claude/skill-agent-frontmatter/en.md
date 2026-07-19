@@ -75,7 +75,7 @@ Provenance markers: **Standard·AgentSkills** (Agent Skills spec [R1], portable 
 | Field | Applies to | Type | Limits / allowed values | Provenance | Owner |
 |---|---|---|---|---|---|
 | `name` | both | string | 1–64 chars; lowercase ASCII letters/digits/hyphens; no leading/trailing hyphen; no `--`; no reserved token `anthropic`/`claude`; no XML tags; equals folder/file name | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Structure |
-| `description` | both | string | non-empty; ≤1024 chars; third person; states *what* and *when*; no XML tags | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Structure |
+| `description` | both | string | non-empty; ≤1024 chars; third person; states *what* / *when* / *don't-use-for-X→Y* shape; no XML tags; agents additionally: no `user:`/`assistant:`/`<commentary>`/`<example>` blocks, tightened delimitation chains | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Structure / §Description contract |
 | `distribution` | agent | enum | exactly `plugin` or `project` | nolte | `agent-management` §Distribution |
 | `phase` | both | enum | one of `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`; never a list | nolte | `skill-agent-catalog` §Phase classification |
 
