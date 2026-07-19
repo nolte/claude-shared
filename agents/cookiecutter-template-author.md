@@ -1,6 +1,6 @@
 ---
 name: cookiecutter-template-author
-description: "Scaffolds or refactors a Cookiecutter template (and its pre_prompt/pre_gen/post_gen hooks plus a pytest-cookies harness) so the rendered project conforms to the bound nolte spec corpus. Invoke when the user asks to scaffold, author, or refactor a Cookiecutter template, harden a hook, or set up a pytest-cookies test harness; also German requests. Typically dispatched by the `cookiecutter-template-manage` skill for the authoring step. Don't use for the full template lifecycle with name/purpose discovery (`cookiecutter-template-manage`, which dispatches this agent). Returns created/edited files, a conformance audit, and a caller checklist. Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Scaffolds or refactors a Cookiecutter template (its pre_prompt/pre_gen/post_gen hooks and a pytest-cookies harness) so the rendered project conforms to the bound nolte spec corpus. Invoke to scaffold, author, or refactor a Cookiecutter template, harden a hook, or set up a pytest-cookies harness; also German. Usually dispatched by `cookiecutter-template-manage`. Returns created files, a conformance audit, and a checklist; supports resume. Don't use for the full template lifecycle with name/purpose discovery (`cookiecutter-template-manage`)."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, WebSearch
 tags: [scaffolding, quality-gate]

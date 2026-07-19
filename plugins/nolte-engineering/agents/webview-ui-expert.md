@@ -1,6 +1,6 @@
 ---
 name: webview-ui-expert
-description: "Read-only, cross-file deep review of one named target against the canonical-language file under spec/frontend/webview-ui-optimization/ across five domains (Performance, Security, Accessibility WCAG 2.2 AA, Internationalisation, UX). Produces a severity-sorted findings report naming every violated rule and cross-file coupling, with sources under .audits/webview-ui-expert/. Read-only. Invoke when the user — or `webview-ui-optimize` via expert-review — needs a deeper read of the auth flow, dashboard charts, i18n bootstrap, CSP/Vite/Emotion pipeline, or RTL; also German requests. Don't use for single-rule audits or fixes (`webview-ui-optimize`), CVE auditing (`dependency-audit`), or Vale review (`prose-vale-curator`)."
+description: "Read-only, cross-file deep review of one named target against spec/frontend/webview-ui-optimization/ across five domains (Performance, Security, Accessibility WCAG 2.2 AA, i18n, UX). Produces a severity-sorted findings report with sources under .audits/webview-ui-expert/. Invoke when a deeper read of the auth flow, dashboard charts, i18n bootstrap, CSP/Vite/Emotion pipeline, or RTL is needed (directly or via `webview-ui-optimize`); also German. Don't use for single-rule audits or fixes (`webview-ui-optimize`), CVE auditing (`dependency-audit`), or Vale review (`prose-vale-curator`)."
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet

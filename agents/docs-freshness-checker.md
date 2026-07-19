@@ -1,6 +1,6 @@
 ---
 name: docs-freshness-checker
-description: "Audits the MkDocs documentation of the current repository for freshness — multi-language parity (e.g. docs/en vs docs/de), dead internal links, stale references into spec/ or src/, ADR index completeness and status hygiene, Mermaid derived-source drift, and TODO/placeholder markers. Read-only: produces a severity-sorted report, never edits. Invoke when the user asks to check the docs for drift, find dead links, check DE/EN parity, or prep docs for a release; also German requests. Don't use to write or update docs (an author's task) or for Vale/vocabulary linting (`prose-vale-curator`)."
+description: "Read-only audit of the current repo's MkDocs docs for freshness: multi-language parity (docs/en vs docs/de), dead internal links, stale references into spec/ or src/, ADR index/status hygiene, Mermaid derived-source drift, and TODO/placeholder markers. Returns a severity-sorted report, never edits. Invoke to check docs for drift, find dead links, check DE/EN parity, or prep docs for a release; also German. Don't use to write or update docs, or for Vale/vocabulary linting (`prose-vale-curator`)."
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet

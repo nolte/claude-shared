@@ -1,6 +1,6 @@
 ---
 name: e2e-result-reviewer
-description: "Visually reviews an end-to-end run's outputs — screenshots and the machine-generated protocol — against the requirement, test-case, and UI specs, per spec/project/e2e-test-automation/. Reads each screenshot as an image, compares layout, content, state, and i18n against the specs, and returns prioritised findings (critical/high/medium/low) keyed to requirement/TC IDs. Read-only. Invoke after an E2E run when the user asks to review the screenshots/protocol or find UI/spec deviations. Don't use to scaffold tests (`e2e-test-generator`), to repair the test code (`e2e-test-reviewer`), or to audit pyramid shape (`test-pyramid-check`)."
+description: "Visually reviews an end-to-end run's outputs (screenshots and the machine-generated protocol) against the requirement, test-case, and UI specs, per spec/project/e2e-test-automation/. Reads each screenshot as an image and returns prioritised findings keyed to requirement/TC IDs. Read-only. Invoke after an E2E run to review the screenshots/protocol or find UI/spec deviations. Don't use to scaffold tests (`e2e-test-generator`), repair the test code (`e2e-test-reviewer`), or audit pyramid shape (`test-pyramid-check`)."
 distribution: plugin
 tools: Read, Glob, Grep
 phase: review

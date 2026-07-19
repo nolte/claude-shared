@@ -1,6 +1,6 @@
 ---
 name: security-requirements-reviewer
-description: "Read-only security architect's review of a project's requirement/specification set (functional + non-functional requirements, ADRs, spec docs) for security and privacy completeness, before or independently of implementation. Judges whether each requirement specifies the controls it needs (data minimization, auth, RBAC & tenant isolation, API security, encryption, GDPR rights, AI/LLM security, infra), detecting requirement sources at runtime, and returns a severity-classified report; writes nothing to disk. Invoke when the user asks to review requirements/specs for security gaps, missing access control, or over-collection; also German requests. Don't use to audit implemented code (`code-security-reviewer`, `gdpr-data-protection-reviewer`), for CVE scanning (`dependency-audit-scanner`), or to edit specs."
+description: "Read-only security architect's review of a project's requirement/spec set (requirements, ADRs, spec docs) for security and privacy completeness, before or independently of implementation. Judges whether each requirement specifies the controls it needs, detecting requirement sources at runtime; returns a severity-classified report, writes nothing. Invoke to review requirements/specs for security gaps, missing access control, or over-collection; also German. Don't use to audit implemented code (`code-security-reviewer`, `gdpr-data-protection-reviewer`), for CVE scanning (`dependency-audit-scanner`), or to edit specs."
 distribution: plugin
 tools: Read, Grep, Glob
 phase: plan

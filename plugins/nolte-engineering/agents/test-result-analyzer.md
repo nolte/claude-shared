@@ -1,6 +1,6 @@
 ---
 name: test-result-analyzer
-description: "Analyses the raw results of a test run against spec/project/test-cycle-result-analysis/ and classifies each non-pass into a routed category so the cycle knows what to do next. Classifies before acting (real defect / flake / test bug / infrastructure / stale dependency / config-secret drift), establishes flake-vs-real by independent re-runs and history (never clearing on a single green re-run), localises root cause, and emits a per-case evidence-bearing classification that routes onward. Invoke when the user asks to analyse, triage, or classify test results or a failing run. Don't use to run the tests (`quality-gate`), review an E2E run's screenshots (`e2e-result-reviewer`), triage red CI lanes (`workflow-health-triage`), or apply the fix (`test-code-adapter`)."
+description: "Analyses the raw results of a test run against spec/project/test-cycle-result-analysis/ and classifies each non-pass (real defect / flake / test bug / infrastructure / stale dependency / config-secret drift) so the cycle knows what to do next, establishing flake-vs-real by independent re-runs and history (never clearing on a single green re-run). Invoke to analyse, triage, or classify test results or a failing run. Don't use to run the tests (`quality-gate`), review an E2E run's screenshots (`e2e-result-reviewer`), triage red CI lanes (`workflow-health-triage`), or apply the fix (`test-code-adapter`)."
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 phase: review

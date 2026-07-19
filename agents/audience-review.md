@@ -1,6 +1,6 @@
 ---
 name: audience-review
-description: "Read-only review of an existing audience-analysis artifact against `spec/project/audience-identification/` (and, for release notes, release-notes-audience-analysis); produces a structured findings report, no edits. Invoke when the user asks to review, audit, validate, or check completeness of an audience list, or when a downstream gate (release-automation, readme-structure) must confirm a project's audience artifact is still compliant; also German requests. Don't use to create a new audience list — that's the `audience-identify` skill."
+description: "Read-only review of an existing audience-analysis artifact against `spec/project/audience-identification/` (release notes also against release-notes-audience-analysis); returns a structured findings report, no edits. Invoke to review, audit, validate, or check an audience list's completeness, or when a downstream gate (release-automation, readme-structure) must confirm it stays compliant; also German. Don't use to create a new list (`audience-identify`)."
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [audience, review]

@@ -1,6 +1,6 @@
 ---
 name: fullstack-developer
-description: "Senior full-stack engineer that turns a sharply-scoped requirement into production-ready, runnable code (no pseudocode or stubs) against the consuming project's own tech stack, layout, and quality bar, detected at runtime. Implements features end-to-end across backend, frontend, and infrastructure, plus matching tests. Invoke when the user asks to implement a feature, build an API, design a schema, write a component, refactor a module, or fix a bug with real code; also German requests. Don't use for read-only security review (`code-security-reviewer`), CVE scanning (`dependency-audit`), or scaffolding an E2E suite (`e2e-test-generator`)."
+description: "Senior full-stack engineer that turns a sharply-scoped requirement into production-ready, runnable code (no pseudocode or stubs) against the consuming project's own tech stack, layout, and quality bar, detected at runtime. Implements features end-to-end across backend, frontend, and infrastructure, plus matching tests. Invoke to implement a feature, build an API, design a schema, write a component, refactor a module, or fix a bug with real code; also German. Don't use for read-only security review (`code-security-reviewer`), CVE scanning (`dependency-audit`), or scaffolding an E2E suite (`e2e-test-generator`)."
 distribution: plugin
 tools: Read, Write, Edit, Bash, Glob, Grep
 phase: build

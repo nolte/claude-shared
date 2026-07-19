@@ -1,6 +1,6 @@
 ---
 name: link-rot-scanner
-description: "Audits the repository's documentation for dead links — internal relative links, intra-page anchors, cross-tree references into spec/ src/ scripts/, and external http(s) URLs probed over the network. Wraps the deterministic scripts/check_links.py and triages findings into a severity-sorted report, classifying network flakiness (timeouts, transient 5xx, rate-limits) as warning rather than rot. Read-only. Invoke when the user asks to audit the links, find dead external links, or check docs for broken URLs before a release; also German requests. Don't use for the offline CI gate (call scripts/check_links.py --offline), the broader docs-freshness audit (`docs-freshness-checker`), or Vale linting (`prose-vale-curator`)."
+description: "Read-only audit of the repo's docs for dead links: internal relative links, intra-page anchors, cross-tree references, and external http(s) URLs probed over the network. Wraps scripts/check_links.py and triages findings into a severity-sorted report, classing network flakiness as warning not rot. Invoke to audit links, find dead external links, or check docs for broken URLs before a release; also German. Don't use for the offline CI gate (scripts/check_links.py --offline), the broader freshness audit (`docs-freshness-checker`), or Vale linting (`prose-vale-curator`)."
 distribution: plugin
 tools: Read, Bash
 model: sonnet

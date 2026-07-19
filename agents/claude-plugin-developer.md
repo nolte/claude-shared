@@ -1,6 +1,6 @@
 ---
 name: claude-plugin-developer
-description: "Draft a new nolte-shared plugin artifact (skill or agent) or refine an existing one in strict conformance with every spec under spec/claude/. Invoke when the user asks to author, scaffold, or draft a spec-compliant skill or agent; also German requests. Returns the drafted/edited files, the skill-vs-agent rationale, and a release checklist. Don't use for spec authoring (`spec`), pure structural validation, or interactive name/purpose scaffolding (`skill-management`, which chains here)."
+description: "Draft or refine a nolte-shared plugin artifact (skill or agent) in strict conformance with every spec under spec/claude/. Invoke to author, scaffold, or draft a spec-compliant skill or agent; also German. Returns the drafted files, the skill-vs-agent rationale, and a release checklist. Don't use for spec authoring (`spec`) or interactive name/purpose scaffolding (`skill-management`)."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 tags: [scaffolding, review]

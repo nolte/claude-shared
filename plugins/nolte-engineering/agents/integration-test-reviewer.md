@@ -1,6 +1,6 @@
 ---
 name: integration-test-reviewer
-description: "Reviews existing integration tests against spec/project/test-tier-integration/, returns a checklist-based conformance verdict, and applies only minimal surgical fixes. Checks the narrow form (exactly one real external, the rest doubled), seam-only assertions, real-but-ephemeral dependencies, per-test data isolation, readiness waits, and anti-patterns (broad integration, a drifting in-memory fake, shared mutable environment, re-testing unit logic, fixed sleeps, container races, hitting a real third-party API). Invoke when the user asks to review, audit, or repair integration tests. Don't use to scaffold them (`integration-test-generator`), for another tier reviewer, or to audit pyramid shape (`test-pyramid-check`)."
+description: "Reviews existing integration tests against spec/project/test-tier-integration/, returns a checklist conformance verdict, and applies only minimal surgical fixes. Invoke to review, audit, or repair integration tests. Don't use to scaffold them (`integration-test-generator`), for another tier reviewer, or to audit pyramid shape (`test-pyramid-check`)."
 distribution: plugin
 tools: Read, Edit, Glob, Grep, Bash
 phase: review
