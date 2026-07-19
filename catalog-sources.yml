@@ -1,0 +1,33 @@
+# Catalog source roots for scripts/docs/gen_catalog.py.
+#
+# See spec/claude/skill-agent-catalog/en.md §"Generation mechanism".
+#
+# Plugin mode (this repo is itself a Claude Code plugin):
+# the local plugin MUST be the first entry and represents the repository's own
+# skills/ and agents/ folders. Additional external plugin source roots MAY follow.
+
+sources:
+  - name: nolte-shared
+    local: .
+    skills_path: skills
+    agents_path: agents
+    repo_url: https://github.com/nolte/claude-shared
+    branch: main
+  # Second in-repo plugin (media generation). Source root is plugins/nolte-media/;
+  # its skills/ and agents/ are scoped to that root, distinct from the nolte-shared
+  # root above. See spec/claude/plugin-scoping/ §"When to split into a separate plugin".
+  - name: nolte-media
+    local: ./plugins/nolte-media
+    skills_path: skills
+    agents_path: agents
+    repo_url: https://github.com/nolte/claude-shared
+    branch: main
+  # Third in-repo plugin (engineering: implementation + test + quality + code audits).
+  # Scoped to plugins/nolte-engineering/; consumed by code-bearing repos on top of
+  # nolte-shared. See spec/claude/plugin-scoping/ §"When to split into a separate plugin".
+  - name: nolte-engineering
+    local: ./plugins/nolte-engineering
+    skills_path: skills
+    agents_path: agents
+    repo_url: https://github.com/nolte/claude-shared
+    branch: main

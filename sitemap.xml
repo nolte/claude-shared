@@ -1,0 +1,2061 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+    <url>
+        <loc>https://nolte.github.io/claude-shared/release-audiences/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/release-audiences/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/release-audiences/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/by-task/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/by-task/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/by-task/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/privacy/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/privacy/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/privacy/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/using/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/using/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/using/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/SUMMARY/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/SUMMARY/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/SUMMARY/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/bjw-common-deployment-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/bjw-common-deployment-generator/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/bjw-common-deployment-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/code-security-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/code-security-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/code-security-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/component-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/component-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/component-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/component-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/component-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/component-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/contract-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/contract-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/contract-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/contract-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/contract-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/contract-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/dependency-audit-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/dependency-audit-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/dependency-audit-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/deployment-bestpractices-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/deployment-bestpractices-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/deployment-bestpractices-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/deployment-change-analyzer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/deployment-change-analyzer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/deployment-change-analyzer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/dockerfile-audit-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/dockerfile-audit-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/dockerfile-audit-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-result-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-result-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-result-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/frontend-usability-optimizer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/frontend-usability-optimizer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/frontend-usability-optimizer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/fullstack-developer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/fullstack-developer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/fullstack-developer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/i18n-completeness-checker/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/i18n-completeness-checker/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/i18n-completeness-checker/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/implementation-plan-author/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/implementation-plan-author/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/implementation-plan-author/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/integration-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/integration-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/integration-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/integration-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/integration-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/integration-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/kpi-signal-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/kpi-signal-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/kpi-signal-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/license-check-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/license-check-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/license-check-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/observability-audit-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/observability-audit-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/observability-audit-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/release-regression-scope-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/release-regression-scope-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/release-regression-scope-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/test-case-extractor/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/test-case-extractor/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-case-extractor/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/test-code-adapter/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/test-code-adapter/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-code-adapter/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/test-result-analyzer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/test-result-analyzer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-result-analyzer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/unit-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/unit-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/unit-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/unit-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/unit-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/unit-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-engineering/webview-ui-expert/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/webview-ui-expert/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/webview-ui-expert/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-media/graphic-prompt-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-media/graphic-prompt-generator/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-media/graphic-prompt-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-media/png-to-transparent-svg/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-media/png-to-transparent-svg/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-media/png-to-transparent-svg/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/audience-doc-author/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/audience-doc-author/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/audience-doc-author/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/audience-review/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/audience-review/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/audience-review/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/claude-plugin-developer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/claude-plugin-developer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/claude-plugin-developer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/cookiecutter-template-author/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/cookiecutter-template-author/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/cookiecutter-template-author/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/diagram-opportunity-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/diagram-opportunity-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/diagram-opportunity-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/docs-freshness-checker/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/docs-freshness-checker/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/docs-freshness-checker/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/feature-consistency-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/feature-consistency-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/feature-consistency-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/gdpr-data-protection-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/gdpr-data-protection-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/gdpr-data-protection-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/lektorat-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/lektorat-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/lektorat-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/link-rot-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/link-rot-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/link-rot-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/mermaid-diagram-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/mermaid-diagram-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/mermaid-diagram-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/portfolio-inflight-collector/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/portfolio-inflight-collector/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/portfolio-inflight-collector/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/portfolio-manifest-collector/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/portfolio-manifest-collector/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/portfolio-manifest-collector/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/project-structure-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/project-structure-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/project-structure-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/prose-vale-curator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/prose-vale-curator/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/prose-vale-curator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/quality-gate-enforcer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/quality-gate-enforcer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/quality-gate-enforcer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/roadmap-coherence-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/roadmap-coherence-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/roadmap-coherence-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/security-requirements-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/security-requirements-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/security-requirements-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/spec-readiness-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/spec-readiness-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/spec-readiness-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/sprint-readiness-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/sprint-readiness-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/sprint-readiness-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/tech-stack-drift-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/tech-stack-drift-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/tech-stack-drift-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/tech-stack-fitness-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/tech-stack-fitness-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/tech-stack-fitness-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/agents/nolte-shared/vocab-drift-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/vocab-drift-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/vocab-drift-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/getting-started/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/getting-started/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/getting-started/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/getting-started/installation/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/getting-started/installation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/getting-started/installation/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/getting-started/usage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/getting-started/usage/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/getting-started/usage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/agents-concept/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/agents-concept/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/agents-concept/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/architecture/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/architecture/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/contributing/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/contributing/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/contributing/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/development-lifecycle/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/development-lifecycle/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/development-lifecycle/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/development/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/development/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/development/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/glossary/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/glossary/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/glossary/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/image-generation/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/image-generation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/image-generation/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/interfaces/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/interfaces/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/interfaces/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/project-structure/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/project-structure/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/project-structure/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/skill-management/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/skill-management/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/skill-management/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/skills-concept/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/skills-concept/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/skills-concept/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/spec/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/spec/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/spec/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/test-automation/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/test-automation/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/test-automation/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/guides/troubleshooting/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/troubleshooting/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/troubleshooting/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/portfolio/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/portfolio/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/portfolio/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/project/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/project/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/project/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/references/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/references/tags/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/tags/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/tags/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/references/specs/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/specs/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/specs/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/references/specs/agent-management/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/specs/agent-management/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/specs/agent-management/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/references/specs/skill-management/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/specs/skill-management/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/specs/skill-management/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/SUMMARY/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/SUMMARY/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/SUMMARY/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/api-error-check/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/api-error-check/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/api-error-check/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/dependency-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/dependency-audit/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/dependency-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/deployment-chart-manage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/deployment-chart-manage/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/deployment-chart-manage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/dockerfile-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/dockerfile-audit/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/dockerfile-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/kpi-derive/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/kpi-derive/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/kpi-derive/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/license-check/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/license-check/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/license-check/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/observability-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/observability-audit/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/observability-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/quality-gate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/quality-gate/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/quality-gate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/release-regression-scope/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/release-regression-scope/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/release-regression-scope/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/test-cycle-orchestrate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/test-cycle-orchestrate/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/test-cycle-orchestrate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/test-pyramid-check/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/test-pyramid-check/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/test-pyramid-check/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-engineering/webview-ui-optimize/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/webview-ui-optimize/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/webview-ui-optimize/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-media/gemini-image-handoff/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-media/gemini-image-handoff/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-media/gemini-image-handoff/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-media/image-generate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-media/image-generate/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-media/image-generate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/agent-review/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/agent-review/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/agent-review/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/audience-identify/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/audience-identify/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/audience-identify/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/backstage-catalog-generate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/backstage-catalog-generate/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/backstage-catalog-generate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/blog-author-trigger/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/blog-author-trigger/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/blog-author-trigger/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/blog-author/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/blog-author/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/blog-author/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/continuous-improvement-triage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/continuous-improvement-triage/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/continuous-improvement-triage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/cookiecutter-template-manage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/cookiecutter-template-manage/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/cookiecutter-template-manage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/docs-audience-tracks-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/docs-audience-tracks-apply/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/docs-audience-tracks-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/docs-dry-refactor/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/docs-dry-refactor/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/docs-dry-refactor/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/feature-decompose/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/feature-decompose/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/feature-decompose/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/github-issue-templates-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/github-issue-templates-apply/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/github-issue-templates-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/issue-orchestrate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/issue-orchestrate/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/issue-orchestrate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/lektorat-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/lektorat-apply/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/lektorat-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/lektorat-auto-revise/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/lektorat-auto-revise/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/lektorat-auto-revise/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/mermaid-diagrams-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/mermaid-diagrams-apply/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/mermaid-diagrams-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/mission-define/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/mission-define/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/mission-define/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/mission-revise/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/mission-revise/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/mission-revise/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/mkdocs-structure-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/mkdocs-structure-apply/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/mkdocs-structure-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/permission-allowlist-maintain/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/permission-allowlist-maintain/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/permission-allowlist-maintain/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/portfolio-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/portfolio-audit/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/portfolio-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/portfolio-inflight-triage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/portfolio-inflight-triage/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/portfolio-inflight-triage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/project-structure-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/project-structure-apply/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/project-structure-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/pull-request-create/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/pull-request-create/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/pull-request-create/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/pull-request-merge/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/pull-request-merge/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/pull-request-merge/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/readme-structure-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/readme-structure-apply/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/readme-structure-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/release-notes-curate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/release-notes-curate/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/release-notes-curate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/release-publish-trigger/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/release-publish-trigger/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/release-publish-trigger/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/requirements-elicit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/requirements-elicit/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/requirements-elicit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-init/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-init/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-init/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-plan/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-plan/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-plan/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-refine/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-refine/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-refine/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/skill-agent-catalog-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/skill-agent-catalog-apply/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-agent-catalog-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/skill-management/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/skill-management/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-management/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/skill-review/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/skill-review/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-review/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/skills-agents-sweep/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/skills-agents-sweep/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/skills-agents-sweep/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/spec-drift-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/spec-drift-audit/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/spec-drift-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/spec/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/spec/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/spec/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-execute/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-execute/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-execute/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-plan/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-plan/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-plan/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-review/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-review/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-review/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/tech-stack-capture/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/tech-stack-capture/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/tech-stack-capture/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/vocab-drift-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/vocab-drift-audit/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/vocab-drift-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/workflow-health-triage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/workflow-health-triage/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/workflow-health-triage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/working-copy-start/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/working-copy-start/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/working-copy-start/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/skills/nolte-shared/yaml-json-schema/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/yaml-json-schema/"/>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/yaml-json-schema/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/release-audiences/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/release-audiences/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/release-audiences/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/by-task/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/by-task/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/by-task/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/privacy/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/privacy/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/privacy/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/using/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/using/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/using/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/SUMMARY/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/SUMMARY/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/SUMMARY/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/bjw-common-deployment-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/bjw-common-deployment-generator/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/bjw-common-deployment-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/code-security-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/code-security-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/code-security-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/component-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/component-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/component-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/component-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/component-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/component-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/contract-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/contract-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/contract-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/contract-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/contract-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/contract-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/dependency-audit-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/dependency-audit-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/dependency-audit-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/deployment-bestpractices-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/deployment-bestpractices-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/deployment-bestpractices-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/deployment-change-analyzer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/deployment-change-analyzer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/deployment-change-analyzer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/dockerfile-audit-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/dockerfile-audit-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/dockerfile-audit-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-result-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-result-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-result-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/e2e-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/e2e-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/frontend-usability-optimizer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/frontend-usability-optimizer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/frontend-usability-optimizer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/fullstack-developer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/fullstack-developer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/fullstack-developer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/i18n-completeness-checker/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/i18n-completeness-checker/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/i18n-completeness-checker/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/implementation-plan-author/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/implementation-plan-author/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/implementation-plan-author/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/integration-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/integration-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/integration-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/integration-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/integration-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/integration-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/kpi-signal-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/kpi-signal-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/kpi-signal-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/license-check-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/license-check-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/license-check-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/observability-audit-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/observability-audit-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/observability-audit-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/release-regression-scope-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/release-regression-scope-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/release-regression-scope-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-case-extractor/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-case-extractor/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/test-case-extractor/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-code-adapter/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-code-adapter/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/test-code-adapter/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-result-analyzer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/test-result-analyzer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/test-result-analyzer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/unit-test-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/unit-test-generator/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/unit-test-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/unit-test-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/unit-test-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/unit-test-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-engineering/webview-ui-expert/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-engineering/webview-ui-expert/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-engineering/webview-ui-expert/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-media/graphic-prompt-generator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-media/graphic-prompt-generator/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-media/graphic-prompt-generator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-media/png-to-transparent-svg/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-media/png-to-transparent-svg/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-media/png-to-transparent-svg/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/audience-doc-author/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/audience-doc-author/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/audience-doc-author/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/audience-review/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/audience-review/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/audience-review/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/claude-plugin-developer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/claude-plugin-developer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/claude-plugin-developer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/cookiecutter-template-author/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/cookiecutter-template-author/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/cookiecutter-template-author/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/diagram-opportunity-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/diagram-opportunity-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/diagram-opportunity-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/docs-freshness-checker/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/docs-freshness-checker/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/docs-freshness-checker/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/feature-consistency-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/feature-consistency-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/feature-consistency-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/gdpr-data-protection-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/gdpr-data-protection-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/gdpr-data-protection-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/lektorat-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/lektorat-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/lektorat-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/link-rot-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/link-rot-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/link-rot-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/mermaid-diagram-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/mermaid-diagram-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/mermaid-diagram-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/portfolio-inflight-collector/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/portfolio-inflight-collector/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/portfolio-inflight-collector/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/portfolio-manifest-collector/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/portfolio-manifest-collector/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/portfolio-manifest-collector/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/project-structure-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/project-structure-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/project-structure-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/prose-vale-curator/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/prose-vale-curator/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/prose-vale-curator/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/quality-gate-enforcer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/quality-gate-enforcer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/quality-gate-enforcer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/roadmap-coherence-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/roadmap-coherence-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/roadmap-coherence-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/security-requirements-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/security-requirements-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/security-requirements-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/spec-readiness-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/spec-readiness-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/spec-readiness-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/sprint-readiness-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/sprint-readiness-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/sprint-readiness-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/tech-stack-drift-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/tech-stack-drift-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/tech-stack-drift-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/tech-stack-fitness-reviewer/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/tech-stack-fitness-reviewer/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/tech-stack-fitness-reviewer/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/agents/nolte-shared/vocab-drift-scanner/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/agents/nolte-shared/vocab-drift-scanner/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/agents/nolte-shared/vocab-drift-scanner/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/getting-started/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/getting-started/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/getting-started/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/getting-started/installation/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/getting-started/installation/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/getting-started/installation/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/getting-started/usage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/getting-started/usage/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/getting-started/usage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/agents-concept/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/agents-concept/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/agents-concept/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/architecture/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/architecture/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/architecture/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/contributing/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/contributing/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/contributing/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/development-lifecycle/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/development-lifecycle/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/development-lifecycle/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/development/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/development/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/development/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/glossary/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/glossary/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/glossary/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/image-generation/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/image-generation/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/image-generation/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/interfaces/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/interfaces/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/interfaces/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/project-structure/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/project-structure/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/project-structure/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/skill-management/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/skill-management/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/skill-management/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/skills-concept/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/skills-concept/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/skills-concept/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/spec/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/spec/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/spec/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/test-automation/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/test-automation/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/test-automation/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/guides/troubleshooting/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/guides/troubleshooting/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/guides/troubleshooting/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/portfolio/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/portfolio/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/portfolio/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/project/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/project/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/project/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/references/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/references/tags/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/tags/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/tags/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/references/specs/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/specs/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/specs/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/references/specs/agent-management/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/specs/agent-management/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/specs/agent-management/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/references/specs/skill-management/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/references/specs/skill-management/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/references/specs/skill-management/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/SUMMARY/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/SUMMARY/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/SUMMARY/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/api-error-check/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/api-error-check/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/api-error-check/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/dependency-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/dependency-audit/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/dependency-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/deployment-chart-manage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/deployment-chart-manage/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/deployment-chart-manage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/dockerfile-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/dockerfile-audit/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/dockerfile-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/kpi-derive/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/kpi-derive/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/kpi-derive/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/license-check/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/license-check/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/license-check/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/observability-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/observability-audit/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/observability-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/quality-gate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/quality-gate/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/quality-gate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/release-regression-scope/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/release-regression-scope/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/release-regression-scope/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/test-cycle-orchestrate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/test-cycle-orchestrate/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/test-cycle-orchestrate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/test-pyramid-check/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/test-pyramid-check/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/test-pyramid-check/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-engineering/webview-ui-optimize/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-engineering/webview-ui-optimize/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-engineering/webview-ui-optimize/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-media/gemini-image-handoff/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-media/gemini-image-handoff/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-media/gemini-image-handoff/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-media/image-generate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-media/image-generate/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-media/image-generate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/agent-review/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/agent-review/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/agent-review/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/audience-identify/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/audience-identify/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/audience-identify/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/backstage-catalog-generate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/backstage-catalog-generate/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/backstage-catalog-generate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/blog-author-trigger/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/blog-author-trigger/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/blog-author-trigger/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/blog-author/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/blog-author/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/blog-author/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/continuous-improvement-triage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/continuous-improvement-triage/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/continuous-improvement-triage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/cookiecutter-template-manage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/cookiecutter-template-manage/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/cookiecutter-template-manage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/docs-audience-tracks-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/docs-audience-tracks-apply/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/docs-audience-tracks-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/docs-dry-refactor/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/docs-dry-refactor/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/docs-dry-refactor/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/feature-decompose/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/feature-decompose/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/feature-decompose/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/github-issue-templates-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/github-issue-templates-apply/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/github-issue-templates-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/issue-orchestrate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/issue-orchestrate/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/issue-orchestrate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/lektorat-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/lektorat-apply/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/lektorat-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/lektorat-auto-revise/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/lektorat-auto-revise/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/lektorat-auto-revise/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/mermaid-diagrams-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/mermaid-diagrams-apply/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/mermaid-diagrams-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/mission-define/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/mission-define/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/mission-define/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/mission-revise/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/mission-revise/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/mission-revise/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/mkdocs-structure-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/mkdocs-structure-apply/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/mkdocs-structure-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/permission-allowlist-maintain/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/permission-allowlist-maintain/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/permission-allowlist-maintain/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/portfolio-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/portfolio-audit/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/portfolio-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/portfolio-inflight-triage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/portfolio-inflight-triage/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/portfolio-inflight-triage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/project-structure-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/project-structure-apply/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/project-structure-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/pull-request-create/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/pull-request-create/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/pull-request-create/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/pull-request-merge/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/pull-request-merge/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/pull-request-merge/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/readme-structure-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/readme-structure-apply/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/readme-structure-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/release-notes-curate/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/release-notes-curate/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/release-notes-curate/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/release-publish-trigger/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/release-publish-trigger/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/release-publish-trigger/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/requirements-elicit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/requirements-elicit/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/requirements-elicit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-init/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-init/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-init/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-plan/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-plan/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-plan/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-refine/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/roadmap-refine/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/roadmap-refine/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-agent-catalog-apply/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-agent-catalog-apply/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/skill-agent-catalog-apply/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-management/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-management/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/skill-management/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-review/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/skill-review/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/skill-review/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/skills-agents-sweep/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/skills-agents-sweep/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/skills-agents-sweep/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/spec-drift-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/spec-drift-audit/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/spec-drift-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/spec/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/spec/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/spec/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-execute/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-execute/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-execute/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-plan/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-plan/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-plan/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-review/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/sprint-review/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/sprint-review/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/tech-stack-capture/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/tech-stack-capture/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/tech-stack-capture/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/vocab-drift-audit/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/vocab-drift-audit/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/vocab-drift-audit/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/workflow-health-triage/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/workflow-health-triage/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/workflow-health-triage/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/working-copy-start/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/working-copy-start/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/working-copy-start/"/>
+    </url>
+    <url>
+        <loc>https://nolte.github.io/claude-shared/en/skills/nolte-shared/yaml-json-schema/</loc>
+        <lastmod>2026-07-19</lastmod>
+        <changefreq>daily</changefreq>
+        <xhtml:link rel="alternate" hreflang="en" href="https://nolte.github.io/claude-shared/en/skills/nolte-shared/yaml-json-schema/"/>
+        <xhtml:link rel="alternate" hreflang="de" href="https://nolte.github.io/claude-shared/skills/nolte-shared/yaml-json-schema/"/>
+    </url>
+</urlset>
