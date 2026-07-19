@@ -1,11 +1,11 @@
 ---
 id: F-5
 title: Structural analysis + plugin-boundary decision
-status: ready
+status: done
 roadmap_item: R-9
 sprint: 5
 created: 2026-07-11
-ended: null
+ended: 2026-07-19
 verifies_sprint_value: null
 consistency_check:
   performed_at: 2026-07-11
@@ -26,17 +26,17 @@ The boundary decision **MUST** evaluate one named candidate on its merits: extra
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** A written analysis artifact records the measured per-plugin aggregate agent-description token weight for all three shared plugins (`nolte-shared`, `nolte-engineering`, `nolte-media`), with the measurement method stated explicitly so the number is reproducible.
-- [ ] **acceptance-2** The artifact maps capability overlap and delimitation (`don't use for X → use Y`) cross-references across the shared agents and skills.
-- [ ] **acceptance-3** The artifact states a plugin-boundary decision (split vs. keep-and-slim) with a rationale explicitly bound by the distribution-contract rule in `spec/claude/plugin-scoping/`; the rationale does not justify any split by topic, domain, or agent count alone.
-- [ ] **acceptance-4** The artifact reuses and cites the existing `agent-review`, `skill-review`, and `skills-agents-sweep` outputs rather than re-deriving their conclusions.
+- [x] **acceptance-1** A written analysis artifact records the measured per-plugin aggregate agent-description token weight for all three shared plugins (`nolte-shared`, `nolte-engineering`, `nolte-media`), with the measurement method stated explicitly so the number is reproducible.
+- [x] **acceptance-2** The artifact maps capability overlap and delimitation (`don't use for X → use Y`) cross-references across the shared agents and skills.
+- [x] **acceptance-3** The artifact states a plugin-boundary decision (split vs. keep-and-slim) with a rationale explicitly bound by the distribution-contract rule in `spec/claude/plugin-scoping/`; the rationale does not justify any split by topic, domain, or agent count alone.
+- [x] **acceptance-4** The artifact reuses and cites the existing `agent-review`, `skill-review`, and `skills-agents-sweep` outputs rather than re-deriving their conclusions.
 
 ## Test hooks
 
-- **acceptance-1** — manual: open the analysis artifact; confirm a per-plugin token-weight table covering all three shared plugins and a stated measurement method — `pending`
-- **acceptance-2** — manual: confirm the artifact contains a capability-overlap and delimitation cross-reference map — `pending`
-- **acceptance-3** — manual: confirm the boundary-decision section names the decision and cites `spec/claude/plugin-scoping/`; assert no topic/count-only justification — `pending`
-- **acceptance-4** — manual: confirm citations to the `agent-review`, `skill-review`, and `skills-agents-sweep` outputs — `pending`
+- **acceptance-1** — manual: open the analysis artifact; confirm a per-plugin token-weight table covering all three shared plugins and a stated measurement method — `passing`
+- **acceptance-2** — manual: confirm the artifact contains a capability-overlap and delimitation cross-reference map — `passing`
+- **acceptance-3** — manual: confirm the boundary-decision section names the decision and cites `spec/claude/plugin-scoping/`; assert no topic/count-only justification — `passing`
+- **acceptance-4** — manual: confirm citations to the `agent-review`, `skill-review`, and `skills-agents-sweep` outputs — `passing`
 
 ## Consistency notes
 
