@@ -1,6 +1,6 @@
 ---
 name: vocab-drift-scanner
-description: "Read-only scanner dispatched by the `vocab-drift-audit` skill: diffs repository-local Vale vocabulary files against the pinned upstream nolte/vale-style release and returns a two-section drift report — local entries already accepted upstream (delete) and local entries not yet upstream (upstream PR candidates). Follow-up actions stay with the skill."
+description: "Read-only scanner dispatched by `vocab-drift-audit`: diffs repository-local Vale vocabulary files against the pinned upstream nolte/vale-style release and returns a two-section drift report (local entries already accepted upstream to delete; local entries not yet upstream as PR candidates). Follow-up actions stay with the skill."
 distribution: plugin
 tools: Read, Bash, Glob, Grep, mcp__github__get_file_contents, mcp__github__get_latest_release
 model: sonnet

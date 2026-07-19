@@ -1,6 +1,6 @@
 ---
 name: e2e-test-generator
-description: "Scaffolds a spec-conformant end-to-end test suite for a feature against spec/project/e2e-test-automation/, defaulting to the Selenium + pytest reference profile. Wires page-object encapsulation, data-testid-first locators, condition-based waits, screenshot checkpoints, markers, TC-ID traceability, and the machine-generated protocol. Invoke when the user asks to generate or scaffold E2E/browser tests, or turn test cases into runnable E2E tests. Don't use to repair an existing suite (`e2e-test-reviewer`), to review a run's screenshots (`e2e-result-reviewer`), to derive test cases (`test-case-extractor`), or to run the gate (`quality-gate`)."
+description: "Scaffolds a spec-conformant end-to-end suite for a feature against spec/project/e2e-test-automation/, defaulting to the Selenium + pytest reference profile, with page-object encapsulation, data-testid-first locators, condition-based waits, screenshot checkpoints, and TC-ID traceability. Invoke to generate or scaffold E2E/browser tests, or turn test cases into runnable E2E tests. Don't use to repair a suite (`e2e-test-reviewer`), review a run's screenshots (`e2e-result-reviewer`), derive test cases (`test-case-extractor`), or run the gate (`quality-gate`)."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 phase: build

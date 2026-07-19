@@ -1,6 +1,6 @@
 ---
 name: mermaid-diagram-reviewer
-description: "Statically audits every Mermaid block in docs/<lang>/ against spec/project/mermaid-diagrams/ plus the MkDocs setup in mkdocs.yml and docs/requirements.txt. Read-only — structured findings (setup-drift, source-marker-missing/-malformed, authoring-violation, derived-source-missing, clean) routed through `mermaid-diagrams-apply` or direct edits. Does not render diagrams (rendering is verified by mkdocs build --strict in CI). Invoke when the user asks to review Mermaid diagrams, audit Mermaid setup, or check diagram authoring against the spec; also German requests. Don't use to author/fix diagrams (`mermaid-diagrams-apply`), to detect derived-source drift (`docs-freshness-checker`), or to triage build failures (run `task docs`)."
+description: "Read-only static audit of every Mermaid block in docs/<lang>/ against spec/project/mermaid-diagrams/ plus the MkDocs setup (mkdocs.yml, docs/requirements.txt). Returns structured findings routed through `mermaid-diagrams-apply` or direct edits; does not render (CI's mkdocs build --strict does). Invoke to review Mermaid diagrams, audit Mermaid setup, or check diagram authoring; also German. Don't use to author/fix diagrams (`mermaid-diagrams-apply`), detect derived-source drift (`docs-freshness-checker`), or triage build failures."
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]

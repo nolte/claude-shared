@@ -1,6 +1,6 @@
 ---
 name: feature-consistency-reviewer
-description: "Read-only consistency reviewer dispatched mid-flow by `feature-decompose` before a draft feature under project/features/ goes draft → ready. Checks the draft for overlap, duplication, drift, and prior art against the feature corpus, the project's source-code roots, and the spec corpus, and returns structured findings (`kind`, `target`, `resolution`). Users rarely invoke it directly; for spec-vs-code drift on existing features use `spec-drift-audit`."
+description: "Read-only consistency reviewer dispatched mid-flow by `feature-decompose` before a draft feature under project/features/ goes draft to ready. Checks the draft for overlap, duplication, drift, and prior art against the feature corpus, the project's source roots, and the spec corpus, and returns structured findings (`kind`, `target`, `resolution`). Rarely invoked directly; for spec-vs-code drift on existing features use `spec-drift-audit`."
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]

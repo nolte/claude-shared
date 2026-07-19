@@ -1,6 +1,6 @@
 ---
 name: graphic-prompt-generator
-description: "Turns a short graphic brief into a brand-conformant, generator-ready AI image-generation prompt document on disk. Reads the repository's published brand tokens and descriptive-color vocabulary, assembles the prompt in the mandated style-reference → descriptive-phrases → hex-reinforcement → seed order for one named generator (Gemini, Midjourney, or successor), and writes it under design/prompts/. Invoke when the user asks to draft an image prompt for a hero/empty-state/onboarding illustration, app icon, or logo. Don't use to generate the image itself, to clean a PNG background (`png-to-transparent-svg`), or to define the brand color system."
+description: "Turns a short graphic brief into a brand-conformant, generator-ready AI image-generation prompt document on disk. Reads the repo's published brand tokens and descriptive-color vocabulary, assembles the prompt in the mandated order for one named generator (Gemini, Midjourney, or successor), and writes it under design/prompts/. Invoke to draft an image prompt for a hero/empty-state/onboarding illustration, app icon, or logo. Don't use to generate the image itself, clean a PNG background (`png-to-transparent-svg`), or define the brand color system."
 distribution: plugin
 tools: Read, Write, Glob, Grep
 phase: design

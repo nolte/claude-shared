@@ -1,6 +1,6 @@
 ---
 name: e2e-test-reviewer
-description: "Reviews an existing end-to-end suite against spec/project/e2e-test-automation/ (and the Selenium + pytest reference profile), returns a checklist-based conformance verdict, and applies only minimal surgical fixes. Checks page-object encapsulation, condition-based waits, the locator hierarchy, screenshot checkpoints, markers, TC-ID traceability, and anti-patterns (fixed sleeps, raw element lookups, position-based XPath, empty assertions, silent skips). Invoke when the user asks to review, audit, debug, or repair E2E/browser tests. Don't use to scaffold a suite (`e2e-test-generator`), to review a run's screenshots (`e2e-result-reviewer`), or to audit pyramid shape (`test-pyramid-check`)."
+description: "Reviews an existing end-to-end suite against spec/project/e2e-test-automation/ (Selenium + pytest reference profile), returns a checklist conformance verdict, and applies only minimal surgical fixes. Invoke to review, audit, debug, or repair E2E/browser tests. Don't use to scaffold a suite (`e2e-test-generator`), review a run's screenshots (`e2e-result-reviewer`), or audit pyramid shape (`test-pyramid-check`)."
 distribution: plugin
 tools: Read, Edit, Glob, Grep, Bash
 phase: review

@@ -1,6 +1,6 @@
 ---
 name: png-to-transparent-svg
-description: "Converts a PNG that uses a baked-in checkerboard (or single-color) background as fake transparency into a clean SVG with real alpha. Detects the fake-transparency pattern in RGB, sets those pixels to alpha=0, writes a cleaned PNG, then vectorises it with vtracer. Invoke when the user asks to convert a PNG to a transparent SVG, vectorise an AI-generated image or logo, or fix a checkerboard background; also German requests. Don't use for PNGs that already carry real alpha (vectorise directly), or for photographic content where the background isn't a flat fake-transparency pattern."
+description: "Converts a PNG that uses a baked-in checkerboard (or single-color) background as fake transparency into a clean SVG with real alpha. Detects the fake-transparency pattern in RGB, sets those pixels to alpha=0, writes a cleaned PNG, then vectorises it with vtracer. Invoke to convert a PNG to a transparent SVG, vectorise an AI-generated image or logo, or fix a checkerboard background; also German. Don't use for PNGs that already carry real alpha (vectorise directly), or for photographic content where the background isn't a flat fake-transparency pattern."
 distribution: plugin
 tools: Read, Bash, Glob
 model: sonnet

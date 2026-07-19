@@ -1,6 +1,6 @@
 ---
 name: spec-readiness-reviewer
-description: "Audits one or more specifications under a target spec topic for downstream readiness along three dimensions — contradictions (intra- and cross-spec), audience fit, and domain completeness (Requirements ↔ Acceptance Criteria coverage, load-bearing Open Questions, ghost references to non-existent specs). Read-only: produces a severity-sorted report, never edits. Invoke when the user asks to check a spec for contradictions, audit spec readiness before promotion, or find gaps in a spec; also German requests. Don't use to author or translate specs (`spec`), reconcile spec vs implementation (`spec-drift-audit`), create an audience artefact (`audience-identify`), or lint prose (`prose-vale-curator`)."
+description: "Read-only audit of specs under a target topic for downstream readiness along three dimensions: contradictions (intra- and cross-spec), audience fit, and domain completeness (Requirements-to-Acceptance-Criteria coverage, load-bearing Open Questions, ghost references). Returns a severity-sorted report, never edits. Invoke to check a spec for contradictions, audit spec readiness before promotion, or find gaps in a spec; also German. Don't use to author or translate specs (`spec`), reconcile spec vs implementation (`spec-drift-audit`), create an audience artefact (`audience-identify`), or lint prose (`prose-vale-curator`)."
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet

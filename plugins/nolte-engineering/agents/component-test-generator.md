@@ -1,6 +1,6 @@
 ---
 name: component-test-generator
-description: "Scaffolds spec-conformant component-tier tests against spec/project/test-tier-component/ — a component exercised in isolation with externals doubled at the boundary — in either flavour: frontend UI (assert observable output via user-facing queries, never internals) or service/backend (drive the service through its own API). Wires determinism, optional a11y/visual checks, and TC-ID traceability. Invoke when the user asks to generate or scaffold component tests. Don't use to review them (`component-test-reviewer`), for another tier (use the matching tier generator), or to run the gate (`quality-gate`)."
+description: "Scaffolds spec-conformant component-tier tests against spec/project/test-tier-component/ (a component in isolation with externals doubled at the boundary), in either flavour: frontend UI (assert observable output via user-facing queries) or service/backend (drive through its own API). Invoke to generate or scaffold component tests. Don't use to review them (`component-test-reviewer`), for another tier (matching tier generator), or to run the gate (`quality-gate`)."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 phase: build

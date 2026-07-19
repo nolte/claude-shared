@@ -1,6 +1,6 @@
 ---
 name: integration-test-generator
-description: "Scaffolds spec-conformant narrow integration tests against spec/project/test-tier-integration/ — exercising the code against exactly one real external collaborator (database, broker, filesystem, or single owned service) while doubling every other external, asserting only the integration seam (serialisation, real queries, mapping, transactions, wire protocols, migrations). Wires real-but-ephemeral dependencies (a disposable container, never a drifting in-memory fake), data isolation, and readiness waits. Invoke when the user asks to generate integration tests for a database, broker, or service seam. Don't use to review them (`integration-test-reviewer`), for another tier (matching tier generator), or to run the gate (`quality-gate`)."
+description: "Scaffolds spec-conformant narrow integration tests against spec/project/test-tier-integration/ (the code against exactly one real external collaborator while doubling every other), asserting only the integration seam, with real-but-ephemeral dependencies (a disposable container, never a drifting in-memory fake) and data isolation. Invoke to generate integration tests for a database, broker, or service seam. Don't use to review them (`integration-test-reviewer`), for another tier (matching tier generator), or to run the gate (`quality-gate`)."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Grep, Bash
 phase: build
