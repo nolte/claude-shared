@@ -21,7 +21,7 @@ Deeper agent/skill rework (merge, split, retire, or rewrite beyond descriptions)
 ## Features
 
 - [F-5](`../features/shared-plugin-structural-analysis.md`) — status: done
-- [F-6](`../features/agent-description-contract.md`) — status: ready
+- [F-6](`../features/agent-description-contract.md`) — status: done
 - [F-7](`../features/shared-agent-description-remediation.md`) — status: ready
 - [F-8](`../features/agent-description-budget-guardrail.md`) — status: ready
 
