@@ -1,11 +1,11 @@
 ---
 id: F-8
 title: Agent-description budget guardrail
-status: ready
+status: done
 roadmap_item: R-9
 sprint: 5
 created: 2026-07-11
-ended: null
+ended: 2026-07-19
 verifies_sprint_value: acceptance-1
 consistency_check:
   performed_at: 2026-07-11
@@ -27,15 +27,15 @@ Consumers keep their regained agent-description headroom permanently, because a 
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** `scripts/validate_skills.py` measures the per-plugin aggregate agent-description token weight, holds the post-remediation baseline recorded by F-7, and fails when a plugin's aggregate regresses above that baseline.
-- [ ] **acceptance-2** The check runs inside `task test` (and therefore the existing CI gate) with no new standalone workflow.
-- [ ] **acceptance-3** The measurement method (the tokenization proxy) is documented so the reported number is reproducible.
+- [x] **acceptance-1** `scripts/validate_skills.py` measures the per-plugin aggregate agent-description token weight, holds the post-remediation baseline recorded by F-7, and fails when a plugin's aggregate regresses above that baseline.
+- [x] **acceptance-2** The check runs inside `task test` (and therefore the existing CI gate) with no new standalone workflow.
+- [x] **acceptance-3** The measurement method (the tokenization proxy) is documented so the reported number is reproducible.
 
 ## Test hooks
 
-- **acceptance-1** — CLI: raise one plugin's aggregate description weight above the baseline in a scratch run; assert `validate_skills.py` fails — `pending`
-- **acceptance-2** — CLI: `task test` invokes the new check; assert it runs without a new workflow file — `pending`
-- **acceptance-3** — manual: confirm the measurement method is documented alongside the check — `pending`
+- **acceptance-1** — CLI: raise one plugin's aggregate description weight above the baseline in a scratch run; assert `validate_skills.py` fails — `passing`
+- **acceptance-2** — CLI: `task test` invokes the new check; assert it runs without a new workflow file — `passing`
+- **acceptance-3** — manual: confirm the measurement method is documented alongside the check — `passing`
 
 ## Consistency notes
 
