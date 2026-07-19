@@ -1,11 +1,11 @@
 ---
 number: 0005
-status: active
+status: closed
 started: 2026-07-19
-ended: null
+ended: 2026-07-19
 value_statement: "Consumer repositories can enable the shared nolte plugins and still keep enough room for their own agents, without Claude Code's agent-description routing budget tripping the ~15k warning."
-artifact_ref: null
-last_commit: null
+artifact_ref: "nolte-shared@0.1.11"
+last_commit: c00bcb1fa664b71281977f22c8d3ae4214e7689b
 roadmap_items: [R-9]
 features: [F-5, F-6, F-7, F-8]
 ---
@@ -33,4 +33,25 @@ Deeper agent/skill rework (merge, split, retire, or rewrite beyond descriptions)
 
 ## Review notes
 
-_Populated by `sprint-review` at closure._
+Closed 2026-07-19 by `sprint-review`. All four features (F-5–F-8) are `done` and merged to `develop`, shipped in release **v0.1.11**.
+
+**Value verification.** Verifier: `features/agent-description-budget-guardrail.md` (F-8), `verifies_sprint_value: acceptance-1`, checked. The per-plugin agent-description budget guardrail in `scripts/validate_skills.py` measures each plugin's aggregate `description` weight (the 4-char/token method), holds the F-7 baseline, and fails Critical on regression — green in CI on the develop tip. The reclaimed headroom (~9,227 → ~7,064 est. tokens, −23.4%) is now durable, not a one-off trim.
+
+**Artefact validation (Claude plugin).**
+- `git rev-parse v0.1.11` → `c00bcb1fa664b71281977f22c8d3ae4214e7689b` (equals `last_commit`).
+- `gh release view v0.1.11 --json isDraft` → `{"isDraft": false}`; published 2026-07-19T21:58:07Z.
+- Marketplace resolution: `.claude-plugin/marketplace.json` `metadata.version` = 0.1.11; all four version-bearing files aligned at 0.1.11.
+- Required checks (lint, test, docs, links) all SUCCESS on the develop tip.
+
+**Release-skill-layer chain.** Chained: `release-publish-trigger` dispatched `release-publish.yml` (run 29705286747, conclusion success), publishing v0.1.11 (<https://github.com/nolte/claude-shared/releases/tag/v0.1.11>). `release-notes-curate` was not run separately; the release-drafter draft body was sufficient for this internal-improvement release.
+
+**Blog-trigger deferrals.** No unconsumed blog-trigger deferrals (`project/blog-triggers/` carries no `deferred` entries).
+
+**Delivered artefacts.**
+- `.audits/shared-plugin-analysis/2026-07-19.md` — F-5 structural analysis + the keep-and-slim boundary verdict (bound by `spec/claude/plugin-scoping/`).
+- `.audits/shared-plugin-analysis/2026-07-19-post-remediation-baseline.md` — F-7 recorded baseline.
+- `spec/claude/agent-management/` §Description contract + `spec/claude/skill-agent-frontmatter/` digest update — F-6.
+- 54 normalised agent descriptions — F-7.
+- `check_agent_description_budget` guardrail + tests in `scripts/validate_skills.py` / `tests/test_validate_skills.py` — F-8.
+
+**Follow-on (deferred, out of scope this sprint).** Deeper agent/skill rework (merge / split / retire / rewrite beyond descriptions) and the consumer-audience authoring-plugin carve-out (evaluated and declined *for the agent-description budget* in F-5, but left open as a skill-budget/audience question) remain to be decomposed — they need fresh roadmap items and features, since R-9's own features are all delivered here.
