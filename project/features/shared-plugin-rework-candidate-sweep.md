@@ -1,11 +1,11 @@
 ---
 id: F-17
 title: Candidate-surfacing sweep for shared-plugin deep rework
-status: draft
+status: done
 roadmap_item: R-11
 sprint: null
 created: 2026-07-20
-ended: null
+ended: 2026-07-20
 verifies_sprint_value: null
 consistency_check:
   performed_at: 2026-07-20
@@ -30,17 +30,17 @@ The value is honest either way: if the full pass surfaces rework candidates, R-1
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** A consolidated `skills-agents-sweep` report exists under `.audits/skills-agents-sweep/`, conforming to `spec/claude/skills-agents-sweep/` (mandatory report sections and the single-open-sweep lifecycle), covering every shared agent and skill across the three plugins.
-- [ ] **acceptance-2** Each rework candidate is listed with the observed issue (overlap / dead capability / drift) and a proposed action (merge / split / retire / rewrite), or the report explicitly records that none warrant rework.
-- [ ] **acceptance-3** Each candidate cites evidence from the per-artefact `agent-review` / `skill-review` findings — the full pass F-5's focused sweep skipped — not only frontmatter heuristics.
-- [ ] **acceptance-4** Any candidate action that touches a plugin boundary is bound by `spec/claude/plugin-scoping/`; no candidate is justified by topic, domain, or artefact count alone.
+- [x] **acceptance-1** A consolidated `skills-agents-sweep` report exists under `.audits/skills-agents-sweep/`, conforming to `spec/claude/skills-agents-sweep/` (mandatory report sections and the single-open-sweep lifecycle), covering every shared agent and skill across the three plugins.
+- [x] **acceptance-2** Each rework candidate is listed with the observed issue (overlap / dead capability / drift) and a proposed action (merge / split / retire / rewrite), or the report explicitly records that none warrant rework.
+- [x] **acceptance-3** Each candidate cites evidence from the per-artefact `agent-review` / `skill-review` findings — the full pass F-5's focused sweep skipped — not only frontmatter heuristics.
+- [x] **acceptance-4** Any candidate action that touches a plugin boundary is bound by `spec/claude/plugin-scoping/`; no candidate is justified by topic, domain, or artefact count alone.
 
 ## Test hooks
 
-- **acceptance-1** — manual: open the sweep report; confirm it conforms to `spec/claude/skills-agents-sweep/` and covers all three plugins' agents and skills — `pending`
-- **acceptance-2** — manual: confirm each candidate carries an observed issue + proposed action, or an explicit "none warrant rework" record — `pending`
-- **acceptance-3** — manual: confirm each candidate cites per-artefact `agent-review` / `skill-review` evidence — `pending`
-- **acceptance-4** — manual: confirm no boundary-touching candidate is justified by topic/domain/count alone; each cites `spec/claude/plugin-scoping/` — `pending`
+- **acceptance-1** — manual: open the sweep report; confirm it conforms to `spec/claude/skills-agents-sweep/` and covers all three plugins' agents and skills — `passing`
+- **acceptance-2** — manual: confirm each candidate carries an observed issue + proposed action, or an explicit "none warrant rework" record — `passing`
+- **acceptance-3** — manual: confirm each candidate cites per-artefact `agent-review` / `skill-review` evidence — `passing`
+- **acceptance-4** — manual: confirm no boundary-touching candidate is justified by topic/domain/count alone; each cites `spec/claude/plugin-scoping/` — `passing`
 
 ## Consistency notes
 
