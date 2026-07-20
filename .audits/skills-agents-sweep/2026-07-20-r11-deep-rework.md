@@ -125,11 +125,20 @@ not flagged.
 Finding: no artefact warrants merge/split/retire/rewrite. R-11's P2 strand closes
 with zero rework features. → this sweep report is the evidence.
 
-**Wave 1 — optional polish backlog (Info-level, non-blocking): DEFERRED.**
+**Wave 1 — optional polish backlog (Info-level, non-blocking): PARTIALLY IMPLEMENTED (2026-07-20, chore PR).**
 The 79 minor conformance notes cluster into cheap mechanical sweeps; none affects
-routing or capability, none is release-blocking. Deferred as a low-priority polish
-backlog (no separate tracking issue required at Info level; a future
-`continuous-improvement-triage` run or a small `chore` can pick them up):
+routing or capability, none is release-blocking. **Resolution:** the clear mechanical
+items were fixed in the chore PR — **PB-1 / tool-enum drift** (`dependency-audit-scanner`,
+`vocab-drift-scanner`, `portfolio-manifest-collector` body tool lists synced to their
+frontmatter grants) and **PB-6** (`spec-drift-audit` template gains the mandated
+`## Summary`). **PB-3 is a false positive** — the `spec/vocabulary-and-style-curation/`
+reference is a *conditional* consumer-repo pointer ("if the current repository ships …",
+canonical example `nolte/vale-style`), not a phantom in this repo, so no fix. The rest
+stay **deferred with cause**: PB-2 (placement) is a real boundary question already carried
+in F-18's decision doc; PB-4's `portfolio-audit` op-count fix would touch the
+F-8-guarded description budget and needs a considered change, not a mechanical one;
+PB-5 (`blog-author` spec-restatement trim) is a larger, judgement-heavy edit. Original
+backlog for reference:
 
 - **PB-1 — MCP-tool prose lag:** `dependency-audit-scanner`, `vocab-drift-scanner`,
   `portfolio-manifest-collector` enumerate their tool set in body prose without the
@@ -159,6 +168,9 @@ F-18 on it.
   `97048dd`; 0 rework candidates (`2026-07-20-r11-deep-rework-per-artefact.md`).
 - 2026-07-20 — W1 — deferred — verified: 79 Info-level notes catalogued as PB-1..PB-6;
   non-blocking, no tracking issue required at Info level.
+- 2026-07-20 — W1 — partially-implemented — verified: chore PR fixed PB-1 (tool-enum
+  drift, 3 agents) + PB-6 (spec-drift-audit template `## Summary`); PB-3 resolved as a
+  false positive; PB-2/PB-4-op/PB-5 remain deferred with cause.
 
 > Note: this report is retained on disk (not deleted per the sweep spec's `close`
 > operation) because F-17 acceptance-1 requires the consolidated report to persist

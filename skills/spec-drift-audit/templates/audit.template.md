@@ -33,6 +33,10 @@ status: open
 - Documentation: `docs/`, `README.md`, `CLAUDE.md`
 - Workflows and hooks: `.github/workflows/`, `.pre-commit-config.yaml`
 
+## Summary
+
+<!-- One-paragraph verdict: overall drift posture, the highest-severity finding, and the go/no-go on the audited surface. Required by spec/project/spec-drift §Artifact contract (## Scope, ## Summary, ## Findings, ## Processing log, in that order); populated after Per-criterion results and Findings are complete. -->
+
 ## Per-criterion results
 
 <!-- One row per spec acceptance criterion. Use result values: pass | fail | blocked | not-applicable -->
