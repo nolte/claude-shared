@@ -1,11 +1,11 @@
 ---
 id: F-18
 title: Authoring-slice plugin carve-out decision
-status: draft
+status: done
 roadmap_item: R-11
 sprint: null
 created: 2026-07-20
-ended: null
+ended: 2026-07-20
 verifies_sprint_value: null
 consistency_check:
   performed_at: 2026-07-20
@@ -30,17 +30,17 @@ The decision is bound by the distribution-contract rule in `spec/claude/plugin-s
 
 ## Acceptance criteria
 
-- [ ] **acceptance-1** A written decision (split vs. keep) with rationale, bound by `spec/claude/plugin-scoping/` and inheriting F-5 §3's settled inputs, justified by skill-mechanism budget and consumer audience — never by topic, domain, or artefact count.
-- [ ] **acceptance-2** The decision measures the authoring slice's aggregate *skill*-description weight with a stated, reproducible method (analogous to F-5's agent-description measurement); the F-8 guardrail in `scripts/validate_skills.py` measures agent descriptions only, so this skill-axis measurement is net-new.
-- [ ] **acceptance-3** The decision weighs a split against the standing cost of a fourth lockstep-versioned plugin (version alignment in `.github/release-automation.yml`; the CLAUDE.md lockstep rule).
-- [ ] **acceptance-4** If the decision is to split, a follow-on execution feature is identified (execution deferred, per `plugin-scoping`); if the decision is to keep, the recorded rationale closes the carve-out question.
+- [x] **acceptance-1** A written decision (split vs. keep) with rationale, bound by `spec/claude/plugin-scoping/` and inheriting F-5 §3's settled inputs, justified by skill-mechanism budget and consumer audience — never by topic, domain, or artefact count.
+- [x] **acceptance-2** The decision measures the authoring slice's aggregate *skill*-description weight with a stated, reproducible method (analogous to F-5's agent-description measurement); the F-8 guardrail in `scripts/validate_skills.py` measures agent descriptions only, so this skill-axis measurement is net-new.
+- [x] **acceptance-3** The decision weighs a split against the standing cost of a fourth lockstep-versioned plugin (version alignment in `.github/release-automation.yml`; the CLAUDE.md lockstep rule).
+- [x] **acceptance-4** If the decision is to split, a follow-on execution feature is identified (execution deferred, per `plugin-scoping`); if the decision is to keep, the recorded rationale closes the carve-out question.
 
 ## Test hooks
 
-- **acceptance-1** — manual: open the decision doc; confirm a split/keep verdict bound by `plugin-scoping/`, inheriting F-5 §3, with no topic/count justification — `pending`
-- **acceptance-2** — manual: confirm a stated, reproducible skill-description-weight measurement of the authoring slice — `pending`
-- **acceptance-3** — manual: confirm the fourth-plugin lockstep-versioning cost is weighed against the saving — `pending`
-- **acceptance-4** — manual: confirm the decision either identifies a deferred split-execution feature or records a keep rationale that closes the question — `pending`
+- **acceptance-1** — manual: open the decision doc; confirm a split/keep verdict bound by `plugin-scoping/`, inheriting F-5 §3, with no topic/count justification — `passing`
+- **acceptance-2** — manual: confirm a stated, reproducible skill-description-weight measurement of the authoring slice — `passing`
+- **acceptance-3** — manual: confirm the fourth-plugin lockstep-versioning cost is weighed against the saving — `passing`
+- **acceptance-4** — manual: confirm the decision either identifies a deferred split-execution feature or records a keep rationale that closes the question — `passing`
 
 ## Consistency notes
 
