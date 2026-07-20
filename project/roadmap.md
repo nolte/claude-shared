@@ -171,3 +171,17 @@ status: proposed
 ```
 
 GitHub-touching skills and agents shell out to the `gh` CLI and parse its text output; a connected GitHub MCP server exposes the same operations as typed, paginated tools that are cheaper and more reliable for read-heavy comprehension (issue and comments, workflow-run logs, cross-repo issue and PR collection). Make those artefacts optionally prefer the MCP server when present and always fall back to `gh` when absent. It stays strictly additive: no artefact ever requires MCP, and the `gh`-only path produces identical output. Grounded in issue #378 (`.audits/issue-orchestrate/378/analysis.md`, work packages P1–P9, MVP-first: an authoring-convention spec plus a single Tier-1 pilot before broadening).
+
+### R-11 — Shared-plugin deep agent/skill rework and finer-grained plugin boundary
+
+```yaml
+id: R-11
+title: Shared-plugin deep agent/skill rework and finer-grained plugin boundary
+detail: coarse
+outcomes: [O-1, O-2]
+target_sprint: null
+mvp: false
+status: proposed
+```
+
+The R-9 follow-on: the two strands deferred out of sprint 0005 (which delivered the analysis, description contract, remediation, and budget guardrail, released in v0.1.11). First a candidate-surfacing `skills-agents-sweep` as the analysis gate (F-5 found no duplicate capabilities, so deep rework is candidate-driven, not a blanket sweep), then per-candidate deep rework — merge / split / retire / rewrite beyond descriptions, one feature each, routing preserved. Independently, re-evaluate the finer-grained plugin boundary: whether the plugin/skill-authoring slice should be carved into its own plugin so consumers who never author a plugin stop loading it, decided on a skill-mechanism-budget / consumer-audience axis (F-5 declined it for the agent-description budget; open on the skill axis) and bound by the distribution-contract rule in `spec/claude/plugin-scoping/`. Backlog — not sprint-ready until the candidate sweep runs. Grounded in issue #416 (`.audits/issue-orchestrate/416/analysis.md`), roadmap R-9 (done), and `.audits/shared-plugin-analysis/2026-07-19.md`; requirements covered by `project/requirements/shared-plugin-restructure.md` (R2/R3/R8).
