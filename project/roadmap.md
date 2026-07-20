@@ -181,7 +181,9 @@ detail: coarse
 outcomes: [O-1, O-2]
 target_sprint: null
 mvp: false
-status: proposed
+status: done
 ```
 
 The R-9 follow-on: the two strands deferred out of sprint 0005 (which delivered the analysis, description contract, remediation, and budget guardrail, released in v0.1.11). First a candidate-surfacing `skills-agents-sweep` as the analysis gate (F-5 found no duplicate capabilities, so deep rework is candidate-driven, not a blanket sweep), then per-candidate deep rework — merge / split / retire / rewrite beyond descriptions, one feature each, routing preserved. Independently, re-evaluate the finer-grained plugin boundary: whether the plugin/skill-authoring slice should be carved into its own plugin so consumers who never author a plugin stop loading it, decided on a skill-mechanism-budget / consumer-audience axis (F-5 declined it for the agent-description budget; open on the skill axis) and bound by the distribution-contract rule in `spec/claude/plugin-scoping/`. Backlog — not sprint-ready until the candidate sweep runs. Grounded in issue #416 (`.audits/issue-orchestrate/416/analysis.md`), roadmap R-9 (done), and `.audits/shared-plugin-analysis/2026-07-19.md`; requirements covered by `project/requirements/shared-plugin-restructure.md` (R2/R3/R8).
+
+**Delivered 2026-07-20 (ad hoc / operator-driven; R-11 stayed Backlog, never sprint-activated).** Both strands closed: **F-17** ran the full `skills-agents-sweep` over all 113 shared artefacts and found **0 deep-rework candidates** (`.audits/skills-agents-sweep/2026-07-20-r11-deep-rework.md`), so the per-candidate-rework strand (P2) closes with no features. **F-18** decided the authoring-slice carve-out is **keep** on the skill axis — the ~10.4 % skill-description saving does not outweigh the standing fourth-plugin lockstep cost absent an acute skill-budget limit; re-open on a stated trigger (`.audits/shared-plugin-analysis/2026-07-20-authoring-carve-out-decision.md`). A deferrable Info-level polish backlog (PB-1..PB-6) from the sweep remains, tracked in the sweep report.
