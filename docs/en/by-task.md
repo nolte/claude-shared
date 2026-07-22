@@ -24,7 +24,7 @@ Task-oriented landing page: groups skills and agents by user intent rather than 
 
 ## Author a Claude Code skill
 
-- **Scaffold or revise a `nolte-shared` skill folder** → [`skill-management`](skills/nolte-shared/skill-management.md). Writes the `SKILL.md` template with valid frontmatter, then chains to `claude-plugin-developer` for the spec-conformant body draft.
+- **Scaffold or revise a `nolte-shared` skill folder** → [`skill-management`](skills/nolte-claude-dev/skill-management.md). Writes the `SKILL.md` template with valid frontmatter, then chains to `claude-plugin-developer` for the spec-conformant body draft.
 
 ## Pick a skill vs. an agent
 

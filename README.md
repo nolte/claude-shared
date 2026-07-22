@@ -93,7 +93,7 @@ For local testing without the marketplace flow, load the plugins directly from a
 claude --plugin-dir /path/to/claude-shared --plugin-dir /path/to/claude-shared/plugins/nolte-media --plugin-dir /path/to/claude-shared/plugins/nolte-engineering
 ```
 
-Plugin skills are namespaced by plugin name—for example `/nolte-shared:spec`, `/nolte-shared:skill-management`, `/nolte-media:image-generate`.
+Plugin skills are namespaced by plugin name—for example `/nolte-shared:spec`, `/nolte-claude-dev:skill-management`, `/nolte-media:image-generate`.
 
 ### Work on the plugin itself (dogfooding)
 

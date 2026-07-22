@@ -16,7 +16,7 @@ Skills are invocable by name—with or without the plugin prefix:
 
 ```
 /nolte-shared:spec
-/nolte-shared:skill-management
+/nolte-claude-dev:skill-management
 ```
 
 They also appear under `/skills` where Tab-completion works.
@@ -25,7 +25,7 @@ They also appear under `/skills` where Tab-completion works.
 
 | Skill | Purpose | Typical triggers |
 |-------|---------|-----------------|
-| [`skill-management`](../skills/nolte-shared/skill-management.md) | Scaffold new skills; validate existing ones against the spec | "create a new skill," "scaffold a skill for X," "validate this skill" |
+| [`skill-management`](../skills/nolte-claude-dev/skill-management.md) | Scaffold new skills; validate existing ones against the spec | "create a new skill," "scaffold a skill for X," "validate this skill" |
 | [`spec`](../skills/nolte-shared/spec.md) | Write, translate, index and drift-check multilingual specs | "write a spec for X," "is X already covered?," "regenerate the index" |
 
 ## Response language
@@ -38,6 +38,6 @@ A project may ship its own skill of the same name. Even then, the plugin version
 
 ## Next
 
-- [Skill Management](../skills/nolte-shared/skill-management.md) in depth
+- [Skill Management](../skills/nolte-claude-dev/skill-management.md) in depth
 - [Spec skill](../skills/nolte-shared/spec.md) in depth
 - [Specifications](../references/specs/index.md): the authoring rules

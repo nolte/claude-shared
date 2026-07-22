@@ -125,10 +125,10 @@ Design is where conventions, scaffolds, and specifications are written. Specs ar
 |---|---|---|
 | [`spec`](../skills/nolte-shared/spec.md) | skill | Author, translate, deduplicate, or drift-check a multilingual specification under `spec/`. |
 | [`spec-readiness-reviewer`](../agents/nolte-shared/spec-readiness-reviewer.md) | agent | Audit a spec for contradictions, audience fit, and domain completeness before promotion. |
-| [`skill-management`](../skills/nolte-shared/skill-management.md) | skill | Author or revise a Claude Code skill in the plugin source tree. |
-| [`claude-plugin-developer`](../agents/nolte-shared/claude-plugin-developer.md) | agent | Draft a new plugin skill or agent in strict conformance with every spec under `spec/claude/`. |
+| [`skill-management`](../skills/nolte-claude-dev/skill-management.md) | skill | Author or revise a Claude Code skill in the plugin source tree. |
+| [`claude-plugin-developer`](../agents/nolte-claude-dev/claude-plugin-developer.md) | agent | Draft a new plugin skill or agent in strict conformance with every spec under `spec/claude/`. |
 | [`project-structure-apply`](../skills/nolte-shared/project-structure-apply.md) | skill | Audit and scaffold the repository's `.github/`, Taskfile, MkDocs, Renovate config, and Probot integrations. |
-| [`skill-agent-catalog-apply`](../skills/nolte-shared/skill-agent-catalog-apply.md) | skill | Wire up the MkDocs skill-and-agent catalog so docs surface every artefact. |
+| [`skill-agent-catalog-apply`](../skills/nolte-claude-dev/skill-agent-catalog-apply.md) | skill | Wire up the MkDocs skill-and-agent catalog so docs surface every artefact. |
 | [`mkdocs-structure-apply`](../skills/nolte-shared/mkdocs-structure-apply.md) | skill | Audit and scaffold the per-language MkDocs skeleton, plugin baseline, and frontmatter contract. |
 | [`mermaid-diagrams-apply`](../skills/nolte-shared/mermaid-diagrams-apply.md) | skill | Apply the Mermaid-diagrams convention to a doc page. |
 | [`github-issue-templates-apply`](../skills/nolte-shared/github-issue-templates-apply.md) | skill | Scaffold or update `.github/ISSUE_TEMPLATE/` Issue Forms for the project's audience. |
@@ -155,8 +155,8 @@ Code change reaches `develop` only through a reviewed pull request. Skill and ag
 |---|---|---|
 | [`pull-request-create`](../skills/nolte-shared/pull-request-create.md) | skill | Open a draft PR with a Conventional-Commits title and the five-section body. Runs `task lint` locally before push. |
 | [`pull-request-merge`](../skills/nolte-shared/pull-request-merge.md) | skill | Promote the draft to ready, apply labels, trigger automerge, and verify the merge commit landed on `develop`. |
-| [`skill-review`](../skills/nolte-shared/skill-review.md) | skill | Audit a skill against `skill-management` / `skill-vs-agent`; emit a persistent review plan. |
-| [`agent-review`](../skills/nolte-shared/agent-review.md) | skill | Same shape as `skill-review`, but for agents. |
+| [`skill-review`](../skills/nolte-claude-dev/skill-review.md) | skill | Audit a skill against `skill-management` / `skill-vs-agent`; emit a persistent review plan. |
+| [`agent-review`](../skills/nolte-claude-dev/agent-review.md) | skill | Same shape as `skill-review`, but for agents. |
 
 ### 6 Quality
 

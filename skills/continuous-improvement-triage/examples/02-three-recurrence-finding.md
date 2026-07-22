@@ -29,7 +29,7 @@ Repository state when the skill is invoked:
    - B: Author a new specialist skill `prose-style-fix` via `claude-plugin-developer` with `distribution: plugin` (required because the class appears in two repositories).
    - C: Defer with explicit reason and owner.
 
-4. **User chooses A** (extend `audience-doc-author`). The skill records this as a gap-closure decision and dispatches `Agent(subagent_type="nolte-shared:claude-plugin-developer")` with the brief: "Extend the `description` of `agents/audience-doc-author.md` to explicitly name prose-style markdown lint failure remediation and Vale lint fix authoring as responsibilities; the current description mentions Vale style checks but not fixing lint failures."
+4. **User chooses A** (extend `audience-doc-author`). The skill records this as a gap-closure decision and dispatches `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")` with the brief: "Extend the `description` of `agents/audience-doc-author.md` to explicitly name prose-style markdown lint failure remediation and Vale lint fix authoring as responsibilities; the current description mentions Vale style checks but not fixing lint failures."
 
 5. **Wait for agent report.** `claude-plugin-developer` updates `agents/audience-doc-author.md` and proposes a PR. The skill records the fix PR number.
 

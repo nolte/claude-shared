@@ -24,7 +24,7 @@ Aufgaben-orientierte Einstiegs-Seite: gruppiert Skills und Agents nach Nutzer-Ab
 
 ## Einen Claude-Code-Skill verfassen
 
-- **Einen `nolte-shared`-Skill-Ordner scaffolden oder überarbeiten** → [`skill-management`](skills/nolte-shared/skill-management.md). Schreibt das `SKILL.md`-Template mit gültiger Frontmatter und kettet anschließend zu `claude-plugin-developer` für den spec-konformen Body-Entwurf.
+- **Einen `nolte-shared`-Skill-Ordner scaffolden oder überarbeiten** → [`skill-management`](skills/nolte-claude-dev/skill-management.md). Schreibt das `SKILL.md`-Template mit gültiger Frontmatter und kettet anschließend zu `claude-plugin-developer` für den spec-konformen Body-Entwurf.
 
 ## Skill oder Agent wählen
 

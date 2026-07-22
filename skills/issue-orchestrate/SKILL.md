@@ -224,7 +224,7 @@ body.
    `continuous-improvement` §Portfolio gap closure: record the no-match, count
    generalist-handled recurrences of the class, and at three or more (or with a
    recorded high-impact justification) offer to dispatch
-   `Agent(subagent_type="nolte-shared:claude-plugin-developer")` to author a new
+   `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")` to author a new
    specialist. Until the gap closes, the generalist may handle the package and the PR
    records the explicit "no matching specialised agent — generalist remediation"
    note.

@@ -26,7 +26,7 @@ spec-compliant workflows without rebuilding them.
 
 - **Downstream Claude Code users** (`downstream-user`): developers who invoke
   the plugin's slash commands (for example `/nolte-shared:spec`,
-  `/nolte-shared:skill-management`, `/nolte-shared:pull-request-create`) and its
+  `/nolte-claude-dev:skill-management`, `/nolte-shared:pull-request-create`) and its
   sub-agents inside their own portfolio projects. You get stable command names,
   reproducible outputs, and consistent review and release discipline.
 - **End users of downstream projects** (`downstream-end-user`): you never call
@@ -46,7 +46,7 @@ The plugin is designed for these scenarios:
 - Run a consistent **quality gate** and **dependency audit** before committing
   or releasing (`/nolte-engineering:quality-gate`, `/nolte-engineering:dependency-audit`).
 - Author and review **skills, agents, and specs** against shared authoring rules
-  (`/nolte-shared:skill-management`, `/nolte-shared:spec`, and the review skills).
+  (`/nolte-claude-dev:skill-management`, `/nolte-shared:spec`, and the review skills).
 - Keep **project structure, documentation, and release automation** aligned with
   the portfolio baseline.
 

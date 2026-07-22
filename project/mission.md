@@ -30,7 +30,7 @@ revised_at: 2026-05-29
 
 ## Audiences
 
-**Downstream Claude Code users in portfolio projects.** What the MVP delivers to this audience: a published `nolte-shared` plugin whose slash commands (`/nolte-shared:spec`, `/nolte-shared:skill-management`, `/nolte-shared:pull-request-create`, and the planning-suite skills) produce reproducible, spec-compliant outputs against any repo that installs it. The audience benefits because the plugin removes the "every repo reinvents its review and release rituals" tax — a single install path replaces N copies of the same workflow, and consumers can rely on the bilingual specs as the contract for what each command does.
+**Downstream Claude Code users in portfolio projects.** What the MVP delivers to this audience: a published `nolte-shared` plugin whose slash commands (`/nolte-shared:spec`, `/nolte-shared:pull-request-create`, and the planning-suite skills) produce reproducible, spec-compliant outputs against any repo that installs it. The audience benefits because the plugin removes the "every repo reinvents its review and release rituals" tax — a single install path replaces N copies of the same workflow, and consumers can rely on the bilingual specs as the contract for what each command does.
 
 **Plugin author dogfooding inside this repo.** What the MVP delivers to this audience: a working reference adoption of the planning suite inside `claude-shared` itself — `project/goals.md`, `project/roadmap.md`, `project/features/`, and this `project/mission.md`. The author benefits because every new spec can be lived in this repo before it's released to consumer repos, surfacing rough edges (like missing fallbacks, ambiguous wording, or unspecified back-references) where the cost of fixing them is lowest.
 

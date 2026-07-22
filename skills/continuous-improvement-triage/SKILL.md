@@ -96,7 +96,7 @@ Record decisions on open findings and dispatch specialists.
 2. **For each unresolved finding in `## Findings`**, present the finding, the current specialist match (from the runtime catalog), and the three decision options:
    - **Dispatch specialist**: select the named specialist and record its `subagent_type` in the finding.
    - **Defer with reason**: record an explicit deferral note (reason + owner + target quarter).
-   - **Initiate gap-closure**: if no matching specialist exists and the recurrence threshold is met, dispatch `Agent(subagent_type="nolte-shared:claude-plugin-developer")` to author a new specialist or extend an existing one's `description`.
+   - **Initiate gap-closure**: if no matching specialist exists and the recurrence threshold is met, dispatch `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")` to author a new specialist or extend an existing one's `description`.
 
 3. **Dispatch hands-on remediation.** For each finding with a dispatch decision, call `Agent(subagent_type="<plugin>:<agent>")` with the finding class, the finding source reference, and a fix-PR-title hint. Wait for the agent's report. Never perform the specialist remediation inline.
 

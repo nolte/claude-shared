@@ -45,7 +45,7 @@ A newcomer who can run `task check` cleanly has a workable repository.
 ## Workflow
 
 1. **Read the spec first**: every skill or agent follows a [specification](../references/specs/index.md).
-2. **Create the skill/agent**: use the [Skill Management](../skills/nolte-shared/skill-management.md) skill. It scaffolds lowercase-kebab-case folders, writes valid frontmatter, and prevents the usual mistakes.
+2. **Create the skill/agent**: use the [Skill Management](../skills/nolte-claude-dev/skill-management.md) skill. It scaffolds lowercase-kebab-case folders, writes valid frontmatter, and prevents the usual mistakes.
 3. **Adjust the spec if needed**: via the [Spec skill](../skills/nolte-shared/spec.md). Never edit translations directly. The English canonical (the authoritative EN source file) is the source of truth; everything else is regenerated from it.
 4. **Validate**: `skill-management` in validation mode. Mechanical defects (frontmatter mismatch, absolute paths, missing hard-rules) can be autofixed on request.
 5. **Update the index**: after spec changes, regenerate `spec/README.md` through the Spec skill.

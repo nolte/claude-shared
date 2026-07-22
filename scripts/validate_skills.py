@@ -619,7 +619,8 @@ def check_agent_tree(agents_dir: Path) -> list[Finding]:
 AGENT_DESC_BUDGET_HEADROOM = 0.15  # +15% slack for legitimately-added agents
 # key = agents/ dir relative to REPO ; value = post-remediation baseline chars (F-7)
 AGENT_DESC_BASELINE_CHARS = {
-    "agents": 11451,                          # nolte-shared (23 agents)
+    "agents": 11065,                          # nolte-shared (22 agents; claude-plugin-developer carved out to nolte-claude-dev 2026-07-22, F-18 flip)
+    "plugins/nolte-claude-dev/agents": 386,    # nolte-claude-dev (1 agent: claude-plugin-developer)
     "plugins/nolte-engineering/agents": 15700,  # nolte-engineering (29 agents)
     "plugins/nolte-media/agents": 1108,        # nolte-media (2 agents)
 }

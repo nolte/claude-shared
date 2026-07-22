@@ -39,7 +39,7 @@ Skills aus diesem Plugin sind per Namespace aufrufbar:
 
 ```
 /nolte-shared:spec
-/nolte-shared:skill-management
+/nolte-claude-dev:skill-management
 ```
 
 !!! tip "Symlink statt Kopie"
@@ -65,7 +65,7 @@ claude --plugin-dir .
 
 ## Überprüfen, dass das Plugin geladen wurde
 
-Nach dem Start zeigt `/skills` die Einträge aus diesem Repository — z. B. `nolte-shared:spec` und `nolte-shared:skill-management`. Fehlt etwas, prüfe:
+Nach dem Start zeigt `/skills` die Einträge aus diesem Repository — z. B. `nolte-shared:spec` und `nolte-claude-dev:skill-management`. Fehlt etwas, prüfe:
 
 1. `.claude-plugin/plugin.json` ist valides JSON
 2. Der Ordner enthält `skills/<name>/SKILL.md` mit gültigem Frontmatter

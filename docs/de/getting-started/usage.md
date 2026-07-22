@@ -16,7 +16,7 @@ Skills des Plugins sind per Name aufrufbar — optional mit Plugin-Präfix (z. B
 
 ```
 /nolte-shared:spec
-/nolte-shared:skill-management
+/nolte-claude-dev:skill-management
 ```
 
 Claude Code zeigt sie außerdem unter `/skills` an. Von dort lassen sie sich mit Tab auswählen.
@@ -25,7 +25,7 @@ Claude Code zeigt sie außerdem unter `/skills` an. Von dort lassen sie sich mit
 
 | Skill | Zweck | Typische Trigger |
 |-------|-------|-----------------|
-| [`skill-management`](../skills/nolte-shared/skill-management.md) | Neue Skills anlegen, bestehende gegen die Spec validieren | "neuen Skill anlegen", "Skill für X erstellen", "validate this skill" |
+| [`skill-management`](../skills/nolte-claude-dev/skill-management.md) | Neue Skills anlegen, bestehende gegen die Spec validieren | "neuen Skill anlegen", "Skill für X erstellen", "validate this skill" |
 | [`spec`](../skills/nolte-shared/spec.md) | Mehrsprachige Spezifikationen schreiben, übersetzen, indizieren, auf Drift prüfen | "schreib eine Spec für X", "ist X schon abgedeckt?", "Index neu bauen" |
 
 ## Antwortsprache
@@ -38,6 +38,6 @@ Hat ein Projekt eigene Skills mit gleichem Namen, bleibt die Plugin-Version erre
 
 ## Nächste Schritte
 
-- [Skill-Management](../skills/nolte-shared/skill-management.md) im Detail
+- [Skill-Management](../skills/nolte-claude-dev/skill-management.md) im Detail
 - [Spec-Skill](../skills/nolte-shared/spec.md) im Detail
 - [Spezifikationen](../references/specs/index.md) — verbindliche Autoren-Regeln

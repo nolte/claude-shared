@@ -22,6 +22,11 @@
       "name": "nolte-engineering",
       "source": "./plugins/nolte-engineering",
       "description": "Engineering capabilities for code-bearing projects: full-stack implementation, the test-tier and test-cycle suite, the quality gate, frontend/web-UI optimization, and code-security / dependency / license auditing. Code repositories adopt this on top of nolte-shared."
+    },
+    {
+      "name": "nolte-claude-dev",
+      "source": "./plugins/nolte-claude-dev",
+      "description": "Claude Code skill and agent authoring for plugin/skill developers: spec-conformant skill/agent scaffolding and revision, skill and agent review, portfolio-wide skills/agents sweeps, and skills/agents documentation-catalog generation. Adopt this on top of nolte-shared only if you author Claude Code skills or agents; the majority of consumers never do."
     }
   ]
 }

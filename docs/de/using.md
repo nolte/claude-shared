@@ -27,7 +27,7 @@ implementieren.
 
 - **Downstream-Claude-Code-Nutzer** (`downstream-user`): Entwickler, die die
   Slash-Commands des Plugins (zum Beispiel `/nolte-shared:spec`,
-  `/nolte-shared:skill-management`, `/nolte-shared:pull-request-create`) und
+  `/nolte-claude-dev:skill-management`, `/nolte-shared:pull-request-create`) und
   dessen Sub-Agents in ihren eigenen Portfolio-Projekten aufrufen. Du bekommst
   stabile Command-Namen, reproduzierbare Outputs und konsistente Review- und
   Release-Disziplin.
@@ -50,7 +50,7 @@ Das Plugin ist für diese Szenarien ausgelegt:
   oder Release laufen lassen (`/nolte-engineering:quality-gate`,
   `/nolte-engineering:dependency-audit`).
 - **Skills, Agents und Specs** gegen geteilte Autorenschafts-Regeln verfassen und
-  reviewen (`/nolte-shared:skill-management`, `/nolte-shared:spec` sowie die
+  reviewen (`/nolte-claude-dev:skill-management`, `/nolte-shared:spec` sowie die
   Review-Skills).
 - **Projektstruktur, Dokumentation und Release-Automation** an der
   Portfolio-Basis ausgerichtet halten.
