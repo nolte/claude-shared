@@ -31,3 +31,13 @@ sources:
     agents_path: agents
     repo_url: https://github.com/nolte/claude-shared
     branch: main
+  # Fourth in-repo plugin (Claude skill/agent authoring, carved out of nolte-shared
+  # by the F-18 flip 2026-07-22). Scoped to plugins/nolte-claude-dev/; adopted on top
+  # of nolte-shared only by consumers who author Claude Code skills or agents.
+  # See spec/claude/plugin-scoping/ §"When to split into a separate plugin".
+  - name: nolte-claude-dev
+    local: ./plugins/nolte-claude-dev
+    skills_path: skills
+    agents_path: agents
+    repo_url: https://github.com/nolte/claude-shared
+    branch: main

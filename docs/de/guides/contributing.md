@@ -45,7 +45,7 @@ Wer `task check` sauber durchläuft, hat ein lauffähiges Repo.
 ## Workflow
 
 1. **Spec zuerst lesen** — Skill oder Agent folgt immer einer geltenden [Spezifikation](../references/specs/index.md).
-2. **Skill/Agent anlegen** — nutze den [Skill-Management](../skills/nolte-shared/skill-management.md)-Skill. Er legt ASCII-Kebab-Case-Ordner an, schreibt valides Frontmatter und verhindert typische Fehler.
+2. **Skill/Agent anlegen** — nutze den [Skill-Management](../skills/nolte-claude-dev/skill-management.md)-Skill. Er legt ASCII-Kebab-Case-Ordner an, schreibt valides Frontmatter und verhindert typische Fehler.
 3. **Spec anpassen, wenn nötig** — über den [Spec-Skill](../skills/nolte-shared/spec.md). Übersetzungen niemals direkt editieren. Der englische Kanon (die maßgebliche EN-Quelldatei) ist die Wahrheit; alles andere wird aus ihm regeneriert.
 4. **Validieren lassen** — `skill-management` im Validierungsmodus prüft mechanische Defekte (Frontmatter-Mismatch, absolute Pfade, fehlende Hard-Rules) und bietet Fixes an.
 5. **Index aktualisieren** — nach Änderungen an Specs: `spec/README.md` via Spec-Skill regenerieren.

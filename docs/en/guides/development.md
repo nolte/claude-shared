@@ -32,4 +32,4 @@ Before writing a new skill or agent, read the relevant specification:
 - [Skill Authoring](../references/specs/skill-management.md)
 - [Agent Authoring](../references/specs/agent-management.md)
 
-Create new skills through the [Skill Management](../skills/nolte-shared/skill-management.md) skill itself—that guarantees conformance.
+Create new skills through the [Skill Management](../skills/nolte-claude-dev/skill-management.md) skill itself—that guarantees conformance.

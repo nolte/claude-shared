@@ -42,10 +42,10 @@ If you are unsure whether a change fits, open an issue first and describe the us
 
 ## Authoring rules
 
-- **New skills** are scaffolded via `/nolte-shared:skill-management`. Do not hand-roll the folder layout.
+- **New skills** are scaffolded via `/nolte-claude-dev:skill-management`. Do not hand-roll the folder layout.
 - **New agents** are drafted via the `claude-plugin-developer` agent; pick agent over skill only when `spec/claude/skill-vs-agent/` says so.
 - **Specs** are authored and translated via `/nolte-shared:spec`. EN is canonical; DE is a kept-in-sync translation.
-- **Reviews** for existing skills and agents use `/nolte-shared:skill-review` and `/nolte-shared:agent-review`. They produce review plans under `.audits/`; that is where follow-up work lives.
+- **Reviews** for existing skills and agents use `/nolte-claude-dev:skill-review` and `/nolte-claude-dev:agent-review`. They produce review plans under `.audits/`; that is where follow-up work lives.
 
 ## Pull request workflow
 

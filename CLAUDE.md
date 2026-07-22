@@ -4,29 +4,30 @@ Orientation for Claude Code and contributors working inside this repository.
 
 ## What this repo is
 
-`claude-shared` is a Claude Code **plugin monorepo**: it ships three plugins from one repository, sharing one `spec/` corpus, one Taskfile, and one CI pipeline. Each split is justified by a **distribution-contract** difference per `spec/claude/plugin-scoping/` §"When to split into a separate plugin" — never by topic or count.
+`claude-shared` is a Claude Code **plugin monorepo**: it ships four plugins from one repository, sharing one `spec/` corpus, one Taskfile, and one CI pipeline. Each split is justified by a **distribution-contract** difference per `spec/claude/plugin-scoping/` §"When to split into a separate plugin" — never by topic or count.
 
-- **`nolte-shared`** (repo root) — the common delivery-lifecycle plugin: planning, specs, PR & release workflow, docs/prose, portfolio, and plugin-meta. Every adopting repo installs it.
+- **`nolte-shared`** (repo root) — the common delivery-lifecycle plugin: planning, specs, PR & release workflow, docs/prose, and portfolio. Every adopting repo installs it.
 - **`nolte-media`** (`plugins/nolte-media/`) — brand-aware image generation and media processing. Split on a different **runtime/dependency** requirement: it needs external image-generation credentials and binaries (Cloudflare / Gemini / Pollinations API access, `vtracer`) that most consumers neither have nor want.
 - **`nolte-engineering`** (`plugins/nolte-engineering/`) — engineering capabilities for code-bearing projects: full-stack implementation, the test-tier and test-cycle suite, the quality gate, frontend/web-UI optimization, and code-security / dependency / license auditing. Split on a different **consumer audience**: code repositories adopt it on top of `nolte-shared`, while non-code repos (docs, content, config) take `nolte-shared` alone.
+- **`nolte-claude-dev`** (`plugins/nolte-claude-dev/`) — Claude Code skill/agent authoring: `skill-management`, `skill-review`, `agent-review`, `skills-agents-sweep`, `skill-agent-catalog-apply`, and the `claude-plugin-developer` agent. Split on a different **consumer audience** (F-18 flip 2026-07-22, `.audits/shared-plugin-analysis/2026-07-22-authoring-carve-out-reopen.md`): the majority of consumers install `nolte-shared` for the delivery lifecycle and **never author a skill or agent**, so they should stop carrying the authoring slice's skill-list weight. Adopters who do author skills/agents install it on top of `nolte-shared`. The `spec/claude/` corpus that governs authoring stays repo-wide — it does not move into this plugin.
 
-All three plugins version in **lockstep** — one release line equal to the repository's release tag (the splits are about install-time audience/dependencies, not release cadence). `.github/release-automation.yml` declares each plugin's `plugin.json` `version` plus `marketplace.json` `metadata.version` as the version-bearing files the pre-publish gate aligns; the `chore(release): <tag>` alignment bumps all of them together. Marketplace `plugins[].version` entries are intentionally absent — plugin-version resolution takes each plugin's own `plugin.json` first.
+All four plugins version in **lockstep** — one release line equal to the repository's release tag (the splits are about install-time audience/dependencies, not release cadence). `.github/release-automation.yml` declares each plugin's `plugin.json` `version` plus `marketplace.json` `metadata.version` as the version-bearing files the pre-publish gate aligns; the `chore(release): <tag>` alignment bumps all of them together. Marketplace `plugins[].version` entries are intentionally absent — plugin-version resolution takes each plugin's own `plugin.json` first.
 
 ## Layout
 
 - `.claude-plugin/plugin.json` — `nolte-shared` plugin manifest (name, version, author)
-- `.claude-plugin/marketplace.json` — marketplace catalog listing **all three** plugins (downstream install source)
+- `.claude-plugin/marketplace.json` — marketplace catalog listing **all four** plugins (downstream install source)
 - `skills/<name>/SKILL.md` — `nolte-shared` skills; each folder is one skill
 - `agents/<name>.md` — `nolte-shared` sub-agents
-- `plugins/nolte-media/`, `plugins/nolte-engineering/` — the second and third plugins: each with its own `.claude-plugin/plugin.json`, `skills/`, and `agents/`, scoped to that root
-- `spec/` — bilingual specifications governing all three plugins' skill/agent authoring and project conventions (repo-wide; not shipped with any plugin)
+- `plugins/nolte-media/`, `plugins/nolte-engineering/`, `plugins/nolte-claude-dev/` — the second, third, and fourth plugins: each with its own `.claude-plugin/plugin.json`, `skills/`, and `agents/`, scoped to that root
+- `spec/` — bilingual specifications governing all four plugins' skill/agent authoring and project conventions (repo-wide; not shipped with any plugin)
 - `docs/` — MkDocs source, bilingual (`docs/de/`, `docs/en/`); the catalog renders each plugin under its own `{skills,agents}/<plugin>/` subtree, configured in `docs/catalog-sources.yml`
 - `project/` — this repo's own planning surface: `mission.md`, `goals.md`, `roadmap.md`, plus `features/`, `sprints/`, and `blog-triggers/` (driven by `sprint-execute`, `feature-decompose`, `roadmap-plan`)
 - `portfolio/` — portfolio-level data (`tech-stack.yml`, `aggregate.yml`, `schemas/`)
 - `scripts/` — repo automation behind the Taskfile targets (`validate_skills.py`, `wip_journal.py`, `check_links.py`, `worktree_add.sh`, …); `validate_skills.py` auto-discovers every in-repo plugin under `plugins/`
 - `.claude/` — this repo's own Claude Code config (not shipped with any plugin): `settings.json` wires the journal/guard/validate hooks and permission allowlist; `rules/*.md` are session-loaded instruction rules — a rule with no `paths:` loads every session like `CLAUDE.md`, a `paths:`-scoped rule loads only when a matching file is touched
 
-Plugin skills are namespaced by plugin name — e.g. `/nolte-shared:spec`, `/nolte-media:image-generate`, `/nolte-engineering:quality-gate`.
+Plugin skills are namespaced by plugin name — e.g. `/nolte-shared:spec`, `/nolte-media:image-generate`, `/nolte-engineering:quality-gate`, `/nolte-claude-dev:skill-management`.
 
 ## Command entry points
 
@@ -45,14 +46,14 @@ Local automation runs through `Taskfile.yml`:
 When developing inside this repository, launch Claude Code with **all** in-repo plugins loaded — the root plugin plus each subdirectory plugin:
 
 ```bash
-claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering
+claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering --plugin-dir ./plugins/nolte-claude-dev
 ```
 
 `task plugin:reload` runs exactly this. Use `/reload-plugins` inside the session to pick up changes without restarting.
 
 ## Conventions
 
-- New skills are scaffolded via `/nolte-shared:skill-management`.
+- New skills are scaffolded via `/nolte-claude-dev:skill-management`.
 - Specs are authored and translated via `/nolte-shared:spec`.
 - Project-structure drift is checked via `/nolte-shared:project-structure-apply`.
 - Pull requests are created via `/nolte-shared:pull-request-create` following `spec/project/pull-request-workflow/`.

@@ -31,6 +31,20 @@ guardrail should enforce; the token figure is the human-facing estimate.
 | nolte-media | 2 | **1,108** | ~277 | 1,232 (~308) | −10% |
 | **All three** | **54** | **28,259** | **~7,064** | 36,909 (~9,227) | **−23.4%** |
 
+### 2026-07-22 re-baseline (F-18 authoring carve-out)
+
+The F-18 flip (`keep → split`, `2026-07-22-authoring-carve-out-reopen.md`) moved
+the agent `claude-plugin-developer` (386 chars) out of `nolte-shared` into the new
+fourth plugin `nolte-claude-dev`. This is a **move, not a trim** — the aggregate
+across plugins is unchanged. `AGENT_DESC_BASELINE_CHARS` in `validate_skills.py`
+is updated accordingly (regression-only gate; a move that lowers a plugin's weight
+is not a "raise" and needs no headroom re-derivation):
+
+| Plugin | Agents | Chars (baseline) | Δ vs. 2026-07-19 |
+|---|---:|---:|---|
+| nolte-shared | 22 | **11,065** | −386 (agent moved out) |
+| nolte-claude-dev | 1 | **386** | +386 (agent moved in) |
+
 ## Remediation summary
 
 - Every shared agent `description` normalised to the F-6 §Description contract

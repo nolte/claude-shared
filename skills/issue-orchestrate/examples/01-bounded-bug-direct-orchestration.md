@@ -45,7 +45,7 @@ Repository state when the skill is invoked:
    - `P2` — fix the stale `see_also` entry in `skills/lektorat-apply/SKILL.md`;
      acceptance: `task test` (`validate_skills.py`) passes and the named skill
      exists; touches `SKILL.md`; specialist resolved to
-     `nolte-shared:claude-plugin-developer`; **depends on** `P1` (same file region).
+     `nolte-claude-dev:claude-plugin-developer`; **depends on** `P1` (same file region).
 5. **Write the pre-analysis artifact.** The skill instantiates
    `templates/analysis.template.md` to `.audits/issue-orchestrate/312/analysis.md`
    with both packages, the DAG ordering `P1 → P2`, the risks, and the route, and
@@ -62,14 +62,14 @@ Repository state when the skill is invoked:
    skill body.
 8. **Dispatch in DAG order.** `P1` first: `Agent(subagent_type="nolte-shared:spec")`
    — wait for its report, record the result in the artifact's dispatch log. Then
-   `P2`: `Agent(subagent_type="nolte-shared:claude-plugin-developer")`. Each dispatch
+   `P2`: `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")`. Each dispatch
    gates on operator confirmation.
 9. **Verify.** The skill runs `quality-gate` green; no security-sensitive path is
    touched, so no `code-security-reviewer` run is required. It chains
    `pull-request-create` with **Risk / rollout notes** pre-populated:
    - `Issue: #312 — classification: bug`
    - `P1 dispatched specialist: nolte-shared:spec`
-   - `P2 dispatched specialist: nolte-shared:claude-plugin-developer`
+   - `P2 dispatched specialist: nolte-claude-dev:claude-plugin-developer`
    and `Closes #312` in the body. The operator confirms title and body before push.
 10. **Stop before merge.** The skill posts the artifact summary back to #312 as a
     comment (operator-confirmed), then reports the issue number, classification

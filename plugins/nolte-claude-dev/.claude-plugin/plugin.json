@@ -1,0 +1,11 @@
+{
+  "name": "nolte-claude-dev",
+  "version": "0.1.11",
+  "description": "Claude Code skill and agent authoring for plugin/skill developers: scaffolding and revising skills and agents in spec conformance, skill and agent review, portfolio-wide skills/agents sweeps, and skills/agents documentation-catalog generation. Adopt this on top of nolte-shared only if you author Claude Code skills or agents; the majority of consumers never do.",
+  "author": {
+    "name": "nolte",
+    "url": "https://github.com/nolte"
+  },
+  "repository": "https://github.com/nolte/claude-shared",
+  "homepage": "https://github.com/nolte/claude-shared"
+}
