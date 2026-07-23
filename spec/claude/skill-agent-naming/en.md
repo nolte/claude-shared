@@ -44,7 +44,7 @@ Scope boundary: this spec owns the **form** of a name—its semantic shape, morp
 
 - **MUST** keep naming consistent across the whole plugin—one convention per artifact type; mixing a gerund or free-form name into either surface is itself the discoverability anti-pattern `plugin-scoping` §Namespace and naming coherence warns against
 - Domain plugins that inherit this corpus (for example `claude-home-assistant`) **MAY** prepend a fixed domain prefix (`ha-`) to every artifact name; the form after the prefix follows the rules above unchanged (`ha-config-flow-augment`, `ha-blueprint-author`)
-- Inheriting plugins audit their surface against this spec's **rules**, not against the nolte-shared validator lists verbatim, and **MUST** declare their own closed exception lists in their spec-index README under the same discipline (closed, greppable, reviewer MUST NOT flag). A **family-suffix exception**—one deliberate, uniform suffix naming an artifact family, such as a `*-solution` front-door family—qualifies when it's declared there and stays internally consistent
+- Inheriting plugins audit their surface against this spec's **rules**, not against the nolte-shared validator lists verbatim, and **MUST** declare their own closed exception lists in their spec-index README under the same discipline (closed, greppable, reviewer MUST NOT flag). A **family-suffix exception** (one deliberate, uniform suffix naming an artifact family, such as a `*-solution` front-door family) qualifies when it's declared there and stays internally consistent
 
 ### Rename policy
 
