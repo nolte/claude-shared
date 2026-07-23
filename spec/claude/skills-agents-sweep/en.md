@@ -60,7 +60,7 @@ This spec codifies the methodology for a skills-and-agents sweep audit: a period
 - **MUST** classify every finding by implementation wave: mechanical sweep (automated or near-automated edit), spec extension (requires a spec change before implementation), or structural new artifact (requires authoring a new skill or agent)
 - **MUST** analyse skill-vs-agent classification: for every skill and agent, verify the rationale section justifies the chosen artifact type using the decision criteria from `spec/claude/skill-vs-agent/`; cases that don't match the decision criteria are findings
 - **SHOULD** analyse operations-vocabulary consistency: detect skills that use non-standard operation headings or operation verbs, and record deviations against the vocabulary defined in `spec/claude/skill-management/`
-- **SHOULD** analyse naming consistency: detect artifacts whose names deviate from the dominant naming convention in their lifecycle cluster (gerund or verb-noun form), and record the deviation with a proposed canonical form
+- **SHOULD** analyse naming consistency against `spec/claude/skill-agent-naming/` (skills `<object-noun>-<action>`, agents `<subject>-<role-noun>`, closed exceptions honoured), and record each deviation with a proposed canonical form
 - **SHOULD** distinguish findings that block release (failed MUST rules, Critical per `review-plan`) from findings that are deferrable (failed SHOULD, Warning or Suggestion per `review-plan`)
 
 ### Consolidated report format

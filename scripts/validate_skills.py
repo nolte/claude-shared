@@ -47,7 +47,7 @@ NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
 
 # --- Name-form convention --------------------------------------------------
 # spec/claude/skill-management/ §"Frontmatter validation" and
-# spec/claude/agent-management/ §Structure fix one name form per artefact type:
+# spec/claude/skill-agent-naming/ (normative owner) fixes one name form per artefact type:
 #   skills  -> <object-noun>-<action>   (trailing token names the action,
 #              a finite verb like `apply`/`create` or a deverbal action noun
 #              like `audit`/`review`/`handoff`/`management`)
@@ -217,7 +217,8 @@ def check_name_form(name: str | None, target: str, kind: str) -> list[Finding]:
     """Suggestion-grade name-form check.
 
     Skills are `<object-noun>-<action>`; agents are `<subject>-<role-noun>`
-    (`skill-management` §Frontmatter validation, `agent-management` §Structure).
+    (normative owner: `spec/claude/skill-agent-naming/`; the closed lists here
+    mirror that spec and change with it in the same PR).
     Never emits Critical: a form deviation is a discoverability smell, not a
     platform-validator failure. Names in the closed per-kind exception lists are
     silent; the lists themselves are the audit trail.
