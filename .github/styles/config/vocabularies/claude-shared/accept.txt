@@ -55,3 +55,12 @@ Caldiera
 Rombach
 Berghout
 Doran
+cyclomatic
+trustworthily
+reusability
+analysability
+modifiability
+tiering
+roadmapping
+delimitations
+TODOs?
