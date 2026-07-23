@@ -79,7 +79,7 @@ commands shown, per `spec/claude/mcp-tool-preference/`. `gh` stays authoritative
 
 3. **Identify generalist-handled finding classes.** Group the PRs by finding class (derived from the finding source and the nature of the fix). For each class, count how many times it was handled by a generalist (no specialist named). Classes at three or more generalist-handled occurrences trigger the gap-closure rule.
 
-4. **Resolve the current specialist catalog.** `Glob` `agents/*.md` (plus `~/.claude/agents/*.md`), `Read` the `description:` line of every candidate, and build a `(name, description)` table. This is the runtime inventory—not a hard-coded snapshot.
+4. **Resolve the current specialist catalog.** `Glob` every catalog root — `agents/*.md`, `skills/*/SKILL.md`, `plugins/*/agents/*.md`, `plugins/*/skills/*/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/{agents,skills}` in consumer installs, plus `~/.claude/agents/*.md` — and `Read` the `description:` line of every candidate, and build a `(name, description)` table. This is the runtime inventory—not a hard-coded snapshot.
 
 5. **Match finding classes to specialists.** For each generalist-handled finding class, walk the candidates and check whether any specialist's description now covers it. If a match exists but wasn't used historically, record that as a routing correction opportunity. If no match exists and the class has reached the three-recurrence threshold, record a **gap-closure action required** finding.
 
@@ -96,7 +96,7 @@ Record decisions on open findings and dispatch specialists.
 2. **For each unresolved finding in `## Findings`**, present the finding, the current specialist match (from the runtime catalog), and the three decision options:
    - **Dispatch specialist**: select the named specialist and record its `subagent_type` in the finding.
    - **Defer with reason**: record an explicit deferral note (reason + owner + target quarter).
-   - **Initiate gap-closure**: if no matching specialist exists and the recurrence threshold is met, dispatch `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")` to author a new specialist or extend an existing one's `description`.
+   - **Initiate gap-closure**: if no matching specialist exists and the recurrence threshold is met, dispatch `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")` (when the nolte-claude-dev plugin is installed; otherwise record the gap and point the operator at installing it) to author a new specialist or extend an existing one's `description`.
 
 3. **Dispatch hands-on remediation.** For each finding with a dispatch decision, call `Agent(subagent_type="<plugin>:<agent>")` with the finding class, the finding source reference, and a fix-PR-title hint. Wait for the agent's report. Never perform the specialist remediation inline.
 

@@ -10,6 +10,8 @@ use_when:
   - "you want to retarget an existing roadmap item to another sprint"
   - "you want to flip the MVP flag on a roadmap item"
 dont_use_when:
+  - situation: "You want the detail-level invariant enforced and violations walked item by item"
+    alternative: roadmap-refine
   - situation: "project/roadmap.md does not exist yet"
     alternative: roadmap-init
   - situation: "You want to enforce the queue-wide detail-level invariant"

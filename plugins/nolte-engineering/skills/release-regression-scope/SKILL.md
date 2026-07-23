@@ -84,7 +84,7 @@ When resolving the release range from merged pull requests, prefer the connected
 
 Per `spec/claude/skill-management/` §Gotchas.
 
-- **This skill selects; it never derives.** Manufacturing a new test case for an uncovered requirement is `test-case-extractor` / `test-cycle-case-determination`, not this skill. An uncovered requirement is a coverage-gap blocker, not a prompt to write a test here.
+- **This skill selects; it never derives.** Manufacturing a new test case for an uncovered requirement is `test-case-extractor` (per `spec/project/test-cycle-case-determination/`), not this skill. An uncovered requirement is a coverage-gap blocker, not a prompt to write a test here.
 - **Non-attributable never means narrower.** The safe direction for an unmapped change is *wider* (full-area regression + residual-risk note), never a guessed subset. Silent narrowing violates spec R3.
 - **A missing verifying test is a blocker, not a pass.** An impacted area with a requirement that has no green test is *not* covered (R5/R6); reporting it as in-scope-and-passing is the failure mode this skill exists to prevent.
 - **The scanner is read-only and range-agnostic.** The skill resolves the release range and hands the scanner the refs; the scanner attributes only. Don't expect the scanner to reach the GitHub API.

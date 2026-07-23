@@ -1,6 +1,6 @@
 ---
 name: webview-ui-optimize
-description: "Audits a browser-rendered frontend against the canonical-language file under spec/frontend/webview-ui-optimization/ and, with per-item user approval, patches findings across five domains: Performance, Security, Accessibility (WCAG 2.2 AA), Internationalisation, and UX. Three operations: `audit` (written to `.audits/webview-ui-optimize/`), `patch` (one finding at a time), `expert-review` (dispatches `webview-ui-expert`). Invoke when the user asks to \"audit the frontend\", \"check the UI against the webview-ui spec\", \"optimise for performance / a11y / i18n / UX / security\", \"fix the CSP\", \"wire up vitest-axe\", or equivalent German-language requests. Don't use for brand-design decisions, audience artefact (`audience-identify`), prose linting (`prose-vale-curator`), CVE audits (`dependency-audit`), or release-pipeline (`release-automation`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Audits a browser-rendered frontend against the canonical-language file under spec/frontend/webview-ui-optimization/ and, with per-item user approval, patches findings across five domains: Performance, Security, Accessibility (WCAG 2.2 AA), Internationalisation, and UX. Three operations: `audit` (written to `.audits/webview-ui-optimize/`), `patch` (one finding at a time), `expert-review` (dispatches `webview-ui-expert`). Invoke when the user asks to \"audit the frontend\", \"check the UI against the webview-ui spec\", \"optimise for performance / a11y / i18n / UX / security\", \"fix the CSP\", \"wire up vitest-axe\", or equivalent German-language requests. Don't use for brand-design decisions, audience artefact (`audience-identify`), prose linting (`prose-vale-curator`), CVE audits (`dependency-audit`), or the release pipeline (`release-publish-trigger`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [audit, scaffolding]
 phase: design
 summary: "Audits and patches a browser-rendered frontend across Performance, Security, A11y (WCAG 2.2 AA), i18n, and UX."
@@ -10,6 +10,8 @@ use_when:
   - "you want to patch a single finding (CSP, axe rule, prefers-reduced-motion, etc.)"
   - "you want a deeper expert-review pass on a named target"
 dont_use_when:
+  - situation: "You want a conventions-driven usability rework applied directly, not the spec rule loop"
+    alternative: frontend-usability-optimizer
   - situation: "You want CVE auditing rather than UI optimisation"
     alternative: dependency-audit
   - situation: "You want prose / Vale linting"
@@ -51,7 +53,7 @@ Detect the user's language from their message and respond in it. The audit-table
 
 ## Tools used
 
-Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
+Tools this skill uses: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
 - `Read` / `Glob` / `Grep` for repository inspection: `package.json`, `vite.config.ts`, `index.html`, `tsconfig*.json`, `eslint.config.*`, `nginx*.conf` / `*.inc`, `src/**/*.{ts,tsx,css}`, every `*.json` translation file, and the bundled per-domain research notes under `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md`.
 - `Write` to land a new audit report under `.audits/webview-ui-optimize/<timestamp>.md`; `Edit` to apply individual approved patches to existing files. Never overwrite a hand-edited audit; append a new timestamped report instead.

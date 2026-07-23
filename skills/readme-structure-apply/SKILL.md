@@ -45,7 +45,7 @@ Detect the user's language from their message and respond in it. The README itse
 
 ## Tools used
 
-Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
+Tools this skill uses: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
 - `Read` / `Glob` / `Grep` for repository inspection (`README.md`, `.github/workflows/`, `LICENSE`, `pyproject.toml` / `package.json` for proper-noun discovery, neighbouring portfolio repos for the related-repositories section).
 - `Write` for scaffold (a fresh `README.md` doesn't exist yet) and `Edit` for patch (a section is added or fixed in an existing README).

@@ -44,7 +44,7 @@ Detect the user's language from their message and respond in it. Generated file 
 
 ## Tools used
 
-Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
+Tools this skill uses: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
 - `Read` / `Glob` / `Grep` for repository inspection (page walking, paragraph hashing, marker hunting in candidate canonical sources, existing-include detection).
 - `Edit` for in-place replacement of duplicated paragraph blocks with `{% include-markdown … %}` directives, and for inserting start/end marker comments into canonical sources.

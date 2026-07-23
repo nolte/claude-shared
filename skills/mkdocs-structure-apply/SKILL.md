@@ -47,7 +47,7 @@ Detect the user's language from their message and respond in it. Generated file 
 
 ## Tools used
 
-Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
+Tools this skill uses: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
 - `Read` / `Glob` / `Grep` for repository inspection (mkdocs.yml, docs/<lang>/ trees, dep manifests, page frontmatter, active extension-spec markers).
 - `Write` / `Edit` for scaffold and patch operations on `mkdocs.yml`, docs trees, and dep manifests; never overwriting existing config wholesale.

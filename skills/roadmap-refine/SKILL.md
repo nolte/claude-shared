@@ -10,6 +10,8 @@ use_when:
   - "you want to promote roadmap items from coarse or backlog to fine"
   - "you want to verify the roadmap is ready for sprint planning"
 dont_use_when:
+  - situation: "You want the promotion or retarget write executed as a standalone roadmap operation"
+    alternative: roadmap-plan
   - situation: "You want to add or retarget items"
     alternative: roadmap-plan
   - situation: "project/roadmap.md does not exist yet"
