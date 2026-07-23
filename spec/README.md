@@ -19,6 +19,7 @@ Canonical language: `en` · Translations: `de`
 | claude | review-plan | Review Plan Artifact | Review-Plan-Artefakt | draft | portfolio | 2026-04-24 |
 | claude | skill-agent-catalog | Claude Skill and Agent Catalog | Claude-Skill- und -Agent-Katalog | draft | local | 2026-04-23 |
 | claude | skill-agent-frontmatter | Skill and Agent Frontmatter Field Reference | Skill- und Agent-Frontmatter-Feldreferenz | draft | local | unversioned |
+| claude | skill-agent-naming | Skill and Agent Naming | Skill- und Agent-Naming | draft | portfolio | unversioned |
 | claude | skill-management | Claude Skill Authoring | Claude-Skill-Autorenschaft | draft | local | 2026-04-24 |
 | claude | skill-review | Claude Skill Review | Claude-Skill-Review | draft | local | 2026-04-24 |
 | claude | skill-vs-agent | Skill vs. Agent Decision | Skill- vs. Agent-Entscheidung | draft | local | 2026-04-23 |
