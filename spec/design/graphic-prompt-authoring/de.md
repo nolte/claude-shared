@@ -6,7 +6,7 @@ Status: draft
 
 Portfolioweit braucht KI-Bildgenerierung erst einen Prompt, bevor sie ein Asset erzeugen kann: ein Hero-Bild für einen Blogpost, eine Empty-State-Illustration für eine Web-App, ein App-Icon, eine Social Card. Diese Prompts ad hoc zu schreiben erzeugt zwei Fehlermodi. Erstens driften die Prompts vom Brand ab — jeder Autor greift zu anderen Farbwörtern, ignoriert die publizierte Style-Referenz oder hartcodiert eine Farbton-Intuition, die das `corporate-design-colors`-Spec verbietet. Zweitens sind die Prompts nicht reproduzierbar: Es gibt kein dauerhaftes Artefakt, das festhält, was angefragt wurde, sodass „dasselbe Bild, nur breiter" Monate später Raterei ist.
 
-Diese Spec regelt, wie ein Claude-Code-Agent (der `graphic-prompt-generator`-Agent, `distribution: plugin`) ein kurzes Grafik-Briefing in ein **brand-konformes, generatorfertiges Prompt-Dokument auf der Platte** überführt. Sie ist die Autoren-Hälfte der KI-Bild-Pipeline: Diese Spec erzeugt den Prompt; `spec/tools/image-generation/` konsumiert einen Prompt und liefert eine Bilddatei; `spec/claude/png-to-transparent-svg/` reinigt einen generierten Raster zu einem Vektor, wenn Transparenz nötig ist. Der Farbvertrag, den diese Prompts erfüllen müssen, gehört zu `spec/design/corporate-design-colors/` §AI image color contract; diese Spec wiederholt ihn nicht, sondern operationalisiert ihn für den Prompt-Autoren-Schritt und erweitert ihn auf Generatoren jenseits von Midjourney.
+Diese Spec regelt, wie ein Claude-Code-Agent (der `graphic-prompt-generator`-Agent, `distribution: plugin`) ein kurzes Grafik-Briefing in ein **brand-konformes, generatorfertiges Prompt-Dokument auf der Platte** überführt. Sie ist die Autoren-Hälfte der KI-Bild-Pipeline: Diese Spec erzeugt den Prompt; `spec/tools/image-generation/` konsumiert einen Prompt und liefert eine Bilddatei; `spec/design/png-to-transparent-svg/` reinigt einen generierten Raster zu einem Vektor, wenn Transparenz nötig ist. Der Farbvertrag, den diese Prompts erfüllen müssen, gehört zu `spec/design/corporate-design-colors/` §AI image color contract; diese Spec wiederholt ihn nicht, sondern operationalisiert ihn für den Prompt-Autoren-Schritt und erweitert ihn auf Generatoren jenseits von Midjourney.
 
 Die Capability ist der generalisierte Nachfolger eines projektlokalen `gemini-graphic-prompt-generator`-Agents, der die Palette, das Maskottchen und die Dateipfade eines einzelnen Projekts hartcodiert hatte. Die Portfolio-Form liest den Brand aus den publizierten Design-Tokens des Konsumenten-Repositorys, statt den Brand irgendeines Projekts im Body zu tragen.
 
@@ -24,7 +24,7 @@ Leser: Skill- und Agent-Autoren, die den Prompt-Autoren-Agent pflegen; Reviewer,
 
 - Definition des Brand-Farbsystems, des deskriptiven Farbvokabulars, der kanonischen Style-Referenz (`--sref` oder pro-Modell-Äquivalent) oder der Farb-Prompt-Assemblierungs-Reihenfolge — alles im Besitz von `spec/design/corporate-design-colors/` §AI image color contract; diese Spec referenziert jenen Vertrag und darf ihm nicht widersprechen
 - Der tatsächliche Aufruf eines Bildgenerators oder das Schreiben einer Bilddatei (im Besitz von `spec/tools/image-generation/` und jedem künftigen pro-Generator-Geschwister)
-- Nachbearbeitung erzeugter Raster — Hintergrund-Reinigung und Vektorisierung gehören zu `spec/claude/png-to-transparent-svg/`
+- Nachbearbeitung erzeugter Raster — Hintergrund-Reinigung und Vektorisierung gehören zu `spec/design/png-to-transparent-svg/`
 - Nicht-farbliche Bild-Achsen (Komposition, Beleuchtung, fotografisch-vs-illustrativ) über das hinaus, was ein einzelnes Briefing spezifiziert; eine künftige `spec/design/imagery-style/` besitzt die portfolioweite Behandlung
 - Pflege des `brand-prompt-library.md`-Ledgers *publizierter* Hero-Bilder (das ist ein Post-Generierungs-Record im Besitz von `corporate-design-colors`); diese Spec regelt Vor-Generierungs-Prompt-Dokumente
 
@@ -82,7 +82,7 @@ Leser: Skill- und Agent-Autoren, die den Prompt-Autoren-Agent pflegen; Reviewer,
 
 - [R1] AI image color contract, deskriptives Farbvokabular, Style-Referenz und Prompt-Assemblierungs-Reihenfolge: `spec/design/corporate-design-colors/` §AI image color contract
 - [R2] Nachgelagertes Bildgenerierungs-Tool (Prompt rein, Bilddatei raus): `spec/tools/image-generation/`
-- [R3] Nachbearbeitung für Transparenz-Reinigung und Vektorisierung: `spec/claude/png-to-transparent-svg/`
+- [R3] Nachbearbeitung für Transparenz-Reinigung und Vektorisierung: `spec/design/png-to-transparent-svg/`
 - [R4] Agent-Autoren-Regeln, denen dieser Agent entspricht: `spec/claude/agent-management/`
 - [R5] Skill-vs-Agent-Entscheidungsregel und Rationale-Abschnitts-Anforderung: `spec/claude/skill-vs-agent/`
 - [R6] FLUX-Generierungs-Grundlage auf Modellebene (die Prompting-Regeln und harten Invarianten für FLUX-Ziele): `spec/design/flux-image-generation/`

@@ -17,6 +17,7 @@ dont_use_when:
   - situation: "You want to enforce the queue-wide detail-level invariant"
     alternative: roadmap-refine
 see_also:
+  - roadmap-coherence-reviewer
   - roadmap-init
   - roadmap-refine
   - requirements-elicit
@@ -28,6 +29,10 @@ resumable: true
 # Roadmap Plan
 
 Mutates the queue in `project/roadmap.md` per `spec/project/roadmap/<canonical_language>.md` and the cross-cutting MVP semantics declared by `spec/project/mission/<canonical_language>.md`. Owns adds, detail promotions, sprint retargets, MVP flips, and lifecycle transitions on existing items. The detail-level invariant is checked here on every write; the wider per-queue audit belongs to `roadmap-refine`.
+
+## Coherence gate
+
+Before a batch of transitions or when drift against `goals.md` / `mission.md` / the sprint files is suspected, dispatch the read-only `roadmap-coherence-reviewer` agent and act on its findings first — it is the hybrid-pattern review counterpart of this skill and catches cross-document inconsistencies the per-item validations here don't see.
 
 ## Why this is a skill, not an agent
 

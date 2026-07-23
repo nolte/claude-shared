@@ -17,6 +17,7 @@ dont_use_when:
   - situation: "project/roadmap.md does not exist yet"
     alternative: roadmap-init
 see_also:
+  - roadmap-coherence-reviewer
   - roadmap-plan
   - roadmap-init
   - sprint-plan
@@ -33,6 +34,10 @@ This skill also triggers on equivalent German-language requests, including:
 
 - "Roadmap verfeinern"
 - "Roadmap-Detailstufen prüfen"
+
+## Coherence gate
+
+Before a batch of transitions or when drift against `goals.md` / `mission.md` / the sprint files is suspected, dispatch the read-only `roadmap-coherence-reviewer` agent and act on its findings first — it is the hybrid-pattern review counterpart of this skill and catches cross-document inconsistencies the per-item validations here don't see.
 
 ## Why this is a skill, not an agent
 

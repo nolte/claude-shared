@@ -111,6 +111,8 @@ Add a single Mermaid diagram to a markdown file under `docs_dir`. Two source mod
 
 #### derived
 
+> Candidate discovery: when the author doesn't yet know *which* prose deserves a diagram, dispatch the read-only `diagram-opportunity-reviewer` agent first — its findings are exactly this flow's input.
+
 1. Ask for: the target markdown file path, the source artifact (one of the recognized derivation sources from the spec). The source must be a real path in the repo.
 2. Read the source artifact and extract nodes/edges:
    - `.claude-plugin/plugin.json` → plugin name, version, owner, included skills/agents → `flowchart` or `C4Component`.

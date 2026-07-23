@@ -57,7 +57,7 @@ Read `references/operations.md` when executing any of the operations below in de
 
 ### 1. Audit
 
-Walk through the spec's Acceptance Criteria one item at a time; classify each finding as `pass`, `missing`, or `drift`. Report grouped by spec area (Top-level files, Claude integration, CI and automation, GitHub repository configuration, Documentation, Specifications, Project planning artefacts, Tests, Source layout, Python development, Home Assistant, Containerization). Audit is read-only—never autofix.
+Walk through the spec's Acceptance Criteria one item at a time; classify each finding as `pass`, `missing`, or `drift`. Report grouped by spec area (Top-level files, Claude integration, CI and automation, GitHub repository configuration, Documentation, Specifications, Project planning artefacts, Tests, Source layout, Python development, Home Assistant, Containerization). Audit is read-only—never autofix. For a context-isolating variant of this pass, dispatch the read-only `project-structure-reviewer` agent (the hybrid-pattern counterpart declared in its body) and consume its severity-sorted findings instead of walking inline; the routing through the apply operation stays identical.
 
 ### 2. GitHub App installation check
 

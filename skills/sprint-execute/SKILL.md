@@ -52,7 +52,7 @@ This skill performs whichever of the operations below the user's request maps to
 
 ### 1. Promote `planned → active`
 
-Triggered as a side effect of the first `ready → in_progress` transition on a feature whose `sprint` field matches a `planned` sprint, or directly when the user explicitly asks to start the sprint.
+Triggered as a side effect of the first `ready → in_progress` transition on a feature whose `sprint` field matches a `planned` sprint, or directly when the user explicitly asks to start the sprint. Before promoting, offer the readiness gate: dispatch the read-only `sprint-readiness-reviewer` agent for its go/no-go on the target sprint file (the contract that agent declares); on a no-go, surface the findings and stop instead of promoting.
 
 Steps:
 
