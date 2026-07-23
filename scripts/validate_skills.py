@@ -58,7 +58,7 @@ NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$")
 # Trailing action tokens established across the skill surface. Extend when a new
 # skill legitimately introduces a new action token.
 SKILL_ACTION_TOKENS = {
-    "apply", "audit", "author", "capture", "check", "create", "curate",
+    "apply", "assess", "audit", "author", "capture", "check", "create", "curate",
     "decompose", "define", "derive", "elicit", "execute", "generate", "handoff", "identify",
     "init", "maintain", "manage", "management", "merge", "optimize",
     "orchestrate", "plan", "refactor", "refine", "review", "revise",
