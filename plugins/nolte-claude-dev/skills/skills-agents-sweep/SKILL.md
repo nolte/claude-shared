@@ -66,7 +66,7 @@ Interactive. Confirm scope with the user before proceeding.
 
 1. **Determine scope.** Ask (or infer from message): full inventory sweep, or narrowed to a lifecycle phase or frontmatter tag? Record the scope; if narrowed, note which artefacts are excluded in the report's `## Scope` section.
 2. **Record the repository revision.** Run `git rev-parse HEAD`; record as `repo-revision` in report frontmatter.
-3. **Inventory the artefacts.** Walk `skills/<name>/SKILL.md` and `agents/<name>.md`; count each group. Record counts in frontmatter (`scope:`).
+3. **Inventory the artefacts.** Walk every plugin root: `skills/<name>/SKILL.md` and `agents/<name>.md` at the repo root plus `plugins/*/skills/<name>/SKILL.md` and `plugins/*/agents/<name>.md` (mirroring the auto-discovery in `scripts/validate_skills.py`); count each group per plugin. Record counts in frontmatter (`scope:`).
 4. **Phase 1 — per-artefact reviews.** For each skill, invoke `skill-review run <name>` to produce a plan under `.audits/skill-review/<name>.md`. For each agent, invoke `agent-review run <name>` to produce a plan under `.audits/agent-review/<name>.md`. Record `per-artefact-plans` count in frontmatter. Per the governing spec, phase 2 should not begin until phase 1 plans exist — confirm with the user before proceeding to phase 2 if any plans are missing.
 5. **Phase 2 — cross-cutting analysis.** Analyse these dimensions in order, drawing on the per-artefact plans from phase 1:
    - **Boundary matrix**: for every pair whose descriptions address overlapping trigger phrases, record overlap, propose resolution (merge / rename / bidirectional "Don't use for" clause), and classify as conflict, adjacent, or chain.
