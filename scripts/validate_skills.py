@@ -539,6 +539,111 @@ def check_use_case_field_lengths(text: str, target: str, kind: str) -> list[Find
     return findings
 
 
+
+
+# --- 2026-07 audit guards (WP-B6) -----------------------------------------
+
+RATIONALE_HEADINGS = {
+    "skill": "## Why this is a skill, not an agent",
+    "agent": "## Why this is an agent, not a skill",
+}
+# Sanctioned nominal description leads that are third-person without a verb.
+NOMINAL_LEAD_PREFIXES = (
+    "Read-only", "Top-level", "Whole-picture", "Bilingual",
+    # role-noun / participle leads that are third-person without an -s verb
+    "Senior", "Given",
+)
+DESCRIPTION_HEADROOM_CHARS = 975  # 95% of the 1024 platform cap
+
+
+def check_rationale_heading(body: str, target: str, kind: str) -> list[Finding]:
+    """Exact-wording rationale heading per `skill-vs-agent` §Rationale section heading.
+
+    The heading is a MUST with fixed wording because grep-based portfolio
+    audits key on the exact string; variants defeat them silently.
+    """
+    heading = RATIONALE_HEADINGS[kind]
+    if re.search(rf"^{re.escape(heading)}\s*$", body, re.MULTILINE):
+        return []
+    return [Finding(
+        "Critical", target, f"{kind}-management.rationale-heading-missing",
+        f"body lacks the exact rationale heading `{heading}` "
+        "(skill-vs-agent §Rationale section heading)")]
+
+
+def check_description_lead_voice(desc: str | None, target: str, kind: str) -> list[Finding]:
+    """Heuristic third-person lead-verb check (imperative-description detector).
+
+    The pronoun gate misses imperative leads ("Audit the..." instead of
+    "Audits the..."). Heuristic: the first word of the description should be
+    a third-person-singular verb (ends in `s`) or a sanctioned nominal lead.
+    Warning severity: a heuristic, not a platform rule.
+    """
+    if not desc:
+        return []
+    first = desc.split(" ", 1)[0].strip('"')
+    if not first or not first[0].isupper():
+        return []
+    if first.startswith(NOMINAL_LEAD_PREFIXES):
+        return []
+    if not first.isalpha() or first.endswith("s"):
+        return []
+    # Adverb-led third person ("Visually reviews ..."): pass when the second
+    # word carries the -s verb instead.
+    rest = desc.split(" ", 2)
+    if len(rest) > 1 and rest[1].strip('"').endswith("s"):
+        return []
+    return [Finding(
+        "Warning", target, f"{kind}-management.frontmatter-description-lead-voice",
+        f"`description` opens with `{first}` — reads as imperative; use the "
+        f"third-person form (`{first}s ...`) or a sanctioned nominal lead")]
+
+
+def check_description_headroom(desc: str | None, target: str, kind: str) -> list[Finding]:
+    """Early-warning headroom hint below the hard 1024 cap (R-9 guardrail)."""
+    if not desc or len(desc) > 1024 or len(desc) < DESCRIPTION_HEADROOM_CHARS:
+        return []
+    return [Finding(
+        "Info", target, f"{kind}-management.frontmatter-description-headroom",
+        f"`description` length {len(desc)} is within 5% of the 1024 cap; "
+        "trim on the next edit before an addition breaks the MUST")]
+
+
+def _tools_list(tools) -> list[str]:
+    if tools is None:
+        return []
+    if isinstance(tools, list):
+        return [str(t).strip() for t in tools]
+    return [t.strip() for t in str(tools).split(",") if t.strip()]
+
+
+def check_bash_justification(tools, desc: str | None, body: str, target: str) -> list[Finding]:
+    """Agents holding `Bash` carry a greppable justification heading.
+
+    Read-only-shaped agents (description leads with "Read-only" or names a
+    read-only responsibility) require `## Read-only Bash justification`
+    (agent-management §Tool access narrow exception — a MUST, so Critical).
+    Write-capable agents document shell usage under the neutral
+    `## Bash justification` (a convention, so Warning when absent).
+    """
+    if "Bash" not in _tools_list(tools):
+        return []
+    has_ro = bool(re.search(r"^## Read-only Bash justification\s*$", body, re.MULTILINE))
+    has_neutral = bool(re.search(r"^## Bash justification\s*$", body, re.MULTILINE))
+    if has_ro or has_neutral:
+        return []
+    read_only_shaped = bool(re.search(r"\bread-only\b", (desc or ""), re.IGNORECASE))
+    if read_only_shaped:
+        return [Finding(
+            "Critical", target, "agent-management.bash-justification-missing",
+            "read-only agent declares `Bash` without a `## Read-only Bash "
+            "justification` section (agent-management §Tool access)")]
+    return [Finding(
+        "Warning", target, "agent-management.bash-justification-missing",
+        "write-capable agent declares `Bash` without a `## Bash justification` "
+        "section naming its command envelope (agent-management §Tool access)")]
+
+
 def check_skill(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix()
     text = path.read_text(encoding="utf-8")
@@ -559,6 +664,9 @@ def check_skill(path: Path) -> list[Finding]:
     findings += check_when_to_use(fm.get("description"), fm.get("when_to_use"), rel, "skill")
     findings += check_resumable_wiring(
         fm.get("resumable"), fm.get("description"), fm.get("name"), body, rel, "skill")
+    findings += check_rationale_heading(body, rel, "skill")
+    findings += check_description_lead_voice(fm.get("description"), rel, "skill")
+    findings += check_description_headroom(fm.get("description"), rel, "skill")
     return findings
 
 
@@ -581,6 +689,10 @@ def check_agent(path: Path) -> list[Finding]:
     findings += check_phase(fm.get("phase"), rel, "agent")
     findings += check_resumable_wiring(
         fm.get("resumable"), fm.get("description"), fm.get("name"), body, rel, "agent")
+    findings += check_rationale_heading(body, rel, "agent")
+    findings += check_description_lead_voice(fm.get("description"), rel, "agent")
+    findings += check_description_headroom(fm.get("description"), rel, "agent")
+    findings += check_bash_justification(fm.get("tools"), fm.get("description"), body, rel)
     return findings
 
 
