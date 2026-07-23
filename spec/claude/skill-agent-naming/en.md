@@ -31,6 +31,7 @@ Scope boundary: this spec owns the **form** of a name—its semantic shape, morp
 
 - **MUST** name every skill in verb-noun form, concretely `<object-noun>-<action>`: the leading tokens name the object, the **trailing** token names the action—expressed either as a finite verb (`pull-request-create`, `roadmap-init`, `feature-decompose`, `mission-define`) or as a verb-derived action noun (`dependency-audit`, `gemini-image-handoff`, `skill-management`)
 - The action sits **last**, mirroring the agent-side order where the role-noun sits last
+- The action vocabulary is **open at rule level**: any finite verb or verb-derived action noun qualifies (`add`, `augment`, `scaffold`, `migrate`, `sync`, `determine`, `release`, and peers). The validator's `SKILL_ACTION_TOKENS` list is a surface mirror that grows with the portfolio's actual tokens—never a semantic gate that outlaws a legitimate verb
 - **Closed exceptions** (a reviewer **MUST NOT** flag these; the list is exhaustive): `spec` (bare noun), `yaml-json-schema` (noun compound), `quality-gate` (trailing noun names a thing, not an action). All three predate the convention; renaming would break every consumer call site—and, for `spec`, the `$ref`/cross-reference machinery. Every *new* skill **MUST** follow the convention
 
 ### Agent names: `<subject>-<role-noun>`
@@ -43,6 +44,7 @@ Scope boundary: this spec owns the **form** of a name—its semantic shape, morp
 
 - **MUST** keep naming consistent across the whole plugin—one convention per artifact type; mixing a gerund or free-form name into either surface is itself the discoverability anti-pattern `plugin-scoping` §Namespace and naming coherence warns against
 - Domain plugins that inherit this corpus (for example `claude-home-assistant`) **MAY** prepend a fixed domain prefix (`ha-`) to every artifact name; the form after the prefix follows the rules above unchanged (`ha-config-flow-augment`, `ha-blueprint-author`)
+- Inheriting plugins audit their surface against this spec's **rules**, not against the nolte-shared validator lists verbatim, and **MUST** declare their own closed exception lists in their spec-index README under the same discipline (closed, greppable, reviewer MUST NOT flag). A **family-suffix exception** (one deliberate, uniform suffix naming an artifact family, such as a `*-solution` front-door family) qualifies when it's declared there and stays internally consistent
 
 ### Rename policy
 
