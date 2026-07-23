@@ -1,6 +1,6 @@
 ---
 name: project-structure-apply
-description: "Audits a repository against the canonical-language file under spec/project/project-structure/ and scaffolds or patches missing artefacts: README, top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, the MkDocs site skeleton (delegated mid-flow to `mkdocs-structure-apply`), .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, `stale`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests. Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Audits a repository against the canonical-language file under spec/project/project-structure/ and scaffolds or patches missing artefacts: README (delegated mid-flow to `readme-structure-apply`), top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, the MkDocs site skeleton (delegated mid-flow to `mkdocs-structure-apply`), .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, `stale`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests. Supports resume on re-invocation."
 tags: [scaffolding]
 phase: design
 summary: "Audits a repository against the project-structure spec and scaffolds missing artefacts (README, .github/, Renovate, Taskfile, MkDocs, .claude/)."
@@ -10,6 +10,8 @@ use_when:
   - "you want to scaffold missing GitHub configs (settings, release-drafter, boring-cyborg, stale)"
   - "you want to check that the backing GitHub Apps (Probot, Renovate) are installed"
 dont_use_when:
+  - situation: "You want the README audited, scaffolded, or patched on its own"
+    alternative: readme-structure-apply
   - situation: "You want only the MkDocs site skeleton (per-language tree, nav, plugin baseline), not the whole repo structure"
     alternative: mkdocs-structure-apply
   - situation: "You want to wire the skill-and-agent catalog on top of MkDocs"

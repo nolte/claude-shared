@@ -47,7 +47,7 @@ Detect the user's language from their message and respond in it. Generated artef
 
 ## Tools used
 
-Declared tools: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
+Tools this skill uses: `Read`, `Write`, `Edit`, `Glob`, `Grep`, `Bash`.
 
 - `Read` / `Glob` / `Grep` for repository inspection (docs/<lang>/ trees, page frontmatter, audience artefact, marker files that indicate active extension specs).
 - `Write` / `Edit` for scaffold and patch operations on per-page frontmatter, content-block placeholder pages, and the audience artefact; never overwriting an existing audience artefact wholesale (delegate that to `audience-identify`).

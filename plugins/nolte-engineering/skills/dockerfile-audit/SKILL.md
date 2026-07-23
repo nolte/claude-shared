@@ -1,6 +1,6 @@
 ---
 name: dockerfile-audit
-description: Audits a project's Dockerfiles against spec/project/dockerfile-best-practices/ and produces a severity-classified audit artifact. The default `audit` operation dispatches the read-only dockerfile-audit-scanner agent, then hard-fails on any missing mandatory OCI core label (source, title, description, version, revision, created) present in neither the Dockerfile nor CI injection, and on any of the four mandatory non-label pillars (non-root numeric USER, in-layer secrets, base not pinned by tag+digest, missing .dockerignore); advisory pillars are scored. The opt-in `apply` operation inserts or merges the OCI LABEL block into the final stage. Invoke when the user asks to "audit a Dockerfile," "check OCI image labels," "run a Dockerfile best-practices check," or equivalent German-language requests. Don't use for dependency CVEs (dependency-audit), license inventory (license-check), or Kubernetes runtime hardening. Supports resume per spec/claude/resumable-work/.
+description: Audits a project's Dockerfiles against spec/project/dockerfile-best-practices/ and produces a severity-classified audit artifact. The default `audit` operation dispatches the read-only dockerfile-audit-scanner agent, then hard-fails on any missing mandatory OCI core label (source, title, description, version, revision, created) present in neither the Dockerfile nor CI injection, and on any of the four mandatory non-label pillars (non-root numeric USER, in-layer secrets, base not pinned by tag+digest, missing .dockerignore); advisory pillars are scored. The opt-in `apply` operation inserts or merges the OCI LABEL block into the final stage. Invoke when the user asks to "audit a Dockerfile," "check OCI image labels," "run a Dockerfile best-practices check," or equivalent German-language requests. Don't use for dependency CVEs (dependency-audit), license inventory (license-check), or Kubernetes runtime hardening (deployment-bestpractices-reviewer). Supports resume per spec/claude/resumable-work/.
 tags: [audit]
 phase: quality
 summary: "Audits a project's Dockerfiles against the best-practices spec (mandatory OCI labels + four hardening pillars), reports findings, and can apply the OCI LABEL block."
@@ -15,7 +15,7 @@ dont_use_when:
   - situation: "You want a license-compliance inventory"
     alternative: license-check
   - situation: "You want Kubernetes runtime hardening (SecurityContext, probes)"
-    alternative: quality-gate
+    alternative: deployment-bestpractices-reviewer
 see_also:
   - dockerfile-audit-scanner
   - dependency-audit

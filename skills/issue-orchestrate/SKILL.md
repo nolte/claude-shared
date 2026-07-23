@@ -224,7 +224,7 @@ body.
    `continuous-improvement` §Portfolio gap closure: record the no-match, count
    generalist-handled recurrences of the class, and at three or more (or with a
    recorded high-impact justification) offer to dispatch
-   `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")` to author a new
+   `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")` (if nolte-claude-dev is installed; else record the gap for the operator) to author a new
    specialist. Until the gap closes, the generalist may handle the package and the PR
    records the explicit "no matching specialised agent — generalist remediation"
    note.
@@ -241,7 +241,7 @@ the next time the skill runs, with no stale snapshot to mislead the dispatch.
 
 ### 6. verify
 
-Before any PR opens, require `quality-gate` to pass green on the produced change, and
+Before any PR opens, require `quality-gate` (when nolte-engineering is installed; otherwise the repo's declared `task lint`/`task test` gate) to pass green on the produced change, and
 for any package touching a security-sensitive path run the read-only
 `code-security-reviewer` agent to scope the surface and the built-in `security-review`
 skill to verify the produced diff. (`security-review` is the Claude Code harness
