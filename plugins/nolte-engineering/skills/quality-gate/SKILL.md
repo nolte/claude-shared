@@ -14,11 +14,14 @@ dont_use_when:
     alternative: dependency-audit
 see_also:
   - dependency-audit
+  - quality-gate-enforcer
 ---
 
 # Quality Gate
 
 Run every lint, typecheck, and test step the project declares, in parallel, and report the outcome as a single table. This skill doesn't fix failures—it surfaces them with enough detail that the caller knows what to fix.
+
+The gate's *wiring* — whether the Taskfile targets, `.pre-commit-config.yaml`, and `ci.yml` conform to `spec/project/quality-gate/` — is the sibling `quality-gate-enforcer` agent's job: dispatch that read-only auditor when the question is whether the gate is wired right, not whether the code passes it.
 
 Implements `spec/project/quality-gate/` — the spec defines the gate composition contract, invocation requirements, and output shape. This skill binds those rules to the on-disk procedure.
 
