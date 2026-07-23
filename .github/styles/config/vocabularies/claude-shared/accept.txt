@@ -62,5 +62,5 @@ analysability
 modifiability
 tiering
 roadmapping
-delimitation(s)?
+delimitations?
 TODOs?
