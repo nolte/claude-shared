@@ -1,12 +1,12 @@
 ---
 name: skill-management
-description: Authors or revises Claude Code skills in the nolte-shared plugin source tree. Invoke when the user asks to create a new skill, scaffold a skill, add a skill to this repo, or revise an existing skill (weak description, missing Hard rules, overlong instructions). Also handles equivalent German-language requests. Scaffolds the target folder under skills/ (distribution via the plugin mechanism, not .claude/skills copies) and writes SKILL.md with valid frontmatter. Don't use to review or audit an existing skill (use `skill-review` for the persistent spec-cited plan), to bump the plugin version in a skill-change PR (`release-automation` owns that), or for a full spec-conformant draft of a skill or agent (this skill chains to claude-plugin-developer after name/purpose decisions). Supports resume on re-invocation per `spec/claude/resumable-work/`.
+description: Authors or revises Claude Code skills in this plugin monorepo, targeting any of its plugin roots. Invoke when the user asks to create a new skill, scaffold a skill, add a skill to this repo, or revise an existing skill (weak description, missing Hard rules, overlong instructions). Also handles equivalent German-language requests. Scaffolds the target folder under the chosen plugin root's skills/ directory (distribution via the plugin mechanism, not .claude/skills copies) and writes SKILL.md with valid frontmatter. Don't use to review or audit an existing skill (use `skill-review` for the persistent spec-cited plan), to bump the plugin version in a skill-change PR (`release-automation` owns that), or for a full spec-conformant draft of a skill or agent (this skill chains to claude-plugin-developer after name/purpose decisions). Supports resume on re-invocation per `spec/claude/resumable-work/`.
 tags: [scaffolding]
 phase: design
-summary: "Scaffolds or revises a nolte-shared Claude Code skill folder."
-summary_de: "Scaffoldet oder überarbeitet einen nolte-shared Claude-Code-Skill-Ordner."
+summary: "Scaffolds or revises a Claude Code skill folder in one of this monorepo's plugins."
+summary_de: "Scaffoldet oder überarbeitet einen Claude-Code-Skill-Ordner in einem der Plugins dieses Monorepos."
 use_when:
-  - "you want to create a new skill in the nolte-shared plugin"
+  - "you want to create a new skill in one of this monorepo's plugins"
   - "you want to revise a weak description or restructure an existing skill"
   - "you want to scaffold SKILL.md with valid frontmatter before writing the body"
 dont_use_when:
@@ -40,7 +40,7 @@ Detect the user's language and respond in it. Skill files themselves (`SKILL.md`
 
 ## Target location
 
-This skill is intended to run inside the **claude-shared plugin source tree** (a repo that contains `.claude-plugin/plugin.json` and a top-level `skills/` directory). There, skills always live at `skills/<name>/`. Detection: if `.claude-plugin/plugin.json` exists at the repo root, treat the repo as the source tree and use `skills/<name>/`.
+This skill is intended to run inside the **claude-shared plugin monorepo** (a repo that contains `.claude-plugin/plugin.json` at the root and possibly further plugin roots under `plugins/*/.claude-plugin/plugin.json`). Skills live at `<plugin-root>/skills/<name>/`. Detection: if `.claude-plugin/plugin.json` exists at the repo root, treat the repo as the source tree; when more than one plugin root exists, list them (`.claude-plugin/` plus every `plugins/*/`) and ask the user which plugin the skill belongs to — the audience/distribution contract per `spec/claude/plugin-scoping/` decides, never topic convenience.
 
 If you're invoked in a project that's **not** a Claude Code plugin source tree, stop and ask the user whether they want:
 - to author a **project-local** skill under `.claude/skills/<name>/` (outside the `nolte-shared` plugin scope—this spec doesn't govern it, and the skill won't be shared across projects), or
@@ -94,7 +94,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ## Hard rules
 
-- Never create a skill at a non-standard path. Inside a plugin source tree the only accepted location is `skills/<name>/`; everywhere else, stop and ask the user whether to switch to the plugin repository instead.
+- Never create a skill at a non-standard path. Inside a plugin source tree the only accepted locations are `skills/<name>/` at the repo root or `plugins/<plugin>/skills/<name>/` for a subdirectory plugin (chosen during scaffolding); everywhere else, stop and ask the user whether to switch to the plugin repository instead.
 - Never distribute a plugin-owned skill by copying it into a consuming project's `.claude/skills/`, by symlinking, or by any other out-of-band path. Distribution is the plugin mechanism's job.
 - Never write a vague `description` like "helps with X" or "for Y tasks." It must enumerate concrete user phrasings so Claude's routing is reliable.
 - Name new skills in **verb-noun form** (`<object-noun>-<action>`, action token last), never gerund (`-ing`) or noun-only — per `skill-management` §Frontmatter validation. The only allowed action-less names are the closed exceptions `spec`, `yaml-json-schema`, `quality-gate`; `scripts/validate_skills.py` (`SKILL_NAME_FORM_EXCEPTIONS`) flags any other as a `Suggestion`.

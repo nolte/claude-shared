@@ -25,7 +25,7 @@ resumable: true
 
 Operationalises `spec/claude/skill-agent-catalog/<canonical_language>.md` inside the current repository. The skill audits the current catalog wiring, proposes the concrete file-level changes the spec requires, and—with explicit per-change user consent—applies them.
 
-When the spec isn't present in the target repository, fall back to the copy shipped by the `nolte-shared` plugin (read it at runtime from the plugin install path). Never invent requirements that don't appear in the spec.
+When the spec isn't present in the target repository, stop and tell the user the catalog spec is unavailable: `spec/` is repo-wide in the source monorepo and is not shipped with any plugin (see CLAUDE.md §Layout), so there is no installed copy to read at runtime. Offer to proceed only against explicitly user-supplied spec content. Never invent requirements that don't appear in the spec.
 
 ## User-language policy
 

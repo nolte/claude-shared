@@ -65,7 +65,7 @@ Also verify `.audits/` exists and is tracked by git. If absent, create `.audits/
 
 Interactive. Confirm each decision with the user before acting on it.
 
-1. **Resolve the target.** Accept `agents/<name>.md` or a runtime path `.claude/agents/<name>.md` / `~/.claude/agents/<name>.md`. If the user gave only a name without a path prefix, default to `agents/<name>.md`. If multiple candidates match, list them back and ask.
+1. **Resolve the target.** Accept `agents/<name>.md`, `plugins/<plugin>/agents/<name>.md`, or a runtime path `.claude/agents/<name>.md` / `~/.claude/agents/<name>.md`. If the user gave only a name without a path prefix, search every plugin root — `agents/<name>.md` plus `plugins/*/agents/<name>.md`, mirroring the auto-discovery in `scripts/validate_skills.py`. If multiple candidates match, list them back and ask.
 2. **Check for an existing plan** at `.audits/agent-review/<name>.md`. If present:
    - If `status` is `open` or `in-progress`, tell the user a live plan exists and ask: resume it, supersede it (overwrite), or abort. Do not silently overwrite.
    - If `status` is `complete`, ask whether to rerun (overwrite — per `review-plan` one-plan-per-target invariant).
@@ -82,7 +82,7 @@ Interactive. Confirm each decision with the user before acting on it.
    8. Plugin-distribution constraint check (`agent-review` §Plugin-distribution constraint checks): when `distribution: plugin`, the frontmatter does NOT set `hooks`, `mcpServers`, or `permissionMode` → any of those is a `Critical`; for `distribution: project` those fields are valid. Flag a `Warning` when the body describes behavior requiring those fields but the distribution is `plugin`, or when a `distribution: project` agent references a plugin-co-located asset (`${CLAUDE_PLUGIN_ROOT}`).
    9. Rationale section: at least one decisive dimension named → absence is `Critical`; at least one counter-dimension named → absence is `Suggestion`.
    10. Referenced assets exist.
-   11. Duplicate-prevention: `Grep` the `description:` line of every other `agents/*.md` and `skills/*/SKILL.md` for semantic overlap with the target — keyword hits are candidates, not verdicts; read each candidate and judge.
+   11. Duplicate-prevention: `Grep` the `description:` line of every other agent and skill across all plugin roots (`agents/*.md`, `skills/*/SKILL.md`, `plugins/*/agents/*.md`, `plugins/*/skills/*/SKILL.md`) for semantic overlap with the target — keyword hits are candidates, not verdicts; read each candidate and judge.
    12. Info observations for body-length or asset-factoring opportunities.
 6. **Map severities.** MUST failure → `Critical`, SHOULD failure → `Warning`, applicable MAY → `Suggestion`, observation without a rule → `Info`. The severity vocabulary itself is fixed by `spec/claude/review-plan/` §Severity scale — Title Case, no abbreviations, no portfolio-local extensions. Never promote Vale / markdown-style observations above `Info`.
 7. **Draft the plan** from `templates/plan.template.md`, filling every field. `repo-revision` is `git rev-parse HEAD` (or `unknown`). `created` is today's ISO date.
