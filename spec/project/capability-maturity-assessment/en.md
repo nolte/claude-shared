@@ -5,13 +5,13 @@ Portfolio-Scope: portfolio
 
 ## Context
 
-A working application accumulates dozens of business-facing functions—"add a location", "detect a hardiness zone", "export a print view"—and stakeholders keep asking the same two questions about them: *who is each function for*, and *how done is it, really?* The second question hides three separate ones that teams routinely collapse into a single gut feeling: is the function **fully built** against what it promised, is it **well built** as code, and is it **trustworthily built** as in verified by tests at the right levels. A function can be feature-complete yet untested, or immaculately tested yet a thin stub, and a one-word answer ("done") erases that difference. What's missing is a **repeatable, top-down process** that inventories the application's business functions, ties each to the audiences it serves, and grades each function's *build maturity* along those three axes on a shared, defensible scale.
+A working application accumulates dozens of business-facing functions—"add a location," "detect a hardiness zone," "export a print view"—and stakeholders keep asking the same two questions about them: *who is each function for*, and *how done is it, really?* The second question hides three separate ones that teams routinely collapse into a single gut feeling: is the function **fully built** against what it promised, is it **well built** as code, and is it **trustworthily built** as in verified by tests at the right levels. A function can be feature-complete yet untested, or immaculately tested yet a thin stub, and a one-word answer ("done") erases that difference. What's missing is a **repeatable, top-down process** that inventories the application's business functions, ties each to the audiences it serves, and grades each function's *build maturity* along those three axes on a shared, defensible scale.
 
-This spec defines that process. It governs how to **enumerate** the business-facing capabilities of an application, **map** each to the audiences it serves (consuming the audience artifact rather than reinventing it), and **classify** each capability into a **Bronze / Silver / Gold** maturity tier **per axis**—implementation completeness, code quality, and test coverage across tiers—plus a **separate overall tier** derived from those axes. It fixes the *criteria and the contract*, not a fixed list of functions: any application in the portfolio inherits the same rubric and produces its own capability matrix.
+This spec defines that process. It governs how to **enumerate** the business-facing capabilities of an application, **map** each to the audiences it serves (consuming the audience artifact rather than reinventing it), and **classify** each capability into a **Bronze / Silver / Gold** maturity tier per axis—implementation completeness, code quality, and test coverage across tiers—plus a **separate overall tier** derived from those axes. It fixes the *criteria and the contract*, not a fixed list of functions: any application in the portfolio inherits the same rubric and produces its own capability matrix.
 
-The tri-medal grading is not invented ad hoc: graded project-quality tiers with exactly the Bronze/Silver/Gold shape are the established convention of the **OpenSSF Best Practices Badge** (passing/silver/gold) [R11], the three assessment axes are each grounded in an established body of practice (the ISO/IEC 25010 product-quality model for code quality [R8], McCabe cyclomatic complexity as a maintainability signal [R9], the portfolio's own Test Pyramid foundation for the test axis [R2]), and the deliberate distinction from *process* maturity models (CMMI [R12]) keeps the assessment about the product, not the organisation.
+The tri-medal grading isn't invented ad hoc: graded project-quality tiers with exactly the Bronze/Silver/Gold shape are the established convention of the **OpenSSF Best Practices Badge** (passing/silver/gold) [R11], the three assessment axes are each grounded in an established body of practice (the ISO/IEC 25010 product-quality model for code quality [R8], McCabe cyclomatic complexity as a maintainability signal [R9], the portfolio's own Test Pyramid foundation for the test axis [R2]), and the deliberate distinction from *process* maturity models (CMMI [R12]) keeps the assessment about the product, not the organisation.
 
-The spec draws a **hard boundary**: it governs *inventory, audience mapping, and grading only*. The moment a capability's tier is assigned and written to the matrix, the process stops. Enforcing a tier as a merge gate, prioritising which Bronze capability to promote next, or wiring the grade into a dashboard is **downstream action**, out of scope (see §Non-Goals). In particular this spec is **not** a pass/fail quality gate: `spec/project/quality-gate/` [R3] answers "may this PR merge?" with a binary; this spec answers "how mature is this capability?" with a graded, advisory classification that never blocks a merge.
+The spec draws a **hard boundary**: it governs *inventory, audience mapping, and grading only*. The moment a capability's tier is assigned and written to the matrix, the process stops. Enforcing a tier as a merge gate, prioritising which Bronze capability to promote next, or wiring the grade into a dashboard is **downstream action**, out of scope (see §Non-Goals). In particular this spec isn't a pass/fail quality gate: `spec/project/quality-gate/` [R3] answers "may this PR merge?" with a binary; this spec answers "how mature is this capability?" with a graded, advisory classification that never blocks a merge.
 
 It's a sibling of `spec/project/kpi-definition-process/` [R7] in shape—both are `Portfolio-Scope: portfolio` methodology specs that ground a downstream `nolte-engineering` skill whose read-only scanner reads the source tree, and both separate mechanical detection from a human judgement call. They differ in question: KPIs measure *business outcomes at runtime* (did the app achieve its goal?), while this spec measures *build maturity of a capability* (is the function fully, well, and verifiably built?). The two compose—a Gold-tier capability can still drive a poor KPI, and a critical KPI can rest on a Bronze-tier capability that needs promotion.
 
@@ -21,8 +21,8 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 
 - The application's business-facing capabilities are **inventoried top-down** as user-meaningful functions traceable to requirements, not bottom-up from whatever code modules happen to exist
 - Every capability is **mapped to the audiences it serves**, consuming the `spec/project/audience-identification/` [R1] artifact, so "who is this for" is answered from an authoritative list, not a private assumption
-- Every capability is graded on **three explicit, independent axes**—implementation completeness, code quality, and test coverage across tiers—so the "how done is it" question is decomposed rather than collapsed
-- Each axis is classified into one of **Bronze / Silver / Gold** against a stated rubric, with a fourth implicit **Unrated** floor for a capability that does not yet clear Bronze on that axis
+- Every capability is graded on three explicit, independent axes—implementation completeness, code quality, and test coverage across tiers—so the "how done is it" question is decomposed rather than collapsed
+- Each axis is classified into one of **Bronze / Silver / Gold** against a stated rubric, with a fourth implicit **Unrated** floor for a capability that doesn't yet clear Bronze on that axis
 - A **separate overall tier** is derived from the three axis tiers by a **weakest-link** rule and reported *alongside* the per-axis tiers, so a reader sees both the summary and where the summary comes from
 - The grading cleanly separates **machine-derivable signals** (static analysis, complexity, coverage, tier presence, CI status) from **judgement inputs** (audience mapping, completeness against acceptance criteria), so the process is automatable where it can be and honest where it can't
 - The graded capabilities land in a **human-readable, judgement-legible artifact** (`project/maturity/<slug>.md`) that a reader can follow and challenge, because a maturity tier is a defensible claim, not a machine dump
@@ -33,7 +33,7 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 
 - **Enforcing a tier as a gate.** Blocking a merge, failing CI, or refusing a release because a capability is below a target tier is downstream action; this spec produces an advisory grade, never a gate. The pass/fail merge decision stays owned by `spec/project/quality-gate/` [R3]
 - **Prioritisation and roadmapping.** Deciding *which* Bronze capability to promote next, or sequencing promotion work, is a planning decision owned by `spec/project/roadmap/` and `spec/project/sprint/`; this spec grades the current state, it doesn't plan the next one
-- **Dashboarding and trend tracking.** Rendering the matrix into a dashboard, tracking tier movement over time, or alerting on regressions is a measurement/presentation concern out of scope here
+- **Dashboards and trend tracking.** Rendering the matrix into a dashboard, tracking tier movement over time, or alerting on regressions is a measurement/presentation concern out of scope here
 - **Defining the application's audiences.** Enumerating and characterising audiences is owned by `spec/project/audience-identification/` [R1]; this spec *consumes* that artifact, it doesn't produce it
 - **Redefining the test tiers or the coverage-as-guide rule.** The functional tier taxonomy (static → unit → component → integration → contract → E2E) and the "coverage is a guide, not a target" governance rule are owned by `spec/project/test-pyramid-foundation/` [R2]; the test axis *consumes* them
 - **A fixed, universal capability list.** This spec defines the *process and rubric* to grade project-specific capabilities, not a canned catalogue of "the functions every app has"; the capabilities are always inventoried from *this* application
@@ -43,8 +43,8 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 
 ### The capability inventory
 
-- The process **MUST** inventory **business-facing capabilities**: user-meaningful units of functionality that a named audience can recognise as a thing the application does (for example "record a harvest", "detect a climate zone"), each traceable to a requirement or acceptance criterion. A capability **MUST NOT** be defined as a code artifact (a module, class, or endpoint); code artifacts are the *evidence* a capability is graded against, not the unit of grading
-- The inventory **MUST** be derived **top-down** from the application's requirements, feature set, or user-facing surface, and **MUST NOT** be assembled bottom-up from the directory structure; a capability that cannot be laddered back to something a user or audience wants is a code artifact, not a capability
+- The process **MUST** inventory **business-facing capabilities**: user-meaningful units of functionality that a named audience can recognise as a thing the application does (for example "record a harvest," "detect a climate zone"), each traceable to a requirement or acceptance criterion. A capability **MUST NOT** be defined as a code artifact (a module, class, or endpoint); code artifacts are the *evidence* a capability is graded against, not the unit of grading
+- The inventory **MUST** be derived **top-down** from the application's requirements, feature set, or user-facing surface, and **MUST NOT** be assembled bottom-up from the directory structure; a capability that can't be laddered back to something a user or audience wants is a code artifact, not a capability
 - Each capability **MUST** carry a stable short identifier (for example `C1`) for cross-reference, a human-readable name, and a one-sentence description of what the function does for its audience
 - The process **MUST** be re-runnable: when the application changes, re-assessment **SHOULD** show which capabilities held their tier, which moved up, and which regressed, rather than silently replacing the matrix
 
@@ -57,30 +57,30 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 ### The three assessment axes
 
 - Every capability **MUST** be graded on exactly these **three independent axes**, each classified into Bronze / Silver / Gold (or Unrated below Bronze):
-  - **Axis A — Implementation completeness**: how fully the capability is built against what it promised (its acceptance criteria / requirement)
-  - **Axis B — Code quality**: how well the code realising the capability is built, per the ISO/IEC 25010 product-quality model [R8] and static-analysis signals
-  - **Axis C — Test coverage across tiers**: how trustworthily the capability is verified by automated tests at the appropriate levels of the Test Pyramid [R2]
+  - **Axis A** (implementation completeness): how fully the capability is built against what it promised (its acceptance criteria / requirement)
+  - **Axis B** (code quality): how well the code realising the capability is built, per the ISO/IEC 25010 product-quality model [R8] and static-analysis signals
+  - **Axis C** (test coverage across tiers): how trustworthily the capability is verified by automated tests at the appropriate levels of the Test Pyramid [R2]
 - The three axes **MUST** be graded and reported **independently**; a strong axis **MUST NOT** silently compensate for a weak one at the axis level (compensation is explicitly forbidden by the weakest-link overall rule below). This is the load-bearing decomposition of the whole spec: "how done is it" is three questions, not one
 
-### Axis A — Implementation completeness
+### Axis A: Implementation completeness
 
 - Axis A **MUST** be graded against the capability's **acceptance criteria / requirement**, consuming the abstract cases of `spec/project/test-case-derivation/` [R4] and the acceptance criteria of `spec/project/spec-driven-development/` [R5] where they exist; where they don't, the assessor **MUST** state the completeness baseline used, because completeness is meaningless without a "complete against what?"
 - The tier rubric for Axis A **MUST** be:
-  - **Bronze**: the core happy path is implemented and reachable by its audience; at least the primary acceptance criterion is satisfied; visible gaps, stubs, or TODOs are permitted; error handling and edge cases are not required
+  - **Bronze**: the core happy path is implemented and reachable by its audience; at least the primary acceptance criterion is satisfied; visible gaps, stubs, or TODOs are permitted; error handling and edge cases aren't required
   - **Silver**: all documented acceptance criteria for the capability are satisfied; the principal error and validation paths are handled; there are no known functional gaps on the primary audience path; the capability is complete across its full surface (for example API + UI + i18n) for that path
   - **Gold**: Silver, plus edge and failure cases are handled, the non-functional requirements that apply to the capability are met (for example performance, accessibility, security, data-protection obligations), there are no open functional defects or TODOs against it, and end-user documentation exists for every mapped audience
-- Axis A is **primarily a judgement input** (see §"Machine-derivable vs. judgement inputs"): assessing completeness against acceptance criteria requires reading the requirement, which a scanner cannot do; the scanner **MAY** surface signals (unimplemented markers, `TODO`/`FIXME`, feature flags, stub returns) but **MUST NOT** assign the Axis A tier
+- Axis A is **primarily a judgement input** (see §"Machine-derivable vs. judgement inputs"): assessing completeness against acceptance criteria requires reading the requirement, which a scanner can't do; the scanner **MAY** surface signals (unimplemented markers, `TODO`/`FIXME`, feature flags, stub returns) but **MUST NOT** assign the Axis A tier
 
-### Axis B — Code quality
+### Axis B: Code quality
 
 - Axis B **MUST** be grounded in the **ISO/IEC 25010** product-quality model [R8]—principally its *maintainability* characteristic (modularity, reusability, analysability, modifiability, testability)—and in the portfolio's static-analysis tier (`spec/project/test-tier-static-analysis/`), read against the repository's own style guides
 - The tier rubric for Axis B **MUST** be:
   - **Bronze**: the code builds/runs and passes static analysis (lint, type-check, format-check) with **no errors** (warnings permitted); the applicable style guide is broadly followed
   - **Silver**: static analysis passes with **no warnings**; the style guide is fully followed; the architectural layering / module boundaries of the project are respected; cyclomatic complexity [R9] is under the project's configured ceiling and duplication is under its configured bound; the code is typed where the stack supports it
   - **Gold**: Silver, plus public interfaces are documented, there are no remaining code smells or technical-debt markers, security-oriented static rules (SAST) pass clean, complexity is low throughout rather than merely under ceiling, and the code has passed human review
-- Axis B is **largely machine-derivable**: static-analysis status, complexity metrics, duplication, and type coverage are scanner signals; the **Gold** step ("no remaining smells", "passed human review") retains a judgement component the skill **MUST** confirm rather than infer
+- Axis B is **largely machine-derivable**: static-analysis status, complexity metrics, duplication, and type coverage are scanner signals; the **Gold** step ("no remaining smells," "passed human review") retains a judgement component the skill **MUST** confirm rather than infer
 
-### Axis C — Test coverage across tiers
+### Axis C: Test coverage across tiers
 
 - Axis C **MUST** consume the functional tier taxonomy and governance rules of `spec/project/test-pyramid-foundation/` [R2] and **MUST NOT** redefine a tier. It grades a capability by **which test tiers verify it and whether they pass**, not by a single coverage number
 - The tier rubric for Axis C **MUST** be:
@@ -95,7 +95,7 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 - Each capability **MUST** be reported with **all three per-axis tiers explicitly** (Axis A, Axis B, Axis C), never only a summary; the per-axis breakdown is where the assessment's information lives
 - A **separate overall tier MUST** be derived by the **weakest-link** rule: the overall tier is the **minimum** of the three axis tiers (Gold only when *every* axis is Gold; Silver when the weakest axis is Silver; Bronze when any axis is Bronze; Unrated when any axis is below Bronze). A strong axis **MUST NOT** compensate for a weak one in the overall tier
 - The overall tier and the three axis tiers **MUST** both appear in the matrix; the process **MUST NOT** collapse them into the overall tier alone, because the axis divergence *is* the actionable content
-- Where the axes diverge (for example Axis B Gold, Axis C Bronze), the process **SHOULD** record the divergence as an explicit **improvement lever**—the single axis that, if raised, would raise the overall tier—so the matrix reads as guidance, not just a scoreboard
+- Where the axes diverge (for example Axis B Gold, Axis C Bronze), the process **SHOULD** record the divergence as an explicit improvement lever—the single axis that, if raised, would raise the overall tier—so the matrix reads as guidance, not just a scoreboard
 
 ### Machine-derivable vs. judgement inputs
 
@@ -108,11 +108,11 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 - The graded capabilities **MUST** be written to `project/maturity/<slug>.md`, mirroring the layout of `project/kpis/<slug>.md`: a header naming the inventory scope, the audience artifact consumed, and the configured thresholds, followed by one structured block (or one table row) per capability
 - Each capability block **MUST** carry: `id`, `name`, `description`, mapped `audience(s)`, the three per-axis tiers (A/B/C), the derived `overall` tier, the `improvement-lever` (the axis to raise next), and a short `rationale` making each axis tier defensible; where maturity diverges by audience, the per-audience divergence **MUST** be recorded
 - The artifact **MUST** be **human-readable Markdown**, not a bare data dump, because a maturity tier is a defensible claim a reader must be able to follow and challenge; each capability's audience mapping **MUST** resolve to a real audience in the consumed artifact (a ghost audience is a defect)
-- The header **SHOULD** state the rubric parameters used (the configured coverage bands and complexity ceiling) and list any capability whose Axis A could not be graded for lack of acceptance criteria as a named open item, so the assessment is auditable
+- The header **SHOULD** state the rubric parameters used (the configured coverage bands and complexity ceiling) and list any capability whose Axis A couldn't be graded for lack of acceptance criteria as a named open item, so the assessment is auditable
 
 ### Thresholds are project-configurable
 
-- The **numeric thresholds** the rubric references—the lower/middle/upper coverage bands (Axis C) and the complexity ceiling and duplication bound (Axis B)—**MUST** be **project-configurable parameters**, not values hard-coded in this spec, so the rubric structure is portfolio-wide while the numbers fit each stack and language
+- The **numeric thresholds** the rubric references—the lower/middle/upper coverage bands (Axis C) and the complexity ceiling and duplication bound (Axis B)—these **MUST** be **project-configurable parameters**, not values hard-coded in this spec, so the rubric structure is portfolio-wide while the numbers fit each stack and language
 - The configured thresholds **MUST** satisfy the **monotonicity invariant** `Bronze ≤ Silver ≤ Gold` on every graded band; a configuration that inverts or flattens the bands is invalid
 - This spec **MAY** recommend starting defaults, but **MUST NOT** mandate a universal coverage percentage or complexity number; a fixed universal threshold would contradict both the application-agnostic goal and the coverage-as-a-guide rule [R2]
 
@@ -163,7 +163,7 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 - **Exact skill/agent names.** Working names `maturity-assess` (skill) and `capability-maturity-scanner` (agent) are confirmed against the `<object-noun>-<action>` naming convention and catalogue discoverability at skill-authoring time
 - **Overall-tier rule beyond weakest-link.** The spec fixes weakest-link (minimum) as the overall rule; whether a project may *opt in* to a stricter "Gold requires Gold on all axes **and** a passed human review" or a looser variant via a local override is deferred
 - **Per-audience tiering depth.** Whether per-audience divergence should be a full parallel grading (three axes × each audience) or a lightweight note on the capability is deferred to skill-authoring; the spec requires recording the divergence, not a fixed depth
-- **Threshold default recommendations.** Whether this spec should ship *recommended* starting coverage bands and a complexity ceiling (clearly demoted to "reference", per the tool-agnostic precedent of `test-pyramid-foundation`) or leave every number to the project is deferred
+- **Threshold default recommendations.** Whether this spec should ship *recommended* starting coverage bands and a complexity ceiling (clearly demoted to "reference," per the tool-agnostic precedent of `test-pyramid-foundation`) or leave every number to the project is deferred
 
 ## References
 
@@ -174,8 +174,8 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 - [R5] `spec/project/spec-driven-development/`: Spec-Driven Development (the acceptance-criteria basis for Axis A)
 - [R6] `spec/project/portfolio-inherited-spec-layer/`: Portfolio-Inherited Spec Layer (how a consumer repo inherits this spec by reference)
 - [R7] `spec/project/kpi-definition-process/`: KPI Definition Process (sibling methodology spec; the build-maturity-vs-business-outcome delimitation)
-- [R8] ISO/IEC 25010 — Systems and software Quality Requirements and Evaluation (SQuaRE), product quality model (eight characteristics incl. maintainability): <https://iso25000.com/index.php/en/iso-25000-standards/iso-25010>
+- [R8] ISO/IEC 25010—Systems and software Quality Requirements and Evaluation (SQuaRE), product quality model (eight characteristics incl. maintainability): <https://iso25000.com/index.php/en/iso-25000-standards/iso-25010>
 - [R9] Thomas J. McCabe, *A Complexity Measure*, IEEE Transactions on Software Engineering, 1976; overview: <https://en.wikipedia.org/wiki/Cyclomatic_complexity>
 - [R10] Martin Fowler, *TestCoverage* (coverage as a guide, not a target): <https://martinfowler.com/bliki/TestCoverage.html>
 - [R11] OpenSSF Best Practices Badge Program (passing / silver / gold graded project-quality tiers): <https://www.bestpractices.dev/en/criteria>
-- [R12] CMMI (Capability Maturity Model Integration) — process-capability maturity levels, named only to delimit product- from process-maturity: <https://en.wikipedia.org/wiki/Capability_Maturity_Model_Integration>
+- [R12] CMMI (Capability Maturity Model Integration)—process-capability maturity levels, named only to delimit product- from process-maturity: <https://en.wikipedia.org/wiki/Capability_Maturity_Model_Integration>
