@@ -31,6 +31,7 @@ Scope-Grenze: Diese Spec besitzt die **Form** eines Namens — semantische Gesta
 
 - **MUSS** jeden Skill in Verb-Substantiv-Form benennen, konkret `<object-noun>-<action>`: die führenden Tokens benennen das Objekt, das **nachgestellte** Token die Aktion — als finites Verb (`pull-request-create`, `roadmap-init`, `feature-decompose`, `mission-define`) oder als verb-abgeleitetes Aktions-Nomen (`dependency-audit`, `gemini-image-handoff`, `skill-management`)
 - Die Aktion steht **zuletzt**, spiegelbildlich zur Agent-Seite, wo das Rollen-Nomen zuletzt steht
+- Das Aktions-Vokabular ist **auf Regel-Ebene offen**: jedes finite Verb oder verb-abgeleitete Aktions-Nomen qualifiziert (`add`, `augment`, `scaffold`, `migrate`, `sync`, `determine`, `release` und weitere). Die `SKILL_ACTION_TOKENS`-Liste des Validators ist ein Oberflächen-Spiegel, der mit den realen Tokens des Portfolios wächst — nie ein semantisches Gate, das ein legitimes Verb verbietet
 - **Geschlossene Ausnahmen** (ein Reviewer **DARF** sie **NICHT** flaggen; die Liste ist abschließend): `spec` (nacktes Nomen), `yaml-json-schema` (Nomen-Kompositum), `quality-gate` (nachgestelltes Nomen benennt ein Ding, keine Aktion). Alle drei sind älter als die Konvention; Umbenennung bräche jede Consumer-Aufrufstelle — bei `spec` zusätzlich die `$ref`-/Querverweis-Maschinerie. Jeder *neue* Skill **MUSS** der Konvention folgen
 
 ### Agent-Namen: `<subject>-<role-noun>`
@@ -43,6 +44,7 @@ Scope-Grenze: Diese Spec besitzt die **Form** eines Namens — semantische Gesta
 
 - **MUSS** das Naming über das ganze Plugin konsistent halten — eine Konvention pro Artefakt-Typ; eine Gerundium- oder Freiform in eine der beiden Flächen zu mischen ist selbst das Discoverability-Anti-Pattern, vor dem `plugin-scoping` §Namespace and naming coherence warnt
 - Domänen-Plugins, die diesen Korpus erben (etwa `claude-home-assistant`), **DÜRFEN** jedem Artefakt-Namen ein festes Domänen-Präfix (`ha-`) voranstellen; die Form nach dem Präfix folgt unverändert den obigen Regeln (`ha-config-flow-augment`, `ha-blueprint-author`)
+- Erbende Plugins auditieren ihre Fläche gegen die **Regeln** dieser Spec, nicht wörtlich gegen die nolte-shared-Validator-Listen, und **MÜSSEN** eigene geschlossene Ausnahmelisten in ihrem Spec-Index-README deklarieren, unter derselben Disziplin (geschlossen, greppable, Reviewer DARF NICHT flaggen). Eine **Familien-Suffix-Ausnahme** — ein bewusstes, uniformes Suffix, das eine Artefakt-Familie benennt, etwa eine `*-solution`-Front-Door-Familie — qualifiziert, wenn sie dort deklariert ist und intern konsistent bleibt
 
 ### Rename-Policy
 
