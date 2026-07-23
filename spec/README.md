@@ -41,6 +41,7 @@ Canonical language: `en` · Translations: `de`
 | project | blog-author | Blog author | Blog-Autor | accepted | local | unversioned |
 | project | blog-author-trigger | Blog author trigger | Blog-Autor-Trigger | draft | local | unversioned |
 | project | branching-model | Branching Model | Branching-Modell | draft | portfolio | 2026-04-23 |
+| project | capability-maturity-assessment | Capability Maturity Assessment | Reifegrad-Bewertung fachlicher Funktionen | draft | portfolio | unversioned |
 | project | code-security-audit | Whole-Codebase Security Audit | Whole-Codebase-Security-Audit | draft | local | unversioned |
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | local | 2026-04-23 |
 | project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | local | unversioned |
