@@ -57,12 +57,12 @@ Leser: Teams, die wissen müssen, wie vollständig und vertrauenswürdig jede Fu
 ### Die drei Bewertungsachsen
 
 - Jede Capability **MUSS** auf genau diesen **drei unabhängigen Achsen** eingestuft werden, jede klassifiziert in Bronze / Silber / Gold (oder Unrated unter Bronze):
-  - **Achse A — Umsetzungsgrad**: wie vollständig die Capability gegen das gebaut ist, was sie versprach (ihre Akzeptanzkriterien / ihr Requirement)
-  - **Achse B — Code-Qualität**: wie gut der Code, der die Capability realisiert, gebaut ist, gemäß dem ISO/IEC-25010-Produktqualitätsmodell [R8] und statischen-Analyse-Signalen
-  - **Achse C — Testabdeckung über die Teststufen**: wie vertrauenswürdig die Capability durch automatisierte Tests auf den passenden Stufen der Testpyramide [R2] verifiziert ist
+  - **Achse A** (Umsetzungsgrad): wie vollständig die Capability gegen das gebaut ist, was sie versprach (ihre Akzeptanzkriterien / ihr Requirement)
+  - **Achse B** (Code-Qualität): wie gut der Code, der die Capability realisiert, gebaut ist, gemäß dem ISO/IEC-25010-Produktqualitätsmodell [R8] und statischen-Analyse-Signalen
+  - **Achse C** (Testabdeckung über die Teststufen): wie vertrauenswürdig die Capability durch automatisierte Tests auf den passenden Stufen der Testpyramide [R2] verifiziert ist
 - Die drei Achsen **MUSS**en **unabhängig** eingestuft und berichtet werden; eine starke Achse **DARF NICHT** eine schwache auf Achsen-Ebene still kompensieren (Kompensation ist durch die Weakest-Link-Gesamtregel unten explizit verboten). Dies ist die tragende Zerlegung der gesamten Spec: „wie fertig ist es" sind drei Fragen, nicht eine
 
-### Achse A — Umsetzungsgrad
+### Achse A: Umsetzungsgrad
 
 - Achse A **MUSS** gegen die **Akzeptanzkriterien / das Requirement** der Capability eingestuft werden, die abstrakten Fälle von `spec/project/test-case-derivation/` [R4] und die Akzeptanzkriterien von `spec/project/spec-driven-development/` [R5] konsumierend, wo sie existieren; wo nicht, **MUSS** der Bewerter die verwendete Vollständigkeits-Baseline angeben, weil Vollständigkeit ohne ein „vollständig gegen was?" bedeutungslos ist
 - Die Tier-Rubrik für Achse A **MUSS** sein:
@@ -71,7 +71,7 @@ Leser: Teams, die wissen müssen, wie vollständig und vertrauenswürdig jede Fu
   - **Gold**: Silber, plus Rand- und Fehlerfälle sind behandelt, die auf die Capability zutreffenden nicht-funktionalen Anforderungen sind erfüllt (z. B. Performance, Barrierefreiheit, Sicherheit, Datenschutzpflichten), es gibt keine offenen funktionalen Defekte oder TODOs gegen sie, und Endnutzer-Dokumentation existiert für jede zugeordnete Zielgruppe
 - Achse A ist **primär eine Urteils-Eingabe** (siehe §„Maschinell ableitbare vs. Urteils-Eingaben"): Vollständigkeit gegen Akzeptanzkriterien zu bewerten erfordert das Lesen des Requirements, was ein Scanner nicht kann; der Scanner **KANN** Signale zutage fördern (Unimplemented-Marker, `TODO`/`FIXME`, Feature-Flags, Stub-Rückgaben), **DARF** aber das Achse-A-Tier **NICHT** zuweisen
 
-### Achse B — Code-Qualität
+### Achse B: Code-Qualität
 
 - Achse B **MUSS** im **ISO/IEC-25010**-Produktqualitätsmodell [R8] verankert sein — prinzipiell in seiner *Wartbarkeits*-Charakteristik (Modularität, Wiederverwendbarkeit, Analysierbarkeit, Modifizierbarkeit, Testbarkeit) — und in der statischen-Analyse-Stufe des Portfolios (`spec/project/test-tier-static-analysis/`), gelesen gegen die repository-eigenen Style Guides
 - Die Tier-Rubrik für Achse B **MUSS** sein:
@@ -80,7 +80,7 @@ Leser: Teams, die wissen müssen, wie vollständig und vertrauenswürdig jede Fu
   - **Gold**: Silber, plus öffentliche Schnittstellen sind dokumentiert, es gibt keine verbleibenden Code-Smells oder Tech-Debt-Marker, sicherheitsorientierte statische Regeln (SAST) bestehen sauber, die Komplexität ist durchweg niedrig statt bloß unter Obergrenze, und der Code hat ein menschliches Review bestanden
 - Achse B ist **weitgehend maschinell ableitbar**: statischer-Analyse-Status, Komplexitäts-Metriken, Duplizierung und Type-Coverage sind Scanner-Signale; der **Gold**-Schritt („keine verbleibenden Smells", „menschliches Review bestanden") behält eine Urteils-Komponente, die das Skill **MUSS** bestätigen statt schlussfolgern
 
-### Achse C — Testabdeckung über die Teststufen
+### Achse C: Testabdeckung über die Teststufen
 
 - Achse C **MUSS** die funktionale Teststufen-Taxonomie und Governance-Regeln von `spec/project/test-pyramid-foundation/` [R2] konsumieren und **DARF NICHT** eine Stufe neu definieren. Sie stuft eine Capability danach ein, **welche Teststufen sie verifizieren und ob sie bestehen**, nicht nach einer einzigen Coverage-Zahl
 - Die Tier-Rubrik für Achse C **MUSS** sein:
