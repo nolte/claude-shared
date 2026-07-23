@@ -55,6 +55,8 @@ Dispatch `test-result-analyzer` to classify each non-pass into a routed category
 
 For each confirmed real failure, dispatch `test-code-adapter` to apply the minimal correct change that satisfies the asserted behaviour, fixing the root cause. The fix **re-enters step 2** (re-execute); never assume green without re-running.
 
+**Optional review leg:** when the adaptation touched test code itself, dispatch the touched tier's `*-test-reviewer` agent (unit / component / integration / contract / e2e) as the review-and-repair counterpart before re-executing — mirroring the reviewer wiring the E2E tier already carries.
+
 ### Loop or exit
 
 Repeat from step 2 until the **exit conditions** hold: every required case is green, no previously-green case regressed, and the coverage/mutation signal is acceptable per the foundation's coverage governance. Surface the per-turn state each round; stop when exit-ready, or hand back when a turn cannot make progress (for example a fix needs a product decision).

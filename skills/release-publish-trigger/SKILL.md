@@ -162,6 +162,10 @@ Activated by `--wait` or unambiguous operator phrasing. Caps mirror `pull-reques
 
 The single-shot default exists because the prompt-cache TTL is 5 min; unbounded polling burns the cache. Caps balance: short waits stay cache-warm, long waits accept one cache miss but never balloon.
 
+## Single-shot by design (not resumable)
+
+Every gate is re-derived from live GitHub state on each run, and the dispatch itself is idempotent to re-validate — a persisted checkpoint per `spec/claude/resumable-work/` would only cache staleness. Re-invoking after an interruption simply re-walks the gates; this is the deliberate exception to the plugin's resumable convention, recorded here so reviewers don't flag the absent `resumable` flag as an omission.
+
 ## Gotchas
 
 - `pascalgn/automerge-action` (used by some `release-publish.yml` implementations downstream) exits 0 even on `mergeResult: 'merge_failed'`. A green `release-publish.yml` run is **not** proof the publish happened. Always re-verify `gh release view <tag> --json isDraft` after a `success` conclusion.

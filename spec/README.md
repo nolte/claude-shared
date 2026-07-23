@@ -13,7 +13,7 @@ Canonical language: `en` · Translations: `de`
 | claude | mcp-tool-preference | Optional GitHub MCP Tool Preference | Optionale Bevorzugung des GitHub-MCP-Servers | draft | local | unversioned |
 | claude | permission-allowlist | Claude Code Permission Allowlist Maintenance | Pflege der Claude-Code-Permission-Allowlist | draft | portfolio | 2026-04-23 |
 | claude | plugin-scoping | Claude Plugin Scoping | Claude-Plugin-Schnittführung | draft | local | unversioned |
-| claude | png-to-transparent-svg | PNG to Transparent SVG | PNG zu transparentem SVG | draft | local | unversioned |
+| design | png-to-transparent-svg | PNG to Transparent SVG | PNG zu transparentem SVG | draft | local | unversioned |
 | claude | research-triangulate | Research Triangulation | Recherche-Triangulation | draft | local | unversioned |
 | claude | resumable-work | Resumable Skill and Agent Work | Wiederaufnehmbare Skill- und Agent-Arbeit | draft | local | unversioned |
 | claude | review-plan | Review Plan Artifact | Review-Plan-Artefakt | draft | portfolio | 2026-04-24 |

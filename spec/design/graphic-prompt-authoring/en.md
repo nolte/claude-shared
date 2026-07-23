@@ -6,7 +6,7 @@ Status: draft
 
 Across the portfolio, AI image generation needs a prompt before it can produce an asset: a hero image for a blog post, an empty-state illustration for a web app, an app icon, a social card. Writing those prompts ad hoc produces two failure modes. First, the prompts drift off-brand—each author reaches for different color words, ignores the published style reference, or hard-codes a hue intuition the `corporate-design-colors` spec forbids. Second, the prompts aren't reproducible: there is no durable artifact recording what was asked for, so regenerating "the same image but wider" months later is guesswork.
 
-This spec governs how a Claude Code agent (the `graphic-prompt-generator` agent, `distribution: plugin`) turns a short graphic brief into a **brand-conformant, generator-ready prompt document on disk**. It's the authoring half of the AI-imagery pipeline: this spec produces the prompt; `spec/tools/image-generation/` consumes a prompt and emits an image file; `spec/claude/png-to-transparent-svg/` cleans a generated raster into a vector when transparency is needed. The color contract those prompts must satisfy is owned by `spec/design/corporate-design-colors/` §AI image color contract; this spec doesn't restate it, it operationalises it for the prompt-authoring step and extends it to generators beyond Midjourney.
+This spec governs how a Claude Code agent (the `graphic-prompt-generator` agent, `distribution: plugin`) turns a short graphic brief into a **brand-conformant, generator-ready prompt document on disk**. It's the authoring half of the AI-imagery pipeline: this spec produces the prompt; `spec/tools/image-generation/` consumes a prompt and emits an image file; `spec/design/png-to-transparent-svg/` cleans a generated raster into a vector when transparency is needed. The color contract those prompts must satisfy is owned by `spec/design/corporate-design-colors/` §AI image color contract; this spec doesn't restate it, it operationalises it for the prompt-authoring step and extends it to generators beyond Midjourney.
 
 The capability is the generalised successor to a project-local `gemini-graphic-prompt-generator` agent that hard-coded one project's palette, mascot, and file paths. The portfolio form reads the brand from the consuming repository's published design tokens instead of carrying any project's brand in its body.
 
@@ -24,7 +24,7 @@ Readers: skill and agent authors who maintain the prompt-authoring agent; review
 
 - Defining the brand color system, the descriptive-color vocabulary, the canonical style reference (`--sref` or per-model equivalent), or the prompt-assembly color order—all owned by `spec/design/corporate-design-colors/` §AI image color contract; this spec references that contract and must not contradict it
 - Actually calling an image generator or writing an image file (owned by `spec/tools/image-generation/` and any future per-generator sibling)
-- Post-processing generated rasters—background cleanup and vectorisation are owned by `spec/claude/png-to-transparent-svg/`
+- Post-processing generated rasters—background cleanup and vectorisation are owned by `spec/design/png-to-transparent-svg/`
 - Non-color imagery axes (composition, lighting, photographic-vs-illustrative register) beyond what a single brief specifies; a future `spec/design/imagery-style/` owns the portfolio-wide treatment
 - Maintaining the `brand-prompt-library.md` ledger of *published* hero images (that's a post-generation record owned by `corporate-design-colors`); this spec governs pre-generation prompt documents
 
@@ -82,7 +82,7 @@ Readers: skill and agent authors who maintain the prompt-authoring agent; review
 
 - [R1] AI image color contract, descriptive-color vocabulary, style-reference and prompt-assembly order: `spec/design/corporate-design-colors/` §AI image color contract
 - [R2] Downstream image-generation tool (prompt in, image file out): `spec/tools/image-generation/`
-- [R3] Post-processing for transparency cleanup and vectorisation: `spec/claude/png-to-transparent-svg/`
+- [R3] Post-processing for transparency cleanup and vectorisation: `spec/design/png-to-transparent-svg/`
 - [R4] Agent authoring rules this agent conforms to: `spec/claude/agent-management/`
 - [R5] Skill-vs-agent decision rule and rationale-section requirement: `spec/claude/skill-vs-agent/`
 - [R6] FLUX model-level generation baseline (the prompting rules and hard invariants for FLUX targets): `spec/design/flux-image-generation/`
