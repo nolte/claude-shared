@@ -1,6 +1,6 @@
 ---
 name: audience-doc-author
-description: "Draft or refine an audience-tailored doc (README, release notes, MkDocs pages, or any doc governed by spec/project/) against an existing `audience-identify` artifact. Invoke to write, draft, or refactor a doc for specific audiences; also German. Needs the audience artifact first (dispatch `audience-identify`). Don't use for plugin skills/agents (`claude-plugin-developer`), spec authoring (`spec`), or a greenfield README (`readme-structure-apply`). Supports resume."
+description: "Drafts or refines an audience-tailored doc (README, release notes, MkDocs pages, or any doc governed by spec/project/) against an existing `audience-identify` artifact. Invoke to write, draft, or refactor a doc for specific audiences; also German. Needs the audience artifact first (dispatch `audience-identify`). Don't use for plugin skills/agents (`claude-plugin-developer`), spec authoring (`spec`), or a greenfield README (`readme-structure-apply`). Supports resume."
 distribution: plugin
 tools: Read, Write, Edit, Glob, Bash
 tags: [audience, prose]

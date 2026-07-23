@@ -143,3 +143,63 @@ def test_description_budget_ungated_dir_noops(monkeypatch):
     # plugin before its baseline is captured).
     monkeypatch.delitem(v.AGENT_DESC_BASELINE_CHARS, "agents", raising=False)
     assert v.check_agent_description_budget(v.REPO / "agents") == []
+
+
+# --- WP-B6: 2026-07 audit guards ------------------------------------------
+
+def test_rationale_heading_missing_is_critical():
+    findings = v.check_rationale_heading("# T\n\n## Other\n", "x/SKILL.md", "skill")
+    assert _rules(findings) == {"skill-management.rationale-heading-missing"}
+    assert findings[0].severity == "Critical"
+
+
+def test_rationale_heading_exact_wording_passes():
+    body = "# T\n\n## Why this is a skill, not an agent\n\n- dimension\n"
+    assert v.check_rationale_heading(body, "x/SKILL.md", "skill") == []
+    body_a = "# T\n\n## Why this is an agent, not a skill\n\n- dimension\n"
+    assert v.check_rationale_heading(body_a, "x.md", "agent") == []
+
+
+def test_rationale_heading_variant_fails():
+    body = "# T\n\n## Skill-vs-agent rationale\n\n- dimension\n"
+    assert len(v.check_rationale_heading(body, "x.md", "agent")) == 1
+
+
+def test_lead_voice_imperative_warns():
+    findings = v.check_description_lead_voice("Audit the repo for drift.", "x.md", "skill")
+    assert _rules(findings) == {"skill-management.frontmatter-description-lead-voice"}
+    assert findings[0].severity == "Warning"
+
+
+def test_lead_voice_third_person_and_nominal_pass():
+    assert v.check_description_lead_voice("Audits the repo.", "x.md", "skill") == []
+    assert v.check_description_lead_voice("Read-only scanner dispatched by x.", "x.md", "agent") == []
+    assert v.check_description_lead_voice("Visually reviews an E2E run.", "x.md", "agent") == []
+    assert v.check_description_lead_voice("Senior full-stack implementation agent.", "x.md", "agent") == []
+
+
+def test_description_headroom_info_band():
+    assert v.check_description_headroom("x" * 900, "x.md", "skill") == []
+    findings = v.check_description_headroom("x" * 1000, "x.md", "skill")
+    assert _rules(findings) == {"skill-management.frontmatter-description-headroom"}
+    assert findings[0].severity == "Info"
+    # over-cap is the cap check's job, not headroom's
+    assert v.check_description_headroom("x" * 1030, "x.md", "skill") == []
+
+
+def test_bash_justification_readonly_critical():
+    findings = v.check_bash_justification(
+        "Read, Bash", "Read-only scanner over the tree.", "# A\n\nbody\n", "x.md")
+    assert _rules(findings) == {"agent-management.bash-justification-missing"}
+    assert findings[0].severity == "Critical"
+
+
+def test_bash_justification_write_capable_warning_and_headings_pass():
+    findings = v.check_bash_justification(
+        ["Read", "Write", "Bash"], "Drafts docs and runs checks.", "# A\n\nbody\n", "x.md")
+    assert findings and findings[0].severity == "Warning"
+    ok_ro = "# A\n\n## Read-only Bash justification\n\n- `git log`\n"
+    assert v.check_bash_justification("Read, Bash", "Read-only scanner.", ok_ro, "x.md") == []
+    ok_n = "# A\n\n## Bash justification\n\n- `task test`\n"
+    assert v.check_bash_justification("Read, Write, Bash", "Drafts.", ok_n, "x.md") == []
+    assert v.check_bash_justification("Read, Grep", "Read-only scanner.", "# A\n", "x.md") == []
