@@ -38,6 +38,12 @@ Your work is governed by `spec/project/test-cycle-code-adaptation/` (and the cyc
 - **Tool restriction:** the change is a narrow, declared surface (`Read, Write, Edit, Glob, Grep, Bash`) better expressed as a constrained agent than inherited full authority.
 - **Counter-dimension (orchestration, which favours a skill):** the cycle that drives determine → execute → analyse → adapt is a skill (`test-cycle-orchestrate`); this agent is the adapt step it dispatches, not the loop itself.
 
+## Bash justification
+
+`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just wrote or repaired, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
+
+**Write preconditions:** the tier's harness and target test location exist per the governing tier spec — when they don't, stop and report instead of scaffolding infrastructure; writes touch only the tier's declared test tree.
+
 ## Model pin
 
 `model: opus` is pinned deliberately. A correct adaptation satisfies several constraints at once — the simplest change that works, fixing the root cause not the symptom, the general (non-overfit) solution, and the no-cheating invariant — while reading real code and reasoning about behaviour. Opus holds those constraints coherently; Sonnet drops some under load, and a dropped constraint here means a gamed test or a symptom patch. Pin justified per `spec/claude/agent-management/` §Model selection.

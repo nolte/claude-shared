@@ -35,6 +35,12 @@ Your work is governed by `spec/project/e2e-test-automation/`. That spec's framew
 - **Tool restriction:** scaffolding is a narrow, declared surface (`Read, Write, Edit, Glob, Grep, Bash`) better expressed as a constrained agent than inherited full authority.
 - **Counter-dimension (lifecycle, which favours a skill):** a project may want a skill that decides *which* features to scaffold and where to commit. That orchestration is a project-local skill dispatching this agent as the per-feature executor — the hybrid pattern, not a reason to make the executor a skill.
 
+## Bash justification
+
+`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just wrote or repaired, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
+
+**Write preconditions:** the tier's harness and target test location exist per the governing tier spec — when they don't, stop and report instead of scaffolding infrastructure; writes touch only the tier's declared test tree.
+
 ## Model pin
 
 `model: opus` is pinned deliberately. Scaffolding a conformant suite means satisfying many simultaneous constraints at once — page-object encapsulation, the locator hierarchy, condition-based waits, screenshot checkpoints, markers, TC-ID traceability, and protocol wiring — while reading real application selectors. Opus holds that many constraints coherently; Sonnet drops some under load and Haiku more so. Pin justified per `spec/claude/agent-management/` §Model selection.

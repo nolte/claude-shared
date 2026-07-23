@@ -69,7 +69,7 @@ agent_version: mermaid-diagram-reviewer@<git-sha-or-short; "unknown" when the ca
 findings:
   - kind: <setup-drift | source-marker-missing | source-marker-malformed | authoring-violation | derived-source-missing | clean>
     target: <mkdocs.yml:<line>, docs/<lang>/<path>:<line>, or "n/a" for a clean run>
-    severity: <critical | warning | info>
+    severity: <Critical | Warning | Suggestion | Info>  # canonical scale per spec/claude/review-plan/
     resolution: <dispatch-skill mermaid-diagrams-apply:<operation> | align-mkdocs <key>=<value> | add-marker <md-path>:<line> | fix-marker <md-path>:<line> | fix-authoring <md-path>:<line>:<rule> | proceed>
     evidence: <one-line quote, path:line, or schema reference>
     rationale: <one short sentence citing the spec rule>
@@ -99,7 +99,7 @@ findings:
 - A `clean` finding signals every Mermaid block and the surrounding MkDocs setup match the spec; live-rendering verification is `mkdocs build --strict`'s job, run via `task docs` locally or by CI on every push.
 ````
 
-When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
+When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: Info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
 
 ## Inputs
 
@@ -115,7 +115,7 @@ If the working tree isn't a git repository or has no `docs/` tree, stop and repo
 Verify, using `Read` and `Glob` only:
 
 1. `spec/project/mermaid-diagrams/<canonical_language>.md` exists. Read `spec/.spec-config.yml` to resolve the canonical language; fall back to `en` when the config is absent. If the spec is missing, stop and report — without the oracle, the audit is ad-hoc judgement.
-2. `mkdocs.yml` exists at the repository root (the spec's setup requirements anchor on it). When it's absent, emit a single `setup-drift` finding (`severity: critical`, `target: mkdocs.yml`, `resolution: dispatch-skill mermaid-diagrams-apply:setup`) and stop the rest of the audit.
+2. `mkdocs.yml` exists at the repository root (the spec's setup requirements anchor on it). When it's absent, emit a single `setup-drift` finding (`severity: Critical`, `target: mkdocs.yml`, `resolution: dispatch-skill mermaid-diagrams-apply:setup`) and stop the rest of the audit.
 3. At least one language tree exists under `docs/<lang>/` (resolved from `mkdocs.yml`'s i18n locales, fallback `docs/`). When no tree exists, report "no docs surface" in **Health** and emit a single `clean` finding — there's nothing to audit.
 
 ## Investigation surface
@@ -124,18 +124,18 @@ The audit walks four surfaces; each has a bounded scan rule so the agent stays w
 
 ### Surface 1 — MkDocs setup (per spec §"MkDocs setup")
 
-- `mkdocs.yml` **MUST** declare `pymdownx.superfences` under `markdown_extensions` with a custom fence for Mermaid (the exact configuration block is named in the spec). Missing or malformed declaration is a `setup-drift` finding (`severity: critical`).
-- `mkdocs.yml` **MUST** keep `theme.name: material`. A different theme is a `setup-drift` finding (`severity: critical`) — Material's built-in Mermaid bridge is the portfolio-standard render path.
-- `mkdocs.yml` **MUST NOT** add `mkdocs-mermaid2-plugin` (or any other Mermaid-only plugin) to its `plugins:` list. Presence is a `setup-drift` finding (`severity: critical`).
-- `docs/requirements.txt` (or the equivalent docs install set) **MUST** include `pymdown-extensions` with an explicit version specifier per `spec/project/project-structure/` "Requirements file format". A bare entry or a missing one is a `setup-drift` finding (`severity: warning`).
+- `mkdocs.yml` **MUST** declare `pymdownx.superfences` under `markdown_extensions` with a custom fence for Mermaid (the exact configuration block is named in the spec). Missing or malformed declaration is a `setup-drift` finding (`severity: Critical`).
+- `mkdocs.yml` **MUST** keep `theme.name: material`. A different theme is a `setup-drift` finding (`severity: Critical`) — Material's built-in Mermaid bridge is the portfolio-standard render path.
+- `mkdocs.yml` **MUST NOT** add `mkdocs-mermaid2-plugin` (or any other Mermaid-only plugin) to its `plugins:` list. Presence is a `setup-drift` finding (`severity: Critical`).
+- `docs/requirements.txt` (or the equivalent docs install set) **MUST** include `pymdown-extensions` with an explicit version specifier per `spec/project/project-structure/` "Requirements file format". A bare entry or a missing one is a `setup-drift` finding (`severity: Warning`).
 
 ### Surface 2 — diagram source markers (per spec §"Diagram sources")
 
 For each Mermaid fence (` ```mermaid ` opening, ` ``` ` closing) in each markdown file under `docs/<lang>/`:
 
-- The fence **MUST** be preceded immediately by an HTML comment of the form `<!-- diagram-source: user-described—<summary> -->` or `<!-- diagram-source: derived—<source> -->`. Missing comment is a `source-marker-missing` finding (`severity: warning`).
-- A present comment **MUST** match one of the two declared shapes exactly (the dash is an em-dash `—`, not a hyphen-minus `-`). Malformed shape is a `source-marker-malformed` finding (`severity: warning`).
-- A `derived—<source>` marker **MUST** name a source that resolves on disk relative to the repo root (file or directory). A non-resolving source is a `derived-source-missing` finding (`severity: critical`).
+- The fence **MUST** be preceded immediately by an HTML comment of the form `<!-- diagram-source: user-described—<summary> -->` or `<!-- diagram-source: derived—<source> -->`. Missing comment is a `source-marker-missing` finding (`severity: Warning`).
+- A present comment **MUST** match one of the two declared shapes exactly (the dash is an em-dash `—`, not a hyphen-minus `-`). Malformed shape is a `source-marker-malformed` finding (`severity: Warning`).
+- A `derived—<source>` marker **MUST** name a source that resolves on disk relative to the repo root (file or directory). A non-resolving source is a `derived-source-missing` finding (`severity: Critical`).
 
 Cap the scan at every markdown file under the resolved language trees; hobby-scale doc trees per the spec.
 
@@ -143,12 +143,12 @@ Cap the scan at every markdown file under the resolved language trees; hobby-sca
 
 For each Mermaid block discovered in Surface 2:
 
-- The block **MUST** be preceded (within the same markdown file, above the source-marker comment) by a heading (level 3 or deeper) or a bold caption naming what the diagram shows, plus a one-sentence prose lead-in. Missing heading / caption is an `authoring-violation` finding (`severity: warning`, `rule: heading-caption`).
-- A `flowchart` block **MUST** declare an explicit direction (`TB`, `LR`, or `TD`) on its first line (the line immediately after the opening fence, optionally after a `flowchart` keyword). Missing direction is an `authoring-violation` finding (`severity: critical`, `rule: missing-direction`).
-- The block **MUST NOT** use `gitGraph` — it's intentionally excluded from the catalog per spec §"Diagram catalog". A `gitGraph` block is an `authoring-violation` finding (`severity: critical`, `rule: gitGraph-forbidden`).
-- The block **MUST NOT** apply per-node or per-edge inline styling (`style`, `linkStyle`, or `classDef` with hard-coded colors). Hits are `authoring-violation` findings (`severity: warning`, `rule: inline-styling`).
-- Node labels, edge labels, and identifiers inside the Mermaid block **MUST** be English even in `docs/de/` or any other non-English tree. A non-English label (heuristic: contains an umlaut `[äöüÄÖÜß]`, or a clear DE word matched against a small recognised-token list — the heuristic is reported in **Health** as "approximation"; the spec requires English but the agent can only detect it heuristically without a full NLP pass) is an `authoring-violation` finding (`severity: warning`, `rule: non-english-labels`).
-- The block **SHOULD** stay under roughly 25 nodes — a hit above the cap is an `authoring-violation` finding (`severity: info`, `rule: node-count`). The spec keeps this as a SHOULD until a counting lint matures; flag it but never block.
+- The block **MUST** be preceded (within the same markdown file, above the source-marker comment) by a heading (level 3 or deeper) or a bold caption naming what the diagram shows, plus a one-sentence prose lead-in. Missing heading / caption is an `authoring-violation` finding (`severity: Warning`, `rule: heading-caption`).
+- A `flowchart` block **MUST** declare an explicit direction (`TB`, `LR`, or `TD`) on its first line (the line immediately after the opening fence, optionally after a `flowchart` keyword). Missing direction is an `authoring-violation` finding (`severity: Critical`, `rule: missing-direction`).
+- The block **MUST NOT** use `gitGraph` — it's intentionally excluded from the catalog per spec §"Diagram catalog". A `gitGraph` block is an `authoring-violation` finding (`severity: Critical`, `rule: gitGraph-forbidden`).
+- The block **MUST NOT** apply per-node or per-edge inline styling (`style`, `linkStyle`, or `classDef` with hard-coded colors). Hits are `authoring-violation` findings (`severity: Warning`, `rule: inline-styling`).
+- Node labels, edge labels, and identifiers inside the Mermaid block **MUST** be English even in `docs/de/` or any other non-English tree. A non-English label (heuristic: contains an umlaut `[äöüÄÖÜß]`, or a clear DE word matched against a small recognised-token list — the heuristic is reported in **Health** as "approximation"; the spec requires English but the agent can only detect it heuristically without a full NLP pass) is an `authoring-violation` finding (`severity: Warning`, `rule: non-english-labels`).
+- The block **SHOULD** stay under roughly 25 nodes — a hit above the cap is an `authoring-violation` finding (`severity: Info`, `rule: node-count`). The spec keeps this as a SHOULD until a counting lint matures; flag it but never block.
 
 ### Surface 4 — derived-source freshness (intentionally deferred)
 
@@ -156,9 +156,9 @@ The spec's §"Drift behavior" assigns the *temporal* drift check ("source modifi
 
 ## Severity assignment
 
-- `critical`: violations that break rendering or violate a closed-vocabulary rule — missing `pymdownx.superfences`, wrong theme, `mkdocs-mermaid2-plugin` present, `gitGraph` block, missing `flowchart` direction, `derived—<path>` source missing on disk.
-- `warning`: violations that don't break rendering but break the spec's stated invariant — missing or malformed source markers, missing heading / caption, inline styling, non-English labels in language trees.
-- `info`: cosmetic or "noted for review" findings — node count above 25 (SHOULD), heuristic-only label-language matches, deferred-scope notes.
+- `Critical`: violations that break rendering or violate a closed-vocabulary rule — missing `pymdownx.superfences`, wrong theme, `mkdocs-mermaid2-plugin` present, `gitGraph` block, missing `flowchart` direction, `derived—<path>` source missing on disk.
+- `Warning`: violations that don't break rendering but break the spec's stated invariant — missing or malformed source markers, missing heading / caption, inline styling, non-English labels in language trees.
+- `Info`: cosmetic or "noted for review" findings — node count above 25 (SHOULD), heuristic-only label-language matches, deferred-scope notes.
 
 ## Hard rules
 
@@ -170,5 +170,5 @@ The spec's §"Drift behavior" assigns the *temporal* drift check ("source modifi
 - **Never** call the `Skill` tool or dispatch sibling agents — subagents can't spawn further subagents (per `spec/claude/agent-management/` §"Subagent boundaries (Claude Code runtime)").
 - **Never** report a derived-source freshness finding (last-commit timestamp drift) — that's `docs-freshness-checker`'s scope per spec §"Drift behavior". Report the boundary in **Health** instead of trying to cover it.
 - **Always** ground every finding in a concrete reference: a `path:line`, a fence number, or a spec section. Findings without a reference aren't findings.
-- **Always** classify the run as `clean` (`target: n/a`, `severity: info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
+- **Always** classify the run as `clean` (`target: n/a`, `severity: Info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
 - **Always** reread `spec/project/mermaid-diagrams/<canonical_language>.md` before producing the report; when this agent disagrees with the spec, the spec wins and the agent's behaviour is updated, not the spec.

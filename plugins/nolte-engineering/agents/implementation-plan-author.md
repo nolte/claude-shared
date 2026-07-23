@@ -74,6 +74,10 @@ path of `spec/project/issue-orchestration/` §Working-copy isolation — a dedic
 the issue id as its parameter and produces the plan — leaving the operator-approval gates with the
 orchestrating skill.
 
+## Bash justification
+
+This agent is write-capable only for its single artifact (via `Write`); `Bash` itself stays read-only, exactly as §Hard rules pins it: platform context reads (`gh issue view`, `gh api` against read-only endpoints) and git introspection (`git log`, `git ls-files`). No git mutation, no pushes, no package installs — the neutral heading applies because the agent as a whole writes, not because Bash does.
+
 ## Model pin
 
 `model: opus` is pinned deliberately. A good plan holds many constraints together at once — the

@@ -67,6 +67,19 @@ Starter vocabulary:
 - `release`: release-automation, changelogs, versioning
 - `quality-gate`: lint, typecheck, test
 - `dependency`: CVE scans, license compliance, lockfile hygiene
+- `design`: brand/design assets, image prompts, visual tooling
+- `media`: image and media processing or generation
+- `privacy`: GDPR / data-protection surfaces
+- `orchestrate`: multi-skill / multi-agent orchestration flows
+- `implementation`: hands-on code implementation
+- `planning`: work-package and implementation planning
+- `frontend`: browser-rendered UI surfaces
+- `ui`: UI/UX review and optimization
+- `fullstack`: combined frontend + backend implementation
+- `issue`: GitHub-issue intake and orchestration
+- `lifecycle`: sprint/feature lifecycle transitions and triggers
+- `triage`: intake, classification, and routing of findings or issues
+- `validation`: schema and structural validation tooling
 - `requirements`: requirements elicitation and downstream planning input
 
 ### Source location (`claude-shared` repository)

@@ -351,8 +351,8 @@ environment facts the executing agent would otherwise get wrong.
 
 ## Multi-model testing
 
-Examples and operations in this skill are verified on Claude Sonnet 4.6 as the
-default model; spot-checked on Haiku 4.5 for cost-sensitive intake runs; Opus 4.7
+Examples and operations in this skill are verified on Claude Sonnet as the
+default model; spot-checked on Haiku for cost-sensitive intake runs; Opus
 is appropriate for high-stakes issues (security, spec-change, or wide-blast-radius
 decompositions) that require deeper reasoning. The skill body has no model-specific
 assumptions beyond standard tool-call semantics.

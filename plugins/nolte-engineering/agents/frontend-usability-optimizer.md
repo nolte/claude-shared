@@ -46,6 +46,10 @@ Decision dimensions per `spec/claude/skill-vs-agent/` §Decision dimensions:
 
 This is the **execution** half of the hybrid "skill orchestrates, agent executes" pattern, like `fullstack-developer`: a parent owns scoping, clarification, and the final summary; this agent owns the isolated, multi-file usability-editing pass. Direct invocation is fine when the target is already sharply scoped.
 
+## Bash justification
+
+`Bash` serves the verify loop of the usability rework: the repository's declared build and test commands (bundler build, unit/a11y test runners) confirm this agent's own edits still build and pass. It never installs new dependencies, never pushes, and never runs commands outside the repo's declared toolchain.
+
 ## Model pin
 
 `model: sonnet` is pinned deliberately. Usability optimization of presentation-layer code is a medium-scope, largely rule-based pass — apply the project's documented UI conventions and the stack-agnostic checklist (labels, units, help text, input modes, empty/loading/error states, focus order, responsive mobile-first layout, i18n completeness). It does **not** require holding the many simultaneous cross-layer constraints (layer boundaries, error contract, typing, test patterns, security invariants) that justify Opus on `fullstack-developer`; Sonnet handles this structural, checklist-driven editing reliably at substantially lower cost, and portfolio-wide usability sweeps benefit from the cost differential. Pin justified per `spec/claude/agent-management/` §Model selection.

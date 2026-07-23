@@ -134,4 +134,4 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ## Multi-model testing
 
-Examples and operations in this skill are verified on Claude Sonnet 4.6 as the default model; spot-checked on Haiku 4.5 for lightweight partial audits; Opus 4.7 is appropriate for full-scope audits requiring deeper cross-spec reasoning. The skill has no model-specific assumptions beyond standard tool-call semantics.
+Examples and operations in this skill are verified on Claude Sonnet as the default model; spot-checked on Haiku for lightweight partial audits; Opus is appropriate for full-scope audits requiring deeper cross-spec reasoning. The skill has no model-specific assumptions beyond standard tool-call semantics.
