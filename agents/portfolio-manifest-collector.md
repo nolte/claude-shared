@@ -42,6 +42,8 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `gh api orgs/nolte/repos --paginate --jq '...'` — read-only GitHub API call to enumerate public non-archived repositories under the `nolte` organisation
 - `gh api repos/nolte/<repo>/contents/project/portfolio.yml --jq .content | base64 -d` — read-only GitHub API call to fetch and decode the manifest of a single portfolio member
 - `gh api rate_limit` — read-only check to detect imminent rate-limit exhaustion before a full-portfolio scan
+- `gh auth status` — the precondition preflight probe (CLI availability and authentication), read-only by nature
+- `gh api repos/nolte/<repo>/contents/CLAUDE.md --jq .content | base64 -d` — read-only fetch of a member's `CLAUDE.md` to check the `portfolio: excluded` opt-out marker (working procedure step 1)
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutations.
 

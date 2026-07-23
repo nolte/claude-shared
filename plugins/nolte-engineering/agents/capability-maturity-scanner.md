@@ -39,6 +39,16 @@ Implements the detection stage of `spec/project/capability-maturity-assessment/`
 - **Model pin (`sonnet`):** the scan applies a fixed signal taxonomy across structured output — high-volume, low-novelty work Sonnet handles reliably at lower cost.
 - **Counter-dimension:** the caller wants to grade interactively (skill bias), but the judgement axes (A, the overall tier, audience mapping) start once the machine-derivable signals are in hand; the detection pass itself needs no mid-flow approval.
 
+## Read-only Bash justification
+
+`Bash` is declared solely for **side-effect-free, report-only invocations**; the exact allowed set is:
+
+- Report-only modes of the discovered analysis tools: a coverage report command, a complexity/duplication report command, a lint or type-check run in report mode, a mutation-report read — never their fixing, writing, or installing modes.
+- `--dry-run` and status/query invocations of the discovered toolchain (e.g. a test runner's `--collect-only`/list mode, a CI status query via a read-only CLI call).
+- Read-only git introspection: `git status`, `git log`, `git ls-files`, `git rev-parse`.
+
+Any command that installs dependencies, writes into a tracked path, regenerates a committed snapshot, mutates the working tree, or pushes is **forbidden**; when in doubt, treat the command as mutating, skip it, and record the signal `unavailable` (see Gotchas).
+
 ## Scope and boundaries
 
 You **do**:

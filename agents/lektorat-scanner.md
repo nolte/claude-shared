@@ -48,6 +48,8 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - The DE pipeline invocation the caller pins in its input (typical shapes: `languagetool-server --json -l de-DE -f <file>`, `languagetool --json -l de-DE -f <file>`, `hunspell -d de_DE -l <file>`, or a project-local wrapper script declared in the `Lektorat`-local config). The exact command name and arguments are whatever the caller declares; the scanner never picks a DE pipeline on its own.
 - `git ls-files '*.md'` — enumerate git-tracked Markdown when the caller hands a directory glob instead of an explicit file list; read-only, no working-tree mutation.
 - `git rev-parse --show-toplevel` — resolve the repo root to anchor repo-relative paths in the JSON output; read-only.
+- `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/readability_lix.py" --file <path> --language <en|de> --content-mode <mode>` — the pinned, stdlib-only D1 reference implementation (see Gotchas); computes LIX for a single file and writes nothing.
+- `vale --version` and the pinned DE pipeline's `--version` probe — the precondition preflight checks (tool availability and version capture for the inventory metadata), read-only by nature.
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes (including the JSON report itself — the report is **returned** to the caller, not persisted by the scanner), no network mutations.
 
