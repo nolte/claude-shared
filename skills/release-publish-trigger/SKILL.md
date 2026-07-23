@@ -1,6 +1,6 @@
 ---
 name: release-publish-trigger
-description: "Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per the canonical-language file under spec/project/release-skill-layer/ §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check on develop is SUCCESS, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or the German \"veröffentliche das Release\", \"stoße den Release-Publish an\", \"ship das Release\". Typically called by sprint-review's opt-in chain, not directly after sprint closure."
+description: "Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per the canonical-language file under spec/project/release-skill-layer/ §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check on develop is SUCCESS, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or equivalent German-language requests. Typically called by sprint-review's opt-in chain, not directly after sprint closure."
 tags: [release]
 phase: close-release
 summary: "Validates every pre-publish gate locally, then dispatches release-publish.yml for the open release-drafter draft on develop."
@@ -33,6 +33,14 @@ Operationalises `spec/project/release-skill-layer/<canonical_language>.md` §"Sk
 ## User-language policy
 
 Detect the operator's language and respond in it. All `git`, `gh api`, and `gh workflow run` invocations stay English so that `release-publish.yml`'s job summary, `release-drafter`'s draft body, and downstream automation stay consistent across the portfolio.
+
+## German trigger phrases
+
+The frontmatter `description` keeps the trigger lexicon English-only per `spec/claude/skill-management/` §Structure (plugin-distributed skills). Treat the following German paraphrases as equivalent and discoverable through this skill:
+
+- "veröffentliche das Release"
+- "stoße den Release-Publish an"
+- "ship das Release"
 
 ## Preconditions
 

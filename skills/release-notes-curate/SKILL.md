@@ -1,6 +1,6 @@
 ---
 name: release-notes-curate
-description: "Augments the open release-drafter draft on develop with project-context-aware sections per the canonical-language file under spec/project/release-skill-layer/ §\"Skill A — Draft notes curation\". Reads the project's audience artefact, derives a section bundle from the detected project type, wraps the augmentation in stable HTML-comment markers so re-runs update in place, and writes the body back via `gh release edit` for a release tag. Invoke when the user asks to \"curate the release notes\", \"shape the release notes for this repo\", or the German \"kuratiere die Release-Notes\", \"reichere den Release-Draft mit Projektkontext an\". Don't use to publish the release (use `release-publish-trigger`), to identify audiences (use `audience-identify`), to draft notes from scratch (use the `audience-doc-author` agent), or to scaffold issue / PR templates (use `github-issue-templates-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Augments the open release-drafter draft on develop with project-context-aware sections per the canonical-language file under spec/project/release-skill-layer/ §\"Skill A — Draft notes curation\". Reads the project's audience artefact, derives a section bundle from the detected project type, wraps the augmentation in stable HTML-comment markers so re-runs update in place, and writes the body back via `gh release edit` for a release tag. Invoke when the user asks to \"curate the release notes\", \"shape the release notes for this repo\", or equivalent German-language requests. Don't use to publish the release (use `release-publish-trigger`), to identify audiences (use `audience-identify`), to draft notes from scratch (use the `audience-doc-author` agent), or to scaffold issue / PR templates (use `github-issue-templates-apply`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 tags: [release]
 phase: close-release
 summary: "Augments the open release-drafter draft on develop with project-context-aware sections via gh release edit."
@@ -35,6 +35,14 @@ Operationalises `spec/project/release-skill-layer/<canonical_language>.md` §"Sk
 ## User-language policy
 
 Detect the user's language and respond in it. The release notes themselves stay in **English**, regardless of the repo's documentation language — the GitHub release UI is English-only in practice and translated section headings would mismatch the surrounding chrome.
+
+## German trigger phrases
+
+The frontmatter `description` keeps the trigger lexicon English-only per `spec/claude/skill-management/` §Structure (plugin-distributed skills). Treat the following German paraphrases as equivalent and discoverable through this skill:
+
+- "kuratiere die Release-Notes"
+- "reichere den Release-Draft mit Projektkontext an"
+- "gestalte die Release-Notes für dieses Repo"
 
 ## Preconditions
 

@@ -48,7 +48,7 @@ Your work is governed by `spec/project/e2e-test-automation/`. You review the pro
 You **do**:
 - Locate the most recent run output (reference profile: the newest `test-reports/e2e/<timestamp>/`) and read its protocol fully.
 - Read each screenshot as an image and judge it against the requirement/test-case/UI specs: layout, presence of required elements, state display, i18n, and visible error/validation states.
-- Return prioritised findings (critical / high / medium / low), each keyed to the requirement or TC ID it concerns.
+- Return prioritised findings on the canonical severity scale of `spec/claude/review-plan/` (Critical / Warning / Suggestion / Info), each keyed to the requirement or TC ID it concerns.
 
 You **do not**:
 - Edit code, tests, or the application (read-only; you declare only `Read`, `Glob`, `Grep`).
@@ -72,11 +72,11 @@ For each screenshot, read it as an image and compare it against the specs it tra
 
 ### Phase 3 — Prioritise and report
 
-Return a Markdown findings report. Classify each finding: **critical** (a functional/spec violation), **high** (a UI defect), **medium** (i18n or copy), **low** (polish). Key each finding to the requirement/TC ID and the screenshot it concerns, and state the observed-vs-expected concisely. End with a short prioritised action list.
+Return a Markdown findings report. Classify each finding on the canonical severity scale of `spec/claude/review-plan/`: **Critical** (a functional/spec violation), **Warning** (a UI defect), **Suggestion** (i18n or copy), **Info** (polish). Key each finding to the requirement/TC ID and the screenshot it concerns, and state the observed-vs-expected concisely. End with a short prioritised action list.
 
 ## Hard rules
 
 1. Read-only: never edit code, tests, or the application; you declare only `Read`, `Glob`, `Grep`.
 2. Review only an existing run's outputs; never run the suite or generate the run yourself.
 3. Ground every finding in a spec the project actually declares, keyed to a requirement/TC ID; where none governs, say so rather than inventing an expectation.
-4. Every finding carries a priority (critical/high/medium/low) and names the screenshot and requirement/TC it concerns.
+4. Every finding carries a severity from the canonical `spec/claude/review-plan/` scale (Critical/Warning/Suggestion/Info) and names the screenshot and requirement/TC it concerns.

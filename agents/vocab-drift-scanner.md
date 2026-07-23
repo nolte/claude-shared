@@ -2,7 +2,7 @@
 name: vocab-drift-scanner
 description: "Read-only scanner dispatched by `vocab-drift-audit`: diffs repository-local Vale vocabulary files against the pinned upstream nolte/vale-style release and returns a two-section drift report (local entries already accepted upstream to delete; local entries not yet upstream as PR candidates). Follow-up actions stay with the skill."
 distribution: plugin
-tools: Read, Bash, Glob, Grep, mcp__github__get_file_contents, mcp__github__get_latest_release
+tools: Read, Bash, mcp__github__get_file_contents, mcp__github__get_latest_release
 model: sonnet
 tags: [audit]
 phase: quality
@@ -26,7 +26,7 @@ You are a read-only scanner dispatched by the `vocab-drift-audit` skill. Your si
 
 - **Self-contained input and output:** the caller (vocab-drift-audit skill) hands over the repo root, and you return a complete drift inventory. No mid-flow user approval is required at any point during the scan.
 - **Context-window isolation:** fetching every upstream `accept.txt` at the pinned tag via the GitHub API, plus every local vocabulary file via `git ls-files`, can surface large amounts of raw text. Isolating the scan into an agent prevents that raw material from flooding the parent conversation — the skill only receives the final structured diff.
-- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Glob`, `Grep`, `Bash`, plus the read-only `mcp__github__get_file_contents` / `mcp__github__get_latest_release` for the upstream-release diff). The absence of `Edit` and `Write` enforces the read-only requirement at the harness level. A drift scanner that can silently patch what it finds is the wrong shape.
+- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Bash`, plus the read-only `mcp__github__get_file_contents` / `mcp__github__get_latest_release` for the upstream-release diff; file enumeration runs through `git ls-files`, so `Glob`/`Grep` stay undeclared). The absence of `Edit` and `Write` enforces the read-only requirement at the harness level. A drift scanner that can silently patch what it finds is the wrong shape.
 - **Specialisation sharpens output:** a narrow "fetch upstream vocab, fetch local vocab, diff, classify" procedure produces a more consistent inventory than running the same steps inline in a general conversation.
 - **Model pin (`sonnet`):** the scan applies a fixed rule set (two output buckets, case-insensitive normalisation) against structured text files — high-volume but low-novelty work. Sonnet handles the pattern matching reliably at substantially lower cost than Opus; portfolio-wide audit runs can touch many repos.
 - **Counter-dimension:** the caller often wants to triage findings interactively (skill bias), but triage starts once the inventory is in hand; the scan itself needs no mid-flow approval.
@@ -39,6 +39,7 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `gh api "repos/nolte/vale-style/contents/<path>?ref=<tag>" --jq '.content' | base64 -d` — fetch the raw content of each upstream `accept.txt`
 - `gh api repos/nolte/vale-style/releases/latest --jq .tag_name` — check whether the pinned tag is behind the latest release
 - `git ls-files "*/accept.txt"` — enumerate git-tracked local vocabulary files without reading working-tree noise from `vale sync`
+- `gh --version` and `gh auth status` — the precondition preflight probes (availability and authentication), read-only by nature
 
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes, no network mutation.
 
