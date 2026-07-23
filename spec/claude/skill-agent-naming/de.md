@@ -50,7 +50,7 @@ Scope-Grenze: Diese Spec besitzt die **Form** eines Namens — semantische Gesta
 - Ein künftiger koordinierter Portfolio-Rename (etwa der Flip auf Gerundium-Form) **DARF** mit Deprecation-Periode stattfinden; bis eine solche Änderung shippt, gelten die obigen Formen
 - Der stehende Naming-Audit-Entscheid von 2026 gilt: Form-Abweichungen in der Bestandsfläche sind **Beobachtungs-Suggestions**, nie Rename-Aufträge
 
-### Validator-Bindung
+### Bindung an `scripts/validate_skills.py`
 
 - `scripts/validate_skills.py` operationalisiert diese Spec als **Suggestion-grade** `check_name_form` (eine Form-Abweichung ist ein Discoverability-Smell, kein Plattform-Fehler) mit vier gespiegelten geschlossenen Listen: `SKILL_ACTION_TOKENS`, `SKILL_NAME_FORM_EXCEPTIONS`, `AGENT_ROLE_NOUNS`, `AGENT_NAME_FORM_EXCEPTIONS`
 - **MUSS** diese Spec und jene Listen im **selben PR** ändern, wann immer sich eine Seite bewegt; ein Listeneintrag ohne Spec-Gegenstück (oder umgekehrt) ist ein Defekt
@@ -71,7 +71,7 @@ Nur zur Bequemlichkeit — die normativen Regeln leben in `skill-management` §F
 - [R1] Skill authoring best practices, Anthropic platform docs: <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
 - [R2] `plugin-scoping` §Namespace and naming coherence: `spec/claude/plugin-scoping/`
 - [R3] Zeichen-Ebenen-Owner: `spec/claude/skill-management/` §Frontmatter validation · `spec/claude/agent-management/` §Structure
-- [R4] Validator: `scripts/validate_skills.py` (`check_name_form` und die vier geschlossenen Listen)
+- [R4] `scripts/validate_skills.py` (`check_name_form` und die vier geschlossenen Listen)
 
 ## Offene Fragen
 
