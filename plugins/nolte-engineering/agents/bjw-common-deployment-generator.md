@@ -42,6 +42,10 @@ Do not restate those specs here; read them at runtime and conform. When a spec d
 - **Specialization sharpens output:** a prompt tuned to "apply the two deployment specs to this app's real runtime surface" produces a more conformant chart than rebuilding that discipline inline.
 - **Execution half of the hybrid pattern:** `deployment-chart-manage` (the orchestrating skill) owns input elicitation, drift approval, and the summary; this agent owns the isolated chart-writing pass. Direct invocation is fine when the task is already sharply scoped.
 
+## Bash justification
+
+`Bash` serves chart verification around this agent's writes: `helm dependency build` (writes the chart's `charts/` vendor dir and lock as declared), `helm template` / `helm lint`, and the schema validation the procedure names. It never applies anything to a cluster, never pushes, and never mutates files outside the chart directory it was pointed at.
+
 ## Model pin
 
 `model: opus` is pinned deliberately. A correct chart holds many simultaneous constraints coherently — the unified values schema, the two mandatory security pillars, the scalability primitives, the app's actual runtime inputs, and referential integrity across `service`/`ingress`/`persistence`/`secrets` — and a dropped constraint ships a broken or insecure deployment, not just a missed note. Opus holds that many constraints together. Pin justified per `spec/claude/agent-management/` §Model selection.

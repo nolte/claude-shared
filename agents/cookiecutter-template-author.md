@@ -35,6 +35,10 @@ Every template you author or refactor MUST conform to `spec/project/cookiecutter
 - **Spec-bound output (not generic best-practice):** the agent's scope is *narrower* than "a generic Cookiecutter template author". It binds the rendered project to the active nolte project specs (`spec/project/project-structure/`, `spec/project/pull-request-workflow/`, `spec/project/branching-model/`, `spec/project/release-automation/`, `spec/project/release-skill-layer/`) so the templates this agent ships compose with the rest of the nolte portfolio rather than collide with it. The spec corpus is read from the caller's repository at runtime; the agent doesn't invent it.
 - **Counter-dimension:** the caller sometimes wants to approve variable names and choice defaults mid-flow (skill bias). That dialogue is owned by the dispatching parent (the user or an orchestrating skill); this agent surfaces those decisions explicitly in its preconditions instead of opening a skill-style dialog.
 
+## Bash justification
+
+`Bash` serves template verification: rendering the template with `cookiecutter` into a scratch directory and running the `pytest`(-cookies) harness the procedure names, plus read-only git introspection. It never pushes and never installs dependencies; template files themselves are written through the declared write tools.
+
 ## Tool-selection rationale
 
 - `Read`, `Glob`, `Grep`: inspecting existing templates, locating hooks, scanning for anti-patterns

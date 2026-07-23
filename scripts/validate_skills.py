@@ -37,6 +37,9 @@ REPO = Path(__file__).resolve().parent.parent
 STARTER_TAGS = {
     "pull-request", "review", "audit", "scaffolding", "prose",
     "audience", "release", "quality-gate", "dependency", "requirements",
+    "design", "media", "privacy", "orchestrate", "implementation",
+    "planning", "frontend", "ui", "fullstack", "issue",
+    "lifecycle", "triage", "validation",
 }
 RESERVED_TOKENS = {"anthropic", "claude"}
 GENERIC_NAMES = {"helper", "utils", "tools", "documents", "data", "files"}

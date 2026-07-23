@@ -67,6 +67,19 @@ Starter-Vokabular:
 - `release` — Release-Automation, Changelogs, Versionierung
 - `quality-gate` — Lint, Typecheck, Test
 - `dependency` — CVE-Scans, Lizenz-Compliance, Lockfile-Hygiene
+- `design` — Brand-/Design-Assets, Bild-Prompts, visuelles Tooling
+- `media` — Bild- und Medienverarbeitung oder -generierung
+- `privacy` — DSGVO-/Datenschutz-Flächen
+- `orchestrate` — Multi-Skill-/Multi-Agent-Orchestrierungs-Flows
+- `implementation` — Hands-on-Code-Implementierung
+- `planning` — Work-Package- und Implementierungs-Planung
+- `frontend` — browser-gerenderte UI-Flächen
+- `ui` — UI-/UX-Review und -Optimierung
+- `fullstack` — kombinierte Frontend+Backend-Implementierung
+- `issue` — GitHub-Issue-Aufnahme und -Orchestrierung
+- `lifecycle` — Sprint-/Feature-Lifecycle-Übergänge und -Trigger
+- `triage` — Aufnahme, Klassifikation und Routing von Findings oder Issues
+- `validation` — Schema- und Struktur-Validierungs-Tooling
 - `requirements` — Anforderungserfassung und nachgelagerter Planungs-Input
 
 ### Quell-Ablageort (Repository claude-shared)

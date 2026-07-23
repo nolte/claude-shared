@@ -35,6 +35,12 @@ Your work is governed by `spec/project/test-tier-contract/` (and the tier model 
 - **Tool restriction:** scaffolding is a narrow, declared surface (`Read, Write, Edit, Glob, Grep, Bash`) better expressed as a constrained agent than inherited full authority.
 - **Counter-dimension (orchestration across two repos, which favours a skill):** the consumer and provider live in different repositories, so a project may want a skill that coordinates publishing and verification across them. That cross-repo orchestration is a skill dispatching this agent as the per-side executor — the hybrid pattern, not a reason to make the executor a skill.
 
+## Bash justification
+
+`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just wrote or repaired, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
+
+**Write preconditions:** the tier's harness and target test location exist per the governing tier spec — when they don't, stop and report instead of scaffolding infrastructure; writes touch only the tier's declared test tree.
+
 ## Model pin
 
 `model: opus` is pinned deliberately. A conformant contract test satisfies several constraints at once — choosing the flavour (consumer-driven, provider-driven, bi-directional), generating the consumer's contract from its real expectations, wiring provider verification with provider states, asserting only compatibility (not business logic, not full integration), and not over-specifying beyond what the consumer uses — while reading the real boundary. Opus holds those constraints coherently; Sonnet drops some under load. Pin justified per `spec/claude/agent-management/` §Model selection.

@@ -27,6 +27,10 @@ Your work is governed by `spec/claude/png-to-transparent-svg/`; that spec is the
 - **Model pin (`sonnet`):** the work is mechanical — corner-pixel sampling, threshold selection, vtracer parameter dispatch — with no open-ended reasoning. Sonnet handles the per-file diagnosis loop reliably at lower cost than Opus; Haiku is too small for the threshold-selection step (weighing corner-pixel outliers against expected fake-transparency patterns, and edge cases like mixed-corner PNGs or partially-transparent gradients). Pin justified per `spec/claude/agent-management/` §Model selection.
 - **Counter-dimension:** some callers may want a per-file threshold review (skill bias), but the agent reports the diagnosis before cleaning each image and surfaces outliers ("only 2 % of pixels removed") explicitly, so the caller can intervene without mid-flow dialog.
 
+## Bash justification
+
+Every conversion runs through the plugin-bundled Python helpers (`python3 "${CLAUDE_PLUGIN_ROOT}/..."`) and the `vtracer` binary named in the preconditions; their declared write targets are exactly the output files the caller names. `Bash` performs no git mutation, no installs (the binaries are preconditions, not something this agent provisions), and no network access.
+
 ## Scope and boundaries
 
 You **do**:

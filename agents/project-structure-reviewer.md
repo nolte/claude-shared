@@ -67,7 +67,7 @@ agent_version: project-structure-reviewer@<git-sha-or-short; "unknown" when the 
 findings:
   - kind: <missing-file | missing-directory | extends-drift | layout-violation | workflow-gap | clean>
     target: <path; "n/a" for a clean run>
-    severity: <critical | warning | info>
+    severity: <Critical | Warning | Suggestion | Info>  # canonical scale per spec/claude/review-plan/
     resolution: <dispatch-skill project-structure-apply:<operation> | add-file <path> | align-extends <file>:<extends-value> | relocate <from>=<to> | proceed>
     evidence: <one-line quote, path:line, or schema reference>
     rationale: <one short sentence citing the spec rule>
@@ -96,7 +96,7 @@ findings:
 - A `clean` finding signals the on-disk layout matches the spec; the GitHub-App live check (Renovate, Probot Settings, boring-cyborg, stale) is a separate concern owned by `project-structure-apply`.
 ````
 
-When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
+When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: Info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
 
 ## Inputs
 
@@ -122,51 +122,51 @@ The audit walks four surfaces; each has a bounded scan rule so the agent stays w
 
 Required MUST files at the repository root:
 
-- `README.md` — `missing-file` (`severity: critical`) when absent. The internal README structure is governed by `spec/project/readme-structure/`, not this audit; presence is the only check here.
-- `.gitignore` — `missing-file` (`severity: critical`) when absent.
-- `CLAUDE.md` — `missing-file` (`severity: critical`) when absent.
-- `renovate.json5` (preferred) **or** `renovate.json` — `missing-file` (`severity: critical`) when neither is present.
-- `.pre-commit-config.yaml` — `missing-file` (`severity: critical`) when absent.
-- `Taskfile.yml` (or `Taskfile.yaml`) — `missing-file` (`severity: critical`) when neither variant is present.
-- `mkdocs.yml` — `missing-file` (`severity: critical`) when absent (the docs surface is required per §Documentation).
+- `README.md` — `missing-file` (`severity: Critical`) when absent. The internal README structure is governed by `spec/project/readme-structure/`, not this audit; presence is the only check here.
+- `.gitignore` — `missing-file` (`severity: Critical`) when absent.
+- `CLAUDE.md` — `missing-file` (`severity: Critical`) when absent.
+- `renovate.json5` (preferred) **or** `renovate.json` — `missing-file` (`severity: Critical`) when neither is present.
+- `.pre-commit-config.yaml` — `missing-file` (`severity: Critical`) when absent.
+- `Taskfile.yml` (or `Taskfile.yaml`) — `missing-file` (`severity: Critical`) when neither variant is present.
+- `mkdocs.yml` — `missing-file` (`severity: Critical`) when absent (the docs surface is required per §Documentation).
 
 ### Surface 2 — required directories (per spec §"Claude Code integration", §"Documentation", §"Specifications", §"Tests")
 
 Required MUST directories at the repository root:
 
-- `.claude/` — `missing-directory` (`severity: critical`) when absent.
-- `.github/` with at least `.github/workflows/` — `missing-directory` (`severity: critical`) when either is absent.
-- `docs/` — `missing-directory` (`severity: critical`) when absent.
-- `spec/` — `missing-directory` (`severity: critical`) when absent.
-- `tests/` — for a repository with runtime source, `missing-directory` (`severity: critical`) when absent. For a Claude Code plugin / prompt-only repository (the `.claude-plugin/` + `skills/` layout with no runtime source), `tests/` is **SHOULD**, not **MUST**, per `spec/project/project-structure/` §Tests: emit at most `missing-directory` (`severity: warning`) when absent, and suppress even that — treating the directory as `not-applicable` — when the `Taskfile.yml` `test` target runs a frontmatter/contract validation (for example `scripts/validate_skills.py`). Never emit a `critical` for a missing `tests/` on a plugin / prompt-only repository.
+- `.claude/` — `missing-directory` (`severity: Critical`) when absent.
+- `.github/` with at least `.github/workflows/` — `missing-directory` (`severity: Critical`) when either is absent.
+- `docs/` — `missing-directory` (`severity: Critical`) when absent.
+- `spec/` — `missing-directory` (`severity: Critical`) when absent.
+- `tests/` — for a repository with runtime source, `missing-directory` (`severity: Critical`) when absent. For a Claude Code plugin / prompt-only repository (the `.claude-plugin/` + `skills/` layout with no runtime source), `tests/` is **SHOULD**, not **MUST**, per `spec/project/project-structure/` §Tests: emit at most `missing-directory` (`severity: Warning`) when absent, and suppress even that — treating the directory as `not-applicable` — when the `Taskfile.yml` `test` target runs a frontmatter/contract validation (for example `scripts/validate_skills.py`). Never emit a `critical` for a missing `tests/` on a plugin / prompt-only repository.
 
 Optional but spec-governed:
 
-- `project/` — when present, verify the canonical layout (`project/roadmap.md`, `project/goals.md`, `project/sprints/<NNNN>-<slug>.md`, `project/features/<slug>.md`) per §"Project planning artefacts (optional)". `missing-file` (`severity: warning`) for each missing piece when `project/` exists.
-- `project/` **MUST NOT** be nested under `docs/` or any other subdirectory — `layout-violation` (`severity: critical`) when `docs/project/` or similar is detected.
+- `project/` — when present, verify the canonical layout (`project/roadmap.md`, `project/goals.md`, `project/sprints/<NNNN>-<slug>.md`, `project/features/<slug>.md`) per §"Project planning artefacts (optional)". `missing-file` (`severity: Warning`) for each missing piece when `project/` exists.
+- `project/` **MUST NOT** be nested under `docs/` or any other subdirectory — `layout-violation` (`severity: Critical`) when `docs/project/` or similar is detected.
 
 ### Surface 3 — portfolio `_extends` and required workflows (per spec §"GitHub repository configuration" and §"Release and documentation workflows")
 
-- `.github/settings.yml` — `missing-file` (`severity: critical`) when absent.
-- When `.github/settings.yml` exists, **MUST** carry `_extends: nolte/gh-plumbing:.github/commons-settings.yml` (the short form `gh-plumbing:.github/commons-settings.yml` within the `nolte` org is equivalent). Missing or mismatched `_extends` is an `extends-drift` finding (`severity: critical`).
-- `renovate.json5` (or `.json`) **MUST** `extends` the portfolio preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>` pinned to a release tag. Missing or unpinned `extends` is an `extends-drift` finding (`severity: critical`).
-- `.github/release-drafter.yml` — `missing-file` (`severity: critical`) when absent; **MUST** extend `nolte/gh-plumbing:.github/commons-release-drafter.yml` — `extends-drift` (`severity: warning`) when present but not extending the commons file.
-- Required workflow files under `.github/workflows/` (per `spec/project/branching-model/` §Required GitHub workflows): `release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`. Each missing file is a `workflow-gap` finding (`severity: critical`). The exact `uses:` pin verification is deferred-scope (out of this audit) per **Health**.
+- `.github/settings.yml` — `missing-file` (`severity: Critical`) when absent.
+- When `.github/settings.yml` exists, **MUST** carry `_extends: nolte/gh-plumbing:.github/commons-settings.yml` (the short form `gh-plumbing:.github/commons-settings.yml` within the `nolte` org is equivalent). Missing or mismatched `_extends` is an `extends-drift` finding (`severity: Critical`).
+- `renovate.json5` (or `.json`) **MUST** `extends` the portfolio preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>` pinned to a release tag. Missing or unpinned `extends` is an `extends-drift` finding (`severity: Critical`).
+- `.github/release-drafter.yml` — `missing-file` (`severity: Critical`) when absent; **MUST** extend `nolte/gh-plumbing:.github/commons-release-drafter.yml` — `extends-drift` (`severity: Warning`) when present but not extending the commons file.
+- Required workflow files under `.github/workflows/` (per `spec/project/branching-model/` §Required GitHub workflows): `release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`. Each missing file is a `workflow-gap` finding (`severity: Critical`). The exact `uses:` pin verification is deferred-scope (out of this audit) per **Health**.
 
 ### Surface 4 — source layout and project-type-specific (per spec §"Source layout", §"Python development (optional)", §"Home Assistant integrations (optional)", §"Ansible bootstrap (optional)")
 
-- **Source layout:** primary source code **MUST** live under one of the recognised layouts (`src/`, `src/<component>/`, `custom_components/<name>/`, the Claude-plugin layout `skills/` + `agents/` + `.claude-plugin/`, or the Ansible-bootstrap layout `playbooks/` + `roles/` + `inventory*/`). Detect which layouts are present and verify primary source files don't live loose at the repo root (per §"Source layout" MUST NOT). Loose source files are `layout-violation` findings (`severity: critical`).
-- **Python (optional):** when `pyproject.toml` or `requirements.txt` is present at the root or under any `src/<component>/`, run the per-project-type checks: `.venv/` listed in `.gitignore` (per §"Python development"), `pyproject.toml` carries `[build-system]` and project metadata, `requirements.txt` lists every dep with an explicit version specifier (per §"Requirements file format"). Each violation is a `layout-violation` finding (`severity: warning`).
-- **Home Assistant (optional):** when `hacs.json` exists at the root, verify integration code lives under `custom_components/<domain>/` (per §"Home Assistant integrations"). Missing or misplaced integration is a `layout-violation` finding (`severity: warning`).
-- **Ansible (optional):** when `ansible.cfg` or any `playbooks/<name>.yml` exists at the root, verify the Ansible-bootstrap layout (`playbooks/`, `roles/`, `inventory*/`). Missing pieces are `layout-violation` findings (`severity: warning`).
+- **Source layout:** primary source code **MUST** live under one of the recognised layouts (`src/`, `src/<component>/`, `custom_components/<name>/`, the Claude-plugin layout `skills/` + `agents/` + `.claude-plugin/`, or the Ansible-bootstrap layout `playbooks/` + `roles/` + `inventory*/`). Detect which layouts are present and verify primary source files don't live loose at the repo root (per §"Source layout" MUST NOT). Loose source files are `layout-violation` findings (`severity: Critical`).
+- **Python (optional):** when `pyproject.toml` or `requirements.txt` is present at the root or under any `src/<component>/`, run the per-project-type checks: `.venv/` listed in `.gitignore` (per §"Python development"), `pyproject.toml` carries `[build-system]` and project metadata, `requirements.txt` lists every dep with an explicit version specifier (per §"Requirements file format"). Each violation is a `layout-violation` finding (`severity: Warning`).
+- **Home Assistant (optional):** when `hacs.json` exists at the root, verify integration code lives under `custom_components/<domain>/` (per §"Home Assistant integrations"). Missing or misplaced integration is a `layout-violation` finding (`severity: Warning`).
+- **Ansible (optional):** when `ansible.cfg` or any `playbooks/<name>.yml` exists at the root, verify the Ansible-bootstrap layout (`playbooks/`, `roles/`, `inventory*/`). Missing pieces are `layout-violation` findings (`severity: Warning`).
 
 Cap the source-layout walk at one directory level below each recognised root; deeper structure (per-component internals) is out of this audit's scope.
 
 ## Severity assignment
 
-- `critical`: violations that would block a clean `project-structure-apply audit` pass — every MUST top-level file or directory missing, missing portfolio `_extends`, missing required workflow, source files loose at the root.
-- `warning`: violations that don't block but break the spec's stated invariant — optional-but-present surface drifts (a half-set `project/` tree, a Python project with bare `requirements.txt` entries, an Ansible project missing `inventory*/`), missing `release-drafter.yml` extends pointer.
-- `info`: cosmetic or "noted for review" findings — detected project-type signals the audit didn't follow up on, deferred-scope notes (GitHub-App live verification, workflow `uses:`-pin freshness).
+- `Critical`: violations that would block a clean `project-structure-apply audit` pass — every MUST top-level file or directory missing, missing portfolio `_extends`, missing required workflow, source files loose at the root.
+- `Warning`: violations that don't block but break the spec's stated invariant — optional-but-present surface drifts (a half-set `project/` tree, a Python project with bare `requirements.txt` entries, an Ansible project missing `inventory*/`), missing `release-drafter.yml` extends pointer.
+- `Info`: cosmetic or "noted for review" findings — detected project-type signals the audit didn't follow up on, deferred-scope notes (GitHub-App live verification, workflow `uses:`-pin freshness).
 
 ## Hard rules
 
@@ -178,5 +178,5 @@ Cap the source-layout walk at one directory level below each recognised root; de
 - **Never** call the `Skill` tool or dispatch sibling agents — subagents can't spawn further subagents (per `spec/claude/agent-management/` §"Subagent boundaries (Claude Code runtime)").
 - **Never** flag a project-type-specific check (Python, Home Assistant, Ansible) when the project-type signal is absent. Report the absence of the signal in **Health** under "Surfaces with zero hits" instead of flagging the entire missing project type as drift.
 - **Always** ground every finding in a concrete reference: a `path`, a `path:line`, or a spec section. Findings without a reference aren't findings.
-- **Always** classify the run as `clean` (`target: n/a`, `severity: info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
+- **Always** classify the run as `clean` (`target: n/a`, `severity: Info`, `resolution: proceed`) when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
 - **Always** reread `spec/project/project-structure/<canonical_language>.md` before producing the report; when this agent disagrees with the spec, the spec wins and the agent's behaviour is updated, not the spec.

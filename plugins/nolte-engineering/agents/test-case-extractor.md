@@ -35,6 +35,10 @@ Your work is governed by `spec/project/test-case-derivation/`. The derived cases
 - **Parallelism:** one instance per requirement can run in parallel for batch derivation.
 - **Counter-dimension (lifecycle, which favours a skill):** test cases co-evolve with specs and a consuming project will often want a batch-orchestration skill (which requirements to process, where to commit). That orchestration is exactly what a project-local skill provides while dispatching this agent as the per-requirement executor — the hybrid pattern, not a reason to make the executor itself a skill.
 
+## Write preconditions
+
+`Write` targets only the test-case documents under the declared `tests/cases/` tree. Preconditions: the requirement/spec source the cases derive from exists and is readable, and the target tree either exists or its creation is part of the declared output — when the source material is missing, stop and report instead of inventing cases.
+
 ## Model pin
 
 `model: sonnet` is pinned deliberately. The work is structured extraction against a fixed methodology and template — Sonnet handles it reliably and at lower cost than Opus, which is overkill here; Haiku risks missing edge cases and negative scenarios that the derivation discipline requires. Pin justified per `spec/claude/agent-management/` §Model selection.

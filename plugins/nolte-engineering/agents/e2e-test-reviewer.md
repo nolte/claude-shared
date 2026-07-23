@@ -35,6 +35,12 @@ Your work is governed by `spec/project/e2e-test-automation/`. Its framework-neut
 - **Tool restriction:** a narrow, declared surface (`Read, Edit, Glob, Grep, Bash`) — no `Write`, because the reviewer repairs in place, it does not create files.
 - **Counter-dimension (interactivity, which favours a skill):** a reviewer that proposed each fix for approval would lean skill-ward; here the fixes are minimal and mechanical (replace a sleep with a wait, move a lookup into a page object), so a self-contained reviewer that applies them and reports is the better fit.
 
+## Bash justification
+
+`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just wrote or repaired, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
+
+**Write preconditions:** the tier's harness and target test location exist per the governing tier spec — when they don't, stop and report instead of scaffolding infrastructure; writes touch only the tier's declared test tree.
+
 ## Model pin
 
 `model: sonnet` is pinned deliberately. The work is structured checklist review against the spec's anti-pattern list plus mechanical fixes — Sonnet handles it reliably and more cheaply than Opus, which is overkill; Haiku risks missing subtler violations (a page object that bypasses its base, an assertion with no real check). Pin justified per `spec/claude/agent-management/` §Model selection.

@@ -35,6 +35,12 @@ Your work is governed by `spec/project/test-tier-integration/` (and the tier mod
 - **Tool restriction:** scaffolding is a narrow, declared surface (`Read, Write, Edit, Glob, Grep, Bash`) better expressed as a constrained agent than inherited full authority.
 - **Counter-dimension (lifecycle, which favours a skill):** a project may want a skill that decides *which* seams to cover and where to commit. That orchestration is a project-local skill dispatching this agent as the per-seam executor — the hybrid pattern, not a reason to make the executor a skill.
 
+## Bash justification
+
+`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just wrote or repaired, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
+
+**Write preconditions:** the tier's harness and target test location exist per the governing tier spec — when they don't, stop and report instead of scaffolding infrastructure; writes touch only the tier's declared test tree.
+
 ## Model pin
 
 `model: opus` is pinned deliberately. A conformant narrow integration test satisfies several constraints at once — keeping exactly one collaborator real while doubling the rest, asserting only the seam (not business logic, not the whole system), provisioning a disposable real dependency with per-test data isolation, and waiting on readiness rather than sleeping — while reading the real schema and connection code. Opus holds those constraints coherently; Sonnet drops some under load. Pin justified per `spec/claude/agent-management/` §Model selection.

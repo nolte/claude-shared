@@ -134,4 +134,4 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ## Multi-model testing
 
-Operations and examples in this skill are verified on Claude Sonnet 4.6 as the default model. Full-scope sweeps over large inventories (30-plus artefacts) benefit from Opus 4.7 for deeper cross-spec reasoning in phase 2. Haiku 4.5 is appropriate for the `update` and `close` operations on an already-complete report. The skill has no model-specific assumptions beyond standard tool-call semantics.
+Operations and examples in this skill are verified on Claude Sonnet as the default model. Full-scope sweeps over large inventories (30-plus artefacts) benefit from Opus for deeper cross-spec reasoning in phase 2. Haiku is appropriate for the `update` and `close` operations on an already-complete report. The skill has no model-specific assumptions beyond standard tool-call semantics.

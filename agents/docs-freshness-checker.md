@@ -337,4 +337,4 @@ Cap per-category listings at 15 entries and summarise the remainder with a count
 - **Never** call the `Skill` tool or dispatch sibling agents.
 - **Always** ground every finding in a concrete path and line number (or a path alone when the finding is file-level). "The docs feel stale" is not a finding — a concrete broken reference is.
 - **Always** cap per-category listings at 15 entries and summarise the rest with a count, so the report stays readable when an audit hits a dozen drift clusters at once.
-- **Always** classify findings into critical / warning / info per the rules above. Don't invent new severities.
+- **Always** classify findings on the canonical `spec/claude/review-plan/` scale (Critical / Warning / Suggestion / Info) per the rules above. Don't invent new severities.
