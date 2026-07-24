@@ -1,0 +1,66 @@
+{
+  "operation": "audit",
+  "operation_version": "1",
+  "repository": "nolte/claude-shared",
+  "ran_at": "2026-07-24T15:13:00Z",
+  "language_summary": [
+    {"language": "en", "files": 32},
+    {"language": "de", "files": 28}
+  ],
+  "pipeline_metadata": {
+    "en": {
+      "tool": "vale",
+      "version": "vale version 3.0.1",
+      "configured_path": ".vale.ini",
+      "readability": {
+        "library": "nolte-readability-lix",
+        "library_version": "1.1.0",
+        "tokenizer": "builtin-unicode-regex",
+        "tokenizer_version": "1.1.0",
+        "long_word_threshold": 6
+      }
+    },
+    "de": {
+      "tool": "languagetool-http",
+      "version": "6.9-SNAPSHOT (buildDate 2026-07-08 17:49:55 +0000)",
+      "configured_path": "https://api.languagetool.org/v2",
+      "readability": {
+        "library": "readability_lix.py (repo-pinned stdlib reference implementation)",
+        "library_version": "1.1.0",
+        "tokenizer": "readability_lix internal Unicode-letter tokenizer",
+        "tokenizer_version": "1.1.0",
+        "long_word_threshold": 6,
+        "decompounding": false
+      }
+    }
+  },
+  "dimensions_evaluated": ["D1", "D2", "D3", "D4", "D5", "D6"],
+  "inventory_findings": [
+    {"kind": "content-mode-missing", "language": "en", "file": "docs/en/privacy.md", "message": "Page has no YAML frontmatter (no title/audience/content_mode/track/last_updated); D1 skipped, D5 falls back to whole audience set."},
+    {"kind": "content-mode-missing", "language": "de", "file": "docs/de/privacy.md", "message": "Page has no YAML frontmatter (no content_mode key) and is not in the meta-default list; D1 skipped pending an explicit content_mode."}
+  ],
+  "findings": [
+    {"id": "7d39414ca2", "severity": "warning", "dimension": "D1", "file": "docs/en/portfolio/index.md", "line_start": 17, "line_end": 334, "message": "LIX 59 crosses the reference-mode warn threshold (55); dominant lever is long-word proportion from the auto-generated capability table.", "rule": "lektorat §D1 Readability (LIX)", "language": "en", "audience": ["maintainer"], "evidence": "lix=59, asl=11.77, lwp=47.41, words=1660, sentences=141, corridor={warn:55,crit:65}", "suggested_resolution": "Auto-generated from portfolio/aggregate.yml; shorten source manifests, not the rendered page."},
+    {"id": "ce563c08d8", "severity": "warning", "dimension": "D2", "file": "docs/en/references/specs/skill-management.md", "line_start": 43, "line_end": 43, "message": "Abbreviation 'RFC' without expansion on first use.", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["maintainer"], "evidence": "The keywords MUST, SHOULD, and MAY follow RFC 2119", "suggested_resolution": "Expand once: 'RFC (Request for Comments) 2119'."},
+    {"id": "d5ee8fcad0", "severity": "warning", "dimension": "D2", "file": "docs/en/references/specs/agent-management.md", "line_start": 40, "line_end": 40, "message": "Abbreviation 'RFC' without expansion on first use.", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["maintainer"], "evidence": "The keywords MUST, MUST NOT, SHOULD, and MAY follow RFC 2119", "suggested_resolution": "Expand once on first use."},
+    {"id": "04491ea609", "severity": "warning", "dimension": "D2", "file": "docs/en/guides/architecture.md", "line_start": 44, "line_end": 44, "message": "Abbreviation 'ADRs' without expansion on first use.", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["external-contributor", "maintainer"], "evidence": "rather than as standalone ADRs", "suggested_resolution": "Expand once: 'ADRs (Architecture Decision Records)'."},
+    {"id": "d71cd770e2", "severity": "warning", "dimension": "D2", "file": "docs/en/guides/agents-concept.md", "line_start": 21, "line_end": 21, "message": "Abbreviation 'ADR' without expansion on first use (table cell).", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["maintainer"], "evidence": "ADR hygiene", "suggested_resolution": "Expand once near first use."},
+    {"id": "3a4ca614e7", "severity": "warning", "dimension": "D2", "file": "README.md", "line_start": 57, "line_end": 57, "message": "Abbreviation 'ADR' without expansion on first use.", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["downstream-user", "dogfooding-author", "ci-operator", "maintainer", "claude-coauthor", "external-contributor"], "evidence": "ADR hygiene and placeholder markers", "suggested_resolution": "Expand once: 'ADR (Architecture Decision Record) hygiene'."},
+    {"id": "295fdd4b51", "severity": "warning", "dimension": "D2", "file": "docs/en/guides/development-lifecycle.md", "line_start": 172, "line_end": 172, "message": "Abbreviation 'ADR' without expansion on first use.", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["maintainer"], "evidence": "ADR hygiene, and Mermaid-derived drift", "suggested_resolution": "Expand once on first use in this page."},
+    {"id": "19ab915b83", "severity": "warning", "dimension": "D2", "file": "docs/en/guides/development-lifecycle.md", "line_start": 168, "line_end": 168, "message": "Abbreviation 'CVEs' without expansion on first use.", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["maintainer"], "evidence": "Scan the dependency tree for CVEs", "suggested_resolution": "Expand once: 'CVEs (Common Vulnerabilities and Exposures)'."},
+    {"id": "a361293394", "severity": "warning", "dimension": "D2", "file": "docs/en/guides/skills-concept.md", "line_start": 26, "line_end": 26, "message": "Abbreviation 'CVEs' without expansion on first use (table cell).", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["maintainer"], "evidence": "Scan dependencies for known CVEs", "suggested_resolution": "Expand once near first use."},
+    {"id": "d09aa22eb9", "severity": "warning", "dimension": "D2", "file": "CONTRIBUTING.md", "line_start": 7, "line_end": 7, "message": "Abbreviation 'SLA' without expansion on first use.", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["external-contributor", "maintainer"], "evidence": "no published review or merge SLA", "suggested_resolution": "Expand once: 'SLA (service-level agreement)'."},
+    {"id": "0219d94011", "severity": "warning", "dimension": "D2", "file": "docs/en/by-task.md", "line_start": 23, "line_end": 23, "message": "Abbreviation 'AC' without expansion on first use.", "rule": "lektorat §D2 Comprehensibility — unexplained abbreviations", "language": "en", "audience": ["maintainer"], "evidence": "requirement-to-AC coverage", "suggested_resolution": "Spell out 'Acceptance Criteria' once."},
+    {"id": "b29619db11", "severity": "warning", "dimension": "D4", "file": "docs/en/references/specs/agent-management.md", "line_start": 21, "line_end": 98, "message": "Mixed heading capitalisation (Title Case spec-section names vs sentence-case page headings).", "rule": "lektorat §D4 Writing style — internal consistency", "language": "en", "audience": ["maintainer"], "evidence": "## Goals and Non-Goals ... ### Tool access ... ## Full text", "suggested_resolution": "Normalize, or document that Title Case headings mirror canonical spec section names verbatim."},
+    {"id": "495b462492", "severity": "warning", "dimension": "D4", "file": "docs/en/references/specs/skill-management.md", "line_start": 24, "line_end": 81, "message": "Mixed heading capitalisation (same pattern as sibling page).", "rule": "lektorat §D4 Writing style — internal consistency", "language": "en", "audience": ["maintainer"], "evidence": "## Goals and Non-Goals ... ## Full text", "suggested_resolution": "Same as sibling finding."},
+    {"id": "6dfd7306e3", "severity": "warning", "dimension": "D5", "file": "docs/en/getting-started/usage.md", "line_start": 5, "line_end": 5, "message": "track: user-docs contradicts declared audience [maintainer, external-contributor] (both map to developer-docs).", "rule": "lektorat §D5 Audience-fit — register mismatch", "language": "en", "audience": ["maintainer", "external-contributor"], "evidence": "audience: [maintainer, external-contributor] ... track: user-docs", "suggested_resolution": "Correct track to developer-docs (sibling convention) or retarget the audience array."},
+    {"id": "lekt-d229c2aeec", "severity": "warning", "dimension": "D3", "file": "docs/de/guides/development-lifecycle.md", "line_start": 129, "line_end": 129, "message": "Weak-noun declension: 'Agent' takes -en in accusative singular.", "rule": "DE_AGREEMENT (LanguageTool)", "language": "de", "audience": ["maintainer"], "evidence": "oder einen neuen Agent in strikter Konformität", "suggested_resolution": "'einen neuen Agent' → 'einen neuen Agenten'."},
+    {"id": "lekt-263614f178", "severity": "warning", "dimension": "D3", "file": "docs/de/guides/test-automation.md", "line_start": 41, "line_end": 41, "message": "Weak-noun declension: 'Agent' takes -en in accusative singular.", "rule": "DE_AGREEMENT (LanguageTool)", "language": "de", "audience": ["maintainer"], "evidence": "wo die Arbeit spezialisiert ist, einen Agent.", "suggested_resolution": "'einen Agent' → 'einen Agenten'."},
+    {"id": "lekt-44b1502b7a", "severity": "warning", "dimension": "D4", "file": "docs/de/getting-started/installation.md", "line_start": 46, "line_end": 46, "message": "Informal 'du' address vs spec default 'Sie' on how-to pages; consistent (not mixed) across 11 DE pages.", "rule": "lektorat §D4 register-default", "language": "de", "audience": ["maintainer", "external-contributor"], "evidence": "neben deinem eigenen `.claude/`-Ordner", "suggested_resolution": "Operator decision: accept portfolio-wide 'du' as deliberate convention (record override) or revert to 'Sie'."},
+    {"id": "lekt-c65f60ac1a", "severity": "warning", "dimension": "D3", "file": "docs/de/portfolio/index.md", "line_start": 117, "line_end": 117, "message": "Untranslated English prose in DE-resolved page (auto-generated portfolio content); consolidates ~700 raw LanguageTool matches with one root cause.", "rule": "lektorat §Sprach-Handhabung — cross-language content", "language": "de", "audience": ["maintainer"], "evidence": "ansible-reachy-mini-bootstrap provisions a Reachy Mini WiFi device", "suggested_resolution": "Localize the generator's source data (portfolio manifests), not the rendered page."},
+    {"id": "lekt-10cd200d73", "severity": "warning", "dimension": "D5", "file": "docs/de/portfolio/index.md", "line_start": 180, "line_end": 180, "message": "English-only descriptions in the DE portfolio table — systemic register gap in generated content.", "rule": "lektorat §D5 register-mismatch", "language": "de", "audience": ["maintainer"], "evidence": "Bundles reusable Claude Code skills (slash commands)", "suggested_resolution": "Raise with the generator/source-data owner; out of Lektorat's remit."},
+    {"id": "lekt-6a78d5ca2a", "severity": "warning", "dimension": "D2", "file": "docs/de/guides/development-lifecycle.md", "line_start": 13, "line_end": 13, "message": "Abbreviation 'MVP' without expansion in a load-bearing paragraph; not in glossary.", "rule": "lektorat §D2 unexplained-abbreviation", "language": "de", "audience": ["maintainer"], "evidence": "Sobald das MVP erreicht ist", "suggested_resolution": "Expand 'MVP (Minimum Viable Product)' on first use."},
+    {"id": "lekt-cfd8e740c6", "severity": "suggestion", "dimension": "D2", "file": "docs/de/guides/agents-concept.md", "line_start": 23, "line_end": 23, "message": "Abbreviation 'ADR' without expansion; not in glossary.", "rule": "lektorat §D2 unexplained-abbreviation", "language": "de", "audience": ["maintainer"], "evidence": "stale Pfadverweise, ADR-Hygiene", "suggested_resolution": "Glossary entry or first-use expansion."},
+    {"id": "lekt-39371cb95c", "severity": "suggestion", "dimension": "D3", "file": "docs/de/getting-started/usage.md", "line_start": 33, "line_end": 33, "message": "Elliptical formula sentence with lowercase infinitive readable as nominalized subject.", "rule": "FRAGE_KLEIN (LanguageTool)", "language": "de", "audience": ["maintainer", "external-contributor"], "evidence": "Deutsch fragen ergibt Deutsch als Antwort.", "suggested_resolution": "Consider 'Auf Deutsch fragen ergibt ...'; low-confidence."}
+  ]
+}
