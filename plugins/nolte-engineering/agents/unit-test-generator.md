@@ -37,7 +37,7 @@ Your work is governed by `spec/project/test-tier-unit/` (and, for the tier model
 
 ## Bash justification
 
-`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just wrote or repaired, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
+`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just scaffolded, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
 
 **Write preconditions:** the tier's harness and target test location exist per the governing tier spec — when they don't, stop and report instead of scaffolding infrastructure; writes touch only the tier's declared test tree.
 

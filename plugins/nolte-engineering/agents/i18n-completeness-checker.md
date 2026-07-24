@@ -1,6 +1,6 @@
 ---
 name: i18n-completeness-checker
-description: "Read-only audit of a localized app's translation files for completeness against each other and against code usage. Diffs each locale against a reference, scans source for key references, and reports parity gaps, keys used but undefined (critical), and orphan keys. Adapts to the project's i18n library. Invoke to check translations for gaps, find missing/orphan i18n keys, or audit locale completeness. Don't use to author or fix translations, or for the broad web-UI i18n/RTL review."
+description: "Read-only audit of a localized app's translation files for completeness against each other and against code usage. Diffs each locale against a reference, scans source for key references, and reports parity gaps, keys used but undefined (critical), and orphan keys. Adapts to the project's i18n library. Invoke to check translations for gaps, find missing/orphan i18n keys, or audit locale completeness. Don't use to author or fix translations, or for the broad web-UI i18n/RTL review (`webview-ui-expert`)."
 distribution: plugin
 tools: Read, Glob, Grep
 phase: quality

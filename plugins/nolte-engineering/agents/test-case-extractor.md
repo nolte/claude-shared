@@ -12,7 +12,7 @@ use_when:
   - "you want test cases or acceptance/E2E scenarios derived from a requirement or specification document"
   - "you want a coverage map and traceability from a requirement to its test cases"
 dont_use_when:
-  - situation: "you want to run the test suite, classify failures, or fix test code"
+  - situation: "you want to run the test suite"
     alternative: quality-gate
   - situation: "you want the derived cases turned into a runnable E2E/browser automation suite"
     alternative: e2e-test-generator
