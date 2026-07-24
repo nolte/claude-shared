@@ -38,6 +38,7 @@ Leser: Spec-Autoren, die die Schwester-Test-Specs schreiben; Skill- und Agent-Au
 - Die stabilen **Selektoren** bereitstellen, gegen die ein Step auflöst: besitzt `spec/frontend/testability-identifiers/` [R4]; ein Szenario stützt sich auf diesen Vertrag und benennt nie einen Selektor
 - Ein bestimmtes BDD-Framework, einen Parser oder eine Dateiendung vorschreiben: Der Kern ist tool-neutral; Gherkin und die Cucumber-Familie sind das illustrative Referenzprofil, keine Anforderung
 - Die Stufen-Taxonomie oder Coverage-Governance festlegen: besitzt `spec/project/test-pyramid-foundation/` [R5]
+- Spezifizieren, wie eine BDD-Step-Definition an Page Objects verdrahtet wird und von ihnen entkoppelt bleibt (der Integrations- und Wiederverwendbarkeits-Vertrag): besitzt `spec/project/bdd-page-object-integration/` [R13]; diese Spec setzt die Step-Definition-Prinzipien, jene Spec die konkrete Page-Object-Verdrahtung
 
 ## Anforderungen
 
@@ -149,6 +150,7 @@ Dieses Profil macht den tool-neutralen Kern mit **Gherkin** und der **Cucumber-F
 - [R10] Cucumber, *Writing better Gherkin* (deklarative statt imperative Szenarien): <https://cucumber.io/docs/bdd/better-gherkin/>
 - [R11] Eric Evans / Martin Fowler, *Ubiquitous Language*: <https://martinfowler.com/bliki/UbiquitousLanguage.html>
 - [R12] Gojko Adzic, *Specification by Example* (lebende Dokumentation aus ausführbaren Beispielen): <https://www.manning.com/books/specification-by-example>
+- [R13] `spec/project/bdd-page-object-integration/`: besitzt den BDD-zu-Page-Object-Integrations- und Entkopplungs-Vertrag, auf den sich die Step-Definitionen dieser Spec bei E2E stützen
 
 ## Offene Fragen
 

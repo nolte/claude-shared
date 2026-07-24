@@ -36,6 +36,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - Authoring or editing the requirement/spec documents a suite traces to
 - Generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work). Provisioning those hooks is the provider-side complement, owned by `spec/frontend/testability-identifiers/`
 - Authoring the business-readable **BDD scenario/specification layer** (Given-When-Then, feature files) that sits above these execution mechanics—owned by `spec/project/behavior-driven-development/` [R7]; a BDD scenario's steps delegate down into the page objects this spec owns, they don't restate them
+- Specifying how a BDD step definition integrates with and stays decoupled from these page objects (the wiring and reusability contract): owned by `spec/project/bdd-page-object-integration/` [R8]; this spec owns the page objects, that spec owns how a BDD step consumes them without coupling back
 
 ## Requirements
 
@@ -134,6 +135,7 @@ This profile is the binding realisation of the core for Python projects and the 
 - [R5] Page Object Model (background methodology): <https://martinfowler.com/bliki/PageObject.html>
 - [R6] Test pyramid foundation (the tier model and taxonomy the E2E tier sits atop; owner of tier-completeness and coverage governance): `spec/project/test-pyramid-foundation/`
 - [R7] `spec/project/behavior-driven-development/`: owns the BDD scenario/specification layer above these execution mechanics; its scenario steps delegate to this spec's page objects
+- [R8] `spec/project/bdd-page-object-integration/`: owns the BDD-to-Page-Object integration and decoupling contract; the page objects this spec owns are consumed there without depending on the BDD layer
 
 ## Open Questions
 

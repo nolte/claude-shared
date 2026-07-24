@@ -38,6 +38,7 @@ Readers: spec authors writing the sibling test specs; skill and agent authors bu
 - Provisioning the stable **selectors** a step resolves against: owned by `spec/frontend/testability-identifiers/` [R4]; a scenario relies on that contract and never names a selector
 - Mandating a specific BDD framework, parser, or file extension: the core is tool-neutral; Gherkin and the Cucumber family are the illustrative reference profile, not a requirement
 - Setting the tier taxonomy or coverage governance: owned by `spec/project/test-pyramid-foundation/` [R5]
+- Specifying how a BDD step definition wires to page objects and stays decoupled from them (the integration and reusability contract): owned by `spec/project/bdd-page-object-integration/` [R13]; this spec sets the step-definition principles, that spec the concrete page-object wiring
 
 ## Requirements
 
@@ -149,6 +150,7 @@ This profile makes the tool-neutral core concrete with **Gherkin** and the **Cuc
 - [R10] Cucumber, *Writing better Gherkin* (declarative over imperative scenarios): <https://cucumber.io/docs/bdd/better-gherkin/>
 - [R11] Eric Evans / Martin Fowler, *Ubiquitous Language*: <https://martinfowler.com/bliki/UbiquitousLanguage.html>
 - [R12] Gojko Adzic, *Specification by Example* (living documentation from executable examples): <https://www.manning.com/books/specification-by-example>
+- [R13] `spec/project/bdd-page-object-integration/`: owns the BDD-to-Page-Object integration and decoupling contract this spec's step definitions rely on at E2E
 
 ## Open Questions
 

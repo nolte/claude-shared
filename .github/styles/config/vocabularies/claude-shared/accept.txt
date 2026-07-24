@@ -7,6 +7,8 @@ Adzic
 Wynne
 Gojko
 Dinwiddie
+PicoContainer
+WebDriver
 combinational
 Bazel
 [Pp]arallelisation

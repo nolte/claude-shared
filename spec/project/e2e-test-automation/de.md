@@ -36,6 +36,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 - Die Anforderungs-/Spec-Dokumente schreiben oder bearbeiten, auf die eine Suite verweist
 - Produktiv-Anwendungscode oder `data-testid`-Hooks in der zu testenden Anwendung erzeugen (die Suite *stützt sich* auf solche Hooks; sie hinzuzufügen ist Anwendungsarbeit). Die Bereitstellung dieser Hooks ist das Provider-seitige Pendant, das `spec/frontend/testability-identifiers/` besitzt
 - Die geschäftslesbare **BDD-Szenario-/Spezifikationsebene** (Given-When-Then, Feature-Dateien) autoren, die über diesen Ausführungsmechaniken liegt — besitzt `spec/project/behavior-driven-development/` [R7]; die Steps eines BDD-Szenarios delegieren in die Page Objects, die diese Spec besitzt, statt sie zu wiederholen
+- Spezifizieren, wie eine BDD-Step-Definition mit diesen Page Objects integriert wird und von ihnen entkoppelt bleibt (der Verdrahtungs- und Wiederverwendbarkeits-Vertrag): besitzt `spec/project/bdd-page-object-integration/` [R8]; diese Spec besitzt die Page Objects, jene Spec, wie ein BDD-Step sie ohne Rückkopplung konsumiert
 
 ## Anforderungen
 
@@ -134,6 +135,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die 
 - [R5] Page Object Model (Hintergrund-Methodik): <https://martinfowler.com/bliki/PageObject.html>
 - [R6] Test-Pyramide-Fundament (Stufenmodell und Taxonomie, auf denen die E2E-Stufe dieser Spec aufsitzt; Eigentümer von Stufen-Vollständigkeit und Coverage-Governance): `spec/project/test-pyramid-foundation/`
 - [R7] `spec/project/behavior-driven-development/`: besitzt die BDD-Szenario-/Spezifikationsebene über diesen Ausführungsmechaniken; ihre Szenario-Steps delegieren an die Page Objects dieser Spec
+- [R8] `spec/project/bdd-page-object-integration/`: besitzt den BDD-zu-Page-Object-Integrations- und Entkopplungs-Vertrag; die Page Objects dieser Spec werden dort konsumiert, ohne von der BDD-Ebene abzuhängen
 
 ## Offene Fragen
 
