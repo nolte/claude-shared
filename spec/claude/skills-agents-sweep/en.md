@@ -8,7 +8,7 @@ The `skill-review` and `agent-review` specs define how a single artifact is revi
 
 Portfolio-wide concerns are systematically invisible to per-artifact reviews. Boundary conflicts between two skills only surface when both are reviewed in the same session with explicit cross-referencing. Spec-induced gaps -- where a spec requires a skill or agent that doesn't yet exist -- are never caught by reviewing existing artifacts. Operations-vocabulary drift accumulates across the inventory without any single per-artifact finding calling it out. Naming inconsistencies and lifecycle-ordering gaps require an inventory-wide view to detect.
 
-This spec codifies the methodology for a skills-and-agents sweep audit: a periodic, portfolio-wide procedure that supplements per-artifact reviews with cross-cutting analysis. The methodology was developed empirically during the 2026-05-20 baseline sweep of the `nolte-shared` plugin (34 skills, 9 agents) and is documented in `.audits/skills-agents-sweep/2026-05-20-baseline.md`. This spec generalises that experience into a repeatable procedure.
+This spec codifies the methodology for a skills-and-agents sweep audit: a periodic, portfolio-wide procedure that supplements per-artifact reviews with cross-cutting analysis. The methodology was developed empirically during the 2026-05-20 baseline sweep of the `nolte-shared` plugin (34 skills, 9 agents). This spec generalises that experience into a repeatable procedure.
 
 ## Goals
 

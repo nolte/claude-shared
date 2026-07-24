@@ -8,7 +8,7 @@ Die Specs `skill-review` und `agent-review` legen fest, wie ein einzelnes Artefa
 
 Portfolio-weite Befunde sind per-Artefakt-Reviews systematisch unsichtbar. Abgrenzungskonflikte zwischen zwei Skills treten nur zutage, wenn beide in derselben Session mit expliziter Cross-Referenzierung reviewt werden. Spec-induzierte Lücken -- wo eine Spec ein Skill oder einen Agent verlangt, der noch nicht existiert -- werden beim Review vorhandener Artefakte nie entdeckt. Vokabular-Drift bei Operations-Bezeichnungen akkumuliert im Inventar, ohne dass ein einzelner Per-Artefakt-Befund darauf hinweist. Namens-Inkonsistenzen und Lifecycle-Ordnungs-Lücken erfordern eine inventarweite Perspektive.
 
-Diese Spec kodifiziert die Methodik eines Skills-und-Agents-Sweep-Audits: ein periodisches, portfolio-weites Verfahren, das per-Artefakt-Reviews durch Cross-Cutting-Analyse ergänzt. Die Methodik wurde empirisch beim Baseline-Sweep 2026-05-20 des `nolte-shared`-Plugins (34 Skills, 9 Agents) entwickelt und in `.audits/skills-agents-sweep/2026-05-20-baseline.md` dokumentiert. Diese Spec verallgemeinert diese Erfahrung zu einem wiederholbaren Verfahren.
+Diese Spec kodifiziert die Methodik eines Skills-und-Agents-Sweep-Audits: ein periodisches, portfolio-weites Verfahren, das per-Artefakt-Reviews durch Cross-Cutting-Analyse ergänzt. Die Methodik wurde empirisch beim Baseline-Sweep 2026-05-20 des `nolte-shared`-Plugins (34 Skills, 9 Agents) entwickelt. Diese Spec verallgemeinert diese Erfahrung zu einem wiederholbaren Verfahren.
 
 ## Goals
 
