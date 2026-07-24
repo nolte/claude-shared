@@ -117,6 +117,122 @@ flowchart LR
 
 Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 
+## Globaler Tech-Stack
+
+Die portfolioweite technische Grundlinie, handkuratiert in `portfolio/tech-stack.yml`. Jedes Portfolio-Member-Repository erbt implizit jeden Eintrag unten, dessen Status `active` oder `experimental` ist; ein Member steigt über einen Override mit Begründung aus. Die Abschnitte folgen der `group`-Reihenfolge aus der Tech-Stack-Spec, innerhalb einer Gruppe wird nach `kind` sortiert.
+
+### Warum es dieses Inventar gibt
+
+- **Sichtbarkeit über Repositories hinweg.** Eine Seite beantwortet, welches Repository welchen Baustein nutzt, statt in jedem Repository einzeln Lockfiles und Workflow-Dateien zu durchsuchen (Outcome O-1).
+- **Geringere Onboarding-Kosten.** Neue Mitwirkende lesen die technische Grundlinie an einer Stelle, bevor sie die erste Quelldatei öffnen (Outcomes O-1, O-2).
+- **Standardisierungsdruck mit explizitem Sicherheitsventil.** Das Portfolio hat einen Default-Stack, und ein abweichendes Repository meldet sich mit einer schriftlichen Begründung, statt das Setup stillschweigend neu zu erfinden (Outcome O-1).
+- **Auditierbarkeit struktureller Ausreißer.** Mit dem Inventar kann das Portfolio-Audit strukturelle Fragen stellen, die ein freies README nicht beantworten kann, etwa welches Repository gerenderte Dokumentation ausliefert, ohne einen Dokumentationsgenerator zu deklarieren (Outcomes O-2, O-3).
+- **Dogfooding der Planungs-Suite.** `claude-shared` erfasst zuerst den eigenen Stack, damit der Erfassungsablauf hier erprobt ist, bevor er an Konsumenten ausgeliefert wird (Outcome O-3).
+
+Paraphrasiert aus dem Benefits-Abschnitt der Tech-Stack-Discovery-Spec; der vollständige Wortlaut und die Outcome-Anker stehen in [`spec/portfolio/tech-stack-discovery/`](https://github.com/nolte/claude-shared/blob/develop/spec/portfolio/tech-stack-discovery/de.md).
+
+### `documentation`
+
+| Eintrag | Art | Status | Rolle |
+|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | Documentation generator producing the bilingual MkDocs site under docs/. |
+| `markdownlint` | `lint` | ✅ active | Markdown style linter run via the pre-commit hook framework. |
+| `vale` | `lint` | ✅ active | Prose linter using the pinned nolte/vale-style vocabularies and the Microsoft style ruleset. |
+
+### `quality`
+
+| Eintrag | Art | Status | Rolle |
+|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | Pre-commit hook framework wiring trailing-whitespace, end-of-files, yamllint, markdownlint, and Vale checks. |
+
+### `automation`
+
+| Eintrag | Art | Status | Rolle |
+|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | Portfolio CI/CD anchor providing reusable GitHub Actions workflows (mkdocs deploy, release-drafter, automerge, release-cd-refresh-master) consumed by every nolte/* repository. |
+| `github-actions` | `ci` | ✅ active | Continuous-integration provider running lint, test, docs, release-drafter, and release-publish workflows. |
+| `renovate` | `dep-bot` | ✅ active | Automated dependency-update bot extending the nolte/gh-plumbing common preset. |
+| `boring-cyborg` | `other` | ✅ active | Probot GitHub App that auto-labels PRs by touched paths and welcomes first-time contributors per .github/boring-cyborg.yml. |
+| `probot-settings` | `other` | ✅ active | Probot GitHub App that materialises .github/settings.yml (branch protection, labels, required checks) onto every nolte/* repository. |
+| `release-drafter` | `other` | ✅ active | Release-notes drafter that aggregates merged PRs into a draft GitHub Release between version cuts, wired via a gh-plumbing reusable workflow. |
+| `stale-bot` | `other` | ✅ active | Probot GitHub App that closes stale issues and PRs per .github/stale.yml. |
+
+### `build-tooling`
+
+| Eintrag | Art | Status | Rolle |
+|---|---|---|---|
+| `task` | `build` | ✅ active | Task orchestrator running quality-gate, docs, plugin-reload, and lint targets via a portfolio-wide Taskfile convention. |
+
+### `plugin-platform`
+
+| Eintrag | Art | Status | Rolle |
+|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | Claude Code plugin shape defining the skills/&lt;name&gt;/SKILL.md and agents/&lt;name&gt;.md source layout plus the plugin/marketplace manifests. |
+| `claude-code` | `runtime` | ✅ active | Host runtime that loads and executes skills and agents shipped by this plugin in contributor and end-user sessions. |
+
+## Verteilung nach Art
+
+Repo-spezifische Einträge je `kind`, damit strukturelle Ausreißer (ein Repository mit zwei `language`-Einträgen oder ganz ohne eine bestimmte Art) auf einen Blick sichtbar sind. Geerbte globale Einträge sind überall identisch und bleiben außen vor.
+
+<!-- diagram-source: derived—portfolio/aggregate.yml -->
+```mermaid
+flowchart LR
+    subgraph K0["nolte/blog"]
+        K0N0["deploy-target × 1"]
+        K0N1["framework × 2"]
+        K0N2["language × 1"]
+        K0N3["package-manager × 1"]
+        K0N4["runtime × 1"]
+    end
+    subgraph K1["nolte/claude-shared"]
+        K1N0["deploy-target × 2"]
+        K1N1["language × 1"]
+    end
+    subgraph K2["nolte/cookiecutter-gh-project"]
+        K2N0["framework × 1"]
+        K2N1["language × 1"]
+    end
+    subgraph K3["nolte/kamerplanter"]
+        K3N0["build × 2"]
+        K3N1["deploy-target × 2"]
+        K3N2["framework × 3"]
+        K3N3["language × 2"]
+        K3N4["runtime × 1"]
+    end
+    subgraph K4["nolte/kamerplanter-ha"]
+        K4N0["deploy-target × 1"]
+        K4N1["framework × 1"]
+        K4N2["language × 1"]
+        K4N3["test × 1"]
+    end
+    subgraph K5["nolte/reachy-mini-app"]
+        K5N0["deploy-target × 1"]
+        K5N1["framework × 1"]
+        K5N2["language × 1"]
+    end
+    subgraph K6["nolte/reachy-mini-mcp"]
+        K6N0["deploy-target × 1"]
+        K6N1["framework × 1"]
+        K6N2["language × 1"]
+        K6N3["lint × 1"]
+        K6N4["test × 1"]
+    end
+    subgraph K7["nolte/terraform-github-bootstrap"]
+        K7N0["framework × 1"]
+        K7N1["language × 2"]
+        K7N2["lint × 1"]
+    end
+    subgraph K8["nolte/vale-style"]
+        K8N0["deploy-target × 1"]
+    end
+    subgraph K9["nolte/workstation"]
+        K9N0["framework × 1"]
+        K9N1["language × 1"]
+    end
+```
+
+Herkunft: 🔗 geerbt · ➕ repo-spezifisch · 🚫 unterdrückt · 🔀 neu gruppiert
+
 ## nolte/ansible-reachy-mini-bootstrap
 
 > ansible-reachy-mini-bootstrap provisions a Reachy Mini WiFi device to a working Pollen/Reachy runtime state from a single inventory plus playbook run, so any owner reaches an identical, reproducible device state without manual per-device setup.
@@ -126,6 +242,10 @@ Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 | Fähigkeit | Status | Beschreibung | Zielgruppen |
 |---|---|---|---|
 | `reachy-mini-ansible-provisioning` | ✅ active | An Ansible playbook and role collection that bootstraps a Reachy Mini WiFi device (Raspberry Pi OS) to a working state — network, system dependencies, and the Pollen/Reachy runtime — from a single inventory plus playbook run. | `nolte` (repo author, first operator on his own device)<br>Reachy Mini owner / hobbyist |
+
+### Tech-Stack
+
+_Noch kein `tech_stack:`-Block deklariert; der effektive Stack dieses Repositories ist die globale Grundlinie oben, unverändert._
 
 ### Peer-Referenzen
 
@@ -142,6 +262,64 @@ Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 | `bilingual-blog-knowledge-base` | 🧪 experimental | A bilingual (English-canonical, German-translated) Astro blog and personal knowledge base, deployed to GitHub Pages, that publishes durable posts as real EN+DE pairs without translation drift for technical readers, portfolio reviewers, and the author's own future-self. | A — Technical readers<br>B — Portfolio reviewers<br>C — Author as knowledge-base user |
 | `transparent-ai-authoring` | 🧪 experimental | Per-post AI-disclosure (the aiGenerated frontmatter flag, with a planned visible badge and About-page explanation) that keeps AI-drafted content transparently distinct from hand-curated content. | A — Technical readers<br>B — Portfolio reviewers<br>L — People and projects named in posts |
 
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🚫 unterdrückt | Blog publishes its site and knowledge base with Astro, not MkDocs; this repo carries no docs/ MkDocs tree or mkdocs.yml. |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `github-pages` | `deploy-target` | ✅ active | ➕ repo-spezifisch | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+| `astro` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `tailwindcss` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `typescript` | `language` | ✅ active | ➕ repo-spezifisch | — |
+| `npm` | `package-manager` | ✅ active | ➕ repo-spezifisch | — |
+| `node` | `runtime` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🚫 unterdrückt | Blog is an Astro web application, not a Claude Code plugin; it ships no skills/&lt;name&gt;/SKILL.md or agents/ layout, so the plugin-shape entry does not apply. |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- 🚫 unterdrückt `mkdocs` — Blog publishes its site and knowledge base with Astro, not MkDocs; this repo carries no docs/ MkDocs tree or mkdocs.yml.
+- 🚫 unterdrückt `claude-code-plugin` — Blog is an Astro web application, not a Claude Code plugin; it ships no skills/&lt;name&gt;/SKILL.md or agents/ layout, so the plugin-shape entry does not apply.
+- ➕ repo-spezifisch `node` — `runtime` / `build-tooling`
+- ➕ repo-spezifisch `npm` — `package-manager` / `build-tooling`
+- ➕ repo-spezifisch `astro` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `typescript` — `language` / `build-tooling`
+- ➕ repo-spezifisch `tailwindcss` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `github-pages` — `deploy-target` / `automation`
+
 ### Peer-Referenzen
 
 - `nolte/claude-shared`
@@ -156,6 +334,10 @@ Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 |---|---|---|---|
 | `claude-code-skills-and-agents-for-home-assistant` | ✅ active | A Claude Code plugin bundling skills and agents for Home Assistant development — custom integrations, Lovelace cards, blueprints and automations, and ESPHome / add-on work — that authors HA artefacts against Home Assistant Core and HACS conventions. | Plugin-Autor beim Dogfooding in diesem Repo (nolte)<br>Spätere öffentliche Nutzer (HA-Custom-Integration- und Card-Autoren-Community) |
 
+### Tech-Stack
+
+_Noch kein `tech_stack:`-Block deklariert; der effektive Stack dieses Repositories ist die globale Grundlinie oben, unverändert._
+
 ### Peer-Referenzen
 
 _Keine deklariert._
@@ -169,6 +351,10 @@ _Keine deklariert._
 | Fähigkeit | Status | Beschreibung | Zielgruppen |
 |---|---|---|---|
 | `claude-code-skills-and-agents-for-reachy-mini` | ✅ active | A Claude Code plugin bundling skills and agents for Reachy Mini robot development — dance-to-music behaviours and Home Assistant integration — so the operator builds Reachy Mini apps with consistent, spec-grounded tooling. | Plugin-Autor beim Dogfooding in diesem Repo (nolte)<br>Spätere öffentliche Nutzer (Reachy-Mini-Hobby- und Maker-Community) |
+
+### Tech-Stack
+
+_Noch kein `tech_stack:`-Block deklariert; der effektive Stack dieses Repositories ist die globale Grundlinie oben, unverändert._
 
 ### Peer-Referenzen
 
@@ -190,6 +376,56 @@ _Keine deklariert._
 | `auto-generated-skill-agent-catalog` | ✅ active | Generates a navigable MkDocs catalog of every skill and agent in the nolte-shared plugin (and optionally external plugin source roots) so downstream readers discover what the plugin ships without reading the source tree directly. | Downstream Claude Code users in portfolio projects<br>Plugin author dogfooding inside this repo<br>External contributors via pull request |
 | `shared-vale-vocabulary-extension` | ✅ active | Extends the nolte/vale-style baseline vocabulary with portfolio-specific terms (autoload, autolink, Probot, Renovate, vtracer, retarget, and similar) so prose under README.md, docs/en/, and spec/**/en.md passes Vale across the portfolio. | Plugin author dogfooding inside this repo<br>Other Nolte portfolio repos as passive consumers of the conventions |
 
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `github-pages` | `deploy-target` | ✅ active | ➕ repo-spezifisch | — |
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `python` | `language` | ✅ active | ➕ repo-spezifisch | — |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-marketplace` | `deploy-target` | ✅ active | ➕ repo-spezifisch | — |
+| `claude-code-plugin` | `framework` | ✅ active | 🔗 geerbt | — |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- ➕ repo-spezifisch `python` — `language` / `documentation`
+- ➕ repo-spezifisch `github-pages` — `deploy-target` / `documentation`
+- ➕ repo-spezifisch `claude-code-marketplace` — `deploy-target` / `plugin-platform`
+
 ### Peer-Referenzen
 
 - `nolte/vale-style`
@@ -203,6 +439,54 @@ _Keine deklariert._
 | Fähigkeit | Status | Beschreibung | Zielgruppen |
 |---|---|---|---|
 | `github-project-cookiecutter-template` | ✅ active | A Cookiecutter template that scaffolds a standardised nolte-style GitHub project — pre-wired GitHub Actions and settings based on nolte/gh-plumbing (release process, MkDocs docs publishing, static tests, labelling) — from a single cookiecutter run. | Developer scaffolding a new nolte-style GitHub project |
+
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+| `cookiecutter` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `python` | `language` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🔗 geerbt | — |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- ➕ repo-spezifisch `python` — `language` / `build-tooling`
+- ➕ repo-spezifisch `cookiecutter` — `framework` / `build-tooling`
 
 ### Peer-Referenzen
 
@@ -220,6 +504,10 @@ _Keine deklariert._
 | `probot-commons-config` | ✅ active | Shared Probot app configuration commons (settings, release-drafter, boring-cyborg, stale presets) that downstream nolte/* repositories extend so repository governance stays uniform across the portfolio. | Downstream repositories extending Probot configurations<br>Repository maintainer (nolte) |
 | `renovate-shared-presets` | ✅ active | Shared Renovate configuration presets (renovate-configs/) that downstream nolte/* repositories extend for consistent dependency-update grouping, scheduling, and labelling. | Downstream repositories consuming Renovate presets<br>Renovate bot |
 
+### Tech-Stack
+
+_Noch kein `tech_stack:`-Block deklariert; der effektive Stack dieses Repositories ist die globale Grundlinie oben, unverändert._
+
 ### Peer-Referenzen
 
 _Keine deklariert._
@@ -233,6 +521,70 @@ _Keine deklariert._
 | Fähigkeit | Status | Beschreibung | Zielgruppen |
 |---|---|---|---|
 | `plant-lifecycle-management-system` | ✅ active | A self-hosted, multi-tenant plant lifecycle management system — seed-to-harvest tracking with a growth-phase state machine (GDD/VPD/photoperiod), nutrient planning, adaptive care reminders, integrated pest management, a RAG knowledge assistant, and a Home Assistant integration — for home growers, hobby gardeners, and community gardens. | Home grower / hobby gardener / houseplant owner<br>Community-garden administrator<br>Self-hoster |
+
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `docker-image` | `deploy-target` | ✅ active | ➕ repo-spezifisch | — |
+| `kubernetes` | `deploy-target` | ✅ active | ➕ repo-spezifisch | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `skaffold` | `build` | ✅ active | ➕ repo-spezifisch | — |
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+| `vite` | `build` | ✅ active | ➕ repo-spezifisch | — |
+| `celery` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `fastapi` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `react` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `python` | `language` | ✅ active | ➕ repo-spezifisch | — |
+| `typescript` | `language` | ✅ active | ➕ repo-spezifisch | — |
+| `node` | `runtime` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🔗 geerbt | — |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- ➕ repo-spezifisch `python` — `language` / `build-tooling`
+- ➕ repo-spezifisch `fastapi` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `celery` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `node` — `runtime` / `build-tooling`
+- ➕ repo-spezifisch `react` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `vite` — `build` / `build-tooling`
+- ➕ repo-spezifisch `typescript` — `language` / `build-tooling`
+- ➕ repo-spezifisch `docker-image` — `deploy-target` / `automation`
+- ➕ repo-spezifisch `kubernetes` — `deploy-target` / `automation`
+- ➕ repo-spezifisch `skaffold` — `build` / `build-tooling`
 
 ### Peer-Referenzen
 
@@ -248,6 +600,58 @@ _Keine deklariert._
 |---|---|---|---|
 | `kamerplanter-home-assistant-integration` | ✅ active | A HACS-distributed Home Assistant custom integration that connects a Kamerplanter instance to Home Assistant — exposing plant monitoring (growth phases, days-in-phase, next-phase predictions, nutrient-plan assignments), per-channel nutrient dosages, tank management, and per-location overviews as sensors and services. | Home Assistant user running Kamerplanter<br>Self-hoster running both Kamerplanter and Home Assistant |
 
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+| `pytest` | `test` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `hacs` | `deploy-target` | ✅ active | ➕ repo-spezifisch | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+| `home-assistant` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `python` | `language` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🔗 geerbt | — |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- ➕ repo-spezifisch `python` — `language` / `build-tooling`
+- ➕ repo-spezifisch `home-assistant` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `pytest` — `test` / `quality`
+- ➕ repo-spezifisch `hacs` — `deploy-target` / `automation`
+
 ### Peer-Referenzen
 
 - `nolte/kamerplanter`
@@ -261,6 +665,56 @@ _Keine deklariert._
 | Fähigkeit | Status | Beschreibung | Zielgruppen |
 |---|---|---|---|
 | `reachy-mini-behavior-app` | 🧪 experimental | A Reachy Mini behavior package built on the Pollen Robotics / Hugging Face reachy_mini SDK — packaging robot behaviours (for example dance-to-music) that run on the Reachy Mini and distributed as a Hugging Face app. | Reachy Mini owner / maker |
+
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `huggingface-hub` | `deploy-target` | 🧪 experimental | ➕ repo-spezifisch | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+| `reachy-mini` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `python` | `language` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🔗 geerbt | — |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- ➕ repo-spezifisch `python` — `language` / `build-tooling`
+- ➕ repo-spezifisch `reachy-mini` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `huggingface-hub` — `deploy-target` / `automation`
 
 ### Peer-Referenzen
 
@@ -276,6 +730,60 @@ _Keine deklariert._
 |---|---|---|---|
 | `reachy-mini-mcp-server` | ✅ active | A Model Context Protocol server that wraps the Pollen Reachy Mini daemon behind a REST interface, exposing the robot's behaviours to MCP clients and LLM end users. | MCP clients<br>Reachy Mini owners / developers |
 
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+| `ruff` | `lint` | ✅ active | ➕ repo-spezifisch | — |
+| `pytest` | `test` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `docker-image` | `deploy-target` | ✅ active | ➕ repo-spezifisch | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+| `mcp` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `python` | `language` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🔗 geerbt | — |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- ➕ repo-spezifisch `python` — `language` / `build-tooling`
+- ➕ repo-spezifisch `mcp` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `ruff` — `lint` / `quality`
+- ➕ repo-spezifisch `pytest` — `test` / `quality`
+- ➕ repo-spezifisch `docker-image` — `deploy-target` / `automation`
+
 ### Peer-Referenzen
 
 - `nolte/reachy-mini-app`
@@ -290,6 +798,10 @@ _Keine deklariert._
 |---|---|---|---|
 | `reusable-taskfile-collection` | ✅ active | A collection of remotely-includable Taskfiles (src/taskfile-include-*.yaml for mkdocs, pre-commit, kind, and k8s) that downstream nolte/* projects include via the Task includes: mechanism to get consistent task targets without copying Taskfile logic into each repository. | Taskfile-consumer project<br>Consumer-side developer running tasks locally<br>Consumer-side CI/CD pipeline |
 
+### Tech-Stack
+
+_Noch kein `tech_stack:`-Block deklariert; der effektive Stack dieses Repositories ist die globale Grundlinie oben, unverändert._
+
 ### Peer-Referenzen
 
 _Keine deklariert._
@@ -303,6 +815,58 @@ _Keine deklariert._
 | Fähigkeit | Status | Beschreibung | Zielgruppen |
 |---|---|---|---|
 | `github-config-as-code` | ✅ active | Terraform (integrations/github provider) that manages the nolte GitHub account's repository inventory (existence, description, topics, visibility, feature flags) and per-repo repository rulesets (modern branch protection) as code — the deliberate complement to gh-plumbing's Probot-managed per-repo settings. | Terraform operator / maintainer (nolte)<br>The nolte GitHub account and its repositories |
+
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+| `tflint` | `lint` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+| `terraform` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+| `hcl` | `language` | ✅ active | ➕ repo-spezifisch | — |
+| `python` | `language` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🔗 geerbt | — |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- ➕ repo-spezifisch `terraform` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `hcl` — `language` / `build-tooling`
+- ➕ repo-spezifisch `tflint` — `lint` / `quality`
+- ➕ repo-spezifisch `python` — `language` / `build-tooling`
 
 ### Peer-Referenzen
 
@@ -319,6 +883,53 @@ _Keine deklariert._
 | `vale-style-package` | ✅ active | A curated Vale style package distributed as `nolte-styles.zip` via GitHub releases. Consumer repositories integrate it via a single `.vale.ini` `Packages` entry to lint markdown consistently across the portfolio. | nolte/* consumer repositories<br>CI pipelines in consumer repos<br>local developers in consumer repos |
 | `vocabulary-curation-spec` | 🧪 experimental | A written specification under `spec/vocabulary-and-style-curation/{en,de}.md` that codifies inclusion criteria, removal policy, and group scoping for the vocabularies shipped in `vale-style-package`. Curator agents from `nolte/claude-shared` (`prose-vale-curator`, `vocab-drift-audit`) cite this spec to ground automated curation decisions. | nolte (primary maintainer)<br>Claude Code agents / skills<br>External contributors |
 
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `markdownlint` | `lint` | ✅ active | 🔗 geerbt | — |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `github-releases` | `deploy-target` | ✅ active | ➕ repo-spezifisch | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🚫 unterdrückt | vale-style ships a Vale style package, not a Claude Code plugin; it carries no .claude-plugin/ manifests and no skills/agents layout. |
+| `claude-code` | `runtime` | ✅ active | 🔗 geerbt | — |
+
+#### Delta gegenüber dem globalen Stack
+
+- 🚫 unterdrückt `claude-code-plugin` — vale-style ships a Vale style package, not a Claude Code plugin; it carries no .claude-plugin/ manifests and no skills/agents layout.
+- ➕ repo-spezifisch `github-releases` — `deploy-target` / `automation`
+
 ### Peer-Referenzen
 
 _Keine deklariert._
@@ -332,6 +943,57 @@ _Keine deklariert._
 | Fähigkeit | Status | Beschreibung | Zielgruppen |
 |---|---|---|---|
 | `developer-workstation-provisioning` | ✅ active | A chezmoi source tree that provisions a developer workstation to an identical, reproducible state from a single `chezmoi init --apply`: asdf-pinned CLI tool versions, a baseline git config, a curated zsh setup, the reusable Taskfile collection, and the pre-commit / cookiecutter / MkDocs Python virtualenvs. | workstation-operator<br>downstream-tooling-consumers |
+
+### Tech-Stack
+
+#### `documentation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `mkdocs` | `docs` | ✅ active | 🔗 geerbt | — |
+| `python` | `language` | ✅ active | ➕ repo-spezifisch | — |
+| `markdownlint` | `lint` | ✅ active | 🚫 unterdrückt | workstation does not wire markdownlint; its .pre-commit-config.yaml runs only check-yaml, end-of-file-fixer, and trailing-whitespace, and there is no .markdownlint* config. |
+| `vale` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `quality`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `pre-commit` | `lint` | ✅ active | 🔗 geerbt | — |
+
+#### `automation`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `gh-plumbing` | `ci` | ✅ active | 🔗 geerbt | — |
+| `github-actions` | `ci` | ✅ active | 🔗 geerbt | — |
+| `renovate` | `dep-bot` | ✅ active | 🔗 geerbt | — |
+| `boring-cyborg` | `other` | ✅ active | 🔗 geerbt | — |
+| `probot-settings` | `other` | ✅ active | 🔗 geerbt | — |
+| `release-drafter` | `other` | ✅ active | 🔗 geerbt | — |
+| `stale-bot` | `other` | ✅ active | 🔗 geerbt | — |
+
+#### `build-tooling`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `task` | `build` | ✅ active | 🔗 geerbt | — |
+| `chezmoi` | `framework` | ✅ active | ➕ repo-spezifisch | — |
+
+#### `plugin-platform`
+
+| Eintrag | Art | Status | Herkunft | Anmerkungen |
+|---|---|---|---|---|
+| `claude-code-plugin` | `framework` | ✅ active | 🚫 unterdrückt | workstation is not a Claude Code plugin source tree; it carries no plugin/marketplace manifests and follows chezmoi layout conventions. |
+| `claude-code` | `runtime` | ✅ active | 🚫 unterdrückt | workstation is a chezmoi source tree, not a Claude Code plugin host; it ships no .claude-plugin/ and loads no skills or agents. |
+
+#### Delta gegenüber dem globalen Stack
+
+- 🚫 unterdrückt `claude-code` — workstation is a chezmoi source tree, not a Claude Code plugin host; it ships no .claude-plugin/ and loads no skills or agents.
+- 🚫 unterdrückt `claude-code-plugin` — workstation is not a Claude Code plugin source tree; it carries no plugin/marketplace manifests and follows chezmoi layout conventions.
+- 🚫 unterdrückt `markdownlint` — workstation does not wire markdownlint; its .pre-commit-config.yaml runs only check-yaml, end-of-file-fixer, and trailing-whitespace, and there is no .markdownlint* config.
+- ➕ repo-spezifisch `chezmoi` — `framework` / `build-tooling`
+- ➕ repo-spezifisch `python` — `language` / `documentation`
 
 ### Peer-Referenzen
 

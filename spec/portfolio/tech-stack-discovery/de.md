@@ -1,6 +1,6 @@
 # Portfolio-Tech-Stack-Discovery
 
-Status: draft
+Status: accepted
 
 ## Context
 

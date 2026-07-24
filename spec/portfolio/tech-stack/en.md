@@ -1,6 +1,6 @@
 # Portfolio Tech Stack Capture
 
-Status: draft
+Status: accepted
 
 ## Context
 

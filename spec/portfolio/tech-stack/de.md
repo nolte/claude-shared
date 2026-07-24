@@ -1,6 +1,6 @@
 # Portfolio-Tech-Stack-Erfassung
 
-Status: draft
+Status: accepted
 
 ## Context
 
