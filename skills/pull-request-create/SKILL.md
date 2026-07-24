@@ -127,6 +127,10 @@ Rules for the body:
   - `Originating source: <named finding source>` — the audit entry, workflow incident, project-structure report, or manual review Issue (with a link where available) that triggered the fix, so the PR is traceable back to its trigger.
   - `Dispatched specialist: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>)` — the specialised agent or skill that produced the fix; or, when none matched, the literal `Dispatched specialist: no matching specialist existed — generalist handled`. This is the primary signal for portfolio-level coverage gaps.
   Ask the user for these two values whenever the change context (branch name, commit log, linked audit artifact) indicates an audit-triggered remediation; do not invent them. For non-audit PRs these two lines are omitted.
+- **Audit-remediation checklist (tick before `gh pr create`).** When the change context indicates an audit-triggered remediation PR, confirm all three of the following before opening the PR, so the two grep-stable fields are present by construction rather than reconstructed later:
+  - [ ] **Risk / rollout notes** carries an `Originating source:` line naming the finding source (with a link where available).
+  - [ ] **Risk / rollout notes** carries a `Dispatched specialist:` line naming the specialist, or the literal `no matching specialist existed — generalist handled`.
+  - [ ] Both lines use those exact field labels verbatim, so they stay grep-stable portfolio-wide per `spec/project/continuous-improvement/<canonical_language>.md` §"Traceability in remediation artifacts".
 - Repository-specific sections **may** be appended *after* the five required sections, never interleaved.
 
 Derive section content from the commit log, file list, and diff collected in step 1. Present the drafted title and body back to the user and iterate until they approve.
