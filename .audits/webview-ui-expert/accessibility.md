@@ -314,3 +314,4 @@ Items deferred to **OQ resolution** before turning into normative text: OQ-1 (MU
 - Recharts 3 enables `accessibilityLayer` by default; the spec rule is reworded from "enable" to "keep enabled / disabling is forbidden".
 - SC 2.4.13 Focus Appearance and SC 2.3.3 Animation from Interactions are Level AAA; the spec now labels both as deliberate adoptions beyond the AA floor.
 - AP-13 (contradicting `aria-label` vs visible label) previously carried no sources; it entered the spec as a WCAG 2.5.3 Label-in-Name MUST (W3C Understanding 2.5.3 plus Deque/WebAIM coverage satisfy the two-source contract).
+- Audit-trail gap closure: the spec's route-change-announcement rule (`aria-live="polite"` region OR focus-on-H1, never both for the same event) predates a matching entry in this file. Anchor recorded here: WAI-ARIA APG landmark/live-region guidance plus MDN `aria-live` both back the rule; treat this note as its research entry until the next full refresh.
