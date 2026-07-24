@@ -7,7 +7,7 @@ Portfolio-Scope: portfolio
 
 At the end-to-end tier a BDD scenario and a Page Object both exist, and the value of the pairing depends entirely on *how they are wired together*. Done well, a Gherkin scenario reads as behavior in the domain's language, a thin step definition translates each line into a call on a page object, and the page object encapsulates the user interface, so the same page object serves every scenario that touches that screen. Done badly, the page object learns about Gherkin, the step definition reaches into the DOM, assertions leak across layers, and every scenario grows its own bespoke page object that no other test can reuse. The difference isn't the two patterns in isolation, both of which are already specified elsewhere: it's the **integration contract** between them, and specifically the **decoupling** that keeps the page-object layer reusable.
 
-This spec owns that contract. Its load-bearing thesis is a strict dependency direction: **the Page Object layer MUST have zero dependency on the BDD/step layer.** A page object knows nothing of Gherkin, of the step-definition framework, of scenarios, tags, or the test runner, and it holds no assertions. It is a plain, reusable user-interface encapsulation library that a BDD step definition consumes exactly the way a non-BDD test consumes it. The step definition is the *only* layer that knows both worlds; it depends on page objects, page objects never depend on it. That one-way dependency is what makes a page object reusable across BDD steps, plain E2E tests, and any other client, which is the whole point of investing in the pattern.
+This spec owns that contract. Its load-bearing thesis is a strict dependency direction: **the Page Object layer MUST have zero dependency on the BDD/step layer.** A page object knows nothing of Gherkin, of the step-definition framework, of scenarios, tags, or the test runner, and it holds no assertions. It's a plain, reusable user-interface encapsulation library that a BDD step definition consumes exactly the way a non-BDD test consumes it. The step definition is the *only* layer that knows both worlds; it depends on page objects, page objects never depend on it. That one-way dependency is what makes a page object reusable across BDD steps, plain E2E tests, and any other client, which is the whole point of investing in the pattern.
 
 The normative core is tool-neutral: it constrains the *dependency direction, the decoupling, and the wiring seam* against any WebDriver-plus-BDD combination. Because the operator's primary case is Selenium, a normative **Selenium + `pytest-bdd`** reference profile makes the contract concrete, mirroring how `spec/project/e2e-test-automation/` demotes its concrete stack to a swappable profile.
 
@@ -69,7 +69,7 @@ Readers: engineers who wire BDD scenarios to page objects or review that wiring;
 
 ### State and data at the seam
 
-- State shared across the steps of a scenario (the entity under test, an id captured in a `When`, a value to assert in a `Then`) **MUST** be held in an explicit **scenario-scoped context** object (a `pytest-bdd` fixture, a Cucumber World), never in module-level globals or class attributes on a page object.
+- State shared across the steps of a scenario (the entity under test, an id captured in a `When`, a value to assert in a `Then`) **MUST** be held in an explicit **scenario-scoped context** object (a `pytest-bdd` fixture, a Cucumber World), never in module-level global variables or class attributes on a page object.
 - A page object **MUST NOT** persist scenario-specific state across scenarios; it exposes current page state on demand and stays stateless with respect to the test flow.
 - Data a step passes to a page object (a name, an amount, a row from an `Examples` table) **MUST** flow as method arguments; a page object **MUST NOT** read the scenario context, tags, or example data directly, which would couple it back to BDD.
 
@@ -92,8 +92,8 @@ Readers: engineers who wire BDD scenarios to page objects or review that wiring;
   - **A step that calls the driver or a selector directly**, bypassing the page object: the step absorbed page-object responsibility.
   - **Business logic in a page object**: behavior leaked down out of the step/scenario.
   - **A page object aware of scenarios, tags, or the scenario context**: an upward dependency that inverts the layering.
-  - **One page object per step or per scenario**: bespoke, unreusable objects that defeat the pattern's purpose.
-  - **Scenario state shared through globals or on the page object** instead of an explicit scenario-scoped context.
+  - **One page object per step or per scenario**: bespoke, single-use objects that defeat the pattern's purpose.
+  - **Scenario state shared through global variables or on the page object** instead of an explicit scenario-scoped context.
   - **A god page object** that spans unrelated surfaces, so no client can reuse a focused slice.
 
 ## Reference profile (illustrative, non-normative)
@@ -110,7 +110,7 @@ This profile makes the tool-neutral core concrete with **Selenium** and **`pytes
 - [ ] Page-object independence from BDD is specified: no BDD/framework imports, no step decorators, no scenario/tag/runner awareness, no assertions
 - [ ] The step-as-glue contract is specified: only layer aware of both worlds, no UI plumbing, no business logic, `Then` assertion in the step binding
 - [ ] Wiring is specified: dependency injection via fixtures/DI container, a single driver provider, no per-step page-object plumbing
-- [ ] Scenario state is specified to live in an explicit scenario-scoped context, never globals or the page object
+- [ ] Scenario state is specified to live in an explicit scenario-scoped context, never global variables or the page object
 - [ ] Composition and reuse-beyond-BDD are specified, including the demonstrable dual-use (BDD step + non-BDD test) of the same page object
 - [ ] The Non-Goals link all four neighbour specs (`e2e-test-automation`, `behavior-driven-development`, `testability-identifiers`, `test-pyramid-foundation`) by responsibility, restating none of them
 - [ ] The anti-pattern list names framework imports in a page object, assertions in a page object, driver/selector calls in a step, business logic in a page object, scenario awareness in a page object, one-object-per-step, global state, and god page objects
