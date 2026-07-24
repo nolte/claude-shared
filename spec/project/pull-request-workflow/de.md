@@ -136,3 +136,9 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 
 ## Offene Fragen
 - _Keine aktuell; alle Fragen aus der Entwurfsphase sind geklärt._
+
+## Quellen
+
+Das GitHub-Closing-Keyword-Plattformverhalten in §„Verknüpftes-Issue-Schließung beim develop-Merge" ist eine Author-Time-externe Aussage, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede Quelle unten: 2026-07-24.
+
+- **`Closes`/`Fixes`/`Resolves`-Keywords schließen das verknüpfte Issue nur automatisch, wenn der Pull Request in den Default-Branch des Repositories gemergt wird; ein Merge in einen Nicht-Default-Branch lässt das Issue offen**: GitHub Docs, „Linking a pull request to an issue" („the issue ... closes ... If the pull request is merged into the repository's default branch") (Primary), `https://docs.github.com/en/issues/tracking-your-work-with-issues/using-issues/linking-a-pull-request-to-an-issue`; GitHub-Community-Discussion #157378 zur Wahl, ob das Mergen verknüpfter Pull Requests das Issue schließt (Secondary), `https://github.com/orgs/community/discussions/157378`; GitHub-Community-Discussion #13240 mit der Bitte um Schließung, wenn der PR einen Nicht-Default-Branch anvisiert (Secondary), `https://github.com/orgs/community/discussions/13240`
