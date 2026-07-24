@@ -40,9 +40,9 @@ Your work is governed by `spec/project/test-cycle-code-adaptation/` (and the cyc
 
 ## Bash justification
 
-`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just wrote or repaired, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
+`Bash` serves the verify loop of this agent's write mandate: it re-runs the tests affected by the change this agent just applied (the repository's `task test` slice or the native runner named in the procedure) to confirm the case is green with no regression, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the affected test scope; file changes happen through the declared write tools only.
 
-**Write preconditions:** the tier's harness and target test location exist per the governing tier spec — when they don't, stop and report instead of scaffolding infrastructure; writes touch only the tier's declared test tree.
+**Write preconditions:** a confirmed real failure with its evidence exists, and a failing case reproduces it — when either is missing, stop and report instead of guessing at a fix. Writes touch the production code under test, plus at most one new failing regression case when the trigger is a defect with no covering case; never an existing test.
 
 ## Model pin
 
