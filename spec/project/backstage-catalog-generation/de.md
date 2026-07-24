@@ -8,7 +8,7 @@ Status: draft
 
 Ein bestehendes Softwareprojekt in ein Backstage-Portal aufzunehmen, bedeutet, einen Deskriptor zu schreiben, der auf drei Achsen zugleich korrekt ist: Er MUSS [MUST] Backstages per-Kind-JSON-Schema und Feld-Format-Validatoren erfüllen; er MUSS [MUST] Owner, Systeme und APIs referenzieren, die tatsächlich auflösen; und er SOLLTE [SHOULD] die well-known Annotations tragen, die die Integrationen des Portals aktivieren (Quell-Links, CI, TechDocs, GitHub). Von Hand ist das fehleranfällig — die Validierungsregeln sind strenger, als die Prosa-Docs vermuten lassen, mehrere Pflichtfelder sind nicht offensichtlich (ein leeres-aber-vorhandenes `spec.children` bei einer Group, kein `lifecycle` bei einer Resource), und eine Klasse von Metadaten DARF NICHT [MUST NOT] authored werden, weil der Catalog sie automatisch setzt.
 
-Diese Spec erfasst diesen Wissensbestand als normative Referenz und als Pflichtenkatalog für einen automatisierten Generator. Sie ist die **Grundlage für einen späteren Skill**, der ein bestehendes Softwareprojekt liest und eine passende `catalog-info.yaml` erzeugt. Gemäß dem Scope des Projektverantwortlichen deckt sie den **vollen Entity-Kernel** ab — Component, API, Resource, System, Domain, Group, User, Location und Template — mit **besonderem Fokus auf den Software Catalog und das Tech Radar**. Sie fußt auf einer 146-Quellen-Recherche über `backstage.io/docs` sowie die Quellbäume `backstage/backstage` und `backstage/community-plugins`, festgehalten unter `.audits/backstage-research/2026-06-07-research-notes.md`.
+Diese Spec erfasst diesen Wissensbestand als normative Referenz und als Pflichtenkatalog für einen automatisierten Generator. Sie ist die **Grundlage für einen späteren Skill**, der ein bestehendes Softwareprojekt liest und eine passende `catalog-info.yaml` erzeugt. Gemäß dem Scope des Projektverantwortlichen deckt sie den **vollen Entity-Kernel** ab — Component, API, Resource, System, Domain, Group, User, Location und Template — mit **besonderem Fokus auf den Software Catalog und das Tech Radar**. Sie fußt auf einer 146-Quellen-Recherche über `backstage.io/docs` sowie die Quellbäume `backstage/backstage` und `backstage/community-plugins`; die tragenden Quell-URLs sind in §Sources katalogisiert.
 
 Die Spec ist bewusst zweischichtig, passend dazu, wie sich das Wissen zerlegt: **§Das Backstage-Catalog-Modell** beschreibt, was ein konformer Deskriptor (und die Tech-Radar-Datendatei) erfüllen muss — das normative Substrat, unabhängig von jedem Generator gültig; **§Generator-Anforderungen** beschreibt, was ein auf diesem Substrat aufbauender automatisierter Generator tun, inferieren, emittieren und zu emittieren verweigern muss. Die Acceptance Criteria sind gegen einen Generator formuliert, damit der spätere Skill ein testbares Ziel hat.
 
@@ -40,9 +40,9 @@ Die Anforderungen sind in zwei Schichten organisiert. **§Das Backstage-Catalog-
 #### Entity-Envelope
 
 - Jede Catalog-Entity **MUSS [MUST]** ein YAML-Objekt mit genau diesen authored Root-Keys sein: `apiVersion` (string), `kind` (string, großgeschrieben), `metadata` (object) und `spec` (object, kind-spezifisch).
-- `relations` (array von `{type, targetRef}`) und `status` (object mit `items[]` aus `{type, level, message, error?}`) sind **read-only, catalog-abgeleitete** Ausgabefelder. Ein Deskriptor **DARF NICHT [MUST NOT]** sie authoren; sie sind hier nur aufgeführt, damit Generator und Reviewer sie als tabu erkennen.
+- `relations` (array von `{type, targetRef}`) und `status` (object mit `items[]` aus `{type, level, message, error?}`) sind **read-only, catalog-abgeleitete** Ausgabefelder. Ein Deskriptor **DARF NICHT [MUST NOT]** sie authoren; sie sind hier nur aufgeführt, damit Generator und Reviewer sie als tabu erkennen. Der einzige dokumentierte `status.items[].type` ist `backstage.io/catalog-processing` (mit `level` aus `info`/`warning`/`error`); das Status-Modell ist explizit in aktiver Entwicklung und sein Format kann sich unerwartet ändern — nichts sollte darauf aufbauen.
 - Mehrere Entities **KÖNNEN [MAY]** sich eine Datei teilen, getrennt durch den Standard-YAML-Dokumenttrenner `---`.
-- Der `metadata`-Block ist allen Kinds gemein. `metadata.name` ist **required**; `metadata.namespace` ist optional (Default `default`); `metadata.uid` und `metadata.etag` sind output-only und **DÜRFEN NICHT [MUST NOT]** authored werden. Optionale authored Metadaten: `title`, `description`, `labels` (key→value-Map), `annotations` (key→value-Map), `tags` (Liste von Strings), `links` (array von `{url (required), title, icon, type}`).
+- Der `metadata`-Block ist allen Kinds gemein. `metadata.name` ist **required**; `metadata.namespace` ist optional (Default `default`); `metadata.uid` und `metadata.etag` sind output-only und **DÜRFEN NICHT [MUST NOT]** authored werden. Optionale authored Metadaten: `title`, `description`, `labels` (key→value-Map), `annotations` (key→value-Map), `tags` (Liste von Strings), `links` (array von `{url (required), title, icon, type}`). Ein Link-`icon`-Wert besteht aus Alphanumerischen, optional getrennt durch eines von `[-_.]`.
 
 #### Entity-Kinds
 
@@ -57,12 +57,12 @@ Der Kernel umfasst neun Kinds. Ihre `spec.type`- und `spec.lifecycle`-Werte sind
 | Domain | `backstage.io/v1alpha1` | `owner` | `type`, `subdomainOf` | type org-definiert | Kein `lifecycle`. `subdomainOf` ermöglicht verschachtelte Domains. |
 | Group | `backstage.io/v1alpha1` | `type`, `children` | `profile` (`{displayName, email, picture}`), `parent`, `members` | type org-definiert (`team`, `business-unit`, `root`) | `children` MUSS [MUST] vorhanden sein; **darf eine leere Liste `[]` sein**, aber der Key darf nicht fehlen. |
 | User | `backstage.io/v1alpha1` | `memberOf` | `profile` | — | `memberOf` MUSS [MUST] vorhanden sein; **darf `[]` sein**, aber der Key darf nicht fehlen. Kein type/lifecycle/owner. |
-| Location | `backstage.io/v1alpha1` | — | `type`, `target` *oder* `targets`, `presence` (`required`/`optional`, Default `required`) | type z. B. `url`/`file` | Ein Zeiger auf weitere Entity-Daten, kein reales Ding. `target` oder `targets` verwenden. |
-| Template | `scaffolder.backstage.io/v1beta3` | `type`, `owner` | `parameters`, `steps`, `output`, `secrets`, `presentation` | — | Aktueller Deskriptor ist `v1beta3`; `v1beta2` und das ursprüngliche `v1alpha1`-Scaffolder-Format sind älter/deprecated. Vom Scaffolder konsumiert, nicht Teil des Software-Entity-Relation-Graphen. |
+| Location | `backstage.io/v1alpha1` | — | `type`, `target` *oder* `targets`, `presence` (`required`/`optional`, Default `required`) | type z. B. `url`/`file` | Ein Zeiger auf weitere Entity-Daten, kein reales Ding. `target` oder `targets` verwenden; ein fehlendes `type` wird von der Parent-Location geerbt. Erzeugte Entities werden über die `backstage.io/managed-by-location`-Annotations nachverfolgt. |
+| Template | `scaffolder.backstage.io/v1beta3` | `type`, `owner` | `parameters`, `steps`, `output`, `secrets`, `presentation` | — | Aktueller Deskriptor ist `v1beta3`; `v1beta2` und das ursprüngliche `v1alpha1`-Scaffolder-Format sind älter/deprecated. Vom Scaffolder konsumiert, nicht Teil des Software-Entity-Relation-Graphen. Erwähnenswerte optionale Metadata-Annotation: `backstage.io/time-saved` (eine ISO-8601-Dauer wie `PT4H`). |
 
 - Ein Deskriptor **DARF NICHT [MUST NOT]** `spec.lifecycle` bei Resource, System, Domain, Group oder User emittieren — nur Component und API tragen es.
 - Ein Group-Deskriptor **MUSS [MUST]** `spec.children` und ein User-Deskriptor **MUSS [MUST]** `spec.memberOf` enthalten, auch wenn leer (`[]`), sonst scheitert die Schema-Validierung.
-- Die abgeleiteten **Relations**, die ein Generator verstehen sollte (indirekt authored, über die `spec`-Referenzfelder, nie direkt): `ownedBy`/`ownerOf`, `partOf`/`hasPart`, `dependsOn`/`dependencyOf`, `providesApi`/`apiProvidedBy`, `consumesApi`/`apiConsumedBy`, `parentOf`/`childOf`, `memberOf`/`hasMember`. Man beachte die Asymmetrie: `spec`-Feldnamen sind im Plural (`providesApis`, `consumesApis`), während die abgeleiteten Relation-Type-Strings im Singular stehen (`providesApi`, `consumesApi`).
+- Die abgeleiteten **Relations**, die ein Generator verstehen sollte (indirekt authored, über die `spec`-Referenzfelder, nie direkt): `ownedBy`/`ownerOf`, `partOf`/`hasPart`, `dependsOn`/`dependencyOf`, `providesApi`/`apiProvidedBy`, `consumesApi`/`apiConsumedBy`, `parentOf`/`childOf`, `memberOf`/`hasMember`. Man beachte die Asymmetrie: `spec`-Feldnamen sind im Plural (`providesApis`, `consumesApis`), während die abgeleiteten Relation-Type-Strings im Singular stehen (`providesApi`, `consumesApi`). Die System-Model-Übersichtsseite schreibt lose `implementsApi`/`exposesApi`; die kanonischen Relation-Type-Strings sind die `providesApi`/`consumesApi`-Familie der Well-known-Relations-Seite.
 
 #### Benennungs- und Format-Constraints
 
@@ -77,7 +77,7 @@ Die Feld-Format-Validatoren (`KubernetesValidatorFunctions` / `CommonValidatorFu
 
 #### Entity-Referenzen und Owner-Auflösung
 
-- Eine Referenz in einem `spec`-Feld ist ein String `[<kind>:][<namespace>/]<name>` (1–3 Teile). Wenn ein Teil fehlt: das **kind** defaultet je nach Feldkontext, der **namespace** defaultet auf `default`.
+- Eine Referenz in einem `spec`-Feld ist ein String `[<kind>:][<namespace>/]<name>` (1–3 Teile). Wenn ein Teil fehlt: das **kind** defaultet je nach Feldkontext, der **namespace** defaultet auf `default`. Es existiert auch eine zusammengesetzte Objektform `{ kind, namespace, name }`; systemübergreifende Kommunikation sollte die volle dreiteilige String-Form nutzen, und das catalog-abgeleitete `relations[].targetRef` trägt stets die voll normalisierte dreiteilige Form.
 - Das per-Feld-Default-Kind, das ein Generator anwenden MUSS [MUST], wenn er eine bare Referenz emittiert:
 
   | Feld | Default-Kind |
@@ -100,9 +100,57 @@ Die Feld-Format-Validatoren (`KubernetesValidatorFunctions` / `CommonValidatorFu
 
 Backstage dokumentiert ein Register well-known Annotations. Sie teilen sich in zwei Klassen, die ein Generator unterschiedlich behandeln muss:
 
-- **Authorbar (emittieren, wenn das Signal existiert)** — `github.com/project-slug` (`org/repo`), `gitlab.com/project-slug`, `backstage.io/source-location` (`url:https://github.com/org/repo/`, abschließender Slash für ein Verzeichnis), `backstage.io/techdocs-ref` (`dir:.` wenn Docs kolokiert sind), `backstage.io/techdocs-entity`/`-entity-path`, `backstage.io/view-url`/`edit-url`, plus Integrations-Annotations, namespaced durch das integrierende System (`circleci.com/project-slug`, `jenkins.io/job-full-name`, `sonarqube.org/project-key`, `sentry.io/project-slug`, `pagerduty.com/integration-key`, …). Integrations-Annotations, deren Plugin außerhalb des Kerns lebt (Kubernetes `backstage.io/kubernetes-id`/`-label-selector`, PagerDuty, Jira), sind auf ihren Plugin-Seiten dokumentiert, nicht auf der zentralen Annotations-Seite.
+- **Authorbar (emittieren, wenn das Signal existiert)** — das Kern-Register plus Integrations-Annotations, namespaced durch die Domain des integrierenden Systems (`backstage.io/` ist für das reserviert, was Backstage selbst ausliefert):
+
+  | Key | Wert-Gestalt | Zweck |
+  | --- | --- | --- |
+  | `backstage.io/source-location` | `url:https://github.com/org/repo/` (abschließender Slash für ein Verzeichnis) | Quellcode-Wurzel |
+  | `backstage.io/view-url` / `backstage.io/edit-url` | URL | Kanonische View-/Quell-Edit-URLs der Entity-Datei |
+  | `backstage.io/source-template` | `template:default/create-react-app-template` | Scaffolder-Template, aus dem die Entity erzeugt wurde |
+  | `backstage.io/techdocs-ref` | `dir:.` oder eine `url:`-Referenz | Wo die TechDocs-Quelle liegt |
+  | `backstage.io/techdocs-entity` / `-entity-path` | `component:default/example` / ein Docs-Pfad | Externe Entity, der die Docs gehören, und der Pfad darin |
+  | `backstage.io/code-coverage` | `scm-only` / `enabled` | Code-Coverage-Plugin |
+  | `github.com/project-slug` | `org/repo` | Aktiviert GitHub-Features |
+  | `github.com/team-slug` | `org/team` | GitHub-Team-Zuordnung |
+  | `github.com/user-login` | Login-Name | GitHub-User-Login |
+  | `github.com/user-id` / `gitlab.com/user-id` | `'123456'` (gequotet, unveränderlich) | Numerische SCM-User-Ids |
+  | `gitlab.com/project-slug` | `org/repo` | GitLab-Projekt |
+  | `graph.microsoft.com/tenant-id` (und Geschwister) | string | Microsoft-Graph-Verzeichniszuordnung |
+  | `jenkins.io/job-full-name` | `folder-name/job-name` | Voller CI-Job-Pfad |
+  | `gocd.org/pipelines` | kommagetrennte Namen | CI-Pipelines |
+  | `circleci.com/project-slug` | `github/org/repo` | CI-Projekt |
+  | `sonarqube.org/project-key` | Projekt-Key | Statische-Analyse-Projekt |
+  | `sentry.io/project-slug` / `rollbar.com/project-slug` | `org/project` | Error-Tracking-Projekte |
+  | `periskop.io/service-name` | Service-Name | Exception-Aggregation |
+  | `vault.io/secrets-path` | `test/backstage` | Secrets-Pfad |
+  | `backstage.io/ldap-rdn` / `-uuid` / `-dn` | string | Verzeichnisdienst-Ids |
+
+- **Plugin-Seiten-Annotations (nicht im zentralen Register)** — Integrations-Annotations, deren Plugin außerhalb des Kerns lebt, sind auf ihren Plugin-Seiten dokumentiert, weil die zentrale Seite nur kern-ausgelieferte Annotations abdeckt. Kubernetes: `backstage.io/kubernetes-id` (gematcht gegen ein `backstage.io/kubernetes-id`-*Label* auf den Cluster-Ressourcen), `backstage.io/kubernetes-namespace` (schränkt den Lookup ein), `backstage.io/kubernetes-label-selector` (ein Selektor im `kubectl`-Stil, der Vorrang vor `-id` hat), `backstage.io/kubernetes-cluster` (pinnt einen benannten Cluster). PagerDuty: `pagerduty.com/integration-key` (bevorzugt, wenn beide vorhanden) und `pagerduty.com/service-id` (Alternative mit reduzierter Funktion). Jira-Keys stammen aus Community-Plugins, nicht aus dem Kern (siehe Open Questions).
+- **Feld-Substitutionen** — `$text:`, `$json:` und `$yaml:` betten externen Dateiinhalt in ein Deskriptorfeld ein.
 - **Auto-gesetzt (ein Deskriptor DARF NICHT [MUST NOT] diese authoren)** — `backstage.io/managed-by-location`, `backstage.io/managed-by-origin-location`, `backstage.io/orphan`. Der Catalog leitet sie während der Ingestion ab; sie zu authoren ist falsch.
 - **Deprecated Mappings**, die ein Generator vermeiden MUSS [MUST]: `backstage.io/github-actions-id` → `github.com/project-slug` verwenden; `backstage.io/definition-at-location` → Placeholder-Substitution (`$text:`/`$json:`/`$yaml:`) verwenden; `jenkins.io/github-folder` → `jenkins.io/job-full-name` verwenden.
+
+#### Onboarding- und Ingestion-Kontext
+
+Ein generierter Deskriptor landet über einen von drei Ingestion-Pfaden in einem Catalog. Das Backend zu betreiben bleibt ein Non-Goal; dieser Kontext ist festgehalten, weil er begrenzt, was ein Generator annehmen darf:
+
+- **Statische Locations** (`catalog.locations`-App-Config-Einträge mit `type: url` oder `type: file`): `file`-Targets sind nur für lokale Entwicklung, und statisch konfigurierte Locations können nicht über die Catalog-API entfernt werden.
+- **Die Register-an-existing-component-UI** (`@backstage/plugin-catalog-import`, Route `/catalog-import`): Deskriptor- oder Repository-URL einfügen, analysieren, importieren. Wird kein Deskriptor gefunden, öffnet der Wizard einen Pull Request mit einer Beispiel-`catalog-info.yaml` (Default-Dateiname `catalog-info.yaml`, Default-PR-Branch `backstage-integration`); Upstream-Issue #22162 trackt, dass der Wizard fälschlich einen PR öffnet, obwohl ein Root-Deskriptor bereits existiert.
+- **Automatische Discovery-Provider** (`catalog.providers.*`): geplante Entity-Provider, die eine Organisation, Gruppe oder einen Workspace crawlen und je entdecktem Deskriptor eine Location emittieren.
+
+  | | GitHub | GitLab | Bitbucket Cloud |
+  | --- | --- | --- | --- |
+  | Provider-Klasse | `GithubEntityProvider` | `GitlabDiscoveryEntityProvider` | `BitbucketCloudEntityProvider` |
+  | Backend-Modul | `@backstage/plugin-catalog-backend-module-github` | `@backstage/plugin-catalog-backend-module-gitlab` | `@backstage/plugin-catalog-backend-module-bitbucket-cloud` |
+  | Config-Key | `catalog.providers.github.<id>` | `catalog.providers.gitlab.<id>` | `catalog.providers.bitbucketCloud.<id>` |
+  | Erforderlicher Scope | `organization` | `host`, `group` | `workspace` |
+  | Deskriptor-Pfad-Key | `catalogPath` (Default `/catalog-info.yaml`, führender Slash; `*`/`**`-Globs) | `entityFilename` (Default `catalog-info.yaml`, kein Slash) | `catalogPath` (Default `/catalog-info.yaml`) |
+  | Filter | `filters.branch` / `repository` (Regex) / `topic` / `visibility`; `allowArchived` (Default false) | `branch`, `projectPattern` (Regex) | `filters.projectKey` / `filters.repoSlug` (Regex) |
+
+- GitHub-Discovery empfiehlt eine Schedule-Frequenz um 35 Minuten, um das API-Limit von 5000 Requests pro Stunde zu respektieren, und integriert sich mit `@backstage/plugin-events-backend-module-github` für webhook-getriebene Updates.
+- **`catalog.rules` begrenzt, was ein Catalog akzeptiert** — die Default-Allow-List lässt nur die Kinds `Component`, `API` und `Location` zu; ein leeres `rules`-Array weist alles zurück, und per-Location-Rules können das globale Set überschreiben. Ein Deskriptor jedes anderen Kinds (System, Domain, Group, User, Resource, Template) wird bei der Ingestion zurückgewiesen, bis der Operator die Rules erweitert — ein Generator, der solche Kinds emittiert, sollte diese Operator-Abhängigkeit ausweisen.
+- Entity-Provider sitzen am Catalog-Rand und emittieren `full`- oder `delta`-Mutationen (jede Entity trägt einen `locationKey`); Processors sitzen mitten in der Pipeline und können nur hinzufügen oder aktualisieren. Provider-emittierte Entities müssen `backstage.io/managed-by-location` und `backstage.io/managed-by-origin-location` tragen, sonst werden sie mit Warnungen verworfen; das sind dieselben Annotations, die ein hand-authored Deskriptor NICHT enthalten DARF [MUST NOT], weil die Ingestion-Maschinerie sie hinzufügt.
+- Owner-Auflösung setzt einen ingestierten Org-Graphen voraus: `GitHubOrgEntityProvider` (Modul `@backstage/plugin-catalog-backend-module-github-org`, Config `catalog.providers.githubOrg`) macht Organisations-Teams zu Group-Entities und Mitglieder zu User-Entities.
 
 #### Das Tech-Radar-Datenmodell
 
@@ -120,17 +168,19 @@ Das Tech Radar ist ein **eigenständiges Frontend-Plugin**, **nicht** in den Sof
   | `RadarEntrySnapshot` | `date` (ein JS-`Date`), `ringId`, `description?`, `moved?` (`MovedState`) |
   | `enum MovedState` | `Down = -1`, `NoChange = 0`, `Up = 1` |
 
-- **Rings** kodieren Adoptions-Reife (Sample-Daten: `adopt`/`trial`/`assess`/`hold`); **Quadrants** kodieren Technologie-Kategorien (Sample-Daten: Languages/Frameworks/Infrastructure/Process). Beide sind datengetrieben: Ring- und Quadrant-Anzahl und -Namen kommen aus den Daten-Arrays, nicht aus festen Enums.
+- **Rings** kodieren Adoptions-Reife (Sample-Daten: `adopt`/`trial`/`assess`/`hold`); **Quadrants** kodieren Technologie-Kategorien (Sample-Daten: Languages/Frameworks/Infrastructure/Process). Beide sind datengetrieben: Ring- und Quadrant-Anzahl und -Namen kommen aus den Daten-Arrays, nicht aus festen Enums. Die ursprüngliche Ankündigung beschrieb die Ring-Semantik so: Use/Adopt heißt für die meisten Teams empfohlen, Trial heißt evaluiert mit klarem Nutzen, Assess heißt erkundenswert, Hold heißt nicht weiter investieren; adopt-vs-use ist Naming-Drift zwischen Sample und Ankündigung, und Ring-Namen sind eine org-konfigurierbare Konvention.
 - Der **aktuelle Ring eines Eintrags ist kein Feld am Eintrag** — er wird aus den `timeline`-Snapshots des Eintrags abgeleitet (latest-by-date ist die starke, sample-daten-gestützte Annahme; die exakte Selektionsregel ist eine Open Question). `date` ist im In-Memory-Modell ein JS-`Date`, sodass JSON-Datumsstrings **MÜSSEN [MUST]** konvertiert werden (`new Date(...)`), wenn ein Custom-Client die Daten lädt; der zod-Parser des Backends nutzt `z.coerce.date()`.
-- Wiring: der Erweiterungspunkt ist `techRadarApiRef` (`interface TechRadarApi { load(id?: string): Promise<TechRadarLoaderResponse> }`). Drei Sourcing-Pfade existieren: der Default-Client (`DefaultTechRadarApi`, fetcht `<backend>/data`, validiert mit `TechRadarLoaderResponseParser`, fällt bei Fehler auf Mock-Daten zurück); ein Custom-Client, der `TechRadarApi` implementiert und via `createApiFactory(techRadarApiRef, new MyClient())` registriert wird (hat Vorrang vor einem Backend, wenn beide existieren); und das `plugin-tech-radar-backend`, das eine JSON-Datei von einer unter dem Top-Level-`techRadar.url`-App-Config-Key deklarierten URL liest und sie unter `/data` ausliefert.
+- Wiring: der Erweiterungspunkt ist `techRadarApiRef` (`interface TechRadarApi { load(id?: string): Promise<TechRadarLoaderResponse> }`). Drei Sourcing-Pfade existieren: der Default-Client (`DefaultTechRadarApi`, fetcht `<backend>/data`, validiert mit `TechRadarLoaderResponseParser`, fällt bei Fehler auf Mock-Daten zurück); ein Custom-Client, der `TechRadarApi` implementiert und via `createApiFactory(techRadarApiRef, new MyClient())` registriert wird (hat Vorrang vor einem Backend, wenn beide existieren); und das `plugin-tech-radar-backend`, das eine JSON-Datei von einer unter dem Top-Level-`techRadar.url`-App-Config-Key deklarierten URL liest (über Backstages URL Reader, sodass die Datei in einem git-Repository liegen kann) und sie unter `/data` ausliefert. Der Default-Client hängt einen `Authorization: Bearer <idToken>`-Header an, wenn eines verfügbar ist.
 - **Paketverlagerung**: Stand Mitte 2026 lebt das Plugin in `backstage/community-plugins` unter dem `@backstage-community`-Scope, aufgeteilt in `plugin-tech-radar` (Frontend), `plugin-tech-radar-common` (`model.ts`, `schema.ts`, `sampleTechRadarResponse.json` — die kanonische Modellquelle) und `plugin-tech-radar-backend`. Der alte `@backstage`-Paketname und die alten `backstage.io/docs/features/techradar/`-URLs sind deprecated / 404. Eine Spec oder ein Generator **MUSS [MUST]** die `@backstage-community`-Pakete referenzieren.
 
 #### Validierung, Schema und die Policy-Chain
 
 - Es gibt **kein** offizielles `backstage-cli`-Subkommando, um einen Deskriptor auf der Platte zu validieren (`config:check`/`print`/`schema` gelten für App-Config, nicht für Catalog-Entities).
-- Der kanonische serverseitige Validierungspfad ist `POST <backend>/api/catalog/validate-entity` (z. B. `http://localhost:7007/api/catalog/validate-entity`). Der JSON-Request-Body erfordert **beide**, `location` (string) und `entity` (object) — `location` steht im Body, nicht in einem HTTP-Header. Antworten: `200` (kein Body) bei Erfolg; `400` mit `{ "errors": [ { "name", "message" } ] }` bei Fehler.
-- Der de-facto Offline-/CI-Linter ist der Community-`@roadiehq/backstage-entity-validator` (CLI-Binary `validate-entity`, eine `RoadieHQ/backstage-entity-validator` GitHub Action und ein Docker-Image). Er führt Backstages eigene strukturelle Validierung plus Well-known-Annotation-Checks aus, akzeptiert Globs und Custom-Schema-Dateien, prüft aber **nicht** die Ziel-Existenz von Entity-Referenzen.
-- Kanonische JSON-Schemas (draft-07) liegen in `packages/catalog-model/src/schema/` (`Entity`, `EntityEnvelope`, `EntityMeta` und per-Kind-Dateien unter `kinds/`). Die Default-Policy-Chain (`CatalogBuilder.buildEntityPolicy()`) ist `allOf(SchemaValidEntityPolicy, DefaultNamespaceEntityPolicy, NoForeignRootFieldsEntityPolicy, FieldFormatEntityPolicy)`.
+- Der kanonische serverseitige Validierungspfad ist `POST <backend>/api/catalog/validate-entity` (z. B. `http://localhost:7007/api/catalog/validate-entity`; OpenAPI `operationId: ValidateEntity`, Auth ein optionales JWT-Bearer-Token). Der JSON-Request-Body erfordert **beide**, `location` (string) und `entity` (object) — `location` steht im Body, nicht in einem HTTP-Header. Antworten: `200` (kein Body) bei Erfolg; `400` mit `{ "errors": [ { "name", "message" } ] }` bei Fehler. Eine ältere Docs-Seite rendert den Pfad als `POST /entities/validate`; die Source-of-Truth-OpenAPI nutzt `/validate-entity`.
+- Der de-facto Offline-/CI-Linter ist der Community-`@roadiehq/backstage-entity-validator` (CLI-Binary `validate-entity`, eine per Tag gepinnte `RoadieHQ/backstage-entity-validator` GitHub Action, z. B. `@v0.3.11`, und ein Docker-Image). Er defaultet auf `catalog-info.yaml` im Repository-Root, akzeptiert kommagetrennte Listen und Globs (Flags: `-q` minimale Ausgabe, `-i` STDIN, `-l` Custom-Schema-Datei), führt Backstages eigene strukturelle Validierung plus Well-known-Annotation-Checks aus und behandelt Custom-Schemas als additiv (sie können nur verschärfen). Er prüft **nicht** die Ziel-Existenz von Entity-Referenzen.
+- Kanonische JSON-Schemas (draft-07) liegen in `packages/catalog-model/src/schema/` (`Entity`, `EntityEnvelope`, `EntityMeta` und per-Kind-Dateien unter `kinds/`, plus neuere spezialisierte Varianten wie `API.v1alpha1.mcp-server.schema.json` und die `AiResource.v1alpha1.*`-Schemas). Die Default-Policy-Chain (`CatalogBuilder.buildEntityPolicy()`) ist `allOf(SchemaValidEntityPolicy, DefaultNamespaceEntityPolicy, NoForeignRootFieldsEntityPolicy, FieldFormatEntityPolicy)`.
+- `@backstage/catalog-model` exportiert `entityKindSchemaValidator<T>(schema)` (gibt nur bei einem `kind`/`apiVersion`-Mismatch `false` zurück und wirft bei jeder anderen Schema-Verletzung) und `entityEnvelopeSchemaValidator()` (Envelope-Präsenz und -Gestalt), beide auf Ajv draft-07 gebaut. Die Feld-Format-Validatoren (`isValidApiVersion`, `isValidKind`, `isValidEntityName`, `isValidNamespace`, `isValidLabelKey`, `isValidLabelValue`, `isValidAnnotationKey`, `isValidAnnotationValue`, `isValidTag`) stammen aus `makeValidator(overrides)` und lassen sich via `CatalogBuilder.setFieldFormatValidators(...)` oder, im neuen Backend-System, `catalogModelExtensionPoint.setFieldValidators(...)` überschreiben.
+- Ein Processor signalisiert eine defekte Entity, indem er `generalError`/`inputError` über `processingResult` emittiert; die Entity wird als invalid markiert und verworfen, während die vorherige fehlerfreie Version erhalten bleibt, und die Fehler erscheinen im Entity-`status` und im validate-entity-`errors[]`.
 - Validierung erfolgt in drei Stufen: **Ingestion** (grob — nur Präsenz von `kind`, `metadata.name`, `metadata.namespace`), **Processing** (volles Schema + Policy + Feld-Format + Processor-Emission) und **Stitching**. Ein Deskriptor, der die Ingestion besteht, kann zur Processing-Zeit dennoch zurückgewiesen werden.
 
 #### Versions- und Editions-Caveats
@@ -201,7 +251,7 @@ Der Generator **SOLLTE [SHOULD]** Folgendes aus Repository-Signalen inferieren u
 
 ## Open Questions
 
-Übertragen aus der Recherche (`.audits/backstage-research/2026-06-07-research-notes.md`); jede begrenzt oder verfeinert das Generator-Verhalten und sollte vor oder während der Skill-Erstellung aufgelöst werden.
+Übertragen aus der Recherche (siehe §Sources); jede begrenzt oder verfeinert das Generator-Verhalten und sollte vor oder während der Skill-Erstellung aufgelöst werden.
 
 1. **Template aktueller Deskriptor** — die volle optionale `spec`-Feldliste (`parameters`, `steps`, `output`, `secrets`, `presentation`) für `scaffolder.backstage.io/v1beta3` gegen die Live-`software-templates/writing-templates`-Docs für das anvisierte Release bestätigen.
 2. **`additionalProperties` auf per-Kind-`spec`** — ob die per-Kind-JSON-Schemas `additionalProperties: false` auf `spec` setzen (d. h. ob ein unbekanntes `spec`-Feld bei einem bekannten Kind zurückgewiesen oder bloß ignoriert wird). Bestimmt, ob ein Generator ohne ein Custom-Kind sicher Custom-`spec`-Felder hinzufügen darf.
@@ -222,3 +272,57 @@ Der Generator **SOLLTE [SHOULD]** Folgendes aus Repository-Signalen inferieren u
 17. **Tech-Radar-Backend-Refresh/-Header** — ob `plugin-tech-radar-backend` einen Refresh/Schedule oder Custom-Request-Header/Caching für `techRadar.url` unterstützt; App-Config-Keys jenseits von `techRadar.url`.
 18. **Tech-Radar-kanonischer-Docs-Ort** — ob backstage.io noch eine Tech-Radar-Feature-Seite unter einem verlagerten Pfad hostet oder ob die kanonischen Docs nur im community-plugins-README leben.
 19. **Tech-Radar-Current-Ring-Selektionsregel** — latest-by-date-Selektion und Tie-/Ordering-Handling aus der Rendering-Component-Quelle bestätigen.
+
+## Sources
+
+Die Recherche vom 2026-06-07 (146 Quellen über `backstage.io/docs` sowie die Quellbäume `backstage/backstage` und `backstage/community-plugins`) fundiert diese Spec. Die tragenden URLs, gruppiert:
+
+**Software Catalog — Deskriptorformat, System-Modell, Referenzen**
+
+- <https://backstage.io/docs/features/software-catalog/descriptor-format>
+- <https://backstage.io/docs/features/software-catalog/system-model>
+- <https://backstage.io/docs/features/software-catalog/references>
+- <https://backstage.io/docs/features/software-catalog/well-known-relations>
+
+**Well-known Annotations und Statuses**
+
+- <https://backstage.io/docs/features/software-catalog/well-known-annotations>
+- <https://backstage.io/docs/features/software-catalog/well-known-statuses>
+- <https://backstage.io/docs/features/kubernetes/configuration/>
+- <https://pagerduty.github.io/backstage-plugin-docs/getting-started/backstage/>
+
+**Onboarding, Konfiguration, Integrationen**
+
+- <https://backstage.io/docs/features/software-catalog/configuration>
+- <https://backstage.io/docs/features/software-catalog/external-integrations>
+- <https://backstage.io/docs/integrations/github/discovery>
+- <https://backstage.io/docs/integrations/gitlab/discovery>
+- <https://backstage.io/docs/integrations/bitbucketCloud/discovery>
+- <https://backstage.io/docs/integrations/github/org>
+- <https://backstage.io/docs/getting-started/register-a-component/>
+
+**Tech Radar (community-plugins-Workspace `tech-radar`)**
+
+- <https://github.com/backstage/community-plugins/tree/main/workspaces/tech-radar/plugins/tech-radar>
+- <https://github.com/backstage/community-plugins/blob/main/workspaces/tech-radar/plugins/tech-radar/README.md>
+- <https://github.com/backstage/community-plugins/blob/main/workspaces/tech-radar/plugins/tech-radar-backend/README.md>
+- `plugin-tech-radar-common`-Quellen: `src/model.ts`, `src/schema.ts`, `src/sampleTechRadarResponse.json`
+- <https://backstage.io/blog/2020/05/14/tech-radar-plugin/>
+- <https://www.npmjs.com/package/@backstage-community/plugin-tech-radar>
+
+**Validierung, Schema, Tooling**
+
+- <https://backstage.io/docs/features/software-catalog/software-catalog-api/>
+- <https://github.com/backstage/backstage/blob/master/plugins/catalog-backend/src/schema/openapi.yaml>
+- <https://backstage.io/docs/tooling/cli/commands/>
+- <https://github.com/backstage/backstage/tree/master/packages/catalog-model/src/schema>
+- `packages/catalog-model/src/validation/`-Quellen: `KubernetesValidatorFunctions.ts`, `CommonValidatorFunctions.ts`, `makeValidator.ts`
+- <https://github.com/backstage/backstage/blob/master/plugins/catalog-backend/src/service/CatalogBuilder.ts>
+- <https://backstage.io/docs/features/software-catalog/extending-the-model/>
+- <https://backstage.io/docs/features/software-catalog/life-of-an-entity>
+- <https://github.com/RoadieHQ/backstage-entity-validator>
+
+**Frontend-System-Invarianz**
+
+- <https://backstage.io/docs/frontend-system/building-apps/migrating/>
+- <https://backstage.io/docs/features/software-catalog/catalog-customization/>

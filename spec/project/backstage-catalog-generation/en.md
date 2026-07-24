@@ -8,7 +8,7 @@ Status: draft
 
 The onboarding of an existing software project into a Backstage portal means writing a descriptor that's correct on three axes at once: it must satisfy Backstage's per-kind JSON schema and field-format validators; it must reference owners, systems, and APIs that actually resolve; and it should carry the well-known annotations that light up the portal's integrations (source links, CI, TechDocs, GitHub). Done by hand this is error-prone—the validation rules are stricter than the prose docs imply, several required fields are non-obvious (an empty-but-present `spec.children` on a Group, no `lifecycle` on a Resource), and a class of metadata must **not** be authored because the catalog sets it automatically.
 
-This spec captures that body of knowledge as a normative reference and as a set of obligations for an automated generator. It's the **foundation for a later skill** that reads an existing software project and emits a fitting `catalog-info.yaml`. Per the project owner's scope it covers the **full entity kernel** (Component, API, Resource, System, Domain, Group, User, Location, and Template) with **particular focus on the Software Catalog and the Tech Radar**. It's grounded in a 146-source research pass over `backstage.io/docs` and the `backstage/backstage` and `backstage/community-plugins` source trees, retained at `.audits/backstage-research/2026-06-07-research-notes.md`.
+This spec captures that body of knowledge as a normative reference and as a set of obligations for an automated generator. It's the **foundation for a later skill** that reads an existing software project and emits a fitting `catalog-info.yaml`. Per the project owner's scope it covers the **full entity kernel** (Component, API, Resource, System, Domain, Group, User, Location, and Template) with **particular focus on the Software Catalog and the Tech Radar**. It's grounded in a 146-source research pass over `backstage.io/docs` and the `backstage/backstage` and `backstage/community-plugins` source trees; the load-bearing source URLs are catalogued in §Sources.
 
 The spec is deliberately two-layered, matching how the knowledge decomposes: **§The Backstage catalog model** states what a conformant descriptor (and the Tech Radar data file) must satisfy—the normative substrate, true regardless of any generator; **§Generator requirements** states what an automated generator built on that substrate must do, infer, emit, and refuse to emit. The Acceptance Criteria are written against a generator so the later skill has a testable target.
 
@@ -40,9 +40,9 @@ The requirements are organised in two layers. **§The Backstage catalog model** 
 #### Entity envelope
 
 - Every catalog entity **MUST** be a YAML object with exactly these authored root keys: `apiVersion` (string), `kind` (string, capitalised), `metadata` (object), and `spec` (object, kind-specific).
-- `relations` (array of `{type, targetRef}`) and `status` (object with `items[]` of `{type, level, message, error?}`) are **read-only, catalog-derived** output fields. A descriptor **MUST NOT** author them; they're listed here only so a generator and reviewer recognise them as off-limits.
+- `relations` (array of `{type, targetRef}`) and `status` (object with `items[]` of `{type, level, message, error?}`) are **read-only, catalog-derived** output fields. A descriptor **MUST NOT** author them; they're listed here only so a generator and reviewer recognise them as off-limits. The only documented `status.items[].type` is `backstage.io/catalog-processing` (with `level` one of `info`/`warning`/`error`); the status model is explicitly in active development and its format may change unexpectedly, so nothing should build on it.
 - Multiple entities **MAY** share one file, separated by the standard YAML document separator `---`.
-- The `metadata` block is common to all kinds. `metadata.name` is **required**; `metadata.namespace` is optional (defaults to `default`); `metadata.uid` and `metadata.etag` are output-only and **MUST NOT** be authored. Optional authored metadata: `title`, `description`, `labels` (key→value map), `annotations` (key→value map), `tags` (list of strings), `links` (array of `{url (required), title, icon, type}`).
+- The `metadata` block is common to all kinds. `metadata.name` is **required**; `metadata.namespace` is optional (defaults to `default`); `metadata.uid` and `metadata.etag` are output-only and **MUST NOT** be authored. Optional authored metadata: `title`, `description`, `labels` (key→value map), `annotations` (key→value map), `tags` (list of strings), `links` (array of `{url (required), title, icon, type}`). A link `icon` value consists of alphanumerics optionally separated by one of `[-_.]`.
 
 #### Entity kinds
 
@@ -57,12 +57,12 @@ The kernel comprises nine kinds. Their `spec.type` and `spec.lifecycle` values a
 | Domain | `backstage.io/v1alpha1` | `owner` | `type`, `subdomainOf` | type org-defined | No `lifecycle`. `subdomainOf` enables nested domains. |
 | Group | `backstage.io/v1alpha1` | `type`, `children` | `profile` (`{displayName, email, picture}`), `parent`, `members` | type org-defined (`team`, `business-unit`, `root`) | `children` MUST be present; **may be an empty list `[]`** but the key can't be omitted. |
 | User | `backstage.io/v1alpha1` | `memberOf` | `profile` | — | `memberOf` MUST be present; **may be `[]`** but the key can't be omitted. No type/lifecycle/owner. |
-| Location | `backstage.io/v1alpha1` | — | `type`, `target` *or* `targets`, `presence` (`required`/`optional`, default `required`) | type, for example `url`/`file` | A pointer to more entity data, not a real-world thing. Use `target` or `targets`. |
-| Template | `scaffolder.backstage.io/v1beta3` | `type`, `owner` | `parameters`, `steps`, `output`, `secrets`, `presentation` | — | Current descriptor is `v1beta3`; `v1beta2` and the original `v1alpha1` scaffolder format are older/deprecated. Consumed by the Scaffolder, not part of the software-entity relation graph. |
+| Location | `backstage.io/v1alpha1` | — | `type`, `target` *or* `targets`, `presence` (`required`/`optional`, default `required`) | type, for example `url`/`file` | A pointer to more entity data, not a real-world thing. Use `target` or `targets`; an omitted `type` is inherited from the parent location. Spawned entities are tracked via the `backstage.io/managed-by-location` annotations. |
+| Template | `scaffolder.backstage.io/v1beta3` | `type`, `owner` | `parameters`, `steps`, `output`, `secrets`, `presentation` | — | Current descriptor is `v1beta3`; `v1beta2` and the original `v1alpha1` scaffolder format are older/deprecated. Consumed by the Scaffolder, not part of the software-entity relation graph. Notable optional metadata annotation: `backstage.io/time-saved` (an ISO-8601 duration such as `PT4H`). |
 
 - A descriptor **MUST NOT** emit `spec.lifecycle` on Resource, System, Domain, Group, or User—only Component and API carry it.
 - A Group descriptor **MUST** include `spec.children` and a User descriptor **MUST** include `spec.memberOf`, even when empty (`[]`), or schema validation fails.
-- The derived **relations** a generator should understand (authored indirectly, via the `spec` reference fields, never directly): `ownedBy`/`ownerOf`, `partOf`/`hasPart`, `dependsOn`/`dependencyOf`, `providesApi`/`apiProvidedBy`, `consumesApi`/`apiConsumedBy`, `parentOf`/`childOf`, `memberOf`/`hasMember`. Note the asymmetry: `spec` field names are plural (`providesApis`, `consumesApis`) while the derived relation type strings are singular (`providesApi`, `consumesApi`).
+- The derived **relations** a generator should understand (authored indirectly, via the `spec` reference fields, never directly): `ownedBy`/`ownerOf`, `partOf`/`hasPart`, `dependsOn`/`dependencyOf`, `providesApi`/`apiProvidedBy`, `consumesApi`/`apiConsumedBy`, `parentOf`/`childOf`, `memberOf`/`hasMember`. Note the asymmetry: `spec` field names are plural (`providesApis`, `consumesApis`) while the derived relation type strings are singular (`providesApi`, `consumesApi`). The system-model overview page loosely writes `implementsApi`/`exposesApi`; the canonical relation type strings are the `providesApi`/`consumesApi` family from the well-known-relations page.
 
 #### Naming and format constraints
 
@@ -77,7 +77,7 @@ The field-format validators (`KubernetesValidatorFunctions` / `CommonValidatorFu
 
 #### Entity references and owner resolution
 
-- A reference in a `spec` field is a string `[<kind>:][<namespace>/]<name>` (1–3 parts). When a part is omitted: the **kind** defaults per the field's context, the **namespace** defaults to `default`.
+- A reference in a `spec` field is a string `[<kind>:][<namespace>/]<name>` (1–3 parts). When a part is omitted: the **kind** defaults per the field's context, the **namespace** defaults to `default`. A compound object form `{ kind, namespace, name }` also exists; cross-system communication should use the full three-part string form, and the catalog-derived `relations[].targetRef` always carries the fully normalised three-part form.
 - The per-field default kind a generator MUST apply when emitting a bare reference:
 
   | Field | Default kind |
@@ -100,9 +100,57 @@ The field-format validators (`KubernetesValidatorFunctions` / `CommonValidatorFu
 
 Backstage documents a registry of well-known annotations. They split into two classes a generator must treat differently:
 
-- **Authored (emit when the signal exists)**: `github.com/project-slug` (`org/repo`), `gitlab.com/project-slug`, `backstage.io/source-location` (`url:https://github.com/org/repo/`, trailing slash for a directory), `backstage.io/techdocs-ref` (`dir:.` when docs are colocated), `backstage.io/techdocs-entity`/`-entity-path`, `backstage.io/view-url`/`edit-url`, plus integration annotations namespaced by the integrating system (`circleci.com/project-slug`, `jenkins.io/job-full-name`, `sonarqube.org/project-key`, `sentry.io/project-slug`, `pagerduty.com/integration-key`, …). Integration annotations whose plugin lives outside core (Kubernetes `backstage.io/kubernetes-id`/`-label-selector`, PagerDuty, Jira) are documented on their plugin pages, not the central annotations page.
+- **Authored (emit when the signal exists)**: the core registry plus integration annotations namespaced by the integrating system's domain (`backstage.io/` is reserved for what Backstage itself ships):
+
+  | Key | Value shape | Purpose |
+  | --- | --- | --- |
+  | `backstage.io/source-location` | `url:https://github.com/org/repo/` (trailing slash for a directory) | Source-code root |
+  | `backstage.io/view-url` / `backstage.io/edit-url` | URL | Canonical view / source-edit URLs for the entity file |
+  | `backstage.io/source-template` | `template:default/create-react-app-template` | Scaffolder Template the entity was created from |
+  | `backstage.io/techdocs-ref` | `dir:.` or a `url:` reference | Where the TechDocs source lives |
+  | `backstage.io/techdocs-entity` / `-entity-path` | `component:default/example` / a docs path | External entity owning the docs, and the path within it |
+  | `backstage.io/code-coverage` | `scm-only` / `enabled` | Code-coverage plugin |
+  | `github.com/project-slug` | `org/repo` | Wires GitHub features |
+  | `github.com/team-slug` | `org/team` | GitHub team mapping |
+  | `github.com/user-login` | login name | GitHub user login |
+  | `github.com/user-id` / `gitlab.com/user-id` | `'123456'` (quoted, immutable) | Numeric SCM user ids |
+  | `gitlab.com/project-slug` | `org/repo` | GitLab project |
+  | `graph.microsoft.com/tenant-id` (and siblings) | string | Microsoft Graph directory mapping |
+  | `jenkins.io/job-full-name` | `folder-name/job-name` | Full CI job path |
+  | `gocd.org/pipelines` | comma-separated names | CI pipelines |
+  | `circleci.com/project-slug` | `github/org/repo` | CI project |
+  | `sonarqube.org/project-key` | project key | Static-analysis project |
+  | `sentry.io/project-slug` / `rollbar.com/project-slug` | `org/project` | Error-tracking projects |
+  | `periskop.io/service-name` | service name | Exception aggregation |
+  | `vault.io/secrets-path` | `test/backstage` | Secrets path |
+  | `backstage.io/ldap-rdn` / `-uuid` / `-dn` | string | Directory-service ids |
+
+- **Plugin-page annotations (not on the central registry)**: integration annotations whose plugin lives outside core are documented on their plugin pages, because the central page covers only core-shipped annotations. Kubernetes: `backstage.io/kubernetes-id` (matched against a `backstage.io/kubernetes-id` *label* on the cluster resources), `backstage.io/kubernetes-namespace` (restricts lookup), `backstage.io/kubernetes-label-selector` (a `kubectl`-style selector that takes precedence over `-id`), `backstage.io/kubernetes-cluster` (pins one named cluster). PagerDuty: `pagerduty.com/integration-key` (preferred when both are present) and `pagerduty.com/service-id` (alternative with reduced function). Jira keys originate from community plugins, not core (see Open Questions).
+- **Field substitutions**: `$text:`, `$json:`, and `$yaml:` embed external file content into a descriptor field.
 - **Set automatically (a descriptor MUST NOT author these)**: `backstage.io/managed-by-location`, `backstage.io/managed-by-origin-location`, `backstage.io/orphan`. The catalog derives them during ingestion; authoring them is wrong.
 - **Deprecated mappings** a generator MUST avoid: `backstage.io/github-actions-id` → use `github.com/project-slug`; `backstage.io/definition-at-location` → use placeholder substitution (`$text:`/`$json:`/`$yaml:`); `jenkins.io/github-folder` → use `jenkins.io/job-full-name`.
+
+#### Onboarding and ingestion context
+
+A generated descriptor lands in a catalog through one of three ingestion paths. Operating the backend stays a Non-Goal; this context is recorded because it bounds what a generator may assume:
+
+- **Static locations** (`catalog.locations` app-config entries with `type: url` or `type: file`): `file` targets are for local development only, and statically configured locations can't be removed through the catalog API.
+- **The register-an-existing-component UI** (`@backstage/plugin-catalog-import`, route `/catalog-import`): paste a descriptor or repository URL, analyse, import. When no descriptor is found the wizard opens a pull request adding an example `catalog-info.yaml` (default filename `catalog-info.yaml`, default PR branch `backstage-integration`); upstream issue #22162 tracks the wizard erroneously opening a PR although a root descriptor already exists.
+- **Automatic discovery providers** (`catalog.providers.*`): scheduled entity providers that crawl an organisation, group, or workspace and emit a Location per discovered descriptor.
+
+  | | GitHub | GitLab | Bitbucket Cloud |
+  | --- | --- | --- | --- |
+  | Provider class | `GithubEntityProvider` | `GitlabDiscoveryEntityProvider` | `BitbucketCloudEntityProvider` |
+  | Backend module | `@backstage/plugin-catalog-backend-module-github` | `@backstage/plugin-catalog-backend-module-gitlab` | `@backstage/plugin-catalog-backend-module-bitbucket-cloud` |
+  | Config key | `catalog.providers.github.<id>` | `catalog.providers.gitlab.<id>` | `catalog.providers.bitbucketCloud.<id>` |
+  | Required scope | `organization` | `host`, `group` | `workspace` |
+  | Descriptor path key | `catalogPath` (default `/catalog-info.yaml`, leading slash; `*`/`**` globs) | `entityFilename` (default `catalog-info.yaml`, no slash) | `catalogPath` (default `/catalog-info.yaml`) |
+  | Filters | `filters.branch` / `repository` (regex) / `topic` / `visibility`; `allowArchived` (default false) | `branch`, `projectPattern` (regex) | `filters.projectKey` / `filters.repoSlug` (regex) |
+
+- GitHub discovery recommends a schedule frequency around 35 minutes to respect the 5000-requests-per-hour API limit, and integrates with `@backstage/plugin-events-backend-module-github` for webhook-driven updates.
+- **`catalog.rules` bounds what a catalog accepts**: the default allow-list admits only the kinds `Component`, `API`, and `Location`; an empty `rules` array rejects everything, and per-location rules can override the global set. A descriptor of any other kind (System, Domain, Group, User, Resource, Template) is rejected at ingestion until the operator extends the rules, so a generator emitting those kinds should surface that operator dependency.
+- Entity providers sit at the catalog edge and emit `full` or `delta` mutations (each entity carrying a `locationKey`); processors sit mid-pipeline and can only add or update. Provider-emitted entities must carry `backstage.io/managed-by-location` and `backstage.io/managed-by-origin-location` or they're dropped with warnings; these are the same annotations a hand-authored descriptor MUST NOT contain, because the ingesting machinery adds them.
+- Owner resolution presupposes an ingested org graph: `GitHubOrgEntityProvider` (module `@backstage/plugin-catalog-backend-module-github-org`, config `catalog.providers.githubOrg`) turns organisation teams into Group entities and members into User entities.
 
 #### The Tech Radar data model
 
@@ -120,17 +168,19 @@ The Tech Radar is a **standalone frontend plugin**, **not** wired into the Softw
   | `RadarEntrySnapshot` | `date` (a JS `Date`), `ringId`, `description?`, `moved?` (`MovedState`) |
   | `enum MovedState` | `Down = -1`, `NoChange = 0`, `Up = 1` |
 
-- **Rings** encode adoption maturity (sample data: `adopt`/`trial`/`assess`/`hold`); **quadrants** encode technology categories (sample data: Languages/Frameworks/Infrastructure/Process). Both are data-driven: ring and quadrant count and names come from the data arrays, not from fixed enums.
+- **Rings** encode adoption maturity (sample data: `adopt`/`trial`/`assess`/`hold`); **quadrants** encode technology categories (sample data: Languages/Frameworks/Infrastructure/Process). Both are data-driven: ring and quadrant count and names come from the data arrays, not from fixed enums. The original announcement described the ring semantics as: Use/Adopt means recommended for most teams, Trial means evaluated with clear benefits, Assess means worth exploring, Hold means don't invest further; adopt-vs-use is sample-vs-announcement naming drift, and ring names are an org-configurable convention.
 - An entry's **current ring isn't a field on the entry**; instead it's derived from the entry's `timeline` snapshots (latest-by-date is the strong, sample-data-backed assumption; the exact selection rule is an Open Question). `date` is a JS `Date` in the in-memory model, so JSON date strings **MUST** be converted (`new Date(...)`) when a custom client loads the data; the backend's Zod parser uses `z.coerce.date()`.
-- Wiring: the extension point is `techRadarApiRef` (`interface TechRadarApi { load(id?: string): Promise<TechRadarLoaderResponse> }`). Three sourcing paths exist: the default client (`DefaultTechRadarApi`, fetches `<backend>/data`, validates with `TechRadarLoaderResponseParser`, falls back to mock data on failure); a custom client implementing `TechRadarApi` registered via `createApiFactory(techRadarApiRef, new MyClient())` (takes precedence over a backend when both exist); and the `plugin-tech-radar-backend`, which reads a JSON file from a URL declared under the top-level `techRadar.url` app-config key and serves it at `/data`.
+- Wiring: the extension point is `techRadarApiRef` (`interface TechRadarApi { load(id?: string): Promise<TechRadarLoaderResponse> }`). Three sourcing paths exist: the default client (`DefaultTechRadarApi`, fetches `<backend>/data`, validates with `TechRadarLoaderResponseParser`, falls back to mock data on failure); a custom client implementing `TechRadarApi` registered via `createApiFactory(techRadarApiRef, new MyClient())` (takes precedence over a backend when both exist); and the `plugin-tech-radar-backend`, which reads a JSON file from a URL declared under the top-level `techRadar.url` app-config key (through Backstage's URL Reader, so the file can live in a git repository) and serves it at `/data`. The default client attaches an `Authorization: Bearer <idToken>` header when one is available.
 - **Package relocation**: as of mid-2026 the plugin lives in `backstage/community-plugins` under the `@backstage-community` scope, split into `plugin-tech-radar` (frontend), `plugin-tech-radar-common` (`model.ts`, `schema.ts`, and `sampleTechRadarResponse.json`, the canonical model source), and `plugin-tech-radar-backend`. The old `@backstage` package name and the old `backstage.io/docs/features/techradar/` URLs are deprecated / 404. A spec or generator **MUST** reference the `@backstage-community` packages.
 
 #### Validation, schema, and the policy chain
 
 - There is **no** official `backstage-cli` subcommand to validate a descriptor on disk (`config:check`/`print`/`schema` apply to app-config, not catalog entities).
-- The canonical server-side validation path is `POST <backend>/api/catalog/validate-entity` (for example `http://localhost:7007/api/catalog/validate-entity`). The JSON request body requires **both** `location` (string) and `entity` (object); note that `location` is in the body, not an HTTP header. Responses: `200` (no body) on success; `400` with `{ "errors": [ { "name", "message" } ] }` on failure.
-- The de-facto offline / CI linter is the community `@roadiehq/backstage-entity-validator` (CLI binary `validate-entity`, a `RoadieHQ/backstage-entity-validator` GitHub Action, and a Docker image). It runs Backstage's own structural validation plus well-known-annotation checks, accepts globs and custom schema files, but **doesn't** check entity-reference target existence.
-- Canonical JSON schemas (draft-07) live in `packages/catalog-model/src/schema/` (`Entity`, `EntityEnvelope`, `EntityMeta`, and per-kind files under `kinds/`). The default policy chain (`CatalogBuilder.buildEntityPolicy()`) is `allOf(SchemaValidEntityPolicy, DefaultNamespaceEntityPolicy, NoForeignRootFieldsEntityPolicy, FieldFormatEntityPolicy)`.
+- The canonical server-side validation path is `POST <backend>/api/catalog/validate-entity` (for example `http://localhost:7007/api/catalog/validate-entity`; OpenAPI `operationId: ValidateEntity`, auth an optional JWT Bearer token). The JSON request body requires **both** `location` (string) and `entity` (object); note that `location` is in the body, not an HTTP header. Responses: `200` (no body) on success; `400` with `{ "errors": [ { "name", "message" } ] }` on failure. An older docs page renders the path as `POST /entities/validate`; the source-of-truth OpenAPI uses `/validate-entity`.
+- The de-facto offline / CI linter is the community `@roadiehq/backstage-entity-validator` (CLI binary `validate-entity`, a `RoadieHQ/backstage-entity-validator` GitHub Action pinned by tag, for example `@v0.3.11`, and a Docker image). It defaults to `catalog-info.yaml` at the repository root, accepts comma-separated lists and globs (flags: `-q` minimal output, `-i` STDIN, `-l` custom schema file), runs Backstage's own structural validation plus well-known-annotation checks, and treats custom schemas as additive (they can only tighten). It **doesn't** check entity-reference target existence.
+- Canonical JSON schemas (draft-07) live in `packages/catalog-model/src/schema/` (`Entity`, `EntityEnvelope`, `EntityMeta`, and per-kind files under `kinds/`, plus newer specialised variants such as `API.v1alpha1.mcp-server.schema.json` and the `AiResource.v1alpha1.*` schemas). The default policy chain (`CatalogBuilder.buildEntityPolicy()`) is `allOf(SchemaValidEntityPolicy, DefaultNamespaceEntityPolicy, NoForeignRootFieldsEntityPolicy, FieldFormatEntityPolicy)`.
+- `@backstage/catalog-model` exports `entityKindSchemaValidator<T>(schema)` (returns `false` only on a `kind`/`apiVersion` mismatch and throws on any other schema violation) and `entityEnvelopeSchemaValidator()` (envelope presence and shape), both built on Ajv draft-07. The field-format validators (`isValidApiVersion`, `isValidKind`, `isValidEntityName`, `isValidNamespace`, `isValidLabelKey`, `isValidLabelValue`, `isValidAnnotationKey`, `isValidAnnotationValue`, `isValidTag`) come from `makeValidator(overrides)` and can be overridden via `CatalogBuilder.setFieldFormatValidators(...)` or, in the new backend system, `catalogModelExtensionPoint.setFieldValidators(...)`.
+- A processor signals a broken entity by emitting `generalError`/`inputError` through `processingResult`; the entity is marked invalid and dropped while the prior error-free version is retained, and the errors surface in the entity `status` and in the validate-entity `errors[]`.
 - Validation happens in three stages: **ingestion** (coarse: `kind`, `metadata.name`, `metadata.namespace` presence only), **processing** (full schema + policy + field-format + processor emission), and **stitching**. A descriptor that passes ingestion can still be rejected at processing time.
 
 #### Versioning and edition caveats
@@ -201,7 +251,7 @@ The generator **SHOULD** infer the following from repository signals, and **MUST
 
 ## Open Questions
 
-Carried forward from the research pass (`.audits/backstage-research/2026-06-07-research-notes.md`); each bounds or refines generator behaviour and should be resolved before or during skill authoring.
+Carried forward from the research pass (see §Sources); each bounds or refines generator behaviour and should be resolved before or during skill authoring.
 
 1. **Template current descriptor**: confirm the full optional `spec` field list (`parameters`, `steps`, `output`, `secrets`, `presentation`) for `scaffolder.backstage.io/v1beta3` against the live `software-templates/writing-templates` docs for the targeted release.
 2. **`additionalProperties` on per-kind `spec`**: whether the per-kind JSON schemas set `additionalProperties: false` on `spec` (that is, whether emitting an unknown `spec` field on a known kind is rejected or merely ignored). Governs whether a generator may add custom `spec` fields without a custom kind.
@@ -222,3 +272,57 @@ Carried forward from the research pass (`.audits/backstage-research/2026-06-07-r
 17. **Tech Radar backend refresh/headers**: whether `plugin-tech-radar-backend` supports a refresh/schedule or custom request headers/caching for `techRadar.url`; app-config keys beyond `techRadar.url`.
 18. **Tech Radar canonical docs location**: whether backstage.io still hosts a Tech Radar feature page under a relocated path, or whether canonical docs live only in the community-plugins README.
 19. **Tech Radar current-ring selection rule**: confirm latest-by-date selection and tie/ordering handling from the rendering component source.
+
+## Sources
+
+The 2026-06-07 research pass (146 sources over `backstage.io/docs` and the `backstage/backstage` and `backstage/community-plugins` source trees) grounds this spec. The load-bearing URLs, grouped:
+
+**Software Catalog: descriptor format, system model, references**
+
+- <https://backstage.io/docs/features/software-catalog/descriptor-format>
+- <https://backstage.io/docs/features/software-catalog/system-model>
+- <https://backstage.io/docs/features/software-catalog/references>
+- <https://backstage.io/docs/features/software-catalog/well-known-relations>
+
+**Well-known annotations and statuses**
+
+- <https://backstage.io/docs/features/software-catalog/well-known-annotations>
+- <https://backstage.io/docs/features/software-catalog/well-known-statuses>
+- <https://backstage.io/docs/features/kubernetes/configuration/>
+- <https://pagerduty.github.io/backstage-plugin-docs/getting-started/backstage/>
+
+**Onboarding, configuration, integrations**
+
+- <https://backstage.io/docs/features/software-catalog/configuration>
+- <https://backstage.io/docs/features/software-catalog/external-integrations>
+- <https://backstage.io/docs/integrations/github/discovery>
+- <https://backstage.io/docs/integrations/gitlab/discovery>
+- <https://backstage.io/docs/integrations/bitbucketCloud/discovery>
+- <https://backstage.io/docs/integrations/github/org>
+- <https://backstage.io/docs/getting-started/register-a-component/>
+
+**Tech Radar (community-plugins workspace `tech-radar`)**
+
+- <https://github.com/backstage/community-plugins/tree/main/workspaces/tech-radar/plugins/tech-radar>
+- <https://github.com/backstage/community-plugins/blob/main/workspaces/tech-radar/plugins/tech-radar/README.md>
+- <https://github.com/backstage/community-plugins/blob/main/workspaces/tech-radar/plugins/tech-radar-backend/README.md>
+- `plugin-tech-radar-common` sources: `src/model.ts`, `src/schema.ts`, `src/sampleTechRadarResponse.json`
+- <https://backstage.io/blog/2020/05/14/tech-radar-plugin/>
+- <https://www.npmjs.com/package/@backstage-community/plugin-tech-radar>
+
+**Validation, schema, tooling**
+
+- <https://backstage.io/docs/features/software-catalog/software-catalog-api/>
+- <https://github.com/backstage/backstage/blob/master/plugins/catalog-backend/src/schema/openapi.yaml>
+- <https://backstage.io/docs/tooling/cli/commands/>
+- <https://github.com/backstage/backstage/tree/master/packages/catalog-model/src/schema>
+- `packages/catalog-model/src/validation/` sources: `KubernetesValidatorFunctions.ts`, `CommonValidatorFunctions.ts`, `makeValidator.ts`
+- <https://github.com/backstage/backstage/blob/master/plugins/catalog-backend/src/service/CatalogBuilder.ts>
+- <https://backstage.io/docs/features/software-catalog/extending-the-model/>
+- <https://backstage.io/docs/features/software-catalog/life-of-an-entity>
+- <https://github.com/RoadieHQ/backstage-entity-validator>
+
+**Frontend-system invariance**
+
+- <https://backstage.io/docs/frontend-system/building-apps/migrating/>
+- <https://backstage.io/docs/features/software-catalog/catalog-customization/>
