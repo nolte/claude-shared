@@ -120,8 +120,8 @@ plugins:
       # as the canonical opening/closing tags, but those collide with verbatim
       # occurrences of the directive inside skill-body prose that the catalog
       # generator renders into docs/<lang>/skills/**. We pin custom tags here
-      # so the plugin's regex doesn't fire on doc-examples. See
-      # .audits/docs-catalog-refresh.md §F1 for the proposed spec amendment.
+      # so the plugin's regex doesn't fire on doc-examples, per
+      # spec/project/mkdocs-structure/ §Snippet inclusion (tags pinned per-repo).
       opening_tag: "{!"
       closing_tag: "!}"
 

@@ -15,7 +15,7 @@ consistency_check:
       target: F-5 (project/features/shared-plugin-structural-analysis.md)
       resolution: proceed
     - kind: prior-art
-      target: spec/claude/plugin-scoping/ (.audits/shared-plugin-analysis/2026-07-19.md §3)
+      target: spec/claude/plugin-scoping/ (F-5 structural analysis §3, in git history)
       resolution: proceed
     - kind: overlap
       target: F-17 (shared-plugin-rework-candidate-sweep)
@@ -46,9 +46,9 @@ The decision is bound by the distribution-contract rule in `spec/claude/plugin-s
 
 The consistency check ran via the `feature-consistency-reviewer` agent (`agent_version: feature-consistency-reviewer@e8f78f7`) and returned three findings for this feature — two `overlap` (blocking, resolved below) and one `prior-art` (non-blocking).
 
-- **overlap → F-5** (`project/features/shared-plugin-structural-analysis.md`; resolution `proceed`): F-18 acceptance-1 (a written plugin-boundary decision bound by `plugin-scoping`) matches F-5 acceptance-3 at the criterion level — both produce a boundary decision citing the same spec. It is not duplication: F-5 decided only the **agent-description** axis (the carve-out removes ~122 t; §3 fact 1) and explicitly re-opened the skill axis (`.audits/shared-plugin-analysis/2026-07-19.md` §3 "must be justified by *skill*-mechanism budget … **not** by the agent-description budget"), which F-18 acceptance-2 measures for the first time — confirmed net-new because the F-8 guardrail (`scripts/validate_skills.py`) measures agent descriptions only. `merge-into F-5` / `supersede F-5` both fail (F-5 is closed and its agent-axis verdict stands; F-18 complements it); `revisit-after` fails (the deferral event, R-9 delivery, has already happened). `proceed`.
+- **overlap → F-5** (`project/features/shared-plugin-structural-analysis.md`; resolution `proceed`): F-18 acceptance-1 (a written plugin-boundary decision bound by `plugin-scoping`) matches F-5 acceptance-3 at the criterion level — both produce a boundary decision citing the same spec. It is not duplication: F-5 decided only the **agent-description** axis (the carve-out removes ~122 t; §3 fact 1) and explicitly re-opened the skill axis (the F-5 structural analysis (retired to git history) §3 "must be justified by *skill*-mechanism budget … **not** by the agent-description budget"), which F-18 acceptance-2 measures for the first time — confirmed net-new because the F-8 guardrail (`scripts/validate_skills.py`) measures agent descriptions only. `merge-into F-5` / `supersede F-5` both fail (F-5 is closed and its agent-axis verdict stands; F-18 complements it); `revisit-after` fails (the deferral event, R-9 delivery, has already happened). `proceed`.
 - **overlap → F-17** (sibling draft `shared-plugin-rework-candidate-sweep`; resolution `proceed`, mirrored into both features à la F-7↔F-8): F-17's general sweep may surface the authoring carve-out as one `split` candidate, while F-18 is the dedicated decision on it carrying its own skill-budget measurement method. Producer→consumer chain, not redundancy; `merge-into` would collapse a single pre-known decision into a broad sweep. `proceed`.
-- **prior-art → `spec/claude/plugin-scoping/`** (+ `.audits/shared-plugin-analysis/2026-07-19.md` §3; resolution `proceed`, non-blocking): F-5 §3 already established that the consumer-audience category is legitimate (not topic/count) and named the fourth-plugin lockstep cost. F-18 inherits these — acceptance-1/3 cite F-5 §3 and re-weigh the cost on the skill axis rather than re-litigating category legitimacy.
+- **prior-art → `spec/claude/plugin-scoping/`** (+ the F-5 structural analysis (retired to git history) §3; resolution `proceed`, non-blocking): F-5 §3 already established that the consumer-audience category is legitimate (not topic/count) and named the fourth-plugin lockstep cost. F-18 inherits these — acceptance-1/3 cite F-5 §3 and re-weigh the cost on the skill axis rather than re-litigating category legitimacy.
 
 ## Risks
 

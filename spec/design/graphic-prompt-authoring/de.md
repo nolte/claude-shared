@@ -90,4 +90,4 @@ Leser: Skill- und Agent-Autoren, die den Prompt-Autoren-Agent pflegen; Reviewer,
 
 ## Offene Fragen
 
-_Alle offenen Fragen sind aufgelöst. Das pro-Modell-Style-Referenz-Äquivalent wird von `corporate-design-colors` §AI image color contract festgelegt, der ein festes kanonisches Referenzbild vorschreibt (keinen Freitext-Stil-Absatz); da `brand-primary` nun entschieden ist (`oklch(0.47 0.12 276)` / `#4A529D`), konsumiert diese Spec jenen Vertrag direkt. Das Asset-Typ-Vokabular-Deferral wurde am 2026-06-06 entschieden. Siehe `.audits/decisions/2026-06-06-settle-open-questions.md` für den vollständigen Eintrag._
+_Alle offenen Fragen sind aufgelöst. Das pro-Modell-Style-Referenz-Äquivalent wird von `corporate-design-colors` §AI image color contract festgelegt, der ein festes kanonisches Referenzbild vorschreibt (keinen Freitext-Stil-Absatz); da `brand-primary` nun entschieden ist (`oklch(0.47 0.12 276)` / `#4A529D`), konsumiert diese Spec jenen Vertrag direkt. Das Asset-Typ-Vokabular-Deferral wurde am 2026-06-06 entschieden. Der vollständige Eintrag ist in der Git-Historie erhalten (Entscheidungslog, 2026-06-06)._
