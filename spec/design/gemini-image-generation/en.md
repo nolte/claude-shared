@@ -69,7 +69,7 @@ Readers: prompt authors and skill/agent authors targeting Gemini; operators tuni
 
 ### Output and licensing (hard invariants)
 - **MUST** treat the SynthID watermark as always present: every Gemini-generated image carries it. For branding, commercial, or blog assets this is a material difference from the FLUX-on-Cloudflare path (no watermark) and **MUST** be weighed when choosing the provider.
-- **MUST** treat Gemini as billing-required: `gemini-2.5-flash-image` reports a Free-Tier quota of `limit: 0`. That's a provider property, not a prompt concern, but it bears on provider choice (owned by `spec/tools/image-generation/`).
+- **MUST** treat Gemini as billing-required: no image-generation model on the Gemini Developer API carries a free tier, and a call without billing fails against a zero-valued free-tier quota metric ([E5], [E6], [E7]). That's a provider property, not a prompt concern, but it bears on provider choice (owned by `spec/tools/image-generation/`).
 
 ### Anti-patterns
 - **MUST NOT** port a FLUX or SDXL comma-tag prompt verbatim to Gemini; rewrite it as narrative prose with stated intent.
@@ -89,6 +89,8 @@ Readers: prompt authors and skill/agent authors targeting Gemini; operators tuni
 
 ## References
 
+The billing, watermark, and model-currency assertions in §"Output and licensing (hard invariants)" are author-time external assertions triangulated per `spec/claude/research-triangulate/` §Author-time assertions (author-time tier: at least three independent sources, ordered Primary-first). Retrieval date for every external source below: 2026-07-24.
+
 - [R1] Prompt-document authoring that targets the chosen generator: `spec/design/graphic-prompt-authoring/`
 - [R2] The tool whose `gemini` provider calls `gemini-2.5-flash-image`: `spec/tools/image-generation/`
 - [R3] The sibling model baseline for the default FLUX path: `spec/design/flux-image-generation/`
@@ -97,9 +99,16 @@ Readers: prompt authors and skill/agent authors targeting Gemini; operators tuni
 - [E2] Nano Banana image generation, official API docs (examples, aspect ratios, SynthID watermark): <https://ai.google.dev/gemini-api/docs/image-generation>
 - [E3] Ultimate prompting guide for Nano Banana (frameworks, text-rendering rules, camera and lighting): <https://cloud.google.com/blog/products/ai-machine-learning/ultimate-prompting-guide-for-nano-banana>
 - [E4] Imagen prompt guide, the boundary case whose 480-token and roughly-25-character text limits the native Gemini model doesn't inherit: <https://ai.google.dev/gemini-api/docs/imagen>
+- [E5] Gemini Developer API pricing, whose free-tier row reads "Not available" for every image model, `gemini-2.5-flash-image` included (Primary): <https://ai.google.dev/gemini-api/docs/pricing>
+- [E6] Home Assistant core issue #157289, an independent consumer reporting `generate_content_free_tier_requests, limit: 0` on Gemini image generation (Secondary): <https://github.com/home-assistant/core/issues/157289>
+- [E7] googleapis `js-genai` issue #1322, the same zero-valued free-tier quota metric raised through Google's own JavaScript SDK (Secondary): <https://github.com/googleapis/js-genai/issues/1322>
+- [E8] Gemini API model deprecations, giving `gemini-2.5-flash-image` a shutdown date of 2026-10-02 and naming its replacement (Primary): <https://ai.google.dev/gemini-api/docs/deprecations>
+
+Verified 2026-07-24: the billing invariant holds—Google publishes no free-tier allowance for any Gemini image model, and the zero-valued quota metric reproduces across independent consumers ([E5]–[E7]). The always-on SynthID watermark likewise remains documented on the primary image-generation page ([E2], "All generated images include a SynthID watermark"), with no opt-out documented anywhere. Two qualifications: Google no longer publishes a numeric per-model free-tier request table, so the pricing page's "Not available" row is the durable evidence rather than a quota figure; and a `limit: 0` response body doesn't by itself prove a project lacks billing, since paid projects were reported hitting the same metric on image models in February 2026.
 
 ## Open Questions
 
 - **`gemini-2.5-flash-image` exact prompt-token limit.** The native model has no published hard token cap comparable to FLUX's 256 or Imagen's 480; the large context windows cited in guides (131K/65K) belong to the newer Nano-Banana-Pro and Nano-Banana-2 tiers. Treat the 2.5 model's practical limit as generous but not primary-documented until Google publishes a figure.
 - **Reference-image count on 2.5.** The "up to 14 reference images" figure is documented for the Nano-Banana-Pro/2 tiers; the supported count for `gemini-2.5-flash-image` specifically isn't primary-verified here. Revisit if Google documents it.
 - **Output resolution of the tool's gemini path.** Newer tiers emit 1K/2K/4K; what `gemini-2.5-flash-image` returns by default through the pinned `v1beta` endpoint is a tool-mechanics concern owned by `spec/tools/image-generation/` and isn't restated here.
+- **Successor model for this baseline.** Google gives `gemini-2.5-flash-image` a shutdown date of 2026-10-02 and names `gemini-3.1-flash-image` as its replacement ([E8]); `gemini-3.1-flash-lite-image` and `gemini-3-pro-image` are the other current stable image models. Which of them this baseline is re-pinned to, and which of its prompting invariants survive the move, is settled together with the tool-side migration owned by `spec/tools/image-generation/`—not guessed at here, because the prompting facts have to be re-verified against the successor's own documentation rather than inherited.

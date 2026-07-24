@@ -69,7 +69,7 @@ Leser: Prompt-Autoren und Skill-/Agent-Autoren, die Gemini adressieren; Betreibe
 
 ### Output und Lizenzierung (harte Invarianten)
 - **MUSS [MUST]** das SynthID-Wasserzeichen als immer vorhanden behandeln: Jedes Gemini-generierte Bild trägt es. Für Branding-, kommerzielle oder Blog-Assets ist das ein materieller Unterschied zum FLUX-über-Cloudflare-Pfad (kein Wasserzeichen) und **MUSS** bei der Provider-Wahl abgewogen werden.
-- **MUSS [MUST]** Gemini als billing-pflichtig behandeln: `gemini-2.5-flash-image` meldet ein Free-Tier-Kontingent von `limit: 0`. Das ist eine Provider-Eigenschaft, kein Prompt-Belang, aber es beeinflusst die Provider-Wahl (Eigentum von `spec/tools/image-generation/`).
+- **MUSS [MUST]** Gemini als billing-pflichtig behandeln: kein Bildgenerierungsmodell der Gemini Developer API hat ein Free-Tier, und ein Aufruf ohne Billing scheitert an einer auf null gesetzten Free-Tier-Quota-Metrik ([E5], [E6], [E7]). Das ist eine Provider-Eigenschaft, kein Prompt-Belang, aber es beeinflusst die Provider-Wahl (Eigentum von `spec/tools/image-generation/`).
 
 ### Anti-Patterns
 - **MUSS NICHT [MUST NOT]** einen FLUX- oder SDXL-Komma-Tag-Prompt wörtlich auf Gemini portieren; ihn als erzählende Prosa mit genannter Absicht neu schreiben.
@@ -89,6 +89,8 @@ Leser: Prompt-Autoren und Skill-/Agent-Autoren, die Gemini adressieren; Betreibe
 
 ## Referenzen
 
+Die Billing-, Wasserzeichen- und Modell-Aktualitäts-Aussagen in §„Output und Lizenzierung (harte Invarianten)" sind Author-Time-externe Aussagen, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede externe Quelle unten: 2026-07-24.
+
 - [R1] Prompt-Dokument-Authoring, das den gewählten Generator adressiert: `spec/design/graphic-prompt-authoring/`
 - [R2] Das Tool, dessen `gemini`-Provider `gemini-2.5-flash-image` aufruft: `spec/tools/image-generation/`
 - [R3] Die Schwester-Modell-Grundlage für den Standard-FLUX-Pfad: `spec/design/flux-image-generation/`
@@ -97,9 +99,16 @@ Leser: Prompt-Autoren und Skill-/Agent-Autoren, die Gemini adressieren; Betreibe
 - [E2] Nano Banana image generation, offizielle API-Docs (Beispiele, Seitenverhältnisse, SynthID-Wasserzeichen): <https://ai.google.dev/gemini-api/docs/image-generation>
 - [E3] Ultimate prompting guide for Nano Banana (Frameworks, Text-Rendering-Regeln, Kamera und Licht): <https://cloud.google.com/blog/products/ai-machine-learning/ultimate-prompting-guide-for-nano-banana>
 - [E4] Imagen-Prompt-Guide, der Grenzfall, dessen 480-Token- und Rund-25-Zeichen-Text-Limits **nicht** auf das native Gemini-Modell zutreffen: <https://ai.google.dev/gemini-api/docs/imagen>
+- [E5] Gemini-Developer-API-Pricing, dessen Free-Tier-Zeile für jedes Bildmodell „Not available" lautet, `gemini-2.5-flash-image` eingeschlossen (Primary): <https://ai.google.dev/gemini-api/docs/pricing>
+- [E6] Home-Assistant-core-Issue #157289, ein unabhängiger Konsument, der `generate_content_free_tier_requests, limit: 0` bei der Gemini-Bildgenerierung meldet (Secondary): <https://github.com/home-assistant/core/issues/157289>
+- [E7] googleapis-`js-genai`-Issue #1322, dieselbe auf null gesetzte Free-Tier-Quota-Metrik, ausgelöst über Googles eigenes JavaScript-SDK (Secondary): <https://github.com/googleapis/js-genai/issues/1322>
+- [E8] Gemini-API-Model-Deprecations, das `gemini-2.5-flash-image` das Abschaltdatum 2026-10-02 gibt und den Ersatz benennt (Primary): <https://ai.google.dev/gemini-api/docs/deprecations>
+
+Verifiziert 2026-07-24: Die Billing-Invariante hält — Google veröffentlicht für kein Gemini-Bildmodell ein Free-Tier-Kontingent, und die auf null gesetzte Quota-Metrik reproduziert sich über unabhängige Konsumenten hinweg ([E5]–[E7]). Auch das immer vorhandene SynthID-Wasserzeichen bleibt auf der primären Image-Generation-Seite dokumentiert ([E2], „All generated images include a SynthID watermark"), ohne dass irgendwo ein Opt-out dokumentiert wäre. Zwei Einschränkungen: Google veröffentlicht keine numerische Free-Tier-Request-Tabelle je Modell mehr, weshalb die „Not available"-Zeile der Preisseite der belastbare Beleg ist und keine Kontingentzahl; und ein `limit: 0`-Response-Body beweist für sich genommen nicht, dass einem Projekt Billing fehlt, da im Februar 2026 auch zahlende Projekte bei Bildmodellen dieselbe Metrik trafen.
 
 ## Offene Fragen
 
 - **Exaktes Prompt-Token-Limit von `gemini-2.5-flash-image`.** Das native Modell hat kein veröffentlichtes hartes Token-Cap vergleichbar mit FLUX' 256 oder Imagens 480; die in Guides genannten großen Kontextfenster (131K/65K) gehören zu den neueren Nano-Banana-Pro- und Nano-Banana-2-Stufen. Das praktische Limit des 2.5-Modells als großzügig, aber nicht primär dokumentiert behandeln, bis Google eine Zahl veröffentlicht.
 - **Anzahl Referenzbilder bei 2.5.** Die Angabe „bis zu 14 Referenzbilder" ist für die Nano-Banana-Pro/2-Stufen dokumentiert; die unterstützte Anzahl speziell für `gemini-2.5-flash-image` ist hier nicht primär verifiziert. Erneut prüfen, falls Google sie dokumentiert.
 - **Output-Auflösung des gemini-Pfads des Tools.** Neuere Stufen liefern 1K/2K/4K; was `gemini-2.5-flash-image` standardmäßig über den verdrahteten `v1beta`-Endpunkt zurückgibt, ist ein Tool-Mechanik-Belang im Eigentum von `spec/tools/image-generation/` und wird hier nicht wiederholt.
+- **Nachfolgemodell für diese Grundlage.** Google gibt `gemini-2.5-flash-image` das Abschaltdatum 2026-10-02 und nennt `gemini-3.1-flash-image` als Ersatz ([E8]); `gemini-3.1-flash-lite-image` und `gemini-3-pro-image` sind die weiteren aktuellen stabilen Bildmodelle. Auf welches davon diese Grundlage neu gepinnt wird und welche ihrer Prompting-Invarianten den Wechsel überleben, wird zusammen mit der Tool-seitigen Migration im Eigentum von `spec/tools/image-generation/` entschieden — nicht hier geraten, denn die Prompting-Fakten müssen gegen die Dokumentation des Nachfolgers neu verifiziert statt geerbt werden.
