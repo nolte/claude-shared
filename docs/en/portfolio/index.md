@@ -103,10 +103,15 @@ flowchart LR
     class R13C0 active;
     class R13C1 experimental;
     class R14C0 active;
+    R0 -.peer.-> R9
     R1 -.peer.-> R4
+    R3 -.peer.-> R9
+    R3 -.peer.-> R10
     R4 -.peer.-> R13
     R5 -.peer.-> R6
     R8 -.peer.-> R7
+    R9 -.peer.-> R10
+    R10 -.peer.-> R9
     R12 -.peer.-> R6
 ```
 
@@ -124,7 +129,7 @@ Status: ✅ active · 🧪 experimental · ⚠️ deprecated · 🗓️ planned
 
 ### Peer references
 
-_None declared._
+- `nolte/reachy-mini-app`
 
 ## nolte/blog
 
@@ -167,7 +172,8 @@ _None declared._
 
 ### Peer references
 
-_None declared._
+- `nolte/reachy-mini-app`
+- `nolte/reachy-mini-mcp`
 
 ## nolte/claude-shared
 
@@ -258,7 +264,7 @@ _None declared._
 
 ### Peer references
 
-_None declared._
+- `nolte/reachy-mini-mcp`
 
 ## nolte/reachy-mini-mcp
 
@@ -272,7 +278,7 @@ _None declared._
 
 ### Peer references
 
-_None declared._
+- `nolte/reachy-mini-app`
 
 ## nolte/taskfiles
 

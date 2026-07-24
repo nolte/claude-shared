@@ -243,7 +243,8 @@ members:
     audience:
     - "`nolte` (repo author, first operator on his own device)"
     - "Reachy Mini owner / hobbyist"
-  peers: []
+  peers:
+  - nolte/reachy-mini-app
 - repo: nolte/claude-home-assistant
   repo_url: https://github.com/nolte/claude-home-assistant
   mission_statement: >-
@@ -281,7 +282,9 @@ members:
     audience:
     - "Plugin-Autor beim Dogfooding in diesem Repo (nolte)"
     - "Spätere öffentliche Nutzer (Reachy-Mini-Hobby- und Maker-Community)"
-  peers: []
+  peers:
+  - nolte/reachy-mini-app
+  - nolte/reachy-mini-mcp
 - repo: nolte/reachy-mini-mcp
   repo_url: https://github.com/nolte/reachy-mini-mcp
   mission_statement: >-
@@ -299,7 +302,8 @@ members:
     audience:
     - "MCP clients"
     - "Reachy Mini owners / developers"
-  peers: []
+  peers:
+  - nolte/reachy-mini-app
 - repo: nolte/kamerplanter
   repo_url: https://github.com/nolte/kamerplanter
   mission_statement: >-
@@ -359,7 +363,8 @@ members:
     status: experimental
     audience:
     - "Reachy Mini owner / maker"
-  peers: []
+  peers:
+  - nolte/reachy-mini-mcp
 - repo: nolte/cookiecutter-gh-project
   repo_url: https://github.com/nolte/cookiecutter-gh-project
   mission_statement: >-
