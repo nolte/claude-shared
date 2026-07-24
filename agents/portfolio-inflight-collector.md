@@ -67,7 +67,7 @@ Per data source (the named `gh` command is the retained fallback, never removed)
 | 4b. Open Discussions | `github:list_discussions` (+ `github:get_discussion_comments` for last-comment author/timestamp) **when the connected server exposes the discussions toolset** | `gh api graphql` discussions query |
 | release-drafter drafts | `github:list_releases` (draft filter) | `gh api repos/<repo>/releases` |
 
-Deliberate `gh`-stays exceptions — the OQ-D cases from `.audits/issue-orchestrate/378/analysis.md`, i.e. the very optionality this pilot exercises rather than gaps to hide:
+Deliberate `gh`-stays exceptions — the OQ-D cases from the issue #378 pre-analysis (retired to git history), i.e. the very optionality this pilot exercises rather than gaps to hide:
 
 - **Data source 4a — unresolved review-thread `isResolved` state:** the review-thread *comments* can be read via `github:pull_request_read` method `get_review_comments`, but the `pullRequest.reviewThreads.isResolved` flag has no clean MCP tool. The resolved-state read therefore stays on `gh api graphql` on **both** paths.
 - **Repository default branch (data source 3 filter):** `gh api repos/<repo> --jq .default_branch` has no clean single-purpose MCP equivalent; it stays on `gh` on both paths.

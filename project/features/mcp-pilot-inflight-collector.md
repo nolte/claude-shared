@@ -58,5 +58,5 @@ The consistency check ran via the `feature-consistency-reviewer` agent (`agent_v
 ## References
 
 - Roadmap item R-10 (`project/roadmap.md`).
-- Work package P6 in `.audits/issue-orchestrate/378/analysis.md` (the MVP-carrying pilot).
+- Work package P6 in the issue #378 pre-analysis (retired to git history) (the MVP-carrying pilot).
 - GitHub issue #378; tracking issue #382.

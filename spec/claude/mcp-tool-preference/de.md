@@ -71,7 +71,7 @@ Leser: Skill- und Agent-Autoren in `claude-shared`, die GitHub-berührende Artef
 - [R2] Agent-Frontmatter, `tools:`-Gewährungen und das ignorierte `mcpServers`-Feld für plugin-distribuierte Agents: `spec/claude/agent-management/`
 - [R3] Allowlisting von Shell- und MCP-Tool-Aufrufen, damit sie nicht prompten: `spec/claude/permission-allowlist/`
 - [R4] Agent-Description- und Tool-Routing-Budget-Governance, die die `tools:`-Gewährungen respektieren müssen: Roadmap-Item R-9
-- [R5] Herkunft und der gestaffelte Adoptionsplan (Work-Packages P1-P9): Issue #378, `.audits/issue-orchestrate/378/analysis.md`
+- [R5] Herkunft und der gestaffelte Adoptionsplan (Work-Packages P1-P9): Issue #378; Pre-Analysis in die Git-Historie überführt
 
 ## Offene Fragen
 
