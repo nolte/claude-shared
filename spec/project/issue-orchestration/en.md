@@ -31,8 +31,12 @@ specialist coverage is used inconsistently (a security issue gets a generalist
 fix instead of `code-security-reviewer`), and the link from a merged PR back to the
 motivating issue is informal. This spec defines a single orchestration
 process—analyse, decompose, route, dispatch, verify—whose quality-bearing core
-is a **persistent pre-analysis artifact** that prepares each sub-problem so a
-specialist can implement it completely and to a high standard. The orchestrator is
+is a **run-scoped pre-analysis artifact** that prepares each sub-problem so a
+specialist can implement it completely and to a high standard. That artifact is a
+process artifact rather than a deliverable: it's reviewable while the run is open
+and removed again before the pull request merges, so what outlives the run is the
+pull request's audit-trail section and the issue thread, not a file on the default
+branch (see §Pre-analysis artifact lifecycle). The orchestrator is
 a generalist: it never performs the specialist remediation itself when a matching
 specialist exists.
 
@@ -40,8 +44,12 @@ specialist exists.
 - A raw GitHub issue is comprehended in full before any code is written: body,
   comments, labels, linked issues and PRs, and the repository surface it touches
 - Every issue is decomposed into atomic, testable work packages, each mapped to the
-  most specialized available skill or agent, and the decomposition is persisted as
-  a reviewable artifact rather than living only in conversation
+  most specialized available skill or agent, and the decomposition is persisted for
+  the run as a reviewable artifact rather than living only in conversation
+- Process artifacts don't accumulate on the default branch: the decomposition is
+  committed so it's reviewable inside the pull request, then removed before the
+  merge, and the audit trail that survives is the pull request's **Risk / rollout
+  notes** plus the issue comment
 - The role of the orchestrator is to analyse, decompose, route, dispatch, and
   verify—not hands-on remediation when a specialist exists; specialists do the
   editing through the standard PR gate
@@ -188,7 +196,8 @@ specialist exists.
   `.audits/issue-orchestrate/<issue-number>/analysis.md`, carrying the issue
   metadata, the classification and rationale, the in/out-of-scope boundary, the
   work-package table, the cross-package dependency ordering, the risks, and any open
-  questions for the operator
+  questions for the operator; the artifact is run-scoped and removed again before
+  the merge, per §Pre-analysis artifact lifecycle
 - **MUST** present the pre-analysis artifact for operator approval before any
   dispatch; the artifact is the reviewable hand-off contract, and dispatch on an
   unapproved decomposition is forbidden
@@ -196,6 +205,50 @@ specialist exists.
   machine-readable audit-trail fields that later land in a PR (classification label,
   specialist `subagent_type`, finding source) stay English so the trail is grep-able
   portfolio-wide
+
+### Pre-analysis artifact lifecycle (transient)
+
+The pre-analysis artifact is a **process artifact, not a deliverable**. It earns
+its keep as the reviewable decomposition gate while the run is open, and it has no
+readership once the capability it describes is implemented, verified, and merged.
+
+- **MUST** treat `.audits/issue-orchestrate/<issue-number>/analysis.md` as
+  run-scoped: written and committed on the run's feature branch, kept there while
+  the packages are dispatched and their results recorded, and removed with a
+  fix-forward `git rm` on that same branch before the pull request merges. The
+  artifact **MUST NOT** reach the default branch
+- **MUST NOT** remove the artifact before every dispatched work package is
+  implemented and the §Verification and traceability gate is green; the removal is
+  the run's last content change, not a cleanup that races the specialists
+- **MUST** perform the removal as a **fix-forward commit on the feature branch**,
+  never as a history rewrite, so the pull request's commit trail still carries an
+  artifact a reviewer can read while the squashed merge commit carries none of it
+- **MUST NOT** conceal the artifact behind a `.gitignore` entry instead. An ignored
+  artifact never appears in the pull request, which hollows out the
+  operator-approval gate §Decomposition makes load-bearing, and
+  `spec/claude/review-plan/` §File location and naming already fixes `.audits/` as
+  tracked-not-ignored territory portfolio-wide. Tracked-then-removed is the same
+  lifecycle that spec gives a review plan—create, work off, delete, and let the git
+  history be the trail—applied to this artifact
+- **MUST** land the durable audit trail outside the file before it goes: the pull
+  request's **Risk / rollout notes** section (per §Verification and traceability)
+  and the issue comment recording the classification, package count, and route
+  taken. A fact worth keeping after the merge belongs in one of those two places
+- **MUST NOT** extend this transience to the requirement artifact under
+  `project/requirements/<slug>.md`. That artifact stays durable like its siblings:
+  it's the confirmed input every work package traces back to, it stays readable
+  after the merge, and `spec/project/requirements-elicitation/` §G owns its
+  lifecycle
+- **MUST NOT** treat the removal as a resumption concern: the recovery anchor is
+  the checkpoint under `.resume/issue-orchestrate/` per §Resumption and operator
+  gating, and the artifact still exists at every phase boundary a resume can land
+  on, because the removal follows the last of them
+<!-- vale Microsoft.Contractions = NO -->
+- **SHOULD NOT** generalise this rule to every `.audits/` path. Dated, accumulating
+  audit records keep the non-disposable lifecycle their own specs give them (the
+  enumerated set in `spec/claude/review-plan/` §Relationship to other specs); this
+  section is scoped to the pre-analysis artifact this process writes
+<!-- vale Microsoft.Contractions = YES -->
 
 ### Specialist dispatch (reuse over reinvention)
 - **MUST** resolve the specialist for each work package by a runtime lookup of the
@@ -269,6 +322,11 @@ specialist exists.
   classification verbatim, and, per work package, the dispatched specialist
   (`subagent_type` literal) or the explicit "no matching specialised
   agent—generalist remediation" note
+- **MUST** remove the pre-analysis artifact from the feature branch per
+  §Pre-analysis artifact lifecycle once every package is implemented and the gate
+  above is green, and before the pull request is handed to `pull-request-merge`, so
+  the merge can't carry it onto the default branch; the **Risk / rollout notes**
+  section and the issue comment are what survive the merge
 - **MUST NOT** merge the pull request; the orchestration stops at an open,
   audit-trailed PR and hands the merge to `pull-request-merge`, which re-validates the
   gate
@@ -290,7 +348,10 @@ specialist exists.
 
 ## Acceptance Criteria
 - [ ] For an acquired issue, the pre-analysis artifact at
-  `.audits/issue-orchestrate/<issue-number>/analysis.md` exists and records the issue
+  `.audits/issue-orchestrate/<issue-number>/analysis.md` existed on the run's feature
+  branch at dispatch time—recoverable after the fact with
+  `git log --diff-filter=A -- .audits/issue-orchestrate/<issue-number>/` on that
+  branch—and recorded the issue
   metadata, the single primary classification with rationale, the in/out-of-scope
   boundary, and a work-package table where every package names a problem statement,
   acceptance criteria, touched files, a specialist, and its dependencies
@@ -311,6 +372,18 @@ specialist exists.
 - [ ] No work package in any pre-analysis artifact lacks a testable acceptance
   criterion; a package that can't state one is instead recorded as a routing signal
   to the formal pipeline
+- [ ] The default branch's tree carries no `.audits/issue-orchestrate/` path
+  (`git ls-tree -r --name-only develop -- .audits/issue-orchestrate/` returns
+  nothing), and no commit reachable from the default branch adds one
+  (`git log --diff-filter=A --name-only develop -- .audits/issue-orchestrate/` is
+  empty)
+- [ ] For every pull request this orchestration produced, the feature branch carries
+  both the artifact's creation commit and its removal commit, the removal commit
+  post-dates the last specialist result recorded in the artifact, and `.gitignore`
+  carries no `.audits/issue-orchestrate/` entry
+- [ ] For every merged orchestration run, the requirement artifact under
+  `project/requirements/<slug>.md` that grounded the decomposition is still present
+  on the default branch after the merge
 - [ ] Every specialist named in a work package was resolved by a runtime catalog
   lookup at analysis time, and no implementing skill carries a frozen inline list of
   specialist names as its dispatch table

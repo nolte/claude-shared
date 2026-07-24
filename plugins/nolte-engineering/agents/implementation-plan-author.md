@@ -203,6 +203,9 @@ packages stay concurrently dispatchable. Per §Working-copy isolation this write
 off `develop`, never the primary checkout. Write the prose in the issue's own language; keep the
 machine-readable fields (specialist identifiers, classification labels) in English so the trail stays
 grep-able. Do not present the artifact for approval or dispatch anything — that is the caller's gate.
+On the issue-driven path the artifact is run-scoped per `spec/project/issue-orchestration/`
+§Pre-analysis artifact lifecycle: the caller removes it from the feature branch before the pull
+request merges, so never `.gitignore` it and never remove it yourself.
 
 ### Step 5 — Report
 

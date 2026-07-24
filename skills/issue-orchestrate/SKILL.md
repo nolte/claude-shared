@@ -50,12 +50,12 @@ it completely.
   orchestrator stays in the main thread and chains other skills (`feature-decompose`
   or `roadmap-plan` for the pipeline route, `quality-gate`, `pull-request-create`).
 - **Multi-phase state accumulates across prompts.** A decomposition, a route
-  decision, and a sequence of per-package dispatches span many turns; a skill's
-  persistent instruction context and the resumable-work envelope fit this naturally.
-- Counter-dimension considered: a narrow agent could own the decomposition step in
-  isolation and gain context-window protection, but every downstream lane (routing,
-  dispatch, verification, PR annotation) is interactive — keeping the whole flow in
-  one orchestrating skill is simpler than splitting at the decomposition boundary.
+  decision, and per-package dispatches span many turns; a skill's persistent
+  instruction context and the resumable-work envelope fit that naturally.
+- Counter-dimension considered: a narrow agent could own the decomposition alone and
+  gain context-window protection, but every downstream lane (routing, dispatch,
+  verification, PR annotation) is interactive, so one orchestrating skill beats a
+  split at the decomposition boundary.
 
 ## User-language policy
 
@@ -91,13 +91,11 @@ Before any operation:
   `spec/project/issue-orchestration/` §Issue acquisition and
   `spec/project/requirements-elicitation/` §H Consumer contract, check whether a
   requirement artefact under `project/requirements/` exists for the issue and whether
-  its `U_gate` meets `τ_high`. When none exists or `U_gate` is below `τ_high` — the
-  common case for a raw issue whose requirements are stated only as prose — you
-  **MUST** dispatch `requirements-elicit` to analyse the issue into a confirmed
-  requirement artefact first, or record an explicit operator override in the
-  pre-analysis artifact; never decompose against unstated or weakly-understood
-  requirements. `question`-class and already-self-resolved issues are exempt — they
-  never reach decomposition.
+  its `U_gate` meets `τ_high`. When none exists or `U_gate` is below it — the common
+  case for a raw issue stated only as prose — you **MUST** dispatch
+  `requirements-elicit` first, or record an explicit operator override in the
+  pre-analysis artifact; never decompose against weakly-understood requirements.
+  `question`-class and already-self-resolved issues are exempt.
 - **Working copy (before the first tracked-file write).** Per
   `spec/project/issue-orchestration/` §Working-copy isolation and
   `spec/project/parallel-working-copies/`, every on-disk write the orchestration
@@ -105,11 +103,11 @@ Before any operation:
   feature branch the PR is opened from — **MUST** happen in a dedicated worktree
   created off `origin/develop` via `task worktree:add -- <branch> [slug]`; the primary
   checkout stays on `develop`. Create (or confirm) the worktree before operation 3
-  writes the artifact. You **MAY** run the processing as a dedicated worktree-isolated
-  agent taking the issue id as its parameter (`Agent(..., isolation: "worktree")`)
-  instead of a fresh top-level session; when you do, set the agent worktree root under
+  writes the artifact. You **MAY** run the processing as a worktree-isolated agent
+  taking the issue id as its parameter (`Agent(..., isolation: "worktree")`) instead
+  of a fresh top-level session; if you do, root it under
   `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/agents/` (never `.claude/worktrees/`),
-  and note that the subagent transcript isn't independently `claude --resume`-able, so
+  and note that a subagent transcript isn't independently `claude --resume`-able, so
   the `.resume/issue-orchestrate/` checkpoint stays the recovery anchor.
 
 ## Operations
@@ -214,12 +212,9 @@ body.
    not its name: a `spec-change` package maps to whichever skill's description names
    spec authoring (the `spec` skill); a documentation package to whichever agent names
    an audience-targeted documentation responsibility; a feature-shaped package to
-   `feature-decompose`. A `security` package is not a single dispatch — it follows the
-   audit→fix→verify chain in operation 6: the read-only `code-security-reviewer` agent
-   scopes the surface, a coding-capable specialist (or the generalist under the gap
-   rule) authors the fix, and the built-in `security-review` skill verifies the diff.
-   These are illustrative anchors — re-resolve by description match each run, never
-   from this list.
+   `feature-decompose`. A `security` package isn't a single dispatch — it follows the
+   audit→fix→verify chain in operation 6. These are illustrative anchors — re-resolve
+   by description match each run, never from this list.
 3. **No match is a portfolio gap.** When no candidate matches, apply
    `continuous-improvement` §Portfolio gap closure: record the no-match, count
    generalist-handled recurrences of the class, and at three or more (or with a
@@ -235,10 +230,6 @@ body.
    the issue reference. Collect and record each specialist's result in the artifact
    before dispatching a dependent package.
 
-The dynamic-lookup design means a specialist that lands in any distribution root
-becomes dispatchable immediately, and a renamed or removed one stops being a target
-the next time the skill runs, with no stale snapshot to mislead the dispatch.
-
 ### 6. verify
 
 Before any PR opens, require `quality-gate` (when nolte-engineering is installed; otherwise the repo's declared `task lint`/`task test` gate) to pass green on the produced change, and
@@ -246,9 +237,19 @@ for any package touching a security-sensitive path run the read-only
 `code-security-reviewer` agent to scope the surface and the built-in `security-review`
 skill to verify the produced diff. (`security-review` is the Claude Code harness
 built-in, invoked as the `security-review` skill — not
-`Agent(subagent_type="nolte-shared:security-review")`, which does not exist.) Then
-open the PR via `pull-request-create` (the operator confirms title and body per that
-skill's externally-visible-action gate) with:
+`Agent(subagent_type="nolte-shared:security-review")`, which does not exist.)
+
+**Then clean up the pre-analysis artifact.** With every package implemented and the
+gate green, `git rm .audits/issue-orchestrate/<n>/analysis.md` and commit the removal
+on the feature branch as a fix-forward. The artifact is run-scoped per
+`spec/project/issue-orchestration/` §Pre-analysis artifact lifecycle: the branch's
+commit trail keeps it readable for the reviewer, the squashed merge carries none of
+it, and the durable trail is the PR notes below plus the issue comment — so move any
+fact worth keeping into them first. Never `.gitignore` the path instead, and never
+remove the requirement artefact under `project/requirements/`, which stays durable.
+
+Then open the PR via `pull-request-create` (the operator confirms title and body per
+that skill's externally-visible-action gate) with:
 
 - the issue linked (`Closes #<n>` or the repository's linking convention), and
 - a **Risk / rollout notes** section per `pull-request-workflow` carrying the issue
@@ -283,9 +284,9 @@ number and repository) matches the current invocation; if one matches, prompt th
 operator with `Resume run <run_id> from phase <phase> (last checkpoint
 <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope
 (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the
-fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't
-duplicate those rules here. A resumed run never re-dispatches a work package whose
-result is already recorded in the artifact.
+fail-closed semantics on schema or YAML errors live in the spec; don't duplicate
+them here. A resumed run never re-dispatches a work package whose result is already
+recorded in the artifact.
 
 ## Hard rules
 
@@ -309,9 +310,11 @@ result is already recorded in the artifact.
   catalog is resolved by runtime `Glob` each run.
 - **Never** decompose an issue that belongs in the formal pipeline (more than one
   outcome, more than one PR strand, or a new/retargeted roadmap item) for direct
-  implementation; route it to `feature-decompose` or `roadmap-plan` instead.
-- **Never** mix the direct and pipeline routes for one issue, and never leave the
-  remainder of a partially-implemented issue silently unplanned.
+  implementation; route it to `feature-decompose` or `roadmap-plan` instead, never
+  mix the two routes, and never leave the remainder silently unplanned.
+- **Never** let the pre-analysis artifact reach the default branch: remove it with a
+  fix-forward `git rm` on the feature branch once the packages are implemented and
+  the gate is green, and never hide it in `.gitignore` instead.
 - **Never** classify an issue outside the closed set
   `bug / feature-request / spec-change / security / docs / refactor / question /
   infra`.
@@ -340,19 +343,18 @@ environment facts the executing agent would otherwise get wrong.
   but is one coherent outcome with a single PR strand and no new roadmap item is
   bounded and implemented directly. An issue that spans two goal outcomes is *not*
   bounded even if each is small — it routes to the pipeline.
-- **The pre-analysis artifact is the gate, not a by-product.** Skipping the artifact
-  write to "save a step" and dispatching from memory removes the reviewable hand-off
-  contract the spec makes load-bearing; the artifact must exist and be approved
-  before any dispatch.
+- **The pre-analysis artifact is the gate, not a by-product — and not a
+  deliverable.** Skipping the write to "save a step" and dispatching from memory
+  removes the reviewable hand-off contract; leaving it in place past the merge ships
+  a process file to the default branch. It must exist and be approved before any
+  dispatch, and be gone before the PR merges.
 - **A specialist named in the artifact must come from the live catalog.** A package
-  pointing at a specialist that no longer exists (renamed or removed) is a dispatch
-  failure waiting to happen; re-resolve by `Glob` at dispatch time, not from the
-  artifact's stale name if the catalog moved between analysis and dispatch.
+  pointing at a renamed or removed specialist is a dispatch failure waiting to
+  happen; re-resolve by `Glob` at dispatch time, not from a stale artifact name.
 
 ## Multi-model testing
 
-Examples and operations in this skill are verified on Claude Sonnet as the
-default model; spot-checked on Haiku for cost-sensitive intake runs; Opus
-is appropriate for high-stakes issues (security, spec-change, or wide-blast-radius
-decompositions) that require deeper reasoning. The skill body has no model-specific
-assumptions beyond standard tool-call semantics.
+Verified on Claude Sonnet as the default model; spot-checked on Haiku for
+cost-sensitive intake runs; Opus suits high-stakes issues (security, spec-change,
+wide blast radius). No model-specific assumptions beyond standard tool-call
+semantics.
