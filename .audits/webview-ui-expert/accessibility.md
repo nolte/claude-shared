@@ -308,3 +308,9 @@ Practices to encode as **SHOULDs** (high-value but with legitimate opt-out scena
 - **`aria-disabled` over native `disabled` for "needs-an-explanation" controls** (BP-22) — SHOULD because purely-decorative-disabled is fine native.
 
 Items deferred to **OQ resolution** before turning into normative text: OQ-1 (MUI v9 dark-mode contrast defaults), OQ-2 (notistack ARIA wiring), OQ-3 (Recharts per-chart-type keyboard map), OQ-4 (canonical RR-v7 focus-restoration hook), OQ-5 (Vitest browser-mode contrast lift).
+
+## Currency addendum (2026-07-24)
+
+- Recharts 3 enables `accessibilityLayer` by default; the spec rule is reworded from "enable" to "keep enabled / disabling is forbidden".
+- SC 2.4.13 Focus Appearance and SC 2.3.3 Animation from Interactions are Level AAA; the spec now labels both as deliberate adoptions beyond the AA floor.
+- AP-13 (contradicting `aria-label` vs visible label) previously carried no sources; it entered the spec as a WCAG 2.5.3 Label-in-Name MUST (W3C Understanding 2.5.3 plus Deque/WebAIM coverage satisfy the two-source contract).

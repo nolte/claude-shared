@@ -333,3 +333,9 @@ The exact stack under research:
 - **SHOULD** use `sx` only for one-off styles and promote reused styles to `styled()`; avoid object-shape `sx` values that change every render (use CSS variables instead).
 - **MUST** default the Vitest `environment` to `node`; opt files into `happy-dom`/`jsdom` per pragma. **SHOULD** prefer `happy-dom` over `jsdom` when the test only needs basic DOM APIs.
 - **MUST** use Testing Library `findBy*` (or `waitFor`) for async UI assertions; **SHOULD** pass `{ hidden: true }` to `*ByRole` on large trees.
+
+## Currency addendum (2026-07-24)
+
+- Vite 8 is Rolldown-based: both the Rollup-era `manualChunks` and the interim `advancedChunks` are deprecated; the current chunk-tuning option is `output.codeSplitting` (verified against vitejs/vite #21414 and rolldown.rs OutputOptions). The chunking practice entered the spec referencing that option.
+- Recharts v3 restructured the package; the bundle-cost figures behind the lazy-load practice (P21) should be revalidated on the next refresh.
+- The side-effect dayjs locale import recommended here conflicts with the i18n research (default-export imports); the spec resolves the conflict in favor of default-export imports because some bundlers drop bare side-effect imports.

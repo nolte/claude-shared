@@ -36,11 +36,13 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 - **MUSS** `font-display: swap` (oder `optional`) auf jeder `@font-face`-Regel deklarieren, inklusive MUI-generierter Typografie.
 - **MUSS** die LCP-kritische Typografie als `<link rel="preload" as="font" type="font/woff2" href="…" crossorigin>` vorladen (das `crossorigin`-Attribut ist verpflichtend — ohne es wird die Preload zweimal gefetcht).
-- **SOLLTE** `fetchpriority="high"` auf das LCP-Bild (oder dessen `rel="preload" as="image"`-Link) auf Routen setzen, deren LCP-Kandidat ein Bild ist; **DARF NICHT** auf mehr als ein Element pro Route angewendet werden.
+- **SOLLTE** `fetchpriority="high"` auf das LCP-Bild (oder dessen `rel="preload" as="image"`-Link) auf Routen setzen, deren LCP-Kandidat ein Bild ist; **DARF NICHT** auf mehr als ein Element pro Route angewendet werden. (Das Research schlägt ein MUSS vor; bleibt SOLLTE, weil der LCP-Kandidat der Referenz-SPA in der Regel Text ist, kein Bild.)
 - **MUSS** `loading="lazy"` und `decoding="async"` auf jedem off-screen `<img>` deklarieren und intrinsische `width`/`height` (oder CSS `aspect-ratio`) bereitstellen.
 - **MUSS** Vites content-gehashte Dateinamen für `/assets/*`-Output beibehalten.
 - **MUSS** die `<link rel="modulepreload">`-Tags, die Vite in `index.html` emittiert, beibehalten; Backend-integrierte Setups **MÜSSEN** sie aus dem Build-Manifest replizieren.
 - **DARF NICHT** synchrone `<script>`-Tags vor dem Vite-Modul-Entry einfügen; jedes spät geladene Script **MUSS** `defer`, `async` oder `type="module"` tragen.
+- **MUSS** first-paint-kritisches CSS klein halten: nur die Styles inlinen, die das initiale Rendering braucht, und alles Weitere über die von Vite emittierte Stylesheet-Kette laden; zusätzliche render-blockierende Stylesheets vor dieser Kette sind verboten.
+- **SOLLTE** sich auf Vites Default-per-Modul-Code-Splitting verlassen und Chunking nur tunen, wenn Bundle-Analyse einen Long-Tail-Vendor-Chunk zeigt; getunt wird über Rolldowns `output.codeSplitting`-Option (das Rollup-zeitliche `manualChunks` und das Zwischenformat `advancedChunks` sind in Vite 8 beide deprecated). **DARF NICHT** ganz `node_modules` in einen einzigen Vendor-Mega-Chunk pinnen.
 
 #### React-19-Rendering
 
@@ -83,6 +85,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 - **DARF NICHT** `'unsafe-inline'` oder `'unsafe-eval'` in `script-src` führen; für `style-src` ist ein an Emotions `cache.nonce` gebundener Nonce gegenüber `'unsafe-inline'` zu bevorzugen.
 - **DARF NICHT** Host-Allowlist-CSPs verwenden (umgehbar über offene JSONP-Endpoints auf gelisteten Hosts).
 - **MUSS** `require-trusted-types-for 'script'` senden und eine benannte `trusted-types`-Policy, die jede HTML-Einfügung durch DOMPurify pipet.
+- **MUSS** eingebettete Drittanbieter-Inhalte sandboxen: `<iframe sandbox>` mit dem kleinsten funktionierenden Token-Satz plus einer `frame-src`-Allow-List in der CSP. Die Kombination `sandbox="allow-scripts allow-same-origin"` auf same-origin-Inhalt **DARF NICHT** vorkommen — sie erlaubt dem Frame, seine eigene Sandbox aufzuheben.
 
 #### nginx-Security-Header
 
@@ -103,9 +106,15 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 - **MUSS** jede nutzerkontrollierte URL validieren, bevor sie an `href`, `src` oder React Router `navigate(...)` / `redirect(...)` übergeben wird: URL parsen, `javascript:`, `data:`, `vbscript:` ablehnen, Schemes (`https:`, `mailto:`) und Origins per Allow-List filtern, route-relative Pfade bevorzugen.
 - **MUSS** `rel="noopener noreferrer"` auf jeden externen `target="_blank"`-Link setzen (sowie auf jeden `window.open(url, '_blank')`-Features-String); Lint-Enforcement via `react/jsx-no-target-blank`.
 
+#### HTTP-Client-Disziplin
+
+- **MUSS** API-Traffic durch eine konfigurierte axios-Instanz pro Backend leiten — `baseURL`, ein explizites `timeout` und ein Request-Interceptor, der das In-Memory-Token injiziert; Ad-hoc-`axios.get(url)`-Aufrufe mit hand-gebauten Auth-Headern sind verboten.
+- **MUSS** `withCredentials` nur auf Endpoints aktivieren, die tatsächlich Cookies brauchen, nie als globaler Default.
+
 #### Auth, Storage und Secrets
 
 - **DARF** Auth-Tokens (Access, Refresh, Session) **NICHT** in `localStorage`, `sessionStorage`, IndexedDB oder persistiertem Redux-State speichern; **MUSS** Tokens in einem `HttpOnly; Secure; SameSite=Strict`-Cookie führen, das vom Backend ausgestellt wird, ODER im Memory plus Silent-Refresh gegen einen cookie-geschützten Refresh-Endpoint.
+- **MUSS** Auth-Cookies unter dem `__Host-`-Prefix ausstellen (`Path=/`, kein `Domain`-Attribut); `SameSite=Lax` ist nur für OAuth-Callback-Flows akzeptabel, und `SameSite=None` ohne `Secure` **DARF NICHT** ausgestellt werden (Browser verwerfen es stillschweigend).
 - **MUSS** `redux-persist` (wenn vorhanden) mit einer expliziten `whitelist` von Slices konfigurieren, die ausschließlich nicht-sensiblen UI-State enthalten (Theme, Sprache, Tabellenspalten-Reihenfolge). Encryption-at-Rest mit einem Key, der im Bundle ausgeliefert wird, ist verboten.
 - **MUSS** jeden `import.meta.env.VITE_*`-Wert als öffentlich behandeln. API-Keys, Signing-Secrets, OAuth-Client-Secrets und BFF-umgehende URLs **DÜRFEN NICHT** hinter einem `VITE_`-Prefix abgelegt werden; **DARF NICHT** `envPrefix` auf den leeren String überschrieben werden.
 - **MUSS** Vite `build.sourcemap` auf `false` (oder `'hidden'`, wenn Error-Tracking Symbolisierung mit privatem Upload braucht) setzen; **DARF NICHT** `*.js.map` öffentlich aus nginx ausliefern, und **SOLLTE** `*.map` auf der nginx-Ebene blockieren.
@@ -115,6 +124,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 - **MUSS** jedes Zod-Schema serverseitig spiegeln: Client-Validierung ist UX, niemals das autoritative Gate. Backend validiert Positive-Allow-List, Längenschranken, Typschranken; Client surfacet Backend-Fehler via `setError`.
 - **MUSS** File-Uploads im Browser validieren (`accept`, MIME, Größe, Extension) ausschließlich zur UX; das Backend **MUSS** Magic-Bytes validieren, ein hartes Max-Size erzwingen, außerhalb des Web-Roots speichern und scannen.
 - **MUSS** `autocomplete`-Hints absichtlich auf sensiblen Formularen setzen (`new-password`, `current-password`, `one-time-code`); **DARF NICHT** ein pauschales `autocomplete="off"` auf Credential-Feldern setzen (moderne Browser ignorieren es für Passwörter).
+- **MUSS** die Länge deckeln und das URL-Scheme per Allow-List filtern, bevor ein nutzerkontrollierter String als QR-Code gerendert wird (`qrcode.react`); ein gescanntes `javascript:`- oder `data:`-Payload wird auf dem scannenden Gerät ausgeführt.
 
 #### Supply-Chain und Verifikation
 
@@ -135,7 +145,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 - **MUSS** einen „Skip to main content"-Link als erstes fokussierbares Element ausliefern; visuell versteckt, aber fokussierbar, niemals `display:none`; **MUSS** den Fokus auf `<main>` oder ein `tabindex="-1"`-Element darin verschieben.
 - **MUSS** den Fokus bei jedem Routenwechsel entweder (a) auf den Hauptinhalts-Container mit `tabindex="-1"` oder (b) auf das neue `<h1>` mit `tabindex="-1"` verschieben; **DARF NICHT** ein Landmark-Element fokussiert werden, und **DARF NICHT** ein beliebiger Input autofokussiert werden.
-- **DARF NICHT** `outline: 0` / `outline: none` ohne einen gleichwertigen Ersatz setzen; **MUSS** `:focus-visible` für angepasste Fokus-Styles verwenden und das 3:1-Non-Text-Kontrast- und WCAG-2.4.13-Focus-Appearance-Perimeter-Limit erfüllen.
+- **DARF NICHT** `outline: 0` / `outline: none` ohne einen gleichwertigen Ersatz setzen; **MUSS** `:focus-visible` für angepasste Fokus-Styles verwenden und das 3:1-Non-Text-Kontrast- und WCAG-2.4.13-Focus-Appearance-Perimeter-Limit erfüllen (2.4.13 ist Level AAA, bewusst über den AA-Boden hinaus adoptiert).
 - **MUSS** sicherstellen, dass der Fokus nicht von sticky Chrome verdeckt wird (WCAG 2.4.11): `scroll-margin-top` / `scroll-padding` gleich der Bar-Höhe.
 - **DARF NICHT** `tabindex`-Werte größer als `0` verwenden; nur `0` und `-1` sind zulässig.
 
@@ -143,6 +153,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 - **MUSS** die Focus-Trap-, Initial-Focus- und Return-Focus-Defaults von MUI `Dialog` / `Modal` beibehalten: `disableEnforceFocus`, `disableAutoFocus`, `disableRestoreFocus` für reguläre Dialoge nicht setzen. **MUSS** `aria-labelledby` tragen, das auf den Titel verweist; **SOLLTE** zusätzlich `aria-describedby` für längeren Inhalt tragen.
 - **MUSS** jeden Icon-only `IconButton` mit `aria-label` (oder visuell verstecktem Text) beschriften; `<Tooltip>` liefert eine Beschreibung, keinen Namen, und **DARF** das Label **NICHT** ersetzen.
+- **MUSS** den Accessible Name einer Steuerung mit ihrem sichtbaren Label ausrichten: Wo `aria-label` und sichtbarer Text koexistieren, **MUSS** der Accessible Name den sichtbaren Text enthalten (WCAG 2.5.3 Label in Name); ein `aria-label`, das dem sichtbaren Label widerspricht, ist verboten.
 - **MUSS** react-hook-form-Fehler mit dem Triple `aria-invalid={!!errors.x}` + `aria-describedby="<error-id>"` + `role="alert"` auf dem Fehlerelement verdrahten.
 - **MUSS** Input-IDs via React 19 `useId()` (oder MUIs auto-generierte IDs) erzeugen, damit `<label htmlFor>` und `aria-describedby` über Re-Renders hinweg stabil auflösen.
 - **MUSS** `@mui/x-tree-view` (`SimpleTreeView` / `RichTreeView`) mit `aria-label` oder `aria-labelledby` beschriften; **DARF** die eingebaute WAI-ARIA-APG-Tree-Keyboard-Vereinbarung **NICHT** überschreiben.
@@ -152,24 +163,25 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 #### Toasts und Live-Regionen
 
 - **MUSS** notistack-Nachrichten via einer Live-Region announcen; Default ist `role="status"` / `aria-live="polite"`, `role="alert"` / `aria-live="assertive"` bleibt echten Fehlern (fehlgeschlagener Save, Auth-Expiry) vorbehalten.
+- **MUSS** die Schließen-Steuerung eines dismissbaren Toasts als echten `<button>` mit Accessible Name ausführen; ein Toast **DARF** beim Erscheinen den Fokus **NICHT** stehlen.
 - **MUSS** Routenwechsel via einer `aria-live="polite"`-Region oder via Focus-auf-H1-Mechanismus announcen; **DARF NICHT** beide für dasselbe Event stapeln.
 
 #### Visuelles
 
 - **MUSS** MUIs `palette.contrastThreshold` auf `4.5` setzen, damit von der Palette abgeleitete `contrastText`-Wahlen WCAG 1.4.3 AA (Body-Text 4,5:1) zielen; angepasste Paletten via WebAIM-Contrast-Checker verifizieren.
-- **MUSS** nicht-essenzielle Motion in `@media (prefers-reduced-motion: no-preference)` wickeln (Opt-out-Pattern); Transitions reduzieren oder entfernen, wenn der Nutzer eine Reduce-Präferenz ausgedrückt hat.
+- **MUSS** nicht-essenzielle Motion in `@media (prefers-reduced-motion: no-preference)` wickeln (Opt-out-Pattern); Transitions reduzieren oder entfernen, wenn der Nutzer eine Reduce-Präferenz ausgedrückt hat (das zugrunde liegende WCAG-Kriterium 2.3.3 ist Level AAA, bewusst über den AA-Boden hinaus adoptiert).
 - **SOLLTE** `prefers-color-scheme` für das Initial-Theme respektieren, wenn der Nutzer noch keine explizite Wahl getroffen hat; eine persistierte Nutzerwahl **MUSS** die OS-Präferenz danach überschreiben.
 - **MUSS** Layout-Reflow bei 320 CSS px Viewport-Breite ohne horizontales Scrollen ermöglichen (WCAG 1.4.10); inhärent zweidimensionaler Inhalt (Tabellen, Charts) **MUSS** in seinem eigenen Container scrollen, nicht auf der Seitenebene.
 - **SOLLTE** `aria-disabled="true"` gegenüber dem nativen `disabled` für Steuerungen bevorzugen, deren Disabled-State eine Erklärung braucht (Formular-Gating, Paywall), damit ein zugeordneter `aria-describedby`-Grund erkennbar bleibt.
 
 #### Zielgröße
 
-- **MUSS** jeder interaktiven Steuerung eine Tap-Target-Fläche von mindestens 24 × 24 CSS-Pixeln geben (WCAG 2.5.8); **SOLLTE** in touch-first-Kontexten auf 44 × 44 CSS-Pixel zielen (Apple-HIG-/Material-Design-Abgleich). Spacing **SOLLTE** ≥ 8 px zwischen benachbarten Zielen lassen.
+- **MUSS** jeder interaktiven Steuerung eine Tap-Target-Fläche von mindestens 24 × 24 CSS-Pixeln geben (WCAG 2.5.8); **SOLLTE** in touch-first-Kontexten auf 44 × 44 CSS-Pixel (Apple HIG) bis 48 × 48 CSS-Pixel (Material Design) zielen. Spacing **SOLLTE** ≥ 8 px zwischen benachbarten Zielen lassen.
 
 #### Charts
 
 - **MUSS** jedem Recharts-Chart eine programmatisch ermittelbare Textalternative geben: `role="img"` + `aria-label` / `aria-labelledby` auf dem Container, eine eingebettete Klartext-Zusammenfassung UND einen Datentabellen-Fallback (sichtbar oder visuell versteckt, aber semantisch ausgezeichnet).
-- **MUSS** Recharts' `accessibilityLayer` auf jedem Chart aktivieren.
+- **MUSS** Recharts' `accessibilityLayer` auf jedem Chart aktiviert lassen (seit Recharts 3 per Default an; Deaktivieren ist verboten).
 
 #### Tests
 
@@ -197,18 +209,19 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 - **MUSS** eine persistierte Nutzerwahl immer die automatische Erkennung schlagen lassen: `i18n.changeLanguage(lng)` schreibt in die Caches, aus denen der Detector liest.
 - **MUSS** `supportedLngs` (kanonische Sprache zuerst) und `fallbackLng` explizit in `i18n.init` deklarieren; Resource-Path-Injection über den Querystring-Slot wird nur durch diese Allow-List entschärft.
 - **MUSS** die Locale in der URL via einem React-Router-v7-Dynamiksegment (`/:locale/*`) oder einer `prefix(...)`-Route kodieren; der Router ist die einzige Quelle der Wahrheit für die aktive Locale und **MUSS** i18next bei jeder Navigation synchronisieren. Die kanonische Locale **DARF** prefix-los an der `x-default`-Wurzel ausgeliefert werden, während jede nicht-kanonische Locale ihren Prefix trägt; Cookies bleiben ausschließlich ein Erkennungs-Input und **DÜRFEN NICHT** die alleinige Locale-Quelle sein.
-- **MUSS** `Content-Language: <locale>` aus nginx auf jeder lokalisierten Response senden; **SOLLTE** einen bestehenden `i18next`-Cookie vor `Accept-Language`-basierten Root-Redirects respektieren.
+- **MUSS** `Content-Language: <locale>` aus nginx auf jeder lokalisierten Response senden; **SOLLTE** einen bestehenden `i18next`-Cookie vor `Accept-Language`-basierten Root-Redirects respektieren. `Accept-Language`-Negotiation **MUSS** ausschließlich an der locale-losen Wurzel stattfinden (Exact-Match-`location =`-Block); Deep Links **DÜRFEN NICHT** auf Basis von `Accept-Language` umgeschrieben oder redirected werden.
 - **MUSS** statische `<link rel="alternate" hreflang="…" href="…">`-Tags (einer pro Locale plus `x-default`) im initialen `index.html` server-side oder zur Build-Zeit emittieren, bidirektional. React-Runtime-Injektion von `hreflang` ist verboten.
 
 #### Laden, RTL und Picker
 
 - **MUSS** Übersetzungen in einen Namespace pro Feature organisieren (`auth`, `plants`, `settings`, `common`) und Namespaces pro Route via `i18next-resources-to-backend` (Vite-Dynamic-Imports) oder `i18next-http-backend` lazy laden.
 - **MUSS** die kanonische Locale plus die aktive Locale vorbündeln; den Rest als Vite-Chunks pro `(locale, namespace)`-Paar deferren.
+- **SOLLTE** einen Preload-Hint für den initialen Namespace-Chunk der aktiven Locale emittieren, wenn die Locale zur Build-Zeit oder mit der ersten Response bekannt ist.
 - **MUSS** den React-Baum in `<Suspense>` wickeln, damit der erste Paint keine rohen Keys zeigt; `react.useSuspense: true` ist Default und **MUSS** aktiv bleiben, außer jeder Konsument gatet explizit auf `ready`.
 - **MUSS** MUI-v9-RTL via `createTheme({ direction: 'rtl' })` UND einem Emotion-`CacheProvider`, dessen Cache `[prefixer, rtlPlugin]` aus `@mui/stylis-plugin-rtl` verwendet, verdrahten, wenn die aktive Locale RTL ist.
 - **MUSS** MUI-X `LocalizationProvider` mit drei Dingen im Gleichschritt verdrahten: dayjs-Locale (`dayjs.locale('de')`), `adapterLocale="de"` und `localeText` aus `@mui/x-date-pickers/locales`.
 - **MUSS** dayjs-Locales als Default-Export-Imports einbinden und sie bei jedem `languageChanged`-Event umschalten; bare Side-Effect-Imports (`import 'dayjs/locale/de'`) **DÜRFEN NICHT** erscheinen, weil einige Bundler sie verwerfen.
-- **MUSS** Zod-Validierungsfehler via einer custom `errorMap` (gesetzt via `z.setErrorMap` oder `zodResolver(schema, { errorMap })`) übersetzen; **DARF NICHT** `t()`-Aufrufe innerhalb von Schema-Definitionen einbetten.
+- **MUSS** Zod-Validierungsfehler über eine zentrale, locale-bewusste Error-Map übersetzen, die i18n-Keys auflöst — Zod 3: `z.setErrorMap` oder `zodResolver(schema, { errorMap })`; Zod 4: der vereinheitlichte `error`-Parameter oder `z.config({ customError })` (`setErrorMap` existiert dort nicht mehr); **DARF NICHT** `t()`-Aufrufe innerhalb von Schema-Definitionen einbetten.
 - **MUSS** Übersetzungen für `notistack`-Nachrichten an der Call-Site auflösen (`enqueueSnackbar(t('errors.savePlant'), …)`), damit Nachrichten über die Toast-Lebensdauer stabil bleiben.
 
 #### Drift-Erkennung
@@ -227,12 +240,13 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
   - 1 s – 10 s: Skeleton-Screen, der das finale Layout abbildet.
   - > 10 s: determinierter Progress-Bar mit Abbrechen-Affordanz.
 - **DARF NICHT** länger als 300 ms nach einer Navigation einen leeren Screen zeigen; Skeletons oder `<Suspense>`-Fallbacks überbrücken die Lücke.
-- **MUSS** die Spinner-Anzeige um 200 – 300 ms debouncen, damit kurze Loads keinen Spinner aufblitzen lassen; die gewählte projektweite Schwelle **MUSS** konsistent angewendet werden.
+- **MUSS** die Spinner-Anzeige um 200 – 300 ms debouncen, damit kurze Loads keinen Spinner aufblitzen lassen; die gewählte projektweite Schwelle **MUSS** konsistent angewendet werden. (Die konkreten Millisekunden-Werte in diesen beiden Regeln sind Projekt-Konventionen auf Basis der Nielsen-Norman-Group-Response-Time-Bänder, keine vendor-zitierten Schwellen.)
 - **MUSS** pro View einen `<XxxSkeleton/>` bauen, der das finale Layout abbildet (Form, Anzahl, ungefähre Größe); generische Shimmer-Boxen, die beim Hydrate Layout-Shift verursachen, sind verboten.
 
 #### Mutations und Recovery
 
 - **SOLLTE** Optimistic-UI nur auf risikoarme Mutations anwenden (Favorisieren, Toggeln, Umsortieren, Umbenennen); **DARF NICHT** auf finanzielle Transaktionen, irreversible Löschungen ohne Undo-Schonfrist oder irgendetwas, das nachgelagerte Side-Effects (E-Mail, Payment) auslöst.
+- **MUSS** jedes optimistische Update bei Fehlschlag zurückrollen (RTK Query: `patchResult.undo()` im `queryFulfilled`-Catch) und eine inline Recovery-Affordanz zeigen; ein stillschweigend beibehaltener optimistischer State ist verboten.
 - **SOLLTE** einen optimistischen Commit + Undo-Snackbar gegenüber einem unterbrechenden „Sind Sie sicher?"-Dialog für reversible destruktive Aktionen bevorzugen; einen echten `<Dialog>` nur dann verwenden, wenn die Aktion irreversibel oder mehrstufig ist.
 - **MUSS** Fehler-Surfaces unterscheiden:
   - Inline-Fehler (neben Feld oder Komponente) — Formularvalidierung, „diese Karte ließ sich nicht laden — retry", fehlende Berechtigung.
@@ -257,15 +271,16 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 #### Formulare
 
 - **MUSS** react-hook-form mit `mode: 'onTouched'`, `reValidateMode: 'onChange'`, `shouldFocusError: true` konfigurieren.
-- **MUSS** eine Fehler-Zusammenfassung oberhalb des Formulars rendern, wenn > 1 Feld ungültig ist: ein `role="alert"`-Container mit Überschrift und Liste von Links, die zu jedem ungültigen Feld springen.
+- **MUSS** eine Fehler-Zusammenfassung oberhalb des Formulars rendern, wenn > 1 Feld ungültig ist: ein `role="alert"`-Container mit Überschrift und Liste von Links, die zu jedem ungültigen Feld springen. Rendert die Zusammenfassung, erhält sie — nicht das erste ungültige Feld — den Fokus; `shouldFocusError` deckt nur den Ein-Fehler-Fall (niemals beide fokussieren).
 - **MUSS** `aria-disabled="true"` (nicht natives `disabled`) auf dem Submit-Button setzen, während das Formular pendet, damit Screen-Reader-Nutzer ihn weiterhin tabbar erreichen und seinen Status hören; die Submit-Logik im Handler abschotten, nicht via `disabled`.
 - **DARF NICHT** Button-States allein über Farbe kommunizieren (WCAG 1.4.1): Farbe wird mit Inline-Nachricht / Icon / `aria-live`-Update gepaart.
 
 #### Theming und Motion
 
-- **MUSS** jede Farbe, jeden Spacing-Wert und jeden Border-Radius aus Theme-Tokens auflösen; hartkodierte Hex- / `rgb()`-Werte innerhalb von Komponenten sind verboten.
+- **MUSS** jede Farbe, jeden Spacing-Wert und jeden Border-Radius aus Theme-Tokens auflösen; hartkodierte Hex- / `rgb()`-Werte innerhalb von Komponenten sind verboten (eine Projekt-Konvention auf Basis der MUI-Theming-Leitlinien).
 - **MUSS** Light-/Dark-Mode via MUI v9 `colorSchemes` + `cssVariables` steuern; **DARF NICHT** via `palette.mode`-Konditionalen flippen (das verursacht FOUC).
 - **MUSS** ein winziges `<head>`-Script einbetten, das den persistierten Theme-Key liest und ein `data-color-scheme`-Attribut auf `<html>` setzt, bevor der React-Baum mountet (MUIs `InitColorSchemeScript`).
+- **SOLLTE** Live-Wechseln des OS-Themes über einen `matchMedia('(prefers-color-scheme: dark)')`-Change-Listener folgen, solange der Nutzer keinen expliziten Override gesetzt hat; sobald ein Override existiert, gewinnt er.
 - **MUSS** nicht-essenzielle Motion in `@media (prefers-reduced-motion: no-preference)` wickeln; essenzielle Motion (Lade-Spinner) **SOLLTE** auf Opacity / Dissolve reduziert werden, wenn Reduce-Motion gesetzt ist.
 
 #### Viewport und Plattform-Passform
@@ -278,17 +293,19 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 #### Dialoge und Popovers
 
-- **MUSS** das Plattform-`<dialog>` (über MUI `Dialog`, das es unter der Haube nutzt, via `.showModal()` aufgerufen) gegenüber selbstgebauten Modal-Div-Bäumen bevorzugen: Focus-Trap, ESC, `aria-modal`, `::backdrop`, Top-Layer und Inertness sind dann gratis.
+- **MUSS** MUI `Dialog` verwenden (eine `Modal`-basierte Implementierung mit eigenem Focus-Trap — sie rendert kein natives `<dialog>`) oder, außerhalb von MUI-Flächen, das Plattform-`<dialog>` via `.showModal()` öffnen, dessen Focus-Trap, ESC-Handling, `aria-modal`, `::backdrop`, Top-Layer und Inertness gratis mitkommen; selbstgebaute Modal-Div-Bäume sind verboten.
 - **SOLLTE** die native Popover-API (`popover="auto"`) auf stabilen Engines für Tooltips / Menüs bevorzugen; auf MUI `Popover` / `Menu` für ältere Browser zurückfallen.
 
 #### Charts und Viewport
 
 - **MUSS** jeden Recharts-Chart in `<ResponsiveContainer width="100%" aspect={…}>` (oder mit festem `minWidth` / `minHeight`) wickeln; nackte Charts, die in schmalen Spalten kollabieren, sind verboten.
-- **MUSS** `accessibilityLayer` auf jedem Chart aktivieren (Querverweis auf die a11y-MUSS-Regel in §Accessibility › Charts).
+- **MUSS** Chart-Tooltips jede gerenderte Serie plus den formatierten x-Achsen-Wert tragen lassen und sie so positionieren, dass Touch-Eingabe sie nie unter dem Finger verdeckt.
+- **MUSS** `accessibilityLayer` auf jedem Chart aktiviert lassen (Querverweis auf die a11y-MUSS-Regel in §Accessibility › Charts).
 
 ### Übergreifende Verifikation
 
 - **MUSS** `vitest-axe`-Smoke-Tests, ein Vite-+-nginx-Static-Asset-Audit (immutable Headers, Source-Map-Absenz), einen Mozilla-HTTP-Observatory-Check und einen Core-Web-Vitals-RUM-Snapshot ins Release-Gate verdrahten; ein Release **DARF NICHT** ausgeliefert werden, solange eines davon rot ist.
+- **SOLLTE** das Vitest-`environment` per Default auf `node` setzen und DOM-abhängige Dateien per File-Pragma in `jsdom` / `happy-dom` opt-in nehmen (Test-Assertion-Inhalte bleiben per Nicht-Ziele außer Scope; diese Regel deckt nur Infrastruktur).
 - **MUSS** den Research-Audit-Trail unter `.audits/webview-ui-expert/<domain>.md` synchron mit dieser Spec halten; jede normative Regel oben ist mindestens an einen Eintrag dort verankert, der seinerseits ≥ 2 unabhängige autoritative Quellen zitiert.
 
 ## Akzeptanzkriterien
@@ -307,11 +324,13 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 ## Offene Fragen
 
-_Derzeit keine._
+- Emotion + Trusted Types: Ob die Emotion-Runtime unter einer erzwungenen `require-trusted-types-for 'script'`-CSP mit MUI v9 sauber arbeitet, ist unverifiziert; vor der Behandlung von Audit-`fail`-Zeilen zur Trusted-Types-MUSS-Regel gegen den Referenz-Stack verifizieren.
+- CSS Scroll Snap (Research `ux.md`, Praktik #25) bleibt nicht-normativ, bis eine zweite unabhängige Quelle sie stützt; beim nächsten Research-Refresh übernehmen oder verwerfen.
+- Der Wartungsstatus von `vitest-axe` und die `@vitest/browser`-+-axe-core-Route (die die JSDOM-Color-Contrast-Beschränkung aufheben würde) sind ungeklärt; beim nächsten Test-Infrastruktur-Bump neu bewerten.
 
 ## Quellen
 
-Jede normative Regel oben ist an die per-Domäne-Research-Notes unter `.audits/webview-ui-expert/` verankert; jeder Eintrag dort zitiert mindestens zwei unabhängige autoritative Quellen:
+Jede normative Regel oben ist an die per-Domäne-Research-Notes unter `.audits/webview-ui-expert/` verankert; jeder Eintrag dort zitiert mindestens zwei unabhängige autoritative Quellen. Regeln, die explizit als Projekt-Konventionen markiert sind, sind bewusste Hausregeln und von der Zwei-Quellen-Verankerung ausgenommen. Nachträgliche Aktualitäts-Korrekturen (Recharts-3-`accessibilityLayer`-Default, Vite-8-/Rolldown-`output.codeSplitting`, Zod-4-Fehler-API, MUI-`Dialog`-Implementierung, Trusted-Types- und Popover-API-Browser-Support, RFC 9110) sind im datierten Aktualitäts-Nachtrag jeder Research-Datei festgehalten (zuletzt: 2026-07-24):
 
 - `.audits/webview-ui-expert/performance.md` — 27 Praktiken + 9 Anti-Patterns (web.dev, react.dev, vitejs.dev, mui.com, redux.js.org, reactrouter.com, react-hook-form.com, MDN, nginx.org, day.js.org, axios-http.com, vitest.dev, RFC 8246).
 - `.audits/webview-ui-expert/security.md` — 28 Praktiken (OWASP Cheat Sheets, MDN, W3C Trusted Types, web.dev, Mozilla HTTP Observatory, Vendor-Docs).

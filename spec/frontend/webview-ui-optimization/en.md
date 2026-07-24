@@ -36,11 +36,13 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 - **MUST** declare `font-display: swap` (or `optional`) on every `@font-face` rule, including MUI-generated typography.
 - **MUST** preload the LCP-critical typography as `<link rel="preload" as="font" type="font/woff2" href="…" crossorigin>` (the `crossorigin` attribute is mandatory—without it the preload is fetched twice).
-- **SHOULD** set `fetchpriority="high"` on the LCP image (or its `rel="preload" as="image"` link) on routes whose LCP candidate is an image; **MUST NOT** apply it to more than one element per route.
+- **SHOULD** set `fetchpriority="high"` on the LCP image (or its `rel="preload" as="image"` link) on routes whose LCP candidate is an image; **MUST NOT** apply it to more than one element per route. (The research proposes a MUST; kept SHOULD because the reference SPA's LCP candidate is usually text, not an image.)
 - **MUST** declare `loading="lazy"` and `decoding="async"` on every off-screen `<img>` and provide intrinsic `width`/`height` (or CSS `aspect-ratio`).
 - **MUST** keep Vite's content-hashed filenames for `/assets/*` output.
 - **MUST** keep `<link rel="modulepreload">` tags Vite emits into `index.html`; backend-integrated setups **MUST** replicate them from the build manifest.
 - **MUST NOT** inject synchronous `<script>` tags ahead of the Vite module entry; every late-loaded script **MUST** carry `defer`, `async`, or `type="module"`.
+- **MUST** keep first-paint-critical CSS small: inline only the styles the initial render needs and load everything else through the stylesheet chain Vite emits; additional render-blocking stylesheets ahead of that chain are forbidden.
+- **SHOULD** rely on Vite's default per-module code splitting and tune chunking only when bundle analysis shows a long-tail vendor chunk; tuning happens via Rolldown's `output.codeSplitting` option (the Rollup-era `manualChunks` and the interim `advancedChunks` are both deprecated in Vite 8). **MUST NOT** pin all of `node_modules` into a single vendor mega-chunk.
 
 #### React 19 rendering
 
@@ -83,6 +85,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 - **MUST NOT** include `'unsafe-inline'` or `'unsafe-eval'` in `script-src`; for `style-src`, prefer a nonce bound to Emotion's `cache.nonce` over `'unsafe-inline'`.
 - **MUST NOT** use host-allowlist CSPs (bypassable via open JSONP endpoints on allowlisted hosts).
 - **MUST** send `require-trusted-types-for 'script'` and a named `trusted-types` policy that pipes any HTML insertion through DOMPurify.
+- **MUST** sandbox embedded third-party content: `<iframe sandbox>` with the smallest token set that works, plus a `frame-src` allow-list in the CSP. The combination `sandbox="allow-scripts allow-same-origin"` on same-origin content **MUST NOT** appear—it lets the frame lift its own sandbox.
 
 #### nginx security headers
 
@@ -103,9 +106,15 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 - **MUST** validate every user-controlled URL before assigning to `href`, `src`, or calling React Router `navigate(...)` / `redirect(...)`: parse the URL, reject `javascript:`, `data:`, `vbscript:`, allow-list schemes (`https:`, `mailto:`) and origins, prefer route-relative paths.
 - **MUST** add `rel="noopener noreferrer"` to every external `target="_blank"` link (and to any `window.open(url, '_blank')` features string); lint-enforce via `react/jsx-no-target-blank`.
 
+#### HTTP client discipline
+
+- **MUST** route API traffic through one configured axios instance per backend, carrying `baseURL`, an explicit `timeout`, and a request interceptor that injects the in-memory token; ad-hoc `axios.get(url)` calls with hand-built auth headers are forbidden.
+- **MUST** enable `withCredentials` only on endpoints that actually need cookies, never as a global default.
+
 #### Auth, storage, and secrets
 
 - **MUST NOT** store auth tokens (access, refresh, session) in `localStorage`, `sessionStorage`, IndexedDB, or Redux state that's persisted; **MUST** keep tokens in an `HttpOnly; Secure; SameSite=Strict` cookie issued by the backend, OR in memory plus silent refresh against a cookie-protected refresh endpoint.
+- **MUST** issue auth cookies under the `__Host-` prefix (`Path=/`, no `Domain` attribute); `SameSite=Lax` is acceptable only for OAuth callback flows, and `SameSite=None` without `Secure` **MUST NOT** be issued (browsers silently reject it).
 - **MUST** configure `redux-persist` (when present) with an explicit `whitelist` of slices that hold non-sensitive UI state only (theme, language, table column order). Encryption-at-rest with a key that ships in the bundle is forbidden.
 - **MUST** treat every `import.meta.env.VITE_*` value as public. API keys, signing secrets, OAuth client secrets, and BFF-bypassing URLs **MUST NOT** be put behind a `VITE_` prefix; **MUST NOT** override `envPrefix` to an empty string.
 - **MUST** set Vite `build.sourcemap` to `false` (or `'hidden'` when error tracking requires symbolication with private upload); **MUST NOT** serve `*.js.map` publicly from nginx, and **SHOULD** block `*.map` at the nginx layer.
@@ -115,6 +124,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 - **MUST** mirror every Zod schema server-side: client validation is UX, never the authoritative gate. Backend validates positive-allow-list, length bounds, type bounds; client surfaces backend errors via `setError`.
 - **MUST** validate file uploads in the browser (`accept`, MIME, size, extension) for UX only; the backend **MUST** validate magic bytes, enforce a hard max size, store outside the web root, and scan.
 - **MUST** apply `autocomplete` hints intentionally on sensitive forms (`new-password`, `current-password`, `one-time-code`); **MUST NOT** set blanket `autocomplete="off"` on credential fields (modern browsers ignore it for passwords).
+- **MUST** cap the length and allow-list the URL scheme of any user-controlled string before rendering it as a QR code (`qrcode.react`); a scanned `javascript:` or `data:` payload executes on the scanning device.
 
 #### Supply chain and verification
 
@@ -135,7 +145,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 - **MUST** ship a "skip to main content" link as the first focusable element; visually hidden but focusable, never `display:none`, **MUST** move focus to `<main>` or a `tabindex="-1"` element inside it.
 - **MUST** move focus on every route change to either (a) the main content container with `tabindex="-1"`, or (b) the new `<h1>` with `tabindex="-1"`; **MUST NOT** focus a landmark element or autofocus an arbitrary input.
-- **MUST NOT** set `outline: 0` / `outline: none` without an equivalent replacement; **MUST** use `:focus-visible` for custom focus styling and meet the 3:1 non-text contrast and WCAG 2.4.13 Focus Appearance perimeter rule.
+- **MUST NOT** set `outline: 0` / `outline: none` without an equivalent replacement; **MUST** use `:focus-visible` for custom focus styling and meet the 3:1 non-text contrast and WCAG 2.4.13 Focus Appearance perimeter rule (2.4.13 is Level AAA, adopted deliberately beyond the AA floor).
 - **MUST** ensure focus isn't obscured by sticky chrome (WCAG 2.4.11): use `scroll-margin-top` / `scroll-padding` equal to the bar height.
 - **MUST NOT** use `tabindex` values greater than `0`; only `0` and `-1` are acceptable.
 
@@ -143,6 +153,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 - **MUST** preserve MUI `Dialog` / `Modal` focus-trap, initial-focus, and return-focus defaults: don't set `disableEnforceFocus`, `disableAutoFocus`, or `disableRestoreFocus` for routine dialogs. **MUST** carry `aria-labelledby` referencing the title; **SHOULD** also carry `aria-describedby` for long-form content.
 - **MUST** label every icon-only `IconButton` with `aria-label` (or visually-hidden text); `<Tooltip>` provides a description, not a name, and **MUST NOT** substitute for the label.
+- **MUST** keep the accessible name of a control aligned with its visible label: when both `aria-label` and visible text exist, the accessible name **MUST** contain the visible text (WCAG 2.5.3 Label in Name); an `aria-label` that contradicts the visible label is forbidden.
 - **MUST** wire react-hook-form errors with the triple `aria-invalid={!!errors.x}` + `aria-describedby="<error-id>"` + `role="alert"` on the error element.
 - **MUST** generate input IDs via React 19 `useId()` (or MUI's generated IDs) so `<label htmlFor>` and `aria-describedby` resolve stably across renders.
 - **MUST** label `@mui/x-tree-view` (`SimpleTreeView` / `RichTreeView`) with `aria-label` or `aria-labelledby`; **MUST NOT** override the built-in WAI-ARIA APG tree keyboard behaviour.
@@ -152,24 +163,25 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 #### Toasts and live regions
 
 - **MUST** announce notistack messages via a live region; default to `role="status"` / `aria-live="polite"`, reserve `role="alert"` / `aria-live="assertive"` for true errors (failed save, auth expiry).
+- **MUST** make a dismissible toast's close control a real `<button>` with an accessible name; a toast **MUST NOT** steal focus when it appears.
 - **MUST** announce route changes via an `aria-live="polite"` region or via the focus-on-H1 mechanism; **MUST NOT** stack both for the same event.
 
 #### Visual
 
 - **MUST** configure MUI's `palette.contrastThreshold` to `4.5` so palette-derived `contrastText` choices target WCAG 1.4.3 AA (body text 4.5:1); verify custom palettes via WebAIM contrast checker.
-- **MUST** wrap non-essential motion in `@media (prefers-reduced-motion: no-preference)` (opt-out pattern); reduce or remove transitions when the user has expressed a reduce preference.
+- **MUST** wrap non-essential motion in `@media (prefers-reduced-motion: no-preference)` (opt-out pattern); reduce or remove transitions when the user has expressed a reduce preference (the underlying WCAG 2.3.3 criterion is Level AAA, adopted deliberately beyond the AA floor).
 - **SHOULD** honour `prefers-color-scheme` for the initial theme when the user hasn't explicitly chosen one; persisted user choice **MUST** override the OS preference thereafter.
 - **MUST** keep layout reflow at 320 CSS px viewport width without horizontal scroll (WCAG 1.4.10); inherently 2-D content (tables, charts) **MUST** scroll inside its own container, not the page.
 - **SHOULD** prefer `aria-disabled="true"` over native `disabled` for controls whose disabled state needs an explanation (form gating, paywall) so an associated `aria-describedby` reason remains discoverable.
 
 #### Target size
 
-- **MUST** make every interactive control's tap target at least 24 × 24 px (WCAG 2.5.8); **SHOULD** target 44 × 44 px on touch-first contexts (Apple HIG / Material Design alignment). Spacing **SHOULD** leave ≥ 8 px between adjacent targets.
+- **MUST** make every interactive control's tap target at least 24 × 24 px (WCAG 2.5.8); **SHOULD** target 44 × 44 px (Apple HIG) to 48 × 48 px (Material Design) on touch-first contexts. Spacing **SHOULD** leave ≥ 8 px between adjacent targets.
 
 #### Charts
 
 - **MUST** give every Recharts chart a programmatically determinable text alternative: `role="img"` + `aria-label` / `aria-labelledby` on the container, an inline plain-language summary, AND a data-table fallback (visible or visually hidden but marked-up).
-- **MUST** enable Recharts' `accessibilityLayer` on every chart.
+- **MUST** keep Recharts' `accessibilityLayer` enabled on every chart (on by default since Recharts 3; disabling it is forbidden).
 
 #### Testing
 
@@ -197,18 +209,19 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 - **MUST** make a persisted user choice always beat automatic detection: `i18n.changeLanguage(lng)` writes through to the caches the detector reads.
 - **MUST** declare `supportedLngs` (canonical first) and `fallbackLng` explicitly in `i18n.init`; resource-path injection via the querystring slot is mitigated only by this allow-list.
 - **MUST** encode the locale in the URL via a React Router v7 dynamic segment (`/:locale/*`) or a `prefix(...)` route; the router is the single source of truth for the active locale and **MUST** sync i18next on every navigation. The canonical locale **MAY** be served prefix-less at the `x-default` root while every non-canonical locale carries its prefix; cookies stay a detection input only and **MUST NOT** be the sole locale source.
-- **MUST** emit `Content-Language: <locale>` from nginx on every localised response; **SHOULD** honour an existing `i18next` cookie ahead of `Accept-Language`-based root redirects.
+- **MUST** emit `Content-Language: <locale>` from nginx on every localised response; **SHOULD** honour an existing `i18next` cookie ahead of `Accept-Language`-based root redirects. `Accept-Language` negotiation **MUST** happen only at the locale-less root (exact-match `location =` block); deep links **MUST NOT** be rewritten or redirected based on `Accept-Language`.
 - **MUST** emit static `<link rel="alternate" hreflang="…" href="…">` tags (one per locale, plus `x-default`) in the initial `index.html` server-side or at build time, bidirectional. React-runtime injection of `hreflang` is forbidden.
 
 #### Loading, RTL, and pickers
 
 - **MUST** organise translations into one namespace per feature (`auth`, `plants`, `settings`, `common`) and lazy-load namespaces per route via `i18next-resources-to-backend` (Vite dynamic imports) or `i18next-http-backend`.
 - **MUST** pre-bundle the canonical locale plus the active locale; defer the rest as Vite chunks per `(locale, namespace)` pair.
+- **SHOULD** emit a preload hint for the active locale's initial namespace chunk when the locale is known at build time or on the first response.
 - **MUST** wrap the React tree in `<Suspense>` so first paint doesn't show raw keys; `react.useSuspense: true` is the default and **MUST** stay enabled unless every consumer explicitly gates on `ready`.
 - **MUST** wire MUI v9 RTL via `createTheme({ direction: 'rtl' })` AND an Emotion `CacheProvider` whose cache uses `[prefixer, rtlPlugin]` from `@mui/stylis-plugin-rtl` when the active locale is RTL.
 - **MUST** wire MUI-X `LocalizationProvider` with three things in lockstep: dayjs locale (`dayjs.locale('de')`), `adapterLocale="de"`, and `localeText` from `@mui/x-date-pickers/locales`.
 - **MUST** drive dayjs locales as default-export imports and switch them on every `languageChanged` event; bare side-effect imports (`import 'dayjs/locale/de'`) **MUST NOT** appear because some bundlers drop them.
-- **MUST** translate Zod validation errors via a custom `errorMap` (set via `z.setErrorMap` or `zodResolver(schema, { errorMap })`); **MUST NOT** embed `t()` calls inside schema definitions.
+- **MUST** translate Zod validation errors through one central, locale-aware error map that resolves i18n keys—Zod 3: `z.setErrorMap` or `zodResolver(schema, { errorMap })`; Zod 4: the unified `error` parameter or `z.config({ customError })` (`setErrorMap` no longer exists there); **MUST NOT** embed `t()` calls inside schema definitions.
 - **MUST** resolve translations for `notistack` messages at the call site (`enqueueSnackbar(t('errors.savePlant'), …)`) so messages stay stable for the toast's lifetime.
 
 #### Drift detection
@@ -227,12 +240,13 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
   - 1 s–10 s: skeleton screen mirroring the final layout.
   - > 10 s: determinate progress bar with cancel affordance.
 - **MUST NOT** show a blank screen for more than 300 ms after a navigation; skeletons or `<Suspense>` fallbacks bridge the gap.
-- **MUST** debounce spinner display by 200–300 ms so brief loads don't flash a spinner; the chosen project-wide threshold **MUST** be applied consistently.
+- **MUST** debounce spinner display by 200–300 ms so brief loads don't flash a spinner; the chosen project-wide threshold **MUST** be applied consistently. (The concrete millisecond values in these two rules are project conventions layered on the Nielsen Norman Group response-time bands, not vendor-quoted thresholds.)
 - **MUST** build a per-view `<XxxSkeleton/>` that mirrors the final layout (shape, count, rough size); generic shimmer boxes that cause layout shift on hydrate are forbidden.
 
 #### Mutations and recovery
 
 - **SHOULD** apply optimistic UI to low-risk mutations only (favouriting, toggling, reordering, renaming); **MUST NOT** apply it to financial transactions, irreversible deletes without an undo grace period, or anything triggering downstream side effects (email, payment).
+- **MUST** roll every optimistic update back on failure (RTK Query: `patchResult.undo()` in the `queryFulfilled` catch) and surface an inline recovery affordance; a silently kept optimistic state is forbidden.
 - **SHOULD** prefer an optimistic commit + Undo snackbar over an interruption-style "Are you sure?" dialog for reversible destructive actions; use a real `<Dialog>` only when the action is irreversible or multi-step.
 - **MUST** distinguish error surfaces:
   - inline error (next to field or component)—form validation, "this card failed to load—retry," missing permission.
@@ -257,15 +271,16 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 #### Forms
 
 - **MUST** configure react-hook-form with `mode: 'onTouched'`, `reValidateMode: 'onChange'`, `shouldFocusError: true`.
-- **MUST** render an error summary above the form when `>1` field is invalid: a `role="alert"` container with a heading and a list of links jumping to each invalid field.
+- **MUST** render an error summary above the form when `>1` field is invalid: a `role="alert"` container with a heading and a list of links jumping to each invalid field. When the summary renders, it—not the first invalid field—receives focus; `shouldFocusError` covers the single-error case only (never focus both).
 - **MUST** use `aria-disabled="true"` (not native `disabled`) on the submit button while the form is pending so screen-reader users can still tab onto it and hear its state; guard submission inside the handler, not via `disabled`.
 - **MUST NOT** communicate button states via colour alone (WCAG 1.4.1): pair colour with inline message / icon / `aria-live` update.
 
 #### Theming and motion
 
-- **MUST** resolve every colour, spacing value, and border-radius from theme tokens; hard-coded hex / `rgb()` inside components is forbidden.
+- **MUST** resolve every colour, spacing value, and border-radius from theme tokens; hard-coded hex / `rgb()` inside components is forbidden (a project convention layered on MUI theming guidance).
 - **MUST** drive light/dark mode via MUI v9 `colorSchemes` + `cssVariables`; **MUST NOT** flip via `palette.mode` conditionals (they cause FOUC).
 - **MUST** inline a tiny `<head>` script that reads the persisted theme key and sets a `data-color-scheme` attribute on `<html>` before the React tree mounts (MUI's `InitColorSchemeScript`).
+- **SHOULD** follow live OS theme changes via a `matchMedia('(prefers-color-scheme: dark)')` change listener while the user hasn't set an explicit override; once an override exists, it wins.
 - **MUST** wrap non-essential motion in `@media (prefers-reduced-motion: no-preference)`; essential motion (loading spinner) **SHOULD** be reduced to opacity / dissolve when reduce-motion is set.
 
 #### Viewport and platform fit
@@ -278,17 +293,19 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 #### Dialogs and popovers
 
-- **MUST** prefer the platform `<dialog>` (via MUI `Dialog`, which uses it under the hood, called via `.showModal()`) over hand-rolled modal-div trees: focus trap, ESC, `aria-modal`, `::backdrop`, top-layer, and inertness are then free.
+- **MUST** use MUI `Dialog` (a `Modal`-based implementation with its own focus trap—it doesn't render a native `<dialog>`) or, outside MUI surfaces, the platform `<dialog>` opened via `.showModal()`, whose focus trap, ESC handling, `aria-modal`, `::backdrop`, top layer, and inertness come free; hand-rolled modal-div trees are forbidden.
 - **SHOULD** prefer the native Popover API (`popover="auto"`) on stable engines for tooltips / menus; fall back to MUI `Popover` / `Menu` for older browsers.
 
 #### Charts and viewport
 
 - **MUST** wrap every Recharts chart in `<ResponsiveContainer width="100%" aspect={…}>` (or fixed `minWidth` / `minHeight`); naked charts that collapse in narrow columns are forbidden.
-- **MUST** enable `accessibilityLayer` on every chart (cross-references the a11y MUST in §Accessibility › Charts).
+- **MUST** make chart tooltips carry every rendered series plus the formatted x-axis value, and position them so touch input never hides them under the finger.
+- **MUST** keep `accessibilityLayer` enabled on every chart (cross-references the a11y MUST in §Accessibility › Charts).
 
 ### Cross-cutting verification
 
 - **MUST** wire `vitest-axe` smoke tests, a Vite + nginx static-asset audit (immutable headers, source-map absence), a Mozilla HTTP Observatory check, and a Core-Web-Vitals RUM snapshot into the release gate; a release **MUST NOT** ship while any of those are red.
+- **SHOULD** default the Vitest `environment` to `node` and opt DOM-dependent files into `jsdom` / `happy-dom` per file pragma (test-assertion content stays out of scope per Non-Goals; this rule covers infrastructure only).
 - **MUST** keep the research audit trail under `.audits/webview-ui-expert/<domain>.md` in lockstep with this spec; every normative rule above is anchored to at least one entry there, which in turn cites ≥ 2 independent authoritative sources.
 
 ## Acceptance Criteria
@@ -307,11 +324,13 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 ## Open Questions
 
-_None at this time._
+- Emotion + Trusted Types: whether the Emotion runtime operates cleanly under an enforced `require-trusted-types-for 'script'` CSP with MUI v9 is unverified; verify against the reference stack before treating audit `fail` rows on the Trusted-Types MUST as actionable.
+- CSS scroll snap (research `ux.md` practice #25) stays non-normative until a second independent source backs it; adopt or drop at the next research refresh.
+- `vitest-axe` maintenance status and the `@vitest/browser` + axe-core route (which would lift the JSDOM color-contrast limitation) are unresolved; re-evaluate at the next test-infrastructure bump.
 
 ## Sources
 
-Every normative rule above is anchored to the per-domain research notes under `.audits/webview-ui-expert/`, each entry of which cites at least two independent authoritative sources:
+Every normative rule above is anchored to the per-domain research notes under `.audits/webview-ui-expert/`, each entry of which cites at least two independent authoritative sources. Rules explicitly marked as project conventions are deliberate house rules and exempt from the two-source anchor. Post-publication currency corrections (Recharts 3 `accessibilityLayer` default, Vite 8 / Rolldown `output.codeSplitting`, Zod 4 error API, MUI `Dialog` implementation, Trusted-Types and Popover-API browser support, RFC 9110) are recorded in each research file's dated currency addendum (last: 2026-07-24):
 
 - `.audits/webview-ui-expert/performance.md`: 27 practices + 9 anti-patterns (`web.dev`, `react.dev`, `vitejs.dev`, `mui.com`, `redux.js.org`, `reactrouter.com`, `react-hook-form.com`, MDN, `nginx.org`, `day.js.org`, `axios-http.com`, `vitest.dev`, RFC 8246).
 - `.audits/webview-ui-expert/security.md`: 28 practices (OWASP Cheat Sheets, MDN, W3C Trusted Types, `web.dev`, Mozilla HTTP Observatory, vendor docs).
