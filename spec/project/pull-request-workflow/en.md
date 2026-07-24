@@ -58,6 +58,7 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - **MAY** add repository-specific sections *below* the five required sections; additional sections **MUST** appear after all five required sections and **MUST NOT** be interleaved between them
 - **SHOULD** use imperative mood in Summary and Changes (`Add …`, `Fix …`, not `Added …`)
 - **SHOULD** link to the relevant spec file under `spec/` when the change implements or modifies a spec
+- **SHOULD**, when the PR remediates an in-scope portfolio-audit finding (an audit-remediation PR per `spec/project/continuous-improvement/` §"Traceability in remediation artifacts"), record two grep-stable lines in **Risk / rollout notes**: `Originating source: <named finding source>` and `Dispatched specialist: <subagent_type or skill name, or the literal "no matching specialist existed — generalist handled">`, so the fix stays traceable to its trigger and to the specialist that produced it. This reminder is non-blocking: the §PR lint workflow **MUST NOT** fail a PR for their absence, since these two fields are a `continuous-improvement` coverage signal rather than a PR-structure requirement, and `spec/project/continuous-improvement/` holds the authoritative MUST for the audit-remediation subset
 
 ### PR lint workflow
 - **MUST** include a workflow under `.github/workflows/` (for example `pr-lint.yml`) that lints PR title and body on the `pull_request` events `opened`, `edited`, `synchronize`, and `ready_for_review`
