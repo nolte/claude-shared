@@ -226,7 +226,7 @@ Return one message with these sections, in this order:
 
 | Aspect | Detail |
 |--------|--------|
-| **Targets** | Exactly one file: the pre-analysis artifact at `.audits/issue-orchestrate/<issue-number>/analysis.md`, inside a dedicated worktree off `develop`. |
+| **Targets** | Exactly one file: the pre-analysis artifact — `.audits/issue-orchestrate/<issue-number>/analysis.md` (issue-driven), `.audits/observability-audit/<timestamp>/plan.md` (audit-driven), or `.audits/source-code-review/<target-slug>-plan.md` (review-driven) — inside a dedicated worktree off `develop`. |
 | **Goals** | Author the implementation plan (specialist-mapped, testable work-package decomposition) that downstream specialists implement. |
 | **Preconditions** | A single resolved issue; requirements understood to `τ_high` (or the gap surfaced as blocking); the repository's conventions are detectable. |
 | **Idempotency** | Re-running for the same issue overwrites the same artifact deterministically — no duplicate packages, stable package ids. |
