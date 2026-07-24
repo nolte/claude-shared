@@ -14,6 +14,7 @@ dont_use_when:
     alternative: code-security-reviewer
 see_also:
   - code-security-reviewer
+  - api-documentation-audit
 ---
 
 # API Error-Handling Conformance Check
@@ -21,6 +22,8 @@ see_also:
 Statically check a web API's error-handling surface against the project's own error contract, and produce a single severity-sorted report. This skill reports and recommends; it never edits handler code.
 
 Implements `spec/project/api-error-handling/` — the spec defines the conformance dimensions, severity mapping, and discovery rules. This skill binds those rules to the on-disk procedure. When the spec and this skill disagree, the spec wins.
+
+Sister capability: `api-documentation-audit` audits the published OpenAPI document per `spec/project/api-documentation/` — this skill checks the error-handling code paths; that one checks the documentation surface that publishes them.
 
 ## German trigger phrases
 

@@ -90,6 +90,7 @@ Leser: Skill-Autoren, die den Checker pflegen; Reviewer, die seine Befunde prüf
 - [R3] Angrenzendes Whole-Codebase-Security-Audit (gegen diese Spec abgegrenzt; Leckage-Befunde zeigen hierhin): `spec/project/code-security-audit/`
 - [R4] Review-Plan-/Audit-Ausgabe-Konventionen für nach Schweregrad sortierte Reports: `spec/claude/review-plan/`
 - [R5] RFC 9457 — Problem Details for HTTP APIs (empfohlener Default-Fehler-Contract): <https://www.rfc-editor.org/rfc/rfc9457>
+- [R6] Schwester-Spec, die die API-Dokumentations-Oberfläche besitzt; ihre Fehlerantwort-Dokumentationsregeln delegieren an diese Spec: `spec/project/api-documentation/`
 
 ## Offene Fragen
 

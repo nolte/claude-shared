@@ -90,6 +90,7 @@ Readers: skill authors maintaining the checker; reviewers verifying its findings
 - [R3] Adjacent whole-codebase security audit (delimited against this spec; leakage findings point here): `spec/project/code-security-audit/`
 - [R4] Review-plan / audit-output conventions for severity-sorted reports: `spec/claude/review-plan/`
 - [R5] RFC 9457—Problem Details for HTTP APIs (recommended default error contract): <https://www.rfc-editor.org/rfc/rfc9457>
+- [R6] Sister spec owning the API documentation surface; its error-response documentation rules defer to this spec: `spec/project/api-documentation/`
 
 ## Open Questions
 

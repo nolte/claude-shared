@@ -18,7 +18,7 @@ This spec defines, for every YAML-encoded JSON Schema document the portfolio aut
 4. **the validation contract** that lets a CI gate prove the schema is itself valid and that any companion data files conform to it,
 5. **the on-disk layout** that makes the schema discoverable next to the data it describes.
 
-The spec deliberately scopes itself to **JSON Schema 2020-12 in YAML**. JSON-encoded schemas, OpenAPI Schema Objects, and AsyncAPI Schema Objects are out of scope—they have their own governing specs (OpenAPI 3.x §Schema Object, AsyncAPI 3.x §Schema Object) which intentionally diverge from pure JSON Schema and warrant their own portfolio rule when the need arises.
+The spec deliberately scopes itself to **JSON Schema 2020-12 in YAML**. JSON-encoded schemas, OpenAPI Schema Objects, and AsyncAPI Schema Objects are out of scope—they have their own governing specs (OpenAPI 3.x §Schema Object, AsyncAPI 3.x §Schema Object) which intentionally diverge from pure JSON Schema. For OpenAPI Schema Objects that rule now exists as `spec/project/api-documentation/`; AsyncAPI Schema Objects warrant their own when the need arises.
 
 ## Goals
 
@@ -32,7 +32,7 @@ The spec deliberately scopes itself to **JSON Schema 2020-12 in YAML**. JSON-enc
 ## Non-Goals
 
 - Choosing a single JSON Schema validator implementation. The choice between `check-jsonschema`, `ajv-cli`, `python-jsonschema`, and `jsonschema-rs` stays a per-repo decision driven by the language ecosystem the project already uses.
-- Defining OpenAPI 3.x Schema Object or AsyncAPI Schema Object conventions. Those formats inherit *most* of JSON Schema but diverge in well-known ways (`nullable`, `discriminator`, `example` vs `examples`) and need their own spec.
+- Defining OpenAPI 3.x Schema Object or AsyncAPI Schema Object conventions. Those formats inherit *most* of JSON Schema but diverge in well-known ways (`nullable`, `discriminator`, `example` vs `examples`) and need their own spec; for OpenAPI documents that spec is `spec/project/api-documentation/`.
 - Authoring schemas as JSON-encoded files (`*.json` or `*.schema.json`). The portfolio's authoring rule is YAML-only, and `*.schema.yaml` is the only authoring form this spec recognises. JSON-encoded schemas remain forbidden until a separate spec governs them; downstream consumers that need a JSON artefact derive it at build time via `yq -o json` (or an equivalent transform) from the YAML source.
 - Replacing `spec/project/feature/` (which governs the *content* of feature frontmatter) with a schema spec. This spec is about the shape and lifecycle of schema files; the frontmatter spec stays authoritative for what feature frontmatter contains.
 - Centralising frequently-shared schemas in a portfolio-wide registry directory. The portfolio policy is repo-local placement; cross-repository sharing is solved through `$id` discipline and absolute `$ref` URI targets into the owning repo's GitHub path, not through a shared directory under `spec/portfolio/<topic>/schemas/`.
@@ -120,7 +120,7 @@ Inside `properties` and inside `$defs`, every individual property sub-schema MUS
 
 - **MUST** keep this spec distinct from `spec/project/feature/`: the feature spec governs *which* fields a feature frontmatter carries; this spec governs *how* the schema describing those fields is written.
 - **MUST** keep this spec distinct from `spec/project/project-structure/`: the structure spec governs the repository layout; this spec governs schemas placed inside that layout's `schemas/` directories.
-- **MUST NOT** be invoked to validate OpenAPI Schema Objects, AsyncAPI Schema Objects, or JSON-encoded JSON Schema documents. Those formats have or will have their own specs.
+- **MUST NOT** be invoked to validate OpenAPI Schema Objects, AsyncAPI Schema Objects, or JSON-encoded JSON Schema documents. OpenAPI documents are governed by `spec/project/api-documentation/`; the other formats will get their own specs.
 
 ## Acceptance Criteria
 

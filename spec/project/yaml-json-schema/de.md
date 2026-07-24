@@ -18,7 +18,7 @@ Diese Spec definiert für jedes YAML-codierte JSON-Schema-Dokument, das das Port
 4. **den Validierungs-Vertrag**, der einem CI-Gate erlaubt zu beweisen, dass das Schema selbst gültig ist und dass etwaige Begleit-Datendateien dem Schema entsprechen,
 5. **das On-Disk-Layout**, das das Schema dort auffindbar macht, wo auch die beschriebenen Daten liegen.
 
-Die Spec begrenzt sich bewusst auf **JSON Schema 2020-12 in YAML**. JSON-codierte Schemata, OpenAPI-Schema-Objekte und AsyncAPI-Schema-Objekte sind nicht Scope — sie haben eigene regierende Specs (OpenAPI 3.x §Schema Object, AsyncAPI 3.x §Schema Object), die bewusst von reinem JSON Schema abweichen und eine eigene Portfolio-Regel verdienen, sobald der Bedarf konkret wird.
+Die Spec begrenzt sich bewusst auf **JSON Schema 2020-12 in YAML**. JSON-codierte Schemata, OpenAPI-Schema-Objekte und AsyncAPI-Schema-Objekte sind nicht Scope — sie haben eigene regierende Specs (OpenAPI 3.x §Schema Object, AsyncAPI 3.x §Schema Object), die bewusst von reinem JSON Schema abweichen. Für OpenAPI-Schema-Objekte existiert diese Regel jetzt als `spec/project/api-documentation/`; AsyncAPI-Schema-Objekte verdienen ihre eigene, sobald der Bedarf konkret wird.
 
 ## Ziele
 
@@ -32,7 +32,7 @@ Die Spec begrenzt sich bewusst auf **JSON Schema 2020-12 in YAML**. JSON-codiert
 ## Nicht-Ziele
 
 - Eine einzige JSON-Schema-Validator-Implementierung wählen. Die Validator-Wahl (`check-jsonschema`, `ajv-cli`, `python-jsonschema`, `jsonschema-rs`) bleibt eine Pro-Repo-Entscheidung, getrieben vom Sprach-Ökosystem, das das Projekt ohnehin nutzt.
-- Konventionen für OpenAPI-3.x-Schema-Objekte oder AsyncAPI-Schema-Objekte definieren. Diese Formate erben *das meiste* von JSON Schema, weichen aber an bekannten Stellen ab (`nullable`, `discriminator`, `example` vs `examples`) und brauchen eine eigene Spec.
+- Konventionen für OpenAPI-3.x-Schema-Objekte oder AsyncAPI-Schema-Objekte definieren. Diese Formate erben *das meiste* von JSON Schema, weichen aber an bekannten Stellen ab (`nullable`, `discriminator`, `example` vs `examples`) und brauchen eine eigene Spec; für OpenAPI-Dokumente ist diese Spec `spec/project/api-documentation/`.
 - Schemata als JSON-codierte Dateien (`*.json` oder `*.schema.json`) autorisieren. Die Portfolio-Autorisierungsregel ist YAML-only — `*.schema.yaml` ist die einzige Autorisierungsform, die diese Spec anerkennt. JSON-codierte Schemata bleiben verboten, bis eine eigene Spec sie regiert; nachgelagerte Konsumenten, die ein JSON-Artefakt brauchen, erzeugen es zur Build-Zeit aus der YAML-Quelle via `yq -o json` (oder einer äquivalenten Transformation).
 - `spec/project/feature/` (welche den *Inhalt* von Feature-Frontmatter regiert) durch eine Schema-Spec ersetzen. Diese Spec handelt von Form und Lebenszyklus der Schema-Dateien; die Frontmatter-Spec bleibt verbindlich dafür, *was* Feature-Frontmatter enthält.
 - Häufig geteilte Schemata in einem portfolio-weiten Registry-Verzeichnis zentralisieren. Die Portfolio-Policy ist Repo-lokale Ablage; repository-übergreifendes Teilen wird durch `$id`-Disziplin und absolute `$ref`-URIs in den GitHub-Pfad des besitzenden Repos gelöst, nicht durch ein gemeinsames Verzeichnis unter `spec/portfolio/<topic>/schemas/`.
@@ -120,7 +120,7 @@ Innerhalb von `properties` und innerhalb von `$defs` **MUSS** jedes einzelne Pro
 
 - **MUSS** diese Spec von `spec/project/feature/` abgegrenzt halten: Die Feature-Spec regiert, *welche* Felder ein Feature-Frontmatter trägt; diese Spec regiert, *wie* das Schema, das diese Felder beschreibt, geschrieben wird.
 - **MUSS** diese Spec von `spec/project/project-structure/` abgegrenzt halten: Die Structure-Spec regiert das Repository-Layout; diese Spec regiert Schemata, die innerhalb der `schemas/`-Verzeichnisse dieses Layouts liegen.
-- **DARF NICHT** invocate werden, um OpenAPI-Schema-Objekte, AsyncAPI-Schema-Objekte oder JSON-codierte JSON-Schema-Dokumente zu validieren. Diese Formate haben eigene Specs oder werden welche bekommen.
+- **DARF NICHT** invocate werden, um OpenAPI-Schema-Objekte, AsyncAPI-Schema-Objekte oder JSON-codierte JSON-Schema-Dokumente zu validieren. OpenAPI-Dokumente regiert `spec/project/api-documentation/`; die anderen Formate werden eigene Specs bekommen.
 
 ## Akzeptanzkriterien
 
