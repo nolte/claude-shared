@@ -74,7 +74,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 ### Geschwindigkeit und Platzierung
 
 - **MUSS [MUST]** akzeptieren, dass Integrationstests **langsamer** sind als Unit- und Component-Tests (Sekunden bis Minuten, inklusive Container-Start) und daher **weniger zahlreich**, gemäß der Ökonomie der Pyramide.
-- **SOLLTE [SHOULD]** einen Pull Request an den **schnellen schmalen** Integrationstests gaten (ausgeführt gemäß `spec/project/quality-gate/`, als erforderliche Checks gemäß `spec/project/pull-request-workflow/` deklariert) und langsamere oder schwerere Integrationstests in einer dedizierten CI-Stufe oder Nightly ausführen, statt jede Änderung zu blockieren.
+- **MUSS [MUST]** einen Pull Request an den **schnellen schmalen** Integrationstests gaten (ausgeführt gemäß `spec/project/quality-gate/`, als erforderliche Checks gemäß `spec/project/pull-request-workflow/` deklariert), weil die Apex-Spec `spec/project/test-pyramid-foundation/` §CI gating model — die Autorität darüber, welche Stufen ins Gate gehören — schmale Integration zu den schnellen Stufen zählt, die das Gate durchlaufen MÜSSEN; langsamere oder schwerere Integrationstests laufen in einer dedizierten CI-Stufe oder Nightly, statt jede Änderung zu blockieren.
 
 ### Grenze zur Contract-Stufe
 

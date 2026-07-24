@@ -30,11 +30,11 @@ Leserschaft: Skill- und Agent-Autor:innen in `claude-shared` sowie Operator:inne
 ## Requirements
 
 ### Geltungsbereich
-- **MUSS [MUST]** für jeden Skill gelten, dessen normaler Kontrollfluss mehr als ein Genehmigungsgate oder mehr als eine interne Phase mit einem Zwischenartefakt umfasst, das die Person bei Unterbrechung sonst verlieren würde; Agents fallen unter die Ermessensklausel weiter unten statt unter dieses MUSS, weil ein Agent headless läuft und kein Genehmigungsgate zu bewahren hat
+- **MUSS [MUST]** für jeden Skill gelten, dessen normaler Kontrollfluss mehr als ein Genehmigungsgate oder mehr als eine interne Phase mit einem Zwischenartefakt umfasst, das die Person bei Unterbrechung sonst verlieren würde. Agents haben kein Genehmigungsgate zu bewahren, sodass der Genehmigungsgate-Trigger sie nicht erreicht; aber ein Agent, der mehr als eine benannte Phase mit einem solchen Zwischenartefakt umspannt, unterliegt demselben MUSS gemäß `spec/claude/agent-management/` §Resumable runs. Die Ermessensklausel weiter unten deckt nur den Restfall ab — einen mehrphasigen Agent, dessen Phasen bloß vom Checkpointing profitieren, ohne ein bei Unterbrechung verlorenes Zwischenartefakt
 - **MUSS [MUST]** im `SKILL.md`-Frontmatter des Skills (bzw. im Agent-Frontmatter) per `resumable: true`-Feld deklariert werden, damit der Katalog-Generator und die Peer-Lookups aus `skill-vs-agent` Resume-Support sichtbar machen können
 - **MUSS [MUST]** aus dem `description`-Text des Skills bzw. Agents heraus referenziert werden (eine kurze Klausel: „supports resume on re-invocation"), wann immer `resumable: true` gesetzt ist, damit Operator:innen, die den Katalog lesen ohne ins Frontmatter zu schauen, dies dennoch erkennen
 - **SOLLTE NICHT [SHOULD NOT]** für Einmal-Skills gelten, deren komplette Ausführung ein einzelner Bash-Aufruf oder ein einzelner Tool-Call ist, der selbst billig neu startbar ist; `resumable: false` (oder das Feld auslassen) ist für diese die richtige Wahl
-- **KANN [MAY]** für Agents gelten, deren Vertrag ansonsten fire-and-forget ist, wenn sie intern mehrere Phasen umspannen, die vom Checkpointing profitieren; das ist eine bewusste Ausnahme zur üblichen Skills-sind-mehrturnig-/-Agents-sind-einturnig-Trennung aus `spec/claude/skill-vs-agent/`
+- **KANN [MAY]** für Agents gelten, deren Vertrag ansonsten fire-and-forget ist, wenn sie intern mehrere Phasen umspannen, die bloß vom Checkpointing profitieren (kein Zwischenartefakt geht bei Unterbrechung verloren — dieser Fall ist das MUSS oben, gemäß `spec/claude/agent-management/` §Resumable runs); das ist eine bewusste Ausnahme zur üblichen Skills-sind-mehrturnig-/-Agents-sind-einturnig-Trennung aus `spec/claude/skill-vs-agent/`
 
 ### Persistenz-Ort
 - **MUSS [MUST]** Resume-State unter `.resume/<skill-or-agent-name>/<run-id>.yml` an der Repository-Wurzel der Working Copy schreiben
@@ -113,7 +113,7 @@ Die folgenden Schlüssel bilden den Pflicht-Envelope, den jede State-Datei trage
 
 ## Acceptance Criteria
 - [ ] Jeder Skill unter `skills/`, dessen normaler Kontrollfluss mehr als ein Genehmigungsgate ODER mehr als eine benannte interne Phase mit einem Zwischenartefakt hat, trägt `resumable: true` im Frontmatter
-- [ ] Jeder Agent unter `agents/`, der `resumable: true` trägt, umspannt tatsächlich mehr als eine benannte Phase mit einem Zwischenartefakt (gemäß der Ermessensklausel für Agents in §Geltungsbereich); ein read-only Single-Pass-Agent lässt das Feld korrekt weg, und das Weglassen ist nie selbst ein Befund
+- [ ] Jeder Agent unter `agents/`, der `resumable: true` trägt, umspannt tatsächlich mehr als eine benannte Phase mit einem Zwischenartefakt (gemäß §Geltungsbereich: das MUSS bei einem bei Unterbrechung verlorenen Zwischenartefakt oder die Ermessensklausel für den Rest-Fall, der bloß profitiert); ein read-only Single-Pass-Agent lässt das Feld korrekt weg, und das Weglassen ist nie selbst ein Befund
 - [ ] Jeder Skill und Agent mit `resumable: true` erwähnt Resume-Support im `description:`-Text
 - [ ] Kein Skill bzw. Agent mit `resumable: true` schreibt Resume-State außerhalb von `.resume/<skill-or-agent-name>/`
 - [ ] Die `.gitignore` des Repositories enthält einen Eintrag, der `/.resume/` ignoriert

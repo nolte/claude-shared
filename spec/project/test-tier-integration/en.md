@@ -74,7 +74,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 ### Speed and placement
 
 - **MUST** accept that integration tests are **slower** than unit and component tests (seconds to minutes, including container startup) and therefore **fewer**, per the pyramid's economics.
-- **SHOULD** gate a pull request on the **fast narrow** integration tests (executed per `spec/project/quality-gate/`, declared as required checks per `spec/project/pull-request-workflow/`), and run slower or heavier integration tests in a dedicated CI stage or nightly rather than blocking every change.
+- **MUST** gate a pull request on the **fast narrow** integration tests (executed per `spec/project/quality-gate/`, declared as required checks per `spec/project/pull-request-workflow/`), because the apex `spec/project/test-pyramid-foundation/` §CI gating model—the authority on which tiers belong in the gate—classes narrow integration among the fast tiers that MUST gate; run slower or heavier integration tests in a dedicated CI stage or nightly rather than blocking every change.
 
 ### Boundary to the contract tier
 
