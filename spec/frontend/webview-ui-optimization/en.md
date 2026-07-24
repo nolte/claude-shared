@@ -42,7 +42,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 - **MUST** keep `<link rel="modulepreload">` tags Vite emits into `index.html`; backend-integrated setups **MUST** replicate them from the build manifest.
 - **MUST NOT** inject synchronous `<script>` tags ahead of the Vite module entry; every late-loaded script **MUST** carry `defer`, `async`, or `type="module"`.
 - **MUST** keep first-paint-critical CSS small: inline only the styles the initial render needs and load everything else through the stylesheet chain Vite emits; additional render-blocking stylesheets ahead of that chain are forbidden.
-- **SHOULD** rely on Vite's default per-module code splitting and tune chunking only when bundle analysis shows a long-tail vendor chunk; tuning happens via Rolldown's `output.codeSplitting` option (the Rollup-era `manualChunks` and the interim `advancedChunks` are both deprecated in Vite 8). **MUST NOT** pin all of `node_modules` into a single vendor mega-chunk.
+- **SHOULD** rely on Vite's default per-module code splitting and tune chunking only when bundle analysis shows a long-tail vendor chunk; tuning happens via the bundler's `output.codeSplitting` option (the Rollup-era `manualChunks` and the interim `advancedChunks` are both deprecated in Vite 8). **MUST NOT** pin all of `node_modules` into a single vendor mega-chunk.
 
 #### React 19 rendering
 
@@ -108,7 +108,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 #### HTTP client discipline
 
-- **MUST** route API traffic through one configured axios instance per backend, carrying `baseURL`, an explicit `timeout`, and a request interceptor that injects the in-memory token; ad-hoc `axios.get(url)` calls with hand-built auth headers are forbidden.
+- **MUST** route API traffic through one configured `axios` instance per backend, carrying `baseURL`, an explicit `timeout`, and a request interceptor that injects the in-memory token; ad-hoc `axios.get(url)` calls with hand-built auth headers are forbidden.
 - **MUST** enable `withCredentials` only on endpoints that actually need cookies, never as a global default.
 
 #### Auth, storage, and secrets
@@ -181,7 +181,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 #### Charts
 
 - **MUST** give every Recharts chart a programmatically determinable text alternative: `role="img"` + `aria-label` / `aria-labelledby` on the container, an inline plain-language summary, AND a data-table fallback (visible or visually hidden but marked-up).
-- **MUST** keep Recharts' `accessibilityLayer` enabled on every chart (on by default since Recharts 3; disabling it is forbidden).
+- **MUST** keep Recharts' `accessibilityLayer` enabled on every chart (on by default since Recharts 3; never disable it).
 
 #### Testing
 
@@ -305,7 +305,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 ### Cross-cutting verification
 
 - **MUST** wire `vitest-axe` smoke tests, a Vite + nginx static-asset audit (immutable headers, source-map absence), a Mozilla HTTP Observatory check, and a Core-Web-Vitals RUM snapshot into the release gate; a release **MUST NOT** ship while any of those are red.
-- **SHOULD** default the Vitest `environment` to `node` and opt DOM-dependent files into `jsdom` / `happy-dom` per file pragma (test-assertion content stays out of scope per Non-Goals; this rule covers infrastructure only).
+- **SHOULD** default the Vitest `environment` to `node` and opt DOM-dependent files into `jsdom` / `happy-dom` via a per-file comment directive (test-assertion content stays out of scope per Non-Goals; this rule covers infrastructure only).
 - **MUST** keep the research audit trail under `.audits/webview-ui-expert/<domain>.md` in lockstep with this spec; every normative rule above is anchored to at least one entry there, which in turn cites ≥ 2 independent authoritative sources.
 
 ## Acceptance Criteria
@@ -330,7 +330,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 
 ## Sources
 
-Every normative rule above is anchored to the per-domain research notes under `.audits/webview-ui-expert/`, each entry of which cites at least two independent authoritative sources. Rules explicitly marked as project conventions are deliberate house rules and exempt from the two-source anchor. Post-publication currency corrections (Recharts 3 `accessibilityLayer` default, Vite 8 / Rolldown `output.codeSplitting`, Zod 4 error API, MUI `Dialog` implementation, Trusted-Types and Popover-API browser support, RFC 9110) are recorded in each research file's dated currency addendum (last: 2026-07-24):
+Every normative rule above is anchored to the per-domain research notes under `.audits/webview-ui-expert/`, each entry of which cites at least two independent authoritative sources. Rules explicitly marked as project conventions are deliberate house rules and exempt from the two-source anchor. Post-publication currency corrections (Recharts 3 `accessibilityLayer` default, Vite 8 `output.codeSplitting`, Zod 4 error API, MUI `Dialog` implementation, Trusted-Types and Popover-API browser support, RFC 9110) are recorded in each research file's dated currency addendum (last: 2026-07-24):
 
 - `.audits/webview-ui-expert/performance.md`: 27 practices + 9 anti-patterns (`web.dev`, `react.dev`, `vitejs.dev`, `mui.com`, `redux.js.org`, `reactrouter.com`, `react-hook-form.com`, MDN, `nginx.org`, `day.js.org`, `axios-http.com`, `vitest.dev`, RFC 8246).
 - `.audits/webview-ui-expert/security.md`: 28 practices (OWASP Cheat Sheets, MDN, W3C Trusted Types, `web.dev`, Mozilla HTTP Observatory, vendor docs).
