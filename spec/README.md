@@ -35,6 +35,7 @@ Canonical language: `en` · Translations: `de`
 | portfolio | portfolio-management | Portfolio Management | Portfolio-Management | draft | local | unversioned |
 | portfolio | tech-stack | Portfolio Tech Stack Capture | Portfolio-Tech-Stack-Erfassung | draft | local | unversioned |
 | portfolio | tech-stack-discovery | Portfolio Tech-Stack Discovery | Portfolio-Tech-Stack-Discovery | draft | local | unversioned |
+| project | api-documentation | API Documentation Best Practices | API-Dokumentations-Best-Practices | draft | local | unversioned |
 | project | api-error-handling | API Error-Handling Conformance | API-Fehlerbehandlungs-Konformität | draft | local | 2026-06-17 |
 | project | audience-identification | Audience Identification | Zielgruppen-Identifikation | accepted | local | 2026-04-24 |
 | project | backstage-catalog-generation | Backstage catalog-info.yaml Generation | Backstage-catalog-info.yaml-Generierung | draft | local | unversioned |

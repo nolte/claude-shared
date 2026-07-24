@@ -44,7 +44,7 @@ The audit **MUST** classify every finding into exactly one of these categories:
 - **Content-mode drift**: a page under `docs/<lang>/` (outside snippet folders) that lacks the `content_mode` frontmatter key, or whose `content_mode` value isn't one of `tutorial`, `how-to`, `reference`, `explanation`, `troubleshooting`, `glossary`, `meta`, or an extension value declared by a project-type-specific spec. Mixing-violations (a `how-to` page that ships extended `explanation` content, a `reference` page with embedded recipes) are reported as `content-mode mixing` findings at warning severity—the detection is a Reviewer-judgement signal, not a strict regex, so the audit lists candidate pages without automatically failing.
 - **Audience-track mismatch**: a page whose `audience` frontmatter value maps to a track different from the page's `track` frontmatter value, per the default mapping declared in `spec/project/docs-audience-tracks/` §Audience-to-track mapping (overridable per project with a recorded rationale in the audience artefact).
 
-Additional categories **MAY** be added by a repository when its documentation needs them (for example, an API-reference-vs-code check in a repository that ships an OpenAPI spec), but the portfolio-level categories above are the floor.
+Additional categories **MAY** be added by a repository when its documentation needs them (for example, an API-reference-vs-code check in a repository that ships an OpenAPI spec; `spec/project/api-documentation/` anchors its drift rule in this category), but the portfolio-level categories above are the floor.
 
 ### Severity classification
 - **MUST** adopt the following severity scale:
