@@ -51,7 +51,7 @@ Readers: spec authors writing the sibling test specs; skill and agent authors bu
 ### Collaborative discovery
 
 - A consuming project **SHOULD** discover the examples that become scenarios **collaboratively before coding**, so a scenario encodes a shared understanding rather than a single author's after-the-fact guess [R6], [R7].
-- It **SHOULD** use **Example Mapping** to structure that discovery: for a story, map its business **rules**, a concrete **example** per rule, and the open **questions** the conversation surfaces, so an underspecified or oversized story is exposed before code is written [R7].
+- It **SHOULD** use **Example Mapping** to structure that discovery: for a story, map its business **rules**, a concrete **example** per rule, and the open **questions** the conversation surfaces, so an under-specified or oversized story is exposed before code is written [R7].
 - It **SHOULD** run the discovery as a **Three Amigos** conversation across the three perspectives (business / product, development, testing), because each perspective catches examples the others miss [R6], [R8].
 - An open question raised during discovery **MUST** be recorded and resolved rather than silently encoded as an assumption in a scenario; an unresolved question means the behavior isn't yet understood.
 
@@ -79,7 +79,7 @@ Readers: spec authors writing the sibling test specs; skill and agent authors bu
 ### Step-definition design
 
 - A step definition **MUST** be **thin**: it translates one Gherkin step into an action against the system (or, at E2E, into a call on the page-object layer [R3]) and holds no business logic of its own.
-- Step definitions **MUST** be **reused** across scenarios; the same domain step **MUST NOT** be reimplemented per feature. Shared setup and helper logic live in the step/support layer, not copied into each binding.
+- Step definitions **MUST** be **reused** across scenarios; the same domain step **MUST NOT** be re-implemented per feature. Shared setup and helper logic live in the step/support layer, not copied into each binding.
 - A Gherkin step **MUST NOT** contain assertions; the **Then** step's *binding* performs the assertion, while the scenario text states the expected outcome in domain terms. Assertion logic **MUST NOT** leak into the scenario file.
 - A step's binding **MUST** resolve selectors and low-level interaction only through the layer that owns them (`spec/project/e2e-test-automation/`'s page objects [R3], resolving `spec/frontend/testability-identifiers/`'s contract [R4] at E2E); a step **MUST NOT** name a raw selector inline.
 
