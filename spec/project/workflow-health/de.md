@@ -127,3 +127,10 @@ Required-Status-Checks auf `develop` können auch Anbieter umfassen, die keine G
 
 ## Offene Fragen
 - _Derzeit keine; alle Entwurfsfragen sind geklärt._
+
+## Quellen
+
+Das `GITHUB_TOKEN`-kaskadiert-nicht-Plattformverhalten in §Bekannte Plattform-Constraints ist eine Author-Time-externe Aussage, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Dieselbe Aussage wird aus `spec/project/release-automation/` §Berechtigungen und Schutz referenziert, das dieselben Quellen zitiert. Abrufdatum für jede Web-Quelle unten: 2026-07-24.
+
+- **GitHub Actions löst aus Events, die mit dem automatischen `GITHUB_TOKEN` erzeugt wurden, keine neuen Workflow-Läufe aus, außer `workflow_dispatch` und `repository_dispatch`**: GitHub Docs, „Triggering a workflow" („events triggered by the `GITHUB_TOKEN` ... will not create a new workflow run") (Primary), `https://docs.github.com/en/actions/using-workflows/triggering-a-workflow`; GitHub Changelog, „Use the GITHUB_TOKEN with workflow_dispatch and repository_dispatch" (Primary), `https://github.blog/changelog/2022-09-08-github-actions-use-github_token-with-workflow_dispatch-and-repository_dispatch/`; GitHub-Community-Discussion #25702, „Push from Action does not trigger subsequent action" (Secondary), `https://github.com/orgs/community/discussions/25702`
+- **Empirischer Portfolio-Beleg**: der eigene `v0.1.5`-Release-Lauf des Portfolios bestätigte dieses Verhalten direkt, als ein unter `GITHUB_TOKEN` emittiertes `release: published`-Event nicht als neuer Lauf zu `release-cd-refresh-master.yml` kaskadierte (Primary, direkte Beobachtung; erfasst in der Release-Prozess-Verifikation für `nolte/claude-shared`).

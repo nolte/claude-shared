@@ -42,7 +42,7 @@ Diese Spec definiert den Vertrag für das **Generieren eines vollständigen, kor
       repository: https://bjw-s-labs.github.io/helm-charts/
   ```
 
-- Das Chart **MUSS** `kubeVersion` in `Chart.yaml` auf die deklarierte Untergrenze der Library (`>=1.28.0-0`) oder höher setzen, sodass eine Installation gegen einen älteren Cluster früh scheitert, statt ein inkompatibles Objekt zu rendern
+- Das Chart **MUSS** `kubeVersion` in `Chart.yaml` auf die deklarierte Untergrenze der Library (`>=1.31.0-0` für `common` 5.0.x; die 4.x-Linie deklarierte `>=1.28.0-0`) oder höher setzen, sodass eine Installation gegen einen älteren Cluster früh scheitert, statt ein inkompatibles Objekt zu rendern. Die Untergrenze **MUSS** der gepinnten `common`-Version folgen, weil die Library sie über Major-Sprünge hinweg anhebt (siehe §Quellen)
 - Der Generator **MUSS** `helm dependency build` (oder `update`) ausführen, sodass ein `Chart.lock` erzeugt und die Library unter `charts/` eingebunden wird, bevor überhaupt getemplatet oder gelintet wird; ein Chart ohne auflösbare Abhängigkeit ist unvollständig
 - Die Abhängigkeit des Charts von `common` **SOLLTE** von der Dependency-Update-Automatisierung des Repositories (Renovate, gemäß `spec/project/dependency-audit/`) nachverfolgt werden, sodass Versions-Anhebungen vorgeschlagen und reviewt werden, statt still zu driften
 - Generierte Values **MÜSSEN** gegen das mitgelieferte `values.schema.json` der Library validieren; der Generator **DARF NICHT** Values ausgeben, die das Schema verletzen (unbekannte Schlüssel, falsche Typen, fehlende Pflichtfelder), da die Library das Schema zur Render-Zeit erzwingt
@@ -120,3 +120,12 @@ Diese Spec definiert den Vertrag für das **Generieren eines vollständigen, kor
 - **Secret-Management-Backend.** Standardisiert das Portfolio auf ein Backend (External Secrets Operator, SOPS, Sealed Secrets)? Falls ja, kann die „Kein-Klartext"-Anforderung einen konkreten Standard benennen, statt den Mechanismus offenzulassen.
 - **GitOps-Grenze.** Diese Spec endet am Chart. Sollte eine begleitende Spec die Verdrahtung des Charts in einen GitOps-Controller regeln, oder bleibt das bewusst jedem Repository überlassen?
 - **Chart-Ort-Konvention.** Gibt es einen portfolio-weiten Standard-Chart-Pfad (`deploy/charts/<app>/` vs. `charts/<app>/`), auf den diese Spec aus `spec/project/project-structure/` verweisen sollte, oder bleibt es eine Konvention pro Repository, die der Agent erkennt?
+
+## Quellen
+
+Die Upstream-Anker-Aussagen oben (der Versions-Pin der `common`-Library und ihre `kubeVersion`-Untergrenze) sind Author-Time-externe Aussagen, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede Quelle unten: 2026-07-24.
+
+- **`common`-Library `version: 5.0.1` und kanonisches Repository `https://bjw-s-labs.github.io/helm-charts/`**: `common`-`Chart.yaml` am Tag `common-5.0.1`, deklariert `version: 5.0.1` (Primary), `https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-5.0.1/charts/library/common/Chart.yaml`; der veröffentlichte Helm-Repository-Index, der `common` 5.0.1 und die kanonische Repo-URL listet (Primary), `https://bjw-s-labs.github.io/helm-charts/index.yaml`; die `bjw-s-labs/helm-charts`-GitHub-Releases (Primary), `https://github.com/bjw-s-labs/helm-charts/releases`
+- **`kubeVersion`-Untergrenze `>=1.31.0-0` für `common` 5.0.x (die 4.x-Linie deklarierte `>=1.28.0-0`)**: `common`-`Chart.yaml` am Tag `common-5.0.1`, deklariert `kubeVersion: ">=1.31.0-0"` (Primary), `https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-5.0.1/charts/library/common/Chart.yaml`; der Helm-Repository-Index, in dem `common` 4.0.1 bis 4.6.2 `>=1.28.0-0` und 5.0.0/5.0.1 `>=1.31.0-0` tragen (Primary), `https://bjw-s-labs.github.io/helm-charts/index.yaml`; die `common`-5.0.0-Release-Notiz, „increased minimum Kubernetes requirements to version 1.31" (Secondary), `https://github.com/bjw-s-labs/helm-charts/releases`
+
+Die in einem früheren Entwurf angegebene Untergrenze `>=1.28.0-0` traf nur für die `common`-4.x-Linie zu; sie wurde gemäß der obigen Triangulation auf `>=1.31.0-0` korrigiert, um der gepinnten 5.0.1-Version zu entsprechen.

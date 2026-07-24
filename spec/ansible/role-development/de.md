@@ -7,12 +7,12 @@ Implementierung: documentary-only — Ansible-Automation liegt außerhalb des Sc
 Ansible-Rollen sind die wiederverwendbaren Einheiten, die ein Playbook-Repository über `requirements.yml` konsumiert. Sie kapseln idempotente Zustands-Logik für eine fokussierte Verantwortlichkeit (nginx installieren, SSH härten, ein Basis-OS bootstrappen), damit dieselbe Logik über Umgebungen und Projekte hinweg wiederverwendet werden kann. Diese Spec definiert die Best-Practice-Baseline für die *Rollen-Schicht* — Galaxy-konformes Verzeichnislayout, Rollen-Schnittstelle (Argument-Specs, Metadaten, Abhängigkeiten), Variablen-Hygiene, Idempotenz, Naming, Tests mit Molecule, Linting, semantische Versionierung und Galaxy-Publishing. Die konsumierende *Playbook-Schicht* wird von [`spec/ansible/playbook-development/`](../playbook-development/de.md) geregelt; diese Spec wiederholt orchestrierungs-bezogene Konventionen (Inventar, Vault, CI-Dry-Run) bewusst nicht.
 
 Referenzen:
-- [Reusing roles (offizieller Guide)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
-- [Developing collections](https://docs.ansible.com/ansible/latest/dev_guide/developing_collections.html)
+- [Reusing roles (offizieller Guide)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
+- [Developing collections](https://docs.ansible.com/projects/ansible/latest/dev_guide/developing_collections.html)
 - [Galaxy — creating a role](https://galaxy.ansible.com/docs/contributing/creating_role.html)
 - [Molecule (Test-Framework)](https://ansible.readthedocs.io/projects/molecule/)
 - [ansible-lint](https://ansible.readthedocs.io/projects/lint/)
-- [Jeff Geerling — Best Practices for Ansible (Community)](https://www.jeffgeerling.com/blog/2019/best-practices-ansible-2019)
+- [Tips and Tricks (offizielle Praxis-Hinweise)](https://docs.ansible.com/projects/ansible/latest/tips_tricks/ansible_tips_tricks.html)
 - [DevSec Hardening Framework](https://dev-sec.io/)
 
 ## Ziele
@@ -86,7 +86,7 @@ Referenzen:
 - **SOLLTE [SHOULD]** ein `CHANGELOG.md` (oder Release-Drafter-Output) pflegen, das Änderungen je getaggter Version auflistet
 
 ### Galaxy-Publishing
-- **MUSS [MUST]** die Rolle (oder die enthaltende Collection) so veröffentlichen, dass konsumierende Playbook-Repos sie via `requirements.yml` pinnen können; Standalone-Rollen via `ansible-galaxy role import`, Collections via `ansible-galaxy collection publish`. Single-Role-Repos setzen standardmäßig auf Standalone-Rollen-Publishing; eine Collection (`galaxy.yml`) wird übernommen, sobald das Repo eine zweite verwandte Rolle ausliefert, im Einklang mit der Post-2.10-Ökosystem-Richtung.
+- **MUSS [MUST]** die Rolle (oder die enthaltende Collection) so veröffentlichen, dass konsumierende Playbook-Repos sie via `requirements.yml` pinnen können; Standalone-Rollen via `ansible-galaxy role import`, Collections via `ansible-galaxy collection publish`. Single-Role-Repos setzen standardmäßig auf Standalone-Rollen-Publishing; eine Collection (`galaxy.yml`) wird übernommen, sobald das Repo eine zweite verwandte Rolle ausliefert, im Einklang mit der Collection-zentrierten Richtung, die das Ökosystem mit Ansible 2.10 eingeschlagen hat. Standalone-Rollen sind nicht deprecated, werden auf Galaxy aber als Legacy-Inhalt geführt: der CLI-Import-Pfad ist weiterhin dokumentiert und aktuell, während der Rollen-Import über die Web-Oberfläche beim Galaxy-NG-Umstieg 2023 entfallen ist (siehe §Quellen).
 - **SOLLTE [SHOULD]** das Publishing aus einem CI-Workflow triggern (auf Tag-Push), nicht von der Maschine einer Entwicklerin, damit jeder Release reproduzierbar ist
 - **KANN [MAY]** auf eine private Galaxy- / Pulp-Instanz veröffentlichen, wenn die Rolle portfolio-intern ist; das `requirements.yml` des konsumierenden Playbooks nutzt dann die passende `source:`-URL
 
@@ -110,3 +110,13 @@ Referenzen:
 
 ## Offene Fragen
 _Derzeit keine._
+
+## Quellen
+
+Die Ökosystem-Richtungs-Aussage in §„Galaxy-Publishing" ist eine Author-Time-externe Aussage, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede Quelle unten: 2026-07-24.
+
+- **Ansible 2.10 hat die Aufteilung vollzogen, die Collections zum Distributionsformat des Ökosystems machte**: Ansible, „Ansible 2.10 porting guide" („In Ansible 2.10, many plugins and modules have migrated to Collections on Ansible Galaxy") (Primary), <https://docs.ansible.com/projects/ansible/latest/porting_guides/porting_guide_2.10.html>; Ansible, „Developing collections" („Collections are a distribution format for Ansible content") (Primary), <https://docs.ansible.com/projects/ansible/latest/dev_guide/developing_collections.html>; Opensource.com, „5 tips for choosing an Ansible collection" („In August 2020, Ansible issued its first release since the developers split the core functionality from the vast majority of its modules and plugins") (Secondary), <https://opensource.com/article/21/3/ansible-collections>; ATIX AG, „Ansible Collections: more clarity and easier sharing" (Secondary), <https://atix.de/en/blog/ansible-collections/>
+- **Ein Repo mit mehreren verwandten Rollen ist der dokumentierte Auslöser für die Umstellung auf eine Collection**: Ansible, „Migrating Roles to Roles in Collections on Galaxy" („distribute many roles in a single cohesive unit of reusable automation"; geteilte Plugins „instead of duplicating them") (Primary), <https://docs.ansible.com/projects/ansible/latest/dev_guide/migrating_roles.html>; Ansible, „Distributing collections", das `galaxy.yml` verlangt und `ansible-galaxy collection publish` dokumentiert (Primary), <https://docs.ansible.com/projects/ansible/latest/dev_guide/developing_collections_distributing.html>; Red Hat, „Ansible Content Collections" („the essential building blocks of automation") (Secondary, Vendor), <https://www.redhat.com/en/technologies/management/ansible/content-collections>
+- **Standalone-Rollen-Publishing überlebt über die CLI und ist als Legacy positioniert, nicht als deprecated**: Ansible, `ansible-galaxy`-CLI-Referenz, die `role import` neben `collection publish` dokumentiert (Primary), <https://docs.ansible.com/projects/ansible/latest/cli/ansible-galaxy.html>; Galaxy-NG-User-Guide, der Standalone-Rollen unter der „Legacy"-Navigation und deren v1-API führt und `ansible-galaxy role import` aktuell hält (Primary), <https://docs.ansible.com/projects/galaxy-ng/en/latest/community/userguide.html>; Red Hat, „The new Ansible Galaxy", dessen Feature-Vergleich die GitHub-Rollen-Import-Oberfläche streicht mit dem Hinweis, dass das Veröffentlichen von Collections die Empfehlung ist und bestehende Rollen über die CLI pflegbar bleiben (Primary, Vendor-Ankündigung), <https://www.redhat.com/en/blog/new-ansible-galaxy>
+
+Verifiziert 2026-07-24: Für Galaxys Standalone-Rollen-Inhaltstyp wurde weder eine Deprecation noch eine Abschaltung angekündigt. Zurückgezogen wurde Angrenzendes, das leicht damit verwechselt wird — die alte Galaxy-Codebasis (inzwischen read-only) und die Galaxy-v2-API —, weshalb die Anforderung oben Standalone-Publishing als Default für Single-Role-Repos behält und Collections als Richtung benennt.

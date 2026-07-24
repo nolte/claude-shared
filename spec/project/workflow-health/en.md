@@ -127,3 +127,10 @@ Required status checks on `develop` may include providers that aren't GitHub Act
 
 ## Open Questions
 - _None at this time; all drafting questions have been resolved._
+
+## Sources
+
+The `GITHUB_TOKEN`-does-not-cascade platform behaviour in §Known platform constraints is an author-time external assertion triangulated per `spec/claude/research-triangulate/` §Author-time assertions (author-time tier: at least three independent sources, ordered Primary-first). The same assertion is cross-referenced from `spec/project/release-automation/` §Permissions and protection, which cites the same sources. Retrieval date for every web source below: 2026-07-24.
+
+- **GitHub Actions doesn't trigger new workflow runs from events created with the automatic `GITHUB_TOKEN`, except `workflow_dispatch` and `repository_dispatch`**: GitHub Docs, "Triggering a workflow" (*"events triggered by the GITHUB_TOKEN ... will not create a new workflow run"*) (Primary), `https://docs.github.com/en/actions/using-workflows/triggering-a-workflow`; GitHub Changelog, "Use the GITHUB_TOKEN with `workflow_dispatch` and `repository_dispatch`" (Primary), `https://github.blog/changelog/2022-09-08-github-actions-use-github_token-with-workflow_dispatch-and-repository_dispatch/`; GitHub community discussion #25702, *"Push from Action does not trigger subsequent action"* (Secondary), `https://github.com/orgs/community/discussions/25702`
+- **Empirical portfolio evidence**: the portfolio's own `v0.1.5` release run confirmed this behaviour directly, when a `release: published` event emitted under `GITHUB_TOKEN` didn't cascade to `release-cd-refresh-master.yml` as a new run (Primary, direct observation; recorded in the release-process verification for `nolte/claude-shared`).

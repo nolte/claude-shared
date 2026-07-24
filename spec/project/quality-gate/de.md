@@ -79,3 +79,9 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 
 ## Offene Fragen
 _Derzeit keine._
+
+## Quellen
+
+Die JSON-Schema-Meta-Validierungs-Aussage in §Zusammensetzung (dass `additionalProperties: false` unter `allOf` unsolide ist und die Closed-Shape-Garantie `unevaluatedProperties: false` erfordert) ist eine Author-Time-externe Aussage, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede Quelle unten: 2026-07-24.
+
+- **`additionalProperties: false` erkennt nur Properties im selben Subschema und kann daher eine über `allOf`/`$ref` zusammengesetzte Form nicht schließen; `unevaluatedProperties: false` (eingeführt in draft 2019-09) ist das Keyword, das die Form über die Komposition hinweg schließt**: JSON Schema, „Understanding JSON Schema"-Objekt-Referenz („additionalProperties only recognizes properties declared in the same subschema as itself" und kann das Erweitern eines Schemas via Combining-Keywords wie `allOf` einschränken, während `unevaluatedProperties` in Subschemata deklarierte Properties erkennt) (Primary), `https://json-schema.org/understanding-json-schema/reference/object`; Learn JSON Schema, die `additionalProperties`-Referenz (2020-12) mit Querverweis auf `unevaluatedProperties` (Secondary), `https://www.learnjsonschema.com/2020-12/applicator/additionalproperties/`; Simon Mikulcik, „Bulletproof Your Input Validation: Understanding unevaluatedProperties" („additionalProperties ... only knows about its siblings"; die Lösung ist „add `unevaluatedProperties: false`") (Secondary), `https://medium.com/@smikulcik/bulletproof-your-input-validation-understanding-unevaluatedproperties-c6e7a0eb6ddd`

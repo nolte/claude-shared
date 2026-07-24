@@ -60,3 +60,11 @@ This spec consolidates the portfolio-wide Taskfile *mechanics* in one place: the
 
 ## Open Questions
 - Once Task's remote-Taskfile resolution graduates from experimental to stable, should consuming portfolio-common automation from `nolte/taskfiles` be raised from **SHOULD** to **MUST**, and the `TASK_X_REMOTE_TASKFILES` flag requirement retired? Deferred until the upstream feature stabilises.
+
+## Sources
+
+The Task remote-Taskfile feature-maturity assertion in §"Shared Taskfiles from `nolte/taskfiles`" is an author-time external assertion triangulated per `spec/claude/research-triangulate/` §Author-time assertions (author-time tier: at least three independent sources, ordered Primary-first). Retrieval date for every source below: 2026-07-24.
+
+- **Task's remote-Taskfile resolution is an experimental feature gated by `TASK_X_REMOTE_TASKFILES=1`**: Task documentation, "Remote Taskfiles" experiment page, gated by `TASK_X_REMOTE_TASKFILES` and carrying the standard experimental-feature warning (Primary), `https://taskfile.dev/docs/experiments/remote-taskfiles`; the upstream tracking issue `go-task/task#1317`, still open with experiment status "candidate" (Primary), `https://github.com/go-task/task/issues/1317`; `Marmelab`, "Taskfile: The Modern Alternative to `Makefile`" (Secondary), `https://marmelab.com/blog/2026/03/12/taskfile-alternative-makefile.html`
+
+Verified 2026-07-24: the feature is still experimental (the tracking issue's status has advanced from "draft" to "candidate" but is neither stable nor enabled by default), and the flag name `TASK_X_REMOTE_TASKFILES` is unchanged, so the requirement above remains current.

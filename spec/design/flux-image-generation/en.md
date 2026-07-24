@@ -27,8 +27,8 @@ Readers: prompt authors and skill/agent authors targeting FLUX; operators tuning
 ## Requirements
 
 ### Model selection
-- **MUST** treat **FLUX.1-schnell** as the default model: Apache-2.0 (commercial use of outputs permitted), few-step distilled, reachable on Cloudflare Workers AI's free tier.
-- **MUST** treat **FLUX.1-dev** as non-commercial: its licence forbids commercial use of outputs without a separate Black Forest Labs licence, so it **MUST NOT** be the default for blog or commercial assets; use it only for non-commercial or evaluation work.
+- **MUST** treat **FLUX.1-schnell** as the default model: Apache-2.0 (commercial use of both the model and its outputs permitted), few-step distilled, billed in Neurons on Cloudflare Workers AI and therefore drawn from its free daily Neuron allocation.
+- **MUST** treat **FLUX.1-dev** as licence-restricted at the *model* level rather than at the output level: the FLUX [dev] Non-Commercial License requires a separate Black Forest Labs licence for commercial use of the model itself and obliges the operator to run content filtering, while the generated outputs may be used for any purpose including commercial ones (the one output restriction is training a competing model). Because the commercial-use question therefore attaches to the generating run and not to the asset, FLUX.1-dev **MUST NOT** be the default for blog or commercial assets; use it only for non-commercial or evaluation work.
 - **MUST** record which FLUX variant produced an asset; the `image-generation` tool's sidecar `model` field satisfies this.
 
 ### Prompting (natural language)
@@ -74,6 +74,8 @@ Readers: prompt authors and skill/agent authors targeting FLUX; operators tuning
 
 ## References
 
+The model-licensing and hosting assertions in §"Model selection" are author-time external assertions triangulated per `spec/claude/research-triangulate/` §Author-time assertions (author-time tier: at least three independent sources, ordered Primary-first). Retrieval date for every external source below: 2026-07-24.
+
 - [R1] Prompt-document authoring that targets FLUX: `spec/design/graphic-prompt-authoring/`
 - [R2] The tool whose `cloudflare` provider runs FLUX.1-schnell: `spec/tools/image-generation/`
 - [R3] Brand color contract the prompts must satisfy: `spec/design/corporate-design-colors/`
@@ -81,6 +83,13 @@ Readers: prompt authors and skill/agent authors targeting FLUX; operators tuning
 - [E2] FLUX.1-schnell model card (`guidance_scale=0.0`, `max_sequence_length=256`): <https://huggingface.co/black-forest-labs/FLUX.1-schnell>
 - [E3] FLUX.1-dev model card (`guidance_scale=3.5`, `max_sequence_length=512`): <https://huggingface.co/black-forest-labs/FLUX.1-dev>
 - [E4] Cloudflare `@cf/black-forest-labs/flux-1-schnell` schema (`steps` max 8, `prompt` max 2048, no width/height/negative_prompt): <https://developers.cloudflare.com/workers-ai/models/flux-1-schnell/>
+- [E5] FLUX [dev] Non-Commercial License v2.0, the licence text Black Forest Labs currently publishes (last updated 2025-11-25; its scope clause names FLUX.1 [dev]), granting Output use "for any purpose (including for commercial purposes)" (Primary): <https://bfl.ai/legal/non-commercial-license-terms>
+- [E6] `LICENSE-FLUX1-dev` v1.1.1, the licence version still shipped in the `flux` inference repository, requiring a company licence "for a commercial activity" around the model (Primary): <https://github.com/black-forest-labs/flux/blob/474dc42/model_licenses/LICENSE-FLUX1-dev>
+- [E7] Black Forest Labs' own clarification that the short-lived v1.1 wording dropping the commercial-output grant was reverted in v1.1.1 (Primary, vendor statement in a third-party forum): <https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/discussions/6>
+- [E8] Cloudflare Workers AI pricing, the 10,000-Neurons-per-day free allocation FLUX.1-schnell's per-tile and per-step rates are billed against (Primary, independent redistributor): <https://developers.cloudflare.com/workers-ai/platform/pricing/>
+- [E9] Independent overview of the schnell (Apache-2.0) / dev (source-available, non-commercial) / pro (proprietary) split, including that users keep ownership of the outputs (Tertiary): <https://en.wikipedia.org/wiki/Flux_(text-to-image_model)>
+
+Verified 2026-07-24: FLUX.1-dev's restriction sits on the model, not on the output. An earlier revision of this spec stated that the licence forbids commercial use of *outputs*; the licence text in force contradicts that ([E5], [E6], [E7]), so §"Model selection" is corrected above rather than merely cited. Two licence versions circulate in parallel—v2.0 on Black Forest Labs' legal site and v1.1.1 in the inference repository and on the model card—and they agree on the output grant. Black Forest Labs has since shipped the FLUX.2 family under the same consolidated non-commercial terms; this spec still governs the FLUX.1 models the `image-generation` tool reaches.
 
 ## Open Questions
 
