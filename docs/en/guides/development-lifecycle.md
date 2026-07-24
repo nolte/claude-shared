@@ -165,11 +165,11 @@ Quality skills and agents run mostly in CI and pre-push contexts. Several are al
 | Artefact | Type | When to invoke |
 |---|---|---|
 | [`quality-gate`](../skills/nolte-engineering/quality-gate.md) | skill | Run lint, typecheck, and test in parallel before commit, PR, or release. |
-| [`dependency-audit`](../skills/nolte-engineering/dependency-audit.md) | skill | Scan the dependency tree for CVEs, optionally license issues; pre-PR or pre-release gate. |
+| [`dependency-audit`](../skills/nolte-engineering/dependency-audit.md) | skill | Scan the dependency tree for CVEs (Common Vulnerabilities and Exposures), optionally license issues; pre-PR or pre-release gate. |
 | [`portfolio-audit`](../skills/nolte-shared/portfolio-audit.md) | skill | Audit the cross-repository capability portfolio for duplicates and gaps. |
 | [`vocab-drift-audit`](../skills/nolte-shared/vocab-drift-audit.md) | skill | Diff the local Vale vocabulary against the pinned `nolte/vale-style` release. |
 | [`workflow-health-triage`](../skills/nolte-shared/workflow-health-triage.md) | skill | Triage a failing required workflow on `develop` or `main` and dispatch the appropriate fix lane. |
-| [`docs-freshness-checker`](../agents/nolte-shared/docs-freshness-checker.md) | agent | Audit MkDocs docs for parity, dead links, stale spec/src references, ADR hygiene, and Mermaid-derived drift. |
+| [`docs-freshness-checker`](../agents/nolte-shared/docs-freshness-checker.md) | agent | Audit MkDocs docs for parity, dead links, stale spec/src references, ADR (Architecture Decision Record) hygiene, and Mermaid-derived drift. |
 | [`prose-vale-curator`](../agents/nolte-shared/prose-vale-curator.md) | agent | Curate prose so it passes Vale; in vocabulary-owning repos, extend `accept.txt` for legitimate technical identifiers. |
 
 ### 7 Close and release

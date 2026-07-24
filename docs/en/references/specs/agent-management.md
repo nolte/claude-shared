@@ -37,7 +37,7 @@ Without a steady shape, agents drift in naming, trigger wording, tool scoping, a
 
 ## Requirements (excerpt)
 
-The keywords MUST, MUST NOT, SHOULD, and MAY follow RFC 2119 (the normative-requirement rule).
+The keywords MUST, MUST NOT, SHOULD, and MAY follow RFC (Request for Comments) 2119 (the normative-requirement rule).
 
 ### Structure
 

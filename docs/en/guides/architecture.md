@@ -41,8 +41,8 @@ project—there is no runtime service.
 ## Load-bearing decisions
 
 The non-trivial trade-offs are recorded as conventions in `spec/` and in
-`CLAUDE.md` rather than as standalone ADRs (the repo keeps no `docs/<lang>/adrs/`
-tree yet):
+`CLAUDE.md` rather than as standalone Architecture Decision Records (ADRs; the
+repo keeps no `docs/<lang>/adrs/` tree yet):
 
 - **Plugin-only distribution**—skills are never copied into consumers; the
   marketplace is the single delivery path.

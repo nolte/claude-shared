@@ -18,7 +18,7 @@ Agents are specialized sub-agents with focused tool access and a system prompt. 
 | `audience-doc-author` | Drafts or refines audience-driven documentation against an existing audience artifact |
 | `audience-review` | Reviews audience artifacts produced by `audience-identify` (read-only) |
 | `spec-readiness-reviewer` | Audits specs for contradictions, audience fit, and Requirement-vs-Acceptance completeness |
-| `docs-freshness-checker` | Audits MkDocs documentation for language parity, dead links, stale path references, ADR hygiene |
+| `docs-freshness-checker` | Audits MkDocs documentation for language parity, dead links, stale path references, ADR (Architecture Decision Record) hygiene |
 | `prose-vale-curator` | Curates prose to pass Vale without altering technical claims |
 | `png-to-transparent-svg` | Converts a PNG image with baked-in checkerboard transparency into an SVG file with real alpha |
 | `feature-consistency-reviewer` | Reviews a draft feature against the feature corpus, source roots, and spec corpus for overlap, duplication, drift, and prior art |
