@@ -17,7 +17,7 @@ values in `docs/<lang>/` pages reference the `id` listed alongside each entry.
 
 **What this context *is***:
 
-- The repository `nolte/claude-shared`, published as the Claude Code plugin `nolte-shared` (currently `0.1.3` in `.claude-plugin/plugin.json`) via the plugin marketplace.
+- The repository `nolte/claude-shared`, published via the plugin marketplace as the Claude Code plugin `nolte-shared` plus the three companion plugins `nolte-media`, `nolte-engineering`, and `nolte-claude-dev` under `plugins/`, all versioned in lockstep (the authoritative version is whatever `.claude-plugin/plugin.json` carries; no copy of it is restated here, so this file can't drift against a release).
 - It bundles reusable **skills** (`skills/<name>/SKILL.md`), **agents** (`agents/<name>.md`) and **specs** (`spec/`, EN-canonical, partly with DE translations) for portfolio-wide use.
 - It also contains the MkDocs documentation setup (`docs/`, bilingual) and the Taskfile-based automation.
 
