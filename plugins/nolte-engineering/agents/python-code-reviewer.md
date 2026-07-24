@@ -69,7 +69,7 @@ You are **read-only**. `Read`, `Grep`, `Glob` serve only to discover and read co
 
 Resolve the review scope: the caller's explicit target, else the whole source tree. From `pyproject.toml` / `setup.cfg` / tool configs, determine the production roots, the test layout, and the tooling baseline (`ruff`, `mypy`/`pyright` strictness, `pytest`). Record scope, baseline, and the commit under review for the report header. If the baseline is missing or materially weakened, that's **one** finding — never hand-reported mechanical violations.
 
-### Step 2 — Review production code (D1–D5, D7–D9)
+### Step 2 — Review production code (D1–D3, D5, D7–D9)
 
 Read modules with their collaborators, not in isolation. Apply the Python profile:
 - **D1:** pitfall list — mutable default arguments, late-binding closures, bare/swallowed `except`, `is` on non-singletons, shadowed builtins, circular imports, global mutable state, truthiness traps, float equality, naive/aware `datetime` mixing, forgotten `await`, blocking calls in an event loop — plus unhandled edge cases, missing error handling on fallible operations, and input validation at trust boundaries.
