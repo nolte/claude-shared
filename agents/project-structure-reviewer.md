@@ -86,7 +86,7 @@ findings:
 ## Health
 - Spec rules checked: <list of §sections in `spec/project/project-structure/` the audit covered>
 - Surfaces with zero hits: <list, e.g. "Top-level files" when every required top-level artefact exists>
-- Deferred scope (intentional out-of-bounds): <list, e.g. "GitHub-App installation → project-structure-apply skill (live API)", "label-description-length policing → settings.yml-specific audit not in this surface">
+- Deferred scope (intentional out-of-bounds): <list, e.g. "GitHub-App installation → project-structure-apply skill (live API)", "workflow-health HEAD redness (gh run list --status failure) + flake-register cross-check → project-structure-apply skill (spec/project/workflow-health/ §Auditing)", "label-description-length policing → settings.yml-specific audit not in this surface">
 
 ## Caller follow-ups
 - Route every `missing-file` and `missing-directory` finding through `project-structure-apply scaffold` for the canonical bootstrap path; manual `add-file` is the fallback when the operator wants to author a one-off variant.
@@ -152,6 +152,7 @@ Optional but spec-governed:
 - `renovate.json5` (or `.json`) **MUST** `extends` the portfolio preset `github>nolte/gh-plumbing//renovate-configs/common#<tag>` pinned to a release tag. Missing or unpinned `extends` is an `extends-drift` finding (`severity: Critical`).
 - `.github/release-drafter.yml` — `missing-file` (`severity: Critical`) when absent; **MUST** extend `nolte/gh-plumbing:.github/commons-release-drafter.yml` — `extends-drift` (`severity: Warning`) when present but not extending the commons file.
 - Required workflow files under `.github/workflows/` (per `spec/project/branching-model/` §Required GitHub workflows): `release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`. Each missing file is a `workflow-gap` finding (`severity: Critical`). The exact `uses:` pin verification is deferred-scope (out of this audit) per **Health**.
+- **Workflow-health redness is deferred to the skill.** `spec/project/workflow-health/` §Auditing makes a workflow-health pass a SHOULD for any audit that visits `.github/workflows/`, but its live half—HEAD redness of required checks via `gh run list --status failure`, plus the flake-register cross-check—needs `Bash` + an authenticated `gh`, which this read-only agent deliberately doesn't hold (identical to the GitHub-App live check). This agent's contribution to the pass is the **static** slice only: the presence-of-required-workflow-files check above. Record the live redness scan under **Health** → "Deferred scope"; the `project-structure-apply` skill performs it.
 
 ### Surface 4 — source layout and project-type-specific (per spec §"Source layout", §"Python development (optional)", §"Home Assistant integrations (optional)", §"Ansible bootstrap (optional)")
 
