@@ -54,8 +54,24 @@ tasks:
       - pre-commit run --all-files
 
   lint:prose:
-    desc: Run Vale prose linter across English-language Markdown
+    desc: |
+      Run the Vale prose linter across English-language Markdown.
+      Requires Vale >= 3.14: the per-path `BasedOnStyles =` opt-outs in .vale.ini
+      (the generated docs/*/skills|agents|portfolio trees, the German trees, the
+      LLM-instruction artefacts) rely on section-glob matching that older Vale
+      builds silently ignore, so an outdated binary reports hundreds of false
+      errors against generated and non-English files. The preflight below fails
+      fast with that explanation instead of drowning the caller in noise.
     cmds:
+      - |
+        installed="$(vale --version | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)"
+        required="3.14.0"
+        if [ "$(printf '%s\n%s\n' "$required" "$installed" | sort -V | head -1)" != "$required" ]; then
+          echo "vale $installed is too old — this repo's .vale.ini needs >= $required." >&2
+          echo "Older builds ignore the per-path BasedOnStyles opt-outs and report false errors" >&2
+          echo "against the generated catalog, the German trees, and SKILL.md/agent files." >&2
+          exit 1
+        fi
       - vale sync
       - vale README.md docs/en/ $(find spec -name 'en.md')
 
@@ -106,6 +122,17 @@ tasks:
       - docs:catalog
     cmds:
       - python3 scripts/check_links.py --offline
+
+  deps:audit:
+    desc: |
+      Scan the Python dependency manifests for known CVEs with pip-audit, per
+      spec/project/dependency-audit/ §Execution mechanics. This is the local
+      reproduction of what the dependency-audit skill runs, so a contributor can
+      reproduce a finding without dispatching the skill. Non-zero exit means at
+      least one advisory matched. Requires uv (pip-audit runs via uvx, so no
+      global install and no pollution of the working environment).
+    cmds:
+      - uvx pip-audit --progress-spinner=off -r requirements.txt -r requirements-dev.txt -r docs/requirements.txt -r evals/requirements-dev.txt -r evals/requirements-eval.txt
 
   license:sbom:
     desc: |
