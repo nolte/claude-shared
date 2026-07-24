@@ -72,5 +72,5 @@ The spec surface aligns rather than conflicts: `spec/claude/mcp-tool-preference/
 ## References
 
 - Roadmap item R-10 (`project/roadmap.md`).
-- Work package P2 in `.audits/issue-orchestrate/378/analysis.md`.
+- Work package P2 in the issue #378 pre-analysis (retired to git history).
 - GitHub issue #378; tracking issue #382.

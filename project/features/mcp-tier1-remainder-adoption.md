@@ -62,5 +62,5 @@ The consistency check ran via the `feature-consistency-reviewer` agent (`agent_v
 ## References
 
 - Roadmap item R-10 (`project/roadmap.md`).
-- Work package P7 in `.audits/issue-orchestrate/378/analysis.md` (Tier-1 remainder); OQ-D at analysis §Open questions.
+- Work package P7 in the issue #378 pre-analysis (retired to git history) (Tier-1 remainder); OQ-D at analysis §Open questions.
 - GitHub issue #378; tracking issue #382.

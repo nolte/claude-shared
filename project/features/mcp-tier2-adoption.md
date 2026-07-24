@@ -56,5 +56,5 @@ Procedural note: at decomposition time the sibling drafts F-13 / F-14 / F-16 wer
 ## References
 
 - Roadmap item R-10 (`project/roadmap.md`).
-- Work package P8 in `.audits/issue-orchestrate/378/analysis.md`.
+- Work package P8 in the issue #378 pre-analysis (retired to git history).
 - GitHub issue #378; tracking issue #382.

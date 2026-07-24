@@ -12,7 +12,7 @@ consistency_check:
   agent_version: feature-consistency-reviewer@5784336
   findings:
     - kind: prior-art
-      target: PR #329 (.audits/issue-orchestrate/371/analysis.md) and agents/*.md, plugins/nolte-engineering/agents/*.md, plugins/nolte-media/agents/*.md
+      target: PR #329 (issue #371 pre-analysis, in git history) and agents/*.md, plugins/nolte-engineering/agents/*.md, plugins/nolte-media/agents/*.md
       resolution: proceed
     - kind: overlap
       target: F-8 (agent-description-budget-guardrail)

@@ -53,5 +53,5 @@ The consistency check ran via the `feature-consistency-reviewer` agent (`agent_v
 ## References
 
 - Roadmap item R-10 (`project/roadmap.md`).
-- Work package P9 in `.audits/issue-orchestrate/378/analysis.md`.
+- Work package P9 in the issue #378 pre-analysis (retired to git history).
 - GitHub issue #378; tracking issue #382.

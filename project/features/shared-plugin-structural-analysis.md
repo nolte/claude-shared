@@ -12,7 +12,7 @@ consistency_check:
   agent_version: feature-consistency-reviewer@5784336
   findings:
     - kind: prior-art
-      target: .audits/issue-orchestrate/371/analysis.md (PR #329 trim; .audits/skills-agents-sweep/2026-07-01.md)
+      target: issue #371 pre-analysis, in git history (PR #329 trim; .audits/skills-agents-sweep/2026-07-01.md)
       resolution: proceed
 ---
 
@@ -42,7 +42,7 @@ The boundary decision **MUST** evaluate one named candidate on its merits: extra
 
 The consistency check ran via the `feature-consistency-reviewer` agent (`agent_version: feature-consistency-reviewer@5784336`) and returned one non-blocking finding for this feature.
 
-- **prior-art** (`.audits/issue-orchestrate/371/analysis.md` — PR #329 trim and the `skills-agents-sweep` artifact; resolution `proceed`): earlier work touched agent descriptions — PR #329 applied a one-off −30% two-tier trim — and the `skills-agents-sweep/2026-07-01.md` artifact ran a qualitative sweep whose 5k-token cap targets the skill *body* axis (the axis `scripts/validate_skills.py` already enforces at lines 427–447), which is orthogonal to the per-agent *description*-token routing budget this feature measures. Neither produced F-5's measured per-plugin analysis or the plugin-boundary decision, so `proceed` is correct: F-5 is net-new analysis, not a re-run. No sibling feature (F-1 mission, F-2 release, F-3 quality-gate docs, F-4 reviewer-agent coverage) claims this scope. `prior-art` is a non-blocking kind, so it does not gate `draft → ready`.
+- **prior-art** (issue #371 pre-analysis, in git history — PR #329 trim and the `skills-agents-sweep` artifact; resolution `proceed`): earlier work touched agent descriptions — PR #329 applied a one-off −30% two-tier trim — and the `skills-agents-sweep/2026-07-01.md` artifact ran a qualitative sweep whose 5k-token cap targets the skill *body* axis (the axis `scripts/validate_skills.py` already enforces at lines 427–447), which is orthogonal to the per-agent *description*-token routing budget this feature measures. Neither produced F-5's measured per-plugin analysis or the plugin-boundary decision, so `proceed` is correct: F-5 is net-new analysis, not a re-run. No sibling feature (F-1 mission, F-2 release, F-3 quality-gate docs, F-4 reviewer-agent coverage) claims this scope. `prior-art` is a non-blocking kind, so it does not gate `draft → ready`.
 
 This feature is the **measurement-method source** for the R-9 chain: the tokenization method it documents under acceptance-1 is the single method that F-7's recorded baseline and F-8's enforced guardrail both reuse verbatim (see F-7 and F-8 consistency notes). Because F-5's own measurement is self-contained, the reviewer raised no blocking overlap on F-5; the shared-method commitment is recorded downstream where the values must reconcile.
 

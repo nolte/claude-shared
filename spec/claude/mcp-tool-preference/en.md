@@ -71,7 +71,7 @@ Readers: skill and agent authors in `claude-shared` who maintain GitHub-touching
 - [R2] Agent frontmatter, `tools:` grants, and the ignored `mcpServers` field for plugin-distributed agents: `spec/claude/agent-management/`
 - [R3] The allowlist that keeps shell and MCP tool calls from prompting: `spec/claude/permission-allowlist/`
 - [R4] Agent-description and tool-routing budget governance the `tools:` grants must respect: roadmap item R-9
-- [R5] Provenance and the staged adoption plan (work packages P1-P9): issue #378, `.audits/issue-orchestrate/378/analysis.md`
+- [R5] Provenance and the staged adoption plan (work packages P1-P9): issue #378; pre-analysis retired to git history
 
 ## Open Questions
 
