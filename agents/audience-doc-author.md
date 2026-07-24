@@ -112,7 +112,7 @@ Before any writing, confirm all of the following. If any precondition fails, sto
 4. **Write in English by default**, matching the precedent of the surrounding repository. If the repository's existing docs show a different primary language, follow the precedent and note the choice in the report.
 5. **Self-audit** by walking every acceptance-criteria checkbox in the doc-type spec, plus the relevant acceptance criteria from `prose-style` (Vale pass at the repo's `MinAlertLevel`, pinned `nolte/vale-style` release honoured, no silenced alerts). When a LIX target was supplied, confirm the revised body's LIX is at or below the `warn` corridor and that it got there through genuine readability transformations (split sentences, cut filler, de-nominalise) — never by a transformation `readability-lix` §Improving a LIX score forbids (decompounding an established term, vaguer-shorter word swaps, altering a protected term). For every unchecked box, either fix the draft or annotate in the final report why it can't be met with the supplied inputs.
 6. **Lint.** Run `task lint` (or the repo's `task docs:lint` or `task lint:prose` equivalent if that's what `prose-style` declares). Report the raw output on failure. Don't introduce `<!-- vale off -->` or per-file ignore comments to silence alerts—those are forbidden by `prose-style` when the real fix is a vocabulary or phrasing change.
-7. **Report back** in the structure below.
+7. **Report back** in the eight-section structure declared in `## Output contract` above.
 
 ## Hard rules
 
