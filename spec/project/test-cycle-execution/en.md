@@ -76,7 +76,9 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 ### Flakiness handling at execution time
 
 - **MUST NOT** **retry a test until it goes green**: retrying a test until it passes hides real flakiness and ships a broken signal [R6], [R12].
-- **MAY** use a **bounded, flip-signal retry** (run a failing test a fixed small number of times only to *detect* that it flips, flagging it as flaky)—detection, not laundering.
+- **MUST** own **flake detection** and leave **flake classification** to phase 3: this phase produces the observation, phase 3 assigns the class. The split is what keeps the invariant "a single green re-run doesn't clear a failure" enforceable, because the component that re-runs is never the component that decides the failure was harmless.
+- **MUST** use a **bounded, flip-signal re-run** on a failing case: **N = 2 additional independent runs** (three observations in total), run in the same execution and under the same pinned command and environment. Two extra runs is the smallest N that can observe a flip in either direction while staying cheap enough to run on every red case; N = 1 can't distinguish a flip from a coincidence, and larger N buys confidence the phase isn't entitled to spend, since classification is phase 3's job. A project **MAY** raise N (never lower it) and **MUST** record the value it used.
+- **MUST** emit the **per-run outcome vector** for that case (for example `fail, pass, fail`) plus a derived `flip-observed: true|false` signal as part of the structured result, and **MUST NOT** itself label the case `flaky` or `real`, collapse the vector to its best outcome, or let a green re-run replace the original red in the emitted result.
 - **MUST** **quarantine** a known-flaky test (exclude it from the gating signal while tracking it as a defect to fix) rather than letting it block the gate or be silently re-run forever [R5], [R12].
 
 ### Reproducibility and pinning
@@ -95,7 +97,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 - [ ] Isolation + randomised order is required, and bare sleeps are forbidden in favour of readiness-condition waits (incl. ephemeral deps), with no shared mutable environment
 - [ ] Parallelisation/sharding is required (SHOULD); test selection is permitted (MAY) only if the full suite still runs on a schedule; reproducible-build caching is referenced
 - [ ] Staged CI execution gates the fast tiers on the PR and runs slow/broad tiers in a dedicated stage/nightly, with a fast-PR-stage + fail-fast guideline
-- [ ] Retry-until-green is forbidden; bounded flip-signal retry is detection-only; known flakes are quarantined-and-tracked
+- [ ] Retry-until-green is forbidden; the bounded flip-signal re-run is detection-only at a fixed N = 2 additional independent runs, emitting the per-run outcome vector plus a `flip-observed` signal and never a `flaky`/`real` label; known flakes are quarantined-and-tracked
 - [ ] Reproducibility via pinning + recorded command/environment is required
 - [ ] Each result is keyed to a TC-ID for traceability
 - [ ] The boundary against `quality-gate` (single-invocation gate), `workflow-health` (red-CI triage = phase 3), and phases 1/3/4 is explicit
@@ -122,4 +124,4 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 
 - Should the portfolio set a concrete PR-gating-stage time budget (for example the ~10-minute guideline) as a requirement, or keep it advisory and per-project?
 - Should test impact analysis / predictive selection be elevated from MAY to SHOULD for large suites, given its proven cost saving—and what's the required cadence for the full-suite safety run?
-- Is the bounded flip-signal retry better owned here (execution emits a `flaky` flag) or in phase 3 (analysis decides flake vs real)—where exactly does the flake *classification* live versus the flake *detection*?
+- ~~Is the bounded flip-signal retry better owned here (execution emits a `flaky` flag) or in phase 3 (analysis decides flake vs real)—where exactly does the flake *classification* live versus the flake *detection*?~~ **Settled (2026-07-24): detection here, classification in phase 3.** Execution runs the bounded re-run at a fixed N = 2 additional independent runs and emits the per-run outcome vector plus `flip-observed`; it never emits a `flaky` label. `spec/project/test-cycle-result-analysis/` consumes that vector together with cross-run history and assigns the class. Separating the two puts the "presume real until evidence" judgement in the one phase whose entire job is classification, and denies the re-running component any authority to explain its own red away—the exact failure mode that turns a bounded re-run into retry-until-green.

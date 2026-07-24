@@ -28,13 +28,13 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - Das **consumer-driven**-Modell als Referenz etablieren und die provider-driven- und bi-directional-Varianten mit ihrer Eignung dokumentieren
 - Assertions auf die **Kompatibilität des Agreements** begrenzen (Nachrichtenform, Feld-Präsenz und -Typen, Status-Codes, die protokoll-ebene Interaktion), nie Geschäftslogik oder End-to-End-Verhalten
 - Einen **Contract-Austausch (Broker)** und ein **`can-i-deploy`-artiges Kompatibilitäts-Gate** vor dem Deployment verlangen, sodass ein Contract, der nicht gegen den aktuellen Provider verifiziert ist, nicht ausgeliefert werden kann
-- Eine scharfe Grenze zur Integration-Stufe (ein echter eigener, live geübter Kollaborateur) und zu E2E (das ganze System) ziehen
+- Eine scharfe Grenze zur Integration-Stufe (ein echter eigener, im Gleichschritt ausgelieferter, live geübter Kollaborateur) und zu E2E (das ganze System) ziehen
 - Die Stufe werkzeug-agnostisch halten, mit einem austauschbaren Referenzprofil statt eines vorgeschriebenen Frameworks
 
 ## Nicht-Ziele
 
 - Die Stufe auszuführen oder ihre Ausführungsmechanik und Ausgabetabelle zu definieren: Eigentum von `spec/project/quality-gate/` [R9]
-- Einen **echten eigenen Kollaborateur** live zu üben (eine echte Datenbank oder einen Broker über eine Verbindung): Das ist die Integration-Stufe [R2]
+- Einen **echten eigenen, im Gleichschritt ausgelieferten Kollaborateur** live zu üben (eine echte Datenbank oder einen Broker über eine Verbindung, oder einen eigenen Service, der zusammen mit dem geprüften Code deployt und versioniert wird): Das ist die Integration-Stufe [R2]
 - Die **Geschäftslogik oder interne Korrektheit** eines der Services zu verifizieren: Das sind die eigenen Unit- und Component-Stufen jedes Service [R7]
 - Eine **Ganz-System-Journey** zu treiben: Das ist die E2E-Stufe [R8]
 - **Beide** — Consumer und Provider — zusammen hochzufahren: Die Contract-Stufe existiert genau, um das zu vermeiden
@@ -87,7 +87,8 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 ### Wann verwenden, wann nicht
 
 - **MUSS [MUST]** die Contract-Stufe an **Service-zu-Service-/API-Grenzen** anwenden, wo Consumer und Provider unabhängig evolvieren und brechende Änderungen **ohne eine geteilte Integrationsumgebung** gefangen werden müssen — der Microservice-Fall des Fundaments, in dem Contract-Tests breite Integration ersetzen [R1].
-- **DARF NICHT [MUST NOT]** sie auf eine Grenze anwenden, die das Projekt **vollständig besitzt und bereits** als schmalen Integrationstest übt (eine echte Datenbank, die es kontrolliert), noch sie für vollständige funktionale Verifikation verwenden; das sind die Integration- bzw. Unit-/Component-Stufen [R2], [R7].
+- **DARF NICHT [MUST NOT]** sie auf eine Grenze anwenden, die das Projekt **besitzt und im Gleichschritt ausliefert** und bereits als schmalen Integrationstest übt (eine echte Datenbank, die es kontrolliert, oder einen eigenen Service, der zusammen mit seinem Consumer deployt und versioniert wird), noch sie für vollständige funktionale Verifikation verwenden; das sind die Integration- bzw. Unit-/Component-Stufen [R2], [R7].
+- **MUSS [MUST]** sie umgekehrt auf einen Service anwenden, den das Projekt **besitzt, aber unabhängig ausliefert**: Gemeinsamer Besitz beseitigt den Versions-Schiefstand nicht, den unabhängiges Deployment erzeugt, also ist eine eigene, aber unabhängig ausgelieferte Grenze eine Contract-Grenze. `spec/project/test-tier-integration/` [R2] nennt dieselbe Regel von der anderen Seite; der Unterscheider ist die **Auslieferungsgrenze**, nicht der Besitz.
 
 ### Anti-Patterns
 
@@ -110,7 +111,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [ ] Determinismus via keine-Seite-live (Consumer-Mock + Provider-Replay) ist gefordert
 - [ ] Ein Broker und ein `can-i-deploy`-artiges Deployment-Gate sind gefordert, und Contract-Drift (kein Broker / kein Gate) ist verboten
 - [ ] Die Ausführungs-Platzierung weist Consumer-Tests der Consumer-Pipeline (PR-Gate), Provider-Verifikation der Provider-Pipeline und can-i-deploy als Pre-Deploy-Gate zu
-- [ ] Die Wann-verwenden-/Wann-nicht-Regeln knüpfen an den Microservice-Fall (breite Integration ersetzen) und schließen Owned-Collaborator-Integration und vollständige funktionale Verifikation aus
+- [ ] Die Wann-verwenden-/Wann-nicht-Regeln knüpfen an den Microservice-Fall (breite Integration ersetzen), schließen im Gleichschritt ausgelieferte Owned-Collaborator-Integration und vollständige funktionale Verifikation aus und schließen einen eigenen, aber unabhängig ausgelieferten Service über den Auslieferungsgrenzen-Unterscheider ein
 - [ ] Die Grenze zur Integration-Stufe (echter eigener Kollaborateur live), zu den Unit-/Component-Stufen (interne Korrektheit) und zu E2E (ganzes System) ist explizit
 - [ ] Traceability auf TC-ID ist gefordert, und ein optionales, klar degradiertes Referenzprofil (consumer-driven + Varianten) ist bereitgestellt, ohne ein Framework vorzuschreiben
 - [ ] Die EN- und DE-Versionen sind strukturell identisch (gleiche Überschriften, Anforderungszahl, Akzeptanzkriterien-Zahl) und der Spec-Index listet den neuen Slug

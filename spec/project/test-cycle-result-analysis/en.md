@@ -53,6 +53,9 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 
 - **MUST NOT** explain a failure away as a **flake without evidence**: a failure is presumed **real** until classification shows otherwise [R5].
 - **MUST** establish flakiness by **independent re-runs and history**, not by a single re-run: a single green re-run **doesn't** clear a failure—a result that fails then passes with no change is evidence of flakiness *to be quarantined and fixed*, not of the original failure being safe to ignore [R5], [R6].
+- **MUST** consume the **per-run outcome vector** and `flip-observed` signal that execution emits from its bounded flip-signal re-run at a fixed **N = 2 additional independent runs** (three observations per failing case), per `spec/project/test-cycle-execution/` [R2], rather than commissioning re-runs of its own. Detection lives in phase 2, classification lives here; this phase never re-runs a case [R2].
+- **MUST** treat `flip-observed: true` as **necessary but not sufficient** for a `flake` classification: a flip within the three observations is admissible evidence, and the class **MUST** additionally rest on **history** (the same case having flipped before, or a known non-deterministic cause identified in the trace). Absent that second leg, the failure stays classified **real**, because one flip is equally consistent with a genuine order-, timing-, or state-dependent defect, and a defect misfiled as a flake is quarantined instead of fixed.
+- **MUST NOT** treat a fixed re-run count as a **confidence threshold**: the phase classifies from a fixed, auditable N plus history, not from a computed pass-rate probability. A statistical threshold needs a run-history volume most projects don't have, varies per case, and can't be reproduced by a reviewer from the emitted result—the fixed N can.
 - **MUST** treat the **normalisation of flakiness** (routinely waving failures through as "probably flaky") as a trust-destroying anti-pattern, per the foundation's determinism rule.
 
 ### Root-cause analysis
@@ -86,7 +89,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 - [ ] The phase is defined as interpreting raw results into a routed classification (not running tests, not applying fixes), consuming execution's structured output
 - [ ] Classification is mandatory before any action, using the workflow-health failure taxonomy (defect / flake / test-bug / infra / stale dep / config-secret drift), and acting on an unclassified result is forbidden
 - [ ] Each class routes to a next phase (real defect → phase 4 + regression case in phase 1; test bug → phase 1; flake → quarantine; infra/stale/config → environment fix)
-- [ ] Real-vs-flake discipline is required: presume real, no explaining-away without evidence, and a single green re-run doesn't clear a failure, cited to Google
+- [ ] Real-vs-flake discipline is required: presume real, no explaining-away without evidence, and a single green re-run doesn't clear a failure, cited to Google; the flake class consumes execution's fixed N = 2 flip-signal vector and additionally requires history, with a confidence threshold explicitly rejected
 - [ ] Root-cause via assertion diff / trace / logs / E2E artefacts, change bisection, and minimal reproducer is required, cited to git-bisect and reproducer guides
 - [ ] Coverage is read as a guide feeding new cases (not a number), and mutation score is the stronger suite-quality signal read as a trend
 - [ ] Visual/E2E review is routed to `e2e-result-reviewer` and red-CI triage to `workflow-health` (referenced, not restated), with cross-run trend/dedup analysis
@@ -110,6 +113,6 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 
 ## Open Questions
 
-- How many independent re-runs (and over what window) should the phase require before classifying a failure as flake versus real—a fixed number, or a confidence threshold?
+- ~~How many independent re-runs (and over what window) should the phase require before classifying a failure as flake versus real—a fixed number, or a confidence threshold?~~ **Settled (2026-07-24): a fixed number, and the phase doesn't run it.** Execution performs the re-runs at a fixed N = 2 additional independent runs and emits the outcome vector; this phase classifies from that vector plus history, and a flip alone never suffices for `flake`. A fixed N is reproducible by a reviewer from the emitted result, which a computed confidence threshold isn't, and the history leg supplies the discrimination a larger N would otherwise be bought for. The window is therefore not a wall-clock window but the case's recorded run history, which is what the phase already reads for trends.
 - Should the deduplication of many failures into one root cause be a required step with a named grouping key (for example stack-trace signature), or stay advisory?
 - Where a classification is `test-bug`, should the phase require a recorded rationale tying the case change to a requirement, mirroring the foundation's no-cheating auditability question?

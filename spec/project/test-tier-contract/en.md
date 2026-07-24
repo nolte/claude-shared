@@ -28,13 +28,13 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - Establish the **consumer-driven** model as the reference and document the provider-driven and bi-directional variants with their fit
 - Scope assertions to the **compatibility of the agreement** (message shape, field presence and types, status codes, the protocol-level interaction), never business logic or end-to-end behaviour
 - Require a **contract exchange (broker)** and a **`can-i-deploy`-style compatibility gate** before deployment, so a contract that isn't verified against the current provider can't ship
-- Draw a crisp boundary to the integration tier (a real owned collaborator exercised live) and to E2E (the whole system)
+- Draw a crisp boundary to the integration tier (a real owned collaborator released in lockstep and exercised live) and to E2E (the whole system)
 - Keep the tier tool-agnostic, with a swappable reference profile rather than a mandated framework
 
 ## Non-Goals
 
 - Executing the tier or defining its run mechanics and output table: owned by `spec/project/quality-gate/` [R9]
-- Exercising a **real owned collaborator** live (a real database or broker over a connection): that's the integration tier [R2]
+- Exercising a **real owned collaborator released in lockstep** live (a real database or broker over a connection, or an owned service deployed and versioned together with the code under test): that's the integration tier [R2]
 - Verifying either service's **business logic or internal correctness**: that's each service's own unit and component tiers [R7]
 - Driving a **whole-system journey**: that's the E2E tier [R8]
 - Standing up **both** the consumer and the provider together: the contract tier exists precisely to avoid that
@@ -87,7 +87,8 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 ### When to use, when not
 
 - **MUST** apply the contract tier at **service-to-service / API boundaries** where consumer and provider evolve independently and breaking changes must be caught **without a shared integration environment**: the foundation's microservice case where contract tests replace broad integration [R1].
-- **MUST NOT** apply it to a boundary the project **fully owns and already exercises** as a narrow integration test (a real database it controls), nor use it for full functional verification; those are the integration and unit/component tiers respectively [R2], [R7].
+- **MUST NOT** apply it to a boundary the project **owns and releases in lockstep with**, already exercised as a narrow integration test (a real database it controls, or an owned service deployed and versioned together with its consumer), nor use it for full functional verification; those are the integration and unit/component tiers respectively [R2], [R7].
+- **MUST** apply it, conversely, to a service the project **owns but releases independently**: common ownership doesn't remove the version skew that independent deployment creates, so an owned-but-independently-shipped boundary is a contract boundary. `spec/project/test-tier-integration/` [R2] states the same rule from the other side; the discriminator is the **release boundary**, not ownership.
 
 ### Anti-patterns
 
@@ -110,7 +111,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [ ] Determinism via neither-side-live (consumer mock + provider replay) is required
 - [ ] A broker and a `can-i-deploy`-style deployment gate are required, and contract drift (no broker / no gate) is forbidden
 - [ ] Execution placement assigns consumer tests to the consumer pipeline (PR gate), provider verification to the provider pipeline, and can-i-deploy as a pre-deploy gate
-- [ ] The when-to-use / when-not rules tie to the microservice case (replace broad integration) and exclude owned-collaborator integration and full functional verification
+- [ ] The when-to-use / when-not rules tie to the microservice case (replace broad integration), exclude lockstep-released owned-collaborator integration and full functional verification, and include an owned-but-independently-released service via the release-boundary discriminator
 - [ ] The boundary against the integration tier (real owned collaborator live), the unit/component tiers (internal correctness), and E2E (whole system) is explicit
 - [ ] Traceability to TC-ID is required, and an optional clearly-demoted reference profile (consumer-driven + variants) is provided without mandating a framework
 - [ ] EN and DE versions are structurally identical (same headings, requirement count, acceptance-criteria count) and the spec index lists the new slug
