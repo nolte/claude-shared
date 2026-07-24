@@ -45,6 +45,23 @@ is not a "raise" and needs no headroom re-derivation):
 | nolte-shared | 22 | **11,065** | −386 (agent moved out) |
 | nolte-claude-dev | 1 | **386** | +386 (agent moved in) |
 
+### 2026-07-24 re-baseline (source-code-review capability, legitimately-added agent)
+
+The holistic source-code-review capability (`spec/project/source-code-review/`)
+adds one agent to `nolte-engineering`: `python-code-reviewer` (597 chars,
+authored to the F-6 contract shape from the start), and extends
+`implementation-plan-author` by its third grounded-input mode (+30 chars,
+856 → 886). This is the guardrail's sanctioned **raise** case (a
+legitimately-added agent, not creep in the existing surface): the pre-existing
+29 descriptions are unchanged at 17,908 chars aggregate — already above the
+frozen 15,700 baseline inside its 15% headroom — so the residual slack
+(~147 chars) could not fit a contract-shaped description and the plugin
+re-baselines at the re-measured value:
+
+| Plugin | Agents | Chars (baseline) | Δ vs. 2026-07-22 |
+|---|---:|---:|---|
+| nolte-engineering | 30 | **18,535** | +627 (python-code-reviewer +597; implementation-plan-author grounded-input extension +30) |
+
 ## Remediation summary
 
 - Every shared agent `description` normalised to the F-6 §Description contract

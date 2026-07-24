@@ -87,6 +87,7 @@ Canonical language: `en` · Translations: `de`
 | project | release-skill-layer | Local Release Skill Layer | Lokale Release-Skill-Schicht | draft | portfolio | unversioned |
 | project | requirements-elicitation | Requirements Elicitation Interview | Anforderungserfassung per Interview | draft | local | unversioned |
 | project | roadmap | Project Roadmap | Projekt-Roadmap | draft | local | unversioned |
+| project | source-code-review | Holistic Source Code Review | Ganzheitliches Source-Code-Review | draft | local | unversioned |
 | project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | local | 2026-04-23 |
 | project | spec-driven-development | Spec-Driven Development | Spezifikations-getriebene Entwicklung | accepted | local | unversioned |
 | project | spec-readiness | Spec Readiness | Spec-Reife | draft | local | unversioned |
