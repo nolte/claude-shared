@@ -42,7 +42,7 @@ This spec defines the contract for **generating a complete, correct, schema-vali
       repository: https://bjw-s-labs.github.io/helm-charts/
   ```
 
-- The chart **MUST** set `kubeVersion` in `Chart.yaml` to the library's declared floor (`>=1.28.0-0`) or higher, so an install against an older cluster fails fast rather than rendering an incompatible object
+- The chart **MUST** set `kubeVersion` in `Chart.yaml` to the library's declared floor (`>=1.31.0-0` for `common` 5.0.x; the 4.x line declared `>=1.28.0-0`) or higher, so an install against an older cluster fails fast rather than rendering an incompatible object. The floor **MUST** track the pinned `common` version, because the library raises it across major bumps (see §Sources)
 - The generator **MUST** run `helm dependency build` (or `update`) so a `Chart.lock` is produced and the library is vendored under `charts/` before any templating or linting; a chart shipped without a resolvable dependency is incomplete
 - The chart's dependency on `common` **SHOULD** be tracked by the repository's dependency-update automation (Renovate, per `spec/project/dependency-audit/`) so version bumps are proposed and reviewed rather than drifting silently
 - Generated values **MUST** validate against the library's bundled `values.schema.json`; the generator **MUST NOT** emit values that violate the schema (unknown keys, wrong types, missing required fields), because the library enforces the schema at render time
@@ -120,3 +120,12 @@ This spec defines the contract for **generating a complete, correct, schema-vali
 - **Secret-management backend.** Does the portfolio standardise on one backend (External Secrets Operator, SOPS, Sealed Secrets)? If so, the "no plaintext" requirement can name a concrete default instead of leaving the mechanism open.
 - **GitOps boundary.** This spec stops at the chart. Should a companion spec govern wiring the chart into a GitOps controller, or is that intentionally left to each repository?
 - **Chart location convention.** Is there a portfolio-standard chart path (`deploy/charts/<app>/` versus `charts/<app>/`) this spec should reference from `spec/project/project-structure/`, or does it remain a per-repository convention the agent detects?
+
+## Sources
+
+The upstream-anchor assertions above (the `common` library version pin and its `kubeVersion` floor) are author-time external assertions triangulated per `spec/claude/research-triangulate/` §Author-time assertions (author-time tier: at least three independent sources, ordered Primary-first). Retrieval date for every source below: 2026-07-24.
+
+- **`common` library `version: 5.0.1` and canonical repository `https://bjw-s-labs.github.io/helm-charts/`**: `common` `Chart.yaml` at tag `common-5.0.1`, declaring `version: 5.0.1` (Primary), `https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-5.0.1/charts/library/common/Chart.yaml`; the published Helm repository index listing `common` 5.0.1 and the canonical repo URL (Primary), `https://bjw-s-labs.github.io/helm-charts/index.yaml`; the `bjw-s-labs/helm-charts` GitHub releases (Primary), `https://github.com/bjw-s-labs/helm-charts/releases`
+- **`kubeVersion` floor `>=1.31.0-0` for `common` 5.0.x (the 4.x line declared `>=1.28.0-0`)**: `common` `Chart.yaml` at tag `common-5.0.1`, declaring `kubeVersion: ">=1.31.0-0"` (Primary), `https://raw.githubusercontent.com/bjw-s-labs/helm-charts/common-5.0.1/charts/library/common/Chart.yaml`; the Helm repository index, where `common` 4.0.1 through 4.6.2 carry `>=1.28.0-0` and 5.0.0/5.0.1 carry `>=1.31.0-0` (Primary), `https://bjw-s-labs.github.io/helm-charts/index.yaml`; the `common` 5.0.0 release note, "increased minimum Kubernetes requirements to version 1.31" (Secondary), `https://github.com/bjw-s-labs/helm-charts/releases`
+
+The `>=1.28.0-0` floor stated in an earlier draft was accurate only for the `common` 4.x line; it was corrected to `>=1.31.0-0` to match the pinned 5.0.1 version, per the triangulation above.
