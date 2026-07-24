@@ -38,7 +38,7 @@ from pathlib import Path
 
 # Bumped when the computation (stripping, segmentation, counting) changes in a
 # way that can move a score; recorded in pipeline_metadata for reproducibility.
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 LIBRARY = "nolte-readability-lix"
 TOKENIZER = "builtin-unicode-regex"
 LONG_WORD_THRESHOLD = 6  # a long word has MORE than 6 letters (7+)
@@ -70,6 +70,7 @@ _ABBREVIATIONS = [
 ]
 
 _SENT = "\x00"  # placeholder for a period that must not split a sentence
+_BREAK = "\x01"  # hard sentence boundary at a structural line end
 
 
 def strip_markdown(text: str) -> str:
@@ -94,19 +95,43 @@ def strip_markdown(text: str) -> str:
     text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)
     text = re.sub(r"\[([^\]]*)\]\[[^\]]*\]", r"\1", text)  # reference-style
 
+    # Emoji / icon shortcodes (:name:) render as symbols, not prose.
+    text = re.sub(r"(?<!\w):[a-z0-9_+-]+:(?!\w)", " ", text)
+
     out_lines: list[str] = []
+    structural: list[bool] = []
     for line in text.split("\n"):
         stripped = line.strip()
         # Markdown table separator rows (| --- | --- |) carry no prose.
         if re.fullmatch(r"\|?[\s:|-]*\|[\s:|-]*\|?", stripped) and "-" in stripped:
             continue
+        is_structural = bool(
+            re.match(r"^[ \t]*#{1,6}[ \t]+", line)
+            or re.match(r"^[ \t]*>[ \t]?\S", line)
+            or re.match(r"^[ \t]*([-*+]|\d+\.)[ \t]+", line)
+            or "|" in line
+        )
         # Leading block markers: heading #, blockquote >, list bullets, table pipe.
         line = re.sub(r"^[ \t]*#{1,6}[ \t]+", "", line)
         line = re.sub(r"^[ \t]*>[ \t]?", "", line)
         line = re.sub(r"^[ \t]*([-*+]|\d+\.)[ \t]+", "", line)
         line = line.replace("|", " ")
         out_lines.append(line)
-    text = "\n".join(out_lines)
+        structural.append(is_structural)
+
+    # Structural boundaries terminate sentences (spec §Word and sentence
+    # segmentation): a heading, list item, table row, or blockquote line ends a
+    # sentence at its line end, and so does a paragraph break; flattened
+    # structure must never concatenate into a synthetic sentence.
+    terminated: list[str] = []
+    for i, line in enumerate(out_lines):
+        body = line.rstrip()
+        core = body.rstrip("*_~ \t")
+        ends_paragraph = i + 1 >= len(out_lines) or not out_lines[i + 1].strip()
+        if core and (structural[i] or ends_paragraph) and core[-1] not in ".!?:;":
+            body = body + "."
+        terminated.append(body)
+    text = "\n".join(terminated)
 
     # Emphasis / inline markers (keep the words, drop the punctuation).
     text = re.sub(r"[*_~]", "", text)
@@ -126,6 +151,10 @@ def _protect_non_boundaries(text: str) -> str:
 def split_sentences(text: str) -> list[str]:
     """Segment prose into sentences with abbreviation/number guards."""
     protected = _protect_non_boundaries(text)
+    # A line break after terminal punctuation is a hard boundary (structural
+    # lines are terminated in strip_markdown), regardless of what case the
+    # next line starts with (spec §Word and sentence segmentation).
+    protected = re.sub(r"(?<=[.!?;:])[ \t]*\n\s*", _BREAK, protected)
     # A boundary is .!? — or a colon introducing an independent clause —
     # followed by whitespace and an opening uppercase letter/quote, or EOL.
     boundary = re.compile(r'([.!?]|:(?=\s+[A-ZÄÖÜ]))\s+(?=[A-ZÄÖÜ"\'(\[]|$)')
@@ -142,8 +171,12 @@ def split_sentences(text: str) -> list[str]:
             buf = ""
     if buf.strip():
         sentences.append(buf)
+    # Expand the hard structural boundaries collected above.
+    expanded: list[str] = []
+    for s in sentences:
+        expanded.extend(part for part in s.split(_BREAK) if part.strip())
     # Trailing terminal punctuation with no following capital still ends the text.
-    sentences = [s.replace(_SENT, ".").strip() for s in sentences if s.strip()]
+    sentences = [s.replace(_SENT, ".").strip() for s in expanded if s.strip()]
     return sentences
 
 

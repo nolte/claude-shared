@@ -68,6 +68,31 @@ def test_trailing_punctuation_does_not_change_classification():
     assert a["long_words"] == b["long_words"] == 1
 
 
+def test_structural_boundaries_terminate_sentences():
+    # Spec §Word and sentence segmentation: a heading, list item, or table row
+    # ends a sentence at its line end even without terminal punctuation, so
+    # flattened structure never concatenates into one synthetic sentence.
+    md = (
+        "# Heading\n"
+        "\n"
+        "- first item without period\n"
+        "- second item\n"
+        "\n"
+        "| left | right |\n"
+        "| --- | --- |\n"
+        "| cell one | cell two |\n"
+    )
+    r = lix.compute(md, "en", "reference")
+    assert r["sentences"] == 5  # heading, two items, header row, data row
+
+
+def test_emoji_shortcodes_are_stripped():
+    # Spec (lektorat §Language handling): emoji/icon shortcodes render as
+    # symbols, not prose, and must not count as words.
+    r = lix.compute("Nice :rocket: day.", "en", "reference")
+    assert r["words"] == 2
+
+
 def test_code_and_links_stripped():
     md = (
         "Visit [the dashboard](https://example.com/very/long/path) now.\n\n"
