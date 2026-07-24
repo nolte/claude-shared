@@ -1,6 +1,6 @@
 ---
 name: graphic-prompt-generator
-description: "Turns a short graphic brief into a brand-conformant, generator-ready AI image-generation prompt document on disk. Reads the repo's published brand tokens and descriptive-color vocabulary, assembles the prompt in the mandated order for one named generator (Gemini, Midjourney, or successor), and writes it under design/prompts/. Invoke to draft an image prompt for a hero/empty-state/onboarding illustration, app icon, or logo. Don't use to generate the image itself, clean a PNG background (`png-to-transparent-svg`), or define the brand color system."
+description: "Turns a short graphic brief into a brand-conformant, generator-ready AI image-generation prompt document on disk. Reads the repo's published brand tokens and descriptive-color vocabulary, assembles the prompt in the mandated order for one named generator (Gemini, Midjourney, or successor), and writes it under design/prompts/. Invoke to draft an image prompt for a hero/empty-state/onboarding illustration, app icon, or logo. Don't use to generate the image itself, for a one-off paste-into-the-UI prompt (`gemini-image-handoff`), clean a PNG background (`png-to-transparent-svg`), or define the brand color system."
 distribution: plugin
 tools: Read, Write, Glob, Grep
 phase: design
@@ -14,6 +14,8 @@ use_when:
 dont_use_when:
   - situation: "you want to actually generate the image from a prompt, not author the prompt document"
     alternative: image-generate
+  - situation: "you want a one-off prompt to paste into the Gemini UI, not a durable brand-conformant prompt document"
+    alternative: gemini-image-handoff
   - situation: "you want to remove a fake-transparency background or vectorise a generated PNG"
     alternative: png-to-transparent-svg
 see_also:
@@ -75,7 +77,7 @@ If no brand bundle or `brand-vocabulary.md` is discoverable, **stop and report t
 
 Determine the asset type from the documented vocabulary (`app-icon`, `logo`, `nav-icon`, `illustration`, `empty-state`, `onboarding`, `hero`, `badge`, `pattern`, `diagram`), the variants needed (light / dark / neutral), the target dimensions and file format, and the single target generator. Name the generator explicitly (for example `gemini-2.5-flash-image`, `midjourney-v7`).
 
-When that generator is FLUX or Gemini, consult its model-level baseline before assembling — `spec/design/flux-image-generation/` or `spec/design/gemini-image-generation/` — and author the prompt to that model's rules: FLUX takes a terse, front-loaded natural-language description with no negative prompts and no prompt weights; Gemini takes narrative prose plus a stated intent and always embeds a SynthID watermark. A prompt isn't portable between them — the same brief yields a materially different prompt per model.
+When that generator is FLUX or Gemini, consult its model-level baseline before assembling — `spec/design/flux-image-generation/` or `spec/design/gemini-image-generation/` — and author the prompt to that model's rules. When that spec tree is absent (the same consumer-install case as the brand fallback above), fall back to the generator's own published prompting guidance and record which baseline you applied in the prompt document's header. The model rules are: FLUX takes a terse, front-loaded natural-language description with no negative prompts and no prompt weights; Gemini takes narrative prose plus a stated intent and always embeds a SynthID watermark. A prompt isn't portable between them — the same brief yields a materially different prompt per model.
 
 ### Phase 2 — Assemble the prompt
 
