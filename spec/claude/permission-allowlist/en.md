@@ -6,6 +6,8 @@ Portfolio-Scope: portfolio
 ## Context
 Claude Code (CLI, plugin, and Agent SDK runs) prompts the user for confirmation on any shell or MCP tool call that isn't either autoallowed by the harness or listed in the current project's permission allowlist. Without a curated, committed allowlist, authors confirm the same handful of read-only `git` / `gh` / `task` invocations again and again during day-to-day work, which erodes attention and conditions humans to accept confirmation prompts reflexively. Every repository in the portfolio therefore ships a version-controlled `.claude/settings.json` with an explicit `permissions.allow` list covering the small, well-understood set of read-only commands whose prompts add no safety value. The list is a living artifact that needs a defined maintenance process so it neither ossifies (missing commands that have since become common) nor silently sprawls (inheriting dangerous wildcards from developer-local configs).
 
+Readers: skill and agent authors who maintain a repository's `.claude/settings.json` allowlist, the `permission-allowlist-maintain` skill authors who operationalise the maintenance process, and reviewers checking that a committed allowlist neither ossifies nor sprawls.
+
 ## Goals
 - Every repository in the portfolio ships a committed `.claude/settings.json` whose `permissions.allow` list covers the read-only commands that are demonstrably frequent in that repository
 - The allowlist is updated deliberately and at documented triggers, not through ad-hoc one-off entries that slip in unreviewed

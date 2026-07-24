@@ -10,7 +10,7 @@ This spec governs how a Claude Code agent (the `graphic-prompt-generator` agent,
 
 The capability is the generalised successor to a project-local `gemini-graphic-prompt-generator` agent that hard-coded one project's palette, mascot, and file paths. The portfolio form reads the brand from the consuming repository's published design tokens instead of carrying any project's brand in its body.
 
-Readers: skill and agent authors who maintain the prompt-authoring agent; reviewers verifying generated prompt documents conform to the brand; operators who brief the agent and later regenerate assets.
+Readers: skill and agent authors who maintain the prompt-authoring agent; reviewers verifying generated prompt documents conform to the brand; operators who invoke the agent with a free-form brief and rely on the durable prompt document to regenerate an asset later—this spec governs the produced document and its reproducibility, not the brief's internal format.
 
 ## Goals
 

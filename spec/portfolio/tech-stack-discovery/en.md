@@ -52,7 +52,7 @@ Direct consumers read the inventory and act on it.
 
 - **Downstream Claude Code users in portfolio projects.** Surface: invoking the capture skill in their own repository to author or revise its `tech_stack:` block, plus reading the rendered portfolio inventory under `docs/<lang>/portfolio/`. Expectation: the skill works without per-repo configuration; the inherited entries are immediately visible without manual declaration; the rendered page is a fair representation of the repo's actual stack. Criticality: primary. Maps to AUDIENCES.md → direct consumers → `"Downstream Claude Code users in portfolio projects"`.
 
-- **Contributor reading the rendered docs during onboarding.** Surface: the documentation site under `docs/<lang>/portfolio/` showing the global stack section and the per-repository sections with inherited / repo-specific / suppressed badges. Expectation: a single page answers "what does this repo build on" without grepping the repository's lockfiles and workflow files. Criticality: secondary. Maps to AUDIENCES.md → contributors / maintainers → `"External contributors via pull request"`.
+- **Contributor reading the rendered docs during onboarding.** Surface: the documentation site under `docs/<lang>/portfolio/` showing the global stack section and the per-repository sections with inherited / repo-specific / suppressed badges. Expectation: a single page answers "what does this repo build on" without grepping the repository's lockfiles and workflow files. Criticality: peripheral (aligned to `AUDIENCES.md` → `external-contributor`, which is `peripheral`). Maps to AUDIENCES.md → contributors / maintainers → `"External contributors via pull request"`.
 
 ### Indirect consumers
 

@@ -4,7 +4,9 @@ Status: draft
 
 ## Kontext
 
-KI-Bildgeneratoren (Gemini, DALL-E, Midjourney und ähnliche — diese Liste ist illustrativ für das Muster, keine erschöpfende oder normative Menge) liefern häufig PNGs aus, in denen das Schachbrettmuster, das eigentlich „transparent" signalisieren soll, tatsächlich in die RGB-Kanäle gemalt ist — mit `alpha=255` überall. Vektorisierer wie vtracer behandeln dieses Muster als legitimen Bildinhalt, sodass das resultierende SVG ein vollflächiges Schachbrett hinter dem Motiv trägt. Bis diese Spec landet, operationalisiert der Agent `plugins/nolte-media/agents/png-to-transparent-svg.md` (Erbe früherer Bild-Utility-Arbeit) die Reinigungs-und-Vektorisierungs-Schleife ohne autorisierende Spec — ein `spec-drift-audit`-Befund (D-3 in der Cross-Cutting-Coverage-Matrix). Diese Spec schließt den Drift, indem sie formalisiert, was der Agent tut, was nicht, und wie ein nachgelagerter Konsument seine Ausgabe beurteilt.
+KI-Bildgeneratoren (Gemini, DALL-E, Midjourney und ähnliche — diese Liste ist illustrativ für das Muster, keine erschöpfende oder normative Menge) liefern häufig PNGs aus, in denen das Schachbrettmuster, das eigentlich „transparent" signalisieren soll, tatsächlich in die RGB-Kanäle gemalt ist — mit `alpha=255` überall. Vektorisierer wie vtracer behandeln dieses Muster als legitimen Bildinhalt, sodass das resultierende SVG ein vollflächiges Schachbrett hinter dem Motiv trägt. Bis diese Spec landet, operationalisiert der Agent `plugins/nolte-media/agents/png-to-transparent-svg.md` (Erbe früherer Bild-Utility-Arbeit) die Reinigungs-und-Vektorisierungs-Schleife ohne autorisierende Spec — ein `spec-drift-audit`-Befund (D-3 in der Cross-Cutting-Coverage-Matrix, inzwischen in die Git-Historie zurückgezogen). Diese Spec schließt den Drift, indem sie formalisiert, was der Agent tut, was nicht, und wie ein nachgelagerter Konsument seine Ausgabe beurteilt.
+
+Leser: Autoren und Reviewer des `png-to-transparent-svg`-Agents, der die Reinigungs-und-Vektorisierungs-Schleife operationalisiert, sowie nachgelagerte Konsumenten, die beurteilen, ob ein erzeugtes SVG echte Transparenz trägt.
 
 ## Ziele
 

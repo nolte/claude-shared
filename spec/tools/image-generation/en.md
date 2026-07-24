@@ -27,6 +27,7 @@ Three constraints shape the design:
 - Batch pipelines (n prompts per job)—one prompt per invocation (`-n` requests multiple images of the **same** prompt).
 - A local/self-hosted provider (`stable-diffusion.cpp`)—a planned follow-up, out of scope for this iteration.
 - Guaranteeing any provider stays free—quotas are the providers' to change.
+- Midjourney as a provider—it has no scriptable text-to-image API reachable from the terminal, so it's deliberately absent from the fixed `--provider` registry. `spec/design/graphic-prompt-authoring/` may author a Midjourney-targeted prompt document, but this tool never generates against Midjourney; the two specs meet only at the prompt artifact, not at a shared backend.
 
 ## Requirements
 

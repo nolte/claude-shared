@@ -9,6 +9,8 @@ Ein Skill (`SKILL.md`) und ein Agent (`agents/<name>.md`) tragen beide YAML-Fron
 
 Diese Spec ist diese Landkarte. Sie ist eine **beschreibende, aggregierende Referenz**: Für jedes Skill- und Agent-Frontmatter-Feld hält sie die Aufgabe des Feldes fest, den Typ, die Limits, den Pflicht-/optional-Status, einen expliziten **Provenienz-Marker** (Anthropic-/Claude-Code-Standard, mit der Upstream-Quelle — gegenüber nolte-lokaler Erfindung) und einen Rückverweis auf die Spec, die die Regeln des Feldes **normativ besitzt**. Sie wiederholt diese Regeln bewusst nicht als zweite Quelle der Wahrheit; bei jeder Abweichung gewinnt die Owner-Spec. Sie wird zusammen mit einer maschinenlesbaren JSON-Schema-Begleitdatei ausgeliefert, die dasselbe Feldset auf der Parse-Fehler-Ebene kodiert, und sie definiert den Wartungsprozess, der Referenz, Schema, Owner und `scripts/validate_skills.py` davon abhält, auseinanderzudriften.
 
+Leser: Skill- und Agent-Autoren und Reviewer, die die vollständige Feld-Landkarte brauchen, die `validate_skills.py`-Betreuer, die das Schema synchron halten, sowie alle, die beurteilen, ob ein Feld ein portabler Claude-Code-Standard oder eine nolte-lokale Erfindung ist.
+
 ## Ziele
 
 - Eine konsolidierte Referenz, die **jedes** Skill- und Agent-Frontmatter-Feld in einem einzigen Dokument abdeckt, sodass ein Autor oder Reviewer die gesamte Fläche auf einmal sieht.

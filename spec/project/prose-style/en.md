@@ -5,6 +5,8 @@ Status: draft
 ## Context
 Documentation, specifications, READMEs, release notes, and other human-readable Markdown across this portfolio must read consistently regardless of who—or what—wrote the text. [Vale](https://vale.sh) is the shared prose linter used to enforce that consistency. The canonical source is the portfolio-local style package in [`nolte/vale-style`](https://github.com/nolte/vale-style); a repository's `.vale.ini` composes the upstream Microsoft and RedHat style packages with a pinned release of that package, which also carries the shared technical vocabulary. When a new term, product name, or phrasing convention is introduced, it must be deposited in `nolte/vale-style` rather than tracked per repository, so that future text generation—whether by a human or by an AI assistant—produces output that already passes the shared rules.
 
+Readers: humans and AI assistants authoring Markdown across the portfolio, reviewers running Vale, and the `nolte/vale-style` maintainers who own the shared style package and vocabulary.
+
 ## Goals
 - Human-readable text in every repository follows the same lint-enforced style rules
 - Shared technical vocabulary has a single canonical home at `nolte/vale-style`

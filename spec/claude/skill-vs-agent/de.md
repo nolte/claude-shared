@@ -5,6 +5,8 @@ Status: draft
 ## Kontext
 Claude Code bietet in diesem Plugin zwei Formate für wiederverwendbare Capabilities: **Skills** (unter `skills/<name>/SKILL.md` autoriert) und **Agents** (unter `agents/<name>.md` autoriert). Die `skill-management`-Spezifikation regelt die On-Disk-Struktur von Skills; die `agent-management`-Spezifikation dasselbe für Agents. Keine davon beantwortet die vorgelagerte Frage: **welches Format passt zu einer gegebenen Capability?** Ohne eine gemeinsame Entscheidungsregel driften Portfolio-Autoren — dieselbe Aufgabenklasse erscheint in einem Repository als Skill und in einem anderen als Agent, oder dieselbe Capability wird doppelt ausgeliefert, weil niemand entscheiden konnte. Der Abschnitt „Specialized-agent dispatch for remediation" in der `workflow-health`-Spezifikation setzt bereits ein Skill-orchestriert-Agent-führt-aus-Muster voraus; diese Spezifikation kodifiziert die Regel, die diese Voraussetzung portfolio-weit konsistent macht.
 
+Leser: Portfolio-Autoren, die entscheiden, ob eine Capability ein Skill oder ein Agent sein soll, Reviewer, die prüfen, dass die Begründung dokumentiert ist, sowie die Nachbar-Specs `skill-management`/`agent-management`, die diese Entscheidungsregel voraussetzen.
+
 ## Ziele
 - Jede neue Claude-Code-Capability in diesem Plugin wird entweder als Skill oder als Agent autoriert, nie als beides, auf Basis einer deterministischen Entscheidungsregel
 - Ähnliche Aufgaben in verschiedenen Repositories landen auf demselben Artefakt-Typ — kein Drift zwischen „hier Skill, dort Agent" für gleichwertige Arbeit

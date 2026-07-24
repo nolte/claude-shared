@@ -1,3 +1,11 @@
+---
+title: Privacy Notice
+audience: [downstream-user]
+content_mode: meta
+track: user-docs
+last_updated: 2026-06-01
+---
+
 # Privacy Notice
 
 Last updated: June 1, 2026

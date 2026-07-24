@@ -9,6 +9,8 @@ Until this spec existed, the naming convention for reusable Claude Code artifact
 
 Scope boundary: this spec owns the **form** of a name—its semantic shape, morphology, exceptions, and rename policy. The **character-level** constraints (1–64 chars, lowercase ASCII kebab-case, no leading/trailing hyphen, no `--`, reserved tokens `anthropic`/`claude`, no XML) stay owned by `skill-management` §Frontmatter validation and `agent-management` §Structure; the digest at the end of this document only points there.
 
+Readers: skill and agent authors choosing a conformant name, reviewers citing one anchor for the whole name-form convention, `validate_skills.py` maintainers who mirror the exception lists, and consumer plugins inheriting the convention.
+
 ## Goals
 
 - One normative home for the complete naming convention, inheritable by every portfolio plugin

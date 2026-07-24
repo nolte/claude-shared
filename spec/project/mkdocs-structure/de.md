@@ -9,6 +9,8 @@ Jedes Portfolio-Repository, das Dokumentation ausliefert, tut das über MkDocs, 
 
 Diese Spec schließt diese Lücke. Sie definiert (a) das portfolio-weite MkDocs-Skelett — Site-Layout, Plugin-Basis, Navigations-Kontrakt, Per-Page-Struktur, Sprachen-Parität — und (b) zwei explizite **Erweiterungs-Hooks**, über die projekt-typ-spezifische Specs (`skill-agent-catalog`, künftige `cookiecutter-template-docs`, künftige `library-api-docs`, …) zusätzliche Sektionen und Plugins andocken, ohne das Skelett zu forken oder es stillschweigend zu übersteuern. Das Skelett wird erzwungen; die Erweiterungen sind deklarativ und nachprüfbar.
 
+Leser: Autoren des `mkdocs-structure-apply`-Skills und der Projekttyp-Specs, die sich an seine Extension-Hooks andocken, sowie Reviewer und das `docs-freshness`-Audit, die die Site-Form über Repositorys hinweg normalisieren.
+
 ## Ziele
 <!-- Was diese Spec erreichen soll. Stichpunkte, ergebnisorientiert. -->
 - Jedes Portfolio-Repository mit MkDocs exponiert dieselbe Top-Level-Navigation, sodass ein Leser, der ein Repo gelernt hat, das nächste sofort navigieren kann

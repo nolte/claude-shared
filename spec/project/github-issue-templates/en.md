@@ -8,6 +8,8 @@ GitHub repositories in the nolte portfolio cover diverse project types: Claude C
 
 The `project-structure` spec leaves this gap explicitly open: community-health files (issue templates, CODEOWNERS) aren't yet prescribed. This spec closes the issue-template half of that gap and defines a methodology (not a fixed template) that a downstream skill can run on any repo to generate the right templates for that repo's project type.
 
+Readers: authors of the downstream skill that generates project-type-specific issue templates, reviewers checking template fit, and the maintainers and contributors who triage the issues those templates shape.
+
 ## Goals
 
 - Define a repeatable procedure for deriving project-specific issue templates from a repo's project type and audience profile.

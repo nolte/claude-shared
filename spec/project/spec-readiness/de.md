@@ -5,6 +5,8 @@ Status: draft
 ## Kontext
 Spezifikationen unter `spec/<topic>/<slug>/` sind die Quelle der Wahrheit für nachgelagerte Arbeit im Portfolio — Implementierung, Review-Pläne, Tooling, Dokumentation, Audits. Eine Spec, die in sich widersprüchlich ist, über ihre Leser schweigt oder Lücken hat, zwingt jeden nachgelagerten Schritt zum Raten. Die Kosten kumulieren: Widersprüche tauchen als Bugreports während der Implementierung auf, Audience-Mismatches als „das war nicht für uns geschrieben", Vollständigkeitslücken als Ad-hoc-Entscheidungen, die dann der Spec widersprechen, der sie folgen sollten. Heute hat das Portfolio benachbarte Audits — `spec/project/spec-drift-audit/` gleicht Spec gegen Implementierung ab, der `spec`-Skill dedupliziert über Übersetzungen hinweg, `audience-identify` erstellt Audience-Artefakte für Module, die noch keines haben — aber keines von ihnen prüft, ob eine Spec **für nachgelagerte Nutzung bereit** ist. Diese Spec definiert die Reife-Praxis: was das Audit prüft, wann es läuft, wie Befunde klassifiziert werden und wie eine Spec von Draft zu einer implementierbaren Quelle der Wahrheit aufsteigt.
 
+Leser: Auditoren, die die Readiness-Prüfung durchführen, bevor eine Spec den Draft-Status verlässt, die Autoren des `spec-readiness-reviewer`, die sie operationalisieren, sowie Spec-Autoren, die die von ihr aufgedeckten Widersprüche, Zielgruppen-Lücken und Vollständigkeits-Befunde auflösen.
+
 ## Ziele
 - Jede Spec im Geltungsbereich wird entlang dreier Dimensionen auditiert — Widersprüche, Audience-Fit, fachliche Vollständigkeit — bevor sie für nachgelagerte Arbeit herangezogen wird
 - Befunde werden nach einer geteilten Schweregrad-Skala klassifiziert, sodass dieselbe Art von Problem portfolioweit gleich behandelt wird

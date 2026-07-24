@@ -319,7 +319,7 @@ Every browser-hosted UI in the portfolio is built on the same primitives—plain
 - [ ] Every Recharts chart in the repository renders a text alternative and a data-table fallback, and enables `accessibilityLayer`.
 - [ ] `vitest-axe` runs in CI and reports zero violations for every page-level component; the JSDOM contrast-rule limitation is documented and verified by a browser-mode or manual contrast pass.
 - [ ] Every route uses React Router v7 lazy modules with `<Suspense>` + `<ErrorBoundary>` pairs, and the layout mounts `<ScrollRestoration/>`.
-- [ ] `npm audit --omit=dev` reports zero known high/critical CVEs in the production dependency tree; lockfile drift fails CI.
+- [ ] Production-dependency CVE thresholds and the lockfile-drift gate are owned and verified by `spec/project/dependency-audit/` (per §Non-Goals); this spec references that owner rather than asserting its own threshold here.
 - [ ] The `webview-ui-optimize` skill produces a row-per-rule audit table for the repository with `pass` / `fail` / `n/a` and the offending file paths for every `fail`.
 
 ## Open Questions

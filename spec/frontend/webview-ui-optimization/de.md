@@ -319,7 +319,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 - [ ] Jeder Recharts-Chart im Repository rendert eine Textalternative und einen Datentabellen-Fallback und aktiviert `accessibilityLayer`.
 - [ ] `vitest-axe` läuft in CI und meldet null Violations pro Page-Level-Komponente; die JSDOM-Contrast-Rule-Beschränkung ist dokumentiert und wird durch einen Browser-Mode- oder manuellen Contrast-Pass verifiziert.
 - [ ] Jede Route nutzt React-Router-v7-Lazy-Module mit `<Suspense>`-+-`<ErrorBoundary>`-Paaren, und das Layout mountet `<ScrollRestoration/>`.
-- [ ] `npm audit --omit=dev` meldet null bekannte High-/Critical-CVEs im Produktions-Dependency-Baum; Lockfile-Drift lässt CI fehlschlagen.
+- [ ] CVE-Schwellen des Produktions-Dependency-Baums und das Lockfile-Drift-Gate gehören `spec/project/dependency-audit/` und werden dort verifiziert (laut §Nicht-Ziele); diese Spec verweist auf diesen Eigentümer, statt hier eine eigene Schwelle festzuschreiben.
 - [ ] Der `webview-ui-optimize`-Skill produziert eine Zeile-pro-Regel-Audit-Tabelle für das Repository mit `pass` / `fail` / `n/a` und den betreffenden Dateipfaden für jeden `fail`.
 
 ## Offene Fragen

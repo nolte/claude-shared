@@ -8,6 +8,8 @@ Portfolio-Repositories liefern MkDocs-Sites, die standardmäßig zweisprachig si
 
 Diese Spec schließt die Lücke, indem sie den Canonical-und-Translation-Vertrag, der bereits `spec/<topic>/<slug>/` regelt (eine Datei pro Sprache, atomar geschrieben, Englisch kanonisch, Drift gemanagt), auf jede Markdown-Seite unter `docs_dir` überträgt. Sie ist das **Autorenschafts-Pendant** zum Form-Vertrag von `mkdocs-structure` und zum Audit-Vertrag von `docs-freshness`: Form sagt „die Bäume MÜSSEN [MUST] parallel sein", Audit sagt „wir erkennen, wenn sie es nicht sind", und diese Spec sagt „jeder Erzeugungsschritt hält sie von Beginn an parallel".
 
+Leser: Autoren dokumentationserzeugender Skills und Agents, die jeden konfigurierten Sprachbaum atomar schreiben müssen, sowie Reviewer und das `docs-freshness`-Audit, die Sprachparitäts-Drift erkennen.
+
 ## Ziele
 
 - Doku-erzeugende Skills und Agents schreiben jede konfigurierte Sprachfassung einer `docs/<lang>/`-Seite **atomar im selben Erzeugungsschritt**, mit Englisch als kanonischer Quelle und anderen konfigurierten Sprachen als strukturell identische Übersetzungen

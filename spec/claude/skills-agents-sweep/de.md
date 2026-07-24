@@ -10,6 +10,8 @@ Portfolio-weite Befunde sind per-Artefakt-Reviews systematisch unsichtbar. Abgre
 
 Diese Spec kodifiziert die Methodik eines Skills-und-Agents-Sweep-Audits: ein periodisches, portfolio-weites Verfahren, das per-Artefakt-Reviews durch Cross-Cutting-Analyse ergänzt. Die Methodik wurde empirisch beim Baseline-Sweep 2026-05-20 des `nolte-shared`-Plugins (34 Skills, 9 Agents) entwickelt. Diese Spec verallgemeinert diese Erfahrung zu einem wiederholbaren Verfahren.
 
+Leser: Auditoren, die einen portfolioweiten Sweep des Plugin-Inventars durchführen, die Autoren des `skills-agents-sweep`-Skills, die die Methodik operationalisieren, sowie Betreuer, die auf die Querschnitts-Befunde reagieren, die Einzelartefakt-Reviews nicht sichtbar machen.
+
 ## Goals
 
 - Jeder Sweep-Audit wendet dieselben Cross-Cutting-Analyse-Dimensionen in derselben Reihenfolge an und produziert einen konsolidierten Bericht, der über Sweep-Instanzen hinweg vergleichbar ist

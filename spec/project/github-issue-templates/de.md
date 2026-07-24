@@ -8,6 +8,8 @@ GitHub-Repositorys im nolte-Portfolio decken sehr unterschiedliche Projekttypen 
 
 Die `project-structure`-Spec lässt diese Lücke explizit offen: Community-Health-Dateien (Issue-Templates, CODEOWNERS) sind noch nicht vorgeschrieben. Diese Spec schließt die Issue-Template-Hälfte dieser Lücke und definiert eine Methodik — kein fixes Template — die ein nachgelagerter Skill auf ein beliebiges Repo anwenden kann, um die für den Projekttyp passenden Templates zu erzeugen.
 
+Leser: Autoren des nachgelagerten Skills, das projekttyp-spezifische Issue-Templates generiert, Reviewer, die die Template-Passung prüfen, sowie die Betreuer und Beitragenden, die die von diesen Templates geformten Issues triagieren.
+
 ## Goals
 
 - Wiederholbares Verfahren definieren, um projektspezifische Issue-Templates aus dem Projekttyp und dem Audience-Profil eines Repos abzuleiten.

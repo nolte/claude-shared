@@ -70,6 +70,9 @@ design/**/*.jpg
 design/**/*.jpeg
 design/**/*.png
 design/**/*.meta.json
+# Exception: provenance sidecars for the committed SVG masters ARE tracked.
+# They embed no Cloudflare account id — only generator/model/seed/prompt provenance.
+!design/brand/**/*.svg.meta.json
 
 # Local scratch workspace for asset render/cutout iteration (never committed).
 .scratch/

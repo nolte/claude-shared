@@ -7,6 +7,8 @@ The `claude-shared` repository collects reusable Claude Code skills and agents t
 
 For a consolidated cross-artifact reference of every skill- and agent-frontmatter field, its provenance (portable Claude Code standard versus nolte-local invention), and its normative owner, see `spec/claude/skill-agent-frontmatter/`. That reference maps and points back to this spec; it doesn't restate the rules here.
 
+Readers: authors creating or reshaping a skill in the `nolte-shared` plugin, reviewers auditing a skill against its on-disk shape and distribution path, and the consuming projects that install skills via the plugin marketplace.
+
 ## Goals
 - Every skill has the same predictable shape on disk
 - Skills are discoverable by Claude through precise, trigger-oriented descriptions

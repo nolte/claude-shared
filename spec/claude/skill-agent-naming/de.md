@@ -9,6 +9,8 @@ Bis zu dieser Spec lebte die Namenskonvention für wiederverwendbare Claude-Code
 
 Scope-Grenze: Diese Spec besitzt die **Form** eines Namens — semantische Gestalt, Morphologie, Ausnahmen und Rename-Policy. Die **Zeichen-Ebene** (1–64 Zeichen, lowercase ASCII-kebab-case, kein führender/abschließender Bindestrich, kein `--`, reservierte Tokens `anthropic`/`claude`, kein XML) bleibt bei `skill-management` §Frontmatter validation und `agent-management` §Structure; der Digest am Ende dieses Dokuments zeigt nur dorthin.
 
+Leser: Skill- und Agent-Autoren bei der Wahl eines konformen Namens, Reviewer, die einen einzigen Anker für die gesamte Namensform-Konvention zitieren, `validate_skills.py`-Betreuer, die die Ausnahmelisten spiegeln, sowie Consumer-Plugins, die die Konvention erben.
+
 ## Ziele
 
 - Ein normatives Zuhause für die komplette Namenskonvention, erbbar von jedem Portfolio-Plugin

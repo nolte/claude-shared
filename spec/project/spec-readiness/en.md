@@ -5,6 +5,8 @@ Status: draft
 ## Context
 Specifications under `spec/<topic>/<slug>/` are the source of truth for downstream work in the portfolio—implementation, review plans, tooling, documentation, audits. A spec that's internally contradictory, silent about its intended readers, or riddled with gaps forces every downstream step to guess. The cost compounds: contradictions surface as bug reports during implementation, audience mismatches surface as "this wasn't written for us," and completeness gaps surface as ad-hoc decisions that then contradict the spec they were supposed to follow. Today the portfolio has adjacent audits: `spec/project/spec-drift-audit/` reconciles spec against implementation, the `spec` skill deduplicates across translations, `audience-identify` builds audience artifacts for modules that don't yet have one, but none of them audits whether a spec is **ready to be consumed downstream**. This spec defines that readiness practice: what the audit checks, when it runs, how findings are classified, and how a spec graduates from draft to an implementable source of truth.
 
+Readers: auditors running the readiness check before a spec graduates from draft, the `spec-readiness-reviewer` authors who operationalise it, and spec authors resolving the contradictions, audience gaps, and completeness findings it surfaces.
+
 ## Goals
 - Every spec in scope is audited along three dimensions—contradictions, audience fit, domain completeness—before it's relied on for downstream work
 - Findings are classified by a shared severity scale so the same issue gets the same response across the portfolio

@@ -7,6 +7,8 @@ Status: accepted
 
 Software-Module und Projekte werden von mehreren Zielgruppen konsumiert, betrieben, eingeschränkt oder beobachtet — Nutzer, Betreiber, nachgelagerte Integratoren, Maintainer, Security, Compliance, Business-Stakeholder, indirekt betroffene Endnutzer und mehr. Ohne ein diszipliniertes Verfahren, die zutreffenden Zielgruppen für einen *abgesteckten Kontext* (ein konkretes Modul, einen Service, eine Bibliothek oder ein Projekt) zu ermitteln, werden Entscheidungen über Dokumentationstiefe, API-Oberfläche, Release-Taktung, SLAs und Sicherheitslage gegen die privaten Annahmen der Autoren statt gegen die tatsächliche Zielgruppen-Menge getroffen. Diese Spec definiert ein wiederholbares Verfahren, mit dem sich die Zielgruppen eines abgesteckten Kontexts ermitteln und charakterisieren lassen, damit nachgelagerte Artefakte (READMEs, Specs, Threat Models, Release Notes, SLAs) auf eine belastbare Zielgruppenliste verweisen können, statt sie jedes Mal neu zu erfinden.
 
+Leser: Autoren, die die Identifikationsmethode für einen abgegrenzten Kontext anwenden, sowie die nachgelagerten Artefakt-Autoren (README, Spec, Threat-Model, Release-Notes, SLA) und ihre Reviewer, die die resultierende Zielgruppenliste referenzieren, statt sie neu zu erfinden.
+
 ## Ziele
 <!-- Was diese Spec erreichen will. Stichpunkte, ergebnisorientiert. -->
 - Ein konsistentes Verfahren zum Aufzählen der Zielgruppen eines abgesteckten Kontexts bereitstellen

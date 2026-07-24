@@ -7,6 +7,8 @@ Status: draft
 
 Die `skill-management`-Spec definiert, wie ein Skill *erstellt* wird — On-Disk-Form, Frontmatter, Templates, Distributionsform. Was sie nicht definiert, ist, wie ein Skill *reviewt* wird: welche Anforderungen ein Reviewer prüft, in welcher Reihenfolge und welches Deliverable das Review hinterlässt. Ohne eine geteilte Review-Prozedur erzeugen zwei Reviewer desselben Skills inkompatible Ergebnisse, die Rationale-Dokumentations-Regel aus `skill-vs-agent` verrutscht still, und Plugin-Entwickler, die die Review-Ausgabe konsumieren, müssen die private Form jedes Reviewers rückentwickeln. Diese Spec definiert die bindende Review-Prozedur für Skills im `nolte-shared`-Plugin, verweist auf `skill-management` und `skill-vs-agent` als Wahrheitsquellen dafür, was als Finding zählt, und delegiert den Output-Format-Vertrag an `review-plan`. Ein Skill-Review erzeugt genau ein `review-plan`-Artefakt unter `.audits/skill-review/<skill-name>.md`; sobald jeder Punkt verarbeitet ist, wird der Plan gelöscht und seine Git-Historie bleibt als Audit-Trail.
 
+Leser: Reviewer, die ein Skill-Review gegen `skill-management` und `skill-vs-agent` durchführen, die Autoren des `skill-review`-Skills, die das Verfahren operationalisieren, sowie Plugin-Entwickler, die das resultierende `review-plan`-Artefakt konsumieren.
+
 ## Ziele
 <!-- Was diese Spec erreichen will. Stichpunkte, ergebnisorientiert. -->
 - Jedes Skill-Review wendet denselben Satz von Checks aus `skill-management` und `skill-vs-agent` in derselben Reihenfolge mit demselben Schweregrad-Mapping an

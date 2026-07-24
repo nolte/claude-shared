@@ -12,6 +12,8 @@ Diese Spec erfasst diesen Wissensbestand als normative Referenz und als Pflichte
 
 Die Spec ist bewusst zweischichtig, passend dazu, wie sich das Wissen zerlegt: **§Das Backstage-Catalog-Modell** beschreibt, was ein konformer Deskriptor (und die Tech-Radar-Datendatei) erfüllen muss — das normative Substrat, unabhängig von jedem Generator gültig; **§Generator-Anforderungen** beschreibt, was ein auf diesem Substrat aufbauender automatisierter Generator tun, inferieren, emittieren und zu emittieren verweigern muss. Die Acceptance Criteria sind gegen einen Generator formuliert, damit der spätere Skill ein testbares Ziel hat.
 
+Leser: Autoren des künftigen Katalog-Generator-Skills, das `catalog-info.yaml` erzeugt, Reviewer, die einen Deskriptor gegen Backstages per-Kind-Validatoren prüfen, sowie Portfolio-Operatoren, die ein Repository in ein Backstage-Portal einbinden.
+
 ## Goals
 
 - Ein Generator kann ein bestehendes Repository lesen und eine `catalog-info.yaml` emittieren, die Backstages Schema-, Feld-Format- und Policy-Validierung deterministisch besteht, ohne dass am Pflicht-Floor manuell nachgebessert werden muss.

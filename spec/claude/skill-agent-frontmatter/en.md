@@ -9,6 +9,8 @@ A skill (`SKILL.md`) and an agent (`agents/<name>.md`) both carry YAML frontmatt
 
 This spec is that map. It's a **descriptive, aggregating reference**: for every skill- and agent-frontmatter field it records the field's task, type, limits, required/optional status, an explicit **provenance marker** (Anthropic/Claude Code standard, with the upstream source—versus nolte-local invention), and a back-reference to the spec that **normatively owns** the field's rules. It deliberately doesn't restate those rules as a second source of truth; on any discrepancy the owner spec wins. It ships alongside a machine-readable JSON-Schema companion that encodes the same field set at the parse-error level, and it defines the maintenance process that keeps the reference, the schema, the owners, and `scripts/validate_skills.py` from drifting apart.
 
+Readers: skill and agent authors and reviewers who need the full field map, the `validate_skills.py` maintainers who keep the schema in sync, and anyone judging whether a field is a portable Claude Code standard or a nolte-local invention.
+
 ## Goals
 
 - One consolidated reference covering **every** skill- and agent-frontmatter field in a single document, so an author or reviewer sees the whole surface at once.

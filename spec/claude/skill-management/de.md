@@ -7,6 +7,8 @@ Das Repository claude-shared sammelt wiederverwendbare Claude-Code-Skills und -A
 
 Für eine konsolidierte artefaktübergreifende Referenz jedes Skill- und Agent-Frontmatter-Feldes, seiner Provenienz (portabler Claude-Code-Standard gegenüber nolte-lokaler Erfindung) und seines normativen Owners siehe `spec/claude/skill-agent-frontmatter/`. Diese Referenz bildet ab und verweist auf diese Spec zurück; sie wiederholt die Regeln hier nicht.
 
+Leser: Autoren, die ein Skill im `nolte-shared`-Plugin erstellen oder umgestalten, Reviewer, die ein Skill gegen seine On-Disk-Form und seinen Distributionsweg prüfen, sowie die konsumierenden Projekte, die Skills über den Plugin-Marktplatz installieren.
+
 ## Ziele
 - Jeder Skill hat dieselbe vorhersehbare Form auf der Festplatte
 - Skills sind für Claude über präzise, trigger-orientierte Beschreibungen auffindbar

@@ -5,6 +5,8 @@ Status: draft
 ## Kontext
 Das Portfolio pflegt eine wachsende Menge an Specs unter `spec/<topic>/<slug>/`. Gleichzeitig verändert sich der tatsächliche Repository-Zustand durch Pull Requests, Dependency-Bumps, Plattform-Evolution (GitHub, Claude Code, Taskfiles) und ad-hoc Hotfixes, und zwar schneller als Specs nachgezogen werden. Ohne einen verbindlichen Abgleichprozess entsteht stille Drift in beide Richtungen: entweder laufen Repositories an ihren Specs vorbei (Spec-MUSS-Regeln sind nicht umgesetzt) oder Specs dokumentieren einen Soll-Zustand, über den die Praxis mit gutem Grund hinweggegangen ist. Beide Formen von Drift untergraben, dass Menschen und KI-Agenten Specs als vertrauenswürdige Referenz nutzen können. Diese Spezifikation definiert daher den verbindlichen, wiederkehrenden Audit-Prozess: wann er läuft, welchen Scope er abdeckt, wie Ergebnisse gehandhabt werden und wie der Feedbackloop als Spec-Revision oder als Implementierungs-Fix zurückkehrt.
 
+Leser: Auditoren, die den wiederkehrenden Abgleich von Spec und Implementierung durchführen, die Autoren des `spec-drift-audit`-Skills, die ihn operationalisieren, sowie Betreuer, die auf jeden Befund entweder mit einer Spec-Revision oder einem Implementierungs-Fix reagieren.
+
 ## Ziele
 - Jedes Repository im Portfolio führt in dokumentierten Auslöser-Intervallen einen Abgleich zwischen Implementierung und Specs durch
 - Entdeckte Abweichungen werden innerhalb einer dokumentierten Reaktionszeit entweder in Code oder Config korrigiert oder bewusst in eine Spec-Revision überführt — kein „known bug, next quarter"

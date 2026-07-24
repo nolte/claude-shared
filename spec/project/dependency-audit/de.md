@@ -5,6 +5,8 @@ Status: draft
 ## Kontext
 Jedes Repository im Portfolio zieht Drittanbieter-Pakete über ein oder mehrere Dependency-Manifeste ein (`pyproject.toml`, `package.json`, `go.mod`, `Cargo.toml` und deren Lockfiles). Jedes dieser Pakete ist eine Supply-Chain-Angriffsfläche: bekannte Schwachstellen (CVEs / GHSAs / PYSECs) werden fortlaufend offengelegt, transitive Abhängigkeiten multiplizieren diese Fläche, und Lizenzen bringen manchmal Verpflichtungen mit (Copyleft, Attribution), die die eigene Lizenz des Projekts nicht absorbieren kann. Ohne verbindliche Audit-Praxis sammeln sich Befunde still an — Auditoren werden ad hoc ausgeführt, Renovate-PRs tragen keinen Sicherheitskontext, und das Portfolio kann die Frage „Wie hoch ist unsere aktuelle CVE-Exposition?" nicht reproduzierbar beantworten. Diese Spec definiert, wann Dependency-Audits laufen, was sie abdecken, wie Ergebnisse klassifiziert werden und wie Befunde in Handlung übergehen. Sie ergänzt `spec/project/workflow-health/` (kontinuierliche CI-Gesundheit) und `spec/project/spec-drift-audit/` (periodisches Tiefen-Audit), indem sie die spezifische Scheibe des Supply-Chain-Risikos besetzt.
 
+Leser: Autoren und Operatoren des `dependency-audit`-Skills und seines Scanners, Reviewer, die CVE- und Lizenz-Befunde triagieren, sowie Betreuer, die eine reproduzierbare Antwort auf die aktuelle Supply-Chain-Exposition des Portfolios brauchen.
+
 ## Ziele
 - Jedes Repository mit einem Dependency-Manifest führt ein Schwachstellen-Audit an dokumentierten Triggerpunkten durch, nicht zufällig
 - Befunde werden nach einer geteilten Schweregrad-Skala klassifiziert, sodass dieselbe CVE portfolio-weit gleich behandelt wird
