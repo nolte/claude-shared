@@ -48,7 +48,7 @@ This is the **execution** half of the hybrid "skill orchestrates, agent executes
 
 ## Bash justification
 
-`Bash` serves the verify loop of the usability rework: the repository's declared build and test commands (bundler build, unit/a11y test runners) confirm this agent's own edits still build and pass. It never installs new dependencies, never pushes, and never runs commands outside the repo's declared toolchain.
+`Bash` serves the verify loop of the usability rework: the repository's own type checker and linter in check mode (for example its `typecheck` / `lint` tasks, or the underlying `tsc` / `eslint` equivalents) confirm this agent's own edits still pass. It never installs new dependencies, never pushes, and never runs commands outside the repo's declared toolchain.
 
 ## Model pin
 
@@ -104,6 +104,8 @@ Always work mobile-first:
 #### Stack-agnostic usability checklist
 
 Express each item using the project's own components, tokens, and i18n — not framework-specific code from this prompt.
+
+Where this plugin's `spec/` tree is present, `spec/frontend/webview-ui-optimization/` governs the same accessibility, i18n, and UX ground and binds ahead of this list; the peer agent `webview-ui-expert` grades a target against that spec read-only, while this agent fixes in place. The checklist below is the fallback baseline for a consumer install that ships no `spec/`, and the project's own documented conventions win over both.
 
 - **Descriptive and help text:** every form panel/section has a heading plus a short, beginner-friendly intro describing the field group's purpose; every list view has a one-to-two-sentence intro above the table explaining what the entity is and what it is for; every field whose purpose is not self-evident carries an accessible info/help affordance (keyboard-focusable) with explanatory text.
 - **Domain terms and units:** fields using domain-specific terms or abbreviations carry an inline explanation (tooltip/help text); units appear in the label or as an input adornment, never left implicit.

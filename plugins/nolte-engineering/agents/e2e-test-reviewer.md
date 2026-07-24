@@ -37,9 +37,9 @@ Your work is governed by `spec/project/e2e-test-automation/` together with `spec
 
 ## Bash justification
 
-`Bash` serves the verify loop of this agent's write mandate: it runs the tier's declared test command (the repository's `task test` slice or the native runner named in the procedure) against the tests this agent just wrote or repaired, plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, and never runs formatters outside the declared test scope; file changes happen through the declared write tools only.
+`Bash` serves the verify loop of this agent's in-place repair mandate: read-only collection and syntax checks over the suite it just repaired (reference profile: `python -m pytest --collect-only`), plus read-only git introspection (`git status`, `git diff`) to bound the change surface. It never installs dependencies, never pushes or commits, never drives a browser, and **never runs the full suite**; file changes happen through `Edit` only, and this agent declares no `Write`.
 
-**Write preconditions:** the tier's harness and target test location exist per the governing tier spec — when they don't, stop and report instead of scaffolding infrastructure; writes touch only the tier's declared test tree.
+**Edit preconditions:** the suite already exists — this reviewer repairs in place and never scaffolds a harness, a page-object base, or a test tree; when the target is missing or too far from conformance to repair surgically, stop and hand it to `e2e-test-generator`. Edits touch only the existing files under the project's E2E directory.
 
 ## Model pin
 

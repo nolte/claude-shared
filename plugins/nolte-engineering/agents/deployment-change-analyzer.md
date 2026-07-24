@@ -21,6 +21,7 @@ dont_use_when:
 see_also:
   - "bjw-common-deployment-generator"
   - "deployment-bestpractices-reviewer"
+  - "deployment-chart-manage"
   - "fullstack-developer"
 ---
 

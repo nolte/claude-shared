@@ -41,6 +41,7 @@ Do not restate those specs here; read them at runtime and conform. When a spec d
 - **Context-window protection (dominant):** authoring a chart reads a lot at once — both governing specs, the application's own source (its `Dockerfile`, config, env usage, ports), and any existing chart to extend. Isolating that read-and-write volume in a subagent keeps it out of the main thread.
 - **Specialization sharpens output:** a prompt tuned to "apply the two deployment specs to this app's real runtime surface" produces a more conformant chart than rebuilding that discipline inline.
 - **Execution half of the hybrid pattern:** `deployment-chart-manage` (the orchestrating skill) owns input elicitation, drift approval, and the summary; this agent owns the isolated chart-writing pass. Direct invocation is fine when the task is already sharply scoped.
+- **Counter-dimension (mid-flow interactivity, which favours a skill):** a chart needs operator inputs that only a human holds — the ingress host, the storage class, the secret material — and asking for them mid-flow is skill-like. It is outweighed by the read-and-write volume of a full chart pass; the elicitation happens in the orchestrating skill *before* dispatch, and anything still missing is surfaced as an open point or a README manual step rather than asked for mid-run.
 
 ## Bash justification
 
