@@ -60,3 +60,11 @@ Diese Spec konsolidiert die portfolio-weite Taskfile-*Mechanik* an einem Ort: da
 
 ## Offene Fragen
 - Sobald Tasks Remote-Taskfile-Auflösung von experimentell auf stabil reift: Sollte das Konsumieren portfolio-gemeinsamer Automatisierung aus `nolte/taskfiles` von **SOLLTE** auf **MUSS** angehoben und die `TASK_X_REMOTE_TASKFILES`-Flag-Anforderung zurückgezogen werden? Aufgeschoben, bis das Upstream-Feature stabilisiert.
+
+## Quellen
+
+Die Task-Remote-Taskfile-Feature-Reifegrad-Aussage in §„Geteilte Taskfiles aus `nolte/taskfiles`" ist eine Author-Time-externe Aussage, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede Quelle unten: 2026-07-24.
+
+- **Tasks Remote-Taskfile-Auflösung ist ein experimentelles Feature, gated durch `TASK_X_REMOTE_TASKFILES=1`**: Task-Dokumentation, „Remote Taskfiles"-Experiment-Seite, gated durch `TASK_X_REMOTE_TASKFILES` und mit der Standard-Experimental-Feature-Warnung (Primary), `https://taskfile.dev/docs/experiments/remote-taskfiles`; das Upstream-Tracking-Issue `go-task/task#1317`, weiterhin offen mit Experiment-Status „candidate" (Primary), `https://github.com/go-task/task/issues/1317`; Marmelab, „Taskfile: The Modern Alternative to Makefile" (Secondary), `https://marmelab.com/blog/2026/03/12/taskfile-alternative-makefile.html`
+
+Verifiziert 2026-07-24: Das Feature ist weiterhin experimentell (der Status des Tracking-Issues ist von „draft" auf „candidate" fortgeschritten, aber weder stable noch standardmäßig aktiviert), und der Flag-Name `TASK_X_REMOTE_TASKFILES` ist unverändert, sodass die obige Anforderung aktuell bleibt.
