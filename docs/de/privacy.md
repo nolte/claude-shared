@@ -1,3 +1,11 @@
+---
+title: Datenschutzhinweis
+audience: [downstream-user]
+content_mode: meta
+track: user-docs
+last_updated: 2026-06-01
+---
+
 # Datenschutzhinweis
 
 Stand: 1. Juni 2026

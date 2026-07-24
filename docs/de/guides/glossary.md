@@ -13,6 +13,10 @@ gehören zum upstream `nolte/vale-style`-Vokabular (gemäß
 `spec/project/prose-style/`); dieses Glossar erfasst nur das eigene
 Delta.
 
+- **ADR (Architecture Decision Record)**: ein kurzes Dokument, das eine
+  architektonisch bedeutsame Entscheidung festhält — ihren Kontext, die
+  getroffene Wahl und ihre Konsequenzen — versionskontrolliert abgelegt, damit
+  die Begründung die Konversation überdauert, die sie hervorgebracht hat.
 - **Agent**: ein fokussierter Claude-Code-Sub-Agent, definiert in
   `agents/<name>.md`, per `subagent_type` dispatchbar, mit eigener
   Tool-Allow-List und eigenem System-Prompt.

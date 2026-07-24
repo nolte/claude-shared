@@ -12,6 +12,10 @@ Project-specific terminology for `claude-shared`. General prose terms are owned
 by the upstream `nolte/vale-style` vocabulary (per `spec/project/prose-style/`);
 this glossary captures only the project-specific delta.
 
+- **ADR (Architecture Decision Record)**: a short document capturing one
+  architecturally significant decision—its context, the choice made, and its
+  consequences—kept under version control so the rationale outlives the
+  conversation that produced it.
 - **Agent**: a focused Claude Code sub-agent defined in `agents/<name>.md`,
   dispatchable by `subagent_type`, with its own tool allow-list and system
   prompt.
