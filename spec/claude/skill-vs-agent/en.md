@@ -5,6 +5,8 @@ Status: draft
 ## Context
 Claude Code offers two reusable-capability formats in this plugin: **skills** (authored under `skills/<name>/SKILL.md`) and **agents** (authored under `agents/<name>.md`). The `skill-management` spec governs the on-disk shape of skills; the `agent-management` spec does the same for agents. Neither answers the prior question: **which format fits a given capability?** Without a shared decision rule, portfolio authors drift—the same class of task appears as a skill in one repository and as an agent in another, or the same capability is shipped twice because nobody could decide. The `workflow-health` spec's "Specialized-agent dispatch for remediation" subsection already presupposes a skill-orchestrates-agent-executes pattern; this spec codifies the rule that makes that presupposition consistent across the portfolio.
 
+Readers: portfolio authors deciding whether a capability should be a skill or an agent, reviewers checking that the rationale is documented, and the neighbouring `skill-management`/`agent-management` specs that presuppose this decision rule.
+
 ## Goals
 - Every new Claude Code capability in this plugin is authored as either a skill or an agent, never both, based on a deterministic decision rule
 - Similar tasks in different repositories land on the same artifact type—no drift between "skill here, agent there" for equivalent work

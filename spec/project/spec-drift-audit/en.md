@@ -5,6 +5,8 @@ Status: draft
 ## Context
 The portfolio maintains a growing set of specifications under `spec/<topic>/<slug>/`. At the same time, the actual repository state changes through pull requests, dependency bumps, platform evolution (GitHub, Claude Code, Taskfiles) and ad-hoc hotfixes, and it does so faster than specs are kept current. Without a binding reconciliation process, silent drift builds up in both directions: either repositories diverge from their specs (spec MUST rules aren't implemented) or specs document a target state that practice has, for good reason, moved past. Both forms of drift undermine the whole point of using specs as a trustworthy reference for humans and AI agents. This spec therefore defines the binding, recurring audit process: when it runs, which scope it covers, how results are handled, and how the feedback loop returns as either a spec revision or an implementation fix.
 
+Readers: auditors running the recurring spec-versus-implementation reconciliation, the `spec-drift-audit` skill authors who operationalise it, and maintainers acting on each finding as either a spec revision or an implementation fix.
+
 ## Goals
 - Every repository in the portfolio runs a spec-versus-implementation reconciliation at documented trigger intervals
 - Findings are either fixed in code or config, or intentionally lifted into a spec revision, within a documented response window—no "known bug, next quarter" limbo

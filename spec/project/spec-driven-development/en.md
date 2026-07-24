@@ -17,6 +17,8 @@ The principle rests on four pillars:
 
 This principle is the axiomatic precondition that the existing process specs (`continuous-improvement`, `spec-drift-audit`, `spec-readiness`, `pull-request-workflow`, `skill-management`, `agent-management`) operate on. The planning suite (`mission`, `roadmap`, `feature`, `sprint`) is itself spec-driven by construction—every artefact under `project/` cites the spec that governs it. This document makes that latent contract explicit and load-bearing.
 
+Readers: every contributor and AI agent making a change in the portfolio (each anchored to a spec), reviewers enforcing the spec-anchor rule on PRs and skill/agent frontmatter, and the `spec-drift-audit` process detecting un-anchored artifacts.
+
 ## Goals
 
 - Anchor every implementation change in this portfolio to a versioned specification, so traceability holds across every commit, PR, and release without exception.

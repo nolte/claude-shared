@@ -6,6 +6,8 @@ Status: draft
 
 AI image generators (Gemini, DALL-E, Midjourney, and similar—this list is illustrative of the pattern, not an exhaustive or normative set) frequently emit PNGs where the checkerboard motif meant to signal "transparent" is actually painted into the RGB channels with `alpha=255` everywhere. Vectorisers like vtracer treat that motif as legitimate image content, so the resulting SVG carries a full-canvas checkerboard behind the motif. Until this spec lands, the `plugins/nolte-media/agents/png-to-transparent-svg.md` agent (heritage from earlier image-utility work) operationalises the cleanup-and-vectorise loop without an authorising spec—a `spec-drift-audit` finding (D-3 in the cross-cutting coverage matrix, since retired to git history). This spec closes the drift by formalising what the agent does, what it doesn't, and how a downstream consumer judges its output.
 
+Readers: authors and reviewers of the `png-to-transparent-svg` agent that operationalises the cleanup-and-vectorise loop, and downstream consumers judging whether a produced SVG carries real transparency.
+
 ## Goals
 
 - Provide an authoritative, version-controlled definition of the fake-transparency-cleanup-then-vectorise contract that the existing agent already implements

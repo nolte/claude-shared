@@ -10,6 +10,8 @@ Portfolio-wide concerns are systematically invisible to per-artifact reviews. Bo
 
 This spec codifies the methodology for a skills-and-agents sweep audit: a periodic, portfolio-wide procedure that supplements per-artifact reviews with cross-cutting analysis. The methodology was developed empirically during the 2026-05-20 baseline sweep of the `nolte-shared` plugin (34 skills, 9 agents). This spec generalises that experience into a repeatable procedure.
 
+Readers: auditors running a portfolio-wide sweep of the plugin inventory, the `skills-agents-sweep` skill authors who operationalise the methodology, and maintainers acting on the cross-cutting findings that per-artifact reviews can't surface.
+
 ## Goals
 
 - Every sweep audit applies the same cross-cutting analysis dimensions, in the same order, producing a consolidated report that's comparable across sweep instances

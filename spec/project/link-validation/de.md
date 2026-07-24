@@ -9,6 +9,8 @@ Das Portfolio besitzt einen Teil dieser Fläche bereits, aber nicht den determin
 
 Diese Spec besitzt **Link-Validität als deterministische, maschinenprüfbare Praxis**: einen stdlib-only-Checker unter `scripts/`, der interne und Cross-Tree-Links gegen den Arbeitsbaum auflöst und externe URLs über HTTP probt, eine dünne Gating-Schicht, die die Offline-Schicht (intern + cross-tree) in CI und das Quality-Gate verdrahtet, und einen read-only-Agent, der die vernetzte (externe) Schicht als periodisches und pre-release-Audit läuft. Das Ziel ist unverblümt: **keine toten Links in der Dokumentation.** Sie ergänzt `docs-freshness` (das die nicht-deterministischen Drift-Kategorien behält — Parität, ADR-Hygiene, Stale-Marker, Mermaid-Drift), statt es zu ersetzen, und sie ergänzt `prose-style`/`prose-vale-curator` (Prosa-Korrektheit) und `mkdocs build --strict` (Rendering), indem sie die eine Fläche besetzt, die keines davon gatet: ob das Ziel eines Links tatsächlich auflöst.
 
+Leser: Autoren von `scripts/check_links.py`, der CI- und Quality-Gate-Verdrahtung und des `link-rot-scanner`-Agents, die diese Praxis operationalisieren, sowie Reviewer und Doku-Autoren, die sich darauf verlassen, dass keine toten Links nach `develop` gelangen.
+
 ## Ziele
 - Jedes Repository mit Dokumentation kann jeden internen, Cross-Tree- und externen Link mit einem einzigen deterministischen Befehl validieren, und dieser Befehl ist die Quelle der Wahrheit für „ist dieser Link tot?"
 - Die Offline-Schicht (interne + Cross-Tree-Links) läuft unbeaufsichtigt als blockierender CI-Gate bei Dokumentationsänderungen und innerhalb des aggregierten Quality-Gates, sodass tote interne Links nie gemergt werden

@@ -7,6 +7,8 @@ Every repository in this portfolio ships a top-level `README.md`: mandated by th
 
 The reference implementation is this repository's own `README.md`. It targets diverse software elements—Claude Code plugins, reusable GitHub workflow packages, Home Assistant integrations, Vale style packages, Python services—all hosted on GitHub, all discoverable through the same portfolio entry points. This spec lifts that shape into a portfolio-wide contract so new repositories and refactors can produce structurally identical READMEs without case-by-case negotiation.
 
+Readers: authors of the `readme-structure-apply` skill and anyone creating or refactoring a repository README, plus the human and machine consumers (plugin marketplaces, package indexes, summarising agents) that scan READMEs in a predictable order.
+
 ## Goals
 - A reader (human or AI) can locate intent, install command, and portfolio context within the first screen of every repository's README
 - Repositories of different types (plugin, library, service, integration, CLI, style package) share one recognizable section skeleton

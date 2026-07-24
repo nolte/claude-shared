@@ -7,6 +7,8 @@ Jedes Repository in diesem Portfolio liefert eine `README.md` auf oberster Ebene
 
 Die Referenzimplementierung ist die `README.md` dieses Repositories selbst. Sie adressiert unterschiedliche Software-Elemente — Claude-Code-Plugins, wiederverwendbare GitHub-Workflow-Pakete, Home-Assistant-Integrationen, Vale-Style-Pakete, Python-Dienste —, alle auf GitHub gehostet, alle über dieselben Portfolio-Einstiegspunkte auffindbar. Diese Spec hebt diese Gestalt auf einen portfolioweiten Vertrag, damit neue Repositories und Refactorings strukturell identische READMEs erzeugen können, ohne Einzelfall-Verhandlung.
 
+Leser: Autoren des `readme-structure-apply`-Skills und alle, die ein Repository-README erstellen oder umbauen, sowie die menschlichen und maschinellen Konsumenten (Plugin-Marktplätze, Paket-Indizes, zusammenfassende Agents), die READMEs in vorhersehbarer Reihenfolge scannen.
+
 ## Ziele
 - Ein Leser (Mensch oder KI) kann Absicht, Install-Befehl und Portfolio-Kontext in jeder README innerhalb des ersten Bildschirms verorten
 - Repositories unterschiedlicher Art (Plugin, Bibliothek, Dienst, Integration, CLI, Style-Paket) teilen sich ein erkennbares Abschnitts-Grundgerüst

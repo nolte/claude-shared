@@ -5,6 +5,8 @@ Status: draft
 ## Context
 Every repository in the portfolio pulls in third-party packages through one or more dependency manifests (`pyproject.toml`, `package.json`, `go.mod`, `Cargo.toml`, and their lockfiles). Each of those packages is a supply-chain attack surface: known vulnerabilities (CVEs / GHSAs / PYSECs) are disclosed continuously, transitive dependencies multiply that surface, and licenses sometimes carry obligations (copyleft, attribution) that the project's own license can't absorb. Without a binding audit practice, vulnerability findings accumulate silently—auditors are run ad hoc, Renovate PRs carry no security context, and the portfolio can't answer "what's our current CVE exposure?" in a reproducible way. This spec defines when dependency audits run, what they cover, how results are classified, and how findings turn into action. It complements `spec/project/workflow-health/` (continuous CI health) and `spec/project/spec-drift-audit/` (periodic deep audit) by owning the specific slice of supply-chain risk.
 
+Readers: authors and operators of the `dependency-audit` skill and its scanner, reviewers triaging CVE and licence findings, and maintainers who need a reproducible answer to the portfolio's current supply-chain exposure.
+
 ## Goals
 - Every repository with a dependency manifest runs a vulnerability audit at documented trigger points, not by chance
 - Findings are classified by a shared severity scale so the same CVE is treated the same way across the portfolio

@@ -9,6 +9,8 @@ The portfolio already owns part of this surface but not the deterministic, gatin
 
 This spec owns **link validity as a deterministic, machine-checkable practice**: a stdlib-only checker under `scripts/` that resolves internal and cross-tree links against the working tree and probes external URLs over HTTP, a thin gating layer that wires the offline (internal + cross-tree) slice into CI and the quality gate, and a read-only agent that runs the networked (external) slice as a periodic and pre-release audit. The goal is blunt: **no dead links in the documentation.** It complements `docs-freshness` (which keeps the non-deterministic drift categories—parity, ADR hygiene, stale markers, Mermaid drift) rather than replacing it, and it complements `prose-style`/`prose-vale-curator` (prose correctness) and `mkdocs build --strict` (rendering) by owning the one surface none of them gate: whether a link's target actually resolves.
 
+Readers: authors of `scripts/check_links.py`, the CI and quality-gate wiring, and the `link-rot-scanner` agent that operationalise this practice, plus reviewers and doc authors relying on no dead links surviving to `develop`.
+
 ## Goals
 - Every repository with documentation can validate every internal, cross-tree, and external link with a single deterministic command, and that command is the source of truth for "is this link dead?"
 - The offline slice (internal + cross-tree links) runs unattended as a blocking CI gate on documentation changes and inside the aggregate quality gate, so dead internal links never merge

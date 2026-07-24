@@ -9,6 +9,8 @@ Every portfolio repository that ships documentation does so through MkDocs, and 
 
 This spec closes that gap. It defines (a) the portfolio-wide MkDocs skeleton—site layout, plugin baseline, navigation contract, per-page structure, language parity—and (b) two explicit **extension hooks** through which project-type-specific specs (`skill-agent-catalog`, future `cookiecutter-template-docs`, future `library-api-docs`, …) bolt on additional sections and plugins without forking the skeleton or silently overriding it. The skeleton is enforced; the extensions are declarative and reviewable.
 
+Readers: authors of the `mkdocs-structure-apply` skill and the project-type specs that bolt onto its extension hooks, and reviewers plus the `docs-freshness` audit that normalise the site shape across repositories.
+
 ## Goals
 <!-- What this spec aims to achieve. Bullet points, outcome-oriented. -->
 - Every portfolio repository with MkDocs exposes the same top-level navigation, so a reader who learned one repo knows how to navigate the next

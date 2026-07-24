@@ -7,6 +7,8 @@ MkDocs Material ist der dokumentierte Default für Projektdokumentation in diese
 
 Mermaid rendert text-beschriebene Diagramme inline in MkDocs Material über die Markdown-Erweiterung `pymdownx.superfences` und die in Material eingebaute Mermaid-Brücke. Damit bleibt jedes Diagramm versionskontrolliert, in Pull-Requests diff-bar und aus textuellen Änderungen re-renderbar. Diese Spec macht Mermaid zum kanonischen Diagramm-Werkzeug für Portfolio-Dokumentation, fixiert je Anwendungsfall den unterstützten Diagrammtyp, listet die MkDocs-seitigen Abhängigkeiten, die ein Repository deklarieren muss, um Diagramme zu rendern, und definiert, wie Diagramme mit den Strukturen synchron bleiben, die sie visualisieren.
 
+Leser: Doku-Autoren, die ein Mermaid-Diagramm hinzufügen, die Autoren des `mermaid-diagrams-apply`-Skills und des `mermaid-diagram-reviewer`, die es operationalisieren und prüfen, sowie Reviewer, die kontrollieren, dass ein Diagramm synchron mit der visualisierten Struktur bleibt.
+
 ## Ziele
 - Jedes Diagramm in der Portfolio-Dokumentation ist text-basiert (Mermaid), inline im Markdown, versionskontrolliert und in Pull-Request-Diffs reviewbar
 - Die Dokumentation kann Strukturen visualisieren, die bereits im Repository existieren — Claude-Plugin-Manifeste, Projekt-Abhängigkeiten, Spec-Querverweise, Branching-Model-Fluss, Konfigurations-Schemata — ohne handgezeichnete Binärbilder

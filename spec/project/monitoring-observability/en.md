@@ -13,6 +13,8 @@ The contract anchors on **OpenTelemetry (OTel)** as the vendor-neutral standardâ
 
 Every mandatory requirement is phrased so a future read-only `observability-audit` scanner can verify it by **static presence and wiring** (an SDK/exporter configured, a structured-log formatter in place, a trace-propagation middleware registered, an SLO/alert rules file present and well-formed)â€”runtime-only behaviours (values actually flowing, a trace actually unbroken end-to-end, an alert actually firing) are stated as advisory or "verify at runtime." Every load-bearing claim here was adversarially verified against primary sources (see `Version and standard anchors`): 48 load-bearing claims, 0 refuted.
 
+Readers: backend, frontend, and platform engineers instrumenting an application to the mandatory contract, the `observability-audit` scanner authors who verify it by static wiring, and reviewers of image- and service-bearing repositories that inherit this bar by reference.
+
 ## Goals
 
 - Every service exposes the **four mandatory pillars**: application/runtime **metrics** (RED + USE), **structured logs** correlated to traces, **distributed traces** propagated across every boundary, and **health signals + at least one SLO with a bound alert**, as a vendor-neutral, statically-checkable floor

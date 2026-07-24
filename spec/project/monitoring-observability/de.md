@@ -13,6 +13,8 @@ Der Vertrag verankert sich auf **OpenTelemetry (OTel)** als vendor-neutralem Sta
 
 Jede Pflicht-Anforderung ist so formuliert, dass ein künftiger read-only `observability-audit`-Scanner sie per **statischer Präsenz und Verdrahtung** verifizieren kann (ein SDK/Exporter konfiguriert, ein strukturierter Log-Formatter vorhanden, eine Trace-Propagations-Middleware registriert, eine SLO-/Alert-Regeldatei vorhanden und wohlgeformt) — reine Laufzeit-Verhaltensweisen (Werte, die tatsächlich fließen, ein Trace, der tatsächlich Ende-zu-Ende ungebrochen ist, ein Alert, der tatsächlich feuert) sind als empfohlen oder „zur Laufzeit prüfen" angegeben. Jede tragende Aussage hier wurde adversarial gegen Primärquellen verifiziert (siehe `Versions- und Standard-Anker`): 48 tragende Aussagen, 0 widerlegt.
 
+Leser: Backend-, Frontend- und Plattform-Ingenieure, die eine Anwendung gegen den verpflichtenden Vertrag instrumentieren, die Autoren des `observability-audit`-Scanners, die ihn über statische Verdrahtung verifizieren, sowie Reviewer von image- und service-tragenden Repositorys, die diese Messlatte per Verweis erben.
+
 ## Ziele
 
 - Jeder Service exponiert die **vier Pflichtsäulen** — Anwendungs-/Laufzeit-**Metriken** (RED + USE), **strukturierte Logs** korreliert zu Traces, **Distributed Traces** propagiert über jede Grenze, und **Health-Signale + mindestens ein SLO mit gebundenem Alert** — als vendor-neutralen, statisch prüfbaren Boden

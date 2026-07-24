@@ -12,6 +12,8 @@ This spec captures that body of knowledge as a normative reference and as a set 
 
 The spec is deliberately two-layered, matching how the knowledge decomposes: **§The Backstage catalog model** states what a conformant descriptor (and the Tech Radar data file) must satisfy—the normative substrate, true regardless of any generator; **§Generator requirements** states what an automated generator built on that substrate must do, infer, emit, and refuse to emit. The Acceptance Criteria are written against a generator so the later skill has a testable target.
 
+Readers: authors of the future catalog-generator skill that emits `catalog-info.yaml`, reviewers auditing a descriptor against Backstage's per-kind validators, and portfolio operators onboarding a repository into a Backstage portal.
+
 ## Goals
 
 - A generator can read an existing repository and emit a `catalog-info.yaml` that passes Backstage's schema, field-format, and policy validation deterministically, with no manual repair needed for the required floor.

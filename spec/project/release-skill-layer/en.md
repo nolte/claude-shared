@@ -7,6 +7,8 @@ Portfolio-Scope: portfolio
 
 Two existing specs frame how releases work in the portfolio. `release-automation` defines **how** the Draft → Published transition happens (a `workflow_dispatch`-triggered `release-publish.yml` consuming a `release-drafter` draft) and explicitly forbids body edits inside that workflow: per its §Operational contract, body edits **MUST** happen via `gh release edit` outside the workflow, or via `release-drafter` re-runs. `release-notes-audience-analysis` defines **what** the body should contain, by applying the audience-identification method to the bounded context "release notes of a GitHub release." Neither spec covers the operational layer that sits in the operator's terminal: a local procedure that reads the open draft, augments its body with project-context-aware sections derived from the audience artefact and the repo's architecture, and a separate local procedure that validates every pre-publish gate before dispatching `release-publish.yml`. This spec defines that layer as two reusable skills shipped from this plugin, so every adopting repo gets the same local entry point for the release decision without bypassing the workflow audit trail.
 
+Readers: authors of the two release skills (`release-notes-curate`, `release-publish-trigger`) this spec defines, and operators driving the release decision from their terminal without bypassing the `release-automation` audit trail.
+
 ## Goals
 
 - Provide a local skill (Skill A) that augments the open `release-drafter` draft with project-context-aware sections derived from the repo's project type and the audience artefact, idempotent on re-runs.

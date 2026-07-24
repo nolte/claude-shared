@@ -6,6 +6,8 @@ Portfolio-Scope: portfolio
 ## Kontext
 Repositories in diesem Portfolio verwenden `main` als reinen Präsentations-Branch, der stets das zuletzt veröffentlichte GitHub Release widerspiegelt. Aktive Entwicklung findet auf `develop` statt; Feature-Branches zielen per Pull Request auf `develop`. Wenn ein GitHub Release veröffentlicht wird, führen wiederverwendbare Workflows aus [`nolte/gh-plumbing`](https://github.com/nolte/gh-plumbing) einen Fast-Forward von `main` auf den freigegebenen Tag durch, sodass `main` eine maschinell gepflegte, lesende Sicht auf das zuletzt ausgelieferte Artefakt bleibt. Menschen und KI-Agenten, die auf `main` schauen, sehen genau das, was ausgeliefert wurde — niemals einen Work-in-Progress-Stand.
 
+Leser: Beitragende und KI-Agenten, die den `develop`-/Feature-Branch-Fluss bearbeiten, Reviewer und Release-Operatoren, die sich auf `main` als Sicht auf das veröffentlichte Release verlassen, sowie die Tooling-Autoren, die die `gh-plumbing`-Release-Workflows verdrahten.
+
 ## Ziele
 - `main` entspricht immer dem zuletzt veröffentlichten GitHub Release, nichts anderem
 - Keine manuellen Commits, Pushes oder Merges landen auf `main` — jede Änderung läuft über `develop` und ein Release

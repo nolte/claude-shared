@@ -9,6 +9,8 @@ The portfolio uses [Cookiecutter](https://www.cookiecutter.io/) as the canonical
 
 A Cookiecutter template in this portfolio is a project-scaffold artefact that renders, in one step, a new repository whose initial commit satisfies every applicable MUST in those neighbouring specs. The template carries its own hooks (`pre_prompt.py`, `pre_gen_project.py`, `post_gen_project.py`), its own `cookiecutter.json` variable shape, and its own test harness (`pytest-cookies` plus a GitHub Actions matrix). This spec governs that artefact: what the template MUST produce, what hooks it MUST run, how its tests MUST exercise the rendered output, and which anti-patterns it MUST refuse to ship.
 
+Readers: authors of the `cookiecutter-template-author` agent and the templates it produces, reviewers auditing a template against the neighbouring scaffolding specs, and the `spec-drift-audit` process comparing template implementations against this spec.
+
 ## Goals
 <!-- What this spec aims to achieve. Bullet points, outcome-oriented. -->
 - Every Cookiecutter template authored in the portfolio renders a project whose initial commit passes every applicable MUST in `spec/project/project-structure/`, `spec/project/pull-request-workflow/`, `spec/project/branching-model/`, `spec/project/release-automation/`, and `spec/project/release-skill-layer/`

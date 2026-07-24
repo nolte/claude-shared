@@ -5,6 +5,8 @@ Status: draft
 ## Kontext
 Dokumentation, Spezifikationen, READMEs, Release-Notes und sonstiges menschenlesbares Markdown in diesem Portfolio sollen sich gleich lesen – unabhängig davon, wer oder was den Text geschrieben hat. [Vale](https://vale.sh) ist der gemeinsam genutzte Prose-Linter, der diese Konsistenz durchsetzt. Die kanonische Quelle ist das portfolio-eigene Style-Paket in [`nolte/vale-style`](https://github.com/nolte/vale-style); die `.vale.ini` eines Repositories kombiniert die Upstream-Style-Pakete von Microsoft und RedHat mit einem gepinnten Release dieses Pakets, das zugleich das gemeinsame Fachvokabular trägt. Wird ein neuer Begriff, Produktname oder eine neue Formulierungs-Konvention eingeführt, gehört diese nach `nolte/vale-style` und nicht in einen repository-lokalen Sonderweg – damit künftige Texterzeugung, ob durch Menschen oder durch eine KI-Assistenz, Ergebnisse liefert, die das gemeinsame Regelwerk bereits einhalten.
 
+Leser: Menschen und KI-Assistenten, die portfolioweit Markdown verfassen, Reviewer, die Vale ausführen, sowie die `nolte/vale-style`-Betreuer, die das gemeinsame Style-Paket und Vokabular besitzen.
+
 ## Ziele
 - Menschenlesbarer Text in jedem Repository folgt denselben lint-geprüften Stilregeln
 - Das gemeinsame Fachvokabular hat einen einzigen kanonischen Ort in `nolte/vale-style`

@@ -7,6 +7,8 @@ Status: accepted
 
 Software modules and projects are consumed, operated, constrained, or observed by multiple audience groups—users, operators, downstream integrators, maintainers, security, compliance, business stakeholders, indirect end users, and more. Without a disciplined way to enumerate which audiences apply to a *bounded context* (a specific module, service, library, or project), decisions about documentation depth, API surface, release cadence, SLAs, and security posture are made against the author's private assumptions rather than against the actual audience set. This spec defines a repeatable method to identify and characterize the audiences of any scoped context so that downstream artifacts (READMEs, specs, threat models, release notes, SLAs) can reference an authoritative audience list instead of reinventing one each time.
 
+Readers: authors running the identification method for a bounded context, and the downstream artifact authors (README, spec, threat model, release notes, SLA) plus their reviewers who reference the resulting audience list instead of reinventing one.
+
 ## Goals
 <!-- What this spec aims to achieve. Bullet points, outcome-oriented. -->
 - Provide a consistent procedure for enumerating the audiences of a defined context

@@ -8,6 +8,8 @@ Portfolio repositories ship MkDocs sites that are bilingual by default: `spec/pr
 
 This spec closes that gap by lifting the canonical-and-translation contract that already governs `spec/<topic>/<slug>/` (one file per language, written atomically, English canonical, drift-managed) to every Markdown page under `docs_dir`. It's the **authoring counterpart** to the `mkdocs-structure` shape contract and the `docs-freshness` audit contract: shape says "the trees must be parallel," audit says "we detect when they aren't," and this spec says "every authoring step keeps them parallel from the start."
 
+Readers: authors of documentation-producing skills and agents that must write every configured language tree atomically, and reviewers plus the `docs-freshness` audit that detect language-parity drift.
+
 ## Goals
 
 - Documentation-producing skills and agents write every configured language version of a `docs/<lang>/` page **atomically in the same authoring step**, with English as the canonical source and other configured languages as structurally identical translations

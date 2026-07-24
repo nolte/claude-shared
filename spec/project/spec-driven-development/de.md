@@ -17,6 +17,8 @@ Das Prinzip stützt sich auf vier Säulen:
 
 Dieses Prinzip ist die axiomatische Vorbedingung, auf der die existierenden Process-Specs (`continuous-improvement`, `spec-drift-audit`, `spec-readiness`, `pull-request-workflow`, `skill-management`, `agent-management`) operieren. Die Planning-Suite (`mission`, `roadmap`, `feature`, `sprint`) ist selbst spec-driven by construction — jedes Artefakt unter `project/` zitiert die Spec, die es regiert. Dieses Dokument macht diesen latenten Vertrag explizit und tragend.
 
+Leser: jede beitragende Person und jeder KI-Agent, die eine Änderung im Portfolio vornehmen (jeweils an einer Spec verankert), Reviewer, die die Spec-Anker-Regel bei PRs und Skill/Agent-Frontmatter durchsetzen, sowie der `spec-drift-audit`-Prozess, der nicht-verankerte Artefakte erkennt.
+
 ## Ziele
 
 - Jede Implementierungs-Änderung in diesem Portfolio an eine versionierte Spezifikation verankern, sodass Nachvollziehbarkeit ausnahmslos über jeden Commit, PR und jedes Release hinweg hält.
