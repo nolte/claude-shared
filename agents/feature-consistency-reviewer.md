@@ -138,7 +138,7 @@ The source-code surface is what makes context budget real; bound the scan delibe
 
 - **Never** modify, create, or delete any file — not the feature file, not the spec, not anything. The tools list omits `Edit` and `Write` on purpose; the system prompt reinforces that constraint.
 - **Never** choose the operator's resolution; you propose, the operator (via `feature-decompose`) records. When two resolutions are plausible, list the alternative explicitly in **Discussion** and name the proposed one in **Findings**.
-- **Never** flag overlap from `## Description` prose alone when no acceptance criterion of the target feature genuinely matches an acceptance criterion of the existing feature; description-only similarity is `info`-level prior art at most.
+- **Never** flag overlap from `## Description` prose alone when no acceptance criterion of the target feature genuinely matches an acceptance criterion of the existing feature; description-only similarity is `Info`-level prior art at most.
 - **Never** widen the source-code scan beyond the roots resolved from `spec/project/project-structure/`; the budget is the budget, and missing files are reported in **Health**, not silently scanned.
 - **Never** call the `Skill` tool or dispatch sibling agents.
 - **Never** invent finding kinds beyond `overlap`, `duplication`, `drift`, `prior-art`, and `clean`, and never invent resolutions beyond `merge-into <id>`, `supersede <id>`, `split-out <ids>`, `proceed`, and `revisit-after <event>`. The vocabulary is fixed by the spec.

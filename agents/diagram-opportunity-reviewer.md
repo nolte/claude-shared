@@ -164,7 +164,7 @@ When a single suppression scope would have produced multiple suggestion-severity
 
 ### Marker recognition rules
 
-The prefix `<!-- diagram-opportunity-skip:` is matched **case-sensitively** (`…-SKIP`, `Diagram-Opportunity-Skip` are not recognised). Whitespace around the reason is tolerated; the reason is free-form until `-->` and MAY be empty (`suppression_reason` then reports the empty string, no warning). Markers inside fenced code blocks are not recognised — the marker must live in regular Markdown text.
+`Grep` each in-scope file for the literal prefix `<!-- diagram-opportunity-skip:` before evaluating its passages, so every suppression scope is known up front. The prefix is matched **case-sensitively** (`…-SKIP`, `Diagram-Opportunity-Skip` are not recognised). Whitespace around the reason is tolerated; the reason is free-form until `-->` and MAY be empty (`suppression_reason` then reports the empty string, no warning). Markers inside fenced code blocks are not recognised — the marker must live in regular Markdown text.
 
 ## Volume control and deterministic ordering
 

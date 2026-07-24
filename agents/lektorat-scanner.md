@@ -51,6 +51,8 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/readability_lix.py" --file <path> --language <en|de> --content-mode <mode>` — the pinned, stdlib-only D1 reference implementation (see Gotchas); computes LIX for a single file and writes nothing.
 - `vale --version` and the pinned DE pipeline's `--version` probe — the precondition preflight checks (tool availability and version capture for the inventory metadata), read-only by nature.
 
+One of those commands falls into the **network-read** class sanctioned by `spec/claude/agent-management/` §"Tool access" §"Sanctioned command classes beyond the strict read-only set", and is named here with its bound: when the caller pins an HTTP-endpoint DE pipeline (the `pipeline_metadata.de.configured_path` shape "HTTP endpoint URL (Public or self-hosted)"), the invocation sends the file's prose to that endpoint and reads the response. It is a read: never a mutating request, never a write to remote state, never an authenticated write endpoint. Any other network class stays forbidden.
+
 The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, or causes external side effects. No `git add`, `git commit`, `git push`, no `gh api -X POST`/`-X PATCH`/`-X DELETE`, no `rm`, no package installs, no file writes (including the JSON report itself — the report is **returned** to the caller, not persisted by the scanner), no network mutations.
 
 ## Inputs

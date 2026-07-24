@@ -53,13 +53,13 @@ Return a single severity-sorted report in this exact structure. The structured f
 - Setup files consulted: mkdocs.yml, docs/requirements.txt (or equivalent docs install set)
 
 ## Summary
-| Category | Critical | Warning | Info |
-|---|---|---|---|
-| MkDocs setup | … | … | … |
-| Source markers | … | … | … |
-| Authoring rules | … | … | … |
-| Derived-source paths | … | … | … |
-| **Total** | **…** | **…** | **…** |
+| Category | Critical | Warning | Suggestion | Info |
+|---|---|---|---|---|
+| MkDocs setup | … | … | … | … |
+| Source markers | … | … | … | … |
+| Authoring rules | … | … | … | … |
+| Derived-source paths | … | … | … | … |
+| **Total** | **…** | **…** | **…** | **…** |
 
 ## Findings
 
@@ -158,6 +158,7 @@ The spec's §"Drift behavior" assigns the *temporal* drift check ("source modifi
 
 - `Critical`: violations that break rendering or violate a closed-vocabulary rule — missing `pymdownx.superfences`, wrong theme, `mkdocs-mermaid2-plugin` present, `gitGraph` block, missing `flowchart` direction, `derived—<path>` source missing on disk.
 - `Warning`: violations that don't break rendering but break the spec's stated invariant — missing or malformed source markers, missing heading / caption, inline styling, non-English labels in language trees.
+- `Suggestion`: MAY-class opportunities and one-line improvements that elevate a conformant diagram — a `user-described` marker whose summary would resolve to a concrete artefact, or a direction declared on a non-`flowchart` type where the spec leaves it optional.
 - `Info`: cosmetic or "noted for review" findings — node count above 25 (SHOULD), heuristic-only label-language matches, deferred-scope notes.
 
 ## Hard rules

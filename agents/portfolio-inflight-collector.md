@@ -1,6 +1,6 @@
 ---
 name: portfolio-inflight-collector
-description: "Read-only in-flight data collector dispatched by `portfolio-inflight-triage`: gathers open issues, open PRs (incl. drafts), branches without an active PR to develop, and unresolved review threads plus open Discussions across the nolte portfolio. Returns raw per-repo data only; severity classification, stalling thresholds, and report authoring stay with the calling skill. Writes nothing."
+description: "Read-only in-flight data collector dispatched by `portfolio-inflight-triage`: gathers open issues, open PRs (incl. drafts), branches without an active PR to develop, and unresolved review threads plus open Discussions across the nolte portfolio. Returns raw per-repo data only; severity classification, stalling thresholds, and report authoring stay with the calling skill. Don't use for the capability-manifest inventory (`portfolio-manifest-collector`)."
 distribution: plugin
 tools: [Bash, mcp__github__list_issues, mcp__github__issue_read, mcp__github__list_pull_requests, mcp__github__pull_request_read, mcp__github__list_branches, mcp__github__list_releases, mcp__github__list_discussions, mcp__github__get_discussion_comments]
 model: sonnet

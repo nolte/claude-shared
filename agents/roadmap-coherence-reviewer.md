@@ -122,7 +122,7 @@ The audit walks three surfaces; each has a bounded scan rule so the agent stays 
 
 ### Surface 2 — cross-document references (`goals.md`, `mission.md`)
 
-- Read `project/goals.md` and extract every outcome ID (`O-<n>`). For each roadmap item, every entry in its `outcomes` list **MUST** resolve; non-resolving entries are `cross-ref-missing` findings.
+- `Grep` `project/goals.md` for the outcome-ID pattern (`O-<n>`) and read the surrounding lines only where an ID needs its context; the same `Grep` pass extracts the `relevant_outcomes` and `mvp_status` fields from `project/mission.md`. For each roadmap item, every entry in its `outcomes` list **MUST** resolve; non-resolving entries are `cross-ref-missing` findings.
 - Empty `outcomes` lists are `cross-ref-missing` findings with `target: <item-id>` and the spec rule `spec/project/roadmap/` §Outcome linkage.
 - When `project/mission.md` exists, read its frontmatter and extract `relevant_outcomes` plus `mvp_status`. An item with `mvp: true` whose `outcomes` list contains no outcome from `relevant_outcomes` is a `cross-ref-missing` finding (the MVP flag claims load-bearing relevance that the outcome linkage doesn't back).
 - When `mvp_status` is `stabilised`, an item that flipped from `mvp: false` to `mvp: true` (detectable only from the caller's commit context, not from the working tree alone) is a `lifecycle-drift` finding; without the commit-context input, report the constraint in **Health** as "not verifiable from the working tree".

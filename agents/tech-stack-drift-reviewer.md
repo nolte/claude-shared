@@ -147,6 +147,8 @@ For each Portfolio-Member repository (`project/portfolio.yml` present, `tech_sta
 
 ### Surface 3 — signal-vs-declaration (per `spec/portfolio/tech-stack-discovery/` §"Discovery sequence per repository")
 
+Resolve the signal files with `Glob`, then `Grep` each one for the in-file markers the signal map names (for example `[tool.uv]` in `pyproject.toml`, a `plugins:` entry in `mkdocs.yml`, a `uses:` pin in a workflow); read a file in full only when the marker needs surrounding context.
+
 For each declared entry in the effective stack (inherited active/experimental ∪ additions − overrides):
 
 - A declared entry **MUST** have a matching on-disk signal per the discovery spec's signal map (for example: `kind: package-manager`, `name: uv` requires `uv.lock` or `[tool.uv]` in `pyproject.toml`; `kind: ci`, `name: github-actions` requires at least one workflow under `.github/workflows/`; `kind: docs`, `name: mkdocs` requires `mkdocs.yml`). Missing signal is a `signal-missing` finding (`severity: Warning`); the discovery spec downgrades to `Suggestion` when the entry's `rationale` field explicitly acknowledges the gap.
