@@ -1,6 +1,6 @@
 ---
 name: kpi-signal-scanner
-description: "Read-only scanner dispatched by the `kpi-derive` skill: mines the source tree and the requirement/goal documents for candidate KPI signals and returns a structured candidate inventory, each keyed to the goal/requirement it ladders back to, with file:line. Detection only: never selects the key KPIs, defines them, applies the SMART gate, or writes. Don't use to select or define KPIs or write the artifact (`kpi-derive`), elicit requirements (`requirements-elicit`), or scan Dockerfiles/dependencies (other scanners)."
+description: "Read-only scanner dispatched by the `kpi-derive` skill: mines the source tree and the requirement/goal documents for candidate KPI signals and returns a structured candidate inventory, each keyed to the goal/requirement it ladders back to, with file:line. Detection only: never selects the key KPIs, defines them, applies the SMART gate, or writes. Don't use to select or define KPIs or write the artifact (`kpi-derive`), or to elicit requirements (`requirements-elicit`)."
 distribution: plugin
 tools: Read, Glob, Grep
 model: sonnet
