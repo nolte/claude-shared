@@ -24,6 +24,14 @@ on:
 permissions:
   contents: write
 
+# spec/project/release-automation/ §Workflow existence and trigger SHOULD: two
+# overlapping dispatches must queue rather than race on the `--draft=false` API
+# call, so `cancel-in-progress` stays false — cancelling a half-finished publish
+# is worse than serialising.
+concurrency:
+  group: release-publish
+  cancel-in-progress: false
+
 jobs:
   publish:
     uses: nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml@v1.1.26

@@ -16,7 +16,7 @@ Detailed on-disk layout and the field-level contract of the three delivery artef
 
 The spec calls the skill an "agentic author" and §Delivery contract promotes these to `MUST` for that case:
 
-- **Self-check manifest** — one status line per acceptance-criterion ID from the two sibling specs (`a-1`…`a-17` for `post-writing-style`, `a-1`…`a-13` for `post-audience-communication`), with value `passed`, `finding: <reason>`, or `override: <reference>`. Per-language block (EN + DE) and per-pair block kept separate so build status, cross-language binding identity, and audience-field identity show as their own lines.
+- **Self-check manifest** — one status line per acceptance-criterion ID from the two sibling specs (`a-1`…`a-17b` for `post-writing-style` — the range includes `a-4a`, `a-17a`, and `a-17b` — and `a-1`…`a-13` for `post-audience-communication`), with value `passed`, `finding: <reason>`, or `override: <reference>`. Per-language block (EN + DE) and per-pair block kept separate so build status, cross-language binding identity, and audience-field identity show as their own lines.
 - **Source-to-claim mapping** — every entry of the briefing source list mapped to the concrete post passage it supports (heading anchor + sentence number). Multi-source citation is allowed; an unused source is a `finding`, not a violation. Every named-project / named-library / named-tool claim in the post points at ≥ 1 source.
 - **Handover manifest** — three lines naming (a) the chosen handover route (target-state via `lektorat-apply` or transitional via `prose-vale-curator` + reviewer judgement), (b) the build status and the command used, (c) the repository state (branch name, optional commit SHA) the self-check ran against.
 
