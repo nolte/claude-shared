@@ -66,6 +66,7 @@ tasks:
       unless RUN_EVALS=1. Requires pytest: `pip install -r evals/requirements-dev.txt`.
     cmds:
       - task: validate:skills
+      - task: validate:mission
       - python3 -m pytest tests -q
 
   check:
@@ -127,6 +128,18 @@ tasks:
       on any Critical-grade finding.
     cmds:
       - python3 scripts/validate_skills.py
+
+  validate:mission:
+    desc: |
+      Validate project/mission.md frontmatter against the structural rules from
+      spec/project/mission/ §"Frontmatter schema" and §"Body sections": field
+      order, unknown keys, relevant_outcomes→goals.md and audiences→AUDIENCES.md
+      resolution, verifies_via feature resolution, time_bound shape, and the
+      mvp_status enum. A missing mission file is a pass (adoption is optional).
+      Wired into `task test` and the validate-mission pre-commit hook; `--self-test`
+      runs the negative-proof fixtures.
+    cmds:
+      - python3 scripts/validate_mission.py
 
   validate:schemas:
     desc: |
