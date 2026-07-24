@@ -731,7 +731,7 @@ def check_agent_tree(agents_dir: Path) -> list[Finding]:
 # token estimate (len(concat) // 4) over the concatenated `description` of every
 # agent under a plugin's agents/ root — the single method fixed in F-5 and reused
 # by check_body_token_estimate. Baseline chars are recorded in
-# .audits/shared-plugin-analysis/2026-07-19-post-remediation-baseline.md; raising
+# the F-7 remediation record (git history; re-baselined per PR #438); raising
 # one requires re-measuring and updating both places with a recorded rationale.
 AGENT_DESC_BUDGET_HEADROOM = 0.15  # +15% slack for legitimately-added agents
 # key = agents/ dir relative to REPO ; value = post-remediation baseline chars (F-7)

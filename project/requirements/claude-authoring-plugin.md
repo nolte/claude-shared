@@ -16,7 +16,7 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
   `plugins/nolte-media/` (own `.claude-plugin/plugin.json`, `skills/`, `agents/`),
   versioned in lockstep, listed as the fourth entry in the root
   `.claude-plugin/marketplace.json`. This **re-opens and flips decision F-18**
-  (`.audits/shared-plugin-analysis/2026-07-20-authoring-carve-out-decision.md`,
+  (the F-18 carve-out decision (retired to git history),
   verdict `keep-and-watch`).
 - **For whom:** every downstream repository that installs the `claude-shared`
   marketplace. The split's beneficiary is the **majority of consumers who never

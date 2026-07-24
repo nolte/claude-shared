@@ -135,4 +135,4 @@ Notes on coverage: The `MUST` rules in §Checkpoint cadence around *when* a chec
 
 ## Open Questions
 
-_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. See `.audits/decisions/2026-06-06-settle-open-questions.md` for the per-item decisions and rationale._
+_All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. The per-item decisions and rationale are preserved in git history (decision log, 2026-06-06)._

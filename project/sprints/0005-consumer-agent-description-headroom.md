@@ -48,8 +48,8 @@ Closed 2026-07-19 by `sprint-review`. All four features (F-5–F-8) are `done` a
 **Blog-trigger deferrals.** No unconsumed blog-trigger deferrals (`project/blog-triggers/` carries no `deferred` entries).
 
 **Delivered artefacts.**
-- `.audits/shared-plugin-analysis/2026-07-19.md` — F-5 structural analysis + the keep-and-slim boundary verdict (bound by `spec/claude/plugin-scoping/`).
-- `.audits/shared-plugin-analysis/2026-07-19-post-remediation-baseline.md` — F-7 recorded baseline.
+- the F-5 structural analysis (retired to git history) — F-5 structural analysis + the keep-and-slim boundary verdict (bound by `spec/claude/plugin-scoping/`).
+- the F-7 post-remediation baseline (retired to git history) — F-7 recorded baseline.
 - `spec/claude/agent-management/` §Description contract + `spec/claude/skill-agent-frontmatter/` digest update — F-6.
 - 54 normalised agent descriptions — F-7.
 - `check_agent_description_budget` guardrail + tests in `scripts/validate_skills.py` / `tests/test_validate_skills.py` — F-8.
