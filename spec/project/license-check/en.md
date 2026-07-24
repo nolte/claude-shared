@@ -7,7 +7,7 @@ Status: draft
 
 Every repository in the portfolio combines three streams of intellectual property: the project's own source code, the third-party dependencies it pulls in through manifests, and the tools that touch the build or the artifacts (including AI generators that emit code, images, or models). Each stream carries license obligations—attribution, notice propagation, source-disclosure triggers, patent grants—and a permissive-leaning portfolio can't silently absorb a copyleft or use-restricted obligation it never agreed to. Today license risk is handled only at the edges: `spec/project/dependency-audit/` runs an optional, allowlist-driven license pass over dependencies, `spec/project/project-structure/` mandates a root `LICENSE` file, and `spec/tools/image-generation/` warns about one generator's output licence. None of these owns the *process*: how a license is identified, what obligations its category triggers, which combinations are compatible with the project's own license, how AI-generated provenance enters the inventory, and how a finding turns into remediation or attribution. This spec defines that end-to-end process (`Inventory/Discovery → SBOM → SPDX identification → classification → policy gate → remediation → attribution/NOTICE → continuous CI check`), anchored throughout in SPDX, and it carries the portfolio's default allow/review/deny policy. It's the license-compliance *authority* that `dependency-audit`'s license pass implements for the dependency slice.
 
-The factual claims in this spec (license categories and their obligations, the one-directional Apache-2.0/GPL compatibility, the GPL "conveying" trigger, AGPL §13 network copyleft, MPL-2.0 / EPL-2.0 file-level copyleft and patent clauses, the AI-provenance findings, the per-stack tooling) are grounded in a four-round research record persisted under `.audits/license-check/` (2026-05-30 plus three 2026-06-01 notes). Two interpretive caveats are load-bearing and reproduced where they apply: the FSF position that static and dynamic linking are equivalent lacks settled case law, and the popular term "license laundering" is interpretation, not the wording of the peer-reviewed sources.
+The factual claims in this spec (license categories and their obligations, the one-directional Apache-2.0/GPL compatibility, the GPL "conveying" trigger, AGPL §13 network copyleft, MPL-2.0 / EPL-2.0 file-level copyleft and patent clauses, the AI-provenance findings, the per-stack tooling) are grounded in a four-round research record (2026-05-30 through 2026-06-04); the load-bearing primary sources are catalogued in §Sources. Two interpretive caveats are load-bearing and reproduced where they apply: the FSF position that static and dynamic linking are equivalent lacks settled case law, and the popular term "license laundering" is interpretation, not the wording of the peer-reviewed sources.
 
 ## Goals
 - Every license entering a repository—own code, dependency, or tool/AI-generated artifact—is identified by a canonical SPDX identifier (or an explicit `LicenseRef-`/`NOASSERTION` fallback) whose full text is resolvable on demand
@@ -56,7 +56,7 @@ The factual claims in this spec (license categories and their obligations, the o
   - **source-available / restricted** (for example BUSL-1.1, SSPL-1.0, open-weight model licenses): not OSI-conforming; carries field-of-use, time, or behavioural restrictions
   - **public-domain / public-domain-equivalent** (for example CC0-1.0, Unlicense): no obligation beyond not misrepresenting authorship
 - **MUST** record, for strong and network copyleft findings, whether the component is *conveyed/linked/networked* or *executed at arm's length*, because that distinction decides the policy tier (see §Default policy)
-- **SHOULD** capture patent-grant and patent-retaliation clauses where the category carries them: Apache-2.0 §3 (an express grant of the claims necessarily infringed by a Contribution alone or combined with the Work; the grant terminates if the licensee institutes patent litigation alleging the Work infringes), GPL-3.0 §11 (each contributor grants a non-exclusive, worldwide, royalty-free license under its essential patent claims, backed by an anti-discrimination rule barring conveyance under a discriminatory patent deal, so GPL-3.0 carries no patent-retaliation termination clause), MPL-2.0 (§2.1 grant, §5.2 retaliation termination), and EPL-2.0 (§2(b) grant excluding hardware, §7 retaliation)—because a patent-retaliation termination can void the grant a downstream user relies on (verbatim wording recorded in `.audits/license-check/research-2026-06-04-followups.md`)
+- **SHOULD** capture patent-grant and patent-retaliation clauses where the category carries them: Apache-2.0 §3 (an express grant of the claims necessarily infringed by a Contribution alone or combined with the Work; the grant terminates if the licensee institutes patent litigation alleging the Work infringes), GPL-3.0 §11 (each contributor grants a non-exclusive, worldwide, royalty-free license under its essential patent claims, backed by an anti-discrimination rule barring conveyance under a discriminatory patent deal, so GPL-3.0 carries no patent-retaliation termination clause), MPL-2.0 (§2.1 grant, §5.2 retaliation termination), and EPL-2.0 (§2(b) grant excluding hardware, §7 retaliation)—because a patent-retaliation termination can void the grant a downstream user relies on (the verbatim clause wording resolves on demand through §SPDX anchoring, for example via `https://spdx.org/licenses/Apache-2.0.json`)
 - **MUST** treat the FSF position "static and dynamic linking both create a combined work under the GPL" as the conservative default assumption for the gate, while recording in the artifact that this is the FSF interpretation and **not** settled case law
 
 ### Compatibility against the project's own license
@@ -86,7 +86,7 @@ The factual claims in this spec (license categories and their obligations, the o
 - **MUST** record machine-readable provenance for every committed AI-generated artifact—at minimum the fact that it's AI-generated, and where known the generator/model and tier—using an available standard carrier (CycloneDX ML-BOM component type `machine-learning-model` + `modelCard`, or the SPDX 3.0.1 AI Profile `AIPackage` properties); for a plain AI-generated *file* with no dedicated "AI-generated" flag in the standard, a SPDX comment/annotation is the accepted fallback
 - **MUST** treat AI-emitted code as a copyleft-contamination risk and gate it: it's empirically established that even top-performing code LLMs reproduce open-source code with "striking similarity" in roughly 0.88–2.01 % of generated snippets and usually emit no license information for copyleft snippets; the process **MUST** include a duplicate-/similarity-detection step against copyleft sources for AI-emitted code before it's treated as own code
 - **MUST** classify open-weight model licenses (for example OpenRAIL / RAIL-M, the Llama Community License, the custom Gemma Terms of Use) as `review`-tier source-available/restricted licenses, **not** as OSI open source, because they carry use-restrictions and fail the Open Source AI Definition's "for any purpose" freedoms—and **MUST** pin the artifact version, since an open-weight model can change license between versions (for example Gemma's custom terms for v1–v3 versus Apache-2.0 for v4)
-- **MUST NOT** assume a commercial generator's terms grant a clean, copyrightable artifact: terms vary (some assign output ownership without warranting copyrightability; IP indemnities are frequently tier-gated to paid plans), and purely AI-generated output may not be copyrightable at all under U.S. law (a finding scoped to U.S. jurisdiction; other jurisdictions differ)—capture the governing terms and tier in the artifact rather than presuming. The per-generator terms verified to date (GitHub Copilot, OpenAI, Adobe Firefly, Midjourney) are recorded in `.audits/license-check/research-2026-06-04-followups.md`; that table is the volatile-evidence layer, kept out of this normative text because vendor terms change
+- **MUST NOT** assume a commercial generator's terms grant a clean, copyrightable artifact: terms vary (some assign output ownership without warranting copyrightability; IP indemnities are frequently tier-gated to paid plans), and purely AI-generated output may not be copyrightable at all under U.S. law (a finding scoped to U.S. jurisdiction; other jurisdictions differ)—capture the governing terms and tier in the artifact rather than presuming. The per-generator terms verified to date (GitHub Copilot, OpenAI, Adobe Firefly, Midjourney) are recorded in the evidence appendix [`ai-generator-terms.md`](ai-generator-terms.md); that table is the volatile-evidence layer, kept out of this normative text because vendor terms change
 - **SHOULD** label the "license laundering" framing as interpretation when it's used in documentation; the underlying compliance risk (unattributed copyleft-similar code) is evidenced, the label isn't the wording of the primary sources
 
 ### Per-stack tooling
@@ -140,5 +140,43 @@ The factual claims in this spec (license categories and their obligations, the o
 - [ ] The implementing process is exercised against fixtures for the four enumerated one-directional compatibility rules (for example a conveyed GPLv3 dependency in an Apache-2.0 product is never `allow`; an Apache-2.0 dependency in a GPLv3 project is), confirming the compatibility encoding rather than a blanket route-to-`review`
 
 ## Open Questions
-- Resolved 2026-06-04 (evidence in the follow-up research note `.audits/license-check/research-2026-06-04-followups.md`): the cross-reference realignment landed, so `spec/portfolio/tech-stack/` and `spec/project/dependency-audit/` now name `license-check` as the policy authority; the Apache-2.0 §3 and GPL-3.0 §11 patent wording is verified and folded into §Classification and obligations; the NOTICE-generation default is hardened to the ORT reporter in §Per-stack tooling; and the per-generator terms (GitHub Copilot, OpenAI, Adobe Firefly, Midjourney) are recorded in that note rather than in this normative text.
+- Resolved 2026-06-04 (follow-up research round): the cross-reference realignment landed, so `spec/portfolio/tech-stack/` and `spec/project/dependency-audit/` now name `license-check` as the policy authority; the Apache-2.0 §3 and GPL-3.0 §11 patent wording is verified and folded into §Classification and obligations; the NOTICE-generation default is hardened to the ORT reporter in §Per-stack tooling; and the per-generator terms (GitHub Copilot, OpenAI, Adobe Firefly, Midjourney) are recorded in the evidence appendix [`ai-generator-terms.md`](ai-generator-terms.md) rather than in this normative text.
 - Revisit the deny-tier default if a `nolte/*` repository is ever intentionally licensed under copyleft, which would invert the compatibility anchor for that repository.
+
+## Sources
+
+The factual claims above rest on a four-round primary-source research record (2026-05-30 through 2026-06-04). The load-bearing sources, grouped:
+
+**SPDX anchoring and in-repo compliance**
+
+- <https://spdx.org/licenses/> and <https://github.com/spdx/license-list-data> (identifier resolution and full license texts)
+- <https://scancode-licensedb.aboutcode.org/> (fallback for licenses outside the SPDX list)
+- <https://reuse.software/spec-3.3/> (per-file licensing information)
+
+**Compatibility and copyleft interpretation**
+
+- <https://www.gnu.org/licenses/gpl-faq.html>, <https://www.gnu.org/licenses/license-list.en.html>, and <https://www.gnu.org/licenses/license-compatibility.en.html>
+- <https://www.apache.org/licenses/GPL-compatibility.html> (the one-directional Apache-2.0/GPLv3 rule)
+- <https://www.mozilla.org/MPL/2.0/> and its FAQ (file-level copyleft scope)
+- <https://spdx.org/licenses/GPL-3.0-only.html> and <https://spdx.org/licenses/EPL-2.0.html> (verbatim patent-clause wording)
+- <https://lwn.net/Articles/548216/> (linking-equivalence debate context)
+
+**Policy seeds**
+
+- CNCF `allowed-third-party-license-policy` (<https://github.com/cncf/foundation>): an SPDX-identifier-anchored allowlist, the seed for the default `allow` tier—deliberately not overstated as "purely permissive"
+
+**AI provenance and output rights**
+
+- U.S. Copyright Office, *Copyright and Artificial Intelligence*, Part 2 report* (<https://www.copyright.gov/ai/Copyright-and-Artificial-Intelligence-Part-2-Copyrightability-Report.pdf>) and <https://www.copyright.gov/newsnet/2025/1060/>
+- The `LiCoEval` benchmark (<https://arxiv.org/html/2408.02487v3>)—the 0.88–2.01 % striking-similarity finding—and <https://arxiv.org/html/2409.06390v1>
+- <https://opensource.org/ai/open-source-ai-definition> (open-weight licenses versus the Open Source AI Definition freedoms)
+- <https://cyclonedx.org/capabilities/mlbom/> (ML-BOM provenance carrier); the SPDX 3.0.1 AI Profile
+- Vendor terms: `learn.microsoft.com` customer copyright commitment (GitHub Copilot), <https://openai.com/policies/row-terms-of-use>, Adobe Firefly legal FAQ, `docs.midjourney.com` terms (via <https://terms.law/ai-output-rights/midjourney/> when the primary source blocks fetches)—the verified extract lives in [`ai-generator-terms.md`](ai-generator-terms.md)
+
+**Per-stack tooling**
+
+- <https://peps.python.org/pep-0639/> (Python `License-Expression` metadata)
+- <https://www.npmjs.com/package/license-checker-rseidelsohn> (Node)
+- <https://github.com/google/go-licenses> (Go; documented non-Go and URL-resolution limits)
+- <https://oss-review-toolkit.org/ort/docs/tools/reporter> (ORT NOTICE templates, the verified cross-stack attribution default)
+- <https://www.deepbits.com/blog/BreakingDownTheAccuracyOfSBOMGenerators> (the investigated-and-refuted metadata-versus-build SBOM-accuracy claim)
