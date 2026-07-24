@@ -27,6 +27,7 @@ Drei Randbedingungen prägen das Design:
 - Batch-Pipelines (n Prompts pro Job) — ein Prompt pro Aufruf (`-n` fordert mehrere Bilder **desselben** Prompts an).
 - Ein lokaler/selbst-gehosteter Provider (`stable-diffusion.cpp`) — ein geplanter Folgeschritt, in dieser Iteration außerhalb des Geltungsbereichs.
 - Garantieren, dass ein Provider kostenlos bleibt — Kontingente liegen in der Hand der Anbieter.
+- Midjourney als Provider — es bietet keine skriptbare, vom Terminal aus erreichbare Text-zu-Bild-API und fehlt daher bewusst in der festen `--provider`-Registry. `spec/design/graphic-prompt-authoring/` darf ein Midjourney-Ziel-Prompt-Dokument verfassen, doch dieses Tool generiert nie gegen Midjourney; die beiden Specs treffen sich nur am Prompt-Artefakt, nicht an einem gemeinsamen Backend.
 
 ## Anforderungen
 

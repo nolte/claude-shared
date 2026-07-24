@@ -10,7 +10,7 @@ Diese Spec regelt, wie ein Claude-Code-Agent (der `graphic-prompt-generator`-Age
 
 Die Capability ist der generalisierte Nachfolger eines projektlokalen `gemini-graphic-prompt-generator`-Agents, der die Palette, das Maskottchen und die Dateipfade eines einzelnen Projekts hartcodiert hatte. Die Portfolio-Form liest den Brand aus den publizierten Design-Tokens des Konsumenten-Repositorys, statt den Brand irgendeines Projekts im Body zu tragen.
 
-Leser: Skill- und Agent-Autoren, die den Prompt-Autoren-Agent pflegen; Reviewer, die prüfen, dass erzeugte Prompt-Dokumente brand-konform sind; Operatoren, die den Agent briefen und Assets später neu generieren.
+Leser: Skill- und Agent-Autoren, die den Prompt-Autoren-Agent pflegen; Reviewer, die prüfen, dass erzeugte Prompt-Dokumente brand-konform sind; Operatoren, die den Agent mit einem frei formulierten Brief aufrufen und sich auf das dauerhafte Prompt-Dokument stützen, um ein Asset später neu zu generieren — diese Spec regelt das erzeugte Dokument und seine Reproduzierbarkeit, nicht das interne Format des Briefs.
 
 ## Ziele
 
