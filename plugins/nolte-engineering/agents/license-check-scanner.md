@@ -1,8 +1,8 @@
 ---
 name: license-check-scanner
-description: "Read-only license-inventory scanner dispatched by the `license-check` skill: detects the stack (Python/Node/Go), reads the CycloneDX SBOM (or resolves licenses from lockfiles and registry metadata), maps each component to a canonical SPDX id and category, and returns the inventory plus the project's own outbound license and REUSE state. The policy gate, remediation, NOTICE generation, and audit-artifact write stay with the skill."
+description: "Read-only license-inventory scanner dispatched by the `license-check` skill: detects the stack (Python/Node/Go), reads the CycloneDX SBOM (or resolves licenses from lockfiles and registry metadata), maps each component to a canonical SPDX id and category, and returns the inventory plus the project's own outbound license and REUSE state. The policy gate, remediation, NOTICE generation, and audit-artifact write stay with the skill. Don't use for CVE scanning (`dependency-audit-scanner`)."
 distribution: plugin
-tools: Read, Bash
+tools: Read, Glob, Bash
 model: sonnet
 tags: [audit, dependency]
 phase: quality
@@ -45,7 +45,9 @@ This agent declares `Bash` as a deliberate exception under `spec/claude/agent-ma
 - `npx --yes license-checker-rseidelsohn --json --production` — resolve Node licenses from the already-installed `node_modules`, read-only, no project install
 - `curl -s https://pypi.org/pypi/<pkg>/json` — resolve a package's SPDX license from PyPI metadata, read-only
 - `uvx reuse lint` — report REUSE compliance, read-only
-- `find . -maxdepth 3 -name "<manifest>"`, `cat <lockfile>`, `cat LICENSE`, `git ls-files` — discover manifests, lockfiles, and own-license state, no mutations
+- `cat <lockfile>`, `cat LICENSE`, `git ls-files` — read lockfiles and own-license state, no mutations
+
+Manifest and lockfile *discovery* uses the dedicated `Glob` / `Read` tools, preferred over a `Bash` `find` per `spec/claude/agent-management/` §Tool access ("prefer dedicated tools").
 
 **Ephemeral tool-runner exception.** `npx --yes license-checker-rseidelsohn` and `uvx reuse` fetch the *license-tooling* binary into the runner's own cache (npm's `_npx` cache, uv's tool cache) on first use. This is the one caveat to "installs nothing": these commands may populate a shared tool cache, but they do **not** add or modify any project dependency, do **not** touch `node_modules` / the project virtualenv, and write nothing to the working tree — they only run a resolver read-only over what is already installed. That cache-population is an allowed read-only exception; installing a *project* dependency is not.
 
@@ -104,7 +106,7 @@ Record the BSD-4-Clause (advertising clause) explicitly when seen — it is the 
 
 ### Phase 1: Detect stack and own license
 
-Search the repo root and common subroots (`backend/`, `frontend/`, `packages/*`, `apps/*`) up to two levels deep:
+Search the repo root and common subroots (`backend/`, `frontend/`, `packages/*`, `apps/*`) up to two levels deep, using `Glob`/`Read` (not a `Bash` `find`):
 
 | Indicator | Stack | License tooling |
 |---|---|---|
