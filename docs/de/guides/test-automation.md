@@ -38,7 +38,7 @@ Um zu prüfen, ob ein Feature die Stufen, die es abdecken sollte, tatsächlich a
 
 ## Der Zyklus: wie man einen Test entwickelt
 
-Der `test-cycle-orchestrate`-Skill treibt den iterativen Loop. Jede Phase hat eine realisierende Spec und, wo die Arbeit spezialisiert ist, einen Agent. Der Loop kehrt von Phase 4 zu Phase 2 zurück (erneut ausführen) und speist Phase 3 in Phase 1 zurück (ein entdeckter Defekt wird ein neuer Regressionsfall); er endet nur bei einer expliziten Abbruchbedingung, nie durch das Abschwächen eines Tests, um einen Pass zu erzwingen.
+Der `test-cycle-orchestrate`-Skill treibt den iterativen Loop. Jede Phase hat eine realisierende Spec und, wo die Arbeit spezialisiert ist, einen Agenten. Der Loop kehrt von Phase 4 zu Phase 2 zurück (erneut ausführen) und speist Phase 3 in Phase 1 zurück (ein entdeckter Defekt wird ein neuer Regressionsfall); er endet nur bei einer expliziten Abbruchbedingung, nie durch das Abschwächen eines Tests, um einen Pass zu erzwingen.
 
 | Phase | Capability | Phasen-Spec |
 |-------|------------|-------------|

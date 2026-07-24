@@ -54,7 +54,7 @@ This repository is a **plugin monorepo** shipping three plugins: **`nolte-shared
 | `audience-doc-author` | Draft or refine an audience-tailored documentation artifact (README, release notes, …) against an existing audience artifact. |
 | `audience-review` | Read-only review of an existing audience artifact against the audience-identification spec. |
 | `spec-readiness-reviewer` | Audit specs for contradictions, audience fit, and Requirements-vs-Acceptance-Criteria completeness. |
-| `docs-freshness-checker` | Audit MkDocs documentation for language parity, dead internal links, stale path references, ADR hygiene and placeholder markers. |
+| `docs-freshness-checker` | Audit MkDocs documentation for language parity, dead internal links, stale path references, ADR (Architecture Decision Record) hygiene and placeholder markers. |
 | `prose-vale-curator` | Rephrase prose until it passes Vale, preferring terms the shipped vocabularies already accept. |
 
 ### `nolte-media` (image generation & media processing)

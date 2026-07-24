@@ -23,7 +23,7 @@ Skills are reusable workflows Claude Code invokes via the `Skill` tool. In the `
 | `release-notes-curate` | Augment the open release-drafter draft with a project-context section (per `release-skill-layer`) |
 | `release-publish-trigger` | Validate pre-publish gates and dispatch `release-publish.yml` for the open draft on `develop` |
 | `quality-gate` | Run lint + typecheck + tests in parallel and tabulate the results |
-| `dependency-audit` | Scan dependencies for known CVEs (optionally licenses) |
+| `dependency-audit` | Scan dependencies for known CVEs (Common Vulnerabilities and Exposures), optionally licenses |
 | `project-structure-apply` | Audit the repo against the `project-structure` spec and scaffold missing artefacts |
 | `github-issue-templates-apply` | Scaffold or update `.github/ISSUE_TEMPLATE/` per the `github-issue-templates` spec |
 | `skill-agent-catalog-apply` | Wire up the MkDocs catalog that lists every skill and agent in a plugin repo |

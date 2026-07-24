@@ -10,7 +10,7 @@ last_updated: 2026-05-19
 
 Die `nolte-shared`-Skills und -Agents decken den vollständigen Entwicklungszyklus eines Projekts ab — vom ersten Mission-Statement bis zum veröffentlichten Release-Artefakt. Diese Seite zeigt, wo jedes Artefakt greift.
 
-Der Zyklus hat sieben sequenzielle Phasen plus eine achte, **Cross-cutting**, die phasenagnostische Artefakte sammelt. Die ersten sieben Phasen bilden einen Kreislauf. Am Ende eines Sprints kehrt der Lauf zurück zu **Plan**, um den nächsten Sprint zu planen. Sobald das MVP erreicht ist, kehrt der Lauf zurück zu **Vision** — die Mission wird Richtung Stabilisierung revidiert.
+Der Zyklus hat sieben sequenzielle Phasen plus eine achte, **Cross-cutting**, die phasenagnostische Artefakte sammelt. Die ersten sieben Phasen bilden einen Kreislauf. Am Ende eines Sprints kehrt der Lauf zurück zu **Plan**, um den nächsten Sprint zu planen. Sobald das MVP (Minimum Viable Product) erreicht ist, kehrt der Lauf zurück zu **Vision** — die Mission wird Richtung Stabilisierung revidiert.
 
 Jeder Skill und jeder Agent deklariert seine Phase im Frontmatter (`phase:`). Der Katalog-Generator gruppiert die [Skills](../skills/index.md)- und [Agents](../agents/index.md)-Katalog-Seiten nach diesem Feld. So bleiben diese Seite und der Katalog im Gleichschritt.
 
@@ -126,7 +126,7 @@ Design ist die Phase, in der Konventionen, Scaffolds und Spezifikationen geschri
 | [`spec`](../skills/nolte-shared/spec.md) | Skill | Multilinguale Spezifikation unter `spec/` schreiben, übersetzen, deduplizieren oder Drift prüfen. |
 | [`spec-readiness-reviewer`](../agents/nolte-shared/spec-readiness-reviewer.md) | Agent | Eine Spec auf Widersprüche, Audience-Fit und Domain-Vollständigkeit prüfen, bevor sie weiterzieht. |
 | [`skill-management`](../skills/nolte-claude-dev/skill-management.md) | Skill | Einen Claude-Code-Skill im Plugin-Source-Tree schreiben oder überarbeiten. |
-| [`claude-plugin-developer`](../agents/nolte-claude-dev/claude-plugin-developer.md) | Agent | Einen neuen Plugin-Skill oder einen neuen Agent in strikter Konformität mit allen Specs unter `spec/claude/` entwerfen. |
+| [`claude-plugin-developer`](../agents/nolte-claude-dev/claude-plugin-developer.md) | Agent | Einen neuen Plugin-Skill oder einen neuen Agenten in strikter Konformität mit allen Specs unter `spec/claude/` entwerfen. |
 | [`project-structure-apply`](../skills/nolte-shared/project-structure-apply.md) | Skill | `.github/`, Taskfile, MkDocs, Renovate-Config und Probot-Integrationen auditieren und scaffolden. |
 | [`skill-agent-catalog-apply`](../skills/nolte-claude-dev/skill-agent-catalog-apply.md) | Skill | MkDocs-Skill-und-Agent-Katalog verdrahten, damit Docs jedes Artefakt sichtbar machen. |
 | [`mkdocs-structure-apply`](../skills/nolte-shared/mkdocs-structure-apply.md) | Skill | Per-Sprache-MkDocs-Skelett, Plugin-Baseline und Frontmatter-Kontrakt prüfen und scaffolden. |

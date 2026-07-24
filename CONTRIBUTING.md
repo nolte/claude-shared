@@ -4,7 +4,7 @@ Thanks for taking a look. This document describes what kinds of contributions ma
 
 ## Status
 
-This repository is currently maintained single-handedly and is in an early consolidation phase (see the "Status" note in `README.md`). Pull requests are welcome, but there is no published review or merge SLA — triage is best-effort.
+This repository is currently maintained single-handedly and is in an early consolidation phase (see the "Status" note in `README.md`). Pull requests are welcome, but there is no published review or merge SLA (service-level agreement) — triage is best-effort.
 
 If you are unsure whether a change fits, open an issue first and describe the use case. A short issue beats a large PR that has to be redirected.
 

@@ -40,7 +40,7 @@ Without a consistent shape, skills drift in naming, in trigger text, and in stru
 
 ### Structure
 
-The keywords MUST, SHOULD, and MAY follow RFC 2119 (normative-requirement convention).
+The keywords MUST, SHOULD, and MAY follow RFC (Request for Comments) 2119 (normative-requirement convention).
 
 - **MUST** be authored as a folder `<name>/` in ASCII kebab-case
 - **MUST** contain `SKILL.md` at the folder root

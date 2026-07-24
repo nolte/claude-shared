@@ -20,7 +20,7 @@ Task-oriented landing page: groups skills and agents by user intent rather than 
 ## Author or audit a specification
 
 - **Write, translate, or refresh a spec under `spec/`** → [`spec`](skills/nolte-shared/spec.md). Keeps every configured language tree in sync with the canonical source, regenerates the spec index, and de-duplicates against existing coverage.
-- **Audit a spec before downstream implementation** → [`spec-readiness-reviewer`](agents/nolte-shared/spec-readiness-reviewer.md). Read-only audit for contradictions, audience fit, requirement-to-AC coverage, and ghost references to non-existent specs. Severity-sorted report; never edits.
+- **Audit a spec before downstream implementation** → [`spec-readiness-reviewer`](agents/nolte-shared/spec-readiness-reviewer.md). Read-only audit for contradictions, audience fit, requirement-to-acceptance-criteria (AC) coverage, and ghost references to non-existent specs. Severity-sorted report; never edits.
 
 ## Author a Claude Code skill
 

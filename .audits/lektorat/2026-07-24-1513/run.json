@@ -1,0 +1,20 @@
+{
+  "operation": "audit",
+  "invoked_via": "nolte-shared:lektorat-apply",
+  "trigger": "issue #441 — full lektorat audit D1-D6, full scope",
+  "severity_floor": "suggestion",
+  "target_set": {
+    "en": ["docs/en/**/*.md (28 files)", "README.md", "CONTRIBUTING.md", "SECURITY.md", "AUDIENCES.md"],
+    "de": ["docs/de/**/*.md (28 files)"],
+    "excluded": ["CLAUDE.md (LLM-instruction artifact)", "spec/**", "skills/**", "agents/**", "generated configs"]
+  },
+  "audience_artifact": "AUDIENCES.md",
+  "finding_id_scheme": "stable hash of file+dimension+line (scanner-assigned); ran_at and absolute paths excluded from hash inputs",
+  "scanner_dispatch": "two batched lektorat-scanner agent runs (EN batch, DE batch)",
+  "repo_revision": "db0aaf4",
+  "user_options": {
+    "dimensions": ["D1", "D2", "D3", "D4", "D5", "D6"],
+    "artifact_target": "worktree lektorat-full-audit (branch docs/lektorat-full-audit)",
+    "mode_note": "autonomous run mandated by operator (issue-backlog processing); patch approvals recorded as autonomous decisions in summary.md dispositions"
+  }
+}
