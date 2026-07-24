@@ -116,7 +116,14 @@ Eine eng umrissene Menge von **Editorial- und Dokumentations-Audit-Specs** seria
 ### Bezug zu anderen Specs
 
 - **MUSS [MUST]** aus jeder Review-Spec referenziert werden, die einen Plan produziert (`skill-review`, `agent-review` und jeder künftige Review-Typ) — die Review-Spec besitzt die Kriterien, diese Spec besitzt die Artefakt-Form
-- **MUSS NICHT [MUST NOT]** als Ausgabe eines **datierten periodischen Audit-Records** verwendet werden: `spec-drift-audit` (`.audits/spec-drift/<YYYY>-Q<n>.md`) und `portfolio-inflight-management` (`.audits/portfolio-inflight/<YYYY-MM-DD>.md`) nutzen die Vier-Sektionen-Struktur und das Severity-Vokabular dieser Spec weiter, folgen aber ihrer eigenen datierten Dateinamens- und Nicht-Wegwerf-Lebenszyklus-Konvention; die No-Timestamp- und Ein-Plan-pro-Ziel-Regeln dieser Spec gelten **nicht** für jene Records, die nicht bei Verarbeitungs-Abschluss gelöscht werden sollen
+- **MUSS NICHT [MUST NOT]** als Ausgabe eines **datierten periodischen oder akkumulierenden Audit-Records** verwendet werden. Die folgenden Records nutzen die Vier-Sektionen-Struktur und das Severity-Vokabular dieser Spec weiter, folgen aber ihrer eigenen datierten Dateinamens- und Nicht-Wegwerf-Lebenszyklus-Konvention; die No-Timestamp- und Ein-Plan-pro-Ziel-Regeln dieser Spec gelten **nicht** für sie, und sie sollen nicht bei Verarbeitungs-Abschluss gelöscht werden:
+  - `spec-drift-audit` — `.audits/spec-drift/<YYYY>-Q<n>.md`
+  - `portfolio-inflight-management` — `.audits/portfolio-inflight/<YYYY-MM-DD>.md`
+  - `portfolio-management` — `.audits/portfolio/<YYYY-MM-DD>.md`
+  - `docs-freshness` — `.audits/docs-freshness/<YYYY>-Q<n>.md`
+  - `lektorat` — `.audits/lektorat/<YYYY-MM-DD-HHMM>/`
+  - `lektorat-auto-revise` — `.audits/lektorat-auto-revise/<YYYY-MM-DD-HHMM>/`
+  - `diagram-opportunity` — `.audits/diagram-opportunity/<YYYY-MM-DD-HHMM>/`
 - **SOLLTE [SHOULD]**, wenn ein Review-Agent (z. B. `audience-review`) einen Report in der Hauptkonversation emittiert, den strukturierten Plan trotzdem unter `.audits/<review-type>/<target>.md` persistieren, damit der Verarbeitungsvertrag unabhängig davon konsistent ist, wer das Review gefahren hat
 - **SOLLTE [SHOULD]** `spec/project/parallel-working-copies/` §Audit-Artefakte in mehreren Worktrees konsultieren, wenn der Plan in einem Worktree statt im primären Checkout erzeugt wird; die Per-(Review-Typ, Ziel)-Eindeutigkeitsregel aus dieser Spec ist jeweils nur innerhalb eines Working Tree beobachtbar, und die worktree-lokalen Commit-, Transfer- und Cleanup-Regeln leben dort
 - **SOLLTE [SHOULD]** in Repositories, die direkte Pushes nach `develop` verbieten, den Plan und den Fix, den er beschreibt, im selben Feature-Branch-PR landen lassen — Erzeugen, Abhaken, `## Processing log`-Aktualisierungen und der Lösch-Commit alle in einem Diff — gemäß `spec/project/parallel-working-copies/` §Audit-Artefakte; ein eigenständiger früherer PR ist Reviews vorbehalten, die vor jeder Fix-Abgrenzung laufen
