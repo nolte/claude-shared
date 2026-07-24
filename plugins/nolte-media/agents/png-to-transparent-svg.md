@@ -11,6 +11,9 @@ summary_de: "Konvertiert ein PNG mit Fake-Transparency-Hintergrund (Checkerboard
 use_when:
   - "you want to convert a PNG with baked-in checkerboard background to a transparent SVG"
   - "you want to vectorise an AI-generated icon and drop the fake background"
+see_also:
+  - "graphic-prompt-generator"
+  - "image-generate"
 ---
 
 # PNG to Transparent SVG
@@ -29,7 +32,7 @@ Your work is governed by `spec/design/png-to-transparent-svg/`; that spec is the
 
 ## Bash justification
 
-Every conversion runs through the plugin-bundled Python helpers (`python3 "${CLAUDE_PLUGIN_ROOT}/..."`) and the `vtracer` binary named in the preconditions; their declared write targets are exactly the output files the caller names. `Bash` performs no git mutation, no installs (the binaries are preconditions, not something this agent provisions), and no network access.
+`Bash` runs exactly three command classes: the availability probes of §Preconditions (`python3 --version`, `python3 -c 'import PIL'`, `python3 -c 'import vtracer'`), the inline Pillow and vtracer Python of Phases 1–4, and nothing else. Their write targets are exactly the cleaned PNG and the output SVG the caller named. `Bash` performs no git mutation, no installs (Pillow and vtracer are preconditions, not something this agent provisions), and no network access.
 
 ## Scope and boundaries
 
