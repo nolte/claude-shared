@@ -14,6 +14,10 @@ created: ""
 <!-- Replace <N> with the issue number; this artifact lives at .audits/issue-orchestrate/<N>/analysis.md -->
 <!-- Write the prose body in the issue's language; keep the machine-readable fields
      (classification label, specialist subagent_type, finding source) in English. -->
+<!-- Run-scoped artifact: committed on the run's feature branch, then removed with a
+     fix-forward `git rm` before the PR merges, per spec/project/issue-orchestration/
+     §Pre-analysis artifact lifecycle. Anything worth keeping after the merge goes into
+     the PR's Risk / rollout notes or the issue comment first. -->
 
 ## Issue metadata
 

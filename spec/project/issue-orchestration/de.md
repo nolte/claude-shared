@@ -33,9 +33,13 @@ Security-Issue erhält einen Generalisten-Fix statt `code-security-reviewer`), u
 der Link von einem gemergten PR zurück zum motivierenden Issue ist informell.
 Diese Spezifikation definiert einen einzelnen Orchestrierungs-Prozess —
 analysieren, dekomponieren, routen, dispatchen, verifizieren — dessen
-qualitätsstiftender Kern ein **persistentes Voranalyse-Artefakt** ist, das jedes
+qualitätsstiftender Kern ein **lauf-gebundenes Voranalyse-Artefakt** ist, das jedes
 Teilproblem so aufbereitet, dass ein Spezialist es vollständig und hochwertig
-umsetzen kann. Der Orchestrator ist ein Generalist: Er führt die
+umsetzen kann. Dieses Artefakt ist ein Prozess-Artefakt, kein Liefergegenstand: Es
+ist reviewbar, solange der Lauf offen ist, und wird wieder entfernt, bevor der Pull
+Request mergt — was den Lauf überdauert, ist der Audit-Trail-Abschnitt des Pull
+Requests und der Issue-Thread, keine Datei auf dem Default-Branch (siehe
+§Lebenszyklus des Voranalyse-Artefakts). Der Orchestrator ist ein Generalist: Er führt die
 Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert.
 
 ## Goals
@@ -44,7 +48,11 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   Repository-Oberfläche, die es berührt
 - Jedes Issue wird in atomare, testbare Arbeitspakete zerlegt, jedes auf den am
   besten passenden verfügbaren Skill oder Agent gemappt, und die Dekomposition wird
-  als reviewbares Artefakt persistiert statt nur im Gespräch zu leben
+  für den Lauf als reviewbares Artefakt persistiert statt nur im Gespräch zu leben
+- Prozess-Artefakte sammeln sich nicht auf dem Default-Branch an: Die Dekomposition
+  wird committet, damit sie im Pull Request reviewbar ist, dann vor dem Merge
+  entfernt; der Audit-Trail, der überdauert, ist der Abschnitt **Risk / rollout
+  notes** des Pull Requests plus der Issue-Kommentar
 - Die Rolle des Orchestrators ist analysieren, dekomponieren, routen, dispatchen
   und verifizieren — keine praktische Remediation, wenn ein Spezialist existiert;
   Spezialisten erledigen das Editieren durch das Standard-PR-Gate
@@ -207,7 +215,8 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   `.audits/issue-orchestrate/<issue-number>/analysis.md` persistieren, das die
   Issue-Metadaten, die Klassifikation und Begründung, die In/Out-of-Scope-Grenze,
   die Arbeitspaket-Tabelle, die paketübergreifende Abhängigkeitsordnung, die Risiken
-  und etwaige offene Fragen an den Operator trägt
+  und etwaige offene Fragen an den Operator trägt; das Artefakt ist lauf-gebunden und
+  wird vor dem Merge wieder entfernt, gemäß §Lebenszyklus des Voranalyse-Artefakts
 - **MUSS [MUST]** das Voranalyse-Artefakt vor jedem Dispatch zur Operator-Freigabe
   vorlegen; das Artefakt ist der reviewbare Übergabe-Vertrag, und ein Dispatch auf
   einer nicht freigegebenen Dekomposition ist verboten
@@ -215,6 +224,56 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   die maschinenlesbaren Audit-Trail-Felder, die später in einem PR landen
   (Klassifikations-Label, Spezialisten-`subagent_type`, Finding-Quelle), bleiben
   Englisch, damit der Trail portfolioweit grep-bar ist
+
+### Lebenszyklus des Voranalyse-Artefakts (transient)
+
+Das Voranalyse-Artefakt ist ein **Prozess-Artefakt, kein Liefergegenstand**. Es
+rechtfertigt sich als reviewbares Dekompositions-Gate, solange der Lauf offen ist,
+und hat keine Leserschaft mehr, sobald die beschriebene Capability umgesetzt,
+verifiziert und gemergt ist.
+
+- **MUSS [MUST]** `.audits/issue-orchestrate/<issue-number>/analysis.md` als
+  lauf-gebunden behandeln: auf dem Feature-Branch des Laufs geschrieben und
+  committet, dort belassen, während die Pakete dispatched und ihre Ergebnisse
+  erfasst werden, und mit einem Fix-Forward-`git rm` auf demselben Branch entfernt,
+  bevor der Pull Request mergt. Das Artefakt **DARF NICHT [MUST NOT]** den
+  Default-Branch erreichen
+- **DARF NICHT [MUST NOT]** das Artefakt entfernen, bevor jedes dispatchte
+  Arbeitspaket umgesetzt und das Gate aus §Verifikation und Nachvollziehbarkeit grün
+  ist; die Entfernung ist die letzte inhaltliche Änderung des Laufs, kein Cleanup,
+  das mit den Spezialisten um die Wette läuft
+- **MUSS [MUST]** die Entfernung als **Fix-Forward-Commit auf dem Feature-Branch**
+  ausführen, nie als History-Rewrite, damit der Commit-Trail des Pull Requests
+  weiterhin ein Artefakt trägt, das ein Reviewer lesen kann, während der gesquashte
+  Merge-Commit nichts davon trägt
+- **DARF NICHT [MUST NOT]** das Artefakt stattdessen hinter einem
+  `.gitignore`-Eintrag verbergen. Ein ignoriertes Artefakt taucht nie im Pull Request
+  auf, was das Operator-Freigabe-Gate aushöhlt, das §Dekomposition tragend macht, und
+  `spec/claude/review-plan/` §File location and naming legt `.audits/` portfolioweit
+  bereits als getracktes, nicht ignoriertes Terrain fest. Tracked-then-removed ist
+  derselbe Lebenszyklus, den jene Spezifikation einem Review-Plan gibt — erzeugen,
+  abarbeiten, löschen und die Git-Historie den Trail sein lassen — angewandt auf
+  dieses Artefakt
+- **MUSS [MUST]** den dauerhaften Audit-Trail außerhalb der Datei landen, bevor sie
+  verschwindet: den Abschnitt **Risk / rollout notes** des Pull Requests (gemäß
+  §Verifikation und Nachvollziehbarkeit) und den Issue-Kommentar, der Klassifikation,
+  Paketzahl und gewählte Route festhält. Ein Fakt, der den Merge überdauern soll,
+  gehört an einen dieser beiden Orte
+- **DARF NICHT [MUST NOT]** diese Transienz auf das Requirement-Artefakt unter
+  `project/requirements/<slug>.md` ausdehnen. Jenes Artefakt bleibt dauerhaft wie
+  seine Geschwister: Es ist der bestätigte Input, auf den jedes Arbeitspaket
+  zurückführt, es bleibt nach dem Merge lesbar, und
+  `spec/project/requirements-elicitation/` §G besitzt seinen Lebenszyklus
+- **DARF NICHT [MUST NOT]** die Entfernung als Wiederaufnahme-Problem behandeln: Der
+  Recovery-Anker ist der Checkpoint unter `.resume/issue-orchestrate/` gemäß
+  §Wiederaufnehmbarkeit und Operator-Gating, und das Artefakt existiert an jeder
+  Phasengrenze, an der eine Wiederaufnahme landen kann, noch, weil die Entfernung auf
+  die letzte davon folgt
+- **SOLLTE NICHT [SHOULD NOT]** diese Regel auf jeden `.audits/`-Pfad
+  verallgemeinern. Datierte, akkumulierende Audit-Records behalten den nicht
+  wegwerfbaren Lebenszyklus, den ihre eigenen Spezifikationen ihnen geben (die
+  aufgezählte Menge in `spec/claude/review-plan/` §Relationship to other specs);
+  dieser Abschnitt ist auf das Voranalyse-Artefakt dieses Prozesses begrenzt
 
 ### Spezialisten-Dispatch (Wiederverwendung statt Neuerfindung)
 - **MUSS [MUST]** den Spezialisten für jedes Arbeitspaket durch einen
@@ -296,6 +355,11 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   wörtlich und pro Arbeitspaket den dispatchten Spezialisten
   (`subagent_type`-Literal) oder die explizite Notiz „no matching specialised agent —
   generalist remediation"
+- **MUSS [MUST]** das Voranalyse-Artefakt gemäß §Lebenszyklus des
+  Voranalyse-Artefakts vom Feature-Branch entfernen, sobald jedes Paket umgesetzt und
+  das Gate oben grün ist, und bevor der Pull Request an `pull-request-merge` übergeben
+  wird, damit der Merge es nicht auf den Default-Branch tragen kann; was den Merge
+  überdauert, sind die **Risk / rollout notes**-Sektion und der Issue-Kommentar
 - **DARF NICHT [MUST NOT]** den Pull Request mergen; die Orchestrierung stoppt bei
   einem offenen, audit-getrailten PR und übergibt den Merge an `pull-request-merge`,
   das das Gate neu validiert
@@ -320,8 +384,11 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   mutierenden Schritt ohne ein festgehaltenes „Ja"
 
 ## Acceptance Criteria
-- [ ] Für ein akquiriertes Issue existiert das Voranalyse-Artefakt unter
-  `.audits/issue-orchestrate/<issue-number>/analysis.md` und hält die
+- [ ] Für ein akquiriertes Issue existierte das Voranalyse-Artefakt unter
+  `.audits/issue-orchestrate/<issue-number>/analysis.md` zur Dispatch-Zeit auf dem
+  Feature-Branch des Laufs — nachträglich rekonstruierbar mit
+  `git log --diff-filter=A -- .audits/issue-orchestrate/<issue-number>/` auf diesem
+  Branch — und hielt die
   Issue-Metadaten, die einzelne primäre Klassifikation mit Begründung, die
   In/Out-of-Scope-Grenze und eine Arbeitspaket-Tabelle fest, in der jedes Paket eine
   Problemstellung, Akzeptanzkriterien, berührte Dateien, einen Spezialisten und seine
@@ -344,6 +411,19 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
 - [ ] Kein Arbeitspaket in einem Voranalyse-Artefakt entbehrt eines testbaren
   Akzeptanzkriteriums; ein Paket, das keines formulieren kann, wird stattdessen als
   Routing-Signal in die formale Pipeline festgehalten
+- [ ] Der Baum des Default-Branch trägt keinen `.audits/issue-orchestrate/`-Pfad
+  (`git ls-tree -r --name-only develop -- .audits/issue-orchestrate/` liefert nichts),
+  und kein vom Default-Branch erreichbarer Commit fügt einen hinzu
+  (`git log --diff-filter=A --name-only develop -- .audits/issue-orchestrate/` ist
+  leer)
+- [ ] Für jeden von dieser Orchestrierung produzierten Pull Request trägt der
+  Feature-Branch sowohl den Erzeugungs- als auch den Entfernungs-Commit des Artefakts,
+  der Entfernungs-Commit liegt nach dem letzten im Artefakt festgehaltenen
+  Spezialisten-Ergebnis, und `.gitignore` trägt keinen
+  `.audits/issue-orchestrate/`-Eintrag
+- [ ] Für jeden gemergten Orchestrierungslauf ist das Requirement-Artefakt unter
+  `project/requirements/<slug>.md`, das die Dekomposition grundiert hat, nach dem
+  Merge weiterhin auf dem Default-Branch vorhanden
 - [ ] Jeder in einem Arbeitspaket benannte Spezialist wurde durch einen
   Runtime-Katalog-Lookup zur Analysezeit aufgelöst, und kein implementierendes Skill
   trägt eine eingefrorene Inline-Liste von Spezialistennamen als Dispatch-Tabelle
