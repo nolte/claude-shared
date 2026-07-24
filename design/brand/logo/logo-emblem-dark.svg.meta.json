@@ -1,0 +1,15 @@
+{
+  "asset": "logo-emblem-dark.svg",
+  "source": "ai-generated-then-vectorised",
+  "provider": "cloudflare",
+  "model": "@cf/black-forest-labs/flux-1-schnell",
+  "output_license": "Apache-2.0",
+  "prompt_source": "design/prompts/logo_sloth-emblem.md",
+  "prompt_variant": "Dark Mode",
+  "seed": 8505,
+  "vectorised_by": "design/brand/vectorize.py",
+  "vectorise_threshold": 18,
+  "mime_type": "image/svg+xml",
+  "committed": "2026-06-11",
+  "provenance_note": "Backfilled 2026-07-24 from git history and the prompt document per the license-check follow-up (.audits/license-check/license-2026-07-24.md). The intermediate PNG render is gitignored and reproducible from the prompt doc's Rendered v1.1 asset block. No Cloudflare account id is embedded."
+}
