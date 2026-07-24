@@ -602,3 +602,9 @@ Load-bearing rules for the normative spec:
 
 Each rule maps to one or more of the numbered practices above and to two
 or more independent authoritative sources.
+
+## Currency addendum (2026-07-24)
+
+- Trusted Types browser support is stale above: Firefox ships enforcement by default since Firefox 133 (late 2024) and WebKit/Safari followed in 2025. Broad availability strengthens the spec's Trusted-Types MUST; the Emotion-compatibility open question remains open and is now tracked in the spec's Open Questions.
+- The HTTP Observatory reference is the MDN-hosted successor (`developer.mozilla.org/en-US/observatory`); the retired `observatory.mozilla.org` endpoint must not be targeted by release-gate tooling.
+- Practice #14 (redux-persist) still lacks a second independent source; the spec keeps the rule and records the convention-level exceptions in its Sources section.

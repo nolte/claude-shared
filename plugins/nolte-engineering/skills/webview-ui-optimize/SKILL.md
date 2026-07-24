@@ -71,7 +71,7 @@ Before doing anything:
    - monorepo with a `frontend/` or `src/frontend/` subroot: scope to that subroot.
    - the user may name a different subroot explicitly.
 4. Confirm the stack matches the spec's reference: `package.json` declares `react ^19`, `vite ^8`, `@mui/material ^9`, `@reduxjs/toolkit`, `react-router-dom ^7`, `react-hook-form`, `react-i18next`, `notistack`. Mark divergences (`react ^18`, no MUI, etc.) in the audit's pre-state and continue — most rules still apply, but the stack-specific MUSTs degrade to SHOULDs against the actual dependency.
-5. Resolve the per-domain research notes. Prefer a repo-local `.audits/webview-ui-expert/` directory when the target repo carries one; otherwise use the notes bundled with this skill at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md`. The bundled copy always ships with the plugin, so a green-field consumer needs no manual copy; per-rule audit findings reference those notes.
+5. Resolve the per-domain research notes. Prefer a repo-local `spec/frontend/webview-ui-optimization/research/` directory when the target repo carries one; otherwise use the notes bundled with this skill at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md`. The bundled copy always ships with the plugin, so a green-field consumer needs no manual copy; per-rule audit findings reference those notes.
 6. Check for uncommitted changes touching `package.json`, `vite.config.ts`, `index.html`, `eslint.config.*`, `nginx*.conf*`, or `src/`. If any are dirty, report and ask whether to stash, commit, or abort — never overwrite uncommitted work.
 
 ## Operations
@@ -157,7 +157,7 @@ For a named file, route module, or feature whose findings cross several spec rul
 
 - The target path (or feature description).
 - The current audit report's findings for that target.
-- The relevant research notes (repo-local `.audits/webview-ui-expert/<domain>.md` when present, else the bundled `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md`).
+- The relevant research notes (repo-local `spec/frontend/webview-ui-optimization/research/<domain>.md` when present, else the bundled `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md`).
 
 Dispatch the agent by `subagent_type: webview-ui-expert`. The agent returns a structured deep-review report (its own Output-shape section defines the format) which the skill writes verbatim under `.audits/webview-ui-optimize/expert-review-<target>-<iso-timestamp>.md`, then summarises in the conversation and queues the resulting findings into the patch backlog.
 
@@ -186,12 +186,12 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 5. **Never** propose a patch that contradicts a higher-precedence rule in another domain (e.g. an Emotion-style fix that breaks the strict-CSP nonce wiring); when domains collide, surface the conflict and stop until the user decides.
 6. **Never** bypass the spec — every patch's rationale must cite the exact `spec/frontend/webview-ui-optimization/<canonical_language>.md` line.
 7. **Always** read the spec at runtime: prefer the target repo's `spec/frontend/webview-ui-optimization/<canonical_language>.md`; fall back to the copy bundled with this skill at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/spec/webview-ui-optimization.md` only when the target repo lacks one (this plugin ships no `spec/` tree).
-8. **Always** anchor every finding to a research note; a finding without a research-note anchor (and the ≥ 2 independent authoritative sources behind it) is not a finding. Use the target repo's `.audits/webview-ui-expert/<domain>.md` when present, else the notes bundled with this skill at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md` — which always ship with the plugin, so findings are never blocked on an unshipped path.
+8. **Always** anchor every finding to a research note; a finding without a research-note anchor (and the ≥ 2 independent authoritative sources behind it) is not a finding. Use the target repo's `spec/frontend/webview-ui-optimization/research/<domain>.md` when present, else the notes bundled with this skill at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md` — which always ship with the plugin, so findings are never blocked on an unshipped path.
 
 ## Sources
 
 - `spec/frontend/webview-ui-optimization/` — the canonical authoritative spec this skill operationalises. Bundled fallback: `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/spec/webview-ui-optimization.md` (+ `.de.md`), shipped because the `nolte-engineering` plugin carries no `spec/` tree.
-- `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md` — the per-domain research notes bundled with the skill, anchoring every normative rule to ≥ 2 independent authoritative sources (repo-local `.audits/webview-ui-expert/<domain>.md` takes precedence when the target repo carries one).
+- `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md` — the per-domain research notes bundled with the skill, anchoring every normative rule to ≥ 2 independent authoritative sources (repo-local `spec/frontend/webview-ui-optimization/research/<domain>.md` takes precedence when the target repo carries one).
 - `spec/project/prose-style/` — the Vale rule set that the audit prose and the patch rationales should ultimately pass (delegated to `prose-vale-curator`).
 - `spec/claude/skill-vs-agent/` — the skill-vs-agent decision dimensions that justify this artefact as a skill, with the `webview-ui-expert` agent as the deep-review specialist.
 - `webview-ui-expert` (`subagent_type`) — the read-only deep-review agent dispatched by the `expert-review` operation.

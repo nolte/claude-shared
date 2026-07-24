@@ -658,3 +658,10 @@ dropped from the list.
   for the library but not corroborated by an external UX authority).
 - 0 practices marked `unverified` and retained — anything that couldn't
   be sourced was either dropped or reduced in scope.
+
+## Currency addendum (2026-07-24)
+
+- The Popover API claim "flagged in Firefox" is stale: Firefox supports `popover` since v125 (April 2024); the API is Baseline across engines. The spec's fallback SHOULD stays as a conservative floor.
+- The claim that MUI `Dialog` renders the native `<dialog>` element via `.showModal()` is wrong: MUI `Dialog` is `Modal`-based (div tree plus its own focus trap). The spec rule was corrected accordingly on 2026-07-24.
+- Practice #28 (`prefetch="intent"`) cites two reactrouter.com pages (not independent); the spec keeps it as a SHOULD with the framework-mode qualifier. Practice #25 (CSS scroll snap, label `partial`) stays non-normative and is tracked in the spec's Open Questions.
+- Maintenance watch: notistack has seen little maintenance since v3; no deprecation or successor is known. No action needed now; watch at the next dependency review.
