@@ -189,7 +189,7 @@ Two declared extension points let project-type-specific specs add to the skeleto
 
 <!-- Unresolved decisions, known unknowns, things that need a stakeholder answer. -->
 - None at draft time. The seven initial design questions (ADR-section trigger, Project-section opt-in, extension discovery mechanism, audience baseline, source-language descriptor, extension-section cap, Skills/Agents absolute position) were resolved during initial authoring; see the PR that introduces this spec for the rationale of each.
-- Resolved: the no-mixing rule is detected at audit time as a Reviewer-judgement signal at warning severity, never via a static marker scan—see `spec/project/docs-freshness/` §Drift categories (Content-mode drift).
+- Resolved: the no-mixing rule is detected at audit time as a Reviewer-judgement signal at warning severity, never via a static marker scan—see `spec/project/docs-freshness/` §Categories of drift (Content-mode drift).
 
 _The `prerequisites` deferral (from MAY to SHOULD) was settled on 2026-06-06 (decision log preserved in git history)._
 
