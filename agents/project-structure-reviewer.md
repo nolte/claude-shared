@@ -49,15 +49,15 @@ Return a single severity-sorted report in this exact structure. The structured f
 - Optional surfaces evaluated: <list, e.g. "project/", "custom_components/", "Python venv setup">
 
 ## Summary
-| Category | Critical | Warning | Info |
-|---|---|---|---|
-| Top-level files | … | … | … |
-| Directory structure | … | … | … |
-| Portfolio `_extends` | … | … | … |
-| Workflow files | … | … | … |
-| Source layout | … | … | … |
-| Project-type-specific | … | … | … |
-| **Total** | **…** | **…** | **…** |
+| Category | Critical | Warning | Suggestion | Info |
+|---|---|---|---|---|
+| Top-level files | … | … | … | … |
+| Directory structure | … | … | … | … |
+| Portfolio `_extends` | … | … | … | … |
+| Workflow files | … | … | … | … |
+| Source layout | … | … | … | … |
+| Project-type-specific | … | … | … | … |
+| **Total** | **…** | **…** | **…** | **…** |
 
 ## Findings
 
@@ -138,7 +138,7 @@ Required MUST directories at the repository root:
 - `.github/` with at least `.github/workflows/` — `missing-directory` (`severity: Critical`) when either is absent.
 - `docs/` — `missing-directory` (`severity: Critical`) when absent.
 - `spec/` — `missing-directory` (`severity: Critical`) when absent.
-- `tests/` — for a repository with runtime source, `missing-directory` (`severity: Critical`) when absent. For a Claude Code plugin / prompt-only repository (the `.claude-plugin/` + `skills/` layout with no runtime source), `tests/` is **SHOULD**, not **MUST**, per `spec/project/project-structure/` §Tests: emit at most `missing-directory` (`severity: Warning`) when absent, and suppress even that — treating the directory as `not-applicable` — when the `Taskfile.yml` `test` target runs a frontmatter/contract validation (for example `scripts/validate_skills.py`). Never emit a `critical` for a missing `tests/` on a plugin / prompt-only repository.
+- `tests/` — for a repository with runtime source, `missing-directory` (`severity: Critical`) when absent. For a Claude Code plugin / prompt-only repository (the `.claude-plugin/` + `skills/` layout with no runtime source), `tests/` is **SHOULD**, not **MUST**, per `spec/project/project-structure/` §Tests: emit at most `missing-directory` (`severity: Warning`) when absent, and suppress even that — treating the directory as `not-applicable` — when the `Taskfile.yml` `test` target runs a frontmatter/contract validation (for example `scripts/validate_skills.py`). Never emit a `Critical` for a missing `tests/` on a plugin / prompt-only repository.
 
 Optional but spec-governed:
 
@@ -167,6 +167,7 @@ Cap the source-layout walk at one directory level below each recognised root; de
 
 - `Critical`: violations that would block a clean `project-structure-apply audit` pass — every MUST top-level file or directory missing, missing portfolio `_extends`, missing required workflow, source files loose at the root.
 - `Warning`: violations that don't block but break the spec's stated invariant — optional-but-present surface drifts (a half-set `project/` tree, a Python project with bare `requirements.txt` entries, an Ansible project missing `inventory*/`), missing `release-drafter.yml` extends pointer.
+- `Suggestion`: MAY-class opportunities and one-line improvements on an otherwise conformant layout — a `renovate.json` that could move to the preferred `renovate.json5`, or an optional-but-spec-governed surface (`project/`) the repository could adopt.
 - `Info`: cosmetic or "noted for review" findings — detected project-type signals the audit didn't follow up on, deferred-scope notes (GitHub-App live verification, workflow `uses:`-pin freshness).
 
 ## Hard rules
