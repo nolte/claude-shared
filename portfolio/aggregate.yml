@@ -5,9 +5,92 @@
 # spec/portfolio/portfolio-management/ §Documentation rendering the rendered
 # docs/<lang>/portfolio/ pages MUST NOT be hand-edited; edit this snapshot
 # (or re-run Render) and regenerate via `task docs:portfolio`.
+#
+# Tech-stack keys, per spec/portfolio/tech-stack/ §Documentation rendering:
+#   global_tech_stack:      snapshot of portfolio/tech-stack.yml (see below)
+#   members[].tech_stack:   snapshot of that member's project/portfolio.yml
+#                           tech_stack: block (additions / overrides / regroup)
+# Both are derived copies for the renderer, never a second source of truth.
 
 schema_version: 1
 snapshot_source: portfolio-audit Render (portfolio-manifest-collector via gh api)
+# Snapshot of the hand-curated global tech stack. Derived from
+# portfolio/tech-stack.yml, which stays the single source of truth per
+# spec/portfolio/tech-stack/ §Global tech-stack manifest — edit that file, never
+# this snapshot, and re-run the portfolio-audit skill's Render operation to
+# refresh the copy the renderer reads.
+global_tech_stack:
+- name: mkdocs
+  kind: docs
+  group: documentation
+  role: "Documentation generator producing the bilingual MkDocs site under docs/."
+  status: active
+- name: renovate
+  kind: dep-bot
+  group: automation
+  role: "Automated dependency-update bot extending the nolte/gh-plumbing common preset."
+  status: active
+- name: github-actions
+  kind: ci
+  group: automation
+  role: "Continuous-integration provider running lint, test, docs, release-drafter, and release-publish workflows."
+  status: active
+- name: task
+  kind: build
+  group: build-tooling
+  role: "Task orchestrator running quality-gate, docs, plugin-reload, and lint targets via a portfolio-wide Taskfile convention."
+  status: active
+- name: vale
+  kind: lint
+  group: documentation
+  role: "Prose linter using the pinned nolte/vale-style vocabularies and the Microsoft style ruleset."
+  status: active
+- name: pre-commit
+  kind: lint
+  group: quality
+  role: "Pre-commit hook framework wiring trailing-whitespace, end-of-files, yamllint, markdownlint, and Vale checks."
+  status: active
+- name: markdownlint
+  kind: lint
+  group: documentation
+  role: "Markdown style linter run via the pre-commit hook framework."
+  status: active
+- name: gh-plumbing
+  kind: ci
+  group: automation
+  role: "Portfolio CI/CD anchor providing reusable GitHub Actions workflows (mkdocs deploy, release-drafter, automerge, release-cd-refresh-master) consumed by every nolte/* repository."
+  status: active
+- name: release-drafter
+  kind: other
+  group: automation
+  role: "Release-notes drafter that aggregates merged PRs into a draft GitHub Release between version cuts, wired via a gh-plumbing reusable workflow."
+  status: active
+- name: probot-settings
+  kind: other
+  group: automation
+  role: "Probot GitHub App that materialises .github/settings.yml (branch protection, labels, required checks) onto every nolte/* repository."
+  status: active
+- name: boring-cyborg
+  kind: other
+  group: automation
+  role: "Probot GitHub App that auto-labels PRs by touched paths and welcomes first-time contributors per .github/boring-cyborg.yml."
+  status: active
+- name: stale-bot
+  kind: other
+  group: automation
+  role: "Probot GitHub App that closes stale issues and PRs per .github/stale.yml."
+  status: active
+- name: claude-code
+  kind: runtime
+  group: plugin-platform
+  role: "Host runtime that loads and executes skills and agents shipped by this plugin in contributor and end-user sessions."
+  status: active
+- name: claude-code-plugin
+  kind: framework
+  group: plugin-platform
+  role: "Claude Code plugin shape defining the skills/<name>/SKILL.md and agents/<name>.md source layout plus the plugin/marketplace manifests."
+  status: active
+
 members:
 - repo: nolte/blog
   repo_url: https://github.com/nolte/blog
@@ -41,6 +124,37 @@ members:
     since: 2026-05-21
   peers:
   - nolte/claude-shared
+  tech_stack:
+    additions:
+    - name: node
+      kind: runtime
+      group: build-tooling
+      status: active
+    - name: npm
+      kind: package-manager
+      group: build-tooling
+      status: active
+    - name: astro
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: typescript
+      kind: language
+      group: build-tooling
+      status: active
+    - name: tailwindcss
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: github-pages
+      kind: deploy-target
+      group: automation
+      status: active
+    overrides:
+    - name: mkdocs
+      rationale: "Blog publishes its site and knowledge base with Astro, not MkDocs; this repo carries no docs/ MkDocs tree or mkdocs.yml."
+    - name: claude-code-plugin
+      rationale: "Blog is an Astro web application, not a Claude Code plugin; it ships no skills/<name>/SKILL.md or agents/ layout, so the plugin-shape entry does not apply."
 - repo: nolte/claude-shared
   repo_url: https://github.com/nolte/claude-shared
   mission_statement: >-
@@ -116,6 +230,20 @@ members:
     since: 2026-04-24
   peers:
   - nolte/vale-style
+  tech_stack:
+    additions:
+    - name: python
+      kind: language
+      group: documentation
+      status: active
+    - name: github-pages
+      kind: deploy-target
+      group: documentation
+      status: active
+    - name: claude-code-marketplace
+      kind: deploy-target
+      group: plugin-platform
+      status: active
 - repo: nolte/vale-style
   repo_url: https://github.com/nolte/vale-style
   mission_statement: >-
@@ -146,6 +274,15 @@ members:
     - Claude Code agents / skills
     - External contributors
   peers: []
+  tech_stack:
+    additions:
+    - name: github-releases
+      kind: deploy-target
+      group: automation
+      status: active
+    overrides:
+    - name: claude-code-plugin
+      rationale: "vale-style ships a Vale style package, not a Claude Code plugin; it carries no .claude-plugin/ manifests and no skills/agents layout."
 - repo: nolte/workstation
   repo_url: https://github.com/nolte/workstation
   mission_statement: >-
@@ -166,6 +303,23 @@ members:
     - downstream-tooling-consumers
     since: 2026-06-01
   peers: []
+  tech_stack:
+    additions:
+    - name: chezmoi
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: python
+      kind: language
+      group: documentation
+      status: active
+    overrides:
+    - name: claude-code
+      rationale: "workstation is a chezmoi source tree, not a Claude Code plugin host; it ships no .claude-plugin/ and loads no skills or agents."
+    - name: claude-code-plugin
+      rationale: "workstation is not a Claude Code plugin source tree; it carries no plugin/marketplace manifests and follows chezmoi layout conventions."
+    - name: markdownlint
+      rationale: "workstation does not wire markdownlint; its .pre-commit-config.yaml runs only check-yaml, end-of-file-fixer, and trailing-whitespace, and there is no .markdownlint* config."
 - repo: nolte/gh-plumbing
   repo_url: https://github.com/nolte/gh-plumbing
   mission_statement: >-
@@ -304,6 +458,28 @@ members:
     - "Reachy Mini owners / developers"
   peers:
   - nolte/reachy-mini-app
+  tech_stack:
+    additions:
+    - name: python
+      kind: language
+      group: build-tooling
+      status: active
+    - name: mcp
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: ruff
+      kind: lint
+      group: quality
+      status: active
+    - name: pytest
+      kind: test
+      group: quality
+      status: active
+    - name: docker-image
+      kind: deploy-target
+      group: automation
+      status: active
 - repo: nolte/kamerplanter
   repo_url: https://github.com/nolte/kamerplanter
   mission_statement: >-
@@ -327,6 +503,48 @@ members:
     - Community-garden administrator
     - Self-hoster
   peers: []
+  tech_stack:
+    additions:
+    - name: python
+      kind: language
+      group: build-tooling
+      status: active
+    - name: fastapi
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: celery
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: node
+      kind: runtime
+      group: build-tooling
+      status: active
+    - name: react
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: vite
+      kind: build
+      group: build-tooling
+      status: active
+    - name: typescript
+      kind: language
+      group: build-tooling
+      status: active
+    - name: docker-image
+      kind: deploy-target
+      group: automation
+      status: active
+    - name: kubernetes
+      kind: deploy-target
+      group: automation
+      status: active
+    - name: skaffold
+      kind: build
+      group: build-tooling
+      status: active
 - repo: nolte/kamerplanter-ha
   repo_url: https://github.com/nolte/kamerplanter-ha
   mission_statement: >-
@@ -348,6 +566,24 @@ members:
     - "Self-hoster running both Kamerplanter and Home Assistant"
   peers:
   - nolte/kamerplanter
+  tech_stack:
+    additions:
+    - name: python
+      kind: language
+      group: build-tooling
+      status: active
+    - name: home-assistant
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: pytest
+      kind: test
+      group: quality
+      status: active
+    - name: hacs
+      kind: deploy-target
+      group: automation
+      status: active
 - repo: nolte/reachy-mini-app
   repo_url: https://github.com/nolte/reachy-mini-app
   mission_statement: >-
@@ -365,6 +601,20 @@ members:
     - "Reachy Mini owner / maker"
   peers:
   - nolte/reachy-mini-mcp
+  tech_stack:
+    additions:
+    - name: python
+      kind: language
+      group: build-tooling
+      status: active
+    - name: reachy-mini
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: huggingface-hub
+      kind: deploy-target
+      group: automation
+      status: experimental
 - repo: nolte/cookiecutter-gh-project
   repo_url: https://github.com/nolte/cookiecutter-gh-project
   mission_statement: >-
@@ -384,6 +634,16 @@ members:
     - "Developer scaffolding a new nolte-style GitHub project"
   peers:
   - nolte/gh-plumbing
+  tech_stack:
+    additions:
+    - name: python
+      kind: language
+      group: build-tooling
+      status: active
+    - name: cookiecutter
+      kind: framework
+      group: build-tooling
+      status: active
 - repo: nolte/terraform-github-bootstrap
   repo_url: https://github.com/nolte/terraform-github-bootstrap
   mission_statement: >-
@@ -406,4 +666,22 @@ members:
     - "The nolte GitHub account and its repositories"
   peers:
   - nolte/gh-plumbing
+  tech_stack:
+    additions:
+    - name: terraform
+      kind: framework
+      group: build-tooling
+      status: active
+    - name: hcl
+      kind: language
+      group: build-tooling
+      status: active
+    - name: tflint
+      kind: lint
+      group: quality
+      status: active
+    - name: python
+      kind: language
+      group: build-tooling
+      status: active
 historical: []
