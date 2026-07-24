@@ -28,6 +28,7 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 - Die Anforderungsdokumente selbst verfassen oder editieren — der Agent liest Anforderungen, er schreibt sie nicht
 - Visuelles Review der Screenshots oder Logs eines Testlaufs gegen eine Spec — geregelt von `spec/project/e2e-test-automation/` (Agent `e2e-result-reviewer`)
 - Die Batch-Orchestrierung über viele Anforderungen (Auswahl- und Commit-Politik) ist ein Konsumenten-Projekt-Skill, der diesen Agent pro Anforderung dispatcht (der Skill-orchestriert/Agent-führt-aus-Hybrid), keine Verantwortung dieses Agents
+- Die abgeleiteten Fälle als ausführbare **BDD-Szenarien** (Given-When-Then / Gherkin) kodieren — besitzt `spec/project/behavior-driven-development/` [R5]; diese Spec konsumiert die Fälle dieser Spec (über ihre TC-IDs) als Eingabe und leitet sie nicht neu ab
 
 ## Anforderungen
 
@@ -75,6 +76,7 @@ Leser: Agent-Autoren, die den Extractor pflegen; QA-Engineers und Entwickler, di
 - [R2] Skill-vs-Agent-Entscheidungsregel und Rationale-Abschnitts-Anforderung: `spec/claude/skill-vs-agent/`
 - [R3] Test-Ausführung / Fehlerbehandlung (gegen diese Spec abgegrenzt): `spec/project/quality-gate/`
 - [R4] ISTQB-Test-Design-Techniken (Hintergrund-Methodik): <https://www.istqb.org/>
+- [R5] `spec/project/behavior-driven-development/`: konsumiert die abgeleiteten Fälle (über ihre TC-IDs) und kodiert sie als ausführbare BDD-Szenarien
 
 ## Offene Fragen
 
