@@ -53,7 +53,7 @@ Reviews of Claude Code artifacts—a skill against `skill-management`, an agent 
 
 ### Severity scale
 
-This section is the single canonical source for severity vocabulary across every audit, review, and readiness artefact in the portfolio. Other specs **MUST** reference this section rather than redefining their own scale.
+This section is the single canonical source for severity vocabulary across every audit, review, and readiness artefact in the portfolio. Other specs **MUST** reference this section rather than redefining their own scale. The one bounded exception is the editorial sub-scale carve-out at the end of this section.
 
 - **MUST** classify every finding into exactly one of these four severity levels, in Title Case, in this order of decreasing impact:
   - **Critical**: violates a MUST in the source spec, or directly blocks promotion / merge of the reviewed artefact (load-bearing Open Question on a pre-promotion run, ghost reference to a non-existent spec, MUST↔MUST contradiction across two specs both already promoted)
@@ -63,6 +63,18 @@ This section is the single canonical source for severity vocabulary across every
 - **MUST NOT** invent additional severity levels (no `BLOCKER`, no `MAJOR/MINOR`, no `P0/P1/P2`); reviewers who feel another level is needed propose a spec amendment, not a local extension
 - **MUST** use these labels verbatim—Title Case, no abbreviations, no upper-case variants—in `## Summary` counts, `## Findings` subsection headings, and any per-finding annotation, so downstream tooling can grep them deterministically
 - **MUST NOT** downgrade a severity on local judgement alone; disagreement with the classification is a documented waiver recorded in the plan's `## Processing log`, not a silent reclassification
+
+#### Editorial sub-scale carve-out
+
+A bounded set of **editorial and documentation-audit specs** serialise their findings into machine-read scanner output (JSON keys, frontmatter values, CLI exit-code mappings) rather than into a disposable review plan. For those, a stable **lowercase** token—not the human-facing Title-Case label—is the wire contract, so this carve-out sanctions a lowercase editorial sub-scale for the named specs only.
+
+- **MAY**, for the specs named below only, use a lowercase severity vocabulary drawn from the tokens `critical` / `warning` / `suggestion` / `info`, and **MAY** omit the levels the tool never emits. The named specs, with the subset each uses, are:
+  - `spec/project/docs-freshness/` — `critical` / `warning` / `info`
+  - `spec/project/lektorat/` — `critical` / `warning` / `suggestion` (and it additionally MUST-NOTs `info`)
+  - `spec/project/i18n-completeness/` — `critical` / `warning` / `info`
+  - `spec/project/diagram-opportunity/` — `suggestion` / `info` only
+- **MUST** keep every lowercase editorial token semantically identical to its Title-Case counterpart (a lowercase `critical` means exactly `Critical`); the carve-out is a serialisation form, not a second severity model
+- **MUST NOT** extend this carve-out to any spec not named above; a spec outside this set still references the Title-Case four verbatim per the rules above, and adding a spec here is a spec amendment to this section
 
 ### Plan body structure
 

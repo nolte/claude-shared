@@ -50,6 +50,7 @@ Readers: agent authors maintaining the checker; reviewers verifying its findings
 
 - **MUST** be strictly read-only: declare only read and search tools, and never edit translation files, code, or any other file; the single output is a report
 - **MUST** emit a single severity-sorted report ordered **critical** (used-but-undefined; missing in a locale), then **warning** (orphans, structural mismatch), then **info** (identical values, empty values, placeholder drift), led by a summary metrics table (per-locale key counts, missing, orphan, empty, identical, dynamic-skipped)
+- **MUST** treat these lowercase names (`critical` / `warning` / `info`) as the machine-read editorial serialisation sanctioned by the editorial sub-scale carve-out in `spec/claude/review-plan/` §Severity scale; each maps one-to-one onto that spec's Title-Case levels
 - **MUST** cap per-category output (for example: show the first N entries and summarise the remainder as "… and {n} more") so a large drift doesn't produce an unreadable wall of keys
 - **SHOULD** attribute each used-but-undefined key to a source location (file and line) so the finding is actionable
 - **MUST** report which locale files, source roots, globs, reference locale, and call-site patterns it used, so the audit's scope is auditable and reproducible

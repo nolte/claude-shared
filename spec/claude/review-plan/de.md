@@ -53,7 +53,7 @@ Reviews von Claude-Code-Artefakten — ein Skill gegen `skill-management`, ein A
 
 ### Schweregrad-Skala
 
-Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabular über jedes Audit-, Review- und Reife-Artefakt im Portfolio hinweg. Andere Specs **MÜSSEN [MUST]** auf diesen Abschnitt verweisen, statt eine eigene Skala zu definieren.
+Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabular über jedes Audit-, Review- und Reife-Artefakt im Portfolio hinweg. Andere Specs **MÜSSEN [MUST]** auf diesen Abschnitt verweisen, statt eine eigene Skala zu definieren. Die einzige eng umrissene Ausnahme ist der Editorial-Sub-Skala-Carve-out am Ende dieses Abschnitts.
 
 - **MUSS [MUST]** jedes Finding in genau eine dieser vier Schweregrad-Stufen einordnen, in Title Case, in dieser Reihenfolge abnehmender Auswirkung:
   - **Critical**: verletzt ein MUST in der Quell-Spec oder blockiert direkt die Beförderung / das Mergen des reviewten Artefakts (tragende Open Question in einem Pre-Promotion-Lauf, Geist-Referenz auf eine nicht existierende Spec, MUST↔MUST-Widerspruch zwischen zwei bereits beförderten Specs)
@@ -63,6 +63,18 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 - **MUSS NICHT [MUST NOT]** zusätzliche Schweregrad-Stufen erfinden (kein `BLOCKER`, kein `MAJOR/MINOR`, kein `P0/P1/P2`); Reviewer, die eine weitere Stufe für nötig halten, schlagen eine Spec-Änderung vor, keine lokale Erweiterung
 - **MUSS [MUST]** diese Labels wortwörtlich verwenden — Title Case, keine Abkürzungen, keine Großbuchstaben-Varianten — in `## Summary`-Zählungen, `## Findings`-Unter-Abschnitts-Überschriften und jeder finding-bezogenen Annotation, damit nachgelagerte Tools sie deterministisch grepen können
 - **MUSS NICHT [MUST NOT]** einen Schweregrad allein auf Basis lokaler Einschätzung absenken; Abweichung von der Klassifikation ist eine dokumentierte Waiver-Notiz im `## Processing log` des Plans, keine stille Re-Klassifikation
+
+#### Editorial-Sub-Skala-Carve-out
+
+Eine eng umrissene Menge von **Editorial- und Dokumentations-Audit-Specs** serialisiert ihre Findings in maschinengelesene Scanner-Ausgabe (JSON-Keys, Frontmatter-Werte, CLI-Exit-Code-Mappings) statt in einen wegwerfbaren Review-Plan. Dafür ist ein stabiler **Kleinschreibungs**-Token — nicht das menschenlesbare Title-Case-Label — der Wire-Contract, weshalb dieser Carve-out eine Kleinschreibungs-Editorial-Sub-Skala ausschließlich für die genannten Specs sanktioniert.
+
+- **KANN [MAY]** ausschließlich für die unten genannten Specs ein Kleinschreibungs-Schweregrad-Vokabular aus den Tokens `critical` / `warning` / `suggestion` / `info` verwenden und **KANN [MAY]** die Stufen weglassen, die das Werkzeug nie ausgibt. Die genannten Specs, mit der jeweils genutzten Teilmenge, sind:
+  - `spec/project/docs-freshness/` — `critical` / `warning` / `info`
+  - `spec/project/lektorat/` — `critical` / `warning` / `suggestion` (und es verbietet zusätzlich `info`)
+  - `spec/project/i18n-completeness/` — `critical` / `warning` / `info`
+  - `spec/project/diagram-opportunity/` — nur `suggestion` / `info`
+- **MUSS [MUST]** jeden Kleinschreibungs-Editorial-Token semantisch identisch zu seinem Title-Case-Gegenstück halten (ein Kleinschreibungs-`critical` bedeutet exakt `Critical`); der Carve-out ist eine Serialisierungsform, kein zweites Schweregrad-Modell
+- **MUSS NICHT [MUST NOT]** diesen Carve-out auf eine oben nicht genannte Spec ausweiten; eine Spec außerhalb dieser Menge verweist weiterhin wortwörtlich auf die vier Title-Case-Stufen gemäß den obigen Regeln, und das Aufnehmen einer Spec hier ist eine Spec-Änderung an diesem Abschnitt
 
 ### Plan-Körper-Struktur
 

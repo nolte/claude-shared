@@ -63,6 +63,7 @@ A passage that matches more than one pattern with comparable confidence **MUST [
 ### Severity range
 - **MUST [MUST]** assign every finding a severity from the closed set `{suggestion, info}`: `suggestion` for matches the agent expects the operator to act on, `info` for context-only matches (for example a passage suppressed via `<!-- diagram-opportunity-skip: ... -->`, recorded for traceability)
 - **MUST NOT [MUST NOT]** emit `warning` or `critical` severities; this is a suggestion tool, not a defects list, and a higher severity would train operator fatigue
+- **MUST [MUST]** treat these lowercase names (`suggestion` / `info`) as the machine-read editorial serialisation sanctioned by the editorial sub-scale carve-out in `spec/claude/review-plan/` §Severity scale; each maps one-to-one onto that spec's Title-Case levels
 
 ### Source-classification suggestion
 - **MUST [MUST]** propose a source classification on every `suggestion`-severity finding—either `user-described` (with a one-line summary candidate) or `derived` (with a concrete source-path candidate inside the repository)—matching the `<!-- diagram-source: ... -->` annotation form mandated by `spec/project/mermaid-diagrams/` §Diagram sources

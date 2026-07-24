@@ -52,6 +52,7 @@ Additional categories **MAY** be added by a repository when its documentation ne
   - **warning**: language-parity gap, stale marker inside an ADR whose status is `accepted`, ADR index drift, content-staleness delta > 90 days, Mermaid diagram-source drift, track-frontmatter drift (missing key), content-mode drift (missing key), content-mode mixing candidate, audience-track mismatch, i18n base-URL drift; response window: within the current quarter
   - **info**: stale marker inside ordinary prose, content-staleness delta 30–90 days, ADR without a declared status (treat as info, not critical—the ADR is still readable); response window: best effort
 - **MUST NOT** downgrade a severity on local judgement alone; disagreement with the classification belongs in an explicit waiver recorded in the audit artifact
+- **MUST** treat these lowercase names (`critical` / `warning` / `info`) as the machine-read editorial serialisation sanctioned by the editorial sub-scale carve-out in `spec/claude/review-plan/` §Severity scale; each maps one-to-one onto that spec's Title-Case levels
 
 ### Triggers and cadence
 - **MUST** run a full audit at least once per calendar quarter in every repository with a `docs_dir`
