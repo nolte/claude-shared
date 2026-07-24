@@ -89,7 +89,7 @@ findings:
 - Deferred scope (intentional out-of-bounds): <list, e.g. "artefact-ref validation → release-artifact spec at sprint closure, not here">
 
 ## Caller follow-ups
-- A **NO-GO** verdict blocks the `planned → active` transition; route every `critical` finding through its named resolution skill before re-running this agent.
+- A **NO-GO** verdict blocks the `planned → active` transition; route every `Critical` finding through its named resolution skill before re-running this agent.
 - `value-statement-drift` and `lifecycle-violation` findings route through `sprint-plan` (the canonical sprint mutator).
 - `missing-verifier` and `feature-not-ready` findings route through `feature-decompose` (per-feature mutator); designating the value-verifying acceptance criterion (`verifies_sprint_value: acceptance-<n>`) lands on the feature side, not the sprint side.
 - `cross-ref-missing` findings route to the originating artefact's owner (`roadmap-plan` for `R-<n>` gaps, `feature-decompose` for feature gaps).
@@ -115,7 +115,7 @@ Verify, using `Read` and `Glob` only:
 1. `spec/project/sprint/<canonical_language>.md` exists. Read `spec/.spec-config.yml` to resolve the canonical language; fall back to `en` when the config is absent. If the spec is missing, stop and report — without the oracle, the audit is ad-hoc judgement.
 2. The target sprint file resolves and parses as YAML frontmatter plus body. If the frontmatter is malformed or required fields are missing, stop and report; the parent skill `sprint-plan` must hand off a syntactically valid file.
 3. `project/features/` is reachable. The audit needs to read every feature in the sprint's `features` list; an unreachable features directory turns every `missing-verifier` and `feature-not-ready` check into a false positive, so stop and report.
-4. `project/roadmap.md` is reachable. The audit needs to validate `roadmap_items` references; if the roadmap is missing, treat every cross-reference as `cross-ref-missing` with severity `warning` and continue.
+4. `project/roadmap.md` is reachable. The audit needs to validate `roadmap_items` references; if the roadmap is missing, treat every cross-reference as `cross-ref-missing` with severity `Warning` and continue.
 5. `project/mission.md` may or may not exist. When it exists, the agent traces value-statement coverage through `relevant_outcomes`; when it doesn't, that trace is reported in **Health** as "skipped — no mission file present".
 
 ## Investigation surface
@@ -131,6 +131,7 @@ The audit walks three surfaces; each has a bounded scan rule so the agent stays 
 
 ### Surface 2 — cross-document references (`roadmap.md`, `goals.md`, `mission.md`)
 
+- Resolve cross-document IDs with `Grep`: match each `R-<n>` and each feature `id` across `project/roadmap.md` and `project/features/`, and read a file in full only when a hit needs its surrounding frontmatter.
 - For every entry in `roadmap_items`, verify a matching `R-<n>` exists in `project/roadmap.md`. Non-resolving entries are `cross-ref-missing` findings (`severity: Critical`).
 - When `project/mission.md` exists, read its `relevant_outcomes`. For each `roadmap_items` entry, read the corresponding item's `outcomes` list from `project/roadmap.md` and verify at least one outcome touches `relevant_outcomes`. A sprint whose roadmap items don't touch any mission-relevant outcome is a `cross-ref-missing` finding (`severity: Warning`) — the sprint may still be GO when it's a hardening sprint, but the operator deserves the explicit note in `## Goal`.
 - For every entry in `features`, verify a matching feature file exists under `project/features/` whose frontmatter `id` resolves. Non-resolving entries are `cross-ref-missing` findings (`severity: Critical`).
@@ -156,7 +157,7 @@ After the per-feature loop, verify the **value-delivery contract**: exactly one 
 - `Warning`: non-blocking but spec-relevant — sprint already past `planned`, body sections in wrong order, missing `## Test hooks`, mission-outcome trace gap, multiple `verifies_sprint_value` declarations.
 - `Info`: cosmetic or "noted for review" — heuristic-only value-statement matches the operator may override, deferred-scope notes.
 
-The verdict is **NO-GO** when at least one `critical` finding is present; otherwise **GO** (even with `warning` findings — the operator decides whether to proceed).
+The verdict is **NO-GO** when at least one `Critical` finding is present; otherwise **GO** (even with `Warning` findings — the operator decides whether to proceed).
 
 ## Hard rules
 
@@ -166,7 +167,7 @@ The verdict is **NO-GO** when at least one `critical` finding is present; otherw
 - **Never** validate `artifact_ref` content beyond presence — the artefact-validation contract lives in `spec/project/release-artifact/` and runs at sprint closure (`sprint-review`), not at the readiness gate. Report deferred scope in **Health**.
 - **Never** widen the scan beyond `project/sprints/`, `project/features/`, `project/roadmap.md`, `project/goals.md`, `project/mission.md`, and the spec corpus. Don't walk `src/`, `docs/`, `node_modules/`, `.venv/`, or anything in `.gitignore`.
 - **Never** call the `Skill` tool or dispatch sibling agents — subagents can't spawn further subagents (per `spec/claude/agent-management/` §"Subagent boundaries (Claude Code runtime)").
-- **Never** issue a **GO** verdict when at least one `critical` finding is present, regardless of operator preference; the verdict is mechanically derived from the findings, not negotiated.
+- **Never** issue a **GO** verdict when at least one `Critical` finding is present, regardless of operator preference; the verdict is mechanically derived from the findings, not negotiated.
 - **Always** ground every finding in a concrete reference: a sprint frontmatter field, a feature `id`, a roadmap `id`, or a `path:line`. Findings without a reference aren't findings.
 - **Always** classify the run as `clean` (`target: n/a`, `severity: Info`, `resolution: proceed`) with verdict **GO** when every surface was scanned and produced no actionable hit; an empty `findings` list is invalid — a clean run is still a recorded run.
 - **Always** reread `spec/project/sprint/<canonical_language>.md` and `spec/project/feature/<canonical_language>.md` before producing the report; when this agent disagrees with the spec, the spec wins and the agent's behaviour is updated, not the spec.
