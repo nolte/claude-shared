@@ -81,7 +81,7 @@ The caller gives you one of:
 4. **Stack-wide concern**: a phrase that names a cross-domain pipeline ("the CSP plus Vite plus Emotion pipeline", "the prefers-reduced-motion coverage", "the RTL pipeline end-to-end").
 5. **Audit-row drilldown**: the phrase "deep-review for finding <rule-id> in the latest audit" — triggers a single-rule deep dive scoped to every file affected by that rule.
 
-If the input is ambiguous or empty, ask once for a target and stop. Don't invent one.
+If the input is ambiguous or empty, return a request for a concrete target and stop — a subagent has no channel for a mid-run question, so the caller re-dispatches. Don't invent a target.
 
 ## Preconditions
 
