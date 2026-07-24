@@ -35,6 +35,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - Mandating a specific browser-automation library: the core is framework-neutral; Selenium is the shipped reference profile, not a requirement
 - Authoring or editing the requirement/spec documents a suite traces to
 - Generating production application code or `data-testid` hooks in the application under test (the suite *relies on* such hooks; adding them is application work). Provisioning those hooks is the provider-side complement, owned by `spec/frontend/testability-identifiers/`
+- Authoring the business-readable **BDD scenario/specification layer** (Given-When-Then, feature files) that sits above these execution mechanics—owned by `spec/project/behavior-driven-development/` [R7]; a BDD scenario's steps delegate down into the page objects this spec owns, they don't restate them
 
 ## Requirements
 
@@ -132,6 +133,7 @@ This profile is the binding realisation of the core for Python projects and the 
 - [R4] Fast-tier execution gate, delimited against this spec: `spec/project/quality-gate/`
 - [R5] Page Object Model (background methodology): <https://martinfowler.com/bliki/PageObject.html>
 - [R6] Test pyramid foundation (the tier model and taxonomy the E2E tier sits atop; owner of tier-completeness and coverage governance): `spec/project/test-pyramid-foundation/`
+- [R7] `spec/project/behavior-driven-development/`: owns the BDD scenario/specification layer above these execution mechanics; its scenario steps delegate to this spec's page objects
 
 ## Open Questions
 

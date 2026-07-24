@@ -35,6 +35,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 - Eine bestimmte Browser-Automatisierungs-Bibliothek vorschreiben: Der Kern ist framework-neutral; Selenium ist das mitgelieferte Referenzprofil, keine Pflicht
 - Die Anforderungs-/Spec-Dokumente schreiben oder bearbeiten, auf die eine Suite verweist
 - Produktiv-Anwendungscode oder `data-testid`-Hooks in der zu testenden Anwendung erzeugen (die Suite *stützt sich* auf solche Hooks; sie hinzuzufügen ist Anwendungsarbeit). Die Bereitstellung dieser Hooks ist das Provider-seitige Pendant, das `spec/frontend/testability-identifiers/` besitzt
+- Die geschäftslesbare **BDD-Szenario-/Spezifikationsebene** (Given-When-Then, Feature-Dateien) autoren, die über diesen Ausführungsmechaniken liegt — besitzt `spec/project/behavior-driven-development/` [R7]; die Steps eines BDD-Szenarios delegieren in die Page Objects, die diese Spec besitzt, statt sie zu wiederholen
 
 ## Anforderungen
 
@@ -132,6 +133,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die 
 - [R4] Ausführungs-Gate der schnellen Stufen, abgegrenzt gegen diese Spec: `spec/project/quality-gate/`
 - [R5] Page Object Model (Hintergrund-Methodik): <https://martinfowler.com/bliki/PageObject.html>
 - [R6] Test-Pyramide-Fundament (Stufenmodell und Taxonomie, auf denen die E2E-Stufe dieser Spec aufsitzt; Eigentümer von Stufen-Vollständigkeit und Coverage-Governance): `spec/project/test-pyramid-foundation/`
+- [R7] `spec/project/behavior-driven-development/`: besitzt die BDD-Szenario-/Spezifikationsebene über diesen Ausführungsmechaniken; ihre Szenario-Steps delegieren an die Page Objects dieser Spec
 
 ## Offene Fragen
 

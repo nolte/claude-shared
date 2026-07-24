@@ -5,6 +5,8 @@
 # nolte/vale-style and remove it here once released (see spec/project/prose-style).
 Adzic
 Wynne
+Gojko
+Dinwiddie
 combinational
 Bazel
 [Pp]arallelisation

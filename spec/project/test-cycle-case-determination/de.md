@@ -69,7 +69,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Phasen-Specs schreiben; Skill- und 
 
 ### Beispiel-getriebene und Test-first-Ermittlung
 
-- **SOLLTE [SHOULD]** **Example Mapping** (Rules → Examples → Questions) und **Specification by Example / BDD** (Given-When-Then) verwenden, um konkrete Beispiele kollaborativ **vor** dem Coden zu entdecken und Akzeptanzkriterien in Fälle zu verwandeln [R8], [R9].
+- **SOLLTE [SHOULD]** **Example Mapping** (Rules → Examples → Questions) und **Specification by Example / BDD** (Given-When-Then) verwenden, um konkrete Beispiele kollaborativ **vor** dem Coden zu entdecken und Akzeptanzkriterien in Fälle zu verwandeln [R8], [R9]; die vollständige, tool-neutrale BDD-Behandlung (Szenariosprache, Step-Definition-Prinzipien und die Ableitung Testcase-Dokument→Szenario) besitzt `spec/project/behavior-driven-development/` [R15].
 - **SOLLTE [SHOULD]** **Test-first (TDD)** als Testfall-Ermittlungs-Praxis behandeln: Der fehlschlagende Test *ist* der Fall, der das nächste Verhaltens-Inkrement definiert [R1].
 
 ### Maschinell erzeugte Fälle
@@ -127,6 +127,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Phasen-Specs schreiben; Skill- und 
 - [R12] ISTQB Glossary, *test case* / *traceability matrix* (Fall-Qualität; Anforderung → Fall-Traceability) — <https://istqb-glossary.page/test-case/>
 - [R13] *Risk-based testing* (Eintrittswahrscheinlichkeit × Auswirkung als Auswahl) — <https://en.wikipedia.org/wiki/Risk-based_testing>
 - [R14] *Write a failing test that reproduces the bug before fixing it* — <https://martinfowler.com/articles/testing-culture.html>
+- [R15] `spec/project/behavior-driven-development/`: der vollständige tool-neutrale BDD-Standard, den dieses SOLLTE operationalisiert (kollaborative Ermittlung, Szenariosprache, Step-Definition-Prinzipien und die Ableitung Testcase-Dokument→Szenario)
 
 ## Offene Fragen
 

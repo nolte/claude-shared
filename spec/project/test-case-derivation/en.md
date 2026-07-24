@@ -28,6 +28,7 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 - Authoring or editing the requirement documents themselves—the agent reads requirements, it doesn't write them
 - Visual review of a test run's screenshots or logs against a spec—governed by `spec/project/e2e-test-automation/` (agent `e2e-result-reviewer`)
 - Batch orchestration across many requirements (selection and commit policy) is a consuming-project skill that dispatches this agent per requirement (the skill-orchestrates/agent-executes hybrid), not a responsibility of this agent
+- Encoding the derived cases as executable **BDD scenarios** (Given-When-Then / Gherkin)—owned by `spec/project/behavior-driven-development/` [R5]; that spec consumes this spec's cases (via their TC-IDs) as its input and doesn't re-derive them
 
 ## Requirements
 
@@ -75,6 +76,7 @@ Readers: agent authors maintaining the extractor; QA engineers and developers wh
 - [R2] Skill-vs-agent decision rule and rationale-section requirement: `spec/claude/skill-vs-agent/`
 - [R3] Test execution / failure handling (delimited against this spec): `spec/project/quality-gate/`
 - [R4] ISTQB test-design techniques (background methodology): <https://www.istqb.org/>
+- [R5] `spec/project/behavior-driven-development/`: consumes the derived cases (via their TC-IDs) and encodes them as executable BDD scenarios
 
 ## Open Questions
 

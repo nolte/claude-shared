@@ -69,7 +69,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 
 ### Example-driven and test-first determination
 
-- **SHOULD** use **Example Mapping** (rules → examples → questions) and **Specification by Example / BDD** (Given-When-Then) to discover concrete examples collaboratively **before** coding, turning acceptance criteria into cases [R8], [R9].
+- **SHOULD** use **Example Mapping** (rules → examples → questions) and **Specification by Example / BDD** (Given-When-Then) to discover concrete examples collaboratively **before** coding, turning acceptance criteria into cases [R8], [R9]; the full, tool-neutral BDD treatment (scenario language, step-definition principles, and the test-case-document-to-scenario derivation) is owned by `spec/project/behavior-driven-development/` [R15].
 - **SHOULD** treat **test-first (TDD)** as a case-determination practice: the failing test *is* the case that defines the next increment of behaviour [R1].
 
 ### Machine-generated cases
@@ -127,6 +127,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 - [R12] ISTQB Glossary, *test case* / *traceability matrix* (case quality; requirement → case traceability): <https://istqb-glossary.page/test-case/>
 - [R13] *Risk-based testing* (likelihood × impact selection): <https://en.wikipedia.org/wiki/Risk-based_testing>
 - [R14] *Write a failing test that reproduces the bug before fixing it*: <https://martinfowler.com/articles/testing-culture.html>
+- [R15] `spec/project/behavior-driven-development/`: the full tool-neutral BDD standard this SHOULD operationalizes (collaborative discovery, scenario language, step-definition principles, and the test-case-document-to-scenario derivation)
 
 ## Open Questions
 
