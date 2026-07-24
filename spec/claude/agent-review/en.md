@@ -56,7 +56,7 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 
 ### Model-choice checks
 
-- **MUST** verify, when the frontmatter declares a `model` field, that its value is exactly one of `opus`, `sonnet`, or `haiku` per `agent-management`; any other value is a `Critical`
+- **MUST** verify, when the frontmatter declares a `model` field, that its value is one of the three forms `agent-management` §Model selection (and `skill-agent-frontmatter`) permit: a model alias (`opus`, `sonnet`, or `haiku`), a full model ID (for example `claude-opus-4-7`), or the literal `inherit`. A value in none of these forms is a `Critical`; a well-formed alias, full model ID, or `inherit` is conformant and **MUST NOT** be flagged
 - **MUST** verify, when a `model` is pinned, that the system prompt or an accompanying comment states a rationale for the choice; its absence is a `Warning`, reflecting the SHOULD in `agent-management`
 - **SHOULD** run a plausibility check on the pinned `model`: a read-only or reporting agent pinned to `opus` without a stated rationale produces a `Suggestion`; a complex audit or planning agent pinned to `haiku` without a stated rationale produces a `Suggestion`
 - **MAY** record an `Info` finding when the `model` field is absent, noting that the agent inherits the caller's model per `agent-management`

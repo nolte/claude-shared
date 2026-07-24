@@ -56,7 +56,7 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 
 ### Modell-Wahl-Checks
 
-- **MUSS [MUST]** bei gesetztem `model`-Frontmatter-Feld verifizieren, dass dessen Wert exakt einer von `opus`, `sonnet` oder `haiku` gemäß `agent-management` ist; jeder andere Wert ist ein `Critical`
+- **MUSS [MUST]** bei gesetztem `model`-Frontmatter-Feld verifizieren, dass dessen Wert eine der drei von `agent-management` §Model selection (und `skill-agent-frontmatter`) erlaubten Formen ist: ein Modell-Alias (`opus`, `sonnet` oder `haiku`), eine vollständige Modell-ID (zum Beispiel `claude-opus-4-7`) oder das Literal `inherit`. Ein Wert in keiner dieser Formen ist ein `Critical`; ein wohlgeformter Alias, eine vollständige Modell-ID oder `inherit` ist konform und **DARF NICHT [MUST NOT]** gemeldet werden
 - **MUSS [MUST]** bei fixiertem `model` verifizieren, dass der System-Prompt oder ein begleitender Kommentar eine Begründung für die Wahl nennt; Fehlen ist ein `Warning` und spiegelt das SHOULD aus `agent-management`
 - **SOLLTE [SHOULD]** einen Plausibilitäts-Check auf das fixierte `model` fahren: ein Read-only- oder Reporting-Agent, fixiert auf `opus` ohne genannte Begründung, erzeugt ein `Suggestion`; ein komplexer Audit- oder Planungs-Agent, fixiert auf `haiku` ohne genannte Begründung, erzeugt ein `Suggestion`
 - **KANN [MAY]** ein `Info`-Finding erzeugen, wenn das `model`-Feld fehlt, und dabei festhalten, dass der Agent das Modell des Aufrufers gemäß `agent-management` erbt
