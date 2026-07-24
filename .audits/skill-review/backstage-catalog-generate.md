@@ -13,7 +13,7 @@ specs-applied:
     revision: "01575faf0ba2b75333191cfad81d32c258833f6c"
 repo-revision: "004c8f73311d2144581c8fdb4e56435a10525509"
 created: "2026-06-07"
-status: in-progress
+status: complete
 ---
 
 # Skill Review: backstage-catalog-generate
@@ -32,11 +32,11 @@ Explicitly out of scope: runtime behavior of the skill, Vale/markdown style (han
 
 - Critical: 0
 - Warning: 1 (closed)
-- Suggestion: 2 (1 closed, 1 open)
+- Suggestion: 2 (both closed)
 - Info: 3
 
-Go/no-go: PASS — no Critical findings; the skill is mergeable. W1 and S1 were addressed in this session (Gotchas section added, three `examples/` scenarios seeded). S2 remains open as optional tightening; the three Info items are observations.
-Next concrete action: commit Spec + Skill + plan together; S2 may be deferred.
+Go/no-go: PASS — no Critical findings; the skill is mergeable. W1 and S1 were addressed in the 2026-06-07 session (Gotchas section added, three `examples/` scenarios seeded); S2 closed 2026-07-24 as accepted-as-is.
+Next concrete action: none — all findings addressed (fixed or accepted-with-rationale).
 
 ## Findings
 
@@ -58,7 +58,7 @@ Next concrete action: commit Spec + Skill + plan together; S2 may be deferred.
       Fix: add ≥3 scenarios (e.g. a Node service with an OpenAPI spec → Component+API; a library with no CODEOWNERS → owner flagged needs-confirm; a Tech Radar JSON request).
       Verify: `ls skills/backstage-catalog-generate/examples/` lists ≥3 scenario files.
 
-- [ ] [skill-management.drift-surface] The body restates several repo-external Backstage facts inline (in Hard rules / signal table) that also live in the domain spec, creating a drift surface if Backstage or the spec changes.
+- [x] [skill-management.drift-surface] The body restates several repo-external Backstage facts inline (in Hard rules / signal table) that also live in the domain spec, creating a drift surface if Backstage or the spec changes.
       Where: `SKILL.md` `## Hard rules` and `## Repo signals → fields`.
       Fix: keep only the generation-critical invariants inline and lean on the cited spec as single source of truth; the existing "when the spec disagrees, the spec wins" rule already mitigates, so this is optional tightening.
       Verify: inline facts are minimised or each carries an explicit "per spec §…" pointer.
@@ -85,3 +85,5 @@ Next concrete action: commit Spec + Skill + plan together; S2 may be deferred.
 <!-- Append one line per item closure: YYYY-MM-DD — <item-shorthand> — <action taken> — verified: <method> -->
 2026-06-07 — W1 gotchas-section — added `## Gotchas` to SKILL.md consolidating the non-obvious Backstage validation quirks — verified: `grep -n '## Gotchas' SKILL.md` hits; `validate_skills.py` still 0 findings; 89 lines (<500)
 2026-06-07 — S1 evaluation-scenarios — seeded examples/ with 01-node-service-with-openapi, 02-library-no-codeowners, 03-tech-radar-json — verified: `ls examples/` lists 3 scenario files
+2026-07-24 — S2 drift-surface — accepted as-is (Suggestion-class optional tightening; the "spec wins" rule mitigates at two body anchors, and the domain spec is self-contained since PR #439 absorbed the research corpus incl. §Sources, strengthening the single-source-of-truth chain; rationale recorded here) — verified: `grep -c "spec wins" skills/backstage-catalog-generate/SKILL.md` = 2; the Info-item research-report trace now resolves via the spec's §Sources
+2026-07-24 — plan close — every finding `- [x]`; zero Critical at any point. Status set to `complete`; the plan is deleted in the follow-up commit per `review-plan` §Lifecycle (`review(skill-review): close backstage-catalog-generate—0C/1W/2S/3I`), leaving git history as the audit trail
