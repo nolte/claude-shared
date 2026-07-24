@@ -87,8 +87,8 @@ Leser: Entwickler, die eine API dokumentieren; Reviewer und das Audit-Tooling, d
 - [ ] Ein Repository mit einer HTTP-API, aber ohne auffindbares OpenAPI-Dokument erzeugt einen Critical-Befund, während das Audit trotzdem durchläuft
 - [ ] Ein Repository mit mehreren OpenAPI-Dokumenten erhält einen Report pro Dokument
 - [ ] Ein per `$ref` aufgeteiltes Dokument mit auffindbarem Entry-Point bündelt sauber; ein Multi-File-Dokument ohne auffindbaren Entry-Point erzeugt einen Befund
-- [ ] Der Audit-Report benennt die geprüften Dokumente, die OpenAPI-Version, den erkannten Flavour (spec-first oder code-first) und wie das Dokument entdeckt wurde
-- [ ] Der operationalisierende Skill und Agent zitieren diese Spec in ihrem Body oder ihrer `description`
+- [ ] Der Audit-Report benennt die geprüften Dokumente, die OpenAPI-Version, den erkannten Flavour (spec-first oder code-first) und wie jedes Dokument entdeckt wurde
+- [ ] Der Audit-Skill und der Scanner-Agent zitieren diese Spec in ihrem Body oder ihrer `description`
 
 ## Referenzen
 

@@ -87,8 +87,8 @@ Readers: developers documenting an API; reviewers and the audit tooling checking
 - [ ] A repository with an HTTP API but no discoverable OpenAPI document produces a critical finding while the audit still completes
 - [ ] A repository with multiple OpenAPI documents gets a per-document report
 - [ ] A `$ref`-split document with a discoverable entry point bundles cleanly; a multi-file document without a discoverable entry point produces a finding
-- [ ] The audit report names the document(s) checked, the OpenAPI version, the detected flavour (spec-first or code-first), and how the document was discovered
-- [ ] The operationalising skill and agent cite this spec in their body or `description`
+- [ ] The audit report names the documents checked, the OpenAPI version, the detected flavour (spec-first or code-first), and how each document was discovered
+- [ ] The audit skill and scanner agent cite this spec in their body or `description`
 
 ## References
 
