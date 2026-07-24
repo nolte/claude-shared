@@ -69,10 +69,10 @@ This section is the single canonical source for severity vocabulary across every
 A bounded set of **editorial and documentation-audit specs** serialise their findings into machine-read scanner output (JSON keys, frontmatter values, CLI exit-code mappings) rather than into a disposable review plan. For those, a stable **lowercase** token—not the human-facing Title-Case label—is the wire contract, so this carve-out sanctions a lowercase editorial sub-scale for the named specs only.
 
 - **MAY**, for the specs named below only, use a lowercase severity vocabulary drawn from the tokens `critical` / `warning` / `suggestion` / `info`, and **MAY** omit the levels the tool never emits. The named specs, with the subset each uses, are:
-  - `spec/project/docs-freshness/` — `critical` / `warning` / `info`
-  - `spec/project/lektorat/` — `critical` / `warning` / `suggestion` (and it additionally MUST-NOTs `info`)
-  - `spec/project/i18n-completeness/` — `critical` / `warning` / `info`
-  - `spec/project/diagram-opportunity/` — `suggestion` / `info` only
+  - `spec/project/docs-freshness/`: `critical` / `warning` / `info`
+  - `spec/project/lektorat/`: `critical` / `warning` / `suggestion` (and it additionally MUST-NOTs `info`)
+  - `spec/project/i18n-completeness/`: `critical` / `warning` / `info`
+  - `spec/project/diagram-opportunity/`: `suggestion` / `info` only
 - **MUST** keep every lowercase editorial token semantically identical to its Title-Case counterpart (a lowercase `critical` means exactly `Critical`); the carve-out is a serialisation form, not a second severity model
 - **MUST NOT** extend this carve-out to any spec not named above; a spec outside this set still references the Title-Case four verbatim per the rules above, and adding a spec here is a spec amendment to this section
 
@@ -117,13 +117,13 @@ A bounded set of **editorial and documentation-audit specs** serialise their fin
 
 - **MUST** reference this spec from every review spec that produces a plan (`skill-review`, `agent-review`, and any future review type)—the review spec owns the criteria, this spec owns the artifact shape
 - **MUST NOT** be used as the output of a **dated periodic or accumulating audit record**. The records below reuse this spec's four-section structure and severity vocabulary but follow their own dated-filename and non-disposable lifecycle; this spec's no-timestamp and one-plan-per-target rules **don't** apply to them, and they aren't meant to be deleted on processing completion:
-  - `spec-drift-audit` — `.audits/spec-drift/<YYYY>-Q<n>.md`
-  - `portfolio-inflight-management` — `.audits/portfolio-inflight/<YYYY-MM-DD>.md`
-  - `portfolio-management` — `.audits/portfolio/<YYYY-MM-DD>.md`
-  - `docs-freshness` — `.audits/docs-freshness/<YYYY>-Q<n>.md`
-  - `lektorat` — `.audits/lektorat/<YYYY-MM-DD-HHMM>/`
-  - `lektorat-auto-revise` — `.audits/lektorat-auto-revise/<YYYY-MM-DD-HHMM>/`
-  - `diagram-opportunity` — `.audits/diagram-opportunity/<YYYY-MM-DD-HHMM>/`
+  - `spec-drift-audit`: `.audits/spec-drift/<YYYY>-Q<n>.md`
+  - `portfolio-inflight-management`: `.audits/portfolio-inflight/<YYYY-MM-DD>.md`
+  - `portfolio-management`: `.audits/portfolio/<YYYY-MM-DD>.md`
+  - `docs-freshness`: `.audits/docs-freshness/<YYYY>-Q<n>.md`
+  - `lektorat`: `.audits/lektorat/<YYYY-MM-DD-HHMM>/`
+  - `lektorat-auto-revise`: `.audits/lektorat-auto-revise/<YYYY-MM-DD-HHMM>/`
+  - `diagram-opportunity`: `.audits/diagram-opportunity/<YYYY-MM-DD-HHMM>/`
 - **SHOULD**, when a review agent (for example `audience-review`) emits a report in the main conversation, still persist the structured plan to `.audits/<review-type>/<target>.md` so the processing contract is consistent regardless of who ran the review
 - **SHOULD** consult `spec/project/parallel-working-copies/` §Audit artefacts in multiple worktrees when the plan is produced inside a worktree rather than the primary checkout; the per-(review-type, target) uniqueness rule from this spec is only observable inside one working tree at a time, and the worktree-local commit, transfer, and cleanup rules live there
 - **SHOULD**, in repositories that forbid direct pushes to `develop`, land the plan and the fix it describes on the same feature-branch PR—create, check-off, `## Processing log` updates, and the deletion commit all in one diff—per `spec/project/parallel-working-copies/` §Audit artefacts; a standalone earlier PR is reserved for reviews run before any fix is scoped

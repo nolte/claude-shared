@@ -69,10 +69,10 @@ Dieser Abschnitt ist die einzige kanonische Quelle für das Schweregrad-Vokabula
 Eine eng umrissene Menge von **Editorial- und Dokumentations-Audit-Specs** serialisiert ihre Findings in maschinengelesene Scanner-Ausgabe (JSON-Keys, Frontmatter-Werte, CLI-Exit-Code-Mappings) statt in einen wegwerfbaren Review-Plan. Dafür ist ein stabiler **Kleinschreibungs**-Token — nicht das menschenlesbare Title-Case-Label — der Wire-Contract, weshalb dieser Carve-out eine Kleinschreibungs-Editorial-Sub-Skala ausschließlich für die genannten Specs sanktioniert.
 
 - **KANN [MAY]** ausschließlich für die unten genannten Specs ein Kleinschreibungs-Schweregrad-Vokabular aus den Tokens `critical` / `warning` / `suggestion` / `info` verwenden und **KANN [MAY]** die Stufen weglassen, die das Werkzeug nie ausgibt. Die genannten Specs, mit der jeweils genutzten Teilmenge, sind:
-  - `spec/project/docs-freshness/` — `critical` / `warning` / `info`
-  - `spec/project/lektorat/` — `critical` / `warning` / `suggestion` (und es verbietet zusätzlich `info`)
-  - `spec/project/i18n-completeness/` — `critical` / `warning` / `info`
-  - `spec/project/diagram-opportunity/` — nur `suggestion` / `info`
+  - `spec/project/docs-freshness/`: `critical` / `warning` / `info`
+  - `spec/project/lektorat/`: `critical` / `warning` / `suggestion` (und es verbietet zusätzlich `info`)
+  - `spec/project/i18n-completeness/`: `critical` / `warning` / `info`
+  - `spec/project/diagram-opportunity/`: nur `suggestion` / `info`
 - **MUSS [MUST]** jeden Kleinschreibungs-Editorial-Token semantisch identisch zu seinem Title-Case-Gegenstück halten (ein Kleinschreibungs-`critical` bedeutet exakt `Critical`); der Carve-out ist eine Serialisierungsform, kein zweites Schweregrad-Modell
 - **MUSS NICHT [MUST NOT]** diesen Carve-out auf eine oben nicht genannte Spec ausweiten; eine Spec außerhalb dieser Menge verweist weiterhin wortwörtlich auf die vier Title-Case-Stufen gemäß den obigen Regeln, und das Aufnehmen einer Spec hier ist eine Spec-Änderung an diesem Abschnitt
 
