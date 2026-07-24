@@ -30,13 +30,13 @@ Readers: skill and agent authors in `claude-shared`, plus operators who run long
 ## Requirements
 
 ### Scope of applicability
-- **MUST** apply to every skill whose normal control flow includes more than one user-approval gate, or more than one internal phase that produces an intermediate artefact the operator would otherwise lose on interruption; agents fall under the discretionary clause below rather than this MUST, because an agent runs headless and has no user-approval gate to preserve
+- **MUST** apply to every skill whose normal control flow includes more than one user-approval gate, or more than one internal phase that produces an intermediate artefact the operator would otherwise lose on interruption. Agents have no user-approval gate to preserve, so the approval-gate trigger doesn't reach them; but an agent that spans more than one named phase producing such an intermediate artefact is held to the same MUST by `spec/claude/agent-management/` §Resumable runs. The discretionary clause below covers only the residual case—a multi-phase agent whose phases merely benefit from checkpoints without an intermediate artefact lost on interruption
 - **MUST** be declared in the skill's `SKILL.md` frontmatter (or the agent's frontmatter) via a `resumable: true` field, so the catalog generator and `skill-vs-agent` peer lookups can surface resume support to operators
 - **MUST** be referenced from the skill or agent description text (one short clause: "supports resume on re-invocation") whenever `resumable: true` is set, so operators reading the catalog without inspecting frontmatter still know
 <!-- vale Microsoft.Contractions = NO -->
 - **SHOULD NOT** apply to one-shot skills whose entire execution is a single Bash invocation or a single tool call that's itself cheap to restart; declaring `resumable: false` (or omitting the field) is the correct choice for those
 <!-- vale Microsoft.Contractions = YES -->
-- **MAY** apply to agents whose contract is otherwise fire-and-forget when they internally span multiple phases that benefit from checkpoint writes; this is a deliberate exception to the usual skills-are-multi-turn / agents-are-single-turn split in `spec/claude/skill-vs-agent/`
+- **MAY** apply to agents whose contract is otherwise fire-and-forget when they internally span multiple phases that merely benefit from checkpoint writes (no intermediate artefact is lost on interruption—that case is the MUST above, per `spec/claude/agent-management/` §Resumable runs); this is a deliberate exception to the usual skills-are-multi-turn / agents-are-single-turn split in `spec/claude/skill-vs-agent/`
 
 ### Persistence location
 - **MUST** write resume state to `.resume/<skill-or-agent-name>/<run-id>.yml` at the repository root of the working copy
@@ -117,7 +117,7 @@ The following keys form the mandatory envelope every state file MUST carry. Skil
 
 ## Acceptance Criteria
 - [ ] Every skill under `skills/` whose normal control flow has more than one user-approval gate OR more than one named internal phase that produces an intermediate artefact carries `resumable: true` in its frontmatter
-- [ ] Every agent under `agents/` carrying `resumable: true` genuinely spans more than one named phase with an intermediate artefact (per §Scope of applicability's discretionary agent clause); a read-only single-pass agent correctly omits the field, and omission is never itself a finding
+- [ ] Every agent under `agents/` carrying `resumable: true` genuinely spans more than one named phase with an intermediate artefact (per §Scope of applicability: the MUST for an intermediate artefact lost on interruption, or the discretionary clause for the residual benefit-only case); a read-only single-pass agent correctly omits the field, and omission is never itself a finding
 - [ ] Every skill and agent with `resumable: true` mentions resume support in its `description:` text
 - [ ] No skill or agent with `resumable: true` writes resume state outside `.resume/<skill-or-agent-name>/`
 - [ ] The repository's `.gitignore` contains an entry that ignores `/.resume/`
