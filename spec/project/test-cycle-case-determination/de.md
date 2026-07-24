@@ -95,7 +95,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Phasen-Specs schreiben; Skill- und 
 
 ### Traceability
 
-- **MUSS [MUST]** eine **Anforderung → TC-ID**-Traceability-Matrix führen, sodass die Abdeckung von Anforderungen (nicht nur Code) auditierbar ist, gemäß der Traceability-Kette des Fundaments [R12].
+- **MUSS [MUST]** die **Anforderung → TC-ID**-Traceability als **einzelnes projektweites Matrix-Artefakt** führen (nicht allein als Per-Fall-Frontmatter), sodass die Abdeckung von Anforderungen—einschließlich, welche Anforderungen *null* Fälle haben—an einer Stelle auditierbar und diff-bar ist, gemäß der Traceability-Kette des Fundaments [R12]. Per-Fall-Frontmatter hält die umgekehrte `Fall → Anforderung`-Kante und ist die Quelle, aus der die Matrix generiert und gegen die sie geprüft wird; es ersetzt die zentrale Matrix nicht, weil die Beantwortung von „welche Anforderungen sind ungedeckt" aus Frontmatter allein das Scannen jedes Falls erfordert und eine Anforderung, die kein Fall referenziert, nicht sichtbar machen kann.
 
 ## Akzeptanzkriterien
 
@@ -108,7 +108,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Phasen-Specs schreiben; Skill- und 
 - [ ] Risikobasierte Auswahl (Eintrittswahrscheinlichkeit × Auswirkung) ist gefordert
 - [ ] Die Iterations-Feedback-Regel ist bindend: ein Regressionsfall für jeden bestätigten Defekt (zuerst den fehlschlagenden Fall schreiben), plus Coverage-Lücken-, explorative und Anforderungsänderungs-Fälle
 - [ ] Der Fall-Qualitätsmaßstab (unabhängig, deterministisch-by-design, ein Verhalten, absichtsoffenbarend, beobachtbares Verhalten, nicht-redundant, keine Über-Spezifikation) ist gefordert
-- [ ] Eine Anforderung → TC-ID-Traceability-Matrix ist gefordert
+- [ ] Eine Anforderung → TC-ID-Traceability-Matrix ist als einzelnes zentrales projektweites Artefakt gefordert (Per-Fall-Frontmatter ist ihre Quelle, kein Ersatz)
 - [ ] Die EN- und DE-Versionen sind strukturell identisch (gleiche Überschriften, Anforderungszahl, Akzeptanzkriterien-Zahl) und der Spec-Index listet den neuen Slug
 
 ## Referenzen
@@ -133,4 +133,4 @@ Leser: Spec-Autor:innen, die die Geschwister-Phasen-Specs schreiben; Skill- und 
 
 - Sollte die Phase ein Mindest-Technik-Set je Falltyp verlangen (zum Beispiel BVA + EP bei jedem begrenzten numerischen Input) oder beratend bleiben, welche Techniken zutreffen?
 - Wo Property-based Testing zutrifft, sollte die Phase es für reine Funktionen mit klaren Invarianten von DARF auf SOLLTE anheben, analog zur offenen Frage der Unit-Stufe?
-- Lebt die Anforderung → TC-ID-Matrix in einem einzelnen Projekt-Artefakt, oder genügt Per-Fall-Frontmatter (wie `test-case-derivation` es bereits ausgibt) als Traceability-Nachweis?
+- ~~Lebt die Anforderung → TC-ID-Matrix in einem einzelnen Projekt-Artefakt, oder genügt Per-Fall-Frontmatter (wie `test-case-derivation` es bereits ausgibt) als Traceability-Nachweis?~~ **Entschieden (2026-07-24): ein zentrales Artefakt.** Die Matrix lebt in einem einzelnen projektweiten Artefakt (siehe Traceability-Anforderung oben); Per-Fall-Frontmatter ist die Rückkanten-Quelle, aus der sie gebaut und gegen die sie geprüft wird, kein Ersatz. Die Audit-Frage, die die Matrix beantworten soll—„welche Anforderungen haben keinen Fall?"—ist eine Coverage-*Lücken*-Frage, und eine Lücke ist genau eine Anforderung, die *kein* Frontmatter referenziert; nur ein zentrales, nach Anforderung geschlüsseltes Artefakt kann sie sichtbar machen, ohne jeden Fall zu scannen, und nur ein diff-bares Artefakt hält den Coverage-Stand an einer Stelle reviewbar.

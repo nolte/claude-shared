@@ -52,7 +52,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 - Die **E2E-Stufe MUSS** der Verifikation von User-Journeys vorbehalten bleiben, nicht für Logik, die eine Stufe tiefer besser getestet ist; das ist die Regel der niedrigsten-Stufe-die-Vertrauen-gibt des Fundaments, an der Spitze angewandt
 - Das charakteristische Fehlermuster ist eine **überbevölkerte Spitze**: Einzelflächen-Assertions auf Feldebene (ein Feld ein-/ausgeblendet, ein Button aktiviert/deaktiviert, ein Leerzustand, ein Label, ein i18n-String, eine Validierungsmeldung, ein Berechnungsergebnis) laufen als langsame Browser-Tests statt als schnelle Component-/Unit-Tests. Eine Suite, die in die Hunderte von E2E-Tests abdriftet, ist ein Symptom dafür; jeder solche Test **MUSS** auf die niedrigste Stufe gedrückt werden, die Vertrauen gibt, sodass E2E ein schlanker Satz stufenübergreifender Journeys bleibt
 - Coverage-Governance (Coverage als Leitlinie statt Ziel, Mutationsscore als stärkeres Signal, keine festen stufenübergreifenden Verhältnisse) gehört dem Fundament; diese Spec **DARF** keine numerischen Coverage-Ziele setzen
-- Der Skill `test-pyramid-check` **MUSS** die Stufen-Vollständigkeit gegen die Taxonomie des Fundaments und die unten definierte E2E-Disziplin auditieren und pro Feature berichten, welche Stufen vorhanden sind, welche fehlen und ob die E2E-Stufe diesen Disziplinen folgt
+- Der Skill `test-pyramid-check` **MUSS** die unten definierte **E2E-Stufen-Disziplin** auditieren und pro Feature berichten, ob die E2E-Stufe ihr folgt; seine **Stufen-Vollständigkeits**-Achse (welche Stufen vorhanden, fehlend oder `n/a` sind) ist an `spec/project/test-pyramid-foundation/` [R6] gebunden, das dieses Gebot besitzt, und diese Spec **DARF** es **NICHT** wiederholen
 
 ### Page-Object-Kapselung
 
@@ -121,7 +121,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die 
 - [ ] Eine aufgesetzte Suite leitet jede UI-Interaktion über Page Objects, verwendet nur bedingungsbasiertes Warten, folgt der Locator-Hierarchie und trägt Marker, TC-ID-Docstrings und beschreibende Assertions
 - [ ] Ein Lauf kann ein zeitgestempeltes, git-ignoriertes Markdown-Protokoll mit Metadaten, Zusammenfassung, Abdeckung pro Anforderung und einer beschriebenen Screenshot-Galerie ausgeben
 - [ ] Jeder Test benennt die umgesetzte TC-ID und den Anforderungsfall, auf den er verweist; abweichende Nummerierung wird durch eine explizite Zuordnung überbrückt
-- [ ] `test-pyramid-check` berichtet pro Feature vorhandene/fehlende Stufen und markiert E2E-Disziplin-Verstöße
+- [ ] `test-pyramid-check` markiert pro Feature E2E-Disziplin-Verstöße gegen diese Spec, während sein Bericht über vorhandene/fehlende Stufen an `test-pyramid-foundation` gebunden ist
 - [ ] `e2e-result-reviewer` läuft read-only und erzeugt priorisierte Befunde mit Bezug zu Anforderungs-/TC-IDs
 - [ ] Jeder der drei Agents und der Skill zitiert diese Spec, und jede `description` grenzt ihn von den anderen sowie von `test-case-derivation` und `quality-gate` ab
 - [ ] `test-case-derivation/{en,de}.md` widerspricht dieser Spec nicht mehr: Die Grenze zur E2E-Automatisierung verläuft entlang der Verantwortung, nicht entlang „geteilt vs. projektlokal"

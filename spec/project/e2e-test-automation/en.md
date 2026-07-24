@@ -52,7 +52,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - The **E2E tier MUST** be reserved for user-journey verification, not for logic better tested a tier down; this is the foundation's lowest-tier-that-gives-confidence rule applied at the apex
 - The characteristic failure mode is an **over-populated apex**: single-surface, field-level assertions (a field shown/hidden, a button enabled/disabled, an empty state, a label, an i18n string, a validation message, a calculation result) run as slow browser tests instead of fast component/unit tests. A suite drifting into the hundreds of E2E tests is a symptom of this; each such test **MUST** be pushed down to the lowest tier that gives confidence, leaving E2E a lean set of cross-layer journeys
 - Coverage governance (coverage as a guide not a target, mutation score as the stronger signal, no fixed cross-tier ratios) is owned by the foundation; this spec **MUST NOT** set numeric coverage targets
-- The `test-pyramid-check` skill **MUST** audit tier completeness against the foundation's taxonomy and the E2E discipline defined below, and report, per feature, which tiers are present, which are missing, and whether the E2E tier follows those disciplines
+- The `test-pyramid-check` skill **MUST** audit the **E2E-tier discipline** defined below and report, per feature, whether the E2E tier follows it; the skill's **tier-completeness** axis (which tiers are present, missing, or `n/a`) is bound to `spec/project/test-pyramid-foundation/` [R6], which owns that mandate, and this spec **MUST NOT** restate it
 
 ### Page-object encapsulation
 
@@ -121,7 +121,7 @@ This profile is the binding realisation of the core for Python projects and the 
 - [ ] A scaffolded suite routes every UI interaction through page objects, uses only condition-based waits, follows the locator hierarchy, and carries markers, TC-ID docstrings, and descriptive assertions
 - [ ] A run can emit a timestamped, git-ignored Markdown protocol with metadata, summary, per-requirement coverage, and a described screenshot gallery
 - [ ] Each test names the TC-ID it realises and the requirement case it traces to; differing numbering is bridged by an explicit mapping
-- [ ] `test-pyramid-check` reports present/missing tiers per feature and flags E2E-discipline violations
+- [ ] `test-pyramid-check` flags E2E-discipline violations per feature against this spec, while its present/missing-tier reporting is bound to `test-pyramid-foundation`
 - [ ] `e2e-result-reviewer` runs read-only and produces prioritised findings keyed to requirement/TC IDs
 - [ ] Each of the three agents and the skill cites this spec, and each `description` delimits it from the others and from `test-case-derivation` and `quality-gate`
 - [ ] `test-case-derivation/{en,de}.md` no longer contradicts this spec: its boundary against E2E automation is drawn by responsibility, not by "shared vs. project-local"

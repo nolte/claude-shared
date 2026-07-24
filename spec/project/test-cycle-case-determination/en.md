@@ -95,7 +95,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 
 ### Traceability
 
-- **MUST** maintain a **requirement → TC-ID** traceability matrix so coverage of requirements (not just code) is auditable, per the foundation's traceability chain [R12].
+- **MUST** maintain the **requirement → TC-ID** traceability as a **single project-level matrix artefact** (not per-case frontmatter alone) so coverage of requirements—including which requirements have *zero* cases—is auditable and diff-able in one place, per the foundation's traceability chain [R12]. Per-case frontmatter records the reverse `case → requirement` edge and is the source the matrix is generated from and checked against; it doesn't substitute for the central matrix, because answering "which requirements are uncovered" from frontmatter alone requires scanning every case and can't surface a requirement that no case references.
 
 ## Acceptance Criteria
 
@@ -108,7 +108,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 - [ ] Risk-based selection (likelihood × impact) is required
 - [ ] The iterative-feedback rule is binding: a regression case for every confirmed defect (write the failing case first), plus coverage-gap, exploratory, and requirement-change cases
 - [ ] The case quality bar (independent, deterministic-by-design, one behaviour, intention-revealing, observable behaviour, non-redundant, no over-specification) is required
-- [ ] A requirement → TC-ID traceability matrix is required
+- [ ] A requirement → TC-ID traceability matrix is required as a single central project-level artefact (per-case frontmatter is its source, not a substitute)
 - [ ] EN and DE versions are structurally identical (same headings, requirement count, acceptance-criteria count) and the spec index lists the new slug
 
 ## References
@@ -133,4 +133,4 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 
 - Should the phase require a minimum technique set per case type (for example BVA + EP on any bounded numeric input), or stay advisory on which techniques apply?
 - Where property-based testing applies, should the phase elevate it from MAY to SHOULD for pure functions with clear invariants, mirroring the unit tier's open question?
-- Does the requirement → TC-ID matrix live in a single project artefact, or is per-case frontmatter (as `test-case-derivation` already emits) sufficient as the traceability record?
+- ~~Does the requirement → TC-ID matrix live in a single project artefact, or is per-case frontmatter (as `test-case-derivation` already emits) sufficient as the traceability record?~~ **Settled (2026-07-24): one central artefact.** The matrix lives in a single project-level artefact (see the traceability requirement above); per-case frontmatter is the reverse-edge source it's built from and checked against, not a substitute. The audit question the matrix exists to answer—"which requirements have no case?"—is a coverage-*gap* question, and a gap is precisely a requirement that *no* frontmatter references; only a central artefact keyed by requirement can surface it without scanning every case, and only one diffable artefact keeps the coverage state reviewable in one place.
