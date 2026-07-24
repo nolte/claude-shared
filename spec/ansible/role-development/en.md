@@ -7,12 +7,12 @@ Implementation: documentary-only—Ansible automation lives outside the `nolte-s
 Ansible roles are the reusable units that a playbook repository consumes via `requirements.yml`. They encapsulate idempotent state-management logic for a focused responsibility (install `nginx`, harden SSH, bootstrap a base OS) so the same logic can be reused across environments and projects. This spec defines the best-practice baseline for the *role layer*: Galaxy-conformant directory layout, role interface (argument specs, metadata, dependencies), variable hygiene, idempotent behaviour, naming, testing with Molecule, linting, semantic versioning, and Galaxy publishing. The consuming *playbook layer* is governed by [`spec/ansible/playbook-development/`](../playbook-development/en.md), and this spec deliberately doesn't repeat orchestration-level conventions (inventory, vault, CI dry-run).
 
 References:
-- [Reusing roles (official guide)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
-- [Developing collections](https://docs.ansible.com/ansible/latest/dev_guide/developing_collections.html)
+- [Reusing roles (official guide)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
+- [Developing collections](https://docs.ansible.com/projects/ansible/latest/dev_guide/developing_collections.html)
 - [Galaxy: creating a role](https://galaxy.ansible.com/docs/contributing/creating_role.html)
 - [Molecule (testing framework)](https://ansible.readthedocs.io/projects/molecule/)
 - [`ansible-lint`](https://ansible.readthedocs.io/projects/lint/)
-- [Best practices for Ansible (community blog)](https://www.jeffgeerling.com/blog/2019/best-practices-ansible-2019)
+- [Tips and tricks (official practice guidance)](https://docs.ansible.com/projects/ansible/latest/tips_tricks/ansible_tips_tricks.html)
 - [DevSec Hardening Framework](https://dev-sec.io/)
 
 ## Goals

@@ -7,12 +7,12 @@ Implementierung: documentary-only — Ansible-Automation liegt außerhalb des Sc
 Ansible-Rollen sind die wiederverwendbaren Einheiten, die ein Playbook-Repository über `requirements.yml` konsumiert. Sie kapseln idempotente Zustands-Logik für eine fokussierte Verantwortlichkeit (nginx installieren, SSH härten, ein Basis-OS bootstrappen), damit dieselbe Logik über Umgebungen und Projekte hinweg wiederverwendet werden kann. Diese Spec definiert die Best-Practice-Baseline für die *Rollen-Schicht* — Galaxy-konformes Verzeichnislayout, Rollen-Schnittstelle (Argument-Specs, Metadaten, Abhängigkeiten), Variablen-Hygiene, Idempotenz, Naming, Tests mit Molecule, Linting, semantische Versionierung und Galaxy-Publishing. Die konsumierende *Playbook-Schicht* wird von [`spec/ansible/playbook-development/`](../playbook-development/de.md) geregelt; diese Spec wiederholt orchestrierungs-bezogene Konventionen (Inventar, Vault, CI-Dry-Run) bewusst nicht.
 
 Referenzen:
-- [Reusing roles (offizieller Guide)](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
-- [Developing collections](https://docs.ansible.com/ansible/latest/dev_guide/developing_collections.html)
+- [Reusing roles (offizieller Guide)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
+- [Developing collections](https://docs.ansible.com/projects/ansible/latest/dev_guide/developing_collections.html)
 - [Galaxy — creating a role](https://galaxy.ansible.com/docs/contributing/creating_role.html)
 - [Molecule (Test-Framework)](https://ansible.readthedocs.io/projects/molecule/)
 - [ansible-lint](https://ansible.readthedocs.io/projects/lint/)
-- [Jeff Geerling — Best Practices for Ansible (Community)](https://www.jeffgeerling.com/blog/2019/best-practices-ansible-2019)
+- [Tips and Tricks (offizielle Praxis-Hinweise)](https://docs.ansible.com/projects/ansible/latest/tips_tricks/ansible_tips_tricks.html)
 - [DevSec Hardening Framework](https://dev-sec.io/)
 
 ## Ziele
