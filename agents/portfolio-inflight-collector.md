@@ -41,7 +41,7 @@ This agent declares `Bash` in its tool list as a deliberate exception under `spe
 - `gh api orgs/nolte/repos --paginate --jq '...'` — read-only GitHub API call to enumerate public non-archived repositories under the `nolte` organisation when the calling skill issues the resolve-fresh instruction.
 - `gh api repos/nolte/<repo>/contents/CLAUDE.md --jq .content | base64 -d` — read-only fetch of a repository's `CLAUDE.md` to detect the `portfolio: excluded` opt-out marker and any `inflight: skip-<source>` per-data-source opt-out markers from §Portfolio scope.
 - `gh api repos/nolte/<repo>/contents/project/inflight.yml --jq .content | base64 -d` — read-only fetch of an optional per-repository threshold-override config, surfaced as a verbatim YAML string to the calling skill (the skill applies the overrides; the agent only fetches).
-- `gh issue list --repo nolte/<repo> --state open --json number,title,createdAt,updatedAt,labels,assignees,comments --limit <n>` — read-only enumeration of open issues for data source 1 (open issues). Optional `--search` filter is applied to drop issues carrying `triage-done`, `wontfix`, or `parking-lot` labels per the §Data sources exclusion rules.
+- `gh issue list --repo nolte/<repo> --state open --json number,title,author,createdAt,updatedAt,labels,assignees,comments --limit <n>` — read-only enumeration of open issues for data source 1 (open issues). The `author` field carries the issue author login (including bot logins such as `renovate[bot]`), which the calling skill needs for the §Stalling thresholds bot-authored-dashboard exclusion. Optional `--search` filter is applied to drop issues carrying `triage-done`, `wontfix`, or `parking-lot` labels per the §Data sources exclusion rules.
 - `gh pr list --repo nolte/<repo> --state open --json number,title,isDraft,createdAt,updatedAt,headRefOid,headRefName,baseRefName,mergeable,statusCheckRollup,reviewDecision,labels,latestReviews --limit <n>` — read-only enumeration of open PRs (including drafts) for data source 2 (open PRs).
 - `gh api repos/nolte/<repo>/branches --paginate --jq '...'` — read-only enumeration of remote branches for data source 3 (branches without active PR), cross-referenced against the open-PR list to filter out branches with an open PR pointing to `develop`, the default branch, and the `gh-pages` deploy branch.
 - `gh api repos/nolte/<repo> --jq .default_branch` — read-only fetch of the repository's default branch name, needed to exclude the default branch from data source 3.
@@ -134,6 +134,7 @@ Per-source opt-outs honoured: <list of <repo>:<source> or "none">
 #### Open issues (`issue`)
 - <repo-name>/issue/<number>
   - title: <title>
+  - author: <login>
   - createdAt: <ISO-8601>
   - updatedAt: <ISO-8601>
   - daysOpen: <n>
@@ -141,6 +142,7 @@ Per-source opt-outs honoured: <list of <repo>:<source> or "none">
   - assignees: <list or "none">
   - labels: <list or "none">
   - hasMaintainerCommentLast30d: yes | no
+  - isBotAuthored: yes | no (true when author is `renovate[bot]`, `dependabot[bot]`, or `github-actions[bot]`; the skill applies the §Stalling thresholds exclusion)
   - excludedByLabel: false (or true with label name; included only when caller requests excluded-items audit trail)
 - ...
 
@@ -250,7 +252,7 @@ Before collecting:
 
 4. **For each in-scope Portfolio-Member repository, collect the four primary data sources** (skipping any source marked `inflight: skip-<source>` for that repository). Each source prefers the corresponding GitHub MCP read tool per §GitHub MCP-preferred reads when a server is connected, otherwise the read-only `gh` command already enumerated in §Read-only Bash justification — don't restate the full flag strings here; the filters and derivations below are the load-bearing part and are identical on both paths:
 
-   a. **Open issues (`issue`):** via the `gh issue list` command. Filter out issues carrying any of `triage-done`, `wontfix`, `parking-lot` labels per §Data sources. For each remaining issue, derive `daysOpen`, `daysSinceLastActivity`, and `hasMaintainerCommentLast30d` from the JSON. Assign identifier `<repo>/issue/<number>`.
+   a. **Open issues (`issue`):** via the `gh issue list` command. Filter out issues carrying any of `triage-done`, `wontfix`, `parking-lot` labels per §Data sources. For each remaining issue, capture the `author` login and derive `daysOpen`, `daysSinceLastActivity`, `hasMaintainerCommentLast30d`, and `isBotAuthored` (true when the author login is `renovate[bot]`, `dependabot[bot]`, or `github-actions[bot]`) from the JSON. The bot-author signal is carried through only; the calling skill applies the §Stalling thresholds bot-authored-dashboard exclusion. Assign identifier `<repo>/issue/<number>`.
 
    b. **Open pull requests (`pr`):** via the `gh pr list` command (drafts included). For each PR, derive `daysOpen`, `daysSinceLastReviewerActivity`, `requiredChecksState` from the `statusCheckRollup` field, and the `mergeable` flag (the skill uses `CONFLICTING` to set the conflicts-against-`develop` driver). Assign identifier `<repo>/pr/<number>`.
 
