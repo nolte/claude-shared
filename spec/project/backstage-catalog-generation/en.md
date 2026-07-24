@@ -130,7 +130,7 @@ Backstage documents a registry of well-known annotations. They split into two cl
 - **Set automatically (a descriptor MUST NOT author these)**: `backstage.io/managed-by-location`, `backstage.io/managed-by-origin-location`, `backstage.io/orphan`. The catalog derives them during ingestion; authoring them is wrong.
 - **Deprecated mappings** a generator MUST avoid: `backstage.io/github-actions-id` → use `github.com/project-slug`; `backstage.io/definition-at-location` → use placeholder substitution (`$text:`/`$json:`/`$yaml:`); `jenkins.io/github-folder` → use `jenkins.io/job-full-name`.
 
-#### Onboarding and ingestion context
+#### Ingestion and onboarding context
 
 A generated descriptor lands in a catalog through one of three ingestion paths. Operating the backend stays a Non-Goal; this context is recorded because it bounds what a generator may assume:
 
@@ -179,7 +179,7 @@ The Tech Radar is a **standalone frontend plugin**, **not** wired into the Softw
 - The canonical server-side validation path is `POST <backend>/api/catalog/validate-entity` (for example `http://localhost:7007/api/catalog/validate-entity`; OpenAPI `operationId: ValidateEntity`, auth an optional JWT Bearer token). The JSON request body requires **both** `location` (string) and `entity` (object); note that `location` is in the body, not an HTTP header. Responses: `200` (no body) on success; `400` with `{ "errors": [ { "name", "message" } ] }` on failure. An older docs page renders the path as `POST /entities/validate`; the source-of-truth OpenAPI uses `/validate-entity`.
 - The de-facto offline / CI linter is the community `@roadiehq/backstage-entity-validator` (CLI binary `validate-entity`, a `RoadieHQ/backstage-entity-validator` GitHub Action pinned by tag, for example `@v0.3.11`, and a Docker image). It defaults to `catalog-info.yaml` at the repository root, accepts comma-separated lists and globs (flags: `-q` minimal output, `-i` STDIN, `-l` custom schema file), runs Backstage's own structural validation plus well-known-annotation checks, and treats custom schemas as additive (they can only tighten). It **doesn't** check entity-reference target existence.
 - Canonical JSON schemas (draft-07) live in `packages/catalog-model/src/schema/` (`Entity`, `EntityEnvelope`, `EntityMeta`, and per-kind files under `kinds/`, plus newer specialised variants such as `API.v1alpha1.mcp-server.schema.json` and the `AiResource.v1alpha1.*` schemas). The default policy chain (`CatalogBuilder.buildEntityPolicy()`) is `allOf(SchemaValidEntityPolicy, DefaultNamespaceEntityPolicy, NoForeignRootFieldsEntityPolicy, FieldFormatEntityPolicy)`.
-- `@backstage/catalog-model` exports `entityKindSchemaValidator<T>(schema)` (returns `false` only on a `kind`/`apiVersion` mismatch and throws on any other schema violation) and `entityEnvelopeSchemaValidator()` (envelope presence and shape), both built on Ajv draft-07. The field-format validators (`isValidApiVersion`, `isValidKind`, `isValidEntityName`, `isValidNamespace`, `isValidLabelKey`, `isValidLabelValue`, `isValidAnnotationKey`, `isValidAnnotationValue`, `isValidTag`) come from `makeValidator(overrides)` and can be overridden via `CatalogBuilder.setFieldFormatValidators(...)` or, in the new backend system, `catalogModelExtensionPoint.setFieldValidators(...)`.
+- `@backstage/catalog-model` exports `entityKindSchemaValidator<T>(schema)` (returns `false` only on a `kind`/`apiVersion` mismatch and throws on any other schema violation) and `entityEnvelopeSchemaValidator()` (envelope presence and shape), both built on `Ajv` draft-07. The field-format validators (`isValidApiVersion`, `isValidKind`, `isValidEntityName`, `isValidNamespace`, `isValidLabelKey`, `isValidLabelValue`, `isValidAnnotationKey`, `isValidAnnotationValue`, `isValidTag`) come from `makeValidator(overrides)` and can be overridden via `CatalogBuilder.setFieldFormatValidators(...)` or, in the new backend system, `catalogModelExtensionPoint.setFieldValidators(...)`.
 - A processor signals a broken entity by emitting `generalError`/`inputError` through `processingResult`; the entity is marked invalid and dropped while the prior error-free version is retained, and the errors surface in the entity `status` and in the validate-entity `errors[]`.
 - Validation happens in three stages: **ingestion** (coarse: `kind`, `metadata.name`, `metadata.namespace` presence only), **processing** (full schema + policy + field-format + processor emission), and **stitching**. A descriptor that passes ingestion can still be rejected at processing time.
 
@@ -291,7 +291,7 @@ The 2026-06-07 research pass (146 sources over `backstage.io/docs` and the `back
 - <https://backstage.io/docs/features/kubernetes/configuration/>
 - <https://pagerduty.github.io/backstage-plugin-docs/getting-started/backstage/>
 
-**Onboarding, configuration, integrations**
+**Catalog onboarding, configuration, integrations**
 
 - <https://backstage.io/docs/features/software-catalog/configuration>
 - <https://backstage.io/docs/features/software-catalog/external-integrations>
