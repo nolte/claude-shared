@@ -154,7 +154,7 @@ def split_sentences(text: str) -> list[str]:
     # A line break after terminal punctuation is a hard boundary (structural
     # lines are terminated in strip_markdown), regardless of what case the
     # next line starts with (spec §Word and sentence segmentation).
-    protected = re.sub(r"(?<=[.!?;])[ \t]*\n\s*", _BREAK, protected)
+    protected = re.sub(r"(?<=[.!?;:])[ \t]*\n\s*", _BREAK, protected)
     # A boundary is .!? — or a colon introducing an independent clause —
     # followed by whitespace and an opening uppercase letter/quote, or EOL.
     boundary = re.compile(r'([.!?]|:(?=\s+[A-ZÄÖÜ]))\s+(?=[A-ZÄÖÜ"\'(\[]|$)')
