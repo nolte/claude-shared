@@ -14,7 +14,7 @@ Each file pairs every best-practice claim with **at least two independent author
 
 These files were authored as **input** to `spec/frontend/webview-ui-optimization/`, which the `webview-ui-optimize` skill operationalises (and which the `webview-ui-expert` agent uses for cross-file deep reviews of named frontend targets).
 
-The `.audits/` location was chosen for proximity to the consuming spec, not because the material represents actionable findings for `claude-shared`. The `claude-shared` repository ships no browser-rendered frontend — these notes apply to consumer projects (`kamerplanter`, `kamerplanter-ha`, future webview-ui-bearing repos) that adopt the spec.
+This folder lives inside the spec topic it feeds (relocated 2026-07-24 from `.audits/webview-ui-expert/`, where its research nature was routinely mistaken for a disposable findings report). The `claude-shared` repository ships no browser-rendered frontend — these notes apply to consumer projects (`kamerplanter`, `kamerplanter-ha`, future webview-ui-bearing repos) that adopt the spec.
 
 ## What this folder is **not**
 
@@ -22,11 +22,13 @@ The `.audits/` location was chosen for proximity to the consuming spec, not beca
 - Not a `spec-drift-audit` report (see `.audits/spec-drift/`).
 - Not a `portfolio-inflight-triage` finding set (see `.audits/portfolio-inflight/`).
 - Not an action plan with severity ratings, deadlines, or owners.
+- Not a spec topic of its own: the files are English-only evidence notes, deliberately outside the bilingual `{en,de}.md` contract and the Vale gate (which lints only `spec/**/en.md`).
 
-If you are looking for actionable claude-shared audit findings, browse the other `.audits/<audit-type>/` folders instead.
+If you are looking for actionable claude-shared audit findings, browse the `.audits/<audit-type>/` folders instead.
 
 ## Lifecycle
 
-- **Source of truth**: this folder. Updates land here as research material evolves.
+- **Source of truth**: this folder. Updates land here as research material evolves; post-publication corrections go into each file's dated "Currency addendum" section.
 - **Consumed by**: `spec/frontend/webview-ui-optimization/{en,de}.md` (when the spec lifts a rule from research into a normative requirement).
+- **Shipped mirror**: `plugins/nolte-engineering/skills/webview-ui-optimize/references/research-notes/` bundles a copy for plugin consumers; refresh both together.
 - **Refreshed**: when the underlying library versions in scope change materially (React major bump, Vite major bump, MUI major bump, …) or when WCAG / ARIA APG normative guidance updates.

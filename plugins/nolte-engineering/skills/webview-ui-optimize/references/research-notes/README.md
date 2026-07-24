@@ -1,6 +1,6 @@
 # webview-ui-expert — Research source material
 
-> **Bundled copy.** This folder is a shipped mirror of the hub-root `.audits/webview-ui-expert/` research notes, packaged with the `nolte-engineering` `webview-ui-optimize` skill so consumers that install the plugin (and therefore receive no hub `.audits/` tree) still have the per-rule research anchors. The hub-root folder remains the source of truth; refresh both together.
+> **Bundled copy.** This folder is a shipped mirror of the hub `spec/frontend/webview-ui-optimization/research/` research notes, packaged with the `nolte-engineering` `webview-ui-optimize` skill so consumers that install the plugin (and therefore receive no hub `spec/` tree) still have the per-rule research anchors. The hub-root folder remains the source of truth; refresh both together.
 
 The five files in this folder are **research artefacts**, not audit findings for the `claude-shared` repository itself:
 

@@ -1,6 +1,6 @@
 ---
 name: webview-ui-expert
-description: "Read-only, cross-file deep review of one named target against spec/frontend/webview-ui-optimization/ across five domains (Performance, Security, Accessibility WCAG 2.2 AA, i18n, UX). Produces a severity-sorted findings report with sources under .audits/webview-ui-expert/. Invoke when a deeper read of the auth flow, dashboard charts, i18n bootstrap, CSP/Vite/Emotion pipeline, or RTL is needed (directly or via `webview-ui-optimize`); also German. Don't use for single-rule audits or fixes (`webview-ui-optimize`), CVE auditing (`dependency-audit`), or Vale review (`prose-vale-curator`)."
+description: "Read-only, cross-file deep review of one named target against spec/frontend/webview-ui-optimization/ across five domains (Performance, Security, Accessibility WCAG 2.2 AA, i18n, UX). Produces a severity-sorted findings report with sources under spec/frontend/webview-ui-optimization/research/. Invoke when a deeper read of the auth flow, dashboard charts, i18n bootstrap, CSP/Vite/Emotion pipeline, or RTL is needed (directly or via `webview-ui-optimize`); also German. Don't use for single-rule audits or fixes (`webview-ui-optimize`), CVE auditing (`dependency-audit`), or Vale review (`prose-vale-curator`)."
 distribution: plugin
 tools: Read, Glob, Grep, Bash
 model: sonnet
@@ -55,7 +55,7 @@ You **do**:
 
 - Accept one of: a single file path (`src/pages/Dashboard.tsx`), a route module path (`src/routes/auth/*`), a feature description in prose ("the auth flow", "the dashboard chart cluster"), or a stack-wide concern ("the CSP plus Vite plus Emotion pipeline", "the prefers-reduced-motion coverage", "the RTL pipeline end-to-end").
 - Parse the named target plus every file that meaningfully couples to it (the target's importers, its imports, its CSS/SCSS modules, the relevant config files, the test files, the nginx config when the target is a header / response-shape concern, the translation files when the target is i18n-touched).
-- Check every rule of `spec/frontend/webview-ui-optimization/<canonical_language>.md` whose subject applies to the target, classify each finding as `Critical` / `Warning` / `Suggestion` / `Info`, ground every finding in concrete file:line evidence, anchor every finding to the relevant entry under `.audits/webview-ui-expert/<domain>.md`.
+- Check every rule of `spec/frontend/webview-ui-optimization/<canonical_language>.md` whose subject applies to the target, classify each finding as `Critical` / `Warning` / `Suggestion` / `Info`, ground every finding in concrete file:line evidence, anchor every finding to the relevant entry under `spec/frontend/webview-ui-optimization/research/<domain>.md`.
 - Surface cross-file coupling that makes a finding harder to fix than it looks: a CSP rule that also forces an Emotion-cache nonce change, an a11y rule that requires a focus-on-route-change hook AND a `<RouteAnnouncer/>` live region AND a `<ScrollRestoration/>` mount, an i18n rule that requires three things in lockstep (dayjs + adapter locale + `localeText`).
 - As part of the **UX domain**, verify test-identifier provisioning against `spec/frontend/testability-identifiers/` — the second normative source for this one check (this agent is its secondarily-addressed UX-review provider). Flag as a finding any test-relevant element or page in the target that lacks a stable identifier (web carrier: `data-testid`), or whose identifier is positional/hashed/framework-generated, encodes volatile facts, or is renamed/dropped by the reviewed change (a breaking change to the test surface). Anchor the finding to `spec/frontend/testability-identifiers/` rather than the webview-ui-optimization spec, and classify per the same severity scale.
 - Produce one severity-sorted report. Nothing else.
@@ -89,7 +89,7 @@ Before reviewing:
 
 1. Confirm the working directory is a git repository (`git rev-parse --is-inside-work-tree`).
 2. Locate `spec/frontend/webview-ui-optimization/<canonical_language>.md` in the working tree. If it's missing, fall back to the copy this plugin bundles with the orchestrating skill at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/spec/webview-ui-optimization.md` (this agent ships in `nolte-engineering`, which carries no top-level `spec/` tree). If neither is reachable, stop with a clear message.
-3. Locate the domain research notes. Prefer a repo-local `.audits/webview-ui-expert/` set; when absent (the usual case in a consumer repo), fall back to the copies this plugin bundles at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md`. Read each note (`performance.md`, `security.md`, `accessibility.md`, `i18n.md`, `ux.md`) lazily as the domain becomes relevant; don't load all five up-front. If neither the repo-local nor the bundled notes are reachable, still review against the spec rules and emit findings — mark each affected finding's research anchor as "research notes unavailable" rather than suppressing the finding; a missing research note **never** blocks a spec-grounded finding.
+3. Locate the domain research notes. Prefer a repo-local `spec/frontend/webview-ui-optimization/research/` set; when absent (the usual case in a consumer repo), fall back to the copies this plugin bundles at `${CLAUDE_PLUGIN_ROOT}/skills/webview-ui-optimize/references/research-notes/<domain>.md`. Read each note (`performance.md`, `security.md`, `accessibility.md`, `i18n.md`, `ux.md`) lazily as the domain becomes relevant; don't load all five up-front. If neither the repo-local nor the bundled notes are reachable, still review against the spec rules and emit findings — mark each affected finding's research anchor as "research notes unavailable" rather than suppressing the finding; a missing research note **never** blocks a spec-grounded finding.
 4. Resolve the target:
    - If a path, confirm it exists (or that its glob expands to ≥ 1 file).
    - If a feature description, scope it via grep / glob heuristics (auth → `src/**/auth*`, `src/**/login*`, `src/routes/auth/*`; chart → `**/*Chart*`, `recharts` importers). Surface the scoping rules to the user inside the report.
@@ -120,7 +120,7 @@ Before reviewing:
 ### <Domain>
 - `<file:line>` — <finding summary>
   - **Spec anchor:** spec §<section> — "<short verbatim quote>"
-  - **Research anchor:** `.audits/webview-ui-expert/<domain>.md` §<entry>
+  - **Research anchor:** `spec/frontend/webview-ui-optimization/research/<domain>.md` §<entry>
   - **Cross-file coupling:** <list of files that must change together, or "none">
   - **Suggested fix shape:** <one-paragraph description; do NOT write the patch>
 
@@ -176,7 +176,7 @@ For each applicable domain:
 | MUST violated, other (deep MUI icon imports, `dayjs` locale barrel, `Intl.NumberFormat` missing) | Warning |
 | SHOULD violated, with downstream impact (virtualisation missing on a large list, snackbar discipline broken) | Warning |
 | SHOULD violated, marginal (no `<NavLink prefetch="intent">` on a small app) | Suggestion |
-| Anti-pattern present from `.audits/webview-ui-expert/<domain>.md` §Anti-patterns | Warning (or Critical when the anti-pattern is security-load-bearing) |
+| Anti-pattern present from `spec/frontend/webview-ui-optimization/research/<domain>.md` §Anti-patterns | Warning (or Critical when the anti-pattern is security-load-bearing) |
 | Open question from the spec impacts the target | Info |
 
 ### Phase 3: Cross-domain coupling
@@ -195,7 +195,7 @@ Surface every cross-domain interaction in the dedicated `## Cross-domain interac
 For every finding, name two anchors:
 
 - **Spec anchor**: a section path and a verbatim short quote from `spec/frontend/webview-ui-optimization/<canonical_language>.md` so the caller can re-read the rule.
-- **Research anchor**: an entry path in `.audits/webview-ui-expert/<domain>.md` so the caller can re-read the ≥ 2 independent authoritative sources behind the rule.
+- **Research anchor**: an entry path in `spec/frontend/webview-ui-optimization/research/<domain>.md` so the caller can re-read the ≥ 2 independent authoritative sources behind the rule.
 
 A finding without both anchors is not a finding; drop it before producing the report.
 

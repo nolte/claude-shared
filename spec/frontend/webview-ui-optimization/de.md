@@ -9,7 +9,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 ## Ziele
 
 - Eine Beitragende an einem Portfolio-Frontend kann eine beliebige Seite oder Komponente gegen eine Spec auditieren und normative MUSS/SOLLTE/DARF-NICHT-Regeln für Performance, Security, Accessibility, Internationalisierung und UX finden.
-- Jede normative Regel ist durch ≥ 2 unabhängige autoritative Quellen (Vendor-Docs, W3C-/WHATWG-Specs, OWASP-Cheat-Sheets, MDN, WebAIM, web.dev, Nielsen Norman Group) verankert, festgehalten im Research-Audit-Trail unter `.audits/webview-ui-expert/`.
+- Jede normative Regel ist durch ≥ 2 unabhängige autoritative Quellen (Vendor-Docs, W3C-/WHATWG-Specs, OWASP-Cheat-Sheets, MDN, WebAIM, web.dev, Nielsen Norman Group) verankert, festgehalten im Research-Audit-Trail unter `spec/frontend/webview-ui-optimization/research/`.
 - Die Regeln sind stack-spezifisch, wo der Stack festliegt (React 19, Vite 8, MUI v9, RTK, react-router v7, react-hook-form, react-i18next, notistack, Recharts, nginx), und plattformgenerisch sonst (HTML, CSS, Browser-APIs).
 - Die Spec ist die einzige Quelle der Wahrheit, die der `webview-ui-optimize`-Skill (Audit-+-Patch-Workflow) und der `webview-ui-expert`-Agent (read-only Tiefen-Reviewer) konsumieren.
 - Drift zwischen Spec und Ziel-Repository ist erkennbar: Der Skill kann eine Zeile pro Regel mit `pass` / `fail` / `n/a` produzieren.
@@ -306,7 +306,7 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 - **MUSS** `vitest-axe`-Smoke-Tests, ein Vite-+-nginx-Static-Asset-Audit (immutable Headers, Source-Map-Absenz), einen Mozilla-HTTP-Observatory-Check und einen Core-Web-Vitals-RUM-Snapshot ins Release-Gate verdrahten; ein Release **DARF NICHT** ausgeliefert werden, solange eines davon rot ist.
 - **SOLLTE** das Vitest-`environment` per Default auf `node` setzen und DOM-abhängige Dateien über eine per-File-Kommentar-Direktive in `jsdom` / `happy-dom` opt-in nehmen (Test-Assertion-Inhalte bleiben per Nicht-Ziele außer Scope; diese Regel deckt nur Infrastruktur).
-- **MUSS** den Research-Audit-Trail unter `.audits/webview-ui-expert/<domain>.md` synchron mit dieser Spec halten; jede normative Regel oben ist mindestens an einen Eintrag dort verankert, der seinerseits ≥ 2 unabhängige autoritative Quellen zitiert.
+- **MUSS** den Research-Audit-Trail unter `spec/frontend/webview-ui-optimization/research/<domain>.md` synchron mit dieser Spec halten; jede normative Regel oben ist mindestens an einen Eintrag dort verankert, der seinerseits ≥ 2 unabhängige autoritative Quellen zitiert.
 
 ## Akzeptanzkriterien
 
@@ -331,10 +331,10 @@ Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schl
 
 ## Quellen
 
-Jede normative Regel oben ist an die per-Domäne-Research-Notes unter `.audits/webview-ui-expert/` verankert; jeder Eintrag dort zitiert mindestens zwei unabhängige autoritative Quellen. Regeln, die explizit als Projekt-Konventionen markiert sind, sind bewusste Hausregeln und von der Zwei-Quellen-Verankerung ausgenommen. Nachträgliche Aktualitäts-Korrekturen (Recharts-3-`accessibilityLayer`-Default, Vite-8-`output.codeSplitting`, Zod-4-Fehler-API, MUI-`Dialog`-Implementierung, Trusted-Types- und Popover-API-Browser-Support, RFC 9110) sind im datierten Aktualitäts-Nachtrag jeder Research-Datei festgehalten (zuletzt: 2026-07-24):
+Jede normative Regel oben ist an die per-Domäne-Research-Notes unter `spec/frontend/webview-ui-optimization/research/` verankert; jeder Eintrag dort zitiert mindestens zwei unabhängige autoritative Quellen. Regeln, die explizit als Projekt-Konventionen markiert sind, sind bewusste Hausregeln und von der Zwei-Quellen-Verankerung ausgenommen. Nachträgliche Aktualitäts-Korrekturen (Recharts-3-`accessibilityLayer`-Default, Vite-8-`output.codeSplitting`, Zod-4-Fehler-API, MUI-`Dialog`-Implementierung, Trusted-Types- und Popover-API-Browser-Support, RFC 9110) sind im datierten Aktualitäts-Nachtrag jeder Research-Datei festgehalten (zuletzt: 2026-07-24):
 
-- `.audits/webview-ui-expert/performance.md` — 27 Praktiken + 9 Anti-Patterns (web.dev, react.dev, vitejs.dev, mui.com, redux.js.org, reactrouter.com, react-hook-form.com, MDN, nginx.org, day.js.org, axios-http.com, vitest.dev, RFC 8246).
-- `.audits/webview-ui-expert/security.md` — 28 Praktiken (OWASP Cheat Sheets, MDN, W3C Trusted Types, web.dev, Mozilla HTTP Observatory, Vendor-Docs).
-- `.audits/webview-ui-expert/accessibility.md` — 24 Praktiken (W3C WAI WCAG 2.2, ARIA Authoring Practices Guide, MDN, WebAIM, Deque, A11y Project, Vendor-Docs).
-- `.audits/webview-ui-expert/i18n.md` — 26 Praktiken (W3C i18n WG, Unicode CLDR / TR10, ICU, MDN, Google Search Central, RFC 7231, Vendor-Docs).
-- `.audits/webview-ui-expert/ux.md` — 30 Praktiken (Nielsen Norman Group, web.dev, MDN, W3C, WHATWG, Material Design, Apple HIG, Vendor-Docs).
+- `spec/frontend/webview-ui-optimization/research/performance.md` — 27 Praktiken + 9 Anti-Patterns (web.dev, react.dev, vitejs.dev, mui.com, redux.js.org, reactrouter.com, react-hook-form.com, MDN, nginx.org, day.js.org, axios-http.com, vitest.dev, RFC 8246).
+- `spec/frontend/webview-ui-optimization/research/security.md` — 28 Praktiken (OWASP Cheat Sheets, MDN, W3C Trusted Types, web.dev, Mozilla HTTP Observatory, Vendor-Docs).
+- `spec/frontend/webview-ui-optimization/research/accessibility.md` — 24 Praktiken (W3C WAI WCAG 2.2, ARIA Authoring Practices Guide, MDN, WebAIM, Deque, A11y Project, Vendor-Docs).
+- `spec/frontend/webview-ui-optimization/research/i18n.md` — 26 Praktiken (W3C i18n WG, Unicode CLDR / TR10, ICU, MDN, Google Search Central, RFC 7231, Vendor-Docs).
+- `spec/frontend/webview-ui-optimization/research/ux.md` — 30 Praktiken (Nielsen Norman Group, web.dev, MDN, W3C, WHATWG, Material Design, Apple HIG, Vendor-Docs).
