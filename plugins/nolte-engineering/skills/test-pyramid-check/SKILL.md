@@ -34,7 +34,7 @@ Also triggers on equivalent German-language requests, including "Testpyramide pr
 
 ### 1. Read the spec and detect the stack
 
-Read `spec/project/test-pyramid-foundation/` (the closed functional-tier taxonomy) and `spec/project/e2e-test-automation/` (the E2E disciplines). Detect the project's stack from its manifests and layout (e.g. `pyproject.toml` + `tests/`, `package.json` + `*.test.ts`, `go.mod` + `*_test.go`) so you glob the right paths for each tier. Read the project's declared coverage targets where they live (CI config, `pyproject.toml` `[tool.coverage]`, a project test spec) — do not assume a fixed percentage.
+Read `spec/project/test-pyramid-foundation/` (the closed functional-tier taxonomy), `spec/project/e2e-test-automation/` (the E2E disciplines), and `spec/project/test-falsifiability/` (the T-categories behind operation 5). Detect the project's stack from its manifests and layout (e.g. `pyproject.toml` + `tests/`, `package.json` + `*.test.ts`, `go.mod` + `*_test.go`) so you glob the right paths for each tier. Read the project's declared coverage targets where they live (CI config, `pyproject.toml` `[tool.coverage]`, a project test spec) — do not assume a fixed percentage.
 
 ### 2. Locate each tier (in parallel)
 
