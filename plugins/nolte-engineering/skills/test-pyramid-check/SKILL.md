@@ -34,7 +34,7 @@ Also triggers on equivalent German-language requests, including "Testpyramide pr
 
 ### 1. Read the spec and detect the stack
 
-Read `spec/project/test-pyramid-foundation/` (the closed functional-tier taxonomy) and `spec/project/e2e-test-automation/` (the E2E disciplines). Detect the project's stack from its manifests and layout (e.g. `pyproject.toml` + `tests/`, `package.json` + `*.test.ts`, `go.mod` + `*_test.go`) so you glob the right paths for each tier. Read the project's declared coverage targets where they live (CI config, `pyproject.toml` `[tool.coverage]`, a project test spec) — do not assume a fixed percentage.
+Read `spec/project/test-pyramid-foundation/` (the closed functional-tier taxonomy), `spec/project/e2e-test-automation/` (the E2E disciplines), and `spec/project/test-falsifiability/` (the T-categories behind operation 5). Detect the project's stack from its manifests and layout (e.g. `pyproject.toml` + `tests/`, `package.json` + `*.test.ts`, `go.mod` + `*_test.go`) so you glob the right paths for each tier. Read the project's declared coverage targets where they live (CI config, `pyproject.toml` `[tool.coverage]`, a project test spec) — do not assume a fixed percentage.
 
 ### 2. Locate each tier (in parallel)
 
@@ -66,7 +66,18 @@ If an E2E tier exists for `$ARGUMENTS`, check it against the spec's disciplines 
 
 Flag violations by file; for a deep per-line review or repairs, hand off to `e2e-test-reviewer`.
 
-### 5. Report
+### 5. Flag falsifiability suspects
+
+Per `spec/project/test-falsifiability/`, a tier whose tests can't fail isn't coverage. Sweep each located tier at grep level (not a deep review — that is the owning tier reviewer's falsifiability dimension):
+
+- Empty exception handlers in test files — an `except`/`catch` whose body is only `pass`/empty (T1)
+- Tautological assertions — `assert True`, comparisons true for every value such as `>= 0` on a count or length (T2)
+- Assertions consisting solely of a negative ("no error shown") with no paired positive assertion (T2)
+- Duplicate selector values under differently named locator constants in E2E page objects (T6)
+
+Flag each hit by file with its T-category, exclude flagged tests from every tier's effective count in the report, and route each hit to the owning tier reviewer for the graded review.
+
+### 6. Report
 
 ```markdown
 # Test pyramid review: {feature/module}
@@ -86,6 +97,9 @@ Flag violations by file; for a deep per-line review or repairs, hand off to `e2e
 ## E2E discipline
 {page objects / waits / screenshots / markers / TC-IDs — per check, with file refs}
 
+## Falsifiability suspects
+{per tier: file + T-category per spec/project/test-falsifiability/, or "none found"; flagged tests are excluded from the Tier overview's effective counts and routed to the owning tier reviewer}
+
 ## Gaps (prioritised)
 {numbered list of missing tiers / ungated coverage / discipline violations}
 
@@ -98,8 +112,8 @@ Flag violations by file; for a deep per-line review or repairs, hand off to `e2e
 1. Read and report only — never scaffold, edit, or run tests. Scaffolding is `e2e-test-generator`; repair is `e2e-test-reviewer`; running the gate is `quality-gate`.
 2. A non-applicable tier is `n/a` with a reason, never a gap — don't demand an API tier from a system with no API.
 3. Report the project's *declared* coverage target and whether it is enforced; never invent a percentage.
-4. Keep the E2E check at grep/structure level; route deep review and fixes to `e2e-test-reviewer`.
-5. When `spec/project/test-pyramid-foundation/` (tier taxonomy / completeness) or `spec/project/e2e-test-automation/` (E2E discipline) and this skill disagree, the spec wins; this skill needs the update.
+4. Keep the E2E check at grep/structure level; route deep review and fixes to `e2e-test-reviewer`. The falsifiability sweep is grep-level too: suspects route to the owning tier reviewer for the named-dimension grading, and a flagged suspect never counts toward a tier's effective coverage.
+5. When `spec/project/test-pyramid-foundation/` (tier taxonomy / completeness), `spec/project/e2e-test-automation/` (E2E discipline), or `spec/project/test-falsifiability/` (falsifiability sweep) and this skill disagree, the spec wins; this skill needs the update.
 
 ## Why this is a skill, not an agent
 
