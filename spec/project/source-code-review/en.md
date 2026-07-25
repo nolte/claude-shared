@@ -66,6 +66,8 @@ The reviewer **MUST** assess every in-scope file against the following dimension
 
 ### Language profiles
 
+A **surface extension** may add dimensions on top of this core where a review subject carries concerns no language profile can express. `spec/frontend/source-code-review/` is the first: for browser-rendered code it overlays frontend dimensions (F1–F11) and a framework-profile axis onto D1–D10. An extension inherits this spec's tooling-first rule, severity vocabulary, report contract, and reviewer contract unchanged, never restates a core rule, and tags each finding with exactly one dimension ID.
+
 Every language profile **MUST** define, and a reviewer applies as one unit:
 
 - **Tooling baseline:** the linter / formatter / type-checker set the tooling-first rule defers to, and what "standard strictness" means
@@ -126,8 +128,9 @@ Every language profile **MUST** define, and a reviewer applies as one unit:
 - [R6] Mechanical gate the tooling-first rule defers to: `spec/project/quality-gate/`
 - [R7] Agent authoring rules and read-only tool discipline: `spec/claude/agent-management/`
 - [R8] Skill-vs-agent decision rule: `spec/claude/skill-vs-agent/`
+- [R9] Frontend surface extension (dimensions F1–F11, framework profiles, delimitation from the UX review): `spec/frontend/source-code-review/`
 
 ## Open Questions
 
 - Should the D4 domain-duplication dimension gain a cross-repository mode (duplication across portfolio members), or stay repository-local until the portfolio-inherited spec layer ships a cross-repo resolver?
-- Which second language profile (TypeScript is the likeliest candidate) should be added first, and does it live in this spec or in a sibling profile document once profile count grows?
+- Which second **language** profile should be added first, and does it live in this spec or in a sibling profile document once profile count grows? The browser surface is now covered by the frontend extension [R9], which carries its own framework profiles, so the open slot is server-side TypeScript—a repository running a Node service plus a browser client currently gets the extension for its client and no profile for its server.

@@ -3,6 +3,12 @@
 # v0.1.17. This repository-local override is therefore intentionally empty;
 # add a new term here only when it is not yet accepted upstream, then PR it to
 # nolte/vale-style and remove it here once released (see spec/project/prose-style).
+#
+# Frontend review vocabulary (added with spec/frontend/source-code-review/;
+# upstream PR candidates for the technical vocabulary of nolte/vale-style).
+[Cc]omposable(s)?
+[Mm]emoiz(e|es|ed|ing|ation)
+[Uu]nmount(s|ed|ing)?
 Adzic
 Wynne
 Gojko

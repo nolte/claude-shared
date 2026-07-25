@@ -66,6 +66,8 @@ Der Reviewer **MUSS** jede Datei im Scope gegen die folgenden Dimensionen prüfe
 
 ### Sprachprofile
 
+Eine **Oberflächen-Erweiterung** darf diesem Kern Dimensionen hinzufügen, wo ein Review-Gegenstand Belange trägt, die kein Sprachprofil ausdrücken kann. `spec/frontend/source-code-review/` ist die erste: Für browsergerenderten Code legt sie Frontend-Dimensionen (F1–F11) und eine Framework-Profil-Achse über D1–D10. Eine Erweiterung übernimmt die Tooling-first-Regel, das Schweregrad-Vokabular, den Report-Vertrag und den Reviewer-Vertrag dieser Spec unverändert, wiederholt nie eine Kern-Regel und taggt jedes Finding mit genau einer Dimensions-ID.
+
 Jedes Sprachprofil **MUSS** definieren, und ein Reviewer wendet es als Einheit an:
 
 - **Tooling-Baseline:** die Linter-/Formatter-/Type-Checker-Menge, an die die Tooling-first-Regel delegiert, und was „Standard-Strictness" bedeutet
@@ -126,8 +128,9 @@ Jedes Sprachprofil **MUSS** definieren, und ein Reviewer wendet es als Einheit a
 - [R6] Mechanisches Gate, an das die Tooling-first-Regel delegiert: `spec/project/quality-gate/`
 - [R7] Agent-Autorenregeln und Read-only-Tool-Disziplin: `spec/claude/agent-management/`
 - [R8] Skill-vs-Agent-Entscheidungsregel: `spec/claude/skill-vs-agent/`
+- [R9] Frontend-Oberflächen-Erweiterung (Dimensionen F1–F11, Framework-Profile, Abgrenzung zum UX-Review): `spec/frontend/source-code-review/`
 
 ## Offene Fragen
 
 - Soll die D4-Fachduplizierungs-Dimension einen Cross-Repository-Modus erhalten (Duplizierung über Portfolio-Mitglieder hinweg) oder repository-lokal bleiben, bis der Portfolio-inherited-Spec-Layer einen Cross-Repo-Resolver liefert?
-- Welches zweite Sprachprofil (TypeScript ist der wahrscheinlichste Kandidat) kommt zuerst, und lebt es in dieser Spec oder in einem Schwester-Profildokument, sobald die Profilzahl wächst?
+- Welches zweite **Sprach**profil kommt zuerst, und lebt es in dieser Spec oder in einem Schwester-Profildokument, sobald die Profilzahl wächst? Die Browser-Oberfläche deckt inzwischen die Frontend-Erweiterung [R9] mit eigenen Framework-Profilen ab, sodass der offene Platz serverseitiges TypeScript ist — ein Repository mit Node-Service und Browser-Client erhält derzeit die Erweiterung für seinen Client und kein Profil für seinen Server.
