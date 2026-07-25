@@ -153,6 +153,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** invent outcomes, audience entries, or sprint numbers inline. Missing outcomes route to the goals workflow; missing audiences route to `audience-identify`; non-existent sprint numbers are refused.
 - **Never** assign an `R-<n>` ID that has already existed in the file's history (even if currently deleted). IDs are monotonic and never reused.
 - **Never** allow `proposed → done` or any transition back from `cancelled`. Direct `proposed → done` is forbidden because every done item must have been actively worked on.
+- **Never** apply any status transition without first re-reading the item's current on-disk `status` and verifying it is the legal predecessor of the requested target; a file moved out-of-band is refused, and an operator-decided deviation is recorded as a dated deviation note in the item's body before the write (R-11 precedent, #498).
 - **Never** flip `mvp: true → false` after the item entered `status: active`. The asymmetry is mandated by `spec/project/mission/`.
 - **Never** flip `mvp: false → true` after `mvp_status` reached `stabilised`. Surface a verbatim error citing the mission spec.
 - **Never** retarget an item to a `closed` or `cancelled` sprint. The valid post-terminal values are `null` or a `planned` sprint number.

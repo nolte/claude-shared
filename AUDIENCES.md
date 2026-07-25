@@ -11,6 +11,12 @@ spec/project/docs-audience-tracks/ §Audience-to-track mapping. The portfolio
 baseline mapping is applied (user → user-docs; contributor / operator /
 release-manager / governing → developer-docs); the `audience:` frontmatter
 values in `docs/<lang>/` pages reference the `id` listed alongside each entry.
+
+Re-run 2026-07-25 over the four-plugin bounded context (2026-Q3 audit finding
+`audience-identification.surface-drift-four-plugins`, #498): per-plugin
+consumer audiences added (the plugin splits are justified by different
+consumer audiences per CLAUDE.md), plus the previously undeclared surfaces
+portfolio/ and project/{blog-triggers,requirements,portfolio.yml}.
 -->
 
 ## Bounded context
@@ -25,7 +31,9 @@ values in `docs/<lang>/` pages reference the `id` listed alongside each entry.
 
 - External surfaces: the plugin manifest + marketplace entry (install path), the slash commands (e.g. `/nolte-shared:spec`), the agent definitions, and the published MkDocs site (including the auto-generated skill / agent catalog under `docs/<lang>/skills/` and `docs/<lang>/agents/` and the `docs/lifecycle.md` development-lifecycle page).
 - The repo itself, the `develop`/`main` branches, and the CI workflows are part of the context.
-- The planning-suite artefacts under `project/` (`mission.md`, `goals.md`, `roadmap.md`, `features/`, `sprints/`) are internal surface — they describe how the plugin governs its own evolution and are read by downstream specs that reference the planning suite (`mission`, `roadmap`, `sprint`, `feature`, `release-skill-layer`).
+- The portfolio-level data surface: `portfolio/` (`tech-stack.yml`, `aggregate.yml`, `schemas/`) plus this repo's own `project/portfolio.yml` manifest — collected from and rendered for the portfolio member repositories via `portfolio-audit` and the docs Portfolio section.
+- The cross-repo blog-trigger surface: `project/blog-triggers/` — written here on feature `in_progress → done` events and consumed by `nolte/blog` per `spec/project/blog-author-trigger/`.
+- The planning-suite artefacts under `project/` (`mission.md`, `goals.md`, `roadmap.md`, `features/`, `sprints/`, `requirements/`) are internal surface — they describe how the plugin governs its own evolution and are read by downstream specs that reference the planning suite (`mission`, `roadmap`, `sprint`, `feature`, `release-skill-layer`).
 
 **What is explicitly *outside***:
 
@@ -44,6 +52,18 @@ peripheral). Mark a whole category as `none — <reason>` when it does not apply
 
 - **Downstream Claude Code users in portfolio projects** — _id_: `downstream-user` · _category_: direct-consumer · _track_: `user-docs` · _surface_: plugin slash commands (e.g. `/nolte-shared:spec`, `/nolte-claude-dev:skill-management`, `/nolte-shared:pull-request-create`) and sub-agents · _expects_: consistent, spec-compliant workflows without per-repo reimplementation; stable command names; reproducible outputs · _status_: `assumed` · _criticality_: primary
   - Open questions: Which repos / which people are using this plugin in practice today?
+
+- **Code-repository adopters of `nolte-engineering`** — _id_: `engineering-consumer` · _category_: direct-consumer · _track_: `user-docs` · _surface_: `/nolte-engineering:*` slash commands and agents (full-stack implementation, test-tier and test-cycle suite, quality gate, frontend/web-UI optimization, code-security / dependency / license auditing), installed on top of `nolte-shared` · _expects_: the engineering slice works in code-bearing repos without pulling media or authoring weight; non-code repos can take `nolte-shared` alone · _status_: `assumed` · _criticality_: primary
+  - Open questions: none
+
+- **Media-capable adopters of `nolte-media`** — _id_: `media-consumer` · _category_: direct-consumer · _track_: `user-docs` · _surface_: `/nolte-media:*` image-generation and media-processing skills; requires external credentials and binaries (Cloudflare / Gemini / Pollinations API access, `vtracer`) that most consumers neither have nor want — the runtime/dependency contract that justifies the split · _expects_: clear preflight failure when credentials/binaries are missing; brand conventions applied consistently · _status_: `assumed` · _criticality_: secondary
+  - Open questions: none
+
+- **Skill/agent-authoring adopters of `nolte-claude-dev`** — _id_: `authoring-consumer` · _category_: direct-consumer · _track_: `user-docs` · _surface_: `/nolte-claude-dev:*` (skill-management, skill-review, agent-review, skills-agents-sweep, skill-agent-catalog-apply) plus the `claude-plugin-developer` agent, installed on top of `nolte-shared` by the minority of consumers who author skills/agents (F-18 flip 2026-07-22) · _expects_: authoring machinery stays out of the majority's skill-list weight; the governing `spec/claude/` corpus stays repo-wide, not plugin-shipped · _status_: `assumed` · _criticality_: secondary
+  - Open questions: none
+
+- **`nolte/blog` as blog-trigger consumer** — _id_: `blog-consumer` · _category_: direct-consumer · _track_: `developer-docs` · _surface_: `project/blog-triggers/` records written on feature `in_progress → done` events, consumed cross-repo per `spec/project/blog-author-trigger/` · _expects_: trigger records conform to the contract; no cross-repo writes from this side beyond the declared rule · _status_: `assumed` · _criticality_: peripheral
+  - Open questions: none
 
 - **Plugin author dogfooding inside this repo** — _id_: `dogfooding-author` · _category_: direct-consumer · _track_: `developer-docs` (override of portfolio baseline: dogfooding is a contributor-class surface, not an end-user surface) · _surface_: `claude --plugin-dir .`, `/reload-plugins`, local skill invocation while developing; planning-suite skills (`/nolte-shared:mission-define`, `/nolte-shared:mission-revise`, `/nolte-shared:roadmap-init`, `/nolte-shared:roadmap-plan`, `/nolte-shared:roadmap-refine`, `/nolte-shared:sprint-plan`, `/nolte-shared:sprint-execute`, `/nolte-shared:sprint-review`, `/nolte-shared:feature-decompose`, `/nolte-shared:audience-identify`) applied to `claude-shared` itself, mutating `project/mission.md`, `project/goals.md`, `project/roadmap.md`, `project/features/`, `project/sprints/`, and `AUDIENCES.md` in-repo · _expects_: changes to skills/agents/specs become callable immediately without reinstall; skills also function against this repo itself (e.g. running `audience-identify` on `nolte-shared`); the planning-suite-on-self loop stays self-consistent across spec revisions · _status_: `confirmed` (validated by the plugin author dogfooding through sprint 0001 on 2026-05-11) · _criticality_: primary
   - Open questions: none
@@ -91,8 +111,11 @@ reasoned exclusion:
   **`downstream-user`** (direct consumer, _track_: `user-docs`) — the Claude Code
   users in portfolio projects who invoke the plugin's slash commands — and, at
   one remove, by **`downstream-end-user`** (indirect, `user-docs`). The baseline
-  `user` is therefore covered under context-specific labels; no separate `user`
-  entry is added because it would duplicate `downstream-user`.
+  `user` is therefore covered under context-specific labels — since the
+  2026-07-25 re-run additionally differentiated per plugin
+  (**`engineering-consumer`**, **`media-consumer`**, **`authoring-consumer`**) —
+  and no separate `user` entry is added because it would duplicate
+  `downstream-user`.
 - **`contributor`** — covered by **`maintainer`**, **`external-contributor`**,
   **`claude-coauthor`** (all `developer-docs`).
 - **`operator`** — covered by **`ci-operator`** (`developer-docs`).
@@ -112,6 +135,7 @@ reasoned exclusion:
 - Only "Plugin author dogfooding inside this repo" is tagged `confirmed` so far (validated by the author's first end-to-end dogfood sprint on 2026-05-11). All other entries remain `assumed` until they are validated against a real representative or an authoritative source.
 - A versioning and communication policy for breaking spec changes is not yet defined; it affects the governing-party (portfolio anchors) and indirect (other portfolio repos) audiences simultaneously.
 - The distinction between "other portfolio repos as passive convention consumers" (Indirect) and "downstream projects as plugin users" (Direct) needs a concrete check per repo the next time this artifact is revisited.
+- Which adopting repos install which of the three companion plugins (`nolte-engineering`, `nolte-media`, `nolte-claude-dev`) is not yet inventoried; a per-repo adoption matrix would graduate the three per-plugin entries from `assumed`.
 
 ## Revisit triggers
 
