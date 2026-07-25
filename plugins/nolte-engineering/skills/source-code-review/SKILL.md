@@ -10,8 +10,8 @@ use_when:
   - "you want domain-knowledge duplication found and consolidated"
   - "you want a persisted review report whose work packages specialists remediate in parallel"
 dont_use_when:
-  - situation: "you want a diff-scoped review of an open pull request"
-    alternative: review
+  - situation: "you want a diff-scoped review of an open pull request (the review leg of the PR flow)"
+    alternative: pull-request-merge
   - situation: "you want per-capability Bronze/Silver/Gold maturity grading, not finding-level review"
     alternative: maturity-assess
   - situation: "You want a deep whole-codebase OWASP security audit"

@@ -44,7 +44,7 @@ Go/no-go: PASS — no open Critical; every Critical/actionable Warning fixed in 
 ### Warning
 
 - [x] [skill-review.duplicate] No delimitation against the diff-scoped PR review flow or maturity-assess grading (sweep boundary-matrix finding).
-      Resolution: dont_use_when clauses added (review, maturity-assess) (fixed in this batch).
+      Resolution: dont_use_when clauses added (pull-request-merge as the PR-flow entry — `review` is a CLI built-in, not catalog-resolvable — and maturity-assess) (fixed in this batch).
 
 ### Suggestion
 
