@@ -104,6 +104,7 @@ Canonical language: `en` · Translations: `de`
 | project | test-cycle-execution | Test Cycle: Execution | Test-Zyklus: Ausführung | draft | local | unversioned |
 | project | test-cycle-foundation | Test Cycle Foundation | Fundament des Test-Zyklus | draft | local | unversioned |
 | project | test-cycle-result-analysis | Test Cycle: Result Analysis | Test-Zyklus: Ergebnis-Analyse | draft | local | unversioned |
+| project | test-falsifiability | Test Falsifiability | Test-Falsifizierbarkeit | draft | portfolio | 2026-07-25 |
 | project | test-pyramid-foundation | Test Pyramid Foundation | Fundament der Testpyramide | draft | local | unversioned |
 | project | test-tier-component | Test Tier: Component | Test-Stufe: Component | draft | local | unversioned |
 | project | test-tier-contract | Test Tier: Contract | Test-Stufe: Contract | draft | local | unversioned |

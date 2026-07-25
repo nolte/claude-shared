@@ -34,6 +34,7 @@ Readers: spec authors completing the cycle family; skill and agent authors build
 - **Running** the tests to verify: phase 2 (`test-cycle-execution`) [R3] (this phase triggers it, doesn't own it)
 - **Correcting a wrong test**: that's a reviewable case change in phase 1 (`test-cycle-case-determination`) [R4], not a code change here
 - Mandating a specific language, editor, or refactoring tool: techniques are named only as illustrative examples
+- Detecting tests that were **born** unable to fail (never degraded by any change): owned by `spec/project/test-falsifiability/` [R12]; this phase's invariant covers falsifiability-destroying *transitions*, visible in a diff
 
 ## Requirements
 
@@ -116,6 +117,7 @@ Readers: spec authors completing the cycle family; skill and agent authors build
 - [R9] Martin Fowler, *Opportunistic Refactoring* (only refactor while green; depends on a regression suite): <https://martinfowler.com/bliki/OpportunisticRefactoring.html>
 - [R10] Martin Fowler, *Self-Testing Code* (write a test exposing the bug, then fix; the suite as safety net): <https://martinfowler.com/bliki/SelfTestingCode.html>
 - [R11] *Regression testing* (a fix keeps prior behaviour green): <https://en.wikipedia.org/wiki/Regression_testing>
+- [R12] `spec/project/test-falsifiability/`: the taxonomy of tests born unable to fail; delimited from this phase's transition-covering invariant
 
 ## Open Questions
 

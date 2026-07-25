@@ -128,3 +128,4 @@ All five original open questions were settled by the operator on 2026-07-25; the
 - [R4] *Sentry SDK documentation*, the platform-SDK configuration surface (DSN, environment, release, before-send scrubbing, sampling) the tool-neutral contract binds to: <https://docs.sentry.io/platforms/>
 - [R5] `spec/project/monitoring-observability/`, the telemetry contract this spec complements: frontend error-capture floor, third-party probing, and the `[locked]` PII-redaction pillar
 - [R6] `spec/project/gdpr-audit-process/`, the PII-class definition and audit verdict referenced by the scrubbing and data-protection requirements
+- [R7] `spec/project/test-falsifiability/`, the test-artifact counterpart of the swallowed-error concern: its T1 keeps failure signals visible to the suite as this spec's capture rules keep them visible at runtime

@@ -34,6 +34,7 @@ Leser: Spec-Autor:innen, die die Zyklus-Familie vervollständigen; Skill- und Ag
 - Die Tests zur Verifikation **auszuführen**: Phase 2 (`test-cycle-execution`) [R3] (diese Phase löst sie aus, besitzt sie nicht)
 - Einen **falschen Test zu korrigieren**: Das ist eine reviewbare Fall-Änderung in Phase 1 (`test-cycle-case-determination`) [R4], keine Code-Änderung hier
 - Eine bestimmte Sprache, einen Editor oder ein Refactoring-Werkzeug vorzuschreiben: Techniken sind nur als illustrative Beispiele genannt
+- Tests zu erkennen, die von Geburt an nicht fehlschlagen konnten (nie durch eine Änderung degradiert): Eigentum von `spec/project/test-falsifiability/` [R12]; die Invariante dieser Phase deckt falsifizierbarkeits-zerstörende *Übergänge* ab, sichtbar in einem Diff
 
 ## Anforderungen
 
@@ -116,6 +117,7 @@ Leser: Spec-Autor:innen, die die Zyklus-Familie vervollständigen; Skill- und Ag
 - [R9] Martin Fowler, *Opportunistic Refactoring* (nur unter Grün refactoren; hängt von einer Regressions-Suite ab) — <https://martinfowler.com/bliki/OpportunisticRefactoring.html>
 - [R10] Martin Fowler, *Self-Testing Code* (einen Test schreiben, der den Bug zeigt, dann beheben; die Suite als Sicherheitsnetz) — <https://martinfowler.com/bliki/SelfTestingCode.html>
 - [R11] *Regression testing* (ein Fix hält vorheriges Verhalten grün) — <https://en.wikipedia.org/wiki/Regression_testing>
+- [R12] `spec/project/test-falsifiability/` — die Taxonomie von Geburt an nicht fehlschlagbarer Tests; abgegrenzt von der übergangs-deckenden Invariante dieser Phase
 
 ## Offene Fragen
 

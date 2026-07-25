@@ -36,6 +36,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - Asserting runtime behaviour, business logic, or integration correctness—those belong to the executing tiers above
 - Mandating specific linters, type checkers, formatters, or SAST engines—the reference profile is illustrative
 - Defining the repository-wide rule set or per-language config content—that's a per-repository decision; this spec defines the tier's shape and governance, not its rule lists
+- Defining the falsifiability checks over test code (swallowed post-conditions, vacuous assertions, empty-default readers)—the check catalog is owned by `spec/project/test-falsifiability/` [R17]; this tier owns the regime those checks run under (rule identifiers, baseline-and-ratchet, effective-signal governance)
 
 ## Requirements
 
@@ -141,6 +142,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [R14] Dropbox, *Our journey to type checking 4 million lines of Python*: <https://dropbox.tech/application/our-journey-to-type-checking-4-million-lines-of-python>
 - [R15] C. Sadowski et al., *Lessons from Building Static Analysis Tools at Google* (CACM 2018; inline beats nightly dashboards, govern by effective false positive): <https://cacm.acm.org/research/lessons-from-building-static-analysis-tools-at-google/>
 - [R16] *Ratcheting* (baseline-and-ratchet pattern for legacy code): <https://ponomarev.uk/blog/ratcheting>
+- [R17] `spec/project/test-falsifiability/`: owns the test-code falsifiability check catalog this tier operates
 
 ## Open Questions
 

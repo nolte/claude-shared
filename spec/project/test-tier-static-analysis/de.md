@@ -36,6 +36,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - Laufzeitverhalten, Geschäftslogik oder Integrations-Korrektheit zu behaupten — die gehören zu den ausführenden Stufen darüber
 - Bestimmte Linter, Type-Checker, Formatter oder SAST-Engines vorzuschreiben — das Referenzprofil ist illustrativ
 - Das repositoryweite Regelset oder den Inhalt der Sprach-Konfigs zu definieren — das ist eine projektspezifische Entscheidung; diese Spec definiert Form und Governance der Stufe, nicht ihre Regel-Listen
+- Die Falsifizierbarkeits-Checks über Testcode zu definieren (verschluckte Post-Conditions, vakuöse Assertions, Empty-Default-Reader) — der Check-Katalog ist Eigentum von `spec/project/test-falsifiability/` [R17]; diese Stufe besitzt das Regime, unter dem diese Checks laufen (Regel-Identifier, Baseline-and-Ratchet, Effective-Signal-Governance)
 
 ## Anforderungen
 
@@ -141,6 +142,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [R14] Dropbox, *Our journey to type checking 4 million lines of Python* — <https://dropbox.tech/application/our-journey-to-type-checking-4-million-lines-of-python>
 - [R15] C. Sadowski et al., *Lessons from Building Static Analysis Tools at Google* (CACM 2018; inline schlägt Nightly-Dashboards, Steuerung nach effektivem False Positive) — <https://cacm.acm.org/research/lessons-from-building-static-analysis-tools-at-google/>
 - [R16] *Ratcheting* (Baseline-and-Ratchet-Muster für Legacy-Code) — <https://ponomarev.uk/blog/ratcheting>
+- [R17] `spec/project/test-falsifiability/` — besitzt den Testcode-Falsifizierbarkeits-Check-Katalog, den diese Stufe betreibt
 
 ## Offene Fragen
 

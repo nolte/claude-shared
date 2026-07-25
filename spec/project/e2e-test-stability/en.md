@@ -38,6 +38,7 @@ Readers: authors and reviewers of E2E suites; the `e2e-test-generator` / `e2e-te
 - How a confirmed real defect is fixed in production code (including the no-cheating invariant), owned by `spec/project/test-cycle-code-adaptation/`
 - Provisioning testability hooks (`data-testid`, state exposition) in the application, owned by `spec/frontend/testability-identifiers/`
 - Test-tier placement (what belongs in E2E at all), owned by `spec/project/test-pyramid-foundation/`
+- The cross-tier taxonomy and detection of tests that can't fail, owned by `spec/project/test-falsifiability/`; this spec's §A/§E (skips), §D (state-changer read-back), and §G (silent responsive passes) supply the E2E instances that taxonomy cites as T3, T4, T6, and T7
 
 ## Requirements
 
@@ -118,6 +119,7 @@ A responsive UI renders different chrome, DOM shapes, and geometry per breakpoin
 - `spec/project/test-cycle-code-adaptation/`: the no-cheating invariant and root-cause fixing for confirmed defects
 - `spec/project/test-pyramid-foundation/`: tier placement; the lower-tier regression tests required by §B
 - `spec/frontend/testability-identifiers/`: provider-side testability hooks in the application under test
+- `spec/project/test-falsifiability/`: the cross-tier falsifiability taxonomy that generalizes this spec's loud-failure rules and consumes §F's request-count evidence as a detection route
 - Source experience: kamerplanter full-suite E2E stabilization (2026-07), branch `fix/e2e-full-run-stabilization`: order-dependent harvest-detail skips, ESC-race across ~20 page objects, optimistic experience-level snackbar, preference lost-update, duplicate singleton preference documents; each mechanic listed in §Context maps to a reproduced incident there; the mobile-profile pass (runs `20260725_010046`, `030325`, `055859`, `073849`; 141 → 72 → 8 → 5 failures) supplied the §G viewport hazards
 
 ## Open Questions

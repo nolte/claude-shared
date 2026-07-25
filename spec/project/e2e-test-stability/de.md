@@ -38,6 +38,7 @@ Leser: Autor:innen und Reviewer von E2E-Suiten; die Agents `e2e-test-generator` 
 - Wie ein bestätigter echter Defekt im Produktivcode gefixt wird (inkl. No-Cheating-Invariante) — liegt bei `spec/project/test-cycle-code-adaptation/`
 - Provisionierung von Testability-Hooks (`data-testid`, Zustands-Exposition) in der Anwendung — liegt bei `spec/frontend/testability-identifiers/`
 - Test-Tier-Platzierung (was überhaupt in E2E gehört) — liegt bei `spec/project/test-pyramid-foundation/`
+- Die tier-übergreifende Taxonomie und Detektion von Tests, die nicht fehlschlagen können — liegt bei `spec/project/test-falsifiability/`; §A/§E (Skips), §D (Zustandsänderer-Read-back) und §G (stille Responsive-Passes) dieser Spec liefern die E2E-Instanzen, die jene Taxonomie als T3, T4, T6 und T7 zitiert
 
 ## Requirements
 
@@ -118,6 +119,7 @@ Eine responsive UI rendert je Breakpoint anderes Chrome, andere DOM-Formen und a
 - `spec/project/test-cycle-code-adaptation/` — No-Cheating-Invariante und Root-Cause-Fixing für bestätigte Defekte
 - `spec/project/test-pyramid-foundation/` — Tier-Platzierung; die von §B geforderten Regressionstests auf niedrigeren Tiers
 - `spec/frontend/testability-identifiers/` — providerseitige Testability-Hooks in der Anwendung unter Test
+- `spec/project/test-falsifiability/` — die tier-übergreifende Falsifizierbarkeits-Taxonomie, die die Laut-Fehlschlagen-Regeln dieser Spec generalisiert und §Fs Request-Count-Evidenz als Detektionsweg konsumiert
 - Quell-Erfahrung: kamerplanter-Full-Suite-E2E-Stabilisierung (2026-07), Branch `fix/e2e-full-run-stabilization` — reihenfolgeabhängige Harvest-Detail-Skips, ESC-Race über ~20 Page Objects, optimistischer Erfahrungsstufen-Snackbar, Preference-Lost-Update, Duplikat-Singleton-Preference-Dokumente; jeder Mechanismus aus §Context mappt auf einen dort reproduzierten Vorfall; der Mobile-Profil-Durchlauf (Läufe `20260725_010046`, `030325`, `055859`, `073849`; 141 → 72 → 8 → 5 Failures) lieferte die §G-Viewport-Hazards
 
 ## Open Questions

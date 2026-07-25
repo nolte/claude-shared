@@ -128,3 +128,4 @@ Alle fünf ursprünglichen offenen Fragen wurden am 2026-07-25 vom Operator ents
 - [R4] *Sentry-SDK-Dokumentation* — die Plattform-SDK-Konfigurationsfläche (DSN, Environment, Release, Before-Send-Scrubbing, Sampling), an die der tool-neutrale Vertrag bindet: <https://docs.sentry.io/platforms/>
 - [R5] `spec/project/monitoring-observability/` — der Telemetrie-Vertrag, den diese Spec ergänzt: Frontend-Error-Capture-Boden, Third-Party-Probing und die `[locked]` PII-Redaktions-Säule
 - [R6] `spec/project/gdpr-audit-process/` — PII-Klassendefinition und Audit-Urteil, referenziert von den Scrubbing- und Datenschutz-Anforderungen
+- [R7] `spec/project/test-falsifiability/` — das Testartefakt-Gegenstück des Swallowed-Error-Belangs: sein T1 hält Failure-Signale für die Suite sichtbar, wie die Capture-Regeln dieser Spec sie zur Laufzeit sichtbar halten

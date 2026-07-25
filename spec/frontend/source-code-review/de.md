@@ -281,6 +281,7 @@ Dies ist eine tragende Grenze, kein höflicher Hinweis. Beide Reviews blicken au
 - [R10] Agent-Autorenregeln und Read-only-Tool-Disziplin: `spec/claude/agent-management/`
 - [R11] Recherche-Methodik und Quellenschwellen hinter den Regeln dieser Spec: `spec/claude/research-triangulate/`
 - [R12] Evidenznotizen mit den Quellen je Dimension: `spec/frontend/source-code-review/research/`
+- [R13] Falsifizierbarkeits-Taxonomie und Detektionskriterien für F11-Findings zu Tests, die nicht fehlschlagen können: `spec/project/test-falsifiability/`
 
 ## Offene Fragen
 
