@@ -1,0 +1,46 @@
+# Guard: the release fallback-path alignment PR (branch chore/release-*) MUST
+# be squash-merged by the maintainer with their own credential, never via the
+# automerge label — a GITHUB_TOKEN-authenticated merge suppresses the
+# release-drafter cascade (spec/project/release-automation/; 2026-Q3 audit
+# finding release-automation.fallback-path-automerge-label, where PR #344
+# carried the label and was merged by the bot).
+#
+# The guard strips the label the moment it lands on a release branch and
+# leaves an explanatory comment, so the automerge workflow (which fires on
+# label events) never sees a labeled release PR.
+name: release-automerge-guard
+
+on:
+  pull_request:
+    types:
+      - labeled
+      - reopened
+      - synchronize
+
+permissions:
+  pull-requests: write
+
+jobs:
+  strip-automerge-label:
+    if: >-
+      startsWith(github.event.pull_request.head.ref, 'chore/release-') &&
+      contains(github.event.pull_request.labels.*.name, 'automerge')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v9
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.payload.pull_request.number;
+            await github.rest.issues.removeLabel({
+              owner, repo, issue_number, name: 'automerge',
+            }).catch((e) => { if (e.status !== 404) throw e; });
+            await github.rest.issues.createComment({
+              owner, repo, issue_number,
+              body: [
+                'Removed the `automerge` label: the `chore(release)` alignment PR',
+                'MUST be squash-merged by the maintainer with their own credential.',
+                'A `GITHUB_TOKEN`-authenticated merge suppresses the release-drafter',
+                'cascade (spec/project/release-automation/).',
+              ].join(' '),
+            });
