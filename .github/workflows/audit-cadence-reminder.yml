@@ -1,0 +1,71 @@
+# Quarterly dependency- and license-audit reminder.
+#
+# spec/project/dependency-audit/ MUSTs a full audit at least once per calendar
+# quarter in every repository with a dependency manifest, and
+# spec/project/license-check/ shares that cadence for the full license check.
+# Both full audits are operator-driven (the dependency-audit and license-check
+# skills persist reasoned records under .audits/), so — like the
+# portfolio-audit reminder — the cadence trigger is a reminder issue, not an
+# unattended run. The deterministic per-change slices run in audit-gates.yml.
+name: audit-cadence-reminder
+
+on:
+  schedule:
+    # 06:30 UTC on the first day of January, April, July, and October
+    # (offset from portfolio-audit-reminder's 06:00 to keep issues distinct).
+    - cron: "30 6 1 1,4,7,10 *"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  open-reminder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open or refresh the quarterly dependency/license audit reminder
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const now = new Date();
+            const quarter = `${now.getUTCFullYear()} Q${Math.floor(now.getUTCMonth() / 3) + 1}`;
+            const title = `Quarterly dependency & license audit — ${quarter}`;
+
+            const existing = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "${title}"`,
+            });
+            if (existing.data.total_count > 0) {
+              core.info(`Reminder issue for ${quarter} already open; nothing to do.`);
+              return;
+            }
+
+            const body = [
+              "The quarterly audit cadences are due:",
+              "",
+              "- `spec/project/dependency-audit/` — full CVE audit at least once",
+              "  per calendar quarter (and before every release tag carrying a",
+              "  dependency change).",
+              "- `spec/project/license-check/` — full check on the shared cadence.",
+              "",
+              "## Action",
+              "",
+              "1. Run `task deps:audit` (or the `dependency-audit` skill) and",
+              "   persist the record as",
+              "   `.audits/dependency-audit/dependencies-<YYYY>-Q<n>.md`.",
+              "2. Run the `license-check` skill, persist the record under",
+              "   `.audits/license-check/`, and refresh the baseline via",
+              "   `python3 scripts/check_licenses.py --update` in the same change.",
+              "",
+              "## Close criteria",
+              "",
+              "Both records for this quarter are committed and any non-`allow` /",
+              "non-clean finding carries a recorded response.",
+            ].join("\n");
+
+            const created = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+            });
+            core.info(`Opened reminder #${created.data.number} for ${quarter}.`);

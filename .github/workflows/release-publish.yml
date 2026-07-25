@@ -33,7 +33,29 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  # Pre-publish gate per spec/project/license-check/ §Triggers, cadence, and
+  # CI: a full check is required before every release tag, so the publish is
+  # refused while the latest persisted license-check verdict isn't `Pass`
+  # (2026-Q3 audit finding license-check.ci-cadence-unwired, #496).
+  license-verdict:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Latest license-check record must carry verdict Pass
+        run: |
+          latest=$(ls .audits/license-check/license-*.md 2>/dev/null | sort | tail -1)
+          if [ -z "$latest" ]; then
+            echo "::error::No license-check record under .audits/license-check/ — run the license-check skill before publishing."
+            exit 1
+          fi
+          echo "Latest record: $latest"
+          if ! awk '/^## Verdict/{f=1;next} f && NF {print; exit}' "$latest" | grep -q '^\*\*Pass'; then
+            echo "::error::Latest license-check verdict in $latest is not Pass — resolve findings and re-run the license-check skill before publishing."
+            exit 1
+          fi
+
   publish:
+    needs: license-verdict
     uses: nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml@v1.1.26
     with:
       tag: ${{ inputs.tag }}

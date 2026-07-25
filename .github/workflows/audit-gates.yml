@@ -1,0 +1,66 @@
+# Continuous audit gates, per two 2026-Q3 spec-drift findings (#496):
+#
+# - spec/project/dependency-audit/ MUSTs a CVE check on dependency changes in
+#   addition to the quarterly full audit (the quarterly cadence is the
+#   audit-cadence-reminder workflow; full-audit records live under
+#   .audits/dependency-audit/).
+# - spec/project/license-check/ §Triggers MUSTs a continuous CI check on
+#   changes touching a dependency manifest, a lockfile, the LICENSE file, or
+#   committed AI-generated artifacts. The deterministic CI slice is a
+#   drift gate: the SBOM's license identifiers must all be covered by the
+#   adjudicated baseline of the latest full license-check record
+#   (.audits/license-check/license-baseline.json); classification and policy
+#   stay with the license-check skill.
+name: audit-gates
+
+on:
+  pull_request:
+    paths:
+      - "requirements*.txt"
+      - "docs/requirements.txt"
+      - "evals/requirements-*.txt"
+      - "LICENSE"
+      - "design/**"
+      - ".audits/license-check/license-baseline.json"
+      - "scripts/check_licenses.py"
+      - ".github/workflows/audit-gates.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cve-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: pip-audit over every Python manifest
+        run: |
+          pip install --quiet pip-audit
+          pip-audit --progress-spinner=off \
+            -r requirements.txt \
+            -r requirements-dev.txt \
+            -r docs/requirements.txt \
+            -r evals/requirements-dev.txt \
+            -r evals/requirements-eval.txt
+
+  license-drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+      - name: Build the CycloneDX SBOM (same install set as task license:sbom)
+        run: |
+          python -m venv .sbom-venv
+          .sbom-venv/bin/pip install --quiet \
+            -r docs/requirements.txt \
+            -r evals/requirements-dev.txt \
+            -r requirements-dev.txt \
+            cyclonedx-bom
+          .sbom-venv/bin/cyclonedx-py environment .sbom-venv -o sbom.cdx.json
+      - name: License-drift gate against the adjudicated baseline
+        run: python3 scripts/check_licenses.py

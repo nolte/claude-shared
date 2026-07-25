@@ -146,6 +146,17 @@ tasks:
       - rm -rf .sbom-venv
       - 'echo "CycloneDX SBOM (with licenses) written to sbom.cdx.json"'
 
+  license:check:
+    desc: |
+      License-drift gate: build the SBOM (license:sbom) and verify every
+      license identifier is covered by the adjudicated baseline of the latest
+      full license-check record (.audits/license-check/license-baseline.json),
+      per spec/project/license-check §Triggers. CI runs the same gate in
+      .github/workflows/audit-gates.yml on manifest/LICENSE changes.
+    deps: [license:sbom]
+    cmds:
+      - python3 scripts/check_licenses.py
+
   validate:skills:
     desc: |
       Validate every skill and agent frontmatter against the structural rules
