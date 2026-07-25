@@ -138,6 +138,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die 
 - [R7] `spec/project/behavior-driven-development/`: besitzt die BDD-Szenario-/Spezifikationsebene über diesen Ausführungsmechaniken; ihre Szenario-Steps delegieren an die Page Objects dieser Spec
 - [R8] `spec/project/bdd-page-object-integration/`: besitzt den BDD-zu-Page-Object-Integrations- und Entkopplungs-Vertrag; die Page Objects dieser Spec werden dort konsumiert, ohne von der BDD-Ebene abzuhängen
 - [R9] `spec/project/e2e-test-stability/`: das Laufzeit-Stabilitäts-Komplement zu diesem Suite-Form-Standard; dessen §G besitzt den Responsive-/Viewport-Hazard-Katalog, gegen den die Ungescoped-Rollen-Locator-Regel schützt
+- [R10] `spec/project/test-falsifiability/`: die tier-übergreifende Falsifizierbarkeits-Taxonomie; sie generalisiert das Tautologie-Assertion-Verbot und die Silent-Early-Return-Regel dieser Spec als ihre T2-Kategorie
 
 ## Offene Fragen
 

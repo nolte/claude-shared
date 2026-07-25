@@ -60,6 +60,7 @@ Every repository in the portfolio runs lint, type-check, and test commands in so
 - **MUST** stay separate from `spec/project/workflow-health/`: workflow-health covers the continuous CI state over time (flake triage, trend), the gate is the per-invocation pass/fail
 - **MUST** stay separate from dependency/vulnerability scanning: that scanning has its own cadence and severity scale; the gate doesn't assume responsibility for it
 - **MUST** be independent of `spec/project/release-automation/` in the sense that a green gate is a precondition for a release cut, not a replacement for the release workflow
+- **MUST** keep suite-quality signals derived from `spec/project/test-falsifiability/` (mutation score in particular) out of the required categories; they stay advisory by default, and a repository **MAY** expose a mutation run as an additional declared category per §Composition's MAY-extend rule—the same reasoning as the coverage-thresholding exclusion
 
 ### Monorepo and subroot behaviour
 - **MUST** scope each category to the subroots that actually own the relevant manifest (for example run `ruff` in `backend/` only, `eslint` in `frontend/` only) when the repository is a monorepo; a monolithic invocation that walks the whole tree would pick up unrelated code

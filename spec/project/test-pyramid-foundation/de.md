@@ -182,6 +182,7 @@ Leser: Spec-Autor:innen, die die Stufen-Specs auf diesem Fundament schreiben; Sk
 - [R17] Google Testing Blog, *Code Coverage Best Practices* — <https://testing.googleblog.com/2020/08/code-coverage-best-practices.html>
 - [R18] pitest — Mutationstest — <https://pitest.org/>
 - [R19] SAST vs. DAST (Platzierung von Security-Tests) — <https://blog.jetbrains.com/teamcity/2025/05/sast-vs-dast/>
+- [R20] `spec/project/test-falsifiability/` — die tier-übergreifende Taxonomie von Tests, die nicht fehlschlagen können; konsumiert die Mutation-Score-Leitlinie dieser Spec und verbietet, nicht-falsifizierbare Tests als Tier-Coverage zu zählen
 
 ## Offene Fragen
 

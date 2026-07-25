@@ -138,6 +138,7 @@ This profile is the binding realisation of the core for Python projects and the 
 - [R7] `spec/project/behavior-driven-development/`: owns the BDD scenario/specification layer above these execution mechanics; its scenario steps delegate to this spec's page objects
 - [R8] `spec/project/bdd-page-object-integration/`: owns the BDD-to-Page-Object integration and decoupling contract; the page objects this spec owns are consumed there without depending on the BDD layer
 - [R9] `spec/project/e2e-test-stability/`: the runtime-stability complement to this suite-shape standard; its §G owns the responsive/viewport hazard catalog the unscoped-role-locator rule guards against
+- [R10] `spec/project/test-falsifiability/`: the cross-tier falsifiability taxonomy; it generalizes this spec's tautological-assertion ban and silent-early-return rule as its T2 category
 
 ## Open Questions
 

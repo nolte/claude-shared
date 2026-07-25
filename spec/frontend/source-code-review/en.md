@@ -281,6 +281,7 @@ This is a load-bearing boundary, not a courtesy note. The two reviews look at th
 - [R10] Agent authoring rules and read-only tool discipline: `spec/claude/agent-management/`
 - [R11] Research methodology and source thresholds behind this spec's rules: `spec/claude/research-triangulate/`
 - [R12] Evidence notes with the sources behind each dimension: `spec/frontend/source-code-review/research/`
+- [R13] Falsifiability taxonomy and detection criteria for F11 findings about tests that can't fail: `spec/project/test-falsifiability/`
 
 ## Open Questions
 

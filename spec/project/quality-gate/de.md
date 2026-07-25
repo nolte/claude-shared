@@ -60,6 +60,7 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 - **MUSS** getrennt bleiben von `spec/project/workflow-health/`: workflow-health deckt den kontinuierlichen CI-Zustand über die Zeit ab (Flake-Triage, Trend), das Gate ist das Pass/Fail pro Invocation
 - **MUSS** getrennt bleiben vom Dependency-/Schwachstellen-Scanning: jenes Scanning hat eine eigene Kadenz und Schweregrad-Skala; das Gate übernimmt dafür keine Verantwortung
 - **MUSS** unabhängig von `spec/project/release-automation/` bleiben in dem Sinne, dass ein grünes Gate eine Vorbedingung eines Release-Schnitts ist, nicht ein Ersatz für den Release-Workflow
+- **MUSS** aus `spec/project/test-falsifiability/` abgeleitete Suite-Qualitätssignale (insbesondere den Mutation-Score) aus den Pflicht-Kategorien heraushalten; sie bleiben per Default advisorisch, und ein Repository **KANN** einen Mutation-Lauf als zusätzliche deklarierte Kategorie gemäß der MAY-extend-Regel in §Zusammensetzung exponieren — dieselbe Begründung wie beim Coverage-Thresholding-Ausschluss
 
 ### Monorepo- und Unterordner-Verhalten
 - **MUSS** jede Kategorie auf die Unterordner skopieren, die das relevante Manifest tatsächlich besitzen (zum Beispiel `ruff` nur in `backend/`, `eslint` nur in `frontend/`), wenn das Repository ein Monorepo ist; eine monolithische Invocation, die den gesamten Baum durchläuft, würde unbeteiligten Code aufgreifen

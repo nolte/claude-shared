@@ -129,6 +129,7 @@ Every language profile **MUST** define, and a reviewer applies as one unit:
 - [R7] Agent authoring rules and read-only tool discipline: `spec/claude/agent-management/`
 - [R8] Skill-vs-agent decision rule: `spec/claude/skill-vs-agent/`
 - [R9] Frontend surface extension (dimensions F1–F11, framework profiles, delimitation from the UX review): `spec/frontend/source-code-review/`
+- [R10] Falsifiability taxonomy and detection criteria behind D6's always-green-test rule and the test-code instance of D1's swallowed-error no-go: `spec/project/test-falsifiability/`
 
 ## Open Questions
 

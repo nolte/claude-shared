@@ -129,6 +129,7 @@ Jedes Sprachprofil **MUSS** definieren, und ein Reviewer wendet es als Einheit a
 - [R7] Agent-Autorenregeln und Read-only-Tool-Disziplin: `spec/claude/agent-management/`
 - [R8] Skill-vs-Agent-Entscheidungsregel: `spec/claude/skill-vs-agent/`
 - [R9] Frontend-Oberflächen-Erweiterung (Dimensionen F1–F11, Framework-Profile, Abgrenzung zum UX-Review): `spec/frontend/source-code-review/`
+- [R10] Falsifizierbarkeits-Taxonomie und Detektionskriterien hinter D6s Always-green-Test-Regel und der Testcode-Instanz von D1s Swallowed-Error-No-Go: `spec/project/test-falsifiability/`
 
 ## Offene Fragen
 

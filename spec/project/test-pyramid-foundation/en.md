@@ -182,6 +182,7 @@ Readers: spec authors writing the per-tier specs on top of this foundation; skil
 - [R17] Google Testing Blog, *Code Coverage Best Practices*: <https://testing.googleblog.com/2020/08/code-coverage-best-practices.html>
 - [R18] pitest—mutation testing: <https://pitest.org/>
 - [R19] SAST vs DAST (security testing placement): <https://blog.jetbrains.com/teamcity/2025/05/sast-vs-dast/>
+- [R20] `spec/project/test-falsifiability/`: the cross-tier taxonomy of tests that can't fail; consumes this spec's mutation-score guidance and forbids counting non-falsifiable tests as tier coverage
 
 ## Open Questions
 
