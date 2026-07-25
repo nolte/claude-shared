@@ -41,7 +41,7 @@ Run the loop for `$ARGUMENTS`. One turn:
 
 ### 1. Determine cases
 
-Ensure the cases that should be green exist and currently fail or are absent. Dispatch `test-case-extractor` to derive abstract cases from a requirement, and the per-tier generator (`unit-test-generator`, `component-test-generator`, `integration-test-generator`, `contract-test-generator`, or `e2e-test-generator`) to scaffold the runnable test at the tier the foundation's lowest-tier-that-gives-confidence rule selects. When the trigger is a confirmed defect, a **failing regression case is written first**.
+Ensure the cases that should be green exist and currently fail or are absent. Dispatch `test-case-extractor` to derive abstract cases from a requirement, and the per-tier generator (`unit-test-generator`, `component-test-generator`, `integration-test-generator`, `contract-test-generator`, or `e2e-test-generator`) to scaffold the runnable test at the tier the foundation's lowest-tier-that-gives-confidence rule selects. When the trigger is a confirmed defect, a **failing regression case is written first**, and its red run is recorded as negative-verification evidence per `spec/project/test-falsifiability/` — the command plus the observed failure, carried into the run's audit trail.
 
 ### 2. Execute
 
@@ -57,7 +57,7 @@ Dispatch `test-result-analyzer` to classify each non-pass into a routed category
 
 For each confirmed real failure, dispatch `test-code-adapter` to apply the minimal correct change that satisfies the asserted behaviour, fixing the root cause. The fix **re-enters step 2** (re-execute); never assume green without re-running.
 
-**Optional review leg:** when the adaptation touched test code itself, dispatch the touched tier's `*-test-reviewer` agent (unit / component / integration / contract / e2e) as the review-and-repair counterpart before re-executing — mirroring the reviewer wiring the E2E tier already carries.
+**Optional review leg:** when the adaptation touched test code itself, dispatch the touched tier's `*-test-reviewer` agent (unit / component / integration / contract / e2e) as the review-and-repair counterpart before re-executing — mirroring the reviewer wiring the E2E tier already carries. When the adaptation added or changed assertions, readers, or helpers, this leg is not optional: the tier reviewer's falsifiability dimension (per `spec/project/test-falsifiability/`) must grade the touched tests before re-execution.
 
 ### Loop or exit
 
@@ -66,7 +66,7 @@ Repeat from step 2 until the **exit conditions** hold: every required case is gr
 ## Hard rules
 
 1. **Never** make a case pass by weakening, deleting, skipping, or hard-coding to its expected value; resolve a red case by a code adaptation (step 4) or, when the test was wrong, a reviewable case change (step 1) — never a silent escape. This is the cycle's central integrity rule.
-2. **Always** write a failing regression case before fixing a confirmed defect, so the cycle accumulates coverage of real failures over time.
+2. **Always** write a failing regression case before fixing a confirmed defect, recording its red run as negative-verification evidence per `spec/project/test-falsifiability/`, so the cycle accumulates coverage of real failures over time.
 3. **Never** retry a flaky test until it goes green; the only permitted re-running is step 2's bounded flip-signal re-run (fixed N, detection-only, vector-emitting); route a confirmed flake to quarantine-and-track, not to the gating signal.
 4. **Never** declare a turn complete without re-execution: a code change re-enters step 2 and all cases must be green with no regression before exit.
 5. **Never** restate a phase's internals here; dispatch its capability (`test-case-extractor` / tier generators, `quality-gate`, `test-result-analyzer`, `test-code-adapter`) and orchestrate the loop. When a phase spec disagrees with this skill, the spec wins; propose a skill update rather than diverging.
