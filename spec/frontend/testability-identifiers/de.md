@@ -51,6 +51,7 @@ Leser: Frontend-Entwickler, die eine Portfolio-UI bauen oder umgestalten (Zielgr
 ### Bereitstellung auf Element-Ebene
 
 - Interaktive Elemente (Buttons, Links, Toggles, Menüeinträge), die ein Test ansteuert, **MÜSSEN** jeweils einen stabilen Identifikator tragen.
+- Der Identifikator **MUSS** auf dem Element sitzen, das die Interaktion empfängt, niemals nur auf einem Wrapper, der auch Label-, Hilfe- oder Dekorationsinhalt enthält: Wrapper-Geometrie ist breakpoint-abhängig (umbrechender Hilfetext verschiebt das Klick-Zentrum des Wrappers vom Eingabefeld weg), die Geometrie des interaktiven Kindes nicht. Ein Wrapper **KANN** einen zusätzlichen Identifikator tragen, aber der Identifikator des interaktiven Kindes ist derjenige, der die Bereitstellungspflicht erfüllt.
 - Formularfelder **MÜSSEN** einen stabilen Identifikator der Form `form-field-<name>` tragen, wobei `<name>` der stabile Fachname des Feldes ist, nicht seine Position oder sein Label-Text.
 - Dialoge, Modals und Overlays **MÜSSEN** an ihrer Wurzel einen stabilen Identifikator tragen, sodass ein Test die Selektion auf den offenen Dialog eingrenzen kann.
 - Jede Status-, Validierungs- oder Ergebnisanzeige, deren Inhalt ein Test prüft, **MUSS** einen stabilen Identifikator tragen; das gilt unabhängig davon, wie das Element eingehängt ist (inline, Portal, Toast, Overlay) — der Einhäng-Kontext befreit ein test-relevantes Element nicht von der Bereitstellung.
@@ -59,6 +60,11 @@ Leser: Frontend-Entwickler, die eine Portfolio-UI bauen oder umgestalten (Zielgr
 
 - Zeilen einer wiederholten Liste oder Tabelle **MÜSSEN** über einen stabilen **Business-Key** adressierbar sein (zum Beispiel `<entity>-row-<businessKey>`), niemals über einen Listen-Index oder eine DOM-Position, sodass ein Test Umsortierung, Filterung und Paginierung übersteht.
 - WENN kein natürlicher Business-Key existiert, **MUSS** das Frontend einen stabilen synthetischen Key bereitstellen, der über Renders deterministisch ist; ein Render-Order-Index oder eine flüchtige Laufzeit-ID **DARF** **NICHT** als Adressierungs-Key verwendet werden.
+
+### Responsive Layout-Parität
+
+- Eine Komponente, die je Breakpoint eine andere DOM-Form rendert (Tabelle ↔ Karten, Toolbar ↔ Overflow-Menü, Tabs ↔ Scroller), **MUSS** in jedem Layout dieselben adressierbaren, key-basierten Identifikatoren ausgeben, sodass ein Konsument jedes Layout über dieselben Hooks liest; ein Identifikator, der nur in der Struktur eines Breakpoints existiert, erfüllt die Pflicht für die anderen nicht.
+- Jede wiederholte Liste oder Sektion **MUSS** in jedem Layout unterscheidbar sein: Ein Unterscheidungsmerkmal, das nur die Struktur eines Layouts trägt (ein Accessible Name allein auf der Desktop-Tabelle), lässt die Instanzen des anderen Layouts ununterscheidbar; der unterscheidende Identifikator sitzt daher auf einem Container, der in jedem Layout vorhanden ist.
 
 ### Namensschema
 
@@ -107,6 +113,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Web-(DOM-)Projekte und d
 - [ ] Die UX-/Usability-Rolle ist als adressierter Provider gebunden, und der Identifikator-Erhalt bei einer Usability-Änderung ist gefordert.
 - [ ] Die Durchsetzung ist nur als optionales KANN erwähnt, ohne einen Linter zu benennen.
 - [ ] Die Komponenten-Stufen-Abgrenzung (`test-tier-component`, nutzerseitige-Abfrage-zuerst) ist als bewusster Unterschied vermerkt, nicht als Widerspruch.
+- [ ] Der Identifikator sitzt auf dem interaktionsempfangenden Element (ein Wrapper trägt höchstens einen zusätzlichen), DOM-Formen je Breakpoint geben in jedem Layout dieselben key-basierten Identifikatoren aus, und wiederholte Listen bleiben in jedem Layout unterscheidbar.
 
 ## Referenzen
 
@@ -115,6 +122,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Web-(DOM-)Projekte und d
 - [R3] Frontend-Regeln zu Performance/Security/a11y/i18n/UX für dieselbe Web-Oberfläche: `spec/frontend/webview-ui-optimization/`
 - [R4] Herkunft der Bereitstellungsregeln, hier de-domänisiert: kamerplanter `UI-NFR-022` (`R-001..R-025`), PR #581
 - [R5] Agent-Autorierungsregeln, denen die konsumierenden Agents folgen: `spec/claude/agent-management/`
+- [R6] Konsumentenseitiger Hazard-Katalog, der von diesen Responsive-Pflichten abhängt: `spec/project/e2e-test-stability/` §G
 
 ## Offene Fragen
 

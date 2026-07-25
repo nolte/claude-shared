@@ -70,6 +70,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 - Locators **MUST** follow a robustness hierarchy, most-stable first: a dedicated test hook (for example `data-testid`) → element id → semantic/role selector → CSS → XPath as the last resort
 - Position-based XPath (`//div[3]/span[2]`) **MUST NOT** be used; selectors **MUST** survive cosmetic markup changes
+- A selector built on a structural or ARIA role alone (a bare dialog or listbox role, a bare table or cell selector) **MUST NOT** be used unscoped: component libraries assign the same role to different chrome at different breakpoints, so a role selector is scoped to its owning container or replaced by a dedicated test hook; the responsive hazard catalog behind this rule is `spec/project/e2e-test-stability/` §G
 
 ### Screenshot checkpoints
 
@@ -136,6 +137,7 @@ This profile is the binding realisation of the core for Python projects and the 
 - [R6] Test pyramid foundation (the tier model and taxonomy the E2E tier sits atop; owner of tier-completeness and coverage governance): `spec/project/test-pyramid-foundation/`
 - [R7] `spec/project/behavior-driven-development/`: owns the BDD scenario/specification layer above these execution mechanics; its scenario steps delegate to this spec's page objects
 - [R8] `spec/project/bdd-page-object-integration/`: owns the BDD-to-Page-Object integration and decoupling contract; the page objects this spec owns are consumed there without depending on the BDD layer
+- [R9] `spec/project/e2e-test-stability/`: the runtime-stability complement to this suite-shape standard; its §G owns the responsive/viewport hazard catalog the unscoped-role-locator rule guards against
 
 ## Open Questions
 
