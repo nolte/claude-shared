@@ -56,7 +56,7 @@ Topic folders group related specs (for example `spec/api/`, `spec/claude/`). Onl
 - Translations: `de`
 - Spec root: `spec/` (relative to project root)
 
-Overridable via `spec/.spec-config.yml` (validated against `spec/schemas/spec-config-v1.0.schema.yaml` by `scripts/validate_schemas.py`):
+Overridable via `spec/.spec-config.yml` (validated against `schemas/spec-config-v1.0.schema.yaml` by `scripts/validate_schemas.py`):
 
 ```yaml
 canonical_language: en

@@ -53,7 +53,7 @@ Leser: Skill- und Agent-Autoren und Reviewer, die die vollständige Feld-Landkar
 
 ### Maschinenlesbare Begleitdatei
 
-- **MUSS** eine JSON-Schema-Begleitdatei unter `spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml` ausliefern (JSON-Schema draft 2020-12), im Hausstil von `spec/schemas/spec-config-v1.0.schema.yaml` und `portfolio/schemas/tech-stack-v1.0.schema.yaml`.
+- **MUSS** eine JSON-Schema-Begleitdatei unter `schemas/skill-agent-frontmatter-v1.0.schema.yaml` ausliefern (JSON-Schema draft 2020-12), im Hausstil von `schemas/spec-config-v1.0.schema.yaml` und `portfolio/schemas/tech-stack-v1.0.schema.yaml`.
 - **MUSS** das Schema auf die **Parse-Fehler-Klasse** beschränken — Feld-Präsenz, Typ, primitive Limits (String-Länge, Listen-Länge, Enum-Zugehörigkeit, Pattern) — und **DARF NICHT** Semantik kodieren, die eine Owner-Regel forken würde (zum Beispiel die repoübergreifende Auflösbarkeit von `dont_use_when[].alternative`, die eine Audit-Zeit-Prüfung in `skill-agent-catalog` bleibt).
 - **MUSS** das Schema konsistent mit §Feldreferenz halten: Jedes hier als Pflicht markierte Feld ist dort `required`, jedes Enum hier ist dort ein `enum`/`pattern`, und jeder Provenienz-Marker bildet auf eine Schema-Beschreibungsnotiz ab.
 - **KANN** in einer späteren Änderung von `scripts/validate_skills.py` konsumiert werden; das Schema ist eine Begleitdatei, die der Validator übernehmen kann, und diese Spec verlangt diese Verdrahtung nicht.
@@ -147,7 +147,7 @@ Diese Referenz bleibt nur wahr, wenn sie im Gleichschritt mit den Flächen ände
 
 1. **Provenienz-Prüfung.** Das Feld als **Standard** klassifizieren (die Upstream-Quelle nennen — Agent-Skills-Spec, Anthropic-Plattform oder Claude-Code-Docs —, die es einführte) oder als **nolte** (die Owner-Spec und den Routing-/Katalog-Grund nennen). Das Ergebnis in der §Feldreferenz-Zeile des Feldes festhalten.
 2. **Zuerst den Owner aktualisieren.** Die normative Regel lebt in `skill-management`, `agent-management` oder `skill-agent-catalog`. Den Owner ändern, dann das Digest dieser Referenz zum Abgleich aktualisieren — nie umgekehrt.
-3. **Die vier Flächen in einer Änderung synchronisieren.** Die §Feldreferenz-Zeile, `spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml`, die Owner-Spec und (wenn validator-durchgesetzt) `scripts/validate_skills.py` werden zusammen aktualisiert, oder die bewusste Divergenz wird explizit benannt. Ein Feld, das in einer Fläche vorhanden ist, aber in einer anderen fehlt, ist ein Defekt.
+3. **Die vier Flächen in einer Änderung synchronisieren.** Die §Feldreferenz-Zeile, `schemas/skill-agent-frontmatter-v1.0.schema.yaml`, die Owner-Spec und (wenn validator-durchgesetzt) `scripts/validate_skills.py` werden zusammen aktualisiert, oder die bewusste Divergenz wird explizit benannt. Ein Feld, das in einer Fläche vorhanden ist, aber in einer anderen fehlt, ist ein Defekt.
 4. **Das Schema auf der Parse-Fehler-Klasse halten.** Ein neues Limit, das eine primitive Einschränkung ist (Länge, Enum, Pattern), kommt ins Schema; eine repoübergreifende oder semantische Prüfung (Auflösbarkeit, Earliest-Phase-Heuristik) bleibt eine Audit-Zeit-Regel im Owner und wird **nicht** im Schema kodiert.
 5. **Bei Upstream-Änderung neu markieren.** Wenn Claude Code oder die Agent-Skills-Spec ein neues Frontmatter-Feld ausliefert oder eines befördert, die Provenienz-Prüfung erneut ausführen, sodass ein Feld, das upstream zum Standard wird, von **nolte** (oder abwesend) zu **Standard** neu markiert wird.
 
@@ -163,7 +163,7 @@ Diese Referenz bleibt nur wahr, wenn sie im Gleichschritt mit den Flächen ände
 - [ ] Genau `name`, `description`, `phase` (both) und `distribution` (agent) sind als Pflicht platziert; jedes andere Feld ist optional.
 - [ ] Jedes Feld trägt genau einen Provenienz-Marker; jedes **Standard**-Feld zitiert eine Upstream-Quelle ([R1](#referenzen), [R2](#referenzen), [R3](#referenzen), [R7](#referenzen)); die zehn nolte-Felder (`distribution`, `tags`, `phase`, `summary`, `summary_<lang>`, `use_when`, `dont_use_when`, `see_also`, `examples`, `resumable`) sind als **nolte** markiert.
 - [ ] Jede Feld-Zeile nennt einen normativen Owner-Abschnitt, und das Dokument stellt fest, dass der Owner bei jeder Abweichung gewinnt.
-- [ ] `spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml` existiert (draft 2020-12), deckt nur die Parse-Fehler-Klasse ab und ist konsistent mit §Feldreferenz (Pflicht-Set, Enums, Limits).
+- [ ] `schemas/skill-agent-frontmatter-v1.0.schema.yaml` existiert (draft 2020-12), deckt nur die Parse-Fehler-Klasse ab und ist konsistent mit §Feldreferenz (Pflicht-Set, Enums, Limits).
 - [ ] Ein `## Wartung`-Abschnitt definiert die Provenienz-Prüfung, das Vier-Flächen-Sync-Gate und einen PR-Checklisten-Punkt.
 - [ ] Das Dokument wiederholt kein Owner-Limit als konkurrierende Definition; jedes gezeigte Limit ist ein Digest mit einem Rückverweis.
 - [ ] `task test` besteht und die geänderte Spec-Prosa ist Vale-sauber (aus dem Worktree ausgeführt).
