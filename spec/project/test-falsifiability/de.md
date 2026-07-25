@@ -55,7 +55,7 @@ Leser: Autor:innen und Reviewer von Testcode auf jedem Tier; die Tier-Generator-
 
 ### Detektion: dynamische Kriterien
 
-- Mutation-Testing ist der kanonische allgemeine Detektor — Produktivcode mutieren, und jeder Test, der weiterhin besteht, ist ein Falsifizierbarkeits-Verdachtsfall — und **SHOULD** [SOLLTE] per `spec/project/test-pyramid-foundation/` §"Coverage and suite-quality metrics" auf den Tiers angewendet werden, deren Laufzeitkosten es tragen, praktisch also Unit und Component; auf Tiers, wo es nicht tragbar ist (insbesondere E2E), sind die Review-Kriterien und die negative Verifikation unten der Ersatz, und ihre Anwendung dort ist **MUST** [MUSS], nicht **SHOULD** [SOLLTE]
+- Mutation-Testing ist der kanonische allgemeine Detektor — Produktivcode mutieren, und jeder Test, der weiterhin besteht, ist ein Falsifizierbarkeits-Verdachtsfall — und **SHOULD** [SOLLTE] per `spec/project/test-pyramid-foundation/` §"Coverage und Suite-Qualitätsmetriken" auf den Tiers angewendet werden, deren Laufzeitkosten es tragen, praktisch also Unit und Component; auf Tiers, wo es nicht tragbar ist (insbesondere E2E), sind die Review-Kriterien und die negative Verifikation unten der Ersatz, und ihre Anwendung dort ist **MUST** [MUSS], nicht **SHOULD** [SOLLTE]
 - Ein Test, der behauptet, serverseitigen Zustand zu ändern, dessen Lauf aber keinen entsprechenden Request produziert, **MUST** [MUSS] als Falsifizierbarkeits-Verdachtsfall behandelt werden; Request-pro-Test-Evidenz, die per `spec/project/e2e-test-stability/` §F bereits als Triage-Material vorgehalten wird, **MAY** [KANN] während Review und Analyse dafür herangezogen werden
 - Eine Assertion, die in keinem aufgezeichneten Lauf je fehlgeschlagen ist, ist ein Verdachtskandidat, aber Per-Assertion-Outcome-Historie ist mit Mainstream-Tooling nicht erhebbar und Per-Test-Historie existiert nur fensterbegrenzt in einem dedizierten Test-Analytics-Store (siehe die erledigte Open Question); wo ein solcher Store existiert, **MAY** [KANN] ein im Fenster nie fehlgeschlagener Test zum Priorisieren von Verdachtsfällen fürs Review dienen und **MUST NOT** [DARF NICHT] als Beweis in irgendeine Richtung gelten, denn Historie kann „kann nicht fehlschlagen" nicht von „ist noch nicht fehlgeschlagen" unterscheiden
 
@@ -111,7 +111,7 @@ Leser: Autor:innen und Reviewer von Testcode auf jedem Tier; die Tier-Generator-
 - `spec/project/e2e-test-automation/`: der Assertion-Message-Vertrag und das bestehende Tautologie-Assertion-Verbot, das diese Spec generalisiert
 - `spec/project/test-cycle-foundation/` und `spec/project/test-cycle-code-adaptation/`: Red-before-green und die No-Cheating-Invariante für falsifizierbarkeits-zerstörende Übergänge
 - `spec/project/test-cycle-result-analysis/`: das rot-seitige Gegenstück dieser grün-seitigen Spec
-- `spec/project/test-pyramid-foundation/` §"Coverage and suite-quality metrics": Mutation-Score als stärkeres Suite-Qualitätssignal, mit den Tooling-Referenzen, auf die sich diese Spec stützt
+- `spec/project/test-pyramid-foundation/` §"Coverage und Suite-Qualitätsmetriken": Mutation-Score als stärkeres Suite-Qualitätssignal, mit den Tooling-Referenzen, auf die sich diese Spec stützt
 - `spec/project/test-tier-static-analysis/`: das operative Regime für die statischen Checks
 - `spec/project/source-code-review/` (D1, D6) und `spec/frontend/source-code-review/` (F2, F11): die Review-Dimensionen, an die die Kriterien dieser Spec andocken
 - `spec/frontend/testability-identifiers/`: die Web-Instanziierung des Adressierbarkeits-Prinzips
