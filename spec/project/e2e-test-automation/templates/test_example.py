@@ -57,10 +57,18 @@ class TestExampleList:
         """
         items.open()
         count = items.get_row_count()
-        screenshot("TC-001-002_items-rows", f"Item list — {count} rows found")
 
         if count == 0:
-            pytest.skip("No items seeded — cannot verify the list renders rows")
+            # Self-provision instead of skipping: an availability-dependent
+            # skip is a silent coverage hole, not a pass
+            # (spec/project/e2e-test-stability/ §Test-data isolation).
+            unique = uuid.uuid4().hex[:6]
+            items.click_create()
+            items.fill_name(f"Example {unique}")
+            items.submit()
+            count = items.get_row_count()
+
+        screenshot("TC-001-002_items-rows", f"Item list — {count} rows found")
         assert count >= 1, f"TC-001-002 FAIL: Expected at least 1 row, got {count}"
 
     @pytest.mark.core_crud
