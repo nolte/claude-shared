@@ -78,3 +78,6 @@ discriminable
 discriminability
 interactability
 scroller
+Bugsink
+SDK('s)?
+[Tt]ranspiled
