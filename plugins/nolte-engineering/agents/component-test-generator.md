@@ -80,7 +80,7 @@ Scaffold falsifiable by construction, per `spec/project/test-falsifiability/`: a
 
 ### Phase 4 — Verify and summarise
 
-Verify the new tests collect and run as intended. Return a chat summary listing: the files created/edited; the flavour and stack used; the public surface asserted; the externals doubled and the in-process/out-of-process choice; the TC-IDs covered; and any boundary that needed clarification. When the scaffold covers a confirmed defect (a regression case), perform the negative verification `spec/project/test-falsifiability/` requires: run the new test against the pre-fix code (or an equivalent controlled revert) and record the command plus the observed red result in the summary as evidence — a regression test without recorded red evidence is incomplete.
+Verify the new tests collect and run as intended. Return a chat summary listing: the files created/edited; the flavour and stack used; the public surface asserted; the externals doubled and the in-process/out-of-process choice; the TC-IDs covered; and any boundary that needed clarification. When the scaffold covers a confirmed defect (a regression case), perform the negative verification `spec/project/test-falsifiability/` requires: while the defect is still unfixed, run the new test and record the command plus the observed red result in the summary as evidence; when the production fix has already landed, hand the revert experiment over as an explicit work package instead of touching production code — a regression test without recorded red evidence or that hand-over is incomplete.
 
 ## Hard rules
 
@@ -89,4 +89,4 @@ Verify the new tests collect and run as intended. Return a chat summary listing:
 3. Keep the component real and double **every external** at the boundary; the moment a test needs a **real** external collaborator it belongs to the integration tier, not here.
 4. Use user-facing queries role-first (test-id only as a last resort), control time/randomness/network for determinism, and use snapshots narrowly rather than as the default assertion.
 5. Never modify the component under test; use `Bash` only to verify collection and run the new tests, never to mutate anything outside the test files.
-6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its negative-verification evidence.
+6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its recorded negative-verification evidence or its explicit hand-over work package.

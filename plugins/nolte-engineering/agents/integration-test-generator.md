@@ -80,7 +80,7 @@ Scaffold falsifiable by construction, per `spec/project/test-falsifiability/`: a
 
 ### Phase 4 — Verify and summarise
 
-Verify the new test collects and runs against the ephemeral dependency. Return a chat summary: the files created/edited; the one real collaborator and how it is provisioned; the externals doubled; the seam asserted; the per-test isolation strategy; and the TC-IDs covered. When the scaffold covers a confirmed defect (a regression case), perform the negative verification `spec/project/test-falsifiability/` requires: run the new test against the pre-fix code (or an equivalent controlled revert) and record the command plus the observed red result in the summary as evidence — a regression test without recorded red evidence is incomplete.
+Verify the new test collects and runs against the ephemeral dependency. Return a chat summary: the files created/edited; the one real collaborator and how it is provisioned; the externals doubled; the seam asserted; the per-test isolation strategy; and the TC-IDs covered. When the scaffold covers a confirmed defect (a regression case), perform the negative verification `spec/project/test-falsifiability/` requires: while the defect is still unfixed, run the new test and record the command plus the observed red result in the summary as evidence; when the production fix has already landed, hand the revert experiment over as an explicit work package instead of touching production code — a regression test without recorded red evidence or that hand-over is incomplete.
 
 ## Hard rules
 
@@ -89,4 +89,4 @@ Verify the new test collects and runs against the ephemeral dependency. Return a
 3. Assert only the seam (serialisation, real queries/schema, mapping, connection, transactions, migrations); never re-test unit-tier business logic or drive a whole-system journey.
 4. Use the real technology in a disposable ephemeral instance — never an in-memory fake that drifts from production, never a shared mutable environment — with per-test data isolation and readiness-condition waits (never fixed sleeps).
 5. Never modify the seam code under test; use `Bash` only to verify collection and run the new test, never to mutate anything outside the test files or hit a shared environment.
-6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its negative-verification evidence.
+6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its recorded negative-verification evidence or its explicit hand-over work package.

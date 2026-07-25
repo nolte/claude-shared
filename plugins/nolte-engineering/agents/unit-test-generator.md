@@ -80,7 +80,7 @@ Scaffold falsifiable by construction, per `spec/project/test-falsifiability/`: a
 
 ### Phase 4 — Verify and summarise
 
-Verify the new tests collect and run as intended (reference profile: `--collect-only`, then run just the new file). Return a chat summary listing: the files created/edited; the stack used (and whether it defaulted to the reference profile); the solitary-or-sociable style applied; the behaviours covered and their TC-IDs; and any collaborator that had to be doubled and why. When the scaffold covers a confirmed defect (a regression case), perform the negative verification `spec/project/test-falsifiability/` requires: run the new test against the pre-fix code (or an equivalent controlled revert) and record the command plus the observed red result in the summary as evidence — a regression test without recorded red evidence is incomplete.
+Verify the new tests collect and run as intended (reference profile: `--collect-only`, then run just the new file). Return a chat summary listing: the files created/edited; the stack used (and whether it defaulted to the reference profile); the solitary-or-sociable style applied; the behaviours covered and their TC-IDs; and any collaborator that had to be doubled and why. When the scaffold covers a confirmed defect (a regression case), perform the negative verification `spec/project/test-falsifiability/` requires: while the defect is still unfixed, run the new test and record the command plus the observed red result in the summary as evidence; when the production fix has already landed, hand the revert experiment over as an explicit work package instead of touching production code — a regression test without recorded red evidence or that hand-over is incomplete.
 
 ## Hard rules
 
@@ -89,4 +89,4 @@ Verify the new tests collect and run as intended (reference profile: `--collect-
 3. Assert observable behaviour through the public interface — never private state — and write one behaviour per test with an intention-revealing name.
 4. Use the minimal disciplined doubles; never over-mock, never mock value objects or types you don't own, and prefer state verification, reserving mocks for when the interaction is the contract.
 5. Never modify production code under test; use `Bash` only to verify collection and run the new tests, never to mutate anything outside the test files.
-6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its negative-verification evidence.
+6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its recorded negative-verification evidence or its explicit hand-over work package.

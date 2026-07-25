@@ -80,7 +80,7 @@ Scaffold falsifiable by construction, per `spec/project/test-falsifiability/`: a
 
 ### Phase 4 — Verify and summarise
 
-Verify the contract is generated and verifiable locally. Return a chat summary: the files created/edited; the flavour and stack used; the boundary and the consumer-used subset; the broker and can-i-deploy wiring; and any cross-repo step the user must complete (publishing the contract, running provider verification in the provider pipeline). When the scaffold covers a confirmed defect (a regression case), perform the negative verification `spec/project/test-falsifiability/` requires: run the new test against the pre-fix contract or provider state (or an equivalent controlled revert) and record the command plus the observed red result in the summary as evidence — a regression test without recorded red evidence is incomplete.
+Verify the contract is generated and verifiable locally. Return a chat summary: the files created/edited; the flavour and stack used; the boundary and the consumer-used subset; the broker and can-i-deploy wiring; and any cross-repo step the user must complete (publishing the contract, running provider verification in the provider pipeline). When the scaffold covers a confirmed defect (a regression case), perform the negative verification `spec/project/test-falsifiability/` requires: while the defect is still unfixed, run the new test and record the command plus the observed red result in the summary as evidence; when the production fix has already landed, hand the revert experiment over as an explicit work package instead of touching production code — a regression test without recorded red evidence or that hand-over is incomplete.
 
 ## Hard rules
 
@@ -89,4 +89,4 @@ Verify the contract is generated and verifiable locally. Return a chat summary: 
 3. Assert only agreement compatibility (shape, fields, types, status codes, protocol); never business logic, and never over-specify beyond the subset the consumer uses.
 4. Wire a broker and a can-i-deploy compatibility gate; a contract that is not verified against the current provider is contract drift and is forbidden.
 5. Never modify the service under test or deploy; use `Bash` only to verify the contract is generated/verified locally, never to mutate anything outside the test and wiring files.
-6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its negative-verification evidence.
+6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its recorded negative-verification evidence or its explicit hand-over work package.
