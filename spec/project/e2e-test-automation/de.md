@@ -70,6 +70,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 
 - Locators **MÜSSEN** einer Robustheits-Hierarchie folgen, das Stabilste zuerst: ein dedizierter Test-Hook (z. B. `data-testid`) → Element-ID → semantischer/Rollen-Selektor → CSS → XPath als letztes Mittel
 - Positionsbasiertes XPath (`//div[3]/span[2]`) **DARF** nicht verwendet werden; Selektoren **MÜSSEN** kosmetische Markup-Änderungen überstehen
+- Ein Selektor, der allein auf einer strukturellen oder ARIA-Rolle baut (eine nackte Dialog- oder Listbox-Rolle, ein nackter Tabellen- oder Zellen-Selektor), **DARF** nicht ungescoped verwendet werden: Komponentenbibliotheken vergeben dieselbe Rolle an unterschiedliches Chrome an unterschiedlichen Breakpoints; ein Rollen-Selektor wird daher auf seinen besitzenden Container eingegrenzt oder durch einen dedizierten Test-Hook ersetzt; der Responsive-Hazard-Katalog hinter dieser Regel ist `spec/project/e2e-test-stability/` §G
 
 ### Screenshot-Checkpoints
 
@@ -136,6 +137,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die 
 - [R6] Test-Pyramide-Fundament (Stufenmodell und Taxonomie, auf denen die E2E-Stufe dieser Spec aufsitzt; Eigentümer von Stufen-Vollständigkeit und Coverage-Governance): `spec/project/test-pyramid-foundation/`
 - [R7] `spec/project/behavior-driven-development/`: besitzt die BDD-Szenario-/Spezifikationsebene über diesen Ausführungsmechaniken; ihre Szenario-Steps delegieren an die Page Objects dieser Spec
 - [R8] `spec/project/bdd-page-object-integration/`: besitzt den BDD-zu-Page-Object-Integrations- und Entkopplungs-Vertrag; die Page Objects dieser Spec werden dort konsumiert, ohne von der BDD-Ebene abzuhängen
+- [R9] `spec/project/e2e-test-stability/`: das Laufzeit-Stabilitäts-Komplement zu diesem Suite-Form-Standard; dessen §G besitzt den Responsive-/Viewport-Hazard-Katalog, gegen den die Ungescoped-Rollen-Locator-Regel schützt
 
 ## Offene Fragen
 

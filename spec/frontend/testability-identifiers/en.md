@@ -51,6 +51,7 @@ Readers: frontend developers who build or reshape a portfolio UI (`nolte-enginee
 ### Element-level provisioning
 
 - Interactive elements (buttons, links, toggles, menu items) that a test drives **MUST** each carry a stable identifier.
+- The identifier **MUST** sit on the element that receives the interaction, never only on a wrapper that also contains label, helper, or decoration content: wrapper geometry is breakpoint-dependent (wrapped helper text shifts the wrapper's click centre off the input), while the interactive child's geometry isn't. A wrapper **MAY** carry an additional identifier, but the interactive child's identifier is the one that satisfies the provisioning obligation.
 - Form fields **MUST** carry a stable identifier of the form `form-field-<name>`, where `<name>` is the field's stable business name, not its position or label text.
 - Dialogs, modals, and overlays **MUST** carry a stable identifier on their root so a test can scope selection to the open dialog.
 - Any status, validation, or result display whose content a test asserts on **MUST** carry a stable identifier; this holds regardless of how the element is mounted (inline, portal, toast, overlay)—mounting context doesn't exempt a test-relevant element from provisioning.
@@ -59,6 +60,11 @@ Readers: frontend developers who build or reshape a portfolio UI (`nolte-enginee
 
 - Rows of a repeated list or table **MUST** be addressable by a stable **business key** (for example `<entity>-row-<businessKey>`), never by list index or DOM position, so a test survives reordering, filtering, and pagination.
 - WHEN no natural business key exists, the frontend **MUST** provide a stable synthetic key that's deterministic across renders; a render-order index or an ephemeral runtime id **MUST NOT** be used as the addressing key.
+
+### Responsive layout parity
+
+- A component that renders a different DOM shape per breakpoint (table ↔ cards, toolbar ↔ overflow menu, tabs ↔ scroller) **MUST** emit the same addressable, key-based identifiers in every layout, so a consumer reads every layout through the same hooks; an identifier that exists only in one breakpoint's structure doesn't satisfy the obligation for the others.
+- Every repeated list or section **MUST** be discriminable in every layout: a discriminator carried by only one layout's structure (an accessible name on the desktop table alone) leaves the other layout's instances indistinguishable, so the discriminating identifier sits on a container present in every layout.
 
 ### Naming schema
 
@@ -107,6 +113,7 @@ This profile is the binding realisation of the core for web (DOM) projects and t
 - [ ] The UX/usability role is bound as an addressed provider, and identifier preservation on a usability edit is required.
 - [ ] Enforcement is mentioned only as an optional MAY, with no linter named.
 - [ ] The component-tier delimitation (`test-tier-component`, user-facing-query-first) is noted as an intentional difference, not a contradiction.
+- [ ] The identifier sits on the interaction-receiving element (a wrapper carries at most an additional one), per-breakpoint DOM shapes emit the same key-based identifiers in every layout, and repeated lists stay discriminable in every layout.
 
 ## References
 
@@ -115,6 +122,7 @@ This profile is the binding realisation of the core for web (DOM) projects and t
 - [R3] Frontend performance/security/a11y/i18n/UX rules for the same web surface: `spec/frontend/webview-ui-optimization/`
 - [R4] Provenance of the provisioning rules, generalised here from their plant domain: kamerplanter `UI-NFR-022` (`R-001..R-025`), PR #581
 - [R5] Agent authoring rules the consuming agents conform to: `spec/claude/agent-management/`
+- [R6] Consumer-side hazard catalog that depends on these responsive obligations: `spec/project/e2e-test-stability/` §G
 
 ## Open Questions
 

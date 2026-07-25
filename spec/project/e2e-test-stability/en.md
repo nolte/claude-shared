@@ -12,6 +12,8 @@ A full-suite stabilization pass over a consuming project's E2E suite (≈720 Sel
 4. **Optimistic UI feedback**: a "saved" snackbar queued *before* the PATCH resolved; the test trusted it, reloaded, and the in-flight request was killed—the change silently lost (a real user-facing data-loss bug, not a test problem).
 5. **Genuine application concurrency defects that only parallel E2E load exposes**: a create-on-first-read race minting duplicate singleton documents (no unique index), and a read-modify-write-full-document update losing concurrent PATCHes of disjoint fields. Both reproduced deterministically outside the suite once identified.
 
+A later stabilization pass over the same project's **mobile** E2E profile (141 → 72 → 8 → 5 failures across four full runs, with the desktop profiles green on the same commits) added a sixth mechanic, **viewport-dependent behaviour**: role collisions with hidden responsive chrome, layout switches that change the DOM shape, breakpoint-dependent wrapper geometry, activation models a synthetic fallback can't drive, popovers repositioning mid-animation. Most of these don't fail loudly: they produce empty reads and no-op interactions that let tests pass for the wrong reason. §G catalogs that class.
+
 The load-bearing insight: **a parallel E2E suite is a de-facto concurrency test of the application.** Failures it surfaces split into test-design debt (1–3), app-truthfulness debt (4), and product concurrency defects (5)—and each class has a different correct fix. Stabilizing by retries, skips, serializing everything, or weakening assertions hides all three.
 
 This spec turns those findings into design rules so new suites are stable from the first commit, and into a bounded stabilization loop for existing suites. It complements `spec/project/e2e-test-automation/` (which owns the suite's *shape*: page objects, waits, locators, screenshots, protocol, traceability); this spec owns the suite's *runtime stability* under parallel execution.
@@ -23,6 +25,7 @@ Readers: authors and reviewers of E2E suites; the `e2e-test-generator` / `e2e-te
 - Make E2E tests deterministic by design: self-provisioned data, no cross-test or cross-worker coupling
 - Make suites parallel-safe: global mutable state is inventoried and everything that mutates it serialized, everything else stays parallel
 - Catalog the known UI-interaction hazards (blind keyboard dismissals, transient-overlay intercepts) and mandate the guarded helpers that avoid them
+- Catalog the responsive/viewport hazards a mobile or tablet profile adds (cross-breakpoint role collisions, layout-switch readers, unsound click fallbacks, animation races) and mandate layout-asserting, loud-failing page objects and an animation-free harness
 - Key every wait on durable, truthful signals—and treat optimistic success feedback in the app as an implementation defect
 - Route concurrency failures surfaced by parallel E2E runs to the application as product defects instead of absorbing them in the test layer
 - Keep skips and expected-failure markers honest: deterministic, explained, monitored, and removed when healed
@@ -78,8 +81,22 @@ Readers: authors and reviewers of E2E suites; the `e2e-test-generator` / `e2e-te
 - Every non-pass **MUST** be classified before anything is changed, using the classes of `spec/project/test-cycle-result-analysis/` (real defect / flake / test bug / infrastructure), and the fix **MUST** match the class: test bug → minimal surgical test fix; implementation bug → root-cause fix in the application; flake → prove by independent re-run, then harden the condition or setup; infrastructure → fix the harness
 - A profile/suite counts as stabilized only after passing **twice consecutively without any intervention** in between; any code or test change resets the counter
 - Retries-as-fix, new skips, deleted tests, and weakened assertions are forbidden stabilization means (the no-cheating invariant of `spec/project/test-cycle-code-adaptation/` applied to the suite level); deleting a test requires an explicit justification against its test-case specification
-- Run artifacts (screenshots, application/container logs, the machine-generated protocol) **MUST** be retained per run and used as triage evidence; a claim about "what the app showed" is settled by the screenshot, and a claim about "what the server did" by the request log, before any hypothesis is coded against
+- Run artifacts (screenshots, application/container logs, request logs, the machine-generated protocol) **MUST** be retained per run and used as triage evidence; a claim about "what the app showed" is settled by the screenshot, and a claim about "what the server did" by the request log—including request-count diffs between runs, which settle whether the server was even asked—before any hypothesis is coded against
 - When the same surface fails repeatedly with rotating root causes, the loop **MUST** keep drilling until a mechanism is *proven* (reproduced outside the suite, or demonstrated by isolation asymmetry)—three distinct stacked causes on one page (optimistic feedback, lost update, duplicate singletons) is a realistic outcome, and stopping after the first plausible fix leaves the suite red
+
+### G. Responsive and viewport-dependent hazards
+
+A responsive UI renders different chrome, DOM shapes, and geometry per breakpoint, so a suite that adds a mobile or tablet profile inherits a hazard class §A–F don't cover—and most of it fails silently, as empty reads and no-op interactions that let tests pass for the wrong reason:
+
+- A locator built on a structural or ARIA role alone (a bare dialog or listbox role, a bare table or cell selector) **MUST NOT** be used unscoped: component libraries assign the same role to different chrome at different breakpoints, and a hidden, kept-mounted responsive element can carry the role and precede the real target in the DOM. Scope the selector to its owning container or address a dedicated test hook, per `spec/project/e2e-test-automation/` §Locator strategy
+- A page object **MUST NOT** read a layout-specific structure (a desktop table, a mobile card list) without asserting that layout is active, and a reader that can't find its expected structure **MUST** fail loudly rather than return an empty result—an empty read that satisfies a "nothing unexpected present" assertion is a silent coverage hole
+- Access into a responsive collection **MUST** be key-based, never position-based: a positional read is wrong at every breakpoint, on desktop merely undetectably so. The provider-side obligations this depends on—the same key-based hooks in every layout, per-layout discriminability of lists, the identifier on the interaction-receiving element—are owned by `spec/frontend/testability-identifiers/`
+- A click fallback (a synthetic script click, coordinate-based event dispatch) **MUST** be sound for the target component's activation model or **MUST** fail loudly; a fallback that can't produce the effect but reports success is worse than no fallback, and coordinate-based dispatch performs no interactability hit-test, so it delivers events to whatever sits on top
+- A helper that opens a menu, select, or popover **MUST** verify the component actually opened (an expanded-state attribute or equivalent) instead of assuming the click worked—§D's verify-its-effect rule applied to the open step
+- A viewport-conditional affordance (a section collapsed behind a disclosure control, an overflow menu, drawer navigation) **MUST** be part of the page object's contract, expanded condition-based and idempotently before dependent interactions
+- The browser harness **MUST** disable UI animations suite-wide (a forced reduced-motion preference or the framework equivalent); clicking a still-animating, repositioning popover is a race no wait can reliably close
+- Only one application stack **MUST** run against a given browser grid at a time; concurrent stacks exhaust the grid's session capacity and produce mass setup errors that masquerade as suite failures
+- A profile in a declared test matrix **MUST** count as covered only after at least one valid baseline run; an infrastructure-poisoned run isn't a baseline
 
 ## Acceptance Criteria
 
@@ -90,6 +107,8 @@ Readers: authors and reviewers of E2E suites; the `e2e-test-generator` / `e2e-te
 - [ ] Concurrency defects found under parallel runs are fixed in the application (with a lower-tier regression test), not absorbed by the test layer
 - [ ] All skips are deterministic and reasoned; `xfail` markers carry reason + revisit condition and are removed once they `xpass` through a full green-confirmation window
 - [ ] Suite stabilization work follows classify → class-matched fix → re-run, with green-twice-without-intervention as the exit criterion
+- [ ] No structural/ARIA-role locator is used unscoped; layout-specific readers assert their layout is active and fail loudly instead of returning empty results
+- [ ] Click fallbacks are sound for the target's activation model or fail loudly, open-helpers verify the opened state, the harness runs animation-free with one stack per browser grid, and a matrix profile counts as covered only after a valid baseline run
 - [ ] The `e2e-test-generator` and `e2e-test-reviewer` agents apply this spec alongside `spec/project/e2e-test-automation/` when scaffolding or reviewing suites
 
 ## References
@@ -99,7 +118,7 @@ Readers: authors and reviewers of E2E suites; the `e2e-test-generator` / `e2e-te
 - `spec/project/test-cycle-code-adaptation/`: the no-cheating invariant and root-cause fixing for confirmed defects
 - `spec/project/test-pyramid-foundation/`: tier placement; the lower-tier regression tests required by §B
 - `spec/frontend/testability-identifiers/`: provider-side testability hooks in the application under test
-- Source experience: kamerplanter full-suite E2E stabilization (2026-07), branch `fix/e2e-full-run-stabilization`: order-dependent harvest-detail skips, ESC-race across ~20 page objects, optimistic experience-level snackbar, preference lost-update, duplicate singleton preference documents; each mechanic listed in §Context maps to a reproduced incident there
+- Source experience: kamerplanter full-suite E2E stabilization (2026-07), branch `fix/e2e-full-run-stabilization`: order-dependent harvest-detail skips, ESC-race across ~20 page objects, optimistic experience-level snackbar, preference lost-update, duplicate singleton preference documents; each mechanic listed in §Context maps to a reproduced incident there; the mobile-profile pass (runs `20260725_010046`, `030325`, `055859`, `073849`; 141 → 72 → 8 → 5 failures) supplied the §G viewport hazards
 
 ## Open Questions
 
