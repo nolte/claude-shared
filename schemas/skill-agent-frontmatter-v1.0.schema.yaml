@@ -22,7 +22,7 @@
 # Code frontmatter fields, and a newly-shipped upstream field is a §Maintenance
 # sync event, not a silent pass.
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: https://github.com/nolte/claude-shared/blob/main/spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml
+$id: https://github.com/nolte/claude-shared/blob/main/schemas/skill-agent-frontmatter-v1.0.schema.yaml
 title: Skill and Agent Frontmatter
 description: >-
   Validates the YAML frontmatter of a Claude Code skill (SKILL.md) or agent
@@ -32,14 +32,14 @@ description: >-
   the normative rules the digest points back to.
 
 oneOf:
-  - $ref: "#/$defs/skill"
-  - $ref: "#/$defs/agent"
+  - $ref: "#/$defs/Skill"
+  - $ref: "#/$defs/Agent"
 
 $defs:
 
   # ---- Reusable field constraints (shared by both variants) ----
 
-  name:
+  Name:
     type: string
     minLength: 1
     maxLength: 64
@@ -51,7 +51,7 @@ $defs:
       Standard (Agent Skills spec + Anthropic platform). Required. Equals the
       folder/file name. Owner: skill-management / agent-management §Structure.
 
-  description:
+  Description:
     type: string
     minLength: 1
     maxLength: 1024
@@ -59,21 +59,21 @@ $defs:
       Standard (Agent Skills spec + Anthropic platform). Required. Third person,
       states what + when. Owner: skill-management / agent-management.
 
-  phase:
+  Phase:
     type: string
     enum: [vision, plan, design, build, review, quality, close-release, cross-cutting]
     description: >-
       nolte invention. Required. Exactly one identifier, never a list. Owner:
       skill-agent-catalog §Phase classification.
 
-  distribution:
+  Distribution:
     type: string
     enum: [plugin, project]
     description: >-
       nolte invention. Required for agents only. Owner: agent-management
       §Distribution.
 
-  tags:
+  Tags:
     type: array
     maxItems: 5
     items:
@@ -87,7 +87,7 @@ $defs:
       chars, no leading underscore. Owner: skill-management / agent-management
       §Tag vocabulary and skill-agent-catalog.
 
-  summary:
+  Summary:
     type: string
     minLength: 1
     maxLength: 200
@@ -95,7 +95,7 @@ $defs:
       nolte invention. Optional. English canonical short summary, <=200 chars.
       Owner: skill-agent-catalog §Per-language short summary.
 
-  use_when:
+  UseWhen:
     type: array
     maxItems: 6
     items:
@@ -105,7 +105,7 @@ $defs:
       nolte invention. Optional. <=6 trigger scenarios, each <=120 chars. Owner:
       skill-agent-catalog §Use-case metadata.
 
-  dont_use_when:
+  DontUseWhen:
     type: array
     maxItems: 6
     items:
@@ -126,7 +126,7 @@ $defs:
       alternative (an artifact name). Owner: skill-agent-catalog §Use-case
       metadata.
 
-  see_also:
+  SeeAlso:
     type: array
     maxItems: 8
     items:
@@ -136,7 +136,7 @@ $defs:
       nolte invention. Optional. <=8 artifact names. Resolvability is an audit
       check. Owner: skill-agent-catalog §Use-case metadata.
 
-  examples:
+  UsageExamples:
     type: array
     maxItems: 4
     items:
@@ -154,7 +154,7 @@ $defs:
       nolte invention. Optional. <=4 mappings of prompt (<=200 chars) + outcome
       (<=200 chars). Owner: skill-agent-catalog §Use-case metadata.
 
-  model:
+  Model:
     type: string
     minLength: 1
     description: >-
@@ -162,21 +162,21 @@ $defs:
       model ID, or `inherit`; default `inherit` when omitted. Owner:
       agent-management §Model selection / skill-management §Runtime.
 
-  effort:
+  Effort:
     type: string
     enum: [low, medium, high, xhigh, max]
     description: >-
       Standard (Claude Code). Optional. Overrides the session effort. Owner:
       agent-management / skill-management.
 
-  resumable:
+  Resumable:
     type: boolean
     description: >-
       nolte invention. Optional. `true` when the artifact spans more than one
       approval gate or named phase. Owner: skill-management / agent-management
       §Resumable runs and resumable-work.
 
-  string_list:
+  StringList:
     type: array
     items:
       type: string
@@ -184,8 +184,11 @@ $defs:
 
   # ---- SKILL variant ----
 
-  skill:
+  Skill:
     type: object
+    description: >-
+      The frontmatter shape of a skill (SKILL.md); forbids the agent-only
+      `distribution` field via its closed property set.
     additionalProperties: false
     required: [name, description, phase]
     # summary_<lang> per additional docs language (e.g. summary_de).
@@ -195,49 +198,82 @@ $defs:
         minLength: 1
         maxLength: 200
     properties:
-      name: {$ref: "#/$defs/name"}
-      description: {$ref: "#/$defs/description"}
-      phase: {$ref: "#/$defs/phase"}
-      summary: {$ref: "#/$defs/summary"}
-      tags: {$ref: "#/$defs/tags"}
-      use_when: {$ref: "#/$defs/use_when"}
-      dont_use_when: {$ref: "#/$defs/dont_use_when"}
-      see_also: {$ref: "#/$defs/see_also"}
-      examples: {$ref: "#/$defs/examples"}
-      model: {$ref: "#/$defs/model"}
-      effort: {$ref: "#/$defs/effort"}
-      resumable: {$ref: "#/$defs/resumable"}
+      name: {$ref: "#/$defs/Name"}
+      description: {$ref: "#/$defs/Description"}
+      phase: {$ref: "#/$defs/Phase"}
+      summary: {$ref: "#/$defs/Summary"}
+      tags: {$ref: "#/$defs/Tags"}
+      use_when: {$ref: "#/$defs/UseWhen"}
+      dont_use_when: {$ref: "#/$defs/DontUseWhen"}
+      see_also: {$ref: "#/$defs/SeeAlso"}
+      examples: {$ref: "#/$defs/UsageExamples"}
+      model: {$ref: "#/$defs/Model"}
+      effort: {$ref: "#/$defs/Effort"}
+      resumable: {$ref: "#/$defs/Resumable"}
       # Standard (Claude Code) skill-surface optional fields:
       when_to_use:
         type: string
         description: Standard (Claude Code). Combined with description under 1536 chars.
       argument-hint:
         type: string
+        description: >-
+          Standard (Claude Code). Optional. Placeholder hint shown after the
+          slash-command name when the skill is user-invoked.
       arguments:
         type: string
+        description: >-
+          Standard (Claude Code). Optional. Named-argument declaration string
+          for user invocation.
       disable-model-invocation:
         type: boolean
+        description: >-
+          Standard (Claude Code). Optional. `true` restricts the skill to
+          explicit user invocation; the model never auto-triggers it.
       user-invocable:
         type: boolean
+        description: >-
+          Standard (Claude Code). Optional. `false` hides the skill from the
+          slash-command surface; the model may still auto-trigger it.
       allowed-tools:
-        $ref: "#/$defs/string_list"
+        $ref: "#/$defs/StringList"
+        description: >-
+          Standard (Claude Code). Optional. Tool allowlist active while the
+          skill runs; omitted means the session's tool set applies.
       context:
         type: string
         enum: [fork]
+        description: >-
+          Standard (Claude Code). Optional. `fork` runs the skill in a forked
+          context instead of the main conversation.
       agent:
         type: string
         minLength: 1
+        description: >-
+          Standard (Claude Code). Optional. Agent type that executes the skill
+          when `context: fork` dispatches it off the main loop.
       paths:
-        $ref: "#/$defs/string_list"
+        $ref: "#/$defs/StringList"
+        description: >-
+          Standard (Claude Code). Optional. Path globs that scope when a
+          path-triggered skill loads.
       shell:
         type: string
+        description: >-
+          Standard (Claude Code). Optional. Shell used for the skill's inline
+          command execution.
       hooks:
         type: object
+        description: >-
+          Standard (Claude Code). Optional. Hook wiring the skill contributes
+          while active; shape owned by the Claude Code hooks surface.
 
   # ---- AGENT variant ----
 
-  agent:
+  Agent:
     type: object
+    description: >-
+      The frontmatter shape of an agent (agents/<name>.md); requires the
+      agent-only `distribution` field.
     additionalProperties: false
     required: [name, description, phase, distribution]
     patternProperties:
@@ -246,49 +282,85 @@ $defs:
         minLength: 1
         maxLength: 200
     properties:
-      name: {$ref: "#/$defs/name"}
-      description: {$ref: "#/$defs/description"}
-      phase: {$ref: "#/$defs/phase"}
-      distribution: {$ref: "#/$defs/distribution"}
-      summary: {$ref: "#/$defs/summary"}
-      tags: {$ref: "#/$defs/tags"}
-      use_when: {$ref: "#/$defs/use_when"}
-      dont_use_when: {$ref: "#/$defs/dont_use_when"}
-      see_also: {$ref: "#/$defs/see_also"}
-      examples: {$ref: "#/$defs/examples"}
-      model: {$ref: "#/$defs/model"}
-      effort: {$ref: "#/$defs/effort"}
-      resumable: {$ref: "#/$defs/resumable"}
+      name: {$ref: "#/$defs/Name"}
+      description: {$ref: "#/$defs/Description"}
+      phase: {$ref: "#/$defs/Phase"}
+      distribution: {$ref: "#/$defs/Distribution"}
+      summary: {$ref: "#/$defs/Summary"}
+      tags: {$ref: "#/$defs/Tags"}
+      use_when: {$ref: "#/$defs/UseWhen"}
+      dont_use_when: {$ref: "#/$defs/DontUseWhen"}
+      see_also: {$ref: "#/$defs/SeeAlso"}
+      examples: {$ref: "#/$defs/UsageExamples"}
+      model: {$ref: "#/$defs/Model"}
+      effort: {$ref: "#/$defs/Effort"}
+      resumable: {$ref: "#/$defs/Resumable"}
       # Standard (Claude Code) agent-surface optional fields:
       tools:
-        $ref: "#/$defs/string_list"
+        $ref: "#/$defs/StringList"
+        description: >-
+          Standard (Claude Code). Optional. Tool allowlist granted to the
+          agent; omitted inherits the dispatching session's tools.
       disallowedTools:
-        $ref: "#/$defs/string_list"
+        $ref: "#/$defs/StringList"
+        description: >-
+          Standard (Claude Code). Optional. Tools explicitly denied to the
+          agent even when `tools` would grant them.
       permissionMode:
         type: string
         enum: [default, acceptEdits, auto, dontAsk, bypassPermissions, plan]
+        description: >-
+          Standard (Claude Code). Optional. Permission mode the agent runs
+          under; `default` when omitted.
       maxTurns:
         type: integer
         minimum: 1
+        description: >-
+          Standard (Claude Code). Optional. Upper bound on the agent's
+          conversation turns before it is stopped.
       skills:
-        $ref: "#/$defs/string_list"
+        $ref: "#/$defs/StringList"
+        description: >-
+          Standard (Claude Code). Optional. Skills preloaded into the agent's
+          context at dispatch.
       mcpServers:
         type: object
+        description: >-
+          Standard (Claude Code). Optional. MCP server configuration available
+          to the agent; shape owned by the Claude Code MCP surface.
       hooks:
         type: object
+        description: >-
+          Standard (Claude Code). Optional. Hook wiring active for the agent's
+          session; shape owned by the Claude Code hooks surface.
       memory:
         type: string
         enum: [user, project, local]
+        description: >-
+          Standard (Claude Code). Optional. Which persistent memory scope the
+          agent reads and writes.
       background:
         type: boolean
+        description: >-
+          Standard (Claude Code). Optional. `true` runs the agent in the
+          background, re-invoking the dispatcher on completion.
       isolation:
         type: string
         enum: [worktree]
+        description: >-
+          Standard (Claude Code). Optional. `worktree` gives the agent an
+          isolated git worktree copy of the repository.
       color:
         type: string
         enum: [red, blue, green, yellow, purple, orange, pink, cyan]
+        description: >-
+          Standard (Claude Code). Optional. Display color of the agent in the
+          harness UI.
       initialPrompt:
         type: string
+        description: >-
+          Standard (Claude Code). Optional. Prompt injected as the agent's
+          first user turn at dispatch.
 
 examples:
   # A minimal skill frontmatter.

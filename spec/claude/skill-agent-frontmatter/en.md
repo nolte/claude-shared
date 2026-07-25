@@ -53,7 +53,7 @@ Readers: skill and agent authors and reviewers who need the full field map, the 
 
 ### Machine-readable companion
 
-- **MUST** ship a JSON-Schema companion at `spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml` (JSON-Schema draft 2020-12), in the house style of `spec/schemas/spec-config-v1.0.schema.yaml` and `portfolio/schemas/tech-stack-v1.0.schema.yaml`.
+- **MUST** ship a JSON-Schema companion at `schemas/skill-agent-frontmatter-v1.0.schema.yaml` (JSON-Schema draft 2020-12), in the house style of `schemas/spec-config-v1.0.schema.yaml` and `portfolio/schemas/tech-stack-v1.0.schema.yaml`.
 - **MUST** restrict the schema to the **parse-error class** only—field presence, type, primitive limits (string length, list length, enum membership, pattern)—and **MUST NOT** encode semantics that would fork an owner rule (for example the cross-artifact resolvability of `dont_use_when[].alternative`, which stays an audit-time check in `skill-agent-catalog`).
 - **MUST** keep the schema consistent with §Field reference: every field marked required here is `required` there, every enum here is an `enum`/`pattern` there, and every provenance marker maps to a schema description note.
 - **MAY** be consumed by `scripts/validate_skills.py` in a later change; the schema is a companion the validator can adopt, and this spec doesn't require that wiring.
@@ -147,7 +147,7 @@ This reference stays true only if it changes in lockstep with the surfaces it ma
 
 1. **Provenance review.** Classify the field **Standard** (name the upstream source—Agent Skills spec, Anthropic platform, or Claude Code docs—that introduced it) or **nolte** (name the owner spec and the routing/catalog reason). Record the outcome in the field's §Field reference row.
 2. **Update the owner first.** The normative rule lives in `skill-management`, `agent-management`, or `skill-agent-catalog`. Change the owner, then update this reference's digest to match—never the reverse.
-3. **Sync the four surfaces in one change.** The §Field reference row, `spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml`, the owner spec, and (if validator-enforced) `scripts/validate_skills.py` are updated together, or the deliberate divergence is stated explicitly. A field present in one surface but missing from another is a defect.
+3. **Sync the four surfaces in one change.** The §Field reference row, `schemas/skill-agent-frontmatter-v1.0.schema.yaml`, the owner spec, and (if validator-enforced) `scripts/validate_skills.py` are updated together, or the deliberate divergence is stated explicitly. A field present in one surface but missing from another is a defect.
 4. **Keep the schema at the parse-error class.** A new limit that's a primitive constraint (length, enum, pattern) goes into the schema; a cross-artifact or semantic check (resolvability, phase-earliest heuristic) stays an audit-time rule in the owner, **not** a schema constraint.
 5. **Re-mark on upstream change.** When Claude Code or the Agent Skills spec ships a new frontmatter field, or promotes one, re-run the provenance review so a field that becomes standard upstream is re-marked from **nolte** (or absent) to **Standard**.
 
@@ -163,7 +163,7 @@ This reference stays true only if it changes in lockstep with the surfaces it ma
 - [ ] Exactly `name`, `description`, `phase` (both) and `distribution` (agent) are placed as required; every other field is optional.
 - [ ] Every field carries exactly one provenance marker; every **Standard** field cites an upstream source ([R1](#references), [R2](#references), [R3](#references), [R7](#references)); the ten nolte fields (`distribution`, `tags`, `phase`, `summary`, `summary_<lang>`, `use_when`, `dont_use_when`, `see_also`, `examples`, `resumable`) are marked **nolte**.
 - [ ] Every field row names a normative owner section, and the document states the owner wins on any discrepancy.
-- [ ] `spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml` exists (draft 2020-12), covers the parse-error class only, and is consistent with §Field reference (required set, enums, limits).
+- [ ] `schemas/skill-agent-frontmatter-v1.0.schema.yaml` exists (draft 2020-12), covers the parse-error class only, and is consistent with §Field reference (required set, enums, limits).
 - [ ] A `## Maintenance` section defines the provenance review, the four-surface sync gate, and a PR checklist item.
 - [ ] The document restates no owner limit as a competing definition; each limit shown is a digest with a back-reference.
 - [ ] `task test` passes and the changed spec prose is Vale-clean (run from the worktree).

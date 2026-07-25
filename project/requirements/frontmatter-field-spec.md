@@ -17,7 +17,7 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
      standard — with upstream source — vs. nolte-local invention), and a back-reference to
      the field's **normative owner** spec; plus the standard-vs-invention taxonomy and a
      **§Maintenance** process for keeping the doc in sync; and
-  2. a **machine-readable JSON-Schema companion** `spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml`
+  2. a **machine-readable JSON-Schema companion** `schemas/skill-agent-frontmatter-v1.0.schema.yaml`
      (JSON-Schema draft 2020-12, house style of `spec-config-v1.0` / `tech-stack-v1.0`) that
      encodes the **parse-error class** (field presence, type, limits, enum) only.
 - **Normative model (load-bearing, Q2):** **Model A — descriptive/aggregating.** The new
@@ -102,8 +102,8 @@ probability. A requirement is `confirmed` only after an explicit teach-back.
 ### JSON-Schema companion
 
 - **R7** — WHEN the machine-readable companion is authored, it SHALL exist as
-  `spec/schemas/skill-agent-frontmatter-v1.0.schema.yaml` (JSON-Schema draft 2020-12), in the
-  house style of `spec/schemas/spec-config-v1.0.schema.yaml` /
+  `schemas/skill-agent-frontmatter-v1.0.schema.yaml` (JSON-Schema draft 2020-12), in the
+  house style of `schemas/spec-config-v1.0.schema.yaml` /
   `portfolio/schemas/tech-stack-v1.0.schema.yaml`, encoding **only the parse-error class**
   (field presence, type, limits, enum) — semantics remain with the owner specs (Model A
   consistency). It is a companion the validator MAY later consume; wiring it into

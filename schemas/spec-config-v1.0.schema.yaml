@@ -11,7 +11,7 @@
 # §"Audit and CI integration", not parse errors, so the schema keeps them
 # structurally valid and leaves them to the drift check.
 $schema: https://json-schema.org/draft/2020-12/schema
-$id: https://github.com/nolte/claude-shared/blob/main/spec/schemas/spec-config-v1.0.schema.yaml
+$id: https://github.com/nolte/claude-shared/blob/main/schemas/spec-config-v1.0.schema.yaml
 title: Spec Configuration
 description: >-
   Validates spec/.spec-config.yml. Refs spec/project/portfolio-inherited-spec-layer/
