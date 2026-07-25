@@ -83,8 +83,8 @@ Der Severity-Floor aus Kern-D1 für verschluckte und fehlende Fehlerbehandlung g
 - **MUSS** Fehlerausgaben melden, die rohen Exception-Text, Stacktraces oder Backend-Interna an den Nutzer durchreichen
 - **MUSS** ein optimistisches Update ohne Rollback im Fehlerfall melden sowie eine Mutation, deren Fehlschlag den gerenderten Zustand inkonsistent zum Server zurücklässt
 - **SOLLTE** unbegrenzte Retries ohne Backoff melden sowie pauschale Retries auf Client-Fehlerantworten, die bei Wiederholung nicht erfolgreich sein können
-- **SOLLTE** eine Anwendung ohne globalen Handler für nicht gefangene Fehler und nicht behandelte Rejections melden
-- **MUSS** „Fehler erreichen die Observability-Senke nie" als D10-Route-out an `spec/project/monitoring-observability/` weiterreichen, statt es hier zu vertiefen
+- **SOLLTE** eine Anwendung ohne globalen Handler für nicht gefangene Fehler und nicht behandelte Rejections melden; der Zwei-Listener-Boden und seine Senke gehören `spec/project/error-tracking/` §„Integration contract" und `spec/project/monitoring-observability/` §„Frontend observability", das Finding benennt also die Lücke und routet weiter, statt ein SDK vorzuschreiben
+- **MUSS** „Fehler erreichen die Observability-Senke nie" als D10-Route-out an `spec/project/error-tracking/` (der Tracker-seitige Vertrag, dessen Regel zur expliziten Erfassung an der Entscheidungsstelle das Laufzeit-Gegenstück zu diesem Floor ist) und `spec/project/monitoring-observability/` weiterreichen, statt es hier zu vertiefen
 
 ### F3 — Component-Design und öffentliche API
 
@@ -274,6 +274,7 @@ Dies ist eine tragende Grenze, kein höflicher Hinweis. Beide Reviews blicken au
 - [R4] Whole-Codebase-Security-Audit (Route-out-Ziel für F9-Floors): `spec/project/code-security-audit/`
 - [R5] Observability-Audit (Route-out-Ziel für nicht gemeldete Fehler): `spec/project/monitoring-observability/`
 - [R6] Übersetzungsschlüssel-Abdeckung und Locale-Vollständigkeit (Route-out-Ziel für F10): `spec/project/i18n-completeness/`
+- [R6a] Error-Tracking-Lebenszyklus und der Browser-Global-Handler-Boden (Route-out-Ziel für nicht gemeldete F2-Fehler): `spec/project/error-tracking/`
 - [R7] Test-Identifikator-Vertrag (Route-out-Ziel für F11-Identifikator-Findings): `spec/frontend/testability-identifiers/`
 - [R8] Test-Stufen-Specs und -Reviewer (Route-out-Ziele für Stufenkonformität): `spec/project/test-pyramid-foundation/` und `spec/project/test-tier-*/`
 - [R9] Mechanisches Gate, auf das die Tooling-first-Regel verweist: `spec/project/quality-gate/`

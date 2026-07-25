@@ -83,8 +83,8 @@ The core D1 severity floor for swallowed and missing error handling applies verb
 - **MUST** report error output that exposes raw exception text, stack traces, or backend internals to the user
 - **MUST** report an optimistic update with no rollback on failure, and a mutation whose failure leaves the rendered state inconsistent with the server
 - **SHOULD** report unbounded or unbacked-off retry, and blanket retry on client-error responses that can't succeed on repetition
-- **SHOULD** report an application with no global handler for uncaught errors and unhandled rejections
-- **MUST** route "errors never reach the observability sink" as a D10 route-out to `spec/project/monitoring-observability/` rather than deepening it here
+- **SHOULD** report an application with no global handler for uncaught errors and unhandled rejections; the two-listener floor and its sink are owned by `spec/project/error-tracking/` §"Integration contract" and `spec/project/monitoring-observability/` §"Frontend observability," so the finding names the gap and routes rather than prescribing an SDK
+- **MUST** route "errors never reach the observability sink" as a D10 route-out to `spec/project/error-tracking/` (the tracker-side contract, whose explicit-capture-at-the-decision-point rule is the runtime complement of this floor) and `spec/project/monitoring-observability/` rather than deepening it here
 
 ### F3—Component design and public API
 
@@ -274,6 +274,7 @@ This is a load-bearing boundary, not a courtesy note. The two reviews look at th
 - [R4] Whole-codebase security audit (route-out target for F9 floors): `spec/project/code-security-audit/`
 - [R5] Observability audit (route-out target for unreported errors): `spec/project/monitoring-observability/`
 - [R6] Translation-key coverage and locale completeness (route-out target for F10): `spec/project/i18n-completeness/`
+- [R6a] Error-tracking lifecycle and the browser global-handler floor (route-out target for unreported F2 failures): `spec/project/error-tracking/`
 - [R7] Test-identifier contract (route-out target for F11 identifier findings): `spec/frontend/testability-identifiers/`
 - [R8] Test-tier specs and reviewers (route-out targets for tier conformance): `spec/project/test-pyramid-foundation/` and `spec/project/test-tier-*/`
 - [R9] Mechanical gate the tooling-first rule defers to: `spec/project/quality-gate/`
