@@ -30,7 +30,7 @@ Readers: developers wiring an application to an error tracker, operators running
 - CI/build failure triage (owned by `spec/project/workflow-health/`); the tracker watches running applications, not pipelines
 - Full APM/RUM adoption: the reference tool's performance tracing and the Core Web Vitals layer stay advisory exactly as `spec/project/monitoring-observability/` classifies them
 - Mandating one concrete alerting channel, triage SLA number, retention period, or sampling rate—those are project-defined; this spec mandates that each **exists and is written down**
-- Selecting the tracker for third-party/off-the-shelf software the portfolio merely operates; the scope here is in-house developments ("Eigenentwicklungen")
+- Selecting the tracker for third-party/off-the-shelf software the portfolio merely operates; the scope here is in-house developments
 
 ## Requirements
 

@@ -79,6 +79,5 @@ discriminability
 interactability
 scroller
 Bugsink
-Eigenentwicklungen
 SDK('s)?
 [Tt]ranspiled
