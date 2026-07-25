@@ -1,5 +1,14 @@
 # Performance / Rendering — Research notes
 
+## Contents
+
+- [Methodology](#methodology)
+- [Best practices](#best-practices)
+- [Anti-patterns (with sources)](#anti-patterns-with-sources)
+- [Open questions / gaps](#open-questions--gaps)
+- [Spec-input summary](#spec-input-summary)
+- [Currency addendum (2026-07-24)](#currency-addendum-2026-07-24)
+
 ## Methodology
 
 Each best-practice claim below is backed by at least two independent authoritative sources. Acceptable sources include the official vendor/standards docs: react.dev, vitejs.dev, mui.com, redux.js.org, reactrouter.com, react-hook-form.com, web.dev (Chrome team / Google), developer.mozilla.org, w3.org, whatwg.org, nginx.org, recharts.org, day.js.org, axios-http.com, vitest.dev. Where only the canonical vendor doc exists, a corroborating spec (MDN/W3C) or independent vendor doc is paired. Items lacking two independent sources are marked `partial` or `unverified` with a reason. The repo under test ships a static SPA served by nginx with no SSR.

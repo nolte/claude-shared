@@ -2,6 +2,16 @@
 
 Status: draft
 
+## Inhalt
+
+- [Kontext](#kontext)
+- [Ziele](#ziele)
+- [Nicht-Ziele](#nicht-ziele)
+- [Anforderungen](#anforderungen)
+- [Akzeptanzkriterien](#akzeptanzkriterien)
+- [Offene Fragen](#offene-fragen)
+- [Quellen](#quellen)
+
 ## Kontext
 
 Jede browsergehostete UI im Portfolio baut auf denselben Primitiven auf — schlichtem HTML und CSS plus einem JavaScript-Framework, das in ein einziges DOM rendert — und wird letztlich an denselben fünf Fragen gemessen: Kommt der erste Paint schnell, ist die Interaktionsfläche sicher, kann jeder Nutzer sie bedienen, funktioniert sie in jeder angebotenen Sprache, und fühlt sie sich unter dem Finger oder Zeiger richtig an? Die aktuelle Referenzimplementierung ist das kamerplanter-Frontend: React 19, TypeScript strict, Vite 8 als Bundler, MUI v9 mit Emotion, Redux Toolkit, React Router v7, react-hook-form mit Zod, react-i18next, notistack, Recharts, `qrcode.react`, Vitest mit `vitest-axe`, ausgeliefert als statische Assets hinter nginx mit einem `nginx-security-headers.inc`-Partial. Neue Produktfeatures, Refactorings und Audits berühren alle diese Fläche, aber die Regeln, die sie einhalten müssen, sind verstreut über Vendor-Docs, OWASP-Cheat-Sheets, WCAG-Kriterien und Ad-hoc-Team-Konventionen. Die Kosten sind zweifach: Beitragende leiten dieselben Checklisten jedes Mal neu ab, und Reviewer können nicht aus dem Diff allein erkennen, ob ein PR auslieferungsfähig ist. Diese Spec sammelt die Regeln, die diese Fläche regieren — ausschließlich load-bearing, vendor-verifiziert, je Aussage durch ≥ 2 unabhängige autoritative Quellen verankert — sodass die Regeln einheitlich auf Audits, neuen Code und den `webview-ui-optimize`-Skill / `webview-ui-expert`-Agent angewendet werden, die sie konsumieren.

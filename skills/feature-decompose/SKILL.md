@@ -127,8 +127,8 @@ feature is malformed.
    the project's primary source roots, and the spec corpus under `spec/`,
    and returns a `findings` array. Confirm the working tree is a git
    repository (`git rev-parse --is-inside-work-tree`) before invoking
-   the agent — that precondition has moved from the agent to here when
-   the agent's `tools` list dropped `Bash`.
+   the agent — the agent has no shell access, so this
+   skill owns that precondition.
 2. **Manual fallback (deprecated, transitional only).** The
    `feature-consistency-reviewer` agent ships with this skill — under
    normal conditions the dispatch in step 1 succeeds and the fallback
@@ -170,8 +170,8 @@ feature is malformed.
    fallback; capture it as a dedicated line of the exact form
    `Manual pass performed by: <name>` (the operator's name or handle) at
    the top of `## Consistency notes`, so an auditor can attribute the
-   resolution decisions without parsing prose. The fallback is already
-   deprecated as of the commit that ships this skill alongside the
+   resolution decisions without parsing prose. The manual fallback is deprecated; use it
+   only when the runtime cannot resolve the
    `feature-consistency-reviewer` agent. Every manual pass on a repo
    whose plugin runtime can resolve the agent is a workflow-health
    finding per `spec/project/feature/` §Consistency check; the right

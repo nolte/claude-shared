@@ -14,6 +14,16 @@ status: open
 
 # Spec Drift Audit — YYYY-Q<n>
 
+## Contents
+
+- [Scope](#scope)
+- [Summary](#summary)
+- [Per-criterion results](#per-criterion-results)
+- [Findings](#findings)
+- [Decisions](#decisions)
+- [Specialist coverage review](#specialist-coverage-review)
+- [Processing log](#processing-log)
+
 <!-- For thematic audits: append the topic after the quarter, e.g. "2026-Q2 — pull-request-workflow" -->
 
 ## Scope

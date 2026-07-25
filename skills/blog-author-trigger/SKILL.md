@@ -50,7 +50,7 @@ Detect the operator's language and respond in it. The derived briefing fields ar
 Before deriving anything, resolve the two roles per `spec/project/blog-author-trigger/` §Consumer contract from the source consumer's `CLAUDE.md`:
 
 - **Source consumer** — this repository: hosts features under `project/features/<slug>.md` and drives transitions via `sprint-execute`. The `in_progress → done` transition is the trigger event.
-- **Blog consumer** — the repository declared in `CLAUDE.md` that receives derived briefings (reference: `nolte/blog`, clone path `~/repos/github/blog`). The source consumer **MAY** declare itself as its own blog consumer.
+- **Blog consumer** — the repository declared in `CLAUDE.md` that receives derived briefings; its clone path is resolved from that declaration at runtime (illustrative reference: `nolte/blog` at `~/repos/github/blog`). The source consumer **MAY** declare itself as its own blog consumer.
 
 When `CLAUDE.md` declares no blog consumer, stop with a single-sentence message naming the missing declaration; the operator amends `CLAUDE.md` (per the source-consumer contract) before the trigger can proceed.
 

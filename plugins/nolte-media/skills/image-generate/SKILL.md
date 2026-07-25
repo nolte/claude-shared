@@ -23,7 +23,7 @@ see_also:
 
 Turns a text prompt into an image file on disk — no chat UI, scriptable into any pipeline — by driving the bundled, stdlib-only `scripts/image_generate.py`. Backends are **swappable via `--provider`** so the capability is not locked to one vendor's pricing or availability.
 
-Implements `${CLAUDE_PLUGIN_ROOT}/spec/tools/image-generation/<canonical_language>.md` (per-provider details in `spec/design/flux-image-generation/` and `spec/design/gemini-image-generation/`). Where this skill and the spec disagree, the spec wins.
+Implements `spec/tools/image-generation/<canonical_language>.md`, resolved in the *target repository* (the plugin ships no `spec/` tree). When the target repo carries no such spec — a consumer install without the hub corpus — apply the provider-neutral requirements inlined in this body (provider swappability, consent gate, deterministic file output) as the fallback baseline. Per-provider details live in the hub's `spec/design/flux-image-generation/` and `spec/design/gemini-image-generation/`. Where this skill and a resolvable spec disagree, the spec wins.
 
 ## Why this is a skill, not an agent
 

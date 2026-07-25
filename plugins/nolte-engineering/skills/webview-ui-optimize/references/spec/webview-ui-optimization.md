@@ -2,6 +2,16 @@
 
 Status: draft
 
+## Contents
+
+- [Context](#context)
+- [Goals](#goals)
+- [Non-Goals](#non-goals)
+- [Requirements](#requirements)
+- [Acceptance Criteria](#acceptance-criteria)
+- [Open Questions](#open-questions)
+- [Sources](#sources)
+
 ## Context
 
 Every browser-hosted UI in the portfolio is built on the same primitives—plain HTML and CSS plus a JavaScript framework rendering into a single DOM—and is ultimately judged by the same five questions: does the first paint arrive fast, is the interaction surface safe, can every user operate it, does it work in every offered language, and does it feel right under the user's finger or pointer? The current reference implementation is the kamerplanter frontend: React 19, TypeScript strict, Vite 8 as the bundler, MUI v9 with Emotion, Redux Toolkit, React Router v7, react-hook-form with Zod, react-i18next, notistack, Recharts, `qrcode.react`, Vitest with `vitest-axe`, served as static assets behind nginx with an `nginx-security-headers.inc` partial. New product features, refactors, and audits all touch this surface, but the rules they must satisfy are scattered across vendor docs, OWASP cheat sheets, WCAG criteria, and ad-hoc team conventions. The cost is twofold: contributors re-derive the same checklists every time, and reviewers can't tell whether a PR is shippable from the diff alone. This spec collects the rules that govern that surface—load-bearing only, vendor-verified, anchored to ≥2 independent authoritative sources per claim—so the rules apply uniformly across audits, new code, and the `webview-ui-optimize` skill / `webview-ui-expert` agent that consume them.

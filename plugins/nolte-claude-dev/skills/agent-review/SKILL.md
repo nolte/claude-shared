@@ -136,6 +136,6 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never delete a plan with an open Critical.** `Warning` / `Suggestion` / `Info` may be deferred; `Critical` must land or be downgraded (which requires a spec change, not a reviewer's choice).
 - **No invention in frontmatter.** Unknown git SHA → `unknown`. Missing reference → the finding describes the gap.
 - **English section headings, English commit messages.** Prose inside findings may follow the user's language; the structural contract stays English-only.
-- **No cross-target batching.** One agent per plan, one plan per run. For "review all agents", loop and emit one plan each.
+- **No cross-target batching.** One agent per plan, one plan per run. For "review all agents", loop and emit one plan each. For the consolidated cross-cutting report over the whole inventory (boundary matrix, gap inventory), route to `skills-agents-sweep` instead; the loop here yields per-artefact plans only.
 - **This skill reviews the agent artifact, not its live behavior.** Do not dispatch the agent under review to see what it does — out of scope and risks side effects.
 - **Tool-scope check is bidirectional and strict.** Declared-but-unused is a `Warning`; used-but-undeclared is a `Critical` (the agent will fail to run). Do not soften either side.

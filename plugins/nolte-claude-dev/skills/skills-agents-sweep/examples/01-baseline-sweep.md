@@ -1,5 +1,13 @@
 # Example: Full-Scope Baseline Sweep
 
+## Contents
+
+- [Turn 1 — user invokes the sweep](#turn-1--user-invokes-the-sweep)
+- [Turn 2 — phase 1: per-artefact reviews](#turn-2--phase-1-per-artefact-reviews)
+- [Turn 3 — phase 2: cross-cutting analysis](#turn-3--phase-2-cross-cutting-analysis)
+- [Turn 4 — phase 3: write consolidated report](#turn-4--phase-3-write-consolidated-report)
+- [Turn 5 — commit](#turn-5--commit)
+
 This walkthrough covers a complete portfolio-wide sweep of the `nolte-shared` plugin from
 scope confirmation through consolidated report authoring.
 

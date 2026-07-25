@@ -15,12 +15,12 @@ per-artefact-plans: <count> (under .audits/skill-review/ and .audits/agent-revie
 - [Scope](#scope)
 - [Executive Summary](#executive-summary)
 - [Inventory](#inventory)
-- [Abgrenzungs-Matrix](#abgrenzungs-matrix)
-- [Lücken-Inventar](#lücken-inventar)
+- [Boundary matrix](#boundary-matrix)
+- [Spec-induced gap inventory](#spec-induced-gap-inventory)
 - [Adoption-Friction](#adoption-friction)
-- [Skill-vs-Agent-Sortierung](#skill-vs-agent-sortierung)
-- [Konsistenz-Findings](#konsistenz-findings)
-- [Nachgelagerte Umsetzungs-Roadmap](#nachgelagerte-umsetzungs-roadmap)
+- [Skill-vs-agent classification findings](#skill-vs-agent-classification-findings)
+- [Consistency findings](#consistency-findings)
+- [Wave-based implementation roadmap](#wave-based-implementation-roadmap)
 - [Hand-off](#hand-off)
 - [Processing log](#processing-log)
 
@@ -86,7 +86,7 @@ Both clusters are mechanically fixable with one focused PR each (see roadmap). -
 
 ---
 
-## Abgrenzungs-Matrix
+## Boundary matrix
 
 ### Overlaps (conflicts with trigger collision)
 
@@ -114,7 +114,7 @@ Both clusters are mechanically fixable with one focused PR each (see roadmap). -
 
 ---
 
-## Lücken-Inventar
+## Spec-induced gap inventory
 
 ### Spec-induced gaps (specs exist, skills or agents do not)
 
@@ -176,7 +176,7 @@ Both clusters are mechanically fixable with one focused PR each (see roadmap). -
 
 ---
 
-## Skill-vs-Agent-Sortierung
+## Skill-vs-agent classification findings
 
 ### Skills that should be agents per decision rules
 
@@ -198,7 +198,7 @@ Both clusters are mechanically fixable with one focused PR each (see roadmap). -
 
 ---
 
-## Konsistenz-Findings
+## Consistency findings
 
 ### German-trigger distribution
 
@@ -222,7 +222,7 @@ Both clusters are mechanically fixable with one focused PR each (see roadmap). -
 
 ---
 
-## Nachgelagerte Umsetzungs-Roadmap
+## Wave-based implementation roadmap
 
 Sorted by effort times impact (strategy: mechanical sweeps first, structural changes last).
 

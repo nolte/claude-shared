@@ -27,7 +27,7 @@ Promotes an open draft pull request (typically the one opened by `pull-request-c
 
 ## Why this is a skill, not an agent
 
-Read `references/skill-vs-agent-rationale.md` for the full `skill-vs-agent` justification — in short: externally-visible PR mutations (draft → ready, `automerge` label, fallback merge) gate on mid-flow user confirmation, the skill orchestrates `review`/`security-review`/`workflow-health`, and wait mode needs a visible per-round status line, all of which default the orchestrator to skill form.
+Read `references/skill-vs-agent-rationale.md` when reviewing or challenging the artifact-type choice — in short: externally-visible PR mutations (draft → ready, `automerge` label, fallback merge) gate on mid-flow user confirmation, the skill orchestrates `review`/`security-review`/`workflow-health`, and wait mode needs a visible per-round status line, all of which default the orchestrator to skill form.
 
 ## User-language policy
 
@@ -178,7 +178,7 @@ The skill is single-shot by default: when step 4 finds pending checks or step 7a
 
 ## Gotchas
 
-Read `references/gotchas.md` for the non-obvious environment facts — the exact-spelling `automerge` label, `automerge.yaml` `SUCCESS` not proving the merge, the required-checks list living in `.github/settings.yml` (not the UI), and `Closes #N` autolinks not firing on `develop` merges. The load-bearing versions are also in the Hard rules and the numbered steps.
+Read `references/gotchas.md` when a `gh` call or merge signal behaves unexpectedly — the exact-spelling `automerge` label, `automerge.yaml` `SUCCESS` not proving the merge, the required-checks list living in `.github/settings.yml` (not the UI), and `Closes #N` autolinks not firing on `develop` merges. The load-bearing versions are also in the Hard rules and the numbered steps.
 
 ## Resumability
 
