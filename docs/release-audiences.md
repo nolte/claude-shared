@@ -209,16 +209,29 @@ and machine-readability constraints. The eight candidate audiences mandated by
 Per `release-notes-audience-analysis` §Acceptance Criteria, every configured
 `release-drafter` category must trace back to at least one audience here:
 
+The configured categories are inherited from
+`nolte/gh-plumbing:.github/commons-release-drafter.yml` (🚀 Features /
+🐛 Bug Fixes / 🧰 Maintenance, all rendered under the template's `## Changes`
+heading). This table maps exactly those categories — reconciled 2026-07-25
+against the shared config and the shipped releases v0.1.1…v0.1.11 (2026-Q3
+audit finding `release-notes-audience-analysis.traceability-table-drift`
+in issue 495); the previous rows named categories that never appeared.
+
 | release-drafter category | serves audience(s) |
 | --- | --- |
-| Breaking Changes | `rel-upgrader`, `rel-integrator` |
-| Security | `rel-security` |
-| Features / What's Changed | `rel-new-adopter`, `rel-maintainer`, `rel-renovate`, `rel-feed-reader` |
-| Spec & contract changes | `rel-integrator` |
+| `## Changes` (template wrapper for all categories) | `rel-feed-reader`, `rel-new-adopter` |
+| 🚀 Features (`enhancement`) | `rel-new-adopter`, `rel-maintainer`, `rel-feed-reader` |
+| 🐛 Bug Fixes (`bug`) | `rel-upgrader`, `rel-maintainer` |
+| 🧰 Maintenance (`chore`, `documentations`, `project-config`, `cicd`, `dependencies`) | `rel-maintainer`, `rel-renovate`, `rel-operator` |
 
-When `release-drafter.yml` is next configured or materially changed, every
-category it declares MUST appear in this table (add the row) and every row here
-SHOULD have a backing category; categories no audience needs are removed.
+Categories the upstream config does **not** declare (Breaking Changes,
+Security, Spec & contract changes) carry no row; when they are introduced
+upstream or via a local override, add the row in the same change — Breaking
+Changes serves `rel-upgrader`/`rel-integrator`/`rel-packager`, Security serves
+`rel-security`. When `release-drafter.yml` is next configured or materially
+changed, every category it declares MUST appear in this table (add the row)
+and every row here SHOULD have a backing category; categories no audience
+needs are removed.
 
 ## Revisit triggers
 

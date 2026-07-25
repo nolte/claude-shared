@@ -2,4 +2,20 @@
   extends: [
     'github>nolte/gh-plumbing//renovate-configs/common#v1.1.26',
   ],
+  packageRules: [
+    // spec/project/workflow-health/ MUST NOTs Renovate automerge for
+    // nolte/gh-plumbing tag bumps: a human acknowledgement of each plumbing
+    // bump is the portfolio-wide rollback signal (2026-Q3 audit finding
+    // workflow-health.renovate-automerges-gh-plumbing; PR #392 merged 4
+    // minutes after creation via the bot). automerge is disabled and the
+    // label set is overridden so the shared preset's `automerge` label never
+    // lands on these PRs. Note: the Mend app runs mode:silent for this repo,
+    // so gh-plumbing PRs surface via the dashboard/portal and now wait for a
+    // maintainer merge.
+    {
+      matchPackageNames: ['nolte/gh-plumbing'],
+      automerge: false,
+      labels: ['dependencies'],
+    },
+  ],
 }
