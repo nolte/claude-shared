@@ -21,7 +21,7 @@ BRAND-STYLE-REF v0 (bootstrap): modern flat-design comic / vector cartoon, bold 
 
 A minimalist geometric emblem of a cute sloth hanging from a short horizontal branch, front-facing, simplified to a few bold rounded shapes that form a clean badge-like mark. Dominant body color muted indigo, branch and a single leaf in warm moss green, eyes and claws picked out in warm amber, cream warm-bone-white face mask, and a single short cool silver-grey streak on one side of the head as the signature mark. Thick uniform indigo outline. Iconic and balanced, near-symmetrical apart from the one grey side streak, lots of padding around the mark. Flat warm bone-white background.
 
-Brand color reinforcement: muted indigo #5B5FC7, warm moss green #4F9D69, warm amber #E0A23C, warm bone white #F4F1EA, cool silver-grey streak #AEB2BE. Seed: unset.
+Brand color reinforcement: muted indigo #4A529D, warm moss green #769244, warm amber #E0A23C, warm bone white #F4F1EA, cool silver-grey streak #AEB2BE. Seed: unset.
 ```
 
 ## Prompt — Dark Mode
@@ -31,7 +31,7 @@ BRAND-STYLE-REF v0 (bootstrap): modern flat-design comic / vector cartoon, bold 
 
 A minimalist geometric emblem of a cute sloth hanging from a short horizontal branch, front-facing, simplified to a few bold rounded shapes that form a clean badge-like mark. Dominant body color soft cobalt-violet, branch and a single leaf in soft fern green, eyes and claws picked out in warm amber, cream warm-bone-white face mask, and a single short pale silver-grey streak on one side of the head as the signature mark. Thick uniform warm-bone outline so the mark stays crisp on a dark surface. Iconic and balanced, near-symmetrical apart from the one grey side streak, lots of padding around the mark. Flat deep warm charcoal background.
 
-Brand color reinforcement: soft cobalt-violet #8E92E6, soft fern green #6FBF8A, warm amber #E0A23C, pale silver-grey streak #C9CDD6, deep warm charcoal #20222A. Seed: unset.
+Brand color reinforcement: soft cobalt-violet #939FE3, soft fern green #95B06A, warm amber #E0A23C, pale silver-grey streak #C9CDD6, deep warm charcoal #20222A. Seed: unset.
 ```
 
 ## Rendered v1.1 asset (committed)
@@ -53,11 +53,16 @@ Reproduction:
 At a ≤32 px favicon the silver-grey streak and the branch/leaf collapse to a few pixels;
 that is expected — the emblem is designed to still read as a dark sloth silhouette there.
 
-## Avoidance clause
-No embedded text, letters, or numbers; no other companies' logos or trademarks;
-no watermark or signature; no photorealism or detailed fur texture; no harsh
-gradients or glossy 3D rendering; no busy or cluttered background; no extra limbs
-or distorted anatomy; avoid off-brand colors (no teal-cyan, no pure red, no neon).
+## Avoidance (positive assertions — FLUX has no negative prompt)
+Encode every exclusion as what the image *is*: the emblem is **purely pictorial**
+(all meaning carried by shape alone, free of any lettering, numerals, or marks);
+it is an **original heraldic figure** owing nothing to any existing logo and
+carrying a clean, unsigned surface; the rendering is **flat vector-style with
+crisp matte fills** (stylised smooth shapes rather than photographic fur, solid
+color fields rather than gradients or glossy 3D); the background is a **single
+plain field** so the silhouette stands alone; the anatomy is **exactly the
+canonical figure** (two arms, two legs, three claws each); every color comes
+from the brand vocabulary (indigo/cream/amber family throughout).
 
 ## Post-processing checklist
 - [ ] Remove the flat background → real transparency via `png-to-transparent-svg`
@@ -66,4 +71,4 @@ or distorted anatomy; avoid off-brand colors (no teal-cyan, no pure red, no neon
       a single short grey notch in the tuft or drop it if it muddies the silhouette
 - [ ] Verify it reads as one silhouette (squint test) — the heraldic-animal payload
 - [ ] Pair with the wordmark typography as a separate overlay — never rendered here
-- [ ] If approved, promote this render to `BRAND-STYLE-REF v1` (fixed reference image)
+- [x] Fixed reference image designated (2026-07-25, #494): `design/brand/mascot/mascot-front-light.svg` anchors `BRAND-STYLE-REF` — see `../brand/brand-vocabulary.md` §Canonical style reference
