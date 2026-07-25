@@ -1,5 +1,12 @@
 # Example 02 — Refactor an existing template (surface one-way changes)
 
+## Contents
+
+- [Input prompt](#input-prompt)
+- [Input files](#input-files)
+- [Expected behaviour](#expected-behaviour)
+- [What the skill does NOT do](#what-the-skill-does-not-do)
+
 ## Input prompt
 
 > Das Template unter `cookiecutter-templates/nolte-service/` hat noch die
@@ -29,7 +36,7 @@
 ### Step 1 — Template root confirmation
 
 Skill confirms absolute path:
-`/home/nolte/repos/my-portfolio/cookiecutter-templates/nolte-service/`
+`<repo-root>/cookiecutter-templates/nolte-service/`
 
 Waits for user to confirm this is the correct target.
 

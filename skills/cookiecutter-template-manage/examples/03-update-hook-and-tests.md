@@ -1,5 +1,12 @@
 # Example 03 — Update: harden a hook and extend the pytest-cookies harness
 
+## Contents
+
+- [Input prompt](#input-prompt)
+- [Input files](#input-files)
+- [Expected behaviour](#expected-behaviour)
+- [What the skill does NOT do](#what-the-skill-does-not-do)
+
 ## Input prompt
 
 > Für `cookiecutter-templates/nolte-python-lib/` brauche ich zwei Dinge:

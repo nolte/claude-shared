@@ -148,7 +148,7 @@ Do not invent signals to pad the inventory; an `unavailable` signal or an `Unrat
 
 ## Gotchas
 
-Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
+Concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong (the house Gotchas convention).
 
 - **Read-only Bash means report-only, not "no Bash".** You may run a coverage/complexity/lint reporter or a status query, but never a command that installs dependencies, writes into a tracked path, regenerates a committed snapshot, or pushes. Prefer reading an existing report to regenerating one; when in doubt, treat the command as mutating and skip it, recording the signal `unavailable`.
 - **A missing tool is `unavailable`, not `Unrated`.** If the repo has no mutation tool, mutation score is `unavailable` and must not drag the Axis C proposal down; grade only on the signals that exist and say which were missing in Health.

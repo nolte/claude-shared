@@ -1,5 +1,14 @@
 # Accessibility (a11y) Research — Webview-UI Stack
 
+## Contents
+
+- [Methodology](#methodology)
+- [Best practices](#best-practices)
+- [Anti-patterns](#anti-patterns)
+- [Open questions](#open-questions)
+- [Spec-input summary](#spec-input-summary)
+- [Currency addendum (2026-07-24)](#currency-addendum-2026-07-24)
+
 ## Methodology
 
 - **Target standard:** WCAG 2.2 Level AA (the conformance level most regulators reference). All "MUST" practices below are anchored either to a numbered WCAG 2.2 success criterion or to a normative ARIA Authoring Practices Guide (APG) pattern.

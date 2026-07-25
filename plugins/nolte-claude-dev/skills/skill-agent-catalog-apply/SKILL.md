@@ -42,7 +42,7 @@ Before doing anything:
 
    Report the detected mode explicitly in the audit output so the user knows which rule set applies. Don't bail purely because `.claude-plugin/plugin.json` is absent; consumer mode is a first-class supported shape.
 3. Confirm an `mkdocs.yml` exists at the repo root. If not, stop and tell the user to run `project-structure-apply` first (which is responsible for scaffolding MkDocs itself).
-4. Locate `spec/claude/skill-agent-catalog/` in the current repo or via the `nolte-shared` plugin. If neither is reachable, stop and ask the user which spec source to use.
+4. Locate `spec/claude/skill-agent-catalog/` in the current repo. If it isn't reachable — the spec corpus is repo-wide in the source monorepo and is not shipped with any plugin — stop and ask the user which spec source to use (consistent with the unavailable-spec rule above).
 5. In consumer mode, ask the user which external plugin source roots should appear in the catalog before proposing any changes (for example local clones of `nolte-shared`, other nolte plugins, or third-party plugins). Require at least one; the catalog is meaningless with an empty source list.
 6. Check for uncommitted changes in `mkdocs.yml`, the docs requirements file, and any existing generator hook path. If the tree is dirty there, report and ask whether to stash, commit, or abort—never overwrite uncommitted work.
 

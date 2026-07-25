@@ -71,7 +71,7 @@ Guide the operator through:
 ## Hard rules
 
 - **Never** call the Gemini API, request a `GEMINI_API_KEY`, or run the `image-generate` script for this flow; the whole point is the no-billing UI route.
-- **Never** write the image or a `<image>.meta.json` sidecar — provenance and file placement are the operator's responsibility (this is the "Nur Download-Anleitung" contract).
+- **Never** write the image or a `<image>.meta.json` sidecar — provenance and file placement are the operator's responsibility (this is the download-guidance-only ("Nur Download-Anleitung", the original requirement's wording) contract).
 - **Always** state the **SynthID watermark** caveat: every Gemini UI output carries an invisible SynthID watermark. For a watermark-free commercial or blog asset, steer the operator to `image-generate --provider cloudflare` (FLUX.1-schnell, Apache-2.0, no watermark) instead.
 - **Always** author the prompt to the Gemini baseline — don't paste a FLUX or SDXL tag-list prompt into the Gemini UI; a prompt isn't model-portable.
 

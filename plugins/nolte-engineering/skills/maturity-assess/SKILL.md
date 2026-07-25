@@ -10,6 +10,8 @@ use_when:
   - "you want a checked-in maturity matrix that guides development by showing where implementation quality is weakest"
   - "you want to re-grade capability maturity after the application changed (which held, moved up, or regressed)"
 dont_use_when:
+  - situation: "you want finding-level review of the code itself, not per-capability grading"
+    alternative: source-code-review
   - situation: "You want the binary pass/fail decision on whether a PR may merge"
     alternative: quality-gate
   - situation: "You want to enumerate and characterise the application's audiences"

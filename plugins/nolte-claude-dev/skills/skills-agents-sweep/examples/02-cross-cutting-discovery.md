@@ -1,5 +1,13 @@
 # Example: Cross-Cutting Discovery of a Spec-Induced Gap
 
+## Contents
+
+- [Context](#context)
+- [Turn 1 — gap detection during cross-cutting analysis](#turn-1--gap-detection-during-cross-cutting-analysis)
+- [Turn 2 — skill presents the finding to the user](#turn-2--skill-presents-the-finding-to-the-user)
+- [Turn 3 — user confirms, analysis continues](#turn-3--user-confirms-analysis-continues)
+- [Key observation](#key-observation)
+
 This walkthrough shows how phase 2 cross-cutting analysis surfaces a phantom skill
 (a spec-induced gap) that no individual per-artefact review could detect on its own.
 

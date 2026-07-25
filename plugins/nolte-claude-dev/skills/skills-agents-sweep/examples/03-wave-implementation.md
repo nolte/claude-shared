@@ -1,5 +1,14 @@
 # Example: Wave Implementation and Sweep Closure
 
+## Contents
+
+- [Context](#context)
+- [Turn 1 — recording Wave 1 implementation](#turn-1--recording-wave-1-implementation)
+- [Turn 2 — deferring Wave 4 items](#turn-2--deferring-wave-4-items)
+- [Turn 3 — retiring Wave 5 items](#turn-3--retiring-wave-5-items)
+- [Turn 4 — close the sweep](#turn-4--close-the-sweep)
+- [Turn 5 — confirm and close](#turn-5--confirm-and-close)
+
 This walkthrough covers recording wave decisions via `update` and closing a completed
 sweep cycle via `close` once all waves are resolved.
 

@@ -1,5 +1,41 @@
 # Webview UI Expert — UX / "feels right in the browser" best practices
 
+## Contents
+
+- [1. Loading-state hierarchy — three response-time thresholds (verified)](#1-loading-state-hierarchy--three-response-time-thresholds-verified)
+- [2. Skeletons mirror final layout, never generic spinners (verified)](#2-skeletons-mirror-final-layout-never-generic-spinners-verified)
+- [3. React 19 Suspense + Error Boundary pairing (verified)](#3-react-19-suspense--error-boundary-pairing-verified)
+- [4. Use useTransition for non-urgent UI updates (verified)](#4-use-usetransition-for-non-urgent-ui-updates-verified)
+- [5. Optimistic UI for low-risk mutations only (verified)](#5-optimistic-ui-for-low-risk-mutations-only-verified)
+- [6. Destructive actions: undo affordance over confirmation dialog (verified)](#6-destructive-actions-undo-affordance-over-confirmation-dialog-verified)
+- [7. Snackbar discipline: variant semantics, stacking, persistence (verified)](#7-snackbar-discipline-variant-semantics-stacking-persistence-verified)
+- [8. Error recovery: inline first, toast for transient (verified)](#8-error-recovery-inline-first-toast-for-transient-verified)
+- [9. Scroll restoration on route change (verified)](#9-scroll-restoration-on-route-change-verified)
+- [10. Focus management on route change (verified)](#10-focus-management-on-route-change-verified)
+- [11. Use <ScrollRestoration/> *and* useNavigation() for pending UI (verified)](#11-use-scrollrestoration-and-usenavigation-for-pending-ui-verified)
+- [12. Form validation timing: onTouched + onChange re-validate (verified)](#12-form-validation-timing-ontouched--onchange-re-validate-verified)
+- [13. Error summary above the form for multi-error submits (verified)](#13-error-summary-above-the-form-for-multi-error-submits-verified)
+- [14. Button states: idle / pending / disabled-with-reason (verified)](#14-button-states-idle--pending--disabled-with-reason-verified)
+- [15. Theme tokens, not hard-coded colours (verified)](#15-theme-tokens-not-hard-coded-colours-verified)
+- [16. prefers-color-scheme with user override + persistence (verified)](#16-prefers-color-scheme-with-user-override--persistence-verified)
+- [17. prefers-reduced-motion: opt out, not opt in (verified)](#17-prefers-reduced-motion-opt-out-not-opt-in-verified)
+- [18. :focus-visible, not :focus, for keyboard focus rings (verified)](#18-focus-visible-not-focus-for-keyboard-focus-rings-verified)
+- [19. Viewport units: svh / dvh instead of vh (verified)](#19-viewport-units-svh--dvh-instead-of-vh-verified)
+- [20. env(safe-area-inset-*) on the layout edges (verified)](#20-envsafe-area-inset--on-the-layout-edges-verified)
+- [21. Native <dialog> with inert background, not custom modals (verified)](#21-native-dialog-with-inert-background-not-custom-modals-verified)
+- [22. Responsive charts: ResponsiveContainer + fixed aspect (verified)](#22-responsive-charts-responsivecontainer--fixed-aspect-verified)
+- [23. i18n loading via Suspense, not blank screen (verified)](#23-i18n-loading-via-suspense-not-blank-screen-verified)
+- [24. Vite asset preload hints for above-the-fold critical resources (verified)](#24-vite-asset-preload-hints-for-above-the-fold-critical-resources-verified)
+- [25. CSS scroll snap for predictable carousels / step flows (partial)](#25-css-scroll-snap-for-predictable-carousels--step-flows-partial)
+- [26. Predictable back behaviour: never trap browser back (verified)](#26-predictable-back-behaviour-never-trap-browser-back-verified)
+- [27. Spinner-show delay to avoid flash (~200–300 ms) (verified)](#27-spinner-show-delay-to-avoid-flash-200300-ms-verified)
+- [28. Predictive link prefetch via <NavLink prefetch="intent"> (partial)](#28-predictive-link-prefetch-via-navlink-prefetchintent-partial)
+- [29. Live regions for async state announcements (verified)](#29-live-regions-for-async-state-announcements-verified)
+- [30. Minimum tap target ≥44 × 44 CSS px (verified)](#30-minimum-tap-target-44--44-css-px-verified)
+- [Topics with insufficient authoritative coverage](#topics-with-insufficient-authoritative-coverage)
+- [Verification summary](#verification-summary)
+- [Currency addendum (2026-07-24)](#currency-addendum-2026-07-24)
+
 Stack in scope: React 19, Vite 8, MUI v9, Redux Toolkit (RTK + RTK Query),
 React Router v7 (data routers), react-hook-form + zod, notistack, recharts,
 react-i18next. Production: static site behind nginx, no native shell.

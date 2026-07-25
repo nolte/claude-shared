@@ -1,5 +1,14 @@
 # Security & Sandboxing — Research notes for the webview-ui stack
 
+## Contents
+
+- [Methodology](#methodology)
+- [Best practices](#best-practices)
+- [Anti-patterns to avoid](#anti-patterns-to-avoid)
+- [Open questions / topics needing follow-up](#open-questions--topics-needing-follow-up)
+- [Spec-input summary](#spec-input-summary)
+- [Currency addendum (2026-07-24)](#currency-addendum-2026-07-24)
+
 Scope: Plain HTML/CSS, React 19, Vite 8, MUI v9, Redux Toolkit + react-redux,
 React Router v7, axios, react-hook-form + zod, notistack, react-i18next,
 qrcode.react, nginx (`nginx-security-headers.inc`). Browser-context token-bearer
