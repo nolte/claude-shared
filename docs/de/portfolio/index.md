@@ -21,16 +21,12 @@ Fähigkeit-zu-Repository-Zuordnung über das Portfolio.
 <!-- diagram-source: derived—portfolio/aggregate.yml -->
 ```mermaid
 flowchart LR
-    classDef active fill:#e6f4ea,stroke:#137333,color:#0d652d;
-    classDef experimental fill:#fef7e0,stroke:#b06000,color:#7a4f01;
-    classDef deprecated fill:#fce8e6,stroke:#a50e0e,color:#7a1c12;
-    classDef planned fill:#e8f0fe,stroke:#1967d2,color:#174ea6;
     subgraph R0["nolte/ansible-reachy-mini-bootstrap"]
         R0C0["reachy-mini-ansible-provisioning"]
     end
     subgraph R1["nolte/blog"]
-        R1C0["bilingual-blog-knowledge-base"]
-        R1C1["transparent-ai-authoring"]
+        R1C0["bilingual-blog-knowledge-base<br/>🧪 experimental"]
+        R1C1["transparent-ai-authoring<br/>🧪 experimental"]
     end
     subgraph R2["nolte/claude-home-assistant"]
         R2C0["claude-code-skills-and-agents-for-home-assistant"]
@@ -42,7 +38,7 @@ flowchart LR
         R4C0["shared-claude-code-skills"]
         R4C1["shared-claude-code-agents"]
         R4C2["portfolio-spec-corpus"]
-        R4C3["planning-suite-reference-adopter"]
+        R4C3["planning-suite-reference-adopter<br/>🧪 experimental"]
         R4C4["auto-generated-skill-agent-catalog"]
         R4C5["shared-vale-vocabulary-extension"]
     end
@@ -61,7 +57,7 @@ flowchart LR
         R8C0["kamerplanter-home-assistant-integration"]
     end
     subgraph R9["nolte/reachy-mini-app"]
-        R9C0["reachy-mini-behavior-app"]
+        R9C0["reachy-mini-behavior-app<br/>🧪 experimental"]
     end
     subgraph R10["nolte/reachy-mini-mcp"]
         R10C0["reachy-mini-mcp-server"]
@@ -74,35 +70,11 @@ flowchart LR
     end
     subgraph R13["nolte/vale-style"]
         R13C0["vale-style-package"]
-        R13C1["vocabulary-curation-spec"]
+        R13C1["vocabulary-curation-spec<br/>🧪 experimental"]
     end
     subgraph R14["nolte/workstation"]
         R14C0["developer-workstation-provisioning"]
     end
-    class R0C0 active;
-    class R1C0 experimental;
-    class R1C1 experimental;
-    class R2C0 active;
-    class R3C0 active;
-    class R4C0 active;
-    class R4C1 active;
-    class R4C2 active;
-    class R4C3 experimental;
-    class R4C4 active;
-    class R4C5 active;
-    class R5C0 active;
-    class R6C0 active;
-    class R6C1 active;
-    class R6C2 active;
-    class R7C0 active;
-    class R8C0 active;
-    class R9C0 experimental;
-    class R10C0 active;
-    class R11C0 active;
-    class R12C0 active;
-    class R13C0 active;
-    class R13C1 experimental;
-    class R14C0 active;
     R0 -.peer.-> R9
     R1 -.peer.-> R4
     R3 -.peer.-> R9

@@ -283,30 +283,26 @@ def render_mermaid(members: list[dict]) -> list[str]:
     # the committed snapshot, so docs-freshness can detect drift against it.
     #
     # Each repository is a subgraph that visually boxes its capabilities (clearer
-    # than a flat repo→capability arrow fan); capability nodes are tinted by
-    # status via classDef so the map is scannable at a glance. The fills are
-    # light with explicit dark text, so they stay legible on both the light and
-    # dark Material palettes. Peer references are drawn as repo-to-repo edges.
+    # than a flat repo→capability arrow fan). Non-active capabilities carry
+    # their status badge in the node label: spec/project/mermaid-diagrams/
+    # MUST NOTs classDef/style/linkStyle with hard-coded colors, so light/dark
+    # rendering stays with Material's theme bridge and status stays scannable
+    # through the label text. Peer references are drawn as repo-to-repo edges.
     out = [
         "<!-- diagram-source: derived—portfolio/aggregate.yml -->",
         "```mermaid",
         "flowchart LR",
-        "    classDef active fill:#e6f4ea,stroke:#137333,color:#0d652d;",
-        "    classDef experimental fill:#fef7e0,stroke:#b06000,color:#7a4f01;",
-        "    classDef deprecated fill:#fce8e6,stroke:#a50e0e,color:#7a1c12;",
-        "    classDef planned fill:#e8f0fe,stroke:#1967d2,color:#174ea6;",
     ]
-    class_lines: list[str] = []
     for ri, m in enumerate(members):
         out.append(f'    subgraph R{ri}["{_esc(m["repo"])}"]')
         for ci, cap in enumerate(m.get("capabilities", [])):
             cid = _node_id(f"R{ri}C", ci)
-            out.append(f'        {cid}["{_esc(cap["name"])}"]')
             status = str(cap.get("status", ""))
-            if status in STATUS_BADGE:
-                class_lines.append(f"    class {cid} {status};")
+            label = _esc(cap["name"])
+            if status in STATUS_BADGE and status != "active":
+                label = f"{label}<br/>{STATUS_BADGE[status]}"
+            out.append(f'        {cid}["{label}"]')
         out.append("    end")
-    out += class_lines
     # Outbound peer edges (repo-to-repo) when declared.
     repo_to_rid = {m["repo"]: _node_id("R", ri) for ri, m in enumerate(members)}
     for ri, m in enumerate(members):

@@ -91,6 +91,18 @@ Leser: Maintainer von `nolte/*`-Repositories, der Claude-Code-Skill / -Agent, de
 - **SOLLTE [SHOULD]** ein Mermaid-Diagramm enthalten, das das Capability-zu-Repository-Mapping und die Cross-Repository-Peer-Referenzen visualisiert (gemäß `mermaid-diagrams`-Portfolio-Spec), sodass die gesamte Portfolio-Struktur auf einen Blick sichtbar ist.
 - **MUSS [MUST]** stillgelegte Capabilities — jene, die zu archivierten Repositories gemäß §Portfolio-Scope gehören — in einem einzigen kanonischen „historische Capabilities"-Anhang des gerenderten Inventars festhalten und jede Capability mit ihrem Archivierungsdatum auflisten. Dieser Anhang ist das maßgebliche Ziel, auf das andere Specs zeigen, wenn sie ein stillgelegtes oder verwaistes Item einmalig sichtbar machen müssen, ohne das archivierte Repository wieder in den aktiven Scope aufzunehmen (zum Beispiel `portfolio-inflight-management` §Datenquellen), sodass historische Peer-Referenzen weiterhin auflösbar bleiben.
 
+### MkDocs-Extension-Hook-Deklaration
+
+Das gerenderte Portfolio-Inventar erweitert das Dokumentations-Skelett von `spec/project/mkdocs-structure/` über dessen deklarierte Extension-Hooks (§Extension-Hooks), sodass die hinzugefügte Nav-Oberfläche reviewbar und additiv ist, nie ein stiller Fork:
+
+- **Section-Extension** (gemäß `spec/project/mkdocs-structure/` §Extension-Hooks → Section-Extension):
+  - **Fügt hinzu**: eine Top-Level-Nav-Sektion, **Portfolio**.
+  - **Einfügeposition**: unmittelbar nach der Standard-Sektion **Projekt** (und vor den von `spec/claude/skill-agent-catalog/` beigesteuerten Sektionen **Skills**/**Agents**, wenn beide Extensions aktiv sind).
+  - **Primäre Audience**: `maintainer` (der `developer-docs`-Track); die gerenderten Seiten sind generator-fixiert auf `track: developer-docs`.
+  - **Frontmatter-Form pro Seite**: die fünf Baseline-Schlüssel (`title`, `audience`, `content_mode`, `track`, `last_updated`), mit generator-fixiertem `last_updated: generated`; keine zusätzlichen Schlüssel über die Baseline hinaus.
+  - **Sprachparität**: die Sektion folgt der Standard-Sprachparitäts-Regel — §Dokumentations-Rendering FORDERT [MUST] eine Gegenstück-Seite unter jedem konfigurierten `docs/<lang>/portfolio/`-Baum, gerendert vom selben Generator-Lauf.
+- **Plugin-Extension**: keine. Das Inventar wird von `scripts/docs/gen_portfolio.py` (aufgerufen über `task docs:portfolio`) vor dem Build als physische Dateien gerendert, sodass das Baseline-Plugin-Set genügt und kein zusätzliches MkDocs-Plugin deklariert wird.
+
 ### Entscheidungs-Dokumentation
 
 - **MUSS [MUST]** auf jedem Capability-Eintrag ein nicht-leeres `rationale`-Feld tragen, das benennt, warum das Owner-Repository gewählt wurde; ein Ein-Satz-Rationale ist akzeptabel, ein leeres oder Template-Rationale ist ein `Warning`-Finding aus dem Audit.
