@@ -142,6 +142,13 @@ class BasePage:
     def close_dropdown(self, timeout: int = 5) -> None:
         """Close any open select dropdown and wait until it leaves the DOM.
 
+        Guarded per spec/project/e2e-test-stability/ §Hazard-prone UI
+        interactions: (1) return immediately when the dropdown is already
+        gone, (2) wait briefly for it to close on its own, (3) send ESC only
+        while it is verifiably still open, then (4) wait for it to be gone.
+        A blind ESC-to-body races the dropdown's self-close and lands in the
+        parent dialog instead.
+
         Tuned for Material-UI's `<Select>` (options rendered as
         ``li[role='option']``); adapt the option locator to your component
         library.
@@ -150,9 +157,22 @@ class BasePage:
         from selenium.webdriver.common.keys import Keys
 
         option = (By.CSS_SELECTOR, "li[role='option']")
+        # (1) Already closed: nothing to dismiss.
         if not self.driver.find_elements(*option):
-            return  # Already closed
+            return
+        # (2) Wait briefly — many selects close themselves after a pick.
+        try:
+            WebDriverWait(self.driver, 1).until(
+                lambda d: len(d.find_elements(*option)) == 0
+            )
+            return
+        except TimeoutException:
+            pass
+        # (3) Verifiably still open: only now is ESC safe to send.
+        if not self.driver.find_elements(*option):
+            return
         self.driver.find_element(By.TAG_NAME, "body").send_keys(Keys.ESCAPE)
+        # (4) Wait until it is gone.
         try:
             WebDriverWait(self.driver, timeout).until(
                 lambda d: len(d.find_elements(*option)) == 0

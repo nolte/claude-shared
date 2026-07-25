@@ -47,9 +47,11 @@ Ensure the cases that should be green exist and currently fail or are absent. Di
 
 Run the cases. Dispatch `quality-gate` (the fast tiers) and the project's tier runners; collect the structured per-case results. Honour the staged-execution model — fast tiers gate, slow/broad tiers run where the project places them.
 
+On every red case, run the **bounded flip-signal re-run** mandated by `spec/project/test-cycle-execution/`: **N = 2 additional independent runs** of that case (three observations total), in the same execution under the same pinned command and environment. Emit the **per-run outcome vector** (for example `fail, pass, fail`) plus the derived `flip-observed: true|false` signal as part of the structured result. Detection only: never collapse the vector to its best outcome, never let a green re-run replace the original red, and never label the case `flaky` or `real` here — classification is step 3's job. A project may raise N (never lower it) and records the value used.
+
 ### 3. Analyse results
 
-Dispatch `test-result-analyzer` to classify each non-pass into a routed category (real defect / flake / test bug / infra / stale dep / config drift) with evidence. Route a flake to quarantine, a test bug back to step 1 as a reviewable case change, and infra/stale/config to the environment (via `workflow-health-triage`).
+Dispatch `test-result-analyzer` to classify each non-pass into a routed category (real defect / flake / test bug / infra / stale dep / config drift) with evidence, handing it the execution-emitted per-run outcome vector and `flip-observed` signal from step 2 — analysis consumes that vector together with cross-run history and never re-runs a case itself. Route a flake to quarantine, a test bug back to step 1 as a reviewable case change, and infra/stale/config to the environment (via `workflow-health-triage`).
 
 ### 4. Adapt code
 
@@ -65,7 +67,7 @@ Repeat from step 2 until the **exit conditions** hold: every required case is gr
 
 1. **Never** make a case pass by weakening, deleting, skipping, or hard-coding to its expected value; resolve a red case by a code adaptation (step 4) or, when the test was wrong, a reviewable case change (step 1) — never a silent escape. This is the cycle's central integrity rule.
 2. **Always** write a failing regression case before fixing a confirmed defect, so the cycle accumulates coverage of real failures over time.
-3. **Never** retry a flaky test until it goes green; route a confirmed flake to quarantine-and-track, not to the gating signal.
+3. **Never** retry a flaky test until it goes green; the only permitted re-running is step 2's bounded flip-signal re-run (fixed N, detection-only, vector-emitting); route a confirmed flake to quarantine-and-track, not to the gating signal.
 4. **Never** declare a turn complete without re-execution: a code change re-enters step 2 and all cases must be green with no regression before exit.
 5. **Never** restate a phase's internals here; dispatch its capability (`test-case-extractor` / tier generators, `quality-gate`, `test-result-analyzer`, `test-code-adapter`) and orchestrate the loop. When a phase spec disagrees with this skill, the spec wins; propose a skill update rather than diverging.
 

@@ -72,7 +72,15 @@ Read `spec/project/test-cycle-code-adaptation/` fully. Read the confirmed real f
 
 ### Phase 2 — Determine the change
 
-Determine the simplest correct change that satisfies the behaviour the case asserts, fixing the root cause. Use Obvious Implementation when the real code is clear, Fake It then generalise when not, and Triangulation to force generality from two or more examples. Reject any change that special-cases the test input or otherwise patches the symptom.
+Determine the simplest correct change that satisfies the behaviour the case asserts, fixing the root cause. Use Obvious Implementation when the real code is clear, Fake It then generalise when not, and Triangulation to force generality from two or more examples.
+
+Judge generalisation-versus-special-casing by the **checkable three-signal heuristic** of `spec/project/test-cycle-code-adaptation/` — *a change generalises when it changes a rule; it special-cases when it adds a branch on the case's data* — applying the signals in order:
+
+1. **Literal overlap.** A value appearing both in the case's input/expected-value set and in the production change is the strongest special-casing indicator; treat such a change as special-casing unless signal 3 clears it.
+2. **Predicate shape.** A new conditional whose predicate is an equality/identity check against a case-specific value (`if user_id == 42`) is special-casing; a predicate expressed in the domain's own terms (a range, a type, a documented state) is a rule.
+3. **Second-example probe.** Add one further example from the same equivalence class with different values: passing with no further edit at the same site means the change generalised; forcing another edit there means it was a special case. The probe is the tie-break for signals 1 and 2.
+
+A special case is permissible only where the **domain itself is discontinuous** (a documented exception, regulated boundary, or legacy-compatibility carve-out) — and then it must carry a written rationale naming the domain rule that creates the discontinuity plus a case exercising the general branch, so the carve-out is visible in review rather than inferred from a bare literal.
 
 ### Phase 3 — Apply, verify, and refactor
 
@@ -85,7 +93,7 @@ Return a chat summary: the files changed and the root cause fixed; the green-wit
 ## Hard rules
 
 1. Act only on an already-confirmed real failure; never classify here, and never make a test pass by weakening, deleting, skipping, or hard-coding to its expected value.
-2. Make the simplest correct change that satisfies the asserted behaviour, fix the root cause not the symptom, and write the general (non-overfit) solution.
+2. Make the simplest correct change that satisfies the asserted behaviour, fix the root cause not the symptom, and write the general (non-overfit) solution — judged by the ordered three-signal heuristic (literal overlap, predicate shape, second-example probe); a domain-discontinuity carve-out needs a written rationale plus a general-branch case.
 3. Verify by re-execution before declaring done: the case green and no prior test regressed; never assume green without re-running.
 4. Refactor only while green, behaviour-preserving, never mixed with a behaviour change; keep the change small and reviewable.
 5. Route a genuinely-wrong test back to case determination as a reviewable case change; never edit an existing test to make it pass, and add only a failing regression case before a fix.
