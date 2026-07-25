@@ -238,6 +238,14 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
   missing references block the write rather than fabricating them.
 - **Never** rename a slug after the feature leaves `draft`; the skill writes
   the slug once and treats it as immutable thereafter.
+- **Never** overwrite an existing feature file's `status` with anything but
+  its current on-disk value: this skill re-reads the file before a rewrite
+  and refuses when the requested write would change `status` at all —
+  status transitions live in `sprint-plan` / `sprint-execute` /
+  `sprint-review`, each of which verifies the legal predecessor on disk. An
+  operator-decided lifecycle deviation is recorded as a dated deviation note
+  in `## Consistency notes` *before* any status write (F-17/F-18 precedent,
+  #498).
 - **Never** carry a process-internal acceptance criterion ("PR approved",
   "merged to develop", "CI green"); criteria are user-visible behaviour,
   not workflow gates.
