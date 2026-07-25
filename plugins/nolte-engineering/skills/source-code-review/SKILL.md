@@ -3,8 +3,8 @@ name: source-code-review
 description: Runs a holistic senior-engineer source-code review of production and test code against spec/project/source-code-review/ plus its frontend extension spec/frontend/source-code-review/, and persists a severity-classified report whose disjoint work packages are parallel-dispatchable to specialists. The default `review` operation detects each language and surface and dispatches the matching read-only reviewer agent (`python-code-reviewer`, `frontend-code-reviewer`; anything unprofiled is reported unsupported), then persists the report under .audits/source-code-review/. The `plan` operation hands that report to implementation-plan-author. Invoke to review a codebase like an experienced developer, find domain-knowledge duplication, or find business logic leaking into the client; also German. Don't use for the deep OWASP audit (code-security-reviewer), UX judgment (frontend-usability-optimizer), single-tier test conformance (tier reviewers), or to run lint and tests (quality-gate). Supports resume.
 tags: [review, audit]
 phase: quality
-summary: "Holistic senior-engineer review of production and test code: dispatches the language reviewer, persists the severity-classified report, and hands its parallel work packages to specialists."
-summary_de: "Ganzheitliches Senior-Engineer-Review von Produktiv- und Testcode: dispatcht den Sprach-Reviewer, persistiert den klassifizierten Report und übergibt dessen parallele Work-Packages an Spezialisten."
+summary: "Holistic senior-engineer review of production and test code: detects each language and surface, dispatches the matching reviewer, persists the classified report, routes its parallel work packages."
+summary_de: "Ganzheitliches Senior-Engineer-Review von Produktiv- und Testcode: erkennt Sprache und Oberfläche, dispatcht den passenden Reviewer, persistiert den Report und routet dessen parallele Work-Packages."
 use_when:
   - "you want a senior-engineer review of production and test code beyond lint and types"
   - "you want domain-knowledge duplication found and consolidated"
@@ -26,6 +26,7 @@ dont_use_when:
 see_also:
   - python-code-reviewer
   - frontend-code-reviewer
+  - maturity-assess
   - implementation-plan-author
   - code-security-reviewer
   - fullstack-developer

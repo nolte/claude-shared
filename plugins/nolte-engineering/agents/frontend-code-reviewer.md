@@ -140,7 +140,7 @@ Emit one report:
 
 ## Critical
 ### SCR-001: {title}
-- **File:** `path:line` **Dimension:** F{n} (extends D{n}) **Code:** {production|test} **Confidence:** {confirmed|suspected} **Slice:** {component slice}
+- **File:** `path:line` **Dimension:** F{n}{ (extends D{n}) — only for F4, F6, F9, F11; the other F dimensions have no core twin} **Code:** {production|test} **Confidence:** {confirmed|suspected} **Slice:** {component slice}
 - **Problem:** …
 - **Implementation proposal (not applied):**
   - *Target:* {layer or file the change belongs in}
