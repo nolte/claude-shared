@@ -91,6 +91,18 @@ Readers: maintainers of `nolte/*` repositories, the Claude Code skill / agent th
 - **SHOULD** include a Mermaid diagram visualizing the capability-to-repository mapping and the cross-repository peer references (per `mermaid-diagrams` portfolio spec), so the entire portfolio's structure is visible at a glance.
 - **MUST** record retired capabilities—those belonging to archived repositories per §Portfolio scope—in a single canonical "historical capabilities" appendix of the rendered inventory, listing each capability with its archival date. This appendix is the authoritative destination other specs point at when they need to surface a retired or orphaned item once without re-admitting the archived repository to active scope (for example `portfolio-inflight-management` §Data sources), so historical peer references remain resolvable.
 
+### MkDocs extension-hook declaration
+
+The rendered portfolio inventory extends the documentation skeleton of `spec/project/mkdocs-structure/` through its declared extension hooks (§Extension hooks), so the added nav surface is reviewable and additive, never a silent fork:
+
+- **Section extension** (per `spec/project/mkdocs-structure/` §Extension hooks → Section extension):
+  - **Adds** one top-level nav section, **Portfolio**.
+  - **Insertion position**: immediately after the standard **Project** section (and before the **Skills**/**Agents** sections contributed by `spec/claude/skill-agent-catalog/` when both extensions are active).
+  - **Primary audience**: `maintainer` (the `developer-docs` track); the rendered pages are generator-fixed to `track: developer-docs`.
+  - **Per-page frontmatter shape**: the five baseline keys (`title`, `audience`, `content_mode`, `track`, `last_updated`), with `last_updated: generated` generator-fixed; no extra per-page keys beyond the baseline.
+  - **Language parity**: the section follows the standard language-parity rule—§Documentation rendering MUSTs a counterpart page under every configured `docs/<lang>/portfolio/` tree, rendered by the same generator run.
+- **Plugin extension**: none. The inventory is rendered as physical files by `scripts/docs/gen_portfolio.py` (invoked by `task docs:portfolio`) before the build, so the baseline plugin set suffices and no additional MkDocs plugin is declared.
+
 ### Decision documentation
 
 - **MUST** carry a non-empty `rationale` field on every capability entry naming why the owner repository was chosen; a one-sentence rationale is acceptable, an empty or template rationale is a `Warning` finding from the audit.

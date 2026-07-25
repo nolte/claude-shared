@@ -107,6 +107,7 @@ apply to this repo (for example a parity category in a single-language repo).
 | Track-frontmatter drift | … | … | … |
 | Content-mode drift | … | … | … |
 | Audience-track mismatch | … | … | … |
+| i18n base-URL drift | … | … | … |
 | **Total** | **…** | **…** | **…** |
 
 ## Critical
@@ -160,6 +161,11 @@ apply to this repo (for example a parity category in a single-language repo).
 
 ### Audience-track mismatch
 - `<path>` — `audience: <audience-id>` maps to track `<track-A>`, but page declares `track: <track-B>`
+- …
+
+### i18n base-URL drift
+- `mkdocs.yml` — more than one language configured but no `site_url` declared
+- `mkdocs.yml` — `site_url: <value>` doesn't match the published base URL `<derived>` (from `repo_url`/`origin`)
 - …
 
 ### Stale markers in accepted ADRs
@@ -231,6 +237,14 @@ Only run when at least two language trees exist.
   - Also compare file sizes; a delta greater than 2× suggests one side lags behind content-wise.
 
 Don't translate anything. This phase reports parity gaps; closing them is an author task.
+
+### Phase 2b: i18n base-URL drift
+
+Only run when more than one language is configured (the `mkdocs-static-i18n` plugin declares two or more languages).
+
+- If `mkdocs.yml` carries no `site_url`, flag **i18n base-URL drift** (warning): without it the plugin builds the absolute language-switcher and `<link rel="alternate" hreflang>` tags off the site root `/`, so a GitHub-Pages project-subpath deployment ships wrong alternate-language links.
+- If `site_url` is present, derive the expected published base URL from `repo_url` (or the `origin` remote) — for GitHub Pages, `https://<owner>.github.io/<repo>/` — and flag a mismatch at warning severity. Don't flag a present-but-slashless `site_url`; MkDocs normalises it.
+- The normative requirement is `spec/project/mkdocs-structure/` §i18n and parity; this audit only reports — `mkdocs-structure-apply` owns the fix.
 
 ### Phase 3+4: Internal-link rot and cross-tree reference rot (delegated)
 

@@ -169,9 +169,9 @@ extra:
 
 nav:
   - Startseite: de/index.md
-  - Plugin nutzen: de/using.md
   - Erste Schritte:
       - de/getting-started/index.md
+      - Plugin nutzen: de/using.md
       - Installation: de/getting-started/installation.md
       - Nutzung: de/getting-started/usage.md
   - Guides:
@@ -197,8 +197,9 @@ nav:
           - Skill-Autorenschaft: de/references/specs/skill-management.md
           - Agent-Autorenschaft: de/references/specs/agent-management.md
       - Tags: de/references/tags.md
-  - Projekt: de/project/index.md
+  - Projekt:
+      - de/project/index.md
+      - Datenschutz: de/privacy.md
   - Portfolio: de/portfolio/index.md
   - Skills: de/skills/
   - Agents: de/agents/
-  - Datenschutz: de/privacy.md
