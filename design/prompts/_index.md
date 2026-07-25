@@ -37,7 +37,7 @@ body is solid indigo, **no belly patch**.
 
 - Same outline treatment (bold, even-weight dark-indigo), same matte fills + single
   cel-shading step, flat warm-bone background, isolated subject.
-- Same palette roles: **indigo body** (`#5B5FC7` / slate `#4A4E6B`), **cream face mask
+- Same palette roles: **indigo body** (`#4A529D` / observed slate `#4A4E6B`), **cream face mask
   only** (`#F4F1EA`), **coral-orange cheeks** (`#E8825A`), **dark-brown eyes**
   (`#3A2A22`), dark navy eye-stripes, **cool silver-grey side streak** (`#AEB2BE` light /
   `#C9CDD6` dark).
@@ -47,7 +47,7 @@ body is solid indigo, **no belly patch**.
   sides. It is a cool neutral grey, distinctly cooler than the warm cream so the two
   never merge. In a head-on logo/favicon at ≤32 px it may be simplified to a single short
   grey notch in the tuft, or dropped if it muddies the silhouette (see the logo doc).
-- Light vs. dark: re-pull per-mode tokens (indigo → soft cobalt-violet `#8E92E6`,
+- Light vs. dark: re-pull per-mode tokens (indigo → soft cobalt-violet `#939FE3`,
   dark-indigo outline → warm-bone outline on charcoal) — never RGB inversion.
 - Two recurring FLUX.1-schnell traps, handled in every prompt: colour drift to brown
   (assert indigo, negate brown) and a stray cream patch on the body (assert face-only).

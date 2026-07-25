@@ -46,9 +46,9 @@ derived from it. Keep these recognition anchors exact — word drift is characte
 - A small rounded **dark-indigo nose** centered between the eyes; directly below it a
   thin dark gently-curved closed smile.
 - **Two small round coral-orange blush patches**, one on each cheek.
-- **Deep slate blue-indigo fur** (muted, desaturated indigo; `#5B5FC7` / slate
+- **Deep slate blue-indigo fur** (muted, desaturated indigo; `#4A529D` / observed slate
   `#4A4E6B`) with a single soft cel-shading step, slightly darker at the body sides.
-  In **dark mode** the fur lightens to soft cobalt-violet (`#8E92E6`).
+  In **dark mode** the fur lightens to soft cobalt-violet (`#939FE3`).
 - **The cream is ONLY on the face mask. The whole body — chest, belly, back and
   sides — is solid indigo with NO belly patch.** The only cream areas besides the mask are
   the claws; the only other non-indigo marking anywhere is the cool silver-grey side

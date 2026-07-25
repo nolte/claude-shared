@@ -36,7 +36,7 @@ A cute chibi cartoon sloth sitting on the floor behind a small low wooden table,
 
 The sloth has DEEP BLUE-INDIGO fur (a blue-violet indigo, NOT brown), a large round head with a small jagged head tuft, a heart-shaped cream face mask with two broad dark diagonal eye-stripes, a single cool silver-grey streak of fur running down one side of the head beside the mask (a grey lock, cool grey not cream, the only asymmetry), two big round dark eyes with small white highlights, a small dark nose, a gentle closed smile, two coral-orange blush cheeks. Its body is solid indigo with no belly patch.
 
-Flat warm bone-white background, a soft oval shadow under the whole scene. Fur indigo #5B5FC7 / #4A4E6B (NOT brown), cream face mask #F4F1EA, coral cheeks #E8825A, signature side streak cool silver-grey #AEB2BE, dark charcoal laptop, warm wood-brown table.
+Flat warm bone-white background, a soft oval shadow under the whole scene. Fur indigo #4A529D / observed slate #4A4E6B (NOT brown), cream face mask #F4F1EA, coral cheeks #E8825A, signature side streak cool silver-grey #AEB2BE, dark charcoal laptop, warm wood-brown table.
 ```
 
 ## Generation notes
@@ -50,12 +50,17 @@ Flat warm bone-white background, a soft oval shadow under the whole scene. Fur i
   not a silver metal laptop" for "silver-grey laptop with a plain blank lid", but
   expect ~1 in 4 seeds to paint an Apple logo — discard those.
 
-## Avoidance clause
-No embedded text, letters, numbers or code on the laptop screen (keep it a plain
-glow); **no Apple logo, fruit symbol, or any brand mark on the laptop**; no other
-companies' logos; no watermark; no natural brown/tan/beige fur (fur is blue-indigo);
-no cream belly patch (only the face is cream); no extra limbs or claws beyond three;
-no photorealism; avoid teal-cyan, pure red, or neon.
+## Avoidance (positive assertions — FLUX has no negative prompt)
+Encode every exclusion as what the image *is*: the laptop screen is a **plain soft
+glow** (an empty light surface, free of code, lettering, or numerals) and the lid is
+a **completely blank surface** (an unbranded, generic device — any seed that paints
+a fruit or other mark on it is discarded); the artwork carries **no lettering or
+watermark anywhere**; the fur reads **blue-indigo throughout** (never a natural
+brown/tan/beige coat) with the **cream confined to the face mask** (the chest and
+belly stay solid indigo); the anatomy is **exactly the canonical figure** (three
+claws per hand and foot); the rendering is **flat vector-style with solid matte
+fills**; every hue comes from the brand vocabulary (indigo/cream/amber/moss family
+only).
 
 ## Post-processing checklist
 - [ ] Remove the flat background → transparency via `png-to-transparent-svg`

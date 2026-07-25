@@ -36,7 +36,7 @@ The cream is ONLY on the face mask; the whole body — chest, belly, back and si
 **COLOR LOCK:**
 
 ```
-Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
+Fur colour deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
 ```
 
 ## Expressions (insert one slot between HEAD and TAIL)
@@ -69,7 +69,7 @@ modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, 
 
 a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, NOT natural brown tan or beige sloth fur. Front view, facing the viewer, near-symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A single cool silver-grey streak of fur runs down one side of the head, from the tuft past the temple and cheek beside the mask — a grey lock, cool grey not cream, on one side only. A small rounded dark nose centered. Two large shiny near-black eyes, a wide open cheerful smile, two coral-orange blush patches, a bright happy expression. The cream is ONLY on the face mask; the whole body — chest, belly, back and sides — is solid deep blue-indigo with no belly patch. Compact rounded body with no visible neck, short arms at the sides, exactly three pale cream elongated rounded claws on each hand and foot. Bold even-weight dark-indigo outline, small soft-grey oval shadow beneath.
 
-Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
+Fur colour deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
 ```
 
 ## Generation notes
@@ -80,11 +80,15 @@ Fur colour deep blue-indigo #5B5FC7 / #4A4E6B (NOT brown), mask warm bone white 
 - Star-eyes, heart-eyes and winks are the least reliable (FLUX simplifies them); re-roll.
 - Verify fur stays blue-indigo; re-roll any brown drift.
 
-## Avoidance clause
-No embedded text, letters, or numbers (a dream bubble must stay empty); no other logos;
-no watermark; **no brown / tan / beige fur — fur must read blue-indigo**; no photorealism;
-no harsh gradients or 3D; no busy background; no extra limbs or claws beyond three; avoid
-teal-cyan, pure red, or neon.
+## Avoidance (positive assertions — FLUX has no negative prompt)
+Encode every exclusion as what the image *is*: every panel is **purely pictorial**
+(a dream bubble stays an empty shape; all surfaces free of lettering, marks, or
+watermarks); the fur reads **blue-indigo throughout** (never a natural brown/tan/
+beige coat); the rendering is **flat vector-style with solid matte fills** (stylised
+rather than photographic, flat rather than gradient or 3D); the background is a
+**single plain field**; the anatomy is **exactly the canonical figure** (three claws
+per hand and foot); every hue comes from the brand vocabulary (indigo/cream/amber/
+moss family only).
 
 ## Post-processing checklist
 - [ ] Remove the flat background → transparency via `png-to-transparent-svg`
