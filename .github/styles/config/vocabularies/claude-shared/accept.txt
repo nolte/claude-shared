@@ -87,3 +87,8 @@ scroller
 Bugsink
 SDK('s)?
 [Tt]ranspiled
+# REST API design vocabulary (added with spec/project/rest-api-design/;
+# upstream PR candidates for nolte/vale-style — 'Zalando' fits the pending
+# author/company-name vocabulary work).
+[Cc]acheable
+Zalando

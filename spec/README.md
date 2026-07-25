@@ -91,6 +91,7 @@ Canonical language: `en` · Translations: `de`
 | project | release-regression-scope | Release Regression Scope | Release-Regressionsumfang | draft | local | unversioned |
 | project | release-skill-layer | Local Release Skill Layer | Lokale Release-Skill-Schicht | draft | portfolio | unversioned |
 | project | requirements-elicitation | Requirements Elicitation Interview | Anforderungserfassung per Interview | draft | local | unversioned |
+| project | rest-api-design | REST API and URL Design | REST-API- und URL-Design | draft | local | unversioned |
 | project | roadmap | Project Roadmap | Projekt-Roadmap | draft | local | unversioned |
 | project | source-code-review | Holistic Source Code Review | Ganzheitliches Source-Code-Review | draft | local | unversioned |
 | project | spec-drift-audit | Spec Drift Audit | Spec-Drift-Audit | draft | local | 2026-04-23 |
