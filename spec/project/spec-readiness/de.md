@@ -63,7 +63,7 @@ Leser: Auditoren, die die Readiness-Prüfung durchführen, bevor eine Spec den D
 - **DARF** als `Info` flaggen: Akzeptanzkriterien, die prinzipiell testbar sind, aber Infrastruktur benötigen, die das Portfolio noch nicht hat; das sind keine `Critical`-Klasse, warnen aber Konsument\:innen
 
 ### Schweregrad-Skala
-- **MUSS** die kanonische Vier-Stufen-Schweregrad-Skala aus `spec/claude/review-plan/<canonical_language>.md` §Severity scale verwenden: `Critical` / `Warning` / `Suggestion` / `Info`, in Title Case
+- **MUSS** die kanonische Vier-Stufen-Schweregrad-Skala aus `spec/claude/review-plan/<canonical_language>.md` §Schweregrad-Skala verwenden: `Critical` / `Warning` / `Suggestion` / `Info`, in Title Case
 - **MUSS** Reife-Befunde gemäß den in §Dimension 1, 2 und 3 dokumentierten Mustern auf die Skala abbilden:
   - **Critical**: direkter MUST-/MUST-NOT-Widerspruch innerhalb oder zwischen Specs; tragende Open Question in einer zur Beförderung erwogenen Spec; Referenz auf eine nicht existierende Spec-Sektion; Cross-Spec-Widerspruch zwischen zwei akzeptierten Specs
   - **Warning**: MUST-vs.-SHOULD-Widerspruch; nicht identifizierbare Audience; abgeleitete Audience, deren Bedürfnisse nicht adressiert werden; Ziel ohne passende Anforderung; Anforderung ohne testbares Akzeptanzkriterium; verwaistes Akzeptanzkriterium
@@ -88,7 +88,7 @@ Leser: Auditoren, die die Readiness-Prüfung durchführen, bevor eine Spec den D
 - **MUSS** im Artefakt enthalten: Datum, Auslöser (quartalsweise, pre-promotion, PR-change), Scope (welche Specs auditiert wurden, welche ausgenommen), die auditierte Git-Revision, Schweregrad-Zählungen pro Spec und die vollständige Befundliste sortiert nach Schweregrad
 - **SOLLTE** auf das vorherige Audit-Artefakt verlinken, damit der Reife-Verlauf des Portfolios über Quartale hinweg nachvollziehbar bleibt
 - **SOLLTE** dem `review-plan`-Artefaktformat folgen, wenn das Audit eine einzelne Spec vor einer Beförderungsentscheidung anvisiert, damit die Ausgabe in dieselbe Audit-Mechanik wie Skill-Review und Agent-Review passt
-- **SOLLTE** `spec/project/parallel-working-copies/` §Audit artefacts in multiple worktrees heranziehen, wenn das Audit in einem Worktree statt im primären Checkout läuft, da die Repository-weite Eindeutigkeit des Artefakts nur innerhalb eines Arbeitsbaums zugleich beobachtbar ist und die Worktree-lokalen Commit-, Transfer- und Aufräum-Regeln dort leben
+- **SOLLTE** `spec/project/parallel-working-copies/` §Audit-Artefakte in mehreren Worktrees heranziehen, wenn das Audit in einem Worktree statt im primären Checkout läuft, da die Repository-weite Eindeutigkeit des Artefakts nur innerhalb eines Arbeitsbaums zugleich beobachtbar ist und die Worktree-lokalen Commit-, Transfer- und Aufräum-Regeln dort leben
 
 ### Abgrenzung
 - **MUSS** vom `spec`-Skill getrennt bleiben: dieser Skill erstellt, übersetzt, indiziert, dedupliziert Übersetzungen und prüft Übersetzungs-Drift; dieses Audit prüft die Reife des **Inhalts**
@@ -101,8 +101,8 @@ Leser: Auditoren, die die Readiness-Prüfung durchführen, bevor eine Spec den D
 - [ ] Jede Spec im Portfolio mit nicht-leerer `## Requirements`- oder `## Acceptance Criteria`-Sektion hat seit Einführung dieser Spec mindestens einen Reife-Audit-Eintrag in der Audit-Historie des Repositorys, oder eine dokumentierte Ausnahme
 - [ ] Keine Spec mit unerledigten `Critical`-Reife-Befunden ist seit Einführung dieser Spec aus `Status: draft` befördert worden — entweder ist der Befund gelöst, oder die Beförderung ist blockiert, oder eine Waiver-Notiz ist im Audit-Artefakt festgehalten
 - [ ] Das Audit-Artefakt jedes Reife-Laufs hält Scope (auditierte Spec-Slugs), auditierte Git-Revision, Schweregrad-Zählungen pro Spec und die vollständige Befundliste fest
-- [ ] Kein Cross-Spec-Widerspruch zwischen zwei Specs, die beide aus Draft befördert wurden, bleibt im jüngsten Audit ohne dokumentierte Auflösung stehen — entweder ist der Widerspruch in den Quell-Specs gelöst, oder eine Waiver-Notiz ist im `## Processing log` des Audit-Artefakts laut `spec/claude/review-plan/` §Severity scale festgehalten
-- [ ] Der Agent `agents/spec-readiness-reviewer.md` erzeugt Befunde, die 1-zu-1 auf die drei hier deklarierten Dimensionen und die kanonische Schweregrad-Skala abbilden, die diese Spec zitiert (definiert in `spec/claude/review-plan/` §Severity scale), damit Audit-Artefakte mechanisch erzeugt werden können
+- [ ] Kein Cross-Spec-Widerspruch zwischen zwei Specs, die beide aus Draft befördert wurden, bleibt im jüngsten Audit ohne dokumentierte Auflösung stehen — entweder ist der Widerspruch in den Quell-Specs gelöst, oder eine Waiver-Notiz ist im `## Processing log` des Audit-Artefakts laut `spec/claude/review-plan/` §Schweregrad-Skala festgehalten
+- [ ] Der Agent `agents/spec-readiness-reviewer.md` erzeugt Befunde, die 1-zu-1 auf die drei hier deklarierten Dimensionen und die kanonische Schweregrad-Skala abbilden, die diese Spec zitiert (definiert in `spec/claude/review-plan/` §Schweregrad-Skala), damit Audit-Artefakte mechanisch erzeugt werden können
 - [ ] Kein Audit-Lauf in irgendeinem Repository hat eine Spec-Datei modifiziert; die Read-only-Disziplin hält in der Praxis, nicht nur in dieser Spec
 - [ ] Reife-Audit-Artefakte für Einzel-Spec-Beförderungsläufe entsprechen dem `review-plan`-Artefaktformat, damit sie von derselben Review-Closure-Mechanik wie Skill- und Agent-Review konsumierbar sind
 - [ ] Jede Sektions-Referenz in jeder konfigurierten Sprachdatei einer in-Scope-Spec löst gegen die Überschriften der Datei der Ziel-Spec **in derselben Sprache** auf; eine Referenz, die nur in der kanonischen Sprache auflöst, wird als `Critical` gemeldet
