@@ -30,7 +30,7 @@ Cloudflare Workers AI runs FLUX.1-schnell on a real recurring free tier (10,000 
 
 1. Create a free account at <https://dash.cloudflare.com/sign-up> (no card required).
 2. In the dashboard go to **AI → Workers AI → "Use REST API"** (REST is Representational State Transfer).
-3. Click **"Create a Workers AI API Token"**. Cloudflare pre-fills the right permissions:
+3. Click **Create a Workers AI API Token**. Cloudflare pre-fills the right permissions:
    - `Account` · `Workers AI` · **Read**
    - `Account` · `Workers AI` · **Edit** (this one is required, because generating an image is a `run`/Edit action)
 4. Create the token and copy it (shown only once).

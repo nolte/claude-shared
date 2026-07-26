@@ -68,7 +68,7 @@ Indirect consumers don't interact with the inventory directly, but the inventory
 
 A portfolio-wide tech-stack inventory pays back the curation overhead along five concrete axes. Each benefit names the `project/goals.md` outcome it serves so a reviewer can justify the work in PR or sprint discussions.
 
-- **Visibility across repositories—**a single rendered page answers "which repos use MkDocs", "which repos use `uv`", and "which repo deviates from the documentation default". Without it, the same question requires grepping lockfiles in every repo. Serves O-1 (downstream-consistency for portfolio consumers): a downstream maintainer comparing their repo against the portfolio can do so in one read instead of N greps.
+- **Visibility across repositories—**a single rendered page answers "which repos use MkDocs," "which repos use `uv`," and "which repo deviates from the documentation default." Without it, the same question requires grepping lockfiles in every repo. Serves O-1 (downstream-consistency for portfolio consumers): a downstream maintainer comparing their repo against the portfolio can do so in one read instead of N greps.
 
 - **Contributor onboarding cost compression—**an onboarding contributor reads one page and gets the technical baseline before opening a single file. Today the same orientation requires reading `pyproject.toml`, `Taskfile.yml`, the workflow files, and the documentation config of each repo separately. Serves O-1 (downstream-consistency) and O-2 (authoring-suite ergonomics for the maintainer): every minute saved on orientation is a minute spent on actual contribution.
 

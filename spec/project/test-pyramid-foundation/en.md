@@ -71,7 +71,7 @@ Readers: spec authors writing the per-tier specs on top of this foundation; skil
   - **Purpose & scope boundary**: what this tier verifies and, explicitly, what it **MUST NOT** assert (the boundary against the tier below and above).
   - **Isolation level & permitted test doubles**: which collaborators are real and which are doubled, using the §"Test-double taxonomy" vocabulary.
   - **Speed & determinism budget**: an order-of-magnitude expectation (for example, milliseconds for unit, seconds for integration) and the determinism guarantee the §"Determinism and flakiness" section requires.
-  - **Execution placement**: pre-commit / PR-gating CI / nightly, consistent with §"CI gating model".
+  - **Execution placement**: pre-commit / PR-gating CI / nightly, consistent with the "CI gating model" section.
   - **Traceability**: how a test at this tier names the requirement / TC-ID it verifies, as the §"Traceability" section requires.
   - **Canonical anti-patterns**: the tier-specific smells a reviewer rejects (for example, fixed `sleep` in E2E, raw collaborator access in solitary unit tests, asserting implementation detail in integration).
   - **Optional reference profile**: a fully worked, stack-specific default **MAY** be pinned (as `e2e-test-automation` pins Selenium + pytest), clearly demoted to "reference," never elevated to a requirement.
