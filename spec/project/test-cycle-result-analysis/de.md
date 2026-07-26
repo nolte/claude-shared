@@ -63,6 +63,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Phasen-Specs schreiben; Skill- und 
 - **MUSS [MUST]** einen echten Fehlschlag aus der von der Ausführung ausgegebenen Evidenz lokalisieren: dem **Assertion-Diff** (erwartet vs. tatsächlich), dem **Stack-Trace**, Logs und — auf der E2E-Stufe — den Screenshots und dem Protokoll.
 - **SOLLTE [SHOULD]** **Change-Bisection** (zum Beispiel `git bisect`) verwenden, um den verursachenden Commit zu finden, wenn die Ursache aus dem Trace nicht offensichtlich ist [R7].
 - **SOLLTE [SHOULD]** einen fehlschlagenden Fall auf einen **minimalen Reproducer** reduzieren, sodass die Ursache isoliert und der spätere Fix verifizierbar ist [R8].
+- Auf der **E2E-Stufe** **MUSS [MUST]** die Diagnose-Disziplin von `spec/project/e2e-failure-diagnosis/` [R11] gefahren werden, statt sie hier neu abzuleiten: cluster-weise Klassifikation und das Mechanismus-Beweis-Gate (dessen §A), die Kanal-zu-Frage-Evidenzzuordnung (dessen §B) und die geordnete Testdefekt-gegen-Produktdefekt-Entscheidungsprozedur (dessen §H). Diese Phase routet ein E2E-Cluster durch jene Spec; die Klassifikationsklassen und der Routing-Vertrag oben bleiben Sache dieser Spec.
 
 ### Coverage- und Suite-Qualitäts-Analyse
 
@@ -110,6 +111,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Phasen-Specs schreiben; Skill- und 
 - [R8] scikit-learn, *Crafting a minimal reproducer* (einen fehlschlagenden Fall minimieren, um die Ursache zu isolieren) — <https://scikit-learn.org/stable/developers/minimal_reproducer.html>
 - [R9] Martin Fowler, *TestCoverage* (Coverage als Leitlinie zu fehlenden Tests, kein Ziel) — <https://martinfowler.com/bliki/TestCoverage.html>
 - [R10] Codecov, *Mutation testing: ensuring coverage isn't a vanity metric* (Mutationsscore als stärkeres Signal) — <https://about.codecov.io/blog/mutation-testing-how-to-ensure-code-coverage-isnt-a-vanity-metric/>
+- [R11] `spec/project/e2e-failure-diagnosis/`: die E2E-Fehlerdiagnose-Disziplin, durch die diese Phase ein E2E-Cluster routet (cluster-weise Klassifikation, Mechanismus-Beweis, Evidenzkanäle, die Test-gegen-Produkt-Entscheidungsprozedur)
 
 ## Offene Fragen
 
