@@ -48,7 +48,9 @@ Canonical language: `en` · Translations: `de`
 | project | branching-model | Branching Model | Branching-Modell | draft | portfolio | 2026-04-23 |
 | project | capability-maturity-assessment | Capability Maturity Assessment | Reifegrad-Bewertung fachlicher Funktionen | draft | portfolio | unversioned |
 | project | code-security-audit | Whole-Codebase Security Audit | Whole-Codebase-Security-Audit | draft | local | unversioned |
+| project | continuous-delivery | Continuous Delivery Pipeline Design | Continuous-Delivery-Pipeline-Design | draft | portfolio | unversioned |
 | project | continuous-improvement | Continuous Improvement | Kontinuierliche Weiterentwicklung | draft | local | 2026-04-23 |
+| project | continuous-integration | Continuous Integration Pipeline Design | Continuous-Integration-Pipeline-Design | draft | portfolio | unversioned |
 | project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | local | unversioned |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | local | unversioned |
 | project | dockerfile-best-practices | Dockerfile Best Practices | Dockerfile-Best-Practices | draft | local | unversioned |
@@ -63,6 +65,7 @@ Canonical language: `en` · Translations: `de`
 | project | error-tracking | Error Tracking | Error Tracking | draft | portfolio | 2026-07-25 |
 | project | feature | Project Feature | Projekt-Feature | draft | local | unversioned |
 | project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | local | unversioned |
+| project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | unversioned |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | local | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | local | unversioned |
 | project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | unversioned |
