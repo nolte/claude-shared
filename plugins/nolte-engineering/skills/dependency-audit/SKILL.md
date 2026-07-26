@@ -47,7 +47,7 @@ Detect the user's language from their message and respond in it. The report itse
 
 ### 0. Dispatch the read-only scan agent
 
-Dispatch `dependency-audit-scanner` (Agent) for the read-only audit pass: it detects project type, runs the matching auditor (pip-audit / npm audit / etc.), and returns a structured drift report. Wait for its inventory before proceeding to severity-triage and follow-up actions.
+Dispatch `dependency-audit-scanner` (Agent) for the read-only audit pass: it detects project type, runs the matching auditor (pip-audit / npm audit / etc.), and returns a structured drift report. Wait for its inventory before proceeding to severity-triage and follow-up actions. This scan dispatch is scope-only detection, which `spec/claude/dispatch-brief/` exempts from the refutation clause; when a later step dispatches a specialist to remediate a finding with a proposed fix (a hypothesis), that brief **MUST** authorise refutation per the same spec.
 
 ### 1. Detect project kind
 

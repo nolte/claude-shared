@@ -55,7 +55,7 @@ Dispatch `test-result-analyzer` to classify each non-pass into a routed category
 
 ### 4. Adapt code
 
-For each confirmed real failure, dispatch `test-code-adapter` to apply the minimal correct change that satisfies the asserted behaviour, fixing the root cause. The fix **re-enters step 2** (re-execute); never assume green without re-running.
+For each confirmed real failure, dispatch `test-code-adapter` to apply the minimal correct change that satisfies the asserted behaviour, fixing the root cause. The analyzer's classification and root-cause are a hypothesis, so this brief **MUST** authorise refutation per `spec/claude/dispatch-brief/`: the adapter may refute the diagnosed root cause with contradicting evidence and change nothing (or apply a narrower fix) rather than force the fix to fit, and that refutation is a valid result that re-enters step 3 (re-analyse) instead of a failed dispatch. The fix **re-enters step 2** (re-execute); never assume green without re-running.
 
 **Optional review leg:** when the adaptation touched test code itself, dispatch the touched tier's `*-test-reviewer` agent (unit / component / integration / contract / e2e) as the review-and-repair counterpart before re-executing — mirroring the reviewer wiring the E2E tier already carries. When the adaptation added or changed assertions, readers, or helpers, this leg is not optional: the tier reviewer's falsifiability dimension (per `spec/project/test-falsifiability/`) must grade the touched tests before re-execution.
 

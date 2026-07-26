@@ -93,7 +93,7 @@ The dominant failure mode of E2E triage is therefore not a "hard bug" but a "con
 - Each channel **MUST** return what it settled *and* an explicit list of what it **couldn't** settle; an unstated gap reads to the orchestrator as "settled." A channel's contradiction or could-not-settle return is a first-class outcome.
 - The orchestrator **MUST** compose, not vote: attribute each claim to the modality that owns it ("what the app showed" to the pixel channel, "what the server did" to the request-log channel), treat convergence of two independent channels as corroboration, carry every uncovered could-not-settle back as a residual open question, and on a conflict **stop-and-surface** rather than majority-rule (per `spec/claude/research-triangulate/`).
 - Channel selection **MUST** cover the symptom: the code and pixel channels are the mandatory pair; a server/request-log channel is added for a timeout, a state-change assertion, or a data mismatch; a browser console/network channel is added for a no-op interaction or a suspected client crash. One channel per modality; never two analyses on the same modality.
-- **Dispatch briefs MUST authorise refutation** (issue comment §H, sited here as the authoritative rule; it isn't E2E-specific). Wherever a skill or agent dispatches analysis or remediation, the brief **MUST** state its hypothesis *and* explicitly authorise and expect the specialist to refute it: *if the evidence contradicts this, say so and change nothing rather than forcing the fix to fit.* Without the clause a specialist optimises for completing the stated task; with it, the campaign's specialists corrected the brief roughly ten times, substantively. A brief that omits the refutation clause is a defect.
+- **Dispatch briefs MUST authorise refutation.** `spec/claude/dispatch-brief/` owns this rule portfolio-wide and specifies what a valid refutation contains; it isn't E2E-specific, so this spec applies it rather than restating it. In the parallel multi-channel triage above, every channel brief that asserts a hypothesis **MUST** carry the refutation clause per that spec: *if the evidence contradicts this, say so and change nothing rather than forcing the fix to fit.* Without it a channel optimises for completing the stated task; with it, the campaign's specialists corrected the brief roughly ten times, substantively.
 
 ### F. Library-specific hazard catalogs—how to build and maintain one
 
@@ -138,7 +138,7 @@ This spec is bounded against its neighbours and **MUST NOT** restate their rules
 - `test-result-analyzer` (the classifier) **MUST** apply §A (cluster-wise classification, mechanism proof) and §H (the test-versus-product decision procedure) and route §D findings into `test-falsifiability`.
 - `e2e-test-reviewer` **MUST** apply §D (the vacuous-assertion / silent-empty-reader hunt) and §C (instrumentation-first, the failure-message rubric) when reviewing or repairing a suite.
 - `e2e-result-reviewer` **MUST** apply §B (channel-to-question, provenance, the full-page-screenshot trap) when reading a run's screenshots and protocol, and operate as one channel of §E's parallel triage.
-- Any skill or agent that dispatches analysis or remediation **MUST** carry §E's refutation clause in its dispatch brief.
+- Any skill or agent that dispatches analysis or remediation **MUST** carry the refutation clause in its dispatch brief per `spec/claude/dispatch-brief/` (the portfolio-wide owner; §E applies it to this spec's parallel-triage channels).
 
 ## Acceptance Criteria
 
@@ -158,6 +158,7 @@ This spec is bounded against its neighbours and **MUST NOT** restate their rules
 - `spec/project/test-cycle-code-adaptation/`: the no-cheating invariant §D and §H remediation must respect
 - `spec/project/test-falsifiability/`: the vacuous-test taxonomy and mutation-score guidance §D routes into
 - `spec/claude/research-triangulate/`: the independent-provenance, conflict-stops-and-surfaces, unreachable-hands-back rules §E reuses
+- `spec/claude/dispatch-brief/`: the portfolio-wide refutation-authorisation rule §E and §Binding apply to this spec's dispatch briefs
 - `spec/frontend/testability-identifiers/`: the key-based, addressable-without-guessing hooks the reachability branches depend on
 - Source experience: `nolte/kamerplanter#768` (the stabilization campaign) and its branch `fix/e2e-full-run-stabilization`; run artefacts under `test-reports/e2e/2026072*`; `nolte/claude-shared#514` is the authoring work order
 
