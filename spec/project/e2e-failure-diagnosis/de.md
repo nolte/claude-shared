@@ -93,7 +93,7 @@ Der dominierende Fehlermodus der E2E-Triage ist deshalb nicht „schwerer Bug" �
 - Jeder Kanal **MUSS** zurückgeben, was er entschied, *und* eine explizite Liste dessen, was er **nicht** entscheiden konnte; eine unausgesprochene Lücke liest sich für den Orchestrator als „entschieden". Der Widerspruchs- oder Konnte-nicht-entscheiden-Rücklauf eines Kanals ist ein erstklassiges Ergebnis.
 - Der Orchestrator **MUSS** komponieren, nicht abstimmen: schreibe jede Behauptung der Modalität zu, die sie besitzt („was die App zeigte" dem Pixel-Kanal, „was der Server tat" dem Request-Log-Kanal), behandle Konvergenz zweier unabhängiger Kanäle als Bestätigung, trage jedes unabgedeckte Konnte-nicht-entscheiden als residuale offene Frage zurück und bei einem Konflikt **stop-and-surface** statt Mehrheitsentscheid (gemäß `spec/claude/research-triangulate/`).
 - Die Kanalauswahl **MUSS** das Symptom abdecken: der Code- und der Pixel-Kanal sind das verpflichtende Paar; ein Server-/Request-Log-Kanal wird bei einem Timeout, einer zustandsändernden Assertion oder einer Datenabweichung hinzugefügt; ein Browser-Console-/Network-Kanal bei einer No-op-Interaktion oder einem vermuteten Client-Crash. Ein Kanal pro Modalität; nie zwei Analysen auf derselben Modalität.
-- **Dispatch-Briefings MÜSSEN Refutation autorisieren** (Issue-Kommentar §H, hier als autoritative Regel platziert; sie ist nicht E2E-spezifisch). Wo immer ein Skill oder Agent Analyse oder Remediation dispatcht, **MUSS** das Briefing seine Hypothese benennen *und* den Spezialisten explizit autorisieren und erwarten, sie zu widerlegen: *wenn die Evidenz dem widerspricht, sag es und ändere nichts, statt den Fix passend zu erzwingen.* Ohne die Klausel optimiert ein Spezialist darauf, die gestellte Aufgabe zu erledigen; mit ihr korrigierten die Spezialisten der Kampagne das Briefing des Orchestrators rund zehnmal, substanziell. Ein Briefing, das die Refutations-Klausel weglässt, ist ein Defekt.
+- **Dispatch-Briefings MÜSSEN Refutation autorisieren.** `spec/claude/dispatch-brief/` besitzt diese Regel portfolio-weit und legt fest, was eine gültige Refutation enthält; sie ist nicht E2E-spezifisch, also wendet diese Spec sie an, statt sie neu auszuformulieren. In der obigen parallelen Mehrkanal-Triage **MUSS** jedes Kanal-Briefing, das eine Hypothese benennt, die Refutations-Klausel gemäß jener Spec tragen: *wenn die Evidenz dem widerspricht, sag es und ändere nichts, statt den Fix passend zu erzwingen.* Ohne sie optimiert ein Kanal darauf, die gestellte Aufgabe zu erledigen; mit ihr korrigierten die Spezialisten der Kampagne das Briefing rund zehnmal, substanziell.
 
 ### F. Bibliotheksspezifische Gefahrenkataloge — wie man einen baut und pflegt
 
@@ -138,7 +138,7 @@ Diese Spec ist gegen ihre Nachbarn begrenzt und **DARF** deren Regeln **NICHT** 
 - `test-result-analyzer` (der Klassifikator) **MUSS** §A (cluster-weise Klassifikation, Mechanismus-Beweis) und §H (die Test-gegen-Produkt-Entscheidungsprozedur) anwenden und §D-Befunde in `test-falsifiability` routen.
 - `e2e-test-reviewer` **MUSS** §D (die Vacuous-Assertion- / Still-leere-Reader-Jagd) und §C (Instrumentierung-first, das Fehlernachrichten-Rubrik) beim Review oder Reparieren einer Suite anwenden.
 - `e2e-result-reviewer` **MUSS** §B (Kanal-zu-Frage, Provenienz, die Full-Page-Screenshot-Falle) beim Lesen der Screenshots und des Protokolls eines Laufs anwenden und als ein Kanal der parallelen Triage von §E operieren.
-- Jeder Skill oder Agent, der Analyse oder Remediation dispatcht, **MUSS** die Refutations-Klausel von §E in seinem Dispatch-Briefing tragen.
+- Jeder Skill oder Agent, der Analyse oder Remediation dispatcht, **MUSS** die Refutations-Klausel gemäß `spec/claude/dispatch-brief/` in seinem Dispatch-Briefing tragen (der portfolio-weite Besitzer; §E wendet sie auf die Parallel-Triage-Kanäle dieser Spec an).
 
 ## Akzeptanzkriterien
 
@@ -158,6 +158,7 @@ Diese Spec ist gegen ihre Nachbarn begrenzt und **DARF** deren Regeln **NICHT** 
 - `spec/project/test-cycle-code-adaptation/`: die No-Cheating-Invariante, die §D- und §H-Remediation respektieren müssen
 - `spec/project/test-falsifiability/`: die Vacuous-Test-Taxonomie und Mutation-Score-Leitlinie, in die §D routet
 - `spec/claude/research-triangulate/`: die Unabhängige-Provenienz-, Konflikt-stop-and-surface-, Unerreichbar-zurückgeben-Regeln, die §E wiederverwendet
+- `spec/claude/dispatch-brief/`: die portfolio-weite Refutations-Autorisierungs-Regel, die §E und §Binding auf die Dispatch-Briefings dieser Spec anwenden
 - `spec/frontend/testability-identifiers/`: die schlüsselbasierten, ohne-Raten-adressierbaren Hooks, von denen die Erreichbarkeits-Zweige abhängen
 - Quell-Erfahrung: `nolte/kamerplanter#768` (die Stabilisierungskampagne) und ihr Branch `fix/e2e-full-run-stabilization`; Lauf-Artefakte unter `test-reports/e2e/2026072*`; `nolte/claude-shared#514` ist der Autoren-Arbeitsauftrag
 

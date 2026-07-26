@@ -227,8 +227,12 @@ body.
    each, gate on operator confirmation, then dispatch via
    `Agent(subagent_type="<plugin>:<agent>")` or the matching skill invocation,
    passing the package's problem statement, acceptance criteria, touched files, and
-   the issue reference. Collect and record each specialist's result in the artifact
-   before dispatching a dependent package.
+   the issue reference. A package's problem statement is a hypothesis, so its
+   dispatch brief **MUST** authorise refutation per `spec/claude/dispatch-brief/`:
+   state the hypothesis, tell the specialist it may refute it, and treat a returned
+   refutation (contradicting evidence plus what it did instead) as a first-class
+   result recorded in the artifact, not a failed dispatch. Collect and record each
+   specialist's result in the artifact before dispatching a dependent package.
 
 ### 6. verify
 
