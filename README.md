@@ -42,6 +42,7 @@ This repository is a **plugin monorepo** shipping four plugins: **`nolte-shared`
 | `pull-request-create` | Create a GitHub PR that conforms to the repository's pull-request-workflow spec. |
 | `pull-request-merge` | Promote an open draft PR to merged on `develop`, applying repository-declared labels and every workflow gate. |
 | `project-structure-apply` | Audit the repo against the project-structure spec and scaffold or patch missing artefacts (README, `.github/*`, Taskfile, Renovate, …). |
+| `cicd-pipeline-design` | Design, scaffold and audit a repository's CI/CD pipeline against the CI, CD and GitHub Actions specs. |
 | `lektorat-apply` | Review Markdown prose against the six editorial dimensions and apply the agreed revisions. |
 | `vocab-drift-audit` | Diff repository-local Vale vocabulary against the pinned `nolte/vale-style` release. |
 | `audience-identify` | Identify the audiences of a bounded context and write a reviewable audience artifact. |
@@ -55,6 +56,7 @@ This repository is a **plugin monorepo** shipping four plugins: **`nolte-shared`
 | `spec-readiness-reviewer` | Audit specs for contradictions, audience fit, and Requirements-vs-Acceptance-Criteria completeness. |
 | `docs-freshness-checker` | Audit MkDocs documentation for language parity, dead internal links, stale path references, ADR (Architecture Decision Record) hygiene and placeholder markers. |
 | `prose-vale-curator` | Rephrase prose until it passes Vale, preferring terms the shipped vocabularies already accept. |
+| `cicd-pipeline-reviewer` | Read-only audit of a pipeline and its workflows against the CI, CD and GitHub Actions specs. |
 
 ### `nolte-media` (image generation & media processing)
 
