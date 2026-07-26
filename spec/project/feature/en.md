@@ -63,7 +63,7 @@ The sibling `roadmap` spec defines what work is queued and why; the sibling `spr
 
 - **MUST** state every acceptance criterion as a markdown checkbox bullet (`- [ ] …`), one criterion per bullet, atomic (a single check), testable (a reviewer can mark done/not done without ambiguity).
 - **MUST** assign a stable per-feature criterion identifier visible in the bullet text using the pattern `acceptance-<n>` (for example `- [ ] **acceptance-1** Sensor reading appears within 5 s after device discovery`); the identifier is what the `verifies_sprint_value` frontmatter field references and what `## Test hooks` entries pin against.
-- **MUST NOT** carry process-internal criteria ("PR approved", "merged to develop"); acceptance criteria are user-visible behaviour, not workflow gates.
+- **MUST NOT** carry process-internal criteria ("PR approved," "merged to develop"); acceptance criteria are user-visible behaviour, not workflow gates.
 - **SHOULD** target three to seven criteria per feature; one is suspicious (under-specified), more than ten suggests the feature should be split.
 - **MUST NOT** rely on prose markers in bullet text to identify the value-verifying criterion; the only authoritative signal is the `verifies_sprint_value` frontmatter field. Authors **MAY** mention the verifying role in human-readable prose for reader clarity, but consuming skills **MUST** parse the frontmatter, not the bullet text.
 
