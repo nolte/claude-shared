@@ -92,3 +92,7 @@ SDK('s)?
 # author/company-name vocabulary work).
 [Cc]acheable
 Zalando
+# Coordinate-based-clicking vocabulary (added with spec/project/e2e-test-stability
+# §C; upstream PR candidates for the technical vocabulary of nolte/vale-style).
+actionability
+[Ss]crollable
