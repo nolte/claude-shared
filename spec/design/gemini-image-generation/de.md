@@ -89,7 +89,7 @@ Leser: Prompt-Autoren und Skill-/Agent-Autoren, die Gemini adressieren; Betreibe
 
 ## Referenzen
 
-Die Billing-, Wasserzeichen- und Modell-Aktualitäts-Aussagen in §„Output und Lizenzierung (harte Invarianten)" sind Author-Time-externe Aussagen, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede externe Quelle unten: 2026-07-24.
+Die Billing-, Wasserzeichen- und Modell-Aktualitäts-Aussagen in §„Output und Lizenzierung (harte Invarianten)" sind Author-Time-externe Aussagen, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-Time-Aussagen" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede externe Quelle unten: 2026-07-24.
 
 - [R1] Prompt-Dokument-Authoring, das den gewählten Generator adressiert: `spec/design/graphic-prompt-authoring/`
 - [R2] Das Tool, dessen `gemini`-Provider `gemini-2.5-flash-image` aufruft: `spec/tools/image-generation/`

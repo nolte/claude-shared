@@ -93,7 +93,7 @@ Leser: Teams und Repositories, die die aussagekräftigen KPIs ihrer Business-Anw
 
 - Der normative Inhalt der Spec **MUSS** gegen diese verankerten Quellen gelesen werden (verifiziert 2026-07-10): das **GQM**-Paradigma (Basili, Caldiera, Rombach, *The Goal Question Metric Approach*; Ziel-Koordinaten purpose/issue/object/viewpoint; drei Ebenen Goal→Question→Metric; Metriken objektiv oder subjektiv; business-getriebene Ziele als Input) für das Ableitungs-Rückgrat und die Mess-Stufen-Grenze; **SMART** (G. T. Doran, „There's a S.M.A.R.T. way to write management's goals and objectives", *Management Review*, 1981) für das Pro-KPI-Gate; die **Leading-vs-Lagging**-Indikator-Unterscheidung (leading = prädiktive Inputs, lagging = realisierte Outputs) für die Klassifikation; und die **KPI-vs-Metrik**-Grenze (ein KPI ist eine *Schlüssel*-Metrik, an ein Geschäftsergebnis gebunden) für die Auswahl
 - Eine `kpi-derive`-Implementierung **MUSS** jede Ableitung in diesen Frameworks verankern und **DARF NICHT** die Mess-Grenze überschreiten: Sie definiert KPIs, sie emittiert nie Instrumentierung, einen Metrik-Client oder eine Erhebungs-Pipeline
-- Jede Framework-Attribution oben ist eine Author-Time-externe Aussage und **MUSS** gemäß `spec/claude/research-triangulate/` §"Author-time assertions" auf mindestens drei unabhängige Quellen trianguliert werden; die Quellenliste (URL, Quellklasse, Abrufdatum, Primary-first) ist in §Quellen erfasst
+- Jede Framework-Attribution oben ist eine Author-Time-externe Aussage und **MUSS** gemäß `spec/claude/research-triangulate/` §"Author-Time-Aussagen" auf mindestens drei unabhängige Quellen trianguliert werden; die Quellenliste (URL, Quellklasse, Abrufdatum, Primary-first) ist in §Quellen erfasst
 
 ## Akzeptanzkriterien
 

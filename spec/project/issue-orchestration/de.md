@@ -249,7 +249,7 @@ verifiziert und gemergt ist.
 - **DARF NICHT [MUST NOT]** das Artefakt stattdessen hinter einem
   `.gitignore`-Eintrag verbergen. Ein ignoriertes Artefakt taucht nie im Pull Request
   auf, was das Operator-Freigabe-Gate aushöhlt, das §Dekomposition tragend macht, und
-  `spec/claude/review-plan/` §File location and naming legt `.audits/` portfolioweit
+  `spec/claude/review-plan/` §Dateiort und Namensgebung legt `.audits/` portfolioweit
   bereits als getracktes, nicht ignoriertes Terrain fest. Tracked-then-removed ist
   derselbe Lebenszyklus, den jene Spezifikation einem Review-Plan gibt — erzeugen,
   abarbeiten, löschen und die Git-Historie den Trail sein lassen — angewandt auf
@@ -272,7 +272,7 @@ verifiziert und gemergt ist.
 - **SOLLTE NICHT [SHOULD NOT]** diese Regel auf jeden `.audits/`-Pfad
   verallgemeinern. Datierte, akkumulierende Audit-Records behalten den nicht
   wegwerfbaren Lebenszyklus, den ihre eigenen Spezifikationen ihnen geben (die
-  aufgezählte Menge in `spec/claude/review-plan/` §Relationship to other specs);
+  aufgezählte Menge in `spec/claude/review-plan/` §Bezug zu anderen Specs);
   dieser Abschnitt ist auf das Voranalyse-Artefakt dieses Prozesses begrenzt
 
 ### Spezialisten-Dispatch (Wiederverwendung statt Neuerfindung)

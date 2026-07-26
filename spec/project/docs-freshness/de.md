@@ -52,7 +52,7 @@ Zusätzliche Kategorien **DÜRFEN** von einem Repository hinzugefügt werden, we
   - **warning**: Sprach-Paritäts-Lücke, Stale-Marker in einem ADR mit Status `accepted`, ADR-Index-Drift, Inhalts-Staleness-Delta > 90 Tage, Mermaid-Diagramm-Quell-Drift, Track-Frontmatter-Drift (fehlender Schlüssel), Content-Mode-Drift (fehlender Schlüssel), Content-Mode-Mischungs-Kandidat, Audience-Track-Mismatch, i18n-Basis-URL-Drift; Reaktionsfenster: innerhalb des laufenden Quartals
   - **info**: Stale-Marker in gewöhnlicher Prosa, Inhalts-Staleness-Delta 30 – 90 Tage, ADR ohne deklarierten Status (als Info, nicht kritisch, behandeln — das ADR ist weiterhin lesbar); Reaktionsfenster: best effort
 - **DARF NICHT** einen Schweregrad allein auf Basis lokaler Einschätzung absenken; Abweichung von der Klassifikation gehört in eine explizite Waiver-Notiz, festgehalten im Audit-Artefakt
-- **MUSS [MUST]** diese Kleinschreibungs-Namen (`critical` / `warning` / `info`) als die maschinengelesene Editorial-Serialisierung behandeln, sanktioniert durch den Editorial-Sub-Skala-Carve-out in `spec/claude/review-plan/` §Severity scale; jeder bildet eins-zu-eins auf die Title-Case-Stufen jener Spec ab
+- **MUSS [MUST]** diese Kleinschreibungs-Namen (`critical` / `warning` / `info`) als die maschinengelesene Editorial-Serialisierung behandeln, sanktioniert durch den Editorial-Sub-Skala-Carve-out in `spec/claude/review-plan/` §Schweregrad-Skala; jeder bildet eins-zu-eins auf die Title-Case-Stufen jener Spec ab
 
 ### Auslöser und Kadenz
 - **MUSS** in jedem Repository mit einem `docs_dir` mindestens ein vollständiges Audit pro Kalenderquartal durchführen

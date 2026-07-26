@@ -63,7 +63,7 @@ Eine Passage, die mit vergleichbarer Konfidenz auf mehr als ein Muster passt, **
 ### Severity-Bereich
 - **MUSS [MUST]** jedem Befund eine Severity aus der geschlossenen Menge `{suggestion, info}` zuweisen: `suggestion` für Matches, auf die der Agent ein Handeln der Betreiberin erwartet, `info` für rein kontextuelle Matches (zum Beispiel eine via `<!-- diagram-opportunity-skip: ... -->` unterdrückte Passage, zur Nachvollziehbarkeit festgehalten)
 - **DARF NICHT [MUST NOT]** `warning`- oder `critical`-Severities emittieren; das ist ein Vorschlags-Werkzeug, keine Mängelliste, und eine höhere Severity würde Betreiberinnen-Müdigkeit antrainieren
-- **MUSS [MUST]** diese Kleinschreibungs-Namen (`suggestion` / `info`) als die maschinengelesene Editorial-Serialisierung behandeln, sanktioniert durch den Editorial-Sub-Skala-Carve-out in `spec/claude/review-plan/` §Severity scale; jeder bildet eins-zu-eins auf die Title-Case-Stufen jener Spec ab
+- **MUSS [MUST]** diese Kleinschreibungs-Namen (`suggestion` / `info`) als die maschinengelesene Editorial-Serialisierung behandeln, sanktioniert durch den Editorial-Sub-Skala-Carve-out in `spec/claude/review-plan/` §Schweregrad-Skala; jeder bildet eins-zu-eins auf die Title-Case-Stufen jener Spec ab
 
 ### Quell-Klassifikations-Vorschlag
 - **MUSS [MUST]** auf jedem Befund der Severity `suggestion` eine Quell-Klassifikation vorschlagen—entweder `user-described` (mit einer ein-Zeilen-Zusammenfassungs-Kandidatur) oder `derived` (mit einem konkreten Quell-Pfad-Kandidaten innerhalb des Repositorys)—passend zur `<!-- diagram-source: ... -->`-Annotations-Form, die `spec/project/mermaid-diagrams/` §Diagramm-Quellen verlangt

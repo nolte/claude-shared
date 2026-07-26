@@ -74,7 +74,7 @@ Leser: Prompt-Autoren und Skill-/Agent-Autoren, die FLUX adressieren; Betreiber,
 
 ## Referenzen
 
-Die Lizenz- und Hosting-Aussagen in §„Modellwahl" sind Author-Time-externe Aussagen, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede externe Quelle unten: 2026-07-24.
+Die Lizenz- und Hosting-Aussagen in §„Modellwahl" sind Author-Time-externe Aussagen, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-Time-Aussagen" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede externe Quelle unten: 2026-07-24.
 
 - [R1] Prompt-Dokument-Authoring, das FLUX adressiert: `spec/design/graphic-prompt-authoring/`
 - [R2] Das Tool, dessen `cloudflare`-Provider FLUX.1-schnell ausführt: `spec/tools/image-generation/`

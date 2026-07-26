@@ -63,7 +63,7 @@ Diese Spec konsolidiert die portfolio-weite Taskfile-*Mechanik* an einem Ort: da
 
 ## Quellen
 
-Die Task-Remote-Taskfile-Feature-Reifegrad-Aussage in §„Geteilte Taskfiles aus `nolte/taskfiles`" ist eine Author-Time-externe Aussage, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-time assertions" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede Quelle unten: 2026-07-24.
+Die Task-Remote-Taskfile-Feature-Reifegrad-Aussage in §„Geteilte Taskfiles aus `nolte/taskfiles`" ist eine Author-Time-externe Aussage, trianguliert gemäß `spec/claude/research-triangulate/` §"Author-Time-Aussagen" (Author-Time-Stufe: mindestens drei unabhängige Quellen, Primary-first geordnet). Abrufdatum für jede Quelle unten: 2026-07-24.
 
 - **Tasks Remote-Taskfile-Auflösung ist ein experimentelles Feature, gated durch `TASK_X_REMOTE_TASKFILES=1`**: Task-Dokumentation, „Remote Taskfiles"-Experiment-Seite, gated durch `TASK_X_REMOTE_TASKFILES` und mit der Standard-Experimental-Feature-Warnung (Primary), `https://taskfile.dev/docs/experiments/remote-taskfiles`; das Upstream-Tracking-Issue `go-task/task#1317`, weiterhin offen mit Experiment-Status „candidate" (Primary), `https://github.com/go-task/task/issues/1317`; Marmelab, „Taskfile: The Modern Alternative to Makefile" (Secondary), `https://marmelab.com/blog/2026/03/12/taskfile-alternative-makefile.html`
 
