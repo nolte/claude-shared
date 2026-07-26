@@ -63,6 +63,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 - **MUST** localise a real failure from the evidence execution emitted: the **assertion diff** (expected vs actual), the **stack trace**, logs, and—at the E2E tier—the screenshots and protocol.
 - **SHOULD** use **change bisection** (for example `git bisect`) to find the offending commit when the cause isn't obvious from the trace [R7].
 - **SHOULD** reduce a failing case to a **minimal reproducer** so the cause is isolated and the eventual fix is verifiable [R8].
+- At the **E2E tier**, **MUST** run the diagnostic discipline of `spec/project/e2e-failure-diagnosis/` [R11] rather than re-deriving it here: cluster-wise classification and the mechanism-proof gate (its §A), the channel-to-question evidence map (its §B), and the ordered test-defect-versus-product-defect decision procedure (its §H). This phase routes an E2E cluster through that spec; the classification classes and the routing contract above stay this spec's.
 
 ### Coverage and suite-quality analysis
 
@@ -110,6 +111,7 @@ Readers: spec authors writing the sibling phase specs; skill and agent authors b
 - [R8] scikit-learn, *Crafting a minimal reproducer* (minimise a failing case to isolate the cause): <https://scikit-learn.org/stable/developers/minimal_reproducer.html>
 - [R9] Martin Fowler, *TestCoverage* (coverage as a guide to missing tests, not a target): <https://martinfowler.com/bliki/TestCoverage.html>
 - [R10] Codecov, *Mutation testing: ensuring coverage isn't a vanity metric* (mutation score as the stronger signal): <https://about.codecov.io/blog/mutation-testing-how-to-ensure-code-coverage-isnt-a-vanity-metric/>
+- [R11] `spec/project/e2e-failure-diagnosis/`: the E2E failure-diagnosis discipline this phase routes an E2E cluster through (cluster-wise classification, mechanism proof, evidence channels, the test-vs-product decision procedure)
 
 ## Open Questions
 
