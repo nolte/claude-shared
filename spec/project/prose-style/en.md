@@ -40,6 +40,36 @@ Readers: humans and AI assistants authoring Markdown across the portfolio, revie
 - **SHOULD** prefer phrasings already accepted by the shared vocabulary over coining new terms, and reuse terminology from neighbouring specs and docs when it fits
 - **MUST NOT** silence Vale alerts with per-file ignore comments when the real fix is a vocabulary or style update upstream in `nolte/vale-style`
 
+### Rules that bite in practice
+
+The active configuration is authoritative (§Text generation), but a handful of its rules
+surprise authors often enough to be worth naming. Each one below is an `error`-level
+alert, not a stylistic preference. Every example is written inside a code span because
+`IgnoredScopes` covers `code`; writing them as raw prose would make this section fail the
+rules it documents.
+
+- **MUST** use contractions where the Microsoft style expects them (`it's`, `doesn't`, `isn't`, `can't`, `won't`). Avoiding a contraction is an alert in its own right, not a neutral register choice
+- **MUST** write em-dashes without surrounding spaces (`word—word`, never `word — word`) in English-scoped files
+- **MUST NOT** place an em-dash directly against an inline-code span or bold text. `IgnoredScopes` strips those spans before the dash rule runs, so the dash is then read as spaced and alerts even though the raw source looks correct. Use a colon or rephrase instead
+- **MUST** place sentence punctuation inside the closing quotation mark
+- **MUST** reproduce the exact casing an accepted vocabulary entry carries, including at the start of a sentence or a bold lead-in; a lowercase vocabulary entry stays lowercase, so a term such as `reusability` can't open a sentence and needs rephrasing
+- **MUST NOT** follow a colon inside a heading with a lowercase word; drop the colon or capitalize what follows
+- **SHOULD** open a list entry that begins with inline code or bold using a colon rather than an em-dash, which is the convention the spec corpus already follows in its `## References` sections and sidesteps the adjacency rule above entirely
+
+### Suppressing a rule
+
+§Text generation forbids silencing an alert whose real fix belongs upstream. That
+prohibition stands, and this section carves out the one legitimate exception: a rule that
+collides with a contract another spec makes mandatory. The reference case is the RFC 2119
+keyword `SHOULD NOT`, which `Microsoft.Contractions` rewrites even though the keyword is
+fixed by the requirement grammar and can't be contracted.
+
+- **MUST** express a sanctioned suppression as a scoped comment pair, opening with `<!-- vale <Rule> = NO -->` immediately before the affected lines and closing with `<!-- vale <Rule> = YES -->` immediately after
+- **MUST** re-enable the rule in the same file; a suppression left open to the end of the file silently disables the rule for every later line
+- **MUST** name exactly one rule per pair, so the suppression stays auditable by grep and a second, unrelated alert can't hide behind it
+- **MUST** limit the suppression to a genuine collision between a Vale rule and a contract another spec makes mandatory, and **MUST NOT** use it to pass prose the author simply prefers
+- **MUST NOT** use a suppression to pass a spelling alert, a foreign-language word, or a term that belongs in the shared vocabulary; those stay governed by §New terms and phrasings and §Multilingual text
+
 ### New terms and phrasings
 - **MUST** add newly introduced technical terms, product names, or project-specific jargon to the shared vocabulary at [`nolte/vale-style`](https://github.com/nolte/vale-style), specifically under `src/styles/config/vocabularies/<vocab>/accept.txt`, rather than to a repository-local override
 - **MUST** group additions by an existing vocabulary topic (for example `technical`, `esphome`) whenever one fits, and only propose a new vocabulary when no existing one applies
@@ -72,7 +102,7 @@ The Vale rule sets enforce a mechanical baseline, but the rules below codify the
 - **MUST NOT** ship **emoji** in spec, ADR, or reference prose; emoji **MAY** appear in release notes, README badge rows, and informal blog posts when the project's voice supports it (portfolio convention; not contradicted by upstream style guides)
 - **MAY** use **microcopy patterns** ratified by Microsoft Top-10 (verb-first list items, "you can" pruned away, two-or-three-word headings without end punctuation)
 
-By default these §Voice and tone rules stay **editorial guidance**: they're enforced by the human or AI lektorat pass (`spec/project/lektorat/` §Detection dimensions, which surfaces them as D4 style findings) and by pull-request review, not by bespoke Vale rules. The portfolio doesn't author a general active-voice detector, a title-case detector, or a gendered-pronoun detector in `nolte/vale-style` until recorded drift justifies the rule cost; the [`spec/project/lektorat/`](../lektorat/en.md) §Non-Goals defers this same decision back to this spec as the owner. The one exception already automated is the bias-free substitution table, which `nolte/vale-style` carries upstream (see the inclusive-language bullet above and the §Acceptance Criteria entry for it). When automation does become justified, deposit targeted upstream rules in this order—gendered generic pronouns, exclamation marks, and title-case headings first, because they're the lowest-false-positive classes—and keep the general active-voice class manual, because it's the most false-positive-prone. The countable revisit trigger is recorded in §Open Questions.
+By default these §Voice and tone rules stay **editorial guidance**: they're enforced by the human or AI lektorat pass (`spec/project/lektorat/` §Quality dimensions, which surfaces them as D4 style findings) and by pull-request review, not by bespoke Vale rules. The portfolio doesn't author a general active-voice detector, a title-case detector, or a gendered-pronoun detector in `nolte/vale-style` until recorded drift justifies the rule cost; the [`spec/project/lektorat/`](../lektorat/en.md) §Non-Goals defers this same decision back to this spec as the owner. The one exception already automated is the bias-free substitution table, which `nolte/vale-style` carries upstream (see the inclusive-language bullet above and the §Acceptance Criteria entry for it). When automation does become justified, deposit targeted upstream rules in this order—gendered generic pronouns, exclamation marks, and title-case headings first, because they're the lowest-false-positive classes—and keep the general active-voice class manual, because it's the most false-positive-prone. The countable revisit trigger is recorded in §Open Questions.
 
 ### Multilingual text
 - **MUST** scope Vale to English-authored content only; files authored in any language other than English **MUST NOT** be included in Vale's lint scope
@@ -99,6 +129,8 @@ By default these §Voice and tone rules stay **editorial guidance**: they're enf
 - [ ] Authored or AI-generated paragraphs follow the §Voice and tone rules (active voice, second person on instructional pages, present tense, sentence-case headings, front-loaded answer); a reviewer can spot-check any page and find the rules upheld
 - [ ] No English-scoped prose carries gendered generic pronouns (`he`, `she`, `his`, `hers`, `he/she`), militaristic or ableist substitutions ratified by the Microsoft Bias-Free Communication table, exclamation marks outside genuine emphasis, or culturally specific idioms; the shared Vale vocabulary at `nolte/vale-style` flags every known offender at `error` level
 - [ ] The shared Vale vocabulary at `nolte/vale-style` carries Microsoft's bias-free substitutions (`primary` / `subordinate`, `stop responding`, `perimeter network`, …) so a per-repo override isn't needed to enforce them
+- [ ] Every Vale suppression in the repository is a scoped comment pair that names exactly one rule and re-enables it in the same file; a grep for `= NO` disable comments returns no unmatched opener
+- [ ] No Vale suppression in the repository silences a spelling alert, a foreign-language word, or a term that belongs in the shared vocabulary
 
 ## Open Questions
 

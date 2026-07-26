@@ -28,6 +28,7 @@ Readers: auditors running the readiness check before a spec graduates from draft
 - **MUST** apply to every spec at `spec/<topic>/<slug>/<canonical_language>.md` whose `## Requirements` or `## Acceptance Criteria` section is non-empty
 - **MUST** include specs with `Status: draft`, since drafts are the primary readiness target, not an exemption
 - **MUST** cover both intra-spec (inside one spec) and cross-spec (between two or more specs) concerns
+- **MUST** apply the cross-reference resolvability check of §Dimension 3—Domain completeness to **every configured language file** of an in-scope spec, not only the canonical one. The remaining dimensions stay canonical-only: contradiction detection, audience fit, and Requirement-to-Acceptance-Criterion coverage all read content that a translation mirrors rather than restates, so auditing them per language would duplicate work without finding anything new. A section reference is different in kind, because it names a heading and headings are translated
 - **MAY** narrow a run to a single spec or a single topic when the trigger is itself narrow (for example a PR that changes one spec)
 
 ### Dimension 1—Contradiction detection
@@ -55,6 +56,8 @@ Readers: auditors running the readiness check before a spec graduates from draft
 - **MUST** verify that every Acceptance Criterion traces back to a Requirement or a Goal—an orphan AC (can't be tied to any Requirement or Goal) is a Warning
 - **MUST** classify every Open Question as either **load-bearing** (implementation or downstream work can't responsibly proceed without an answer) or **parking-lot** (nice-to-have refinement, downstream can proceed with a reasonable default); a load-bearing OQ in a spec that's being considered for promotion is a Critical finding
 - **MUST** flag as Critical any reference from spec A to spec B where spec B doesn't exist, or exists but doesn't contain the section the reference implies
+- **MUST** resolve every section reference **against the language file that carries it**: a reference written in `de.md` resolves against the target spec's `de.md` headings, not against the canonical headings. A reference that resolves canonically but names a heading no translation carries is the same Critical, because the reader of that translation reaches nothing. This is why §Scope extends this one check across languages
+- **MUST NOT** treat a translated section reference as conformant on the grounds that its canonical counterpart resolves; the two are separate strings pointing at separate heading sets, and structural parity between a translation and its canonical (owned by the `spec` skill per §Delimitation) doesn't establish that either string resolves
 - **SHOULD** flag as Warning every Goal without at least one matching Requirement—a Goal the spec then never operationalises is a misleading promise
 - **SHOULD** flag as Info when the scope of a spec is ambiguous and no Non-Goals section carves it; the fix is usually adding three to five explicit non-goals
 - **MAY** flag as Info Acceptance Criteria that are testable in principle but require infrastructure the portfolio doesn't yet have; these aren't Critical-class, but they warn consumers
@@ -102,7 +105,10 @@ Readers: auditors running the readiness check before a spec graduates from draft
 - [ ] The agent `agents/spec-readiness-reviewer.md` produces findings that map 1-to-1 onto the three dimensions and the canonical severity scale this spec cites (defined in `spec/claude/review-plan/` §Severity scale), so audit artifacts can be generated mechanically
 - [ ] No audit run in any repository modified any spec file; the read-only discipline holds in practice, not just in this spec
 - [ ] Readiness-audit artifacts for single-spec promotion runs conform to the `review-plan` artifact format, so they're consumable by the same review-closure machinery as skill- and agent-review
+- [ ] Every section reference in every configured language file of an in-scope spec resolves against the headings of the target spec's file **in that same language**; a reference resolving only in the canonical language is reported as Critical
 
 ## Open Questions
 
 _All previously deferred open questions were settled on 2026-06-06: each provisional default is now the standing rule. The per-item decisions and rationale are preserved in git history (decision log, 2026-06-06)._
+
+- The per-language cross-reference rule added to §Scope and §Dimension 3 isn't met by the corpus today. A first sweep over every `spec/<topic>/<slug>/` section reference found a substantial backlog, concentrated in one class: a translation citing the **canonical** section name while the translated target carries a translated heading. Three confirmed instances: `spec/claude/review-plan/` is cited as §"Severity scale" from German files whose target heading reads `Schweregrad-Skala`; `spec/project/mkdocs-structure/` is cited as §"language parity" while the heading reads `i18n and parity`; `spec/project/lektorat/` was cited as §"Detection dimensions" while the heading reads `Quality dimensions` (fixed in the spec that carried it). A mechanical sweep can propose candidates but can't settle them, because a deliberately shortened section name reads correctly to a human and only a per-case judgement separates the two. The remediation pass is therefore a tracked follow-up, not part of the change that introduced the rule, and the matching Acceptance Criterion is expected to fail until that pass lands.
