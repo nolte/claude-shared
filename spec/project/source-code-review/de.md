@@ -90,13 +90,13 @@ Jedes Sprachprofil **MUSS** definieren, und ein Reviewer wendet es als Einheit a
 
 ### Report-Vertrag
 
-- **MUSS** jedes Finding mit dem portfolioweiten Schweregrad-Vokabular aus `spec/claude/review-plan/` §Severity scale klassifizieren (Critical / Warning / Suggestion / Info, wörtlich in Title Case) — nie eine P0–P3- oder high/medium/low-Skala
+- **MUSS** jedes Finding mit dem portfolioweiten Schweregrad-Vokabular aus `spec/claude/review-plan/` §Schweregrad-Skala klassifizieren (Critical / Warning / Suggestion / Info, wörtlich in Title Case) — nie eine P0–P3- oder high/medium/low-Skala
 - **MUSS** auf D1-Fehlerbehandlungs-Findings einen Schweregrad-Boden anwenden: Ein Finding, das einen still verschluckten oder unterdrückten Fehler oder fehlende Fehlerbehandlung einer fehlbaren Operation meldet, wird als **Critical** klassifiziert, wenn confirmed, und mindestens als **Warning**, wenn suspected — nie als Suggestion oder Info —, sodass es immer in die §Work-Packages eingeht; fehlende oder verschluckte Fehlerbehandlung ist ein No-Go, keine Stilfrage
 - **MUSS** jedes Finding mit file:line, seiner Dimensions-ID (D1–D10), seinem `production`- oder `test`-Marker und dem Status confirmed oder suspected attribuieren; ein unsicheres Finding wird als suspected gemeldet, nie still verworfen
 - **MUSS** mit einer Gesamtbewertung führen: reviewter Scope (Wurzeln, Globs, Sprachprofil, Commit), gefundene Tooling-Baseline und Finding-Anzahl je Dimension
 - **MUSS** mit einer **§Work-Packages**-Sektion enden, die alle Critical- und Warning-Findings in Work-Packages zerlegt, bei denen **keine zwei Packages dieselbe Datei berühren**, sodass Spezialisten nebenläufig ohne Merge-Konflikte beheben können; jedes Package trägt seine Finding-IDs, seine Dateimenge, ein Ein-Zeilen-Ziel und ein **Routing-Ziel** (der Spezialisten-Skill oder -Agent, der die Behebung besitzt — Produktivcode-Fixes an die implementierende Engineer-Rolle, Tier-Konformitäts-Findings an den besitzenden Tier-Reviewer, D10-Böden an das besitzende Audit)
 - **MUSS** jede Reihenfolge-Abhängigkeit zwischen Packages explizit deklarieren; Packages ohne deklarierte Abhängigkeit sind per Vertrag parallel-sicher
-- **MUSS**, wenn vom aufrufenden Skill persistiert, unter `.audits/source-code-review/<target-slug>.md` liegen, per `spec/claude/review-plan/` §File location and naming; ein Re-Run überschreibt die kanonische Datei
+- **MUSS**, wenn vom aufrufenden Skill persistiert, unter `.audits/source-code-review/<target-slug>.md` liegen, per `spec/claude/review-plan/` §Dateiort und Namensgebung; ein Re-Run überschreibt die kanonische Datei
 - **SOLLTE** Suggestion- und Info-Findings aus den Work-Packages heraushalten (sie werden gelistet, nicht dispatcht)
 
 ### Reviewer-Vertrag

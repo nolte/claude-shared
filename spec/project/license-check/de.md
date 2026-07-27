@@ -29,7 +29,7 @@ Die Sachaussagen dieser Spec (Lizenzkategorien und ihre Pflichten, die einseitig
 ## Anforderungen
 
 ### Scope — was geprüft wird
-- **MUSS [MUST]** alle drei IP-Ströme prüfen: (1) die eigenen Quelldateien des Repositorys, (2) jede in einem getrackten Manifest deklarierte Third-Party-Dependency (unter Wiederverwendung des Manifest-Sets aus `spec/project/dependency-audit/` §Scope) und (3) Tools und KI-Generatoren, die zum Build-Output beitragen oder committete Artefakte emittieren (generierter Code, Bilder, Modellgewichte)
+- **MUSS [MUST]** alle drei IP-Ströme prüfen: (1) die eigenen Quelldateien des Repositorys, (2) jede in einem getrackten Manifest deklarierte Third-Party-Dependency (unter Wiederverwendung des Manifest-Sets aus `spec/project/dependency-audit/` §Geltungsbereich) und (3) Tools und KI-Generatoren, die zum Build-Output beitragen oder committete Artefakte emittieren (generierter Code, Bilder, Modellgewichte)
 - **MUSS [MUST]** transitive Dependencies abdecken, nicht nur direkte; eine Copyleft-Pflicht in einem transitiven Paket bindet genauso wie in einem direkten
 - **MUSS [MUST]** jeden Subroot in einem Monorepo einschließen, der ein eigenes Manifest trägt, damit Befunde der besitzenden Komponente zugeordnet werden
 - **MUSS [MUST]** ein committetes KI-generiertes Artefakt (Code, Bild, Modellgewicht oder anderes Asset) als in-Scope-Element behandeln, dessen Provenienz und Lizenzstatus gemäß §KI-Provenienz festgehalten werden
@@ -74,7 +74,7 @@ Die Sachaussagen dieser Spec (Lizenzkategorien und ihre Pflichten, die einseitig
   - **review** (manuelle Entscheidung nötig, Gate ist `blocked`, nicht `pass`): weak/datei-granulares Copyleft; source-available/restricted Lizenzen; Open-Weight-Modelllizenzen; die BSD-4-Clause-advertising-clause-Ausnahme; jedes `LicenseRef-*` / `NOASSERTION`; jede nicht positiv als kompatibel bestätigte Kombination; strong/network Copyleft in einer Komponente, die *nur auf Armeslänge ausgeführt* wird (Build-/Dev-Tool, nicht conveyed)
   - **deny** (scheitert automatisch): strong Copyleft (GPL-Familie) und network Copyleft (AGPL) in jeder Komponente, die als Teil des Produkts *conveyed, gelinkt oder über ein Netzwerk angeboten* wird — gerechtfertigt, weil ein permissiv ausgerichtetes, teils SaaS-basiertes Portfolio die Pflicht zum kombinierten Werk bzw. zur §13-Quelltext-Offenlegung nicht absorbieren kann
 - **MUSS [MUST]** ein deny-Tier-Override nur mit einer benannten, zeitlich begrenzten, rationale-tragenden Ausnahme erlauben (gleiche Hülle wie §Remediation), nie als stillschweigende Allowlist-Änderung
-- **MUSS [MUST]** diese Portfolio-Default-Policy als die „explicit policy with named disallowed licenses" behandeln, die `spec/project/dependency-audit/` §License audit verlangt, bevor ein Lizenzbefund hart fehlschlagen darf: ein Repository, das `license-check` übernommen hat, braucht keine zusätzliche Per-Repository-Deny-Deklaration, damit der deny-Tier bindet
+- **MUSS [MUST]** diese Portfolio-Default-Policy als die „explicit policy with named disallowed licenses" behandeln, die `spec/project/dependency-audit/` §Lizenz-Audit verlangt, bevor ein Lizenzbefund hart fehlschlagen darf: ein Repository, das `license-check` übernommen hat, braucht keine zusätzliche Per-Repository-Deny-Deklaration, damit der deny-Tier bindet
 - **DARF NICHT [MUST NOT]** die Kategorie einer Lizenz allein nach lokalem Ermessen herabstufen; Widerspruch ist eine festgehaltene Ausnahme mit Rationale, keine Neuklassifizierung
 
 ### Eigener-Code- und In-Repo-Compliance

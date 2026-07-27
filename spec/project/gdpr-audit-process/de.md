@@ -38,7 +38,7 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer und Datenschutzbeauftrag
 - **MUSS [MUST]** strikt read-only sein: nur Lese- und Such-Tools deklarieren (`Read`, `Grep`, `Glob`), kein `Edit`, `Write`, `NotebookEdit` deklarieren und keine Korrekturen anwenden; die einzige Ausgabe ist der Auditbericht
 - **DARF NICHT [MUST NOT]** personenbezogene Daten, die ihm in Seed-Daten, Fixtures oder Logs begegnen, redigieren, verschieben, exportieren oder anderweitig anfassen; er meldet Ort und Klasse der Exposition, er handelt nicht an den Daten
 - **DARF NICHT [MUST NOT]** Befunde im Quellcode unterdrücken, herabstufen oder annotieren; Melden ist die einzige Aktion
-- **MUSS [MUST]** den Bericht in seiner finalen Nachricht zurückgeben; das Persistieren ist Aufgabe der aufrufenden Skill oder der bedienenden Person. Beim Persistieren liegt der Bericht unter `.audits/gdpr-audit-process/<target-slug>.md` (Unterverzeichnis = Slug dieser Spec) gemäß `spec/claude/review-plan/` §File location and naming; ein erneuter Lauf überschreibt die einzelne kanonische Datei, statt zeitgestempelte Snapshots anzuhäufen
+- **MUSS [MUST]** den Bericht in seiner finalen Nachricht zurückgeben; das Persistieren ist Aufgabe der aufrufenden Skill oder der bedienenden Person. Beim Persistieren liegt der Bericht unter `.audits/gdpr-audit-process/<target-slug>.md` (Unterverzeichnis = Slug dieser Spec) gemäß `spec/claude/review-plan/` §Dateiort und Namensgebung; ein erneuter Lauf überschreibt die einzelne kanonische Datei, statt zeitgestempelte Snapshots anzuhäufen
 
 ### Discovery und Stack-Anpassung
 
@@ -72,7 +72,7 @@ Das Audit **MUSS [MUST]** die folgenden Dimensionen abdecken und dabei dateiübe
 
 ### Ausgabe
 
-- **MUSS [MUST]** einen einzelnen severity-klassifizierten Bericht ausgeben, der das portfolio-weite Severity-Vokabular aus `spec/claude/review-plan/` §Severity scale verwendet (Critical / Warning / Suggestion / Info, wortgleich Title Case) — er **DARF NICHT [MUST NOT]** eine parallele Skala erfinden; jeder Befund trägt einen Titel, den/die DSGVO-Artikel, die Klasse code-verifizierbar/rechtsprüfungs-erforderlich, eine file:line-Attribution für code-verifizierbare Befunde, das Problem und eine konkrete Remediation-Empfehlung (beschrieben, nicht angewendet)
+- **MUSS [MUST]** einen einzelnen severity-klassifizierten Bericht ausgeben, der das portfolio-weite Severity-Vokabular aus `spec/claude/review-plan/` §Schweregrad-Skala verwendet (Critical / Warning / Suggestion / Info, wortgleich Title Case) — er **DARF NICHT [MUST NOT]** eine parallele Skala erfinden; jeder Befund trägt einen Titel, den/die DSGVO-Artikel, die Klasse code-verifizierbar/rechtsprüfungs-erforderlich, eine file:line-Attribution für code-verifizierbare Befunde, das Problem und eine konkrete Remediation-Empfehlung (beschrieben, nicht angewendet)
 - **MUSS [MUST]** mit einer Gesamtbewertungstabelle beginnen (je Auditdimension: Bewertung + Befundzahl + Aufteilung code-verifizierbar/rechtsprüfungs-erforderlich) und einer **Betroffenenrechte-Matrix** (Recht Art. 15–22 × implementiert? × file:line / Lücke)
 - **MUSS [MUST]** ein **Personendaten-Inventar** enthalten (Datenklasse × wo erhoben × wo gespeichert × wo es das System verlässt / welcher Verarbeiter / welche Region), damit die Datenflüsse, auf die sich die Befunde beziehen, sichtbar sind
 - **MUSS [MUST]** den Auditumfang angeben (gescannte Roots, Globs, erkannter Stack, erkannte Personendaten-Klassen, deklarierte Haltung oder DSGVO-Default-Annahme), damit das Audit reproduzierbar ist
@@ -82,7 +82,7 @@ Das Audit **MUSS [MUST]** die folgenden Dimensionen abdecken und dabei dateiübe
 ## Akzeptanzkriterien
 
 - [ ] Der Agent deklariert nur `Read`, `Grep`, `Glob` (keine Schreib-/Edit-/Ausführungs-Tools), wendet keine Quellcode-Edits an und redigiert oder verschiebt niemals personenbezogene Daten, die ihm begegnen
-- [ ] Das Ausführen des Audits erzeugt einen Bericht, der nach dem `spec/claude/review-plan/` §Severity scale-Vokabular klassifiziert ist (Critical / Warning / Suggestion / Info) und dessen Befunde je einen Titel, DSGVO-Artikel, die Klasse code-verifizierbar/rechtsprüfungs-erforderlich, file:line (für code-verifizierbare), Problem und eine beschriebene (nicht angewendete) Remediation tragen
+- [ ] Das Ausführen des Audits erzeugt einen Bericht, der nach dem `spec/claude/review-plan/` §Schweregrad-Skala-Vokabular klassifiziert ist (Critical / Warning / Suggestion / Info) und dessen Befunde je einen Titel, DSGVO-Artikel, die Klasse code-verifizierbar/rechtsprüfungs-erforderlich, file:line (für code-verifizierbare), Problem und eine beschriebene (nicht angewendete) Remediation tragen
 - [ ] Der Bericht beginnt mit einer Bewertungstabelle je Dimension, einer Betroffenenrechte-Matrix und einem Personendaten-Inventar und gibt die gescannten Roots, Globs, den erkannten Stack und die erkannten Personendaten-Klassen an
 - [ ] Ein Speicher mit personenbezogenen Daten ohne Aufbewahrungs- oder Löschmechanismus wird gemeldet (Art. 5(1)(e)); ein Soft-Delete, der personenbezogene Daten intakt lässt, wird als die Löschung nicht erfüllend gekennzeichnet (Art. 17)
 - [ ] Personenbezogene Daten, die an ein Log, eine Fehlermeldung oder ein Analytics-Event ausgegeben werden (E-Mail, Name, Token, vollständige IP, Daten besonderer Kategorien), werden als Critical mit einer file:line gemeldet (Art. 32)

@@ -55,7 +55,7 @@ Leser: Autoren dokumentationserzeugender Skills und Agents, die jeden konfigurie
 
 ### Snippets
 
-- **MUSS [MUST]** dieses Protokoll nur auf **Seiten** (Dateien außerhalb `_`-präfigierter Ordner unter `docs/<lang>/`) anwenden; Snippet-Fragmente in `_`-präfigierten Ordnern (`docs/<lang>/_snippets/` und Äquivalenten gemäß `spec/project/mkdocs-structure/` §Snippet inclusion (DRY)) sind keine Seiten und fallen nicht in den Geltungsbereich der strukturellen-Parität-MUSSe oben
+- **MUSS [MUST]** dieses Protokoll nur auf **Seiten** (Dateien außerhalb `_`-präfigierter Ordner unter `docs/<lang>/`) anwenden; Snippet-Fragmente in `_`-präfigierten Ordnern (`docs/<lang>/_snippets/` und Äquivalenten gemäß `spec/project/mkdocs-structure/` §Snippet-Einbindung (DRY)) sind keine Seiten und fallen nicht in den Geltungsbereich der strukturellen-Parität-MUSSe oben
 - **KANN [MAY]** ein sprachneutrales Snippet (ein Code-Auszug, ein YAML-Fragment, ein CLI-Transkript) in nur einem Sprachbaum vorhalten, eingeschlossen aus beiden Sprachbäumen via `mkdocs-include-markdown-plugin`; das ist die bevorzugte Form für Inhalte, die nicht übersetzt werden
 - **MUSS [MUST]** die strukturelle-Parität-MUSSe dieses Protokolls auf ein Snippet anwenden, das übersetzbaren Prosatext enthält (ein Fragment erklärenden Texts, das von mehreren Seiten eingeschlossen wird); ein solches Snippet wird einmal pro Sprache verfasst, über `docs/<lang>/_snippets/` gespiegelt wie eine Seite
 
