@@ -84,6 +84,10 @@ repos:
     rev: v0.49.1
     hooks:
       - id: markdownlint
+        # Vendored Spec Kit output: the `specify` CLI regenerates these on every
+        # version bump, so local fixes would be clobbered. Our own authored
+        # governance under .specify/memory/ stays in scope.
+        exclude: '^(\.claude/skills/speckit-|\.specify/(templates|scripts|workflows|integrations)/)'
         args:
           - --disable
           - MD013  # line-length
