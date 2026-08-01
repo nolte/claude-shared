@@ -287,3 +287,31 @@ occurrence is a `[[tool.mypy.overrides]]` entry (`:64`) while the real declarati
 `requirements.txt:11` — a name-match scanner would report the SDK as declared *and* miss the
 actual declaration. Fix folded into the P2 artefact together with the P4/P5 review outcomes.
 
+2026-08-01 P4 (`nolte-claude-dev:agent-review` lane, adversarial) — 1 Critical, 7 Warnings,
+4 Suggestions; verdict "ship with fixes". The Critical and three Warnings share one root: the
+pair was drafted in two dispatches, so the skill's `check-policy.md` defined FAIL states the
+scanner never detects (dev/local path pinning a production value — the spec's only statically
+decidable lifecycle violation) or cannot express (a late init, a non-protocol client, two of
+three no-DSN failure modes). Three honesty defects also confirmed: a scope leak labelling DSN
+classes "conformant" against its own hard rule; a claim that the tool grant prevents a probe
+event when `Bash` can reach the network; and a CSP check declared `[static]` that is
+undecidable exactly when the DSN is conformant. All fixed in 8c64aef.
+
+2026-08-01 P5 (`nolte-claude-dev:skill-review` lane, adversarial) — 2 Criticals, 10 Warnings,
+5 Suggestions; verdict "block". Both Criticals verified against source before acting.
+**C1:** `implementation-plan-author.md:38,244` carries a closed three-source list and a hard
+rule rejecting anything else, so the `plan` operation dispatched into a refusal. **Operator
+decision:** extend it with a fourth sanctioned source, body-only, so the budget re-baselined
+under P2 holds — confirmed unchanged at 21869. **C2:** the skill demoted a MUST for browsers
+while raising an unwritten requirement to Critical server-side. `en.md:42` mandates only
+injection via environment/deployment configuration and no literal in the source tree — a
+`VITE_*` build variable satisfies both, and the stage-portability rationale appears nowhere in
+the spec. **Operator decision:** uniform Warning for build-baked, spec left unchanged, rather
+than inventing a portfolio-wide requirement. The review also refuted one premise of my brief:
+`see_also` bidirectionality is not a spec MUST (`skill-agent-catalog` requires resolvability;
+the "Referenced by" inversion is the generator's SHOULD, existing precisely to surface
+one-directional links). All findings fixed in 8c64aef; the fixes pushed the skill body over
+the 5,000-token cap, so the runtime-verify enumeration and the gotchas moved into
+`references/` with load triggers, leaving the body at ~4762 tokens. Validator exit 0,
+pre-commit green, Vale clean.
+
