@@ -114,6 +114,18 @@ Diese Spec schreibt außerdem gegen eine Struktur, die das Portfolio bereits hat
 - **DARF NICHT** eine Regel wiederholen, die `continuous-integration`, `continuous-delivery`, `branching-model`, `project-structure`, `pull-request-workflow`, `workflow-health` oder `release-automation` gehört; wo diese Spec eine dieser Regeln an die Plattform bindet, referenziert sie die besitzende Spec und ergänzt nur die plattformspezifische Mechanik
 - **MUSS** die `GITHUB_TOKEN`-Ereigniskaskade an `spec/project/workflow-health/` verweisen, das sie besitzt, statt sie hier neu herzuleiten
 - **MUSS** einen roten Lauf zur Triage an `spec/project/workflow-health/` weiterreichen
+- **MUSS** die Entscheidung, ob überhaupt eine Merge Queue betrieben wird, an `spec/project/pull-request-workflow/` §„Merge Queue" verweisen, das den Merge-Pfad besitzt; §K bindet nur die Plattform-Mechanik, die aus dieser Entscheidung folgt
+
+### K. Merge-Queue-Ereignisverdrahtung
+
+Dieser Abschnitt bindet die Merge-Queue-Mechanik an die Plattform. Ob ein Repository überhaupt eine Merge Queue betreiben sollte, liegt bei `spec/project/pull-request-workflow/` §„Merge Queue" und wird hier nicht entschieden; diese Regeln gelten, sobald eine aktiviert ist.
+
+- **MUSS** `merge_group` (Aktivitätstyp `checks_requested`) als Trigger in jeden Workflow aufnehmen, dessen Job ein Required Status Check der eingereihten Branch ist. Eine Merge Queue wartet darauf, dass die Required Checks gegen die Merge Group gemeldet werden, und ein Workflow, der nur auf `pull_request` triggert, meldet dort nichts — der Eintrag wartet also auf einen Status, der nie eintrifft [R11], [R12]
+- **DARF NICHT** einen Required Check, der nur im Pull-Request-Kontext laufen kann — ein Titel- oder Body-Linter, ein Check, der Felder aus dem `pull_request`-Payload liest —, für eine eingereihte Branch als required registriert lassen. In einer Merge Group gibt es keinen Pull Request zum Auswerten, und ein Workflow, der nicht startet, meldet überhaupt keinen Status statt eines Skips, der als Erfolg zählte. Ein solcher Check wird entweder aus dem Required-Set entfernt oder so umgebaut, dass sein Job im Merge-Group-Kontext weiterhin läuft und Erfolg meldet, während seine Pull-Request-only-Schritte übersprungen werden [R12]
+- **MUSS** einen Drittanbieter-CI-Provider so konfigurieren, dass er auf Pushes zu Branches mit dem Präfix `gh-readonly-queue/{base_branch}` läuft — den temporären Branches, welche die Queue erzeugt; diese tragen eine andere SHA als der Pull-Request-Head [R12]
+- **DARF NICHT** eine eingereihte Branch über eine Branch-Protection-Regel schützen, deren Namensmuster einen Wildcard verwendet: Auf einer solchen Regel lässt sich keine Merge Queue aktivieren [R12]
+- **MUSS** die Nebenläufigkeitsgruppe eines Merge-Group-Laufs (§F) aus einem Schlüssel ableiten, der in diesem Kontext befüllt ist; eine Gruppe, die auf einem Pull-Request-only-Ausdruck beruht, fasst alle Merge-Group-Läufe in eine Gruppe zusammen, sodass ein neu eingereihter Eintrag genau den Lauf abbricht, auf den die Queue noch wartet
+- **SOLLTE** die verdoppelte Ausführung einkalkulieren, bevor eine Queue aktiviert wird: Dieselbe Pipeline läuft nun einmal pro Pull Request und erneut pro Merge Group, und ein entfernter Eintrag baut die dahinterliegenden Einträge neu. Wo diese Kosten ins Gewicht fallen, entscheiden die Stufen-Zuschnittsregeln von `spec/project/continuous-integration/` §A und §E, was in welchem Kontext läuft — diese Spec leitet sie nicht neu her
 
 ## Akzeptanzkriterien
 
@@ -121,6 +133,7 @@ Diese Spec schreibt außerdem gegen eine Struktur, die das Portfolio bereits hat
 - [ ] Jede Reusable-Workflow-Referenz ist auf eine unveränderliche Referenz gepinnt statt auf einen wandernden Branch
 - [ ] Für jeden gepinnten Digest wurde geprüft, dass er zum Repository der Action selbst gehört und nicht zu einem Fork, und diese Prüfung ist in der Pinning-Änderung festgehalten
 - [ ] Jeder Workflow deklariert einen ausdrücklichen `permissions`-Block, wobei Schreibrechte auf Job- statt auf Workflow-Ebene gewährt werden
+- [ ] In einem Repository, das eine Merge Queue betreibt, triggert jeder Workflow hinter einem Required Status Check zusätzlich auf `merge_group`, kein Required Check hängt von Pull-Request-only-Kontext ab, und Drittanbieter-CI läuft auf dem `gh-readonly-queue/`-Präfix
 - [ ] Kein Workflow gewährt pauschale Vollschreibrechte
 - [ ] Kein `run`-Skript interpoliert einen nicht vertrauenswürdigen Kontextwert direkt; solche Werte erreichen das Skript über eine zwischengeschaltete Umgebungsvariable
 - [ ] Kein Workflow checkt nicht vertrauenswürdigen Pull-Request-Code in einem Kontext aus, der Secrets oder erhöhte Rechte hält
@@ -150,6 +163,8 @@ Die Quellenklassen sind gemäß `spec/claude/research-triangulate/` ausgewiesen.
 - [R8] *actions/cache* (**Primär**, das Repository der Action selbst): Ein passender Schlüssel schreibt keinen neuen Eintrag, Cache-Einträge lassen sich also nicht an Ort und Stelle aktualisieren; `restore-keys` führt Präfix-Abgleiche gegen ältere Einträge durch; die Cache-Sichtbarkeit ist nach Schlüssel, Version und Branch begrenzt: <https://github.com/actions/cache>
 - [R9] *Artifact attestations* (GitHub Docs, **Primär**): plattformerzeugte Build-Provenienz, der Weg über geteilte Reusable Workflows zu einer höheren Provenienz-Stufe und die ausdrückliche Feststellung, dass Attestierungen keine Garantie für die Sicherheit eines Artefakts sind: <https://docs.github.com/en/actions/concepts/security/artifact-attestations>
 - [R10] *SLSA v1.0 Build-Level* (**Primär**, unabhängig von GitHub): die Anforderung, dass die Build-Plattform die Provenienz erzeugt und signiert, nicht der Build-Prozess selbst: <https://slsa.dev/spec/v1.0/levels>
+- [R11] *Events that trigger workflows* (GitHub Docs, **Primär**): das `merge_group`-Ereignis mit seinem einzigen Aktivitätstyp `checks_requested` sowie die Feststellung, dass ein Repository, das Actions für Required Pull-Request-Checks nutzt, das Ereignis ergänzen muss, weil der Merge sonst scheitert, da der Status nie gemeldet wird, `https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows`
+- [R12] *Managing a merge queue* (GitHub Docs, **Primär**): die CI-Konfigurationsanforderung, auf Merge-Group-Ereignisse zu triggern und zu melden, das Präfix `gh-readonly-queue/{base_branch}` temporärer Branches mit abweichender SHA, die Wildcard-Beschränkung der Branch-Protection sowie die durchgearbeiteten Szenarien, in denen ein entfernter Eintrag die dahinterliegenden temporären Branches neu erzeugen lässt, `https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue`
 - `spec/project/continuous-integration/`, `spec/project/continuous-delivery/`: die werkzeugunabhängigen Specs, die diese Spec an die Plattform bindet
 - `spec/project/branching-model/`, `spec/project/pull-request-workflow/`, `spec/project/project-structure/`, `spec/project/workflow-health/`, `spec/project/release-automation/`: die benachbarten Specs, deren Regeln diese Spec referenziert statt wiederholt
 

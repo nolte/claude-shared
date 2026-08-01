@@ -114,6 +114,18 @@ This spec also writes against a structure the portfolio already has. `spec/proje
 - **MUST NOT** restate a rule owned by `continuous-integration`, `continuous-delivery`, `branching-model`, `project-structure`, `pull-request-workflow`, `workflow-health`, or `release-automation`; where this spec binds one of those rules to the platform, it references the owning spec and adds only the platform-specific mechanics
 - **MUST** route the `GITHUB_TOKEN` event-cascade constraint to `spec/project/workflow-health/`, which owns it, rather than re-deriving it here
 - **MUST** route a red run to `spec/project/workflow-health/` for triage
+- **MUST** route the decision of whether to run a merge queue at all to `spec/project/pull-request-workflow/` §"Merge queue" as the owner of the merge path; §K binds only the platform mechanics that follow from that decision
+
+### K. Merge-queue event wiring
+
+This section binds the merge-queue mechanics to the platform. Whether a repository should run a merge queue at all is owned by `spec/project/pull-request-workflow/` §"Merge queue" and isn't decided here; these rules apply once one is enabled.
+
+- **MUST** add `merge_group` (activity type `checks_requested`) as a trigger to every workflow whose job is a required status check for the queued branch. A merge queue waits for the required checks to be reported against the merge group, and a workflow that only triggers on `pull_request` reports nothing there, so the entry waits for a status that never arrives [R11], [R12]
+- **MUST NOT** leave a required check that can only run in pull-request context—a title or body linter, a check reading `pull_request` payload fields—registered as required for a queued branch. In a merge group there's no pull request to inspect, and a workflow that doesn't start reports no status at all rather than a skip that counts as success. Such a check is either removed from the required set or restructured so its job still runs and reports success in the merge-group context while its pull-request-only steps are skipped [R12]
+- **MUST** configure a third-party CI provider to run on pushes to branches with the `gh-readonly-queue/{base_branch}` prefix, the temporary branches the queue creates; these carry a different SHA from the pull request head [R12]
+- **MUST NOT** protect a queued branch through a branch-protection rule whose name pattern uses a wildcard: a merge queue can't be enabled on such a rule [R12]
+- **MUST** derive the concurrency group of a merge-group run (§F) from a key that's populated in that context; a group keyed on a pull-request-only expression collapses every merge-group run into one group, so a newly queued entry cancels the run the queue is still waiting on
+- **SHOULD** account for the doubled execution before enabling a queue: the same pipeline now runs once per pull request and again per merge group, and a removed entry rebuilds the entries behind it. Where that cost matters, the stage-scoping rules of `spec/project/continuous-integration/` §A and §E decide what runs in which context—this spec doesn't re-derive them
 
 ## Acceptance Criteria
 
@@ -121,6 +133,7 @@ This spec also writes against a structure the portfolio already has. `spec/proje
 - [ ] Every reusable-workflow reference is pinned to an immutable reference rather than a moving branch
 - [ ] Each pinned digest was verified to belong to the action's own repository rather than to a fork, and that verification is recorded in the pinning change
 - [ ] Every workflow declares an explicit `permissions` block, with write scopes granted at job level rather than workflow level
+- [ ] In a repository that runs a merge queue, every workflow backing a required status check triggers on `merge_group` as well, no required check depends on pull-request-only context, and third-party CI runs on the `gh-readonly-queue/` prefix
 - [ ] No workflow grants a blanket write-all permission set
 - [ ] No `run` script interpolates an untrusted context value directly; such values reach the script through an intermediate environment variable
 - [ ] No workflow checks out untrusted pull-request code in a context that holds secrets or elevated permissions
@@ -150,6 +163,8 @@ Source classes are labelled per `spec/claude/research-triangulate/`. The load-be
 - [R8] *actions/cache* (**Primary**, the action's own repository): a matching key writes no new entry, so cache entries can't be updated in place; `restore-keys` performs prefix matching against older entries; cache visibility is scoped by key, version, and branch: <https://github.com/actions/cache>
 - [R9] *Artifact attestations* (GitHub Docs, **Primary**): platform-generated build provenance, the shared-reusable-workflow path to a stronger provenance level, and the explicit statement that attestations aren't a guarantee that an artifact is secure: <https://docs.github.com/en/actions/concepts/security/artifact-attestations>
 - [R10] *SLSA v1.0 build levels* (**Primary**, independent of GitHub): the requirement that the build platform generates and signs provenance rather than the build process itself: <https://slsa.dev/spec/v1.0/levels>
+- [R11] *Events that trigger workflows* (GitHub Docs, **Primary**): the `merge_group` event with its single activity type `checks_requested`, and the statement that a repository using Actions for required pull-request checks must add the event or the merge fails because the status is never reported, `https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows`
+- [R12] *Managing a merge queue* (GitHub Docs, **Primary**): the CI-configuration requirement to trigger and report on merge-group events, the `gh-readonly-queue/{base_branch}` temporary-branch prefix carrying a different SHA, the wildcard branch-protection limitation, and the worked scenarios where a removed entry causes the temporary branches behind it to be recreated, `https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue`
 - `spec/project/continuous-integration/`, `spec/project/continuous-delivery/`: the tool-independent specs this spec binds to the platform
 - `spec/project/branching-model/`, `spec/project/pull-request-workflow/`, `spec/project/project-structure/`, `spec/project/workflow-health/`, `spec/project/release-automation/`: the neighbouring specs whose rules this spec references rather than restates
 
