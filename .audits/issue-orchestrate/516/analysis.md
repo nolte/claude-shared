@@ -242,3 +242,25 @@ both languages rather than left contradicting the bullet below it. Translation d
 passed (15 headings, 5 Open-Question bullets, 11 checkboxes in both languages); Vale 3.15.2
 clean on `en.md`. Commits 40b90de, 4ed7bea.
 
+2026-08-01 P2 dispatched to `nolte-claude-dev:claude-plugin-developer` — delivered
+`plugins/nolte-engineering/agents/error-tracking-audit-scanner.md` (draft-and-return; the
+subagent cannot reach worktree paths, so the orchestrator wrote the file). **Refutation
+returned and verified — blocking, accepted:** the brief's "keep the description at sibling
+density" premise was wrong. `check_agent_description_budget` freezes
+`plugins/nolte-engineering/agents` at baseline 18535 with a 21315 ceiling; the 36 existing
+agents already consume 21156, leaving **159 chars**. Even at 713 chars — below the 748-char
+sibling — the new agent pushed the aggregate to 21869 and tripped a `Critical`. Reproduced
+independently with `python3 scripts/validate_skills.py`. **Operator decision 2026-08-01:**
+re-baseline to 21869 with a recorded rationale, the remedy the gate's own message names; the
+gate guards regression, not deliberate growth, and platform-wide agent-description weight is
+~8.6k est. tokens against the ~15k routing budget. The "post-remediation-baseline artefact"
+the message also names no longer exists (`.audits/` emptied 2026-07-24), so the
+`AGENT_DESC_BASELINE_CHARS` comment is the sole rationale record. Second, non-blocking
+refutation accepted: three classifications were deliberately left non-binary by the scanner
+(default-PII unset vs. explicit false; DSN build-baked vs. hardcoded literal; a `release`
+constant that never moves) because the severity split is the skill's triage call, not the
+detector's — folded into the P3 brief. Two checks were added beyond the brief: the CSP
+`connect-src` ingest origin (advisory; a restrictive policy silently blocks every event POST
+even with perfect SDK wiring) and an error-vs-traces sample-rate carve-out. Validator exit 0,
+no findings on the new agent. Commit 95693e9.
+
