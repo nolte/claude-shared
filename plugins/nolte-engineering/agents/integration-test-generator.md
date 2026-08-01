@@ -76,7 +76,7 @@ Pick exactly one real external collaborator (the one under test) and identify ev
 
 Scaffold against the stack. Satisfy the spec: one real collaborator exercised live and ephemerally, the rest doubled; seam-only assertions; the real technology (never an in-memory fake that drifts from production); per-test data isolation; readiness-condition waits, never fixed sleeps; and a TC-ID tracing to the requirement.
 
-Scaffold falsifiable by construction, per `spec/project/test-falsifiability/`: a reader helper distinguishes "not found" from "found and empty" and fails loudly on the former (T3); a state-changing helper verifies its effect and fails loudly (T4); no fallback chain ends in silent success or a substituted path (T5); no assertion is satisfiable by a reader's empty default, tautological over its domain, or solely a negative without a paired positive assertion on the effect (T2); and no failure signal is caught and discarded (T1).
+Scaffold falsifiable by construction, per `spec/project/test-falsifiability/`: a reader helper distinguishes "not found" from "found and empty" and fails loudly on the former (T3); a state-changing helper verifies its effect and fails loudly (T4); no fallback chain ends in silent success or a substituted path (T5); no assertion is satisfiable by a reader's empty default, tautological over its domain, or solely a negative without a paired positive assertion on the effect (T2); and no failure signal is caught and discarded (T1). Every scaffolded test ends in at least one assertion that runs on the unconditional path, and an assertion made per collection element is preceded by a non-empty assertion (T8).
 
 ### Phase 4 — Verify and summarise
 
