@@ -63,7 +63,7 @@ Canonical language: `en` · Translations: `de`
 | project | e2e-test-automation | End-to-End Test Automation Standard | Standard für End-to-End-Test-Automatisierung | draft | local | unversioned |
 | project | e2e-test-stability | End-to-End Test Stability Engineering | End-to-End-Test-Stabilitäts-Engineering | draft | local | unversioned |
 | project | elicitation-implementation-separation | Elicitation–Implementation Separation | Trennung von Anforderungserfassung und Umsetzung | draft | portfolio | unversioned |
-| project | error-tracking | Error Tracking | Error Tracking | draft | portfolio | 2026-07-25 |
+| project | error-tracking | Error Tracking | Error Tracking | draft | portfolio | 2026-08-01 |
 | project | feature | Project Feature | Projekt-Feature | draft | local | unversioned |
 | project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | local | unversioned |
 | project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-08-01 |
