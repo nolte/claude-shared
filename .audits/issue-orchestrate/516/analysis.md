@@ -233,4 +233,12 @@ and runtime behaviour stays advisory/`[runtime-verify]` and never hard-fails.
 
 ## Dispatch log
 
-<!-- Appended during operation 5; one line per package once its specialist reports. -->
+2026-08-01 P1 dispatched to `nolte-shared:spec` — settled. §Open Questions in `en.md` + `de.md`
+now records the capability as settled 2026-08-01 with the artefact names, the six checks, and
+the static-vs-runtime carve-out; `spec/README.md` row refreshed to 2026-08-01. **Scope
+correction beyond the brief:** the section's framing sentence still asserted the audit shape
+was "the one genuinely open remainder", which the settlement falsifies — it was rewritten in
+both languages rather than left contradicting the bullet below it. Translation drift check
+passed (15 headings, 5 Open-Question bullets, 11 checkboxes in both languages); Vale 3.15.2
+clean on `en.md`. Commits 40b90de, 4ed7bea.
+
