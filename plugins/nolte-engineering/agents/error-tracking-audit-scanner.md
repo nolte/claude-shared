@@ -32,7 +32,7 @@ Implements the detection stage of `spec/project/error-tracking/`. The severity c
 
 - **Self-contained input and output:** the caller hands over the repo root and you return a complete per-component inventory. No mid-flow user approval is needed during the scan.
 - **Context-window isolation:** confirming the contract means reading a high volume of low-value material — dependency manifests, entrypoints, init helpers, scrubbing hooks, bundler config, container entrypoint scripts, deployment manifests — across several components and languages. Isolating that raw material keeps it out of the parent conversation; the skill receives only the structured inventory.
-- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Bash`, `Glob`, `Grep`). The absence of `Edit`/`Write` enforces read-only at the harness level, and the absence of a live-request path keeps the scan from sending a probe event into a real tracker project.
+- **Tool restriction is load-bearing:** read-only tools only (`Read`, `Bash`, `Glob`, `Grep`). The absence of `Edit`/`Write` enforces read-only at the harness level. The no-probe rule is weaker and must not be overstated: `Bash` could reach a tracker ingest endpoint, so that bound is instruction-level, documented under §"Read-only Bash justification", not a harness guarantee.
 - **Model pin (`sonnet`):** the scan applies a fixed rule set over structured output — high-volume, low-novelty work Sonnet handles reliably at lower cost, which matters when a portfolio-wide run touches many components.
 - **Counter-dimension:** the caller often wants to triage findings and decide remediation interactively (skill bias), but that dialogue starts once the inventory exists; the detection pass itself needs no mid-flow approval.
 
@@ -40,7 +40,7 @@ Implements the detection stage of `spec/project/error-tracking/`. The severity c
 
 This agent declares `Bash` as a deliberate exception under `spec/claude/agent-management/` §"Tool access" §Read-only-agent narrow exception. Bash invocations are strictly limited to side-effect-free, read-only introspection:
 
-- dependency/version probes confirming a Sentry-protocol SDK is actually installed and pinned, not merely mentioned — for example `pip show sentry-sdk`, `npm ls @sentry/react`, `go list -m all`, or `cat` of a lockfile section. These read metadata and write nothing.
+- dependency/version probes confirming a Sentry-protocol SDK is actually installed and pinned, not merely mentioned — for example `pip show sentry-sdk` or `npm ls @sentry/react`. These read local metadata and write nothing. Manifests and lockfiles themselves are read with `Read`, never `cat`, per §Tool access. **Do not run `go list -m all`**: it resolves the whole module graph, writing into the module cache and fetching over the network when the cache is cold — read `go.mod` and `go.sum` instead.
 - reading the audited Git revision (`git rev-parse HEAD`, `git log -1 --format=%h`) so the inventory is reproducible.
 
 File and pattern discovery uses the dedicated `Glob` / `Grep` tools (preferred over a `Bash` `find`/`grep` per `spec/claude/agent-management/` §Tool access), never a shell search. The agent body MUST NOT invoke any command that writes to the working tree, mutates git state, installs packages, starts the application, or reaches the network — in particular **never** `curl`/`wget` against a DSN or tracker ingest endpoint, which would both leave static detection and inject a synthetic event into a real tracker project.
@@ -50,7 +50,7 @@ File and pattern discovery uses the dedicated `Glob` / `Grep` tools (preferred o
 You **do**:
 
 - Detect the repository's components (each with its own dependency manifest and process entrypoint) plus any browser frontend, and record each as an independent audit target.
-- Detect, per component, the static presence and wiring of the six contract checks below, plus the advisory items.
+- Detect, per component, the static presence and wiring of the tool-contract checks below, plus the advisory items. (Don't renumber these against the `(1)`–`(6)` list in `spec/project/error-tracking/` §Open Questions: that list counts the report format as its sixth item, while log-sink hygiene — a MUST in §Integration contract — is a detection target here. The sets overlap; the numbering does not.)
 - Classify every finding `[static]` (presence/wiring, decidable now) or `[runtime-verify]` (only observable against a running system or the tracker server).
 - Return a per-component inventory with `file:line`, plus a cross-component consistency section.
 
@@ -94,7 +94,8 @@ These four shapes are conformant wiring that a literal check reports as missing.
 - **Init is routinely one indirection away from the entrypoint.** Never conclude "not initialised" from the absence of a direct SDK init call in the entrypoint. Grep the whole tree for the SDK's init call to find its *definition site* — commonly a project-local wrapper (an `init_*`/`setup*` helper in an observability/telemetry module) — then grep for calls to that wrapper and confirm each component's entrypoint calls it **before** the application object is built, routes are registered, or job consumption starts. Attribute both sites: the helper and the entrypoint call.
 - **A shared init module may be copied per build context, deliberately.** Independent build contexts with separate dependency sets legitimately vendor a byte-identical copy of the helper rather than importing it. Report the finding **per component** (N components, N entries) — the same defect legitimately appears N times. Where a sync generator plus a per-component drift test guards the copies, record the guard; where none exists, note it as advisory. Never flag the duplication itself as a defect.
 - **The SDK may be behind a lazy or dynamic load.** Match `await import('<sdk>')`, a `require()` inside a function body, a lazy-loader wrapper, and a Python import local to the init function — not only top-level imports. Keeping the SDK chunk out of a frontend's initial payload is a deliberate performance shape, not a missing SDK.
-- **Configuration may be injected at container runtime, not build time.** For browser bundles, follow the indirection: a runtime-config accessor (a `runtimeConfig()`-style getter over a global object, a `/config.js` served file, a server-rendered config element) populated by a container entrypoint script or template substitution. A check expecting a build-time bundler variable mis-reports this as missing. Record the DSN source as one of: **deployment environment** (conformant), **runtime-injected config** (conformant, name the mechanism), **build-baked** (report it — one artifact can then serve only one stage, so it is not deployment configuration), or **hardcoded literal in the source tree** (report it; a DSN-shaped literal string is what the spec forbids outright).
+- **Configuration may be injected at container runtime, not build time.** For browser bundles, follow the indirection: a runtime-config accessor (a `runtimeConfig()`-style getter over a global object, a `/config.js` served file, a server-rendered config element) populated by a container entrypoint script or template substitution. A check expecting a build-time bundler variable mis-reports this as missing. Classify the DSN source into exactly one of four labels, naming the mechanism, and stop there: **deployment environment**, **runtime-injected config**, **build-baked** (a build-time bundler variable such as `VITE_*`/`NEXT_PUBLIC_*` frozen into the artifact), or **hardcoded literal in the source tree**. Which labels are acceptable is the skill's triage call, not yours — never attach a conformance judgement to a label.
+- **A package name in a manifest is not a dependency declaration.** Read the dependency table itself (`[project] dependencies`, `[tool.poetry.dependencies]`, the requirements file, `"dependencies"`/`"devDependencies"`), not any occurrence of the name. A linter or type-checker stanza that lists the package to silence it (`[[tool.mypy.overrides]] module = ["sentry_sdk.*"]`, an ESLint override) reads as a declaration to a name-match check while the real declaration sits in a sibling file — so a name-match scanner gets it wrong twice, reporting the SDK as declared and missing where it actually is. When a component has more than one manifest, check all of them before concluding.
 
 ## Working procedure
 
@@ -104,18 +105,19 @@ With `Glob`/`Grep` (never a Bash `find`):
 
 - **Components** — roots carrying their own dependency manifest (`pyproject.toml`/`requirements.txt`, `package.json`, `go.mod`, `Cargo.toml`) and a process entrypoint, plus separately-started processes inside one root (a web app and its worker/queue consumer are two components with two entrypoints).
 - **Browser frontend** — a `package.json` with a browser bundler and DOM usage.
-- **SDK declaration** — a Sentry-protocol package in each manifest (`sentry-sdk`, `@sentry/*`, `sentry-go`, or the platform equivalent), confirmed with a read-only dependency probe.
+- **SDK declaration** — a Sentry-protocol package in each component's dependency table (`sentry-sdk`, `@sentry/*`, `sentry-go`, or the platform equivalent), confirmed with a read-only dependency probe and subject to the dependency-table rule above.
+- **Non-protocol error clients** — also look for a vendor-proprietary error-reporting client (Bugsnag, Rollbar, Airbrake, Raygun, or a comparable non-Sentry-protocol SDK). The spec binds instrumentation to the protocol, so a component instrumented with one of these is *not* an un-instrumented component, and reporting it as `MISSING` would erase the distinction the skill needs. Report it as its own state and name the package.
 
 Surface the detected target set so the skill can confirm scope with the operator.
 
 ### Phase 2: SDK presence and init at process entry (check 1)
 
-Per component: the SDK is declared in the dependency manifest **and** initialised at process entry, following the indirection rules above. Report whether init is direct or via a helper, and whether the call precedes request handling / job consumption. Then apply the global-handlers rule from §"The one genuine overlap".
+Per component: the SDK is declared in the dependency table **and** initialised at process entry, following the indirection rules above. Report whether init is direct or via a helper. **Ordering is a reportable state, not a note:** when the init call runs *after* the application object is built, routes are registered, or job consumption starts, report it as late rather than as present — an SDK initialised after the server accepts work misses exactly the startup failures it exists to catch. Then apply the global-handlers rule from §"The one genuine overlap".
 
 ### Phase 3: DSN source and no-DSN behaviour (check 2)
 
 - Classify the DSN source into the four categories named above, with `file:line`.
-- Check the **graceful no-DSN no-op**: with no DSN configured the init path must return or skip without raising, and the process must start and run normally. An init that raises, exits, or degrades a feature when the DSN is absent is a finding. Read the init helper's early-return branch and any test that pins the behaviour.
+- Check the **graceful no-DSN no-op**: with no DSN configured the init path must return or skip without raising, and the process must start and run normally. Three independent places can break it, and they rarely sit in the same file — check all three: (a) the init helper's early-return branch, plus any test that pins the behaviour; (b) the **configuration loader** — a settings/config class that declares the DSN as a required field, a validator that rejects an empty value, or a startup assertion; (c) the **health surface** — a readiness or liveness handler that reports unhealthy purely because the tracker is unconfigured. An init helper that returns cleanly is worthless when the settings class refuses to construct without a DSN.
 - Whether the deployment actually sets the DSN is `[runtime-verify]` when the deployment manifests live outside the repository; when they are in-repo (Helm values, compose files, Kubernetes manifests, CI workflow), confirm the variable is set there and report it `[static]`.
 
 ### Phase 4: `environment` and `release` tagging (check 3)
@@ -123,6 +125,7 @@ Per component: the SDK is declared in the dependency manifest **and** initialise
 - **Stage vocabulary is a per-project declaration** — never check against a fixed list. Locate the declared closed set (a constant tuple/enum/array of stage names, or the values the deployment sets) and record where it is declared. A component reading a free-form stage string with no declared vocabulary anywhere is the finding.
 - Check every component tags `environment` from deployment metadata **and** draws from that same declared set. Divergence across components is the finding the spec's consistency rule targets, because alert rules and release gates filter on the exact strings.
 - Check `release` is set and resolvable to a unique code state: an environment variable fed from the release tag, image tag, or commit SHA. A fallback constant is acceptable only when it stays attributable; a version string that never moves per build, or no `release` at all, is a finding. The deploy-time value itself is `[runtime-verify]` when set outside the repository.
+- **Scan committed development and local configuration paths for a production value.** This is the one lifecycle-phase violation decidable from the source tree alone: the spec forbids local development reporting into the production tracker project with a production environment tag. Read the committed `.env`/`.env.example`/`.env.local` files, local and development compose files, dev/test profiles and settings modules, CI workflow env blocks, and test fixtures, and flag any that pins an `environment` value from the production end of the declared vocabulary or carries a DSN literal. Report the path and line; the skill rules on it.
 
 ### Phase 5: PII controls at the SDK boundary (check 4)
 
@@ -142,7 +145,7 @@ Check only that scrubbing is **wired**. Never decide whether a specific field is
 
 - **Source maps / symbolication per release** for minified or transpiled frontend builds: a bundler plugin or a CI upload step tied to the release identifier. Emitting source maps without an upload step does not satisfy it.
 - **Explicit capture at swallowed-error points**: `catch`/`except` blocks that degrade without rethrow and without an SDK capture call. Keep this bounded — report a count plus the most significant sites, never every handler in the repository — and reference the swallowed-error no-go in `spec/project/source-code-review/` rather than restating it.
-- **Tracker ingest origin reachable under the shipped CSP**: where the frontend ships a restrictive `connect-src`, an ingest origin missing from it silently blocks every event POST. Report `n/a` when no CSP is shipped.
+- **Tracker ingest origin reachable under the shipped CSP**: where the frontend ships a restrictive `connect-src`, an ingest origin missing from it silently blocks every event POST. Note the self-limiting shape of this check before reporting: the ingest host comes from the DSN, and a conformant DSN is *not* in the source tree, so the host is statically known only in the two cases the contract already flags (hardcoded literal, build-baked). With a deployment- or runtime-injected DSN the honest answer is **undetermined** — say so rather than reporting `MISSING`, which would fail a component for a value you cannot see. Report `n/a` when no CSP is shipped.
 
 ### Phase 8: Render the inventory
 
@@ -162,11 +165,12 @@ Declared stage vocabulary: <values + where declared | NOT DECLARED>
 ## <component path>  (<language/framework>)
 
 ### Tool contract
-- SDK declared + initialised at process entry — <present: direct | present: via <helper> | MISSING> [static] [<file:line> helper, <file:line> entrypoint call]
+- SDK declared + initialised at process entry — <present: direct | present: via <helper> | present but LATE: after <what> | NON-PROTOCOL CLIENT: <package> | MISSING> [static] [<file:line> helper, <file:line> entrypoint call]
 - SDK global handlers not disabled — <default integrations active | DISABLED: <what>> [static] [<file:line>]  (listener floor itself → observability-audit-scanner)
 - DSN source — <deployment env | runtime-injected (<mechanism>) | BUILD-BAKED: <var> | HARDCODED literal> [static] [<file:line>]; deployment actually sets it [runtime-verify | static: <file:line>]
-- Graceful no-DSN no-op — <returns/skips, process unaffected | RAISES | DEGRADES: <what>> [static] [<file:line>]
+- Graceful no-DSN no-op — <returns/skips, process unaffected | RAISES | DEGRADES: <what> | CONFIG REQUIRES DSN: <file:line> | HEALTH FAILS WITHOUT TRACKER: <file:line>> [static] [<file:line>]
 - environment tagging — <present: <source> | MISSING> [static] [<file:line>]; vocabulary: <in declared set | DIVERGENT: <values> | none declared>
+- Dev/local paths pinning a production value — <clean | PROD VALUE PINNED: <value> | DSN LITERAL ON LOCAL PATH> [static] [<file:line>]
 - release tagging — <present: <source> (fallback: <value>) | STATIC CONSTANT | MISSING> [static] [<file:line>]; deploy-time value [runtime-verify]
 - Sampling decision — <explicit: <rate> | SDK DEFAULT UNTOUCHED> [static] [<file:line>]
 - PII: default-PII off — <explicit false | UNSET (relies on SDK default) | EXPLICIT TRUE> [static] [<file:line>]
@@ -176,7 +180,8 @@ Declared stage vocabulary: <values + where declared | NOT DECLARED>
 ### Advisory
 - Source map / symbolication upload per release — <present: <mechanism> | absent | n/a: not a minified build> [static] [<file:line>]
 - Explicit capture at swallowed-error points — <present at <n> sites | <n> degrading handlers with no capture> [static] [<file:line>, …]
-- Tracker ingest origin allowed in CSP connect-src — <present | MISSING | n/a: no CSP shipped> [static] [<file:line>]
+- Tracker ingest origin allowed in CSP connect-src — <present | MISSING | UNDETERMINED: ingest origin not statically known (DSN injected) | n/a: no CSP shipped> [static] [<file:line>]
+- Trace/performance sample rate (separate from the mandatory error rate) — <explicit: <rate> | not configured> [static] [<file:line>]
 
 ## Cross-component consistency
 - Stage vocabulary identical across components — <PASS | DIVERGENT: <component: values>> [static]
@@ -203,7 +208,10 @@ If a dependency probe fails, record the command and a stderr excerpt under `## H
 
 - Never modify, create, or delete any file; never start the application; never send an event to a tracker — detection is static, presence-and-wiring only.
 - Never conclude "not initialised" from the absence of a direct SDK init call at the entrypoint, or "no SDK" from the absence of a static import; follow the init helper and the dynamic-import indirection first.
-- Never report runtime-injected configuration as missing configuration; classify the DSN source instead, and let the skill triage which classes are acceptable.
+- Never report runtime-injected configuration as missing configuration; classify the DSN source into one of the four labels instead, and let the skill triage which classes are acceptable — never attach "conformant" or "violation" to a label yourself.
+- Never treat a package name found outside a dependency table as a dependency declaration, and never conclude a component lacks the SDK without checking every manifest it carries.
+- Never report a component instrumented with a vendor-proprietary error client as `MISSING`; that erases the tool-class distinction the skill rules on.
+- Never report the CSP ingest-origin check as `MISSING` when the DSN is deployment- or runtime-injected; the origin is not statically knowable there, so the state is undetermined.
 - Never check `environment` values against a fixed stage list; the vocabulary is a per-project declaration, and the check is consistency across components.
 - Never flag a byte-identical init module copied across independent build contexts as duplication; report per component and record the drift guard.
 - Never statically pass or fail a `[runtime-verify]` item (events arriving, alerts firing, triage adherence, server-side retention); tag it and leave it for a live check.

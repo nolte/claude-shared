@@ -20,25 +20,26 @@ Previous artifact: <path | none>
 
 ## <component path>  (<language/framework>, <SDK + version>) — <PASS | FAIL | NOT-REQUIRED>
 ### Tool contract (hard-fail on any static FAIL)
-- SDK declared + initialised at process entry: <PASS | FAIL: <what>> [<file:line>]
+- SDK declared + initialised at process entry: <PASS | FAIL: late (after <what>) | FAIL: non-protocol client (<package>) | FAIL: <what>> [<file:line>]
 - Global handlers active (not disabled): <PASS | FAIL: <what>> [<file:line>]
-- DSN source (<deployment env | runtime-injected | build-baked | hardcoded>): <PASS | WARN: <why> | FAIL: <why>> [<file:line>]
-- Graceful no-DSN no-op: <PASS | FAIL: <what>> [<file:line>]
-- Environment tagging (declared vocabulary; no prod value on a local path): <PASS | FAIL: <what>> [<file:line>]
+- DSN source (<deployment env | runtime-injected | build-baked | hardcoded>): <PASS | WARN: build-baked, stage portability | FAIL: literal in source tree> [<file:line>]
+- Graceful no-DSN no-op (init path, config loader, health surface): <PASS | FAIL: <what>> [<file:line>]
+- Environment tagging (declared vocabulary): <PASS | FAIL: <what>> [<file:line>]
+- No production value pinned on a dev/local path: <PASS | FAIL: <value at file:line>> [<file:line>]
 - Release tagging (<moves per build | static constant | missing>): <PASS | FAIL: <what>> [<file:line>]
 - Sampling decision explicit: <PASS: <rate> | FAIL: no decision> [<file:line>]
 - default-PII off (<explicit false | unset | explicit true>): <PASS | WARN: unasserted | FAIL: <why>> [<file:line>]
-- Before-send scrubbing wired: <PASS | FAIL> [<file:line>]  (PII verdict → gdpr-data-protection-reviewer)
+- Before-send scrubbing wired: <PASS (shape: allow-list | deny-list; breadcrumbs: covered | not covered) | FAIL> [<file:line>]  (PII verdict → gdpr-data-protection-reviewer)
 - No log-sink misuse: <PASS | FAIL: <levels routed>> [<file:line>]
 ### Advisory (scored)
 - Source-map/symbolication upload per release: <present | absent | n/a> [<file:line>]
 - Explicit capture at swallowed-error points: <present | gaps: <count>> [<file:line>]
-- Tracker ingest origin in CSP connect-src: <present | absent | n/a> [<file:line>]
+- Tracker ingest origin in CSP connect-src: <present | absent | undetermined: DSN injected, origin not statically known | n/a> [<file:line>]
 
 ## Cross-component consistency
 - Stage vocabulary identical across components: <PASS | FAIL: <divergence>>
 - Shared init module: <single source | copied ×<n> (drift guard: <present | absent>)>
-- Components with no wiring: <component> — <Critical: production deployment declared | PASS: exception recorded at <path> | NOT-REQUIRED: no production deployment declared | Warning: exposure undetermined, operator decision needed>
+- Components with no wiring: <component> — <PASS: exception recorded at <path> | NOT-REQUIRED: no production deployment declared | Critical: production deployment declared + structural exposure marker (<marker>) | Warning: production declared, no exposure marker — operator decision | Warning: exposure undetermined — operator decision>
 
 ## Runtime-verify (documented, never a static verdict)
 - <item> — <what a live check must confirm> — <owner>
@@ -50,4 +51,4 @@ Previous artifact: <path | none>
 - Runtime-verify items surfaced: <count>
 ```
 
-Severity mapping for the artifact, per `spec/claude/review-plan/`: a hard fail is **Critical**, a scored advisory item is **Warning** or **Suggestion**, and a `[runtime-verify]` item is **Info**. Use the Title-Case vocabulary; never invent a level.
+Severity mapping is stated once, in `SKILL.md` §"Hard-fail policy" — follow it there rather than re-deriving it here, so the two cannot drift apart.

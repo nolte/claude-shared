@@ -1,6 +1,6 @@
 # Tool-contract check policy
 
-Per-check violation definitions for the scanner's `### Tool contract` section, referenced from `SKILL.md` §"Hard-fail policy". Load this file when triaging that section. Every check here traces to a MUST in `spec/project/error-tracking/` §"Tool-neutral core" or §"Integration contract", so **each hard-fails (Critical) on a static violation** — none is advisory. The three multi-state checks (DSN source, `release`, default-PII) are ruled on in `SKILL.md`, not here.
+Per-check violation definitions for the scanner's `### Tool contract` section, referenced from `SKILL.md` §"Hard-fail policy". Load this file when triaging that section. Every check here traces to a MUST in `spec/project/error-tracking/` §"Tool-neutral core" or §"Integration contract" — except the local-path sub-case of environment tagging, which comes from §"Development phase" — so **each hard-fails on a static violation**; none is advisory. Severity vocabulary is defined once in `SKILL.md`; don't restate it here. The three multi-state checks (DSN source, `release`, default-PII) are ruled on in `SKILL.md`, not here.
 
 ## SDK declared and initialised at process entry
 
@@ -54,6 +54,20 @@ Only error-severity events and deliberate captures reach the tracker.
 - **FAIL** — a logging integration configured with an INFO or DEBUG capture level; every log record forwarded as a tracker event; a log handler attached at the root logger with no level floor.
 - Breadcrumb capture at a lower level is not misuse — breadcrumbs travel with an error event, they are not events. Distinguish the SDK's breadcrumb level from its event level before reporting.
 
+## Runtime-verify inventory
+
+Referenced from `SKILL.md` §"Runtime-verify boundary". These are the contract's obligations that no source-tree scan can settle; each is rendered as an item a live check must confirm, with its owner, and **never** as a static pass or fail. Several are MUSTs — a MUST that lives in the tracker rather than the repository is still not statically decidable.
+
+- Events actually arriving, and grouping into issues sensibly — *owner: the deploying team*
+- Alert rules for a new issue and for a regression, existing, firing, and each carrying a **named owning team** — *owner: the tracker administrator*
+- No paging for development-environment events, and no on-call paging for staging alerts (both MUST NOTs; staging notifies a team channel instead) — *owner: the tracker administrator*
+- New production issues triaged within the project-defined service level, and truthful issue-lifecycle use — resolve on fix, ignore only deliberately — *owner: the triaging team*
+- A data-protection review completed before adopting a **hosted** tracker (processing agreement, storage location); self-hosting is the portfolio default posture — *owner: the operator*
+- Server-side event retention explicitly configured rather than left indefinite — *owner: the tracker administrator*
+- An availability signal for the tracker itself living **outside** the tracker — *owner: the operator*
+- Quota headroom and error-storm behaviour, the storm itself being an incident signal — *owner: the operator*
+- The staging promotion gate: a new issue first seen in staging for a release candidate blocks promotion until triaged — *owner: the releasing team*
+
 ## Advisory items (scored, never a hard fail)
 
-For completeness, the scanner's `### Advisory` section maps to SHOULD-class requirements: source-map or symbolication upload per release, explicit capture at swallowed-error points, and the tracker ingest origin allow-listed in the CSP `connect-src`. A shared init module copied per build context is advisory as well — **Warning** with no drift guard, **Suggestion** with one.
+For completeness, the scanner's `### Advisory` section maps to SHOULD-class requirements: source-map or symbolication upload per release, explicit capture at swallowed-error points, and the tracker ingest origin allow-listed in the CSP `connect-src`. A shared init module copied per build context is advisory as well — **Suggestion** with no drift guard, **Info** with one; the spec states no requirement against it.
