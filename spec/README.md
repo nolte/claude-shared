@@ -66,7 +66,7 @@ Canonical language: `en` · Translations: `de`
 | project | error-tracking | Error Tracking | Error Tracking | draft | portfolio | 2026-07-25 |
 | project | feature | Project Feature | Projekt-Feature | draft | local | unversioned |
 | project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | local | unversioned |
-| project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | unversioned |
+| project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-08-01 |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | local | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | local | unversioned |
 | project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | unversioned |
@@ -86,7 +86,7 @@ Canonical language: `en` · Translations: `de`
 | project | post-writing-style | Post writing style | Post-Schreibstil | accepted | local | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | local | 2026-05-01 |
 | project | prose-style | Prose Style | Textstil | draft | local | 2026-04-24 |
-| project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | portfolio | 2026-04-23 |
+| project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | portfolio | 2026-08-01 |
 | project | quality-gate | Quality Gate | Quality-Gate | draft | portfolio | unversioned |
 | project | readability-lix | Readability (LIX) | Lesbarkeit (LIX) | draft | local | unversioned |
 | project | readme-structure | Repository README Structure | Repository-README-Struktur | draft | local | 2026-04-23 |
