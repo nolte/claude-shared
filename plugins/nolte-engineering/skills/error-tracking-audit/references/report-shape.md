@@ -35,6 +35,7 @@ Previous artifact: <path | none>
 - Source-map/symbolication upload per release: <present | absent | n/a> [<file:line>]
 - Explicit capture at swallowed-error points: <present | gaps: <count>> [<file:line>]
 - Tracker ingest origin in CSP connect-src: <present | absent | undetermined: DSN injected, origin not statically known | n/a> [<file:line>]
+- Trace/performance sample rate (informational; the mandatory knob is the error rate): <explicit: <rate> | not configured> [<file:line>]
 
 ## Cross-component consistency
 - Stage vocabulary identical across components: <PASS | FAIL: <divergence>>
