@@ -264,3 +264,26 @@ detector's — folded into the P3 brief. Two checks were added beyond the brief:
 even with perfect SDK wiring) and an error-vs-traces sample-rate carve-out. Validator exit 0,
 no findings on the new agent. Commit 95693e9.
 
+2026-08-01 P3 dispatched to `nolte-claude-dev:claude-plugin-developer` — delivered
+`SKILL.md` plus `references/{check-policy,report-shape}.md`. **Three refutations returned,
+all accepted:** (1) the brief asked which of the checks are mandatory versus advisory, but
+`en.md:41–53` states every tool-contract item as a MUST while the only SHOULDs (`:50`
+explicit capture, `:54` source maps) already sit in the scanner's separate Advisory block —
+so the split runs along the scanner's own section boundary and no intra-contract split was
+manufactured; (2) the body did not fit the 5,000-token cap at the briefed depth (~4,957 est.
+tokens), so the mechanical per-check violation definitions and the report template moved into
+`references/` with explicit load triggers, keeping every decision the skill owns inline;
+(3) `dont_use_when` needed a fifth neighbour the brief omitted — `api-error-check`, since the
+spec's own delimitation (`en.md:14`) names `api-error-handling` and the closest false trigger
+("check our error handling") would otherwise be unrouted. Validator exit 0. Commit 6878340.
+
+2026-08-01 P6 (generalist calibration against `~/repos/github/kamerplanter`) — all six checks
+resolve to a finding with `file:line` across all five components, and the three anti-naive
+detection rules each fire on their intended target. The two-entrypoints-in-one-root rule also
+caught `src/backend/app/tasks/__init__.py:20` (worker) as a second component beside
+`main.py:38`. **One defect found:** the scanner's Phase 1 treats a package-name occurrence in
+a manifest as a declaration. In `src/knowledge-service/pyproject.toml` the only "sentry"
+occurrence is a `[[tool.mypy.overrides]]` entry (`:64`) while the real declaration is in
+`requirements.txt:11` — a name-match scanner would report the SDK as declared *and* miss the
+actual declaration. Fix folded into the P2 artefact together with the P4/P5 review outcomes.
+
