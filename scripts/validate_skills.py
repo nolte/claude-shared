@@ -739,7 +739,7 @@ AGENT_DESC_BUDGET_HEADROOM = 0.15  # +15% slack for legitimately-added agents
 AGENT_DESC_BASELINE_CHARS = {
     "agents": 11065,                          # nolte-shared (22 agents; claude-plugin-developer carved out to nolte-claude-dev 2026-07-22, F-18 flip)
     "plugins/nolte-claude-dev/agents": 386,    # nolte-claude-dev (1 agent: claude-plugin-developer)
-    "plugins/nolte-engineering/agents": 18535,  # nolte-engineering (30 agents; re-baselined 2026-07-24: python-code-reviewer added)
+    "plugins/nolte-engineering/agents": 21869,  # nolte-engineering (37 agents; re-baselined 2026-08-01: error-tracking-audit-scanner added, #516 — the 2026-07-24 baseline of 30 agents had 159 chars of headroom left, so a deliberate new capability tripped a gate meant to catch regression, not growth; platform-wide agent-description weight across all four plugins is ~8.6k est. tokens against the ~15k routing budget)
     "plugins/nolte-media/agents": 1108,        # nolte-media (2 agents)
 }
 
