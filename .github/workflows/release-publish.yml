@@ -40,7 +40,7 @@ jobs:
   license-verdict:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Latest license-check record must carry verdict Pass
         run: |
           latest=$(ls .audits/license-check/license-*.md 2>/dev/null | sort | tail -1)
@@ -56,7 +56,7 @@ jobs:
 
   publish:
     needs: license-verdict
-    uses: nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml@v2.0.0
+    uses: nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml@d51e51ec3ec17ceea09fe9eb40ac00857b6fa1be # v2.0.0
     with:
       tag: ${{ inputs.tag }}
       dry_run: ${{ inputs.dry_run }}
