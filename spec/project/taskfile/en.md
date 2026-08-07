@@ -56,7 +56,7 @@ This spec consolidates the portfolio-wide Taskfile *mechanics* in one place: the
 - [ ] `nolte/taskfiles` is named as the authoritative shared-Taskfile collection, with a SHOULD to consume portfolio-common automation from it, a MUST to pin the include source via a single ref variable, and the `TASK_X_REMOTE_TASKFILES` experiment-flag requirement recorded
 - [ ] The spec delegates rather than duplicates: target *semantics* point to `quality-gate`, file presence and venv wiring to `project-structure`, `worktree:*` helpers to `parallel-working-copies`, and the `task *` wildcard ban to `permission-allowlist`
 - [ ] `spec/project/project-structure/`, `spec/project/quality-gate/`, and `spec/portfolio/tech-stack/` carry a back-reference to this spec as the owner of the Taskfile mechanics
-- [ ] Every artefact that scaffolds or patches a `Taskfile.yml` (the `project-structure-apply` and `mkdocs-structure-apply` skills, plus the `cookiecutter-template-author` agent through `spec/project/cookiecutter-template-authoring/`) points at this spec and emits the shared-collection include form instead of a locally re-implemented target
+- [ ] Every artefact that scaffolds or patches a `Taskfile.yml` (the `project-structure-apply` and `mkdocs-structure-apply` skills, plus the `cookiecutter-template-author` agent through `spec/project/cookiecutter-template-authoring/`) points at this spec, emits the pinned `includes:` form for automation the collection genuinely covers, and verifies an included target exists and its environment assumptions hold before delegating to it rather than writing the target locally
 - [ ] No requirement in this spec restates the composition or output of a target whose semantics another spec owns
 
 ## Open Questions
