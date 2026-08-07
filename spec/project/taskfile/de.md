@@ -56,6 +56,7 @@ Diese Spec konsolidiert die portfolio-weite Taskfile-*Mechanik* an einem Ort: da
 - [ ] `nolte/taskfiles` ist als autoritative Sammlung geteilter Taskfiles benannt, mit einem SOLLTE, portfolio-gemeinsame Automatisierung daraus zu konsumieren, einem MUSS, die Include-Quelle über eine einzige Ref-Variable zu pinnen, und der festgehaltenen `TASK_X_REMOTE_TASKFILES`-Experiment-Flag-Anforderung
 - [ ] Die Spec delegiert statt zu duplizieren: Target-*Semantik* verweist auf `quality-gate`, Datei-Existenz und venv-Verdrahtung auf `project-structure`, `worktree:*`-Helfer auf `parallel-working-copies` und das `task *`-Wildcard-Verbot auf `permission-allowlist`
 - [ ] `spec/project/project-structure/`, `spec/project/quality-gate/` und `spec/portfolio/tech-stack/` tragen eine Rück-Referenz auf diese Spec als Eigner der Taskfile-Mechanik
+- [ ] Jedes Artefakt, das ein `Taskfile.yml` scaffoldet oder patcht (die Skills `project-structure-apply` und `mkdocs-structure-apply` sowie der Agent `cookiecutter-template-author` über `spec/project/cookiecutter-template-authoring/`), verweist auf diese Spec und gibt die Include-Form der geteilten Sammlung aus statt eines lokal nachgebauten Targets
 - [ ] Keine Anforderung in dieser Spec benennt die Zusammensetzung oder Ausgabe eines Targets neu, dessen Semantik eine andere Spec besitzt
 
 ## Offene Fragen

@@ -47,7 +47,10 @@ For each step below, confirm with the user per file before writing. Group-level 
 - Patch the project's Python dep manifest to pin every baseline plugin:
   - Detect the manifest kind: `pyproject.toml` (PEP 621 `[project.dependencies]` or a `[project.optional-dependencies] docs = [...]` extras group), `requirements.txt` / `docs/requirements.txt`, `uv.lock`, `poetry.lock`.
   - Propose the additions; never run `pip install` / `uv pip install` / `poetry add` from the skill. Report the exact install command appropriate to the detected manager so the user can run it.
-- When `Taskfile.yml` exists and lacks a `docs` target, propose a wire-up: a `docs` target that invokes `mkdocs build --strict` (or the project's existing equivalent) so a local pass matches CI.
+- When `Taskfile.yml` exists and lacks a `docs` target, propose a wire-up so a local pass matches CI. Prefer the shared MkDocs Taskfile from the [`nolte/taskfiles`](https://github.com/nolte/taskfiles) collection over a hand-written target, per `spec/project/taskfile/` §Shared Taskfiles — that spec owns the conventions; never restate its rules here:
+  - Propose an `includes:` entry `mkdocs: "{{.TASK_COLLECTION_BASE}}/taskfile-include-mkdocs.yaml"`, reusing the repo's existing `TASK_COLLECTION_BASE` variable. When the repo has no such variable yet, propose adding it (`https://raw.githubusercontent.com/nolte/taskfiles/<ref>/src`) so the include resolves against one declared, reviewable source; ask the user for the ref, or fall back to `develop` and flag it.
+  - Remote-Taskfile resolution is an experimental Task feature: whenever this wire-up introduces the repo's first remote include, also surface that `TASK_X_REMOTE_TASKFILES=1` has to be set locally and in the CI workflow, otherwise every target fails to resolve.
+  - Fall back to a locally-written `docs` target invoking `mkdocs build --strict` (or the project's existing equivalent) only when the user declines the shared include, and record the decision in the proposal so the divergence is visible.
 - When the active extension spec is `spec/claude/skill-agent-catalog/`, surface that the catalog generator wiring is owned by the separate `skill-agent-catalog-apply` skill and route the user there; never duplicate that wiring here.
 
 ---
