@@ -76,6 +76,7 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 
 - Each test **MUST** capture at least one screenshot, and **MUST** capture the standard checkpoints where they apply: page-load, before a significant action, after it, and any visible error/validation state; a failure screenshot **MUST** be captured automatically by the harness on any test failure
 - Screenshot names **MUST** begin with the test's TC-ID and end with a human-readable description of the visible state, so a screenshot is traceable on its filename alone
+- Screenshot capture **MUST** be observation-neutral per `spec/project/e2e-test-stability/` §C: the capture helper restores viewport/window metrics and waits for layout settling before returning, because a `captureBeyondViewport`-style full-page capture stretches the layout viewport and re-renders media-query-dependent UI underneath the running test
 
 ### Test protocol (audit trail)
 
