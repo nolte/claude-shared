@@ -92,6 +92,13 @@ Die eigentliche Implementierungsarbeit einer Workflow-Behebung — das Bearbeite
 - **DARF NICHT [MUST NOT]** beide Formen (`FLAKES.md` und eine Issue-Menge mit Label `flake`) für dasselbe Repository gleichzeitig pflegen — eine der beiden ist autoritativ, wird bewusst gewählt und aus `CLAUDE.md` oder `README.md` heraus verlinkt
 - **SOLLTE [SHOULD]** einen Flake, der einen Required-Check in mehr als rund einem von zehn Läufen stolpern lässt, als Defect und nicht als Transient behandeln — bei dieser Rate blockiert der Flake Merges material und verdient einen echten Fix statt eines Tracking-Eintrags
 
+### Abbruchraten
+Eine Lane, deren Laufzeit die Kadenz ihres auslösenden Ereignisses übersteigt, erreicht unter cancel-in-progress nie ein Urteil: Jeder neue Push bricht den Lauf ab, den der vorherige Push gestartet hat, die meisten Läufe enden mit `cancelled`, und die Lane meldet nichts, während sie aktiv aussieht. In einem konsumierenden Projekt beobachtet: Eine Per-Push-Security-Scan-Lane wurde in 85 % ihrer Läufe abgebrochen, eine zweite in 44 % — beide wirkten gesund, weil ein abgebrochener Lauf weder rot noch grün ist.
+
+- **MUSS [MUST]** für jede gatende oder berichtende Lane die Abbruchrate über die letzten Läufe beobachten (Richtwert: die letzten 20, zum Beispiel `gh run list --workflow <file> --limit 20`), analog zur Flake-Raten-Schwelle oben
+- **MUSS [MUST]** eine Lane, deren Läufe mehrheitlich mit `cancelled` enden, wie eine nicht existierende Lane behandeln: Sie liefert kein Urteil, und jede Behauptung, die auf ihr ruht („der Scan läuft bei jedem PR"), ist ungedeckt, bis die Rate behoben ist
+- **MUSS [MUST]** die Behebung durch Trigger-Umplatzierung leisten, sodass die Ereignis-Kadenz zur Job-Laufzeit passt (zum Beispiel einmal pro gemergtem Commit auf dem Ziel-Branch oder ein Schedule), **nicht** durch `cancel-in-progress: false` — das staut nur veraltete Läufe, verbraucht Kapazität und liefert überholte Urteile; die Cancel-on-new-run-Empfehlung für Pre-Merge-Workflows in `spec/project/github-actions-best-practices/` §F setzt voraus, dass die Laufzeit zur Kadenz passt
+
 ### Zeitliche Erwartungen
 - **SOLLTE [SHOULD]** einen fehlgeschlagenen Required-Check auf `develop` innerhalb eines Werktags nach Auftreten zur Kenntnis nehmen und innerhalb von zwei Werktagen einen Fix-PR geöffnet haben
 - **SOLLTE [SHOULD]** einen fehlgeschlagenen Release-Flow-Workflow auf `main` (zum Beispiel `release-cd-refresh-master.yml`) mit höherer Dringlichkeit behandeln als einen `develop`-Fehler, weil er die korrekte Präsentation des nächsten Release blockiert
@@ -123,6 +130,7 @@ Required-Status-Checks auf `develop` können auch Anbieter umfassen, die keine G
 - [ ] Wenn eine Fehlerklasse drei oder mehr Male wiedergekehrt ist und jedes Mal von einem Generalisten behandelt wurde, existiert entweder mittlerweile ein spezialisierter Agent im Plugin (gemäß `agent-management`-Spezifikation) oder ein offenes Issue verfolgt seine Erstellung mit benannter verantwortlicher Person
 - [ ] Jeder vorübergehend deaktivierte Workflow (eingeschränkte `on:`-Trigger, auskommentierter Job, in der Actions-UI deaktiviert) ist von einem Tracking-Issue begleitet, das eine verantwortliche Person und ein Wiederaktivierungs-Kriterium benennt; kein Required-Workflow befindet sich in diesem Zustand
 - [ ] Ein Register bekannter Flakes existiert im Repository — entweder `FLAKES.md` im Repository-Root oder ein Set von Issues mit Label `flake`, aber nicht beides — sobald mindestens ein Flake beobachtet und anerkannt wurde; das Register ist aus `CLAUDE.md` oder `README.md` heraus verlinkt und damit auffindbar
+- [ ] Keine gatende oder berichtende Lane endet in der Mehrheit ihrer letzten 20 Läufe mit `cancelled`; wo doch, platziert ein offener Fix-PR oder ein Tracking-Issue ihren Trigger passend zur Ereignis-Kadenz um, statt `cancel-in-progress: false` zu setzen
 - [ ] `.github/settings.yml` deklariert weiterhin die vollständige Required-Checks-Menge für `develop` als Code; kein Required-Check wurde stillschweigend entfernt, um einen dauerhaften Fehler zu umgehen
 
 ## Offene Fragen

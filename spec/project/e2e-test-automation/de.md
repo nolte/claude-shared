@@ -76,6 +76,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 
 - Jeder Test **MUSS** mindestens einen Screenshot aufnehmen und **MUSS** die Standard-Checkpoints aufnehmen, wo sie zutreffen: Seitenaufbau, vor einer signifikanten Aktion, danach und jeder sichtbare Fehler-/Validierungszustand; ein Fehler-Screenshot **MUSS** vom Harness bei jedem Test-Fehlschlag automatisch aufgenommen werden
 - Screenshot-Namen **MÜSSEN** mit der TC-ID des Tests beginnen und mit einer lesbaren Beschreibung des sichtbaren Zustands enden, damit ein Screenshot allein an seinem Dateinamen rückverfolgbar ist
+- Die Screenshot-Aufnahme **MUSS** observations-neutral sein gemäß `spec/project/e2e-test-stability/` §C: Der Capture-Helper stellt Viewport-/Fenster-Metriken wieder her und wartet auf Layout-Settling, bevor er zurückkehrt, denn ein Full-Page-Capture im Stil von `captureBeyondViewport` dehnt den Layout-Viewport und re-rendert Media-Query-abhängige UI unter dem laufenden Test
 
 ### Testprotokoll (Audit-Trail)
 

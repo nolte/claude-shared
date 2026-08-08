@@ -180,25 +180,57 @@ class BasePage:
         except TimeoutException:
             pass
 
-    def scroll_and_click(self, element: WebElement) -> None:
-        """Scroll an element into view and click it, falling back to a JS click."""
-        self.driver.execute_script(
-            "arguments[0].scrollIntoView({block: 'center'});", element
-        )
-        try:
-            element.click()
-        except (ElementNotInteractableException, ElementClickInterceptedException):
-            self.driver.execute_script("arguments[0].click();", element)
+    def scroll_and_click(self, element: WebElement, attempts: int = 3) -> None:
+        """Scroll an element into view and click it with a real click.
 
-    def clear_and_fill(self, element: WebElement, value: str) -> None:
-        """Reliably clear an input and type a new value.
+        Retries with a fresh scroll correction when the click is intercepted
+        by a transient overlay (snackbar, collapse animation) and fails loudly
+        once the attempts are exhausted. Deliberately never falls back to a
+        scripted ``arguments[0].click()``: an untrusted JS click is forbidden
+        by spec/project/e2e-test-stability/ §C (decision-procedure step 5) and
+        is a silent no-op on mousedown-only openers such as MUI's ``Select`` —
+        the helper would report success while nothing happened.
+        """
+        last_error: Exception | None = None
+        for _ in range(attempts):
+            self.driver.execute_script(
+                "arguments[0].scrollIntoView({block: 'center'});", element
+            )
+            try:
+                element.click()
+                return
+            except (
+                ElementNotInteractableException,
+                ElementClickInterceptedException,
+            ) as exc:
+                last_error = exc
+                # Bounded, justified: give a transient overlay (snackbar,
+                # collapse animation) time to clear before the next attempt.
+                time.sleep(0.3)
+        raise ElementClickInterceptedException(
+            f"scroll_and_click: real click failed after {attempts} attempts "
+            f"({type(last_error).__name__}: {last_error}). Not falling back to "
+            "a scripted click per spec/project/e2e-test-stability/ §C — fix "
+            "the overlay/geometry or address a different target instead."
+        ) from last_error
+
+    def clear_and_fill(
+        self, element: WebElement, value: str, timeout: int = 5
+    ) -> None:
+        """Reliably clear an input, type a new value, and verify it stuck.
 
         Clears via the native value setter and dispatches input/change events
         so a controlled component (React/Vue) picks up the change, then verifies
         the field is empty and falls back to Ctrl+A before typing if framework
-        state restored the old value. Adapt if your front end is not
+        state restored the old value. After typing, reads the value back with a
+        bounded wait and fails loudly when the target value never materializes
+        (spec/project/e2e-test-stability/ §D: a state-changing helper verifies
+        its effect) — against a readonly or otherwise non-typable field the
+        keystrokes are silently dropped, and a helper without the read-back
+        would report a successful edit. Adapt if your front end is not
         controlled-component based.
         """
+        from selenium.common.exceptions import TimeoutException
         from selenium.webdriver.common.keys import Keys
 
         self.driver.execute_script(
@@ -218,6 +250,19 @@ class BasePage:
             element.send_keys(Keys.CONTROL + "a")
             time.sleep(0.05)
         element.send_keys(value)
+        # Read back with bounded retries; fail loudly when the value never
+        # arrives instead of letting the test assert against the old state.
+        try:
+            WebDriverWait(self.driver, timeout).until(
+                lambda d: (element.get_attribute("value") or "") == value
+            )
+        except TimeoutException as exc:
+            actual = element.get_attribute("value") or ""
+            raise AssertionError(
+                f"clear_and_fill: field value never became {value!r} within "
+                f"{timeout}s; last read-back was {actual!r} (readonly or "
+                "non-typable field?)"
+            ) from exc
 
     def navigate_via_sidebar(self, path: str, timeout: int = DEFAULT_TIMEOUT) -> None:
         """Navigate by clicking a sidebar link, simulating real user behaviour.
