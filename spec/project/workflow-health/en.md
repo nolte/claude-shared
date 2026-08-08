@@ -92,6 +92,13 @@ The hands-on implementation work of a workflow fix—editing the broken artifact
 - **MUST NOT** maintain both forms (`FLAKES.md` and a `flake`-labelled Issue set) for the same repository—one or the other is authoritative, chosen consciously and linked from `CLAUDE.md` or `README.md`
 - **SHOULD** treat a flake that trips a required check in more than roughly one in ten runs as a defect rather than a transient—at that rate the flake blocks merges materially and deserves a real fix, not a tracking entry
 
+### Cancellation rates
+A lane whose runtime exceeds the cadence of its triggering event never reaches a verdict under cancel-in-progress: every new push cancels the run the previous push started, most runs end `cancelled`, and the lane reports nothing while looking active. Observed in a consuming project: one per-push security-scan lane cancelled in 85% of its runs, a second in 44%—both appeared healthy because a cancelled run is neither red nor green.
+
+- **MUST** observe, for every gating or reporting lane, the cancellation rate over its recent runs (guide value: the last 20, for example `gh run list --workflow <file> --limit 20`), analogous to the flake-rate threshold above
+- **MUST** treat a lane the majority of whose runs end `cancelled` as equivalent to a lane that doesn't exist: it delivers no verdict, and any claim resting on it ("the scan runs on every PR") is unbacked until the rate is remediated
+- **MUST** remediate by re-placing the trigger so the event cadence matches the job runtime (for example once per merged commit on the target branch, or a schedule), **not** by setting `cancel-in-progress: false`—that only queues stale runs, consumes capacity, and delivers obsolete verdicts; the cancel-on-new-run recommendation for pre-merge workflows in `spec/project/github-actions-best-practices/` §F presupposes that the runtime fits the cadence
+
 ### Time expectations
 - **SHOULD** acknowledge a failed required check on `develop` within one business day of the failure appearing and have a fix PR open within two business days
 - **SHOULD** acknowledge a failed release-flow workflow on `main` (for example `release-cd-refresh-master.yml`) with higher urgency than a `develop` failure, because it blocks the next release from presenting correctly
@@ -123,6 +130,7 @@ Required status checks on `develop` may include providers that aren't GitHub Act
 - [ ] When a failure class has recurred three or more times and been handled by a generalist each time, either a specialized agent now exists in the plugin (per the `agent-management` spec) or an open Issue tracks its creation with a named owner
 - [ ] Any temporarily-disabled workflow (restricted `on:` triggers, commented job, disabled in the Actions UI) is accompanied by a tracking Issue naming an owner and a re-enablement criterion; no required workflow appears in this state
 - [ ] A known-flake register exists in the repository: `FLAKES.md` at the repository root or a `flake`-labelled Issue set, but not both—whenever at least one flake has been observed and acknowledged; the register is referenced from `CLAUDE.md` or `README.md` so it's discoverable
+- [ ] No gating or reporting lane ends `cancelled` in the majority of its last 20 runs; where one does, an open fix PR or tracking Issue re-places its trigger to match the event cadence rather than setting `cancel-in-progress: false`
 - [ ] `.github/settings.yml` still declares the full required-checks set for `develop` as code; no required check has been silently dropped to work around a persistent failure
 
 ## Open Questions

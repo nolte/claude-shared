@@ -86,7 +86,7 @@ Diese Spec schreibt außerdem gegen eine Struktur, die das Portfolio bereits hat
 - **MUSS** für jeden Workflow, bei dem sich zwei Läufe auf demselben Branch stören würden, eine Nebenläufigkeitsgruppe deklarieren, sodass ein überholter Lauf nicht gegen den Lauf rennen kann, der ihn ersetzt hat
 - **MUSS** die Nebenläufigkeitsgruppe aus der Workflow-Identität und der Branch- oder Pull-Request-Identität ableiten, sodass Läufe auf verschiedenen Branches einander nicht abbrechen [R7]
 - **DARF NICHT** das Abbrechen laufender Läufe bei einem neuen Lauf auf einen Delivery- oder Release-Workflow anwenden, wo der Abbruch eines laufenden Laufs ein teilweise veröffentlichtes Artefakt hinterlassen kann; das Muster gehört zum Pre-Merge-Feedback, wo das Überholen eines veralteten Laufs erwünscht ist
-- **SOLLTE** das Abbrechen bei neuem Lauf für Pre-Merge-Workflows aktivieren, sodass ein nachgeschobener Commit keinen veralteten Lauf hinterlässt, der Kapazität verbraucht und ein überholtes Urteil meldet [R7]
+- **SOLLTE** das Abbrechen bei neuem Lauf für Pre-Merge-Workflows aktivieren, sodass ein nachgeschobener Commit keinen veralteten Lauf hinterlässt, der Kapazität verbraucht und ein überholtes Urteil meldet [R7]. Diese Empfehlung steht unter dem Vorbehalt, dass die Job-Laufzeit zur Kadenz des auslösenden Ereignisses passt: Eine Lane, deren Laufzeit die Push-Kadenz übersteigt, endet unter cancel-in-progress überwiegend mit `cancelled` und liefert nie ein Urteil — Beobachtung und Abhilfe (Trigger-Umplatzierung, nicht `cancel-in-progress: false`) regelt `spec/project/workflow-health/` §Abbruchraten
 
 ### G. Caching
 

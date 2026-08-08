@@ -86,7 +86,7 @@ This spec also writes against a structure the portfolio already has. `spec/proje
 - **MUST** declare a concurrency group for any workflow where two runs on the same branch would interfere, so a superseded run can't race the run that replaced it
 - **MUST** derive the concurrency group from the workflow identity and the branch or pull-request identity, so runs on different branches don't cancel each other [R7]
 - **MUST NOT** apply cancel-on-new-run behaviour to a delivery or release workflow, where cancelling a run in flight can leave a partially-published artifact; the pattern belongs to pre-merge feedback, where superseding a stale run is the desired outcome
-- **SHOULD** enable cancel-on-new-run for pre-merge workflows, so pushing a follow-up commit doesn't leave a stale run consuming capacity and reporting an obsolete verdict [R7]
+- **SHOULD** enable cancel-on-new-run for pre-merge workflows, so pushing a follow-up commit doesn't leave a stale run consuming capacity and reporting an obsolete verdict [R7]. This recommendation presupposes that the job's runtime fits the cadence of its triggering event: a lane whose runtime exceeds the push cadence ends mostly `cancelled` under cancel-in-progress and never delivers a verdict—observation and remediation (trigger re-placement, not `cancel-in-progress: false`) are owned by `spec/project/workflow-health/` §Cancellation rates
 
 ### G. Caching
 
