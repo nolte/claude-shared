@@ -15,7 +15,7 @@ The contract is a deliberate **hybrid precedence model**, grounded in external b
 
 Readers: maintainers of `nolte/*` consumer repositories who want to be governed by hub specs without copying them; the `claude-shared` maintainer who curates which specs are portfolio-wide; the `spec` skill, which gains a local-vs-inherited drift pass; `spec-drift-audit` and `spec-readiness`, which classify inheritance findings; contributors migrating a repository from copied specs to referenced ones. Implementors extending the `spec` skill or the `spec/.spec-config.yml` schema work from §Requirements; consumer-repository maintainers work from §"Copy→reference migration path" and §"The inheritance manifest"; a `spec-drift-audit` maintainer works from §"Drift detection."
 
-Provenance: this spec is authored under the `spec` skill and follows the six-section template at `skills/spec/templates/spec.template.md`; future revisions follow the same path per `spec/project/spec-driven-development/`.
+Provenance: this spec is authored under the `spec` skill and follows the seven-section template at `skills/spec/templates/spec.template.md`; future revisions follow the same path per `spec/project/spec-driven-development/`.
 
 ## Goals
 
