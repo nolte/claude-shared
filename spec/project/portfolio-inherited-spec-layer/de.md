@@ -15,7 +15,7 @@ Der Vertrag ist ein bewusstes **hybrides Precedence-Modell**, gegründet auf ext
 
 Leser: Maintainer von `nolte/*`-Consumer-Repositories, die von Hub-Specs geregelt werden wollen, ohne sie zu kopieren; der `claude-shared`-Maintainer, der kuratiert, welche Specs portfolioweit sind; der `spec`-Skill, der einen Local-vs-Inherited-Drift-Pass erhält; `spec-drift-audit` und `spec-readiness`, die Vererbungs-Findings klassifizieren; Contributors, die ein Repository von kopierten Specs auf referenzierte migrieren. Implementoren, die den `spec`-Skill oder das `spec/.spec-config.yml`-Schema erweitern, arbeiten aus §Requirements; Consumer-Repository-Maintainer arbeiten aus §"Copy→Reference-Migrationspfad" und §"Das Vererbungs-Manifest"; ein `spec-drift-audit`-Maintainer arbeitet aus §"Drift-Detection".
 
-Provenance: Diese Spec ist unter dem `spec`-Skill verfasst und folgt dem Sechs-Abschnitts-Template unter `skills/spec/templates/spec.template.md`; künftige Revisionen folgen demselben Pfad per `spec/project/spec-driven-development/`.
+Provenance: Diese Spec ist unter dem `spec`-Skill verfasst und folgt dem Sieben-Abschnitts-Template unter `skills/spec/templates/spec.template.md`; künftige Revisionen folgen demselben Pfad per `spec/project/spec-driven-development/`.
 
 ## Goals
 
