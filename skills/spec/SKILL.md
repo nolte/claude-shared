@@ -102,6 +102,8 @@ Per `spec/project/portfolio-inherited-spec-layer/`, a consumer repo may **refere
 1. Take the user's description (any language).
 2. **Duplicate check first** (see operation 5). If clear overlap exists, stop and ask: extend existing, supersede, or proceed as new. Show candidate paths.
 3. Draft the canonical spec from `templates/spec.template.md`, filling every section with content from the user's description. Mark unknowns explicitly instead of inventing.
+
+   Ground every load-bearing claim the draft makes about the working copy — a cause, a state ("this component is unreachable"), an existence ("the helper is already there"), an absence ("no caller remains"). Per `spec/claude/claim-provenance/`, write each such claim as **established**, naming the observation that established it (a command with its output, or a `file:line`), or as **unestablished**, naming the observation that would settle it and stating it wasn't made. When that observation is cheap with the means at hand — a `Grep`, a `Read`, one command — make it rather than publish the claim unestablished; the unestablished exit obliges the spec to say what makes the observation expensive. The same rule governs prose that operation 2 lifts into the canonical, and translations mirror the canonical's provenance markers unchanged.
 4. Translate into each other configured language. Translation preserves structure (headings, requirement order, checklist items). RFC 2119 keywords stay in English and are glossed in-language, for example `MUSS [MUST]`, `SOLLTE [SHOULD]`, `KANN [MAY]`.
 5. Write `spec/[<topic>/]<slug>/<lang>.md` for every configured language in a single operation—never leave a spec partially written.
 6. Regenerate `spec/README.md` (operation 4).

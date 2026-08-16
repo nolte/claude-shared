@@ -129,20 +129,17 @@ feature is malformed.
    repository (`git rev-parse --is-inside-work-tree`) before invoking
    the agent — the agent has no shell access, so this
    skill owns that precondition.
-2. **Manual fallback (deprecated, transitional only).** The
-   `feature-consistency-reviewer` agent ships with this skill — under
-   normal conditions the dispatch in step 1 succeeds and the fallback
-   isn't reached. The fallback exists exclusively for repos whose
-   plugin runtime predates the agent's availability: when step 1 can't
-   resolve the agent at all, walk the same investigation surface
-   yourself — read every existing feature's frontmatter and
-   `## Description`, scan the project's primary source roots for
-   already-implemented behaviour, and grep `spec/` for prior decisions
-   that constrain the new feature. Capture findings in the same shape
-   the agent would emit. Acceptance of this path **MUST** be explicit:
-   ask the operator before proceeding, and surface the runtime version
-   gap so they know the right long-term fix is upgrading the plugin
-   runtime, not normalising the manual pass.
+2. **Manual fallback (deprecated, transitional only).** The agent ships
+   with this skill, so the fallback is reached only when a plugin
+   runtime predating it can't resolve the agent at all: walk the
+   same investigation surface yourself — read every existing feature's
+   frontmatter and `## Description`, scan the project's primary source
+   roots for already-implemented behaviour, and grep `spec/` for prior
+   decisions that constrain the new feature. Capture findings in the
+   same shape the agent would emit. Acceptance of this path **MUST** be
+   explicit: ask the operator before proceeding, and surface the runtime
+   version gap so they know the right long-term fix is upgrading the
+   plugin runtime, not normalising the manual pass.
 3. **Persist findings on the feature** in two places:
    - **Frontmatter** — populate the `consistency_check` object with
      `performed_at: <ISO date>`, `agent_version: <agent-id>` (or
@@ -155,24 +152,25 @@ feature is malformed.
      is never empty.
    - **Body** — populate `## Consistency notes` with one paragraph per
      finding restating the finding in human-readable prose plus the chosen
-     resolution.
+     resolution. Per `spec/claude/claim-provenance/`, each paragraph marks
+     the claim it rests on — the overlap, prior art, or drift it
+     asserts — as **established**, citing the `file:line` or command output
+     that established it, or as **unestablished**, naming the observation
+     that would settle it and stating it wasn't made; make a cheap
+     observation instead of taking the unestablished exit.
 4. **Block the write** when any finding has `kind: overlap` or
    `kind: duplication` and its `resolution` is `proceed` without an
-   explicit one-paragraph rationale in `## Consistency notes`. Surface the
-   offending finding to the operator and ask for a non-`proceed`
-   resolution or a written rationale before continuing. A
+   explicit one-paragraph rationale in `## Consistency notes`. Surface it
+   and ask for a non-`proceed` resolution or a written rationale first. A
    `merge-into <id>` resolution is a first-class outcome and may end the
    decomposition for that feature; record the choice and skip writing the
    redundant file.
 5. **Record the manual-pass author** in `## Consistency notes` when
    `agent_version` starts with `manual-`. The spec's §Consistency check
-   requires the notes section to name the operator who performed the
-   fallback; capture it as a dedicated line of the exact form
-   `Manual pass performed by: <name>` (the operator's name or handle) at
-   the top of `## Consistency notes`, so an auditor can attribute the
-   resolution decisions without parsing prose. The manual fallback is deprecated; use it
-   only when the runtime cannot resolve the
-   `feature-consistency-reviewer` agent. Every manual pass on a repo
+   requires naming the operator who performed the fallback; capture it as
+   a dedicated line of the exact form `Manual pass performed by: <name>`
+   at the top of `## Consistency notes`, so an auditor can attribute the
+   resolution decisions without parsing prose. Every manual pass on a repo
    whose plugin runtime can resolve the agent is a workflow-health
    finding per `spec/project/feature/` §Consistency check; the right
    resolution is to upgrade the plugin runtime and rerun the check via

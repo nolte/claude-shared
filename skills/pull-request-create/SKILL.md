@@ -123,17 +123,18 @@ Rules for the body:
 - **Summary**, **Changes**, and **Testing** must not be empty and must not contain only `None`: if the user can't fill them in, stop and ask.
 - Use imperative mood in Summary and Changes (`Add …`, not `Added …`).
 - If the diff touches any file under `spec/`, append a `Refs spec/<path>` line in **Linked issues** for each touched spec topic (deduplicated by `<area>/<slug>/`), unless the user explicitly declines.
-- **Audit-triggered remediation PRs carry two extra lines in Risk / rollout notes.** When this PR remediates an in-scope finding from a portfolio audit (`spec-drift-audit`, `workflow-health`, `project-structure-apply`, `vocab-drift-audit`, `portfolio-audit`, `portfolio-inflight-triage`, `dependency-audit`, `prose-style`/`markdown-formatting` lint, or a manual review Issue), `spec/project/continuous-improvement/<canonical_language>.md` §"Traceability in remediation artifacts" **MUST**-requires the **Risk / rollout notes** section to additionally record both of the following lines:
-  - `Originating source: <named finding source>` — the audit entry, workflow incident, project-structure report, or manual review Issue (with a link where available) that triggered the fix, so the PR is traceable back to its trigger.
-  - `Dispatched specialist: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>)` — the specialised agent or skill that produced the fix; or, when none matched, the literal `Dispatched specialist: no matching specialist existed — generalist handled`. This is the primary signal for portfolio-level coverage gaps.
-  Ask the user for these two values whenever the change context (branch name, commit log, linked audit artifact) indicates an audit-triggered remediation; do not invent them. For non-audit PRs these two lines are omitted.
-- **Audit-remediation checklist (tick before `gh pr create`).** When the change context indicates an audit-triggered remediation PR, confirm all three of the following before opening the PR, so the two grep-stable fields are present by construction rather than reconstructed later:
-  - [ ] **Risk / rollout notes** carries an `Originating source:` line naming the finding source (with a link where available).
+- **Audit-triggered remediation PRs carry two extra lines in Risk / rollout notes.** When this PR remediates an in-scope finding from a portfolio audit (`spec-drift-audit`, `workflow-health`, `project-structure-apply`, `vocab-drift-audit`, `portfolio-audit`, `portfolio-inflight-triage`, `dependency-audit`, `prose-style`/`markdown-formatting` lint, or a manual review Issue), `spec/project/continuous-improvement/<canonical_language>.md` §"Traceability in remediation artifacts" **MUST**-requires **Risk / rollout notes** to additionally record both lines:
+  - `Originating source: <named finding source>` — the finding source listed above that triggered the fix (with a link where available), so the PR is traceable back to its trigger.
+  - `Dispatched specialist: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>)` — the specialised agent or skill that produced the fix; or, when none matched, the literal `no matching specialist existed — generalist handled`.
+  Ask the user for both values whenever the branch name, commit log, or a linked audit artifact indicates an audit-triggered remediation; never invent them. Non-audit PRs omit both lines.
+- **Audit-remediation checklist (tick before `gh pr create`).** On such a PR, confirm all three before opening it, so both grep-stable fields are present by construction:
+  - [ ] **Risk / rollout notes** carries an `Originating source:` line naming the finding source.
   - [ ] **Risk / rollout notes** carries a `Dispatched specialist:` line naming the specialist, or the literal `no matching specialist existed — generalist handled`.
-  - [ ] Both lines use those exact field labels verbatim, so they stay grep-stable portfolio-wide per `spec/project/continuous-improvement/<canonical_language>.md` §"Traceability in remediation artifacts".
+  - [ ] Both lines use those exact field labels verbatim, so they stay grep-stable portfolio-wide.
+- **Load-bearing claims state their provenance** per `spec/claude/claim-provenance/`: a Summary, Changes, Testing, or Risk statement about a cause, state, existence, or absence in the working copy is either **established**, naming the command output or `file:line` behind it, or **unestablished**, naming the observation that would settle it and stating it wasn't made. Make a cheap observation instead of taking the unestablished exit.
 - Repository-specific sections **may** be appended *after* the five required sections, never interleaved.
 
-Derive section content from the commit log, file list, and diff collected in step 1. Present the drafted title and body back to the user and iterate until they approve.
+Derive section content from step 1's commit log, file list, and diff. Present the drafted title and body to the user and iterate until they approve.
 
 ### 5. Verify local lint before push
 
