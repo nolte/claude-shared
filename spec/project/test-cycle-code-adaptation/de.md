@@ -43,11 +43,12 @@ Leser: Spec-Autor:innen, die die Zyklus-Familie vervollständigen; Skill- und Ag
 - **MUSS [MUST]** diese Phase als **Ermitteln und Anwenden der minimalen korrekten Code-Änderung, die einen bestätigt-roten Fall bestehen lässt** definieren, als Phase 4 des Zyklus [R1].
 - **MUSS [MUST]** nur auf einem **bestätigten echten Fehlschlag** (oder einem fehlenden Fall) handeln, der von `spec/project/test-cycle-result-analysis/` [R2] geroutet wurde; sie re-klassifiziert nicht.
 - **MUSS [MUST]** einen **falschen Test** an Phase 1s reviewbaren Fall-Änderungs-Pfad routen [R4], ihn nie durch Hacken des Codes auf eine falsche Assertion lösen.
+- **MUSS [MUST]** einen Fall, dessen **Doubles oder Fixtures permissiver sind als das, was sie ersetzen**, entlang einer Dimension, auf die sich der Fall stützt, an denselben Phase-1-Pfad routen, *wenn diese Permissivität die Produktionszuschreibung zweifelhaft macht*: Dann entscheidet das Arrangement den Ausgang, die Ursachenspur zeigt auf Produktivcode, der sehr wohl korrekt sein kann, und ihn zu ändern hieße, korrekten Code auf ein Arrangement zu biegen, das die Produktion nicht erreichen kann. Wo der Defekt stattdessen **unabhängig** vom Arrangement bestätigt ist, erzeugt diese Phase ihre Code-Änderung wie gewohnt, und das permissive Double wird **daneben** geroutet, nie an ihrer Stelle — ein bestätigter Defekt bleibt im Zyklus. `T9` in `spec/project/test-falsifiability/` [R12] verantwortet die Kategorie, ihre Detektionsfrage und ihre zweiteilige Ausnahme; diese Spec verantwortet nur das Routing.
 
 ### Inputs und Outputs (der Phase-4-Vertrag)
 
 - **MUSS [MUST]** als Input eine Phase-3-Klassifikation `real-failure` (oder `missing-case`) für eine TC-ID konsumieren, mit ihrer stützenden Evidenz (Trace, Diff, Reproducer).
-- **MUSS [MUST]** als Output eine **Code-Änderung** erzeugen, die erneut in die Ausführung (Phase 2) eintritt; die Änderung ist die Produktions-Edition, nie eine Edition, die den Fall abschwächt.
+- **MUSS [MUST]** als Output eine **Code-Änderung** erzeugen, die erneut in die Ausführung (Phase 2) eintritt; die Änderung ist die Produktions-Edition, nie eine Edition, die den Fall abschwächt. Die beiden Routing-Regeln oben sind die einzigen Ausnahmen: Ein falscher Test und ein Arrangement, das die Zuschreibung zweifelhaft macht, verlassen diese Phase stattdessen als reviewbare Fall-Änderung, und eine Phase, die einen Fall zurückgeroutet hat, **MUSS [MUST]** nennen, welche Regel sie angewandt hat.
 
 ### Der grüne Schritt: zuerst die einfachste Änderung
 
@@ -93,6 +94,7 @@ Leser: Spec-Autor:innen, die die Zyklus-Familie vervollständigen; Skill- und Ag
 ## Akzeptanzkriterien
 
 - [ ] Die Phase ist als Ermitteln/Anwenden der minimalen korrekten Code-Änderung für einen bestätigt-roten Fall definiert (Phase 4), handelt nur auf einem Phase-3-real-failure/missing-case und routet einen falschen Test an Phase 1
+- [ ] Ein Fall, dessen Arrangement die Produktionszuschreibung zweifelhaft macht, wird an denselben Phase-1-Pfad geroutet, ein unabhängig bestätigter Defekt bleibt im Zyklus mit dem permissiven Double daneben geroutet, und der Output-Vertrag benennt beide Routing-Regeln als seine einzigen Ausnahmen
 - [ ] Inputs (Phase-3-`real-failure`/`missing-case` + Evidenz) und Output (eine Code-Änderung, die erneut in die Ausführung eintritt, nie eine test-abschwächende Edition) entsprechen dem Phase-4-Vertrag des Fundaments
 - [ ] Der grüne Schritt verlangt zuerst die einfachste Änderung (als Antwort auf einen fehlschlagenden Test), mit Becks Obvious-Implementation- / Fake-It- / Triangulation-Strategien anerkannt
 - [ ] Das Beheben der Wurzelursache statt des Symptoms ist gefordert, und Over-Fitting ist verboten mit Triangulation und Property-based-Fällen als Anti-Over-Fitting-Disziplin

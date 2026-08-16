@@ -94,6 +94,7 @@ Leserschaft: Agent-/Skill-Autoren, die diese Toolchain pflegen; QA-Engineers und
 - Eine fehlende Vorbedingung (nicht vorhandene Seed-Daten) **MUSS** zu einem expliziten, begründeten Skip führen — nie zu einem stillen vorzeitigen Return, der einen Test bestehen lässt, ohne etwas zu prüfen
 - Vom Test erzeugte Daten **MÜSSEN** ein eindeutiges Suffix verwenden, um über Läufe hinweg isoliert und reproduzierbar zu bleiben; Seed-Daten mit Session-Geltungsbereich **MÜSSEN** idempotent sein (vor dem Anlegen prüfen)
 - Vorbedingungen **MÜSSEN** über den schnellsten zuverlässigen Weg hergestellt werden — einen geseedeten API-Aufruf oder ein Fixture — **nicht** über ein Durchklicken der UI. Ein Test treibt durch den Browser nur die Interaktion, die er prüft; das Herstellen von Vorbedingungs-Zustand (Konten, Entitäten, Navigation) über die UI vervielfacht die Laufzeit und koppelt unbeteiligte Flows in jeden Test
+- Ein Seeding-Fixture oder Setup-Helper **DARF NICHT** Zustand arrangieren, den das echte System ablehnen würde, entlang einer Dimension, auf die sich der Test stützt — einen Identifier, den die API erzeugt statt entgegenzunehmen, einen Wert, den ihre Validierung zurückweist, ein Duplikat, das ein Uniqueness-Constraint verbietet —, sofern dieser Zustand nicht über den validierten Pfad des Systems selbst aufgebaut werden kann **und** die Abweichung im Fixture benannt ist, beide Bedingungen statt der Deklaration allein. Diese Stufe fährt das echte System hoch, ihre Exposition ist also kein Kollaborateur-Double, sondern das **Arrangement** vor dem Lauf: Ein Fixture, das einen Zustand seedet, den die Produktion nie halten kann, lässt jede nachgelagerte Assertion eine unmögliche Welt bestätigen, während die Assertions selbst korrekt und spezifisch bleiben. Das ist die E2E-Ausprägung der Double-Treue-Regel, die `spec/project/test-pyramid-foundation/` §"Test-Double-Taxonomie" verantwortet, und der Fehlermodus ist als `T9` gemäß [R10] zitierbar
 
 ### Spec-Rückverfolgbarkeit
 
@@ -127,6 +128,7 @@ Dieses Profil ist die bindende Umsetzung des Kerns für Python-Projekte und die 
 - [ ] `e2e-result-reviewer` läuft read-only und erzeugt priorisierte Befunde mit Bezug zu Anforderungs-/TC-IDs
 - [ ] Jeder der drei Agents und der Skill zitiert diese Spec, und jede `description` grenzt ihn von den anderen sowie von `test-case-derivation` und `quality-gate` ab
 - [ ] `test-case-derivation/{en,de}.md` widerspricht dieser Spec nicht mehr: Die Grenze zur E2E-Automatisierung verläuft entlang der Verantwortung, nicht entlang „geteilt vs. projektlokal"
+- [ ] Einem Seeding-Fixture ist verboten, Zustand zu arrangieren, den das echte System entlang einer herangezogenen Dimension ablehnen würde, die Ausnahme verlangt beides — dass er nicht über den validierten Pfad aufgebaut werden kann und dass die Abweichung benannt ist —, und die Regel ist als Ausprägung dieser Stufe an die portfolioweite Double-Treue-Regel gebunden
 
 ## Referenzen
 
