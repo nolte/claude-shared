@@ -31,7 +31,7 @@ Readers: every agent and skill that writes a claim into an artefact somebody els
 - Sourcing and triangulating assertions about repo-external facts; owned by `spec/claude/research-triangulate/`.
 - The refutation clause a dispatching orchestrator owes a specialist; owned by `spec/claude/dispatch-brief/`.
 - Claims made in live conversation with the operator, where a correction is one reply away.
-- Implementing a linter or scanner. §C deliberately checks substance rather than a token, so there's nothing deterministic to grep; tooling is separate work if a machine-read carrier ever gains a field.
+- Implementing a linter or scanner. §D deliberately checks substance rather than a token, so there's nothing deterministic to grep; tooling is separate work if a machine-read carrier ever gains a field.
 
 ## Requirements
 
