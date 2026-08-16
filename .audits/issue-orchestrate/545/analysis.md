@@ -15,7 +15,7 @@ created: 2026-08-16
 
 - **Repository**: nolte/claude-shared
 - **Issue**: #545 — A cause claimed in an artefact is unverified by any rule — the mechanism bar gates changes, not assertions
-- **URL**: https://github.com/nolte/claude-shared/issues/545
+- **URL**: <https://github.com/nolte/claude-shared/issues/545>
 - **Labels**: none
 - **Linked items**: none linked. Sibling referenced in the body: #542 (closed, merged as `a786087`) — the test-double half of the same "trusted because never asked to fail" family.
 - **Prior art checked**: no `project/features/` entry; no `project/roadmap.md` item; no requirement artefact before this run; the only open PR is `exp/speckit-spike` (#533), unrelated. No merged change closes the issue.
@@ -119,6 +119,7 @@ The gap this closes, stated against the corpus as it exists:
     | `feature-decompose` | 4595 | 405 |
     | `lektorat-apply` | 4580 | 420 |
     | `spec` | 3173 | 1827 |
+
 - **Touched files / artifacts**: `skills/{issue-orchestrate,pull-request-create,feature-decompose,spec}/SKILL.md`, `skills/lektorat-apply/SKILL.md`
 - **Specialist**: `Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")`
 - **Depends on**: P1
@@ -167,4 +168,11 @@ P1 first and alone. P2, P3, P4 are mutually independent once P1 lands and may di
 
 ## Dispatch log
 
-<!-- Appended during operation 5; one line per package once its specialist reports. -->
+2026-08-16 P1 dispatched to skill `nolte-shared:spec` — spec/claude/claim-provenance/ authored EN+DE, exact structural parity, vale clean. Commit 1145aea.
+2026-08-16 P2 dispatched to skill `nolte-shared:spec` — four neighbours wired, §A retained and extended, index row added. Commit 51712a8.
+2026-08-16 P3 dispatched to `nolte-claude-dev:claude-plugin-developer` — six agents bound, body only. REFUTED four parts of the brief, all accepted: deployment-change-analyzer states no causes at all (:79, :86) so the binding attaches to its existence/absence pairs; python-code-reviewer (:134) and frontend-code-reviewer (:176) already carry a confirmed|suspected flag that nothing required to name an observation, so the binding attaches to the existing flag rather than adding a second vocabulary; e2e-result-reviewer (:32) already asked what the screenshots could not settle but in a covering note, which is the form the spec rules out, so only that delta was bound; test-result-analyzer's §A reference (:29) was scoped to E2E, so the binding generalises it. Commit 88dfeef.
+2026-08-16 P4 dispatched to `nolte-claude-dev:claude-plugin-developer` — five skills bound, body only, four paid for out of the same file. REFUTED the net-neutral hypothesis for issue-orchestrate with numbers (operation 3 is 1156 chars, 125 compress losslessly, the shortest conforming wording is 301, hence +176); accepted, the file stays 450 chars under the cap. Narrowed lektorat-apply to the absence claim only, because its findings are judgements (out of scope per §A) already carrying file, line and sample. The specialist marked one claim unestablished (markdownlint on the indented paragraph in skills/spec) and named the settling observation; observation made, markdownlint passes. Commit 300a18d.
+2026-08-16 P5 dispatched to `nolte-shared:spec-readiness-reviewer` — zero Critical against the spec; the no-restatement claim held under adversarial cross-check of all five neighbours. Three AC coverage gaps and one Info clarification closed; two pre-existing ghost references of one bug class found in neighbour files, verified, and repaired. Commits 4b1172e, 1cf6a09.
+
+Gate: `task --yes check` exit 0 — vale clean, every pre-commit hook passed, 159 tests passed, link check 0 critical.
+Security: no security-sensitive path touched (spec prose, agent bodies, skill bodies only), so `code-security-reviewer` and `security-review` were not required. Recorded as a decision, not an omission.
