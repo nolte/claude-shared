@@ -86,6 +86,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 
 - **MUSS [MUST]** **echt** halten: den eigenen Code der Komponente und ihre interne Verdrahtung; **MUSS [MUST]** doubeln: jeden externen Kollaborateur (andere Services, Dritt-APIs, Netzwerk und — wo Realismus es nicht verlangt — den Datastore), mit dem **Meszaros-Vokabular** des Fundaments (Dummy, Fake, Stub, Spy, Mock) und nennen, welche Art jedes Double ist [R1], [R11].
 - **DARF [MAY]** einen **Fake** (zum Beispiel einen In-Memory-Datastore) anstelle eines echten Stores verwenden, wenn der Store nicht der Realismus ist, den der Test braucht; ein Test, der den **echten** Store verlangt, überschreitet in die Integration-Stufe [R3], [R11].
+- **DARF NICHT [MUST NOT]** zulassen, dass ein Grenz-Double **permissiver ist als der Externe, den es ersetzt**, entlang irgendeiner Dimension, auf die sich der Test stützt, gemäß der Treue-Regel des Fundaments [R1]. Das **DARF [MAY]** oben ist genau das, was ein untreues Double auf dieser Stufe naheliegend macht: Es erlaubt einen In-Memory-Store gerade dort, wo der Store nicht der Realismus ist, den der Test braucht, und ein Fake, der einen Schreibvorgang akzeptiert, den der echte Store an einem Constraint ablehnen würde, macht den ganzen Component-Test zu einer Aussage über ein System, das es nicht geben kann. Jene Erlaubnis deckt Aufsetzkosten und Geschwindigkeit des Stores ab, nie seine **Ablehnungen**. Wo die Abweichung nicht geschlossen werden kann, **MUSS [MUST]** sie im Double selbst benannt werden [R1]; der resultierende Fehlermodus ist als `T9` gemäß [R16] zitierbar.
 
 ### Determinismus, Geschwindigkeit und Platzierung
 
@@ -119,6 +120,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [ ] Service-Component-Tests sind verpflichtet, den Service durch seine eigene Schnittstelle mit gedoubelten Externen zu treiben, wobei interne Schnittstellen nur zum Konfigurieren/Abfragen dienen, zitiert auf Fowler/Clemson
 - [ ] Der in-process-vs-out-of-process-Realismus-/Geschwindigkeits-Trade-off ist eine explizite festgehaltene Wahl
 - [ ] Isolation hält die Komponente echt und doubelt Externe mit dem Meszaros-Vokabular; ein echter Datastore ist als Überschreiten in die Integration deklariert
+- [ ] Einem Grenz-Double ist verboten, permissiver zu sein als der Externe, den es ersetzt, die In-Memory-Store-Erlaubnis ist auf Kosten statt auf Ablehnungen begrenzt, und eine nicht schließbare Abweichung muss im Double deklariert werden
 - [ ] Determinismus (kontrollierte Zeit/Zufall/Netzwerk) und Platzierung (PR-gatende CI, schnelle im Pre-Commit) sind gefordert
 - [ ] Visual-Regression und Accessibility sind als Querschnitt auf Component-Ebene platziert, gegen `webview-ui-optimization` abgegrenzt
 - [ ] Traceability auf TC-ID ist gefordert, und ein optionales, klar degradiertes Referenzprofil (Frontend + Backend) ist bereitgestellt, ohne ein Framework vorzuschreiben
@@ -141,6 +143,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [R13] Storybook, *Interaction Testing* (Play-Funktionen) — <https://storybook.js.org/docs/writing-tests/interaction-testing>
 - [R14] Jest, *Snapshot Testing* (wo es hilft; der Overuse-Vorbehalt) — <https://jestjs.io/docs/snapshot-testing>
 - [R15] Kent C. Dodds, *Why I Never Use Shallow Rendering* — <https://kentcdodds.com/blog/why-i-never-use-shallow-rendering>
+- [R16] `spec/project/test-falsifiability/` — die tier-übergreifende Taxonomie von Tests, die nicht fehlschlagen können; `T9` ist der Fehlermodus, den ein Grenz-Double erzeugt, das permissiver ist als der Externe, den es ersetzt, und die Spec trägt die Review-Frage, die ihn detektiert
 
 ## Offene Fragen
 

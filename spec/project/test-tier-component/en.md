@@ -86,6 +86,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 
 - **MUST** keep **real**: the component's own code and its internal wiring; **MUST** double: every external collaborator (other services, third-party APIs, network, and—where realism doesn't require it—the datastore), using the foundation's **Meszaros vocabulary** (dummy, fake, stub, spy, mock) and stating which kind each double is [R1], [R11].
 - **MAY** use a **fake** (for example an in-memory datastore) in place of a real store when the store isn't the realism the test needs; a test that requires the **real** store crosses into the Integration tier [R3], [R11].
+- **MUST NOT** let a boundary double be **more permissive than the external it replaces** along any dimension the test relies on, per the foundation's fidelity rule [R1]. The `MAY` above is what makes an unfaithful double easy to reach for at this tier: it permits an in-memory store precisely where the store isn't the realism the test needs, and a fake that accepts a write the real store would reject on a constraint turns the whole component test into a claim about a system that can't exist. That permission covers the store's setup cost and speed, never its **refusals**. Where the divergence can't be closed, it **MUST** be named in the double itself [R1]; the resulting failure mode is citable as `T9` per [R16].
 
 ### Determinism, speed, and placement
 
@@ -119,6 +120,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [ ] Service component tests are required to drive the service through its own interface with externals doubled, with internal interfaces used only to configure/probe, cited to Fowler/Clemson
 - [ ] The in-process vs out-of-process realism/speed trade-off is an explicit recorded choice
 - [ ] Isolation keeps the component real and doubles externals using the Meszaros vocabulary; a real datastore is declared as crossing into integration
+- [ ] A boundary double is forbidden from being more permissive than the external it replaces, the in-memory-store permission is bounded to cost rather than refusals, and an unclosable divergence must be declared in the double
 - [ ] Determinism (controlled time/randomness/network) and placement (PR-gating CI, fast ones pre-commit) are required
 - [ ] Visual-regression and accessibility are placed as cross-cutting at component scope, bounded against `webview-ui-optimization`
 - [ ] Traceability to TC-ID is required, and an optional clearly-demoted reference profile (frontend + backend) is provided without mandating a framework
@@ -141,6 +143,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [R13] Storybook, *Interaction Testing* (play functions): <https://storybook.js.org/docs/writing-tests/interaction-testing>
 - [R14] Jest, *Snapshot Testing* (where it helps; the overuse caveat): <https://jestjs.io/docs/snapshot-testing>
 - [R15] Kent C. Dodds, *Why I Never Use Shallow Rendering*: <https://kentcdodds.com/blog/why-i-never-use-shallow-rendering>
+- [R16] `spec/project/test-falsifiability/`: the cross-tier taxonomy of tests that can't fail; `T9` is the failure mode a boundary double more permissive than the external it replaces produces, and the spec carries the review question that detects it
 
 ## Open Questions
 

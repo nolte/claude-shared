@@ -66,6 +66,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 
 - **MUSS [MUST]** genau **einen** externen Kollaborateur (den getesteten) **echt** halten und mit dem Meszaros-Vokabular des Fundaments jeden *anderen* Externen, den der Code berührt, **gedoubelt** halten, sodass der Test Fehler auf den einzelnen Seam lokalisiert, den er abdeckt [R1], [R6].
 - **MUSS [MUST]** für jeden Integrationstest nennen, welcher Kollaborateur echt und welche gedoubelt sind, damit ein Reviewer bestätigen kann, dass der Test schmal ist.
+- **DARF NICHT [MUST NOT]** zulassen, dass einer jener *anderen*, legitim gedoubelten Externen **permissiver ist als das, was er ersetzt**, entlang irgendeiner Dimension, auf die sich der Test stützt, gemäß der Treue-Regel des Fundaments [R1]. Das ist etwas anderes als das In-Memory-Fake-Verbot oben, das den Seam des **einen echten Kollaborateurs** regelt und dort das Ersetzen der Produktionstechnologie überhaupt untersagt; hier sind die Kollaborateure korrekt gedoubelt, und die Anforderung lautet, dass jeder weiterhin **ablehnt**, was der echte ablehnt. Ein schmaler Test bezieht seine präzise Fehlerlokalisierung aus dem echten Seam, den er abdeckt, und hat nichts davon, wenn ein gedoubelter Nachbar einen Aufruf akzeptiert, den die Produktion ablehnen würde. Wo die Abweichung nicht geschlossen werden kann, **MUSS [MUST]** sie im Double selbst benannt werden [R1]; der resultierende Fehlermodus ist als `T9` gemäß [R13] zitierbar.
 
 ### Determinismus und Testdaten-Isolation
 
@@ -100,6 +101,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [ ] Assertions sind auf den Integrations-Seam begrenzt (Serialisierung, echte Queries/Schema, Mapping, Verbindung, Transaktionen, Migrationen) und verboten, Unit-Stufen-Geschäftslogik neu zu testen oder Ganz-System-Journeys zu treiben
 - [ ] Echte-aber-ephemere Kollaborateure sind gefordert, In-Memory-Fakes, die von der Produktionstechnologie abweichen, sind verboten (mit dem H2-vs-echte-Datenbank-Beispiel), und geteilte langlebige Testumgebungen sind verboten
 - [ ] Der Isolationsgrad ist genau ein echter externer Kollaborateur mit allen anderen gedoubelt, explizit kontrastiert mit der Component-Stufe (alle gedoubelt)
+- [ ] Den gedoubelten Nachbarn ist verboten, permissiver zu sein als das, was sie ersetzen, die Regel ist gegen das In-Memory-Fake-Verbot abgegrenzt, das den einen echten Seam regelt, und eine nicht schließbare Abweichung muss im Double deklariert werden
 - [ ] Determinismus via ephemere Umgebungen + Per-Test-Datenisolation ist gefordert, die stufenspezifischen Flakiness-Quellen sind benannt, und Readiness-Bedingungs-Waits (keine Sleeps) sind gefordert
 - [ ] Die Stufe ist als langsamer/weniger platziert, mit schnellen schmalen Tests, die den PR gaten, und schwereren in einer dedizierten Stufe / Nightly
 - [ ] Die Grenze zur Contract-Stufe (ein echter eigener Kollaborateur vs. ein Cross-Service-Agreement ohne beide Seiten live) ist scharf, wird über eine explizite Entscheidungsregel für einen eigenen, aber separat deployten Service an der Auslieferungsgrenze statt am Besitz gezogen, und das Treffen einer echten Dritt-Produktions-API ist verboten
@@ -122,6 +124,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [R10] Martin Fowler, *ContractTest* (Doubles liefern dieselben Ergebnisse wie der echte Service) — <https://martinfowler.com/bliki/ContractTest.html>
 - [R11] Testcontainers, *Replace H2 with a real database for testing* (echte wegwerfbare Container; Dialekt-Drift bei In-Memory-Fakes) — <https://testcontainers.com/guides/replace-h2-with-real-database-for-testing/>
 - [R12] Google Testing Blog, *Where do our flaky tests come from?* (größere Tests sind flake-anfälliger) — <https://testing.googleblog.com/2017/04/where-do-our-flaky-tests-come-from.html>
+- [R13] `spec/project/test-falsifiability/` — die tier-übergreifende Taxonomie von Tests, die nicht fehlschlagen können; `T9` ist der Fehlermodus, den ein gedoubelter Nachbar erzeugt, der permissiver ist als das, was er ersetzt, und die Spec trägt die Review-Frage, die ihn detektiert
 
 ## Offene Fragen
 

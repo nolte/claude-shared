@@ -66,6 +66,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 
 - **MUST** keep **real** exactly **one** external collaborator (the one under test) and keep **doubled**, using the foundation's Meszaros vocabulary, every *other* external the code touches, so the test localises failures to the single seam it covers [R1], [R6].
 - **MUST** state, for each integration test, which collaborator is real and which are doubled, so a reviewer can confirm the test is narrow.
+- **MUST NOT** let any of those *other*, legitimately doubled externals be **more permissive than what it replaces** along any dimension the test relies on, per the foundation's fidelity rule [R1]. This is distinct from the in-memory-fake ban above, which governs the **one real collaborator** seam and forbids substituting production technology there at all; here the collaborators are correctly doubled, and the requirement is that each still **refuses** what the real one refuses. A narrow test earns its precise failure localisation from the real seam it covers, and gains nothing from it if a doubled neighbour accepts a call production would reject. Where the divergence can't be closed, it **MUST** be named in the double itself [R1]; the resulting failure mode is citable as `T9` per [R13].
 
 ### Determinism and test-data isolation
 
@@ -100,6 +101,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [ ] Assertions are scoped to the integration seam (serialisation, real queries/schema, mapping, connection, transactions, migrations) and forbidden from re-testing unit-tier business logic or driving whole-system journeys
 - [ ] Real-but-ephemeral collaborators are required, in-memory fakes that drift from production technology are forbidden (with the H2-vs-real-database example), and shared long-lived test environments are forbidden
 - [ ] The isolation level is exactly one real external collaborator with all others doubled, contrasted explicitly with the component tier (all doubled)
+- [ ] The doubled neighbours are forbidden from being more permissive than what they replace, the rule is delimited against the in-memory-fake ban that governs the one real seam, and an unclosable divergence must be declared in the double
 - [ ] Determinism via ephemeral environments + per-test data isolation is required, the tier-specific flakiness sources are named, and readiness-condition waits (not sleeps) are required
 - [ ] The tier is placed as slower/fewer, with fast narrow tests gating the PR and heavier ones in a dedicated stage / nightly
 - [ ] The boundary to the contract tier (a real owned collaborator vs a cross-service agreement verified without both sides live) is crisp, drawn by the release boundary rather than by ownership via an explicit decision rule for an owned-but-separately-deployed service, and hitting a real third-party production API is forbidden
@@ -122,6 +124,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [R10] Martin Fowler, *ContractTest* (doubles return the same results as the real service): <https://martinfowler.com/bliki/ContractTest.html>
 - [R11] Testcontainers, *Replace H2 with a real database for testing* (real disposable containers; dialect drift in in-memory fakes): <https://testcontainers.com/guides/replace-h2-with-real-database-for-testing/>
 - [R12] Google Testing Blog, *Where do our flaky tests come from?* (larger tests are more flake-prone): <https://testing.googleblog.com/2017/04/where-do-our-flaky-tests-come-from.html>
+- [R13] `spec/project/test-falsifiability/`: the cross-tier taxonomy of tests that can't fail; `T9` is the failure mode a doubled neighbour more permissive than what it replaces produces, and the spec carries the review question that detects it
 
 ## Open Questions
 
