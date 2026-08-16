@@ -71,6 +71,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - **MUST** use the foundation's **Meszaros test-double vocabulary** (dummy, fake, stub, spy, mock) and state which kind a given double is, so reviews speak one language [R1], [R7].
 - **MUST** prefer **state verification** (assert the resulting state) and reserve **behaviour verification** (mocks asserting interactions) for the cases where the interaction *is* the observable contract; over-using behaviour verification is the over-mocking smell [R6], [R7].
 - **MUST NOT** **over-mock**: mock only collaborators the project owns and that represent a real boundary; don't mock value objects, don't mock types you don't own, and don't replace so much of the unit's world that the test only asserts its own scaffolding [R7], [R8].
+- **MUST** apply the foundation's fidelity rule [R1] to this tier's collaborator doubles, exemption included, rather than restating it. The three rules above bound *how much* a unit test doubles; this one bounds whether the double can **refuse**, and at this tier the recurring offender is a hand-written double of a **persistence or repository boundary**: the real collaborator generates or discards keys, enforces uniqueness, and rejects nulls, while the double silently does none of it and every test in the file then passes for a state the database would never hold. Where the divergence can't be closed, it **MUST** be named in the double itself [R1], and the resulting failure mode is citable as `T9` per [R12].
 
 ### What to assert
 
@@ -109,6 +110,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [ ] The classicist and mockist schools are described with the implementation-coupling / refactor-fragility trade-off of interaction-based tests
 - [ ] The FIRST properties are enumerated with each property's meaning, attributed to Ottinger & Schuchert
 - [ ] Test doubles use the foundation's Meszaros vocabulary, state verification is preferred, and over-mocking is forbidden with the mock-only-what-you-own rule
+- [ ] The foundation's fidelity rule is applied to this tier's doubles by reference rather than restated, the persistence boundary is named as the recurring offender here, and the exemption stays the foundation's two-part one
 - [ ] Assertions are required on observable behaviour through the public interface, with AAA, one-behaviour-per-test, intention-revealing names, and independence
 - [ ] Parameterized testing is recommended and property-based testing is permitted with a determinism (fixed-seed) constraint
 - [ ] Determinism and speed are required, the flaky/slow-unit causes are named, and the tier is placed in pre-commit + PR gate
@@ -131,6 +133,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [R9] T. Ottinger & B. Schuchert, *FIRST* (Fast, Isolated, Repeatable, Self-validating, Timely): <http://agileinaflash.blogspot.com/2009/02/first.html>
 - [R10] T. Ottinger, *Brett Schuchert and I came up with FIRST* (authoritative attribution): <https://medium.com/@tottinge_79838/brett-schuchert-and-i-came-up-with-first-so-this-is-an-authoritative-statement-ec6006f6a59e>
 - [R11] *fast-check*: property-based testing (invariants over generated inputs, shrinking): <https://fast-check.dev/>
+- [R12] `spec/project/test-falsifiability/`: the cross-tier taxonomy of tests that can't fail; `T9` is the failure mode a double more permissive than its collaborator produces, and the spec carries the review question that detects it
 
 ## Open Questions
 

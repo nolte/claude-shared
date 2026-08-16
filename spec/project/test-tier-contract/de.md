@@ -39,6 +39,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - Eine **Ganz-System-Journey** zu treiben: Das ist die E2E-Stufe [R8]
 - **Beide** — Consumer und Provider — zusammen hochzufahren: Die Contract-Stufe existiert genau, um das zu vermeiden
 - Ein bestimmtes Contract-Framework, einen Broker oder ein Schema-Format vorzuschreiben: Das Referenzprofil ist illustrativ
+- Die portfolioweite Double-Treue-Regel aus `spec/project/test-pyramid-foundation/` §"Test-Double-Taxonomie" für den consumer-seitigen Mock dieser Stufe auszuprägen: Die Anforderung unten, dass die Doubles eines Consumers **dieselben Ergebnisse liefern wie der echte Provider**, ist strikt stärker als „nicht permissiver als der Kollaborateur, den es ersetzt", und die Provider-Verifikation erzwingt sie maschinell statt per Review, sodass eine Wiederholung der schwächeren Untergrenze hier nur verwischen würde, welche Garantie gilt. Das gilt allein für die **replay-verifizierten** Ausprägungen (consumer-driven und provider-driven); die bi-direktionale Ausprägung, unter der kein Provider-Code läuft, wird von ihrer eigenen Anforderung unten geregelt statt von diesem Ausschluss [R18]
 
 ## Anforderungen
 
@@ -62,6 +63,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
   - **Provider-driven**: Der Provider veröffentlicht den Contract, und Consumer erhalten daraus generierte Stubs; der Producer besitzt die Contract-Definition. Nützlich, wenn ein Provider viele Consumer bedient und die API-Form besitzt [R13].
   - **Bi-directional**: Der Provider veröffentlicht eine statische API-Spezifikation (zum Beispiel OpenAPI), und der Mock/Contract des Consumers wird gegen diese Spezifikation verifiziert, mit **keiner Ausführung von Provider-Code** — ein stärker entkoppelter Ansatz, wenn das Ausführen der Provider-Verifikation unpraktisch ist [R15].
 - **SOLLTE [SHOULD]** auf die **consumer-driven**-Ausprägung defaulten und eine Begründung festhalten, wenn provider-driven oder bi-directional gewählt wird, weil consumer-driven die consumer-relevanten brechenden Änderungen am direktesten fängt.
+- **MUSS [MUST]** den **consumer-seitigen Mock** gegen die portfolioweite Treue-Regel aus `spec/project/test-pyramid-foundation/` §"Test-Double-Taxonomie" prüfen, wann immer das Projekt die oben beschriebene **bi-direktionale** Ausprägung fährt: Jene Ausprägung verifiziert den Mock des Consumers gegen eine veröffentlichte Spezifikation, ohne Provider-Code auszuführen [R15], der Mock erhält also nichts von der maschinellen Garantie, die replay-basierte Verifikation liefert, und das Review ist die einzige verbleibende Prüfung. Unter den replay-verifizierten Ausprägungen ist diese Prüfung entbehrlich, und der Non-Goals-Eintrag oben sagt warum.
 
 ### Was ein Contract-Test verifiziert, und was nicht
 
@@ -106,6 +108,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 
 - [ ] Die Spec definiert einen Contract-Test als Verifikation eines Grenz-Agreements ohne beide Seiten live, gerahmt als Schließen der Stub-Drift-Lücke, zitiert auf Fowler/Pact
 - [ ] Das consumer-driven-Modell ist als Referenz etabliert (Consumer definiert Erwartungen, Provider unabhängig per Replay verifiziert), mit dem Provider-State-Mechanismus
+- [ ] Die bi-direktionale Ausprägung trägt ihre eigene Anforderung, den consumer-seitigen Mock gegen die portfolioweite Treue-Regel zu prüfen, formuliert in den Requirements statt nur als Non-Goals-Nebenbemerkung, weil dort kein Provider-Code läuft
 - [ ] Die drei Ausprägungen (consumer-driven, provider-driven, bi-directional) sind mit ihrer Eignung beschrieben, und consumer-driven ist der festgehaltene Default
 - [ ] Assertions sind auf Agreement-Kompatibilität begrenzt (Form, Felder, Typen, Status-Codes, Protokoll), verboten für Geschäftslogik, und das Über-Spezifikations-Anti-Pattern ist benannt
 - [ ] Determinismus via keine-Seite-live (Consumer-Mock + Provider-Replay) ist gefordert
@@ -133,6 +136,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [R15] PactFlow, *Bi-Directional Contract Testing* (Provider veröffentlicht OpenAPI; keine Ausführung von Provider-Code) — <https://pactflow.io/bi-directional-contract-testing/>
 - [R16] Pact, *Pact Broker* (Contract-Austausch, Versionierung, Kompatibilitätsmatrix) — <https://docs.pact.io/pact_broker>
 - [R17] Pact, *can-i-deploy* (Pre-Deployment-Kompatibilitäts-Gate) — <https://docs.pact.io/pact_broker/can_i_deploy>
+- [R18] `spec/project/test-falsifiability/` — die tier-übergreifende Taxonomie von Tests, die nicht fehlschlagen können; `T9` ist der Fehlermodus, den ein zu permissiver consumer-seitiger Mock unter der bi-direktionalen Ausprägung erzeugt, unter der kein Provider-Code läuft; unter den replay-verifizierten Ausprägungen übertrifft die Exakt-Übereinstimmungs-Anforderung dieser Stufe die Treue-Regel bereits, die `spec/project/test-pyramid-foundation/` §"Test-Double-Taxonomie" verantwortet
 
 ## Offene Fragen
 

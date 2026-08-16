@@ -71,6 +71,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - **MUSS [MUST]** das **Meszaros-Test-Double-Vokabular** des Fundaments (Dummy, Fake, Stub, Spy, Mock) verwenden und nennen, welche Art ein gegebenes Double ist, damit Reviews eine Sprache sprechen [R1], [R7].
 - **MUSS [MUST]** **Zustandsverifikation** (den resultierenden Zustand prüfen) bevorzugen und **Verhaltensverifikation** (Mocks, die Interaktionen prüfen) für die Fälle reservieren, in denen die Interaktion *der* beobachtbare Vertrag ist; Über-Nutzung von Verhaltensverifikation ist der Over-Mocking-Geruch [R6], [R7].
 - **DARF NICHT [MUST NOT]** **over-mocken**: nur Kollaborateure mocken, die das Projekt besitzt und die eine echte Grenze darstellen; keine Value Objects mocken, keine Typen mocken, die man nicht besitzt, und nicht so viel von der Welt der Einheit ersetzen, dass der Test nur sein eigenes Gerüst prüft [R7], [R8].
+- **MUSS [MUST]** die Treue-Regel des Fundaments [R1] samt ihrer Ausnahme auf die Kollaborateur-Doubles dieser Stufe anwenden, statt sie zu wiederholen. Die drei Regeln oben begrenzen, *wie viel* ein Unit-Test doubelt; diese begrenzt, ob das Double **ablehnen** kann, und auf dieser Stufe ist der wiederkehrende Übeltäter ein handgeschriebenes Double einer **Persistenz- oder Repository-Grenze**: Der echte Kollaborateur erzeugt oder verwirft Keys, erzwingt Eindeutigkeit und lehnt Nulls ab, während das Double all das stillschweigend unterlässt und jeder Test der Datei dann für einen Zustand besteht, den die Datenbank nie halten würde. Wo die Abweichung nicht geschlossen werden kann, **MUSS [MUST]** sie im Double selbst benannt werden [R1], und der resultierende Fehlermodus ist als `T9` gemäß [R12] zitierbar.
 
 ### Was geprüft wird
 
@@ -109,6 +110,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [ ] Die Schulen Classicist und Mockist sind mit dem Implementierungs-Kopplungs-/Refactor-Fragilitäts-Trade-off interaktionsbasierter Tests beschrieben
 - [ ] Die FIRST-Eigenschaften sind mit der Bedeutung jeder Eigenschaft aufgezählt, Ottinger & Schuchert zugeschrieben
 - [ ] Test-Doubles verwenden das Meszaros-Vokabular des Fundaments, Zustandsverifikation wird bevorzugt, und Over-Mocking ist verboten mit der Mock-nur-was-du-besitzt-Regel
+- [ ] Die Treue-Regel des Fundaments wird per Verweis auf die Doubles dieser Stufe angewandt statt wiederholt, die Persistenzgrenze ist als wiederkehrender Übeltäter benannt, und die Ausnahme bleibt die zweiteilige des Fundaments
 - [ ] Assertions sind auf beobachtbares Verhalten über die öffentliche Schnittstelle gefordert, mit AAA, ein-Verhalten-pro-Test, absichtsoffenbarenden Namen und Unabhängigkeit
 - [ ] Parametrisiertes Testen ist empfohlen und Property-based Testing erlaubt mit einer Determinismus-(fester-Seed)-Bedingung
 - [ ] Determinismus und Geschwindigkeit sind gefordert, die flaky/langsam-Unit-Ursachen benannt, und die Stufe in Pre-Commit + PR-Gate platziert
@@ -131,6 +133,7 @@ Leser: Spec-Autor:innen, die die Geschwister-Stufen-Specs schreiben; Skill- und 
 - [R9] T. Ottinger & B. Schuchert, *FIRST* (Fast, Isolated, Repeatable, Self-validating, Timely) — <http://agileinaflash.blogspot.com/2009/02/first.html>
 - [R10] T. Ottinger, *Brett Schuchert and I came up with FIRST* (maßgebliche Zuschreibung) — <https://medium.com/@tottinge_79838/brett-schuchert-and-i-came-up-with-first-so-this-is-an-authoritative-statement-ec6006f6a59e>
 - [R11] *fast-check* — Property-based Testing (Invarianten über generierte Eingaben, Shrinking) — <https://fast-check.dev/>
+- [R12] `spec/project/test-falsifiability/` — die tier-übergreifende Taxonomie von Tests, die nicht fehlschlagen können; `T9` ist der Fehlermodus, den ein Double erzeugt, das permissiver ist als sein Kollaborateur, und die Spec trägt die Review-Frage, die ihn detektiert
 
 ## Offene Fragen
 

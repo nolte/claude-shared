@@ -39,6 +39,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - Driving a **whole-system journey**: that's the E2E tier [R8]
 - Standing up **both** the consumer and the provider together: the contract tier exists precisely to avoid that
 - Mandating a specific contract framework, broker, or schema format: the reference profile is illustrative
+- Expressing the portfolio-wide double-fidelity rule of `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" for this tier's consumer-side mock: the requirement below that a consumer's doubles return the **same results the real provider would** is strictly stronger than "no more permissive than the collaborator it replaces," and provider verification enforces it mechanically rather than by review, so restating the weaker floor here would blur which guarantee applies. This holds for the **replay-verified** flavours (consumer-driven and provider-driven) only; the bi-directional flavour, where no provider code executes, is governed by its own requirement below rather than by this exclusion. [R18]
 
 ## Requirements
 
@@ -62,6 +63,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
   - **Provider-driven**: the provider publishes the contract and consumers receive generated stubs from it; the producer owns the contract definition. Useful when one provider serves many consumers and owns the API shape [R13].
   - **Bi-directional**: the provider publishes a static API specification (for example OpenAPI) and the consumer's mock/contract is verified against that spec, with **no execution of provider code**: a more decoupled approach when running provider verification is impractical [R15].
 - **SHOULD** default to the **consumer-driven** flavour and record a justification when choosing provider-driven or bi-directional, because consumer-driven catches the consumer-relevant breaking changes most directly.
+- **MUST** grade the **consumer-side mock** against the portfolio fidelity rule of `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" whenever the project runs the **bi-directional** flavour described above: that flavour verifies the consumer's mock against a published specification with no execution of provider code [R15], so the mock earns none of the mechanical guarantee that replay-based verification supplies, and review is the only check left. Under the replay-verified flavours this grading is unnecessary and the Non-Goals entry above says why.
 
 ### What a contract test verifies, and what it must not
 
@@ -106,6 +108,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 
 - [ ] The spec defines a contract test as verifying a boundary agreement without both sides live, framed as closing the stub-drift gap, cited to Fowler/Pact
 - [ ] The consumer-driven model is established as the reference (consumer defines expectations, provider verified independently by replay), with the provider-state mechanism
+- [ ] The bi-directional flavour carries its own requirement to grade the consumer-side mock against the portfolio fidelity rule, stated in Requirements rather than only as a Non-Goals aside, because no provider code executes there
 - [ ] The three flavours (consumer-driven, provider-driven, bi-directional) are described with their fit, and consumer-driven is the recorded default
 - [ ] Assertions are scoped to agreement compatibility (shape, fields, types, status codes, protocol), forbidden from business logic, and the over-specification anti-pattern is named
 - [ ] Determinism via neither-side-live (consumer mock + provider replay) is required
@@ -133,6 +136,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [R15] PactFlow, *Bi-Directional Contract Testing* (provider publishes OpenAPI; no provider code execution): <https://pactflow.io/bi-directional-contract-testing/>
 - [R16] Pact, *Pact Broker* (contract exchange, versioning, compatibility matrix): <https://docs.pact.io/pact_broker>
 - [R17] Pact, *can-i-deploy* (pre-deployment compatibility gate): <https://docs.pact.io/pact_broker/can_i_deploy>
+- [R18] `spec/project/test-falsifiability/`: the cross-tier taxonomy of tests that can't fail; `T9` is the failure mode an over-permissive consumer-side mock produces under the bi-directional flavour, where no provider code executes; under the replay-verified flavours this tier's exact-match requirement already exceeds the fidelity rule that `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" owns
 
 ## Open Questions
 

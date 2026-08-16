@@ -43,11 +43,12 @@ Readers: spec authors completing the cycle family; skill and agent authors build
 - **MUST** define this phase as **determining and applying the minimal correct code change that makes a confirmed-red case pass**, as phase 4 of the cycle [R1].
 - **MUST** act only on a **confirmed real failure** (or a missing case) routed from `spec/project/test-cycle-result-analysis/` [R2]; it doesn't re-classify.
 - **MUST** route a **wrong test** to phase 1's reviewable case-change path [R4], never resolve it by hacking the code to match a wrong assertion.
+- **MUST** route a case whose **doubles are more permissive than what they replace** along a dimension the case relies on to that same phase-1 path *when that permissiveness is what makes the production attribution doubtful*: the arrangement then decides the outcome, the causal trace points at production code that may well be correct, and editing it would bend correct code to fit an arrangement production can't reach. Where the defect is instead confirmed **independently** of the arrangement, this phase produces its code change as normal and the permissive double is routed **alongside** it, never instead of it—a confirmed defect stays in the cycle. `T9` in `spec/project/test-falsifiability/` [R12] owns the category, its detection question, and its two-part exemption; this spec owns only the routing.
 
 ### Inputs and outputs (the phase-4 contract)
 
 - **MUST** consume, as input, a phase-3 classification of `real-failure` (or `missing-case`) for a TC-ID, with its supporting evidence (trace, diff, reproducer).
-- **MUST** produce, as output, a **code change** that re-enters execution (phase 2); the change is the production edit, never an edit that weakens the case.
+- **MUST** produce, as output, a **code change** that re-enters execution (phase 2); the change is the production edit, never an edit that weakens the case. The two routing rules above are the only exceptions: a wrong test and an arrangement that makes the attribution doubtful both leave this phase as a reviewable case change instead, and a phase that routed a case back **MUST** say which rule it applied.
 
 ### The green step: Simplest change first
 
@@ -93,6 +94,7 @@ Readers: spec authors completing the cycle family; skill and agent authors build
 ## Acceptance Criteria
 
 - [ ] The phase is defined as determining/applying the minimal correct code change for a confirmed-red case (phase 4), acting only on a phase-3 real-failure/missing-case, and routing a wrong test to phase 1
+- [ ] A case whose arrangement makes the production attribution doubtful is routed to the same phase-1 path, an independently confirmed defect stays in the cycle with the permissive double routed alongside it, and the output contract names both routing rules as its only exceptions
 - [ ] Inputs (phase-3 `real-failure`/`missing-case` + evidence) and output (a code change that re-enters execution, never a test-weakening edit) match the foundation's phase-4 contract
 - [ ] The green step requires the simplest change first (in response to a failing test), with Beck's Obvious Implementation / Fake It / Triangulation strategies recognised
 - [ ] Fixing the root cause not the symptom is required, and over-fitting is forbidden with Triangulation and property-based cases as the anti-over-fitting discipline

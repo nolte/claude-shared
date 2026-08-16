@@ -31,7 +31,7 @@ Governed by `spec/project/test-cycle-foundation/` (the loop, the inter-phase con
 ## Why this is a skill, not an agent
 
 - **Orchestrator that chains other capabilities:** the cycle dispatches `test-case-extractor` / per-tier generators, `quality-gate`, `test-result-analyzer`, and `test-code-adapter` in a loop; the skill-orchestrates pattern (per `skill-vs-agent`) defaults the orchestrator to skill form.
-- **Mid-flow gating lives in the conversation:** the no-cheating decision, the "is this exit-ready or loop again" decision, and the wrong-test-routes-to-a-reviewable-case-change decision are per-turn user-visible gates an agent's fire-and-forget shape would lose.
+- **Mid-flow gating lives in the conversation:** the no-cheating decision, the "is this exit-ready or loop again" decision, and the two decisions that route a case back to a reviewable case change instead of a production edit — the test was wrong, and a relied-on permissive arrangement is what makes the production attribution doubtful — are per-turn user-visible gates an agent's fire-and-forget shape would lose.
 - **Output flows back into the main conversation:** each phase's result (the classification, the applied fix, the re-run verdict) surfaces so the operator can steer.
 - Counter-dimension considered: each individual phase is a self-contained agent (the generators, analyzer, adapter); the loop that sequences them is the orchestration, which stays a skill.
 
@@ -57,6 +57,8 @@ Dispatch `test-result-analyzer` to classify each non-pass into a routed category
 
 For each confirmed real failure, dispatch `test-code-adapter` to apply the minimal correct change that satisfies the asserted behaviour, fixing the root cause. The analyzer's classification and root-cause are a hypothesis, so this brief **MUST** authorise refutation per `spec/claude/dispatch-brief/`: the adapter may refute the diagnosed root cause with contradicting evidence and change nothing (or apply a narrower fix) rather than force the fix to fit, and that refutation is a valid result that re-enters step 3 (re-analyse) instead of a failed dispatch. The fix **re-enters step 2** (re-execute); never assume green without re-running.
 
+**A returned case is a sanctioned exit, not a failed dispatch.** `spec/project/test-cycle-code-adaptation/` states the routing rules under which phase 4 hands a case back as a reviewable case change instead of editing production — the wrong test, and a relied-on permissive double that's what makes the production attribution doubtful — and requires the adapter to name which rule it applied. Read them there; route either return to step 1 and on to the tier capability that owns the case or the arrangement, and carry the named rule into the turn's state. This differs from the refutation above: nothing was refuted, the phase completed by its own contract. Where the defect is instead confirmed independently of the arrangement, the adapter still produces the code change and routes the permissive double alongside it, so that case stays in the cycle and re-enters step 2 as usual.
+
 **Optional review leg:** when the adaptation touched test code itself, dispatch the touched tier's `*-test-reviewer` agent (unit / component / integration / contract / e2e) as the review-and-repair counterpart before re-executing — mirroring the reviewer wiring the E2E tier already carries. When the adaptation added or changed assertions, readers, or helpers, this leg is not optional: the tier reviewer's falsifiability dimension (per `spec/project/test-falsifiability/`) must grade the touched tests before re-execution.
 
 ### Loop or exit
@@ -65,7 +67,7 @@ Repeat from step 2 until the **exit conditions** hold: every required case is gr
 
 ## Hard rules
 
-1. **Never** make a case pass by weakening, deleting, skipping, or hard-coding to its expected value; resolve a red case by a code adaptation (step 4) or, when the test was wrong, a reviewable case change (step 1) — never a silent escape. This is the cycle's central integrity rule.
+1. **Never** make a case pass by weakening, deleting, skipping, or hard-coding to its expected value; resolve a red case by a code adaptation (step 4) or by a reviewable case change (step 1) on either sanctioned return route — the test was wrong, or a relied-on permissive arrangement is what makes the production attribution doubtful — never a silent escape. This is the cycle's central integrity rule.
 2. **Always** write a failing regression case before fixing a confirmed defect, recording its red run as negative-verification evidence per `spec/project/test-falsifiability/`, so the cycle accumulates coverage of real failures over time.
 3. **Never** retry a flaky test until it goes green; the only permitted re-running is step 2's bounded flip-signal re-run (fixed N, detection-only, vector-emitting); route a confirmed flake to quarantine-and-track, not to the gating signal.
 4. **Never** declare a turn complete without re-execution: a code change re-enters step 2 and all cases must be green with no regression before exit.
