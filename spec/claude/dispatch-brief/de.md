@@ -50,7 +50,7 @@ Diese Regel lebte zuerst in `spec/project/e2e-failure-diagnosis/` §E, ist aber 
 
 ## References
 
-- [R1] Die E2E-scoped Anwendung, aus der diese Regel gehoben wurde und die nun hierher referenziert: `spec/project/e2e-failure-diagnosis/` §E und §Binding into agents and skills.
+- [R1] Die E2E-scoped Anwendung, aus der diese Regel gehoben wurde und die nun hierher referenziert: `spec/project/e2e-failure-diagnosis/` §E und §Einbindung in Agents und Skills.
 - [R2] Der volumenstärkste hypothesentragende Dispatcher, dessen Pre-Analysis-Briefing pro Arbeitspaket eine Dekompositions-Hypothese trägt: `spec/project/issue-orchestration/`.
 - [R3] Konfliktbehandlung, wenn unabhängige Kanäle widersprechen (komponieren, nicht abstimmen; stop-and-surface): `spec/claude/research-triangulate/`.
 - [R4] Das Skill-orchestriert-Agent-führt-aus-Muster, dessen Dispatch-Schritt diese Regel regelt: `spec/claude/skill-vs-agent/`.

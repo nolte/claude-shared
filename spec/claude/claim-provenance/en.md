@@ -71,7 +71,7 @@ This spec is bounded against its neighbours and **MUST NOT** restate their rules
 
 - `spec/claude/dispatch-brief/` owns the **delegated** half: a brief that carries a hypothesis must authorise the receiving specialist to refute it, and defines what a valid refutation contains. That rule needs two parties. This spec owns the case where analyst and author are the same agent, so no brief exists and nothing authorises anything. A dispatch brief is also an artefact under §A, so both apply to it; they don't overlap, because one governs what the brief owes the specialist and the other what the brief owes its reader.
 - `spec/claude/research-triangulate/` owns **repo-external** assertions and their source-count discipline, and states that repo-internal assertions aren't triangulated because they're verified by reading the working copy directly. This spec is what makes that verification an obligation rather than an assumption. The two are complementary and share no requirement.
-- `spec/project/e2e-failure-diagnosis/` §A owns the **mechanism bar** for an end-to-end failure cluster: the three admissible proof forms, and the sufficient-and-necessary standard that gates a remediation. It's reached from a red run and it gates a change. This spec gates the *assertion* and is reached from any artefact. §A applies this spec; neither restates the other, and §A's proof forms stay there.
+- `spec/project/e2e-failure-diagnosis/` §A owns the **mechanism bar** for an end-to-end failure cluster: the three admissible proof forms, and the sufficient-and-necessary standard that gates a remediation. It's reached from a red run and it gates a change. This spec gates the *assertion* and is reached from any artefact. §A applies this spec; neither restates the other, and §A's proof forms stay there. The two bars are deliberately different heights and a reader shouldn't conflate them: **established** here means one refuting observation was attempted and didn't refute, which is enough to write a cause down honestly, while §A's mechanism bar demands sufficiency and necessity before that cause may drive a change.
 - `spec/project/test-falsifiability/` owns the property for **test code**—a test that can't fail. This spec governs prose claims. The two are siblings in reasoning, not in scope: both name an assertion that's trusted because it was never asked to fail.
 - `spec/claude/review-plan/` owns the **finding format**, including the requirement that a finding cite the spec requirement it rests on. That citation names the rule that was broken; this spec governs the evidence for the cause the finding names. A finding satisfies one and fails the other whenever it cites a rule but guesses at a cause.
 
@@ -91,6 +91,9 @@ This spec is bounded against its neighbours and **MUST NOT** restate their rules
 - [ ] The rule is checked on substance rather than a verbatim token, and a canonical form is offered without being mandated
 - [ ] A reviewer's check is stated as a single question answerable from the artefact alone
 - [ ] §Delimitation names all five neighbours and restates none of their rules
+- [ ] Repeating an already-established claim can be discharged by citing the artefact that established it, and marking a claim unestablished is stated not to be the weaker contribution
+- [ ] A spec that needs this rule is required to cross-reference it rather than restate it, and the neighbours wired at authoring time do exactly that
+- [ ] Both binding obligations are testable against an artefact: an agent carries the distinction inside the finding, and a skill applies §B to the durable artefact it writes
 - [ ] The binding rule forbids `description:` growth, so adopting this spec can't regress the routing budget
 
 ## References
