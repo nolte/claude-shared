@@ -96,6 +96,7 @@ Spiegelt `skill-management` §„Progressive Disclosure und Datei-Referenzen"; d
 
 - **MUSS [MUST]** verifizieren, dass Datei-Referenzen innerhalb von `SKILL.md` maximal eine Ebene tief sind (keine `SKILL.md` → `A.md` → `B.md`-Ketten); eine Kette ist ein `Warning` (Claude tendiert zu Partial-Reads bei verschachtelten Referenzen)
 - **MUSS [MUST]** verifizieren, dass jede Hilfsdatei länger als 100 Zeilen mit einem Inhaltsverzeichnis beginnt; das Fehlen ist ein `Warning`
+- **MUSS [MUST]** verifizieren, dass keine Hilfsdatei eine Regel wiederholt, die `SKILL.md` anders formuliert, und dass jede im Body genannte Anzahl über die Hilfsdateien zu dem passt, was dort liegt; eine widersprechende Hilfsdatei ist ein `Warning` und ein `Critical`, wo genau diese Datei diejenige ist, die ein Lauf für die von der Regel bestimmte Entscheidung lädt
 - **MUSS [MUST]** verifizieren, dass jede Skript-Referenz die Ausführungs-Absicht explizit macht („Run X to …" vs. „See X for the algorithm of …"); mehrdeutige Formulierung ist ein `Warning`
 - **MUSS [MUST]** verifizieren, dass jeder Pfad in `SKILL.md` und Hilfsdateien Forward-Slashes verwendet; Backslash-Pfade sind unter Unix ein `Critical`
 - **MUSS [MUST]** verifizieren, dass jeder MCP-Tool-Verweis die voll qualifizierte `ServerName:tool_name`-Form nutzt; nackte Tool-Namen sind ein `Warning`
