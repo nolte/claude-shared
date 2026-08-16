@@ -31,7 +31,7 @@ Skills und Agents im `nolte-shared`-Plugin produzieren regelmäßig Aussagen üb
   - Konfigurations-Schemata, erlaubte Werte oder Deprecation-Status externer Tools (zum Beispiel Probot-Apps, Renovate-Presets, Vale-Styles)
   - URLs, Endpoints, Quotas, Pricing-Tiers oder Service-Level-Garantien
   - Produkt-, Paket- oder Markennamen, die nicht im aktuellen Repo verankert sind
-- **DARF NICHT [MUST NOT]** repo-interne Aussagen separat triangulieren; die werden durch direktes Lesen der Working Copy verifiziert, und Triangulation gegen externe Quellen wäre langsamer und unzuverlässiger als ein `Grep`
+- **DARF NICHT [MUST NOT]** repo-interne Aussagen separat triangulieren; die werden durch direktes Lesen der Working Copy verifiziert, und Triangulation gegen externe Quellen wäre langsamer und unzuverlässiger als ein `Grep`. Die Pflicht, dieses Lesen tatsächlich durchzuführen und die Behauptung zu markieren, wenn es unterblieb, besitzt `spec/claude/claim-provenance/`; der Ausschluss hier ist kein Freibrief, eine repo-interne Behauptung ungeprüft aufzustellen
 - **DARF NICHT [MUST NOT]** subjektive Entscheidungen triangulieren; sie sind keine faktischen Aussagen und haben keine unabhängigen Quellen zum Vergleich
 - **DARF [MAY]** auch repo-interne Aussagen triangulieren, wenn der tragende Spec dies explizit fordert (zum Beispiel weil die Aussage einen irreversiblen Schreibvorgang außerhalb des Repos gattet)
 

@@ -31,7 +31,7 @@ Skills and agents in the `nolte-shared` plugin regularly produce assertions abou
   - configuration schemas, allowed values, or deprecation status of external tools (for example Probot apps, Renovate presets, Vale styles)
   - URLs, endpoints, quotas, pricing tiers, or service-level guarantees
   - product, package, or brand names not anchored in the current repo
-- **MUST NOT** triangulate repo-internal assertions separately; those are verified by reading the working copy directly, and triangulation against external sources would be slower and less reliable than a `Grep`
+- **MUST NOT** triangulate repo-internal assertions separately; those are verified by reading the working copy directly, and triangulation against external sources would be slower and less reliable than a `Grep`. The obligation to actually perform that reading, and to mark the claim when it wasn't performed, is owned by `spec/claude/claim-provenance/`; this spec's exclusion here isn't a licence to assert a repo-internal claim unchecked
 - **MUST NOT** triangulate subjective decisions; they aren't factual claims and have no independent sources to compare against
 - **MAY** triangulate even repo-internal assertions when the spec carrying the assertion explicitly requires it (for example because the assertion gates an irreversible write outside the repo)
 

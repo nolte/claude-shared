@@ -10,6 +10,7 @@ Canonical language: `en` · Translations: `de`
 | ansible | role-development | Ansible Role Development Best Practices | Best Practices für die Ansible-Rollen-Entwicklung | draft | local | unversioned |
 | claude | agent-management | Claude Agent Authoring | Claude-Agent-Autorenschaft | draft | local | 2026-04-24 |
 | claude | agent-review | Claude Agent Review | Claude-Agent-Review | draft | local | 2026-04-24 |
+| claude | claim-provenance | Claim Provenance | Herkunft von Behauptungen | draft | portfolio | 2026-08-16 |
 | claude | dispatch-brief | Dispatch Brief | Dispatch-Briefing | draft | portfolio | unversioned |
 | claude | mcp-tool-preference | Optional GitHub MCP Tool Preference | Optionale Bevorzugung des GitHub-MCP-Servers | draft | local | unversioned |
 | claude | permission-allowlist | Claude Code Permission Allowlist Maintenance | Pflege der Claude-Code-Permission-Allowlist | draft | portfolio | 2026-04-23 |

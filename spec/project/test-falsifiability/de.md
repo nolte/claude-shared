@@ -128,7 +128,7 @@ Leser: Autor:innen und Reviewer von Testcode auf jedem Tier; die Tier-Generator-
 - `spec/project/source-code-review/` (D1, D6) und `spec/frontend/source-code-review/` (F2, F11): die Review-Dimensionen, an die die Kriterien dieser Spec andocken
 - `spec/frontend/testability-identifiers/`: die Web-Instanziierung des Adressierbarkeits-Prinzips
 - `spec/project/quality-gate/`: der MAY-extend-Mechanismus und die Run-identically-Begründung, die die Gate-Entscheidung spiegelt
-- `spec/project/error-tracking/`: das Laufzeit-Gegenstück zu T1 und die in §Context zitierte False-Confidence-Rahmung
+- `spec/project/error-tracking/`: das Laufzeit-Gegenstück zu T1 und die in §Kontext zitierte False-Confidence-Rahmung
 - Quell-Erfahrung: `nolte/kamerplanter#778` dokumentiert alle elf Instanzen mit Mechanismus und Datei-Referenzen; der Commit-Trail auf Branch `fix/e2e-full-run-stabilization` trägt jeden Fix mit seiner negativen Verifikation; `nolte/claude-shared#517` ist der Authoring-Arbeitsauftrag
 - T9-Quell-Erfahrung: `nolte/kamerplanter#1155` (die Seeding-Änderung, deren Fake-Repository permissiver war als das echte) und PR `nolte/kamerplanter#1206` (der Fix, der den Tenant über den Slug auflöst statt über einen Key, den er nie bekommt); `nolte/claude-shared#542` ist der Arbeitsauftrag, der die Kategorie unter der obigen Erweiterungsregel ergänzt hat, und hält die Abgrenzung gegen die vier Beinahe-Treffer fest
 

@@ -161,20 +161,24 @@ Confirm the classification with the operator before decomposition for at least t
 
 ### 3. decompose (the pre-analysis core)
 
-Decompose the issue into atomic, independently testable work packages — preferably by dispatching the `implementation-plan-author` agent (when the `nolte-engineering` plugin is installed) with the issue and elicited requirements, keeping the inline decomposition below as the fallback. Each package
-records a stable id, a problem statement, its acceptance criteria, the files or
-artifacts it touches, the specialist that should implement it (resolved per
-operation 5's runtime lookup), and its dependencies on other packages as a directed
-acyclic ordering. A package that cannot be stated with a testable acceptance
-criterion is a routing signal to the formal pipeline (operation 4), not a package to
-dispatch.
+Decompose the issue into atomic, independently testable work packages — preferably
+by dispatching `implementation-plan-author` (when `nolte-engineering` is installed)
+with the issue and elicited requirements; the inline decomposition below is the
+fallback. Each package records a stable id, a problem statement, its acceptance
+criteria, the files it touches, the implementing specialist (resolved per operation
+5's runtime lookup), and its dependencies as a directed acyclic ordering. A package
+without a testable acceptance criterion is a routing signal to the formal pipeline
+(operation 4), not a package to dispatch.
 
 Instantiate `templates/analysis.template.md` and write the pre-analysis artifact to
 `.audits/issue-orchestrate/<issue-number>/analysis.md`, carrying the issue metadata,
 the classification and rationale, the in/out-of-scope boundary, the work-package
-table, the dependency ordering, the risks, and any open questions. Present the
-artifact for operator approval before any dispatch. **Hard:** dispatch on an
-unapproved decomposition is forbidden.
+table, the dependency ordering, risks, and open questions. Per
+`spec/claude/claim-provenance/`, every load-bearing claim in it is **established**,
+naming the command output or `file:line` behind it, or **unestablished**, naming the
+observation that would settle it and stating it wasn't made; make a cheap
+observation instead of taking the unestablished exit. Present the artifact for
+operator approval; **dispatch on an unapproved decomposition is forbidden.**
 
 ### 4. route
 

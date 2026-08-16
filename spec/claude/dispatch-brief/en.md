@@ -22,6 +22,7 @@ That rule first lived in `spec/project/e2e-failure-diagnosis/` §E, but it isn't
 - Governing the rest of a dispatch brief's content (problem statement, scope, acceptance criteria); this spec governs only the refutation clause and its deliverable shape.
 - The skill-versus-agent format choice for a capability; that stays with `spec/claude/skill-vs-agent/`.
 - The routing and dispatch mechanics of the Claude Code runtime itself; this spec governs how a brief is composed, not how the runtime delivers it.
+- The **self-directed** case, where the analyst and the actor are the same agent, so no brief is written and nothing authorises anything. The rule here needs two parties; the provenance a claim owes its reader regardless of delegation is owned by `spec/claude/claim-provenance/`. A brief is itself an artefact under that spec, so both apply to one: this spec governs what the brief owes the specialist, the other what it owes its reader.
 
 ## Requirements
 
@@ -55,6 +56,7 @@ That rule first lived in `spec/project/e2e-failure-diagnosis/` §E, but it isn't
 - [R4] The skill-orchestrates-agent-executes pattern whose dispatch step this rule governs: `spec/claude/skill-vs-agent/`.
 - [R5] The agent-authoring conventions this brief convention sits alongside: `spec/claude/agent-management/`.
 - [R6] The source work order and campaign evidence: issue #528, derived from `nolte/kamerplanter#768` (filed here as #514).
+- [R7] The self-directed counterpart, which this spec's §Non-Goals hands off to: `spec/claude/claim-provenance/`.
 
 ## Open Questions
 
