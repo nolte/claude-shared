@@ -94,7 +94,6 @@ Readers: agent/skill authors maintaining this toolchain; QA engineers and develo
 - A missing precondition (absent seed data) **MUST** cause an explicit, reasoned skip—never a silent early return that lets a test pass without exercising anything
 - Test-created data **MUST** use a unique suffix to stay isolated and reproducible across runs; session-scoped seed data **MUST** be idempotent (check-before-create)
 - Preconditions **MUST** be established through the fastest reliable path (a seeded API call or fixture), and **not** by a click-through of the UI. A test drives through the browser only the interaction it asserts; provisioning precondition state (accounts, entities, navigation) via the UI multiplies runtime and couples unrelated flows into every test
-- A seeding fixture or setup helper **MUST NOT** arrange state the real system would reject along a dimension the test relies on—an identifier the API generates rather than accepts, a value its validation refuses, a duplicate a uniqueness constraint forbids—unless that state can't be built through the system's own validated path **and** the divergence is named in the fixture, both conditions rather than the declaration alone. This tier stands up the real system, so its exposure isn't a collaborator double but the **arrangement** preceding the run: a fixture that seeds a state production can never hold makes every assertion downstream certify an impossible world, while the assertions themselves stay correct and specific. This is the E2E instance of the double-fidelity rule `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" owns, and the failure mode is citable as `T9` per [R10]
 
 ### Spec traceability
 
@@ -128,7 +127,6 @@ This profile is the binding realisation of the core for Python projects and the 
 - [ ] `e2e-result-reviewer` runs read-only and produces prioritised findings keyed to requirement/TC IDs
 - [ ] Each of the three agents and the skill cites this spec, and each `description` delimits it from the others and from `test-case-derivation` and `quality-gate`
 - [ ] `test-case-derivation/{en,de}.md` no longer contradicts this spec: its boundary against E2E automation is drawn by responsibility, not by "shared vs. project-local"
-- [ ] A seeding fixture is forbidden from arranging state the real system would reject along a relied-on dimension, the exemption requires both that it can't be built through the validated path and that the divergence is named, and the rule is bound to the portfolio double-fidelity rule as this tier's instance
 
 ## References
 

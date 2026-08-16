@@ -39,7 +39,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - Driving a **whole-system journey**: that's the E2E tier [R8]
 - Standing up **both** the consumer and the provider together: the contract tier exists precisely to avoid that
 - Mandating a specific contract framework, broker, or schema format: the reference profile is illustrative
-- Expressing the portfolio-wide double-fidelity rule of `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" for this tier's consumer-side mock: the requirement below that a consumer's doubles return the **same results the real provider would** is strictly stronger than "no more permissive than the collaborator it replaces," and provider verification enforces it mechanically rather than by review, so restating the weaker floor here would blur which guarantee applies. This holds for the **replay-verified** flavours (consumer-driven and provider-driven) only; the bi-directional flavour, where no provider code executes, is governed by its own requirement below rather than by this exclusion. The tier's residual exposure under the replay-verified flavours is provider-state setup, which the requirements below cover directly [R18]
+- Expressing the portfolio-wide double-fidelity rule of `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" for this tier's consumer-side mock: the requirement below that a consumer's doubles return the **same results the real provider would** is strictly stronger than "no more permissive than the collaborator it replaces," and provider verification enforces it mechanically rather than by review, so restating the weaker floor here would blur which guarantee applies. This holds for the **replay-verified** flavours (consumer-driven and provider-driven) only; the bi-directional flavour, where no provider code executes, is governed by its own requirement below rather than by this exclusion. [R18]
 
 ## Requirements
 
@@ -54,7 +54,6 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 
 - **MUST** adopt **consumer-driven contracts** as the reference model: the **consumer** defines its expectations of the provider as the contract (typically the subset of the provider's surface the consumer actually uses), and the **provider** is **verified independently** against that contract [R6], [R10], [R11].
 - **MUST** verify the provider by **replaying the contract's recorded interactions against the real provider implementation** (provider verification), with a provider-state / setup mechanism to put the provider into the precondition each interaction needs [R12].
-- **MUST NOT** let a **provider state** arrange data the real provider would itself reject: an identifier the provider generates rather than accepts, a value its validation refuses, a duplicate its uniqueness constraint forbids. Provider verification checks the interactions the contract records and never the setup that precedes them, so an over-permissive provider state yields a verified contract for a precondition production can't reach—the tier's own instance of the fidelity rule that `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" owns, and the failure mode is citable as `T9` per [R18]. Where the state can't be built through the provider's own validated path, that divergence **MUST** be named in the state's setup code.
 - **MUST** treat the consumer-side run as executing against a **mock that emits the contract**, so the consumer test is fast, deterministic, and needs no live provider [R12], [R14].
 
 ### The three flavours
@@ -109,7 +108,6 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 
 - [ ] The spec defines a contract test as verifying a boundary agreement without both sides live, framed as closing the stub-drift gap, cited to Fowler/Pact
 - [ ] The consumer-driven model is established as the reference (consumer defines expectations, provider verified independently by replay), with the provider-state mechanism
-- [ ] A provider state is forbidden from arranging data the real provider would reject, the spec states why provider verification can't catch it, and the tier's delimitation against the portfolio-wide double-fidelity rule is explicit and scoped to the replay-verified flavours
 - [ ] The bi-directional flavour carries its own requirement to grade the consumer-side mock against the portfolio fidelity rule, stated in Requirements rather than only as a Non-Goals aside, because no provider code executes there
 - [ ] The three flavours (consumer-driven, provider-driven, bi-directional) are described with their fit, and consumer-driven is the recorded default
 - [ ] Assertions are scoped to agreement compatibility (shape, fields, types, status codes, protocol), forbidden from business logic, and the over-specification anti-pattern is named
@@ -138,7 +136,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [R15] PactFlow, *Bi-Directional Contract Testing* (provider publishes OpenAPI; no provider code execution): <https://pactflow.io/bi-directional-contract-testing/>
 - [R16] Pact, *Pact Broker* (contract exchange, versioning, compatibility matrix): <https://docs.pact.io/pact_broker>
 - [R17] Pact, *can-i-deploy* (pre-deployment compatibility gate): <https://docs.pact.io/pact_broker/can_i_deploy>
-- [R18] `spec/project/test-falsifiability/`: the cross-tier taxonomy of tests that can't fail; `T9` is the failure mode an over-permissive provider state produces, and `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" owns the fidelity rule this tier's exact-match requirement already exceeds for the consumer-side mock
+- [R18] `spec/project/test-falsifiability/`: the cross-tier taxonomy of tests that can't fail; `T9` is the failure mode an over-permissive consumer-side mock produces under the bi-directional flavour, where no provider code executes; under the replay-verified flavours this tier's exact-match requirement already exceeds the fidelity rule that `spec/project/test-pyramid-foundation/` §"Test-double taxonomy" owns
 
 ## Open Questions
 
