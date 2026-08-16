@@ -22,6 +22,7 @@ Diese Regel lebte zuerst in `spec/project/e2e-failure-diagnosis/` §E, ist aber 
 - Den übrigen Inhalt eines Dispatch-Briefings regeln (Problemstellung, Scope, Akzeptanzkriterien); diese Spec regelt nur die Refutations-Klausel und ihre Deliverable-Form.
 - Die Skill-versus-Agent-Format-Wahl für eine Capability; die bleibt bei `spec/claude/skill-vs-agent/`.
 - Die eigene Routing- und Dispatch-Mechanik der Claude-Code-Runtime; diese Spec regelt, wie ein Briefing komponiert wird, nicht wie die Runtime es zustellt.
+- Den **selbstgerichteten** Fall, in dem Analyst und Handelnder derselbe Agent sind, sodass kein Briefing geschrieben wird und nichts irgendetwas autorisiert. Die Regel hier braucht zwei Parteien; die Herkunft, die eine Behauptung ihrem Leser unabhängig von Delegation schuldet, besitzt `spec/claude/claim-provenance/`. Ein Briefing ist selbst ein Artefakt nach jener Spec, also gelten beide für eines: diese Spec regelt, was das Briefing dem Spezialisten schuldet, die andere, was es seinem Leser schuldet.
 
 ## Requirements
 
@@ -55,6 +56,7 @@ Diese Regel lebte zuerst in `spec/project/e2e-failure-diagnosis/` §E, ist aber 
 - [R4] Das Skill-orchestriert-Agent-führt-aus-Muster, dessen Dispatch-Schritt diese Regel regelt: `spec/claude/skill-vs-agent/`.
 - [R5] Die Agent-Authoring-Konventionen, neben denen diese Briefing-Konvention steht: `spec/claude/agent-management/`.
 - [R6] Der Quell-Arbeitsauftrag und die Kampagnen-Evidenz: Issue #528, abgeleitet aus `nolte/kamerplanter#768` (hier als #514 eingereicht).
+- [R7] Das selbstgerichtete Gegenstück, an das §Non-Goals dieser Spec übergibt: `spec/claude/claim-provenance/`.
 
 ## Open Questions
 
