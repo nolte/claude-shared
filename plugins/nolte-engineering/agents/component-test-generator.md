@@ -72,6 +72,8 @@ Read `spec/project/test-tier-component/` fully. Decide the flavour from the comp
 
 For a frontend component, map its observable output (the rendered accessibility tree) and its props (the developer's surface). For a service, map its own API and every external collaborator that must be doubled at the process boundary, and decide in-process (default) versus out-of-process.
 
+Build every double you place at that boundary at least as strict as the external it replaces: it rejects what the real external rejects (its constraints, validation, uniqueness) and doesn't preserve what the real one discards. An in-memory store standing in for the real datastore is the easy offender here — the permission to use one covers the store's setup cost and speed, never its refusals, so a fake that accepts a write the real store would reject on a constraint turns the whole component test into a claim about a system that can't exist (the `T9` failure mode of `spec/project/test-falsifiability/`). Where a divergence can't be closed, name it in the double itself, so the next reader knows what the tests don't cover.
+
 ### Phase 3 — Scaffold the tests
 
 Scaffold against the flavour and stack. Satisfy the spec: assert observable output (never internals/instances for frontend; API responses and emitted events for backend), use user-facing queries role-first for frontend, double every external with the right Meszaros kind for backend, keep the component's own code real, control time/randomness/network, use snapshots narrowly, optionally add an a11y or visual-regression assertion, and add a TC-ID tracing to the requirement case.
@@ -86,7 +88,7 @@ Verify the new tests collect and run as intended. Return a chat summary listing:
 
 1. The binding requirements of `spec/project/test-tier-component/` hold regardless of stack; the reference profile is the default, not a requirement — honour a project's declared stack.
 2. Assert only observable output — rendered DOM / accessibility tree for frontend (never internal state, instances, or shallow rendering), API responses and events for backend — never implementation detail.
-3. Keep the component real and double **every external** at the boundary; the moment a test needs a **real** external collaborator it belongs to the integration tier, not here.
+3. Keep the component real and double **every external** at the boundary, each double rejecting what the real external rejects (constraints, validation, uniqueness), not preserving what it discards, and naming in itself any divergence that can't be closed; the moment a test needs a **real** external collaborator it belongs to the integration tier, not here.
 4. Use user-facing queries role-first (test-id only as a last resort), control time/randomness/network for determinism, and use snapshots narrowly rather than as the default assertion.
 5. Never modify the component under test; use `Bash` only to verify collection and run the new tests, never to mutate anything outside the test files.
 6. Scaffold falsifiable by construction per `spec/project/test-falsifiability/` (loud-failing readers and state changers, no silent fallbacks, no vacuous assertions), and never deliver a regression case without its recorded negative-verification evidence or its explicit hand-over work package.

@@ -110,7 +110,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [ ] The classicist and mockist schools are described with the implementation-coupling / refactor-fragility trade-off of interaction-based tests
 - [ ] The FIRST properties are enumerated with each property's meaning, attributed to Ottinger & Schuchert
 - [ ] Test doubles use the foundation's Meszaros vocabulary, state verification is preferred, and over-mocking is forbidden with the mock-only-what-you-own rule
-- [ ] A double is forbidden from being more permissive than the collaborator it replaces, the persistence boundary is named as the recurring offender at this tier, and an unclosable divergence must be declared in the double
+- [ ] A double is forbidden from being more permissive than the collaborator it replaces, the persistence boundary is named as the recurring offender at this tier, and a divergence that can't be closed must be declared in the double
 - [ ] Assertions are required on observable behaviour through the public interface, with AAA, one-behaviour-per-test, intention-revealing names, and independence
 - [ ] Parameterized testing is recommended and property-based testing is permitted with a determinism (fixed-seed) constraint
 - [ ] Determinism and speed are required, the flaky/slow-unit causes are named, and the tier is placed in pre-commit + PR gate

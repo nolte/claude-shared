@@ -120,7 +120,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [ ] Service component tests are required to drive the service through its own interface with externals doubled, with internal interfaces used only to configure/probe, cited to Fowler/Clemson
 - [ ] The in-process vs out-of-process realism/speed trade-off is an explicit recorded choice
 - [ ] Isolation keeps the component real and doubles externals using the Meszaros vocabulary; a real datastore is declared as crossing into integration
-- [ ] A boundary double is forbidden from being more permissive than the external it replaces, the in-memory-store permission is bounded to cost rather than refusals, and an unclosable divergence must be declared in the double
+- [ ] A boundary double is forbidden from being more permissive than the external it replaces, the in-memory-store permission is bounded to cost rather than refusals, and a divergence that can't be closed must be declared in the double
 - [ ] Determinism (controlled time/randomness/network) and placement (PR-gating CI, fast ones pre-commit) are required
 - [ ] Visual-regression and accessibility are placed as cross-cutting at component scope, bounded against `webview-ui-optimization`
 - [ ] Traceability to TC-ID is required, and an optional clearly-demoted reference profile (frontend + backend) is provided without mandating a framework
