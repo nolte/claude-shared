@@ -86,7 +86,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 
 - **MUST** keep **real**: the component's own code and its internal wiring; **MUST** double: every external collaborator (other services, third-party APIs, network, and—where realism doesn't require it—the datastore), using the foundation's **Meszaros vocabulary** (dummy, fake, stub, spy, mock) and stating which kind each double is [R1], [R11].
 - **MAY** use a **fake** (for example an in-memory datastore) in place of a real store when the store isn't the realism the test needs; a test that requires the **real** store crosses into the Integration tier [R3], [R11].
-- **MUST NOT** let a boundary double be **more permissive than the external it replaces** along any dimension the test relies on, per the foundation's fidelity rule [R1]. The `MAY` above is what makes an unfaithful double easy to reach for at this tier: it permits an in-memory store precisely where the store isn't the realism the test needs, and a fake that accepts a write the real store would reject on a constraint turns the whole component test into a claim about a system that can't exist. That permission covers the store's setup cost and speed, never its **refusals**. Where the divergence can't be closed, it **MUST** be named in the double itself [R1]; the resulting failure mode is citable as `T9` per [R16].
+- **MUST** apply the foundation's fidelity rule [R1] to the doubles standing at this tier's component boundary, exemption included, rather than restating it. The `MAY` above is what makes an unfaithful double easy to reach for at this tier: it permits an in-memory store precisely where the store isn't the realism the test needs, and a fake that accepts a write the real store would reject on a constraint turns the whole component test into a claim about a system that can't exist. That permission covers the store's setup cost and speed, never its **refusals**. Where the divergence can't be closed, it **MUST** be named in the double itself [R1]; the resulting failure mode is citable as `T9` per [R16].
 
 ### Determinism, speed, and placement
 
@@ -120,7 +120,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - [ ] Service component tests are required to drive the service through its own interface with externals doubled, with internal interfaces used only to configure/probe, cited to Fowler/Clemson
 - [ ] The in-process vs out-of-process realism/speed trade-off is an explicit recorded choice
 - [ ] Isolation keeps the component real and doubles externals using the Meszaros vocabulary; a real datastore is declared as crossing into integration
-- [ ] A boundary double is forbidden from being more permissive than the external it replaces, the in-memory-store permission is bounded to cost rather than refusals, and a divergence that can't be closed must be declared in the double
+- [ ] The foundation's fidelity rule is applied to the boundary doubles by reference rather than restated, and the in-memory-store permission is bounded to cost and speed rather than to refusals
 - [ ] Determinism (controlled time/randomness/network) and placement (PR-gating CI, fast ones pre-commit) are required
 - [ ] Visual-regression and accessibility are placed as cross-cutting at component scope, bounded against `webview-ui-optimization`
 - [ ] Traceability to TC-ID is required, and an optional clearly-demoted reference profile (frontend + backend) is provided without mandating a framework

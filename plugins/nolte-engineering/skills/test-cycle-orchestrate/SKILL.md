@@ -67,7 +67,7 @@ Repeat from step 2 until the **exit conditions** hold: every required case is gr
 
 ## Hard rules
 
-1. **Never** make a case pass by weakening, deleting, skipping, or hard-coding to its expected value; resolve a red case by a code adaptation (step 4) or, when the test was wrong, a reviewable case change (step 1) — never a silent escape. This is the cycle's central integrity rule.
+1. **Never** make a case pass by weakening, deleting, skipping, or hard-coding to its expected value; resolve a red case by a code adaptation (step 4) or by a reviewable case change (step 1) on either sanctioned return route — the test was wrong, or a relied-on permissive arrangement is what makes the production attribution doubtful — never a silent escape. This is the cycle's central integrity rule.
 2. **Always** write a failing regression case before fixing a confirmed defect, recording its red run as negative-verification evidence per `spec/project/test-falsifiability/`, so the cycle accumulates coverage of real failures over time.
 3. **Never** retry a flaky test until it goes green; the only permitted re-running is step 2's bounded flip-signal re-run (fixed N, detection-only, vector-emitting); route a confirmed flake to quarantine-and-track, not to the gating signal.
 4. **Never** declare a turn complete without re-execution: a code change re-enters step 2 and all cases must be green with no regression before exit.
