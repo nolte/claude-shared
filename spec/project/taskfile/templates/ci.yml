@@ -19,17 +19,20 @@ on:
 permissions:
   contents: read
 
-# Required by spec/project/github-actions-best-practices/ §F: this workflow
-# triggers on both `pull_request` and `push`, so two runs on one branch are the
-# normal case rather than the exception. The group is derived from the workflow
-# identity plus the branch-or-pull-request identity, so runs on different
-# branches never cancel each other. `cancel-in-progress` belongs here because
-# this is a pre-merge feedback lane, where superseding a stale run is the
-# desired outcome; a delivery or release workflow must not carry it, since
-# cancelling a run in flight can leave a partially published artifact.
+# Required by spec/project/github-actions-best-practices/ §F. The case this
+# handles is successive commits on one pull request: each push starts a run
+# while the previous one is still going, and only the newest verdict is worth
+# waiting for. The group is derived from the workflow identity plus the
+# pull-request number, falling back to the ref for the `push` leg, so the two
+# lanes never share a group and never cancel each other.
+#
+# `cancel-in-progress` is scoped to the pull-request lane on purpose. §F's
+# recommendation is for pre-merge feedback, and cancelling a `push` run on
+# `develop` would leave that commit carrying a `cancelled` required check —
+# which the release gate reads as not-SUCCESS and refuses to publish on.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   # Task's remote-Taskfile resolution is an experimental feature and is off by
@@ -42,6 +45,15 @@ env:
 # problem occurred without anyone opening the log, and each job becomes its own
 # named required status check. The jobs are independent and run in parallel;
 # each pays its own `task install`, which is the price of that isolation.
+#
+# Stages of §A's canonical sequence deliberately absent here, recorded rather
+# than silently dropped because §A requires an omission to be visible in the
+# pipeline definition:
+#   - package: this example ships no build artifact from the pre-merge lane.
+#   - supply-chain scan: dependency, license and code-security review run on
+#     their own cadence rather than once per pull request.
+# A repository that does ship an artifact, or does gate on a scan, adds the
+# stage here rather than leaving it implied.
 jobs:
   lint:
     runs-on: ubuntu-latest

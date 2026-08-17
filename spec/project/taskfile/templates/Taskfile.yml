@@ -50,15 +50,22 @@ includes:
   # Pass it absolute. The module's tasks declare `dir: '{{.USER_WORKING_DIR}}'`,
   # so they run in the directory `task` was invoked from, and they activate the
   # interpreter through a bare `source {{.PYTHON_VENV_DIR_DOCS}}/bin/activate`.
-  # A bare `.venv` therefore resolves against the caller's directory: `task docs`
-  # works from the repository root and fails from any subdirectory, with a shell
-  # error that names nothing about the cause. `{{.ROOT_DIR}}` is the root
-  # Taskfile's own directory and makes the value invocation-independent. The
-  # module's usage comment shows the relative form; prefer this one.
+  # A relative `.venv` therefore resolves against the caller's directory and the
+  # activation fails from anywhere but the root, with a shell error that names
+  # nothing about the cause. `{{.TASKFILE_DIR}}` is this Taskfile's own
+  # directory, so the value is independent both of where `task` was invoked and
+  # of whether a parent Taskfile includes this one — `{{.ROOT_DIR}}` would point
+  # at the parent in that nested case. The module's usage comment shows the
+  # relative form; prefer this one.
+  #
+  # This fixes the interpreter path only. `mkdocs build` still runs in the
+  # caller's directory, so `task docs` from a subdirectory now gets past
+  # activation and fails on the missing `mkdocs.yml` instead. Run it from the
+  # repository root, or pin the build's own directory, if that matters to you.
   mkdocs:
     taskfile: "{{.TASK_COLLECTION_BASE}}/taskfile-include-mkdocs.yaml"
     vars:
-      PYTHON_VENV_DIR_DOCS: "{{.ROOT_DIR}}/{{.VENV}}"
+      PYTHON_VENV_DIR_DOCS: "{{.TASKFILE_DIR}}/{{.VENV}}"
 
 # Deliberately absent: taskfile-include-pre-commit.yaml. Sharing a topic with a
 # module doesn't make its targets usable. That module activates the
