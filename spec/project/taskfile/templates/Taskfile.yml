@@ -20,6 +20,17 @@ vars:
   # trust prompt that would otherwise surface a changed upstream file, so a
   # moving ref lets an unreviewed upstream push execute in this repository's
   # next build.
+  #
+  # The ref MUST resolve to a module that exposes `mkdocs:build` AND declares
+  # its variables in the overridable `'{{.NAME | default "…"}}'` form. The
+  # `docs` target below delegates to the former, and the `includes:` override
+  # below depends on the latter. A ref that predates either one leaves this
+  # Taskfile broken in a way the trust prompt won't warn about: `task docs`
+  # aborts with `Task "mkdocs:build" does not exist`, or the override is
+  # silently ignored and the build runs against the machine-global
+  # interpreter. Read the module at the ref before pinning it, and where no
+  # release yet carries both, either pin the commit SHA that does or keep
+  # `docs` a local target until one is cut.
   TASK_COLLECTION_BASE: https://raw.githubusercontent.com/nolte/taskfiles/<ref>/src
 
   # The project-local virtual environment required by
@@ -32,9 +43,9 @@ includes:
   # for project dependencies. Passing PYTHON_VENV_DIR_DOCS redirects it at this
   # repository's project-local environment.
   #
-  # Override the leaf variable. Passing PYTHON_VENVS_BASEDIR alone does not
-  # reach PYTHON_VENV_DIR_DOCS: a variable derived inside the module's own
-  # `vars:` block reads the module's base value, not the consumer's.
+  # Override the leaf variable — the one whose value reaches the command. An
+  # override of a variable the module only derives another one from never
+  # arrives.
   mkdocs:
     taskfile: "{{.TASK_COLLECTION_BASE}}/taskfile-include-mkdocs.yaml"
     vars:
@@ -55,19 +66,28 @@ tasks:
     silent: true
 
   setup:
-    desc: One-time onboarding — install the git hooks into the local environment
+    desc: |
+      One-time onboarding — bootstrap the project-local environment, then
+      install the git hooks into it. The `install` dependency is what makes
+      this runnable in a fresh clone: the hook binary lives in the virtual
+      environment, so installing hooks before creating it fails.
+    deps:
+      - install
     cmds:
       - "{{.VENV}}/bin/pre-commit install"
 
   install:
     desc: |
       Create the project-local virtual environment and install dependencies.
-      The runtime and documentation install sets are installed independently,
-      with no -r chaining between the requirements files.
+      Each install set is installed independently, with no -r chaining between
+      the requirements files. The dev set carries the toolchain the `lint` and
+      `test` targets below invoke, so omitting it leaves those targets — and
+      the CI job that calls them — failing on a missing binary.
     cmds:
       - python3 -m venv {{.VENV}}
       - "{{.VENV}}/bin/python -m pip install --upgrade pip"
       - "{{.VENV}}/bin/python -m pip install -r requirements.txt"
+      - "{{.VENV}}/bin/python -m pip install -r requirements-dev.txt"
       - "{{.VENV}}/bin/python -m pip install -r docs/requirements.txt"
 
   lint:
