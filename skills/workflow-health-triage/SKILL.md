@@ -69,10 +69,10 @@ Apply the spec's six classes in order; stop at the first match:
 
 | Signal in the failed-step output | Classification |
 |---|---|
+| Push rejected with `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission` | `infra` — **evaluate this row first.** Both the `defect` row (the rejection names a workflow file the diff modified) and the `secret drift` row (it is a 403) would otherwise capture it, and neither is right: it is a deterministic platform constraint, not a repository defect and not an expired credential |
 | Failing step references a file the head commit's diff modified | `defect` |
 | Re-run of the same `headSha` would produce green (no infra signal, no code change in the failing step's surface) | `flake` |
 | HTTP 5xx, rate-limit, registry-unreachable, GitHub status incident | `infra` |
-| Push rejected with `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission` | `infra` — match this row **before** the `secret drift` row below, which the same 403-flavoured rejection would otherwise catch. It's a deterministic platform constraint, not an expired credential |
 | `uses:` pin in the workflow points to a `nolte/gh-plumbing` (or other reusable) tag, and a newer tag exists with the relevant fix | `stale pin` |
 | Token, deploy key, or OIDC trust expired or rotated; failure references `401`, `403`, `expired`, `unauthorized` | `secret drift` |
 | None of the above | `other` (with a short note explaining why) |
