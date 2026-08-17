@@ -125,6 +125,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 - Never write a workflow file without showing the diff and getting approval first.
 - Never reference a third-party action by tag or branch. A full-length commit digest with a version comment is the only accepted form.
+- Never add a trigger to a job that calls a reusable workflow without checking what that reusable's inputs default to. A default derived from a specific event payload (`${{ github.event.release.tag_name }}` and the like) is empty under every other trigger, so the added path is inert — the defect `github-actions-best-practices` §E now forbids. Forward the input explicitly: a declared input plus `${{ inputs.<name> || github.event.<field> }}` where the trigger accepts inputs, a context the event does populate where it doesn't. When the reusable lives in another repository and you can't read it, say so and ask rather than assuming the default is safe.
 - Never grant a blanket write-all permission set to get past an unclear failure; identify the scope the failing step needs.
 - Never patch a consumer repository with a local copy of logic that belongs in `nolte/gh-plumbing`. When the correct remedy is upstream, emit a named upstream work package and leave the consumer alone. A consumer-local workaround is permitted only as a recorded interim measure naming the upstream change it waits for.
 - Never weaken a test or a gate to make a pipeline green. The no-cheating invariant of `spec/project/test-falsifiability/` applies in full under pipeline pressure.

@@ -33,7 +33,7 @@ GitHub-Actions-Workflows kontrollieren jeden Weg durch das Portfolio: Pull-Reque
 - **MUSS [MUST]** beim ersten Fehlschlag eines zuvor grünen Workflows die Ursache vor jedem Re-Run in genau eine der folgenden Kategorien einordnen:
   1. **defect** — eine Code- oder Konfigurationsänderung in diesem Repository hat den Workflow beschädigt
   2. **flake** — derselbe Commit-SHA wird bei einem Re-Run ohne Code-Änderung und ohne Infrastruktursignal grün
-  3. **infra / transient** — Upstream-Provider-Ausfall, Registry-5xx, Rate-Limit, Netzwerk; nur in einem engen Zeitfenster reproduzierbar
+  3. **infra / platform** — Upstream-Provider-Ausfall, Registry-5xx, Rate-Limit, Netzwerk, nur in einem engen Zeitfenster reproduzierbar; **oder** ein deterministisches Plattformverhalten, das dieses Repository nicht wegkonfigurieren kann, gemäß §Bekannte Plattform-Einschränkungen. Die beiden unterscheiden sich in der Dauer, nicht in der Klasse: Keines ist ein Defekt dieses Repositories, und keines wird durch einen Re-Run behoben
   4. **stale pin** — ein in diesem Repository gepinnter `nolte/gh-plumbing`- (oder anderer Reusable-Workflow-) Tag erfüllt den erwarteten Kontrakt nicht mehr; ein neuerer Tag mit dem Fix existiert
   5. **secret / credential drift** — ein Token, Deploy-Key oder OIDC-Trust ist abgelaufen oder wurde rotiert
   6. **other** — explizit gekennzeichnet, mit einer kurzen Notiz im Fix-PR, die erklärt, warum es nicht in die fünf Kategorien passt
@@ -60,7 +60,7 @@ Dieselbe Familie trägt eine zweite, eigenständige Einschränkung — auf der P
 - **MUSS [MUST]** einen Push, der mit `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission` zurückgewiesen wird, als bekannte Plattform-Einschränkung (Triage-Tag `infra`) einordnen statt als Branch-Protection- oder Credential-Defekt.
 - **DARF NICHT [MUST NOT]** aus einem ungeschützten Ziel-Branch schließen, dass ein solcher Push gelingt. Die Zurückweisung ist unabhängig vom Branch-Schutz: Sie wurde beim Push auf einen Branch beobachtet, der überhaupt keine Schutzregel trägt.
 - **MUSS [MUST]** damit rechnen, dass diese Einschränkung nicht bei jedem Lauf auftritt, sondern nur dann, wenn der Diff zwischen Ziel-Branch und Quell-Referenz zufällig `.github/workflows/` berührt. Ein Presentation-Branch-Refresh, der bei aktuellem Branch noch gelang, scheitert, sobald der Branch weit genug zurückgefallen ist, um eine Workflow-Änderung zu tragen — eine grüne Historie belegt also nicht, dass der nächste Refresh durchgeht.
-- **MUSS [MUST]** die Behebung über dasselbe App-Installation-Token führen, das die Cascade-Einschränkung oben aufhebt und im `nolte/gh-plumbing`-Reusable geminted wird, und **MUSS [MUST]** `workflows: write` in den Permission-Satz dieser Installation aufnehmen; `contents: write` allein erfüllt diese Prüfung nicht.
+- **MUSS [MUST]** die Behebung über dasselbe Credential führen, das die Cascade-Einschränkung oben aufhebt und im `nolte/gh-plumbing`-Reusable geminted wird, und **MUSS [MUST]** dessen Scope auf Workflow-Dateien ausweiten: Eine App-Installation braucht zusätzlich zu `contents: write` auch `workflows: write`, ein PAT auf dem alternativen Zweig dieses Paars den klassischen `workflow`-Scope. `contents: write` allein erfüllt keines von beidem.
 
 ### Behebungspfad
 - **MUSS [MUST]** jede Workflow-Behebung über den regulären, in der `pull-request-workflow`-Spezifikation deklarierten Pull-Request-Pfad führen — Branch-Präfix `fix/`, Conventional-Commits-Titel (Type `fix`), alle erforderlichen Checks vor dem Merge grün
@@ -117,7 +117,7 @@ Required-Status-Checks auf `develop` können auch Anbieter umfassen, die keine G
 
 - **MUSS [MUST]** die Triage-Klassifikationen und den Behebungspfad dieser Spezifikation auf Drittanbieter-Required-Status-Checks genauso anwenden wie auf GitHub-Actions-Workflows — das PR-Gate, die No-Override-Regel, die Pinned-Tag-Disziplin (soweit analog anwendbar) und die Delegation an spezialisierte Agents gelten identisch
 - **MUSS [MUST]** jede Entfernung oder Deaktivierung eines Drittanbieter-Required-Checks als PR gegen `.github/settings.yml` deklarieren, nicht als Änderung ausschließlich über die UI des Anbieters; UI-only-Änderungen sind Drift und müssen in die Datei zurückgeführt werden
-- **MUSS [MUST]** einen Ausfall eines Drittanbieter-Check-Providers für die Triage als `infra / transient` einstufen, nicht als `defect`
+- **MUSS [MUST]** einen Ausfall eines Drittanbieter-Check-Providers für die Triage als `infra / platform` einstufen, nicht als `defect`
 - **KANN [MAY]** den „Check deaktivieren"-Mechanismus des Anbieters anstelle einer `on:`-Trigger-Einschränkung (die außerhalb von Actions nicht anwendbar ist) nutzen, wenn ein **nicht erforderlicher** Drittanbieter-Check pausiert werden soll; ein Tracking-Issue mit verantwortlicher Person und Wiederaktivierungs-Kriterium ist weiterhin erforderlich, genau wie bei Actions-Workflows
 
 ### Auditing
@@ -139,6 +139,9 @@ Required-Status-Checks auf `develop` können auch Anbieter umfassen, die keine G
 - [ ] Jeder vorübergehend deaktivierte Workflow (eingeschränkte `on:`-Trigger, auskommentierter Job, in der Actions-UI deaktiviert) ist von einem Tracking-Issue begleitet, das eine verantwortliche Person und ein Wiederaktivierungs-Kriterium benennt; kein Required-Workflow befindet sich in diesem Zustand
 - [ ] Ein Register bekannter Flakes existiert im Repository — entweder `FLAKES.md` im Repository-Root oder ein Set von Issues mit Label `flake`, aber nicht beides — sobald mindestens ein Flake beobachtet und anerkannt wurde; das Register ist aus `CLAUDE.md` oder `README.md` heraus verlinkt und damit auffindbar
 - [ ] Keine gatende oder berichtende Lane endet in der Mehrheit ihrer letzten 20 Läufe mit `cancelled`; wo doch, platziert ein offener Fix-PR oder ein Tracking-Issue ihren Trigger passend zur Ereignis-Kadenz um, statt `cancel-in-progress: false` zu setzen
+- [ ] Zu jedem `workflow_dispatch`-Fallback, den das Repository als Behelfslösung für eine bekannte Plattform-Einschränkung dokumentiert, ist mindestens ein Lauf über genau diesen Auslöser nachweisbar; ein deklarierter, aber nie ausgelöster Fallback zählt nicht als verfügbar
+- [ ] Kein Push, der mit `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission` zurückgewiesen wurde, ist im Abschnitt **Risk / rollout notes** seines Fix-PRs als `secret drift` oder `defect` klassifiziert; die festgehaltene Klasse ist `infra / platform`
+- [ ] Wo ein Repository eine Presentation-Branch aus einer Release-Referenz auffrischt, trägt das Credential, das den Push ausführt, Scope für Workflow-Dateien (App-Installation `workflows: write` oder PAT mit klassischem `workflow`-Scope) — oder das Repository hält fest, warum sein Refresh-Diff `.github/workflows/` niemals berühren kann
 - [ ] `.github/settings.yml` deklariert weiterhin die vollständige Required-Checks-Menge für `develop` als Code; kein Required-Check wurde stillschweigend entfernt, um einen dauerhaften Fehler zu umgehen
 
 ## Offene Fragen

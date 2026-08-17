@@ -33,7 +33,7 @@ GitHub Actions workflows gate every path through the portfolio: pull-request mer
 - **MUST**, on the first failure of a previously-green workflow, classify the root cause before any re-run into exactly one of:
   1. **defect**: code or configuration change in this repository broke the workflow
   2. **flake**: same commit SHA passes on re-run with no code change and no infrastructure signal
-  3. **infra / transient**: upstream provider outage, registry 5xx, rate-limit, network; reproducible only in a narrow time window
+  3. **infra / platform**: upstream provider outage, registry 5xx, rate-limit, network—reproducible only in a narrow time window; **or** a deterministic platform behaviour this repository can't configure away, per §Known platform constraints. The two differ in duration, not in class: neither is a defect in this repository, and neither is fixed by a re-run
   4. **stale pin**: a `nolte/gh-plumbing` (or other reusable-workflow) tag pinned in this repository no longer matches the expected contract; newer tag exists with the fix
   5. **secret / credential drift**: a token, deploy key, or OIDC trust expired or was rotated
   6. **other**: explicitly labelled, with a short note in the fix PR explaining why it doesn't fit the five categories
@@ -60,7 +60,7 @@ The same family carries a second, independent constraint, on the push side rathe
 - **MUST** classify as a known platform constraint (triage tag `infra`) a push rejected with `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission`, rather than as a branch-protection or credential defect.
 - **MUST NOT** infer from an unprotected target branch that such a push will succeed. The rejection is independent of branch protection: it was observed pushing to a branch carrying no protection rule at all.
 - **MUST** expect this constraint to surface intermittently rather than on every run, because it triggers only when the diff between the target branch and the source ref happens to touch `.github/workflows/`. A presentation-branch refresh that succeeded while the branch was current fails once the branch has fallen far enough behind to carry a workflow change—so a green history is no evidence the next refresh will pass.
-- **MUST** remediate it through the same App-installation token that lifts the cascade constraint above, minted in the `nolte/gh-plumbing` reusable, and **MUST** include `workflows: write` in that installation's permission set; `contents: write` alone doesn't satisfy this check.
+- **MUST** remediate it through the same credential that lifts the cascade constraint above, minted in the `nolte/gh-plumbing` reusable, and **MUST** widen that credential's scope to cover workflow files: an App installation needs `workflows: write` in addition to `contents: write`, and a PAT on the alternative branch of that pair needs the classic `workflow` scope. `contents: write` alone satisfies neither.
 
 ### Remediation path
 - **MUST** route every workflow fix through the standard pull-request path declared by the `pull-request-workflow` spec: `fix/` branch prefix, Conventional-Commits title (type `fix`), all required checks green before merge
@@ -117,7 +117,7 @@ Required status checks on `develop` may include providers that aren't GitHub Act
 
 - **MUST** apply the triage classifications and the remediation path of this spec to third-party required status checks the same way as to GitHub Actions workflows—the PR gate, the no-override rule, the pinned-tag discipline (where analogous), and the specialized-agent dispatch all apply identically
 - **MUST** declare any removal or deactivation of a third-party required check as a PR against `.github/settings.yml`, not as a change made through the provider's own UI alone; UI-only changes are drift and have to be reconciled back into the file
-- **MUST** treat an outage of a third-party check provider as `infra / transient` for triage purposes, not as `defect`
+- **MUST** treat an outage of a third-party check provider as `infra / platform` for triage purposes, not as `defect`
 - **MAY** use the provider's own "disable check" mechanism in place of an `on:`-trigger restriction (which doesn't apply outside Actions) when pausing a **non-required** third-party check; a tracking Issue with an owner and re-enablement criterion is still required, exactly as for Actions workflows
 
 ### Auditing
@@ -139,6 +139,9 @@ Required status checks on `develop` may include providers that aren't GitHub Act
 - [ ] Any temporarily-disabled workflow (restricted `on:` triggers, commented job, disabled in the Actions UI) is accompanied by a tracking Issue naming an owner and a re-enablement criterion; no required workflow appears in this state
 - [ ] A known-flake register exists in the repository: `FLAKES.md` at the repository root or a `flake`-labelled Issue set, but not both—whenever at least one flake has been observed and acknowledged; the register is referenced from `CLAUDE.md` or `README.md` so it's discoverable
 - [ ] No gating or reporting lane ends `cancelled` in the majority of its last 20 runs; where one does, an open fix PR or tracking Issue re-places its trigger to match the event cadence rather than setting `cancel-in-progress: false`
+- [ ] Every `workflow_dispatch` fallback the repository documents as a workaround for a known platform constraint has at least one run recorded against that trigger; a declared-but-never-dispatched fallback isn't counted as available
+- [ ] No push rejected with `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission` is classified as `secret drift` or `defect` in its fix PR's **Risk / rollout notes**; the recorded class is `infra / platform`
+- [ ] Where a repository refreshes a presentation branch from a release ref, the credential that performs the push carries workflow-file scope (App installation `workflows: write`, or a PAT with the classic `workflow` scope), or the repository records why its refresh diff can never touch `.github/workflows/`
 - [ ] `.github/settings.yml` still declares the full required-checks set for `develop` as code; no required check has been silently dropped to work around a persistent failure
 
 ## Open Questions

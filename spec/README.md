@@ -92,7 +92,7 @@ Canonical language: `en` · Translations: `de`
 | project | readability-lix | Readability (LIX) | Lesbarkeit (LIX) | draft | local | unversioned |
 | project | readme-structure | Repository README Structure | Repository-README-Struktur | draft | local | 2026-04-23 |
 | project | release-artifact | Project Release Artifact | Projekt-Release-Artefakt | draft | portfolio | unversioned |
-| project | release-automation | Release Automation | Release-Automation | draft | portfolio | 2026-04-24 |
+| project | release-automation | Release Automation | Release-Automation | draft | portfolio | 2026-08-17 |
 | project | release-notes-audience-analysis | Release Notes Audience Analysis | Zielgruppenanalyse für Release Notes | accepted | local | 2026-04-24 |
 | project | release-regression-scope | Release Regression Scope | Release-Regressionsumfang | draft | local | unversioned |
 | project | release-skill-layer | Local Release Skill Layer | Lokale Release-Skill-Schicht | draft | portfolio | unversioned |
