@@ -46,10 +46,19 @@ includes:
   # Override the leaf variable — the one whose value reaches the command. An
   # override of a variable the module only derives another one from never
   # arrives.
+  #
+  # Pass it absolute. The module's tasks declare `dir: '{{.USER_WORKING_DIR}}'`,
+  # so they run in the directory `task` was invoked from, and they activate the
+  # interpreter through a bare `source {{.PYTHON_VENV_DIR_DOCS}}/bin/activate`.
+  # A bare `.venv` therefore resolves against the caller's directory: `task docs`
+  # works from the repository root and fails from any subdirectory, with a shell
+  # error that names nothing about the cause. `{{.ROOT_DIR}}` is the root
+  # Taskfile's own directory and makes the value invocation-independent. The
+  # module's usage comment shows the relative form; prefer this one.
   mkdocs:
     taskfile: "{{.TASK_COLLECTION_BASE}}/taskfile-include-mkdocs.yaml"
     vars:
-      PYTHON_VENV_DIR_DOCS: "{{.VENV}}"
+      PYTHON_VENV_DIR_DOCS: "{{.ROOT_DIR}}/{{.VENV}}"
 
 # Deliberately absent: taskfile-include-pre-commit.yaml. Sharing a topic with a
 # module doesn't make its targets usable. That module activates the
