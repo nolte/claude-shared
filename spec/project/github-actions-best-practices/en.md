@@ -80,6 +80,8 @@ This spec also writes against a structure the portfolio already has. `spec/proje
 - **SHOULD** choose a **reusable workflow** when the shared unit is one or more whole jobs with their own runner and permissions, and a **composite action** when the shared unit is a sequence of steps that runs inside a caller's job
 - **SHOULD** keep the call chain shallow. The platform enforces a documented maximum nesting depth [R6]; a chain that approaches it becomes hard to reason about long before the platform rejects it
 - **MUST** account for the fact that a reusable workflow doesn't inherit the caller's environment, and **MUST** pass what it needs through declared inputs rather than assuming ambient values are present [R6]
+- **MUST**, when the calling workflow declares more than one trigger for a job that calls a reusable workflow, declare a corresponding trigger input for every called input whose default is derived from a specific event payload, and forward it with an explicit fallback expression. An event-payload-derived default such as `${{ github.event.release.tag_name }}` is valid only for the event that carries that payload; on every other trigger it resolves to the empty string, so a trigger added without the matching input is inert on exactly the path it was added for
+- **SHOULD**, in a reusable workflow that declares an event-payload-derived default, reject the empty value and fail with a message naming the caller-side fix, rather than proceeding. An unguarded empty value doesn't stay visible as "missing": it degrades into a silently wrong default, and the run reports success while acting on something other than the intended ref
 
 ### F. Concurrency
 
@@ -134,6 +136,7 @@ This section binds the merge-queue mechanics to the platform. Whether a reposito
 - [ ] Each pinned digest was verified to belong to the action's own repository rather than to a fork, and that verification is recorded in the pinning change
 - [ ] Every workflow declares an explicit `permissions` block, with write scopes granted at job level rather than workflow level
 - [ ] In a repository that runs a merge queue, every workflow backing a required status check triggers on `merge_group` as well, no required check depends on pull-request-only context, and third-party CI runs on the `gh-readonly-queue/` prefix
+- [ ] In a workflow that declares more than one trigger and calls a reusable workflow, every called input whose default is event-payload-derived is backed by a matching trigger input and forwarded with a fallback expression
 - [ ] No workflow grants a blanket write-all permission set
 - [ ] No `run` script interpolates an untrusted context value directly; such values reach the script through an intermediate environment variable
 - [ ] No workflow checks out untrusted pull-request code in a context that holds secrets or elevated permissions

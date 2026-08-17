@@ -67,7 +67,7 @@ Canonical language: `en` · Translations: `de`
 | project | error-tracking | Error Tracking | Error Tracking | draft | portfolio | 2026-08-01 |
 | project | feature | Project Feature | Projekt-Feature | draft | local | unversioned |
 | project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | local | unversioned |
-| project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-08-08 |
+| project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-08-17 |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | local | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | local | unversioned |
 | project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | unversioned |
@@ -118,6 +118,6 @@ Canonical language: `en` · Translations: `de`
 | project | test-tier-integration | Test Tier: Integration | Test-Stufe: Integration | draft | local | unversioned |
 | project | test-tier-static-analysis | Test Tier: Static Analysis | Test-Stufe: Static Analysis | draft | local | unversioned |
 | project | test-tier-unit | Test Tier: Unit | Test-Stufe: Unit | draft | local | unversioned |
-| project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | portfolio | 2026-08-08 |
+| project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | portfolio | 2026-08-17 |
 | project | yaml-json-schema | YAML JSON Schema | YAML JSON Schema | draft | local | unversioned |
 | tools | image-generation | Image Generation (Multi-Provider) | Bildgenerierung (Multi-Provider) | draft | local | 2026-05-30 |

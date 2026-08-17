@@ -90,7 +90,7 @@ Reading the three governing specs plus the neighbours named above is part of pas
 - **Permissions** (§B): a missing `permissions` block; write scopes at workflow level that belong at job level; a blanket write-all set; `id-token` granted workflow-wide.
 - **Untrusted input** (§C): an untrusted context value interpolated directly into a `run` script; a workflow that checks out untrusted pull-request code while holding secrets or elevated permissions.
 - **Credentials** (§D): a long-lived provider credential stored as a secret where short-lived token exchange is available; a structured blob stored as one secret; secrets forwarded to a called workflow more broadly than it needs.
-- **Reuse** (§E): a consumer-local patch of shared logic with no recorded interim-measure note; a reusable workflow assuming ambient environment values instead of declared inputs.
+- **Reuse** (§E): a consumer-local patch of shared logic with no recorded interim-measure note; a reusable workflow assuming ambient environment values instead of declared inputs; a caller declaring more than one trigger that forwards no matching input for a called input whose default is event-payload-derived, so the added trigger is inert on the path it was added for.
 - **Concurrency** (§F): a missing concurrency group where concurrent runs would interfere; a group expression that lets different branches cancel each other; cancel-on-new-run on a delivery or release workflow.
 - **Runners** (§I): a public repository targeting a self-hosted runner; a job depending on state left by a previous run.
 

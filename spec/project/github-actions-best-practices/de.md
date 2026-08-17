@@ -80,6 +80,8 @@ Diese Spec schreibt außerdem gegen eine Struktur, die das Portfolio bereits hat
 - **SOLLTE** einen **Reusable Workflow** wählen, wenn die geteilte Einheit ein oder mehrere ganze Jobs mit eigenem Runner und eigenen Rechten sind, und eine **Composite Action**, wenn die geteilte Einheit eine Schrittfolge ist, die innerhalb des Jobs eines Aufrufers läuft
 - **SOLLTE** die Aufrufkette flach halten. Die Plattform erzwingt eine dokumentierte maximale Verschachtelungstiefe [R6]; eine Kette, die sich ihr nähert, wird lange vor der Zurückweisung durch die Plattform schwer nachvollziehbar
 - **MUSS** berücksichtigen, dass ein Reusable Workflow die Umgebung des Aufrufers nicht erbt, und **MUSS** ihm über deklarierte Eingaben übergeben, was er braucht, statt vorhandene Umgebungswerte anzunehmen [R6]
+- **MUSS**, wenn der aufrufende Workflow mehr als einen Auslöser für einen Job deklariert, der einen Reusable Workflow aufruft, für jede aufgerufene Eingabe, deren Vorgabewert aus einem bestimmten Ereignis-Payload abgeleitet ist, eine entsprechende Auslöser-Eingabe deklarieren und sie über einen ausdrücklichen Rückfallausdruck durchreichen. Ein aus einem Payload abgeleiteter Vorgabewert wie `${{ github.event.release.tag_name }}` gilt nur für das Ereignis, das dieses Payload trägt; bei jedem anderen Auslöser löst er zur leeren Zeichenkette auf, sodass ein ohne die passende Eingabe hinzugefügter Auslöser genau auf dem Pfad wirkungslos ist, für den er hinzugefügt wurde
+- **SOLLTE** in einem Reusable Workflow, der einen aus einem Ereignis-Payload abgeleiteten Vorgabewert deklariert, den leeren Wert zurückweisen und mit einer Meldung abbrechen, die die aufruferseitige Korrektur benennt, statt fortzufahren. Ein ungeprüfter leerer Wert bleibt nicht als „fehlt" sichtbar: Er entartet zu einem still falschen Vorgabewert, und der Lauf meldet Erfolg, während er auf etwas anderes als die beabsichtigte Referenz wirkt
 
 ### F. Nebenläufigkeit
 
@@ -134,6 +136,7 @@ Dieser Abschnitt bindet die Merge-Queue-Mechanik an die Plattform. Ob ein Reposi
 - [ ] Für jeden gepinnten Digest wurde geprüft, dass er zum Repository der Action selbst gehört und nicht zu einem Fork, und diese Prüfung ist in der Pinning-Änderung festgehalten
 - [ ] Jeder Workflow deklariert einen ausdrücklichen `permissions`-Block, wobei Schreibrechte auf Job- statt auf Workflow-Ebene gewährt werden
 - [ ] In einem Repository, das eine Merge Queue betreibt, triggert jeder Workflow hinter einem Required Status Check zusätzlich auf `merge_group`, kein Required Check hängt von Pull-Request-only-Kontext ab, und Drittanbieter-CI läuft auf dem `gh-readonly-queue/`-Präfix
+- [ ] In einem Workflow, der mehr als einen Auslöser deklariert und einen Reusable Workflow aufruft, ist jede aufgerufene Eingabe mit einem aus einem Ereignis-Payload abgeleiteten Vorgabewert durch eine passende Auslöser-Eingabe abgedeckt und über einen Rückfallausdruck durchgereicht
 - [ ] Kein Workflow gewährt pauschale Vollschreibrechte
 - [ ] Kein `run`-Skript interpoliert einen nicht vertrauenswürdigen Kontextwert direkt; solche Werte erreichen das Skript über eine zwischengeschaltete Umgebungsvariable
 - [ ] Kein Workflow checkt nicht vertrauenswürdigen Pull-Request-Code in einem Kontext aus, der Secrets oder erhöhte Rechte hält
