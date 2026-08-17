@@ -117,6 +117,12 @@ Per `spec/project/portfolio-inherited-spec-layer/`, a consumer repo may **refere
   - (a) lift the semantic change into the canonical, then regenerate all translations, or
   - (b) discard the translation edit and regenerate from the canonical.
 - After any update operation, all language files for that spec must match structurally and semantically.
+- **Every changed requirement is followed to what restates it, in the same pass.** A spec restates its own rules in several places, and an edit that reaches the rule but not its restatements leaves the corpus asserting the old and the new version at once. Before the update is finished, walk each changed requirement through:
+  - the **acceptance criteria** that roll it up — a criterion carrying an exception the requirement no longer has is the single most common form of this defect;
+  - any **stated count** the change invalidates ("seven dimensions", "the three grounding specs", "these four decisions");
+  - every **cross-reference** to the changed rule, including `§X` anchors that may now point at the wrong section;
+  - the **artifacts outside the spec** that restate it — a skill's `references/` digest, a checklist, a template — since they go stale silently and no spec-level check sees them.
+- This walk is not optional tidying: `spec/project/spec-readiness/` §Dimension 3 flags a stale restatement as a `Warning`, because a downstream consumer that reads the acceptance criterion as the gate will implement the abandoned rule. For a skill's own supporting files, `spec/claude/skill-management/` §"Progressive disclosure & file references" carries the matching obligation and `spec/claude/skill-review/` verifies it against the skill's `SKILL.md`. Keeping a skill in step with a spec *this* edit changed has no automated gate at all — that is why it belongs in this walk, done by the author, in the same pass.
 
 ### 3. Drift check
 

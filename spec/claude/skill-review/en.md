@@ -96,6 +96,8 @@ Mirrors `skill-management` §"Progressive disclosure & file references"; cite th
 
 - **MUST** verify file references inside `SKILL.md` are at most one level deep (no `SKILL.md` → `A.md` → `B.md` chains); a chain is a `Warning` (Claude tends to partial-read nested references)
 - **MUST** verify every supporting file longer than 100 lines opens with a table of contents; absence is a `Warning`
+- **MUST** verify no supporting file restates a rule that `SKILL.md` states differently, and that any count the body gives about its supporting set matches what's there; a contradicting supporting file is a `Warning`, or a `Critical` where that file is the one a run loads to make the decision the rule governs
+- **SHOULD** verify, for each spec the skill cites as its governing source, that a rule the skill restates still matches the spec's wording; a skill left behind by a spec change is a `Warning`. This is the one clause of the mirrored rule that can't be checked inside the skill folder, so it stays a SHOULD here and is primarily the author's obligation under the `spec` skill's update walk
 - **MUST** verify every script reference makes execution intent explicit ("Run X to …" vs. "See X for the algorithm of …"); ambiguous wording is a `Warning`
 - **MUST** verify every path in `SKILL.md` and supporting files uses forward slashes; backslash paths are a `Critical` on Unix
 - **MUST** verify every MCP-tool reference uses the fully qualified `ServerName:tool_name` form; bare tool names are a `Warning`
