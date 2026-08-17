@@ -3,7 +3,11 @@
 version: '3'
 
 vars:
-  TASK_COLLECTION_BASE: https://raw.githubusercontent.com/nolte/taskfiles/develop/src
+  # Pinned to an immutable release tag per spec/project/taskfile/ §Shared
+  # Taskfiles. `task --yes` in .github/workflows/ci.yml suppresses Task's trust
+  # prompt, so a moving branch ref would let an unreviewed upstream push execute
+  # in this repository's next CI run.
+  TASK_COLLECTION_BASE: https://raw.githubusercontent.com/nolte/taskfiles/v0.1.4/src
 
 includes:
   mkdocs: "{{.TASK_COLLECTION_BASE}}/taskfile-include-mkdocs.yaml"

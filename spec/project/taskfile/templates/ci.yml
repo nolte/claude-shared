@@ -1,0 +1,60 @@
+# Worked example of the CI half that a remote `includes:` block requires, per
+# spec/project/taskfile/ §"Shared Taskfiles from `nolte/taskfiles`" and
+# §"Local and CI parity". Pair it with templates/Taskfile.yml — neither half
+# works without the other.
+#
+# Every job invokes the same targets a contributor runs locally, so the local
+# gate and the CI gate can't drift apart.
+
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [develop]
+
+# Least-privilege default, per spec/project/github-actions-best-practices/ §B:
+# read-only at the workflow level, with write scopes granted per job only where
+# a job genuinely needs one.
+permissions:
+  contents: read
+
+env:
+  # Task's remote-Taskfile resolution is an experimental feature and is off by
+  # default. Every environment that resolves the includes needs this flag set,
+  # the CI runner included. Without it, resolution never happens.
+  TASK_X_REMOTE_TASKFILES: "1"
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      # Third-party actions are pinned by full-length commit digest, with a
+      # comment naming the human-readable version so the pin stays reviewable.
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Set up Task
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+
+      # `--yes` accepts the trust prompt Task raises for a remote include. A
+      # runner has no terminal to answer it, so a bare `task <target>` aborts
+      # rather than prompting. The experiment flag above alone leaves the run
+      # blocked — both pieces are needed together, on every invocation, because
+      # the prompt fires when the Taskfile loads rather than when a target runs.
+      - name: Install dependencies
+        run: task --yes install
+
+      - name: Lint
+        run: task --yes lint
+
+      - name: Test
+        run: task --yes test
+
+      - name: Build the documentation site
+        run: task --yes docs
