@@ -65,7 +65,7 @@ Confirm the run is on `develop` or `main` (the spec's scope) and is `conclusion:
 
 ### 2. Classify before any re-run
 
-Apply the spec's six classes in order; stop at the first match:
+Walk the table top-down and stop at the first match. The rows are ordered by specificity rather than by the spec's class order, so a narrow signal is tested before the broader rows that would also capture it; every row still resolves to one of the spec's six classes:
 
 | Signal in the failed-step output | Classification |
 |---|---|
