@@ -65,10 +65,11 @@ Confirm the run is on `develop` or `main` (the spec's scope) and is `conclusion:
 
 ### 2. Classify before any re-run
 
-Apply the spec's six classes in order; stop at the first match:
+Walk the table top-down and stop at the first match. The rows are ordered by specificity rather than by the spec's class order, so a narrow signal is tested before the broader rows that would also capture it; every row still resolves to one of the spec's six classes:
 
 | Signal in the failed-step output | Classification |
 |---|---|
+| Push rejected with `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission` | `infra` — **evaluate this row first.** Both the `defect` row (the rejection names a workflow file the diff modified) and the `secret drift` row (it is a 403) would otherwise capture it, and neither is right: it is a deterministic platform constraint, not a repository defect and not an expired credential |
 | Failing step references a file the head commit's diff modified | `defect` |
 | Re-run of the same `headSha` would produce green (no infra signal, no code change in the failing step's surface) | `flake` |
 | HTTP 5xx, rate-limit, registry-unreachable, GitHub status incident | `infra` |
@@ -140,6 +141,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 Per `spec/claude/skill-management/` §Gotchas—concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
 
 - **`GITHUB_TOKEN`-cascade failures aren't `defect`.** A `release-drafter.yml` that doesn't fire after an `automerge.yaml` squash-merge, or a `release-cd-refresh-master.yml` that doesn't fire after `release-publish.yml`, is the documented `infra` class per `spec/project/workflow-health/` §Known platform constraints—and the remediation is upstream in `nolte/gh-plumbing`, not in the consumer repo. Don't open a fix PR against the consumer's workflow YAML; document the `infra` classification and reference the `nolte/gh-plumbing` tracking Issue.
+- **A workflow-file push rejection reads like `secret drift` and isn't.** `refusing to allow a GitHub App to create or update workflow ... without 'workflows' permission` is a 403-flavoured rejection, so the `secret drift` row matches it on the surface. It's the second constraint in `spec/project/workflow-health/` §Known platform constraints: `GITHUB_TOKEN` is a GitHub App identity and can never write under `.github/workflows/`, and the `permissions:` block has no `workflows` scope to grant. Rotating a credential fixes nothing. Classify `infra` and route to the App-token remediation, whose installation needs `workflows: write` on top of `contents: write`. It surfaces intermittently, only when the pushed diff happens to touch a workflow file, so a green history doesn't rule it out.
 - **`pascalgn/automerge-action` exits 0 on `mergeResult: 'merge_failed'`.** A `automerge.yaml` run with conclusion `success` whose log carries `mergeResult: 'merge_failed'` or `Failed to merge PR:` is a `stale pin` failure (the reusable's `MERGE_METHOD` default doesn't match the repo's allowed strategy in some pre-fix versions). Triage the `automerge.yaml` `uses:` tag, not the workflow YAML itself.
 - **Renovate-generated bump PRs for `nolte/gh-plumbing` aren't automerged in this portfolio.** A `stale pin` remediation that proposes to enable Renovate automerge for `nolte/gh-plumbing` violates `workflow-health` §Upstream drift and the AC against it. The remediation is a human-acknowledged Renovate PR, not an automerge rule.
 - **`flake` without reproducible evidence is `defect`.** A "let's just re-run and hope" reflex is exactly what the spec forbids. If the same `headSha` doesn't re-run cleanly green and no infra signal explains the first failure, the class is `defect` and the work is a fix, not a tracking entry.
