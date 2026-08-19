@@ -39,6 +39,17 @@ permissions:
 # `cancel-in-progress` is false, so two runs serialise instead of one cancelling
 # the other. Serialising is what closes the window: the second run's search then
 # sees the first run's dependency/license audit issue and skips.
+#
+# That closes the concurrency window, not every duplicate: the runs are serialised
+# but `search.issuesAndPullRequests` reads an index that lags issue creation, so a
+# second run starting immediately after the first can still miss it. Serialising
+# is the part this file can fix; the index lag would need a direct
+# `issues.listForRepo` lookup instead of the search API, which is workflow logic
+# rather than a §F concern.
+#
+# §F's second rule wants a branch identity in the key alongside the workflow
+# identity. This group carries none, deliberately, for the reason above. See the
+# §Open Questions entry on resource-scoped groups.
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false

@@ -32,35 +32,34 @@ permissions:
 # call, so `cancel-in-progress` stays false — cancelling a half-finished publish
 # is worse than serialising.
 #
-# Examined against spec/project/github-actions-best-practices/ §F and left as is.
-# §F's second rule wants the group derived from the workflow identity plus a
-# branch or pull-request identity; this group carries the workflow identity
-# alone, deliberately. The resource being serialised is the repository's single
-# open release draft, which is global rather than per-branch, so a per-branch
-# group would let two dispatches race the same `--draft=false` call — the exact
-# interference the group exists to prevent. `release-drafter.yml` scopes the same
-# draft globally for the same reason, but in a *separate* lane, and the two cannot
-# be made to share one: §F's second rule puts the workflow identity in the key, so
-# two different workflows never produce an equal group string. A drafter run can
-# therefore still overlap a publish. That residual cross-workflow race is recorded
-# as an open question against §F.
+# Per spec/project/github-actions-best-practices/ §F, the group is the shared
+# literal `release-draft`, naming the resource rather than this workflow. The open
+# release draft has two writers — `release-drafter.yml` rewrites its body, this
+# workflow flips it to published — and the platform matches concurrency groups by
+# string equality across the repository, so an equal literal in both files is what
+# puts them in one lane. Keying on this workflow instead would leave a drafter run
+# free to move `target_commitish` between this workflow's `gh release edit
+# --target` and its `--draft=false` flip.
 #
-# §F's second rule guards against runs on different branches cancelling each
-# other, and that consequence is accepted here rather than argued away. With
-# `cancel-in-progress` false an in-flight publish is never interrupted, but GitHub
-# still supersedes a *pending* run the moment a newer dispatch queues into the
-# group — so a second dispatch made while a publish is running can be dropped as
-# `cancelled` and has to be re-dispatched. Serialising the `--draft=false` call is
-# worth that cost.
+# The rename also retires a nested identical group: `reusable-release-publish.yml`
+# at the pinned digest declares `release-publish` for itself, and the caller
+# previously declared the same string. Nested identical groups are a documented
+# deadlock shape. The callee still serialises publishes against each other under
+# its own group, so nothing is lost by naming the caller's lane after the resource
+# it actually shares.
 #
-# Observed and left alone: `reusable-release-publish.yml@v2.0.0` declares this
-# same group name for itself. Nested identical groups are a documented deadlock
-# shape, and this pairing predates the block here — it is not introduced by the
-# §F pass, and published releases show the pairing running through. Recorded as a
-# verification point against the upstream reusable rather than resolved by
-# renaming a group this repository does not own.
+# `cancel-in-progress` stays false: two overlapping dispatches must queue rather
+# than race on the `--draft=false` call, and cancelling a half-finished publish is
+# worse than serialising. GitHub still supersedes a *pending* run the moment a
+# newer one queues into the group, so a dispatch made while the lane is busy can
+# be dropped as `cancelled` and has to be re-dispatched. That consequence is
+# accepted, not argued away.
+#
+# §F's second rule wants the workflow identity plus a branch identity in the key.
+# This group carries neither, deliberately — see the §Open Questions entry on
+# resource-scoped groups.
 concurrency:
-  group: release-publish
+  group: release-draft
   cancel-in-progress: false
 
 jobs:

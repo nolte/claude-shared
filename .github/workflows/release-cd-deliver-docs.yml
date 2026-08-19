@@ -25,12 +25,10 @@ permissions:
 # `${{ github.workflow }}` so any future workflow deploying the same site joins
 # this lane.
 #
-# That is a deliberate deviation from §F's second rule, not a form the rule
-# grants: the key carries neither the workflow identity nor a branch identity. It
-# is recorded here as accepted rather than presented as conformant. The rule's
-# purpose — keeping unrelated runs out of one another's lane — is served by naming
-# the resource, and a repository has exactly one Pages target. Widening §F to
-# admit a resource-scoped group is a spec question, not a workflow edit.
+# §F's second rule wants the workflow identity plus a branch identity in the key.
+# This group carries neither, deliberately: a repository has exactly one Pages
+# target, so keying on the thing contending for it would split the lane that
+# protects it. See the §Open Questions entry on resource-scoped groups.
 #
 # No collision with the reusable called below: it declares its own
 # `mkdocs-deploy` group, so the child never waits on a group its own caller run

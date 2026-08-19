@@ -47,8 +47,10 @@ permissions:
 # One domain reaches all four triggers, and it is the commit, not the pull
 # request: `pull_request` and `pull_request_review` carry
 # `pull_request.head.sha`, `check_suite` carries `check_suite.head_sha`, and
-# `status` carries a top-level `sha`. The pull-request number is unreachable from
-# two of the four. The `github.run_id` tail guarantees the expression is never
+# `status` carries a top-level `sha`. The pull-request number is not reachable
+# from `status` at all, and reaching it from `check_suite` would mean indexing
+# into that payload's `pull_requests[]` array — a different shape from the other
+# arms, which is how the domain mix crept in the first time. The `github.run_id` tail guarantees the expression is never
 # empty, which keeps unrelated runs out of one collapsed lane — the cross-identity
 # interference §F's second rule forbids.
 #
