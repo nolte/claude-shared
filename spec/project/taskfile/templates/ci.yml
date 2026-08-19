@@ -19,23 +19,28 @@ on:
 permissions:
   contents: read
 
-# Required by spec/project/github-actions-best-practices/ §F. The case this
-# handles is successive commits on one pull request: each push starts a run
-# while the previous one is still going, and only the newest verdict is worth
-# waiting for.
+# spec/project/github-actions-best-practices/ §F owes a concurrency group to
+# any workflow "where two runs on the same branch would interfere". That test
+# is met on a pull request and not met on `develop`, so this file answers it
+# per leg rather than once.
 #
-# The `push` leg falls back to `github.run_id`, which is unique per run, so
-# every `develop` run sits in a group of its own. Keying that leg on the ref
-# instead would put all `develop` runs in one group, and grouping alone is
-# enough to lose a verdict: GitHub cancels a *pending* run as soon as a newer
-# one queues into its group, whatever `cancel-in-progress` says. Three merges
-# landing inside one run's duration would leave the middle commit carrying a
-# `cancelled` required check, which the release gate reads as not-SUCCESS and
-# refuses to publish on. A per-run group also keeps the delivery lane from
-# serialising behind itself.
+# Pull request: each push starts a run while the previous one is still going,
+# and only the newest verdict is worth waiting for. That leg is grouped on the
+# pull-request number and supersedes its own stale runs, which is §F's
+# cancel-on-new-run recommendation for pre-merge feedback.
 #
-# With the delivery lane isolated that way, `cancel-in-progress` only ever
-# reaches the pull-request lane, which is exactly where §F recommends it.
+# Push to `develop`: two runs verify two different commits, and this workflow
+# publishes nothing (see the deliberately absent `package` stage below), so
+# neither run holds anything the other could race. The `github.run_id` fallback
+# is how this file records that, `run_id` being unique per run, so every
+# post-merge run sits in a group of its own.
+#
+# Don't key that leg on `github.ref` instead. Grouping alone loses verdicts,
+# whatever `cancel-in-progress` says: GitHub cancels a *pending* run as soon as
+# a newer one queues into its group. Three merges landing inside one run's
+# duration would leave the middle commit carrying a `cancelled` required check,
+# which the release gate reads as not-SUCCESS and refuses to publish on. It
+# would also serialise the post-merge lane behind itself.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
@@ -51,7 +56,12 @@ env:
 # problem occurred without anyone opening the log, and each matrix leg becomes
 # its own named status check (`check (lint)`, `check (test)`, `check (docs)`).
 # Name those legs, not the bare job, as the required checks on the protected
-# branch.
+# branch. Patching an existing repository onto this shape is therefore a
+# two-place change: the legs report as `check (lint)`, `check (test)` and
+# `check (docs)`, so the protected branch's required-check contexts get renamed
+# in the same step. spec/project/taskfile/ §"Reference example" forbids ending a
+# patch with a pipeline that can't go green, and a required context that no
+# longer reports never does.
 #
 # The matrix keeps that property with one job definition. Spelled out as three
 # copied jobs, every pin bump — three action digests plus the Python version —
