@@ -19,15 +19,77 @@ on:
 permissions:
   contents: read
 
+# spec/project/github-actions-best-practices/ §F owes a concurrency group to
+# any workflow "where two runs on the same branch would interfere". That test
+# is met on a pull request and not met on `develop`, so this file answers it
+# per leg rather than once.
+#
+# Pull request: each push starts a run while the previous one is still going,
+# and only the newest verdict is worth waiting for. That leg is grouped on the
+# pull-request number and supersedes its own stale runs, which is §F's
+# cancel-on-new-run recommendation for pre-merge feedback.
+#
+# Push to `develop`: two runs verify two different commits, and this workflow
+# publishes nothing (see the deliberately absent `package` stage below), so
+# neither run holds anything the other could race. The `github.run_id` fallback
+# is how this file records that, `run_id` being unique per run, so every
+# post-merge run sits in a group of its own.
+#
+# Don't key that leg on `github.ref` instead. Grouping alone loses verdicts,
+# whatever `cancel-in-progress` says: GitHub cancels a *pending* run as soon as
+# a newer one queues into its group. Three merges landing inside one run's
+# duration would leave the middle commit carrying a `cancelled` required check,
+# which the release gate reads as not-SUCCESS and refuses to publish on. It
+# would also serialise the post-merge lane behind itself.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 env:
   # Task's remote-Taskfile resolution is an experimental feature and is off by
   # default. Every environment that resolves the includes needs this flag set,
   # the CI runner included. Without it, resolution never happens.
   TASK_X_REMOTE_TASKFILES: "1"
 
+# One reported unit per target rather than one aggregate `task check` step, per
+# spec/project/continuous-integration/ §A: a red run then names which class of
+# problem occurred without anyone opening the log, and each matrix leg becomes
+# its own named status check (`check (lint)`, `check (test)`, `check (docs)`).
+# Name those legs, not the bare job, as the required checks on the protected
+# branch. Patching an existing repository onto this shape is therefore a
+# two-place change: the legs report as `check (lint)`, `check (test)` and
+# `check (docs)`, so the protected branch's required-check contexts get renamed
+# in the same step. spec/project/taskfile/ §"Reference example" forbids ending a
+# patch with a pipeline that can't go green, and a required context that no
+# longer reports never does.
+#
+# The matrix keeps that property with one job definition. Spelled out as three
+# copied jobs, every pin bump — three action digests plus the Python version —
+# has to be applied three times, and a partial edit leaves the legs running on
+# different toolchains with nothing to signal it. The legs stay independent and
+# run in parallel; each pays its own `task install`, which is the price of that
+# isolation.
+#
+# Stages of §A's canonical sequence deliberately absent here, recorded rather
+# than silently dropped because §A requires an omission to be visible in the
+# pipeline definition:
+#   - package: this example ships no build artifact from the pre-merge lane.
+#   - supply-chain scan: dependency, license and code-security review run on
+#     their own cadence rather than once per pull request.
+# A repository that does ship an artifact, or does gate on a scan, adds the
+# stage here rather than leaving it implied.
 jobs:
   check:
     runs-on: ubuntu-latest
+    strategy:
+      # Report every target's verdict, not just the first failure. The default
+      # `fail-fast: true` cancels the sibling legs as soon as one fails, which
+      # both hides the other verdicts and leaves them reporting `cancelled` —
+      # the not-SUCCESS state a required check must not land in for an unrelated
+      # reason.
+      fail-fast: false
+      matrix:
+        target: [lint, test, docs]
     steps:
       # Third-party actions are pinned by full-length commit digest, with a
       # comment naming the human-readable version so the pin stays reviewable.
@@ -50,11 +112,5 @@ jobs:
       - name: Install dependencies
         run: task --yes install
 
-      - name: Lint
-        run: task --yes lint
-
-      - name: Test
-        run: task --yes test
-
-      - name: Build the documentation site
-        run: task --yes docs
+      - name: Run the target
+        run: task --yes ${{ matrix.target }}
