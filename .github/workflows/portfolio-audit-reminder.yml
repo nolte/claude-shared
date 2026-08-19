@@ -30,11 +30,18 @@ permissions:
 # and a manual `workflow_dispatch` can coincide, which is when that window is
 # real rather than theoretical.
 #
+# The group is global — the workflow identity alone, no ref. That is load-bearing
+# rather than cosmetic: the tracking issue is a repository-wide object, and the two
+# triggers this block exists to separate sit on different refs. `schedule` always
+# runs on the default branch while `workflow_dispatch` runs from whatever ref the
+# operator picks, so a ref-keyed group would put exactly the pair that races into
+# two different lanes and leave the window it was added to close wide open.
+#
 # `cancel-in-progress` is false, so two runs serialise instead of one cancelling
 # the other. Serialising is what closes the window: the second run's search then
-# sees the first run's issue and skips.
+# sees the first run's portfolio audit issue and skips.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:

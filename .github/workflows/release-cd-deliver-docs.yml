@@ -22,8 +22,19 @@ permissions:
 # Pages deployment target, so the resource is global; a per-branch group would let
 # two runs deploy to the same site concurrently, which is the interference the
 # group exists to prevent. It stays the literal `pages` rather than
-# `${{ github.workflow }}` for the same reason: the group names the deployment
-# target, so any future workflow that also deploys Pages joins this lane.
+# `${{ github.workflow }}` so any future workflow deploying the same site joins
+# this lane.
+#
+# That is a deliberate deviation from §F's second rule, not a form the rule
+# grants: the key carries neither the workflow identity nor a branch identity. It
+# is recorded here as accepted rather than presented as conformant. The rule's
+# purpose — keeping unrelated runs out of one another's lane — is served by naming
+# the resource, and a repository has exactly one Pages target. Widening §F to
+# admit a resource-scoped group is a spec question, not a workflow edit.
+#
+# No collision with the reusable called below: it declares its own
+# `mkdocs-deploy` group, so the child never waits on a group its own caller run
+# already holds.
 #
 # Declared at workflow level rather than on the single job below: §F owes the
 # group to the *workflow*, and a job-level block would silently leave a
@@ -43,7 +54,13 @@ jobs:
       requirements: docs/requirements.txt
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
+    # Scoped to what the called workflow actually declares at the pinned digest:
+    # `reusable-mkdocs.yaml@v2.0.0` grants its own job `contents: write` only, and
+    # deploys through `mhausenblas/mkdocs-deploy-gh-pages`, which pushes the built
+    # site to the `gh-pages` branch. That is a contents-scope write. The Pages
+    # deployment API is not used, so the `pages: write` and `id-token: write` this
+    # job used to carry reached no consumer — and `id-token: write` is the widest
+    # blast radius of the three (§B, fifth rule: re-derive a job's permissions
+    # when its steps change).
     permissions:
       contents: write
-      id-token: write
-      pages: write

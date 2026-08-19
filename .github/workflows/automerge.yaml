@@ -51,6 +51,12 @@ permissions:
 # two of the four. The `github.run_id` tail guarantees the expression is never
 # empty, which keeps unrelated runs out of one collapsed lane — the cross-identity
 # interference §F's second rule forbids.
+#
+# Known residual edge: two open pull requests can carry the same head commit (one
+# head branch against two bases, or a reopened duplicate). They share a lane, so a
+# newly queued run can supersede the other's pending evaluation. Keying on the
+# pull-request number would trade this rare case for the domain mix above, which
+# breaks every run instead — so the edge is named and accepted, not traded away.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.event.check_suite.head_sha || github.event.sha || github.run_id }}
   cancel-in-progress: false

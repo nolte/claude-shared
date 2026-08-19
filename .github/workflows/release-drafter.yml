@@ -20,13 +20,20 @@ permissions:
 # release workflow, and cancelling a run part-way through rewriting the draft can
 # leave it inconsistent.
 #
-# The group is deliberately global — a bare literal, carrying no ref. The draft
-# it protects is a single repository-wide object, so the group has to be scoped
-# the way the resource is. Keying on `github.ref` would look more conventional and
-# would be wrong: the `push` leg is pinned to `develop` while `workflow_dispatch`
-# runs from whatever ref the operator picks, so the two would land in different
-# groups and rewrite the same draft concurrently. `release-publish.yml` scopes the
-# same resource the same way, for the same reason; the two files have to agree.
+# The group is deliberately global — the workflow identity alone, carrying no
+# ref. The draft it protects is a single repository-wide object, so the group has
+# to be scoped the way the resource is. Keying on `github.ref` would look more
+# conventional and would be wrong: the `push` leg is pinned to `develop` while
+# `workflow_dispatch` runs from whatever ref the operator picks, so the two would
+# land in different groups and rewrite the same draft concurrently.
+#
+# `release-publish.yml` scopes the same draft the same way — globally, no ref —
+# but the two sit in *separate* lanes and cannot be made to share one: §F's second
+# rule requires the workflow identity in the key, so two different workflows never
+# produce an equal group string. A drafter run and a publish dispatch can still
+# overlap on the draft. That residual cross-workflow race is out of this file's
+# reach and is recorded as an open question against §F, rather than papered over
+# with a comment claiming an agreement the group strings do not have.
 #
 # GitHub still supersedes a *pending* run when a newer one queues into this
 # group. That is harmless here because release-drafter recomputes the whole draft
@@ -42,6 +49,10 @@ jobs:
     uses: nolte/gh-plumbing/.github/workflows/reusable-release-drafter.yml@d51e51ec3ec17ceea09fe9eb40ac00857b6fa1be # v2.0.0
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
+    # Scoped to what `reusable-release-drafter.yml@v2.0.0` declares at the pinned
+    # digest: `contents: write` (a release draft is a contents-scope object) and
+    # `pull-requests: read` (release-drafter categorises merged pull requests into
+    # the changelog; it reads them, it does not write them).
     permissions:
       contents: write
-      pull-requests: write
+      pull-requests: read

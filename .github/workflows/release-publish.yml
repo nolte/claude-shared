@@ -39,7 +39,11 @@ permissions:
 # open release draft, which is global rather than per-branch, so a per-branch
 # group would let two dispatches race the same `--draft=false` call — the exact
 # interference the group exists to prevent. `release-drafter.yml` scopes the same
-# draft globally, for the same reason; the two files have to agree.
+# draft globally for the same reason, but in a *separate* lane, and the two cannot
+# be made to share one: §F's second rule puts the workflow identity in the key, so
+# two different workflows never produce an equal group string. A drafter run can
+# therefore still overlap a publish. That residual cross-workflow race is recorded
+# as an open question against §F.
 #
 # §F's second rule guards against runs on different branches cancelling each
 # other, and that consequence is accepted here rather than argued away. With
@@ -48,6 +52,13 @@ permissions:
 # group — so a second dispatch made while a publish is running can be dropped as
 # `cancelled` and has to be re-dispatched. Serialising the `--draft=false` call is
 # worth that cost.
+#
+# Observed and left alone: `reusable-release-publish.yml@v2.0.0` declares this
+# same group name for itself. Nested identical groups are a documented deadlock
+# shape, and this pairing predates the block here — it is not introduced by the
+# §F pass, and published releases show the pairing running through. Recorded as a
+# verification point against the upstream reusable rather than resolved by
+# renaming a group this repository does not own.
 concurrency:
   group: release-publish
   cancel-in-progress: false
