@@ -17,8 +17,11 @@ on:
       - reopened
       - synchronize
 
+# spec/project/github-actions-best-practices/ §B: read-only at the workflow level,
+# with the `pull-requests: write` the label strip and comment need granted on the
+# job alone.
 permissions:
-  pull-requests: write
+  contents: read
 
 # spec/project/github-actions-best-practices/ §F: the conditional group MUST
 # applies. This workflow writes shared state — it removes a label from the pull
@@ -43,6 +46,8 @@ jobs:
       startsWith(github.event.pull_request.head.ref, 'chore/release-') &&
       contains(github.event.pull_request.labels.*.name, 'automerge')
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
     steps:
       - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:

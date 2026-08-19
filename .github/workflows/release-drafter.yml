@@ -1,7 +1,16 @@
+name: release-drafter
+
 on:
   push:
     branches: [develop]
   workflow_dispatch:
+
+# spec/project/github-actions-best-practices/ §B: an explicit block, read-only at
+# the workflow level, with the write scopes this workflow needs granted on the
+# job below. GitHub advises a read-only default token and OpenSSF Scorecard
+# checks exactly this shape.
+permissions:
+  contents: read
 
 # spec/project/github-actions-best-practices/ §F: the conditional group MUST
 # applies. Every run mutates the same shared resource — the single open draft
@@ -11,16 +20,21 @@ on:
 # release workflow, and cancelling a run part-way through rewriting the draft can
 # leave it inconsistent.
 #
-# GitHub still supersedes a *pending* run when a newer one queues into this
-# group, and that is harmless here. release-drafter recomputes the whole draft
-# body from the merge history on every run rather than appending to it, so the
-# run that does execute sees every pull request the skipped one would have seen.
+# The group is deliberately global — a bare literal, carrying no ref. The draft
+# it protects is a single repository-wide object, so the group has to be scoped
+# the way the resource is. Keying on `github.ref` would look more conventional and
+# would be wrong: the `push` leg is pinned to `develop` while `workflow_dispatch`
+# runs from whatever ref the operator picks, so the two would land in different
+# groups and rewrite the same draft concurrently. `release-publish.yml` scopes the
+# same resource the same way, for the same reason; the two files have to agree.
 #
-# A literal prefix stands in for `${{ github.workflow }}` because this file
-# declares no `name:`, so that expression would expand to the workflow's file
-# path.
+# GitHub still supersedes a *pending* run when a newer one queues into this
+# group. That is harmless here because release-drafter recomputes the whole draft
+# body from the merge history on every run rather than appending to it, so the run
+# that does execute sees every pull request the skipped one would have seen. (This
+# is a property of the reusable workflow called below, not of this file.)
 concurrency:
-  group: release-drafter-${{ github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: false
 
 jobs:

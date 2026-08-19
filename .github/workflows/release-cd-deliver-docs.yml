@@ -1,7 +1,40 @@
+name: release-cd-deliver-docs
+
 on:
   release:
     types: [published]
   workflow_dispatch:
+
+# spec/project/github-actions-best-practices/ §B: an explicit block, read-only at
+# the workflow level, with the write scopes this workflow needs granted on the
+# job below. GitHub advises a read-only default token and OpenSSF Scorecard
+# checks exactly this shape.
+permissions:
+  contents: read
+
+# spec/project/github-actions-best-practices/ §F: this is a delivery workflow, so
+# §F's third rule forbids cancel-on-new-run — cancelling a run in flight can leave
+# the Pages site partially published. This block previously carried
+# `cancel-in-progress: true`, which was that violation; GitHub's own Pages
+# workflow template sets it false for the same reason.
+#
+# The group deliberately carries no branch identity. A repository has exactly one
+# Pages deployment target, so the resource is global; a per-branch group would let
+# two runs deploy to the same site concurrently, which is the interference the
+# group exists to prevent. It stays the literal `pages` rather than
+# `${{ github.workflow }}` for the same reason: the group names the deployment
+# target, so any future workflow that also deploys Pages joins this lane.
+#
+# Declared at workflow level rather than on the single job below: §F owes the
+# group to the *workflow*, and a job-level block would silently leave a
+# second job added later outside it.
+#
+# GitHub supersedes a *pending* run when a newer one queues into this group, so a
+# `workflow_dispatch` docs deploy made while a release deploy is running can be
+# dropped as `cancelled` and has to be re-dispatched.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   publish_docs:
@@ -14,16 +47,3 @@ jobs:
       contents: write
       id-token: write
       pages: write
-    # spec/project/github-actions-best-practices/ §F: this is a delivery
-    # workflow, so §F's third rule forbids cancel-on-new-run — cancelling a run
-    # in flight can leave the Pages site partially published. This block
-    # previously carried `cancel-in-progress: true`, which was that violation;
-    # GitHub's own Pages workflow template sets it false for the same reason.
-    #
-    # The group deliberately carries no branch identity. A repository has exactly
-    # one Pages deployment target, so the resource is global; a per-branch group
-    # would let two runs deploy to the same site concurrently, which is the
-    # interference the group exists to prevent.
-    concurrency:
-      cancel-in-progress: false
-      group: "pages"

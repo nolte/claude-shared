@@ -16,8 +16,10 @@ on:
     - cron: "30 6 1 1,4,7,10 *"
   workflow_dispatch:
 
+# spec/project/github-actions-best-practices/ §B: read-only at the workflow
+# level, with the `issues: write` the reminder needs granted on the job alone.
 permissions:
-  issues: write
+  contents: read
 
 # spec/project/github-actions-best-practices/ §F: the conditional group MUST
 # applies, narrowly. The job writes shared state — it opens a tracking issue —
@@ -37,6 +39,8 @@ concurrency:
 jobs:
   open-reminder:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Open or refresh the quarterly dependency/license audit reminder
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9

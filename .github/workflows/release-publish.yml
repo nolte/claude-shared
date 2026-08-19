@@ -21,8 +21,11 @@ on:
         default: false
         type: boolean
 
+# spec/project/github-actions-best-practices/ §B: read-only at the workflow level.
+# `license-verdict` only reads the checkout; the `contents: write` the publish
+# needs is granted on the `publish` job alone.
 permissions:
-  contents: write
+  contents: read
 
 # spec/project/release-automation/ §Workflow existence and trigger SHOULD: two
 # overlapping dispatches must queue rather than race on the `--draft=false` API
@@ -35,9 +38,16 @@ permissions:
 # alone, deliberately. The resource being serialised is the repository's single
 # open release draft, which is global rather than per-branch, so a per-branch
 # group would let two dispatches race the same `--draft=false` call — the exact
-# interference the group exists to prevent. §F's second rule guards against runs
-# on different branches cancelling each other, and with `cancel-in-progress`
-# false no run cancels another.
+# interference the group exists to prevent. `release-drafter.yml` scopes the same
+# draft globally, for the same reason; the two files have to agree.
+#
+# §F's second rule guards against runs on different branches cancelling each
+# other, and that consequence is accepted here rather than argued away. With
+# `cancel-in-progress` false an in-flight publish is never interrupted, but GitHub
+# still supersedes a *pending* run the moment a newer dispatch queues into the
+# group — so a second dispatch made while a publish is running can be dropped as
+# `cancelled` and has to be re-dispatched. Serialising the `--draft=false` call is
+# worth that cost.
 concurrency:
   group: release-publish
   cancel-in-progress: false
@@ -66,6 +76,8 @@ jobs:
 
   publish:
     needs: license-verdict
+    permissions:
+      contents: write
     uses: nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml@d51e51ec3ec17ceea09fe9eb40ac00857b6fa1be # v2.0.0
     with:
       tag: ${{ inputs.tag }}
