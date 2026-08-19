@@ -41,6 +41,7 @@ Canonical language: `en` · Translations: `de`
 | portfolio | tech-stack-discovery | Portfolio Tech-Stack Discovery | Portfolio-Tech-Stack-Discovery | draft | local | unversioned |
 | project | api-documentation | API Documentation Best Practices | API-Dokumentations-Best-Practices | draft | local | unversioned |
 | project | api-error-handling | API Error-Handling Conformance | API-Fehlerbehandlungs-Konformität | draft | local | 2026-06-17 |
+| project | artifact-signing | Artifact Signing and Verification | Artefakt-Signierung und -Verifikation | draft | portfolio | unversioned |
 | project | audience-identification | Audience Identification | Zielgruppen-Identifikation | accepted | local | 2026-04-24 |
 | project | backstage-catalog-generation | Backstage catalog-info.yaml Generation | Backstage-catalog-info.yaml-Generierung | draft | local | unversioned |
 | project | bdd-page-object-integration | BDD and Page Object Integration | BDD und Page-Object-Integration | draft | portfolio | unversioned |
