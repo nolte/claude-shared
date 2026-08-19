@@ -22,17 +22,23 @@ permissions:
 # Required by spec/project/github-actions-best-practices/ §F. The case this
 # handles is successive commits on one pull request: each push starts a run
 # while the previous one is still going, and only the newest verdict is worth
-# waiting for. The group is derived from the workflow identity plus the
-# pull-request number, falling back to the ref for the `push` leg, so the two
-# lanes never share a group and never cancel each other.
+# waiting for.
 #
-# `cancel-in-progress` is scoped to the pull-request lane on purpose. §F's
-# recommendation is for pre-merge feedback, and cancelling a `push` run on
-# `develop` would leave that commit carrying a `cancelled` required check —
-# which the release gate reads as not-SUCCESS and refuses to publish on.
+# The `push` leg falls back to `github.run_id`, which is unique per run, so
+# every `develop` run sits in a group of its own. Keying that leg on the ref
+# instead would put all `develop` runs in one group, and grouping alone is
+# enough to lose a verdict: GitHub cancels a *pending* run as soon as a newer
+# one queues into its group, whatever `cancel-in-progress` says. Three merges
+# landing inside one run's duration would leave the middle commit carrying a
+# `cancelled` required check, which the release gate reads as not-SUCCESS and
+# refuses to publish on. A per-run group also keeps the delivery lane from
+# serialising behind itself.
+#
+# With the delivery lane isolated that way, `cancel-in-progress` only ever
+# reaches the pull-request lane, which is exactly where §F recommends it.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
 
 env:
   # Task's remote-Taskfile resolution is an experimental feature and is off by
@@ -40,11 +46,19 @@ env:
   # the CI runner included. Without it, resolution never happens.
   TASK_X_REMOTE_TASKFILES: "1"
 
-# One job per target rather than one aggregate `task check` step, per
+# One reported unit per target rather than one aggregate `task check` step, per
 # spec/project/continuous-integration/ §A: a red run then names which class of
-# problem occurred without anyone opening the log, and each job becomes its own
-# named required status check. The jobs are independent and run in parallel;
-# each pays its own `task install`, which is the price of that isolation.
+# problem occurred without anyone opening the log, and each matrix leg becomes
+# its own named status check (`check (lint)`, `check (test)`, `check (docs)`).
+# Name those legs, not the bare job, as the required checks on the protected
+# branch.
+#
+# The matrix keeps that property with one job definition. Spelled out as three
+# copied jobs, every pin bump — three action digests plus the Python version —
+# has to be applied three times, and a partial edit leaves the legs running on
+# different toolchains with nothing to signal it. The legs stay independent and
+# run in parallel; each pays its own `task install`, which is the price of that
+# isolation.
 #
 # Stages of §A's canonical sequence deliberately absent here, recorded rather
 # than silently dropped because §A requires an omission to be visible in the
@@ -55,8 +69,17 @@ env:
 # A repository that does ship an artifact, or does gate on a scan, adds the
 # stage here rather than leaving it implied.
 jobs:
-  lint:
+  check:
     runs-on: ubuntu-latest
+    strategy:
+      # Report every target's verdict, not just the first failure. The default
+      # `fail-fast: true` cancels the sibling legs as soon as one fails, which
+      # both hides the other verdicts and leaves them reporting `cancelled` —
+      # the not-SUCCESS state a required check must not land in for an unrelated
+      # reason.
+      fail-fast: false
+      matrix:
+        target: [lint, test, docs]
     steps:
       # Third-party actions are pinned by full-length commit digest, with a
       # comment naming the human-readable version so the pin stays reviewable.
@@ -79,45 +102,5 @@ jobs:
       - name: Install dependencies
         run: task --yes install
 
-      - name: Lint
-        run: task --yes lint
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.14"
-
-      - name: Set up Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
-
-      - name: Install dependencies
-        run: task --yes install
-
-      - name: Test
-        run: task --yes test
-
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: "3.14"
-
-      - name: Set up Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
-
-      - name: Install dependencies
-        run: task --yes install
-
-      - name: Build the documentation site
-        run: task --yes docs
+      - name: Run the target
+        run: task --yes ${{ matrix.target }}
