@@ -20,6 +20,21 @@ on:
 permissions:
   issues: write
 
+# spec/project/github-actions-best-practices/ §F: the conditional group MUST
+# applies, narrowly. The job writes shared state — it opens a tracking issue —
+# and guards itself with a search-then-skip idempotency check, which carries a
+# time-of-check-to-time-of-use window: two runs that both search before either
+# creates would both find nothing and both open a reminder. The quarterly cron
+# and a manual `workflow_dispatch` can coincide, which is when that window is
+# real rather than theoretical.
+#
+# `cancel-in-progress` is false, so two runs serialise instead of one cancelling
+# the other. Serialising is what closes the window: the second run's search then
+# sees the first run's issue and skips.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   open-reminder:
     runs-on: ubuntu-latest

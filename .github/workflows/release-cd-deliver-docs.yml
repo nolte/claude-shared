@@ -14,6 +14,16 @@ jobs:
       contents: write
       id-token: write
       pages: write
+    # spec/project/github-actions-best-practices/ §F: this is a delivery
+    # workflow, so §F's third rule forbids cancel-on-new-run — cancelling a run
+    # in flight can leave the Pages site partially published. This block
+    # previously carried `cancel-in-progress: true`, which was that violation;
+    # GitHub's own Pages workflow template sets it false for the same reason.
+    #
+    # The group deliberately carries no branch identity. A repository has exactly
+    # one Pages deployment target, so the resource is global; a per-branch group
+    # would let two runs deploy to the same site concurrently, which is the
+    # interference the group exists to prevent.
     concurrency:
-      cancel-in-progress: true
+      cancel-in-progress: false
       group: "pages"

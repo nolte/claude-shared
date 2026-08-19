@@ -10,6 +10,36 @@ on:
 permissions:
   contents: read
 
+# spec/project/github-actions-best-practices/ §F owes a concurrency group to any
+# workflow "where two runs on the same branch would interfere". That test is met
+# on a pull request and not met on a push, so this file answers it per leg rather
+# than once. Adapted from the shipped reference in
+# spec/project/taskfile/templates/ci.yml; only the group is taken over, not that
+# template's matrix job shape — this file keeps `lint`, `test`, `docs` and
+# `links` as separate jobs, which are the required contexts named in
+# .github/settings.yml.
+#
+# Pull request: each push starts a run while the previous one is still going, and
+# only the newest verdict is worth waiting for. That leg groups on the
+# pull-request number and supersedes its own stale runs, which is §F's
+# cancel-on-new-run recommendation for pre-merge feedback.
+#
+# Push to `main`/`develop` and `workflow_dispatch`: two runs verify two different
+# commits, and this workflow publishes nothing, so neither run holds anything the
+# other could race. The `github.run_id` fallback is how that is recorded —
+# `run_id` is unique per run, so every post-merge run sits in a group of its own.
+#
+# Don't key that leg on `github.ref` instead. Grouping alone loses verdicts,
+# whatever `cancel-in-progress` says: GitHub cancels a *pending* run as soon as a
+# newer one queues into its group. Three merges landing inside one run's duration
+# would leave the middle commit carrying a `cancelled` required check — `lint`,
+# `test`, `docs` and `links` are all required on `develop` per
+# .github/settings.yml — which the release gate reads as not-SUCCESS. It would
+# also serialise the post-merge lane behind itself.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 env:
   # Taskfile.yml includes remote taskfiles from nolte/taskfiles;
   # Task gates that experimental feature behind this flag.

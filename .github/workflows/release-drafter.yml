@@ -3,6 +3,26 @@ on:
     branches: [develop]
   workflow_dispatch:
 
+# spec/project/github-actions-best-practices/ §F: the conditional group MUST
+# applies. Every run mutates the same shared resource — the single open draft
+# release — so two runs genuinely interfere.
+#
+# `cancel-in-progress` is false: §F's third rule forbids cancel-on-new-run on a
+# release workflow, and cancelling a run part-way through rewriting the draft can
+# leave it inconsistent.
+#
+# GitHub still supersedes a *pending* run when a newer one queues into this
+# group, and that is harmless here. release-drafter recomputes the whole draft
+# body from the merge history on every run rather than appending to it, so the
+# run that does execute sees every pull request the skipped one would have seen.
+#
+# A literal prefix stands in for `${{ github.workflow }}` because this file
+# declares no `name:`, so that expression would expand to the workflow's file
+# path.
+concurrency:
+  group: release-drafter-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   update_release_draft:
     uses: nolte/gh-plumbing/.github/workflows/reusable-release-drafter.yml@d51e51ec3ec17ceea09fe9eb40ac00857b6fa1be # v2.0.0

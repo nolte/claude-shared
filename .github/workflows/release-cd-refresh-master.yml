@@ -2,6 +2,27 @@ on:
   release:
     types: [published]
 
+# spec/project/github-actions-best-practices/ §F: the conditional group MUST
+# applies. Every run force-updates the same shared resource — the `main`
+# presentation branch — so two runs for two releases published in quick
+# succession interfere, and an out-of-order finish would leave `main` pointing at
+# the older release.
+#
+# `cancel-in-progress` is false per §F's third rule: this is a delivery workflow,
+# and cancelling it part-way through leaves `main` in an indeterminate state.
+#
+# The pending-run supersession GitHub applies regardless is harmless here: the
+# job resets `main` to the newest release outright rather than replaying releases
+# in order, so a skipped intermediate run costs nothing.
+#
+# The group names the target branch explicitly — it is hard-coded in the `with:`
+# block below — rather than reading `github.ref`, which on a `release` event
+# points at the tag rather than at the branch being written. A literal prefix
+# stands in for `${{ github.workflow }}` because this file declares no `name:`.
+concurrency:
+  group: release-cd-refresh-master-main
+  cancel-in-progress: false
+
 jobs:
   refresh_presentation_branch:
     uses: nolte/gh-plumbing/.github/workflows/reusable-release-cd-refresh-master.yml@d51e51ec3ec17ceea09fe9eb40ac00857b6fa1be # v2.0.0

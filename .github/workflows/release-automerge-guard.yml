@@ -20,6 +20,23 @@ on:
 permissions:
   pull-requests: write
 
+# spec/project/github-actions-best-practices/ §F: the conditional group MUST
+# applies. This workflow writes shared state — it removes a label from the pull
+# request and posts a comment — and its three trigger types fire in quick
+# succession on a single pull request. Two concurrent runs would both pass the
+# `if:` guard and both post the explanatory comment, while the loser of the
+# removeLabel race swallows a 404 that says nothing about which run acted.
+#
+# `cancel-in-progress` stays false. Cancelling a run between the label removal
+# and the comment leaves the pull request stripped but unexplained; cancelling it
+# before the removal leaves the `automerge` label in place, which is the precise
+# state this guard exists to prevent — automerge.yaml fires on label events and
+# would then act on a labeled release PR. Serialising resolves the race safely:
+# the second run re-reads the labels and no-ops.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 jobs:
   strip-automerge-label:
     if: >-

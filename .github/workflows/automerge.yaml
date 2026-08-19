@@ -17,6 +17,29 @@ on:
       - completed
   status: {}
 
+# spec/project/github-actions-best-practices/ §F: the conditional group MUST
+# applies. This workflow is the merge actor, and its four trigger types
+# (`pull_request`, `pull_request_review`, `check_suite`, `status`) routinely fire
+# within seconds of one another for a single head commit, so concurrent runs act
+# on the same pull request.
+#
+# `cancel-in-progress` is false because §F's third rule forbids cancel-on-new-run
+# wherever a cancelled run can leave a partially-completed side effect.
+# Cancelling this one mid-merge is exactly that failure mode.
+#
+# The group keys on the head commit rather than the pull-request number, because
+# two of the four triggers carry no pull request at all: `check_suite` supplies
+# `check_suite.head_sha` and `status` supplies `sha`. A bare
+# `github.event.pull_request.number` would be empty for both and collapse every
+# unrelated run into one serialised lane, throttling the merge actor
+# repository-wide — the cross-identity interference §F's second rule forbids. The
+# `github.run_id` tail guarantees the expression is never empty. A literal prefix
+# stands in for `${{ github.workflow }}` because this file declares no `name:`,
+# so that expression would expand to the workflow's file path.
+concurrency:
+  group: automerge-${{ github.event.pull_request.number || github.event.check_suite.head_sha || github.event.sha || github.run_id }}
+  cancel-in-progress: false
+
 jobs:
   automerge:
     uses: nolte/gh-plumbing/.github/workflows/reusable-automerge.yaml@d51e51ec3ec17ceea09fe9eb40ac00857b6fa1be # v2.0.0

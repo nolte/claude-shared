@@ -28,6 +28,16 @@ permissions:
 # overlapping dispatches must queue rather than race on the `--draft=false` API
 # call, so `cancel-in-progress` stays false — cancelling a half-finished publish
 # is worse than serialising.
+#
+# Examined against spec/project/github-actions-best-practices/ §F and left as is.
+# §F's second rule wants the group derived from the workflow identity plus a
+# branch or pull-request identity; this group carries the workflow identity
+# alone, deliberately. The resource being serialised is the repository's single
+# open release draft, which is global rather than per-branch, so a per-branch
+# group would let two dispatches race the same `--draft=false` call — the exact
+# interference the group exists to prevent. §F's second rule guards against runs
+# on different branches cancelling each other, and with `cancel-in-progress`
+# false no run cancels another.
 concurrency:
   group: release-publish
   cancel-in-progress: false
