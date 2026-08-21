@@ -34,6 +34,8 @@ That rule first lived in `spec/project/e2e-failure-diagnosis/` §E, but it isn't
   2. **What the specialist did instead.** Exactly one of: changed nothing, applied a narrower fix (only the part with a real gap), or applied a different fix. The specialist **MUST NOT** invent bounds, constraints, or scope the evidence doesn't support merely to satisfy the brief.
 - The orchestrator **MUST** treat a returned refutation as a first-class outcome: record it in the run's audit trail, and reconcile the hypothesis against it before dispatching any dependent work. It **MUST NOT** silently discard a refutation to preserve the original hypothesis.
 - A hypothesis-bearing brief that omits the refutation authorisation **is a defect**. A reviewer can check a brief against this rule by asking whether it asserts a cause, a mechanism, or a remediation, and if so whether it authorises refutation in the deliverable shape above.
+- A brief also supplies **facts** the specialist is meant to act on rather than test — a measured value, a date, a path, a version. Each such fact **MUST** carry its anchor inline (a command with its output, or a `file:line`), pinned per `spec/claude/claim-provenance/` §B where it was read from a mutable reference. A fact stated in a brief without an anchor **MUST** be treated by the specialist as a hypothesis under this spec, not as a given.
+- A specialist that will **write a brief-supplied fact into a durable artefact** — documentation, a spec, a commit message, an issue, a published report — **MUST** verify that fact against the working copy first, and **MUST NOT** discharge it by citing the brief. The brief is an artefact, so it discharges nothing it did not itself establish; `spec/claude/claim-provenance/` §B owns that rule and this is its delegated case. An unverified fact that passes from brief to durable artefact acquires the authority of the artefact while keeping the evidence of the brief, and the error then costs a correction in every place it landed rather than one reply.
 - A non-hypothesis brief (pure detection or scoping) **MAY** carry the clause but isn't required to; the rule binds where a claim exists to be refuted.
 - A domain or scope-specific spec that needs this rule **MUST** cross-reference this spec rather than restate the rule's body, and **MAY** add only its scope-specific application (for example, which evidence channels a brief must carry).
 
@@ -45,6 +47,8 @@ That rule first lived in `spec/project/e2e-failure-diagnosis/` §E, but it isn't
 - [ ] The shape of a valid refutation is specified: contradicting evidence (a `file:line` or a command with output) **and** what was done instead (nothing, a narrower fix, or a different fix).
 - [ ] Framing a refutation as an expected deliverable (not a task failure) is required.
 - [ ] The obligation on the orchestrator to record and reconcile a refutation is stated.
+- [ ] Facts supplied in a brief are required to carry an inline anchor, and an unanchored fact is defined to be a hypothesis rather than a given.
+- [ ] A specialist is required to verify a brief-supplied fact before writing it into a durable artefact, and is forbidden from discharging it by citing the brief.
 - [ ] `e2e-failure-diagnosis` cross-references this spec instead of carrying its own copy of the rule.
 - [ ] The dispatching skills that state hypotheses reference this spec.
 
