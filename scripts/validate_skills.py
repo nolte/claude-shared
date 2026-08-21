@@ -362,6 +362,22 @@ def check_resumable_wiring(
     """
     findings: list[Finding] = []
     if (resumable or "").strip().lower() != "true":
+        # Reverse direction of the same contract. The forward checks below refuse a
+        # flag with no wiring; this refuses wiring with no flag. Without it a skill
+        # can ship a `## Resumability` section, promise resume in `description`, and
+        # still never be treated as resumable by the runtime — which is exactly what
+        # the 2026-08-22 sweep found in two skills that passed CI green.
+        # A `## Resumability` heading alone proves nothing: the section is also where
+        # a skill documents a deliberate opt-out ("this skill is deliberately not
+        # resumable, because ..."). Only a concrete `.resume/` persistence path is
+        # evidence of actual wiring, so that is what the reverse check keys on.
+        if ".resume/" in body:
+            findings.append(Finding(
+                "Critical", target, f"{kind}-management.resumable-flag-missing",
+                "body wires resume (references a `.resume/` persistence path) but "
+                "frontmatter omits `resumable: true` (skill-management "
+                "\u00a7Resumability; spec/claude/resumable-work/)",
+            ))
         return findings
 
     expected_path = f".resume/{name}/" if name else ".resume/"
@@ -559,6 +575,27 @@ NOMINAL_LEAD_PREFIXES = (
 DESCRIPTION_HEADROOM_CHARS = 975  # 95% of the 1024 platform cap
 
 
+def check_operations_heading(body: str, target: str, kind: str) -> list[Finding]:
+    """Enforce the plural `## Operations` heading for the operations block.
+
+    skill-management \u00a7Operations vocabulary: "MUST use `## Operations` (plural)
+    as the heading for the operations block; singular `## Operation` is
+    non-conformant". Sub-operations belong one level down as `### N. <verb>`.
+    Purely mechanical, and previously unchecked: the 2026-08-22 sweep found two
+    skills shipping the singular form with CI green.
+    """
+    bad = re.findall(r"^## Operation(?!s)\b.*$", body, re.M)
+    if not bad:
+        return []
+    return [Finding(
+        "Critical", target, f"{kind}-management.operations-heading-singular",
+        f"operations block uses the singular `## Operation` heading "
+        f"({len(bad)} occurrence(s), first: {bad[0].strip()[:60]!r}); "
+        f"skill-management \u00a7Operations vocabulary requires `## Operations` "
+        f"with sub-operations as `### N. <verb>`",
+    )]
+
+
 def check_rationale_heading(body: str, target: str, kind: str) -> list[Finding]:
     """Exact-wording rationale heading per `skill-vs-agent` §Rationale section heading.
 
@@ -667,6 +704,7 @@ def check_skill(path: Path) -> list[Finding]:
     findings += check_when_to_use(fm.get("description"), fm.get("when_to_use"), rel, "skill")
     findings += check_resumable_wiring(
         fm.get("resumable"), fm.get("description"), fm.get("name"), body, rel, "skill")
+    findings += check_operations_heading(body, rel, "skill")
     findings += check_rationale_heading(body, rel, "skill")
     findings += check_description_lead_voice(fm.get("description"), rel, "skill")
     findings += check_description_headroom(fm.get("description"), rel, "skill")

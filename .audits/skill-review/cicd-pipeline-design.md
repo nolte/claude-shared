@@ -13,7 +13,7 @@ specs-applied:
     revision: "94231d2ec957b4af1a3fb7feba72188b19b64504"
 repo-revision: "f46a3ef2ade001cadf956779a062992e8795c93a"
 created: "2026-08-21"
-status: open
+status: in-progress
 ---
 
 # Skill Review: cicd-pipeline-design
@@ -30,7 +30,7 @@ Context: phase 1 of the skills-agents sweep 2026-08, narrowed to the five artefa
 
 ## Summary
 
-- Critical: 1
+- Critical: 1 (1 closed)
 - Warning: 1
 - Suggestion: 0
 - Info: 2
@@ -42,7 +42,7 @@ Next concrete action: add `resumable: true` to the frontmatter.
 
 ### Critical
 
-- [ ] [skill-management.resumable-frontmatter] The skill declares three named operations and ships a `## Resumability` section, but its frontmatter carries no `resumable: true`.
+- [x] [skill-management.resumable-frontmatter] The skill declares three named operations and ships a `## Resumability` section, but its frontmatter carries no `resumable: true`.
       Where: `skills/cicd-pipeline-design/SKILL.md` frontmatter (lines 1–29); `## Resumability` at line 120; `description` closes with "Supports resume on re-invocation per `spec/claude/resumable-work/`".
       Fix: add `resumable: true` to the frontmatter.
       Verify: `grep -c '^resumable: true' skills/cicd-pipeline-design/SKILL.md` returns 1.
@@ -61,7 +61,7 @@ Next concrete action: add `resumable: true` to the frontmatter.
       Fix: n/a (observation). `skill-management` §Operations vocabulary mandates the plural form only for `## Operations` (line 129); no rule covers the precondition heading, so this cannot be promoted above Info. The spec may need to grow a general section-heading rule — routed to the sweep's operations-vocabulary dimension.
       Verify: n/a.
 
-- [ ] [skill-review.validator-coverage] `scripts/validate_skills.py` does not check the `resumable: true` MUST, so the Critical above passes `task test` undetected.
+- [x] [skill-review.validator-coverage] `scripts/validate_skills.py` does not check the `resumable: true` MUST, so the Critical above passes `task test` undetected.
       Where: `scripts/validate_skills.py` reports only description-headroom `Info` entries across the whole inventory at `f46a3ef`; the Critical above is invisible to it.
       Fix: n/a (observation). Candidate for the sweep's mechanical wave: extend the validator with the `## Resumability`-present-but-`resumable`-absent check, which is a two-condition grep.
       Verify: n/a.
@@ -69,3 +69,5 @@ Next concrete action: add `resumable: true` to the frontmatter.
 ## Processing log
 
 <!-- Append one line per item closure: YYYY-MM-DD — <item-shorthand> — <action taken> — verified: <method> -->
+- 2026-08-22 — resumable-frontmatter — added `resumable: true` — verified: `grep -c '^resumable: true'` returns 1, and removing it reproduces the new `resumable-flag-missing` Critical.
+- 2026-08-22 — validator-coverage — `scripts/validate_skills.py` extended with the reverse resume check and the `## Operations` plural check — verified: both fire on a reverted fix and the suite reports 0 Critical with the fixes in place.
