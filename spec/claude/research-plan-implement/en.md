@@ -39,9 +39,9 @@ This spec fixes both halves: the phase contract that write-bearing capabilities 
 ### Phase definitions and the write boundary
 
 - The discipline names exactly three phases. **Research** builds and records an understanding of the affected surface. **Plan** converts that understanding into a decided, reviewable change description. **Implement** executes the plan and proves it.
-- A capability executing Research or Plan **MUST NOT** write to any path tracked by the repository under change. Writing the phase's own artifact to an untracked working surface (`.resume/`, `.audits/`, or a scratch directory) is the sole exception, and that artifact **MUST NOT** be the change itself.
-- Research **MUST** produce a **findings artifact** and Plan **MUST** produce a **plan artifact** whenever the phase runs at all. A phase that produces no artifact hasn't run; it has been narrated.
-- The transition from Plan to Implement is the **write gate**. It's the first point at which the capability is permitted to change tracked state.
+- A capability executing Research or Plan **MUST NOT** write the change itself. Writing the phase's own artifact to the path its governing spec assigns (`.resume/<slug>/` per `spec/claude/resumable-work/`, `.audits/<review-type>/` per `spec/claude/review-plan/`, or a scratch directory) is permitted, **including where that path is tracked**: `spec/claude/review-plan/` requires `.audits/` to stay checked into git and `spec/project/issue-orchestration/` requires its pre-analysis artifact to be committed rather than ignored, and this rule doesn't override either. The boundary is artifact versus change, not tracked versus untracked.
+- Research **MUST** produce a **findings artifact** and Plan **MUST** produce a **plan artifact** whenever the phase runs at all. The artifact is either a file or, for a capability that holds no write tools, the structured report it returns to the capability that dispatched it, which then owns persisting it. A phase that produces neither hasn't run; it has been narrated.
+- The **write gate** is the capability's first write to tracked state that forms part of the change. Where a Plan phase runs, the gate is the Plan-to-Implement transition; at Tier 0, where no Plan phase runs, the gate is the start of Implement. Every tier has a write gate.
 
 ### Phase depth scales with blast radius
 
@@ -54,8 +54,9 @@ This spec fixes both halves: the phase contract that write-bearing capabilities 
   | 2 | Multiple files, an unfamiliar surface, or a new capability | Research, Plan, Implement |
   | 3 | Cross-repository, a migration, or a change to a published contract | Research, Plan, Implement, plus the design gate and the verification pass below |
 
+- When a change matches more than one tier row, the **highest** matching tier wins. A one-line change to a published contract is Tier 3, not Tier 0, because the published-contract row outranks the one-sentence-diff row.
 - A capability **MUST NOT** force a higher tier than the work requires. Applying Tier 2 ceremony to a Tier 0 change is a defect of the capability, not diligence: the measured failure mode is markdown volume that reviewers skim and agents ignore.
-- A capability **MUST NOT** silently drop below the tier the work requires. When it classifies down (for example, treating a multi-file change as Tier 1), it **MUST** record the classification and its reason in the artifact it produces, so the decision is reviewable rather than invisible.
+- A capability **MUST NOT** drop below the tier the work requires **silently**. Classifying down (for example, treating a multi-file change as Tier 1) is permitted only when recorded: the capability **MUST** state the classification and its reason in the artifact the chosen tier produces, or, where the chosen tier produces no artifact, in the pull-request body of the resulting change. An unrecorded downgrade is the defect this rule names.
 - At Tier 3 the capability **MUST** additionally: settle the design question (**where** the change is going) as an explicit operator-facing decision before the plan describes **how** it gets there, and run a verification pass against the plan after implementation, performed by a context that didn't produce the change.
 
 ### The plan is the review surface
@@ -89,7 +90,7 @@ This spec fixes both halves: the phase contract that write-bearing capabilities 
 ### Binding on skill and agent authoring
 
 - A skill whose workflow writes to tracked paths **MUST** express that workflow in these phase names, **MUST** state the tier or tier range it targets, and **MUST** name the point at which it crosses the write gate.
-- A read-only reviewer or scanner agent is a **Research-phase capability**. Its declared tool set **MUST NOT** include write tools, and its output **MUST** satisfy the findings-artifact anchoring rule above.
+- A read-only reviewer or scanner agent is a **Research-phase capability**. Its tool set is governed by `spec/claude/agent-management/` §Tool access, including that spec's narrow read-only `Bash` and network-read exceptions; this spec adds no tool ban of its own. Its output **MUST** satisfy the findings-artifact anchoring rule above.
 - A capability that hands work to another capability **MUST** name the phase boundary at which it hands off, so the receiving capability knows which phases it owns.
 - A resumable capability **MUST** place its checkpoints per `spec/claude/resumable-work/` at phase boundaries at minimum, because a phase boundary is where an artifact exists that a resumed run can read instead of reconstructing.
 - A capability governed by this spec **MUST** cite it, per the citation rule in `spec/project/spec-driven-development/`.
@@ -121,4 +122,4 @@ This spec fixes both halves: the phase contract that write-bearing capabilities 
 
 - Automated enforcement isn't wired. `skill-review` and `agent-review` currently check frontmatter and description budgets; whether they should also assert that a write-bearing skill names its tier and its write gate is deferred. **Revisit trigger:** when a second skill in this monorepo is found crossing the write gate without a plan artifact, or when `skills-agents-sweep` gains any body-content assertion beyond its current checks, making the marginal cost of one more assertion near zero.
 - The tier boundaries are stated by work shape rather than by a measurable threshold (file count, diff size). A measurable proxy would make the classification auditable after the fact instead of only at authoring time, but every candidate proxy measured so far classifies the cases that matter wrongly (a one-line change to a published contract is Tier 3). **Revisit trigger:** a recorded case where two reviewers classify the same change into different tiers.
-- Whether the Tier 3 design gate deserves its own phase name, as the QRSPI Structure phase does, is left open. This spec folds it into Plan as an ordering rule (settle where before how) because a fourth phase name would need its own artifact contract to be checkable, and no case in this monorepo has yet demanded one.
+- Whether the Tier 3 design gate deserves its own phase name, as the separate Design phase in QRSPI gives it, is left open. This spec folds it into Plan as an ordering rule (settle where before how) because a fourth phase name would need its own artifact contract to be checkable, and no case in this monorepo has yet demanded one.
