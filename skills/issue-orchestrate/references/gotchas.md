@@ -20,3 +20,16 @@ environment facts the executing agent would otherwise get wrong.
 - **A specialist named in the artifact must come from the live catalog.** A package
   pointing at a renamed or removed specialist is a dispatch failure waiting to
   happen; re-resolve by `Glob` at dispatch time, not from a stale artifact name.
+- **A claim read from a mutable ref is a snapshot, not a state.** `gh api
+  …/contents/<path>?ref=master`, `git show develop:<path>`, or a registry `latest`
+  answers for the moment it ran. Two such reads minutes apart can disagree, and two
+  fields quoted from one read can silently come from different revisions if the read
+  is repeated. Resolve the ref to a SHA or digest and re-read at it before the value
+  becomes load-bearing, per `spec/claude/claim-provenance/` §B.
+- **The harness built-ins inspect the session's working directory, not the
+  orchestration worktree.** `security-review` and the diff-scoped review skills
+  resolve "the current branch" from where the session started — the primary checkout,
+  still on `develop`. Invoked from an orchestration whose work lives in a worktree,
+  they see an empty diff and report no findings, which reads exactly like a clean
+  pass. Check the reported branch and file list before believing the verdict, and
+  scope the review explicitly when they disagree with the worktree.
