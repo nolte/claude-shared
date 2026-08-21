@@ -141,7 +141,7 @@ This section binds the merge-queue mechanics to the platform. Whether a reposito
 - [ ] No secret holds a structured blob whose parts are consumed separately, and every secret that has appeared in a log has been rotated rather than only having the log deleted
 - [ ] No called reusable workflow receives secrets beyond the ones it needs
 - [ ] Logic identical across repositories is consumed from `nolte/gh-plumbing` by pinned reference, with no consumer-local copy present and any interim workaround recorded as such
-- [ ] Every workflow whose concurrent runs would interfere declares a concurrency group derived from workflow and branch identity
+- [ ] Every workflow whose concurrent runs would interfere declares a concurrency group derived from workflow and branch identity, or naming the contended resource where that resource is repository-global, per the §Open Questions entry on resource-scoped groups
 - [ ] No delivery or release workflow cancels in-flight runs
 - [ ] Every cache key includes the content that determines the cached data, and no cache stores secret material
 - [ ] Artifact provenance is produced by the platform's attestation mechanism, with its permissions scoped to the producing job
@@ -175,3 +175,4 @@ Source classes are labelled per `spec/claude/research-triangulate/`. The load-be
 - §D's short-lived-credential rule is conditioned on provider support. Which credentials this portfolio holds as long-lived secrets today, and which of them could migrate, hasn't been surveyed.
 - The acceptance criteria are written to be checkable by inspection, but no linter enforces them. Whether to adopt an existing workflow-scanning tool or to rely on the `cicd-pipeline-reviewer` agent alone is unresolved.
 - Upstream platform limits (nesting depth, cache retention, cache size) are referenced rather than quoted, deliberately, so this spec doesn't carry numbers that go stale. A reviewer who needs the current value reads the cited source.
+- §F's second rule derives the group from the workflow identity plus a branch or pull-request identity, which no correct configuration can satisfy where the contended resource is repository-global. A release draft, a Pages deployment target, and a quarterly tracking issue each exist once per repository, so a key carrying either identity splits the very lane that protects them, and two workflows contending for one resource can only share a lane through an equal literal. Whether §F should admit a resource-scoped form, in which the group names the contended resource and `cancel-in-progress` stays false, or whether the rule should stand and such groups be recorded as deviations against it, isn't settled.

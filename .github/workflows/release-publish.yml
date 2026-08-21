@@ -21,15 +21,48 @@ on:
         default: false
         type: boolean
 
+# spec/project/github-actions-best-practices/ §B: read-only at the workflow level.
+# `license-verdict` only reads the checkout; the `contents: write` the publish
+# needs is granted on the `publish` job alone.
 permissions:
-  contents: write
+  contents: read
 
 # spec/project/release-automation/ §Workflow existence and trigger SHOULD: two
 # overlapping dispatches must queue rather than race on the `--draft=false` API
 # call, so `cancel-in-progress` stays false — cancelling a half-finished publish
 # is worse than serialising.
+#
+# Per spec/project/github-actions-best-practices/ §F, the group is the shared
+# literal `release-draft`, naming the resource rather than this workflow. The open
+# release draft has two writers — `release-drafter.yml` rewrites its body, this
+# workflow flips it to published — and the platform matches concurrency groups by
+# string equality across the repository, so an equal literal in both files is what
+# puts them in one lane. Keying on this workflow instead would leave a drafter run
+# free to move `target_commitish` between this workflow's `gh release edit
+# --target` and its `--draft=false` flip.
+#
+# The rename also retires a nested identical group: `reusable-release-publish.yml`
+# at the pinned digest declares `release-publish` for itself, and the caller
+# previously declared the same string. Nested identical groups are a documented
+# deadlock shape. The callee still serialises publishes against each other under
+# its own group, so nothing is lost by naming the caller's lane after the resource
+# it actually shares.
+#
+# `cancel-in-progress` stays false: two overlapping dispatches must queue rather
+# than race on the `--draft=false` call, and cancelling a half-finished publish is
+# worse than serialising. GitHub still supersedes a *pending* run the moment a
+# newer one queues into the group, so a dispatch made while the lane is busy can
+# be dropped as `cancelled` and has to be re-dispatched. That consequence is
+# accepted, not argued away — and it is not self-announcing:
+# `skills/release-publish-trigger/` treats a landed dispatch as the end of its
+# job and does not follow the run, so today the drop is silent. Tracked as a
+# follow-up against that skill.
+#
+# §F's second rule wants the workflow identity plus a branch identity in the key.
+# This group carries neither, deliberately — see the §Open Questions entry on
+# resource-scoped groups.
 concurrency:
-  group: release-publish
+  group: release-draft
   cancel-in-progress: false
 
 jobs:
@@ -56,6 +89,8 @@ jobs:
 
   publish:
     needs: license-verdict
+    permissions:
+      contents: write
     uses: nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml@d51e51ec3ec17ceea09fe9eb40ac00857b6fa1be # v2.0.0
     with:
       tag: ${{ inputs.tag }}

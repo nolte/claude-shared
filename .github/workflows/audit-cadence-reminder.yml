@@ -16,12 +16,49 @@ on:
     - cron: "30 6 1 1,4,7,10 *"
   workflow_dispatch:
 
+# spec/project/github-actions-best-practices/ §B: read-only at the workflow
+# level, with the `issues: write` the reminder needs granted on the job alone.
 permissions:
-  issues: write
+  contents: read
+
+# spec/project/github-actions-best-practices/ §F: the conditional group MUST
+# applies, narrowly. The job writes shared state — it opens a tracking issue —
+# and guards itself with a search-then-skip idempotency check, which carries a
+# time-of-check-to-time-of-use window: two runs that both search before either
+# creates would both find nothing and both open a reminder. The quarterly cron
+# and a manual `workflow_dispatch` can coincide, which is when that window is
+# real rather than theoretical.
+#
+# The group is global — the workflow identity alone, no ref. That is load-bearing
+# rather than cosmetic: the tracking issue is a repository-wide object, and the two
+# triggers this block exists to separate sit on different refs. `schedule` always
+# runs on the default branch while `workflow_dispatch` runs from whatever ref the
+# operator picks, so a ref-keyed group would put exactly the pair that races into
+# two different lanes and leave the window it was added to close wide open.
+#
+# `cancel-in-progress` is false, so two runs serialise instead of one cancelling
+# the other. Serialising is what closes the window: the second run's search then
+# sees the first run's dependency/license audit issue and skips.
+#
+# That closes the concurrency window, not every duplicate: the runs are serialised
+# but `search.issuesAndPullRequests` reads an index that lags issue creation, so a
+# second run starting immediately after the first can still miss it. Serialising
+# is the part this file can fix; the index lag would need a direct
+# `issues.listForRepo` lookup instead of the search API, which is workflow logic
+# rather than a §F concern.
+#
+# §F's second rule wants a branch identity in the key alongside the workflow
+# identity. This group carries none, deliberately, for the reason above. See the
+# §Open Questions entry on resource-scoped groups.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 jobs:
   open-reminder:
     runs-on: ubuntu-latest
+    permissions:
+      issues: write
     steps:
       - name: Open or refresh the quarterly dependency/license audit reminder
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9

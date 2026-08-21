@@ -28,6 +28,28 @@ on:
 permissions:
   contents: read
 
+# spec/project/github-actions-best-practices/ §F, examined rule by rule.
+#
+# The conditional group MUST is *not* triggered here. Both jobs read: one runs
+# pip-audit over the manifests, the other builds a throwaway virtualenv and
+# compares the SBOM against the committed baseline. Neither writes outside its
+# own runner — no draft, no label, no branch, no published artifact — so two runs
+# on one pull request hold nothing the other could race.
+#
+# The group below comes from §F's cancel-on-new-run SHOULD for pre-merge lanes
+# instead: a superseded run keeps consuming capacity while reporting a verdict
+# about a commit nobody is waiting on any more. Neither job is a required context
+# on `develop` (.github/settings.yml names only `lint`, `test`, `docs`, `links`),
+# so superseding one cannot leave a commit carrying a `cancelled` required check.
+#
+# The `github.run_id` fallback is inert under the current `pull_request`-only
+# trigger, where the pull-request number is always populated. It is there so that
+# adding a `push` or `workflow_dispatch` trigger later cannot silently collapse
+# every run into a single group.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   cve-scan:
     runs-on: ubuntu-latest
