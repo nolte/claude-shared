@@ -26,10 +26,15 @@ environment facts the executing agent would otherwise get wrong.
   fields quoted from one read can silently come from different revisions if the read
   is repeated. Resolve the ref to a SHA or digest and re-read at it before the value
   becomes load-bearing, per `spec/claude/claim-provenance/` §B.
-- **The harness built-ins inspect the session's working directory, not the
-  orchestration worktree.** `security-review` and the diff-scoped review skills
-  resolve "the current branch" from where the session started — the primary checkout,
-  still on `develop`. Invoked from an orchestration whose work lives in a worktree,
-  they see an empty diff and report no findings, which reads exactly like a clean
-  pass. Check the reported branch and file list before believing the verdict, and
-  scope the review explicitly when they disagree with the worktree.
+- **The harness built-ins resolve their target against the session's working
+  directory, not the orchestration worktree — and a bare number resolves against the
+  wrong repository.** `security-review` and `code-review` read "the current branch"
+  and "PR #N" from where the session started, which for an orchestration is the
+  primary checkout of a *different* repository, still on `develop`. Two failure
+  shapes, and the second is worse than the first: an **empty diff** yields "no
+  findings", which reads exactly like a clean pass; a number that happens to exist in
+  the session's repository yields a **confident review of unrelated code**, complete
+  with file:line findings that look authentic. Both were observed in one run. Before
+  believing any verdict, check that the reported branch, repository and file list are
+  the ones under review; when they aren't, dispatch a review agent with the worktree
+  path and `--repo <owner>/<name>` stated explicitly.
