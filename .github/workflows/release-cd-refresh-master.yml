@@ -29,6 +29,12 @@ permissions:
 # The group names the target branch explicitly — it is hard-coded in the `with:`
 # block below — rather than reading `github.ref`, which on a `release` event
 # points at the tag rather than at the branch being written.
+#
+# That suffix is also what keeps this group distinct from the reusable's own.
+# At the pinned digest the called workflow declares `release-cd-refresh-master`,
+# and `github.workflow` resolves to this caller's name, so dropping `-main`
+# would produce two identical nested groups — a documented deadlock shape.
+# Keep the suffix.
 concurrency:
   group: ${{ github.workflow }}-main
   cancel-in-progress: false

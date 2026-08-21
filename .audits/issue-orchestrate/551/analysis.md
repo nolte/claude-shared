@@ -190,3 +190,21 @@ Umgesetzt in Commit `22e6844`; Gate erneut grün.
 Drei überzogene Behauptungen wurden zusätzlich korrigiert: die PR-Nummer ist nur aus `status` unerreichbar (`check_suite` führt ein `pull_requests[]`-Array), die Serialisierung schließt bei den Remindern das Nebenläufigkeits- und nicht das Suchindex-Fenster, und `pull-requests: read` bei release-drafter ist nur für die aktuellen Trigger korrekt, weil die geerbte Commons-Config einen Autolabeler mitbringt.
 
 Umgesetzt in Commit `199e7d8`; Gate erneut grün.
+
+2026-08-21 P3 Runde 4 (gegen Commit `0bf3354`) — **AK 4 erfüllt**: 0 kritisch, 0 Warnings, 0 Suggestions. Der Reviewer las alle zehn Workflows vollständig und prüfte §F regelweise gegen den Dateiinhalt. Regel 1 (Block deklariert) von allen zehn erfüllt; Regel 3 (kein cancel-on-new-run auf Delivery/Release) von allen vier Release-/Delivery-Lanes erfüllt; Regel 4 (cancel für Pre-Merge) in genau den zwei Feedback-Lanes `ci` und `audit-gates`.
+
+**Präzisierung zu AK 4:** „clean" heißt hier *kein unverzeichneter Verstoß*, nicht *kein Verstoß*. Fünf der zehn Gruppen tragen keine Branch-/PR-Identität und erfüllen §F's zweite Regel im Wortlaut nicht. Der Reviewer hat die Abdeckung als vollständig verifiziert: `en.md:178` nennt drei Ressourcenklassen, und die fünf Dateien mappen lückenlos darauf (Draft → drafter + publish, Pages → deliver-docs, Tracking-Issue → beide Reminder). Der Eintrag steht in beiden Sprachfassungen, und jede der fünf Dateien trägt den Verweis im Kommentar über dem Block.
+
+**Zwei gezielt gesuchte Widerlegungen, die sich nicht substantiieren ließen** (der Reviewer hebt das ausdrücklich hervor, statt eine Warnung zur Quotenerfüllung zu erfinden):
+
+1. *Namenskollision der beiden Reminder.* Beide nutzen `group: ${{ github.workflow }}` ohne Suffix. Gegenbeleg: `github.workflow` löst auf `name:` auf, und die beiden `name:`-Felder unterscheiden sich — keine gemeinsame Lane. Das Nachziehen der `name:`-Felder in Runde 1 hat das tatsächlich geschlossen.
+2. *`automerge.yaml`s vier Trigger-Domänen.* Jeder Arm wurde gegen die Payload-Form geprüft: `pull_request`/`pull_request_review` → `pull_request.head.sha`, `check_suite` → `check_suite.head_sha`, `status` → Top-Level `sha`. Alle vier landen in der Commit-Domäne, der Group-String ist über alle Trigger gleich.
+
+**Evidenzlücke des Reviewers, im Anschluss geschlossen.** Er markierte als *Lücke, nicht als Befund*, dass `automerge.yaml` und `release-cd-refresh-master.yml` — anders als die drei übrigen Reusable-Aufrufer — keine Aussage über die Gruppe der aufgerufenen Reusable tragen, und dass er sie aus dieser Arbeitskopie nicht prüfen kann. Nachgelesen am Pin `d51e51ec` (`gh api repos/nolte/gh-plumbing/contents/...`):
+
+- `reusable-automerge.yaml` deklariert **gar keinen** `concurrency:`-Block. Keine Verschachtelung möglich.
+- `reusable-release-cd-refresh-master.yml` deklariert `release-cd-refresh-master`; der Caller bildet `release-cd-refresh-master-main`. Verschieden — aber **nur um das Suffix**. Ein späteres Entfernen von `-main` erzeugte zwei identische verschachtelte Gruppen, die dokumentierte Deadlock-Form.
+
+Beide Befunde sind jetzt inline in den jeweiligen Dateien dokumentiert, sodass die Prüfung nicht bei jedem Audit neu gemacht werden muss und das Suffix nicht versehentlich entfernt wird. Damit tragen alle fünf Reusable-Aufrufer dieselbe Kollisionsaussage.
+
+**Kontext-Befund ohne §F-Bezug, an Upstream verwiesen.** `automerge.yaml` und `release-automerge-guard.yml` feuern beide auf `pull_request: labeled`. Bei einem `automerge`-Label auf einem `chore/release-*`-PR starten beide gleichzeitig; der Guard will das Label entfernen, bevor der Automerge-Reusable es liest. Eine gemeinsame Gruppe wäre **keine** Abhilfe, weil Concurrency Wechselseitigkeit erzwingt, aber keine Reihenfolge. Die korrekte Abhilfe sitzt in `nolte/gh-plumbing`: `reusable-automerge.yaml` sollte einen Head-Branch mit Präfix `chore/release-` selbst verweigern. Als Upstream-Arbeitspaket in den PR-Notes vermerkt, nicht lokal nachgebaut (§E: keine driftende Kopie).

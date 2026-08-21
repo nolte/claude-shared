@@ -59,6 +59,12 @@ permissions:
 # newly queued run can supersede the other's pending evaluation. Keying on the
 # pull-request number would trade this rare case for the domain mix above, which
 # breaks every run instead — so the edge is named and accepted, not traded away.
+#
+# No nested identical group: at the pinned digest the reusable called below
+# declares no `concurrency:` block of its own, so nothing downstream can
+# reproduce this group string. That check matters here because
+# `github.workflow` inside a reusable resolves to the *caller* name, so an
+# upstream block of the same shape would collide rather than nest harmlessly.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.event.check_suite.head_sha || github.event.sha || github.run_id }}
   cancel-in-progress: false
