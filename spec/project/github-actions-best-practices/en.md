@@ -141,7 +141,7 @@ This section binds the merge-queue mechanics to the platform. Whether a reposito
 - [ ] No secret holds a structured blob whose parts are consumed separately, and every secret that has appeared in a log has been rotated rather than only having the log deleted
 - [ ] No called reusable workflow receives secrets beyond the ones it needs
 - [ ] Logic identical across repositories is consumed from `nolte/gh-plumbing` by pinned reference, with no consumer-local copy present and any interim workaround recorded as such
-- [ ] Every workflow whose concurrent runs would interfere declares a concurrency group derived from workflow and branch identity
+- [ ] Every workflow whose concurrent runs would interfere declares a concurrency group derived from workflow and branch identity, or naming the contended resource where that resource is repository-global, per the §Open Questions entry on resource-scoped groups
 - [ ] No delivery or release workflow cancels in-flight runs
 - [ ] Every cache key includes the content that determines the cached data, and no cache stores secret material
 - [ ] Artifact provenance is produced by the platform's attestation mechanism, with its permissions scoped to the producing job

@@ -34,8 +34,16 @@ permissions:
 # and the comment leaves the pull request stripped but unexplained; cancelling it
 # before the removal leaves the `automerge` label in place, which is the precise
 # state this guard exists to prevent — automerge.yaml fires on label events and
-# would then act on a labeled release PR. Serialising resolves the race safely:
-# the second run re-reads the labels and no-ops.
+# would then act on a labeled release PR.
+#
+# Serialising closes the removeLabel race but not the comment race, and the
+# difference matters. The job's `if:` is evaluated against the webhook payload,
+# not against live state: a `labeled` event and a `synchronize` arriving right
+# after it both carry the label, so both runs pass the guard. Run two then
+# swallows its removeLabel 404 and posts a second identical comment — the
+# duplicate-comment mode described above. Closing that needs a live
+# `issues.listLabelsOnIssue` read in the script before it comments, which is
+# workflow logic rather than a §F concern.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   cancel-in-progress: false

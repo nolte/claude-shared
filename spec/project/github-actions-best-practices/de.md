@@ -141,7 +141,7 @@ Dieser Abschnitt bindet die Merge-Queue-Mechanik an die Plattform. Ob ein Reposi
 - [ ] Kein Secret enthält ein strukturiertes Datenpaket, dessen Teile getrennt genutzt werden, und jedes Secret, das in einem Log aufgetaucht ist, wurde rotiert statt nur das Log zu löschen
 - [ ] Kein aufgerufener Reusable Workflow erhält Secrets über die hinaus, die er braucht
 - [ ] Über Repositories hinweg identische Logik wird über eine gepinnte Referenz aus `nolte/gh-plumbing` konsumiert, ohne Consumer-lokale Kopie und mit jedem Übergangsumweg als solchem festgehalten
-- [ ] Jeder Workflow, dessen nebenläufige Läufe sich stören würden, deklariert eine Nebenläufigkeitsgruppe aus Workflow- und Branch-Identität
+- [ ] Jeder Workflow, dessen nebenläufige Läufe sich stören würden, deklariert eine Nebenläufigkeitsgruppe aus Workflow- und Branch-Identität oder benennt die umkämpfte Ressource, wo diese repository-global ist, gemäß dem Eintrag zu ressourcengescopten Gruppen unter §Offene Fragen
 - [ ] Kein Delivery- oder Release-Workflow bricht laufende Läufe ab
 - [ ] Jeder Cache-Schlüssel enthält den Inhalt, der die zwischengespeicherten Daten bestimmt, und kein Cache speichert Geheimmaterial
 - [ ] Die Artefakt-Provenienz wird vom Attestierungsmechanismus der Plattform erzeugt, mit auf den erzeugenden Job begrenzten Rechten

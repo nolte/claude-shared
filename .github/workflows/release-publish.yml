@@ -53,7 +53,10 @@ permissions:
 # worse than serialising. GitHub still supersedes a *pending* run the moment a
 # newer one queues into the group, so a dispatch made while the lane is busy can
 # be dropped as `cancelled` and has to be re-dispatched. That consequence is
-# accepted, not argued away.
+# accepted, not argued away — and it is not self-announcing:
+# `skills/release-publish-trigger/` treats a landed dispatch as the end of its
+# job and does not follow the run, so today the drop is silent. Tracked as a
+# follow-up against that skill.
 #
 # §F's second rule wants the workflow identity plus a branch identity in the key.
 # This group carries neither, deliberately — see the §Open Questions entry on
