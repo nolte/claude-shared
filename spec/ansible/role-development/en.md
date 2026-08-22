@@ -6,6 +6,8 @@ Implementation: documentary-only—Ansible automation lives outside the `nolte-s
 ## Context
 Ansible roles are the reusable units that a playbook repository consumes via `requirements.yml`. They encapsulate idempotent state-management logic for a focused responsibility (install `nginx`, harden SSH, bootstrap a base OS) so the same logic can be reused across environments and projects. This spec defines the best-practice baseline for the *role layer*: Galaxy-conformant directory layout, role interface (argument specs, metadata, dependencies), variable hygiene, idempotent behaviour, naming, testing with Molecule, linting, semantic versioning, and Galaxy publishing. The consuming *playbook layer* is governed by [`spec/ansible/playbook-development/`](../playbook-development/en.md), and this spec deliberately doesn't repeat orchestration-level conventions (inventory, vault, CI dry-run).
 
+Consumers: this repository consumes this spec indirectly. `spec/project/project-structure/` §Source layout cites it for the Galaxy-conformant role directories of a standalone role repository, and the `project-structure-reviewer` agent enforces that layout, so those rules are load-bearing here even though no skill or agent names this path. The authoring guidance below has no local consumer and isn't owed one: this repository ships no roles, and its readers are the portfolio's role repositories. An inventory that greps skills and agents for this path finds nothing; that's a limit of the method, not an orphaned spec.
+
 References:
 - [Reusing roles (official guide)](https://docs.ansible.com/projects/ansible/latest/playbook_guide/playbooks_reuse_roles.html)
 - [Developing collections](https://docs.ansible.com/projects/ansible/latest/dev_guide/developing_collections.html)
