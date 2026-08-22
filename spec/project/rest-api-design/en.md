@@ -12,6 +12,8 @@ Where the industry's major guideline works agree (resource-oriented nouns, plura
 
 Readers: developers designing or extending an HTTP API; reviewers checking a design against this standard; skill and agent authors building design-review tooling on top of it.
 
+Consumers: none in this repository, deliberately. This repository ships no HTTP API, so the standard binds the portfolio's API-shipping repositories, which adopt it per §Scope of applicability. No local skill or agent is owed for want of a consumer here; the Readers line above anticipates design-review tooling without asserting that any exists yet. An inventory that greps skills and agents for this path finds nothing, and that's the correct state rather than a gap.
+
 ## Goals
 
 - One predictable URL and method vocabulary across every API-shipping repository, so a consumer can infer an unseen endpoint from the ones it knows

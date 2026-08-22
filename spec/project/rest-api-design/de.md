@@ -12,6 +12,8 @@ Wo die großen Guideline-Werke der Branche einig sind (ressourcen-orientierte Su
 
 Leser: Entwickler, die eine HTTP-API gestalten oder erweitern; Reviewer, die ein Design gegen diesen Standard prüfen; Skill- und Agent-Autoren, die darauf Design-Review-Tooling bauen.
 
+Konsumenten: keine in diesem Repository, und zwar bewusst. Dieses Repository liefert keine HTTP-API aus, der Standard bindet also die API-ausliefernden Repositories des Portfolios, die ihn gemäß §Geltungsbereich übernehmen. Für einen fehlenden Konsumenten hier ist kein lokales Skill und kein Agent geschuldet; die Leser-Zeile oben nimmt Design-Review-Tooling in Aussicht, ohne zu behaupten, dass es bereits existiert. Eine Inventur, die Skills und Agents nach diesem Pfad durchsucht, findet nichts — und das ist der richtige Zustand, keine Lücke.
+
 ## Ziele
 
 - Ein vorhersagbares URL- und Methoden-Vokabular über jedes API-liefernde Repository hinweg, sodass ein Konsument einen ungesehenen Endpunkt aus den bekannten ableiten kann

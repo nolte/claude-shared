@@ -6,6 +6,8 @@ Implementation: documentary-only—Ansible automation lives outside the `nolte-s
 ## Context
 Ansible playbooks are the executable layer that orchestrates reusable roles and collections against an inventory of target hosts. Across the nolte portfolio they bootstrap and maintain Linux devices ranging from servers to Raspberry-Pi-class edge hardware. This spec defines the best-practice baseline for the *playbook layer*: repository layout, inventory hygiene, vault and secrets handling, tagging discipline, variable precedence, dependency consumption, and CI gating. The *role layer* (the reusable units consumed via `requirements.yml`) is governed by [`spec/ansible/role-development/`](../role-development/en.md), and this spec deliberately doesn't repeat role-internal conventions.
 
+Consumers: this repository consumes §Repository profiles indirectly. `spec/project/project-structure/` §Source layout cites it for the inventory-tree profiles, and the `project-structure-reviewer` agent enforces that layout, so those rules are load-bearing here even though no skill or agent names this path. The authoring guidance below has no local consumer and isn't owed one: this repository ships no playbooks, and its readers are the portfolio's bootstrap and provisioning repositories. An inventory that greps skills and agents for this path finds nothing; that's a limit of the method, not an orphaned spec.
+
 References:
 - [Ansible Playbooks intro](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_intro.html)
 - [Ansible Tips and Tricks (official best-practice guide)](https://docs.ansible.com/ansible/latest/tips_tricks/ansible_tips_tricks.html)
