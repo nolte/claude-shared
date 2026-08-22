@@ -267,3 +267,75 @@ def test_declared_resumable_false_is_an_opt_out_not_a_finding():
     # must not raise an unsuppressable Critical.
     body = "# T\n\n## Resumability\n\nDeliberately not resumable; nothing is written to `.resume/foo/`.\n"
     assert v.check_resumable_wiring("false", "Does things.", "foo", body, "x/SKILL.md", "skill") == []
+
+
+# --- research-plan-implement binding, adoption-keyed ratchet ---------------
+#
+# spec/claude/research-plan-implement/ §"Binding on skill and agent authoring"
+# binds a write-bearing skill to three statements: the citation, the tier, and
+# the write gate. The whole corpus predates the spec, so the baseline is
+# aggregated into one Info finding and the per-skill rules only bite once a
+# skill has adopted the citation. These tests pin that asymmetry — it is the
+# whole design, and inverting it would either break CI on 65 skills or leave
+# the gate permanently off.
+
+def _fresh_backlog():
+    v.RPI_UNADOPTED.clear()
+
+
+def test_rpi_uncited_skill_emits_no_file_finding_but_is_counted():
+    _fresh_backlog()
+    assert v.check_rpi_binding("a body with no citation", "x/SKILL.md", "skill") == []
+    assert v.RPI_UNADOPTED == ["x/SKILL.md"]
+
+
+def test_rpi_backlog_is_one_aggregate_info_finding():
+    _fresh_backlog()
+    v.check_rpi_binding("no citation", "a/SKILL.md", "skill")
+    v.check_rpi_binding("no citation", "b/SKILL.md", "skill")
+    findings = v.check_rpi_backlog(total_skills=2)
+    assert len(findings) == 1
+    assert findings[0].severity == "Info"
+    assert findings[0].rule == "skill-management.rpi-adoption-backlog"
+    assert "2 of 2" in findings[0].message
+
+
+def test_rpi_backlog_silent_when_every_skill_adopted():
+    _fresh_backlog()
+    assert v.check_rpi_backlog(total_skills=3) == []
+
+
+def test_rpi_citation_without_tier_or_gate_is_critical():
+    _fresh_backlog()
+    findings = v.check_rpi_binding(
+        "governed by spec/claude/research-plan-implement/", "x/SKILL.md", "skill")
+    assert _rules(findings) == {
+        "skill-management.rpi-tier-missing",
+        "skill-management.rpi-write-gate-missing",
+    }
+    assert {f.severity for f in findings} == {"Critical"}
+    # Adopting must not also count the skill into the backlog.
+    assert v.RPI_UNADOPTED == []
+
+
+def test_rpi_citation_with_tier_and_gate_is_clean():
+    _fresh_backlog()
+    body = ("per spec/claude/research-plan-implement/ this skill targets Tier 1; "
+            "the write gate is operation 3")
+    assert v.check_rpi_binding(body, "x/SKILL.md", "skill") == []
+
+
+def test_rpi_tier_range_satisfies_the_tier_rule():
+    _fresh_backlog()
+    body = ("spec/claude/research-plan-implement/ — Tier 1 to Tier 2 depending on "
+            "scope; the write gate is the first patch")
+    assert v.check_rpi_binding(body, "x/SKILL.md", "skill") == []
+
+
+def test_rpi_citation_inside_a_fence_does_not_count_as_adoption():
+    # A skill that only shows the path in an example block hasn't adopted it;
+    # counting it would silently promote its rules to Critical.
+    _fresh_backlog()
+    body = "```\nspec/claude/research-plan-implement/\n```\n"
+    assert v.check_rpi_binding(body, "x/SKILL.md", "skill") == []
+    assert v.RPI_UNADOPTED == ["x/SKILL.md"]
