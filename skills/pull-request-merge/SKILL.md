@@ -152,21 +152,11 @@ Once the PR is merged, offer (don't automatically execute) the following cleanup
 - `git checkout develop && git pull --ff-only`: update the local integration branch
 - `git branch -d <feature-branch>`: delete the local feature branch (safe delete; refuses to remove a branch whose commits aren't on `develop`)
 
-The remote feature branch is handled by the platform per `spec/project/pull-request-workflow/<canonical_language>.md` §Post-merge branch cleanup: `delete_branch_on_merge: true` in `.github/settings.yml` (directly or via the `nolte/gh-plumbing` commons extension) lets GitHub remove it automatically right after the squash-merge. Confirm this in step 7 by checking that the remote branch is gone: `gh api repos/<owner>/<repo>/git/refs/heads/<feature-branch>` returns `404`. If the branch is still there, the platform setting is either missing or was enabled only later; in that one-off catch-up case, offer the manual REST call and only act with explicit user confirmation:
+The **remote** branch is the platform's job, not this skill's: `delete_branch_on_merge: true` removes it after the squash-merge, and step 7 confirms it by expecting a `404` from the ref. Never delete it manually without explicit user confirmation, and never fold that into the automatic flow.
 
-```
-gh api -X DELETE repos/<owner>/<repo>/git/refs/heads/<feature-branch>
-```
+Finally, surface what's still queued (`gh pr list --state open --base develop`) so the operator can continue the serial flow per §"Sequential merge of multiple ready PRs". Every remaining PR now lags the advanced `develop` tip and **must** be rebased and go green again before this skill runs for it. Don't rebase or re-invoke automatically.
 
-Never run `git push origin --delete …` or `gh api -X DELETE` without explicit user confirmation. Never make remote-branch deletion part of the automatic merge flow—the platform setting is the routine path, manual deletion is only a catch-up.
-
-Finally, surface whether other PRs are waiting to merge so the operator can continue the serial flow per §"Sequential merge of multiple ready PRs":
-
-```
-gh pr list --state open --base develop --json number,title,headRefName,isDraft,labels
-```
-
-If any remain, report them and remind the operator that each now lags the advanced `develop` tip and **must** be rebased onto it (and have its required checks go green again on the rebased head) before re-invoking this skill for the next one — in dependency order where a dependency exists. Don't rebase or re-invoke automatically; the next PR is a separate, operator-driven run.
+`references/branch-cleanup.md` carries the confirmation call, the one-off catch-up case when the branch survives, and why the serial flow stays operator-driven.
 
 ## Wait mode
 
