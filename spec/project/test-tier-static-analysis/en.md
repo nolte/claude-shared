@@ -46,6 +46,7 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 - **MUST** treat the tier as **complementary to, not a subset of, the executing tiers**: static and dynamic analysis catch largely non-overlapping defects, so static analysis is additive coverage, never a substitute for unit/integration tests [R6], [R7].
 - **MUST NOT** ask the static-analysis tier to assert **runtime behaviour, business-logic correctness, or integration outcomes**; a defect that can only be observed by running the code belongs to the Unit tier or above. This is the boundary to the first executing tier.
 - **MUST** position the tier as the **foundation (broadest, cheapest, fastest)** layer of the pyramid per `spec/project/test-pyramid-foundation/` [R1], [R10].
+- **MUST** be enforced by **tooling rather than by a generator-plus-reviewer agent pair**, unlike the four executing tiers. This tier's checks are configured once per repository rather than authored per feature, so a generator would have nothing to scaffold for a new feature and a reviewer of its output would duplicate the wiring audit that `quality-gate-enforcer` already performs. The enforcement chain is: `spec/project/quality-gate/` requires the lint and type-check categories, `quality-gate` executes them, `quality-gate-enforcer` audits their wiring, and `test-pyramid-check` routes the tier away from its own audit for this reason. The absence of a `static-analysis-test-generator` and a `static-analysis-test-reviewer` is therefore the **designed state**, not the gap it looks like beside the four sibling tiers, and an inventory comparing tiers by agent-pair count **MUST NOT** report it as one.
 
 ### Sub-category taxonomy
 
@@ -111,6 +112,9 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 
 ## Acceptance Criteria
 
+- [ ] The spec states that the tier is tool-enforced rather than agent-enforced, names the artefacts forming the enforcement chain, and says that the absence of a generator/reviewer pair is the designed state rather than a gap
+- [ ] The spec names which of its own requirements the enforcement chain doesn't cover, rather than implying the chain covers all of them
+
 - [ ] The spec defines the tier as no-execution verification that needs no test cases, and cites the foundation and a primary source for the static/dynamic complementarity (non-overlapping defects)
 - [ ] The sub-category taxonomy lists the seven sub-categories (lint, type-check, format, complexity, SAST, dead-code, import hygiene)
 - [ ] Type checking is established as a first-class sub-tier with the gradual-typing + strictness-ratchet + block-new-errors model, cited to the type-study and mypy sources
@@ -148,4 +152,4 @@ Readers: spec authors writing the sibling per-tier specs; skill and agent author
 
 - Should the portfolio declare a minimum baseline sub-category set every repository's static-analysis tier MUST enable (for example: at least one linter, one formatter, and—where the language has one—a type checker), or stay fully per-project?
 - Where the language is dynamically typed and has no mature type checker, does the tier record the absence of the type-check sub-category as a justified omission, or require a typed superset (for example typed Python) as the portfolio default?
-- Does the develop/execute/analyse triad for this tier need a dedicated analysis agent, or is the existing `quality-gate` skill (execute) plus `quality-gate-enforcer` agent (wiring audit) sufficient, with only a thin "static-analysis-tier author" capability to add?
+- **Decision (2026-08-22, #558):** the triad needs no dedicated agent pair. `quality-gate` (execute) plus `quality-gate-enforcer` (wiring audit) is sufficient, and the requirement under §Purpose and scope boundary records this. What stays open is narrower and worth naming rather than closing by implication: **the tier's own distinctive rules aren't enforced by anything today.** `quality-gate-enforcer` audits that the lint and type-check categories exist and are wired correctly; it checks neither §Severity gating and the baseline-and-ratchet model, nor §Suppression discipline, nor §SAST scope and the SCA boundary. Whether those become checks in that agent, a lint rule, or stay reviewer guidance isn't settled, and this spec is anchored by the enforcement chain above only for the parts that chain actually covers.
