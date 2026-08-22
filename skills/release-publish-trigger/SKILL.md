@@ -1,6 +1,6 @@
 ---
 name: release-publish-trigger
-description: "Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per the canonical-language file under spec/project/release-skill-layer/ §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check on develop is SUCCESS, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or equivalent German-language requests. Typically called by sprint-review's opt-in chain, not directly after sprint closure."
+description: "Validates every release-automation pre-publish gate locally, then dispatches release-publish.yml via `gh workflow run` for the open release-drafter draft on develop, per the canonical-language file under spec/project/release-skill-layer/ §\"Skill B — Release publish trigger\". Verifies that exactly one open draft exists, the draft tag is reachable from the develop tip, version-bearing files align under their declared transform, every required status check reports SUCCESS on the pull-request head the develop tip merges, and `.github/workflows/release-publish.yml` exists. Refuses to dispatch on any failed gate; routes red checks to workflow-health triage. Never calls `gh release edit --draft=false` directly. Invoke when the user asks to \"publish the release\", \"trigger release publish\", \"ship the release\", or equivalent German-language requests. Typically called by sprint-review's opt-in chain, not directly after sprint closure."
 tags: [release]
 phase: close-release
 summary: "Validates every pre-publish gate locally, then dispatches release-publish.yml for the open release-drafter draft on develop."
@@ -103,13 +103,25 @@ Walk these gates in order. **The skill MUST NOT proceed past a failed gate**; su
 - Verify the subject prefix starts with `chore(release): <tag>` (the prefix-match accepts the `(#N)` suffix GitHub appends on squash-merge, per `release-automation` §Pre-publish verification).
 - **Failure**: no `chore(release): <tag>` commit on the path. Remediation: same as the "Version-bearing files aligned" gate.
 
-#### 4. Required status checks SUCCESS on develop tip
+#### 4. Required status checks SUCCESS where they were enforced
+
+Evaluate this gate on the **pull-request head** the develop tip squash-merges, not on the tip.
 
 - Read the required check list from `.github/settings.yml` (`branches[name=develop].protection.required_status_checks.contexts`).
-- For the develop tip SHA, query `gh api repos/<owner>/<repo>/commits/<sha>/check-runs` and confirm every required context appears with `conclusion=success`.
-- **Failure**: any required check is `failure`, `cancelled`, `timed_out`, or still `in_progress`. Remediation:
+- Resolve the commit to judge:
+  - `gh api repos/<owner>/<repo>/commits/<tip-sha>/pulls --jq '.[0].head.sha'`.
+  - A SHA comes back → that is the commit to query, and report it to the operator alongside the tip so the substitution is visible.
+  - Nothing comes back (a direct push, or a merge the API does not associate) → fall back to the tip SHA and say so in the report.
+- Query `gh api repos/<owner>/<repo>/commits/<sha>/check-runs` for the resolved SHA and confirm every required context appears with `conclusion=success`.
+- **Failure**: any required check is `failure`, `cancelled`, `timed_out`, still `in_progress`, or **absent**. Remediation:
   - red checks → route to `workflow-health` triage (classify as `defect` / `flake` / `infra` / `stale pin` / `secret drift` / `other`); never retry the dispatch blindly.
   - pending checks → stop and ask the operator to wait, or opt in to wait mode (see "Wait mode" below).
+  - absent on a resolved **pull-request head** → a genuine gap: branch protection should have required it there. Report it as a protection-configuration problem, not as a missing run.
+  - absent on a **fallback tip** → the repository published from a commit on which its required contexts were never enforced. Refuse, and say that plainly rather than treating absence as green.
+
+**Why not the tip.** Branch protection enforces its contexts on the pull-request head, which is where the always-run constructions that guarantee a report live. The tip is a *different* commit, produced by squash, and only receives whatever `push`-triggered workflows apply to it — so a required check whose `push` trigger carries a `paths:` filter is simply absent whenever the merge touched none of those paths. That is the normal case, not an edge one. Reading absence strictly blocks most releases; reading it leniently validates a subset while appearing to validate the set. Neither is a gate.
+
+The tip's tree is still the tree those checks ran against: `pull-request-workflow` §Branch freshness requires `required_status_checks.strict: true`, so a pull request can only merge while up to date with `develop`. If a repository has turned `strict` off, say so in the report — the substitution's justification does not hold there.
 
 #### 5. Workflow file present
 
