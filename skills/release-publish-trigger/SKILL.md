@@ -53,7 +53,7 @@ Before doing anything:
 
 ## Operations
 
-Operation 1 resolves the open draft and Operation 2 detects the project type (the index into `release-automation` §Version-bearing files, shared with Skill A per the spec's §Skill split and shared shape MUST). Operations 3 to 5 then form a Plan-validate-execute cycle: Operation 3 walks every pre-publish gate, Operation 4 surfaces the validated state for explicit operator confirmation, and Operation 5 dispatches `release-publish.yml`. Operation 6 verifies the dispatch landed and reports the run URL without polling to completion (unless wait mode is opted in).
+Operation 1 resolves the open draft and Operation 2 detects the project type (the index into `release-automation` §Version-bearing files, shared with Skill A per the spec's §Skill split and shared shape MUST). Operations 3 to 5 then form a Plan-validate-execute cycle: Operation 3 walks every pre-publish gate, Operation 4 surfaces the validated state for explicit operator confirmation, and Operation 5 dispatches `release-publish.yml`. Operation 6 follows the dispatched run until it leaves the queue and reports from there; a landed dispatch isn't the skill's terminal state, because a queued run can still be superseded without publishing.
 
 ### 1. Resolve the open draft
 
@@ -148,18 +148,23 @@ On confirmation:
 - When the operator opts in to `--dry-run`, dispatch with `-f dry_run=true` so the workflow validates without flipping `draft: false`.
 - **Never** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id>` with `draft=false`, or any other body that flips the draft state from this skill. The workflow is the only path.
 
-### 6. Verify the dispatch landed
+### 6. Follow the run out of the queue
 
 Immediately after `gh workflow run` returns:
 
 - Find the new run: `gh run list --workflow=release-publish.yml --limit 1 --json databaseId,status,conclusion,url,headSha`. The match is the run whose `headSha` equals the draft's target SHA and whose `status` is `queued` or `in_progress`.
-- Report the run URL plus the current status to the operator.
-- **Default behaviour is single-shot**: the skill does **not** poll to completion. The operator re-invokes (or opens the URL) once the run finishes.
-- **Wait mode** is the explicit opt-in (via `--wait` argument or unambiguous prompt phrasing like "warte bis der Publish durch ist"): re-check `gh run view <id> --json status,conclusion` at the configured interval (≥60 s) until `status=completed` or the configured wall-clock timeout (≤15 min) is reached. Bound caps mirror `pull-request-merge`'s wait mode (interval default 90 s, timeout default 10 min, max retries 10, visible status line per round, failure short-circuits to `workflow-health` triage).
+- **A landed dispatch isn't the end of the job.** While the run is `queued` it can be superseded and `cancelled` without ever starting: GitHub drops a *pending* run as soon as a newer one queues into the same concurrency group. `release-publish.yml` shares the `release-draft` group with `release-drafter.yml`, which fires on every push to `develop`, so every merge opens the window. `cancel-in-progress: false` doesn't help here: it governs only whether an already *running* run is cancelled.
+- **Re-check `gh run view <id> --json status,conclusion` until the run leaves the queue**, under the same caps as wait mode (interval ≥60 s, default 90 s; wall-clock timeout ≤15 min, default 10 min; max 10 retries; a visible status line per round). Three outcomes:
+  - `status` is `in_progress` or `completed`: the run started and can no longer be superseded. Report the run URL and the status. **This is the terminal state of the single-shot default.**
+  - `conclusion=cancelled` without ever starting: the dispatch was **superseded**. Handle it per the terminal-conclusion branch below.
+  - still `queued` when the caps run out: report an **unresolved dispatch**. Say that the run hasn't started, that it can still be superseded, and give the URL. **Never** report this as a success.
+- **The default stays single-shot**: leaving the queue is the terminal state, not completion. The operator re-invokes (or opens the URL) once the run finishes.
+- **Wait mode** is the explicit opt-in (via `--wait` argument or unambiguous prompt phrasing like "warte bis der Publish durch ist"): keep polling past the queue until `status=completed` or the timeout, under the same caps. Bound caps mirror `pull-request-merge`'s wait mode, and a failure short-circuits to `workflow-health` triage.
 
-After the run completes (single-shot or wait mode):
+On a terminal conclusion (reached in wait mode, or on a later re-invocation):
 
 - On `conclusion=success`: confirm with the operator that the release is now published (`gh release view <tag> --json isDraft` returns `{"isDraft": false}`) and that `release-cd-refresh-master.yml` has started a downstream run (`gh run list --workflow=release-cd-refresh-master.yml --limit 1`); both checks are part of `release-automation`'s acceptance criteria.
+- On `conclusion=cancelled`: the run was **superseded, not broken**. Report it as such, name the re-dispatch as the next action, and state plainly that the release was **not** published. Do **not** route to `workflow-health`: there's no red check to triage and it will find nothing. This is the one failure mode where a second dispatch from this skill is allowed. Re-run operation 3 before re-dispatching, because every gate is re-derived from live state and `develop` may have moved since the first attempt.
 - On `conclusion=failure`: do **not** retry. Route to `workflow-health` triage — classify per `spec/project/workflow-health/`. The most common cause is a `merge_failed` from `pascalgn/automerge-action` when `release-publish.yml` itself uses `automerge-action`; check the run logs for `mergeResult: 'merge_failed'` per `pull-request-merge` step 7b and route as a stale-pin incident if so.
 
 ## Wait mode
@@ -180,6 +185,7 @@ Every gate is re-derived from live GitHub state on each run, and the dispatch it
 
 ## Gotchas
 
+- **A queued run can vanish before it runs**, and `cancel-in-progress: false` doesn't protect it. `release-publish.yml` shares the `release-draft` lane with `release-drafter.yml` deliberately, and the next merge to `develop` supersedes a still-pending publish. Read `references/supersession.md` before acting on a `cancelled` run or proposing to split the lane.
 - `pascalgn/automerge-action` (used by some `release-publish.yml` implementations downstream) exits 0 even on `mergeResult: 'merge_failed'`. A green `release-publish.yml` run is **not** proof the publish happened. Always re-verify `gh release view <tag> --json isDraft` after a `success` conclusion.
 - The `tag` input is mandatory because `release-automation` forbids the workflow's "newest wins" heuristic. Even when only one draft is open, this skill passes `-f tag=<tag>` explicitly.
 - A red required check on `develop`'s tip blocks publish but is not always recoverable by re-running. The triage path is `workflow-health`, not "retry until green."
@@ -191,13 +197,16 @@ Every gate is re-derived from live GitHub state on each run, and the dispatch it
 - Read `examples/01-clean-dispatch-all-gates-pass.md` when all pre-publish gates pass and the skill dispatches the release workflow cleanly.
 - Read `examples/02-version-bearing-files-misaligned.md` when version-bearing files are out of sync and the gate blocks dispatch.
 - Read `examples/03-required-checks-red-route-to-workflow-health.md` when a required check on `develop`'s tip is red and triage routes to `workflow-health`.
+- Read `examples/04-dispatch-superseded-in-queue.md` when a dispatched run is cancelled in the queue without publishing, or is still queued when the caps run out.
 
 ## Hard rules
 
 - Never dispatch when any pre-publish gate fails. Failures route to `workflow-health` triage.
 - Never call `gh release edit --draft=false`, `gh api -X PATCH .../releases/<id>` with `draft=false`, or any other body that flips the draft state. The workflow is the only publish path.
 - Never use a `--ref` other than the default branch (typically `develop`).
-- Never poll to completion outside an explicit operator opt-in to wait mode; default behaviour is single-shot.
+- Never poll to completion outside an explicit operator opt-in to wait mode; the single-shot default ends when the run leaves the queue, not when the dispatch lands.
+- Never report a landed dispatch, or a run still `queued`, as a publish that happened. A dispatch that GitHub accepted can still be superseded and cancelled without publishing anything.
+- Never route a `cancelled` run to `workflow-health`. It's a superseded dispatch, not a workflow defect, and re-dispatching (after re-running the gates) is the remedy.
 - Never retry a failed `release-publish.yml` run blindly. Triage classifies the failure first.
 - Never proceed without explicit operator confirmation of the disclosed validation state.
 - When `spec/project/release-skill-layer/` or `spec/project/release-automation/` disagrees with this skill's instructions, the spec wins. Propose updating this skill rather than silently diverging.

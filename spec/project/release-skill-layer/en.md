@@ -90,12 +90,15 @@ Readers: authors of the two release skills (`release-notes-curate`, `release-pub
 - **MUST NOT** call `gh release edit --draft=false`, `gh api -X PATCH /repos/.../releases/<id>` with `draft=false`, or any other body that flips the draft state outside the workflow. There is no admin-override path; this is identical in spirit to `pull-request-merge`'s `enforce_admins: true` rule.
 - **SHOULD** support a `--dry-run` mode that runs every precondition validation and dispatches with `dry_run=true` workflow input per `release-automation` §Operational contract.
 - **MUST NOT** let `--dry-run` write to the draft body (no "would-publish" comment or any other mutation); `--dry-run` stays strictly side-effect-free. The draft-body edit is Skill A's blast radius (§Skill split and shared shape); Skill B's only side effect is the workflow dispatch.
-- **SHOULD** verify post-dispatch that the workflow run started (`gh run list --workflow=release-publish.yml --limit 1 --json status,conclusion,url`) and report the run URL plus its current status; don't poll to completion outside an explicit wait mode (matches `pull-request-merge`'s wait-mode contract).
+- **MUST** follow the dispatched run until it has left the queue, and **MUST NOT** report a landed dispatch as the skill's terminal state. `gh workflow run` exiting zero means the run was accepted, not that it will execute: while a run is `queued` it can be superseded and `cancelled` without ever starting, because GitHub supersedes a *pending* run as soon as a newer one queues into the same concurrency group. `cancel-in-progress: false` doesn't prevent this—that flag governs only whether an *already running* run is cancelled. Where `release-publish.yml` shares a concurrency group with a workflow that fires on every push to the integration branch, the window is every merge to that branch, which is why a landed dispatch says so little.
+- **MUST** treat `status: in_progress` as the point at which a single-shot report becomes honest, because a run that has started can no longer be superseded while `cancel-in-progress` stays false. Until the run reaches that state the skill **MUST** keep re-checking under the same bounded caps as wait mode, and **MUST** report a run still `queued` at the cap as an **unresolved dispatch** rather than as a success.
+- **SHOULD**, once the run has started, report the run URL plus its current status (`gh run list --workflow=release-publish.yml --limit 1 --json status,conclusion,url`); polling to *completion* stays outside the default and belongs to wait mode (matching `pull-request-merge`'s wait-mode contract).
 
 #### Failure routing
 
 - **MUST**, when a pre-dispatch validation fails because a required check on `develop` is red, route to `workflow-health` triage rather than retry the dispatch, same protocol as `pull-request-merge` step 4.
 - **MUST**, when the workflow run itself fails after a successful dispatch, defer to `release-automation` §Observability and audit and `workflow-health` rather than attempting a second dispatch from the skill.
+- **MUST**, when the dispatched run ends `cancelled` without publishing, report it as a **superseded dispatch** whose remedy is a re-dispatch, and **MUST NOT** route it to `workflow-health` triage. A cancellation under a shared concurrency lane isn't a workflow defect and leaves no red check to diagnose, so triage finds nothing and the operator learns nothing. The report **MUST** name the re-dispatch as the next action and **MUST NOT** present the release as published. This is the one failure mode the skill may resolve by dispatching a second time; every other one keeps the no-blind-retry rule above.
 
 ### Composition
 
@@ -115,7 +118,9 @@ Readers: authors of the two release skills (`release-notes-curate`, `release-pub
 - [ ] Skill A never modifies content outside its marker boundaries, verifiable by diffing the body before and after a run.
 - [ ] Skill B refuses to dispatch when any `release-automation` §Pre-publish verification gate fails, surfacing the failed gate verbatim.
 - [ ] Skill B's run transcript shows `gh workflow run release-publish.yml ...` as the only mutation; grepping the transcript for `gh release edit --draft=false` finds no hit.
-- [ ] Skill B reports the workflow run URL after dispatch and surfaces the run's current status without polling to completion (unless the operator opted in to wait mode, mirroring `pull-request-merge`).
+- [ ] Skill B reports the workflow run URL after dispatch and surfaces the run's current status; it follows the run until the run has left the queue, and doesn't poll to completion (unless the operator opted in to wait mode, mirroring `pull-request-merge`).
+- [ ] Skill B can't report success for a dispatch whose run ended `cancelled` without publishing; a run still `queued` when the caps are reached is reported as unresolved rather than as a dispatch that worked.
+- [ ] A superseded publish is reported with the re-dispatch as its stated next action, distinct from the red-check routing to `workflow-health`, and verifiable by reading the skill's post-dispatch step against this spec.
 - [ ] `release-automation` §Non-Goals (or §Relationship to other specs) cross-links to this spec as the local-skill counterpart for body curation and dispatch ergonomics.
 - [ ] The `release-notes-audience-analysis` Acceptance Criteria line "reviewer can verify primary audience coverage before `release-publish.yml` is dispatched" is satisfied by Skill A's `## Audiences served` subsection.
 
