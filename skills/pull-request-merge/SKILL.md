@@ -72,6 +72,8 @@ Invoke the `review` skill with the PR number so it performs a final review of th
 
 If the diff touches a security-sensitive path—any of `.github/workflows/`, `.github/settings.yml`, `**/*.sh`, files that contain `secret` / `token` / `password` references, auth or signing code—additionally invoke the `security-review` skill. Block on any blocking finding from that skill the same way.
 
+Both built-ins compose their diff from fixed `git ... origin/HEAD...` substitutions that take no path argument, so they read **this session's** working directory rather than any path you pass them. Run them from a working copy that actually holds the change, and check the reported file list against `git diff --stat origin/develop...HEAD` before believing a clean result. A clean report over an empty diff is a failed gate rather than a pass, per `spec/project/issue-orchestration/` §Verification and traceability. This matters most when the branch was produced by `issue-orchestrate`, whose worktree isolation puts the change somewhere the session isn't.
+
 ### 3. Derive and apply labels
 
 Build a candidate label set and intersect it with the labels that actually exist in the repository (collected in step 1). **Never create a new label**; a candidate label that doesn't exist is reported as a portfolio gap to close via `.github/settings.yml` (directly or via `nolte/gh-plumbing:.github/commons-settings.yml`), not silently added.

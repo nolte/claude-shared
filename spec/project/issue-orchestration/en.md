@@ -316,6 +316,38 @@ readership once the capability it describes is implemented, verified, and merged
   (`security-review` is the Claude Code harness built-in, not a `nolte-shared`
   plugin agent; it's invoked as the `security-review` skill, not via
   `Agent(subagent_type="nolte-shared:security-review")`.)
+- **MUST** satisfy that diff verification from a working copy that actually holds the
+  change, and **MUST NOT** rely on passing the worktree path to the built-in. The
+  built-in composes its own change set from four fixed shell substitutions (`git
+  status`, `git diff --name-only origin/HEAD...`, `git log --no-decorate
+  origin/HEAD...`, `git diff origin/HEAD...`) that carry no `-C` and no argument
+  placeholder, so they resolve against the session's working directory and nothing in
+  the invocation redirects them. Under §Working-copy isolation that directory is the
+  primary checkout on a clean `develop`, where all four return empty. Exactly one of
+  these makes the verification conformant: it runs from a session rooted **inside**
+  the worktree, per `spec/project/parallel-working-copies/` §Claude Code session
+  scoping; or the orchestrator records the examined change set itself, per the
+  non-vacuity rule below
+- **MUST** treat a verification result as **vacuous, and therefore failed**, when the
+  change set it examined is empty while the feature branch carries commits. A clean
+  report over an empty diff reads exactly like a clean report over a reviewed one, so
+  the distinction can't be recovered from the report. Before recording any
+  verification outcome the orchestrator **MUST** capture `git -C <worktree> diff
+  --stat origin/develop...HEAD`, and **MUST NOT** record a pass when that capture is
+  empty. This obligation binds whichever conformant path above was taken, because it's
+  the only check that fails closed when the scoping is wrong. Where the repository's
+  integration branch isn't the remote default, note that the built-in's own base is
+  `origin/HEAD`, a clone-time local ref, so a mismatch inflates the diff rather than
+  emptying it and the same capture is what surfaces it
+- **MUST** record the unavailability of `code-security-reviewer` rather than omitting
+  the agent silently. It ships in `nolte-engineering`
+  (`plugins/nolte-engineering/agents/code-security-reviewer.md`), so a session without
+  that plugin installed can't dispatch it, including this repository's own dogfooding
+  sessions unless every plugin root is loaded. Where it's unavailable the orchestrator
+  **MUST** record the gap in the pre-analysis artifact and the pull request's **Risk /
+  rollout notes**, and **MUST NOT** treat the built-in `security-review` as a
+  substitute: the two are complementary (surface scoping against diff verification),
+  not interchangeable
 - **MUST** ensure every pull request the orchestration produces links the issue
   (`Closes #<n>` or the repository's linking convention) and carries, in its **Risk /
   rollout notes** section per `pull-request-workflow`: the issue reference, the issue
@@ -403,7 +435,14 @@ readership once the capability it describes is implemented, verified, and merged
   exception, or a required-check bypass
 - [ ] For every `security`-class issue, the read-only `code-security-reviewer` agent
   and the built-in `security-review` skill both ran before the PR opened (audit, then
-  diff verification), recorded in the artifact and the PR notes
+  diff verification), recorded in the artifact and the PR notes, or the artifact and
+  the PR notes record why `code-security-reviewer` was unavailable
+- [ ] For every run that invoked the built-in `security-review`, the run recorded the
+  change set the verification examined, and no run recorded a pass over an empty
+  change set while its feature branch carried commits
+- [ ] For every run whose verification ran from outside the worktree, the recorded
+  change set came from an explicit `git -C <worktree> diff --stat
+  origin/develop...HEAD` capture rather than from the built-in's own output
 - [ ] For every work package whose finding class has been generalist-handled three
   or more times without a matching specialist, either a specialist now exists or an
   open issue tracks its creation with a named owner, per `continuous-improvement`

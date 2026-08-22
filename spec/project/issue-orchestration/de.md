@@ -348,6 +348,42 @@ verifiziert und gemergt ist.
   der PR geöffnet wird. (`security-review` ist das Claude-Code-Harness-Built-in, kein
   `nolte-shared`-Plugin-Agent; es wird als `security-review`-Skill aufgerufen, nicht
   über `Agent(subagent_type="nolte-shared:security-review")`.)
+- **MUSS [MUST]** diese Diff-Verifikation aus einer Arbeitskopie erfüllen, die die
+  Änderung tatsächlich enthält, und **DARF NICHT [MUST NOT]** darauf bauen, dem
+  Built-in den Worktree-Pfad zu übergeben. Das Built-in setzt seine Änderungsmenge
+  aus vier fest verdrahteten Shell-Substitutionen zusammen (`git status`, `git diff
+  --name-only origin/HEAD...`, `git log --no-decorate origin/HEAD...`, `git diff
+  origin/HEAD...`), die weder ein `-C` noch einen Argument-Platzhalter tragen; sie
+  lösen deshalb gegen das Arbeitsverzeichnis der Session auf, und nichts am Aufruf
+  lenkt sie um. Unter §Arbeitskopien-Isolation ist dieses Verzeichnis der
+  Primärcheckout auf einem sauberen `develop`, wo alle vier leer zurückkommen. Genau
+  eines davon macht die Verifikation konform: Sie läuft aus einer Session, die
+  **innerhalb** des Worktrees wurzelt, gemäß `spec/project/parallel-working-copies/`
+  §Claude-Code-Session-Scoping; oder die Orchestrierung hält die geprüfte
+  Änderungsmenge selbst fest, gemäß der Nicht-Vakuitäts-Regel unten
+- **MUSS [MUST]** ein Verifikationsergebnis als **vakuum und damit fehlgeschlagen**
+  behandeln, wenn die geprüfte Änderungsmenge leer ist, während der Feature-Branch
+  Commits trägt. Ein sauberer Report über einem leeren Diff liest sich exakt wie ein
+  sauberer Report über einem geprüften; der Unterschied lässt sich aus dem Report
+  nicht zurückgewinnen. Vor dem Festhalten irgendeines Verifikationsergebnisses
+  **MUSS [MUST]** die Orchestrierung `git -C <worktree> diff --stat
+  origin/develop...HEAD` erfassen und **DARF NICHT [MUST NOT]** einen Pass
+  festhalten, wenn diese Erfassung leer ist. Diese Pflicht bindet unabhängig davon,
+  welcher der beiden konformen Wege oben gegangen wurde, denn sie ist die einzige
+  Prüfung, die bei falschem Scoping nach sicher fällt. Wo der Integrationsbranch des
+  Repositories nicht der Remote-Default ist, gilt: Die Basis des Built-ins ist
+  `origin/HEAD`, eine klonzeitige lokale Referenz, sodass eine Abweichung den Diff
+  aufbläht statt ihn zu leeren, und dieselbe Erfassung ist es, die das sichtbar macht
+- **MUSS [MUST]** die Nichtverfügbarkeit von `code-security-reviewer` festhalten,
+  statt den Agenten stillschweigend wegzulassen. Er wird mit `nolte-engineering`
+  ausgeliefert (`plugins/nolte-engineering/agents/code-security-reviewer.md`), sodass
+  eine Session ohne dieses Plugin ihn nicht dispatchen kann, einschließlich der
+  Dogfooding-Sessions dieses Repositories, solange nicht jede Plugin-Wurzel geladen
+  ist. Wo er nicht verfügbar ist, **MUSS [MUST]** die Orchestrierung die Lücke im
+  Pre-Analysis-Artefakt und in den **Risk / rollout notes** des Pull Requests
+  festhalten und **DARF NICHT [MUST NOT]** das eingebaute `security-review` als
+  Ersatz behandeln: Die beiden ergänzen sich (Oberflächen-Abfassung gegenüber
+  Diff-Verifikation), sie sind nicht austauschbar
 - **MUSS [MUST]** sicherstellen, dass jeder Pull Request, den die Orchestrierung
   produziert, das Issue verlinkt (`Closes #<n>` oder die Linking-Konvention des
   Repositories) und in seiner **Risk / rollout notes**-Sektion gemäß
@@ -445,7 +481,14 @@ verifiziert und gemergt ist.
 - [ ] Für jedes `security`-Issue liefen sowohl der read-only
   `code-security-reviewer`-Agent als auch das eingebaute `security-review`-Skill,
   bevor der PR geöffnet wurde (Audit, dann Diff-Verifikation), festgehalten im
-  Artefakt und in den PR-Notes
+  Artefakt und in den PR-Notes, oder Artefakt und PR-Notes halten fest, warum
+  `code-security-reviewer` nicht verfügbar war
+- [ ] Für jeden Lauf, der das eingebaute `security-review` aufrief, hielt der Lauf
+  die von der Verifikation geprüfte Änderungsmenge fest, und kein Lauf hielt einen
+  Pass über einer leeren Änderungsmenge fest, während sein Feature-Branch Commits trug
+- [ ] Für jeden Lauf, dessen Verifikation von außerhalb des Worktrees lief, stammte
+  die festgehaltene Änderungsmenge aus einer expliziten Erfassung `git -C <worktree>
+  diff --stat origin/develop...HEAD` statt aus der Ausgabe des Built-ins selbst
 - [ ] Für jedes Arbeitspaket, dessen Finding-Klasse drei oder mehr Male ohne
   passenden Spezialisten generalistisch bearbeitet wurde, existiert nun entweder ein
   Spezialist oder ein offenes Issue trackt seine Erstellung mit benanntem Owner,

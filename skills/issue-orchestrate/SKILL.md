@@ -234,9 +234,12 @@ body.
 Before any PR opens, require `quality-gate` (when nolte-engineering is installed; otherwise the repo's declared `task lint`/`task test` gate) to pass green on the produced change, and
 for any package touching a security-sensitive path run the read-only
 `code-security-reviewer` agent to scope the surface and the built-in `security-review`
-skill to verify the produced diff. (`security-review` is the Claude Code harness
-built-in, invoked as the `security-review` skill — not
-`Agent(subagent_type="nolte-shared:security-review")`, which does not exist.)
+skill to verify the produced diff.
+
+The built-ins read the session's directory, not the worktree, so here they see an
+empty diff and report clean. Capture `git -C <worktree> diff --stat
+origin/develop...HEAD` first; an empty capture is a failed gate, never a pass. Read
+`references/verification-scoping.md`.
 
 **Then clean up the pre-analysis artifact.** With every package implemented and the
 gate green, `git rm .audits/issue-orchestrate/<n>/analysis.md` and commit the removal
