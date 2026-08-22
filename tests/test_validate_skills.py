@@ -203,3 +203,67 @@ def test_bash_justification_write_capable_warning_and_headings_pass():
     ok_n = "# A\n\n## Bash justification\n\n- `task test`\n"
     assert v.check_bash_justification("Read, Write, Bash", "Drafts.", ok_n, "x.md") == []
     assert v.check_bash_justification("Read, Grep", "Read-only scanner.", "# A\n", "x.md") == []
+
+
+# --- checks added by the 2026-08-22 skills-agents sweep, wave W1 -------------
+# Both guard a defect class that shipped to `develop` with CI green, so the tests
+# pin the exact boundary each check turned out to need rather than only the happy
+# path: the plural lookahead, the fenced-code exclusion, and the difference
+# between a *declared* resume opt-out and silence.
+
+def test_operations_heading_singular_is_critical():
+    body = "# T\n\n## Operation: `generate` (default)\n\nsteps\n"
+    findings = v.check_operations_heading(body, "x/SKILL.md", "skill")
+    assert _rules(findings) == {"skill-management.operations-heading-singular"}
+    assert findings[0].severity == "Critical"
+
+
+def test_operations_heading_plural_passes():
+    body = "# T\n\n## Operations\n\n### 1. `generate` (default)\n\nsteps\n"
+    assert v.check_operations_heading(body, "x/SKILL.md", "skill") == []
+
+
+def test_operations_heading_does_not_match_operational_prose():
+    # `(?!s)\b` must reject `## Operations` and any longer word starting with
+    # "Operation", not just the bare singular.
+    body = "# T\n\n## Operational boundaries\n\ntext\n"
+    assert v.check_operations_heading(body, "x/SKILL.md", "skill") == []
+
+
+def test_operations_heading_ignores_fenced_code_blocks():
+    # Skill bodies embed report templates in fenced blocks, and those templates
+    # legitimately carry level-2 headings. A heading inside a fence is sample
+    # output, not this document's own structure.
+    body = "# T\n\n## Operations\n\n```markdown\n## Operation performed\n```\n"
+    assert v.check_operations_heading(body, "x/SKILL.md", "skill") == []
+
+
+def test_resumable_flag_missing_when_body_wires_resume():
+    body = "# T\n\n## Resumability\n\nState is persisted to `.resume/foo/<run-id>.yml`.\n"
+    findings = v.check_resumable_wiring(None, "Does things.", "foo", body, "x/SKILL.md", "skill")
+    assert _rules(findings) == {"skill-management.resumable-flag-missing"}
+    assert findings[0].severity == "Critical"
+
+
+def test_resumable_flag_missing_cites_the_artifact_kind():
+    body = "# T\n\nState is persisted to `.resume/foo/<run-id>.yml`.\n"
+    findings = v.check_resumable_wiring(None, "Does things.", "foo", body, "x.md", "agent")
+    assert _rules(findings) == {"agent-management.resumable-flag-missing"}
+    assert "agent-management" in findings[0].message
+
+
+def test_resumable_heading_alone_is_not_wiring():
+    # The section is also where a skill documents a deliberate opt-out, so the
+    # heading on its own proves nothing. Only a concrete `.resume/` path does.
+    body = (
+        "# T\n\n## Resumability\n\nThis skill is deliberately **not** `resumable`: "
+        "it is a single cheap-to-restart pass.\n"
+    )
+    assert v.check_resumable_wiring(None, "Does things.", "foo", body, "x/SKILL.md", "skill") == []
+
+
+def test_declared_resumable_false_is_an_opt_out_not_a_finding():
+    # An opt-out whose rationale names the `.resume/` path it deliberately avoids
+    # must not raise an unsuppressable Critical.
+    body = "# T\n\n## Resumability\n\nDeliberately not resumable; nothing is written to `.resume/foo/`.\n"
+    assert v.check_resumable_wiring("false", "Does things.", "foo", body, "x/SKILL.md", "skill") == []

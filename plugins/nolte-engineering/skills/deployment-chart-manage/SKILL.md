@@ -35,7 +35,9 @@ Governed by `spec/project/bjw-s-common-chart-deployment/` (chart structure and t
 - **Owns a persistent on-disk artifact:** the chart files and the README manual-steps section are the deliverable; skills own persistent state.
 - Counter-dimension considered: each phase (detect, generate, audit) is a self-contained agent; the loop that sequences them and gates on the operator is the orchestration, which stays a skill.
 
-## Operation 1 — `provision` (greenfield)
+## Operations
+
+### 1. `provision` (greenfield)
 
 Generate a complete, best-practice chart for an app that has none.
 
@@ -44,7 +46,7 @@ Generate a complete, best-practice chart for an app that has none.
 3. **Audit.** Dispatch `deployment-bestpractices-reviewer` on the generated chart. On any Critical/Warning finding, hand it back to the generator to fix and re-audit; loop until the verdict is go.
 4. **Surface manual steps.** Present the README's irreducible operator steps (image tag, ingress host, secrets, storage class, `helm dependency build`) and report the chart location.
 
-## Operation 2 — `reconcile` (the change-noticing process)
+### 2. `reconcile` (the change-noticing process)
 
 Notice that the application changed — often through a `fullstack-developer` edit that added a config value or a new endpoint — and extend the chart to match.
 

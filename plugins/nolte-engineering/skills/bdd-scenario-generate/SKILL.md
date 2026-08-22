@@ -65,7 +65,9 @@ This skill owns the **scenario/specification layer** only. Bounded against its n
 - **Reference profile**: Gherkin + `pytest-bdd` by default, composing with the Selenium + `pytest` profile of `spec/project/e2e-test-automation/`. The core stays tool-neutral; a project on another BDD stack swaps the profile and the binding discipline still holds.
 - **Tier hint** (optional): the tier a case chose, carried onto the scenario so it lands at the right tier per `spec/project/test-cycle-case-determination/`.
 
-## Operation: `generate` (default)
+## Operations
+
+### 1. `generate` (default)
 
 An ordered workflow. Steps 1–5 apply the `behavior-driven-development` derivation; steps 6–7 emit; step 8 is the advisory review; steps 9–10 hand off and report.
 

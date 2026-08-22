@@ -1,6 +1,7 @@
 ---
 name: cicd-pipeline-design
 description: "Designs, scaffolds, and audits a repository's CI/CD pipeline against spec/project/continuous-integration/ (pre-merge stage sequence, reproducible inputs, cache discipline, local↔CI parity), spec/project/continuous-delivery/ (artifact immutability, provenance, the artifact-to-securing-stage matrix, rollback, the handover boundary to deployment), and spec/project/github-actions-best-practices/ (digest pinning, least-privilege permissions, untrusted input, short-lived credentials, reusable-workflow reuse, concurrency, caching). Writes and patches workflow files in the target repository. Invoke when the user asks to design, set up, rework, harden, or audit a CI/CD pipeline or GitHub Actions workflows; also German. Don't use to triage a red run (`workflow-health-triage`), run the gate (`quality-gate`), or publish a release (`release-publish-trigger`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
+resumable: true
 tags: [scaffolding, release]
 phase: design
 summary: "Designs, scaffolds, and audits a repository's CI/CD pipeline against the CI, CD, and GitHub Actions specs."
