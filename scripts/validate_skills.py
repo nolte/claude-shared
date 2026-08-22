@@ -361,7 +361,8 @@ def check_resumable_wiring(
     behavioural eval's job), but it refuses a flag with no wiring behind it.
     """
     findings: list[Finding] = []
-    if (resumable or "").strip().lower() != "true":
+    declared = (resumable or "").strip().lower()
+    if declared != "true":
         # Reverse direction of the same contract. The forward checks below refuse a
         # flag with no wiring; this refuses wiring with no flag. Without it a skill
         # can ship a `## Resumability` section, promise resume in `description`, and
@@ -371,12 +372,19 @@ def check_resumable_wiring(
         # a skill documents a deliberate opt-out ("this skill is deliberately not
         # resumable, because ..."). Only a concrete `.resume/` persistence path is
         # evidence of actual wiring, so that is what the reverse check keys on.
+        # An explicit `resumable: false` is a *declared* opt-out, which
+        # skill-management §Resumable runs covers with its own SHOULD NOT for
+        # one-shot skills. Only silence — no key at all — is ambiguous enough to
+        # flag, otherwise an opt-out whose rationale mentions the `.resume/` path
+        # it deliberately avoids would raise an unsuppressable Critical.
+        if declared == "false":
+            return findings
         if ".resume/" in body:
             findings.append(Finding(
                 "Critical", target, f"{kind}-management.resumable-flag-missing",
                 "body wires resume (references a `.resume/` persistence path) but "
-                "frontmatter omits `resumable: true` (skill-management "
-                "\u00a7Resumability; spec/claude/resumable-work/)",
+                f"frontmatter omits `resumable: true` ({kind}-management "
+                "\u00a7Resumable runs; spec/claude/resumable-work/)",
             ))
         return findings
 
@@ -584,7 +592,8 @@ def check_operations_heading(body: str, target: str, kind: str) -> list[Finding]
     Purely mechanical, and previously unchecked: the 2026-08-22 sweep found two
     skills shipping the singular form with CI green.
     """
-    bad = re.findall(r"^## Operation(?!s)\b.*$", body, re.M)
+    outside_fences = re.sub(r"^```.*?^```", "", body, flags=re.M | re.S)
+    bad = re.findall(r"^## Operation(?!s)\b.*$", outside_fences, re.M)
     if not bad:
         return []
     return [Finding(

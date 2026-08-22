@@ -36,7 +36,7 @@ Context: phase 1 of the skills-agents sweep 2026-08, narrowed to the five artefa
 - Info: 2
 
 Go/no-go: CONDITIONAL — the Critical is a one-line frontmatter addition; everything else is deferrable.
-Next concrete action: add `resumable: true` to the frontmatter.
+Next concrete action: none — the Critical closed 2026-08-22; the Warning is routed to the sweep's boundary matrix.
 
 ## Findings
 
@@ -63,7 +63,7 @@ Next concrete action: add `resumable: true` to the frontmatter.
 
 - [x] [skill-review.validator-coverage] `scripts/validate_skills.py` does not check the `resumable: true` MUST, so the Critical above passes `task test` undetected.
       Where: `scripts/validate_skills.py` reports only description-headroom `Info` entries across the whole inventory at `f46a3ef`; the Critical above is invisible to it.
-      Fix: n/a (observation). Candidate for the sweep's mechanical wave: extend the validator with the `## Resumability`-present-but-`resumable`-absent check, which is a two-condition grep.
+      Fix: n/a (observation). **Superseded 2026-08-22.** The heuristic proposed here — `## Resumability` present and `resumable:` absent — is wrong: that section is also where a skill documents a deliberate opt-out, and applying it produced a false positive on `backstage-catalog-generate`. The check that shipped keys on a concrete `.resume/` persistence path and treats an explicit `resumable: false` as a declared opt-out.
       Verify: n/a.
 
 ## Processing log
