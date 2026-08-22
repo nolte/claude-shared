@@ -41,7 +41,7 @@ it completely.
 
 ## Why this is a skill, not an agent
 
-Read `references/skill-vs-agent-rationale.md` when reviewing or challenging the artifact-type choice — in short: issue-scope confirmation, the classification call, the pre-analysis approval, the route decision and each dispatch are mid-flow operator dialogues, the work is orchestration rather than editing, and multi-phase state accumulates across prompts, all of which default it to skill form.
+Mid-flow operator dialogues at five gates, orchestration rather than editing, and multi-phase state across prompts all default this to skill form. `references/skill-vs-agent-rationale.md` carries the full argument for reviewing or challenging the choice.
 
 ## User-language policy
 
@@ -89,12 +89,9 @@ Before any operation:
   feature branch the PR is opened from — **MUST** happen in a dedicated worktree
   created off `origin/develop` via `task worktree:add -- <branch> [slug]`; the primary
   checkout stays on `develop`. Create (or confirm) the worktree before operation 3
-  writes the artifact. You **MAY** run the processing as a worktree-isolated agent
-  taking the issue id as its parameter (`Agent(..., isolation: "worktree")`) instead
-  of a fresh top-level session; if you do, root it under
-  `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/agents/` (never `.claude/worktrees/`),
-  and note that a subagent transcript isn't independently `claude --resume`-able, so
-  the `.resume/issue-orchestrate/` checkpoint stays the recovery anchor.
+  writes the artifact. A worktree-isolated agent is a sanctioned alternative to a
+  fresh top-level session; `references/gotchas.md` carries its root rule and the
+  resume trade-off it costs.
 
 ## Operations
 
@@ -110,10 +107,9 @@ Comprehend the full issue surface before classifying. Run in parallel:
 - `gh issue view <n> --json closedByPullRequestsReferences` (resolve linked PRs);
   `gh search prs --json …` or `gh pr list` to find open PRs that reference the issue
 
-**Tooling (optional GitHub MCP):** prefer the connected server's read tools for the
-reads above (`github:issue_read`, `github:list_issues`, `github:search_pull_requests` /
-`github:list_pull_requests`); fall back to the `gh` commands shown, per
-`spec/claude/mcp-tool-preference/`. `gh` stays authoritative; output is identical.
+Prefer the connected GitHub MCP server's read tools for those reads when one is
+available, falling back to the `gh` commands shown, per
+`spec/claude/mcp-tool-preference/`. `gh` stays authoritative.
 
 Then ground the issue in the repository: scan the `spec/`, `skills/`, `agents/`,
 source, and `docs/` paths the issue plausibly touches, and check for prior art —
@@ -193,23 +189,18 @@ Resolve the specialist for each work package by a runtime lookup of the catalog 
 exists now; never freeze a snapshot of "which specialists exist" inside this skill
 body.
 
-1. **Resolve the candidate set.** `Glob` every distribution root: the plugin's own
-   specialists at `${CLAUDE_PLUGIN_ROOT}/skills/*/SKILL.md` and
-   `${CLAUDE_PLUGIN_ROOT}/agents/*.md` (where the `nolte-shared` specialists live when
-   this skill runs inside a consumer repository), the consumer project's local
-   `skills/*/SKILL.md` and `agents/*.md`, and `~/.claude/agents/*.md` for the
-   project-distributed half. Then `Read` the `description:` line of every candidate and
-   build a (`name`, `kind`, `description`) table; the table is the runtime inventory. A
-   bare `skills/*/SKILL.md` glob that omits `${CLAUDE_PLUGIN_ROOT}` silently misses
-   every plugin-distributed specialist in a consumer repo — the same
-   `${CLAUDE_PLUGIN_ROOT}` rule the portfolio applies to bundled scripts.
-2. **Match each package to a candidate** on the basis of its stated responsibility,
-   not its name: a `spec-change` package maps to whichever skill's description names
-   spec authoring (the `spec` skill); a documentation package to whichever agent names
-   an audience-targeted documentation responsibility; a feature-shaped package to
-   `feature-decompose`. A `security` package isn't a single dispatch — it follows the
-   audit→fix→verify chain in operation 6. These are illustrative anchors — re-resolve
-   by description match each run, never from this list.
+1. **Resolve the candidate set.** `Glob` all four distribution roots —
+   `${CLAUDE_PLUGIN_ROOT}/skills/*/SKILL.md`, `${CLAUDE_PLUGIN_ROOT}/agents/*.md`, the
+   project's own `skills/*/SKILL.md` and `agents/*.md`, and `~/.claude/agents/*.md`.
+   Omitting `${CLAUDE_PLUGIN_ROOT}` silently misses every plugin-distributed
+   specialist; `references/dispatch-matching.md` says why that fails quietly. Then
+   `Read` each candidate's `description:` line and build a (`name`, `kind`,
+   `description`) table; that table is the runtime inventory.
+2. **Match each package to a candidate** on its stated responsibility, never on a
+   name, re-resolving against the inventory each run. A `security` package isn't a
+   single dispatch: it follows the audit→fix→verify chain in operation 6. Worked
+   anchors for the reasoning are in `references/dispatch-matching.md`, deliberately
+   kept out of this body so they can't harden into a lookup table.
 3. **No match is a portfolio gap.** When no candidate matches, apply
    `continuous-improvement` §Portfolio gap closure: record the no-match, count
    generalist-handled recurrences of the class, and at three or more (or with a
@@ -241,35 +232,23 @@ empty diff and report clean. Capture `git -C <worktree> diff --stat
 origin/develop...HEAD` first; an empty capture is a failed gate, never a pass. Read
 `references/verification-scoping.md`.
 
-**Then clean up the pre-analysis artifact.** With every package implemented and the
-gate green, `git rm .audits/issue-orchestrate/<n>/analysis.md` and commit the removal
-on the feature branch as a fix-forward. The artifact is run-scoped per
-`spec/project/issue-orchestration/` §Pre-analysis artifact lifecycle: the branch's
-commit trail keeps it readable for the reviewer, the squashed merge carries none of
-it, and the durable trail is the PR notes below plus the issue comment — so move any
-fact worth keeping into them first. Never `.gitignore` the path instead, and never
-remove the requirement artefact under `project/requirements/`, which stays durable.
-
-Then open the PR via `pull-request-create` (the operator confirms title and body per
-that skill's externally-visible-action gate) with:
-
-- the issue linked (`Closes #<n>` or the repository's linking convention), and
-- a **Risk / rollout notes** section per `pull-request-workflow` carrying the issue
-  reference, the issue classification verbatim, and per work package the dispatched
-  specialist (`subagent_type` literal) or the explicit "no matching specialised
-  agent — generalist remediation" note.
-
 When a package removed a false factual claim, **grep the corpus for it** before
 declaring the package done, and hold any externally-visible artefact resting on this
 run's own measurement until this gate is green — both per
 `references/measurement-discipline.md`.
 
-When the operator confirms, post the artifact's summary (classification, package
-count, route taken) back to the issue as a comment. The orchestration then stops at
-an open, audit-trailed PR. The merge belongs to `pull-request-merge`, which
-re-validates the gate. Report back the issue number, the classification, the route
-taken, the dispatched specialists, the artifact path, the PR URL, and the one-line
-"next action: invoke `pull-request-merge` after CI is green".
+Then close out in this order, following `references/closeout.md` for each step's
+contract:
+
+1. `git rm .audits/issue-orchestrate/<n>/analysis.md` on the feature branch as a
+   fix-forward. Never `.gitignore` it instead, and never remove
+   `project/requirements/`, which stays durable.
+2. Open the PR via `pull-request-create`, linking the issue and carrying the
+   **Risk / rollout notes** section that reference specifies.
+3. On operator confirmation, post the artifact's summary back to the issue.
+
+The orchestration stops at an open, audit-trailed PR; the merge belongs to
+`pull-request-merge`, which re-validates the gate. Report back per that reference.
 
 ## Examples
 
@@ -346,9 +325,9 @@ recorded in the artifact.
 ## Gotchas
 
 Read `references/gotchas.md` when classifying an ambiguous issue, shaping the
-pre-analysis artifact, or resolving specialists — it corrects the five non-obvious
-environment facts (infra/question short-circuits, boundedness, the transient
-artifact gate, live-catalog resolution) this flow gets wrong most often.
+pre-analysis artifact, resolving specialists, or believing a review verdict — it
+corrects the non-obvious environment facts this flow gets wrong most often. Keep it
+as the single list; don't mirror a count of its entries here.
 
 ## Multi-model testing
 

@@ -38,3 +38,13 @@ environment facts the executing agent would otherwise get wrong.
   believing any verdict, check that the reported branch, repository and file list are
   the ones under review; when they aren't, dispatch a review agent with the worktree
   path and `--repo <owner>/<name>` stated explicitly.
+- **A worktree-isolated agent is a sanctioned alternative, and it costs you resume.**
+  The default is a fresh top-level session in the worktree. You **MAY** instead run
+  the processing as `Agent(..., isolation: "worktree")` taking the issue id as its
+  parameter, per `spec/project/issue-orchestration/` §Working-copy isolation. If you
+  do, root it under `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/agents/` and
+  never under `.claude/worktrees/`, which the parallel-working-copies spec forbids
+  explicitly. The trade-off is real: a subagent transcript isn't independently
+  `claude --resume`-able, so the `.resume/issue-orchestrate/` checkpoint becomes the
+  only recovery anchor. The operator-approval gates stay with this skill either way —
+  the agent does the hands-on work, it doesn't absorb the gates.
