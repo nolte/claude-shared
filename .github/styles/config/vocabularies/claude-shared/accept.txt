@@ -96,3 +96,11 @@ Zalando
 # §C; upstream PR candidates for the technical vocabulary of nolte/vale-style).
 actionability
 [Ss]crollable
+# Supply-chain signing vocabulary (added with spec/project/artifact-signing/;
+# upstream PR candidates for the technical vocabulary of nolte/vale-style).
+Sigstore
+Fulcio
+Rekor
+Kyverno
+[Kk]eyless
+attestor(s)?
