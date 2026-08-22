@@ -583,6 +583,85 @@ NOMINAL_LEAD_PREFIXES = (
 DESCRIPTION_HEADROOM_CHARS = 975  # 95% of the 1024 platform cap
 
 
+# research-plan-implement §"Binding on skill and agent authoring" binds every
+# write-bearing skill to three statements in its own body: the spec citation, the
+# tier (or tier range) it targets, and the point at which it crosses the write gate.
+#
+# All 65 skills predate the spec (#553, 2026-08-21), so enforcing the citation as a
+# Critical would fail CI on the entire backlog at once — precisely what
+# test-tier-static-analysis §"Severity gating and the baseline-and-ratchet model"
+# forbids. The ratchet is adoption-keyed instead of a frozen file list:
+#
+#   citation absent            -> counted into ONE aggregate Info finding
+#   citation present, tier or
+#   write gate missing         -> Critical, per skill (the ratchet)
+#
+# The baseline is aggregated rather than reported per skill on purpose. Emitting
+# 65 individual warnings would raise this report from 11 warnings to 76 and bury
+# the actionable ones — the alert-fatigue cost the same spec section names as a
+# reason a tier "loses trust". One line states the size of the backlog; the
+# ratchet does the enforcing.
+RPI_SPEC = "spec/claude/research-plan-implement"
+RPI_ADOPTED_SEVERITY = "Critical"
+# Collected across the run by check_rpi_binding, drained by check_rpi_backlog.
+RPI_UNADOPTED: list[str] = []
+
+# A tier statement names one of the four tiers, or a range across them.
+_RPI_TIER = re.compile(r"\bTier\s*[0-3]\b")
+# The write gate is named as such; the spec fixes the term, so the check keys on it.
+_RPI_GATE = re.compile(r"\bwrite gate\b", re.I)
+
+
+def check_rpi_binding(body: str, target: str, kind: str) -> list[Finding]:
+    """Check the research-plan-implement binding statements in a skill body.
+
+    Mechanical half only. Whether the declared tier *fits* the work, and whether
+    the write gate is named at the *right* point, need judgement and stay with
+    `skill-review` per `spec/claude/skill-review/` §"Checks derived from
+    research-plan-implement".
+    """
+    outside_fences = re.sub(r"^```.*?^```", "", body, flags=re.M | re.S)
+    if RPI_SPEC not in outside_fences:
+        RPI_UNADOPTED.append(target)
+        return []
+    findings = []
+    if not _RPI_TIER.search(outside_fences):
+        findings.append(Finding(
+            RPI_ADOPTED_SEVERITY, target, f"{kind}-management.rpi-tier-missing",
+            f"body cites `{RPI_SPEC}/` but names no tier; §\"Phase depth scales with "
+            f"blast radius\" requires the targeted tier or tier range to be stated "
+            f"(`Tier 0`..`Tier 3`)",
+        ))
+    if not _RPI_GATE.search(outside_fences):
+        findings.append(Finding(
+            RPI_ADOPTED_SEVERITY, target, f"{kind}-management.rpi-write-gate-missing",
+            f"body cites `{RPI_SPEC}/` but never names its **write gate**; "
+            f"§\"Binding on skill and agent authoring\" requires the point at which "
+            f"the {kind} first writes tracked state to be identified",
+        ))
+    return findings
+
+
+def check_rpi_backlog(total_skills: int) -> list[Finding]:
+    """Report the un-adopted backlog once, as a single corpus-level finding."""
+    if not RPI_UNADOPTED:
+        return []
+    return [Finding(
+        "Info", "skills/", "skill-management.rpi-adoption-backlog",
+        f"{len(RPI_UNADOPTED)} of {total_skills} skills cite no `{RPI_SPEC}/` and "
+        f"state neither a tier nor a write gate. The corpus predates the spec, so "
+        f"this is the grandfathered baseline, reported once rather than per skill; "
+        f"adopting the citation in a skill promotes its tier and write-gate rules "
+        f"to Critical for that skill. The count is over all skills, not only "
+        f"write-bearing ones: the binding rule scopes to a skill that writes "
+        f"tracked state, and that property isn't reliably decidable from the body "
+        f"(a read-only skill such as `quality-gate` writes nothing, and a review "
+        f"skill writes only its findings artifact, which the spec places on the "
+        f"read-only side of the boundary). The over-count is deliberate and costs "
+        f"nothing: an un-adopted skill produces no per-file finding either way",
+    )]
+
+
 def check_operations_heading(body: str, target: str, kind: str) -> list[Finding]:
     """Enforce the plural `## Operations` heading for the operations block.
 
@@ -714,6 +793,7 @@ def check_skill(path: Path) -> list[Finding]:
     findings += check_resumable_wiring(
         fm.get("resumable"), fm.get("description"), fm.get("name"), body, rel, "skill")
     findings += check_operations_heading(body, rel, "skill")
+    findings += check_rpi_binding(body, rel, "skill")
     findings += check_rationale_heading(body, rel, "skill")
     findings += check_description_lead_voice(fm.get("description"), rel, "skill")
     findings += check_description_headroom(fm.get("description"), rel, "skill")
@@ -877,6 +957,10 @@ def main() -> int:
         if p.is_dir() and p.name == "agents":
             all_findings.extend(check_agent_tree(p))
             all_findings.extend(check_agent_description_budget(p))
+
+    # Drain the research-plan-implement adoption backlog into one finding.
+    all_findings.extend(check_rpi_backlog(
+        sum(1 for p in paths if p.name == "SKILL.md")))
 
     if not all_findings:
         print(f"validate_skills: {len(paths)} artifacts checked, no findings")
