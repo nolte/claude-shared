@@ -125,10 +125,21 @@ Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule 
 - **MAY** suppress this check with a documented exception in the plan's `## Scope` section when a skill is explicitly classified as "implementation-only" (for example, `dependency-audit`, `quality-gate`); but the suppression itself must be anchored in a spec or a recorded project decision
 - Rationale: this check operationalises the MUST from spec-driven-development that has so far been operator-only
 
+### Checks derived from `research-plan-implement`
+
+- **MUST** run the three binding checks from `spec/claude/research-plan-implement/` §"Binding on skill and agent authoring" against a skill whose workflow writes to tracked paths: the body cites that spec, states the tier or tier range it targets, and names the point at which it crosses the write gate
+- **MUST** key the severity to **adoption**, per the baseline-and-ratchet model `spec/project/test-tier-static-analysis/` §"Severity gating and the baseline-and-ratchet model" requires when introducing analysis over an existing corpus. A skill that cites the spec and then omits a tier or the write gate is a `Critical`. A skill that cites it nowhere isn't an individual finding: the whole corpus predates the spec, and 65 individual findings would bury the report's actionable ones. `scripts/validate_skills.py` reports that backlog once as an aggregate `Info`; the reviewer **MUST NOT** re-raise it per skill
+- **MUST** treat the mechanical half as already covered and **MUST NOT** restate it as a finding: whether the citation, a tier token, and the phrase *write gate* are present is checked by `scripts/validate_skills.py`. What this review adds is the half a parser can't reach:
+  - whether the **declared tier fits the work** the skill actually does, judged against the tier table's four rows and its highest-match rule. A skill that scaffolds a repository layout and declares Tier 1 is a `Critical`; so is one that runs a three-phase interview to change a single frontmatter field, which is the over-ceremony failure the spec names as a defect of the capability rather than diligence
+  - whether the **write gate is named at the right point**, meaning the first write to tracked state that forms part of the change rather than the first write of any kind. A skill that names its plan-artifact write as its gate has mislabelled it: `research-plan-implement` §"Phase definitions and the write boundary" puts artifact writes on the read-only side of the boundary, "artifact versus change, not tracked versus untracked"
+  - whether an operator approval gate actually sits between Plan and Implement where the declared tier is 2 or 3
+- **MUST NOT** accept a `phase:` frontmatter value as satisfying any of the above. That field is a delivery-lifecycle position and shares the tokens `plan` and `review` with this discipline's phase names while meaning something else; the spec's §"Binding on skill and agent authoring" forbids expressing one through the other
+- Rationale: the binding rules are written to be auditable from the artifact alone, but only their presence is mechanical. Tier fit and gate placement are exactly the judgements a review exists to make, and leaving them unchecked would let a skill satisfy the letter of the discipline while practising none of it
+
 ### Review procedure
 
 - **MUST** begin by reading the canonical `skill-management`, `skill-vs-agent`, and `review-plan` specs before producing any finding; findings without an anchor in one of those specs aren't valid output of this procedure
-- **MUST** produce findings in this order: external-validator findings → frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → best-practices checks → spec-anchor check → INFO observations
+- **MUST** produce findings in this order: external-validator findings → frontmatter → description/triggers → system-prompt body → rationale section → referenced assets → duplicate-prevention check → best-practices checks → spec-anchor check → research-plan-implement binding checks → INFO observations
 - **MUST** emit exactly one `review-plan` file at `.audits/skill-review/<skill-name>.md`; the reviewer **MUST** follow every lifecycle rule from `review-plan`, including the single-plan-per-target invariant and the deletion-commit message format
 - **SHOULD** embed, in the plan's `## Scope` section, the git SHA of the spec versions applied so a later re-review can tell whether findings may have become outdated by a spec revision
 - **MAY** fold purely stylistic observations (Vale, markdown linting) into `Info` findings when they aid the author, but **MUST NOT** promote them to `Warning` or `Critical`: those stay with their own tooling
@@ -142,6 +153,9 @@ This procedure is delivered as a skill (`skills/skill-review/`), per `skill-vs-a
 - **SHOULD**, when the skill under review dispatches an agent, trigger a companion `agent-review` for that agent only if the agent hasn't been reviewed against its current source revision—record the decision in the plan's `## Scope` so downstream actors know whether the dispatched agent has been covered
 
 ## Acceptance Criteria
+
+- [ ] A review of a write-bearing skill judges whether its declared tier fits its work and whether its write gate is named at the first write to tracked state, and doesn't restate the presence checks `scripts/validate_skills.py` already makes
+- [ ] The un-adopted backlog is reported once as an aggregate rather than as a finding per skill, and adopting the citation is what promotes a skill's tier and write-gate rules to `Critical`
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
 - [ ] A worked example exists applying this review procedure to one skill in `nolte-shared` (for instance `audience-identify`) and producing a conforming plan under `.audits/skill-review/`
 - [ ] Every skill in `skills/` has been reviewed against the current `skill-management` revision at least once since this spec was adopted, verifiable by either an open plan under `.audits/skill-review/` or a closing commit in `git log` matching the `review-plan` deletion pattern
