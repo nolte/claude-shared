@@ -75,8 +75,19 @@ Plugin `nolte-shared` aus Claude Code heraus:
 /plugin install nolte-shared@nolte-shared
 ```
 
-Nach der Installation ist jeder Skill als `/nolte-shared:<name>` aufrufbar (zum
-Beispiel `/nolte-shared:spec`); Agents werden von Skills dispatcht oder direkt
-über das `Task`-Tool, wenn du weißt, welchen Agent du willst. Du brauchst keinen
+Die Companion-Plugins sind optional und werden genauso zusätzlich zu
+`nolte-shared` installiert, nur wenn dein Projekt sie braucht:
+
+```bash
+/plugin install nolte-engineering@nolte-shared  # Code-Repositories
+/plugin install nolte-planning@nolte-shared     # Repositories, die in project/ planen
+/plugin install nolte-media@nolte-shared        # braucht Bildgenerierungs-Credentials
+/plugin install nolte-claude-dev@nolte-shared   # nur beim Autorisieren von Skills/Agents
+```
+
+Nach der Installation ist jeder Skill als `/<plugin>:<name>` aufrufbar (zum
+Beispiel `/nolte-shared:spec`, `/nolte-planning:sprint-plan`); Agents werden von
+Skills dispatcht oder direkt über das `Task`-Tool, wenn du weißt, welchen Agent
+du willst. Du brauchst keinen
 Clone dieses Repositories und keine lokale Toolchain, um das Plugin zu nutzen —
 die Installation passiert vollständig in deiner eigenen Claude-Code-Umgebung.

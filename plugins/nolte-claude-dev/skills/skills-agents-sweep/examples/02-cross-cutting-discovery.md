@@ -63,7 +63,7 @@ three existing artefacts cite the missing target.
 > but no operationalising skill or agent exists. Three artefacts reference it:
 >
 > - `agents/spec-readiness-reviewer.md` (§ Scope)
-> - `agents/feature-consistency-reviewer.md` (§ Working method)
+> - `plugins/nolte-planning/agents/feature-consistency-reviewer.md` (§ Working method)
 > - `skills/workflow-health-triage/SKILL.md` (§ Operations › 3. escalate)
 >
 > Any user following those hand-offs will land on a non-existent skill.

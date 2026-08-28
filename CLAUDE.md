@@ -17,7 +17,7 @@ All five plugins version in **lockstep** — one release line equal to the repos
 ## Layout
 
 - `.claude-plugin/plugin.json` — `nolte-shared` plugin manifest (name, version, author)
-- `.claude-plugin/marketplace.json` — marketplace catalog listing **all four** plugins (downstream install source)
+- `.claude-plugin/marketplace.json` — marketplace catalog listing **all five** plugins (downstream install source)
 - `skills/<name>/SKILL.md` — `nolte-shared` skills; each folder is one skill
 - `agents/<name>.md` — `nolte-shared` sub-agents
 - `plugins/nolte-media/`, `plugins/nolte-engineering/`, `plugins/nolte-claude-dev/`, `plugins/nolte-planning/` — the second through fifth plugins: each with its own `.claude-plugin/plugin.json`, `skills/`, and `agents/`, scoped to that root

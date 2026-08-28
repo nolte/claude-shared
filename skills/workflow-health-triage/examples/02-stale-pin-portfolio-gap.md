@@ -30,7 +30,7 @@ Repository state when the skill is invoked:
 - `agents/` directory at runtime contains:
   - `agents/claude-plugin-developer.md` (description: spec-conformant skill / agent / plugin-manifest authoring).
   - `agents/audience-doc-author.md` (description: audience-aware MkDocs documentation prose).
-  - `agents/feature-consistency-reviewer.md` (description: feature-spec consistency review).
+  - `plugins/nolte-planning/agents/feature-consistency-reviewer.md` (description: feature-spec consistency review).
   No agent's `description:` line names *"reusable workflow YAML maintenance"*, *"`nolte/gh-plumbing` tag bumps"*, or *"GitHub Actions pin remediation"*.
 
 ## Expected behaviour

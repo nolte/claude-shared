@@ -44,7 +44,7 @@ This spec presupposes two consumer repositories—a **source consumer** and a **
 A source consumer adopting this spec **MUST** satisfy the following:
 
 - The repository hosts features per [`spec/project/feature/`](../feature/en.md) and sprints per [`spec/project/sprint/`](../sprint/en.md). Features carry frontmatter that names at minimum a title, a status, and an acceptance-criteria block, and live under `project/features/<slug>.md`.
-- The repository invokes [`sprint-execute`](../../../skills/sprint-execute/SKILL.md) (or an equivalent skill conforming to `spec/project/sprint/`) to drive feature transitions. The `in_progress → done` transition is the trigger event named in §Trigger event.
+- The repository invokes [`sprint-execute`](../../../plugins/nolte-planning/skills/sprint-execute/SKILL.md) (or an equivalent skill conforming to `spec/project/sprint/`) to drive feature transitions. The `in_progress → done` transition is the trigger event named in §Trigger event.
 - The repository declares in its `CLAUDE.md` which **blog consumer** receives derived briefings—by name (for example `nolte/blog`), by clone path (for example `~/repos/github/blog`), or by both. A source consumer **MAY** declare itself as its own blog consumer (a single repository hosts both source work and the blog).
 
 ### Blog consumer
@@ -138,12 +138,12 @@ A trigger implementation (hook, skill, or operator workflow) satisfies this spec
 
 The reference consumer pair is:
 
-- **Source consumer**: `nolte/claude-shared` (this plugin's repository). Hosts features under `project/features/<slug>.md`, invokes [`sprint-execute`](../../../skills/sprint-execute/SKILL.md) to drive transitions.
+- **Source consumer**: `nolte/claude-shared` (this plugin's repository). Hosts features under `project/features/<slug>.md`, invokes [`sprint-execute`](../../../plugins/nolte-planning/skills/sprint-execute/SKILL.md) to drive transitions.
 - **Blog consumer**: `nolte/blog` (a bilingual Astro static blog). Hosts post pairs under `src/content/posts/{en,de}/<slug>.md`, satisfies all `blog-author` consumer-contract surfaces per `spec/project/blog-author/` §Reference example annex.
 
 The cross-repository handover for this pair is: the operator runs the trigger from the `claude-shared` clone; on Choice 1 or 2 the trigger writes a pre-staged briefing under `claude-shared/project/blog-triggers/<feature-slug>.briefing.md`, surfaces the path to `~/repos/github/blog`, and the operator opens a new Claude Code session in `~/repos/github/blog` and invokes `blog-author` with the pre-staged briefing as input.
 
-The reference wiring that fires the trigger is the [`blog-author-trigger`](../../../skills/blog-author-trigger/SKILL.md) skill, automatically dispatched from [`sprint-execute`](../../../skills/sprint-execute/SKILL.md) Operation C (`in_progress → done`) step 6. The skill owns the briefing derivation, the three-way operator choice, and the deferral artefact; `sprint-execute` only fires it after marking the feature `done`. This pairing (a dedicated skill, dispatched in-session from `sprint-execute` per [`sprint/en.md`](../sprint/en.md)) is the reference choice only; the spec stays wiring-agnostic and other consumers remain free to pick a different mechanism.
+The reference wiring that fires the trigger is the [`blog-author-trigger`](../../../skills/blog-author-trigger/SKILL.md) skill, automatically dispatched from [`sprint-execute`](../../../plugins/nolte-planning/skills/sprint-execute/SKILL.md) Operation C (`in_progress → done`) step 6. The skill owns the briefing derivation, the three-way operator choice, and the deferral artefact; `sprint-execute` only fires it after marking the feature `done`. This pairing (a dedicated skill, dispatched in-session from `sprint-execute` per [`sprint/en.md`](../sprint/en.md)) is the reference choice only; the spec stays wiring-agnostic and other consumers remain free to pick a different mechanism.
 
 Portfolio-project mapping for this pair: any feature in `nolte/claude-shared` maps to `portfolioProject: claude-shared` in the blog consumer's portfolio collection. The mapping is declared in the blog consumer's `CLAUDE.md`.
 

@@ -23,7 +23,7 @@ Repository state when the skill is invoked:
 - `project/goals.md` — present; the dashboard maps to an existing outcome, the
   notification integration maps to no existing outcome.
 - `project/roadmap.md` and `project/sprints/` — present.
-- `skills/feature-decompose/SKILL.md` and `skills/roadmap-plan/SKILL.md` — present.
+- `plugins/nolte-planning/skills/feature-decompose/SKILL.md` and `plugins/nolte-planning/skills/roadmap-plan/SKILL.md` — present.
 - `gh auth status` — authenticated.
 
 ## Expected behaviour
