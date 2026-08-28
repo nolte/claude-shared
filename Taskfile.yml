@@ -241,7 +241,7 @@ tasks:
   plugin:reload:
     desc: Start Claude Code with all in-repo plugins loaded (dogfooding)
     cmds:
-      - claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering --plugin-dir ./plugins/nolte-claude-dev
+      - claude --plugin-dir . --plugin-dir ./plugins/nolte-media --plugin-dir ./plugins/nolte-engineering --plugin-dir ./plugins/nolte-claude-dev --plugin-dir ./plugins/nolte-planning
 
   worktree:root:
     desc: |

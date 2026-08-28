@@ -45,6 +45,10 @@ The plugin is designed for these scenarios:
   `/nolte-shared:pull-request-merge`) across repositories.
 - Run a consistent **quality gate** and **dependency audit** before committing
   or releasing (`/nolte-engineering:quality-gate`, `/nolte-engineering:dependency-audit`).
+- Run a **planning cadence** in `project/`—mission, roadmap, features, sprints
+  (`/nolte-planning:sprint-plan`, `/nolte-planning:roadmap-plan`)—when your
+  repository plans that way; repositories that track work as issues skip this
+  plugin entirely.
 - Author and review **skills, agents, and specs** against shared authoring rules
   (`/nolte-claude-dev:skill-management`, `/nolte-shared:spec`, and the review skills).
 - Keep **project structure, documentation, and release automation** aligned with

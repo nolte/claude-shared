@@ -49,6 +49,10 @@ Das Plugin ist für diese Szenarien ausgelegt:
 - Ein konsistentes **Quality-Gate** und einen **Dependency-Audit** vor Commit
   oder Release laufen lassen (`/nolte-engineering:quality-gate`,
   `/nolte-engineering:dependency-audit`).
+- Eine **Planungskadenz** in `project/` fahren — Mission, Roadmap, Features,
+  Sprints (`/nolte-planning:sprint-plan`, `/nolte-planning:roadmap-plan`) —,
+  wenn dein Repository so plant; Repositories, die Arbeit als Issues führen,
+  installieren dieses Plugin gar nicht erst.
 - **Skills, Agents und Specs** gegen geteilte Autorenschafts-Regeln verfassen und
   reviewen (`/nolte-claude-dev:skill-management`, `/nolte-shared:spec` sowie die
   Review-Skills).

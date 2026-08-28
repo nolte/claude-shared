@@ -27,6 +27,11 @@
       "name": "nolte-claude-dev",
       "source": "./plugins/nolte-claude-dev",
       "description": "Claude Code skill and agent authoring for plugin/skill developers: spec-conformant skill/agent scaffolding and revision, skill and agent review, portfolio-wide skills/agents sweeps, and skills/agents documentation-catalog generation. Adopt this on top of nolte-shared only if you author Claude Code skills or agents; the majority of consumers never do."
+    },
+    {
+      "name": "nolte-planning",
+      "source": "./plugins/nolte-planning",
+      "description": "Project-planning cadence for repositories that plan in project/: SMART mission authoring, roadmap init/planning/refinement, roadmap-item decomposition into features, and the sprint lifecycle from planning through execution to review, with the matching readiness, coherence, and consistency reviewers. Adopt this on top of nolte-shared only if your repository runs a mission/roadmap/feature/sprint cadence; repositories that track work as issues never do."
     }
   ]
 }

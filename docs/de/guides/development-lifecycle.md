@@ -99,8 +99,8 @@ Die Mission rahmt das gesamte Vorhaben ein: Wem dient das Projekt? Was gilt als 
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
-| [`mission-define`](../skills/nolte-shared/mission-define.md) | Skill | Erste `project/mission.md` schreiben, sobald Audience-Artefakt und `project/goals.md` vorliegen. |
-| [`mission-revise`](../skills/nolte-shared/mission-revise.md) | Skill | SMART-Statement anpassen, `mvp_status` entlang seines erlaubten Lebenszyklus umstellen oder nach Stabilisierung revidieren. |
+| [`mission-define`](../skills/nolte-planning/mission-define.md) | Skill | Erste `project/mission.md` schreiben, sobald Audience-Artefakt und `project/goals.md` vorliegen. |
+| [`mission-revise`](../skills/nolte-planning/mission-revise.md) | Skill | SMART-Statement anpassen, `mvp_status` entlang seines erlaubten Lebenszyklus umstellen oder nach Stabilisierung revidieren. |
 
 ### 2 Plan
 
@@ -110,12 +110,12 @@ Plan überführt die Outcomes der Mission in konkrete, einem Sprint zugeordnete 
 |---|---|---|
 | [`audience-identify`](../skills/nolte-shared/audience-identify.md) | Skill | Audience-Liste des bounded context aufstellen, bevor nachgelagerte Artefakte sie referenzieren. Vorbedingung für `mission-define` und `roadmap-init`. |
 | [`audience-review`](../agents/nolte-shared/audience-review.md) | Agent | Ein bestehendes Audience-Artefakt auf Vollständigkeit prüfen, bevor Mission, Roadmap oder Release-Notes darauf aufbauen. |
-| [`roadmap-init`](../skills/nolte-shared/roadmap-init.md) | Skill | `project/goals.md` und `project/roadmap.md` beim ersten Mal scaffolden. |
-| [`roadmap-plan`](../skills/nolte-shared/roadmap-plan.md) | Skill | Roadmap-Einträge hinzufügen, retargeten oder umformen; MVP-Flag entlang der asymmetrischen Regel umlegen. |
-| [`roadmap-refine`](../skills/nolte-shared/roadmap-refine.md) | Skill | Einträge auf Detailstufe `fine` heben, bevor sie in den aktuellen oder nächsten Sprint laufen. |
-| [`sprint-plan`](../skills/nolte-shared/sprint-plan.md) | Skill | Nächste Sprint-Datei unter `project/sprints/<NNNN>-<slug>.md` anlegen und passende Roadmap-Einträge einziehen. |
-| [`feature-decompose`](../skills/nolte-shared/feature-decompose.md) | Skill | Einen Roadmap-Eintrag in ein oder mehrere `project/features/<slug>.md`-Dateien zerlegen. |
-| [`feature-consistency-reviewer`](../agents/nolte-shared/feature-consistency-reviewer.md) | Agent | Wird von `feature-decompose` dispatched, prüft ein Feature gegen den Feature-Korpus, Quellcode-Roots und Spec-Korpus vor `draft → ready`. |
+| [`roadmap-init`](../skills/nolte-planning/roadmap-init.md) | Skill | `project/goals.md` und `project/roadmap.md` beim ersten Mal scaffolden. |
+| [`roadmap-plan`](../skills/nolte-planning/roadmap-plan.md) | Skill | Roadmap-Einträge hinzufügen, retargeten oder umformen; MVP-Flag entlang der asymmetrischen Regel umlegen. |
+| [`roadmap-refine`](../skills/nolte-planning/roadmap-refine.md) | Skill | Einträge auf Detailstufe `fine` heben, bevor sie in den aktuellen oder nächsten Sprint laufen. |
+| [`sprint-plan`](../skills/nolte-planning/sprint-plan.md) | Skill | Nächste Sprint-Datei unter `project/sprints/<NNNN>-<slug>.md` anlegen und passende Roadmap-Einträge einziehen. |
+| [`feature-decompose`](../skills/nolte-planning/feature-decompose.md) | Skill | Einen Roadmap-Eintrag in ein oder mehrere `project/features/<slug>.md`-Dateien zerlegen. |
+| [`feature-consistency-reviewer`](../agents/nolte-planning/feature-consistency-reviewer.md) | Agent | Wird von `feature-decompose` dispatched, prüft ein Feature gegen den Feature-Korpus, Quellcode-Roots und Spec-Korpus vor `draft → ready`. |
 
 ### 3 Design
 
@@ -145,7 +145,7 @@ Ein geplanter Sprint wird aktiv, sobald das erste Feature startet. `sprint-execu
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
-| [`sprint-execute`](../skills/nolte-shared/sprint-execute.md) | Skill | Sprint auf `active` setzen, Features durch `ready → in_progress → done` führen und `last_commit` pro Abschluss aktualisieren. |
+| [`sprint-execute`](../skills/nolte-planning/sprint-execute.md) | Skill | Sprint auf `active` setzen, Features durch `ready → in_progress → done` führen und `last_commit` pro Abschluss aktualisieren. |
 
 ### 5 Review
 
@@ -178,7 +178,7 @@ Ein Sprint wird geschlossen, indem sein deployment-fähiges Artefakt validiert w
 
 | Artefakt | Typ | Wann einsetzen |
 |---|---|---|
-| [`sprint-review`](../skills/nolte-shared/sprint-review.md) | Skill | `artifact_ref` validieren, das wertverifizierende Akzeptanzkriterium bestätigen, optional in Release-Skills überleiten und den Sprint schließen. |
+| [`sprint-review`](../skills/nolte-planning/sprint-review.md) | Skill | `artifact_ref` validieren, das wertverifizierende Akzeptanzkriterium bestätigen, optional in Release-Skills überleiten und den Sprint schließen. |
 | [`release-notes-curate`](../skills/nolte-shared/release-notes-curate.md) | Skill | Offenen release-drafter-Draft auf `develop` mit projekt-kontext-aware-Sektionen anreichern. |
 | [`release-publish-trigger`](../skills/nolte-shared/release-publish-trigger.md) | Skill | Jedes Pre-Publish-Gate lokal validieren, dann `release-publish.yml` für den Draft dispatchen. |
 

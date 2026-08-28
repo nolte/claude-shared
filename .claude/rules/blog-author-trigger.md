@@ -17,7 +17,7 @@ declares its trigger roles:
 
 - **Source consumer:** `nolte/claude-shared` (this repository). It hosts
   features under `project/features/<slug>.md` and drives transitions via
-  `/nolte-shared:sprint-execute`. The `in_progress → done` transition is the
+  `/nolte-planning:sprint-execute`. The `in_progress → done` transition is the
   trigger event.
 - **Blog consumer:** `nolte/blog` (the bilingual Astro blog), clone path
   `~/repos/github/blog`. It receives derived briefings; the portfolio mapping

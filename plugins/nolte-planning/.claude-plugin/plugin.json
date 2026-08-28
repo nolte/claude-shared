@@ -1,0 +1,11 @@
+{
+  "name": "nolte-planning",
+  "version": "0.1.11",
+  "description": "Project-planning cadence for repositories that plan in project/: SMART mission authoring, roadmap init/planning/refinement, roadmap-item decomposition into features, and the sprint lifecycle from planning through execution to review, with the matching readiness, coherence, and consistency reviewers. Adopt this on top of nolte-shared only if your repository runs a mission/roadmap/feature/sprint cadence; repositories that track work as issues never do.",
+  "author": {
+    "name": "nolte",
+    "url": "https://github.com/nolte"
+  },
+  "repository": "https://github.com/nolte/claude-shared",
+  "homepage": "https://github.com/nolte/claude-shared"
+}

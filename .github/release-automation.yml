@@ -1,14 +1,14 @@
 # Version-bearing file declaration for spec/project/release-automation/ §Version-bearing files.
 #
-# This repository is a plugin monorepo shipping four Claude Code plugins from
+# This repository is a plugin monorepo shipping five Claude Code plugins from
 # one release line (lockstep): nolte-shared (root), nolte-media,
-# nolte-engineering, and nolte-claude-dev. The plugins were split on
+# nolte-engineering, nolte-claude-dev, and nolte-planning. The plugins were split on
 # distribution-contract differences (consumer audience / runtime dependency) —
-# NOT on a different release cadence — so all four carry the same version, equal
+# NOT on a different release cadence — so all five carry the same version, equal
 # to the repository's release tag.
 #
 # The default Claude-plugin convention only covers the root .claude-plugin/
-# plugin.json and marketplace.json metadata.version, which would leave the three
+# plugin.json and marketplace.json metadata.version, which would leave the four
 # sub-plugin manifests to drift. This explicit list REPLACES the default and
 # brings every plugin's own plugin.json into the pre-publish alignment gate.
 #
@@ -27,4 +27,6 @@ version_bearing_files:
   - path: plugins/nolte-engineering/.claude-plugin/plugin.json
     selector: version
   - path: plugins/nolte-claude-dev/.claude-plugin/plugin.json
+    selector: version
+  - path: plugins/nolte-planning/.claude-plugin/plugin.json
     selector: version

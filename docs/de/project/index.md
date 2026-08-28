@@ -12,7 +12,7 @@ Dieser Abschnitt orientiert dich rund um den `project/`-Planungsbaum (Mission, G
 
 Die Planning-Suite umfasst mehrere Skills sowie einen Agenten. Damit operationalisiert ein adoptierendes Repository die Specs `mission`, `roadmap`, `sprint`, `feature` und `release-artifact`. Diese Seite zeigt die typische Reihenfolge der Skill-Aufrufe und ordnet jedem Skill das Artefakt zu, das er schreibt.
 
-Adoption ist freiwillig. Ein Repository ohne `project/`-Verzeichnis bleibt von jedem dieser Skills unberührt.
+Die Suite wird als eigenes Plugin `nolte-planning` ausgeliefert, das zusätzlich zu `nolte-shared` installiert wird; jeder Skill unten wird als `/nolte-planning:<name>` aufgerufen. Adoption ist freiwillig — ein Repository ohne `project/`-Verzeichnis installiert das Plugin gar nicht erst und trägt damit auch kein Gewicht davon.
 
 **Lifecycle-Übersicht**
 
