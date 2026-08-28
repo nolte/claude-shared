@@ -40,7 +40,7 @@ Diese Spec setzt zwei Konsumenten-Repositories voraus—einen **Quell-Konsumente
 Ein Quell-Konsument, der diese Spec übernimmt, **MUSS [MUST]** Folgendes erfüllen:
 
 - Das Repository beherbergt Features per [`spec/project/feature/`](../feature/de.md) und Sprints per [`spec/project/sprint/`](../sprint/de.md). Features tragen Frontmatter, das mindestens einen Titel, einen Status und einen Akzeptanzkriterien-Block benennt, und leben unter `project/features/<slug>.md`.
-- Das Repository ruft [`sprint-execute`](../../../skills/sprint-execute/SKILL.md) auf (oder eine gleichwertige Skill, die `spec/project/sprint/` erfüllt), um Feature-Übergänge zu treiben. Der `in_progress → done`-Übergang ist das in §Trigger-Ereignis benannte Trigger-Ereignis.
+- Das Repository ruft [`sprint-execute`](../../../plugins/nolte-planning/skills/sprint-execute/SKILL.md) auf (oder eine gleichwertige Skill, die `spec/project/sprint/` erfüllt), um Feature-Übergänge zu treiben. Der `in_progress → done`-Übergang ist das in §Trigger-Ereignis benannte Trigger-Ereignis.
 - Das Repository deklariert in seinem `CLAUDE.md`, welcher **Blog-Konsument** abgeleitete Briefings empfängt—per Name (z. B. `nolte/blog`), per Clone-Pfad (z. B. `~/repos/github/blog`) oder per beidem. Ein Quell-Konsument **DARF [MAY]** sich selbst als eigenen Blog-Konsumenten deklarieren (ein einzelnes Repository beherbergt sowohl Quellarbeit als auch Blog).
 
 ### Blog-Konsument
@@ -134,12 +134,12 @@ Eine Trigger-Implementierung (Hook, Skill oder Operator-Workflow) erfüllt diese
 
 Das Referenz-Konsumenten-Paar ist:
 
-- **Quell-Konsument**: `nolte/claude-shared` (das Repository dieses Plugins). Beherbergt Features unter `project/features/<slug>.md`, ruft [`sprint-execute`](../../../skills/sprint-execute/SKILL.md) auf, um Übergänge zu treiben.
+- **Quell-Konsument**: `nolte/claude-shared` (das Repository dieses Plugins). Beherbergt Features unter `project/features/<slug>.md`, ruft [`sprint-execute`](../../../plugins/nolte-planning/skills/sprint-execute/SKILL.md) auf, um Übergänge zu treiben.
 - **Blog-Konsument**: `nolte/blog` (ein zweisprachiger Astro-Static-Blog). Beherbergt Post-Paare unter `src/content/posts/{en,de}/<slug>.md`, erfüllt alle `blog-author`-Konsumenten-Vertrag-Oberflächen per `spec/project/blog-author/` §Referenz-Beispiel-Annex.
 
 Die Cross-Repository-Übergabe für dieses Paar ist: der Operator führt den Trigger aus dem `claude-shared`-Clone aus; bei Wahl 1 oder 2 schreibt der Trigger ein vorbereitetes Briefing unter `claude-shared/project/blog-triggers/<feature-slug>.briefing.md`, zeigt den Pfad zu `~/repos/github/blog` an, und der Operator öffnet eine neue Claude-Code-Session in `~/repos/github/blog` und ruft `blog-author` mit dem vorbereiteten Briefing als Input auf.
 
-Die Referenz-Verdrahtung, die den Trigger feuert, ist die [`blog-author-trigger`](../../../skills/blog-author-trigger/SKILL.md)-Skill, automatisch dispatched aus [`sprint-execute`](../../../skills/sprint-execute/SKILL.md) Operation C (`in_progress → done`) Schritt 6. Die Skill besitzt die Briefing-Ableitung, die dreifache Operator-Wahl und das Deferral-Artefakt; `sprint-execute` feuert sie nur, nachdem das Feature als `done` markiert wurde. Diese Paarung (eine dedizierte Skill, in-session aus `sprint-execute` per [`sprint/de.md`](../sprint/de.md) dispatched) ist nur die Referenzwahl; die Spec bleibt verdrahtungsagnostisch, und andere Konsumenten dürfen weiterhin einen anderen Mechanismus wählen.
+Die Referenz-Verdrahtung, die den Trigger feuert, ist die [`blog-author-trigger`](../../../skills/blog-author-trigger/SKILL.md)-Skill, automatisch dispatched aus [`sprint-execute`](../../../plugins/nolte-planning/skills/sprint-execute/SKILL.md) Operation C (`in_progress → done`) Schritt 6. Die Skill besitzt die Briefing-Ableitung, die dreifache Operator-Wahl und das Deferral-Artefakt; `sprint-execute` feuert sie nur, nachdem das Feature als `done` markiert wurde. Diese Paarung (eine dedizierte Skill, in-session aus `sprint-execute` per [`sprint/de.md`](../sprint/de.md) dispatched) ist nur die Referenzwahl; die Spec bleibt verdrahtungsagnostisch, und andere Konsumenten dürfen weiterhin einen anderen Mechanismus wählen.
 
 Portfolio-Projekt-Mapping für dieses Paar: jedes Feature in `nolte/claude-shared` bildet auf `portfolioProject: claude-shared` in der Portfolio-Collection des Blog-Konsumenten ab. Das Mapping ist im `CLAUDE.md` des Blog-Konsumenten deklariert.
 

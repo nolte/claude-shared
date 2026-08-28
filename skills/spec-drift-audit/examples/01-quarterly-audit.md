@@ -117,7 +117,7 @@ Expected: feature-request.yml required per project-structure AC
 ### F2 — Skills missing `phase` frontmatter field
 Spec: spec/claude/skill-management/en.md §Structure
 Result: fail
-Observed: skills/roadmap-init/SKILL.md has no `phase` field
+Observed: plugins/nolte-planning/skills/roadmap-init/SKILL.md has no `phase` field
 Expected: every skill declares phase from the eight-value vocabulary
 
 ### F3 — Local vocab duplicates not removed post pin-bump

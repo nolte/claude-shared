@@ -6,7 +6,7 @@
 
 ## Input files (optional)
 
-- `skills/roadmap-init/SKILL.md` — the skill under review (frontmatter, body, rationale, hard rules)
+- `plugins/nolte-planning/skills/roadmap-init/SKILL.md` — the skill under review (frontmatter, body, rationale, hard rules)
 - `spec/claude/skill-management/en.md` — canonical authoring spec
 - `spec/claude/skill-vs-agent/en.md` — canonical orchestration spec
 - `spec/claude/review-plan/en.md` — canonical plan-format spec

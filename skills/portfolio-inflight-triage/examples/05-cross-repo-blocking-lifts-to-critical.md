@@ -105,7 +105,7 @@ audit applies the spec defaults.
    by slug — `feature-decompose` — to turn the blocking request into
    actionable feature files. The recommended-action line carries the
    verbatim slash-command invocation:
-   `/nolte-shared:feature-decompose for nolte/gh-plumbing#312 (blocks nolte/sensor-bridge sprint 0004)`.
+   `/nolte-planning:feature-decompose for nolte/gh-plumbing#312 (blocks nolte/sensor-bridge sprint 0004)`.
 8. **Findings-Report written** at
    `.audits/portfolio-inflight/2026-05-23.md` with the four
    `review-plan`-mandated sections in declared order. The finding reads
@@ -118,7 +118,7 @@ audit applies the spec defaults.
    axes: security_relevance=false, release_blocking=false,
          age_multiplier=1.0×, cross_repo_blocking=true
    staleness: 21d open, 21d since last activity
-   recommend: /nolte-shared:feature-decompose for nolte/gh-plumbing#312 (blocks nolte/sensor-bridge sprint 0004)
+   recommend: /nolte-planning:feature-decompose for nolte/gh-plumbing#312 (blocks nolte/sensor-bridge sprint 0004)
    ```
 
 9. **Per-severity counts confirmed.** The closing message reports the

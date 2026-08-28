@@ -12,7 +12,7 @@ This section orients you around the `project/` planning tree (mission, goals, ro
 
 The planning suite bundles skills and one agent that operationalise the `mission`, `roadmap`, `sprint`, `feature`, and `release-artifact` specs in an adopting repository. This page shows the typical order in which the skills are invoked and maps each skill to the artefact it writes.
 
-Adoption is voluntary. A repository without a `project/` directory is untouched by any of these skills.
+The planning cadence itself ships as its own plugin, `nolte-planning`, installed on top of `nolte-shared`: the mission, roadmap, feature, and sprint skills below are called as `/nolte-planning:<name>`. The supporting skills this page also references (`audience-identify` upstream, `release-notes-curate` and `release-publish-trigger` downstream) stay in `nolte-shared` and keep the `/nolte-shared:<name>` prefix. Adoption is voluntary—a repository without a `project/` directory doesn't install the plugin at all, and so carries none of its weight.
 
 **Lifecycle overview**
 

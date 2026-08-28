@@ -24,7 +24,7 @@ Repository state when the skill is invoked:
 - `agents/` directory contains (at runtime — exact set is discovered, not hard-coded):
   - `agents/claude-plugin-developer.md` with `description:` mentioning *"spec-conformant authoring and revision of Claude Code skills, agents, and plugin manifest files"*.
   - `agents/audience-doc-author.md` with `description:` mentioning *"audience-aware MkDocs documentation prose"*.
-  - `agents/feature-consistency-reviewer.md` with `description:` mentioning *"feature-spec acceptance-criterion consistency review"*.
+  - `plugins/nolte-planning/agents/feature-consistency-reviewer.md` with `description:` mentioning *"feature-spec acceptance-criterion consistency review"*.
 - `gh auth status` — authenticated.
 
 ## Expected behaviour

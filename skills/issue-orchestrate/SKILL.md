@@ -176,7 +176,12 @@ issue is implemented directly or routed to the formal pipeline:
   more than a single coherent PR strand, or would create or retarget a roadmap item.
   Hand it to `feature-decompose` (existing roadmap item) or `roadmap-plan` (new
   outcome or item) — never draft features or roadmap items inline. After hand-off,
-  the orchestration stops; the planning skills own the rest.
+  the orchestration stops; the planning skills own the rest. Both ship in
+  `nolte-planning`, not in this plugin, so a session without that plugin installed
+  can't take this route: record the unavailability and stop, exactly as the
+  `code-security-reviewer` rule in `spec/project/issue-orchestration/` requires —
+  never fall through to a generalist, which would leave the issue silently
+  unplanned.
 - **Implement directly** when the issue is bounded — one coherent outcome, a single
   PR strand, no new roadmap item — proceeding to operation 5.
 

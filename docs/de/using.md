@@ -49,6 +49,10 @@ Das Plugin ist für diese Szenarien ausgelegt:
 - Ein konsistentes **Quality-Gate** und einen **Dependency-Audit** vor Commit
   oder Release laufen lassen (`/nolte-engineering:quality-gate`,
   `/nolte-engineering:dependency-audit`).
+- Eine **Planungskadenz** in `project/` fahren — Mission, Roadmap, Features,
+  Sprints (`/nolte-planning:sprint-plan`, `/nolte-planning:roadmap-plan`) —,
+  wenn dein Repository so plant; Repositories, die Arbeit als Issues führen,
+  installieren dieses Plugin gar nicht erst.
 - **Skills, Agents und Specs** gegen geteilte Autorenschafts-Regeln verfassen und
   reviewen (`/nolte-claude-dev:skill-management`, `/nolte-shared:spec` sowie die
   Review-Skills).
@@ -71,8 +75,19 @@ Plugin `nolte-shared` aus Claude Code heraus:
 /plugin install nolte-shared@nolte-shared
 ```
 
-Nach der Installation ist jeder Skill als `/nolte-shared:<name>` aufrufbar (zum
-Beispiel `/nolte-shared:spec`); Agents werden von Skills dispatcht oder direkt
-über das `Task`-Tool, wenn du weißt, welchen Agent du willst. Du brauchst keinen
+Die Companion-Plugins sind optional und werden genauso zusätzlich zu
+`nolte-shared` installiert, nur wenn dein Projekt sie braucht:
+
+```bash
+/plugin install nolte-engineering@nolte-shared  # Code-Repositories
+/plugin install nolte-planning@nolte-shared     # Repositories, die in project/ planen
+/plugin install nolte-media@nolte-shared        # braucht Bildgenerierungs-Credentials
+/plugin install nolte-claude-dev@nolte-shared   # nur beim Autorisieren von Skills/Agents
+```
+
+Nach der Installation ist jeder Skill als `/<plugin>:<name>` aufrufbar (zum
+Beispiel `/nolte-shared:spec`, `/nolte-planning:sprint-plan`); Agents werden von
+Skills dispatcht oder direkt über das `Task`-Tool, wenn du weißt, welchen Agent
+du willst. Du brauchst keinen
 Clone dieses Repositories und keine lokale Toolchain, um das Plugin zu nutzen —
 die Installation passiert vollständig in deiner eigenen Claude-Code-Umgebung.

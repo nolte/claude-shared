@@ -45,6 +45,10 @@ The plugin is designed for these scenarios:
   `/nolte-shared:pull-request-merge`) across repositories.
 - Run a consistent **quality gate** and **dependency audit** before committing
   or releasing (`/nolte-engineering:quality-gate`, `/nolte-engineering:dependency-audit`).
+- Run a **planning cadence** in `project/`—mission, roadmap, features, sprints
+  (`/nolte-planning:sprint-plan`, `/nolte-planning:roadmap-plan`)—when your
+  repository plans that way; repositories that track work as issues skip this
+  plugin entirely.
 - Author and review **skills, agents, and specs** against shared authoring rules
   (`/nolte-claude-dev:skill-management`, `/nolte-shared:spec`, and the review skills).
 - Keep **project structure, documentation, and release automation** aligned with
@@ -65,8 +69,18 @@ plugin from within Claude Code:
 /plugin install nolte-shared@nolte-shared
 ```
 
-After install, every skill is callable as `/nolte-shared:<name>` (for example
-`/nolte-shared:spec`); agents are dispatched by skills, or directly via the
-`Task` tool when you know which agent you want. You don't need a clone of this
+The companion plugins are optional and installed the same way, on top of
+`nolte-shared`, only if your project needs them:
+
+```bash
+/plugin install nolte-engineering@nolte-shared  # code repositories
+/plugin install nolte-planning@nolte-shared     # repositories that plan in project/
+/plugin install nolte-media@nolte-shared        # needs image-generation credentials
+/plugin install nolte-claude-dev@nolte-shared   # only if you author skills or agents
+```
+
+After install, every skill is callable as `/<plugin>:<name>` (for example
+`/nolte-shared:spec`, `/nolte-planning:sprint-plan`); agents are dispatched by
+skills, or directly via the `Task` tool when you know which agent you want. You don't need a clone of this
 repository or its local toolchain to consume the plugin: installation happens
 entirely inside your own Claude Code environment.
