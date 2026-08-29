@@ -79,6 +79,11 @@ CROSS_TREE_ROOTS = {
 SKIP_DIRS = {".git", "node_modules", ".audits", ".venv", "venv",
              "__pycache__", "site", ".cache", "vendor"}
 
+# Hand-maintained markdown trees outside the MkDocs docs_dir that participate in
+# the default scope, per spec/project/link-validation/ §Scope. Extend only with a
+# tree that is authored by hand and linked into; generated trees stay out.
+HAND_MAINTAINED_TREES = ("spec",)
+
 # Built-in known bot-hostile hosts that answer 403/999 to automated agents
 # though the page is live for humans (spec §What counts as a dead link).
 DEFAULT_SOFT_403 = {
@@ -216,6 +221,21 @@ def scope_files(repo: Path, targets: list[str]) -> list[Path]:
             files.add(p)
     for p in repo.glob("*.md"):
         files.add(p)
+    # Hand-maintained markdown trees outside docs_dir participate too, per spec
+    # §Scope. `spec/` is authored by hand and links into docs/, skills/, agents/,
+    # and its own siblings, so it rots the same way — but it was only ever a link
+    # *target* here, never a *source*, which let six dead links inside
+    # spec/project/blog-author-trigger/ survive a fully green gate (PR #571).
+    # The inclusion is deliberately scoped to the offline classes: this corpus
+    # carries ~80x more external URLs than docs_dir, and §Scope forbids widening
+    # the external class to it by default.
+    for tree in HAND_MAINTAINED_TREES:
+        d = repo / tree
+        if d.is_dir():
+            files.update(
+                p for p in d.rglob("*.md")
+                if not any(part in SKIP_DIRS for part in p.relative_to(repo).parts)
+            )
     return sorted(files)
 
 

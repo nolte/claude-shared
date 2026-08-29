@@ -339,15 +339,25 @@ readership once the capability it describes is implemented, verified, and merged
   integration branch isn't the remote default, note that the built-in's own base is
   `origin/HEAD`, a clone-time local ref, so a mismatch inflates the diff rather than
   emptying it and the same capture is what surfaces it
-- **MUST** record the unavailability of `code-security-reviewer` rather than omitting
-  the agent silently. It ships in `nolte-engineering`
-  (`plugins/nolte-engineering/agents/code-security-reviewer.md`), so a session without
-  that plugin installed can't dispatch it, including this repository's own dogfooding
-  sessions unless every plugin root is loaded. Where it's unavailable the orchestrator
-  **MUST** record the gap in the pre-analysis artifact and the pull request's **Risk /
-  rollout notes**, and **MUST NOT** treat the built-in `security-review` as a
-  substitute: the two are complementary (surface scoping against diff verification),
-  not interchangeable
+- **MUST** record the unavailability of any dispatch target that ships in a *sibling*
+  plugin rather than omitting it silently. The candidate resolution globs the plugin
+  root the orchestrator itself ships in, the project's `skills/` and `agents/`, and
+  `~/.claude/agents/`, none of which reaches a sibling plugin, so a session without
+  that plugin installed can't dispatch the target, including this repository's own
+  dogfooding sessions unless every plugin root is loaded. Where such a target is
+  unavailable the orchestrator **MUST** record the gap in the pre-analysis artifact
+  and the pull request's **Risk / rollout notes**, and **MUST NOT** silently fall
+  through to a generalist, which would leave the package handled at the wrong level
+  of expertise with no trace that it happened. Two instances bind today:
+  - `code-security-reviewer` ships in `nolte-engineering`
+    (`plugins/nolte-engineering/agents/code-security-reviewer.md`). The orchestrator
+    **MUST NOT** treat the built-in `security-review` as a substitute: the two are
+    complementary (surface scoping against diff verification), not interchangeable
+  - the pipeline route's targets `feature-decompose` and `roadmap-plan` ship in
+    `nolte-planning` (`plugins/nolte-planning/skills/`). Without that plugin the
+    route can't be taken at all, so the orchestrator **MUST** record the gap and stop
+    rather than drafting features or roadmap items inline, which §Routing to the
+    formal pipeline (no planning bypass) already forbids independently
 - **MUST** ensure every pull request the orchestration produces links the issue
   (`Closes #<n>` or the repository's linking convention) and carries, in its **Risk /
   rollout notes** section per `pull-request-workflow`: the issue reference, the issue
