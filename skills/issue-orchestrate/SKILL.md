@@ -179,7 +179,7 @@ issue is implemented directly or routed to the formal pipeline:
   the orchestration stops; the planning skills own the rest. Both ship in
   `nolte-planning`, not in this plugin, so a session without that plugin installed
   can't take this route: record the unavailability and stop, exactly as the
-  `code-security-reviewer` rule in `spec/project/issue-orchestration/` requires —
+  sibling-plugin dispatch rule in `spec/project/issue-orchestration/` requires —
   never fall through to a generalist, which would leave the issue silently
   unplanned.
 - **Implement directly** when the issue is bounded — one coherent outcome, a single

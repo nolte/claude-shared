@@ -79,6 +79,14 @@ CROSS_TREE_ROOTS = {
 SKIP_DIRS = {".git", "node_modules", ".audits", ".venv", "venv",
              "__pycache__", "site", ".cache", "vendor"}
 
+# Hand-maintained markdown trees outside the MkDocs docs_dir that participate in
+# the default scope, per spec/project/link-validation/ §Scope. This is the
+# portfolio default; a consumer whose tree is named differently (`adr/`, `rfcs/`,
+# `handbook/`) overrides it with `hand_maintained_trees` in .linkcheck.toml
+# rather than patching this plugin-distributed script. Name only trees that are
+# authored by hand and linked into; generated trees stay out.
+DEFAULT_HAND_MAINTAINED_TREES = ("spec",)
+
 # Built-in known bot-hostile hosts that answer 403/999 to automated agents
 # though the page is live for humans (spec §What counts as a dead link).
 DEFAULT_SOFT_403 = {
@@ -143,6 +151,7 @@ class Config:
     per_host_delay: float = 0.3
     fail_on: str = "critical"
     cache_ttl: float = 24 * 3600
+    hand_maintained_trees: tuple = DEFAULT_HAND_MAINTAINED_TREES
 
 
 # --------------------------------------------------------------------------- #
@@ -167,6 +176,8 @@ def load_config(repo: Path) -> Config:
     cfg.per_host_delay = float(data.get("per_host_delay", cfg.per_host_delay))
     cfg.fail_on = str(data.get("fail_on", cfg.fail_on)).lower()
     cfg.cache_ttl = float(data.get("cache_ttl", cfg.cache_ttl))
+    cfg.hand_maintained_trees = tuple(
+        data.get("hand_maintained_trees", cfg.hand_maintained_trees))
     return cfg
 
 
@@ -188,8 +199,16 @@ def discover_docs_dir(repo: Path) -> Path | None:
     return repo / "docs"  # mkdocs default when key is absent
 
 
-def scope_files(repo: Path, targets: list[str]) -> list[Path]:
-    """Resolve the in-scope markdown file set, deterministically sorted."""
+def scope_files(
+    repo: Path, targets: list[str],
+    trees: tuple = DEFAULT_HAND_MAINTAINED_TREES,
+) -> tuple[list[Path], set[Path]]:
+    """Resolve the in-scope markdown file set, deterministically sorted.
+
+    Returns the sorted file list plus the subset that was added implicitly from
+    the hand-maintained trees. An explicit target asks for that path, so nothing
+    is implicit on that path and the external class applies there in full.
+    """
     if targets:
         out: list[Path] = []
         for t in targets:
@@ -198,7 +217,7 @@ def scope_files(repo: Path, targets: list[str]) -> list[Path]:
                 out.extend(p.rglob("*.md"))
             elif p.suffix == ".md" and p.exists():
                 out.append(p)
-        return sorted(set(out))
+        return sorted(set(out)), set()
 
     files: set[Path] = set()
     docs_dir = discover_docs_dir(repo)
@@ -216,7 +235,24 @@ def scope_files(repo: Path, targets: list[str]) -> list[Path]:
             files.add(p)
     for p in repo.glob("*.md"):
         files.add(p)
-    return sorted(files)
+    # Hand-maintained markdown trees outside docs_dir participate too, per spec
+    # §Scope. `spec/` is authored by hand and links into docs/, skills/, agents/,
+    # and its own siblings, so it rots the same way — but it was only ever a link
+    # *target* here, never a *source*, which let six dead links inside
+    # spec/project/blog-author-trigger/ survive a fully green gate (PR #571).
+    # Callers get the implicitly-added set back separately: §Scope admits these
+    # trees to the internal and cross-tree classes only, and `run()` uses this to
+    # keep their external URLs out of the probe (~780 of them in this corpus).
+    implicit: set[Path] = set()
+    for tree in trees:
+        d = repo / tree
+        if d.is_dir():
+            implicit.update(
+                p for p in d.rglob("*.md")
+                if not any(part in SKIP_DIRS for part in p.relative_to(repo).parts)
+            )
+    files.update(implicit)
+    return sorted(files), implicit
 
 
 # --------------------------------------------------------------------------- #
@@ -647,7 +683,7 @@ def is_ignored(f: Finding, cfg: Config, ignored_lines: dict) -> bool:
 # --------------------------------------------------------------------------- #
 def run(repo: Path, targets: list[str], offline: bool,
         classes: set[str], cfg: Config) -> tuple[list[Finding], list[Finding]]:
-    files = scope_files(repo, targets)
+    files, implicit_trees = scope_files(repo, targets, cfg.hand_maintained_trees)
     docs_dir = discover_docs_dir(repo)
     internal_findings: list[Finding] = []
     external_links: list[Link] = []
@@ -661,7 +697,13 @@ def run(repo: Path, targets: list[str], offline: bool,
         for link in links:
             cls = classify(link.target)
             if cls == "external":
-                if "external" in classes:
+                # §Scope admits the hand-maintained trees to the internal and
+                # cross-tree classes only, and MUST NOTs widening the external
+                # class to them: this corpus carries ~780 external reference
+                # URLs, and probing them would put link-rot-scanner on a far
+                # larger, rate-limit-prone surface for no gate benefit. Naming
+                # the tree as an explicit target opts back in.
+                if "external" in classes and fp not in implicit_trees:
                     external_links.append(link)
             elif cls == "scheme":
                 sf = scheme_finding(link)

@@ -374,16 +374,29 @@ verifiziert und gemergt ist.
   Repositories nicht der Remote-Default ist, gilt: Die Basis des Built-ins ist
   `origin/HEAD`, eine klonzeitige lokale Referenz, sodass eine Abweichung den Diff
   aufbläht statt ihn zu leeren, und dieselbe Erfassung ist es, die das sichtbar macht
-- **MUSS [MUST]** die Nichtverfügbarkeit von `code-security-reviewer` festhalten,
-  statt den Agenten stillschweigend wegzulassen. Er wird mit `nolte-engineering`
-  ausgeliefert (`plugins/nolte-engineering/agents/code-security-reviewer.md`), sodass
-  eine Session ohne dieses Plugin ihn nicht dispatchen kann, einschließlich der
-  Dogfooding-Sessions dieses Repositories, solange nicht jede Plugin-Wurzel geladen
-  ist. Wo er nicht verfügbar ist, **MUSS [MUST]** die Orchestrierung die Lücke im
-  Pre-Analysis-Artefakt und in den **Risk / rollout notes** des Pull Requests
-  festhalten und **DARF NICHT [MUST NOT]** das eingebaute `security-review` als
-  Ersatz behandeln: Die beiden ergänzen sich (Oberflächen-Abfassung gegenüber
-  Diff-Verifikation), sie sind nicht austauschbar
+- **MUSS [MUST]** die Nichtverfügbarkeit jedes Dispatch-Ziels festhalten, das in
+  einem *Geschwister*-Plugin ausgeliefert wird, statt es stillschweigend wegzulassen.
+  Die Kandidaten-Auflösung globbt die eigene Plugin-Wurzel der Orchestrierung, die
+  `skills/` und `agents/` des Projekts sowie `~/.claude/agents/` — keine davon
+  erreicht ein Geschwister-Plugin —, sodass eine Session ohne dieses Plugin das Ziel
+  nicht dispatchen kann, einschließlich der Dogfooding-Sessions dieses Repositories,
+  solange nicht jede Plugin-Wurzel geladen ist. Wo ein solches Ziel nicht verfügbar
+  ist, **MUSS [MUST]** die Orchestrierung die Lücke im Voranalyse-Artefakt und in den
+  **Risk / rollout notes** des Pull Requests festhalten und **DARF NICHT [MUST NOT]**
+  stillschweigend auf einen Generalisten zurückfallen — das Paket würde auf der
+  falschen Expertisestufe bearbeitet, ohne jede Spur davon. Heute binden zwei
+  Instanzen:
+  - `code-security-reviewer` wird mit `nolte-engineering` ausgeliefert
+    (`plugins/nolte-engineering/agents/code-security-reviewer.md`). Die Orchestrierung
+    **DARF NICHT [MUST NOT]** das eingebaute `security-review` als Ersatz behandeln:
+    Die beiden ergänzen sich (Oberflächen-Abfassung gegenüber Diff-Verifikation), sie
+    sind nicht austauschbar
+  - die Ziele der Pipeline-Route, `feature-decompose` und `roadmap-plan`, werden mit
+    `nolte-planning` ausgeliefert (`plugins/nolte-planning/skills/`). Ohne dieses
+    Plugin lässt sich die Route überhaupt nicht nehmen; die Orchestrierung **MUSS
+    [MUST]** die Lücke festhalten und anhalten, statt Features oder Roadmap-Einträge
+    inline zu entwerfen — was §Routing in die formale Pipeline (kein Planungs-Bypass)
+    bereits unabhängig verbietet
 - **MUSS [MUST]** sicherstellen, dass jeder Pull Request, den die Orchestrierung
   produziert, das Issue verlinkt (`Closes #<n>` oder die Linking-Konvention des
   Repositories) und in seiner **Risk / rollout notes**-Sektion gemäß
@@ -483,6 +496,10 @@ verifiziert und gemergt ist.
   bevor der PR geöffnet wurde (Audit, dann Diff-Verifikation), festgehalten im
   Artefakt und in den PR-Notes, oder Artefakt und PR-Notes halten fest, warum
   `code-security-reviewer` nicht verfügbar war
+- [ ] Für jeden Lauf, der die Pipeline-Route genommen hat oder genommen hätte, während
+  `nolte-planning` nicht installiert war, halten das Artefakt und die PR-Notizen die
+  Lücke fest, und der Lauf hat dort angehalten — kein Feature und kein Roadmap-Eintrag
+  wurde inline entworfen, und kein Generalist hat das Paket stillschweigend übernommen
 - [ ] Für jeden Lauf, der das eingebaute `security-review` aufrief, hielt der Lauf
   die von der Verifikation geprüfte Änderungsmenge fest, und kein Lauf hielt einen
   Pass über einer leeren Änderungsmenge fest, während sein Feature-Branch Commits trug

@@ -32,6 +32,8 @@ Readers: authors of `scripts/check_links.py`, the CI and quality-gate wiring, an
 ### Scope
 - **MUST** include every markdown file under the MkDocs `docs_dir` configured in `mkdocs.yml`. When no `mkdocs.yml` exists, the scope falls back to every tracked `*.md` file in the repository except those under ignored roots (`.git/`, `node_modules/`, `.audits/`, vendored trees)
 - **MUST** include the repository's top-level hand-maintained markdown (`README.md`, `CLAUDE.md`, and any other tracked root-level `*.md`) in the **internal and cross-tree** link checks, because those files link into `docs/`, `spec/`, and `scripts/` and rot the same way
+- **MUST** include the repository's hand-maintained markdown trees that sit *outside* `docs_dir` (in this portfolio, the specification corpus under `spec/`) in the **internal and cross-tree** link checks, for the same reason the previous rule gives: they're authored by hand, they link into `docs/`, `skills/`, `agents/`, and each other, and they rot identically. A tree that's only ever a *link target* (§Link classification, cross-tree reference) is still an unchecked *link source* until this rule names it, so a moved or deleted target inside such a tree fails silently past a green gate
+- **MUST NOT** widen the **external** class to those trees by default: the specification corpus carries reference sections dense with external URLs (roughly 780 distinct ones in this repository, several times the rest of the scope combined), and the deterministic gate is offline by contract. External probing over that corpus stays an explicit, on-request run (§Audit artifact) rather than a gate obligation
 - **MUST** extract and classify these link forms in every in-scope file:
   - inline links `[text](target)` and autolinks `<https://…>`
   - reference-style links `[text][id]` with their `[id]: target` definitions
@@ -136,6 +138,7 @@ These quality findings are advisory: they sharpen what authors should aim for an
 ## Acceptance Criteria
 - [ ] A single deterministic command (`scripts/check_links.py`) validates internal, intra-page-anchor, cross-tree, and external links across the documentation surface, with exit codes `0`/`1`/`2` and one severity-prefixed finding per line, plus a `--format json` mode
 - [ ] `--offline` runs the internal + intra-page-anchor + cross-tree classes with zero network access and byte-identical output for an unchanged tree
+- [ ] The default scope covers the hand-maintained markdown trees outside `docs_dir` (in this repository, `spec/`) for the internal and cross-tree classes: deleting a file that another spec links to makes the offline run report a `critical`, and that inclusion leaves the external class as narrow as before
 - [ ] A CI job runs the offline slice on every PR and fails the build on any `critical` finding; the same offline run is reachable from `task check` (via `task check:links`) per `spec/project/quality-gate/`
 - [ ] The external slice runs at the documented cadences (per release with doc changes; at least quarterly), is never wired as a required merge-blocking check, and classifies timeouts/transient-5xx/rate-limits as `warning` (never `critical`)
 - [ ] No external link is reported `dead` on a single transient response; a `404`/`410`/DNS-failure is only `critical` after reproducing across the configured retries (and a hard `4xx` only off the soft-403 list)
