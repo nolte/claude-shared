@@ -447,6 +447,10 @@ readership once the capability it describes is implemented, verified, and merged
   and the built-in `security-review` skill both ran before the PR opened (audit, then
   diff verification), recorded in the artifact and the PR notes, or the artifact and
   the PR notes record why `code-security-reviewer` was unavailable
+- [ ] For every run that took, or would have taken, the pipeline route while
+  `nolte-planning` wasn't installed, the artifact and the PR notes record the gap and
+  the run stopped there, with no feature or roadmap item drafted inline and no
+  generalist silently absorbed the package
 - [ ] For every run that invoked the built-in `security-review`, the run recorded the
   change set the verification examined, and no run recorded a pass over an empty
   change set while its feature branch carried commits

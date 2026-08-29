@@ -496,6 +496,10 @@ verifiziert und gemergt ist.
   bevor der PR geöffnet wurde (Audit, dann Diff-Verifikation), festgehalten im
   Artefakt und in den PR-Notes, oder Artefakt und PR-Notes halten fest, warum
   `code-security-reviewer` nicht verfügbar war
+- [ ] Für jeden Lauf, der die Pipeline-Route genommen hat oder genommen hätte, während
+  `nolte-planning` nicht installiert war, halten das Artefakt und die PR-Notizen die
+  Lücke fest, und der Lauf hat dort angehalten — kein Feature und kein Roadmap-Eintrag
+  wurde inline entworfen, und kein Generalist hat das Paket stillschweigend übernommen
 - [ ] Für jeden Lauf, der das eingebaute `security-review` aufrief, hielt der Lauf
   die von der Verifikation geprüfte Änderungsmenge fest, und kein Lauf hielt einen
   Pass über einer leeren Änderungsmenge fest, während sein Feature-Branch Commits trug
