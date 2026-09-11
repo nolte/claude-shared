@@ -128,6 +128,7 @@ Leser: Autor:innen und Reviewer von Testcode auf jedem Tier; die Tier-Generator-
 - `spec/project/test-tier-static-analysis/`: das operative Regime für die statischen Checks
 - `spec/project/source-code-review/` (D1, D6) und `spec/frontend/source-code-review/` (F2, F11): die Review-Dimensionen, an die die Kriterien dieser Spec andocken
 - `spec/frontend/testability-identifiers/`: die Web-Instanziierung des Adressierbarkeits-Prinzips
+- `spec/project/defect-class-guards/`: derselbe Fehlermodus von der Guard-Seite statt von der Test-Seite. G3 (der Guard zählt die Klasse auf, statt die Fundstelle zu prüfen) und G6 (der Selektor passt zum Geltungsbereich der Eigenschaft) beschreiben für einen Guard, was die Taxonomie dieser Spec für einen Test beschreibt: eine Prüfung, deren Subjektmenge per Opt-in entsteht, kann für das nie eingetragene Mitglied nicht fehlschlagen — die Eigenschaft von T2 eine Ebene höher. Ein Guard, der ein Test ist, unterliegt beiden Specs zugleich
 - `spec/project/quality-gate/`: der MAY-extend-Mechanismus und die Run-identically-Begründung, die die Gate-Entscheidung spiegelt
 - `spec/project/error-tracking/`: das Laufzeit-Gegenstück zu T1 und die in §Kontext zitierte False-Confidence-Rahmung
 - Quell-Erfahrung: `nolte/kamerplanter#778` dokumentiert alle elf Instanzen mit Mechanismus und Datei-Referenzen; der Commit-Trail auf Branch `fix/e2e-full-run-stabilization` trägt jeden Fix mit seiner negativen Verifikation; `nolte/claude-shared#517` ist der Authoring-Arbeitsauftrag

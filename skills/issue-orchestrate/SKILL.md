@@ -242,6 +242,17 @@ declaring the package done, and hold any externally-visible artefact resting on 
 run's own measurement until this gate is green — both per
 `references/measurement-discipline.md`.
 
+**When the run closes a defect, what its class leaves behind is a closing
+condition.** Per `spec/project/defect-class-guards/`, decide before the PR opens
+whether the fix leaves a mechanical guard that refuses the class (G1), whether that
+guard enumerates the class rather than the sites the defect was found at (G3), and
+whether its selector is as wide as the property it asserts (G6). Where no guard is
+possible, the note saying why is the deliverable and goes in the issue. Where the
+guard is too large for this change, it becomes its own referenced issue, never an
+intention in the PR body, which is lost at merge. Record the decision in the
+`## Class sweep` section `pull-request-workflow` requires on a `fix` PR, and run the
+predicate rather than estimating its count.
+
 Then close out in this order, following `references/closeout.md` for each step's
 contract:
 
@@ -297,6 +308,10 @@ recorded in the artifact.
   reviewable hand-off contract.
 - **Never** perform a work package's hands-on editing inline when a matching
   specialist exists; analyse, decompose, dispatch, verify.
+- **Never** close a defect-classified run without deciding what its class leaves
+  behind: a guard, or a written note saying why none is possible. A closure resting
+  on the unwritten judgement that the defect can't recur is the shape that produced
+  the predecessor-naming chains `spec/project/defect-class-guards/` §Context records.
 - **Never** freeze an inline snapshot of specialist names as a dispatch table; the
   catalog is resolved by runtime `Glob` each run.
 - **Never** decompose an issue that belongs in the formal pipeline (more than one

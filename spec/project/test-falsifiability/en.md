@@ -128,6 +128,7 @@ Readers: authors and reviewers of test code at every tier; the tier generator an
 - `spec/project/test-tier-static-analysis/`: the operational regime for the static checks
 - `spec/project/source-code-review/` (D1, D6) and `spec/frontend/source-code-review/` (F2, F11): the review dimensions this spec's criteria attach to
 - `spec/frontend/testability-identifiers/`: the web instantiation of the addressable-without-guessing rule
+- `spec/project/defect-class-guards/`: the same failure mode from the guard's side rather than the test's. G3 (the guard enumerates the class instead of checking the site it was found at) and G6 (the selector matches the property's scope) describe, for a guard, what this spec's taxonomy describes for a test: a check whose subject set is opted into can't fail for the member nobody added, which is T2's property one level up. A guard that's a test is governed by both specs at once
 - `spec/project/quality-gate/`: the MAY-extend mechanism and the run-identically rationale mirrored by the gate decision
 - `spec/project/error-tracking/`: the runtime counterpart of T1 and the false-confidence framing quoted in §Context
 - Source experience: `nolte/kamerplanter#778` documents all eleven instances with mechanism and file references; the commit trail on branch `fix/e2e-full-run-stabilization` carries each fix with its negative verification; `nolte/claude-shared#517` is the authoring work order
