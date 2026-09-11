@@ -112,6 +112,14 @@ Render exactly these five sections, in this order, with these exact headings:
 ## Risk / rollout notes
 
 <risk class, migrations, feature flags, or the literal text `None`>
+
+## Class sweep
+<!-- Required only when the PR title's type is `fix`; omitted entirely for feat / chore / docs / exp -->
+
+- Predicate: <the property that describes the defect class, stated so it can be run>
+- Hits: <integer>
+- Repaired: <integer>
+- Guard: <path or required-check context that holds the rest, or `none` plus a reason>
 <!-- Audit-triggered remediation PRs additionally add, per continuous-improvement §Traceability:
 Originating source: <named finding source + link>
 Dispatched specialist: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>) — or "no matching specialist existed — generalist handled" -->
@@ -131,6 +139,7 @@ Rules for the body:
   - [ ] **Risk / rollout notes** carries an `Originating source:` line naming the finding source.
   - [ ] **Risk / rollout notes** carries a `Dispatched specialist:` line naming the specialist, or the literal `no matching specialist existed — generalist handled`.
   - [ ] Both lines use those exact field labels verbatim, so they stay grep-stable portfolio-wide.
+- **A `fix`-typed PR carries the class sweep.** `spec/project/pull-request-workflow/<canonical_language>.md` §"Class sweep (Conventional-Commits type `fix`)" **MUST**-requires the sixth `## Class sweep` section on type `fix` and forbids it on every other type. Read `references/class-sweep.md` and follow it before drafting the body: the predicate has to be runnable, and `Hits` has to be the count that running it produced, not an estimate.
 - **Load-bearing claims state their provenance** per `spec/claude/claim-provenance/`: a Summary, Changes, Testing, or Risk statement about a cause, state, existence, or absence in the working copy is either **established**, naming the command output or `file:line` behind it, or **unestablished**, naming the observation that would settle it and stating it wasn't made. Make a cheap observation instead of taking the unestablished exit.
 - Repository-specific sections **may** be appended *after* the five required sections, never interleaved.
 
@@ -171,6 +180,10 @@ Once the title and body are approved, and only then:
 
 If `gh pr create` fails because a PR already exists for this branch, the collision check above should already have caught it; if it's reached anyway, switch to `gh pr edit` to update the existing PR's title and body instead of creating a new one—but **only** after confirming the existing PR's title and body describe the same change the user is now opening.
 
+## References
+
+- Read `references/class-sweep.md` before opening any PR whose type is `fix`.
+
 ## Examples
 
 - Read `examples/01-fix-pr-on-feature-branch.md` when opening a `fix`-type PR on a feature branch for the first time.
@@ -188,6 +201,8 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** invent a Conventional-Commits type that disagrees with the branch prefix. If the branch is `feat/foo`, the type is `feat`: no translation.
 - **Never** leave Summary, Changes, or Testing empty or equal to `None`. Stop and ask the user for content instead.
 - **Never** open an audit-triggered remediation PR without both the `Originating source:` and `Dispatched specialist:` lines in **Risk / rollout notes**. `spec/project/continuous-improvement/` makes both MUST-fields; the specialist line uses the explicit `no matching specialist existed — generalist handled` form when none matched, never an empty value.
+- **Never** open a `fix`-typed PR without a completed `## Class sweep` section, and never fill its `Hits` field with a number that wasn't produced by running the predicate. A guessed count is indistinguishable from a measured one in the rendered body, which is exactly why the spec makes the field an integer.
+- **Never** render the `## Class sweep` section on a `feat`, `chore`, `docs`, or `exp` PR. The requirement is type-conditional by design; rendering it everywhere turns it into the boilerplate it exists to displace.
 - **Never** silently force-push. Use `--force-with-lease` and only after explicit user confirmation; on an open non-draft PR, also document the rebase in a PR comment per pull-request-workflow §Fix-forward on red checks.
 - **Never** amend a commit that has already been pushed. When iterating on an open PR to fix a red required check, push a **new** commit (fix-forward); `git commit --amend` after the push is prohibited by pull-request-workflow §Fix-forward on red checks because it destroys review context and breaks comment anchoring.
 - **Never** mark a PR as ready for review while a required status check is red or pending on the head commit. Keep the PR as Draft (or return it to Draft) until every required check on the head commit is green.
@@ -199,11 +214,4 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 ## Gotchas
 
-Per `spec/claude/skill-management/` §Gotchas: concrete corrections to non-obvious environment facts the executing agent would otherwise get wrong.
-
-- **`gh pr edit --add-label` can fail on Projects-Classic-deprecation noise.** Repos with Projects Classic still enabled return a `GraphQL: Projects (classic) is being deprecated` warning that the CLI treats as an error, even when the label edit itself would have succeeded. Prefer `gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=<label>"` for label application; it bypasses the GraphQL `projectCards` path entirely.
-- **`gh pr view` warnings land on stderr, JSON on stdout.** When piping `gh pr view --json …` into a parser, the deprecation warning appears on stderr but the JSON on stdout still parses cleanly; when piping into another `gh` call without splitting streams, the warning may be conflated with the result. Always read state via `gh pr view --json <fields>` and route stderr to a separate log when scripting.
-- **Branch-freshness check needs a fresh fetch first.** `git merge-base --is-ancestor origin/develop HEAD` is only meaningful after `git fetch origin develop`; otherwise the local `origin/develop` ref can be stale and the skill reports the branch as fresh when develop has moved. The fetch is part of the freshness contract, not a setup detail.
-- **`task lint`'s prose hook can fail locally on missing Vale-style trust** (the underlying `task lint:prose` includes a remote `taskfile-include-pre-commit.yaml` that prompts for trust on first run). The CI run usually has the trust pre-granted; locally, a one-time `task --yes lint` resolves the prompt. Don't treat a local `vale-prose` red as a CI failure when direct `vale --minAlertLevel=error <files>` reports clean.
-- **A `git push` to an existing remote branch silently overwrites the head SHA of any PR attached to that branch.** GitHub does **not** warn that the PR's description no longer matches the code; the PR's title and body stay as the original author wrote them while the head and files quietly become whatever was pushed. This is the failure mode the branch-name collision check in step 6.2 prevents. Once it has happened, the only clean recovery is to close the misaligned PR (with a comment) and open a fresh one on a unique branch name—editing the PR title and body in place leaves a confusing audit trail in the comment timeline.
-- **A fresh `git checkout` doesn't guarantee `HEAD` stays put between Bash turns.** Another terminal, an IDE git plugin, an unrelated agent session, or a worktree command can switch the branch underneath the skill. Re-run `git rev-parse --abbrev-ref HEAD` immediately before every mutating step and compare it against the branch name captured in Preconditions; treat any divergence as a stop condition. A "successfully" rebased branch you didn't expect is worse than no rebase at all.
+Read `references/gotchas.md` when a `git` or `gh` call behaves unexpectedly — it carries the `gh pr edit --add-label` Projects-Classic failure and its REST workaround, the stdout/stderr split on `gh pr view --json`, the fetch that the branch-freshness check depends on, the local `task lint` prose-hook trust prompt, the silent head-SHA overwrite behind the collision check in step 6.2, and `HEAD` moving between Bash turns. The load-bearing versions are also in the Hard rules and the numbered steps.

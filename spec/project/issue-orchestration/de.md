@@ -404,6 +404,24 @@ verifiziert und gemergt ist.
   wörtlich und pro Arbeitspaket den dispatchten Spezialisten
   (`subagent_type`-Literal) oder die explizite Notiz „no matching specialised agent —
   generalist remediation"
+- **MUSS [MUST]**, wo der Lauf einen Pull Request vom Conventional-Commits-Typ
+  `fix` produziert, den Abschnitt `## Class sweep` ausfüllen, den
+  `pull-request-workflow` §"Klassen-Sweep (Conventional-Commits-Typ `fix`)"
+  verlangt, und **MUSS [MUST]** diese Vervollständigung als Abschlussbedingung der
+  Orchestrierung behandeln statt als Empfehlung. Im Sweep wird die Scope-Grenze der
+  Dekomposition prüfbar: §Dekomposition in Arbeitspakete zieht bereits eine
+  In-/Out-of-Scope-Linie, und der Sweep hält in Zahlen fest, wie viel von der Klasse
+  des Defekts diese Linie zurückgelassen hat
+- **MUSS [MUST]** `Predicate` aus der Klassifikationsarbeit ableiten statt den
+  Issue-Titel zu wiederholen, es ausführen und die resultierende `Hits`-Zahl
+  festhalten. Ein Sweep, dessen Prädikat nie ausgeführt wurde, berichtet eine Zahl,
+  die niemand gemessen hat — schlimmer als kein Abschnitt, weil sie sich als Evidenz
+  liest
+- **MUSS [MUST]**, wenn `Repaired` kleiner als `Hits` ist und kein Guard den Rest
+  hält, die Out-of-Scope-Stellen als eigene Issues anlegen und unter den vier Feldern
+  referenzieren, bevor die Orchestrierung schließt. Sie nur im Pull-Request-Body zu
+  benennen verliert sie beim Merge — genau der Fehlermodus, der die
+  Vorgänger-Nennungsketten erzeugt hat, auf die diese Regel antwortet
 - **MUSS [MUST]** das Voranalyse-Artefakt gemäß §Lebenszyklus des
   Voranalyse-Artefakts vom Feature-Branch entfernen, sobald jedes Paket umgesetzt und
   das Gate oben grün ist, und bevor der Pull Request an `pull-request-merge` übergeben
@@ -433,6 +451,11 @@ verifiziert und gemergt ist.
   mutierenden Schritt ohne ein festgehaltenes „Ja"
 
 ## Acceptance Criteria
+- [ ] Für jeden Orchestrierungslauf, der einen `fix`-typisierten Pull Request
+  produziert hat, trägt dieser Pull Request einen ausgefüllten Abschnitt
+  `## Class sweep`, sein `Predicate` wurde tatsächlich ausgeführt, und entweder ist
+  `Repaired` gleich `Hits`, ein Guard ist benannt, oder die verbleibenden Stellen
+  existieren als referenzierte Issues
 - [ ] Für ein akquiriertes Issue existierte das Voranalyse-Artefakt unter
   `.audits/issue-orchestrate/<issue-number>/analysis.md` zur Dispatch-Zeit auf dem
   Feature-Branch des Laufs — nachträglich rekonstruierbar mit

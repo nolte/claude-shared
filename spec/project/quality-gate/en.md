@@ -56,6 +56,22 @@ Every repository in the portfolio runs lint, type-check, and test commands in so
 - **MAY** expose a `fast` scope (lint + type-check, tests skipped) for pre-commit use; a `fast` run **MUST** report the tests row as `skipped` (per §Output shape) and the verdict **MUST** note the skip. Whether pre-commit invokes the full or the `fast` gate stays the repository's decision
 - **MUST NOT** gate the gate itself behind a CI-only runner (for example a self-hosted GPU runner needed for the tests); if a suite truly can't run locally, split it out of the gate and document the split in the repository's README
 
+### Enforced lane per tier
+`spec/project/pull-request-workflow/` §"CI gate into `develop`" owns *how* the required status checks are declared: as code in `.github/settings.yml`, never through the GitHub UI. It doesn't say *which* checks have to be there. A repository can satisfy every rule in that section while enforcing nothing the gate actually runs, and the declaration-versus-platform audit in `nolte/gh-plumbing` (`reusable-branch-protection-audit.yaml`) stays green throughout, because it compares the declaration against what GitHub enforces rather than against what the repository tests.
+
+That gap is what this section closes. It's a sufficiency rule over the required set, and it belongs here rather than in `pull-request-workflow` because the tiers it quantifies over are the gate's categories (§Composition) and the test tiers of `spec/project/test-pyramid-foundation/`.
+
+- **MUST** have, for every tier the gate runs, at least one required status check for `develop` that runs that tier. A tier is a gate category per §Composition, and, where the repository's tests are tiered per `test-pyramid-foundation`, each test tier the gate runs counts separately. One lane per tier is the bar; a repository doesn't need a check per suite
+- **MUST** treat a check that runs a *different* tier as no coverage for this one. A required frontend build lane doesn't enforce a backend test tier, and a lint lane doesn't enforce either. The mapping from tier to lane is what's asserted, so it **MUST** be readable from the declaration: where the lane's context name doesn't name its tier, the declaration carries a comment that does
+- **MUST** record an exemption, where a tier has no enforced lane, next to the required-check declaration in `.github/settings.yml`, and that exemption **MUST** carry both a reason and the condition under which it's taken back. An exemption without a take-back condition is a permanent hole with an apology attached
+- **MUST NOT** record an exemption for a tier that runs a check the repository relies on to block a specific defect class. An exemption says "this tier may be red at merge time"; over such a check that reads as "this defect class may return." That's the opposite of why the check was written. When the tier as a whole is genuinely too unstable to require, the guard is split into its own lane and that lane is required, rather than the guard riding along in an exempted one
+- **MUST** make the take-back condition checkable by someone other than its author: a named issue, a named defect, or a condition an outsider can evaluate against the repository. "Once the suite is stable" is a mood, not a condition
+- **MUST NOT** count an advisory lane as an enforced one. A job that runs the tier but reports outside the required set, or runs under `continue-on-error`, can't block a merge, which is the only property this section is about
+- **SHOULD** name the required contexts after the Taskfile targets they invoke, so the tier-to-lane mapping needs no comment to be legible
+- A repository whose CI enforces a tier the local gate doesn't run has the reverse gap, and §Invocation contract already forbids it: the gate runs identically in both places
+
+The stronger form of this rule is a workflow-level sufficiency check that detects a foreign repository's tiers and compares them against its required set. It's deliberately deferred: the detection predicate has to prove itself through the `quality-gate-enforcer` agent across several repositories before it's worth freezing into shared CI, and a detector that guesses a tier wrong fails a repository for a tier it doesn't have.
+
 ### Delimitation
 - **MUST** stay separate from `spec/project/workflow-health/`: workflow-health covers the continuous CI state over time (flake triage, trend), the gate is the per-invocation pass/fail
 - **MUST** stay separate from dependency/vulnerability scanning: that scanning has its own cadence and severity scale; the gate doesn't assume responsibility for it
@@ -76,6 +92,11 @@ Every repository in the portfolio runs lint, type-check, and test commands in so
 - [ ] Monorepos scope each category to the owning subroot (not the repo root) and expose at least one aggregate Taskfile target covering every subroot
 - [ ] The repository's README names the gate target and the expected output shape, so new contributors can reproduce it on their first day
 - [ ] A repository whose CI enforces a coverage threshold as a required status check exposes the same coverage run as a local gate category, so a threshold regression can be caught locally before it reaches CI
+- [ ] Every tier the gate runs has at least one required status check for `develop` declared in `.github/settings.yml`, or an exemption recorded next to that declaration carrying a reason and a take-back condition
+- [ ] For each declared required context, the tier it runs is readable from its name or from an adjacent comment, so the tier-to-lane mapping can be checked without opening the workflow
+- [ ] No tier is counted as enforced on the strength of a lane that reports outside the required set or runs under `continue-on-error`
+- [ ] No exemption covers a tier that runs a check the repository relies on to block a defect class; where such a check sits in an unstable tier, it has its own required lane instead
+- [ ] Every exemption's take-back condition names an issue or a condition a reader other than its author can evaluate
 - [ ] The skill `skills/quality-gate/` invokes the repository's Taskfile targets first and falls back to native tooling detection only when no matching target exists
 
 ## Open Questions

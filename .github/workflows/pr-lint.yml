@@ -1,0 +1,36 @@
+name: pr-lint
+
+# spec/project/pull-request-workflow/ §"PR lint workflow" MUSTs a workflow that
+# lints PR title and body on these four events and registers its job as a
+# required status check for `develop`. That section SHOULDs the linter as a
+# reusable workflow under nolte/gh-plumbing so repositories inherit one
+# implementation. No such reusable workflow exists yet, so this is the first
+# implementation rather than a fork of one; upstreaming it is tracked separately.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, ready_for_review]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.14"
+      # spec/project/github-actions-best-practices/ on untrusted input: the PR
+      # title and body are author-controlled, so they reach the checker through
+      # the environment and never through `${{ }}` interpolation into a shell
+      # command, where a crafted title would be executed.
+      - name: Lint the pull-request title and body
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python3 scripts/check_pr_body.py
