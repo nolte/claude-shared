@@ -72,12 +72,37 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - **SHOULD** link to the relevant spec file under `spec/` when the change implements or modifies a spec
 - **SHOULD**, when the PR remediates an in-scope portfolio-audit finding (an audit-remediation PR per `spec/project/continuous-improvement/` §"Traceability in remediation artifacts"), record two grep-stable lines in **Risk / rollout notes**: `Originating source: <named finding source>` and `Dispatched specialist: <subagent_type or skill name, or the literal "no matching specialist existed — generalist handled">`, so the fix stays traceable to its trigger and to the specialist that produced it. This reminder is non-blocking: the §PR lint workflow **MUST NOT** fail a PR for their absence, since these two fields are a `continuous-improvement` coverage signal rather than a PR-structure requirement, and `spec/project/continuous-improvement/` holds the authoritative MUST for the audit-remediation subset
 
+#### Class sweep (Conventional-Commits type `fix`)
+
+A pull request of type `fix` **MUST** carry a sixth section, `## Class sweep`, after the five required sections. A fix that repairs the site where a defect was found and says nothing about the rest of its class leaves the siblings in place, and the next report reads as a new defect rather than as the same one.
+
+This isn't a hypothetical. Across a 325-issue corpus in `nolte/kamerplanter`, 23 closed issues name a predecessor in their own title, in chains up to five long. Issue `#719` is titled as the same IDOR as `#717`, `#948` as the write-side twin of `#927`, `#1018` as the same shape as `#997`. The median issue lifetime there is under a day, so throughput isn't the problem. Scope is. Nothing in the process required enumerating the siblings before closing.
+
+The section **MUST** carry these four fields, as a list, with these exact labels:
+
+```
+## Class sweep
+
+- Predicate: <the property that describes the class, stated so it can be run>
+- Hits: <integer — how many sites the predicate matched>
+- Repaired: <integer — how many of them this PR fixes>
+- Guard: <the guard that holds the rest, as a path or a required-check context; or `none` plus a reason>
+```
+
+- **MUST** state `Predicate` as something runnable against the repository: a grep pattern, an AST query, a lint rule, or a named check, rather than a description of the bug. A predicate reads like "every route handler that reads a tenant id from the request body"; "tenant handling" doesn't qualify
+- **MUST** give `Hits` and `Repaired` as integers. This is the whole point of the section: a number is checkable and a sentence of reassurance isn't, and reassurance is the ritual text this rule exists to prevent
+- **MUST** explain, when `Repaired` is less than `Hits`, which of the remaining sites are out of scope and why, on a line below the four fields
+- **MUST** name in `Guard` what stops the class from coming back, or record `none` with a reason. A `fix` whose class has one member and can't recur still states that, in those words
+- **MUST NOT** be required of any other Conventional-Commits type. `feat`, `chore`, `docs`, and `exp` carry the five sections and nothing more; a type-blind requirement would turn the section into the boilerplate it's meant to displace
+- **SHOULD** give `Predicate` verbatim as the guard's own selector where a guard exists, so the sweep and the guard can't drift apart
+
 ### PR lint workflow
 - **MUST** include a workflow under `.github/workflows/` (for example `pr-lint.yml`) that lints PR title and body on the `pull_request` events `opened`, `edited`, `synchronize`, and `ready_for_review`
 - **MUST** register this workflow's job as a required status check for `develop` in `.github/settings.yml`
 - **MUST** fail the check if the PR title doesn't match the Conventional Commits form `<type>(<scope>)?: <summary>` with `<type>` ∈ {`feat`, `fix`, `chore`, `docs`, `exp`}
 - **MUST** fail the check if the PR body doesn't contain all five required section headings in the declared order
 - **MUST** fail the check if Summary, Changes, or Testing is empty or contains only the literal text `None`
+- **MUST** fail the check, when the PR title's type is `fix`, if the body carries no `## Class sweep` section, if any of the four fields `Predicate`, `Hits`, `Repaired`, `Guard` is missing or empty, or if `Hits` or `Repaired` doesn't parse as an integer (per §"Class sweep"). The type-conditional branch is the substance of the rule: the same body **MUST** pass when the title's type is `feat`, `chore`, `docs`, or `exp`
 - **MUST NOT** fail the check when the body contains additional repository-specific sections appended after the five required sections, so long as the required sections themselves are present, in order, and non-empty where required
 - **SHOULD** implement the linter as a reusable workflow under `nolte/gh-plumbing` (for example `reusable-pr-lint.yaml`) so every repository inherits one implementation rather than forking local copies that drift
 
@@ -136,6 +161,9 @@ A pull-request template **MUST** exist at `.github/pull_request_template.md` and
 - [ ] A sample of recent PR bodies shows all five required sections present, with only Linked issues and Risk / rollout notes allowed to contain the literal `None`; any repository-specific sections appear *after* the required five, never interleaved
 - [ ] A sample of recent `develop` merges whose PR bodies carried `Closes #<n>` keywords shows each referenced tracking issue either closed manually with a cross-reference comment naming the merging PR and the merge-commit SHA, or still open pending the next `release-cd-refresh-master.yml` fast-forward of `main`; the autolink **MUST NOT** have closed any of them silently on the `develop` merge
 - [ ] `.github/workflows/pr-lint.yml` (or an equivalently-named workflow) exists and its job is declared as a required status check for `develop` in `.github/settings.yml`
+- [ ] Every merged PR of type `fix` in a sample of recent merges carries a `## Class sweep` section whose `Hits` and `Repaired` fields are integers, and whose `Predicate` is runnable rather than descriptive
+- [ ] The body check fails a `fix` PR whose body omits the section, and passes the same body once the section is added. Both directions are demonstrated, since one direction alone doesn't distinguish the check from a constant
+- [ ] The body check passes a `feat`, `chore`, `docs`, or `exp` PR whose body omits the section, so the requirement stays type-conditional
 - [ ] `.github/settings.yml` sets `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` for the repository
 - [ ] The last 10 first-parent commits on `develop` (via `git log --first-parent develop -n 10`) each correspond to exactly one squash-merged PR and carry a Conventional-Commits-compliant message
 - [ ] `.github/settings.yml` sets `required_status_checks.strict: true` for the `develop` branch protection (directly or via the `nolte/gh-plumbing` commons extension) so that GitHub enforces the branch-up-to-date precondition

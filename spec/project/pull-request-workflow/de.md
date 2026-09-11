@@ -72,12 +72,37 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - **SOLLTE [SHOULD]** auf die relevante Spec-Datei unter `spec/` verlinken, wenn die Änderung eine Spec umsetzt oder modifiziert
 - **SOLLTE [SHOULD]**, wenn der PR ein in-scope Portfolio-Audit-Finding behebt (ein Audit-Remediation-PR gemäß `spec/project/continuous-improvement/` §"Traceability in remediation artifacts"), zwei grep-stabile Zeilen in **Risk / rollout notes** festhalten: `Originating source: <named finding source>` und `Dispatched specialist: <subagent_type or skill name, or the literal "no matching specialist existed — generalist handled">`, sodass der Fix zu seinem Auslöser und zum Specialist, der ihn produziert hat, rückverfolgbar bleibt. Dieser Reminder ist non-blocking: der §PR-Lint-Workflow **DARF NICHT [MUST NOT]** einen PR wegen ihres Fehlens failen lassen, da diese zwei Felder ein `continuous-improvement`-Coverage-Signal sind und keine PR-Struktur-Anforderung, und `spec/project/continuous-improvement/` das autoritative MUST für die Audit-Remediation-Teilmenge hält
 
+#### Klassen-Sweep (Conventional-Commits-Typ `fix`)
+
+Ein Pull Request vom Typ `fix` **MUSS [MUST]** einen sechsten Abschnitt `## Class sweep` nach den fünf Pflichtabschnitten tragen. Ein Fix, der die Fundstelle eines Defekts repariert und zum Rest seiner Klasse schweigt, lässt die Geschwister stehen, und die nächste Meldung liest sich als neuer Defekt statt als derselbe.
+
+Das ist nicht hypothetisch. In einem Korpus von 325 Issues in `nolte/kamerplanter` benennen 23 geschlossene Issues einen Vorgänger im eigenen Titel, in Ketten von bis zu fünf Gliedern. Issue `#719` ist als dieselbe IDOR wie `#717` betitelt, `#948` als der schreibseitige Zwilling von `#927`, `#1018` als dieselbe Form wie `#997`. Die mediane Issue-Lebensdauer liegt dort unter einem Tag; Durchsatz ist also nicht das Problem, sondern Scope. Nichts im Prozess verlangte, die Geschwister vor dem Schließen aufzuzählen.
+
+Der Abschnitt **MUSS [MUST]** diese vier Felder als Liste mit genau diesen Bezeichnern tragen:
+
+```
+## Class sweep
+
+- Predicate: <die Eigenschaft, die die Klasse beschreibt, so formuliert, dass sie ausführbar ist>
+- Hits: <Ganzzahl — wie viele Stellen das Prädikat getroffen hat>
+- Repaired: <Ganzzahl — wie viele davon dieser PR repariert>
+- Guard: <der Guard, der den Rest hält, als Pfad oder erforderlicher Check-Kontext; oder `none` plus Begründung>
+```
+
+- **MUSS [MUST]** `Predicate` als etwas gegen das Repository Ausführbares angeben: ein Grep-Muster, eine AST-Abfrage, eine Lint-Regel oder einen benannten Check, und nicht als Beschreibung des Bugs. Ein Prädikat liest sich wie „jeder Route-Handler, der eine Tenant-Id aus dem Request-Body liest"; „Tenant-Handling" genügt nicht
+- **MUSS [MUST]** `Hits` und `Repaired` als Ganzzahlen angeben. Genau darum geht es in diesem Abschnitt: eine Zahl ist prüfbar, ein Satz der Beruhigung nicht, und dieser Beruhigungstext ist das Ritual, das die Regel verhindern soll
+- **MUSS [MUST]**, wenn `Repaired` kleiner als `Hits` ist, in einer Zeile unter den vier Feldern erklären, welche der verbleibenden Stellen außerhalb des Scopes liegen und warum
+- **MUSS [MUST]** in `Guard` benennen, was die Klasse am Wiederkommen hindert, oder `none` mit Begründung festhalten. Auch ein `fix`, dessen Klasse ein einziges Mitglied hat und nicht wiederkehren kann, hält genau das fest
+- **DARF NICHT [MUST NOT]** für andere Conventional-Commits-Typen verlangt werden. `feat`, `chore`, `docs` und `exp` tragen die fünf Abschnitte und nichts weiter; eine typblinde Anforderung machte aus dem Abschnitt genau die Textbaustein-Routine, die er verdrängen soll
+- **SOLLTE [SHOULD]** `Predicate` wörtlich als den Selektor des Guards angeben, wo ein Guard existiert, damit Sweep und Guard nicht auseinanderdriften
+
 ### PR-Lint-Workflow
 - **MUSS [MUST]** einen Workflow unter `.github/workflows/` enthalten (z. B. `pr-lint.yml`), der PR-Titel und -Body auf den `pull_request`-Events `opened`, `edited`, `synchronize` und `ready_for_review` lintet
 - **MUSS [MUST]** den Job dieses Workflows als erforderlichen Status-Check für `develop` in `.github/settings.yml` registrieren
 - **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Titel nicht der Conventional-Commits-Form `<type>(<scope>)?: <summary>` mit `<type>` ∈ {`feat`, `fix`, `chore`, `docs`, `exp`} entspricht
 - **MUSS [MUST]** den Check fehlschlagen lassen, wenn der PR-Body nicht alle fünf erforderlichen Abschnittsüberschriften in der festgelegten Reihenfolge enthält
 - **MUSS [MUST]** den Check fehlschlagen lassen, wenn Summary, Changes oder Testing leer ist oder ausschließlich den Literaltext `None` enthält
+- **MUSS [MUST]** den Check fehlschlagen lassen, wenn der Typ des PR-Titels `fix` ist und der Body keinen Abschnitt `## Class sweep` trägt, wenn eines der vier Felder `Predicate`, `Hits`, `Repaired`, `Guard` fehlt oder leer ist, oder wenn `Hits` oder `Repaired` nicht als Ganzzahl parst (gemäß §"Klassen-Sweep"). Der typabhängige Zweig ist die Substanz der Regel: derselbe Body **MUSS [MUST]** passieren, wenn der Typ des Titels `feat`, `chore`, `docs` oder `exp` ist
 - **DARF NICHT [MUST NOT]** den Check fehlschlagen lassen, wenn der Body zusätzliche repo-spezifische Abschnitte enthält, die *nach* den fünf Pflichtabschnitten angehängt sind, solange die Pflichtabschnitte selbst vorhanden, in der richtigen Reihenfolge und an den geforderten Stellen nicht leer sind
 - **SOLLTE [SHOULD]** den Linter als wiederverwendbaren Workflow unter `nolte/gh-plumbing` umsetzen (zum Beispiel `reusable-pr-lint.yaml`), sodass jedes Repository dieselbe Implementierung erbt statt lokaler Kopien, die auseinanderdriften
 
@@ -135,6 +160,9 @@ Ein Pull-Request-Template **MUSS [MUST]** unter `.github/pull_request_template.m
 - [ ] Die Quell-Branches derselben 10 PRs verwendeten eines der Präfixe `feat/`, `fix/`, `chore/`, `docs/`, `exp/`, und der Type im PR-Titel entsprach dem Präfix wortgleich
 - [ ] Eine Stichprobe aktueller PR-Bodies zeigt alle fünf erforderlichen Abschnitte; nur Linked issues und Risk / rollout notes dürfen den Literaltext `None` enthalten; etwaige repo-spezifische Abschnitte erscheinen *nach* den fünf Pflichtabschnitten, niemals dazwischen
 - [ ] `.github/workflows/pr-lint.yml` (oder ein gleichwertig benannter Workflow) existiert, und sein Job ist in `.github/settings.yml` als erforderlicher Status-Check für `develop` deklariert
+- [ ] Jeder gemergte PR vom Typ `fix` in einer Stichprobe jüngerer Merges trägt einen Abschnitt `## Class sweep`, dessen Felder `Hits` und `Repaired` Ganzzahlen sind und dessen `Predicate` ausführbar statt beschreibend ist
+- [ ] Der Body-Check lässt einen `fix`-PR ohne den Abschnitt fehlschlagen und lässt denselben Body passieren, sobald der Abschnitt ergänzt ist. Beide Richtungen werden gezeigt, da eine Richtung allein den Check nicht von einer Konstanten unterscheidet
+- [ ] Der Body-Check lässt einen `feat`-, `chore`-, `docs`- oder `exp`-PR ohne den Abschnitt passieren, sodass die Anforderung typabhängig bleibt
 - [ ] `.github/settings.yml` setzt `allow_squash_merge: true`, `allow_merge_commit: false`, `allow_rebase_merge: false` für das Repository
 - [ ] Die letzten 10 First-Parent-Commits auf `develop` (via `git log --first-parent develop -n 10`) entsprechen je genau einem squash-gemergten PR und tragen eine Conventional-Commits-konforme Nachricht
 - [ ] `.github/settings.yml` setzt `required_status_checks.strict: true` für die Branch-Protection von `develop` (direkt oder via der `nolte/gh-plumbing`-Commons-Extension), sodass GitHub die Branch-Up-to-date-Vorbedingung erzwingt

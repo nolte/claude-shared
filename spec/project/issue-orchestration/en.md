@@ -364,6 +364,23 @@ readership once the capability it describes is implemented, verified, and merged
   classification verbatim, and, per work package, the dispatched specialist
   (`subagent_type` literal) or the explicit "no matching specialised
   agent—generalist remediation" note
+- **MUST**, where the run produces a pull request of Conventional-Commits type
+  `fix`, complete the `## Class sweep` section that `pull-request-workflow`
+  §"Class sweep (Conventional-Commits type `fix`)" requires, and **MUST** treat
+  that completion as a closing condition of the orchestration rather than a
+  recommendation. The sweep is where the decomposition's scope boundary becomes
+  checkable: §Decomposition into work packages already draws an in/out-of-scope
+  line, and the sweep states in numbers how much of the defect's class that line
+  left behind
+- **MUST** derive `Predicate` from the classification work rather than restating
+  the issue title, run it, and record the resulting `Hits` count. A sweep whose
+  predicate was never executed reports a number nobody measured, which is worse
+  than no section, because it reads as evidence
+- **MUST**, when `Repaired` is less than `Hits` and no guard holds the remainder,
+  file the out-of-scope sites as their own issues and reference them under the
+  four fields before the orchestration closes. Leaving them named only in the
+  pull-request body loses them at merge, which is the failure mode that produced
+  the predecessor-naming chains this rule answers
 - **MUST** remove the pre-analysis artifact from the feature branch per
   §Pre-analysis artifact lifecycle once every package is implemented and the gate
   above is green, and before the pull request is handed to `pull-request-merge`, so
@@ -397,6 +414,10 @@ readership once the capability it describes is implemented, verified, and merged
   metadata, the single primary classification with rationale, the in/out-of-scope
   boundary, and a work-package table where every package names a problem statement,
   acceptance criteria, touched files, a specialist, and its dependencies
+- [ ] For every orchestration run that produced a `fix`-typed pull request, that
+  pull request carries a completed `## Class sweep` section, its `Predicate` was
+  actually run, and either `Repaired` equals `Hits`, a guard is named, or the
+  remaining sites exist as referenced issues
 - [ ] For every orchestration run classified `security` or `spec-change`, the
   pre-analysis artifact records an explicit operator classification-confirmation step
   taken before the work-package table was populated
