@@ -75,7 +75,7 @@ If no brand bundle or `brand-vocabulary.md` is discoverable, **stop and report t
 
 ### Phase 1 — Classify the asset
 
-Determine the asset type from the documented vocabulary (`app-icon`, `logo`, `nav-icon`, `illustration`, `empty-state`, `onboarding`, `hero`, `badge`, `pattern`, `diagram`), the variants needed (light / dark / neutral), the target dimensions and file format, and the single target generator. Name the generator explicitly (for example `gemini-2.5-flash-image`, `midjourney-v7`).
+Determine the asset type from the documented vocabulary (`app-icon`, `logo`, `nav-icon`, `illustration`, `empty-state`, `onboarding`, `hero`, `badge`, `pattern`, `diagram`), the variants needed (light / dark / neutral), the target dimensions and file format, and the single target generator. Name the generator explicitly (for example `gemini-3.1-flash-image`, `midjourney-v7`).
 
 When that generator is FLUX or Gemini, consult its model-level baseline before assembling — `spec/design/flux-image-generation/` or `spec/design/gemini-image-generation/` — and author the prompt to that model's rules. When that spec tree is absent (the same consumer-install case as the brand fallback above), fall back to the generator's own published prompting guidance and record which baseline you applied in the prompt document's header. The model rules are: FLUX takes a terse, front-loaded natural-language description with no negative prompts and no prompt weights; Gemini takes narrative prose plus a stated intent and always embeds a SynthID watermark. A prompt isn't portable between them — the same brief yields a materially different prompt per model.
 

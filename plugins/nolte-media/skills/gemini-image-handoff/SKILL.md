@@ -25,7 +25,7 @@ see_also:
 
 A **semi-automatic** route to a Gemini image that needs no API billing. The skill does one half automatically — author a prompt that is optimised for Google's native Gemini image model — and hands the other half to the operator: paste the prompt into the Gemini web UI, generate, and download the image from the chat. It makes **no API call**, needs **no `GEMINI_API_KEY`**, and writes **no image and no sidecar**; the operator owns where the downloaded file lands.
 
-It exists because the `gemini` provider of the `image-generate` tool requires billing (`gemini-2.5-flash-image` reports a Free-Tier quota of `limit: 0`). This skill keeps Gemini reachable for occasional use through the free chat UI, while still applying the verified model baseline so the pasted prompt is actually optimised for Gemini.
+It exists because the `gemini` provider of the `image-generate` tool requires billing (no Gemini image model has a free tier; `gemini-3.1-flash-image` reports a Free-Tier quota of `limit: 0`). This skill keeps Gemini reachable for occasional use through the free chat UI, while still applying the verified model baseline so the pasted prompt is actually optimised for Gemini.
 
 ## Why this is a skill, not an agent
 
@@ -42,13 +42,13 @@ It exists because the `gemini` provider of the `image-generate` tool requires bi
 
 ### 1. Author the Gemini prompt (automated)
 
-Turn the brief into a prompt optimised for `gemini-2.5-flash-image`, following `spec/design/gemini-image-generation/`:
+Turn the brief into a prompt optimised for `gemini-3.1-flash-image`, following `spec/design/gemini-image-generation/`:
 
 - Write it as **narrative, descriptive prose** (describe the scene; never a comma-separated tag list) and **state the asset's intent or purpose**.
 - Front-load the subject, then action, location or context, composition, and style; be hyper-specific about material and texture; control the shot with photographic and lighting language.
 - For **in-image text**, quote the exact words and name the font or style.
 - Express any avoidance **positively** (`a clean, uncluttered background` over `no clutter`) — Gemini has **no** negative-prompt parameter.
-- When the asset must be **brand-conformant** (uses the repo's brand tokens, will be published), don't hand-author it here: dispatch the **`graphic-prompt-generator`** agent with the target generator `gemini-2.5-flash-image`, then hand off the prompt block from the document it writes.
+- When the asset must be **brand-conformant** (uses the repo's brand tokens, will be published), don't hand-author it here: dispatch the **`graphic-prompt-generator`** agent with the target generator `gemini-3.1-flash-image`, then hand off the prompt block from the document it writes.
 
 Present the result as a single fenced **copy-paste block** so the operator can grab it in one go.
 
@@ -81,3 +81,4 @@ Guide the operator through:
 - **Brand assets go through `graphic-prompt-generator` first.** It enforces the brand color contract and writes a durable prompt document; this skill then only handles the UI handoff for the prompt it produced.
 - **The watermark is unavoidable in the UI.** There is no UI toggle to disable SynthID; if the asset can't carry a watermark, the route is wrong, not the prompt.
 - **Aspect ratio / resolution are the UI's to control.** State the desired aspect ratio in the prompt; the chat UI doesn't expose the API's size parameters.
+- **An edit inherits the input image's aspect ratio.** With several inputs it takes the last one's. Per `spec/design/gemini-image-generation/` §"Editing and multi-image", say so explicitly when a turn must keep or change the ratio (`do not change the input aspect ratio`); a conversational edit that stays silent about it will not reshape the image on its own.

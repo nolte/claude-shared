@@ -51,7 +51,7 @@ Kein Token erforderlich. Optional `POLLINATIONS_API_TOKEN` setzen, um das Wasser
 
 ### Gemini (Billing erforderlich)
 
-`GEMINI_API_KEY` von <https://aistudio.google.com/apikey> setzen. Beachte: `gemini-2.5-flash-image` ist **nicht** im Free-Tier (sein Free-Tier-Kontingent ist `0`). Das Projekt muss Billing aktiviert haben. Sonst gibt jeder Aufruf einen Billing-erforderlich-Fehler zurück.
+`GEMINI_API_KEY` von <https://aistudio.google.com/apikey> setzen. Beachte: kein Gemini-Bildmodell ist im Free-Tier (das Free-Tier-Kontingent ist `0`), `gemini-3.1-flash-image` eingeschlossen. Das Projekt muss Billing aktiviert haben. Sonst gibt jeder Aufruf einen Billing-erforderlich-Fehler zurück.
 
 ## Ein Bild generieren
 

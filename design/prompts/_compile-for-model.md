@@ -36,7 +36,7 @@ deterministic script — semantic compression needs judgement. Claude or the
 | --------------------------------- | ------------------------- | ------------- | --------------- | --------- | ------------------------- |
 | **cloudflare flux-1-schnell**     | natural-language prose    | **~256 tok**  | none (no CFG)   | ignored   | none (text only)          |
 | **pollinations flux** (.1-dev)    | natural-language prose    | ~512 tok      | weak            | ignored   | none (text only)          |
-| **gemini-2.5-flash-image**        | conversational NL         | long          | via instruction | partial   | a fixed reference image   |
+| **gemini-3.1-flash-image**        | conversational NL         | long          | via instruction | partial   | a fixed reference image   |
 | **midjourney v6/v7**              | compact NL + parameters   | moderate      | `--no` param    | ignored   | `--sref <code>`           |
 | **openai gpt-image-1 / DALL·E 3** | rich NL (auto-rewritten)  | long          | via instruction | partial   | none                      |
 

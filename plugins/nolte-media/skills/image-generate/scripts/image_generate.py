@@ -10,8 +10,10 @@ one vendor's pricing or availability:
   pollinations  Pollinations.ai, FLUX. Auth-free. NOTE: public feed by default
                 (this tool forces private=true) and the output licence is
                 undocumented — a one-time disclaimer is shown.
-  gemini        Google Gemini gemini-2.5-flash-image. Requires BILLING on the
-                API project (the Free-Tier quota for this model is 0).
+  gemini        Google Gemini gemini-3.1-flash-image ("Nano Banana 2"). Requires
+                BILLING on the API project: no Gemini image model carries a free
+                tier. Replaces gemini-2.5-flash-image, which shuts down
+                2026-10-02.
 
 Stdlib-only by design: no runtime dependencies, so it drops into any shell or CI.
 
@@ -266,8 +268,14 @@ class PollinationsProvider(Provider):
 
 class GeminiProvider(Provider):
     name = "gemini"
-    model = "gemini-2.5-flash-image"
-    ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent"
+    # Pinned to the STABLE id, deliberately not the `-preview` id that Google's
+    # deprecation table names as the successor of gemini-2.5-flash-image: a preview
+    # id is not something to pin a tool to. The `generateContent` surface below is
+    # the legacy one -- Google now leads with the Interactions API -- but it is
+    # still the documented path for image models and keeps this migration to a
+    # model swap. Moving to Interactions is tracked separately.
+    model = "gemini-3.1-flash-image"
+    ENDPOINT = "https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-image:generateContent"
     KEY_PAGE = "https://aistudio.google.com/apikey"
 
     def source(self) -> str:
@@ -278,8 +286,9 @@ class GeminiProvider(Provider):
             "Gemini notice: prompts and generated images may be used by Google to "
             "train and improve their models depending on your plan. Don't submit "
             "confidential or personal data. See https://ai.google.dev/gemini-api/terms. "
-            "NOTE: gemini-2.5-flash-image is NOT on the free tier (quota limit 0) and "
-            "requires billing on the API project."
+            "NOTE: no Gemini image model is on the free tier (quota limit 0), so "
+            "gemini-3.1-flash-image requires billing on the API project. Every "
+            "generated image carries a SynthID watermark."
         )
 
     def generate(self, prompt, n, seed, opts):
@@ -290,13 +299,14 @@ class GeminiProvider(Provider):
                 f"{self.KEY_PAGE} — but note this image model requires billing enabled."
             )
         body: dict = {"contents": [{"parts": [{"text": prompt}]}]}
-        gen: dict = {}
+        # responseModalities is what the v1 image-generation examples send; the
+        # v1beta 2.5 path worked without it.
+        gen: dict = {"responseModalities": ["TEXT", "IMAGE"]}
         if n > 1:
             gen["candidateCount"] = n
         if seed is not None:
             gen["seed"] = seed
-        if gen:
-            body["generationConfig"] = gen
+        body["generationConfig"] = gen
         resp = _post_json(self.ENDPOINT, body, {"x-goog-api-key": key}, self.KEY_PAGE)
         images: list[tuple[str, bytes]] = []
         for candidate in resp.get("candidates", []):
