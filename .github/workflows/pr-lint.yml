@@ -28,9 +28,12 @@ jobs:
       # spec/project/github-actions-best-practices/ on untrusted input: the PR
       # title and body are author-controlled, so they reach the checker through
       # the environment and never through `${{ }}` interpolation into a shell
-      # command, where a crafted title would be executed.
+      # command, where a crafted title would be executed. The author login is
+      # GitHub-controlled but travels the same way; the checker exempts only the
+      # exact logins on its dependency-bot allowlist from the body checks.
       - name: Lint the pull-request title and body
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: python3 scripts/check_pr_body.py
