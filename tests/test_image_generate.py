@@ -388,3 +388,44 @@ def test_gemini_seed_adds_only_the_requested_config(state, gemini_env):
     assert code == 0
     _, body = _sent_request(m)
     assert body["generationConfig"] == {"seed": 7}
+
+
+# --------------------------------------------------------------------------- #
+# Documented flags must exist. Class guard for the `--n` slip in the #596 specs:
+# every flag quoted in backticks in the specs, skill docs and guides about this
+# tool has to be one the parser defines, so a renamed or mistyped flag fails
+# here instead of failing the operator who copies it.
+# --------------------------------------------------------------------------- #
+REPO = Path(__file__).resolve().parent.parent
+FLAG_DOCS = [
+    "spec/tools/image-generation/en.md", "spec/tools/image-generation/de.md",
+    "spec/design/gemini-image-generation/en.md", "spec/design/gemini-image-generation/de.md",
+    "plugins/nolte-media/skills/image-generate/SKILL.md",
+    "plugins/nolte-media/skills/gemini-image-handoff/SKILL.md",
+    "docs/en/guides/image-generation.md", "docs/de/guides/image-generation.md",
+]
+_FLAG_TOKEN = re.compile(r"`(--[a-z][a-z0-9-]*|-[a-z])`")
+
+
+def _parser_flags() -> set[str]:
+    src = SCRIPT_PATH.read_text(encoding="utf-8")
+    return set(re.findall(r'add_argument\(\s*"(-{1,2}[a-z][a-z0-9-]*)"', src)) | {"-h", "--help"}
+
+
+def test_documented_flags_exist_in_parser():
+    defined = _parser_flags()
+    unknown = [
+        f"{doc}:{i}: {tok}"
+        for doc in FLAG_DOCS
+        for i, line in enumerate((REPO / doc).read_text(encoding="utf-8").splitlines(), 1)
+        for tok in _FLAG_TOKEN.findall(line)
+        if tok not in defined
+    ]
+    assert not unknown, "documented flags the parser does not define:\n" + "\n".join(unknown)
+
+
+def test_flag_guard_sees_a_single_letter_long_flag():
+    # The first draft of this predicate required two characters after `--`
+    # and so missed `--n`, the exact defect it exists to catch.
+    assert _FLAG_TOKEN.findall("`--n`") == ["--n"]
+    assert "--n" not in _parser_flags()
