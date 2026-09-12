@@ -350,3 +350,41 @@ def test_from_prompt_doc_end_to_end(state, cf_env):
                   cloudflare_json())
     assert code == 0
     assert json.loads((state / "x.png.meta.json").read_text())["prompt"] == "teal fox on white"
+
+
+# --------------------------------------------------------------------------- #
+# Gemini request shape (#581 migration). A billed call can't run in CI, so the
+# request itself is the thing to pin: these fail against the retired 2.5 pin,
+# against a `-preview` pin, and against a plain call that carries a
+# generationConfig the documented minimal v1 call doesn't send.
+# --------------------------------------------------------------------------- #
+def _sent_request(m):
+    req = m.call_args[0][0]
+    return req.full_url, json.loads(req.data)
+
+
+def test_gemini_request_targets_stable_v1_endpoint(state, gemini_env):
+    code, m = run(["--provider", "gemini", "--prompt", "x", "--out", str(state / "g.png"),
+                   "--accept-data-policy"], gemini_json())
+    assert code == 0
+    url, _ = _sent_request(m)
+    assert url == "https://generativelanguage.googleapis.com/v1/models/gemini-3.1-flash-image:generateContent"
+    assert "preview" not in url
+    assert "v1beta" not in url
+
+
+def test_gemini_plain_call_sends_contents_only(state, gemini_env):
+    code, m = run(["--provider", "gemini", "--prompt", "a teal fox", "--out", str(state / "g.png"),
+                   "--accept-data-policy"], gemini_json())
+    assert code == 0
+    _, body = _sent_request(m)
+    assert body == {"contents": [{"parts": [{"text": "a teal fox"}]}]}
+    assert "generationConfig" not in body
+
+
+def test_gemini_seed_adds_only_the_requested_config(state, gemini_env):
+    code, m = run(["--provider", "gemini", "--prompt", "x", "--out", str(state / "g.png"),
+                   "--seed", "7", "--accept-data-policy"], gemini_json())
+    assert code == 0
+    _, body = _sent_request(m)
+    assert body["generationConfig"] == {"seed": 7}

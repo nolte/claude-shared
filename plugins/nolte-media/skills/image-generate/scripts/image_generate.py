@@ -298,15 +298,17 @@ class GeminiProvider(Provider):
                 "gemini provider needs GEMINI_API_KEY. Create a key at "
                 f"{self.KEY_PAGE} — but note this image model requires billing enabled."
             )
+        # The documented minimal v1 call sends `contents` alone. generationConfig
+        # is added only when the caller asks for --n or --seed, so a plain call
+        # carries no field the endpoint could reject.
         body: dict = {"contents": [{"parts": [{"text": prompt}]}]}
-        # responseModalities is what the v1 image-generation examples send; the
-        # v1beta 2.5 path worked without it.
-        gen: dict = {"responseModalities": ["TEXT", "IMAGE"]}
+        gen: dict = {}
         if n > 1:
             gen["candidateCount"] = n
         if seed is not None:
             gen["seed"] = seed
-        body["generationConfig"] = gen
+        if gen:
+            body["generationConfig"] = gen
         resp = _post_json(self.ENDPOINT, body, {"x-goog-api-key": key}, self.KEY_PAGE)
         images: list[tuple[str, bytes]] = []
         for candidate in resp.get("candidates", []):
