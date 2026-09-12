@@ -20,6 +20,10 @@ concurrency:
 jobs:
   pr-lint:
     runs-on: ubuntu-latest
+    env:
+      # Lock-step with the lint job in ci.yml; the prose-style spec requires local
+      # and CI Vale runs to produce identical alerts.
+      VALE_VERSION: "3.15.2"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
@@ -37,3 +41,20 @@ jobs:
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: python3 scripts/check_pr_body.py
+      - name: Install Vale
+        run: |
+          curl -fsSL "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
+            | sudo tar -xz -C /usr/local/bin vale
+          vale --version
+      - name: Sync Vale styles
+        run: vale sync
+      # spec/project/prose-style/ §"Pull-request titles and release notes":
+      # release-drafter publishes the title, so the title is what Vale checks,
+      # with its Conventional-Commits prefix masked; the body is not linted.
+      # Title and author reach the script through the environment, and the
+      # script hands Vale a file it writes itself, never shell text.
+      - name: Lint the pull-request title prose
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: python3 scripts/check_prose.py --title

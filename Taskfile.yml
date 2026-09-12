@@ -205,6 +205,17 @@ tasks:
     cmds:
       - python3 scripts/check_spec_inheritance.py
 
+  release:notes-prose:
+    desc: |
+      Advisory Vale check of a release's notes before publishing, per
+      spec/project/prose-style/ §"Pull-request titles and release notes". Masks the
+      machine tokens release-drafter adds to each entry and always exits 0. Needs
+      `gh` with push access, since a draft is only visible to it, and a Vale binary.
+      Usage: task release:notes-prose -- v1.0.0
+    cmds:
+      - vale sync
+      - python3 scripts/check_prose.py --release-notes {{.CLI_ARGS}}
+
   image:generate:
     desc: |
       Generate an image from a text prompt via a pluggable provider backend

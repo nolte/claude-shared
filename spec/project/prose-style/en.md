@@ -78,10 +78,13 @@ fixed by the requirement grammar and can't be contracted.
 
 The drift between repository-local vocabularies and the pinned `nolte/vale-style` release is audited by the `vocab-drift-audit` skill rather than by a periodic CI cron.
 
-### Pull-request descriptions and release notes
-- **MUST** apply the same shared Vale rule set to pull-request descriptions and to GitHub Release notes (drafted by release-drafter, edited before publishing), because this prose flows directly into external changelogs and user-facing release pages
-- **MUST** check pull-request descriptions in CI (for example via a PR-check workflow) at the repository's configured `MinAlertLevel`, failing on `error`-level alerts the same way documentation does
-- **SHOULD** verify the final Release notes body against Vale before the release is published, so the published changelog doesn't carry prose violations into public view
+### Pull-request titles and release notes
+- **MUST** apply the same shared Vale rule set to pull-request titles, because release-drafter publishes each merged pull request's title verbatim into the GitHub Release notes, and that's the prose that reaches external changelogs and user-facing release pages
+- **MUST** check the pull-request title in CI, in the PR lint workflow per `spec/project/pull-request-workflow/` §PR lint workflow, at the repository's configured `MinAlertLevel`, failing on `error`-level alerts the same way documentation does
+- **MUST** mask the Conventional-Commits prefix `<type>(<scope>)!:` as code before linting, because its lowercase type and scope are machine vocabulary that the Vale term rules would otherwise flag; the summary after the prefix is checked in full
+- **MUST NOT** lint the title of a pull request opened by a dependency bot on the allowlist in the pull-request linter (`spec/project/pull-request-workflow/` §PR preconditions), because such a title embeds package identifiers verbatim
+- **MUST NOT** require pull-request descriptions to pass Vale. Release-drafter doesn't publish them, and in a sample of 97 pull requests every description failed at `error` level (2026-09-12), so a blocking check would stop every pull request without protecting any published prose. Descriptions stay subject to editorial review, for example through `spec/project/lektorat/`
+- **SHOULD** verify the final Release notes body against Vale before the release is published, masking the same machine tokens release-drafter adds to each entry (the prefix, the pull-request reference, the author mention, and the dependency name); that verification **MUST** be advisory and **MUST NOT** block the publish, because a release draft already carries every title merged since the previous release together with curated sections added by hand
 
 ### Voice and tone
 
@@ -122,7 +125,7 @@ By default these §Voice and tone rules stay **editorial guidance**: they're enf
 - [ ] No repository-local vocabulary file contains a term that's already accepted by the pinned `nolte/vale-style` release
 - [ ] Every domain term introduced by a recent change appears in a PR or recent release of `nolte/vale-style`, not only in the downstream repository
 - [ ] Any AI-assisted text generation operation verifies the output against the repository's Vale configuration before the task is treated as done
-- [ ] Pull-request descriptions and GitHub Release notes pass Vale at the configured `MinAlertLevel` under the same configuration as the repository's Markdown documentation
+- [ ] Pull-request titles pass Vale at the configured `MinAlertLevel` with the Conventional-Commits prefix masked, checked in CI on every pull request not opened by an allowlisted dependency bot, and GitHub Release notes are verified against the same configuration before publishing without that verification blocking the publish
 - [ ] Vale's configured lint scope contains no files authored in a language other than English; `docs/de/`, `spec/<topic>/<slug>/de.md`, and any `*.de.md` are explicitly absent from the scope
 - [ ] Vale's configured lint scope contains no LLM-instruction artifacts; `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, and `agents/*.md` are explicitly absent from the scope
 - [ ] No English-scoped file contains non-English prose anywhere in its body, YAML frontmatter, inline comments, or quoted examples; Vale at `error` level confirms this

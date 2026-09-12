@@ -70,10 +70,13 @@ Die aktive Konfiguration ist maßgeblich (§Texterzeugung), aber einige ihrer Re
 
 Die Drift zwischen repository-lokalen Vokabularen und dem gepinnten `nolte/vale-style`-Release wird über den `vocab-drift-audit`-Skill geprüft statt über einen periodischen CI-Cron.
 
-### Pull-Request-Beschreibungen und Release-Notes
-- **MUSS [MUST]** dasselbe gemeinsame Vale-Regelwerk auf Pull-Request-Beschreibungen und GitHub-Release-Notes anwenden (vom release-drafter entworfen, vor der Veröffentlichung bearbeitet), denn diese Prosa fließt direkt in externe Changelogs und nutzerseitige Release-Seiten
-- **MUSS [MUST]** Pull-Request-Beschreibungen in der CI prüfen (zum Beispiel über einen PR-Check-Workflow) auf dem im Repository konfigurierten `MinAlertLevel` und auf `error`-Stufe genauso scheitern wie die Dokumentation
-- **SOLLTE [SHOULD]** die finalen Release-Notes vor der Veröffentlichung gegen Vale prüfen, damit der veröffentlichte Changelog keine Prosa-Verstöße in die Öffentlichkeit trägt
+### Pull-Request-Titel und Release-Notes
+- **MUSS [MUST]** dasselbe gemeinsame Vale-Regelwerk auf Pull-Request-Titel anwenden, denn release-drafter übernimmt den Titel jedes gemergten Pull Requests wörtlich in die GitHub-Release-Notes, und genau diese Prosa erreicht externe Changelogs und nutzerseitige Release-Seiten
+- **MUSS [MUST]** den Pull-Request-Titel in der CI prüfen, im PR-Lint-Workflow gemäß `spec/project/pull-request-workflow/` §PR-Lint-Workflow, auf dem im Repository konfigurierten `MinAlertLevel` und auf `error`-Stufe genauso scheitern wie die Dokumentation
+- **MUSS [MUST]** das Conventional-Commits-Präfix `<type>(<scope>)!:` vor dem Lint als Code maskieren, weil kleingeschriebener Type und Scope Maschinenvokabular sind, das die Vale-Begriffsregeln sonst anmahnen würden; die Zusammenfassung nach dem Präfix wird vollständig geprüft
+- **DARF NICHT [MUST NOT]** den Titel eines Pull Requests prüfen, den ein Dependency-Bot von der Freigabeliste im Pull-Request-Linter öffnet (`spec/project/pull-request-workflow/` §PR-Rahmenbedingungen), weil ein solcher Titel Paketbezeichner wörtlich enthält
+- **DARF NICHT [MUST NOT]** verlangen, dass Pull-Request-Beschreibungen Vale bestehen. Release-drafter veröffentlicht sie nicht, und in einer Stichprobe von 97 Pull Requests scheiterte jede Beschreibung auf `error`-Stufe (2026-09-12), sodass ein blockierender Check jeden Pull Request stoppen würde, ohne veröffentlichte Prosa zu schützen. Beschreibungen bleiben redaktioneller Prüfung unterworfen, zum Beispiel über `spec/project/lektorat/`
+- **SOLLTE [SHOULD]** die finalen Release-Notes vor der Veröffentlichung gegen Vale prüfen und dabei dieselben Maschinentoken maskieren, die release-drafter jedem Eintrag hinzufügt (das Präfix, den Pull-Request-Verweis, die Autor-Nennung und den Paketnamen); diese Prüfung **MUSS [MUST]** beratend sein und **DARF NICHT [MUST NOT]** die Veröffentlichung blockieren, weil ein Release-Draft bereits jeden seit dem vorigen Release gemergten Titel zusammen mit von Hand ergänzten kuratierten Abschnitten trägt
 
 ### Stimme und Ton
 
@@ -114,7 +117,7 @@ Standardmäßig bleiben diese §Stimme-und-Ton-Regeln **redaktionelle Leitlinien
 - [ ] Keine repository-lokale Vokabular-Datei enthält einen Begriff, den das gepinnte `nolte/vale-style`-Release bereits akzeptiert
 - [ ] Jeder in einer jüngeren Änderung eingeführte Fachbegriff erscheint in einem PR oder einem jüngeren Release von `nolte/vale-style`, nicht nur im Downstream-Repository
 - [ ] Jede KI-gestützte Texterzeugungs-Operation prüft den Output vor Abschluss gegen die Vale-Konfiguration des Repositories
-- [ ] Pull-Request-Beschreibungen und GitHub-Release-Notes bestehen Vale auf dem konfigurierten `MinAlertLevel` unter derselben Konfiguration wie die Markdown-Dokumentation des Repositories
+- [ ] Pull-Request-Titel bestehen Vale auf dem konfigurierten `MinAlertLevel` mit maskiertem Conventional-Commits-Präfix, geprüft in der CI bei jedem Pull Request, der nicht von einem freigegebenen Dependency-Bot geöffnet wurde, und GitHub-Release-Notes werden vor der Veröffentlichung gegen dieselbe Konfiguration geprüft, ohne dass diese Prüfung die Veröffentlichung blockiert
 - [ ] Der konfigurierte Vale-Lint-Scope enthält keine Dateien, die in einer anderen Sprache als Englisch verfasst sind; `docs/de/`, `spec/<topic>/<slug>/de.md` und jede `*.de.md` sind ausdrücklich nicht im Scope
 - [ ] Der konfigurierte Vale-Lint-Scope enthält keine LLM-Instruktions-Artefakte; `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**` und `agents/*.md` sind ausdrücklich nicht im Scope
 - [ ] Keine Datei im englischsprachigen Scope enthält irgendwo nicht-englische Prosa – weder im Fließtext, im YAML-Frontmatter, in Inline-Kommentaren noch in zitierten Beispielen; Vale auf `error`-Stufe bestätigt dies
