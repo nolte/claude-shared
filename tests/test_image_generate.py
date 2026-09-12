@@ -388,3 +388,120 @@ def test_gemini_seed_adds_only_the_requested_config(state, gemini_env):
     assert code == 0
     _, body = _sent_request(m)
     assert body["generationConfig"] == {"seed": 7}
+
+
+# --------------------------------------------------------------------------- #
+# Documented flags must exist. Class guard for the `--n` slip in the #596 specs.
+# A flag counts as documented when it sits where an operator would copy it from:
+#   - anywhere in the repo, a fenced command that invokes the script, with
+#     backslash continuations joined so a flag on a later line is still seen,
+#     or an inline code span that names the script;
+#   - in the tool's own docs, any inline span that starts with a flag, such as
+#     `-n <N>`.
+# Inline spans for other programs (`claude --plugin-dir .`) are not checked.
+# The defined set comes from build_parser(), so aliases count.
+# --------------------------------------------------------------------------- #
+import subprocess
+
+REPO = Path(__file__).resolve().parent.parent
+TOOL_DOC_GLOBS = (
+    "plugins/nolte-media/skills/image-generate/**/*.md",
+    "plugins/nolte-media/skills/gemini-image-handoff/**/*.md",
+    "spec/tools/image-generation/*.md",
+    "spec/design/gemini-image-generation/*.md",
+    "docs/*/guides/image-generation.md",
+)
+_FLAG = re.compile(r"(?<![\w/.=-])(--[a-z][a-z0-9-]*|-[a-zA-Z])(?![\w-])")
+_INLINE = re.compile(r"`([^`\n]+)`")
+_INVOKES = re.compile(r"image_generate\.py|image:generate")
+
+
+def _option_strings(parser) -> set[str]:
+    # Every name each action answers to, aliases included.
+    return {name for action in parser._actions for name in action.option_strings}
+
+
+def _tool_docs() -> set[str]:
+    return {p.relative_to(REPO).as_posix() for g in TOOL_DOC_GLOBS for p in REPO.glob(g)}
+
+
+def _checked_contexts(rel_path, text, tool_docs):
+    in_fence, command, start = False, "", 0
+    for lineno, line in enumerate(text.splitlines(), 1):
+        if line.lstrip().startswith("```"):
+            if in_fence and command and _INVOKES.search(command):
+                yield start, command
+            in_fence, command = not in_fence, ""
+            continue
+        if in_fence:
+            if not command:
+                start = lineno
+            stripped = line.rstrip()
+            if stripped.endswith("\\"):
+                command += stripped[:-1] + " "
+                continue
+            command += stripped
+            if _INVOKES.search(command):
+                yield start, command
+            command = ""
+            continue
+        for span in _INLINE.findall(line):
+            if _INVOKES.search(span) or (rel_path in tool_docs and span.lstrip().startswith("-")):
+                yield lineno, span
+
+
+def _unknown_flags(rel_path, text, defined, tool_docs):
+    return [
+        f"{rel_path}:{lineno}: {token}"
+        for lineno, context in _checked_contexts(rel_path, text, tool_docs)
+        for token in _FLAG.findall(context)
+        if token not in defined
+    ]
+
+
+def test_documented_flags_exist_in_parser():
+    tracked = subprocess.run(
+        ["git", "ls-files", "*.md"], cwd=REPO, capture_output=True, text=True, check=True
+    ).stdout.split()
+    docs = [p for p in tracked if not p.startswith(".audits/")]
+    assert docs, "git ls-files found no Markdown, so the guard would check nothing"
+    orphaned = [g for g in TOOL_DOC_GLOBS if not any(REPO.glob(g))]
+    assert not orphaned, f"tool-doc globs that match nothing, so their files would go unchecked: {orphaned}"
+    tool_docs = _tool_docs()
+    defined = _option_strings(ig.build_parser())
+    unknown = [
+        u for p in docs for u in _unknown_flags(p, (REPO / p).read_text(encoding="utf-8"), defined, tool_docs)
+    ]
+    assert not unknown, "documented flags the parser does not define:\n" + "\n".join(unknown)
+
+
+_DEFINED = {"-h", "--help", "-n", "--prompt", "--out", "--provider"}
+_TOOL_DOC = "spec/tools/image-generation/en.md"
+
+
+def test_flag_guard_flags_a_bare_single_letter_long_flag():
+    # The first draft required two characters after `--` and missed `--n` itself.
+    assert _unknown_flags(_TOOL_DOC, "pass `--n` for more", _DEFINED, {_TOOL_DOC}) == [f"{_TOOL_DOC}:1: --n"]
+
+
+def test_flag_guard_reads_flags_on_continuation_lines():
+    text = "```bash\npython3 scripts/image_generate.py \\\n    --prompt x \\\n    --n 3\n```\n"
+    assert _unknown_flags("README.md", text, _DEFINED, set()) == ["README.md:2: --n"]
+
+
+def test_flag_guard_checks_an_inline_flag_with_its_argument():
+    assert _unknown_flags(_TOOL_DOC, "use `-n <N>` here", _DEFINED, {_TOOL_DOC}) == []
+    assert _unknown_flags(_TOOL_DOC, "use `--n <N>` here", _DEFINED, {_TOOL_DOC}) == [f"{_TOOL_DOC}:1: --n"]
+
+
+def test_flag_guard_ignores_other_programs():
+    assert _unknown_flags(_TOOL_DOC, "run `claude --plugin-dir .` first", _DEFINED, {_TOOL_DOC}) == []
+    assert _unknown_flags("CLAUDE.md", "`--resume` resumes a session", _DEFINED, set()) == []
+
+
+def test_flag_guard_counts_aliases():
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-o", "--out")
+    assert {"-o", "--out"} <= _option_strings(parser)
