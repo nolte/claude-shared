@@ -465,8 +465,9 @@ def test_documented_flags_exist_in_parser():
     ).stdout.split()
     docs = [p for p in tracked if not p.startswith(".audits/")]
     assert docs, "git ls-files found no Markdown, so the guard would check nothing"
+    orphaned = [g for g in TOOL_DOC_GLOBS if not any(REPO.glob(g))]
+    assert not orphaned, f"tool-doc globs that match nothing, so their files would go unchecked: {orphaned}"
     tool_docs = _tool_docs()
-    assert tool_docs, "the tool-doc globs matched nothing, so the guard would check nothing"
     defined = _option_strings(ig.build_parser())
     unknown = [
         u for p in docs for u in _unknown_flags(p, (REPO / p).read_text(encoding="utf-8"), defined, tool_docs)

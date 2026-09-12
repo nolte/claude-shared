@@ -299,7 +299,7 @@ class GeminiProvider(Provider):
                 f"{self.KEY_PAGE} — but note this image model requires billing enabled."
             )
         # The documented minimal v1 call sends `contents` alone. generationConfig
-        # is added only when the caller asks for --n or --seed, so a plain call
+        # is added only when the caller asks for -n or --seed, so a plain call
         # carries no field the endpoint could reject.
         body: dict = {"contents": [{"parts": [{"text": prompt}]}]}
         gen: dict = {}
