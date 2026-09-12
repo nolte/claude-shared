@@ -190,7 +190,7 @@ The reference identifier `L` (used by the `nolte/blog` audience artefact) names 
 - **MUST NOT** quote private communications (Slack DMs, private emails, closed-issue threads) without explicit permission of the source.
 - **SHOULD** prefer the named project's preferred name and capitalisation (for example, `npm` not `NPM`, `Astro` not `astro`). For people, use the form they use publicly.
 
-## Acceptance criteria
+## Acceptance Criteria
 
 A post conforms to this spec when **all** of the per-post criteria below hold. The spec-level criteria (`a-18` and following) are verified against the spec corpus and its git history, not per post; they're reviewed when the spec itself changes. Every criterion is written so a reviewer (the author, the `blog-author` skill, or a future lint skill) can mark it done / not done without ambiguity.
 

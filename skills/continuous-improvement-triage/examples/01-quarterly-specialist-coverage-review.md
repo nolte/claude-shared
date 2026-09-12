@@ -18,7 +18,7 @@ Repository state when the skill is invoked:
   - PR #115: source `vocab-drift-audit`, `Dispatched specialist:` field reads "no matching specialist existed — generalist handled". This is the second such vocab-drift occurrence this quarter; combined with one from Q1, the recurrence count for `vocab-drift` is now 3.
   - PR #117: source `workflow-health` incident, dispatched specialist `nolte-shared:workflow-health-triage` — correctly traced.
 - `agents/` directory at runtime (discovered via `Glob`):
-  - `agents/claude-plugin-developer.md` — description mentions "spec-conformant authoring of Claude Code skills, agents, and plugin manifests".
+  - `plugins/nolte-claude-dev/agents/claude-plugin-developer.md` — description mentions "spec-conformant authoring of Claude Code skills, agents, and plugin manifests".
   - `agents/audience-doc-author.md` — description mentions "audience-aware MkDocs documentation prose".
 - `~/.claude/agents/` empty.
 - No `.audits/continuous-improvement/` directory yet.

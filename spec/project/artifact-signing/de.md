@@ -43,7 +43,7 @@ Der Inhalt stammt aus einem dedizierten Recherchelauf am 2026-08-19 über die Pr
 
 - **MUSS** per Digest (`name@sha256:…`) signieren und attestieren, nie per Tag; ein Tag ist ein veränderlicher Zeiger ohne Unveränderlichkeitsoption auf GHCR [R12], während ein Digest gemäß OCI-Image-Spec content-adressiert ist [R5]
 - **MUSS** den Digest aus dem erzeugenden Schritt selbst erfassen — dem `digest`-Output von `docker/build-push-action` für Images, der `Digest:`-Zeile von `helm push` für Charts — statt einen Tag nachträglich erneut aufzulösen
-- **MUSS** Images in Deployment-Manifesten und GitOps-Values per Digest referenzieren, gemäß `spec/project/kubernetes-deployment-best-practices/` §Image supply-chain hygiene; Tags bleiben menschenlesbare Annotationen
+- **MUSS** Images in Deployment-Manifesten und GitOps-Values per Digest referenzieren, gemäß `spec/project/kubernetes-deployment-best-practices/` §Image-Supply-Chain-Hygiene; Tags bleiben menschenlesbare Annotationen
 - **MUSS** vor dem Push eines Release-Images oder -Charts prüfen, dass der Ziel-Versions-Tag noch nicht existiert, und den Lauf andernfalls scheitern lassen; GHCR überschreibt Tags stillschweigend und Helm verweigert einen erneuten Push nicht [R6]
 
 ### C. Container-Images: Signieren und Attestieren
@@ -102,7 +102,7 @@ Der Inhalt stammt aus einem dedizierten Recherchelauf am 2026-08-19 über die Pr
 - **MUSS** den Sigstore-Trusted-Root als versionierte Konfiguration mit wiederkehrender Update-Prüfung führen; ein veralteter Root lässt die Verifikation nach Upstream-Schlüsselrotationen irgendwann scheitern
 - **KANN** einen offline verwahrten, hardware-gestützten Schlüssel als dokumentierten Break-Glass-Signierer für einen längeren Sigstore-Ausfall vorhalten; sein Einsatz erfordert einen Vorfallsnachweis, und er erscheint nie in CI
 
-## Abnahmekriterien
+## Akzeptanzkriterien
 
 - [ ] In keinem Portfolio-Workflow existiert ein `cosign.key`, ein key-basiertes Signier-Flag oder ein Signierschlüssel-Secret; jede Signatur verifiziert gegen den GitHub-OIDC-Issuer (fasst §A zusammen)
 - [ ] Jeder Release-Image-Digest und Chart-Digest trägt eine verifizierbare Signatur, eine SLSA-Provenance-Attestation und (Images) eine SPDX-SBOM-Attestation, abrufbar aus GHCR (fasst §C, §D zusammen)

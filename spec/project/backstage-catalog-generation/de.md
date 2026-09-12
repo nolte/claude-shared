@@ -236,7 +236,7 @@ Der Generator **SOLLTE [SHOULD]** Folgendes aus Repository-Signalen inferieren u
 - Der Generator **SOLLTE [SHOULD]** jeden emittierten Deskriptor validieren, bevor er ihn präsentiert — mindestens gegen den Offline-`@roadiehq/backstage-entity-validator` (oder eine äquivalente stdlib-Prüfung des Schema-Floors und der Feld-Format-Regeln) — und **KANN [MAY]** zusätzlich an das `/api/catalog/validate-entity` eines laufenden Backends POSTen, wenn eines erreichbar ist.
 - Der Generator **MUSS [MUST]** die Ziel-Existenz von Referenzen als vom Offline-Validator unbestätigt behandeln und Owner-/System-/API-Referenzen als zu bestätigende Behauptungen ausweisen, nicht als validierte Fakten.
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] Die Spec-Tabelle listet alle neun Kinds mit ihren `apiVersion`, required und optional `spec`-Feldern und Konventions-Enums, und ein Reviewer kann daraus den MUST-Floor für jedes Kind ableiten.
 - [ ] Ein nach dieser Spec gebauter Generator emittiert eine Component-`catalog-info.yaml`, deren required Floor (`apiVersion`, `kind`, valides `metadata.name`, `spec.type`/`lifecycle`/`owner`) `@roadiehq/backstage-entity-validator` ohne manuelle Bearbeitung besteht.

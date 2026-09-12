@@ -167,7 +167,7 @@ gemergtes Artefakt sind, bevor die Umsetzung beginnt.
   `parallel-working-copies`, `requirements-elicitation` und `issue-orchestration` fragmentiert zu
   werden. Jene Specs bleiben für ihren eigenen Scope maßgeblich und werden hier cross-referenziert
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] Der Modus ist als optional und benannt dokumentiert; keine Portfolio-Spec macht die
   Trennung von Erfassung und Umsetzung zur Vorbedingung dafür, dass eine Änderung gültig ist

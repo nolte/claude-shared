@@ -19,7 +19,7 @@ Repository state when the skill is invoked:
 - `spec/project/issue-orchestration/en.md` — present (canonical).
 - Issue #298 `bug`-labelled by the reporter, body describes an unsanitised filename
   flowing into a shell invocation in a bundled script — a command-injection surface.
-- The referenced bundled script under `skills/image-generate/` — present.
+- The referenced bundled script under `plugins/nolte-media/skills/image-generate/` — present.
 - At runtime the candidate walk (globbing `${CLAUDE_PLUGIN_ROOT}` plus the project
   roots) discovers `code-security-reviewer` (`description:` names a read-only
   whole-codebase OWASP audit). The diff-scoped `security-review` skill is the Claude

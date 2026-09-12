@@ -144,7 +144,7 @@ Mirrors `skill-management` §"Evaluation discipline"; cite the originating rule 
 - **SHOULD** embed, in the plan's `## Scope` section, the git SHA of the spec versions applied so a later re-review can tell whether findings may have become outdated by a spec revision
 - **MAY** fold purely stylistic observations (Vale, markdown linting) into `Info` findings when they aid the author, but **MUST NOT** promote them to `Warning` or `Critical`: those stay with their own tooling
 
-This procedure is delivered as a skill (`skills/skill-review/`), per `skill-vs-agent`'s orchestrator-is-a-skill rule; the plan persists to `.audits/skill-review/` regardless of entry point per `review-plan`.
+This procedure is delivered as a skill (`plugins/nolte-claude-dev/skills/skill-review/`), per `skill-vs-agent`'s orchestrator-is-a-skill rule; the plan persists to `.audits/skill-review/` regardless of entry point per `review-plan`.
 
 ### Relationship to other specs
 

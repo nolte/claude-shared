@@ -8,7 +8,7 @@ last_updated: 2026-05-19
 
 # Skill-Management
 
-Der Skill `skill-management` erstellt und validiert Claude-Code-Skills. Er liegt unter `skills/skill-management/SKILL.md` und folgt der Spezifikation [Skill-Autorenschaft](../references/specs/skill-management.md).
+Der Skill `skill-management` erstellt und validiert Claude-Code-Skills. Er liegt unter `plugins/nolte-claude-dev/skills/skill-management/SKILL.md` und folgt der Spezifikation [Skill-Autorenschaft](../references/specs/skill-management.md).
 
 ## Wann einsetzen
 
@@ -68,5 +68,5 @@ Gezielte Edits an bestehenden Skills: `description` schärfen, Hard-Rules-Abschn
 
 ## Quellen
 
-- Skill-Datei: `skills/skill-management/SKILL.md`
+- Skill-Datei: `plugins/nolte-claude-dev/skills/skill-management/SKILL.md`
 - Spezifikation: [`spec/claude/skill-management/`](../references/specs/skill-management.md)

@@ -17,7 +17,7 @@ Every repository in the portfolio runs lint, type-check, and test commands in so
 - Picking the specific linting / typechecking / testing tool for a given language (ruff vs flake8, mypy vs pyright, Vitest vs jest): that's a per-repository decision
 - Defining the content of any given test suite or lint rule set—those live in the repositories' own configs
 - Replacing CI: the gate is a local-or-invocable pre-check that mirrors what CI will also run; CI remains the source of truth for merge protection
-- Declaring operational details of the skill that implements the gate (`skills/quality-gate/`)—those can evolve without a spec change
+- Declaring operational details of the skill that implements the gate (`plugins/nolte-engineering/skills/quality-gate/`)—those can evolve without a spec change
 
 ## Requirements
 
@@ -97,7 +97,7 @@ The stronger form of this rule is a workflow-level sufficiency check that detect
 - [ ] No tier is counted as enforced on the strength of a lane that reports outside the required set or runs under `continue-on-error`
 - [ ] No exemption covers a tier that runs a check the repository relies on to block a defect class; where such a check sits in an unstable tier, it has its own required lane instead
 - [ ] Every exemption's take-back condition names an issue or a condition a reader other than its author can evaluate
-- [ ] The skill `skills/quality-gate/` invokes the repository's Taskfile targets first and falls back to native tooling detection only when no matching target exists
+- [ ] The skill `plugins/nolte-engineering/skills/quality-gate/` invokes the repository's Taskfile targets first and falls back to native tooling detection only when no matching target exists
 
 ## Open Questions
 _None at this time._

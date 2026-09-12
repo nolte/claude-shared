@@ -182,7 +182,7 @@ Das `kind`-Enum ist bewusst feingranular (12 Werte) für Audit-Präzision. Das `
 - **MUSS [MUST]** `spec/portfolio/tech-stack-discovery/` als Eigentümer der Ermittlungs-Methodik, des Audience-Modells und der Benefits-Prosa für das Tech-Stack-Inventar behandeln; das Wiederholen einer der drei Sachen in dieser Schema-Spec ist verboten. Diese Spec definiert die Eintragsform, den Vererbungs-Vertrag, die Audit-Severity-Tabelle und den Rendering-Vertrag; die Schwester-Spec definiert, wie ein Eintrag erfasst wird, wer das resultierende Inventar konsumiert und warum sich der Kurationsaufwand auszahlt.
 - **MUSS [MUST]** über Revisionen hinweg mit `spec/portfolio/tech-stack-discovery/` synchron bleiben: Eine Änderung am `kind`-Enum, am Vererbungs-Vertrag oder an der Audit-Severity-Tabelle, die den Discovery-Fluss oder das Audience-Modell beeinflusst, löst eine passende Revision der Schwester-Spec im selben Koordinationsfenster aus (höchstens ein geschlossener Sprint).
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] `portfolio/tech-stack.yml` existiert im Wurzelverzeichnis des `claude-shared`-Repositories mit mindestens einem Eintrag gemäß §"Entry-Schema".
 - [ ] `git blame portfolio/tech-stack.yml` zeigt nur Maintainer-Commits; kein automatisierter Generierungs-Commit erscheint in der Historie, was das Hand-Authoring-MUSS aus §"Globales Tech-Stack-Manifest" verifiziert.

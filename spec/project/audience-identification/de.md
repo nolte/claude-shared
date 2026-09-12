@@ -51,7 +51,7 @@ Leser: Autoren, die die Identifikationsmethode für einen abgegrenzten Kontext a
 - **KANN [MAY]** jeden Zielgruppen-Eintrag auf die für ihn erzeugten Specs, Docs oder SLAs verlinken, damit Abdeckung sichtbar wird
 - **KANN [MAY]** Zielgruppen zusätzlich nach Geografie, Organisationseinheit oder Mandantenzuordnung unterteilen, wenn solche Unterschiede das erwartete Liefergut verändern
 
-## Abnahmekriterien
+## Akzeptanzkriterien
 <!-- Testbare, abhakbare Bedingungen. Reviewer müssen pro Punkt "erfüllt / nicht erfüllt" markieren können. -->
 - [ ] Ein durchgearbeitetes Beispiel existiert, das das Verfahren auf ein konkretes Artefakt dieses Repositories anwendet (z. B. das `nolte-shared`-Plugin oder einen seiner Skills)
 - [ ] Die `readme-structure`-Spec verweist auf diese Spec an der Stelle, an der sie von "intended consumers" spricht

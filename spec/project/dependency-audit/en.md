@@ -18,7 +18,7 @@ Readers: authors and operators of the `dependency-audit` skill and its scanner, 
 - Choosing a specific vulnerability auditor (`pip-audit`, `npm audit`, `govulncheck`, `cargo audit`): the audit is tool-agnostic and the repository picks whichever fits its ecosystem
 - Declaring an upgrade policy (minor vs major, automated vs reviewed): the decision stays with dependency owners and Renovate / Dependabot configuration
 - Replacing continuous CI checks that already scan dependencies on every push—those remain; this spec defines the periodic deep pass and the pre-release gate
-- Defining the skill's operational details (Taskfile target detection, output shape)—those belong to `skills/dependency-audit/` and can evolve without a spec change
+- Defining the skill's operational details (Taskfile target detection, output shape)—those belong to `plugins/nolte-engineering/skills/dependency-audit/` and can evolve without a spec change
 
 ## Requirements
 

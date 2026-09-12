@@ -128,7 +128,7 @@ Eine eng umrissene Menge von **Editorial- und Dokumentations-Audit-Specs** seria
 - **SOLLTE [SHOULD]** `spec/project/parallel-working-copies/` §Audit-Artefakte in mehreren Worktrees konsultieren, wenn der Plan in einem Worktree statt im primären Checkout erzeugt wird; die Per-(Review-Typ, Ziel)-Eindeutigkeitsregel aus dieser Spec ist jeweils nur innerhalb eines Working Tree beobachtbar, und die worktree-lokalen Commit-, Transfer- und Cleanup-Regeln leben dort
 - **SOLLTE [SHOULD]** in Repositories, die direkte Pushes nach `develop` verbieten, den Plan und den Fix, den er beschreibt, im selben Feature-Branch-PR landen lassen — Erzeugen, Abhaken, `## Processing log`-Aktualisierungen und der Lösch-Commit alle in einem Diff — gemäß `spec/project/parallel-working-copies/` §Audit-Artefakte; ein eigenständiger früherer PR ist Reviews vorbehalten, die vor jeder Fix-Abgrenzung laufen
 
-## Abnahmekriterien
+## Akzeptanzkriterien
 <!-- Testbare, abhakbare Bedingungen. Reviewer müssen pro Punkt "erfüllt / nicht erfüllt" markieren können. -->
 - [ ] `.audits/` existiert im Repository und wird von Git getrackt (nicht in `.gitignore`)
 - [ ] Jede Plan-Datei unter `.audits/` parst als gültiges Markdown mit YAML-Frontmatter, das `review-type`, `target`, `target-kind`, `specs-applied`, `repo-revision`, `created`, `status` enthält

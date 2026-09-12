@@ -18,7 +18,7 @@ Leser: Autoren und Operatoren des `dependency-audit`-Skills und seines Scanners,
 - Die Wahl eines konkreten Schwachstellen-Auditors (`pip-audit`, `npm audit`, `govulncheck`, `cargo audit`): das Audit ist werkzeug-agnostisch und das Repository wählt, was zum Ökosystem passt
 - Die Deklaration einer Upgrade-Richtlinie (minor vs. major, automatisch vs. reviewed): die Entscheidung bleibt bei den Dependency-Ownern und der Renovate- / Dependabot-Konfiguration
 - Den Ersatz kontinuierlicher CI-Checks, die bei jedem Push bereits Abhängigkeiten scannen — diese bleiben; diese Spec definiert den periodischen Tiefendurchlauf und das Pre-Release-Gate
-- Die operativen Details des zugehörigen Skills (Taskfile-Target-Erkennung, Ausgabeform) — diese gehören zu `skills/dependency-audit/` und können sich ohne Spec-Änderung entwickeln
+- Die operativen Details des zugehörigen Skills (Taskfile-Target-Erkennung, Ausgabeform) — diese gehören zu `plugins/nolte-engineering/skills/dependency-audit/` und können sich ohne Spec-Änderung entwickeln
 
 ## Anforderungen
 

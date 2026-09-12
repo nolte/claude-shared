@@ -76,10 +76,10 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 
 | Feld | gilt für | Typ | Limits / erlaubte Werte | Provenienz | Owner |
 |---|---|---|---|---|---|
-| `name` | both | string | 1–64 Zeichen; lowercase ASCII Buchstaben/Ziffern/Bindestriche; kein führender/abschließender Bindestrich; kein `--`; kein reserviertes Token `anthropic`/`claude`; keine XML-Tags; gleich dem Ordner-/Dateinamen | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Structure |
-| `description` | both | string | nicht-leer; ≤1024 Zeichen; dritte Person; nennt *was* / *wann* / *don't-use-for-X→Y*-Form; keine XML-Tags; Agents zusätzlich: keine `user:`/`assistant:`/`<commentary>`/`<example>`-Blöcke, knappe Delimitations-Ketten | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Structure / §Description contract |
+| `name` | both | string | 1–64 Zeichen; lowercase ASCII Buchstaben/Ziffern/Bindestriche; kein führender/abschließender Bindestrich; kein `--`; kein reserviertes Token `anthropic`/`claude`; keine XML-Tags; gleich dem Ordner-/Dateinamen | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Struktur |
+| `description` | both | string | nicht-leer; ≤1024 Zeichen; dritte Person; nennt *was* / *wann* / *don't-use-for-X→Y*-Form; keine XML-Tags; Agents zusätzlich: keine `user:`/`assistant:`/`<commentary>`/`<example>`-Blöcke, knappe Delimitations-Ketten | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Struktur / §Description-Contract |
 | `distribution` | agent | enum | genau `plugin` oder `project` | nolte | `agent-management` §Distribution |
-| `phase` | both | enum | eines von `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`; niemals eine Liste | nolte | `skill-agent-catalog` §Phase classification |
+| `phase` | both | enum | eines von `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`; niemals eine Liste | nolte | `skill-agent-catalog` §Phasen-Klassifikation |
 
 ### Standard-Optionalfelder — Claude Code, Skill-Fläche
 
@@ -100,44 +100,44 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 
 | Feld | gilt für | Typ | Limits / erlaubte Werte | Provenienz | Owner |
 |---|---|---|---|---|---|
-| `tools` | agent | Liste von Strings | geringste Autorität; **Weglassen gewährt jedes geerbte Tool** (eine Sprawl-Falle); read-only Agents tragen keine Write-/Edit-/Exec-Tools; niemals `Agent` listen | Standard·CC | `agent-management` §Tool access |
-| `disallowedTools` | agent | Liste von Strings | Denylist, subtrahiert vom geerbten Set; vor `tools` angewendet | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
-| `permissionMode` | agent | enum | `default`/`acceptEdits`/`auto`/`dontAsk`/`bypassPermissions`/`plan`; **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `agent-management` §Plugin-distribution security constraints |
-| `maxTurns` | agent | integer | begrenzt agentische Turns vor dem Stopp | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
-| `skills` | agent | Liste von Strings | preloaded vollen Skill-Inhalt beim Start; überspringt `disable-model-invocation: true`-Skills | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
-| `mcpServers` | agent | Mapping / Refs | Subagent-eigene MCP-Server; **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `agent-management` §Plugin-distribution security constraints |
-| `memory` | agent | enum | `user`/`project`/`local`; aktiviert Read/Write/Edit und Memory-Curation-Prompt | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
-| `background` | agent | boolean | immer als Background-Task laufen; Berechtigungen vorab-genehmigt | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
-| `isolation` | agent | enum | `worktree`: in einem temporären git-Worktree laufen | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
-| `color` | agent | enum | `red`/`blue`/`green`/`yellow`/`purple`/`orange`/`pink`/`cyan` | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
-| `initialPrompt` | agent | string | erster User-Turn, wenn der Agent als Hauptsession via `--agent` läuft | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields |
+| `tools` | agent | Liste von Strings | geringste Autorität; **Weglassen gewährt jedes geerbte Tool** (eine Sprawl-Falle); read-only Agents tragen keine Write-/Edit-/Exec-Tools; niemals `Agent` listen | Standard·CC | `agent-management` §Tool-Zugriff |
+| `disallowedTools` | agent | Liste von Strings | Denylist, subtrahiert vom geerbten Set; vor `tools` angewendet | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder |
+| `permissionMode` | agent | enum | `default`/`acceptEdits`/`auto`/`dontAsk`/`bypassPermissions`/`plan`; **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `agent-management` §Plugin-Verteilungs-Sicherheits-Constraints |
+| `maxTurns` | agent | integer | begrenzt agentische Turns vor dem Stopp | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder |
+| `skills` | agent | Liste von Strings | preloaded vollen Skill-Inhalt beim Start; überspringt `disable-model-invocation: true`-Skills | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder |
+| `mcpServers` | agent | Mapping / Refs | Subagent-eigene MCP-Server; **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `agent-management` §Plugin-Verteilungs-Sicherheits-Constraints |
+| `memory` | agent | enum | `user`/`project`/`local`; aktiviert Read/Write/Edit und Memory-Curation-Prompt | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder |
+| `background` | agent | boolean | immer als Background-Task laufen; Berechtigungen vorab-genehmigt | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder |
+| `isolation` | agent | enum | `worktree`: in einem temporären git-Worktree laufen | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder |
+| `color` | agent | enum | `red`/`blue`/`green`/`yellow`/`purple`/`orange`/`pink`/`cyan` | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder |
+| `initialPrompt` | agent | string | erster User-Turn, wenn der Agent als Hauptsession via `--agent` läuft | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder |
 
 ### Standard-Optionalfelder — Claude Code, beide Flächen
 
 | Feld | gilt für | Typ | Limits / erlaubte Werte | Provenienz | Owner |
 |---|---|---|---|---|---|
-| `model` | both | string | Modell-Alias (`sonnet`/`opus`/`haiku`), eine volle Modell-ID oder `inherit`; **Default `inherit`** bei Weglassen | Standard·CC | `agent-management` §Model selection · `skill-management` §Runtime & lifecycle awareness |
-| `effort` | both | enum | `low`/`medium`/`high`/`xhigh`/`max`; überschreibt den Session-Effort | Standard·CC | `agent-management` §Optional Claude Code frontmatter fields · `skill-management` §Runtime & lifecycle awareness |
-| `hooks` | both | Mapping | Lifecycle-Hooks; bei Agents **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `skill-management` §Runtime & lifecycle awareness · `agent-management` §Plugin-distribution security constraints |
+| `model` | both | string | Modell-Alias (`sonnet`/`opus`/`haiku`), eine volle Modell-ID oder `inherit`; **Default `inherit`** bei Weglassen | Standard·CC | `agent-management` §Modell-Wahl · `skill-management` §Runtime & lifecycle awareness |
+| `effort` | both | enum | `low`/`medium`/`high`/`xhigh`/`max`; überschreibt den Session-Effort | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder · `skill-management` §Runtime & lifecycle awareness |
+| `hooks` | both | Mapping | Lifecycle-Hooks; bei Agents **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `skill-management` §Runtime & lifecycle awareness · `agent-management` §Plugin-Verteilungs-Sicherheits-Constraints |
 
 ### nolte-Optionalfelder — Katalog, Routing, Hauskonvention
 
 | Feld | gilt für | Typ | Limits / erlaubte Werte | Provenienz | Owner |
 |---|---|---|---|---|---|
-| `tags` | both | Liste von Strings | lowercase ASCII kebab-case; jedes ≤30 Zeichen; ≤5 Einträge; kein Eintrag beginnt mit `_` (reserviert für Generator-Auto-Tags) | nolte | `skill-management` / `agent-management` §Tag vocabulary · `skill-agent-catalog` |
-| `summary` | both | string | ≤200 Zeichen; Plain-String; Englisch (kanonisch) | nolte | `skill-agent-catalog` §Per-language short summary |
-| `summary_<lang>` | both | string | ≤200 Zeichen; Plain-String; eines pro zusätzlicher Docs-Sprache (zum Beispiel `summary_de`) | nolte | `skill-agent-catalog` §Per-language short summary |
-| `use_when` | both | Liste von Strings | ≤6 Einträge; jeder ≤120 Zeichen; ein Trigger-Szenario pro Eintrag | nolte | `skill-agent-catalog` §Use-case metadata |
-| `dont_use_when` | both | Liste von Mappings | Schlüssel `situation` (≤120 Zeichen) + `alternative` (ein auffindbarer Artefakt-`name`); ≤6 Einträge; `alternative` muss auflösen, sonst schlägt der Docs-Build fehl | nolte | `skill-agent-catalog` §Use-case metadata |
-| `see_also` | both | Liste von Strings | ≤8 Einträge; jeder ein auffindbarer Artefakt-`name`; muss auflösen | nolte | `skill-agent-catalog` §Use-case metadata |
-| `examples` | both | Liste von Mappings | Schlüssel `prompt` (≤200 Zeichen) + `outcome` (≤200 Zeichen); ≤4 Einträge | nolte | `skill-agent-catalog` §Use-case metadata |
-| `resumable` | both | boolean | `true`, wenn das Artefakt mehr als ein Freigabe-Gate oder mehr als eine benannte Phase umspannt; dann muss `description` Resume-Support erwähnen | nolte | `skill-management` / `agent-management` §Resumable runs · `resumable-work` |
+| `tags` | both | Liste von Strings | lowercase ASCII kebab-case; jedes ≤30 Zeichen; ≤5 Einträge; kein Eintrag beginnt mit `_` (reserviert für Generator-Auto-Tags) | nolte | `skill-management` / `agent-management` §Tag-Vokabular · `skill-agent-catalog` |
+| `summary` | both | string | ≤200 Zeichen; Plain-String; Englisch (kanonisch) | nolte | `skill-agent-catalog` §Per-Sprache-Kurzbeschreibung |
+| `summary_<lang>` | both | string | ≤200 Zeichen; Plain-String; eines pro zusätzlicher Docs-Sprache (zum Beispiel `summary_de`) | nolte | `skill-agent-catalog` §Per-Sprache-Kurzbeschreibung |
+| `use_when` | both | Liste von Strings | ≤6 Einträge; jeder ≤120 Zeichen; ein Trigger-Szenario pro Eintrag | nolte | `skill-agent-catalog` §Use-Case-Metadaten |
+| `dont_use_when` | both | Liste von Mappings | Schlüssel `situation` (≤120 Zeichen) + `alternative` (ein auffindbarer Artefakt-`name`); ≤6 Einträge; `alternative` muss auflösen, sonst schlägt der Docs-Build fehl | nolte | `skill-agent-catalog` §Use-Case-Metadaten |
+| `see_also` | both | Liste von Strings | ≤8 Einträge; jeder ein auffindbarer Artefakt-`name`; muss auflösen | nolte | `skill-agent-catalog` §Use-Case-Metadaten |
+| `examples` | both | Liste von Mappings | Schlüssel `prompt` (≤200 Zeichen) + `outcome` (≤200 Zeichen); ≤4 Einträge | nolte | `skill-agent-catalog` §Use-Case-Metadaten |
+| `resumable` | both | boolean | `true`, wenn das Artefakt mehr als ein Freigabe-Gate oder mehr als eine benannte Phase umspannt; dann muss `description` Resume-Support erwähnen | nolte | `skill-management` / `agent-management` §Wiederaufnehmbare Runs · `resumable-work` |
 
 ### Querschnittliche Reservierungen
 
-- **Reservierte Tokens.** `anthropic` und `claude` **DÜRFEN NICHT** irgendwo in `name` erscheinen; andere Felder (`description`, `tags`, `summary`, …) KÖNNEN sie erwähnen. Eine enge geschlossene Ausnahme existiert für Artefakte, die eine Claude-Code-/Anthropic-Fläche autoren, gated durch einen `## Reserved-token rationale`-Body-Abschnitt — siehe `skill-management` §Frontmatter validation und `agent-management` §Structure.
-- **Reserviertes Tag-Präfix.** Ein führender Unterstrich (`_translation-pending`) markiert ein generator-emittiertes Auto-Tag; autor-deklarierte `tags` **DÜRFEN** es **NICHT** nutzen — siehe `skill-agent-catalog` §Per-language short summary.
-- **Kein Per-Artefakt-Versionsfeld.** Weder Skills noch Agents tragen ein `version`- oder Kompatibilitätsfeld; Versionierung ist plugin-scoped und Per-Artefakt-Historie ist git — siehe `skill-management` §Distribution und `agent-management` §Distribution.
+- **Reservierte Tokens.** `anthropic` und `claude` **DÜRFEN NICHT** irgendwo in `name` erscheinen; andere Felder (`description`, `tags`, `summary`, …) KÖNNEN sie erwähnen. Eine enge geschlossene Ausnahme existiert für Artefakte, die eine Claude-Code-/Anthropic-Fläche autoren, gated durch einen `## Reserved-token rationale`-Body-Abschnitt — siehe `skill-management` §Frontmatter validation und `agent-management` §Struktur.
+- **Reserviertes Tag-Präfix.** Ein führender Unterstrich (`_translation-pending`) markiert ein generator-emittiertes Auto-Tag; autor-deklarierte `tags` **DÜRFEN** es **NICHT** nutzen — siehe `skill-agent-catalog` §Per-Sprache-Kurzbeschreibung.
+- **Kein Per-Artefakt-Versionsfeld.** Weder Skills noch Agents tragen ein `version`- oder Kompatibilitätsfeld; Versionierung ist plugin-scoped und Per-Artefakt-Historie ist git — siehe `skill-management` §Verteilung und `agent-management` §Distribution.
 
 ## Wartung
 

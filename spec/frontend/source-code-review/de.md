@@ -25,10 +25,10 @@ Leser: Autoren des Frontend-Reviewer-Agents und des dispatchenden Skills; Review
 ## Nicht-Ziele
 
 - Die Kern-Review-Dimensionen selbst (D1–D10), die Tooling-first-Regel, das Severity-Vokabular und den Work-Package-Vertrag — gehören `spec/project/source-code-review/` und gelten hier unverändert
-- UX-, Usability-, Visual-Design- und Content-Qualitätsurteile — siehe §Abgrenzung zum UX-Review; gehören `spec/frontend/webview-ui-optimization/` §„UX and native feel" mit dem Skill `webview-ui-optimize` und dem Agent `frontend-usability-optimizer`
+- UX-, Usability-, Visual-Design- und Content-Qualitätsurteile — siehe §Abgrenzung zum UX-Review; gehören `spec/frontend/webview-ui-optimization/` §„UX und Native-Feel" mit dem Skill `webview-ui-optimize` und dem Agent `frontend-usability-optimizer`
 - Tiefes WCAG-Konformitäts-Audit, Kontrastmessung, Zielgrößen-Bewertung und Tests mit assistiver Technologie — gehören `spec/frontend/webview-ui-optimization/` §Accessibility; dieses Review meldet den Code-Defekt und routet die Konformitätsfrage weiter
-- Gemessene Laufzeit-Performance: Core-Web-Vitals-Schwellen, Bundle-Size-Budgets, Profiling — gehören `spec/frontend/webview-ui-optimization/` §„Performance and rendering"; dieses Review sieht nur, was der Quelltext zeigt
-- Tiefes Client-Security-Audit, Content Security Policy und HTTP-Security-Header — gehören `spec/project/code-security-audit/` und `spec/frontend/webview-ui-optimization/` §„Security and sandboxing"; Frontend-Security-Findings sind hier gemeldete Floors, die weitergeroutet werden
+- Gemessene Laufzeit-Performance: Core-Web-Vitals-Schwellen, Bundle-Size-Budgets, Profiling — gehören `spec/frontend/webview-ui-optimization/` §„Performance und Rendering"; dieses Review sieht nur, was der Quelltext zeigt
+- Tiefes Client-Security-Audit, Content Security Policy und HTTP-Security-Header — gehören `spec/project/code-security-audit/` und `spec/frontend/webview-ui-optimization/` §„Security und Sandboxing"; Frontend-Security-Findings sind hier gemeldete Floors, die weitergeroutet werden
 - Übersetzungsschlüssel-Abdeckung und Locale-Vollständigkeit — gehören `spec/project/i18n-completeness/`
 - Der Test-Identifikator-Vertrag selbst — gehört `spec/frontend/testability-identifiers/`
 - Einzel-Stufen-Testkonformität (Component-, Integrations-, E2E-Checklisten) — gehören den `spec/project/test-tier-*/`-Specs und ihren Reviewern
@@ -83,7 +83,7 @@ Der Severity-Floor aus Kern-D1 für verschluckte und fehlende Fehlerbehandlung g
 - **MUSS** Fehlerausgaben melden, die rohen Exception-Text, Stacktraces oder Backend-Interna an den Nutzer durchreichen
 - **MUSS** ein optimistisches Update ohne Rollback im Fehlerfall melden sowie eine Mutation, deren Fehlschlag den gerenderten Zustand inkonsistent zum Server zurücklässt
 - **SOLLTE** unbegrenzte Retries ohne Backoff melden sowie pauschale Retries auf Client-Fehlerantworten, die bei Wiederholung nicht erfolgreich sein können
-- **SOLLTE** eine Anwendung ohne globalen Handler für nicht gefangene Fehler und nicht behandelte Rejections melden; der Zwei-Listener-Boden und seine Senke gehören `spec/project/error-tracking/` §„Integration contract" und `spec/project/monitoring-observability/` §„Frontend observability", das Finding benennt also die Lücke und routet weiter, statt ein SDK vorzuschreiben
+- **SOLLTE** eine Anwendung ohne globalen Handler für nicht gefangene Fehler und nicht behandelte Rejections melden; der Zwei-Listener-Boden und seine Senke gehören `spec/project/error-tracking/` §„Integrationsvertrag (Pflicht)" und `spec/project/monitoring-observability/` §„Frontend-Observability (Pflicht-Boden + empfohlene Tiefe)", das Finding benennt also die Lücke und routet weiter, statt ein SDK vorzuschreiben
 - **MUSS** „Fehler erreichen die Observability-Senke nie" als D10-Route-out an `spec/project/error-tracking/` (der Tracker-seitige Vertrag, dessen Regel zur expliziten Erfassung an der Entscheidungsstelle das Laufzeit-Gegenstück zu diesem Floor ist) und `spec/project/monitoring-observability/` weiterreichen, statt es hier zu vertiefen
 
 ### F3 — Component-Design und öffentliche API
@@ -162,7 +162,7 @@ Die Kern-D10-Regel gilt: Diese Findings werden **gemeldet und geroutet**, nie hi
 - **MUSS** langlebige Zugangsdaten im Web-Storage melden sowie clientseitige Zugriffskontrolle, die als Durchsetzung behandelt wird (die Security-Seite von F1-Klasse 2: einmal melden, unter F9, mit Querverweis auf die F1-Klasse)
 - **SOLLTE** dokumentübergreifende Gefahren melden, die in Markup und Message-Handling sichtbar sind: ein extern geöffnetes Ziel ohne Opener-Beschränkung und ein Message-Empfänger, der den Absender-Origin nicht prüft
 - **SOLLTE** unsanitisierte Nutzerinhalte melden, die in einen Rich-Text-, Markdown- oder Chart-Renderer geleitet werden, sowie explizit deaktiviertes Framework-Escaping
-- **DARF** hier **KEINE** Content Security Policy, keine HTTP-Security-Header und kein Authentifizierungsdesign auditieren: Das wird an `spec/frontend/webview-ui-optimization/` §„Security and sandboxing" und `spec/project/code-security-audit/` geroutet
+- **DARF** hier **KEINE** Content Security Policy, keine HTTP-Security-Header und kein Authentifizierungsdesign auditieren: Das wird an `spec/frontend/webview-ui-optimization/` §„Security und Sandboxing" und `spec/project/code-security-audit/` geroutet
 
 ### F10 — Nutzersichtbarer Text und Locale-Behandlung im Code
 
@@ -223,7 +223,7 @@ Der Kern-§Report-Vertrag gilt unverändert. Diese Spec ergänzt:
 - **SOLLTE** Work-Packages entlang der **Component-Slice-Grenzen** schneiden, sodass keine zwei Packages denselben Slice berühren; das erfüllt und verstärkt die Disjunktheitsgarantie des Kerns, da Component, Styles und Tests eines Slice gemeinsam wandern
 - **MUSS** jedes Work-Package an den zuständigen Spezialisten routen: Frontend-Produktivcode-Behebung an die umsetzende Engineering-Rolle (`fullstack-developer`); Accessibility-Konformitätsfragen an `webview-ui-expert`; Security-Floors an `code-security-reviewer`; Übersetzungsabdeckung an den Internationalisierungs-Checker; Einzel-Stufen-Testkonformität an den zuständigen Stufen-Reviewer
 - **MUSS** die Findings des Reports zusätzlich zur Severity nach Component-Slice gruppieren, damit ein Spezialist eine zusammenhängende Arbeitseinheit erhält statt einer verstreuten Liste
-- **MUSS** an den Kern-Artefaktort persistieren, `.audits/source-code-review/<target-slug>.md` gemäß `spec/claude/review-plan/` §„File location and naming", wobei der Target-Slug einen frontend-begrenzten Lauf von einem Gesamt-Tree-Lauf unterscheidet; ein erneuter Lauf überschreibt die kanonische Datei
+- **MUSS** an den Kern-Artefaktort persistieren, `.audits/source-code-review/<target-slug>.md` gemäß `spec/claude/review-plan/` §„Dateiort und Namensgebung", wobei der Target-Slug einen frontend-begrenzten Lauf von einem Gesamt-Tree-Lauf unterscheidet; ein erneuter Lauf überschreibt die kanonische Datei
 - **MUSS** im Header zusätzlich zu Scope und Tooling-Baseline des Kerns festhalten: das angewandte Framework-Profil, jedes erkannte nicht unterstützte Framework und die vier Baselines aus §„Review-Einheit: der Component-Slice"
 
 ### Abgrenzung zum UX-Review

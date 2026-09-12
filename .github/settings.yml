@@ -38,7 +38,7 @@ branches:
         # `task check` composes lint + test + check:links; `docs` and `pr-lint`
         # are the additional declared categories.
         contexts:
-          - lint # tier: lint — `task lint` (pre-commit across all files, incl. Vale prose)
+          - lint # tier: lint — `task lint` (pre-commit across all files, incl. Vale prose and section references)
           - test # tier: tests — `task test` (skill/agent frontmatter validation + pytest under tests/)
           - docs # tier: docs build — `task docs` (mkdocs build --strict) + the portfolio-inventory freshness diff
           - links # tier: link validation — `task check:links` (offline internal + cross-tree slice)

@@ -202,7 +202,7 @@ The following rules are the author's hard **MUST-NOT obligations**, bundled from
 - **MUST NOT** use a word from the **closed forbidden list** in [`post-writing-style`](../post-writing-style/en.md) §Forbidden words and phrases without a documented override in the surrounding prose.
 - **MUST NOT** let the **cross-language binding key** differ between the EN and DE files of the same post pair, or let the slug differ between the two languages (consumer slug rule; mirrored in §Pre-handover self-check).
 
-## Acceptance criteria
+## Acceptance Criteria
 
 A post draft satisfies this spec if **all** per-post criteria below hold. Each criterion is phrased so a reviewer (the author, the `blog-author` skill, or the editor itself) can mark it done / not done without ambiguity.
 

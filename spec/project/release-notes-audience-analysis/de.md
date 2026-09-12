@@ -60,7 +60,7 @@ Leser: Autoren, die die Zielgruppen der Release-Notes eines Projekts identifizie
 - **KANN [MAY]** eine Release-Notes-Zielgruppe nach Deployment-Größe (Selbst-Hoster vs. Managed), Expertise (Endnutzer vs. Integrator) oder Mandantenzuordnung unterteilen, wenn diese Unterschiede die geforderte Detailtiefe oder Sprachebene verändern
 - **KANN [MAY]** pro Zielgruppe einen minimalen "Release-Notes-Vertrag" festhalten — einen Einzeiler, was jedes Release dieses Projekts dieser Zielgruppe liefern muss (z. B. "jedes Release muss einen Upgrade-Befehl für Upgrader verlinken")
 
-## Abnahmekriterien
+## Akzeptanzkriterien
 <!-- Testbare, abhakbare Bedingungen. Reviewer müssen pro Punkt "erfüllt / nicht erfüllt" markieren können. -->
 - [ ] Ein durchgearbeitetes Beispiel existiert, das das Verfahren auf ein konkretes Projekt im Portfolio anwendet (z. B. `claude-shared` selbst, mit dokumentierten Release-Notes-Zielgruppen aus Plugin-Konsumenten-Sicht)
 - [ ] Das erzeugte Artefakt deklariert "Release Notes von <Projekt>" schriftlich als abgesteckten Kontext, bevor eine Zielgruppe gelistet wird

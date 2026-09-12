@@ -94,7 +94,7 @@ Leser: Auditoren, die einen portfolioweiten Sweep des Plugin-Inventars durchfüh
 - **DARF NICHT** Prüfungen duplizieren, die bereits durch `skill-review` oder `agent-review` abgedeckt sind; die Cross-Cutting-Analyse umfasst nur Dimensionen, die das gleichzeitige Betrachten des gesamten Inventars erfordern
 - **SOLLTE** mit `spec/project/spec-drift-audit/` koordinieren, indem festgehalten wird, dass `spec-drift-audit` den Inhaltsdrift von Spec-Dateien abdeckt, während `skills-agents-sweep` Artefakt-zu-Spec-Bindungs-Lücken abdeckt; die beiden Specs haben unterschiedliche Scopes mit komplementären Befunden und bleiben deshalb getrennte, gegenseitig referenzierte Verfahren statt sich einen kombinierten Einstiegspunkt zu teilen
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] Jeder konsolidierte Sweep-Bericht unter `.audits/skills-agents-sweep/` enthält alle Pflicht-Abschnitte in der vorgeschriebenen Reihenfolge, und das YAML-Frontmatter enthält alle Pflichtfelder
 - [ ] Jede in der Roadmap vorgeschlagene Welle ist entweder mit einem PR-Verweis umgesetzt, mit einem Issue-Verweis zurückgestellt oder mit einer Begründung explizit zurückgezogen
