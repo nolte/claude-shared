@@ -212,3 +212,11 @@ def test_main_reads_the_author_from_the_environment(monkeypatch, capsys):
     assert "skipped for the allowlisted dependency bot renovate[bot]" in capsys.readouterr().out
     monkeypatch.setenv("PR_AUTHOR", "nolte")
     assert check_pr_body.main([]) == 1
+
+
+def test_bot_fix_title_needs_no_class_sweep():
+    # The class sweep is body content like the five sections, so the exemption covers it;
+    # a human `fix` PR with the same body still fails.
+    title = "fix(deps): update dependency pymdown-extensions to v11.0.2"
+    assert check(title, RENOVATE_BODY, author="renovate[bot]") == []
+    assert check(title, RENOVATE_BODY, author="nolte")
