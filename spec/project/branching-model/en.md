@@ -26,7 +26,7 @@ Readers: contributors and AI agents working the `develop`/feature-branch flow, r
 - **MUST** designate `develop` as the integration branch where all feature work lands via pull request
 - **MUST** designate `main` as a release-presentation branch reflecting the most recently published GitHub Release
 - **MUST NOT** allow manual commits, pushes, or merges directly to `main`; the branch is written to only by the release automation
-- **MUST** use feature branches named with one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, or `exp/` and target `develop` in their pull request; these prefixes are identical to the Conventional Commits types used in PR titles so that the branch name and the commit type align without translation
+- **MUST** use feature branches named with one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, or `exp/` and target `develop` in their pull request; these prefixes are identical to the Conventional Commits types used in PR titles so that the branch name and the commit type align without translation; a dependency bot allowlisted per `spec/project/pull-request-workflow/` §PR preconditions opens branches under its own naming scheme and is outside this rule
 - **SHOULD** reserve the `exp/` prefix for experimental or iteration-scoped work that bundles loosely related exploration; an `exp/` branch has an explicitly bounded lifetime and its merge is treated as a throwaway integration rather than as a stable feature, fix, chore, or documentation change
 - **SHOULD** name `exp/` branches with either a calendar-week marker (`exp/YYYY-WW-<theme>`, for example `exp/2026-W17-skill-agent-split`) or a monotonic counter (`exp/NNN-<theme>`, for example `exp/003-skill-agent-split`) so iterations sort chronologically; the theme portion follows the same kebab-case rule as every other branch prefix
 - **SHOULD** exclude `exp` PR titles from user-facing release notes—either by mapping them to a hidden category in `.github/release-drafter.yml` (directly or via the `nolte/gh-plumbing:.github/commons-release-drafter.yml` extension) or by leaving the `exp` type out of the configured categories entirely; experimental work isn't a shipped feature and must not appear as one
@@ -80,7 +80,7 @@ The repository **SHOULD** also include, where applicable:
 - [ ] `.github/workflows/automerge.yaml` is present and invokes the `nolte/gh-plumbing` reusable automerge workflow
 - [ ] The HEAD of `main` corresponds to a published GitHub Release tag (`git tag --points-at main` returns a release tag)
 - [ ] There are no human-authored commits on `main` between two consecutive releases—only commits introduced by the refresh workflow
-- [ ] Feature branches in the repository use one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, `exp/`
+- [ ] Feature branches in the repository use one of the prefixes `feat/`, `fix/`, `chore/`, `docs/`, `exp/`, apart from branches opened by an allowlisted dependency bot
 - [ ] If `.github/release-drafter.yml` is present, the `exp` type either lands in a non-user-facing category or is excluded from the configured categories, so experimental PRs don't surface as shipped features
 - [ ] If MkDocs is used **and** `.github/workflows/release-cd-deliver-docs.yml` is shipped, the workflow triggers on `release: [published]` (the workflow itself is SHOULD, per Requirements §Required GitHub workflows; this AC checks its trigger when present, not its presence)
 

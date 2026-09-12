@@ -7,9 +7,15 @@ order, the non-empty rule for Summary / Changes / Testing, and the
 type-conditional `## Class sweep` section that §"Class sweep (Conventional-Commits
 type `fix`)" requires on type `fix` and forbids on every other type.
 
-Reads the title and body from the environment (PR_TITLE / PR_BODY) or from
---title / --body-file, so a workflow never interpolates untrusted pull-request
-text into a shell command.
+A pull request whose author login is on EXEMPT_BOT_AUTHORS gets the title check
+only. A dependency bot writes its body from a fixed template that can't carry the
+reasoning the five sections exist for, so holding it to them would only ever
+produce filler (spec §PR preconditions).
+
+Reads the title, body and author from the environment (PR_TITLE / PR_BODY /
+PR_AUTHOR) or from --title / --body-file / --author, so a workflow never
+interpolates untrusted pull-request text into a shell command. Without an author
+the pull request is treated as human-authored, which exempts nothing.
 
 Exit code 0 when every rule holds, 1 when any fails, 2 on a usage error.
 """
@@ -29,6 +35,19 @@ NON_EMPTY_SECTIONS = ("Summary", "Changes", "Testing")
 SWEEP_SECTION = "Class sweep"
 SWEEP_FIELDS = ("Predicate", "Hits", "Repaired", "Guard")
 INTEGER_FIELDS = ("Hits", "Repaired")
+
+# Dependency bots whose pull requests skip the body checks, keyed by the author
+# login GitHub puts in the event payload. Every entry needs a reason (spec §PR
+# preconditions). Matching is exact, never on the account type, so an unlisted
+# bot stays subject to every rule.
+EXEMPT_BOT_AUTHORS: dict[str, str] = {
+    "renovate[bot]": (
+        "Renovate writes its own body from a fixed template: a dependency table, the "
+        "upstream release notes and its rebase controls. It can't supply the human "
+        "reasoning Summary and Testing exist for, so the five sections would only ever "
+        "hold filler. Its title already uses Conventional Commits and is still checked."
+    ),
+}
 
 HEADING_RE = re.compile(r"^##[ \t]+(?P<name>.+?)[ \t]*$", re.MULTILINE)
 
@@ -61,7 +80,7 @@ def field_value(content: str, field: str) -> str | None:
     return m.group("value").strip()
 
 
-def check(title: str, body: str) -> list[str]:
+def check(title: str, body: str, author: str | None = None) -> list[str]:
     failures: list[str] = []
 
     title_match = TITLE_RE.match(title.strip())
@@ -79,6 +98,9 @@ def check(title: str, body: str) -> list[str]:
                 f"{{{', '.join(TYPES)}}} (spec §PR preconditions)"
             )
             pr_type = None
+
+    if author in EXEMPT_BOT_AUTHORS:
+        return failures
 
     sections = split_sections(body)
     headings = [name for name, _ in sections]
@@ -146,6 +168,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--title", default=None, help="PR title; defaults to $PR_TITLE")
     parser.add_argument("--body-file", default=None, help="file holding the PR body; defaults to $PR_BODY")
+    parser.add_argument("--author", default=None, help="PR author login from the event payload; defaults to $PR_AUTHOR")
     args = parser.parse_args(argv)
 
     title = args.title if args.title is not None else os.environ.get("PR_TITLE")
@@ -154,12 +177,13 @@ def main(argv: list[str] | None = None) -> int:
             body = handle.read()
     else:
         body = os.environ.get("PR_BODY")
+    author = args.author if args.author is not None else os.environ.get("PR_AUTHOR")
 
     if title is None or body is None:
         print("usage: provide --title/--body-file or set PR_TITLE/PR_BODY", file=sys.stderr)
         return 2
 
-    failures = check(title, body)
+    failures = check(title, body, author)
     if failures:
         print(f"PR body lint: {len(failures)} failure(s)\n")
         for failure in failures:
@@ -169,7 +193,10 @@ def main(argv: list[str] | None = None) -> int:
             '§"PR description structure" and §"PR lint workflow".'
         )
         return 1
-    print("PR body lint: pass")
+    if author in EXEMPT_BOT_AUTHORS:
+        print(f"PR body lint: pass (body checks skipped for the allowlisted dependency bot {author})")
+    else:
+        print("PR body lint: pass")
     return 0
 
 
