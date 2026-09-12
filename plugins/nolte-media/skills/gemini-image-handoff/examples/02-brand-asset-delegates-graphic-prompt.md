@@ -17,7 +17,7 @@ produces.
    and will be published, so the skill must not hand-author the prompt
    inline (that would bypass the brand color contract).
 2. **Delegate to `graphic-prompt-generator`.** The skill dispatches the
-   agent with the target generator `gemini-2.5-flash-image`. The agent
+   agent with the target generator `gemini-3.1-flash-image`. The agent
    writes a durable prompt document that enforces the brand color
    contract and is optimised for the Gemini model baseline.
 3. **Hand off the produced block.** The skill takes the prompt block

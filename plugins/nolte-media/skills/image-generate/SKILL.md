@@ -1,6 +1,6 @@
 ---
 name: image-generate
-description: "Generates an image from a text prompt via a pluggable provider backend, writing the image plus a `<image>.meta.json` sidecar to an operator-chosen path. Backends are swappable via `--provider`: cloudflare (Cloudflare Workers AI FLUX.1-schnell, real free tier, DEFAULT), pollinations (auth-free, but public-feed/undocumented-licence — the tool forces private=true and shows a disclaimer), gemini (gemini-2.5-flash-image, requires billing). Wraps the bundled, stdlib-only `scripts/image_generate.py`. Invoke when the user asks to \"generate an image\", \"create a hero image or icon from a prompt\", \"render this prompt to a PNG\", \"turn a graphic-prompt-generator document into an image\", or equivalent German-language requests. Don't use for image editing, in-painting, or multi-turn refinement; for batch pipelines; or to author the prompt itself (use graphic-prompt-generator). Supports resume is not applicable: a generation is a single terminal call."
+description: "Generates an image from a text prompt via a pluggable provider backend, writing the image plus a `<image>.meta.json` sidecar to an operator-chosen path. Backends are swappable via `--provider`: cloudflare (Cloudflare Workers AI FLUX.1-schnell, real free tier, DEFAULT), pollinations (auth-free, but public-feed/undocumented-licence — the tool forces private=true and shows a disclaimer), gemini (gemini-3.1-flash-image, requires billing). Wraps the bundled, stdlib-only `scripts/image_generate.py`. Invoke when the user asks to \"generate an image\", \"create a hero image or icon from a prompt\", \"render this prompt to a PNG\", \"turn a graphic-prompt-generator document into an image\", or equivalent German-language requests. Don't use for image editing, in-painting, or multi-turn refinement; for batch pipelines; or to author the prompt itself (use graphic-prompt-generator). Supports resume is not applicable: a generation is a single terminal call."
 tags: [design]
 phase: build
 summary: "Generates an image from a text prompt via a swappable provider backend (Cloudflare/Pollinations/Gemini), writing the image plus a metadata sidecar to a chosen path."
@@ -42,7 +42,7 @@ Implements `spec/tools/image-generation/<canonical_language>.md`, resolved in th
 |---|---|---|---|
 | `cloudflare` (default) | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` | Yes — 10k neurons/day, no credit card | FLUX.1-schnell (Apache-2.0), no watermark, no feed |
 | `pollinations` | none (opt. `POLLINATIONS_API_TOKEN`) | Yes, auth-free | Operated by Myceli.AI OU (Estonia, GDPR). **Public feed by default — the tool forces `private=true`** (feed opt-out only, *not* a non-storage guarantee). The Terms grant **no explicit output licence** ("verify the model licence"); `safe` filter is off by default. One-time disclaimer; never the default. |
-| `gemini` | `GEMINI_API_KEY` | **No — requires billing** (free-tier quota is 0 for this model) | `gemini-2.5-flash-image`; data-use notice shown |
+| `gemini` | `GEMINI_API_KEY` | **No — requires billing** (no Gemini image model has a free tier) | `gemini-3.1-flash-image`; data-use notice plus SynthID watermark shown |
 
 ## Inputs
 
