@@ -1,3 +1,8 @@
+# Last propagation: 2026-09-13 — re-apply this file after the Probot Settings App
+# was re-authorized. Live develop protection had enforced only lint/test/docs with
+# enforce_admins and strict false. Verify through the API, not the settings page:
+#   gh api repos/nolte/claude-shared/branches/develop/protection
+
 _extends: nolte/gh-plumbing:.github/commons-settings.yml@v1.1.19
 
 repository:
