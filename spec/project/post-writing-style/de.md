@@ -139,8 +139,10 @@ Dies ist die **geschlossene Liste** von Wörtern und Phrasen, die **DÜRFEN NICH
 - `pivotal` (verwende „central" oder „important")
 - `cutting-edge` (lösche; oder nenne die spezifische Version / Fähigkeit)
 - `innovative` (lösche; beschreibe die Neuheit konkret)
+- `showcase`, `showcasing` (verwende „shows" oder nenne, was gezeigt wird)
+- `foster` (verwende „support" oder „help" oder nenne den Mechanismus)
 - `tapestry`, `realm`, `landscape`, `synergy`, `testament`, `underpinnings` (lösche; formuliere den Satz um)
-- `It's worth noting that …`, `It is important to note that …`, `In conclusion`, `In summary` (lösche den Wrapper; behalte den eigentlichen Punkt)
+- `It's worth noting that …`, `It's important to note that …`, `In conclusion`, `In summary` (lösche den Wrapper; behalte den eigentlichen Punkt)
 - `In today's fast-paced …`, `In an era of …`, `As we navigate the …` (lösche; öffne mit der konkreten Behauptung)
 - `Whether you're a … or a …` (drop den audience-schmeichelnden Wrapper)
 
@@ -151,8 +153,9 @@ Dies ist die **geschlossene Liste** von Wörtern und Phrasen, die **DÜRFEN NICH
 
 #### LLM-Betonungs-Tics
 
-- Sätze, die mit „**It's** [adjective] **that** …" oder „**It is** [adjective] **to** …" beginnen—umformen zu einer direkten Behauptung.
+- Sätze, die mit „**It's** [adjective] **that** …" oder „**It's** [adjective] **to** …" beginnen—umformen zu einer direkten Behauptung.
 - Sätze, die mit „… and that's a **good thing** / **bad thing**." enden—umformen zur spezifischen Begründung.
+- Kontrast-Rahmungen wie „**It's not just** X, **it's** Y" oder „This **isn't about** X. **It's about** Y."—umformen zu einer direkten Aussage über Y.
 
 #### Override-Verfahren
 
@@ -282,6 +285,10 @@ AI-Tell und Verbotswörter:
 - [Don't Write Like AI: Red Flag Words—Blake Stockton](https://www.blakestockton.com/red-flag-words/)
 - ["I'd like to delve into how AI is fostering changes in writing"—Mere Sophistry](https://meresophistry.substack.com/p/id-like-to-delve-into-how-ai-is-fostering)
 - [How to Spot AI Writing Tells—Olivia Cal](https://www.oliviacal.com/post/ai-writing-tells)
+- [Wikipedia:Signs of AI writing—Wikipedia](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)
+- [Delving into LLM-assisted writing in biomedical publications through excess vocabulary—Kobak et al., Science Advances 2025](https://pmc.ncbi.nlm.nih.gov/articles/PMC12219543/)
+- [A to Z style guide, Words to avoid—GOV.UK](https://guidance.publishing.service.gov.uk/writing-to-gov-uk-standards/style-guides/a-to-z-style-guide/)
+- [Claudisms—claudisms.ai](https://claudisms.ai/)
 
 AI-Inhalts-Disclosure-Normen:
 

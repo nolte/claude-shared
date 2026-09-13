@@ -143,6 +143,8 @@ This is the **closed list** of words and phrases that **MUST NOT** appear in the
 - `pivotal` (use `central` or `important`)
 - `cutting-edge` (delete; or name the specific version / capability)
 - `innovative` (delete; describe the novelty concretely)
+- `showcase`, `showcasing` (use `shows`, or name what's shown)
+- `foster` (use `support` or `help`, or name the mechanism)
 - `tapestry`, `realm`, `landscape`, `synergy`, `testament`, `underpinnings` (delete; rewrite the sentence)
 - `It's worth noting that…`, `It's important to note that…`, `In conclusion`, `In summary` (delete the wrapper; keep the actual point)
 - `In today's fast-paced …`, `In an era of …`, `As we navigate the …` (delete; open on the concrete claim)
@@ -157,6 +159,7 @@ This is the **closed list** of words and phrases that **MUST NOT** appear in the
 
 - Sentences that begin "**It's** [adjective] **that**…" or "**It's** [adjective] **to**…"—restructure into a direct claim.
 - Sentences that end with "…and that's a **good thing** / **bad thing**."—restructure into the specific reason.
+- Contrast framings such as "**It's not just** X, **it's** Y" or "This **isn't about** X. **It's about** Y."—state Y directly.
 
 #### Override procedure
 
@@ -286,6 +289,10 @@ AI-tell and forbidden words:
 - [Don't Write Like AI: Red Flag Words—Blake Stockton](https://www.blakestockton.com/red-flag-words/)
 - ["I'd like to delve into how AI is fostering changes in writing"—Mere Sophistry](https://meresophistry.substack.com/p/id-like-to-delve-into-how-ai-is-fostering)
 - [How to Spot AI Writing Tells—Olivia Cal](https://www.oliviacal.com/post/ai-writing-tells)
+- [Wikipedia:Signs of AI writing—Wikipedia](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)
+- [Delving into LLM-assisted writing in biomedical publications through excess vocabulary—Kobak et al., Science Advances 2025](https://pmc.ncbi.nlm.nih.gov/articles/PMC12219543/)
+- [A to Z style guide, Words to avoid—GOV.UK](https://guidance.publishing.service.gov.uk/writing-to-gov-uk-standards/style-guides/a-to-z-style-guide/)
+- [Claudisms—claudisms.ai](https://claudisms.ai/)
 
 AI-content disclosure norms:
 
