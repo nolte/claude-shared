@@ -358,8 +358,14 @@ def check_mission(path: Path) -> list[Finding]:
     except OSError as exc:  # pragma: no cover
         return [Finding("Critical", rel, "mission.unreadable", str(exc))]
     findings = check_mission_text(text, rel)
-    committed = _committed_version(path, os.environ.get("MISSION_BASE_REF", "HEAD"))
-    if committed is not None:
+    base = os.environ.get("MISSION_BASE_REF", "").strip()
+    committed = _committed_version(path, base or "HEAD")
+    if committed is None and base:
+        # An explicitly configured base that can't be read would make the check
+        # vacuous in exactly the run meant to enforce it (a shallow CI checkout).
+        findings.append(Finding("Critical", rel, "mission.base-ref-unreadable",
+                                f"MISSION_BASE_REF={base} names no readable version of {rel}; fetch full history"))
+    elif committed is not None:
         findings.extend(check_revision_rationale(committed, text, rel))
     return findings
 

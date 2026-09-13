@@ -12,6 +12,7 @@
     "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)": "weak copyleft, review tier, accepted: certifi, fqdn, pathspec, unmodified arm's-length dependencies whose file-level copyleft attaches only to modified MPL files (record .audits/license-check/license-2026-07-24.md, Review-tier findings)",
     "MIT": "allow tier, lax-permissive; 33 components incl. PyYAML, jsonschema, mkdocs-material, pytest; all arm's-length tooling (record .audits/license-check/license-2026-07-24.md, Policy gate)",
     "MPL-2.0": "weak copyleft, review tier, accepted: certifi, unmodified arm's-length CA bundle (record .audits/license-check/license-2026-07-24.md, Review-tier findings)",
+    "PSF-2.0": "permissive Python Software Foundation license, allow tier: distlib, an unmodified dependency of pre-commit installed only into the project .venv and the throwaway SBOM venv; nothing conveys it with the plugin. Added with the pre-commit pin in #591; not itemised in the 2026-07-24 record, re-verify at the next full license-check",
     "Python-2.0": "permissive PSF-style license, allow tier: defusedxml, an unmodified arm's-length dependency of the SBOM tooling. Not itemised in the 2026-07-24 record; re-verify at the next full license-check"
   }
 }

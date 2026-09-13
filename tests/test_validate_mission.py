@@ -84,6 +84,12 @@ def test_historical_revision_01575fa_is_caught():
     assert _rules(v.check_revision_rationale(before.stdout, after.stdout, "m")) == {"mission.post-stabilisation-rationale"}
 
 
+def test_unreadable_explicit_base_ref_fails_closed(monkeypatch):
+    # #591 review: a shallow CI checkout must not turn the rationale check into a no-op.
+    monkeypatch.setenv("MISSION_BASE_REF", "0000000000000000000000000000000000000000")
+    assert "mission.base-ref-unreadable" in _rules(v.check_mission(v.MISSION_PATH))
+
+
 def test_well_formed_mission_passes(monkeypatch, tmp_path):
     # Neutralise cross-reference resolution so the unit stays hermetic: with no
     # goals.md / AUDIENCES.md / features corpus, resolution is skipped (returns
