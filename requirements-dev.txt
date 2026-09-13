@@ -9,6 +9,7 @@
 #   - scripts/docs/gen_catalog.py        -> PyYAML
 #   - scripts/docs/gen_portfolio.py      -> PyYAML
 #   - tests/ (eval-harness unit tests)   -> pytest
+#   - task setup / task lint            -> pre-commit
 # (scripts/validate_skills.py and scripts/validate_features.py are stdlib-only.)
 #
 # The docs-build toolchain (MkDocs + plugins) stays in docs/requirements.txt and
@@ -17,3 +18,4 @@
 jsonschema>=4.21,<5
 PyYAML==6.0.3
 pytest>=9,<10
+pre-commit==4.5.0

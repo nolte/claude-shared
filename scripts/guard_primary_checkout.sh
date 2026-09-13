@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 # Guard: the primary checkout MUST stay on `develop`.
+# Guard origin (spec/project/defect-class-guards/ G5): PR #253, which had no
+# tracking issue.
 #
 # Wired in .pre-commit-config.yaml as the `guard-primary-checkout` hook
 # (always_run, pass_filenames: false), so it fires on every `git commit`.

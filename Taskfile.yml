@@ -11,7 +11,10 @@ vars:
 
 includes:
   mkdocs: "{{.TASK_COLLECTION_BASE}}/taskfile-include-mkdocs.yaml"
-  pre-commit: "{{.TASK_COLLECTION_BASE}}/taskfile-include-pre-commit.yaml"
+  # Deliberately no taskfile-include-pre-commit.yaml: this repository keeps its
+  # tooling in a project-local .venv, the case spec/project/taskfile/templates/
+  # names as the negative one for that module (#591). `setup` installs the hooks
+  # from the venv instead.
 
 tasks:
   default:
@@ -32,9 +35,12 @@ tasks:
     silent: true
 
   setup:
-    desc: Install pre-commit hooks (run once after cloning)
+    desc: |
+      One-time onboarding: create the project-local .venv (task install), then
+      install the pre-commit hooks from it.
     cmds:
-      - task: pre-commit:install
+      - task: install
+      - .venv/bin/pre-commit install
 
   install:
     desc: |
@@ -216,6 +222,15 @@ tasks:
     cmds:
       - vale sync
       - python3 scripts/check_prose.py --release-notes {{.CLI_ARGS}}
+
+  release:
+    desc: |
+      Publish a release-drafter draft through release-publish.yml, the primary
+      Draft -> Published path per spec/project/branching-model/ §Release flow.
+      The workflow runs its pre-publish verification before flipping the draft.
+      Usage: task release -- v1.0.0   (append -f dry_run=true to validate only)
+    cmds:
+      - gh workflow run release-publish.yml -f tag={{.CLI_ARGS}}
 
   image:generate:
     desc: |

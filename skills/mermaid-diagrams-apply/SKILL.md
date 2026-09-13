@@ -112,6 +112,8 @@ Add a single Mermaid diagram to a markdown file under `docs_dir`. Two source mod
 #### derived
 
 > Candidate discovery: when the author doesn't yet know *which* prose deserves a diagram, dispatch the read-only `diagram-opportunity-reviewer` agent first — its findings are exactly this flow's input.
+>
+> The agent returns JSON and writes nothing. Persist its complete return verbatim as `.audits/diagram-opportunity/<YYYY-MM-DD-HHMM>/full.json` before using it, then show the operator the capped `findings` array; `full.json` is the only place the matches beyond the caps survive (`spec/project/diagram-opportunity/` §Output shape).
 
 1. Ask for: the target markdown file path, the source artifact (one of the recognized derivation sources from the spec). The source must be a real path in the repo.
 2. Read the source artifact and extract nodes/edges:

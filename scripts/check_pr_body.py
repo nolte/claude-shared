@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Lint a pull request's title and body against spec/project/pull-request-workflow/.
 
+Guard origin (spec/project/defect-class-guards/ G5): #574 (class sweep) and #577 (the check itself).
+
 Implements the checks that spec §"PR lint workflow" declares as a required status
 check: the Conventional-Commits title form, the five required body sections in
 order, the non-empty rule for Summary / Changes / Testing, and the

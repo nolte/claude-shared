@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Lightweight feature-file frontmatter validator.
 
+Guard origin (spec/project/defect-class-guards/ G5): PR #286, which had no tracking issue.
+
 Implements the structural checks named in `spec/project/feature/` §"Frontmatter
 schema", §"Body sections", §"Acceptance-criteria contract", §"Consistency
 check", and §"Directory layout and file shape" (the post-draft slug-rename

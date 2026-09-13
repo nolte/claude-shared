@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Validate JSON Schema files and the data they govern.
 
+Guard origin (spec/project/defect-class-guards/ G5): PR #286, which had no tracking issue; the property shape rule #591.
+
 Implements the validation contract of ``spec/project/yaml-json-schema``:
 
 - **Meta-validation** (§Validation contract MUST): every ``*.schema.yaml`` file
@@ -77,6 +79,11 @@ PASCAL_CASE_RE = re.compile(r"^[A-Z][A-Za-z0-9]*$")
 
 def _excluded(path: Path, root: Path) -> bool:
     return any(part in EXCLUDED_PARTS for part in path.relative_to(root).parts)
+
+
+# §Property sub-schemas: `type` is never omitted unless `oneOf`/`anyOf`/`enum`
+# constrains the shape. A `$ref` or `const` inherits or fixes the shape too.
+PROPERTY_SHAPE_KEYS = ("type", "oneOf", "anyOf", "enum", "$ref", "const")
 
 
 def _iter_subschemas(node):
@@ -181,6 +188,11 @@ def check_skeleton(schema: dict, rel: Path) -> list[str]:
                 problems.append(
                     f"{rel}: property `{prefix}properties/{prop_name}` carries "
                     "no description (§Property sub-schemas)"
+                )
+            if isinstance(sub, dict) and not any(k in sub for k in PROPERTY_SHAPE_KEYS):
+                problems.append(
+                    f"{rel}: property `{prefix}properties/{prop_name}` declares no "
+                    "`type` and no `oneOf`/`anyOf`/`enum` (§Property sub-schemas)"
                 )
 
     # -- Reference rules and allOf closed-shape rule, document-wide.
