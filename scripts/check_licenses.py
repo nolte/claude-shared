@@ -13,16 +13,24 @@ The gate is deliberately a *drift detector*, not a re-classifier: SPDX
 classification, policy tiers, and exception handling stay with the skill and
 its record. A license identifier that the baseline doesn't carry means the
 change introduced an obligation nobody has adjudicated yet — the gate fails
-and points at the skill. Removing identifiers never fails the gate (shrinking
-surface is safe); refresh the baseline together with the next full record.
+and points at the skill.
+
+The baseline is a guard allowlist, so it follows spec/project/defect-class-guards/
+G4: every identifier carries the reason it is allowed, and an identifier the SBOM
+no longer contains is stale and fails the gate, because a reason that outlives
+its component would silently excuse the next one (#591). `--prune` removes stale
+entries; `--update` adds new identifiers with an empty reason, which fails until
+someone writes the reason from the fresh record.
+
+Guard origin (spec/project/defect-class-guards/ G5): #496, staleness and reasons #591.
 
 Usage:
-    python3 scripts/check_licenses.py [--sbom sbom.cdx.json] [--update]
+    python3 scripts/check_licenses.py [--sbom sbom.cdx.json] [--update | --prune]
 
 ``--update`` rewrites the baseline from the current SBOM (do this only in the
 same change that commits a fresh full license-check record).
 
-Exit codes: 0 = clean, 1 = unadjudicated license identifiers found,
+Exit codes: 0 = clean, 1 = unadjudicated, stale, or reasonless identifiers,
 2 = SBOM or baseline missing/unreadable.
 """
 
@@ -56,10 +64,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--sbom", type=Path, default=REPO_ROOT / "sbom.cdx.json")
     parser.add_argument("--baseline", type=Path, default=BASELINE)
-    parser.add_argument(
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument(
         "--update",
         action="store_true",
-        help="Rewrite the baseline from the current SBOM.",
+        help="Rewrite the baseline from the current SBOM, keeping existing reasons.",
+    )
+    mode.add_argument(
+        "--prune",
+        action="store_true",
+        help="Remove baseline entries the current SBOM no longer contains.",
     )
     args = parser.parse_args(argv)
 
@@ -71,24 +85,10 @@ def main(argv: list[str] | None = None) -> int:
     current = sbom_license_ids(args.sbom)
 
     if args.update:
-        args.baseline.parent.mkdir(parents=True, exist_ok=True)
-        args.baseline.write_text(
-            json.dumps(
-                {
-                    "_comment": (
-                        "License identifiers adjudicated by the latest full "
-                        "license-check record in this directory; consumed by "
-                        "scripts/check_licenses.py. Refresh only together with "
-                        "a fresh record (--update)."
-                    ),
-                    "adjudicated": sorted(current),
-                },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-        print(f"license gate: baseline rewritten with {len(current)} identifiers")
+        previous = _load_baseline(args.baseline) if args.baseline.exists() else {}
+        _write_baseline(args.baseline, {ident: previous.get(ident, "") for ident in current})
+        print(f"license gate: baseline rewritten with {len(current)} identifiers; "
+              "write a reason for every empty entry")
         return 0
 
     if not args.baseline.exists():
@@ -98,27 +98,50 @@ def main(argv: list[str] | None = None) -> int:
             "via --update alongside its record.\n"
         )
         return 2
-    adjudicated = set(json.loads(args.baseline.read_text(encoding="utf-8"))["adjudicated"])
+    adjudicated = _load_baseline(args.baseline)
 
-    new = sorted(current - adjudicated)
-    if new:
+    if args.prune:
+        kept = {ident: reason for ident, reason in adjudicated.items() if ident in current}
+        _write_baseline(args.baseline, kept)
+        print(f"license gate: pruned {len(adjudicated) - len(kept)} stale identifier(s)")
+        return 0
+
+    failures = []
+    for ident in sorted(current - set(adjudicated)):
+        failures.append(f"  - unadjudicated: {ident}")
+    for ident in sorted(set(adjudicated) - current):
+        failures.append(f"  - stale (no longer in the SBOM): {ident}")
+    for ident, reason in sorted(adjudicated.items()):
+        if ident in current and not str(reason).strip():
+            failures.append(f"  - no reason recorded: {ident}")
+    if failures:
+        sys.stderr.write("license gate: the adjudicated baseline doesn't match the SBOM:\n")
+        sys.stderr.write("\n".join(failures) + "\n")
         sys.stderr.write(
-            "license gate: unadjudicated license identifier(s) introduced:\n"
-        )
-        for ident in new:
-            sys.stderr.write(f"  - {ident}\n")
-        sys.stderr.write(
-            "Run the full license-check skill, record the verdict under "
-            ".audits/license-check/, and refresh the baseline (--update) in "
-            "the same change.\n"
+            "Run the full license-check skill for new identifiers and record the verdict "
+            "under .audits/license-check/, --prune stale ones, and give every entry a reason.\n"
         )
         return 1
 
     print(
         f"license gate: {len(current)} identifier(s) in the SBOM, all covered "
-        f"by the adjudicated baseline ({len(adjudicated)})"
+        f"by the adjudicated baseline, each with a reason"
     )
     return 0
+
+
+def _load_baseline(path: Path) -> dict[str, str]:
+    data = json.loads(path.read_text(encoding="utf-8"))["adjudicated"]
+    if not isinstance(data, dict):
+        raise SystemExit(f"license gate: {path} must map each identifier to its reason")
+    return data
+
+
+def _write_baseline(path: Path, entries: dict[str, str]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    doc = {"_comment": json.loads(path.read_text(encoding="utf-8"))["_comment"]} if path.exists() else {}
+    doc["adjudicated"] = dict(sorted(entries.items()))
+    path.write_text(json.dumps(doc, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
 if __name__ == "__main__":

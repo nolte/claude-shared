@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """PreToolUse guard: refuse to switch onto a feature branch in the primary checkout.
 
+Guard origin (spec/project/defect-class-guards/ G5): PR #335, which had no tracking issue.
+
 Wired in `.claude/settings.json` as a `PreToolUse` hook matching `Bash`.
 Operationalises `spec/project/parallel-working-copies/` §Branch-to-worktree
 mapping as a *deterministic, pre-execution* guardrail — the complement to the

@@ -29,6 +29,8 @@ from __future__ import annotations
 
 import datetime
 import re
+import os
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -311,13 +313,61 @@ def check_mission_text(text: str, target: str) -> list[Finding]:
     return findings
 
 
+def _source_section(body_text: str) -> str:
+    """The text of the `## Source` section, or "" when there is none."""
+    parts = body_text.split("\n## Source", 1)
+    if len(parts) < 2:
+        return ""
+    return parts[1].split("\n## ", 1)[0]
+
+
+def check_revision_rationale(old_text: str, new_text: str, target: str) -> list[Finding]:
+    """spec/project/mission/ §Revision: a revision after stabilisation carries a rationale.
+
+    Guard origin (spec/project/defect-class-guards/ G5): #591. The file alone
+    can't show that a revision happened, so this compares two versions: when the
+    earlier one was already `mvp_status: stabilised` and anything outside
+    `## Source` changed, `## Source` has to change too.
+    """
+    old, new = _split(old_text), _split(new_text)
+    if old is None or new is None or old_text == new_text:
+        return []
+    if not re.search(r"^mvp_status:\s*stabilised\s*$", old[0], re.MULTILINE):
+        return []
+    old_source, new_source = _source_section(old[1]), _source_section(new[1])
+    outside_changed = (old[0], old[1].replace(old_source, "")) != (new[0], new[1].replace(new_source, ""))
+    if outside_changed and old_source == new_source:
+        return [Finding("Critical", target, "mission.post-stabilisation-rationale",
+                        "the mission changed after `mvp_status: stabilised` without a rationale paragraph in `## Source`")]
+    return []
+
+
+def _committed_version(path: Path, ref: str) -> str | None:
+    try:
+        rel = path.resolve().relative_to(REPO).as_posix()
+    except ValueError:
+        return None
+    proc = subprocess.run(["git", "show", f"{ref}:{rel}"], cwd=REPO, capture_output=True, text=True)
+    return proc.stdout if proc.returncode == 0 else None
+
+
 def check_mission(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix() if path.is_relative_to(REPO) else path.as_posix()
     try:
         text = path.read_text(encoding="utf-8")
     except OSError as exc:  # pragma: no cover
         return [Finding("Critical", rel, "mission.unreadable", str(exc))]
-    return check_mission_text(text, rel)
+    findings = check_mission_text(text, rel)
+    base = os.environ.get("MISSION_BASE_REF", "").strip()
+    committed = _committed_version(path, base or "HEAD")
+    if committed is None and base:
+        # An explicitly configured base that can't be read would make the check
+        # vacuous in exactly the run meant to enforce it (a shallow CI checkout).
+        findings.append(Finding("Critical", rel, "mission.base-ref-unreadable",
+                                f"MISSION_BASE_REF={base} names no readable version of {rel}; fetch full history"))
+    elif committed is not None:
+        findings.extend(check_revision_rationale(committed, text, rel))
+    return findings
 
 
 # --- Negative-proof self-test ---------------------------------------------

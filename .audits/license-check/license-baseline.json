@@ -1,17 +1,18 @@
 {
-  "_comment": "License identifiers adjudicated by the latest full license-check record in this directory; consumed by scripts/check_licenses.py. Refresh only together with a fresh record (--update).",
-  "adjudicated": [
-    "Apache-2.0",
-    "Apache-2.0 OR BSD-2-Clause",
-    "BSD-2-Clause",
-    "BSD-3-Clause",
-    "ISC",
-    "License :: OSI Approved :: Apache Software License",
-    "License :: OSI Approved :: BSD License",
-    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)",
-    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
-    "MIT",
-    "MPL-2.0",
-    "Python-2.0"
-  ]
+  "_comment": "License identifiers adjudicated by the latest full license-check record in this directory, each with the reason it is allowed; consumed by scripts/check_licenses.py. An identifier the SBOM no longer contains is stale and fails the gate (--prune removes it). Refresh with a fresh record (--update), then write a reason for every new identifier.",
+  "adjudicated": {
+    "Apache-2.0": "allow tier, lax-permissive; cyclonedx-bom, cyclonedx-python-lib, license-expression, mkdocs-include-markdown-plugin, py-serializable, requests, tzdata, watchdog; all arm's-length docs/CI tooling (record .audits/license-check/license-2026-07-24.md, Policy gate)",
+    "Apache-2.0 OR BSD-2-Clause": "allow tier, dual lax-permissive expression; packaging; arm's-length tooling (record .audits/license-check/license-2026-07-24.md, Policy gate)",
+    "BSD-2-Clause": "allow tier, lax-permissive; Pygments, boolean.py, mkdocs, properdocs; arm's-length docs tooling (record .audits/license-check/license-2026-07-24.md, Policy gate)",
+    "BSD-3-Clause": "allow tier, lax-permissive; Markdown, MarkupSafe, babel, click, idna, lxml, webcolors; arm's-length docs/CI tooling (record .audits/license-check/license-2026-07-24.md, Policy gate)",
+    "ISC": "allow tier, lax-permissive; isoduration; arm's-length schema-validation tooling (record .audits/license-check/license-2026-07-24.md, Compatibility against the outbound MIT license)",
+    "License :: OSI Approved :: Apache Software License": "PyPI trove classifier for Apache-2.0, same allow tier; arrow, cyclonedx-bom, cyclonedx-python-lib, ghp-import, py-serializable, python-dateutil, requests, sortedcontainers, watchdog (record .audits/license-check/license-2026-07-24.md, Policy gate)",
+    "License :: OSI Approved :: BSD License": "PyPI trove classifier for the BSD family, allow tier; Jinja2, babel, colorama, jsonpointer, python-dateutil, webcolors (record .audits/license-check/license-2026-07-24.md, Policy gate)",
+    "License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)": "weak copyleft, review tier, accepted: chardet, an unmodified library installed only into the throwaway SBOM and docs virtualenvs; nothing links or conveys it with the plugin, so the LGPL modification and relinking duties never arise. Not itemised in the 2026-07-24 record; re-verify at the next full license-check",
+    "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)": "weak copyleft, review tier, accepted: certifi, fqdn, pathspec, unmodified arm's-length dependencies whose file-level copyleft attaches only to modified MPL files (record .audits/license-check/license-2026-07-24.md, Review-tier findings)",
+    "MIT": "allow tier, lax-permissive; 33 components incl. PyYAML, jsonschema, mkdocs-material, pytest; all arm's-length tooling (record .audits/license-check/license-2026-07-24.md, Policy gate)",
+    "MPL-2.0": "weak copyleft, review tier, accepted: certifi, unmodified arm's-length CA bundle (record .audits/license-check/license-2026-07-24.md, Review-tier findings)",
+    "PSF-2.0": "permissive Python Software Foundation license, allow tier: distlib, an unmodified dependency of pre-commit installed only into the project .venv and the throwaway SBOM venv; nothing conveys it with the plugin. Added with the pre-commit pin in #591; not itemised in the 2026-07-24 record, re-verify at the next full license-check",
+    "Python-2.0": "permissive PSF-style license, allow tier: defusedxml, an unmodified arm's-length dependency of the SBOM tooling. Not itemised in the 2026-07-24 record; re-verify at the next full license-check"
+  }
 }

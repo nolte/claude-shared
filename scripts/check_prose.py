@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Run Vale on the prose release-drafter publishes: pull-request titles and release notes.
 
+Guard origin (spec/project/defect-class-guards/ G5): #582.
+
 Implements spec/project/prose-style/ §"Pull-request titles and release notes".
 
 --title checks the pull-request title, read with its author from PR_TITLE and

@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Deterministic documentation link checker.
 
+Guard origin (spec/project/defect-class-guards/ G5): PR #288, which had no tracking issue; the retry rule #591.
+
 Implements `spec/project/link-validation/`. Resolves internal, intra-page
 anchor, and cross-tree links offline against the working tree, and probes
 external `http(s)` links over HTTP. Reports findings; never edits files.
@@ -576,26 +578,38 @@ def probe(url: str, cfg: Config) -> tuple[str, str, str]:
         return ("Warning", "redirect-loop",
                 f"redirect chain exceeds {cfg.max_redirects} hops")
 
+    # spec/project/link-validation/ §Classification (#591 / F89): `dead` needs a
+    # 404/410, DNS failure, or connection refusal that reproduces across all
+    # retries. A dead-looking attempt is only a candidate; any other outcome on
+    # a later attempt wins, and a mix of dead and transient attempts stays transient.
     last_reason = "no response"
+    dead_attempts: list[tuple[str, str, str]] = []
     for n in range(cfg.retries + 1):
         try:
             res = attempt()
-            if res is not None:
+            if res is not None and res[1] != "dead":
                 return res
-            last_reason = "server error (5xx)"
+            if res is not None:
+                dead_attempts.append(res)
+            else:
+                last_reason = "server error (5xx)"
         except urllib.error.URLError as e:
             reason = getattr(e, "reason", e)
             if isinstance(reason, (socket.gaierror,)):
-                return ("Critical", "dead", "DNS resolution failed")
-            if isinstance(reason, ConnectionRefusedError):
-                return ("Critical", "dead", "connection refused")
-            last_reason = f"{type(reason).__name__}: {reason}"
+                dead_attempts.append(("Critical", "dead", "DNS resolution failed"))
+            elif isinstance(reason, ConnectionRefusedError):
+                dead_attempts.append(("Critical", "dead", "connection refused"))
+            else:
+                last_reason = f"{type(reason).__name__}: {reason}"
         except (socket.timeout, TimeoutError):
             last_reason = "timeout"
         except (ssl.SSLError, ConnectionError, OSError) as e:
             last_reason = f"{type(e).__name__}"
         if n < cfg.retries:
             time.sleep(0.5 * (n + 1))
+    if len(dead_attempts) == cfg.retries + 1:
+        severity, classification, reason = dead_attempts[-1]
+        return (severity, classification, f"{reason} (reproduced on {len(dead_attempts)} attempts)")
     return ("Warning", "transient", f"transient ({last_reason}); presumed live")
 
 

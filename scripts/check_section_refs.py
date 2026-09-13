@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Resolve cross-references in the spec corpus and the live documentation.
 
+Guard origin (spec/project/defect-class-guards/ G5): #583.
+
 Implements the structural fix `spec/project/spec-readiness/` asks for in
 §Dimension 3: a section reference resolves against the headings of the file
 in the language that carries it. Resolution reads the target headings; it

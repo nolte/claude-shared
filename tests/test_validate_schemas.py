@@ -85,6 +85,20 @@ def test_missing_property_description_fails(tmp_path):
     assert run(tmp_path) == 1
 
 
+def test_described_but_typeless_property_fails(tmp_path):
+    # #591 / F130: the lint used to check only `description` per property, so a
+    # described property with no shape keyword passed as clean.
+    root = tmp_path
+    text = VALID_SCHEMA.replace("    description: The widget's unique name.\n", "    description: The widget's unique name.\n", 1)
+    lines = text.split("\n")
+    idx = next(i for i, l in enumerate(lines) if l.strip() == "description: The widget's unique name.")
+    prop_indent = len(lines[idx]) - len(lines[idx].lstrip())
+    kept = [l for i, l in enumerate(lines) if not (l.strip().startswith("type:") and len(l) - len(l.lstrip()) == prop_indent and abs(i - idx) <= 3)]
+    assert len(kept) == len(lines) - 1, "fixture no longer has a typed, described property to strip"
+    write_schema(root, "\n".join(kept))
+    assert run(root) == 1
+
+
 def test_id_path_mismatch_fails(tmp_path):
     write_schema(tmp_path, VALID_SCHEMA, rel="schemas/other-v1.0.schema.yaml")
     assert run(tmp_path) == 1

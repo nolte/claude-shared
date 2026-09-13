@@ -58,6 +58,38 @@ x
 """
 
 
+def test_revision_after_stabilisation_without_rationale_is_critical():
+    # #591 / F92: the statement changed after stabilisation, ## Source did not.
+    revised = _GOOD.replace("A does X for the B audience.", "A does Y for the B audience.")
+    assert _rules(v.check_revision_rationale(_GOOD, revised, "m")) == {"mission.post-stabilisation-rationale"}
+
+
+def test_revision_after_stabilisation_with_rationale_passes():
+    revised = _GOOD.replace("A does X for the B audience.", "A does Y for the B audience.").rstrip("\n") + "\n- 2026-09-13 revised: reason.\n"
+    assert v.check_revision_rationale(_GOOD, revised, "m") == []
+
+
+def test_revision_before_stabilisation_needs_no_rationale():
+    early = _GOOD.replace("mvp_status: stabilised", "mvp_status: in_progress")
+    assert v.check_revision_rationale(early, early.replace("does X", "does Y"), "m") == []
+
+
+def test_historical_revision_01575fa_is_caught():
+    import subprocess
+    show = lambda ref: subprocess.run(["git", "show", f"{ref}:project/mission.md"], cwd=v.REPO, capture_output=True, text=True)
+    before, after = show("01575fa^"), show("01575fa")
+    if before.returncode or after.returncode:
+        import pytest
+        pytest.skip("history not available in this checkout")
+    assert _rules(v.check_revision_rationale(before.stdout, after.stdout, "m")) == {"mission.post-stabilisation-rationale"}
+
+
+def test_unreadable_explicit_base_ref_fails_closed(monkeypatch):
+    # #591 review: a shallow CI checkout must not turn the rationale check into a no-op.
+    monkeypatch.setenv("MISSION_BASE_REF", "0000000000000000000000000000000000000000")
+    assert "mission.base-ref-unreadable" in _rules(v.check_mission(v.MISSION_PATH))
+
+
 def test_well_formed_mission_passes(monkeypatch, tmp_path):
     # Neutralise cross-reference resolution so the unit stays hermetic: with no
     # goals.md / AUDIENCES.md / features corpus, resolution is skipped (returns

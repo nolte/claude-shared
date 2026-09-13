@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Local-vs-inherited spec drift check.
 
+Guard origin (spec/project/defect-class-guards/ G5): PR #345, which had no tracking issue.
+
 Operationalises the CI-enforcement MUST of
 `spec/project/portfolio-inherited-spec-layer/` §"Audit and CI integration":
 "undeclared divergence MUST be a CI error ... the Local-vs-Inherited drift pass
