@@ -34,7 +34,7 @@ Measurement note: a whole-file `chars/4` estimate yields ~5448 tokens and would 
 ## Summary
 
 - Critical: 0
-- Warning: 2 (1 added 2026-09-13, F16)
+- Warning: 1
 - Suggestion: 0
 - Info: 1
 
@@ -45,7 +45,7 @@ Next concrete action: none required before use; move detail to `references/` on 
 
 ### Warning
 
-- [ ] [skill-review.check-families-not-run] The plan evidences two of the six newer check families: §Checks derived from runtime & lifecycle and §evaluation discipline; each needs its checks run with a `skill-management` §-anchor before the plan can close.
+- [ ] [skill-review.check-families-not-run] The plan doesn't evidence §Checks derived from runtime & lifecycle or §Checks derived from evaluation discipline (it does cover progressive disclosure and the spec anchor); each needs its checks run with a `skill-management` §-anchor before the plan can close.
       Where: this plan's findings and §Verified conformant, against `spec/claude/skill-review/en.md` §Checks derived from progressive disclosure & file references through §Checks derived from `research-plan-implement`.
       Fix: run the missing families against the target and record a finding or a conformant line for each. Added 2026-09-13 from the 2026-Q4 spec-drift audit (F16).
       Verify: every named family appears as a finding or a §Verified conformant line.
@@ -76,4 +76,4 @@ Recorded so a later reader knows these were checked rather than skipped:
 ## Processing log
 
 <!-- Append one line per item closure: YYYY-MM-DD — <item-shorthand> — <action taken> — verified: <method> -->
-- 2026-09-13 — check-families-not-run — added as an open Warning and the validator version recorded, from the 2026-Q4 spec-drift audit F15/F16 — verified: re-read against `spec/claude/skill-review/en.md` §Review procedure.
+- 2026-09-13 — check-families-not-run — added as an open Warning (not counted in `## Summary`, which keeps the creation-time counts the close subject reads) and the validator version recorded, from the 2026-Q4 spec-drift audit F15/F16 — verified: re-read against `spec/claude/skill-review/en.md` §Review procedure.

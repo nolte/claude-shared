@@ -77,9 +77,9 @@ Expected skill behavior (`close`):
 ```text
 $ git log --oneline -- .audits/skill-review/audience-identify.md
 <new-sha> chore(skill-review): close audience-identify—2C/3W/1S/0I
-<sha-3>   review(skill-review): update audience-identify progress (defer #42)
-<sha-2>   review(skill-review): mark items 2,4 closed
-<sha-1>   review(skill-review): open plan for audience-identify
+<sha-3>   chore(skill-review): update audience-identify progress (defer #42)
+<sha-2>   chore(skill-review): mark items 2,4 closed
+<sha-1>   chore(skill-review): open plan for audience-identify
 ```
 
 The plan file is absent at HEAD, but the history tells the full story: when it was opened, what progressed, what was deferred, and the final severity counts at close.

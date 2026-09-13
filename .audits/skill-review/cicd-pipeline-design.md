@@ -32,7 +32,7 @@ Context: phase 1 of the skills-agents sweep 2026-08, narrowed to the five artefa
 ## Summary
 
 - Critical: 1 (1 closed)
-- Warning: 2 (1 added 2026-09-13, F16)
+- Warning: 1
 - Suggestion: 0
 - Info: 2
 
@@ -50,7 +50,7 @@ Next concrete action: none — the Critical closed 2026-08-22; the Warning is ro
 
 ### Warning
 
-- [ ] [skill-review.check-families-not-run] The plan evidences none of the four newer check families: §Checks derived from progressive disclosure & file references, §runtime & lifecycle, §evaluation discipline, and §`research-plan-implement`; each needs its checks run with a `skill-management` §-anchor before the plan can close.
+- [ ] [skill-review.check-families-not-run] The plan evidences none of these check families: §Checks derived from progressive disclosure & file references, §runtime & lifecycle, §evaluation discipline, §spec-driven-development, and §`research-plan-implement`; each needs its checks run with a `skill-management` §-anchor before the plan can close.
       Where: this plan's findings and §Verified conformant, against `spec/claude/skill-review/en.md` §Checks derived from progressive disclosure & file references through §Checks derived from `research-plan-implement`.
       Fix: run the missing families against the target and record a finding or a conformant line for each. Added 2026-09-13 from the 2026-Q4 spec-drift audit (F16).
       Verify: every named family appears as a finding or a §Verified conformant line.
@@ -77,4 +77,4 @@ Next concrete action: none — the Critical closed 2026-08-22; the Warning is ro
 <!-- Append one line per item closure: YYYY-MM-DD — <item-shorthand> — <action taken> — verified: <method> -->
 - 2026-08-22 — resumable-frontmatter — added `resumable: true` — verified: `grep -c '^resumable: true'` returns 1, and removing it reproduces the new `resumable-flag-missing` Critical.
 - 2026-08-22 — validator-coverage — `scripts/validate_skills.py` extended with the reverse resume check and the `## Operations` plural check — verified: both fire on a reverted fix and the suite reports 0 Critical with the fixes in place.
-- 2026-09-13 — check-families-not-run — added as an open Warning and the validator version recorded, from the 2026-Q4 spec-drift audit F15/F16 — verified: re-read against `spec/claude/skill-review/en.md` §Review procedure.
+- 2026-09-13 — check-families-not-run — added as an open Warning (not counted in `## Summary`, which keeps the creation-time counts the close subject reads) and the validator version recorded, from the 2026-Q4 spec-drift audit F15/F16 — verified: re-read against `spec/claude/skill-review/en.md` §Review procedure.
