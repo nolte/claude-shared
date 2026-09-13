@@ -23,6 +23,7 @@ status: in-progress
 Target: `skills/cicd-pipeline-design/` (SKILL.md, 133 lines / ~3311 tokens, plus three referenced examples — all three resolve).
 Specs applied: `skill-management`, `skill-vs-agent`, `review-plan`, `skill-review` (revisions recorded in frontmatter).
 Validator: override — `skills-ref` is not provisioned in this repository (`command -v skills-ref` returns nothing); the structural checks it would cover are partially served by `scripts/validate_skills.py`, which runs in CI via `task test` per `spec/project/quality-gate/`. The coverage gap that leaves is itself recorded as an Info finding below.
+Validator version: none recorded — `scripts/validate_skills.py` carried no version constant at `f46a3ef`, so that commit is the only identifier; since 2026-09-13 `python3 scripts/validate_skills.py --version` reports it (1.0.0), and a re-review records that value.
 Narrowing: none — full review.
 Explicitly out of scope: runtime behavior of the skill, Vale/markdown style (handled by `task lint`), dispatched agents beyond confirming the orchestration direction.
 
@@ -49,6 +50,11 @@ Next concrete action: none — the Critical closed 2026-08-22; the Warning is ro
 
 ### Warning
 
+- [ ] [skill-review.check-families-not-run] The plan evidences none of these check families: §Checks derived from progressive disclosure & file references, §runtime & lifecycle, §evaluation discipline, §spec-driven-development, and §`research-plan-implement`; each needs its checks run with a `skill-management` §-anchor before the plan can close.
+      Where: this plan's findings and §Verified conformant, against `spec/claude/skill-review/en.md` §Checks derived from progressive disclosure & file references through §Checks derived from `research-plan-implement`.
+      Fix: run the missing families against the target and record a finding or a conformant line for each. Added 2026-09-13 from the 2026-Q4 spec-drift audit (F16).
+      Verify: every named family appears as a finding or a §Verified conformant line.
+
 - [ ] [skill-review.duplicate-capability] The `audit` operation overlaps `quality-gate-enforcer` on `ci.yml`, and neither artefact delimits against the other.
       Where: `skills/cicd-pipeline-design/SKILL.md` §Delimitation (lines 97–103) names `workflow-health-triage`, `quality-gate`, `release-publish-trigger`, `deployment-chart-manage`, and `project-structure-apply`, but not `quality-gate-enforcer`; that agent's description names `quality-gate`, `workflow-health-triage`, and `dependency-audit`, but not this skill.
       Fix: add a bidirectional delimitation — one `## Delimitation` bullet here splitting by question (this skill owns stage sequence, pinning, permissions, caching; the enforcer owns quality-gate wiring conformance), and the mirror clause in the agent. Keep the addition in the body, not the `description`: at 931 of 1024 characters the description has little headroom, and lengthening it trades a Warning for a routing-budget regression.
@@ -71,3 +77,4 @@ Next concrete action: none — the Critical closed 2026-08-22; the Warning is ro
 <!-- Append one line per item closure: YYYY-MM-DD — <item-shorthand> — <action taken> — verified: <method> -->
 - 2026-08-22 — resumable-frontmatter — added `resumable: true` — verified: `grep -c '^resumable: true'` returns 1, and removing it reproduces the new `resumable-flag-missing` Critical.
 - 2026-08-22 — validator-coverage — `scripts/validate_skills.py` extended with the reverse resume check and the `## Operations` plural check — verified: both fire on a reverted fix and the suite reports 0 Critical with the fixes in place.
+- 2026-09-13 — check-families-not-run — added as an open Warning (not counted in `## Summary`, which keeps the creation-time counts the close subject reads) and the validator version recorded, from the 2026-Q4 spec-drift audit F15/F16 — verified: re-read against `spec/claude/skill-review/en.md` §Review procedure.

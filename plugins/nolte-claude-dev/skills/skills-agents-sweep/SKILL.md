@@ -102,7 +102,7 @@ Read `examples/03-wave-implementation.md` for a worked closure cycle.
 2. **Refuse** if any wave lacks a decision. Each wave row must be annotated with `implemented`, `deferred`, or `retired` before close is allowed.
 3. **Verify** that every `deferred` wave has a live tracking-issue URL in its annotation; offer to open issues for any that lack one.
 4. **Delete** the consolidated report file.
-5. **Compose the deletion commit message** exactly: `sweep(skills-agents-sweep): close <slug>--<wave-summary>` in the subject, where `<wave-summary>` is a comma-separated list like `W1-W3-implemented,W4-deferred`. Body lists deferred-issue URLs and `repo-revision`.
+5. **Compose the deletion commit message** exactly: `chore(skills-agents-sweep): close <slug>--<wave-summary>` in the subject, which is also the title of the pull request that squash-merges the removal, where `<wave-summary>` is a comma-separated list like `W1-W3-implemented,W4-deferred`. Body lists deferred-issue URLs and `repo-revision`.
 6. **Run the commit only with explicit user confirmation.** Show the message first.
 
 ## Examples

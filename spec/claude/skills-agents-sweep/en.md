@@ -83,7 +83,7 @@ Readers: auditors running a portfolio-wide sweep of the plugin inventory, the `s
 
 - **MUST** maintain exactly one open sweep per repository at a time; a second sweep **MUST NOT** be opened until the previous sweep is closed
 - The committed consolidated report with `status: open` is the coordination lock; contributors detect an in-flight sweep by the presence of that file on the default branch. No separate lock mechanism is defined
-- **MUST** be closed via a commit that removes the consolidated report file from `.audits/skills-agents-sweep/`; the commit message **MUST** follow the pattern `sweep(skills-agents-sweep): close <slug>--<wave-summary>` where `<wave-summary>` describes which waves were implemented or deferred
+- **MUST** be closed via a commit that removes the consolidated report file from `.audits/skills-agents-sweep/`; the commit message **MUST** follow the pattern `chore(skills-agents-sweep): close <slug>--<wave-summary>` where `<wave-summary>` describes which waves were implemented or deferred. The line is the subject of the squash commit, so the closing pull request carries it as its title; the type is `chore` because the pull-request type vocabulary has no `sweep` type
 - **MUST** record in the consolidated report's processing log one entry per wave closure, with the date, the wave identifier, the action taken, and a verification method
 - **SHOULD** be considered stale and requiring re-opening if it has been open for more than six months without a processing-log entry
 

@@ -118,7 +118,7 @@ Appends log entry:
 3. Proposes deletion commit message:
 
    ```
-   sweep(skills-agents-sweep): close 2026-05-20-baseline--W1-W3-implemented,W4-deferred,W5-mixed
+   chore(skills-agents-sweep): close 2026-05-20-baseline--W1-W3-implemented,W4-deferred,W5-mixed
 
    Waves 1–3 fully implemented (#147–#152, #143, W2 PRs, W3 spec PRs).
    Wave 4 deferred: #153, #154, #155, #156, #157.

@@ -109,7 +109,7 @@ Readers: authors of the two release skills (`release-notes-curate`, `release-pub
 
 ## Acceptance Criteria
 
-- [ ] Two skills exist under `skills/release-notes-curate/` and `skills/release-publish-trigger/` (or equivalent ASCII kebab-case names) shipped by the `nolte-shared` plugin; each has a passing `skill-review` plan recorded under `.audits/skill-review/` at adoption time.
+- [ ] Two skills exist under `skills/release-notes-curate/` and `skills/release-publish-trigger/` (or equivalent ASCII kebab-case names) shipped by the `nolte-shared` plugin; each has a passing `skill-review` plan recorded under `.audits/skill-review/` at adoption time, or, once that plan is closed and deleted, its closing commit in `git log` per `spec/claude/review-plan/`.
 - [ ] Each skill's frontmatter `description` lists concrete user-trigger phrases (EN + DE) and explicit anti-triggers against the workflows it doesn't replace.
 - [ ] Both skills detect project type via the same signals as `github-issue-templates-apply`, verifiable by reading the detection step of each `SKILL.md`.
 - [ ] Skill A consumes the `release-notes-audience-analysis` artefact when present and dispatches `audience-identify` when absent, verifiable by the operator's transcript on a fresh repo.

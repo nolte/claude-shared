@@ -163,7 +163,7 @@ Diese Prozedur wird als Skill (`plugins/nolte-claude-dev/skills/skill-review/`) 
 - [ ] Keine zwei Skills in `skills/` teilen eine äquivalente Capability-Aussage, verifiziert durch Stichprobe jedes Plan-Duplikat-Präventions-Findings
 - [ ] Jeder offene Plan unter `.audits/skill-review/` entspricht der Vier-Abschnitts-Struktur und dem YAML-Frontmatter aus `review-plan`
 - [ ] Die Abnahmekriterien der `skill-management`-Spec verweisen für die Review-Seite ihrer Autoren-Regeln auf diese Spec
-- [ ] Eine Stichprobe von drei geschlossenen Plan-Löschungen in `git log` zeigt exakt das Commit-Message-Format `review(skill-review): close <skill> — <counts>`
+- [ ] Eine Stichprobe von drei geschlossenen Plan-Löschungen in `git log` zeigt exakt das Commit-Message-Format `chore(skill-review): close <skill>—<counts>`, oder den früheren Betreff `review(skill-review): close` bei einer Löschung vor der Durchsetzung des Typ-Vokabulars für Pull Requests
 - [ ] Jeder Plan unter `.audits/skill-review/` hält fest, welcher externe Skill-Struktur-Validator und welche Version gefahren wurde, und kein Plan schließt mit einem ungelösten vom Validator gemeldeten `Critical`
 - [ ] Jeder Plan unter `.audits/skill-review/` führt die Best-Practices-Checks aus §„Checks aus Skill-Creation-Best-Practices" gegen den Ziel-Skill aus
 - [ ] Jeder Plan unter `.audits/skill-review/` führt die in dieser Spec neu hinzugefügten Frontmatter-Validierungs-, Progressive-Disclosure-, Laufzeit-Lifecycle- und Evaluations-Disziplin-Checks aus und zitiert `skill-management` §<Section> als Regel-Anker

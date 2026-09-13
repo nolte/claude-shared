@@ -83,7 +83,7 @@ Leser: Auditoren, die einen portfolioweiten Sweep des Plugin-Inventars durchfüh
 
 - **MUSS** genau einen offenen Sweep pro Repository zur gleichen Zeit aufrechterhalten; ein zweiter Sweep **DARF NICHT** eröffnet werden, bis der vorherige Sweep geschlossen ist
 - Der committete konsolidierte Bericht mit `status: open` ist der Koordinations-Lock; Beitragende erkennen einen laufenden Sweep an der Existenz dieser Datei auf dem Default-Branch. Es ist kein separater Lock-Mechanismus definiert
-- **MUSS** durch einen Commit geschlossen werden, der die konsolidierte Berichtsdatei aus `.audits/skills-agents-sweep/` entfernt; die Commit-Message **MUSS** dem Muster `sweep(skills-agents-sweep): close <Slug>--<Wellen-Zusammenfassung>` folgen, wobei `<Wellen-Zusammenfassung>` beschreibt, welche Wellen umgesetzt oder zurückgestellt wurden
+- **MUSS** durch einen Commit geschlossen werden, der die konsolidierte Berichtsdatei aus `.audits/skills-agents-sweep/` entfernt; die Commit-Message **MUSS** dem Muster `chore(skills-agents-sweep): close <Slug>--<Wellen-Zusammenfassung>` folgen, wobei `<Wellen-Zusammenfassung>` beschreibt, welche Wellen umgesetzt oder zurückgestellt wurden. Die Zeile ist der Betreff des Squash-Commits, der schließende Pull Request trägt sie deshalb als Titel; der Typ ist `chore`, weil das Typ-Vokabular für Pull Requests keinen Typ `sweep` kennt
 - **MUSS** im Processing-Log des konsolidierten Berichts pro Wellen-Abschluss einen Eintrag festhalten mit Datum, Wellen-Kenner, durchgeführter Aktion und Verifikations-Methode
 - **SOLLTE** als veraltet gelten und eine Neu-Eröffnung erfordern, wenn er mehr als sechs Monate lang offen war ohne einen Processing-Log-Eintrag
 

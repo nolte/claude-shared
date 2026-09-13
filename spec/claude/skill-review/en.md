@@ -163,7 +163,7 @@ This procedure is delivered as a skill (`plugins/nolte-claude-dev/skills/skill-r
 - [ ] No two skills in `skills/` share an equivalent capability statement, verified by a spot-check of every plan's duplicate-prevention finding
 - [ ] Every open plan under `.audits/skill-review/` conforms to `review-plan`'s four-section structure and YAML frontmatter
 - [ ] The `skill-management` spec's acceptance criteria cross-reference this spec for the review side of its authoring rules
-- [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(skill-review): close <skill>—<counts>` exactly
+- [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `chore(skill-review): close <skill>—<counts>` exactly, or the former `review(skill-review): close` subject for a deletion made before the pull-request type vocabulary was enforced
 - [ ] Every plan under `.audits/skill-review/` records the external skill-structure validator and version that was run, and no plan closes with an unresolved validator-reported `Critical`
 - [ ] Every plan under `.audits/skill-review/` runs the best-practices checks from §"Checks derived from skill-creation best practices" against the target skill
 - [ ] Every plan under `.audits/skill-review/` runs the frontmatter-validation, progressive-disclosure, runtime-lifecycle, and evaluation-discipline checks newly added to this spec, citing `skill-management` §<section> as the rule anchor

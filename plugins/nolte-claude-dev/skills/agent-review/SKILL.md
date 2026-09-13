@@ -106,7 +106,7 @@ When the user reports closures:
 2. **Refuse if any open `- [ ]` `Critical` remains.** `Warning` / `Suggestion` / `Info` may be closed via `→ deferred: <issue-url>`. Offer to help open tracking issues if missing.
 3. **Count findings at creation time** per severity (from `## Summary`, not current state).
 4. **Delete the plan file.**
-5. **Compose the deletion commit message** exactly: `review(agent-review): close <agent-name>—<C>C/<W>W/<S>S/<I>I` in the subject; body lists deferred-issue URLs and the `repo-revision`. No hook bypass, no signing skip.
+5. **Compose the deletion commit message** exactly: `chore(agent-review): close <agent-name>—<C>C/<W>W/<S>S/<I>I` in the subject, which is also the title of the pull request that squash-merges the deletion; body lists deferred-issue URLs and the `repo-revision`. No hook bypass, no signing skip.
 6. **Run the commit only if the user confirms.** Show the message first.
 
 ## Output — plan shape

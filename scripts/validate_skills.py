@@ -16,6 +16,7 @@ Exit codes:
 Usage:
   python scripts/validate_skills.py              # checks every skill + agent
   python scripts/validate_skills.py skills/foo/  # checks one target
+  python scripts/validate_skills.py --version    # prints the validator version
 
 Output is one finding per line, prefixed with severity in Title Case so
 downstream tooling can grep deterministically.
@@ -33,6 +34,12 @@ except ModuleNotFoundError:  # pragma: no cover - PyYAML is a pinned dev depende
     yaml = None  # the strict-parse check degrades to a no-op rather than crashing
 
 REPO = Path(__file__).resolve().parent.parent
+
+# Recorded in every skill-review plan's `## Scope` so a later re-review can
+# detect validator drift (`spec/claude/skill-review/` §"Checks derived from
+# external skill-structure validation", #588). Bump the minor version when a
+# check is added or its severity changes, the major version when one is removed.
+VALIDATOR_VERSION = "1.0.0"
 
 STARTER_TAGS = {
     "pull-request", "review", "audit", "scaffolding", "prose",
@@ -958,6 +965,9 @@ def discover_default_targets() -> list[str]:
 
 
 def main() -> int:
+    if sys.argv[1:] == ["--version"]:
+        print(f"validate_skills.py {VALIDATOR_VERSION}")
+        return 0
     targets = sys.argv[1:] or discover_default_targets()
     paths: list[Path] = []
     for t in targets:

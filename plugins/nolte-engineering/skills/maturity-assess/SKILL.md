@@ -55,7 +55,7 @@ This skill produces an **advisory graded classification**, never a gate. It grad
 - **Operation**: `assess` (default) or `reassess` (re-grade against a changed application, as a diff).
 - **Audience source**: `spec/project/audience-identification/`'s artifact (`AUDIENCES.md` or its ratified alternative) — consumed, never re-derived.
 - **Capability sources** (top-down, in priority order): `project/features/`, `project/requirements/<slug>.md`, the user-facing surface (routes, commands, UI entry points) — never the directory structure.
-- **Thresholds**: the project-configured coverage bands (lower/middle/upper), complexity ceiling, and duplication bound. When unset, use the spec's reference defaults and record that in the artifact header.
+- **Thresholds**: the project-configured coverage bands (lower/middle/upper), complexity ceiling, and duplication bound. When unset, cap Axis B at Bronze (its Bronze rung needs no threshold), grade Axis C `Unrated` (its Bronze rung needs the lower coverage band), and record in the artifact header that no thresholds are configured; `spec/project/capability-maturity-assessment/` ships no reference defaults.
 
 ## Operations
 
@@ -92,7 +92,7 @@ Triggered when the application changed after the matrix was written. Re-run step
 ## Assessment context
 - audience artifact: <path>   (or: none — mapping recorded as open item, caveat)
 - capability sources: project/features/ · project/requirements/<slug>.md · user-facing surface
-- thresholds: coverage bands <lower/middle/upper> · complexity ceiling <n> · duplication bound <n>  (source: <configured | spec defaults>)
+- thresholds: coverage bands <lower/middle/upper> · complexity ceiling <n> · duplication bound <n>  (source: <configured | unconfigured>)
 - frameworks: OpenSSF Bronze/Silver/Gold · ISO/IEC 25010 (Axis B) · Test Pyramid (Axis C)
 
 ## C1 — <name>

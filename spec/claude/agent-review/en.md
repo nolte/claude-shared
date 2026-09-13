@@ -127,6 +127,8 @@ Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybri
 
 ## Acceptance Criteria
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
+
+In these criteria, `agents/` means every agent root the repository ships: the root `agents/` and each `plugins/*/agents/`.
 - [ ] A worked example exists applying this review procedure to one agent in `nolte-shared` (for instance `audience-review`) and producing a conforming plan under `.audits/agent-review/`; `audience-review` is reviewed as an ordinary single-target run—the reviewer named `agent-review` is a skill, not a self-reviewing agent, so no recursion-termination logic is required
 - [ ] Every agent in `agents/` has been reviewed against the current `agent-management` revision at least once since this spec was adopted, verifiable by either an open plan under `.audits/agent-review/` or a closing commit in `git log` matching the `review-plan` deletion pattern
 - [ ] No agent in `agents/` lacks a rationale section; running the rationale-section check across all agents produces zero `Critical`s
@@ -139,7 +141,7 @@ Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybri
 - [ ] Every agent in `agents/` whose `tools` list includes `Edit`, `Write`, `Bash`, or `NotebookEdit` documents the goals and preconditions of those write effects in its system prompt
 - [ ] Every open plan under `.audits/agent-review/` conforms to `review-plan`'s four-section structure and YAML frontmatter
 - [ ] The `agent-management` spec's acceptance criteria cross-reference this spec for the review side of its authoring rules
-- [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `review(agent-review): close <agent>—<counts>` exactly
+- [ ] A spot-check of three closed plan deletions in `git log` shows the commit message format `chore(agent-review): close <agent>—<counts>` exactly, or the former `review(agent-review): close` subject for a deletion made before the pull-request type vocabulary was enforced
 - [ ] No plan under `.audits/agent-review/` closes with an unresolved `Critical` for `distribution: plugin` agents declaring `hooks`, `mcpServers`, or `permissionMode`
 - [ ] Every plan under `.audits/agent-review/` runs the subagent-boundary checks (no agent-spawning, no Skill-tool invocation) against the target agent
 - [ ] Every plan under `.audits/agent-review/` runs the proactive-delegation-intent check against any agent whose `description` contains "use proactively" or an equivalent phrase

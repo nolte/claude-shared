@@ -97,7 +97,7 @@ When the user reports "I fixed items 3 and 5":
 2. **Refuse if any open `- [ ]` `Critical` remains.** `Warning` / `Suggestion` / `Info` items may be closed via `→ deferred: <issue-url>` annotation on the item, per `review-plan`. Offer to help the user open the tracking issues if they are missing.
 3. **Count findings at creation time** per severity (re-read the `## Summary` counts, not the current state — the commit message records the original review scale, not what is still open now).
 4. **Delete the plan file.**
-5. **Compose the deletion commit message** exactly: `review(skill-review): close <skill-name>—<C>C/<W>W/<S>S/<I>I` in the subject, and in the body list any deferred-issue URLs the plan referenced plus the `repo-revision` the review was taken at. Do not bypass hooks; do not skip signing.
+5. **Compose the deletion commit message** exactly: `chore(skill-review): close <skill-name>—<C>C/<W>W/<S>S/<I>I` in the subject, which is also the title of the pull request that squash-merges the deletion, and in the body list any deferred-issue URLs the plan referenced plus the `repo-revision` the review was taken at. Do not bypass hooks; do not skip signing.
 6. **Run the commit only if the user confirms.** Show the message first.
 
 ## Output — plan shape
