@@ -122,6 +122,12 @@ def test_non_references_are_ignored(repo, line):
     assert citing_de(repo, line) == []
 
 
+def test_numbered_reference_is_resolved_not_skipped(repo):
+    # "§9" must be looked up like any label; only "§ 9" is a legal citation.
+    assert classes(citing_de(repo, "- siehe `review-plan` §9 dort")) == ["section-unresolved"]
+    assert citing_de(repo, "- nach § 9 DDG") == []
+
+
 def test_reference_resolving_in_no_language_is_advisory(repo):
     findings = citing_de(repo, "- gemäß `spec/claude/review-plan/` §\"Required sections\"")
     assert classes(findings) == ["section-unresolved"]
