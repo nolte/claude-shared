@@ -39,7 +39,7 @@ Readers: skill and agent authors choosing a conformant name, reviewers citing on
 ### Agent names: `<subject>-<role-noun>`
 
 - **MUST** name every agent in object-role form, `<subject>-<role-noun>`: the trailing token is the role the agent plays over the leading subject (`code-security-reviewer`, `feature-consistency-reviewer`, `portfolio-manifest-collector`, `vocab-drift-scanner`, `lektorat-scanner`)
-- The trailing role-noun almost always carries `-er`/`-or`/`-ist` morphology (`-reviewer`, `-checker`, `-scanner`, `-collector`, `-curator`, `-enforcer`, `-extractor`, `-generator`, `-author`, `-developer`); an actor noun naming a role without that morphology is still conformant; `webview-ui-expert` is the standing case
+- The trailing role-noun almost always carries `-er`/`-or`/`-ist`/`-ian`/`-eur` morphology (`-reviewer`, `-checker`, `-scanner`, `-collector`, `-curator`, `-enforcer`, `-extractor`, `-generator`, `-author`, `-developer`); an actor noun naming a role without that morphology is still conformant; `webview-ui-expert` is the standing case
 - **Closed exceptions** (a reviewer **MUST NOT** flag these; the list is exhaustive): `png-to-transparent-svg` (a transformation phrase with no role token) and `audience-review` (trailing `review` names an action, not an actor). Renaming either would break every `subagent_type:` call site; the breakage cost outweighs the coherence gain. Every *new* agent **MUST** follow the convention
 
 ### One form per artifact type, per plugin
@@ -56,7 +56,7 @@ Readers: skill and agent authors choosing a conformant name, reviewers citing on
 
 ### Binding to `scripts/validate_skills.py`
 
-- `scripts/validate_skills.py` operationalises this spec as the **Suggestion-grade** `check_name_form` (a form deviation is a discoverability smell, not a platform failure) with four mirrored closed lists: `SKILL_ACTION_TOKENS`, `SKILL_NAME_FORM_EXCEPTIONS`, `AGENT_ROLE_NOUNS`, `AGENT_NAME_FORM_EXCEPTIONS`
+- `scripts/validate_skills.py` operationalises this spec as the **Suggestion-grade** `check_name_form` (a form deviation is a discoverability smell, not a platform failure) with five mirrored closed lists: `SKILL_ACTION_TOKENS`, `SKILL_NAME_FORM_EXCEPTIONS`, `AGENT_ROLE_SUFFIXES`, `AGENT_ROLE_NOUNS`, `AGENT_NAME_FORM_EXCEPTIONS`
 - **MUST** change this spec and those lists in the **same PR** whenever either moves; a list entry without its spec counterpart (or vice versa) is a defect
 
 ### Character-level digest (owned elsewhere)
@@ -67,7 +67,7 @@ For convenience only—the normative rules live in `skill-management` §Frontmat
 
 - [ ] `skill-management` and `agent-management` contain no normative restatement of the form convention—only the delegation pointer to this spec
 - [ ] Every reviewer-facing citation of the name-form check (`skill-review`, `skills-agents-sweep`, the authoring skills) anchors on this spec
-- [ ] The four validator lists match this spec's exception and morphology sets exactly
+- [ ] The five validator lists match this spec's exception and morphology sets exactly
 - [ ] `spec/README.md` indexes this spec; en/de stay structurally in sync
 
 ## References
@@ -75,7 +75,7 @@ For convenience only—the normative rules live in `skill-management` §Frontmat
 - [R1] Skill authoring best practices, Anthropic platform docs: <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
 - [R2] `plugin-scoping` §Namespace and naming coherence: `spec/claude/plugin-scoping/`
 - [R3] Character-level owners: `spec/claude/skill-management/` §Frontmatter validation · `spec/claude/agent-management/` §Structure
-- [R4] `scripts/validate_skills.py` (`check_name_form` and the four closed lists)
+- [R4] `scripts/validate_skills.py` (`check_name_form` and the five closed lists)
 
 ## Open Questions
 

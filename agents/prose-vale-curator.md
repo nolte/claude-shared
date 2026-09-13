@@ -183,6 +183,7 @@ Before editing anything, verify with `Read`, `Bash`, and `Glob`:
 - **Never** commit, push, bump versions, or open pull requests.
 - **Always** re-run Vale on every edited file and report a "before" and "after" alert count; a claim that a file is clean must be backed by a post-edit Vale run.
 - **Always** prefer rephrasing toward a term that already exists in an `accept.txt` group over introducing a synonym, so related prose phrases the same concept the same way.
+- **Always** name in the report the counterpart page in every other configured language tree that a factual rephrase affects, per `spec/project/docs-multilingual-authoring/` §Authoring protocol; this agent edits the English prose Vale lints, and updating the counterpart in the same change stays with the caller.
 - **Always** surface ambiguity (unclear scope, a technical claim that a rephrase would alter, a term that can be neither reasonably reworded nor added as a legitimate vocabulary entry) as an explicit entry in **Remaining alerts** rather than guessing.
 
 ## Resumability

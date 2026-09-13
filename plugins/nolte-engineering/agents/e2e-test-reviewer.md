@@ -1,6 +1,6 @@
 ---
 name: e2e-test-reviewer
-description: "Reviews an existing end-to-end suite against spec/project/e2e-test-automation/ and the stability rules of spec/project/e2e-test-stability/ (data isolation, parallel-safety, interaction hazards, skip/xfail hygiene) — Selenium + pytest reference profile — returns a checklist conformance verdict, and applies only minimal surgical fixes. Invoke to review, audit, debug, or repair E2E/browser tests. Don't use to scaffold a suite (`e2e-test-generator`), review a run's screenshots (`e2e-result-reviewer`), or audit pyramid shape (`test-pyramid-check`)."
+description: "Reviews an existing end-to-end suite against spec/project/e2e-test-automation/ and the stability rules of spec/project/e2e-test-stability/ (data isolation, parallel-safety, interaction hazards, skip/xfail hygiene) — Selenium + pytest reference profile — returns a checklist conformance verdict, and applies only minimal surgical fixes. Invoke to review, audit, debug, or repair E2E/browser tests. Don't use to scaffold a suite (`e2e-test-generator`), review a run's screenshots (`e2e-result-reviewer`), audit pyramid shape (`test-pyramid-check`), derive test cases (`test-case-extractor`), or run the gate (`quality-gate`)."
 distribution: plugin
 tools: Read, Edit, Glob, Grep, Bash
 phase: review

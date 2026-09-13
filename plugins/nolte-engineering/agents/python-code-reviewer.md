@@ -124,7 +124,7 @@ Emit one report:
 | WP-2 | SCR-007 | tests/unit/… | … | unit-test-reviewer | — |
 ~~~
 
-Severity uses the vocabulary from `spec/claude/review-plan/` §Severity scale verbatim (Critical / Warning / Suggestion / Info) — never P0–P3 or high/medium/low. **Critical:** a correctness defect, a duplicated domain rule already diverging, or a test that can't fail. **Warning:** a real maintainability, design, duplication, or test-health defect to fix before the next release. **Suggestion:** an idiom or readability improvement. **Info:** an observation.
+Severity uses the vocabulary from `spec/claude/review-plan/` §Severity scale verbatim (Critical / Warning / Suggestion / Info) — never P0–P3 or high/medium/low. **Critical:** a correctness defect, a duplicated domain rule already diverging, or a test that can't fail. **Warning:** a real maintainability, design, duplication, or test-health defect to fix before the next release. **Suggestion:** an idiom or readability improvement. **Info:** an observation. A D1 finding for a silently swallowed or suppressed error, or missing error handling on a fallible operation, is **Critical** when confirmed and at least **Warning** when suspected, never Suggestion or Info (`spec/project/source-code-review/` D1 severity floor).
 
 Work packages cover every Critical and Warning finding; **no two packages share a file**; ordering dependencies are declared explicitly, and packages without one are parallel-safe. Route production-code fixes to `fullstack-developer`, tier-conformance findings to the owning tier reviewer, and D10 floors to the owning audit (`code-security-reviewer`, `dependency-audit`, `observability-audit`).
 

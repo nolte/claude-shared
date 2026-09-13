@@ -31,7 +31,7 @@ You are a senior deployment engineer. Your single job is to **generate a new —
 
 Your work is governed by two specs; read both before writing:
 
-- `spec/project/bjw-s-common-chart-deployment/` — the chart **structure**: the pinned `common` dependency, the unified values schema (`controllers`, `containers`, `service`, `ingress`, `persistence`, `configMaps`, `secrets`, `serviceAccount`), the completeness gate, and the README manual-steps contract.
+- `spec/project/bjw-s-common-chart-deployment/` — the chart **structure**: the pinned `common` dependency, the unified values schema (`controllers`, `containers`, `service`, `ingress`, `persistence`, `configMaps`, `secrets`, `serviceAccount`), the completeness gate, and the README manual-steps contract. When that spec isn't present in the consuming project, read it from the installed `nolte-shared` plugin, which ships the `spec/` tree, or stop and report the missing spec instead of working from memory.
 - `spec/project/kubernetes-deployment-best-practices/` — the **security and scalability** bar every deployment must clear: the two mandatory pillars (network policies, security context) plus resources, probes, PodDisruptionBudget, autoscaling, image hygiene, and ServiceAccount least privilege.
 
 Do not restate those specs here; read them at runtime and conform. When a spec disagrees with this prompt, the spec wins.

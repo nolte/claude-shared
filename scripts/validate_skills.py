@@ -800,6 +800,43 @@ def check_skill(path: Path) -> list[Finding]:
     return findings
 
 
+# Collected per agent by check_spec_fallback, drained by check_spec_fallback_backlog.
+SPEC_FALLBACK_UNSTATED: list[str] = []
+AGENTS_CHECKED: list[str] = []
+_SPEC_INPUT = re.compile(r"`?spec/[a-z0-9-]+/[a-z0-9-]+/")
+# Only a statement about the absent spec counts; a stray "absent" or "fallback" elsewhere
+# in the body doesn't (review of #610).
+_SPEC_FALLBACK = re.compile(
+    r"(spec tree is absent|spec tree isn't reachable|spec isn't present|spec is absent|"
+    r"installed `nolte-shared`|stop and report the missing spec)", re.I)
+
+
+def check_spec_fallback(body: str, target: str) -> list[Finding]:
+    """agent-management §Runtime location: an agent reading spec paths states its fallback.
+
+    Guard origin (spec/project/defect-class-guards/ G5): #592. Most agents predate
+    the rule, so the unstated ones are reported once as a backlog, like the
+    research-plan-implement adoption, rather than one finding per file.
+    """
+    AGENTS_CHECKED.append(target)
+    if _SPEC_INPUT.search(body) and not _SPEC_FALLBACK.search(body):
+        SPEC_FALLBACK_UNSTATED.append(target)
+    return []
+
+
+def check_spec_fallback_backlog() -> list[Finding]:
+    if not SPEC_FALLBACK_UNSTATED:
+        return []
+    return [Finding(
+        "Info", "agents/", "agent-management.spec-fallback-backlog",
+        f"{len(SPEC_FALLBACK_UNSTATED)} of {len(AGENTS_CHECKED)} agents name `spec/<topic>/<slug>/` "
+        f"files as input without stating what they do when the spec is absent in a consuming "
+        f"project; per agent-management §Runtime location (consuming project) each should read the "
+        f"installed `nolte-shared` spec tree, apply an inlined baseline, or stop and report. Reported "
+        f"once as the grandfathered baseline",
+    )]
+
+
 def check_agent(path: Path) -> list[Finding]:
     rel = path.relative_to(REPO).as_posix()
     text = path.read_text(encoding="utf-8")
@@ -820,6 +857,7 @@ def check_agent(path: Path) -> list[Finding]:
     findings += check_resumable_wiring(
         fm.get("resumable"), fm.get("description"), fm.get("name"), body, rel, "agent")
     findings += check_rationale_heading(body, rel, "agent")
+    findings += check_spec_fallback(body, rel)
     findings += check_description_lead_voice(fm.get("description"), rel, "agent")
     findings += check_description_headroom(fm.get("description"), rel, "agent")
     findings += check_bash_justification(fm.get("tools"), fm.get("description"), body, rel)
@@ -959,7 +997,8 @@ def main() -> int:
             all_findings.extend(check_agent_tree(p))
             all_findings.extend(check_agent_description_budget(p))
 
-    # Drain the research-plan-implement adoption backlog into one finding.
+    # Drain the spec-fallback backlog (#592) and the research-plan-implement adoption backlog.
+    all_findings.extend(check_spec_fallback_backlog())
     all_findings.extend(check_rpi_backlog(
         sum(1 for p in paths if p.name == "SKILL.md")))
 
