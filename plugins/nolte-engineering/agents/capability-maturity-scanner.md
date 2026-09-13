@@ -76,7 +76,7 @@ The caller (maturity-assess skill) provides:
 
 - **Repo root** — the directory to scan. Default: current working directory.
 - **Capability inventory** — the list of `{id, name, code-location hint}` the skill inventoried top-down. Required: you attribute signals per capability, not repo-wide.
-- **Configured thresholds** — the coverage bands (lower/middle/upper), the complexity ceiling, and the duplication bound. When absent, record in Health that no thresholds are configured and propose `Unrated` for Axis B and Axis C: `spec/project/capability-maturity-assessment/` ships no reference defaults and forbids a universal number.
+- **Configured thresholds** — the coverage bands (lower/middle/upper), the complexity ceiling, and the duplication bound. When absent, record in Health that no thresholds are configured, propose at most Bronze for Axis B (its Bronze rung needs no threshold; Silver and Gold need the complexity ceiling and duplication bound) and `Unrated` for Axis C (its Bronze rung already needs the lower coverage band): `spec/project/capability-maturity-assessment/` ships no reference defaults and forbids a universal number.
 
 ## Preconditions
 

@@ -55,7 +55,7 @@ This skill produces an **advisory graded classification**, never a gate. It grad
 - **Operation**: `assess` (default) or `reassess` (re-grade against a changed application, as a diff).
 - **Audience source**: `spec/project/audience-identification/`'s artifact (`AUDIENCES.md` or its ratified alternative) — consumed, never re-derived.
 - **Capability sources** (top-down, in priority order): `project/features/`, `project/requirements/<slug>.md`, the user-facing surface (routes, commands, UI entry points) — never the directory structure.
-- **Thresholds**: the project-configured coverage bands (lower/middle/upper), complexity ceiling, and duplication bound. When unset, grade Axis B and Axis C `Unrated` and record in the artifact header that no thresholds are configured; `spec/project/capability-maturity-assessment/` ships no reference defaults.
+- **Thresholds**: the project-configured coverage bands (lower/middle/upper), complexity ceiling, and duplication bound. When unset, cap Axis B at Bronze (its Bronze rung needs no threshold), grade Axis C `Unrated` (its Bronze rung needs the lower coverage band), and record in the artifact header that no thresholds are configured; `spec/project/capability-maturity-assessment/` ships no reference defaults.
 
 ## Operations
 

@@ -45,7 +45,7 @@ Next concrete action: none required before use; move detail to `references/` on 
 
 ### Warning
 
-- [ ] [skill-review.check-families-not-run] The plan doesn't evidence §Checks derived from runtime & lifecycle or §Checks derived from evaluation discipline (it does cover progressive disclosure and the spec anchor); each needs its checks run with a `skill-management` §-anchor before the plan can close.
+- [ ] [skill-review.check-families-not-run] The plan doesn't evidence §Checks derived from runtime & lifecycle, §Checks derived from evaluation discipline, or §Checks derived from `research-plan-implement` (it does cover progressive disclosure and the spec anchor); each needs its checks run with a `skill-management` §-anchor before the plan can close.
       Where: this plan's findings and §Verified conformant, against `spec/claude/skill-review/en.md` §Checks derived from progressive disclosure & file references through §Checks derived from `research-plan-implement`.
       Fix: run the missing families against the target and record a finding or a conformant line for each. Added 2026-09-13 from the 2026-Q4 spec-drift audit (F16).
       Verify: every named family appears as a finding or a §Verified conformant line.
