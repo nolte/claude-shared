@@ -340,27 +340,22 @@ def test_linked_issue_urls_of_the_same_repository_count():
 
 
 @pytest.mark.parametrize("value", [
-    "no matching specialist existed — a generalist handled it, so none was dispatched",
-    "`no matching specialist existed`; none dispatched",
-    "no matching specialist existed, so a specialist wasn't dispatched",
+    "no matching specialist existed — generalist handled",
+    "`no matching specialist exists` — generalist handled",
+    "“no matching specialist existed” (generalist handled)",
 ])
-def test_value_opening_with_the_no_match_note_passes(value):
+def test_no_match_form_variants_pass(value):
     risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
     assert check(TITLE, _remediation_body(risk), audit_issues=[588]) == []
 
 
-def test_no_match_note_must_open_the_value():
-    risk = ("- Originating source: #588\n- Dispatched specialist: A generalist handled it; "
-            "no matching specialist existed, so none was dispatched")
-    failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
-    assert any("open the value with" in f for f in failures)
-
-
 @pytest.mark.parametrize("value", [
+    "no matching specialist existed; code-security-reviewer matches but was not dispatched",
+    "no matching specialist existed, so none was dispatched",
     "code-security-reviewer; neither code-security-reviewer nor docs dispatched",
     "skill: spec, none but code-security-reviewer not dispatched",
 ])
-def test_named_form_rejects_any_bypass_wording(value):
+def test_any_not_dispatched_wording_fails_in_either_form(value):
     risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
     failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
     assert any("neither allowed form" in f for f in failures)

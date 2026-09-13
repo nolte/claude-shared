@@ -117,10 +117,10 @@ LINKED_ISSUE_RE = re.compile(r"(?<![\w/])#(\d{1,9})\b")
 TRACEABILITY_FIELDS = ("Originating source", "Dispatched specialist")
 NO_MATCH_NOTE = "no matching specialist existed"
 # A named specialist recorded as bypassed satisfies neither allowed form.
-# The two allowed forms are told apart structurally, not by reading clauses: a
-# value that opens with the no-match note is that form and isn't scanned further;
-# any other value names the specialist that produced the fix and so must not
-# record a dispatch as not having happened.
+# Neither allowed form needs to say that something wasn't dispatched: the
+# specialist form names who produced the fix, the no-match form says none existed.
+# Any such wording in the field fails, wherever it stands, so the check can't be
+# steered by clause order.
 BYPASS_RE = re.compile(
     r"\b(?:not|never|none|neither|wasn't|weren't)\b(?:[ \t]+[\w`:-]+){0,3}[ \t]+dispatched\b",
     re.IGNORECASE,
@@ -179,12 +179,11 @@ def check_traceability(risk: str | None, audit_issues: list[int]) -> list[str]:
                 '(spec/project/continuous-improvement/ §"Traceability in remediation artifacts")'
             )
     specialist = values["Dispatched specialist"]
-    opens_with_note = (specialist or "").lstrip("`*_\"' ").lower().startswith(NO_MATCH_NOTE)
-    if specialist and not opens_with_note and BYPASS_RE.search(specialist):
+    if specialist and BYPASS_RE.search(specialist):
         failures.append(
-            "`Dispatched specialist:` records a specialist as not dispatched, which is neither allowed form: "
-            "name the specialist that produced the fix, or open the value with "
-            "`no matching specialist existed` "
+            "`Dispatched specialist:` records something as not dispatched, which is neither allowed form: "
+            "name the specialist that produced the fix, or record that no matching specialist existed, and keep "
+            "any remark about a specialist that wasn't dispatched out of this field "
             '(spec/project/continuous-improvement/ §"Specialist dispatch")'
         )
     return failures
