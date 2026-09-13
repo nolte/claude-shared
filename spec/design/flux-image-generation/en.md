@@ -48,7 +48,7 @@ Readers: prompt authors and skill/agent authors targeting FLUX; operators tuning
 - **MUST** express unwanted attributes positively instead: `a clean, uncluttered background` rather than `no clutter`; `a clear blue sky` rather than `no clouds`.
 
 ### Parameters (hard invariants)
-- **MUST** set `guidance_scale = 0.0` for FLUX.1-schnell. This is mandatory for the distilled model; the commonly-cited `3.5` applies to FLUX.1-dev and is **wrong** for schnell. FLUX.1-dev uses guidance ≈ 3.5.
+- **MUST** set `guidance_scale = 0.0` for FLUX.1-schnell on every serving path that exposes the parameter; the Cloudflare endpoint exposes none. This is mandatory for the distilled model; the commonly-cited `3.5` applies to FLUX.1-dev and is **wrong** for schnell. FLUX.1-dev uses guidance ≈ 3.5.
 - **MUST** keep `steps` within the distilled range: schnell **1–4** (Cloudflare hard cap **8**; more steps add latency and cost without quality), dev 28–50.
 - **SHOULD** pass an explicit `seed` when reproducibility matters; an identical seed plus identical parameters and prompt reproduces the image.
 - **SHOULD** target 1024×1024 (~1 MP) or a familiar aspect ratio (1:1, 16:9, 9:16, 3:2), with pixel dimensions divisible by 16.
@@ -65,7 +65,7 @@ Readers: prompt authors and skill/agent authors targeting FLUX; operators tuning
 
 - [ ] A FLUX prompt under review reads as natural-language sentences, not a comma-tag list.
 - [ ] No prompt weights (`(word:1.3)`, `++`) appear in FLUX prompts.
-- [ ] A schnell call sets guidance to `0` and `steps ≤ 8`, and passes no `negative_prompt`.
+- [ ] A schnell call sets guidance to `0` where the serving path exposes a guidance parameter (the Cloudflare endpoint doesn't), keeps `steps ≤ 8`, and passes no `negative_prompt`.
 - [ ] In-image text is quoted in the prompt.
 - [ ] Unwanted attributes are phrased positively, not as negative prompts.
 - [ ] FLUX.1-dev isn't the default for commercial or published assets; its non-commercial licence is respected.

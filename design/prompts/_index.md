@@ -4,9 +4,13 @@ Brand assets for the portfolio's heraldic-animal identity (a sloth), authored pe
 `spec/design/graphic-prompt-authoring/`. All prompts share one visual register
 (`BRAND-STYLE-REF v1.1`, defined textually in the CHARACTER blocks) and the palette in
 `../brand/brand-vocabulary.md`, so every asset reads as a single brand family. The
-prompt documents are **self-contained** — the figure is fully described in text, so no
-external reference image is needed (and none is committed to the repo).
+prompt documents describe the figure fully in text and name `BRAND-STYLE-REF v1.1`,
+whose fixed reference image is the committed `design/brand/mascot/mascot-front-light.svg`.
 
+> **2026-09-13 prompt rewrite (#589):** every compiled prompt block states its colours
+> positively and measures at most 240 T5 tokens, below the FLUX 256-token cap; the committed renders
+> came from the earlier wording, so they are re-render-pending until the next generation run.
+>
 > **v1.1 figure change:** the canonical figure gained a **cool silver-grey signature
 > streak** down one side of the head (see one-line recall below). All prompt documents
 > carry the v1.1 wording. The **front mascot** and the **logo emblem** are rendered at
@@ -17,11 +21,11 @@ external reference image is needed (and none is committed to the repo).
 
 | Document                                  | Type           | Subject                              | Status (v1.1)        |
 | ----------------------------------------- | -------------- | ------------------------------------ | -------------------- |
-| `illustration_sloth-mascot.md`            | illustration   | Full sloth mascot (front, light/dark) | rendered + vectorised ✅ (seed 8505) |
+| `illustration_sloth-mascot.md`            | illustration   | Full sloth mascot (front, light/dark) | rendered + vectorised with the v1.0 figure (seed 8505) · v1.1 re-render pending ⬜ |
 | `illustration_sloth-mascot-turnaround.md` | model sheet    | All angles (front/side/back/3-4) + poses | prompt updated · re-render pending ⬜ |
 | `illustration_sloth-mascot-expressions.md`| expression sheet | 12 facial expressions + UI mapping  | prompt updated · re-render pending ⬜ |
 | `illustration_sloth-coding.md`            | scene          | Sloth coding at a laptop (tech-twist) | prompt updated · re-render pending ⬜ |
-| `logo_sloth-emblem.md`                    | logo           | Compact heraldic sloth mark          | rendered + vectorised ✅ (seed 8521/8505) |
+| `logo_sloth-emblem.md`                    | logo           | Compact heraldic sloth mark          | rendered + vectorised with the v1.0 figure (seed 8521/8505) · v1.1 re-render pending ⬜ |
 
 ## The canonical figure (one-line recall)
 
@@ -50,5 +54,5 @@ body is solid indigo, **no belly patch**.
 - Light vs. dark: re-pull per-mode tokens (indigo → soft cobalt-violet `#939FE3`,
   dark-indigo outline → warm-bone outline on charcoal) — never RGB inversion.
 - Two recurring FLUX.1-schnell traps, handled in every prompt: colour drift to brown
-  (assert indigo, negate brown) and a stray cream patch on the body (assert face-only).
+  (state the indigo positively) and a stray cream patch on the body (assert face-only).
 - All renders isolated on a flat background for a clean `png-to-transparent-svg` cutout.

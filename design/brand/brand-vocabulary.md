@@ -27,6 +27,21 @@ reinforcement). Agents and prompt documents read this file; they never invent hu
 foliage-friendly green that suits the sloth heraldic animal while staying
 spec-conformant. No fifth brand identity slot name is introduced.
 
+`brand-tertiary` is **omitted**: the mascot and logo need no third functional hue
+beyond `brand-accent` and `brand-complement`, and the optional +60° derivation would
+add a hue no published asset uses. Declare it with the §Ramp structure derivation rule
+when a first asset needs one.
+
+## Character detail colors
+
+Phrases the mascot and logo prompts use for small character features. They are
+illustration-only details, not brand identity slots.
+
+| Phrase                  | Use                               | OKLCH (canonical)       | Hex (derived) |
+| ----------------------- | --------------------------------- | ----------------------- | ------------- |
+| "coral-orange blush"    | Cheek blush on the mascot         | `oklch(0.71 0.14 42)`  | `#E8825A`     |
+| "dark warm eye brown"   | Mascot eyes                       | `oklch(0.30 0.03 48)`  | `#3A2A22`     |
+
 ## Neutrals (warm family, chroma ≤ 0.01)
 
 | Phrase                  | Role                              | OKLCH (canonical)       | Hex (derived) |

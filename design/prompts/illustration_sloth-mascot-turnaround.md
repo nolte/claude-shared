@@ -4,7 +4,7 @@
 > **Generator:** cloudflare flux-1-schnell
 > **Variants:** Light (default) — dark-mode swaps per `illustration_sloth-mascot.md`
 > **Target size:** 1024×1024px per view
-> **Style reference:** the per-view CHARACTER blocks below — self-contained, no external image needed
+> **Style reference:** `BRAND-STYLE-REF v1.1`, anchored by `design/brand/mascot/mascot-front-light.svg`, a v1.0-figure render that is re-render-pending for the v1.1 streak (see `../brand/brand-vocabulary.md` §Canonical style reference); the per-view CHARACTER blocks below carry it as text
 > **Seed:** pass an explicit `--seed` (Cloudflare honours it; the sidecar mis-logs it as None)
 
 ## Context
@@ -36,7 +36,7 @@ generate 2–4 seeds per rear view and discard any that put a pale patch on the 
 
 Two recurring traps, both handled in the prompts below:
 - **Colour drift to brown:** "sloth" pulls FLUX toward natural brown fur. Every prompt
-  asserts the indigo fur and negates brown. If a render is brown, re-roll the seed —
+  states the indigo fur positively, early in the colour description. If a render is brown, re-roll the seed —
   never weaken the colour wording.
 - **Pose vs. view:** poses (wave, hang, sleep…) work best in the **front** or
   **three-quarter** blocks; side/back read most cleanly as a calm standing/sitting body.
@@ -47,51 +47,51 @@ Two recurring traps, both handled in the prompts below:
 Append a POSE phrase (see Poses) after "near-symmetrical." for variants.
 
 ```
-modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
+flat kawaii vector cartoon, bold dark outlines, matte fills, one soft cel-shading step, centered on flat warm bone-white background.
 
-a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, like a blue-grey-violet plush toy, definitely NOT natural brown tan or beige sloth fur. Front view, facing the viewer, near-symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A single cool silver-grey streak of fur runs down one side of the head, from the tuft past the temple and cheek beside the mask — a grey lock, cool grey not cream, on one side only, the figure's only asymmetry. Two large round near-black eyes each with one small white highlight dot. A small rounded dark nose, below it a thin dark gently-curved closed smile. Two small round coral-orange blush patches one on each cheek. The cream is ONLY on the face mask; the whole body — chest, belly and sides — is solid deep blue-indigo with no belly patch. Compact rounded body, no visible neck, short arms at the sides. Exactly three pale cream elongated rounded claws on each hand and foot. Bold even-weight dark-indigo outline, small soft-grey oval shadow beneath.
+chibi cartoon sloth plush toy with deep blue-indigo fur. Front view, facing the viewer, near-symmetrical. Round head half the body height, small jagged tuft. Heart-shaped cream face mask with V-notch. Two broad dark navy diagonal stripes cross the eyes, pale between them. Cool silver-grey fur streak down one side of the head beside the mask, the only asymmetry. Round near-black eyes, white highlights, small dark nose, closed smile, coral-orange blush cheeks. Cream only on face mask, body solid indigo. Rounded body, short arms, three pale cream claws per hand and foot, bold dark-indigo outline, oval shadow.
 
-Fur colour deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
+Fur #4A529D, mask #F4F1EA, blush #E8825A, streak #AEB2BE.
 ```
 
 ## View 2 — Side profile (verified ✅)
 
 ```
-modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
+flat kawaii vector cartoon, bold dark outlines, matte fills, one soft cel-shading step, centered on flat warm bone-white background.
 
-a stylised chibi cartoon sloth plush-toy in STRICT SIDE PROFILE, seen exactly from the side facing left, in a gentle forward-leaning crouched pose — the round head held low at the front, the rounded back arching up and over toward the rear, as if slowly ambling on all fours. Deep blue-indigo fur (desaturated blue-violet, NOT brown). The cream warm-bone patch appears ONLY as a small mask on the face — the snout and the cheek around the eye; the ENTIRE body (back, side, belly and rear) is solid deep blue-indigo with NO cream or pale patch anywhere on the body. A single cool silver-grey streak of fur runs down the visible side of the head, from the tuft past the temple and cheek — a grey lock, cool grey not cream, the only marking on the indigo fur. One round near-black eye with a small white highlight, one bold dark diagonal stripe running back and down from the eye, a short snout pointing left, a small gentle closed smile, a small jagged tuft on top of the head. The near front leg reaches down to the ground showing three pale cream claws. Bold dark-indigo outline. The character rests on the ground with a soft-grey oval shadow beneath. Strict left-facing profile, only one side of the face visible, body fully indigo apart from the grey head streak.
+stylised chibi cartoon sloth plush toy in STRICT SIDE PROFILE facing left, in gentle forward-leaning crouch, head low at the front, back arching up toward the rear, ambling on all fours. Cream ONLY as small face mask on the snout around the eye; the ENTIRE body is solid deep blue-indigo. Cool silver-grey fur streak runs down the visible side of the head. One round near-black eye with white highlight, bold dark diagonal stripe back from the eye, short snout pointing left, small closed smile, small jagged head tuft. The near front leg shows three pale cream claws. Bold dark-indigo outline, resting on the ground over soft-grey oval shadow. Strict profile.
 
-Fur deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown). Cream warm bone white #F4F1EA ONLY on the face mask; the whole body is solid indigo with no belly patch.
+Fur #4A529D, cream mask #F4F1EA.
 ```
 
 ## View 3 — Back (verified ✅)
 
 ```
-modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
+flat kawaii vector cartoon, bold dark outlines, matte fills, one soft cel-shading step, centered on flat warm bone-white background.
 
-a stylised chibi cartoon sloth plush-toy seen STRICTLY FROM BEHIND, the camera directly behind it. We see only its back, covered ENTIRELY in solid deep blue-indigo fur (desaturated blue-violet indigo, NOT brown). The whole back is one continuous indigo surface whose only marking is a faint soft vertical seam of slightly darker indigo running down the middle. The cream face mask belongs to the FRONT and is invisible from behind; the body has no cream belly at all, so there is NO cream, pale or light patch anywhere on the back or the back of the head. The back of its round head carries a small jagged indigo tuft on top, two short arms rest at the sides, and only the tips of three pale cream claws peek out at each side. The cool silver-grey head streak belongs to the side of the head and stays hidden from directly behind; at most a faint sliver of it may show at one edge of the head. The face is completely hidden and NOT visible — no eyes, no mask, no nose, no mouth, and no cream patch on the back. Bold dark-indigo outline. The character rests flat on the ground with a small soft-grey oval shadow touching its base. Rear view only, not front-facing.
+stylised chibi cartoon sloth plush toy seen STRICTLY FROM BEHIND, facing away. We see only its back, covered ENTIRELY in solid deep blue-indigo fur. The back and back of the head form one uniformly indigo surface, marked only by a faint vertical seam of slightly darker indigo down the middle. The face, cream mask, eyes and mouth sit on the hidden front side. The round head carries small jagged indigo tuft, two short arms rest at the sides, tips of three pale cream claws peek out at each side. The cool silver-grey head streak stays on the side of the head, at most a faint sliver at one edge. Bold dark-indigo outline. The character rests flat on the ground with small soft-grey oval shadow at its base. Rear view only.
 
-Fur deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown).
+Fur #4A529D.
 ```
 
 ## View 4 — Three-quarter front (experimental ⚠️ — re-roll seeds)
 
 ```
-modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
+flat kawaii vector cartoon, bold dark outlines, matte fills, one soft cel-shading step, centered on flat warm bone-white background.
 
-a stylised chibi cartoon sloth plush-toy seen from a THREE-QUARTER FRONT angle, the head and body turned about 35 degrees to the left so we see mostly the front plus one side of the head and body. Deep blue-indigo fur (desaturated blue-violet, NOT brown). The heart-shaped cream face mask and the two navy diagonal eye-stripes are visible but foreshortened, the far eye smaller than the near eye, the snout angled to one side. A single cool silver-grey streak of fur runs down the near side of the head from the tuft past the cheek — a grey lock, cool grey not cream. Small jagged indigo tuft on top, two coral-orange cheeks, near-black eyes, three pale cream claws per limb. Compact rounded body, bold dark-indigo outline, soft-grey oval shadow beneath. Turned three-quarter view, not perfectly symmetrical.
+stylised chibi cartoon sloth plush toy seen from THREE-QUARTER FRONT angle, head and body turned about 35 degrees to the left, showing front plus one side. Deep blue-indigo fur throughout. Heart-shaped cream face mask and two navy diagonal eye-stripes are foreshortened, far eye smaller than near eye, snout angled to one side. Cool silver-grey fur streak runs down the near side of the head from the tuft past the cheek. Small jagged indigo tuft, two coral-orange cheeks, near-black eyes, three pale cream claws per limb. Compact rounded body, bold dark-indigo outline, soft-grey oval shadow. Turned three-quarter view with foreshortened, uneven sides.
 
-Fur deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A.
+Fur #4A529D, mask #F4F1EA, blush #E8825A.
 ```
 
 ## View 5 — Three-quarter back (experimental ⚠️ — re-roll seeds)
 
 ```
-modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
+flat kawaii vector cartoon, bold dark outlines, matte fills, one soft cel-shading step, centered on flat warm bone-white background.
 
-a stylised chibi cartoon sloth plush-toy seen from a THREE-QUARTER BACK angle, from behind and slightly to the left. Mostly we see its rounded deep blue-indigo back and the back of its round head with the small jagged tuft; the back itself is solid deep blue-indigo with NO central cream patch — only a thin sliver of the cream face-mask edge shows on the far side where the face turns away. Deep blue-indigo fur (desaturated blue-violet, NOT brown). A faint sliver of the cool silver-grey head streak may show on the near side of the head where it turns away; otherwise the back stays solid indigo. Short arms at the sides, three pale cream claws per limb. Bold dark-indigo outline, the character resting flat on the ground with a soft-grey oval shadow touching its base. Rear three-quarter view, face mostly hidden.
+stylised chibi cartoon sloth plush toy seen from a THREE-QUARTER BACK angle, from behind and slightly to the left. We see mostly its rounded back and the back of its round head with the small jagged tuft; the back is solid deep blue-indigo right across its centre, and only a thin sliver of the cream face-mask edge shows on the far side. Deep blue-indigo fur throughout. A faint sliver of the cool silver-grey head streak may show on the near side of the head. Short arms at the sides, three pale cream claws per limb. Bold dark-indigo outline, resting flat on the ground with a soft-grey oval shadow at its base. Rear three-quarter view, face mostly hidden.
 
-Fur deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown), mask warm bone white #F4F1EA.
+Fur #4A529D, mask #F4F1EA.
 ```
 
 ---
@@ -119,7 +119,7 @@ phrase right after "facing the viewer, near-symmetrical." (front) and adjust as 
 - `--seed` is honoured by Cloudflare (deterministic); the `.meta.json` sidecar mis-logs
   it as `None`, so track the seed via the filename.
 - The per-view CHARACTER blocks above are the canonical reference — compare each
-  render against them point by point (no external reference image is needed).
+  render against them point by point; the committed reference image `design/brand/mascot/mascot-front-light.svg` anchors the figure, though it predates the v1.1 streak.
 
 ## Avoidance (positive assertions — FLUX has no negative prompt)
 Encode every exclusion as what the image *is*: the artwork is **purely pictorial**

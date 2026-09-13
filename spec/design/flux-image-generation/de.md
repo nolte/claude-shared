@@ -48,7 +48,7 @@ Leser: Prompt-Autoren und Skill-/Agent-Autoren, die FLUX adressieren; Betreiber,
 - **MUSS [MUST]** unerwünschte Attribute stattdessen positiv ausdrücken — `a clean, uncluttered background` statt `no clutter`; `a clear blue sky` statt `no clouds`.
 
 ### Parameter (harte Invarianten)
-- **MUSS [MUST]** `guidance_scale = 0.0` für FLUX.1-schnell setzen. Das ist für das distillierte Modell zwingend; das häufig zitierte `3.5` gilt für FLUX.1-dev und ist für schnell **falsch**. FLUX.1-dev nutzt Guidance ≈ 3.5.
+- **MUSS [MUST]** `guidance_scale = 0.0` für FLUX.1-schnell setzen auf jedem Serving-Pfad, der den Parameter anbietet; der Cloudflare-Endpunkt bietet keinen an. Das ist für das distillierte Modell zwingend; das häufig zitierte `3.5` gilt für FLUX.1-dev und ist für schnell **falsch**. FLUX.1-dev nutzt Guidance ≈ 3.5.
 - **MUSS [MUST]** `steps` im distillierten Bereich halten: schnell **1–4** (Cloudflare-Hard-Cap **8**; mehr Steps fügen Latenz und Kosten ohne Qualität hinzu), dev 28–50.
 - **SOLLTE [SHOULD]** einen expliziten `seed` übergeben, wenn Reproduzierbarkeit zählt; ein identischer Seed plus identische Parameter und Prompt reproduziert das Bild.
 - **SOLLTE [SHOULD]** 1024×1024 (~1 MP) oder ein vertrautes Seitenverhältnis (1:1, 16:9, 9:16, 3:2) anvisieren, mit durch 16 teilbaren Pixel-Dimensionen.
@@ -65,7 +65,7 @@ Leser: Prompt-Autoren und Skill-/Agent-Autoren, die FLUX adressieren; Betreiber,
 
 - [ ] Ein geprüfter FLUX-Prompt liest sich als natürlichsprachige Sätze, nicht als Komma-Tag-Liste.
 - [ ] Keine Prompt-Gewichte (`(word:1.3)`, `++`) erscheinen in FLUX-Prompts.
-- [ ] Ein schnell-Aufruf setzt Guidance auf `0` und `steps ≤ 8` und übergibt keinen `negative_prompt`.
+- [ ] Ein schnell-Aufruf setzt Guidance auf `0`, wo der Serving-Pfad einen Guidance-Parameter anbietet (der Cloudflare-Endpunkt tut das nicht), hält `steps ≤ 8` ein und übergibt keinen `negative_prompt`.
 - [ ] Bild-Text ist im Prompt in Anführungszeichen gesetzt.
 - [ ] Unerwünschte Attribute sind positiv formuliert, nicht als Negative Prompts.
 - [ ] FLUX.1-dev ist nicht der Default für kommerzielle oder veröffentlichte Assets; seine non-commercial-Lizenz wird respektiert.
