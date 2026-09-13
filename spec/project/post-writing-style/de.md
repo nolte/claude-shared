@@ -140,9 +140,9 @@ Dies ist die **geschlossene Liste** von Wörtern und Phrasen, die **DÜRFEN NICH
 - `cutting-edge` (lösche; oder nenne die spezifische Version / Fähigkeit)
 - `innovative` (lösche; beschreibe die Neuheit konkret)
 - `showcase`, `showcasing` (verwende „shows" oder nenne, was gezeigt wird)
-- `foster` (verwende „support" oder „help" oder nenne den Mechanismus)
+- `foster`, `fosters`, `fostering` (verwende „support" oder „help" oder nenne den Mechanismus)
 - `tapestry`, `realm`, `landscape`, `synergy`, `testament`, `underpinnings` (lösche; formuliere den Satz um)
-- `It's worth noting that …`, `It's important to note that …`, `In conclusion`, `In summary` (lösche den Wrapper; behalte den eigentlichen Punkt)
+- `It's worth noting that …`, `It's important to note that …`, `It is important to note that …`, `In conclusion`, `In summary` (lösche den Wrapper; behalte den eigentlichen Punkt)
 - `In today's fast-paced …`, `In an era of …`, `As we navigate the …` (lösche; öffne mit der konkreten Behauptung)
 - `Whether you're a … or a …` (drop den audience-schmeichelnden Wrapper)
 
@@ -153,7 +153,7 @@ Dies ist die **geschlossene Liste** von Wörtern und Phrasen, die **DÜRFEN NICH
 
 #### LLM-Betonungs-Tics
 
-- Sätze, die mit „**It's** [adjective] **that** …" oder „**It's** [adjective] **to** …" beginnen—umformen zu einer direkten Behauptung.
+- Sätze, die mit „**It's** [adjective] **that** …" oder „**It's** oder **It is** [adjective] **to** …" beginnen—umformen zu einer direkten Behauptung.
 - Sätze, die mit „… and that's a **good thing** / **bad thing**." enden—umformen zur spezifischen Begründung.
 - Kontrast-Rahmungen wie „**It's not just** X, **it's** Y" oder „This **isn't about** X. **It's about** Y."—umformen zu einer direkten Aussage über Y.
 

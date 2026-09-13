@@ -144,9 +144,9 @@ This is the **closed list** of words and phrases that **MUST NOT** appear in the
 - `cutting-edge` (delete; or name the specific version / capability)
 - `innovative` (delete; describe the novelty concretely)
 - `showcase`, `showcasing` (use `shows`, or name what's shown)
-- `foster` (use `support` or `help`, or name the mechanism)
+- `foster`, `fosters`, `fostering` (use `support` or `help`, or name the mechanism)
 - `tapestry`, `realm`, `landscape`, `synergy`, `testament`, `underpinnings` (delete; rewrite the sentence)
-- `It's worth noting that…`, `It's important to note that…`, `In conclusion`, `In summary` (delete the wrapper; keep the actual point)
+- `It's worth noting that…`, `It's important to note that…`, `It is important to note that…`, `In conclusion`, `In summary` (delete the wrapper; keep the actual point)
 - `In today's fast-paced …`, `In an era of …`, `As we navigate the …` (delete; open on the concrete claim)
 - `Whether you're a … or a …` (drop the audience-flattering wrapper)
 
@@ -157,7 +157,7 @@ This is the **closed list** of words and phrases that **MUST NOT** appear in the
 
 #### LLM-emphasis tics
 
-- Sentences that begin "**It's** [adjective] **that**…" or "**It's** [adjective] **to**…"—restructure into a direct claim.
+- Sentences that begin "**It's** [adjective] **that**…" or "**It's** or **It is** [adjective] **to**…"—restructure into a direct claim.
 - Sentences that end with "…and that's a **good thing** / **bad thing**."—restructure into the specific reason.
 - Contrast framings such as "**It's not just** X, **it's** Y" or "This **isn't about** X. **It's about** Y."—state Y directly.
 
