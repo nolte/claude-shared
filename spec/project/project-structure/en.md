@@ -60,7 +60,7 @@ Versioning policy and the Draft→Published release mechanics are governed by `s
 - **MUST** keep every label `description` in `.github/settings.yml` (and in any `commons-settings.yml` it inherits from) at **100 characters or fewer** (counted as UTF-16 code units, matching JavaScript `String.length` and GitHub's API enforcement). GitHub's labels API rejects longer descriptions with HTTP 422 `description is too long (maximum is 100 characters)`, at which point the Probot Settings App silently skips that one label and the rest of the sync run completes without surfacing the failure. Observed on 2026-05-01 in `nolte/gh-plumbing`: a 117-character description on the `release` label kept it from being created in the live repo while the other 19 labels of the same sync run landed successfully
 - **MUST** include a `.github/release-drafter.yml` extending `nolte/gh-plumbing:.github/commons-release-drafter.yml` to feed the release-notes drafter (the accompanying workflow is specified by the branching-model spec)
 - **SHOULD** include a `.github/boring-cyborg.yml` extending `nolte/gh-plumbing:.github/commons-boring-cyborg.yml` for newcomer onboarding, automatic labeling, and reviewer assignment via the [Boring Cyborg app](https://probot.github.io/apps/boring-cyborg/)
-- **SHOULD** include a `.github/stale.yml` extending `nolte/gh-plumbing:.github/commons-stale.yml` to manage inactive issues and pull requests via the [Stale app](https://probot.github.io/apps/stale/)
+- A `.github/stale.yml` isn't required: `nolte/gh-plumbing` deleted the `commons-stale.yml` it extended on 2021-12-26 (`11deb9e`), so the file can only point at a missing source. Automatic handling of inactive issues and pull requests is a per-repository choice outside this spec (#626)
 - Issue templates under `.github/` are governed by `spec/project/github-issue-templates/`; this spec only surfaces them and never restates their shape
 - The pull-request template `.github/pull_request_template.md` is governed by `spec/project/pull-request-workflow/`; this spec only surfaces it and never restates its shape
 - **MAY** override individual keys from the inherited `commons-*.yml` files when a repository's needs diverge from the portfolio defaults; keep such overrides narrow and explain them alongside the change
@@ -144,7 +144,7 @@ These rules apply to every `requirements.txt` and `requirements-dev.txt` written
 - [ ] `.github/settings.yml` is present and extends `nolte/gh-plumbing:.github/commons-settings.yml` (or the equivalent short form)
 - [ ] Every label `description` field in `.github/settings.yml` and the inherited `commons-settings.yml` is 100 characters or fewer
 - [ ] `.github/release-drafter.yml` is present and extends `nolte/gh-plumbing:.github/commons-release-drafter.yml`
-- [ ] `.github/boring-cyborg.yml` and `.github/stale.yml` are present and extend their respective `nolte/gh-plumbing` commons files
+- [ ] `.github/boring-cyborg.yml` is present and extends `nolte/gh-plumbing:.github/commons-boring-cyborg.yml`
 - [ ] `Taskfile.yml` or `Taskfile.yaml` is present and `task --list` enumerates test, lint, and docs targets
 - [ ] `docs/` and `mkdocs.yml` exist, and `mkdocs build` completes without errors
 - [ ] `spec/` exists at the repository root
