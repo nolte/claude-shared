@@ -128,7 +128,7 @@ Required status checks on `develop` may include providers that aren't GitHub Act
 - [ ] `gh run list --status failure --branch develop --limit 20` shows no failed run older than two business days that isn't either (a) superseded by a green run on a later SHA or (b) covered by an open `fix/` PR
 - [ ] `gh run list --status failure --branch main --limit 20` shows no failed run of a release-flow workflow without either a resolution commit on `develop` or an open tracking Issue
 - [ ] No workflow file in `.github/workflows/` contains `continue-on-error: true` on a step or job that belongs to the required-checks set declared in `.github/settings.yml`
-- [ ] Every `uses: nolte/gh-plumbing/.github/workflows/...` reference in `.github/workflows/` resolves to a release tag (matches `@v[0-9]+`), not to a branch name
+- [ ] Every `uses: nolte/gh-plumbing/.github/workflows/...` reference in `.github/workflows/` resolves to a release: a tag ref matching `@v[0-9]+`, or a commit digest whose trailing comment names that release tag (the stricter pin `github-actions-best-practices` asks for), never a branch name
 - [ ] For the last 10 PRs that touch `.github/workflows/` or pin bumps of `nolte/gh-plumbing`, every one was merged through the standard PR flow (squash-merge, required checks green, no admin override)
 - [ ] The repository's Renovate configuration doesn't automerge `nolte/gh-plumbing` tag bumps—either no automerge rule applies to that dependency, or the rule explicitly excludes `nolte/gh-plumbing`
 - [ ] If the repository declares any third-party required status check for `develop`, its removal or deactivation is reflected in `.github/settings.yml`, not only in the provider's UI

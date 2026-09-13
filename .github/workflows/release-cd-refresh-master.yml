@@ -42,6 +42,13 @@ concurrency:
 jobs:
   refresh_presentation_branch:
     uses: nolte/gh-plumbing/.github/workflows/reusable-release-cd-refresh-master.yml@d51e51ec3ec17ceea09fe9eb40ac00857b6fa1be # v2.0.0
+    # Open gaps, recorded per spec/project/workflow-health/ (#586):
+    # - The reusable resets `main` to the release tag, but `main` blocks force
+    #   pushes, so the reset can't land; waits on nolte/gh-plumbing#414. Until then
+    #   `main` HEAD stays the untagged merge commit left by the older merge step.
+    # - GITHUB_TOKEN can't write under .github/workflows/, and refresh diffs do
+    #   touch workflow files; the reusable's `app-id` path would carry
+    #   `workflows: write`, and waits on the portfolio App of nolte/gh-plumbing#330.
     secrets:
       token: ${{ secrets.GITHUB_TOKEN }}
     with:

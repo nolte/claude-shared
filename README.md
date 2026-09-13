@@ -1,10 +1,11 @@
 # `claude-shared`
 
 [![CI](https://github.com/nolte/claude-shared/actions/workflows/ci.yml/badge.svg?branch=develop)](https://github.com/nolte/claude-shared/actions/workflows/ci.yml)
+[![PR lint](https://github.com/nolte/claude-shared/actions/workflows/pr-lint.yml/badge.svg)](https://github.com/nolte/claude-shared/actions/workflows/pr-lint.yml)
 
 A shared foundation of [Claude Code](https://docs.claude.com/en/docs/claude-code) agents and skills, intended to be reused across multiple software development projects.
 
-The `ci` workflow bundles the four required status checks that gate `develop`: `lint`, `test`, `docs`, and `links`. A green badge means all four passed on the latest `develop` commit.
+Five required status checks gate `develop`: the `ci` workflow bundles `lint`, `test`, `docs`, and `links`, and the `pr-lint` workflow runs `pr-lint` on every pull request. A green `CI` badge means the first four passed on the latest `develop` commit; the `pr-lint` badge shows its latest pull-request run.
 
 ## Purpose
 

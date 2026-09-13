@@ -103,6 +103,7 @@ plugins:
             Skills-Konzept: Skills Concept
             Agents-Konzept: Agents Concept
             Entwicklungszyklus: Development Lifecycle
+            Release-Auslieferung: Release delivery
             Testautomatisierung: Test Automation
             Bildgenerierung: Image Generation
             Entwicklung: Development
@@ -192,6 +193,7 @@ nav:
       - Spec: de/guides/spec.md
       - Agents-Konzept: de/guides/agents-concept.md
       - Entwicklungszyklus: de/guides/development-lifecycle.md
+      - Release-Auslieferung: de/guides/release-delivery.md
       - Testautomatisierung: de/guides/test-automation.md
       - Bildgenerierung: de/guides/image-generation.md
   - References:
