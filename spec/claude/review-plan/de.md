@@ -116,7 +116,7 @@ Eine eng umrissene Menge von **Editorial- und Dokumentations-Audit-Specs** seria
 ### Bezug zu anderen Specs
 
 - **MUSS [MUST]** aus jeder Review-Spec referenziert werden, die einen Plan produziert (`skill-review`, `agent-review` und jeder künftige Review-Typ) — die Review-Spec besitzt die Kriterien, diese Spec besitzt die Artefakt-Form
-- **MUSS NICHT [MUST NOT]** als Ausgabe eines **datierten periodischen oder akkumulierenden Audit-Records** verwendet werden. Die folgenden Records nutzen die Vier-Sektionen-Struktur und das Severity-Vokabular dieser Spec weiter, folgen aber ihrer eigenen datierten Dateinamens- und Nicht-Wegwerf-Lebenszyklus-Konvention; die No-Timestamp- und Ein-Plan-pro-Ziel-Regeln dieser Spec gelten **nicht** für sie, und sie sollen nicht bei Verarbeitungs-Abschluss gelöscht werden:
+- **MUSS NICHT [MUST NOT]** als Ausgabe eines **datierten periodischen oder akkumulierenden Audit-Records** verwendet werden. Ein solcher Record folgt Dateiname, Struktur und Lebenszyklus, die seine eigene Spec festlegt, und nutzt die Vier-Sektionen-Struktur und das Severity-Vokabular dieser Spec überall dort, wo die eigene Spec keine eigene Struktur festlegt. Die Frontmatter-, No-Timestamp- und Ein-Plan-pro-Ziel-Regeln dieser Spec gelten für ihn **nicht**, und ebenso wenig ihre Lösch-bei-Abschluss-Regel: Ein Record bleibt nach der Bearbeitung auf der Platte, sofern seine eigene Spec keinen Abschluss durch Entfernen festlegt, wie `skills-agents-sweep` es tut:
   - `spec-drift-audit` — `.audits/spec-drift/<YYYY>-Q<n>.md`
   - `portfolio-inflight-management` — `.audits/portfolio-inflight/<YYYY-MM-DD>.md`
   - `portfolio-management` — `.audits/portfolio/<YYYY-MM-DD>.md`
@@ -124,6 +124,11 @@ Eine eng umrissene Menge von **Editorial- und Dokumentations-Audit-Specs** seria
   - `lektorat` — `.audits/lektorat/<YYYY-MM-DD-HHMM>/`
   - `lektorat-auto-revise` — `.audits/lektorat-auto-revise/<YYYY-MM-DD-HHMM>/`
   - `diagram-opportunity` — `.audits/diagram-opportunity/<YYYY-MM-DD-HHMM>/`
+  - `spec-readiness` — `.audits/spec-readiness/<YYYY>-Q<n>.md`
+  - `dependency-audit` — `.audits/dependency-audit/dependencies-<YYYY>-Q<n>.md`
+  - `license-check` — `.audits/license-check/license-<YYYY-MM-DD>.md`
+  - `continuous-improvement` — `.audits/continuous-improvement/<YYYY>-Q<n>.md`
+  - `skills-agents-sweep` — `.audits/skills-agents-sweep/<date>-<slug>.md`, gemäß der eigenen Spec durch Entfernen abgeschlossen
 - **SOLLTE [SHOULD]**, wenn ein Review-Agent (z. B. `audience-review`) einen Report in der Hauptkonversation emittiert, den strukturierten Plan trotzdem unter `.audits/<review-type>/<target>.md` persistieren, damit der Verarbeitungsvertrag unabhängig davon konsistent ist, wer das Review gefahren hat
 - **SOLLTE [SHOULD]** `spec/project/parallel-working-copies/` §Audit-Artefakte in mehreren Worktrees konsultieren, wenn der Plan in einem Worktree statt im primären Checkout erzeugt wird; die Per-(Review-Typ, Ziel)-Eindeutigkeitsregel aus dieser Spec ist jeweils nur innerhalb eines Working Tree beobachtbar, und die worktree-lokalen Commit-, Transfer- und Cleanup-Regeln leben dort
 - **SOLLTE [SHOULD]** in Repositories, die direkte Pushes nach `develop` verbieten, den Plan und den Fix, den er beschreibt, im selben Feature-Branch-PR landen lassen — Erzeugen, Abhaken, `## Processing log`-Aktualisierungen und der Lösch-Commit alle in einem Diff — gemäß `spec/project/parallel-working-copies/` §Audit-Artefakte; ein eigenständiger früherer PR ist Reviews vorbehalten, die vor jeder Fix-Abgrenzung laufen
@@ -131,7 +136,7 @@ Eine eng umrissene Menge von **Editorial- und Dokumentations-Audit-Specs** seria
 ## Akzeptanzkriterien
 <!-- Testbare, abhakbare Bedingungen. Reviewer müssen pro Punkt "erfüllt / nicht erfüllt" markieren können. -->
 - [ ] `.audits/` existiert im Repository und wird von Git getrackt (nicht in `.gitignore`)
-- [ ] Jede Plan-Datei unter `.audits/` parst als gültiges Markdown mit YAML-Frontmatter, das `review-type`, `target`, `target-kind`, `specs-applied`, `repo-revision`, `created`, `status` enthält
+- [ ] Jede Plan-Datei unter `.audits/` parst als gültiges Markdown mit YAML-Frontmatter, das `review-type`, `target`, `target-kind`, `specs-applied`, `repo-revision`, `created`, `status` enthält; ein unter §Bezug zu anderen Specs gelisteter datierter Record ist kein Plan und folgt stattdessen seiner eigenen Spec
 - [ ] Jede Plan-Datei enthält die vier Pflicht-Abschnitte (`## Scope`, `## Summary`, `## Findings`, `## Processing log`) mit genau diesen englischen Überschriften
 - [ ] Jedes Finding in einem Plan verwendet die vier-Zeilen-Struktur (einleitender Satz + `Where` / `Fix` / `Verify`) und zitiert eine Spec-Anforderung im eckigen Klammerpräfix
 - [ ] Keine Plan-Datei existiert mit offenem `- [ ]` `Critical` und `status: complete`

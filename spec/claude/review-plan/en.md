@@ -116,7 +116,7 @@ A bounded set of **editorial and documentation-audit specs** serialise their fin
 ### Relationship to other specs
 
 - **MUST** reference this spec from every review spec that produces a plan (`skill-review`, `agent-review`, and any future review type)—the review spec owns the criteria, this spec owns the artifact shape
-- **MUST NOT** be used as the output of a **dated periodic or accumulating audit record**. The records below reuse this spec's four-section structure and severity vocabulary but follow their own dated-filename and non-disposable lifecycle; this spec's no-timestamp and one-plan-per-target rules **don't** apply to them, and they aren't meant to be deleted on processing completion:
+- **MUST NOT** be used as the output of a **dated periodic or accumulating audit record**. Such a record follows the filename, structure, and lifecycle its owning spec defines, and reuses this spec's four-section structure and severity vocabulary wherever the owning spec defines no structure of its own. This spec's frontmatter, no-timestamp, and one-plan-per-target rules **don't** apply to it, and this spec's deletion-on-completion rule doesn't either: a record stays on disk after processing unless its owning spec defines a close-by-removal step, as `skills-agents-sweep` does:
   - `spec-drift-audit`: `.audits/spec-drift/<YYYY>-Q<n>.md`
   - `portfolio-inflight-management`: `.audits/portfolio-inflight/<YYYY-MM-DD>.md`
   - `portfolio-management`: `.audits/portfolio/<YYYY-MM-DD>.md`
@@ -124,6 +124,11 @@ A bounded set of **editorial and documentation-audit specs** serialise their fin
   - `lektorat`: `.audits/lektorat/<YYYY-MM-DD-HHMM>/`
   - `lektorat-auto-revise`: `.audits/lektorat-auto-revise/<YYYY-MM-DD-HHMM>/`
   - `diagram-opportunity`: `.audits/diagram-opportunity/<YYYY-MM-DD-HHMM>/`
+  - `spec-readiness`: `.audits/spec-readiness/<YYYY>-Q<n>.md`
+  - `dependency-audit`: `.audits/dependency-audit/dependencies-<YYYY>-Q<n>.md`
+  - `license-check`: `.audits/license-check/license-<YYYY-MM-DD>.md`
+  - `continuous-improvement`: `.audits/continuous-improvement/<YYYY>-Q<n>.md`
+  - `skills-agents-sweep`: `.audits/skills-agents-sweep/<date>-<slug>.md`, closed by removal per its own spec
 - **SHOULD**, when a review agent (for example `audience-review`) emits a report in the main conversation, still persist the structured plan to `.audits/<review-type>/<target>.md` so the processing contract is consistent regardless of who ran the review
 - **SHOULD** consult `spec/project/parallel-working-copies/` §Audit artefacts in multiple worktrees when the plan is produced inside a worktree rather than the primary checkout; the per-(review-type, target) uniqueness rule from this spec is only observable inside one working tree at a time, and the worktree-local commit, transfer, and cleanup rules live there
 - **SHOULD**, in repositories that forbid direct pushes to `develop`, land the plan and the fix it describes on the same feature-branch PR—create, check-off, `## Processing log` updates, and the deletion commit all in one diff—per `spec/project/parallel-working-copies/` §Audit artefacts; a standalone earlier PR is reserved for reviews run before any fix is scoped
@@ -131,7 +136,7 @@ A bounded set of **editorial and documentation-audit specs** serialise their fin
 ## Acceptance Criteria
 <!-- Testable, checkable conditions. A reviewer should be able to mark each as done/not done. -->
 - [ ] `.audits/` exists in the repository and is tracked by git (not listed in `.gitignore`)
-- [ ] Every plan file under `.audits/` parses as valid markdown with YAML frontmatter containing `review-type`, `target`, `target-kind`, `specs-applied`, `repo-revision`, `created`, `status`
+- [ ] Every plan file under `.audits/` parses as valid markdown with YAML frontmatter containing `review-type`, `target`, `target-kind`, `specs-applied`, `repo-revision`, `created`, `status`; a dated record listed under §Relationship to other specs isn't a plan and follows its owning spec instead
 - [ ] Every plan file contains the four required sections (`## Scope`, `## Summary`, `## Findings`, `## Processing log`) with those exact English headings
 - [ ] Every finding in a plan uses the four-line structure (opening statement + `Where` / `Fix` / `Verify`) and cites a spec requirement in the bracketed prefix
 - [ ] No plan file exists with an open `- [ ]` `Critical` item and `status: complete`
