@@ -117,8 +117,10 @@ LINKED_ISSUE_RE = re.compile(r"(?<![\w/])#(\d{1,9})\b")
 TRACEABILITY_FIELDS = ("Originating source", "Dispatched specialist")
 NO_MATCH_NOTE = "no matching specialist existed"
 # A named specialist recorded as bypassed satisfies neither allowed form.
+# Only `none`/`neither` after the no-match note name nobody; any other match
+# (`X was not dispatched`) records a bypassed specialist.
 BYPASS_RE = re.compile(
-    r"\b(?:not|never|none|neither|wasn't|weren't)\b(?:[ \t]+[\w`:-]+){0,3}[ \t]+dispatched\b",
+    r"\b(?P<word>not|never|none|neither|wasn't|weren't)\b(?:[ \t]+[\w`:-]+){0,3}[ \t]+dispatched\b",
     re.IGNORECASE,
 )
 
@@ -175,9 +177,12 @@ def check_traceability(risk: str | None, audit_issues: list[int]) -> list[str]:
                 '(spec/project/continuous-improvement/ §"Traceability in remediation artifacts")'
             )
     specialist = values["Dispatched specialist"]
-    bypass = BYPASS_RE.search(specialist or "")
     note_at = (specialist or "").lower().find(NO_MATCH_NOTE)
-    if bypass and not (0 <= note_at < bypass.start()):
+    bypassed = [
+        m for m in BYPASS_RE.finditer(specialist or "")
+        if not (m.group("word").lower() in ("none", "neither") and 0 <= note_at < m.start())
+    ]
+    if bypassed:
         failures.append(
             "`Dispatched specialist:` records a specialist as not dispatched, which is neither allowed form: "
             "name the specialist that produced the fix, or record that no matching specialist existed before "

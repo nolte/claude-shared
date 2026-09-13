@@ -346,3 +346,10 @@ def test_linked_issue_urls_of_the_same_repository_count():
 def test_no_match_note_before_the_bypass_wording_passes(value):
     risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
     assert check(TITLE, _remediation_body(risk), audit_issues=[588]) == []
+
+
+def test_named_bypass_after_the_no_match_note_still_fails():
+    risk = ("- Originating source: #588\n- Dispatched specialist: no matching specialist existed for the docs part; "
+            "code-security-reviewer was not dispatched")
+    failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
+    assert any("neither allowed form" in f for f in failures)
