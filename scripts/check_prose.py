@@ -39,17 +39,17 @@ import sys
 import tempfile
 from pathlib import Path
 
-# Dependency bots whose pull-request titles skip the Vale check, keyed by the author
-# login GitHub puts in the event payload. Every entry needs a reason (spec §PR
-# preconditions). The body checks in nolte/gh-plumbing's reusable-pr-lint.yaml
-# carry the same list; a new bot goes into both. Matching is exact, never on the account type, so an unlisted
-# bot stays subject to every rule.
+# Dependency bots whose pull-request titles skip the Vale check, keyed by the
+# author login GitHub puts in the event payload. Every entry needs a reason (spec
+# §PR preconditions). The body checks in nolte/gh-plumbing's reusable-pr-lint.yaml
+# carry the same logins for the body; a new bot goes into both. Matching is exact,
+# never on the account type, so an unlisted bot stays subject to every rule.
 EXEMPT_BOT_AUTHORS: dict[str, str] = {
     "renovate[bot]": (
-        "Renovate writes its own body from a fixed template: a dependency table, the "
-        "upstream release notes and its rebase controls. It can't supply the human "
-        "reasoning Summary and Testing exist for, so the five sections would only ever "
-        "hold filler. Its title already uses Conventional Commits and is still checked."
+        "Renovate's titles embed package identifiers verbatim (for example "
+        "`update dependency mkdocs-material to v9.7.7`), which the Vale term and "
+        "spelling rules would flag as prose errors. Its title form is still checked "
+        "as Conventional Commits by the body check in gh-plumbing."
     ),
 }
 
