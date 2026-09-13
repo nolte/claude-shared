@@ -45,6 +45,10 @@ branches:
           - pr-lint # tier: pull-request structure — scripts/check_pr_body.py (five sections, and the class sweep on `fix`)
       enforce_admins: true
       restrictions: null
+  # Release tags `v*` are protected by the repository ruleset
+  # `release-tags-immutable` (deletion, update, and non-fast-forward blocked),
+  # created through the rulesets API on 2026-09-13 (#586); the settings app
+  # manages branches only. See docs/*/guides/release-delivery.md.
   - name: main
     protection:
       required_pull_request_reviews: null
