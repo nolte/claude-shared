@@ -154,7 +154,7 @@ tasks:
       # Same install set as .github/workflows/audit-gates.yml, cyclonedx-bom included:
       # the gate fails on stale identifiers, so a local SBOM that omits the
       # generator's own dependencies would report CI-valid entries as stale.
-      - uv pip install --python .sbom-venv -r docs/requirements.txt -r evals/requirements-dev.txt -r requirements-dev.txt cyclonedx-bom
+      - uv pip install --python .sbom-venv -r docs/requirements.lock.txt -r evals/requirements-dev.lock.txt -r requirements-dev.lock.txt cyclonedx-bom==7.3.1
       - .sbom-venv/bin/cyclonedx-py environment .sbom-venv -o sbom.cdx.json
       - rm -rf .sbom-venv
       - 'echo "CycloneDX SBOM (with licenses) written to sbom.cdx.json"'

@@ -20,6 +20,10 @@ concurrency:
 jobs:
   pr-lint:
     runs-on: ubuntu-latest
+    # pull-requests: read lists the changed files for the spec-anchor rule (#585).
+    permissions:
+      contents: read
+      pull-requests: read
     env:
       # Lock-step with the lint job in ci.yml; the prose-style spec requires local
       # and CI Vale runs to produce identical alerts.
@@ -35,11 +39,19 @@ jobs:
       # command, where a crafted title would be executed. The author login is
       # GitHub-controlled but travels the same way; the checker exempts only the
       # exact logins on its dependency-bot allowlist from the body checks.
+      # The file names reach the checker through a file, never through the shell.
+      - name: List the pull request's changed files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename' > "${RUNNER_TEMP}/changed-files.txt"
       - name: Lint the pull-request title and body
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_HEAD_REF: ${{ github.head_ref }}
+          CHANGED_FILES_FILE: ${{ runner.temp }}/changed-files.txt
         run: python3 scripts/check_pr_body.py
       - name: Install Vale
         run: |

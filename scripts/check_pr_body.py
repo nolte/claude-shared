@@ -82,7 +82,33 @@ def field_value(content: str, field: str) -> str | None:
     return m.group("value").strip()
 
 
-def check(title: str, body: str, author: str | None = None) -> list[str]:
+# spec/project/spec-driven-development/ Requirement 2 (#585, revisit trigger (a) fired
+# with #561 and #571): a pull request touching implementation paths names its spec.
+REFS_SPEC_RE = re.compile(r"^[ \t]*(?:[-*][ \t]+)?Refs[ \t]+`?spec/[a-z0-9-]+/[a-z0-9-]+/?", re.MULTILINE | re.IGNORECASE)
+
+
+def check_spec_anchor(pr_type: str | None, linked_issues: str | None, changed_files: list[str] | None,
+                      head_ref: str | None) -> list[str]:
+    """Require a `Refs spec/<topic>/<slug>/` line when implementation paths change.
+
+    Exempt: no file list (a local run), a spec-only change, and an `exp/` branch;
+    dependency bots return earlier. A purely cosmetic edit names its anchor like any
+    other: `Refs spec/project/prose-style/`.
+    """
+    if changed_files is None or (head_ref or "").startswith("exp/"):
+        return []
+    implementation = [f for f in changed_files if f and not f.startswith("spec/")]
+    if not implementation or REFS_SPEC_RE.search(strip_comments(linked_issues or "")):
+        return []
+    return [
+        f"the pull request changes {len(implementation)} implementation path(s) (for example "
+        f"`{implementation[0]}`) but `## Linked issues` carries no `Refs spec/<topic>/<slug>/` line "
+        "(spec/project/spec-driven-development/ Requirement 2; a purely cosmetic edit names `Refs spec/project/prose-style/`)"
+    ]
+
+
+def check(title: str, body: str, author: str | None = None, changed_files: list[str] | None = None,
+          head_ref: str | None = None) -> list[str]:
     failures: list[str] = []
 
     title_match = TITLE_RE.match(title.strip())
@@ -123,6 +149,8 @@ def check(title: str, body: str, author: str | None = None) -> list[str]:
                 + " → ".join(REQUIRED_SECTIONS)
                 + " (spec §PR description structure)"
             )
+
+    failures += check_spec_anchor(pr_type, by_name.get("Linked issues"), changed_files, head_ref)
 
     for name in NON_EMPTY_SECTIONS:
         if name in by_name and is_empty(by_name[name]):
@@ -171,6 +199,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--title", default=None, help="PR title; defaults to $PR_TITLE")
     parser.add_argument("--body-file", default=None, help="file holding the PR body; defaults to $PR_BODY")
     parser.add_argument("--author", default=None, help="PR author login from the event payload; defaults to $PR_AUTHOR")
+    parser.add_argument("--changed-files-file", default=None, help="file listing changed paths, one per line; defaults to $CHANGED_FILES_FILE")
     args = parser.parse_args(argv)
 
     title = args.title if args.title is not None else os.environ.get("PR_TITLE")
@@ -185,7 +214,12 @@ def main(argv: list[str] | None = None) -> int:
         print("usage: provide --title/--body-file or set PR_TITLE/PR_BODY", file=sys.stderr)
         return 2
 
-    failures = check(title, body, author)
+    files_path = args.changed_files_file or os.environ.get("CHANGED_FILES_FILE")
+    changed_files = None
+    if files_path:
+        with open(files_path, encoding="utf-8") as handle:
+            changed_files = [line.strip() for line in handle if line.strip()]
+    failures = check(title, body, author, changed_files, os.environ.get("PR_HEAD_REF"))
     if failures:
         print(f"PR body lint: {len(failures)} failure(s)\n")
         for failure in failures:

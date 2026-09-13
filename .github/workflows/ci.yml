@@ -61,6 +61,19 @@ env:
 # documented CI↔local equivalence the spec calls for; do not collapse the jobs
 # into a single `task check` step, which would erase the granular required-check
 # names and per-job dependency isolation above.
+# Stage sequence per spec/project/continuous-integration/ §A, with each job's
+# precondition. Every job runs its own checkout (full history only where a check
+# needs it) and provision step from the committed lock files, so checkout and
+# provision precede every later stage inside each job:
+#   static analysis  -> `lint` (pre-commit, Vale, section references)
+#   test             -> `test` (validators and pytest); runs beside `lint` as a
+#                       separate reported unit, since neither consumes the other's output
+#   package          -> omitted: the plugins ship as a git tag, not a built artifact
+#   supply-chain scan-> `audit-gates.yml` (`cve-scan`, `license-drift`) on manifest
+#                       and lock-file changes; code-security review is an
+#                       out-of-pipeline quarterly practice, see audit-cadence-reminder.yml
+# `docs` and `links` are the documentation build and link validation categories
+# of spec/project/quality-gate/, outside §A's code stages.
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -77,10 +90,12 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.14"
-      - run: pip install pre-commit
+      - run: pip install -r requirements-dev.lock.txt
       - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
         with:
-          version: 3.x
+          # Exact Task release, the one local runs are verified against
+          # (spec/project/continuous-integration/ §C: no floating toolchain refs).
+          version: 3.52.0
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Install Vale
         run: |
@@ -103,10 +118,12 @@ jobs:
           python-version: "3.14"
       # Deterministic eval-harness unit tests only; behavioural evals stay opt-in
       # (RUN_EVALS=1) and never run in CI, so no ANTHROPIC_API_KEY is needed here.
-      - run: pip install -r evals/requirements-dev.txt
+      - run: pip install -r evals/requirements-dev.lock.txt
       - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
         with:
-          version: 3.x
+          # Exact Task release, the one local runs are verified against
+          # (spec/project/continuous-integration/ §C: no floating toolchain refs).
+          version: 3.52.0
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - run: task --yes test
 
@@ -117,10 +134,12 @@ jobs:
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.14"
-      - run: pip install -r docs/requirements.txt
+      - run: pip install -r docs/requirements.lock.txt
       - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
         with:
-          version: 3.x
+          # Exact Task release, the one local runs are verified against
+          # (spec/project/continuous-integration/ §C: no floating toolchain refs).
+          version: 3.52.0
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       # `task docs` runs `mkdocs build --strict`, which fires the gen_catalog.py
       # on_pre_build hook (mkdocs.yml `hooks:`) and so regenerates the catalog
@@ -160,10 +179,12 @@ jobs:
       # `docs:catalog` dependency before scanning, so the offline link checker
       # sees the generated catalog pages. gen_catalog.py needs PyYAML; install
       # the pinned docs toolchain (single source of truth, Renovate-managed).
-      - run: pip install -r docs/requirements.txt
+      - run: pip install -r docs/requirements.lock.txt
       - uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
         with:
-          version: 3.x
+          # Exact Task release, the one local runs are verified against
+          # (spec/project/continuous-integration/ §C: no floating toolchain refs).
+          version: 3.52.0
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - run: task --yes check:links
 
