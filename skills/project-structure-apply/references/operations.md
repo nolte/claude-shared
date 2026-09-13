@@ -25,7 +25,7 @@ Report the findings grouped by spec area: Top-level files, Claude integration, C
 
 ## 2. GitHub App installation check
 
-The Probot-backed YAML files (`.github/settings.yml`, `.github/boring-cyborg.yml`, `.github/stale.yml`) only take effect once the matching GitHub Apps are installed on the repository. The same is true for the Renovate App: a `renovate.json5` config is inert without the Renovate App installed on the repo. Release Drafter runs as a GitHub Action per the branching-model spec, so it's **not** part of this check.
+The Probot-backed YAML files (`.github/settings.yml`, `.github/boring-cyborg.yml`) only take effect once the matching GitHub Apps are installed on the repository. The same is true for the Renovate App: a `renovate.json5` config is inert without the Renovate App installed on the repo. Release Drafter runs as a GitHub Action per the branching-model spec, so it's **not** part of this check.
 
 Apps to verify:
 
@@ -33,7 +33,6 @@ Apps to verify:
 |---|---|---|
 | `settings` | `.github/settings.yml` | `https://github.com/apps/settings` |
 | `boring-cyborg` | `.github/boring-cyborg.yml` | `https://github.com/apps/boring-cyborg` |
-| `stale` | `.github/stale.yml` | `https://github.com/apps/stale` |
 | `renovate` | `renovate.json5` (or `renovate.json`) | `https://github.com/apps/renovate` |
 
 Verify installation via `gh api`: cross-reference the slugs above against the installations accessible to the authenticated user or owning organization:
@@ -71,7 +70,6 @@ For each **missing** or **drift** item the audit surfaced, confirm with the user
 - **`.github/settings.yml`**: write with `_extends: nolte/gh-plumbing:.github/commons-settings.yml` plus only the repo-specific keys (`name`, `description`, `homepage`, `topics`). Pre-fill values from `git remote get-url origin` and `gh repo view --json ...` when available.
 - **`.github/release-drafter.yml`**: `_extends: nolte/gh-plumbing:.github/commons-release-drafter.yml`, nothing else unless the user explicitly requests overrides.
 - **`.github/boring-cyborg.yml`**: `_extends: nolte/gh-plumbing:.github/commons-boring-cyborg.yml`.
-- **`.github/stale.yml`**: `_extends: nolte/gh-plumbing:.github/commons-stale.yml`.
 - **`.github/workflows/`**: if empty, scaffold at minimum a `ci.yml` that invokes Taskfile targets (`task lint`, `task test`, `task docs`), adapted from `spec/project/taskfile/templates/ci.yml` rather than composed from prose: each target reported as its own CI unit per `spec/project/continuous-integration/` §A, and a concurrency group per `spec/project/github-actions-best-practices/` §F on the leg whose runs interfere. Don't invent language-specific pipelines beyond what Taskfile already exposes. When the repo's `Taskfile.yml` carries an `includes:` block pointing at `nolte/taskfiles` (see the Taskfile item below), the workflow **must** set `TASK_X_REMOTE_TASKFILES: "1"` **and** invoke each target as `task --yes <target>` — the flag enables remote resolution, `--yes` accepts the trust prompt that a runner has no TTY to answer. Missing either one fails every task in CI.
 - **Release-management workflows**: when any of the four required workflows from `spec/project/branching-model/` §Required GitHub workflows is missing, scaffold it as a thin caller of the matching reusable workflow in `nolte/gh-plumbing`, pinned to the current release tag (ask the user for the tag, or fall back to `@develop` and flag it):
   - `.github/workflows/release-drafter.yml` → `on: push: branches: [develop]`, calls `nolte/gh-plumbing/.github/workflows/reusable-release-drafter.yml@<tag>` with `permissions: contents: write, pull-requests: write`

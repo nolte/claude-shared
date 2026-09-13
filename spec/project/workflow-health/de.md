@@ -90,7 +90,7 @@ Die eigentliche Implementierungsarbeit einer Workflow-Behebung — das Bearbeite
 - **DARF NICHT [MUST NOT]** den PR-Schritt für einen Version-Bump von `nolte/gh-plumbing`-Referenzen überspringen, nur weil „es nur eine Tag-Änderung ist"; das Gate existiert genau, um diese Klasse von Brüchen abzufangen
 
 ### Verfügbarkeit der Probot-Apps
-- **SOLLTE [SHOULD]** vor der Zuweisung eines Fehlers in `release-drafter.yml`, Settings-Sync oder Label-Sync an den Code prüfen, dass die zugrunde liegenden Probot-Apps (`settings`, `release-drafter`, `boring-cyborg`, `stale`) weiterhin im Repository installiert sind — das `project-structure-apply`-Audit prüft dies
+- **SOLLTE [SHOULD]** vor der Zuweisung eines Fehlers in `release-drafter.yml`, Settings-Sync oder Label-Sync an den Code prüfen, dass die zugrunde liegenden Probot-Apps (`settings`, `release-drafter`, `boring-cyborg`) weiterhin im Repository installiert sind — das `project-structure-apply`-Audit prüft dies
 - **MUSS [MUST]** „Probot-App deinstalliert" als von einem Code-Defect unterschiedliche Konfigurations-Drift behandeln; die Behebung ist eine erneute Autorisierung der App, nicht eine Änderung am Repository-Code
 
 ### Umgang mit Flakes

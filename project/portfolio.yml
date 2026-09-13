@@ -123,7 +123,7 @@ capabilities:
 # inherited unless explicitly overridden below. claude-shared inherits the
 # full global stack (mkdocs, renovate, github-actions, task, vale, pre-commit,
 # markdownlint, gh-plumbing, release-drafter, probot-settings, boring-cyborg,
-# stale-bot, claude-code, claude-code-plugin) and adds Python plus the two
+# claude-code, claude-code-plugin) and adds Python plus the two
 # deploy targets specific to this repository.
 tech_stack:
   additions:
