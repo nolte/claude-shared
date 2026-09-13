@@ -1,1 +1,3 @@
-_extends: nolte/gh-plumbing:.github/commons-boring-cyborg.yml@v1.1.15
+# No `@<ref>` suffix: the Probot config loader rejects it and the app would load
+# nothing from this file (see the same note in .github/settings.yml).
+_extends: nolte/gh-plumbing:.github/commons-boring-cyborg.yml
