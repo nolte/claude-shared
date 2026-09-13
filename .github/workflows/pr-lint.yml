@@ -118,3 +118,16 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: python3 scripts/check_prose.py --title
+
+  # #577: the body checks move to the reusable workflow in nolte/gh-plumbing,
+  # pinned by commit SHA (no release needed for this caller). This job runs next
+  # to the local one until `.github/settings.yml` requires `pr-body / PR Lint`;
+  # the follow-up removes the local body check and keeps the Vale title check.
+  pr-body:
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
+    uses: nolte/gh-plumbing/.github/workflows/reusable-pr-lint.yaml@f6d74ea585cb3ba5a864e046c23155ebb5b96769 # develop, nolte/gh-plumbing#418
+    with:
+      spec-anchor: true
