@@ -139,8 +139,8 @@ notes: |
   The portfolio standardises on MkDocs for documentation, Renovate as the
   dependency bot, GitHub Actions for continuous integration, Task as the
   build orchestrator, and nolte/gh-plumbing as the source of reusable CI/CD
-  workflows. Release-drafter plus the Probot apps (settings, boring-cyborg,
-  stale) provide repo-governance automation across the portfolio. Claude
+  workflows. Release-drafter plus the Probot apps (settings, boring-cyborg)
+  provide repo-governance automation across the portfolio. Claude
   Code is the host runtime for the skills and agents this plugin ships;
   claude-code-plugin captures the plugin-shaped repository layout used by
   every nolte/* repository that distributes Claude Code capabilities.
