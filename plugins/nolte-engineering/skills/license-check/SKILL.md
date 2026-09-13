@@ -146,6 +146,7 @@ Git revision: <sha>
 - Read `examples/01-permissive-python-pass.md` when running the first check on a permissive project that should pass cleanly.
 - Read `examples/02-transitive-mpl-review.md` when a transitive dependency carries weak (file-level) copyleft and must be routed to `review`.
 - Read `examples/03-conveyed-gpl-deny.md` when a conveyed component carries strong copyleft and the gate must `deny` it.
+- Read `examples/04-compatibility-directions.md` when a verdict depends on which way a combination runs: Apache-2.0 into GPLv3, GPLv3 into Apache-2.0, Apache-2.0 into GPLv2, or a BSD-4-Clause dependency.
 
 ## Resumability
 

@@ -258,6 +258,7 @@ The `Lektorat` layer **MUST** distinguish exactly three operations. The names be
         }
       }
     },
+    "dimensions_evaluated": ["D1", "D2", "D3", "D4", "D5", "D6"],
     "inventory_findings": [
       {
         "kind": "vale-unavailable|language-pipeline-missing|language-ambiguous|content-mode-missing|audience-artefact-missing",
@@ -286,6 +287,7 @@ The `Lektorat` layer **MUST** distinguish exactly three operations. The names be
   ```
 
 - **MUST** populate `pipeline_metadata.<language>` for every language present in `language_summary` whose pipeline could be resolved; the three sub-fields `tool`, `version`, and `configured_path` (the D3 spelling/grammar pipeline) are all required and load-bearing for the reproducibility Acceptance Criterion. Placeholder values are forbidden: when one of the three can't be resolved (for example the binary is missing), the corresponding `pipeline_metadata.<language>` block is **omitted** and the scan condition is recorded in `inventory_findings` instead (see below)
+- **MUST** list in `dimensions_evaluated` the dimension IDs (`D1` to `D6`) the run actually evaluated, so a run that skipped a dimension, for example D5 when the audience artefact is missing, says so instead of reading as clean
 - **MUST** also populate the `readability` sub-block of `pipeline_metadata.<language>` per [`spec/project/readability-lix/`](../readability-lix/en.md) §Reproducibility, populating `library`, `library_version`, `tokenizer`, `tokenizer_version`, `long_word_threshold` (always `6`), and, for German only, `decompounding`, using the **same** LIX library and tokenizer for both languages so EN and DE values stay comparable
 - **MUST** surface every infrastructure-level scan condition in the `inventory_findings` array, **never** in `findings`. The `findings` array carries only editorial findings classified under the closed severity set (`critical` / `warning` / `suggestion`) of §Severity classification; `inventory_findings` carries pre-evaluation conditions that prevented part of the scan from completing. The `kind` field is a closed enumeration with exactly these five values:
   - `vale-unavailable`: Vale binary not callable but English files are in scope; D3/D4 EN mechanics are skipped. `file: null`.
@@ -329,13 +331,13 @@ The spec deliberately leaves the exact implementation shape **open**, but **SHOU
 
 ## Acceptance Criteria
 
-- [ ] `spec/.spec-config.yml` languages list is read by every `Lektorat` operation and drives the file-to-language resolution under §Language handling
+- [ ] Every `Lektorat` operation resolves each file's language through the §Language handling priority chain, with `spec/.spec-config.yml` `canonical_language` as the repository default, and never from text content
 - [ ] An `audit` invocation against a representative bilingual repository produces a JSON report whose shape matches §Outputs verbatim (top-level keys, finding-object keys, severity values from the closed set)
 - [ ] An `audit` invocation produces a Markdown summary alongside the JSON, sorted by severity (`critical` first), and writes both to `.audits/lektorat/<YYYY-MM-DD-HHMM>/`
 - [ ] An `audit` invocation completes without any operator interaction (suitable for CI / pre-commit / sprint-review gates)
 - [ ] Re-running the same `audit` invocation produces a byte-identical JSON `findings` array (modulo `ran_at`) on an unchanged repository
-- [ ] An English file produces at least one D1 finding when Flesch Reading Ease drops below its content-mode corridor, with the metric value and corridor included in the finding
-- [ ] A German file produces at least one D1 finding when WSTF exceeds its content-mode corridor, with the metric value and corridor included in the finding
+- [ ] An English file produces at least one D1 finding when its LIX exceeds its content-mode corridor, with the metric value and corridor included in the finding; Flesch Reading Ease and FKGL may be reported alongside but don't change that finding
+- [ ] A German file produces at least one D1 finding when its LIX exceeds its content-mode corridor, with the metric value and corridor included in the finding; WSTF may be reported alongside but doesn't change that finding
 - [ ] A page whose `content_mode` is `meta` **doesn't** produce a D1 finding (the meta exemption is honoured)
 - [ ] A top-level Markdown file without a frontmatter `content_mode` key (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) is treated as `content_mode: meta` for D1 only; the file **doesn't** generate a `content-mode-missing` inventory finding
 - [ ] A file with an unexplained abbreviation produces at least one D2 finding naming the abbreviation, the absent expansion, and the line of first occurrence
@@ -358,8 +360,8 @@ The spec deliberately leaves the exact implementation shape **open**, but **SHOU
 - [ ] A `revise` or `patch` invocation preserves the order and count of every list item, table row, and checklist entry; lexical edits within a single item are allowed, structural cross-item edits aren't
 - [ ] A file under `spec/` is rejected by every `Lektorat` operation with a single-sentence message naming the `spec` skill as the authoritative path
 - [ ] A file under `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, or `agents/*.md` is rejected by every `Lektorat` operation
-- [ ] An audience-fit finding (D5) names exactly one audience ID from the audience artefact and references the artefact path
-- [ ] When the audience artefact is missing, every `Lektorat` operation stops with a message pointing at the `audience-identify` skill, and **MUST NOT** invent audiences
+- [ ] An audience-fit finding (D5) lists in its `audience` array the audience IDs it was judged against, each resolving in the audience artefact; a missing artefact surfaces as the `audience-artefact-missing` inventory finding instead of a D5 finding
+- [ ] When the audience artefact is missing, every `Lektorat` operation records the `audience-artefact-missing` inventory finding pointing at the `audience-identify` skill, skips D5 for the whole scope, evaluates the remaining dimensions, and **MUST NOT** invent audiences
 - [ ] Every Markdown link's `[text](target)` is byte-identical across every operation that doesn't explicitly produce a finding against that link
 - [ ] Every heading-text change surfaced by a `patch` or `revise` operation announces the slug change to the operator before the write is approved
 - [ ] A German file containing a calque (a phrase mirroring an English idiom, for example *„Was die Kosten kaufen, ist Eigentum."*) produces a D6 finding that quotes the offending span and names the `calque` pattern

@@ -258,6 +258,7 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
         }
       }
     },
+    "dimensions_evaluated": ["D1", "D2", "D3", "D4", "D5", "D6"],
     "inventory_findings": [
       {
         "kind": "vale-unavailable|language-pipeline-missing|language-ambiguous|content-mode-missing|audience-artefact-missing",
@@ -286,6 +287,7 @@ Die `Lektorat`-Ebene **MUSS [MUST]** genau drei Operationen unterscheiden. Die N
   ```
 
 - **MUSS [MUST]** `pipeline_metadata.<sprache>` für jede in `language_summary` vertretene Sprache befüllen, deren Pipeline aufgelöst werden konnte; die drei Unterfelder `tool`, `version` und `configured_path` (die D3-Rechtschreib-/Grammatik-Pipeline) sind sämtlich erforderlich und lasttragend für das Reproduzierbarkeits-Akzeptanzkriterium. Platzhalter-Werte sind verboten — wenn eines der drei nicht auflösbar ist (z. B. die Binary fehlt), wird der entsprechende `pipeline_metadata.<sprache>`-Block **weggelassen** und der Scan-Zustand stattdessen in `inventory_findings` aufgezeichnet (siehe unten)
+- **MUSS [MUST]** in `dimensions_evaluated` die Dimensions-IDs (`D1` bis `D6`) aufführen, die der Lauf tatsächlich ausgewertet hat, sodass ein Lauf, der eine Dimension übersprungen hat, etwa D5 bei fehlendem Audience-Artefakt, das ausweist, statt sauber zu wirken
 - **MUSS [MUST]** außerdem den `readability`-Sub-Block von `pipeline_metadata.<sprache>` gemäß [`spec/project/readability-lix/`](../readability-lix/de.md) §Reproduzierbarkeit befüllen — `library`, `library_version`, `tokenizer`, `tokenizer_version`, `long_word_threshold` (immer `6`) und, nur für Deutsch, `decompounding` — unter Verwendung **derselben** LIX-Library und desselben Tokenizers für beide Sprachen, damit EN- und DE-Werte vergleichbar bleiben
 - **MUSS [MUST]** jede Infrastruktur-Level-Scan-Bedingung im Array `inventory_findings` surfacen, **niemals** in `findings`. Das `findings`-Array trägt ausschließlich redaktionelle Befunde, klassifiziert nach der closed-Severity-Menge (`critical` / `warning` / `suggestion`) aus §Severity-Klassifikation; `inventory_findings` trägt Vorbedingungen, die einen Teil des Scans verhindert haben. Das `kind`-Feld ist eine geschlossene Aufzählung mit genau diesen fünf Werten:
   - `vale-unavailable`: Vale-Binary nicht aufrufbar, obwohl englische Dateien im Scope sind; D3/D4-EN-Mechanik wird übersprungen. `file: null`.
@@ -329,13 +331,13 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 
 ## Akzeptanzkriterien
 
-- [ ] Die `languages`-Liste aus `spec/.spec-config.yml` wird von jeder `Lektorat`-Operation gelesen und treibt die Datei-zu-Sprache-Auflösung gemäß §Sprach-Handhabung
+- [ ] Jede `Lektorat`-Operation löst die Sprache jeder Datei über die Prioritätskette aus §Sprach-Handhabung auf, mit `canonical_language` aus `spec/.spec-config.yml` als Repository-Default, und nie aus dem Textinhalt
 - [ ] Ein `audit`-Aufruf gegen ein repräsentatives bilinguales Repository produziert einen JSON-Report, dessen Form §Ausgaben wörtlich entspricht (Top-Level-Keys, Finding-Objekt-Keys, Severity-Werte aus der geschlossenen Menge)
 - [ ] Ein `audit`-Aufruf produziert neben dem JSON eine Markdown-Zusammenfassung, sortiert nach Severity (`critical` zuerst), und schreibt beides unter `.audits/lektorat/<YYYY-MM-DD-HHMM>/`
 - [ ] Ein `audit`-Aufruf läuft ohne Operator-Interaktion durch (CI / pre-commit / sprint-review-tauglich)
 - [ ] Ein Re-Run desselben `audit`-Aufrufs erzeugt auf einem unveränderten Repository ein byte-identisches `findings`-Array (modulo `ran_at`)
-- [ ] Eine englische Datei produziert mindestens einen D1-Befund, wenn Flesch Reading Ease unter ihren content-mode-Korridor fällt — mit Metrik-Wert und Korridor im Befund
-- [ ] Eine deutsche Datei produziert mindestens einen D1-Befund, wenn WSTF ihren content-mode-Korridor überschreitet — mit Metrik-Wert und Korridor im Befund
+- [ ] Eine englische Datei produziert mindestens einen D1-Befund, wenn ihr LIX ihren content-mode-Korridor überschreitet — mit Metrik-Wert und Korridor im Befund; Flesch Reading Ease und FKGL dürfen daneben berichtet werden, ändern diesen Befund aber nicht
+- [ ] Eine deutsche Datei produziert mindestens einen D1-Befund, wenn ihr LIX ihren content-mode-Korridor überschreitet — mit Metrik-Wert und Korridor im Befund; WSTF darf daneben berichtet werden, ändert diesen Befund aber nicht
 - [ ] Eine Seite, deren `content_mode` `meta` ist, produziert **keinen** D1-Befund (die Meta-Ausnahme wird beachtet)
 - [ ] Eine Top-Level-Markdown-Datei ohne `content_mode`-Frontmatter-Key (`README.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `ONBOARDING.md`) wird ausschließlich für D1 als `content_mode: meta` behandelt; die Datei erzeugt **keinen** `content-mode-missing`-Inventory-Befund
 - [ ] Eine Datei mit einer ungeklärten Abkürzung produziert mindestens einen D2-Befund, der die Abkürzung, die fehlende Auflösung und die Zeile der Erstnennung benennt
@@ -358,8 +360,8 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 - [ ] Ein `revise`- oder `patch`-Aufruf erhält Reihenfolge und Anzahl jedes Listenpunkts, jeder Tabellenzeile und jedes Checklisten­eintrags; lexikalische Edits innerhalb eines Eintrags sind erlaubt, strukturelle Cross-Eintrag-Edits nicht
 - [ ] Eine Datei unter `spec/` wird von jeder `Lektorat`-Operation mit einer Ein-Satz-Meldung abgelehnt, die die `spec`-Skill als autoritativen Pfad nennt
 - [ ] Eine Datei unter `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**` oder `agents/*.md` wird von jeder `Lektorat`-Operation abgelehnt
-- [ ] Ein Zielgruppen-Fit-Befund (D5) nennt genau eine Audience-ID aus dem Audience-Artefakt und referenziert den Artefakt-Pfad
-- [ ] Wenn das Audience-Artefakt fehlt, stoppt jede `Lektorat`-Operation mit einer Meldung, die auf die `audience-identify`-Skill zeigt, und **DARF NICHT [MUST NOT]** Audiences erfinden
+- [ ] Ein Zielgruppen-Fit-Befund (D5) führt in seinem `audience`-Array die Audience-IDs, gegen die er beurteilt wurde, und jede davon löst im Audience-Artefakt auf; ein fehlendes Artefakt erscheint als Inventar-Befund `audience-artefact-missing` statt als D5-Befund
+- [ ] Wenn das Audience-Artefakt fehlt, hält jede `Lektorat`-Operation den Inventar-Befund `audience-artefact-missing` mit Verweis auf die `audience-identify`-Skill fest, überspringt D5 für den ganzen Scope, wertet die übrigen Dimensionen aus und **DARF NICHT [MUST NOT]** Audiences erfinden
 - [ ] Jeder Markdown-Link `[text](target)` ist byte-identisch über jede Operation hinweg, die nicht explizit einen Befund gegen diesen Link produziert
 - [ ] Jede Heading-Text-Änderung, die ein `patch`- oder `revise`-Lauf surfaced, kündigt dem Operator den Slug-Wechsel vor der Write-Zustimmung an
 - [ ] Eine deutsche Datei mit einem Calque (eine Wendung, die eine englische Redewendung spiegelt, zum Beispiel „Was die Kosten kaufen, ist Eigentum.") produziert einen D6-Befund, der die verstoßende Passage zitiert und das `calque`-Muster benennt

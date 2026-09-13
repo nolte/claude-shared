@@ -406,6 +406,8 @@ readership once the capability it describes is implemented, verified, and merged
   confirmation; the orchestrator never fires a mutating step without a recorded "yes"
 
 ## Acceptance Criteria
+
+These criteria apply to runs started after the transient pre-analysis rule became normative with #489. The five earlier recoverable runs (#204, #371, #376, #378, #416) predate it; the 2026-Q4 spec-drift audit records them as a historical exception, and the current skill already enforces the classification confirmation, the requirements gate, touched files per package, and the removal commit these criteria check.
 - [ ] For an acquired issue, the pre-analysis artifact at
   `.audits/issue-orchestrate/<issue-number>/analysis.md` existed on the run's feature
   branch at dispatch time—recoverable after the fact with

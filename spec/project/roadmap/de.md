@@ -56,7 +56,7 @@ Das nolte-Portfolio besteht überwiegend aus Hobby-Projekten. Sprint-Kadenz, ver
   - `fine`: ein Absatz, der die für den Nutzer sichtbare Änderung beschreibt, plus eine Checkliste der vorgesehenen Features (nur Titel — das tatsächliche Feature-Schema lebt in der Spec `feature`);
   - `coarse`: ein bis zwei Sätze, die die Absicht beschreiben;
   - `backlog`: ein einziger Satz reicht.
-- **DARF NICHT [MUST NOT]** Aufwandsschätzungen, Daten oder Zuweisungsfelder tragen; diese gehören in die konsumierenden Sprint- und Feature-Artefakte.
+- **DARF NICHT [MUST NOT]** Aufwandsschätzungen, geplante Daten oder Zuweisungsfelder im YAML-Block eines Items tragen; diese gehören in die konsumierenden Sprint- und Feature-Artefakte.
 
 Konkrete Form eines `fine`-Items in `roadmap.md`:
 
@@ -120,8 +120,8 @@ End users authenticate via the new SSO provider in under three steps; the legacy
 - [ ] Die `outcomes`-Liste jedes Roadmap-Items löst auf: jeder Eintrag matcht ein in `goals.md` definiertes `O-<n>`; Lints schlagen sonst fehl.
 - [ ] Kein Roadmap-Item, dessen `target_sprint` auf den aktuellen oder nächsten Sprint zeigt, trägt einen anderen `detail`-Wert als `fine`; `roadmap-refine` meldet bei Bruch dieser Invariante eine Verletzung.
 - [ ] Kein `proposed`-Item geht direkt nach `done`; die einzigen erlaubten Übergänge sind `proposed → active → done`, `proposed → cancelled` und `active → cancelled`.
-- [ ] Keine Aufwandsschätzungen, Kalenderdaten oder Zuweisungsfelder erscheinen an Roadmap-Items; Lints flaggen jedes unbekannte Frontmatter-Schlüsselwort.
-- [ ] Kein Roadmap-Item trägt `target_sprint`, das auf einen `closed`- oder `cancelled`-Sprint zeigt; Lints schlagen, sobald ein Sprint terminal wird, ohne dass `sprint-plan` noch auf ihn zeigende Items geclearet oder neu zugewiesen hat.
+- [ ] Keine Aufwandsschätzungen, geplanten Kalenderdaten oder Zuweisungsfelder erscheinen im YAML-Block eines Roadmap-Items (eine datierte Notiz über bereits Geschehenes, etwa eine Lebenszyklus-Abweichung, ist Historie, keine Planung); Lints flaggen jedes unbekannte Frontmatter-Schlüsselwort.
+- [ ] Kein Roadmap-Item trägt `target_sprint`, das auf einen `closed`- oder `cancelled`-Sprint zeigt, der endete, ohne das Item aufzunehmen; Lints schlagen, sobald ein Sprint terminal wird, ohne dass `sprint-plan` noch auf ihn zeigende Items geclearet oder neu zugewiesen hat.
 - [ ] Kein Roadmap-Item ist im Status `done`, solange ein abgeleitetes Feature in einem nicht-terminalen Status ist (`draft`, `ready`, `in_progress`); beim Sprint-Abschluss durch `sprint-review` durchgesetzt.
 - [ ] Kein Roadmap-Item geht aus einem Sprint mit `status: cancelled` auf `status: done` über, selbst wenn alle Features des Items einzeln `done` sind; die offenen Features des Items müssen in einen neuen Sprint umgehängt werden, und das Item bleibt `active`, bis dieser Nachfolge-Sprint `closed` erreicht.
 - [ ] `audience-identification` wird vor der Outcome-Erstellung auf einem frischen Repo ohne Audience-Artefakt ausgelöst; Outcomes werden niemals inline erfunden.
