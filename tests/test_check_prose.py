@@ -69,6 +69,11 @@ def test_mask_release_notes_masks_every_machine_token_in_an_entry():
         assert token in masked
 
 
+def test_mask_release_notes_keeps_a_human_entry_checked():
+    masked = check_prose.mask_release_notes("* fix(ci): update pr checks (#12) @nolte")
+    assert "update pr checks" in masked and "`pr`" not in masked
+
+
 def test_mask_release_notes_leaves_prose_lines_alone():
     body = "## Changes\n\nA curated sentence about ci and pr checks.\n"
     assert check_prose.mask_release_notes(body) == body
@@ -130,6 +135,18 @@ def test_missing_vale_is_an_error_not_a_pass(monkeypatch):
     monkeypatch.setenv("PR_TITLE", "fix(ci): anything")
     monkeypatch.delenv("PR_AUTHOR", raising=False)
     assert check_prose.main(["--title"]) == 2
+
+
+def test_vale_runtime_error_json_is_an_error_not_a_pass(monkeypatch, vale_on_path):
+    monkeypatch.setenv("PR_TITLE", "fix(ci): anything")
+    monkeypatch.delenv("PR_AUTHOR", raising=False)
+    # The shape Vale 3.15.2 prints with --output=JSON when it can't start.
+    runtime_error = json.dumps({"Line": 0, "Path": ".vale.ini", "Text": "style not found", "Code": "E201", "Span": 1})
+    assert check_prose.main(["--title"], runner=fake_vale(stdout=runtime_error, returncode=2)) == 2
+
+
+def test_missing_release_notes_file_is_an_error_not_a_traceback(tmp_path, vale_on_path):
+    assert check_prose.main(["--file", str(tmp_path / "absent.md")], runner=fake_vale()) == 2
 
 
 def test_unparseable_vale_output_is_an_error_not_a_pass(monkeypatch, vale_on_path):

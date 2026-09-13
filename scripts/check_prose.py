@@ -12,15 +12,17 @@ verbatim. Any error-level alert exits 1. Pull-request descriptions are not
 checked: release-drafter never publishes them.
 
 --release-notes TAG (read through `gh`) or --file PATH checks a release-notes
-body. Each release-drafter entry has its prefix, pull-request reference, author
-mention and dependency name masked. Findings are printed and the exit code is
-always 0, because the verification is advisory and must never block a publish.
+body. Each release-drafter entry has its prefix, pull-request reference and
+author mention masked, and a dependency bot's entry also its package name.
+Findings are printed and never fail the run, because the verification is
+advisory and must never block a publish.
 
 The text reaches Vale only as a temporary Markdown file written inside the
 repository, so .vale.ini's `[*.md]` section applies and no shell ever sees it.
 
 Exit codes: 0 pass or advisory report, 1 title alerts, 2 usage error or a check
-that could not run.
+that could not run (no Vale, a Vale runtime error, no `gh` access, an unreadable
+file). A check that could not run never reads as a pass.
 """
 
 from __future__ import annotations
@@ -45,6 +47,8 @@ ENTRY_PREFIX = re.compile(r"^(\s*[*-]\s+)([a-z][a-z-]*(?:\([^()]*\))?!?:)")
 PR_REFERENCE = re.compile(r"\(#\d+\)")
 # `@[renovate[bot]](https://...)` nests one bracket pair inside the link text.
 AUTHOR = re.compile(r"@\[(?:[^\[\]]|\[[^\]]*\])*\]\([^)]*\)|@[A-Za-z0-9-]+(?:\[bot\])?")
+# Only a bot entry embeds a package identifier; a human title keeps every word checked.
+BOT_AUTHOR = re.compile(r"@\[?[A-Za-z0-9-]+\[bot\]")
 DEPENDENCY = re.compile(
     r"\b((?:update|pin|bump)(?: pre-commit hook| dependency| dependencies| action| module| image)?) "
     r"([A-Za-z0-9@/._-]+)"
@@ -70,7 +74,8 @@ def mask_release_notes(body: str) -> str:
             line = ENTRY_PREFIX.sub(lambda m: m.group(1) + _code(m.group(2)), line, count=1)
             line = PR_REFERENCE.sub(lambda m: _code(m.group(0)), line)
             line = AUTHOR.sub(lambda m: _code(m.group(0)), line)
-            line = DEPENDENCY.sub(lambda m: f"{m.group(1)} {_code(m.group(2))}", line)
+            if BOT_AUTHOR.search(line):
+                line = DEPENDENCY.sub(lambda m: f"{m.group(1)} {_code(m.group(2))}", line)
         lines.append(line)
     return "\n".join(lines) + "\n"
 
@@ -91,8 +96,13 @@ def run_vale(text: str, runner=subprocess.run) -> list[dict]:
         except json.JSONDecodeError as exc:
             detail = (proc.stdout or proc.stderr or "").strip()[:300]
             raise CheckUnavailable(f"vale exited {proc.returncode} without a JSON report: {detail}") from exc
-        if not isinstance(data, dict):
-            raise CheckUnavailable(f"vale returned an unexpected report: {str(data)[:200]}")
+        # A Vale runtime error (unsynced styles, a broken .vale.ini) is also JSON, but a
+        # single object with `Code` and `Text` instead of a map of file -> alert list.
+        if not isinstance(data, dict) or not all(
+            isinstance(alerts, list) and all(isinstance(a, dict) for a in alerts) for alerts in data.values()
+        ):
+            detail = data.get("Text", data) if isinstance(data, dict) else data
+            raise CheckUnavailable(f"vale exited {proc.returncode} with a runtime error: {str(detail)[:300]}")
         return [a for alerts in data.values() for a in alerts if a.get("Severity") == "error"]
     finally:
         shutil.rmtree(tmpdir, ignore_errors=True)
@@ -138,7 +148,13 @@ def main(argv: list[str] | None = None, runner=subprocess.run) -> int:
             return 0
 
         label = args.file or args.release_notes
-        body = Path(args.file).read_text(encoding="utf-8") if args.file else _release_body(args.release_notes, runner)
+        if args.file:
+            try:
+                body = Path(args.file).read_text(encoding="utf-8")
+            except OSError as exc:
+                raise CheckUnavailable(f"cannot read {args.file}: {exc}") from exc
+        else:
+            body = _release_body(args.release_notes, runner)
         alerts = run_vale(mask_release_notes(body), runner)
         if alerts:
             print(f"Release notes prose (advisory, never blocking): {len(alerts)} Vale error(s) in {label}\n")

@@ -209,8 +209,9 @@ tasks:
     desc: |
       Advisory Vale check of a release's notes before publishing, per
       spec/project/prose-style/ §"Pull-request titles and release notes". Masks the
-      machine tokens release-drafter adds to each entry and always exits 0. Needs
-      `gh` with push access, since a draft is only visible to it, and a Vale binary.
+      machine tokens release-drafter adds to each entry; findings never fail it.
+      It exits 2 only when the check can't run: no Vale binary, a Vale runtime
+      error, or no `gh` push access, since a draft is only visible to it.
       Usage: task release:notes-prose -- v1.0.0
     cmds:
       - vale sync
