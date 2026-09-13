@@ -93,7 +93,7 @@ findings:
 - Route every `extends-drift` finding through `align-extends`: edit `.github/settings.yml` or `renovate.json5` to point at the portfolio preset (`nolte/gh-plumbing:.github/commons-settings.yml`, `github>nolte/gh-plumbing//renovate-configs/common#<tag>`); the agent never edits configs directly.
 - Route every `workflow-gap` finding through `project-structure-apply scaffold` — the four required reusable workflows (`release-drafter.yml`, `release-publish.yml`, `release-cd-refresh-master.yml`, `automerge.yaml`) are scaffolded together so a partial set isn't a sustainable state.
 - Route every `layout-violation` finding (source code at the repo root instead of under a recognised layout) through `relocate`; the spec is unambiguous that primary source files **MUST NOT** live loose at the root.
-- A `clean` finding signals the on-disk layout matches the spec; the GitHub-App live check (Renovate, Probot Settings, boring-cyborg, stale) is a separate concern owned by `project-structure-apply`.
+- A `clean` finding signals the on-disk layout matches the spec; the GitHub-App live check (Renovate, Probot Settings, boring-cyborg) is a separate concern owned by `project-structure-apply`.
 ````
 
 When the audit surfaces zero drift, emit exactly one finding with `kind: clean`, `target: n/a`, `severity: Info`, `resolution: proceed`, and an evidence line naming the surfaces that were scanned. A clean run is still a recorded run.
@@ -173,7 +173,7 @@ Cap the source-layout walk at one directory level below each recognised root; de
 ## Hard rules
 
 - **Never** modify, create, or delete any file — not config files, not directories, not workflows, not the spec. The tools list omits `Edit` and `Write` on purpose; the system prompt reinforces that constraint.
-- **Never** invoke shell commands. The tools list omits `Bash` deliberately — live GitHub-API checks (Renovate App, Probot Settings, boring-cyborg, stale) belong to `project-structure-apply`, not this agent. If the operator needs the live check, hand them a pointer to that skill and stop.
+- **Never** invoke shell commands. The tools list omits `Bash` deliberately — live GitHub-API checks (Renovate App, Probot Settings, boring-cyborg) belong to `project-structure-apply`, not this agent. If the operator needs the live check, hand them a pointer to that skill and stop.
 - **Never** choose the operator's resolution; you propose, the operator (via `project-structure-apply` or direct config edits) records. When two resolutions are plausible, list the alternative explicitly in **Discussion** and name the proposed one in **Findings**.
 - **Never** invent finding kinds beyond `missing-file`, `missing-directory`, `extends-drift`, `layout-violation`, `workflow-gap`, and `clean`; never invent resolutions beyond `dispatch-skill`, `add-file`, `align-extends`, `relocate`, and `proceed`. The vocabulary is fixed by this agent's contract.
 - **Never** widen the scan beyond the resolved repo root. Don't walk `node_modules/`, `.venv/`, `dist/`, `build/`, `coverage/`, `.git/`, or anything in `.gitignore`. The audit lives at the repo root and one directory level deep; nothing else is in scope.

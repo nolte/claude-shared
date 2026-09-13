@@ -22,7 +22,7 @@ A typical first-time capture in a Portfolio-Member repository whose stack matche
 ## Expected skill behavior
 
 1. **Preconditions** — confirms `project/portfolio.yml` parses, fetches `claude-shared:portfolio/tech-stack.yml` via `gh api`, confirms feature branch.
-2. **Inherited set** — resolves the global active/experimental entries: `mkdocs`, `renovate`, `github-actions`, `task`, `vale`, `pre-commit`, `markdownlint`, `gh-plumbing`, `release-drafter`, `probot-settings`, `boring-cyborg`, `stale-bot`, `claude-code`, `claude-code-plugin`.
+2. **Inherited set** — resolves the global active/experimental entries: `mkdocs`, `renovate`, `github-actions`, `task`, `vale`, `pre-commit`, `markdownlint`, `gh-plumbing`, `release-drafter`, `probot-settings`, `boring-cyborg`, `claude-code`, `claude-code-plugin`.
 3. **Probe** — produces candidates: `uv`, `ruff`, `task`, `github-actions`, `renovate`, `mkdocs`, `vale`, `pre-commit`, `markdownlint`, `release-drafter`, `probot-settings`.
 4. **Drop inherited matches** — every candidate has a matching inherited entry by `name` and `kind` (the repo uses the portfolio default exactly). All candidates move to the inherited-confirmed list; the `additions` working set is empty.
 5. **Group/lifecycle proposal** — nothing to propose because the additions set is empty.

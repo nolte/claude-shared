@@ -1,13 +1,13 @@
 ---
 name: project-structure-apply
-description: "Audits a repository against the canonical-language file under spec/project/project-structure/ and scaffolds or patches missing artefacts: README (delegated mid-flow to `readme-structure-apply`), top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, the MkDocs site skeleton (delegated mid-flow to `mkdocs-structure-apply`), .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml, stale.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, `stale`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests. Supports resume on re-invocation."
+description: "Audits a repository against the canonical-language file under spec/project/project-structure/ and scaffolds or patches missing artefacts: README (delegated mid-flow to `readme-structure-apply`), top-level orientation file, .gitignore, .pre-commit-config.yaml, Renovate config, Taskfile, the MkDocs site skeleton (delegated mid-flow to `mkdocs-structure-apply`), .claude/ directory, and the full .github/ layout (workflows, settings.yml, release-drafter.yml, boring-cyborg.yml) with the portfolio-wide Probot extends pointers. Verifies via the GitHub API that the backing GitHub Apps (Probot apps `settings`, `boring-cyborg`, plus Renovate) are installed; for Renovate also points at the Mend dashboard when the App is installed but no activity is visible. Invoke when the user asks to audit project structure, scaffold missing GitHub configs, generate release-drafter config, check Probot/Renovate app installation, or equivalent German-language requests. Supports resume on re-invocation."
 tags: [scaffolding]
 phase: design
 summary: "Audits a repository against the project-structure spec and scaffolds missing artefacts (README, .github/, Renovate, Taskfile, MkDocs, .claude/)."
 summary_de: "Auditiert ein Repository gegen die Project-Structure-Spec und scaffoldet fehlende Artefakte (README, .github/, Renovate, Taskfile, MkDocs, .claude/)."
 use_when:
   - "you want to audit the project structure of a repo"
-  - "you want to scaffold missing GitHub configs (settings, release-drafter, boring-cyborg, stale)"
+  - "you want to scaffold missing GitHub configs (settings, release-drafter, boring-cyborg)"
   - "you want to check that the backing GitHub Apps (Probot, Renovate) are installed"
 dont_use_when:
   - situation: "You want the README audited, scaffolded, or patched on its own"
@@ -69,7 +69,7 @@ The `gh run list` calls have no MCP tool and stay on `gh`, same as the GitHub-Ap
 
 ### 2. GitHub App installation check
 
-Verify that the Probot apps (`settings`, `boring-cyborg`, `stale`) and Renovate are installed on the repository via `gh api` against the installations accessible to the owner. Only check apps whose backing config the audit classified as **pass**. Handle 403/404 token-scope errors gracefully; never attempt to install an app programmatically. **Tooling (optional GitHub MCP):** the GitHub-App installation check (`gh api /user/installations`) has no MCP tool and stays on `gh` — a documented OQ-D coverage gap under `spec/claude/mcp-tool-preference/`; `gh` remains authoritative.
+Verify that the Probot apps (`settings`, `boring-cyborg`) and Renovate are installed on the repository via `gh api` against the installations accessible to the owner. Only check apps whose backing config the audit classified as **pass**. Handle 403/404 token-scope errors gracefully; never attempt to install an app programmatically. **Tooling (optional GitHub MCP):** the GitHub-App installation check (`gh api /user/installations`) has no MCP tool and stays on `gh` — a documented OQ-D coverage gap under `spec/claude/mcp-tool-preference/`; `gh` remains authoritative.
 
 ### 3. Apply
 
@@ -93,7 +93,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 
 - **Never** overwrite an existing file without explicit per-item confirmation. Merge into existing YAML or JSON configs rather than replacing them wholesale.
 - **Never** manage repository settings through the GitHub UI or `gh repo edit`. `.github/settings.yml` is the source of truth, driven by the Probot Settings app.
-- **Never** write a `.github/settings.yml` without an `_extends:` pointing at `nolte/gh-plumbing:.github/commons-settings.yml` (or the short form `gh-plumbing:.github/commons-settings.yml` inside the `nolte` org). Same applies to release-drafter, boring-cyborg, and stale.
+- **Never** write a `.github/settings.yml` without an `_extends:` pointing at `nolte/gh-plumbing:.github/commons-settings.yml` (or the short form `gh-plumbing:.github/commons-settings.yml` inside the `nolte` org). Same applies to release-drafter and boring-cyborg.
 - **Never** copy plugin-owned skills into `.claude/skills/`. Distribution is the plugin mechanism's job.
 - **Never** automatically move source files out of the repository root. Report the drift and let the user decide.
 - **Never** scaffold or rewrite content inside the `project/` planning tree (`project/roadmap.md`, `project/goals.md`, `project/sprints/`, `project/features/`, `project/release-artifacts/`, `project/mission.md`). The audit verifies the layout only; per-file authoring is delegated to the planning skills (`roadmap-init`, `sprint-plan`, `feature-decompose`, `mission-define`) per the matching specs.

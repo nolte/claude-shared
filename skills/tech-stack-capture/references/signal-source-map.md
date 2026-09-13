@@ -52,7 +52,6 @@ The probe reads each signal file at most once. A missing file is an absence (no 
 | `.github/release-drafter.yml`                  | `release-drafter`    | `other`           | `automation`      | `build`             | Matches the global entry.                                                                                        |
 | `.github/settings.yml`                         | `probot-settings`    | `other`           | `automation`      | `development`       | Probot Settings app config; matches the global entry.                                                            |
 | `.github/boring-cyborg.yml`                    | `boring-cyborg`      | `other`           | `automation`      | `development`       | Matches the global entry.                                                                                        |
-| `.github/stale.yml`                            | `stale-bot`          | `other`           | `automation`      | `development`       | Matches the global entry.                                                                                        |
 
 A signal not in this table doesn't produce a candidate. Adding a new row is a coordinated edit of this file plus a one-sentence rationale in the PR body; don't ship a candidate-emitting probe without the table row to document it.
 
@@ -92,7 +91,7 @@ Auto-fill rules (default mapping, reproduced from the discovery spec):
 - `lint` running against doc sources → `documentation`; otherwise → `quality` (the `source_of_truth:` path decides — `.vale.ini` and `.markdownlint*` default to `documentation`, everything else under `pyproject.toml`, `.pre-commit-config.yaml` defaults to `quality`)
 - `ci` → `automation`
 - `dep-bot` → `automation`
-- Probot governance bots (`release-drafter`, `probot-settings`, `boring-cyborg`, `stale-bot`) → `automation`
+- Probot governance bots (`release-drafter`, `probot-settings`, `boring-cyborg`) → `automation`
 - `build` → `build-tooling`
 - `package-manager` → `build-tooling`
 - `framework` with `name` matching a Claude Code plugin shape → `plugin-platform`
