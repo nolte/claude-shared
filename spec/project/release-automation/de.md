@@ -5,7 +5,7 @@ Portfolio-Scope: portfolio
 
 ## Kontext
 
-Die Spec `branching-model` definiert, **wie** Releases propagieren, sobald sie veröffentlicht sind (`release-drafter` pflegt einen Draft, ein Mensch publiziert ihn, `release-cd-refresh-master.yml` zieht `main` per Fast-Forward nach). Was dort derzeit manuell bleibt, ist der eigentliche **Draft → Published**-Schritt: §Local release operation fordert, dass ein Operator `gh release edit <tag> --draft=false` ausführt (oder in der Web-UI auf *Publish* klickt).
+Die Spec `branching-model` definiert, **wie** Releases propagieren, sobald sie veröffentlicht sind (`release-drafter` pflegt einen Draft, ein Mensch publiziert ihn, `release-cd-refresh-master.yml` zieht `main` per Fast-Forward nach). Was dort vor dieser Spec manuell blieb, ist der eigentliche **Draft → Published**-Schritt: Ein Operator führte `gh release edit <tag> --draft=false` aus (oder klickte in der Web-UI auf *Publish*).
 
 Dieser manuelle Schritt ist das letzte nicht-automatisierte Glied in der Release-Kette und die Ursache für Finding #3 des `spec-drift-audit` 2026-Q2 — `v0.1.1` liegt auf `claude-shared` als Draft, sodass `main` HEAD nicht auf einen publizierten Release ausgerichtet sein kann. Die portfolioweite Entscheidung lautet, das Audit-Finding **nicht** durch manuelles Promoten eines Releases aufzulösen; stattdessen definiert diese Spec den automatisierten Promotion-Prozess, und das Finding löst sich auf, sobald die Automation einen echten Release geschnitten hat.
 
@@ -15,7 +15,7 @@ Diese Spec schließt die Lücke zwischen `release-drafter` (baut und pflegt den 
 
 - Der Übergang Draft → Published erfolgt über einen reviewbaren, reproduzierbaren Workflow — nicht dadurch, dass ein Operator ein Release per CLI oder Web-UI bearbeitet.
 - Der Mensch bleibt in der Schleife für die **Entscheidung** zu releasen (wann, welche Version), aber die Mechanik (Publish-Aufruf, Tag-Handling, Fehlerprüfung) ist kodifiziert.
-- Die Automation verweigert, etwas zu publizieren, das nicht von `release-drafter` stammt, und schließt damit den handgeschnitzten-Tag-Failure-Mode aus, den `branching-model` §Local release operation bereits verbietet.
+- Die Automation verweigert, etwas zu publizieren, das nicht von `release-drafter` stammt, und schließt damit den handgeschnitzten-Tag-Failure-Mode aus, den `branching-model` §Release-Flow bereits verbietet.
 - Der Prozess ist portfolioweit wiederverwendbar: einmal als Reusable Workflow unter `nolte/gh-plumbing` implementiert, konsumiert von jedem Repo, das `branching-model` folgt.
 - Die `main`-Alignment-Kriterien des Spec-Drift-Audits werden erfüllbar, indem der Workflow ausgelöst wird, nicht indem `gh`-Kommandos direkt gegen den Tag laufen.
 
@@ -25,7 +25,7 @@ Diese Spec schließt die Lücke zwischen `release-drafter` (baut und pflegt den 
 - Binary-Builds, Signing, SBOM-Generierung.
 - Erzeugung von Release-Notes-Inhalten — bleibt Aufgabe von `release-drafter`, gespeist durch Conventional-Commits-PR-Titel. Für die Zielgruppenanalyse, die festlegt, welche Inhalte diese Notes abdecken müssen, siehe die Release-Notes-Zielgruppenanalyse-Konventionen des Repositories.
 - Versionierungspolitik (SemVer-Ableitung von major/minor/patch) — geerbt aus der `release-drafter`-Konfiguration in `nolte/gh-plumbing:.github/commons-release-drafter.yml`.
-- Hotfix-Flow — gehört zu `branching-model` §Hotfix flow, das ihn als Standard-`fix/`-Pull-Request gegen `develop` mit nachfolgendem gewöhnlichem Patch-Release festlegt; außerhalb des Scopes hier.
+- Hotfix-Flow — gehört zu `branching-model` §Hotfix-Flow, das ihn als Standard-`fix/`-Pull-Request gegen `develop` mit nachfolgendem gewöhnlichem Patch-Release festlegt; außerhalb des Scopes hier.
 - Vollständige Abschaffung des manuellen `gh release edit --draft=false`-Pfads; der manuelle Pfad bleibt als dokumentierter Fallback für Incident-Response, wenn der Workflow selbst kaputt ist.
 - Vorschrift darüber, welche Ökosysteme in die Portfolio-Konventions-Tabelle in §Versionstragende Dateien aufgenommen werden; die Tabelle wächst organisch, sobald Repos neuer Typen ins Portfolio kommen, jede Ergänzung ist eine kleine Spec-Änderung, keine neue Spec.
 
@@ -45,8 +45,8 @@ Diese Spec schließt die Lücke zwischen `release-drafter` (baut und pflegt den 
 - **MUSS [MUST]** ausschließlich auf einem Release operieren, das aktuell im Zustand `draft: true` ist und dessen Body von `release-drafter` geschrieben wurde — identifiziert durch Matching des Release-Tags auf den jüngsten Draft, der auf `develop` erzeugt wurde
 - **MUSS [MUST]** das Publizieren verweigern, wenn kein `release-drafter`-Draft existiert oder wenn der Tag des Drafts zu keinem von `develop` aus erreichbaren Commit gehört
 - **MUSS [MUST]** einen optionalen `tag`-Input auf `workflow_dispatch` akzeptieren; wenn mehrere `release-drafter`-Drafts offen sind, **MUSS [MUST]** der Workflow mit einer handlungsfähigen Fehlermeldung fehlschlagen, die alle offenen Drafts listet — es sei denn, `tag` wurde übergeben; in diesem Fall **MUSS [MUST]** ausschließlich der Draft publiziert werden, dessen Tag exakt dem Input entspricht (keine „newest wins"-Heuristik)
-- **DARF NICHT [MUST NOT]** einen neuen Tag anlegen, einen bestehenden Tag überschreiben oder eine außerhalb der Pipeline platzierte `git tag` + `git push --tags`-Sequenz als Release-Quelle tolerieren; der Tag, den der `release-drafter`-Draft trägt, ist der Tag, der publiziert wird, und jedes Release, dessen Tag nicht vom Drafter stammt, **MUSS [MUST]** zurückgewiesen werden — das schließt den Failure-Mode, den `branching-model` §Local release operation bereits verbietet und der portfolioweit historisch als Tag-/Release-Namens-Drift beobachtet wurde
-- **DARF NICHT [MUST NOT]** den Release-Body innerhalb dieses Workflows verändern; Body-Edits müssen, falls nötig, **vor** dem Run über `gh release edit <tag>` stattfinden (Titel-/Body-/Tag-Anpassungen per `branching-model` §Local release operation) oder über `release-drafter`-Re-Runs
+- **DARF NICHT [MUST NOT]** einen neuen Tag anlegen, einen bestehenden Tag überschreiben oder eine außerhalb der Pipeline platzierte `git tag` + `git push --tags`-Sequenz als Release-Quelle tolerieren; der Tag, den der `release-drafter`-Draft trägt, ist der Tag, der publiziert wird, und jedes Release, dessen Tag nicht vom Drafter stammt, **MUSS [MUST]** zurückgewiesen werden — das schließt den Failure-Mode, den `branching-model` §Release-Flow bereits verbietet und der portfolioweit historisch als Tag-/Release-Namens-Drift beobachtet wurde
+- **DARF NICHT [MUST NOT]** den Release-Body innerhalb dieses Workflows verändern; Body-Edits müssen, falls nötig, **vor** dem Run über `gh release edit <tag>` stattfinden (Titel-, Body- oder Tag-Anpassungen am Draft) oder über `release-drafter`-Re-Runs
 - **MUSS [MUST]** den Ziel-Tag, den Titel und eine Diff-Zusammenfassung des Bodys im Workflow-Run-Output sichtbar machen, damit der menschliche Auslöser vor dem irreversiblen Schritt verifizieren kann
 - **SOLLTE [SHOULD]** einen `dry_run: true`-Input auf `workflow_dispatch` unterstützen, der jeden Validierungsschritt durchführt, aber vor dem eigentlichen `--draft=false`-Call abbricht
 - **SOLLTE [SHOULD]** explizit fehlschlagen (Non-Zero-Exit, handlungsfähige Fehlermeldung), wenn `release-cd-refresh-master.yml` fehlt oder deaktiviert ist, weil Publizieren ohne den nachgelagerten Refresh `main` aus dem Takt des letzten Releases laufen ließe
@@ -128,9 +128,9 @@ Die portfolio-vererbte Spec-Schicht erlaubt es einem Consumer-Repository, die po
 
 ### Verhältnis zu anderen Specs
 
-- **MUSS [MUST]** `branching-model` §Release flow und §Local release operation durch In-Place-Edits aktualisieren — kein neuer dedizierter §Automated-release-promotion-Abschnitt — sodass: (a) der automatisierte Workflow als primärer Draft → Published-Pfad genannt wird und (b) die manuelle `gh release edit --draft=false`-Sequenz explizit als Fallback für Incident-Response gekennzeichnet ist
+- **MUSS [MUST]** `branching-model` §Release-Flow durch In-Place-Edits aktualisieren — kein neuer dedizierter §Automated-release-promotion-Abschnitt — sodass: (a) der automatisierte Workflow als primärer Draft → Published-Pfad genannt wird und (b) die manuelle `gh release edit --draft=false`-Sequenz explizit als Fallback für Incident-Response gekennzeichnet ist
 - **DARF NICHT [MUST NOT]** neu spezifizieren, was bereits in `branching-model` abgedeckt ist (Tag-Herkunft, `main`-Refresh, Workflow-Pinning) — stattdessen referenzieren
-- **SOLLTE [SHOULD]** die Open Question in `project-structure` (zur Zeit Zeile 164) durch eine Querverlinkung aus `project-structure` §Release and documentation workflows in diese Spec auflösen
+- **SOLLTE [SHOULD]** die Open Question in `project-structure` (zur Zeit Zeile 164) durch eine Querverlinkung aus `project-structure` §Release- und Dokumentations-Workflows in diese Spec auflösen
 - **MUSS [MUST]** von `release-artifact` als Autorität für den Übergang Draft → Veröffentlicht querreferenziert werden. `release-artifact` §Dispatch-Grenze zur Release-Maschinerie leitet sprint-seitige Artefakt-Validierungs-Ergebnisse in den Workflow weiter, den diese Spec regiert; die Grenze ist einseitig (diese Spec ist die untere Schicht, `release-artifact` ist die obere), und die konsumierende Spec **DARF NICHT [MUST NOT]** eine hier deklarierte Regel neu definieren
 - Das lokale Skill-Gegenstück zu diesem Workflow liegt in [`spec/project/release-skill-layer/`](../release-skill-layer/de.md): Skill A (`release-notes-curate`) übernimmt die Body-Kuratierung via `gh release edit` außerhalb dieses Workflows, und Skill B (`release-publish-trigger`) ist der lokale ergonomische Einstiegspunkt, der jeden Gate aus §Pre-Publish-Verifikation validiert und dann diesen Workflow via `gh workflow run` dispatcht. Diese Spec **DARF NICHT [MUST NOT]** `gh release edit --draft=false` aufrufen; der einzige Veröffentlichungsweg ist der Dispatch dieses Workflows.
 
@@ -138,7 +138,7 @@ Die portfolio-vererbte Spec-Schicht erlaubt es einem Consumer-Repository, die po
 
 - **MUSS [MUST]** den Tag-Namen, den GitHub-Benutzernamen des Auslösers, die Workflow-Run-URL und den `created_at`-Timestamp des `release-drafter`-Drafts in die Job-Summary schreiben, damit Post-Release-Audits den Publish-Vorgang durch diesen Workflow zurückverfolgen können
 - **SOLLTE [SHOULD]** einen Einzeilen-Eintrag in die Audit-Trail-Oberfläche des Repos anhängen (falls sich eine Konvention etabliert — aktuell nicht standardisiert); bis dahin ist die native Run-Historie von GitHub die Audit-Quelle
-- **MUSS [MUST]** `gh run list --workflow=release-publish.yml` zur kanonischen CLI für Inspektion jüngster Publish-Aktivität machen — analog zu den Inspektions-Kommandos für `release-drafter.yml` und `release-cd-refresh-master.yml` in `branching-model` §Local release operation
+- **MUSS [MUST]** `gh run list --workflow=release-publish.yml` zur kanonischen CLI für Inspektion jüngster Publish-Aktivität machen — analog zu den Inspektions-Kommandos für `release-drafter.yml` und `release-cd-refresh-master.yml` in `branching-model` §Erforderliche GitHub-Workflows
 
 ## Akzeptanzkriterien
 
@@ -151,7 +151,7 @@ Die portfolio-vererbte Spec-Schicht erlaubt es einem Consumer-Repository, die po
 - [ ] Ein `dry_run: true`-Dispatch-Input ist vorhanden und führt Validierung durch, ohne `draft: false` zu kippen
 - [ ] Nach einem erfolgreichen Publish-Run gibt `gh release view <tag> --json isDraft` für den publizierten Tag `{"isDraft": false}` zurück
 - [ ] Nach einem erfolgreichen Publish-Run zeigt `gh run list --workflow=release-cd-refresh-master.yml --limit 1` einen Run, der innerhalb von 5 Minuten nach dem Publish-Run gestartet ist — Bestätigung, dass der nachgelagerte Refresh gefeuert hat; falls er nicht gestartet ist, gilt der Publish als unvollständig und **MUSS [MUST]** unter `workflow-health` triagiert werden
-- [ ] `branching-model` §Local release operation wurde aktualisiert, sodass `release-publish.yml` als primärer Pfad und `gh release edit <tag> --draft=false` als Fallback benannt ist
+- [ ] `branching-model` §Release-Flow wurde aktualisiert, sodass `release-publish.yml` als primärer Pfad und `gh release edit <tag> --draft=false` als Fallback benannt ist
 - [ ] Die letzten drei publizierten Releases in jedem Repo, das diese Spec adoptiert hat, wurden durch den `release-publish.yml`-Workflow erzeugt, verifizierbar über `gh run list --workflow=release-publish.yml --limit 10`
 - [ ] Für jedes publizierte Release eines Repos, das versionstragende Dateien deklariert (per §Versionstragende Dateien Default oder Override), entspricht jede deklarierte Datei an der Target-SHA des Releases dem Release-Tag unter ihrer deklarierten Transformation, und ein `chore(release): <tag>`-Commit auf `develop` hat diesen Abgleich vor dem Publish-Run erzeugt — entweder via Primary oder Fallback Path
 - [ ] Bei den letzten drei publizierten Releases in jedem Repo, das diese Spec adoptiert hat, beginnt das Subject des `chore(release): <tag>`-Commits auf `develop` (via `git log -1 --pretty=%s`) mit `chore(release): <tag>` — bestätigt, dass das Präfix-Match-Akzeptanzkriterium des Guards sowohl Primary-Path-Commits als auch Fallback-Path-Squash-Merges mit `(#N)`-Suffix erfasst
@@ -166,7 +166,7 @@ Keine zum aktuellen Zeitpunkt — sämtliche Fragen aus der initialen Draftphase
 - **Trigger**: beschränkt auf `workflow_dispatch`; label-basierte und Schedule-Trigger sind außerhalb des Scopes (zusätzliche Angriffsfläche; kollidiert mit „Mensch entscheidet, wann geshippt wird").
 - **Kanonischer Reusable-Pfad**: `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml`, flacher Pfad konsistent mit der bestehenden Namenskonvention (`reusable-release-drafter.yml` / `reusable-release-cd-refresh-master.yml`).
 - **Multi-Draft-Verhalten**: Fehlschlag mit handlungsfähiger Meldung, es sei denn, der Auslöser übergibt einen `tag`-Input; keine „newest-wins"-Heuristik.
-- **`branching-model`-Integration**: In-Place-Edit von §Release flow + §Local release operation; kein neuer dedizierter Abschnitt.
+- **`branching-model`-Integration**: In-Place-Edit von §Release-Flow; kein neuer dedizierter Abschnitt.
 - **Post-Publish-Sanity-Checks**: als Akzeptanzkriterien kodifiziert (`isDraft: false` und `release-cd-refresh-master.yml`-Run innerhalb von 5 Minuten), nicht als SHOULDs.
 - **Zwei-Pfad-Alignment**: Primary (Workflow-getrieben mit Bypass-Credential) vs. Fallback (Operator-PR + UI-Squash-Merge); beide Pfade landen dieselbe `chore(release): <tag>`-Commit-Form. Primary ist das Portfolio-Ziel; Fallback ist der heute operative Pfad, bis der Portfolio-App-Token/PAT über `nolte/gh-plumbing` ausgeliefert wird.
 - **Override-Config-Pfad**: `.github/release-automation.yml` für Repos, die vom Default aus §Versionstragende Dateien abweichen; konsistent mit anderen `.github/*.yml`-Portfolio-Configs.

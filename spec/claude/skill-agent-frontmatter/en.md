@@ -85,7 +85,7 @@ Provenance markers: **Standard·AgentSkills** (Agent Skills spec [R1], portable 
 
 | Field | Applies to | Type | Limits / allowed values | Provenance | Owner |
 |---|---|---|---|---|---|
-| `when_to_use` | skill | string | combined `description` + `when_to_use` under 1,536 chars (runtime truncates beyond) | Standard·CC | `skill-management` §Frontmatter validation / §Runtime & lifecycle |
+| `when_to_use` | skill | string | combined `description` + `when_to_use` under 1,536 chars (runtime truncates beyond) | Standard·CC | `skill-management` §Frontmatter validation / §Runtime & lifecycle awareness |
 | `argument-hint` | skill | string | free-form hint shown for slash-command arguments | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
 | `arguments` | skill | string | argument declaration for the slash command | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
 | `disable-model-invocation` | skill | boolean | `true` bars model-driven invocation (user-invoked only); blocks subagent `skills:` preload; don't set on a skill another skill dispatches mid-flow | Standard·CC | `skill-management` §Runtime & lifecycle awareness |

@@ -55,7 +55,7 @@ Abgrenzung und Operationalisierung
 - **R12** Die Disziplin SOLLTE in `nolte-engineering` angesiedelt und als eigenständiger Skill plus read-only Scanner-Agent geliefert werden, aufbauend auf den Anker-Specs (`e2e-test-automation`, `test-pyramid-foundation`, `test-tier-*`, `test-cycle-*`, `test-case-derivation`, `release-*`), ohne sie zu duplizieren.
 - **R13** `release-skill-layer` KANN die Capability als optionales Pre-Rollout-Gate referenzieren; die Referenz ist eine Consumer-Entscheidung und wird von dieser Spec nicht verlangt.
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] Die Spec löst ein Release-Change-Set auf (Range-Diff, gemergte PRs, berührte Pfade), bevor irgendetwas attribuiert wird. (R1)
 - [ ] Die Attribution invertiert die bestehende Test↔Requirement-Traceability (Änderung → Requirement/TC-ID → verifizierende Tests) statt eines parallelen Mappings. (R2)

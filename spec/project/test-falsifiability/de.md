@@ -104,7 +104,7 @@ Leser: Autor:innen und Reviewer von Testcode auf jedem Tier; die Tier-Generator-
 - Die Test-Pyramiden-Bewertung **MUST NOT** [DARF NICHT] als nicht-falsifizierbar markierte Tests zur Tier-Coverage zählen; ein Tier, dessen Tests nicht fehlschlagen können, ist keine Coverage, und eine aus solchen Tests berechnete Pyramidenform überzeichnet das Vertrauen
 - Testfall-Ableitung und Szenario-Generierung (einschließlich BDD-Szenario-Arbeit) **MUST** [MÜSSEN] ein erwartetes Ergebnis zurückweisen, das nicht beobachtbar ist — eine unbeobachtbare Erwartung garantiert stromabwärts eine T2-Assertion — und **MUST** [MÜSSEN] einen Fall oder ein Szenario zurückweisen, der bzw. das überhaupt kein erwartetes Ergebnis nennt, denn das garantiert T8
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] Die Taxonomie ist aufzählbar, jede Kategorie trägt mindestens ein konkretes durchgearbeitetes Beispiel, und die Spec deklariert die Liste als offen mit festgehaltenem Erweiterungsverfahren
 - [ ] Jede Kategorie hat einen benannten Detektionsweg — statisch, dynamisch oder review-only — und keine bleibt als unspezifizierte Vorsicht stehen

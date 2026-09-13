@@ -5,7 +5,7 @@ Portfolio-Scope: portfolio
 
 ## Context
 
-The `branching-model` spec defines **how** releases propagate once published (`release-drafter` maintains a draft, a human publishes it, `release-cd-refresh-master.yml` fast-forwards `main`). What it currently leaves manual is the **Draft → Published** step itself: §Local release operation requires an operator to run `gh release edit <tag> --draft=false` (or click *Publish* in the web UI).
+The `branching-model` spec defines **how** releases propagate once published (`release-drafter` maintains a draft, a human publishes it, `release-cd-refresh-master.yml` fast-forwards `main`). What it left manual before this spec is the **Draft → Published** step itself: an operator ran `gh release edit <tag> --draft=false` (or clicked *Publish* in the web UI).
 
 That manual step is the last non-automated link in the release chain and is the root cause of `spec-drift-audit` 2026-Q2 Finding #3: `v0.1.1` sits as Draft on `claude-shared`, so `main` HEAD can't be aligned with a published release. The portfolio-wide decision **rejects** manual release promotion as the fix for the audit finding; instead, this spec defines the automated promotion process, and the finding resolves once the automation has cut a real release.
 
@@ -15,7 +15,7 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 
 - The Draft → Published transition happens through a reviewable, reproducible workflow—not through an operator editing a release via CLI or web UI.
 - The human stays in the loop for the **decision** to release (when, what version), but the mechanics (publish call, tag handling, error checking) are codified.
-- The automation refuses to publish anything it didn't receive from `release-drafter`, closing off the hand-crafted-tag failure mode already forbidden by `branching-model` §Local release operation.
+- The automation refuses to publish anything it didn't receive from `release-drafter`, closing off the hand-crafted-tag failure mode already forbidden by `branching-model` §Release flow.
 - The process is portfolio-reusable: implemented once as a reusable workflow under `nolte/gh-plumbing`, consumed by every repository that follows `branching-model`.
 - Spec-drift-audit `main`-alignment criteria become satisfiable by triggering the workflow, not by running `gh` commands directly against the tag.
 
@@ -45,8 +45,8 @@ This spec fills the gap between `release-drafter` (builds and maintains the draf
 - **MUST** operate exclusively on a release that's currently in `draft: true` state and whose body was written by `release-drafter`: identified by matching the release tag to the most recent draft produced on `develop`
 - **MUST** refuse to publish when no `release-drafter` draft exists, or when the draft's tag doesn't correspond to a commit reachable from `develop`
 - **MUST** accept an optional `tag` input on `workflow_dispatch`; when multiple `release-drafter` drafts are open, the workflow **MUST** fail with an actionable message that lists all open drafts unless `tag` is provided, and **MUST** then publish only the draft whose tag exactly matches the input (no "newest wins" heuristic)
-- **MUST NOT** create a new tag, rewrite an existing tag, or tolerate an out-of-band `git tag` + `git push --tags` sequence as a release source; the tag that the `release-drafter` draft carries is the tag that gets published, and any release whose tag didn't originate from the drafter **MUST** be rejected—this closes the failure mode already forbidden by `branching-model` §Local release operation and observed historically as tag/release-name drift across the portfolio
-- **MUST NOT** alter the release body inside this workflow; body edits, if needed, **MUST** happen before the run via `gh release edit <tag>` (title/body/tag adjustments per `branching-model` §Local release operation) or via `release-drafter` re-runs
+- **MUST NOT** create a new tag, rewrite an existing tag, or tolerate an out-of-band `git tag` + `git push --tags` sequence as a release source; the tag that the `release-drafter` draft carries is the tag that gets published, and any release whose tag didn't originate from the drafter **MUST** be rejected—this closes the failure mode already forbidden by `branching-model` §Release flow and observed historically as tag/release-name drift across the portfolio
+- **MUST NOT** alter the release body inside this workflow; body edits, if needed, **MUST** happen before the run via `gh release edit <tag>` (title, body, or tag adjustments on the draft) or via `release-drafter` re-runs
 - **MUST** surface the target tag, title, and a diff summary of the body in the workflow run output so the human triggerer can verify before the irreversible step
 - **SHOULD** support a `dry_run: true` input on `workflow_dispatch` that performs every validation step but stops short of the actual `--draft=false` call
 - **SHOULD** fail explicitly (non-zero exit, actionable message) when `release-cd-refresh-master.yml` is absent or disabled, because publishing without the downstream refresh would leave `main` out of sync with the latest release
@@ -128,7 +128,7 @@ The portfolio-inherited spec layer lets a consumer repository reference the hub'
 
 ### Relationship to other specs
 
-- **MUST** update `branching-model` §Release flow and §Local release operation by in-place edits—no new dedicated §Automated release promotion section—so that: (a) the automated workflow is named as the primary Draft → Published path, and (b) the manual `gh release edit --draft=false` sequence is explicitly labeled a fallback for incident response
+- **MUST** update `branching-model` §Release flow by in-place edits—no new dedicated §Automated release promotion section—so that: (a) the automated workflow is named as the primary Draft → Published path, and (b) the manual `gh release edit --draft=false` sequence is explicitly labeled a fallback for incident response
 - **MUST NOT** re-specify anything already covered by `branching-model` (tag origin, `main` refresh, workflow pinning)—reference instead
 - **SHOULD** resolve the Open Question in `project-structure` (line 164 at the time of writing) by cross-linking from `project-structure` §Release and documentation workflows into this spec
 - **MUST** be cross-referenced by `release-artifact` as the authority for the Draft → Published transition. `release-artifact` §Dispatch boundary to release machinery routes sprint-side artefact validation outcomes into the workflow this spec governs; the boundary is one-way (this spec is the lower layer, `release-artifact` is the higher one), and the consuming spec **MUST NOT** redefine any rule declared here
@@ -138,7 +138,7 @@ The portfolio-inherited spec layer lets a consumer repository reference the hub'
 
 - **MUST** emit the tag name, the triggerer's GitHub username, the workflow run URL, and the `release-drafter` draft's `created_at` timestamp to the job summary, so post-release audits can trace the publish back through this workflow
 - **SHOULD** append a one-line entry to the repository's audit-trail surface (if a convention emerges—currently not standardized); until then, GitHub's native run history is the audit source
-- **MUST** make `gh run list --workflow=release-publish.yml` the canonical CLI for inspecting recent publish activity—analogous to the `release-drafter.yml` and `release-cd-refresh-master.yml` inspection commands in `branching-model` §Local release operation
+- **MUST** make `gh run list --workflow=release-publish.yml` the canonical CLI for inspecting recent publish activity—analogous to the `release-drafter.yml` and `release-cd-refresh-master.yml` inspection commands in `branching-model` §Required GitHub workflows
 
 ## Acceptance Criteria
 
@@ -151,7 +151,7 @@ The portfolio-inherited spec layer lets a consumer repository reference the hub'
 - [ ] A `dry_run: true` dispatch input is present and performs validation without flipping `draft: false`
 - [ ] After a successful publish run, `gh release view <tag> --json isDraft` returns `{"isDraft": false}` for the published tag
 - [ ] After a successful publish run, `gh run list --workflow=release-cd-refresh-master.yml --limit 1` shows a run started within 5 minutes of the publish run, confirming the downstream refresh fired; if it didn't start, the publish is considered incomplete and **MUST** be triaged under `workflow-health`
-- [ ] `branching-model` §Local release operation has been updated to name `release-publish.yml` as the primary path and `gh release edit <tag> --draft=false` as a fallback
+- [ ] `branching-model` §Release flow has been updated to name `release-publish.yml` as the primary path and `gh release edit <tag> --draft=false` as a fallback
 - [ ] The last three published releases in any repository adopting this spec were produced by the `release-publish.yml` workflow, verifiable via `gh run list --workflow=release-publish.yml --limit 10`
 - [ ] For every published release of a repository that declares version-bearing files (per §Version-bearing files default or override), each declared file at the release's target SHA equals the release tag under its declared transform, and a `chore(release): <tag>` commit on `develop` produced that alignment before the publish run, whether via the primary or fallback path
 - [ ] For the last three published releases on any repo adopting this spec, the `chore(release): <tag>` commit subject on `develop` (as viewed via `git log -1 --pretty=%s`) starts with `chore(release): <tag>`, confirming the guard's prefix-match acceptance criterion handles both primary-path commits and fallback-path squash-merges with `(#N)` suffix
@@ -166,7 +166,7 @@ None at this time—all initial drafting questions were resolved during this spe
 - **Triggers**: limited to `workflow_dispatch`; label-based and scheduled triggers are out of scope (additional attack surface; conflicts with "human decides when to ship").
 - **Canonical reusable path**: `nolte/gh-plumbing/.github/workflows/reusable-release-publish.yml`, flat path consistent with the existing `reusable-release-drafter.yml` / `reusable-release-cd-refresh-master.yml` naming.
 - **Multi-draft behavior**: fail with actionable message unless the dispatcher passes a `tag` input; no "newest-wins" heuristic.
-- **`branching-model` integration**: in-place edit of §Release flow + §Local release operation; no new dedicated section.
+- **`branching-model` integration**: in-place edit of §Release flow; no new dedicated section.
 - **Post-publish sanity checks**: encoded as Acceptance Criteria (`isDraft: false` and `release-cd-refresh-master.yml` run within 5 minutes), not as SHOULDs.
 - **Two-path alignment**: primary (workflow-driven with bypass credential) vs fallback (operator PR + UI squash-merge); both paths land the same `chore(release): <tag>` commit shape. Primary is the portfolio target; fallback is the operative path today until the portfolio App/PAT ships via `nolte/gh-plumbing`.
 - **Override config path**: `.github/release-automation.yml` for repos that deviate from the §Version-bearing files default; consistent with other `.github/*.yml` portfolio configs.

@@ -81,7 +81,7 @@ Spiegelt die Autoren-Anforderungen aus `skill-management` §„Autoren-Qualität
 Spiegelt `skill-management` §„Frontmatter-Validierung"; die ursprüngliche Regel zitieren, wenn ein Finding sie pinnt.
 
 - **MUSS [MUST]** verifizieren, dass `name` 1–64 Zeichen hat, nur ASCII-Kleinbuchstaben/-Ziffern/-Bindestriche, nicht mit `-` beginnt oder endet und kein `--` enthält; jede Verletzung ist ein `Critical`
-- **MUSS [MUST]** verifizieren, dass `name` nicht die reservierten Tokens `anthropic` oder `claude` enthält (die Reserved-Word-Regel gilt nur für `name`, gemäß `skill-management` §Frontmatter validation, da beschreibende Felder wie `description` legitim `claude` erwähnen dürfen); eine Verletzung ist ein `Critical` (der Upstream-Plattform-Validator weist den Skill ab), außer der Artefakt-Body trägt einen `## Reserved-token rationale`-Abschnitt, der die enge Claude/Anthropic-Surface-Ausnahme beansprucht
+- **MUSS [MUST]** verifizieren, dass `name` nicht die reservierten Tokens `anthropic` oder `claude` enthält (die Reserved-Word-Regel gilt nur für `name`, gemäß `skill-management` §Frontmatter-Validierung, da beschreibende Felder wie `description` legitim `claude` erwähnen dürfen); eine Verletzung ist ein `Critical` (der Upstream-Plattform-Validator weist den Skill ab), außer der Artefakt-Body trägt einen `## Reserved-token rationale`-Abschnitt, der die enge Claude/Anthropic-Surface-Ausnahme beansprucht
 - **MUSS [MUST]** verifizieren, dass weder `name` noch `description` XML-Tags enthält; eine Verletzung ist ein `Critical`
 - **MUSS [MUST]** verifizieren, dass `description` nicht-leer und ≤1024 Zeichen ist; Über-Cap oder leer ist ein `Critical`
 - **MUSS [MUST]** verifizieren, dass `description` in der **dritten Person** verfasst ist: das Vorkommen der Pronomen „I", „you" oder „we" (oder anderer Nicht-Dritte-Person-Marker) im Description-Text ist ein `Critical`. Zitat: `skill-management` §Frontmatter-Validierung, abgeleitet aus den Upstream-Plattform-Best-Practices ([R5](#referenzen))
@@ -144,7 +144,7 @@ Spiegelt `skill-management` §„Evaluations-Disziplin"; die ursprüngliche Rege
 - **SOLLTE [SHOULD]** im `## Scope`-Abschnitt des Plans die Git-SHAs der angewandten Spec-Versionen einbetten, damit ein späteres Re-Review erkennen kann, ob Findings durch eine Spec-Revision veraltet sein könnten
 - **KANN [MAY]** rein stilistische Beobachtungen (Vale, Markdown-Linting) als `Info`-Findings aufnehmen, wenn sie dem Autor helfen, **MUSS NICHT [MUST NOT]** sie aber zu `Warning` oder `Critical` erheben — die bleiben bei ihrem eigenen Tooling
 
-Diese Prozedur wird als Skill (`skills/skill-review/`) ausgeliefert, gemäß der Orchestrator-ist-ein-Skill-Regel aus `skill-vs-agent`; der Plan persistiert unabhängig vom Einstiegspunkt unter `.audits/skill-review/` gemäß `review-plan`.
+Diese Prozedur wird als Skill (`plugins/nolte-claude-dev/skills/skill-review/`) ausgeliefert, gemäß der Orchestrator-ist-ein-Skill-Regel aus `skill-vs-agent`; der Plan persistiert unabhängig vom Einstiegspunkt unter `.audits/skill-review/` gemäß `review-plan`.
 
 ### Bezug zu anderen Specs
 
@@ -152,7 +152,7 @@ Diese Prozedur wird als Skill (`skills/skill-review/`) ausgeliefert, gemäß der
 - **MUSS NICHT [MUST NOT]** irgendetwas neu spezifizieren, das bereits in `skill-management` oder `skill-vs-agent` steht; wenn diese Spec und eine jener abweichen, gewinnt die Autoren-Spec, und diese Spec ist die, die aktualisiert werden muss
 - **SOLLTE [SHOULD]**, wenn der zu reviewende Skill einen Agent dispatched, ein begleitendes `agent-review` für diesen Agent nur dann auslösen, wenn der Agent noch nicht gegen seine aktuelle Quell-Revision reviewt wurde — die Entscheidung im `## Scope` des Plans festhalten, damit nachgelagerte Akteure wissen, ob der dispatched Agent abgedeckt ist
 
-## Abnahmekriterien
+## Akzeptanzkriterien
 
 - [ ] Ein Review eines schreibenden Skills beurteilt, ob die deklarierte Stufe zu seiner Arbeit passt und ob das Schreib-Gate beim ersten Schreiben versionierten Zustands benannt ist, und wiederholt nicht die Vorhandenseins-Prüfungen, die `scripts/validate_skills.py` bereits leistet
 - [ ] Der nicht adoptierte Rückstand wird einmal aggregiert gemeldet statt als Befund je Skill, und die Adoption des Zitats ist es, die Stufen- und Schreib-Gate-Regeln eines Skills auf `Critical` hebt

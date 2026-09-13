@@ -4,7 +4,7 @@ Status: draft
 
 ## Context
 
-Portfolio repositories ship MkDocs sites that are bilingual by default: `spec/project/mkdocs-structure/` §Per-language layout already mandates `docs/<lang>/` subdirectories with structurally identical file trees, and `spec/project/docs-freshness/` §Categories of drift audits the resulting drift as a `Language-parity gap` finding. What neither spec defines is the **authoring protocol**: how and when a documentation-producing skill or agent puts a page into every configured language tree. The result is asymmetric authoring: a skill writes `docs/en/foo.md`, leaves `docs/de/foo.md` for later, and the gap only surfaces in the next quarterly `docs-freshness` audit. By that point the canonical page has drifted, the author has paged out the context, and the translation is reconstructed from a stale snapshot.
+Portfolio repositories ship MkDocs sites that are bilingual by default: `spec/project/mkdocs-structure/` §Site layout already mandates `docs/<lang>/` subdirectories with structurally identical file trees, and `spec/project/docs-freshness/` §Categories of drift audits the resulting drift as a `Language-parity gap` finding. What neither spec defines is the **authoring protocol**: how and when a documentation-producing skill or agent puts a page into every configured language tree. The result is asymmetric authoring: a skill writes `docs/en/foo.md`, leaves `docs/de/foo.md` for later, and the gap only surfaces in the next quarterly `docs-freshness` audit. By that point the canonical page has drifted, the author has paged out the context, and the translation is reconstructed from a stale snapshot.
 
 This spec closes that gap by lifting the canonical-and-translation contract that already governs `spec/<topic>/<slug>/` (one file per language, written atomically, English canonical, drift-managed) to every Markdown page under `docs_dir`. It's the **authoring counterpart** to the `mkdocs-structure` shape contract and the `docs-freshness` audit contract: shape says "the trees must be parallel," audit says "we detect when they aren't," and this spec says "every authoring step keeps them parallel from the start."
 
@@ -61,7 +61,7 @@ Readers: authors of documentation-producing skills and agents that must write ev
 
 ### Coordination with neighbouring specs
 
-- **MUST** reference `spec/project/mkdocs-structure/` §Per-language layout for the file-tree parity contract and `spec/project/docs-freshness/` §Categories of drift for the audit-time detection of violations; this spec **MUST NOT** restate either contract
+- **MUST** reference `spec/project/mkdocs-structure/` §Site layout for the file-tree parity contract and `spec/project/docs-freshness/` §Categories of drift for the audit-time detection of violations; this spec **MUST NOT** restate either contract
 - **MUST** reference `spec/project/readme-structure/` §File and language as the source of the README EN-only exemption; this spec **MUST NOT** restate the README rule
 - **MUST NOT** override or relax any MUST declared in `mkdocs-structure`, `docs-freshness`, `readme-structure`, `docs-audience-tracks`, or `audience-identification`; conflicts are resolved by amending the upstream spec, not by exception in this one
 - **MUST** treat generated catalog pages under `docs/<lang>/skills/` and `docs/<lang>/agents/` as documentation-producing output bound by the §Authoring protocol structural MUSTs (one page per language per artefact, parallel trees); `spec/claude/skill-agent-catalog/` owns their per-language rendering and uses its reserved `_translation-pending` auto-tag and "translation pending" badge as the catalog-specific form of the `needs-review` escape hatch. This spec **MUST NOT** restate the catalog's summary-resolution or fallback rules
@@ -77,7 +77,7 @@ Readers: authors of documentation-producing skills and agents that must write ev
 
 ### Single-language repositories
 
-- **MAY** a repository whose `spec/.spec-config.yml` `languages:` list contains exactly one entry treat this spec as trivially satisfied: every authoring step writes exactly one language version, which is also the canonical version, and no parity MUSTs apply. The repository **MUST** continue to use the `docs/<lang>/` layout per `mkdocs-structure` §Per-language layout so adding a second language later is a pure-additive change
+- **MAY** a repository whose `spec/.spec-config.yml` `languages:` list contains exactly one entry treat this spec as trivially satisfied: every authoring step writes exactly one language version, which is also the canonical version, and no parity MUSTs apply. The repository **MUST** continue to use the `docs/<lang>/` layout per `mkdocs-structure` §Site layout so adding a second language later is a pure-additive change
 
 ## Acceptance Criteria
 
@@ -87,7 +87,7 @@ Readers: authors of documentation-producing skills and agents that must write ev
 - [ ] A test invocation of `audience-doc-author` that produces a new page emits `docs/<canonical_language>/<slug>.md` and `docs/<other_language>/<slug>.md` in the same run, with identical heading trees and identical frontmatter key sets
 - [ ] A simulated single-language write (deliberately removing one of the language files after the authoring step) is flagged by `docs-freshness` as a `Language-parity gap` finding with severity `warning`
 - [ ] `README.md` at the repository root remains English-only across the whole skill and agent corpus; no skill or agent that implements this spec produces `README.de.md` or any other localised README variant
-- [ ] `spec/project/mkdocs-structure/` §Per-language layout cross-references this spec as the authoring counterpart (additive sentence, no contract change)
+- [ ] `spec/project/mkdocs-structure/` §Site layout cross-references this spec as the authoring counterpart (additive sentence, no contract change)
 - [ ] `spec/project/docs-freshness/` §Categories of drift cross-references this spec as the authoring counterpart (additive sentence, no contract change)
 - [ ] `spec/project/readme-structure/` §Non-Goals cross-references this spec as the canonical declaration that the README exemption is portfolio-wide (additive sentence, no contract change)
 - [ ] A rename of a canonical page (`git mv docs/en/foo.md docs/en/bar.md`) performed through a documentation-producing skill renames the counterpart in every configured language tree in the same step

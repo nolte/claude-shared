@@ -121,7 +121,7 @@ When the source consumer **is** the blog consumer (a single repository hosts bot
 
 The unconditional no-silent-write stance above is settled: this spec carries **no** opt-in for fully automatic cross-repo posting, and the operator confirmation **MUST** precede every write into the blog consumer's working tree regardless of how single-handed the consumer pair is. A future iteration that trades this safety margin for convenience (for example a `cross_repo_autopost` declaration that lets the trigger open the blog-consumer session automatically) is a deliberate owner-authorised change to this section, not a default the trigger may assume.
 
-## Acceptance criteria
+## Acceptance Criteria
 
 A trigger implementation (hook, skill, or operator workflow) satisfies this spec when **all** of the per-trigger criteria below hold.
 

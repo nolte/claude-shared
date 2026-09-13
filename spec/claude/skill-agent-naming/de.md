@@ -5,9 +5,9 @@ Portfolio-Scope: portfolio
 
 ## Kontext
 
-Bis zu dieser Spec lebte die Namenskonvention für wiederverwendbare Claude-Code-Artefakte verteilt auf zwei Owner-Specs: die Skill-Form in `skill-management` §Frontmatter validation, die Agent-Form in `agent-management` §Structure, mit den Ausnahmelisten ein drittes Mal gespiegelt in `scripts/validate_skills.py`. Das Skills-&-Agents-Audit 2026-07 zeigte, was diese Aufteilung kostet: Reviewer zitieren zwei verschiedene Anker für eine Konvention, die beiden Hälften driften im Wortlaut, und ein Consumer-Plugin (etwa `claude-home-assistant`) hat kein einzelnes Dokument zum Erben. Diese Spec konsolidiert die gesamte Namensform-Konvention in einen **normativen Owner**. Die ehemaligen Host-Abschnitte in `skill-management` und `agent-management` delegieren nur noch hierher und wiederholen nichts; bei jeder Diskrepanz zwischen dieser Spec und einer älteren Wiederholung anderswo **gewinnt diese Spec**.
+Bis zu dieser Spec lebte die Namenskonvention für wiederverwendbare Claude-Code-Artefakte verteilt auf zwei Owner-Specs: die Skill-Form in `skill-management` §Frontmatter-Validierung, die Agent-Form in `agent-management` §Struktur, mit den Ausnahmelisten ein drittes Mal gespiegelt in `scripts/validate_skills.py`. Das Skills-&-Agents-Audit 2026-07 zeigte, was diese Aufteilung kostet: Reviewer zitieren zwei verschiedene Anker für eine Konvention, die beiden Hälften driften im Wortlaut, und ein Consumer-Plugin (etwa `claude-home-assistant`) hat kein einzelnes Dokument zum Erben. Diese Spec konsolidiert die gesamte Namensform-Konvention in einen **normativen Owner**. Die ehemaligen Host-Abschnitte in `skill-management` und `agent-management` delegieren nur noch hierher und wiederholen nichts; bei jeder Diskrepanz zwischen dieser Spec und einer älteren Wiederholung anderswo **gewinnt diese Spec**.
 
-Scope-Grenze: Diese Spec besitzt die **Form** eines Namens — semantische Gestalt, Morphologie, Ausnahmen und Rename-Policy. Die **Zeichen-Ebene** (1–64 Zeichen, lowercase ASCII-kebab-case, kein führender/abschließender Bindestrich, kein `--`, reservierte Tokens `anthropic`/`claude`, kein XML) bleibt bei `skill-management` §Frontmatter validation und `agent-management` §Structure; der Digest am Ende dieses Dokuments zeigt nur dorthin.
+Scope-Grenze: Diese Spec besitzt die **Form** eines Namens — semantische Gestalt, Morphologie, Ausnahmen und Rename-Policy. Die **Zeichen-Ebene** (1–64 Zeichen, lowercase ASCII-kebab-case, kein führender/abschließender Bindestrich, kein `--`, reservierte Tokens `anthropic`/`claude`, kein XML) bleibt bei `skill-management` §Frontmatter-Validierung und `agent-management` §Struktur; der Digest am Ende dieses Dokuments zeigt nur dorthin.
 
 Leser: Skill- und Agent-Autoren bei der Wahl eines konformen Namens, Reviewer, die einen einzigen Anker für die gesamte Namensform-Konvention zitieren, `validate_skills.py`-Betreuer, die die Ausnahmelisten spiegeln, sowie Consumer-Plugins, die die Konvention erben.
 
@@ -44,13 +44,13 @@ Leser: Skill- und Agent-Autoren bei der Wahl eines konformen Namens, Reviewer, d
 
 ### Eine Form pro Artefakt-Typ, pro Plugin
 
-- **MUSS** das Naming über das ganze Plugin konsistent halten — eine Konvention pro Artefakt-Typ; eine Gerundium- oder Freiform in eine der beiden Flächen zu mischen ist selbst das Discoverability-Anti-Pattern, vor dem `plugin-scoping` §Namespace and naming coherence warnt
+- **MUSS** das Naming über das ganze Plugin konsistent halten — eine Konvention pro Artefakt-Typ; eine Gerundium- oder Freiform in eine der beiden Flächen zu mischen ist selbst das Discoverability-Anti-Pattern, vor dem `plugin-scoping` §Namespace- und Benennungs-Kohärenz warnt
 - Domänen-Plugins, die diesen Korpus erben (etwa `claude-home-assistant`), **DÜRFEN** jedem Artefakt-Namen ein festes Domänen-Präfix (`ha-`) voranstellen; die Form nach dem Präfix folgt unverändert den obigen Regeln (`ha-config-flow-augment`, `ha-blueprint-author`)
 - Erbende Plugins auditieren ihre Fläche gegen die **Regeln** dieser Spec, nicht wörtlich gegen die nolte-shared-Validator-Listen, und **MÜSSEN** eigene geschlossene Ausnahmelisten in ihrem Spec-Index-README deklarieren, unter derselben Disziplin (geschlossen, greppable, Reviewer DARF NICHT flaggen). Eine **Familien-Suffix-Ausnahme** (ein bewusstes, uniformes Suffix, das eine Artefakt-Familie benennt, etwa eine `*-solution`-Front-Door-Familie) qualifiziert, wenn sie dort deklariert ist und intern konsistent bleibt
 
 ### Rename-Policy
 
-- Die Umbenennung eines bestehenden Artefakts ist ein **Breaking Change** für jede Consumer-Aufrufstelle und **MUSS** als neues Artefakt plus Deprecation-Notiz auf dem alten ausgeliefert werden, nie als stiller Flip (gemäß `skill-vs-agent` §Portfolio-wide consistency)
+- Die Umbenennung eines bestehenden Artefakts ist ein **Breaking Change** für jede Consumer-Aufrufstelle und **MUSS** als neues Artefakt plus Deprecation-Notiz auf dem alten ausgeliefert werden, nie als stiller Flip (gemäß `skill-vs-agent` §Portfolio-weite Konsistenz)
 - Ein künftiger koordinierter Portfolio-Rename (etwa der Flip auf Gerundium-Form) **DARF** mit Deprecation-Periode stattfinden; bis eine solche Änderung shippt, gelten die obigen Formen
 - Der stehende Naming-Audit-Entscheid von 2026 gilt: Form-Abweichungen in der Bestandsfläche sind **Beobachtungs-Suggestions**, nie Rename-Aufträge
 
@@ -61,7 +61,7 @@ Leser: Skill- und Agent-Autoren bei der Wahl eines konformen Namens, Reviewer, d
 
 ### Zeichen-Ebenen-Digest (anderswo besessen)
 
-Nur zur Bequemlichkeit — die normativen Regeln leben in `skill-management` §Frontmatter validation und `agent-management` §Structure: 1–64 Zeichen, lowercase ASCII-Buchstaben/Ziffern/Bindestriche, kein führender/abschließender Bindestrich, kein `--`, kein XML, reservierte Tokens `anthropic`/`claude` in `name` verboten (enge dokumentierte Ausnahme via `## Reserved-token rationale`), generische Namen (`helper`, `utils`, `tools`, `documents`, `data`, `files`) verboten.
+Nur zur Bequemlichkeit — die normativen Regeln leben in `skill-management` §Frontmatter-Validierung und `agent-management` §Struktur: 1–64 Zeichen, lowercase ASCII-Buchstaben/Ziffern/Bindestriche, kein führender/abschließender Bindestrich, kein `--`, kein XML, reservierte Tokens `anthropic`/`claude` in `name` verboten (enge dokumentierte Ausnahme via `## Reserved-token rationale`), generische Namen (`helper`, `utils`, `tools`, `documents`, `data`, `files`) verboten.
 
 ## Akzeptanzkriterien
 
@@ -73,8 +73,8 @@ Nur zur Bequemlichkeit — die normativen Regeln leben in `skill-management` §F
 ## References
 
 - [R1] Skill authoring best practices, Anthropic platform docs: <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
-- [R2] `plugin-scoping` §Namespace and naming coherence: `spec/claude/plugin-scoping/`
-- [R3] Zeichen-Ebenen-Owner: `spec/claude/skill-management/` §Frontmatter validation · `spec/claude/agent-management/` §Structure
+- [R2] `plugin-scoping` §Namespace- und Benennungs-Kohärenz: `spec/claude/plugin-scoping/`
+- [R3] Zeichen-Ebenen-Owner: `spec/claude/skill-management/` §Frontmatter-Validierung · `spec/claude/agent-management/` §Struktur
 - [R4] `scripts/validate_skills.py` (`check_name_form` und die vier geschlossenen Listen)
 
 ## Offene Fragen

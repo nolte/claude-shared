@@ -39,7 +39,7 @@ Diese Regel lebte zuerst in `spec/project/e2e-failure-diagnosis/` §E, ist aber 
 - Ein nicht hypothesentragendes Briefing (reine Erkennung oder Scoping) **MAY** [MAY] die Klausel tragen, muss es aber nicht; die Regel bindet dort, wo eine Behauptung existiert, die widerlegt werden kann.
 - Eine Domänen- oder scope-spezifische Spec, die diese Regel braucht, **MUST** [MUST] diese Spec referenzieren, statt den Regeltext neu auszuformulieren, und **MAY** [MAY] nur ihre scope-spezifische Anwendung ergänzen (etwa welche Evidenzkanäle ein Briefing tragen muss).
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] Die Regel lebt in dieser übergreifenden Spec unter `spec/claude/`, nicht in einer Domänen-Spec.
 - [ ] „Hypothesentragendes Briefing" ist so definiert, dass ein Reviewer entscheiden kann, ob ein gegebenes Briefing im Scope ist.

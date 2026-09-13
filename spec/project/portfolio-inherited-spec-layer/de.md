@@ -166,7 +166,7 @@ Provenance: Diese Spec ist unter dem `spec`-Skill verfasst und folgt dem Sieben-
 - **MUSS [MUST]** den `spec`-Skill (`skills/spec/SKILL.md`) um den Local-vs-Inherited-Drift-Pass aus §"Drift-Detection" erweitern, der sich mit seinem bestehenden Übersetzungs-Drift-Check komponiert – nicht ihn ersetzt.
 - **KANN [MAY]** reichere Affordanzen (ein dediziertes Migrations-Sub-Kommando, automatisches Override-Datei-Scaffolding, eine gerenderte „Inherited vs Local"-Sicht) auf spätere Revisionen verschieben; die tragende Durchsetzung ist die Schema-Validierung plus der Drift-Pass.
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] `spec/.spec-config.yml` akzeptiert eine optionale `inherits:`-Liste von Source-Records (`source`, `ref`, optional `overrides:`); ein malformter Record wird von CI/Pre-Commit abgelehnt und kann `develop` nicht erreichen.
 - [ ] Die kanonische Datei einer Spec darf eine `Portfolio-Scope:`-Header-Zeile tragen (`portfolio` | `local`); eine Datei ohne eine solche Zeile wird von der Auflösungs- und Audit-Tooling als `local` behandelt.

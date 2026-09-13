@@ -142,7 +142,7 @@ Eine responsive UI rendert je Breakpoint anderes Chrome, andere DOM-Formen und a
 - Gegen ein gegebenes Browser-Grid **MUST** [MUSS] zur selben Zeit genau ein Anwendungs-Stack laufen; nebenläufige Stacks erschöpfen die Session-Kapazität des Grids und produzieren massenhafte Setup-Fehler, die sich als Suite-Failures tarnen
 - Ein Profil in einer deklarierten Test-Matrix **MUST** [MUSS] erst nach mindestens einem validen Baseline-Lauf als abgedeckt gelten; ein infrastruktur-vergifteter Lauf ist keine Baseline
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] Neue E2E-Tests provisionieren die Entitäten, die sie mutieren oder von deren Teilzustand sie abhängen, selbst — mit kollisionsfreien eindeutigen Identifiern
 - [ ] Die Suite dokumentiert ihr Inventar globalen mutierbaren Zustands und serialisiert genau die mutierenden/assertenden Testdateien gegeneinander, nicht mehr

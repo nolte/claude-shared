@@ -22,7 +22,7 @@ Repository state when the skill is invoked:
 - `skills/lektorat-apply/SKILL.md` — present; `see_also` lists a renamed skill.
 - `skills/` and `agents/` populated; at runtime the candidate walk discovers, among
   others, `skills/spec/SKILL.md` (`description:` names multilingual spec authoring)
-  and `agents/claude-plugin-developer.md` (`description:` names spec-conformant
+  and `plugins/nolte-claude-dev/agents/claude-plugin-developer.md` (`description:` names spec-conformant
   authoring of skills, agents, plugin manifests).
 - `gh auth status` — authenticated.
 

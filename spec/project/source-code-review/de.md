@@ -106,7 +106,7 @@ Jedes Sprachprofil **MUSS** definieren, und ein Reviewer wendet es als Einheit a
 - **MUSS** diese Spec im Body oder in der `description` des Reviewer-Agents und des Skills zitieren
 - **MUSS** die Behebung durch den Operator über die Work-Packages des Reports routen (direkt oder über einen im Report gegründeten Implementierungsplan), nie über Ad-hoc-Fixen im Review-Fluss
 
-## Abnahmekriterien
+## Akzeptanzkriterien
 
 - [ ] Der Reviewer-Agent deklariert nur `Read`, `Grep`, `Glob`, wendet keine Edits an und liefert einen Report, klassifiziert mit dem Review-Plan-Schweregrad-Vokabular
 - [ ] Jedes Finding trägt file:line, eine D1–D11-Dimensions-ID, einen `production`/`test`-Marker und ein confirmed/suspected-Flag

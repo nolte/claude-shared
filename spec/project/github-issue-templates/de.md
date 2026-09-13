@@ -113,7 +113,7 @@ Ein nachgelagerter Skill, der diese Spec anwendet, **MUSS [MUST]**:
 - vor dem Schreiben von `feature_request.yml` validieren, dass nicht mehr als die Such-Bestätigung plus ein inhaltliches Feld `required: true` sind und dass das inhaltliche Pflichtfeld ein `textarea` ist; den Schreibvorgang abbrechen, wenn eine der Bedingungen verletzt ist.
 - wieder ausführbar sein: ein erneuter Lauf auf einem Repo, das bereits Templates hat, **MUSS [MUST]** Drift erkennen (geänderter Projekttyp, neue Audiences, fehlende Pflichtfelder, **oder eine `feature_request.yml`, die Pflichtfelder über das Limit hinaus angesammelt hat**) und einen Diff anbieten, statt still zu überschreiben.
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] Ein nach dieser Spec auditiertes Repo besitzt `.github/ISSUE_TEMPLATE/config.yml` mit explizit gesetztem `blank_issues_enabled`.
 - [ ] Ein nach dieser Spec auditiertes Repo besitzt mindestens `bug_report.yml` und `feature_request.yml` als Issue Forms.

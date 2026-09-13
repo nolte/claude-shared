@@ -179,7 +179,7 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   `${NOLTE_WORKTREE_ROOT:-~/repos/.worktrees}/<repo>/agents/` gemäß §Path layout zeigen
   (nie unter `.claude/worktrees/`), und er akzeptiert den Resumability-Trade-off, dass
   ein Subagent-Transkript nicht eigenständig `claude --resume`-bar ist — der Per-Run-
-  Checkpoint unter `.resume/issue-orchestrate/` (siehe §Resumption and operator gating)
+  Checkpoint unter `.resume/issue-orchestrate/` (siehe §Wiederaufnehmbarkeit und Operator-Gating)
   bleibt daher der Recovery-Anker. Die Operator-Freigabe-Gates verbleiben unabhängig
   davon bei der orchestrierenden Skill; der dedizierte Agent führt die
   Hands-on-Arbeit aus, er absorbiert die Gates nicht
@@ -307,7 +307,7 @@ verifiziert und gemergt ist.
   Spezialist (oder, mangels Match, der Generalist unter der Gap-Regel) verfasst den
   Fix, und das eingebaute `security-review`-Skill verifiziert den Diff
 - **MUSS [MUST]** ein Arbeitspaket, für das kein Spezialist passt, als Portfoliolücke
-  gemäß `continuous-improvement` §Portfolio gap closure behandeln: Der Orchestrator
+  gemäß `continuous-improvement` §Portfoliolücken-Schließung behandeln: Der Orchestrator
   hält den No-Match fest, wendet die Drei-Wiederholungen-Regel an und **KANN [MAY]**
   `claude-plugin-developer` dispatchen, um einen neuen Spezialisten zu verfassen,
   wenn die Regel (oder eine festgehaltene High-Impact-Begründung) erfüllt ist; bis
@@ -450,7 +450,7 @@ verifiziert und gemergt ist.
   PR-Erstellung) auf Operator-Bestätigung gaten; der Orchestrator feuert nie einen
   mutierenden Schritt ohne ein festgehaltenes „Ja"
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 - [ ] Für jeden Orchestrierungslauf, der einen `fix`-typisierten Pull Request
   produziert hat, trägt dieser Pull Request einen ausgefüllten Abschnitt
   `## Class sweep`, sein `Predicate` wurde tatsächlich ausgeführt, und entweder ist

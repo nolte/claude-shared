@@ -120,7 +120,7 @@ Ein portfolioweites Tech-Stack-Inventar zahlt den Kurationsaufwand entlang fünf
 - **DARF NICHT [MUST NOT]** Felder des Eintragsschemas, das `kind`-Enum, den Vererbungs-Vertrag oder die Audit-Severity-Tabelle neu definieren; diese leben in `spec/portfolio/tech-stack/` und werden per Referenz importiert.
 - **MUSS [MUST]** in `AUDIENCES.md` unter dem relevanten Revisit-Trigger referenziert werden, wenn diese Spec ihre §Audiences wesentlich ändert.
 
-## Acceptance Criteria
+## Akzeptanzkriterien
 
 - [ ] `spec/portfolio/tech-stack/` (kanonisch und jede vorhandene Übersetzung) trägt einen Ein-Satz-Cross-Reference zu dieser Spec, der sie als Eigentümer der Ermittlungs-Methodik, des Audience-Modells und der Benefits-Prosa nennt.
 - [ ] `AUDIENCES.md` §Revisit triggers nennt diese Spec als Trigger für den Fall, dass §Audiences sich wesentlich ändert.

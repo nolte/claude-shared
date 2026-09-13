@@ -22,7 +22,7 @@ Repository state when the skill is invoked:
 
 - `git log --oneline -1 <headSha>` resolves to commit `feat(skills): rename workflow-health-triage SKILL frontmatter`, which renamed `skills/workflow-health-triage/skill.md` → `skills/workflow-health-triage/SKILL.md` casing-only.
 - `agents/` directory contains (at runtime — exact set is discovered, not hard-coded):
-  - `agents/claude-plugin-developer.md` with `description:` mentioning *"spec-conformant authoring and revision of Claude Code skills, agents, and plugin manifest files"*.
+  - `plugins/nolte-claude-dev/agents/claude-plugin-developer.md` with `description:` mentioning *"spec-conformant authoring and revision of Claude Code skills, agents, and plugin manifest files"*.
   - `agents/audience-doc-author.md` with `description:` mentioning *"audience-aware MkDocs documentation prose"*.
   - `plugins/nolte-planning/agents/feature-consistency-reviewer.md` with `description:` mentioning *"feature-spec acceptance-criterion consistency review"*.
 - `gh auth status` — authenticated.

@@ -152,7 +152,7 @@ When the audiences want incompatible things—`A` wants more depth, `B` wants br
 - **MAY** localise references that genuinely differ between EN- and DE-speaking audiences (for example, a legal-citation reference) when the localisation is honest and the underlying claim is unchanged. Re-translation **MUST NOT** change the post's substance—only its surface.
 - **MUST NOT** flip a post's audience target to `fix` an unbalanced corpus distribution mid-translation. Corpus-level rebalancing happens at the next-post level, not by retconning an existing pair.
 
-## Acceptance criteria
+## Acceptance Criteria
 
 A post conforms to this spec when **all** of the following hold. The criteria are written so a reviewer (the author, the `blog-author` skill, or a future lint skill) can mark each one done / not done without ambiguity.
 

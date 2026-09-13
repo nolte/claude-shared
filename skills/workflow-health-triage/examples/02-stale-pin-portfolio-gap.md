@@ -28,7 +28,7 @@ Repository state when the skill is invoked:
 - `git log --oneline -1 <headSha>` resolves to a squash-merge commit on `develop` whose diff doesn't touch `automerge.yaml` — confirming the failure is in the reusable, not in the consumer's code.
 - `gh run list --status failure --branch develop --limit 50 | grep -c automerge` returns `4` — the historical-occurrence threshold is met.
 - `agents/` directory at runtime contains:
-  - `agents/claude-plugin-developer.md` (description: spec-conformant skill / agent / plugin-manifest authoring).
+  - `plugins/nolte-claude-dev/agents/claude-plugin-developer.md` (description: spec-conformant skill / agent / plugin-manifest authoring).
   - `agents/audience-doc-author.md` (description: audience-aware MkDocs documentation prose).
   - `plugins/nolte-planning/agents/feature-consistency-reviewer.md` (description: feature-spec consistency review).
   No agent's `description:` line names *"reusable workflow YAML maintenance"*, *"`nolte/gh-plumbing` tag bumps"*, or *"GitHub Actions pin remediation"*.

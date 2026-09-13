@@ -166,7 +166,7 @@ Dieser Unterabschnitt regelt Hero-Bilder, Social-Cards und jegliche sonstige KI-
 
 ## Offene Fragen
 
-_Alle offenen Fragen sind aufgelöst. Der `brand-primary`-Anker wurde vom Brand-Owner am 2026-06-06 als gedämpftes Indigo `oklch(0.47 0.12 276)` / `#4A529D` entschieden (festgehalten in §Brand harmony axes); die Deferrals zu Token-Bundle-Registry, CMYK und imagery-style-Übergabe wurden am selben Tag entschieden. Der vollständige Eintrag ist in der Git-Historie erhalten (Entscheidungslog, 2026-06-06)._
+_Alle offenen Fragen sind aufgelöst. Der `brand-primary`-Anker wurde vom Brand-Owner am 2026-06-06 als gedämpftes Indigo `oklch(0.47 0.12 276)` / `#4A529D` entschieden (festgehalten in §Brand-Harmonie-Achsen); die Deferrals zu Token-Bundle-Registry, CMYK und imagery-style-Übergabe wurden am selben Tag entschieden. Der vollständige Eintrag ist in der Git-Historie erhalten (Entscheidungslog, 2026-06-06)._
 
 ## Quellen
 

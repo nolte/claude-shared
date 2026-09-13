@@ -13,7 +13,7 @@ Repository state when the skill is invoked:
 - Open triage artifact at `.audits/continuous-improvement/2026-Q2.md` with `status: open`, containing:
   - **F3 — prose-style lint gap**: 3 generalist-handled occurrences (PRs #104, #109, #116), recurrence count at threshold, decision still `pending`.
 - `agents/` directory at runtime:
-  - `agents/claude-plugin-developer.md` — "spec-conformant authoring of Claude Code skills, agents, and plugin manifests".
+  - `plugins/nolte-claude-dev/agents/claude-plugin-developer.md` — "spec-conformant authoring of Claude Code skills, agents, and plugin manifests".
   - `agents/audience-doc-author.md` — "audience-aware MkDocs documentation prose; applies Vale style checks and prose-quality guidelines".
 - No agent with a description matching "prose-style lint", "markdown formatting lint", or "Vale lint failure remediation" directly, but `audience-doc-author`'s description mentions "Vale style checks"—a near-neighbour match.
 - The same `prose-style` failure class has been observed in one other portfolio repository (`nolte/project-alpha`), making this a cross-repository finding class.
