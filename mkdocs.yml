@@ -86,6 +86,8 @@ plugins:
             Erste Schritte: Getting Started
             Installation: Installation
             Nutzung: Usage
+            Schnellstart: Quickstart
+            Plugin-Fehlerbehebung: Plugin troubleshooting
             Guides: Guides
             References: References
             Projekt: Project
@@ -174,6 +176,8 @@ nav:
       - Plugin nutzen: de/using.md
       - Installation: de/getting-started/installation.md
       - Nutzung: de/getting-started/usage.md
+      - Schnellstart: de/getting-started/quickstart.md
+      - Plugin-Fehlerbehebung: de/getting-started/plugin-troubleshooting.md
   - Guides:
       - de/guides/index.md
       - Entwicklung: de/guides/development.md

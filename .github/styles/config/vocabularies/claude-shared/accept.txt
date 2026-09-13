@@ -1,8 +1,8 @@
-# All previously local entries were contributed upstream to nolte/vale-style
-# (PR #24) and ship in the technical vocabulary as of the pinned release
-# v0.1.17. This repository-local override is therefore intentionally empty;
-# add a new term here only when it is not yet accepted upstream, then PR it to
-# nolte/vale-style and remove it here once released (see spec/project/prose-style).
+# Repository-local Vale vocabulary. Every entry below is a term nolte/vale-style
+# doesn't yet accept at the pinned release (v0.1.17); the upstream additions are
+# tracked in nolte/vale-style#10, #29, and #30. Add a term here only when it
+# isn't accepted upstream, propose it upstream in the same change, and remove it
+# here once a release that accepts it is pinned (see spec/project/prose-style).
 #
 # Frontend review vocabulary (added with spec/frontend/source-code-review/;
 # upstream PR candidates for the technical vocabulary of nolte/vale-style).

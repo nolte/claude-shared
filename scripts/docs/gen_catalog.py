@@ -92,6 +92,7 @@ CHROME = {
         "distribution_label": "Distribution",
         "tags_label": "Tags",
         "plugin_label": "Plugin",
+        "invocation_label": "Aufruf",
         "phase_label": "Phase",
         "use_when_label": "Anwenden wenn",
         "dont_use_when_label": "Nicht anwenden wenn",
@@ -149,6 +150,7 @@ CHROME = {
         "distribution_label": "Distribution",
         "tags_label": "Tags",
         "plugin_label": "Plugin",
+        "invocation_label": "Invocation",
         "phase_label": "Phase",
         "use_when_label": "Use when",
         "dont_use_when_label": "Don't use when",
@@ -337,6 +339,19 @@ def parse_frontmatter(text: str, file_label: str) -> tuple[dict, str]:
         else:
             meta[key] = raw_value
     return meta, body.lstrip("\n")
+
+
+def _repo_prefix(source: SourceRoot) -> str:
+    """The source root's path inside the repository, as a URL path prefix.
+
+    A plugin carved out under plugins/<name>/ keeps its skills and agents there,
+    so the GitHub source link needs that directory; the root plugin needs none.
+    """
+    try:
+        rel = source.local.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        return ""
+    return "" if rel in ("", ".") else f"{rel}/"
 
 
 def load_sources() -> list[SourceRoot]:
@@ -668,7 +683,7 @@ def discover_skills(source: SourceRoot, languages: list[str]) -> list[Artifact]:
                 phase=_validate_phase(meta.get("phase"), label),
                 tags=_normalize_tags(meta.get("tags"), label),
                 body=body,
-                source_relpath=f"{source.skills_path}/{entry.name}/SKILL.md",
+                source_relpath=f"{_repo_prefix(source)}{source.skills_path}/{entry.name}/SKILL.md",
                 repo_url=source.repo_url,
                 branch=source.branch,
                 summary=_validate_summary(meta.get("summary"), label, "summary"),
@@ -718,7 +733,7 @@ def discover_agents(source: SourceRoot, languages: list[str]) -> list[Artifact]:
                 phase=_validate_phase(meta.get("phase"), label),
                 tags=_normalize_tags(meta.get("tags"), label),
                 body=body,
-                source_relpath=f"{source.agents_path}/{entry.name}",
+                source_relpath=f"{_repo_prefix(source)}{source.agents_path}/{entry.name}",
                 repo_url=source.repo_url,
                 branch=source.branch,
                 summary=_validate_summary(meta.get("summary"), label, "summary"),
@@ -995,6 +1010,18 @@ def render_page(
     lines.append("")
 
     # Use-case metadata sections (each rendered only when the field is declared).
+    # spec/project/mkdocs-structure/ §Content modes: a `reference` page SHOULD carry
+    # an example that illustrates without instructing. The invocation form is the
+    # one example every catalog entry has (#593, 2026-Q4 audit F93).
+    lines.append(f"## {chrome['invocation_label']}")
+    lines.append("")
+    lines.append("```text")
+    if artifact.kind == "skill":
+        lines.append(f"/{artifact.plugin}:{artifact.name}")
+    else:
+        lines.append(f'Agent(subagent_type="{artifact.plugin}:{artifact.name}")')
+    lines.append("```")
+    lines.append("")
     if artifact.use_when:
         lines.append(f"## {chrome['use_when_label']}")
         lines.append("")
