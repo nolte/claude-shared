@@ -56,7 +56,7 @@ The nolte portfolio is built largely from hobby-scale projects. Sprint cadence, 
   - `fine`: a paragraph stating the user-visible change and a checklist of intended features (titles only; actual feature schema lives in the `feature` spec);
   - `coarse`: one or two sentences describing the intent;
   - `backlog`: a single sentence is enough.
-- **MUST NOT** carry effort estimates, dates, or assignment fields; those belong to the consuming sprint and feature artefacts.
+- **MUST NOT** carry effort estimates, planned dates, or assignment fields in an item's YAML block; those belong to the consuming sprint and feature artefacts.
 
 Concrete shape of one `fine` item inside `roadmap.md`:
 
@@ -120,8 +120,8 @@ End users authenticate via the new SSO provider in under three steps; the legacy
 - [ ] Every roadmap item's `outcomes` list resolves: each entry matches an `O-<n>` defined in `goals.md`; lints fail otherwise.
 - [ ] No roadmap item with `target_sprint` equal to the current or next sprint carries `detail` other than `fine`; `roadmap-refine` raises a violation when this invariant is broken.
 - [ ] No `proposed` item moves directly to `done`; the only allowed transitions are `proposed → active → done`, `proposed → cancelled`, and `active → cancelled`.
-- [ ] No effort estimates, calendar dates, or assignment fields appear on roadmap items; lints flag any unknown frontmatter key.
-- [ ] No roadmap item carries `target_sprint` pointing at a `closed` or `cancelled` sprint; lints fail when a sprint reaches terminal state without `sprint-plan` clearing or re-targeting items still pointing at it.
+- [ ] No effort estimates, planned calendar dates, or assignment fields appear in a roadmap item's YAML block (a dated note recording what already happened, such as a lifecycle deviation, is history rather than scheduling); lints flag any unknown frontmatter key.
+- [ ] No roadmap item carries `target_sprint` pointing at a `closed` or `cancelled` sprint that ended without picking the item up; lints fail when a sprint reaches terminal state without `sprint-plan` clearing or re-targeting items still pointing at it.
 - [ ] No roadmap item is in `status: done` while any feature it spawned is still in a non-terminal state (`draft`, `ready`, `in_progress`); enforced at sprint closure by `sprint-review`.
 - [ ] No roadmap item advances to `status: done` from a sprint whose own status is `cancelled`, even when every feature on the item is individually `done`; the item's pending features must be re-targeted to a new sprint and the item remains `active` until that successor sprint reaches `closed`.
 - [ ] `audience-identification` is dispatched before outcome authoring on a fresh repo with no audience artefact; outcomes are never invented inline.

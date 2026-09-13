@@ -38,7 +38,7 @@ Readers: developers wiring an application to an error tracker, operators running
 ### Tool-neutral core (mandatory)
 
 - The error tracker **MUST** be selected from the capability class defined by these six capabilities: (1) event ingestion via **Sentry-SDK-protocol-compatible** client SDKs configured by a **DSN**; (2) automatic **grouping** of recurring events into issues; (3) an **environment** dimension on every event; (4) a **release** dimension on every event; (5) **alert rules** on new and regressed issues; (6) an **issue lifecycle** (open → resolved → regressed, plus an explicit ignore state). Any product with these six satisfies this spec—the contract binds the class, not the vendor
-- Application instrumentation **MUST** use the standard Sentry-compatible SDK for its platform rather than a vendor-proprietary client, so switching backends (GlitchTip ↔ Sentry ↔ compatible) is a configuration change (the DSN), never a code change
+- Application instrumentation **MUST** use the standard Sentry-compatible SDK for its platform rather than a vendor-proprietary client, so switching backends (between any two trackers of the capability class) is a configuration change (the DSN), never a code change
 - The DSN **MUST** be injected via environment/deployment configuration and **MUST NOT** be hardcoded in the source tree; a missing DSN **MUST** degrade gracefully—the SDK stays a no-op and the application starts and runs normally, so local checkouts and CI need no tracker
 - One logical application **SHOULD** map to one tracker project per major component (backend, frontend, worker), with deployment stages separated by the environment tag inside those projects; a separate dev project **MAY** be used where hard isolation of experimental noise is wanted
 

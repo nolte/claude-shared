@@ -118,7 +118,7 @@ When the license pass runs:
 - **Python**: `pip-licenses --format=json --with-urls --with-license-file=false` (install hint: `pip install pip-licenses`).
 - **Node**: `npx --yes license-checker --json --production` (or `pnpm licenses list --long --json` for pnpm).
 
-Compare the discovered licenses against the allowlist. If no allowlist exists (and the caller opted in anyway), flag every non-permissive license (GPL / AGPL / LGPL / SSPL / unknown) as `review`, not as failure. Don't invent a policy.
+Classify and gate the discovered licenses with the categories and the allow/review/deny policy of `spec/project/license-check/`; this pass applies that spec to the dependency slice and never classifies on its own. The allowlist found above only switches the pass on and supplies the repository's `allow` entries. A license that isn't on it goes to `review`, not to failure, and with no allowlist (the caller opted in anyway) every non-permissive license (GPL / AGPL / LGPL / SSPL / unknown) goes to `review` too. Don't invent a policy; for a full inventory, SPDX mapping, or a compatibility question, hand over to the `license-check` skill.
 
 ### 5. Render the report
 
