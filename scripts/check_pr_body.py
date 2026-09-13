@@ -115,16 +115,12 @@ def check_spec_anchor(pr_type: str | None, linked_issues: str | None, changed_fi
 AUDIT_LABEL = "audit"
 LINKED_ISSUE_RE = re.compile(r"(?<![\w/])#(\d{1,9})\b")
 TRACEABILITY_FIELDS = ("Originating source", "Dispatched specialist")
-NO_MATCH_NOTE = "no matching specialist existed"
-# A named specialist recorded as bypassed satisfies neither allowed form.
-# Neither allowed form needs to say that something wasn't dispatched: the
-# specialist form names who produced the fix, the no-match form says none existed.
-# Any such wording in the field fails, wherever it stands, so the check can't be
-# steered by clause order.
-BYPASS_RE = re.compile(
-    r"\b(?:not|never|none|neither|wasn't|weren't)\b(?:[ \t]+[\w`:-]+){0,3}[ \t]+dispatched\b",
-    re.IGNORECASE,
-)
+# Neither allowed form needs dispatch-status wording: the specialist form names
+# who produced the fix, the no-match form says none existed. Reading negations
+# in free text leaks in both directions, so the check rejects the vocabulary
+# itself (any form, markdown ignored). A bypass worded without it isn't caught
+# here; the coverage review still reads the field.
+DISPATCH_STATUS_RE = re.compile(r"\b(?:dispatch|invok|bypass)\w*", re.IGNORECASE)
 
 
 def linked_issue_numbers(body: str, repository: str | None = None) -> list[int]:
@@ -179,11 +175,12 @@ def check_traceability(risk: str | None, audit_issues: list[int]) -> list[str]:
                 '(spec/project/continuous-improvement/ §"Traceability in remediation artifacts")'
             )
     specialist = values["Dispatched specialist"]
-    if specialist and BYPASS_RE.search(specialist):
+    plain = re.sub(r"[`*_~]", "", specialist or "")
+    if DISPATCH_STATUS_RE.search(plain):
         failures.append(
-            "`Dispatched specialist:` records something as not dispatched, which is neither allowed form: "
-            "name the specialist that produced the fix, or record that no matching specialist existed, and keep "
-            "any remark about a specialist that wasn't dispatched out of this field "
+            "`Dispatched specialist:` carries dispatch-status wording (dispatch, invoke, bypass), which neither "
+            "allowed form needs: name the specialist that produced the fix, or write `no matching specialist "
+            "existed — generalist handled`, and keep any remark about what was or wasn't dispatched out of this field "
             '(spec/project/continuous-improvement/ §"Specialist dispatch")'
         )
     return failures

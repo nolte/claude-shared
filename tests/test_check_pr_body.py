@@ -290,14 +290,14 @@ def test_no_match_note_passes():
 def test_named_but_not_dispatched_specialist_fails(value):
     risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
     failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
-    assert any("neither allowed form" in f for f in failures)
+    assert any("dispatch-status wording" in f for f in failures)
 
 
 def test_specialist_value_continues_on_indented_lines():
     risk = ("- Originating source: #588\n- Dispatched specialist:\n"
             "  - The audit named `skill: spec`.\n  - It wasn't dispatched.\n- Another note")
     failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
-    assert any("neither allowed form" in f for f in failures)
+    assert any("dispatch-status wording" in f for f in failures)
     assert not any("carries no `Dispatched specialist:`" in f for f in failures)
 
 
@@ -330,7 +330,7 @@ def test_no_match_note_exempts_only_when_it_opens_the_value():
     risk = ("- Originating source: #588\n- Dispatched specialist: skill: spec was not dispatched; "
             "no matching specialist existed for the workflow")
     failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
-    assert any("neither allowed form" in f for f in failures)
+    assert any("dispatch-status wording" in f for f in failures)
 
 
 def test_linked_issue_urls_of_the_same_repository_count():
@@ -354,8 +354,14 @@ def test_no_match_form_variants_pass(value):
     "no matching specialist existed, so none was dispatched",
     "code-security-reviewer; neither code-security-reviewer nor docs dispatched",
     "skill: spec, none but code-security-reviewer not dispatched",
+    "no matching specialist existed; no specialist was dispatched",
+    "spec; code-security-reviewer matched but nobody dispatched it",
+    "code-security-reviewer matches but did not dispatch it",
+    "code-security-reviewer (not **dispatched**)",
+    "skill: spec, bypassed in the operator session",
+    "the audit named `skill: spec`; it wasn't invoked",
 ])
-def test_any_not_dispatched_wording_fails_in_either_form(value):
+def test_any_dispatch_status_wording_fails_in_either_form(value):
     risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
     failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
-    assert any("neither allowed form" in f for f in failures)
+    assert any("dispatch-status wording" in f for f in failures)
