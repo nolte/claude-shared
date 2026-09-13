@@ -53,7 +53,7 @@ Any command that installs dependencies, writes into a tracked path, regenerates 
 
 You **do**:
 
-- Discover the repository's toolchain and the **configured thresholds** the skill passes (or the defaults it names): the lower/middle/upper coverage bands (Axis C), the cyclomatic-complexity ceiling and the duplication bound (Axis B).
+- Discover the repository's toolchain and the **configured thresholds** the skill passes (when it passes none, the thresholds are unconfigured): the lower/middle/upper coverage bands (Axis C), the cyclomatic-complexity ceiling and the duplication bound (Axis B).
 - For each capability in the inventory, mine **Axis B** signals: static-analysis status (lint, type-check, format-check — errors vs. warnings), cyclomatic complexity against the ceiling, duplication against the bound, type coverage, and SAST status where a rule set exists.
 - For each capability, mine **Axis C** signals: which Test-Pyramid tiers (static → unit → component → integration → contract → E2E) verify it and whether they pass, the capability's line/branch coverage against the configured bands, and the mutation score where the toolchain reports one.
 - For each capability, surface **Axis A evidence markers** only: `TODO`/`FIXME`/`XXX`, unimplemented/stub returns, `NotImplemented`, feature flags gating the path, and empty error branches — as *evidence*, never a tier.
@@ -76,7 +76,7 @@ The caller (maturity-assess skill) provides:
 
 - **Repo root** — the directory to scan. Default: current working directory.
 - **Capability inventory** — the list of `{id, name, code-location hint}` the skill inventoried top-down. Required: you attribute signals per capability, not repo-wide.
-- **Configured thresholds** — the coverage bands (lower/middle/upper), the complexity ceiling, and the duplication bound. When absent, use the spec's reference defaults and record in Health that defaults were used.
+- **Configured thresholds** — the coverage bands (lower/middle/upper), the complexity ceiling, and the duplication bound. When absent, record in Health that no thresholds are configured and propose `Unrated` for Axis B and Axis C: `spec/project/capability-maturity-assessment/` ships no reference defaults and forbids a universal number.
 
 ## Preconditions
 
@@ -87,7 +87,7 @@ The caller (maturity-assess skill) provides:
 
 ### Phase 1: Discover toolchain and thresholds
 
-Use `Glob`/`Read` to locate the test/coverage/lint/type/complexity/mutation configuration and any **existing** reports (coverage XML/JSON, lint output, CI logs, mutation reports). Prefer reading an existing report over regenerating it. When a report must be produced, run only the tool's **read-only / report-only** mode (e.g. a coverage or complexity report command, `--dry-run`, a status query) — never a command that installs, writes into tracked paths, or mutates state. Record the thresholds in force (passed in, or the named defaults).
+Use `Glob`/`Read` to locate the test/coverage/lint/type/complexity/mutation configuration and any **existing** reports (coverage XML/JSON, lint output, CI logs, mutation reports). Prefer reading an existing report over regenerating it. When a report must be produced, run only the tool's **read-only / report-only** mode (e.g. a coverage or complexity report command, `--dry-run`, a status query) — never a command that installs, writes into tracked paths, or mutates state. Record the thresholds in force (passed in, or `unconfigured`).
 
 ### Phase 2: Mine Axis B (code quality) signals per capability
 
@@ -129,7 +129,7 @@ Return a fenced Markdown block. Section headings are fixed; omit a per-capabilit
 # Capability Maturity Signal Inventory
 
 Scope: <repo root>
-Thresholds: coverage bands <lower/middle/upper> · complexity ceiling <n> · duplication bound <n>  (source: <passed-in | spec defaults>)
+Thresholds: coverage bands <lower/middle/upper> · complexity ceiling <n> · duplication bound <n>  (source: <passed-in | unconfigured>)
 Audience artifact: <AUDIENCES.md present | absent>   (mapping is the skill's job; noted for Health only)
 
 ## <C1> — <capability name>
@@ -141,7 +141,7 @@ Audience artifact: <AUDIENCES.md present | absent>   (mapping is the skill's job
 - Toolchain found: test-runner <t|none>, coverage <t|none>, lint <t|none>, type-check <t|none>, complexity <t|none>, mutation <t|none>
 - Capabilities scanned: <count> (unlocated: <n>)
 - Signals unavailable: <list — e.g. "mutation score (no mutation tool)">
-- Thresholds source: <passed-in | spec defaults>
+- Thresholds source: <passed-in | unconfigured>
 ```
 
 Do not invent signals to pad the inventory; an `unavailable` signal or an `Unrated` proposal is a valid finding the skill acts on.
