@@ -23,13 +23,13 @@ Wie gelangt das `nolte-shared`-Plugin aus diesem Repository in die Projekte, die
 <!-- diagram-source: user-described — claude-shared als nolte-shared-Plugin verpackt, das Skills/Agents/Specs an konsumierende Projekte ausliefert -->
 ```mermaid
 flowchart LR
-    CS["claude-shared\nQuell-Repository"] -->|"bündelt als"| PL["nolte-shared\nPlugin"]
-    PL -->|"liefert"| S["Skills\nslash-commands"]
-    PL -->|"liefert"| A["Agents\nsubagent_type"]
-    PL -->|"referenziert"| SP["Specs\nKonventionen"]
-    S --> P1["Projekt A"]
+    CS["claude-shared\nsource repo"] -->|"bundled as"| PL["nolte-shared\nplugin"]
+    PL -->|"delivers"| S["Skills\nslash commands"]
+    PL -->|"delivers"| A["Agents\nsubagent_type"]
+    PL -->|"references"| SP["Specs\nconventions"]
+    S --> P1["Project A"]
     A --> P1
-    S --> P2["Projekt B"]
+    S --> P2["Project B"]
     A --> P2
 ```
 

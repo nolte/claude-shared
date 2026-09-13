@@ -29,7 +29,7 @@ portfolio/ and project/{blog-triggers,requirements,portfolio.yml}.
 
 **Where the boundaries run**:
 
-- External surfaces: the plugin manifest + marketplace entry (install path), the slash commands (e.g. `/nolte-shared:spec`), the agent definitions, and the published MkDocs site (including the auto-generated skill / agent catalog under `docs/<lang>/skills/` and `docs/<lang>/agents/` and the `docs/lifecycle.md` development-lifecycle page).
+- External surfaces: the plugin manifest + marketplace entry (install path), the slash commands (e.g. `/nolte-shared:spec`), the agent definitions, and the published MkDocs site (including the auto-generated skill / agent catalog under `docs/<lang>/skills/` and `docs/<lang>/agents/` and the `docs/{en,de}/guides/development-lifecycle.md` development-lifecycle page).
 - The repo itself, the `develop`/`main` branches, and the CI workflows are part of the context.
 - The portfolio-level data surface: `portfolio/` (`tech-stack.yml`, `aggregate.yml`, `schemas/`) plus this repo's own `project/portfolio.yml` manifest — collected from and rendered for the portfolio member repositories via `portfolio-audit` and the docs Portfolio section.
 - The cross-repo blog-trigger surface: `project/blog-triggers/` — written here on feature `in_progress → done` events and consumed by `nolte/blog` per `spec/project/blog-author-trigger/`.
