@@ -5,7 +5,7 @@
 > **Variants:** Light + Dark
 > **Target size:** 1024×1024px (master); must read at 32×32px favicon
 > **Format:** PNG (transparent) after post-processing
-> **Style reference:** BRAND-STYLE-REF v1.1 — canonical style paragraph, see below
+> **Style reference:** BRAND-STYLE-REF v1.1 — canonical style paragraph, see below. The prompt blocks keep the paragraph's original `BRAND-STYLE-REF v0 (bootstrap):` label verbatim, because that label is part of the text the committed v1.1 renders were generated from; the paragraph content is the v1.1 one
 > **Seed:** **light 8521 · dark 8505** (canonical v1.1 — the matched "hanging from a horizontal branch" pair)
 
 ## Context

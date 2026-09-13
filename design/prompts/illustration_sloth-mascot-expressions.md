@@ -4,7 +4,7 @@
 > **Generator:** cloudflare flux-1-schnell
 > **Variants:** Light (default) — dark-mode swaps per `illustration_sloth-mascot.md`
 > **Target size:** 1024×1024px per expression
-> **Style reference:** the HEAD + TAIL blocks below — self-contained, no external image needed
+> **Style reference:** `BRAND-STYLE-REF v1.1`, anchored by `design/brand/mascot/mascot-front-light.svg` (see `../brand/brand-vocabulary.md` §Canonical style reference); the HEAD + TAIL blocks below carry it as text
 > **Seed:** pass an explicit `--seed`; keep one seed across a set for body consistency
 
 ## Context
@@ -24,19 +24,19 @@ modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, 
 **HEAD (invariant identity, up to the face):**
 
 ```
-a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, NOT natural brown tan or beige sloth fur. Front view, facing the viewer, near-symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A single cool silver-grey streak of fur runs down one side of the head, from the tuft past the temple and cheek beside the mask — a grey lock, cool grey not cream, on one side only. A small rounded dark nose centered.
+a chibi cartoon sloth plush-toy with DEEP BLUE-INDIGO fur, a cool blue-violet indigo. Front view, near-symmetrical. Large round head with a small jagged fur tuft. A big heart-shaped cream face mask with a V-notch. Two broad dark navy-charcoal diagonal stripes cross each eye, pale between them, a small dark nose. A cool silver-grey fur streak runs down one side of the head from the tuft past the cheek, beside the mask.
 ```
 
 **TAIL (invariant body):**
 
 ```
-The cream is ONLY on the face mask; the whole body — chest, belly, back and sides — is solid deep blue-indigo with no belly patch. Compact rounded body with no visible neck, short arms at the sides, exactly three pale cream elongated rounded claws on each hand and foot. Bold even-weight dark-indigo outline, small soft-grey oval shadow beneath.
+Cream only on the face mask; the whole body solid deep blue-indigo. Compact rounded body right under the head, short arms, exactly three pale cream claws per hand and foot. Bold dark-indigo outline, soft-grey oval shadow beneath.
 ```
 
 **COLOR LOCK:**
 
 ```
-Fur colour deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
+Fur deep blue-indigo #4A529D / observed slate #4A4E6B, mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, side streak cool silver-grey #AEB2BE.
 ```
 
 ## Expressions (insert one slot between HEAD and TAIL)
@@ -67,9 +67,9 @@ smile. The best approximation is the wide-round-eyes + raised-brows variant
 ```
 modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
 
-a stylised chibi cartoon sloth plush-toy character whose fur is DEEP BLUE-INDIGO, a desaturated blue-violet indigo, NOT natural brown tan or beige sloth fur. Front view, facing the viewer, near-symmetrical. Large round head about half the body height with a small jagged tuft of two or three short fur spikes on top. A big heart-shaped cream warm-bone-white face mask with a small V-notch at the top middle encloses the eyes nose and mouth. Two broad dark navy-charcoal diagonal stripes run from the top center of the mask outward and downward across each eye, the bridge between the eyes left pale. A single cool silver-grey streak of fur runs down one side of the head, from the tuft past the temple and cheek beside the mask — a grey lock, cool grey not cream, on one side only. A small rounded dark nose centered. Two large shiny near-black eyes, a wide open cheerful smile, two coral-orange blush patches, a bright happy expression. The cream is ONLY on the face mask; the whole body — chest, belly, back and sides — is solid deep blue-indigo with no belly patch. Compact rounded body with no visible neck, short arms at the sides, exactly three pale cream elongated rounded claws on each hand and foot. Bold even-weight dark-indigo outline, small soft-grey oval shadow beneath.
+a chibi cartoon sloth plush-toy with DEEP BLUE-INDIGO fur, a cool blue-violet indigo. Front view, near-symmetrical. Large round head with a small jagged fur tuft. A big heart-shaped cream face mask with a V-notch. Two broad dark navy-charcoal diagonal stripes cross each eye, pale between them, a small dark nose. A cool silver-grey fur streak runs down one side of the head from the tuft past the cheek, beside the mask. Two large shiny near-black eyes, a wide open cheerful smile, two coral-orange blush patches, a bright happy expression. Cream only on the face mask; the whole body solid deep blue-indigo. Compact rounded body right under the head, short arms, exactly three pale cream claws per hand and foot. Bold dark-indigo outline, soft-grey oval shadow beneath.
 
-Fur colour deep blue-indigo #4A529D / observed slate #4A4E6B (NOT brown), mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, signature side streak cool silver-grey #AEB2BE.
+Fur deep blue-indigo #4A529D / observed slate #4A4E6B, mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, side streak cool silver-grey #AEB2BE.
 ```
 
 ## Generation notes

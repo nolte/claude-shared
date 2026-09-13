@@ -64,8 +64,9 @@ deterministic script — semantic compression needs judgement. Claude or the
 - **No negative prompt exists** (guidance-distilled, the API sends no `negative_prompt`).
   Convert "no X" into a positive assertion where it matters: "the body is solid indigo"
   beats "no belly patch"; "a plain dark-charcoal laptop" beats "no Apple logo".
-- **Lead colour with an anti-drift assertion**: "deep blue-indigo, NOT brown" up front
-  — "sloth" pulls FLUX toward natural brown fur.
+- **Lead colour with a positive anti-drift assertion**: "deep blue-indigo plush fur, a cool
+  blue-violet indigo throughout" up front — "sloth" pulls FLUX toward natural brown fur, and
+  a negation inside the prompt would name the very colour to avoid.
 - **Scene-first for scenes**: the action sentence ("a sloth typing at a laptop") must
   precede the character details, or FLUX renders the isolated mascot and drops the scene.
 - **Prose, not labels**: the T5 text-encoder reads sentences; `CHARACTER:` / `POSE:`
@@ -77,10 +78,10 @@ deterministic script — semantic compression needs judgement. Claude or the
 **Canonical** (excerpt): the full bullet list in `illustration_sloth-mascot.md`
 §Character bible — every feature, both colour names and hex.
 
-**Compiled — flux-1-schnell** (~187 tokens, hex-free, anchors first):
+**Compiled — flux-1-schnell** (147 words, hex-free, anchors first; rewritten without negations on 2026-09-13, re-render-pending):
 
 ```
-A chibi cartoon three-toed sloth sitting upright facing the viewer, near-symmetrical, with deep blue-indigo plush fur (a blue-violet indigo, definitely NOT brown). A big heart-shaped cream face mask with a small V-notch holds two large round dark-brown eyes; two broad dark diagonal stripes cross over the eyes like a mask, pale between them. Small dark nose, a gentle closed smile, two round coral-orange blush cheeks, a small jagged head tuft on top. A single cool silver-grey fur streak runs down one side of the head beside the mask — a grey lock, the only asymmetry. The cream is only on the face — the whole body is solid indigo with no belly patch. Exactly three pale cream claws on each hand and foot. Bold even dark outline, smooth matte fills with soft cel-shading, flat warm bone-white background, soft oval shadow beneath. Modern flat kawaii vector cartoon style.
+A chibi cartoon three-toed sloth sitting upright facing the viewer, near-symmetrical, with deep blue-indigo plush fur (a cool blue-violet indigo throughout). A big heart-shaped cream face mask with a small V-notch holds two large round dark-brown eyes; two broad dark diagonal stripes cross over the eyes like a mask, pale between them. Small dark nose, a gentle closed smile, two round coral-orange blush cheeks, a small jagged head tuft on top. A single cool silver-grey fur streak runs down one side of the head beside the mask — a grey lock, the only asymmetry. The cream is only on the face — the whole body is solid indigo with a uniformly indigo belly. Exactly three pale cream claws on each hand and foot. Bold even dark outline, smooth matte fills with soft cel-shading, flat warm bone-white background, soft oval shadow beneath. Modern flat kawaii vector cartoon style.
 ```
 
 Every prompt document's `## Compiled — flux-1-schnell` block is produced this way. (Note

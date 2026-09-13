@@ -65,7 +65,7 @@ Leser: Prompt-Autoren und Skill-/Agent-Autoren, die FLUX adressieren; Betreiber,
 
 - [ ] Ein geprüfter FLUX-Prompt liest sich als natürlichsprachige Sätze, nicht als Komma-Tag-Liste.
 - [ ] Keine Prompt-Gewichte (`(word:1.3)`, `++`) erscheinen in FLUX-Prompts.
-- [ ] Ein schnell-Aufruf setzt Guidance auf `0` und `steps ≤ 8` und übergibt keinen `negative_prompt`.
+- [ ] Ein schnell-Aufruf setzt Guidance auf `0`, wo der Serving-Pfad einen Guidance-Parameter anbietet (der Cloudflare-Endpunkt tut das nicht), hält `steps ≤ 8` ein und übergibt keinen `negative_prompt`.
 - [ ] Bild-Text ist im Prompt in Anführungszeichen gesetzt.
 - [ ] Unerwünschte Attribute sind positiv formuliert, nicht als Negative Prompts.
 - [ ] FLUX.1-dev ist nicht der Default für kommerzielle oder veröffentlichte Assets; seine non-commercial-Lizenz wird respektiert.

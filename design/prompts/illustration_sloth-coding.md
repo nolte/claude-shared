@@ -4,7 +4,7 @@
 > **Generator:** cloudflare flux-1-schnell
 > **Variants:** Light (default)
 > **Target size:** 1024×1024px
-> **Style reference:** the prompt below — self-contained, no external image needed
+> **Style reference:** `BRAND-STYLE-REF v1.1`, anchored by `design/brand/mascot/mascot-front-light.svg` (see `../brand/brand-vocabulary.md` §Canonical style reference); the prompt below carry it as text
 > **Seed:** pass an explicit `--seed`; verified-good seeds listed below
 
 ## Context
@@ -32,11 +32,11 @@ warm-bone background (easy to cut out).
 ```
 modern flat-design kawaii vector cartoon, bold clean dark outlines, smooth matte fills with a single soft cel-shading step, simple flat shapes.
 
-A cute chibi cartoon sloth sitting on the floor behind a small low wooden table, viewed from the front and centered, typing on an open laptop that stands on the table. The sloth leans forward and rests both small three-clawed hands on the laptop keyboard. The laptop is a chunky matte DARK CHARCOAL-GREY laptop with a plain smooth lid and rounded corners — a generic dark laptop, definitely not a silver metal laptop, with no logo, no apple, no emblem and no text on it. A small cream mug sits on the floor to the right of the table. The sloth's two clawed feet peek out below the table. Happy focused expression.
+A cute chibi cartoon sloth sits on the floor behind a small low wooden table, front view, centered, typing on an open laptop on the table, both small three-clawed hands on the keyboard. The laptop is chunky matte DARK CHARCOAL-GREY with rounded corners and a plain unmarked lid. A small cream mug stands right of the table; two clawed feet peek out below it. Happy focused expression.
 
-The sloth has DEEP BLUE-INDIGO fur (a blue-violet indigo, NOT brown), a large round head with a small jagged head tuft, a heart-shaped cream face mask with two broad dark diagonal eye-stripes, a single cool silver-grey streak of fur running down one side of the head beside the mask (a grey lock, cool grey not cream, the only asymmetry), two big round dark eyes with small white highlights, a small dark nose, a gentle closed smile, two coral-orange blush cheeks. Its body is solid indigo with no belly patch.
+The sloth has DEEP BLUE-INDIGO blue-violet fur, a large round head with a small jagged tuft, a heart-shaped cream face mask with two broad dark diagonal eye-stripes, a single cool silver-grey fur streak down one side of the head beside the mask (a grey lock, the only asymmetry), two big round dark eyes with white highlights, a small dark nose, a gentle closed smile, two coral-orange blush cheeks. Its whole body is solid indigo.
 
-Flat warm bone-white background, a soft oval shadow under the whole scene. Fur indigo #4A529D / observed slate #4A4E6B (NOT brown), cream face mask #F4F1EA, coral cheeks #E8825A, signature side streak cool silver-grey #AEB2BE, dark charcoal laptop, warm wood-brown table.
+Flat warm bone-white background, soft oval shadow under the scene. Fur deep blue-indigo #4A529D / observed slate #4A4E6B, cream face mask #F4F1EA, coral cheeks #E8825A, side streak cool silver-grey #AEB2BE, dark charcoal laptop, warm wood-brown table.
 ```
 
 ## Generation notes

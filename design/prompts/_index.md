@@ -4,9 +4,13 @@ Brand assets for the portfolio's heraldic-animal identity (a sloth), authored pe
 `spec/design/graphic-prompt-authoring/`. All prompts share one visual register
 (`BRAND-STYLE-REF v1.1`, defined textually in the CHARACTER blocks) and the palette in
 `../brand/brand-vocabulary.md`, so every asset reads as a single brand family. The
-prompt documents are **self-contained** — the figure is fully described in text, so no
-external reference image is needed (and none is committed to the repo).
+prompt documents describe the figure fully in text and name `BRAND-STYLE-REF v1.1`,
+whose fixed reference image is the committed `design/brand/mascot/mascot-front-light.svg`.
 
+> **2026-09-13 prompt rewrite (#589):** every compiled prompt block states its colours
+> positively and stays under 200 words (the FLUX T5 256-token cap); the committed renders
+> came from the earlier wording, so they are re-render-pending until the next generation run.
+>
 > **v1.1 figure change:** the canonical figure gained a **cool silver-grey signature
 > streak** down one side of the head (see one-line recall below). All prompt documents
 > carry the v1.1 wording. The **front mascot** and the **logo emblem** are rendered at

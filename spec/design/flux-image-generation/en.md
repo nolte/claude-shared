@@ -65,7 +65,7 @@ Readers: prompt authors and skill/agent authors targeting FLUX; operators tuning
 
 - [ ] A FLUX prompt under review reads as natural-language sentences, not a comma-tag list.
 - [ ] No prompt weights (`(word:1.3)`, `++`) appear in FLUX prompts.
-- [ ] A schnell call sets guidance to `0` and `steps ≤ 8`, and passes no `negative_prompt`.
+- [ ] A schnell call sets guidance to `0` where the serving path exposes a guidance parameter (the Cloudflare endpoint doesn't), keeps `steps ≤ 8`, and passes no `negative_prompt`.
 - [ ] In-image text is quoted in the prompt.
 - [ ] Unwanted attributes are phrased positively, not as negative prompts.
 - [ ] FLUX.1-dev isn't the default for commercial or published assets; its non-commercial licence is respected.
