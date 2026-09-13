@@ -318,3 +318,22 @@ def test_main_prints_linked_issues_and_reads_labels(monkeypatch, tmp_path, capsy
     assert check_pr_body.main([]) == 1
     labels.write_text("588 spec\n", encoding="utf-8")
     assert check_pr_body.main([]) == 0
+
+
+def test_overlong_issue_number_is_ignored_and_does_not_hide_a_real_one():
+    body = _remediation_body("None", linked="Closes #588 and #" + "9" * 5000)
+    assert check_pr_body.linked_issue_numbers(body) == [588]
+
+
+
+def test_no_match_note_exempts_only_when_it_opens_the_value():
+    risk = ("- Originating source: #588\n- Dispatched specialist: skill: spec was not dispatched; "
+            "no matching specialist existed for the workflow")
+    failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
+    assert any("neither allowed form" in f for f in failures)
+
+
+def test_linked_issue_urls_of_the_same_repository_count():
+    body = _remediation_body("None", linked="Closes https://github.com/nolte/claude-shared/issues/588 and https://github.com/nolte/other/issues/7")
+    assert check_pr_body.linked_issue_numbers(body, "nolte/claude-shared") == [588]
+    assert check_pr_body.linked_issue_numbers(body) == []

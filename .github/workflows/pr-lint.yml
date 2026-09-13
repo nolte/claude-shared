@@ -47,20 +47,39 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename' > "${RUNNER_TEMP}/changed-files.txt"
-      # The checker parses `## Linked issues` itself and prints only issue numbers,
-      # so the loop below handles digits, never body text. An unreadable issue is
-      # reported as a warning; the rule then can't see its label.
+      # The checker parses `## Linked issues` itself and writes only issue numbers
+      # (at most nine digits each), so the next step handles digits, never body
+      # text. This step runs code from the pull request and gets no token.
+      - name: List the linked issue numbers
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: python3 scripts/check_pr_body.py --print-linked-issues > "${RUNNER_TEMP}/linked-issues.txt"
+      # This step holds the token and runs no code from the pull request. An
+      # unreadable linked issue fails the check: the traceability rule can't be
+      # judged without its labels.
       - name: Read the labels of the linked issues
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
+          count=$(wc -l < "${RUNNER_TEMP}/linked-issues.txt")
+          if [ "${count}" -gt 50 ]; then
+            echo "::error::## Linked issues references ${count} issues; the check reads at most 50"
+            exit 1
+          fi
           : > "${RUNNER_TEMP}/linked-issue-labels.txt"
-          for n in $(python3 scripts/check_pr_body.py --print-linked-issues); do
-            if ! gh api "repos/${GITHUB_REPOSITORY}/issues/${n}" --jq '.labels[].name' | sed "s/^/${n} /" >> "${RUNNER_TEMP}/linked-issue-labels.txt"; then
-              echo "::warning::could not read the labels of linked issue #${n}"
+          unreadable=""
+          while read -r n; do
+            if ! labels=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${n}" --jq '.labels[].name'); then
+              unreadable="${unreadable} #${n}"
+              continue
             fi
-          done
+            printf '%s\n' "${labels}" | sed '/^$/d' | sed "s/^/${n} /" >> "${RUNNER_TEMP}/linked-issue-labels.txt"
+          done < "${RUNNER_TEMP}/linked-issues.txt"
+          if [ -n "${unreadable}" ]; then
+            echo "::error::could not read the labels of linked issue(s)${unreadable}"
+            exit 1
+          fi
       - name: Lint the pull-request title and body
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}

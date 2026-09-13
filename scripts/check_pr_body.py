@@ -113,7 +113,7 @@ def check_spec_anchor(pr_type: str | None, linked_issues: str | None, changed_fi
 # source and the specialist. Only issue numbers leave the checker; the workflow
 # reads their labels and hands them back through a file.
 AUDIT_LABEL = "audit"
-LINKED_ISSUE_RE = re.compile(r"(?<![\w/])#(\d+)\b")
+LINKED_ISSUE_RE = re.compile(r"(?<![\w/])#(\d{1,9})\b")
 TRACEABILITY_FIELDS = ("Originating source", "Dispatched specialist")
 NO_MATCH_NOTE = "no matching specialist existed"
 # A named specialist recorded as bypassed satisfies neither allowed form.
@@ -123,11 +123,19 @@ BYPASS_RE = re.compile(
 )
 
 
-def linked_issue_numbers(body: str) -> list[int]:
-    """Same-repository `#N` references in `## Linked issues`, in order, without duplicates."""
-    content = dict(split_sections(body)).get("Linked issues") or ""
+def linked_issue_numbers(body: str, repository: str | None = None) -> list[int]:
+    """Same-repository references in `## Linked issues`, in order, without duplicates.
+
+    Reads `#N` and, when `repository` (`owner/name`) is known, full issue or pull
+    request URLs of that repository, which GitHub links the same way.
+    """
+    content = strip_comments(dict(split_sections(body)).get("Linked issues") or "")
+    found = [(m.start(), m.group(1)) for m in LINKED_ISSUE_RE.finditer(content)]
+    if repository:
+        url_re = re.compile(rf"github\.com/{re.escape(repository)}/(?:issues|pull)/(\d{{1,9}})\b", re.IGNORECASE)
+        found += [(m.start(), m.group(1)) for m in url_re.finditer(content)]
     seen: list[int] = []
-    for number in LINKED_ISSUE_RE.findall(strip_comments(content)):
+    for _, number in sorted(found):
         if int(number) not in seen:
             seen.append(int(number))
     return seen
@@ -167,10 +175,11 @@ def check_traceability(risk: str | None, audit_issues: list[int]) -> list[str]:
                 '(spec/project/continuous-improvement/ §"Traceability in remediation artifacts")'
             )
     specialist = values["Dispatched specialist"]
-    if specialist and NO_MATCH_NOTE not in specialist.lower() and BYPASS_RE.search(specialist):
+    if specialist and not specialist.lower().startswith(NO_MATCH_NOTE) and BYPASS_RE.search(specialist):
         failures.append(
             "`Dispatched specialist:` records a specialist as not dispatched, which is neither allowed form: "
-            "name the specialist that produced the fix, or record that no matching specialist existed "
+            "name the specialist that produced the fix, or start the value with `no matching specialist existed`; "
+            "a remark about another specialist belongs outside this field "
             '(spec/project/continuous-improvement/ §"Specialist dispatch")'
         )
     return failures
@@ -286,7 +295,7 @@ def main(argv: list[str] | None = None) -> int:
         if body is None:
             print("usage: provide --body-file or set PR_BODY", file=sys.stderr)
             return 2
-        for number in linked_issue_numbers(body):
+        for number in linked_issue_numbers(body, os.environ.get("GITHUB_REPOSITORY")):
             print(number)
         return 0
 
