@@ -3,7 +3,12 @@
 # enforce_admins and strict false. Verify through the API, not the settings page:
 #   gh api repos/nolte/claude-shared/branches/develop/protection
 
-_extends: nolte/gh-plumbing:.github/commons-settings.yml@v1.1.19
+# No `@<ref>` suffix: @probot/octokit-plugin-config matches _extends against
+# `^(owner/)?repo(:path.ya?ml)?$`, so `...commons-settings.yml@v1.1.19` is an
+# invalid value, the config load throws, and the app applies nothing from this
+# file (src/util/extends-to-get-content-params.ts). The loader reads the commons
+# from gh-plumbing's default branch; there is no way to pin it here.
+_extends: gh-plumbing:.github/commons-settings.yml
 
 repository:
   name: claude-shared
@@ -56,4 +61,8 @@ branches:
       required_status_checks: null
       enforce_admins: true
       required_linear_history: true
+      # The release step resets `main` to the published tag with a force push
+      # (release-cd-refresh-master); enforce_admins alone would refuse it
+      # (nolte/gh-plumbing#414). Operator decision 2026-09-13.
+      allow_force_pushes: true
       restrictions: null
