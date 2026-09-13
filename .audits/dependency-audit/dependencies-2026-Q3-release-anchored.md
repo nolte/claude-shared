@@ -1,6 +1,8 @@
-# Dependency audit — 2026-Q4
+# Dependency audit — 2026-Q3, release-anchored supplement
 
 - **Date:** 2026-09-13
+- **Trigger:** quarterly (a second 2026-Q3 run that adds the commit SHA and the release-anchored baseline the first run lacked)
+- **Prior record:** `.audits/dependency-audit/dependencies-2026-Q3.md` (2026-07-25, branch-only revision, 0 vulnerabilities)
 - **Repository:** `nolte/claude-shared`, `develop` @ `356d6a558456301bc7d8091a34282a7c2a426a4d`
 - **Release anchor:** `v0.1.11` @ `c00bcb1fa664`, the latest published release, audited from the manifests as tagged
 - **Governing spec:** `spec/project/dependency-audit/` (quarterly full-audit MUST); remediation of spec-drift-audit 2026-Q4 findings F60 (commit SHA) and F61 (release-anchored baseline), #587
@@ -36,5 +38,5 @@ No findings, so no `fix / mitigate / accept` responses are required. The `v0.1.1
 
 ## Cadence and follow-ups
 
-- Next full audit due 2026-Q1, and before any release tag that carries a dependency change; the next release tag should get its own anchored row.
+- Next full audit due 2026-Q4, and before any release tag that carries a dependency change; the next release tag should get its own anchored row.
 - The quarterly reminder in `.github/workflows/audit-cadence-reminder.yml` and the per-change `pip-audit` gate in `.github/workflows/audit-gates.yml` stay the recurring triggers.

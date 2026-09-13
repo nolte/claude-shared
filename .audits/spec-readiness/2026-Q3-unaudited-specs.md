@@ -6,11 +6,11 @@ scope: 13 specs
 status: closed
 ---
 
-# Spec Readiness Audit — 2026-Q4
+# Spec Readiness Audit — 2026-Q3, the 13 specs the first 2026-Q3 run didn't cover
 
 ## Scope
 
-The 13 specs the 2026-Q3 run didn't cover (spec-drift-audit 2026-Q4 finding F120, #587), audited by the `spec-readiness-reviewer` agent at `dac0375` against `spec/project/spec-readiness/en.md`, all three dimensions, with `python3 scripts/check_section_refs.py --report` as a triage aid whose matches were each read against the cited target:
+A supplement to `.audits/spec-readiness/2026-Q3.md` for the 13 specs that run didn't cover (spec-drift-audit 2026-Q4 finding F120, #587), audited by the `spec-readiness-reviewer` agent at `dac0375` against `spec/project/spec-readiness/en.md`, all three dimensions, with `python3 scripts/check_section_refs.py --report` as a triage aid whose matches were each read against the cited target:
 
 `spec/frontend/source-code-review`, `spec/project/error-tracking`, `spec/project/rest-api-design`, `spec/project/test-falsifiability`, `spec/project/continuous-delivery`, `spec/project/continuous-integration`, `spec/project/e2e-failure-diagnosis`, `spec/project/github-actions-best-practices`, `spec/claude/dispatch-brief`, `spec/claude/claim-provenance`, `spec/claude/research-plan-implement`, `spec/project/artifact-signing`, `spec/project/defect-class-guards`.
 
