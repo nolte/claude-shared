@@ -42,7 +42,7 @@ branches:
           - test # tier: tests — `task test` (skill/agent frontmatter validation + pytest under tests/)
           - docs # tier: docs build — `task docs` (mkdocs build --strict) + the portfolio-inventory freshness diff
           - links # tier: link validation — `task check:links` (offline internal + cross-tree slice)
-          - pr-lint # tier: pull-request prose — scripts/check_prose.py (Vale on the title); until #577's follow-up also the local body check
+          - pr-lint # tier: pull-request prose — scripts/check_prose.py (Vale on the title)
           - pr-body / PR Lint # tier: pull-request structure — nolte/gh-plumbing reusable-pr-lint.yaml (five sections, class sweep on `fix`, spec anchor, audit traceability)
       enforce_admins: true
       restrictions: null

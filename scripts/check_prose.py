@@ -39,8 +39,19 @@ import sys
 import tempfile
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from check_pr_body import EXEMPT_BOT_AUTHORS  # noqa: E402  one allowlist, shared with the body check
+# Dependency bots whose pull-request titles skip the Vale check, keyed by the author
+# login GitHub puts in the event payload. Every entry needs a reason (spec §PR
+# preconditions). The body checks in nolte/gh-plumbing's reusable-pr-lint.yaml
+# carry the same list; a new bot goes into both. Matching is exact, never on the account type, so an unlisted
+# bot stays subject to every rule.
+EXEMPT_BOT_AUTHORS: dict[str, str] = {
+    "renovate[bot]": (
+        "Renovate writes its own body from a fixed template: a dependency table, the "
+        "upstream release notes and its rebase controls. It can't supply the human "
+        "reasoning Summary and Testing exist for, so the five sections would only ever "
+        "hold filler. Its title already uses Conventional Commits and is still checked."
+    ),
+}
 
 REPO = Path(__file__).resolve().parent.parent
 TICK = "`"
