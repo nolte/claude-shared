@@ -1,0 +1,8 @@
+# Configuration for scripts/check_links.py (spec/project/link-validation/).
+#
+# dash.cloudflare.com answers automated HEAD and GET probes with HTTP 403 while
+# the sign-up page serves humans; the 2026-Q4 external link audit
+# (.audits/link-validation/2026-Q4.md) saw a reproducing 403 on both
+# docs/*/guides/image-generation.md links. Listing the host here classes that
+# answer as rate-limited instead of dead, as the spec's soft-403 list intends.
+soft_403 = ["dash.cloudflare.com"]

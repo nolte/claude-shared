@@ -10,6 +10,8 @@ Der dominierende Fehlermodus der E2E-Triage ist deshalb nicht „schwerer Bug" �
 
 `spec/project/e2e-test-stability/` besitzt, wie man eine Suite *schreibt*, die diese Gefahren nicht erzeugt (Interaktionsmechanik, wahrheitsgetreue Signale, responsive Geometrie, die Stabilisierungsschleife); `spec/project/e2e-test-automation/` besitzt die *Form* der Suite; `spec/project/test-cycle-result-analysis/` besitzt die rote Klassifikationstaxonomie. Keine davon besitzt die **Diagnose-Disziplin**, die feststellt, *was tatsächlich geschah*, bevor etwas geändert wird. Diese Spec besitzt jene Disziplin: wie man ein Cluster klassifiziert und seinen Mechanismus beweist, welches Artefakt welche Frage entscheidet, wie man einen Test instrumentiert, der einem nicht sagt, warum er fehlschlug, wie man die Assertions jagt, die nie fehlschlagen, wie man unabhängige Evidenzkanäle parallel fährt, wie man einen bibliotheksspezifischen Gefahrenkatalog baut, welche Automatisierungssemantik eine Diagnose in die Irre führt und wie man Testdefekt gegen Produktdefekt entscheidet. Sie ist in der Kampagne und in der Diagnose-Literatur angrenzender Disziplinen begründet; jede Regel ist **testbar** geschrieben — ein Agent kann feststellen, ob sie befolgt wurde.
 
+Leser: Autoren und Reviewer von E2E-Suiten, die einen fehlschlagenden Lauf diagnostizieren, sowie die Agents `test-result-analyzer`, `e2e-test-reviewer` und `e2e-result-reviewer`, die diese Regeln anwenden.
+
 ## Ziele
 
 - **Klassifikation und Mechanismus-Beweis vor jede Remediation stellen**, damit ein Fix nie gegen eine Korrelation codiert wird.
@@ -144,13 +146,13 @@ Diese Spec ist gegen ihre Nachbarn begrenzt und **DARF** deren Regeln **NICHT** 
 
 ## Akzeptanzkriterien
 
-- Jedes Issue-Thema §1–§9 ist hier spezifiziert oder mit Begründung explizit zurückgestellt: §1 → §A; §2 → §B; §3 → §C; §4 → §D; §5 → §E; §6 → §F; §7 → §G; §9 → §H; **§8 zurückgestellt an `e2e-test-stability` §F** (festgehalten in §Nicht-Ziele und §Abgrenzung).
-- Jede Regel ist testbar — ein Agent kann feststellen, ob sie befolgt wurde.
-- Jedes Per-Thema-Research-Mandat ist mit Quellen abgearbeitet (§Quellen) oder als getrackte offene Frage geführt (§Offene Fragen); keines wird stillschweigend fallengelassen.
-- Die Evidenzkanal-Tabelle (§B) existiert und benennt das konkrete Artefakt pro Major-Framework (Playwright, Cypress, Selenium/Grid).
-- Die Vacuous-Assertion-Kategorie (§D) hat eine Detektionsprozedur mit einer mechanischen und einer dynamischen Schicht.
-- `test-result-analyzer`, `e2e-test-reviewer` und `e2e-result-reviewer` referenzieren diesen Inhalt (§„Einbindung in Agents und Skills" plus die Agent-Körper).
-- Die Abgrenzung gegen #503 (responsive Gefahren), #523 (Koordinaten-Klick) und #517 (Falsifizierbarkeit) ist explizit, ohne duplizierte Regeln (§Abgrenzung).
+- [ ] Jedes Issue-Thema §1–§9 ist hier spezifiziert oder mit Begründung explizit zurückgestellt: §1 → §A; §2 → §B; §3 → §C; §4 → §D; §5 → §E; §6 → §F; §7 → §G; §9 → §H; **§8 zurückgestellt an `e2e-test-stability` §F** (festgehalten in §Nicht-Ziele und §Abgrenzung).
+- [ ] Jede Regel ist testbar — ein Agent kann feststellen, ob sie befolgt wurde.
+- [ ] Jedes Per-Thema-Research-Mandat ist mit Quellen abgearbeitet (§Quellen) oder als getrackte offene Frage geführt (§Offene Fragen); keines wird stillschweigend fallengelassen.
+- [ ] Die Evidenzkanal-Tabelle (§B) existiert und benennt das konkrete Artefakt pro Major-Framework (Playwright, Cypress, Selenium/Grid).
+- [ ] Die Vacuous-Assertion-Kategorie (§D) hat eine Detektionsprozedur mit einer mechanischen und einer dynamischen Schicht.
+- [ ] `test-result-analyzer`, `e2e-test-reviewer` und `e2e-result-reviewer` referenzieren diesen Inhalt (§„Einbindung in Agents und Skills" plus die Agent-Körper).
+- [ ] Die Abgrenzung gegen #503 (responsive Gefahren), #523 (Koordinaten-Klick) und #517 (Falsifizierbarkeit) ist explizit, ohne duplizierte Regeln (§Abgrenzung).
 
 ## Referenzen
 

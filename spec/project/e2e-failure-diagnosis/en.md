@@ -10,6 +10,8 @@ The dominant failure mode of E2E triage is therefore not a "hard bug" but a "con
 
 `spec/project/e2e-test-stability/` owns how to *write* a suite that doesn't produce these hazards (interaction mechanics, truthful signals, responsive geometry, the stabilization loop); `spec/project/e2e-test-automation/` owns the suite's *shape*; `spec/project/test-cycle-result-analysis/` owns the red-side classification taxonomy. None of them owns the **diagnostic discipline** that establishes *what actually happened* before anything is changed. This spec owns that discipline: how to classify a cluster and prove its mechanism, which artefact settles which question, how to instrument a test that won't tell you why it failed, how to hunt the assertions that never fail, how to run independent evidence channels in parallel, how to build a per-library hazard catalog, which automation semantics mislead a diagnosis, and how to decide test defect versus product defect. It's grounded in the campaign and in the diagnostic literature of adjacent disciplines; each rule is written to be **testable**—an agent can tell whether it was followed.
 
+Readers: authors and reviewers of E2E suites diagnosing a failing run, and the `test-result-analyzer`, `e2e-test-reviewer`, and `e2e-result-reviewer` agents that apply these rules.
+
 ## Goals
 
 - Make **classification and mechanism-proof gate every remediation**, so a fix is never coded against a correlation.
@@ -144,13 +146,13 @@ This spec is bounded against its neighbours and **MUST NOT** restate their rules
 
 ## Acceptance Criteria
 
-- Each issue topic §1–§9 is specified here or explicitly deferred with a reason: §1 → §A; §2 → §B; §3 → §C; §4 → §D; §5 → §E; §6 → §F; §7 → §G; §9 → §H; **§8 deferred to `e2e-test-stability` §F** (recorded in §Non-Goals and §Delimitation).
-- Every rule is testable—an agent can tell whether it was followed.
-- Every per-topic research mandate is discharged with sources (§Sources) or carried as a tracked open question (§Open Questions); none is silently dropped.
-- The evidence-channel table (§B) exists and names the concrete artefact per major framework (Playwright, Cypress, Selenium/Grid).
-- The vacuous-assertion category (§D) has a detection procedure with a mechanical layer and a dynamic layer.
-- `test-result-analyzer`, `e2e-test-reviewer`, and `e2e-result-reviewer` reference this content (§"Binding into agents and skills" plus the agent bodies).
-- Delimitation against #503 (responsive hazards), #523 (coordinate clicking), and #517 (falsifiability) is explicit, with no duplicated rules (§Delimitation).
+- [ ] Each issue topic §1–§9 is specified here or explicitly deferred with a reason: §1 → §A; §2 → §B; §3 → §C; §4 → §D; §5 → §E; §6 → §F; §7 → §G; §9 → §H; **§8 deferred to `e2e-test-stability` §F** (recorded in §Non-Goals and §Delimitation).
+- [ ] Every rule is testable—an agent can tell whether it was followed.
+- [ ] Every per-topic research mandate is discharged with sources (§Sources) or carried as a tracked open question (§Open Questions); none is silently dropped.
+- [ ] The evidence-channel table (§B) exists and names the concrete artefact per major framework (Playwright, Cypress, Selenium/Grid).
+- [ ] The vacuous-assertion category (§D) has a detection procedure with a mechanical layer and a dynamic layer.
+- [ ] `test-result-analyzer`, `e2e-test-reviewer`, and `e2e-result-reviewer` reference this content (§"Binding into agents and skills" plus the agent bodies).
+- [ ] Delimitation against #503 (responsive hazards), #523 (coordinate clicking), and #517 (falsifiability) is explicit, with no duplicated rules (§Delimitation).
 
 ## References
 

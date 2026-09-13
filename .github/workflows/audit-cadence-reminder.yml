@@ -1,4 +1,6 @@
-# Quarterly dependency- and license-audit reminder.
+# Quarterly audit-cadence reminder: dependency audit, license check, docs
+# freshness, external link validation, and spec readiness (#587 added the last
+# three after the 2026-Q4 spec-drift audit found none of them had ever run).
 #
 # spec/project/dependency-audit/ MUSTs a full audit at least once per calendar
 # quarter in every repository with a dependency manifest, and
@@ -83,6 +85,11 @@ jobs:
               "  per calendar quarter (and before every release tag carrying a",
               "  dependency change).",
               "- `spec/project/license-check/` — full check on the shared cadence.",
+              "- `spec/project/docs-freshness/` — quarterly full docs-freshness audit.",
+              "- `spec/project/link-validation/` — external (networked) link-rot audit;",
+              "  the offline slice already runs in CI.",
+              "- `spec/project/spec-readiness/` — readiness audit of every spec added",
+              "  or changed since the last run.",
               "",
               "## Action",
               "",
@@ -92,10 +99,16 @@ jobs:
               "2. Run the `license-check` skill, persist the record under",
               "   `.audits/license-check/`, and refresh the baseline via",
               "   `python3 scripts/check_licenses.py --update` in the same change.",
+              "3. Dispatch `docs-freshness-checker` and persist",
+              "   `.audits/docs-freshness/<YYYY>-Q<n>.md`.",
+              "4. Dispatch `link-rot-scanner` (runs `python3 scripts/check_links.py",
+              "   --external`) and persist `.audits/link-validation/<YYYY>-Q<n>.md`.",
+              "5. Dispatch `spec-readiness-reviewer` over the new or changed specs and",
+              "   persist `.audits/spec-readiness/<YYYY>-Q<n>.md` with per-spec counts.",
               "",
               "## Close criteria",
               "",
-              "Both records for this quarter are committed and any non-`allow` /",
+              "All five records for this quarter are committed and any non-`allow` /",
               "non-clean finding carries a recorded response.",
             ].join("\n");
 

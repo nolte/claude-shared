@@ -1,6 +1,6 @@
 ---
 title: Using nolte-shared
-audience: [downstream-user]
+audience: [downstream-user, downstream-end-user]
 content_mode: explanation
 track: user-docs
 last_updated: 2026-05-30

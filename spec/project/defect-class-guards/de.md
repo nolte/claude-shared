@@ -13,6 +13,8 @@ Dasselbe Repository besitzt auch die Heilung, undokumentiert. Es betreibt eine R
 
 Jede der folgenden Regeln ist aus einem konkreten Versagen in diesem Korpus verdient, nicht aus einem Prinzip abgeleitet. Diese Spec deklariert den Bezeichnerraum G1–G6, nach dem Vorbild von D1–D10 und T1–Tn in `spec/project/source-code-review/` und `spec/project/test-falsifiability/`.
 
+Leser: wer einen Defekt schließt und dessen Pull Request verfasst, sowie Reviewer, die `source-code-review` D11 auf die Guards anwenden, die ein Fix hinterlässt.
+
 ## Ziele
 
 - Ein geschlossener Defekt hinterlässt etwas Mechanisches, das seine Klasse zurückweist, sodass die Klasse geschlossen wird und nicht die Instanz
@@ -64,7 +66,7 @@ Ein Einzeiler-Fix darf keine Zeremonie erwerben. Die Regeln skalieren mit der Kl
 
 ## Referenzen
 
-Jede Referenz unten ist ein Issue oder Pull Request in `nolte/kamerplanter`, am 2026-09-12 aus erster Hand gelesen. Sie sind der Korpus, aus dem die Regeln abgeleitet sind, keine externe Autorität.
+Jede Referenz unten ist ein Issue oder Pull Request in `nolte/kamerplanter`, am 2026-09-12 aus erster Hand gelesen. Sie sind der Korpus, aus dem die Regeln abgeleitet sind, keine externe Autorität. Ein Issue im Schwester-Repository hat genau einen kanonischen Ort, daher ist das Lesen aus erster Hand das, was `spec/claude/research-triangulate/` §Wann Triangulation Pflicht ist von ihm verlangen kann: eine zweite Quelle würde denselben Datensatz erneut lesen, statt eine unabhängig variierende Tatsache zu bestätigen.
 
 - G1, G3: die Kette `#927` (Cross-Tenant-Reads, auf der Repository-Ebene geschlossen) → `#948` (der schreibseitige Zwilling, der die Klasse benennt und das Durchkehren zum Akzeptanzkriterium macht) → `#950` → `#952` → `#1263`. `#1263` hält fest, dass `#948` zwei der vier Routen mit seiner Form reparierte
 - G3, G6: `#1353` und sein Abschlussvermerk. Der zuerst beschriebene Sweep schlüsselte auf den Dateinamen `tenant_router.py` und konnte drei Routen in `nutrient_calculations/router.py` und `plant_instances/diary_router.py` nicht sehen; der ausgelieferte Guard berechnet die Menge stattdessen aus dem gemounteten Router

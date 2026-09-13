@@ -13,6 +13,8 @@ That repository also has the cure, undocumented. It runs a set of `scripts/check
 
 The rules below are each earned from a specific failure in that corpus rather than derived from principle. This spec declares the identifier space G1–G6, following the D1–D10 and T1–Tn precedent in `spec/project/source-code-review/` and `spec/project/test-falsifiability/`.
 
+Readers: whoever closes a defect and authors its pull request, and reviewers applying `source-code-review` D11 to the guards a fix leaves behind.
+
 ## Goals
 
 - A closed defect leaves behind something mechanical that refuses its class, so the class is closed rather than the instance
@@ -64,7 +66,7 @@ A one-line fix must not acquire a ceremony. The rules scale with the class, not 
 
 ## References
 
-Every reference below is an issue or pull request in `nolte/kamerplanter`, read at first hand on 2026-09-12. They're the corpus the rules are derived from, not external authority.
+Every reference below is an issue or pull request in `nolte/kamerplanter`, read at first hand on 2026-09-12. They're the corpus the rules are derived from, not external authority. A sister-repository issue has exactly one canonical location, so reading it at first hand is what `spec/claude/research-triangulate/` §When triangulation is required can ask of it: a second source would re-read the same record rather than corroborate an independently varying fact.
 
 - G1, G3: the chain `#927` (cross-tenant reads, closed at the repository layer) → `#948` (the write-side twin, which names the class and makes sweeping it an acceptance criterion) → `#950` → `#952` → `#1263`. `#1263` records that `#948` fixed two of the four routes carrying its shape
 - G3, G6: `#1353` and its closing record. The sweep as first described keyed on the filename `tenant_router.py` and couldn't see three routes in `nutrient_calculations/router.py` and `plant_instances/diary_router.py`; the shipped guard computes the set from the mounted router instead
