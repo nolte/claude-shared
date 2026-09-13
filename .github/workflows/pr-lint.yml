@@ -60,12 +60,14 @@ jobs:
         run: python3 scripts/check_prose.py --title
 
   # #577: the pull-request body checks run in the reusable workflow in
-  # nolte/gh-plumbing, pinned by commit SHA; required as `pr-body / PR Lint`.
+  # nolte/gh-plumbing; required as `pr-body / PR Lint`. Tag pin by choice
+  # (github-actions-best-practices §A MAY): nolte controls gh-plumbing's
+  # tags, and branching-model requires a tag for these references.
   pr-body:
     permissions:
       contents: read
       pull-requests: read
       issues: read
-    uses: nolte/gh-plumbing/.github/workflows/reusable-pr-lint.yaml@f6d74ea585cb3ba5a864e046c23155ebb5b96769 # develop, nolte/gh-plumbing#418
+    uses: nolte/gh-plumbing/.github/workflows/reusable-pr-lint.yaml@v2.0.1
     with:
       spec-anchor: true
