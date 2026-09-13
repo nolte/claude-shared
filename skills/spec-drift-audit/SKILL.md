@@ -62,7 +62,7 @@ Interactive. Confirm scope and trigger with the user before proceeding.
 
 1. **Determine trigger and scope.** Ask (or infer from the message): quarterly full-scope, or thematic partial triggered by a specific spec change or new skill/agent? Record the trigger. For thematic audits, confirm which spec topic is in scope.
 2. **Determine the Git revision.** Run `git rev-parse HEAD`; record it as `repo-revision`.
-   When `spec/.spec-config.yml` carries `inherits:`, the scope also includes the local-vs-inherited drift class of `spec/project/portfolio-inherited-spec-layer/` §Drift detection: run the `spec` skill's local-vs-inherited drift check (in the hub, `scripts/check_spec_inheritance.py`) and record each finding like any other.
+   The scope also includes the inheritance drift class of `spec/project/portfolio-inherited-spec-layer/` §Drift detection: when `spec/.spec-config.yml` carries `inherits:`, run the `spec` skill's local-vs-inherited drift check; in the hub, which carries none, run `scripts/check_spec_inheritance.py` for its `Portfolio-Scope:` header validation. Record each finding like any other.
 3. **Collect in-scope specs.** Walk `spec/<topic>/<slug>/<canonical_language>.md` for every file whose `## Requirements` or `## Acceptance Criteria` section is non-empty. `Status: draft` specs are included. For a thematic audit, narrow to the declared topic area — record the narrowing.
 4. **Dispatch partial auditors.** For the implementation surfaces covered by existing skills, delegate and capture their output:
    - Run `project-structure-apply` (audit mode only) to check `.github/`, `Taskfile.yml`, MkDocs, Renovate, and Probot alignment.
