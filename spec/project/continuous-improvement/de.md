@@ -55,6 +55,7 @@ Das Portfolio regelt bereits, **wie** Spezifikationen und Implementierung abgegl
 
 ### Nachvollziehbarkeit in Remediation-Artefakten
 - **MUSS [MUST]** im Abschnitt **Risk / rollout notes** jedes Remediation-PRs (gemäß `pull-request-workflow`) entweder den spezialisierten Agent bzw. Skill benennen, der den Fix produziert hat, oder ausdrücklich vermerken, dass kein passender Spezialist existierte und ein Generalist den Fall bearbeitet hat — dies ist das primäre Signal für Portfolio-Abdeckungslücken
+- **DARF NICHT [MUST NOT]** einen passenden Spezialisten als genannt, aber nicht beauftragt festhalten: Dieser Eintrag ist weder der Spezialist, der den Fix produziert hat, noch ein Kein-Treffer-Vermerk, und er dokumentiert den Verstoß gegen §Spezialisten-Dispatch statt einer Coverage-Lücke. Existiert ein passender Spezialist, wird er beauftragt; der §PR-Lint-Workflow von `pull-request-workflow` weist die Umgehungsform bei jedem PR zurück, der ein Issue mit Audit-Label verlinkt
 - **MUSS [MUST]** im selben Abschnitt die auslösende Finding-Quelle benennen (`spec-drift-audit`-Eintrag, `workflow-health`-Incident, `project-structure-apply`-Bericht, manuelles Review-Issue etc.), damit der PR auf den auslösenden Audit-Eintrag zurückführbar ist
 - **DARF NICHT [MUST NOT]** mehrere inhaltlich unabhängige Findings in einem einzigen Remediation-PR zusammenfassen, nur um Papierkram zu sparen; ein PR pro Finding-Klasse hält die Dispatch-Aufzeichnung aussagekräftig, und verwandte Findings derselben Klasse **DÜRFEN [MAY]** weiterhin gruppiert werden, wenn der Fix tatsächlich atomar ist
 
@@ -82,6 +83,7 @@ Das Portfolio regelt bereits, **wie** Spezifikationen und Implementierung abgegl
 
 ## Akzeptanzkriterien
 - [ ] Bei den letzten 10 gemergten Remediation-PRs des Repositories, die ein im Scope liegendes Audit-Finding adressiert haben, benennt der Abschnitt **Risk / rollout notes** entweder den dispatchten Spezialisten (Agent oder Skill) oder hält ausdrücklich fest, dass kein passender Spezialist existierte und ein Generalist den Fall bearbeitet hat
+- [ ] Kein seit #616 gemergter Remediation-PR hält in **Risk / rollout notes** einen passenden Spezialisten als genannt, aber nicht beauftragt fest
 - [ ] Bei denselben 10 PRs benennt der Abschnitt **Risk / rollout notes** die auslösende Finding-Quelle (Audit-Eintrag, Workflow-Incident, Projektstruktur-Bericht, manuelles Review-Issue etc.), sodass jeder PR auf seinen Trigger zurückführbar ist
 - [ ] Kein im Scope liegendes Finding des jüngsten `spec-drift-audit`-Laufs ist als „kein Spezialist geprüft" erfasst — jedes hat entweder einen dispatchten Spezialisten oder einen expliziten Vermerk „kein passender Spezialist existiert"
 - [ ] Für jede Finding-Klasse, die in den letzten zwei Kalenderquartalen dreimal oder öfter generalistisch bearbeitet wurde, existiert entweder nun ein Spezialist im Portfolio (Agent gemäß `agent-management` oder Skill gemäß `skill-management`) oder ein offenes Issue trackt dessen Anlegen mit benanntem Eigentümer
