@@ -49,6 +49,7 @@ The content comes from a dedicated research pass on 2026-08-19 across the Sigsto
 ### C. Container images: Sign and attest
 
 - **MUST** publish, per release image digest, all three of: a Cosign keyless signature (`cosign sign --yes <name>@<digest>`), a SLSA v1 provenance attestation produced by the platform's attestation mechanism with `push-to-registry: true`, and an SPDX SBOM signed as a Cosign attestation (`cosign attest --type spdxjson`) [R2], [R7], [R8]
+- **MAY**, in a private repository without GitHub Enterprise Cloud, where the platform attestation mechanism isn't available, publish the SLSA v1 provenance as a Cosign attestation of the pushed digest instead (`cosign attest --type slsaprovenance1`); the signature and SBOM requirements above stay unchanged. The keyless path writes the repository identity and workflow path to the public-good transparency log, so a private publisher that must keep them private can't use it: operating a private Sigstore instance is out of scope (§Non-Goals)
 - **MUST** generate the SBOM against the pushed digest (`syft registry:<name>@<digest>`), not against a local build, so the described bytes are the signed bytes
 - **MUST** sign only after the security scan of the pushed digest has passed; an unsigned image in GHCR is a safe intermediate state because policy refuses to admit it
 - **MUST** sign the multi-arch index digest; signing each platform manifest additionally (`--recursive`) is a **MAY** reserved for consumers that pin platform digests directly
@@ -74,7 +75,7 @@ The content comes from a dedicated research pass on 2026-08-19 across the Sigsto
 
 - **MUST** verify, before any GitOps change that promotes a release: the image signature, the chart signature, the SBOM attestation, and the provenance attestation, each against the pinned OIDC issuer `https://token.actions.githubusercontent.com` and an anchored identity pattern for the release workflow
 - **MUST** anchor every identity regular expression (`^…$`, escaped dots); an unanchored pattern also matches an attacker's look-alike repository
-- **MUST** verify provenance with the platform tooling (`gh attestation verify` with `--signer-workflow`, `--source-ref`, and `--deny-self-hosted-runners`), because the source-ref and signer checks evaluate certificate extensions the workflow can't forge [R4]
+- **MUST** verify provenance with the platform tooling (`gh attestation verify` with `--signer-workflow`, `--source-ref`, and `--deny-self-hosted-runners`), because the source-ref and signer checks evaluate certificate extensions the workflow can't forge [R4]; an artifact published through §C's private-repository fallback is verified instead with `cosign verify-attestation --type slsaprovenance1` against the same pinned issuer, identity, and source-ref constraints
 - **MUST** write the promoted chart version and image digest to the GitOps repository through a reviewed pull request; the review is the human production gate
 
 ### G. Verification at admission
@@ -106,7 +107,7 @@ The content comes from a dedicated research pass on 2026-08-19 across the Sigsto
 
 - [ ] No `cosign.key`, key-based signing flag, or signing-key secret exists in any portfolio workflow; every signature verifies against the GitHub OIDC issuer (rolls up §A)
 - [ ] Every release image digest and chart digest carries a verifiable signature, SLSA provenance attestation, and (images) SPDX SBOM attestation, retrievable from GHCR (rolls up §C, §D)
-- [ ] `cosign verify` and `gh attestation verify` succeed against a release artifact using only the pinned issuer, anchored identity, source ref, and runner-environment constraints—and fail when any one constraint is wrong (rolls up §F)
+- [ ] `cosign verify` and `gh attestation verify` (for §C's private-repository fallback, `cosign verify-attestation --type slsaprovenance1`) succeed against a release artifact using only the pinned issuer, anchored identity, source ref, and runner-environment constraints—and fail when any one constraint is wrong (rolls up §F)
 - [ ] A deliberately unsigned test image in the portfolio registry namespace is rejected by admission in every environment, and a signed-but-attestation-less image is rejected in production (rolls up §G)
 - [ ] Re-pushing an existing release version tag fails the pipeline before any registry write (§B)
 - [ ] GHCR cleanup configuration demonstrably excludes `sha256-*` tags and multi-arch child manifests (§E)
@@ -140,7 +141,7 @@ The content comes from a dedicated research pass on 2026-08-19 across the Sigsto
 
 ## Open Questions
 
-- Are portfolio repositories that need artifact attestations ever private? GitHub artifact attestations for private repositories require GitHub Enterprise Cloud, and public-instance signatures publish the repository identity in the transparency log—open because the answer decides whether §C's provenance mechanism applies portfolio-wide or needs a Cosign-only fallback.
+- **Settled 2026-09-13: a private publisher uses the Cosign provenance fallback.** GitHub artifact attestations for private repositories require GitHub Enterprise Cloud, which the user-owned `nolte` account doesn't have. On 2026-09-13 none of its three private repositories publishes OCI artifacts (no GHCR workflow), so §C applies as written wherever it applies today, and §C's Cosign-provenance MAY covers a private publisher if one appears. That fallback still publishes the repository identity in the public-good transparency log; a publisher that must hide it has no path under this spec, because a private Sigstore instance is a Non-Goal.
 - When does the Argo CD native OCI source type (beta since 3.1) become the sanctioned chart reference path? Open because §H's digest-pinned chart reference depends on it, and the beta hasn't been exercised in this portfolio.
 - Does the deployed Kyverno version verify GitHub attestation bundles from GHCR fallback tags in all attestor configurations? A crash report exists for key/cert attestors with transparency-log checks—open until a proof-of-concept in a staging cluster settles which predicate checks production policy can rely on.
 - Do any external consumers require `helm install --verify`? Open because §D's optional GPG `.prov` layer is a one-way door: adding it later changes published chart digests.

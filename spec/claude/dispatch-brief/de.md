@@ -11,6 +11,8 @@ Eine vollständige E2E-Stabilisierungskampagne (`nolte/kamerplanter#768`) machte
 
 Diese Regel lebte zuerst in `spec/project/e2e-failure-diagnosis/` §E, ist aber nicht E2E-spezifisch. Sie gilt für jedes Skill, das Analyse oder Remediation mit einer benannten Hypothese dispatcht: `issue-orchestrate`, `workflow-health-triage`, `source-code-review`, `dependency-audit`, `observability-audit`, die Test-Tier-Reviewer und die Security-Reviewer. `spec/claude/` besitzt bereits die übergreifenden Agent- und Skill-Konventionen (`agent-management`, `skill-management`, `skill-vs-agent`); eine Briefing-Kompositions-Konvention gehört ebenfalls hierher. Diese Spec besitzt die Refutations-Regel portfolio-weit, sodass Domänen-Specs und dispatchende Skills sie referenzieren, statt sie jeweils erneut auszuformulieren.
 
+Leser: Autoren von Skills, die Arbeit an einen Spezialisten dispatchen, und die Spezialisten, die ein Dispatch-Briefing erhalten.
+
 ## Goals
 
 - Refutations-Autorisierung zu einer **routinemäßigen, prüfbaren Eigenschaft** jedes hypothesentragenden Dispatch-Briefings machen, statt zu einer Gewohnheit, an die der Orchestrator sich erinnern muss.

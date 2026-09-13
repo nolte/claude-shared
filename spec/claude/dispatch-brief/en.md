@@ -11,6 +11,8 @@ A full-suite E2E stabilization campaign (`nolte/kamerplanter#768`) made the cost
 
 That rule first lived in `spec/project/e2e-failure-diagnosis/` §E, but it isn't E2E-specific. It applies to every skill that dispatches analysis or remediation with a stated hypothesis: `issue-orchestrate`, `workflow-health-triage`, `source-code-review`, `dependency-audit`, `observability-audit`, the test-tier reviewers, and the security reviewers. `spec/claude/` already owns the cross-cutting agent and skill conventions (`agent-management`, `skill-management`, `skill-vs-agent`); a brief-composition convention belongs here too. This spec owns the refutation rule portfolio-wide so that domain specs and dispatching skills reference it instead of each restating it.
 
+Readers: authors of skills that dispatch work to a specialist, and the specialists that receive a dispatch brief.
+
 ## Goals
 
 - Make refutation authorisation a **routine, checkable property** of every hypothesis-bearing dispatch brief, rather than a habit the orchestrator has to remember.

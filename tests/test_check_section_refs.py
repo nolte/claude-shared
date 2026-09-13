@@ -107,6 +107,11 @@ def test_unquoted_reference_needs_a_word_boundary_after_the_heading(repo):
     assert classes(guard.check(repo)) == ["section-unresolved"]
 
 
+def test_genitive_and_arrow_label_forms_resolve(repo):
+    write(repo, "spec/project/citing/en.md", "# Citing\n## Requirements\n### 1. Topic one\n### A. First\n### D. Credentials\n- per §D's rule, and §1→§A maps topics\n## Acceptance Criteria\n")
+    assert guard.check(repo) == []
+
+
 def test_own_file_heading_resolves_without_a_target(repo):
     write(repo, "spec/project/citing/en.md", "# Citing\n## Requirements\n### Scope\n- per §Scope above\n## Acceptance Criteria\n")
     assert guard.check(repo) == []

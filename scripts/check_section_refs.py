@@ -63,7 +63,8 @@ REFERENCE = re.compile(
     r"|(?<![\w/`-])(?P<bare>[a-z0-9]+(?:-[a-z0-9]+)+)(?![\w/`-])"
     r"|\]\((?:\.\./)+(?P<href>[\w/-]+?)/[a-z]{2}\.md"
 )
-LABEL = re.compile(r"^([a-z]|\d+(?:\.\d+)*)(?=[\s.,;:/)—-]|$)")
+# A label is followed by a boundary; a genitive (§D's) and an arrow list (§1 → §A) end one too.
+LABEL = re.compile(r"^([a-z]|\d+(?:\.\d+)*)(?=[\s.,;:/)—'→-]|$)")
 ARTIFACT_PATH = re.compile(r"`((?:skills|agents)/[\w.-]+(?:/[\w./-]*)?)`")
 
 # The contract form of the acceptance-criteria heading per language. Other

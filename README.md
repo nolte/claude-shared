@@ -83,7 +83,7 @@ A separate plugin for the project-planning cadence, split on a different consume
 
 ## Usage
 
-This repository packages five [Claude Code plugins](https://docs.claude.com/en/docs/claude-code/plugins), each with its own `.claude-plugin/plugin.json` and `skills/` + `agents/`: `nolte-shared` (repo root), `nolte-media` (`plugins/nolte-media/`), `nolte-engineering` (`plugins/nolte-engineering/`), `nolte-claude-dev` (`plugins/nolte-claude-dev/`), and `nolte-planning` (`plugins/nolte-planning/`). All five are listed in `.claude-plugin/marketplace.json`.
+This repository packages five [Claude Code plugins](https://code.claude.com/docs/en/plugins), each with its own `.claude-plugin/plugin.json` and `skills/` + `agents/`: `nolte-shared` (repo root), `nolte-media` (`plugins/nolte-media/`), `nolte-engineering` (`plugins/nolte-engineering/`), `nolte-claude-dev` (`plugins/nolte-claude-dev/`), and `nolte-planning` (`plugins/nolte-planning/`). All five are listed in `.claude-plugin/marketplace.json`.
 
 ### Consume in a downstream project
 
