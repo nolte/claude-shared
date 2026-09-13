@@ -451,6 +451,8 @@ verifiziert und gemergt ist.
   mutierenden Schritt ohne ein festgehaltenes „Ja"
 
 ## Akzeptanzkriterien
+
+Diese Kriterien gelten für Läufe, die begonnen haben, nachdem die Transient-Regel für das Voranalyse-Artefakt mit #489 normativ wurde. Die fünf früheren rekonstruierbaren Läufe (#204, #371, #376, #378, #416) liegen davor; das Spec-Drift-Audit 2026-Q4 hält sie als historische Ausnahme fest, und der heutige Skill erzwingt die Klassifikations-Bestätigung, das Requirements-Gate, die berührten Dateien pro Paket und den Entfernungs-Commit, die diese Kriterien prüfen, bereits.
 - [ ] Für jeden Orchestrierungslauf, der einen `fix`-typisierten Pull Request
   produziert hat, trägt dieser Pull Request einen ausgefüllten Abschnitt
   `## Class sweep`, sein `Predicate` wurde tatsächlich ausgeführt, und entweder ist
