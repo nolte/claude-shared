@@ -356,3 +356,11 @@ def test_spec_fallback_backlog_is_silent_when_every_agent_states_it(monkeypatch)
     monkeypatch.setattr(v, "SPEC_FALLBACK_UNSTATED", [])
     monkeypatch.setattr(v, "AGENTS_CHECKED", ["agents/b.md"])
     assert v.check_spec_fallback_backlog() == []
+
+
+def test_a_stray_absent_or_fallback_word_is_no_spec_fallback(monkeypatch):
+    monkeypatch.setattr(v, "SPEC_FALLBACK_UNSTATED", [])
+    monkeypatch.setattr(v, "AGENTS_CHECKED", [])
+    v.check_spec_fallback("Read `spec/project/x/` first. The absent `Write` tool is intentional; use gh as fallback.", "agents/d.md")
+    [finding] = v.check_spec_fallback_backlog()
+    assert "1 of 1 agents" in finding.message

@@ -804,9 +804,11 @@ def check_skill(path: Path) -> list[Finding]:
 SPEC_FALLBACK_UNSTATED: list[str] = []
 AGENTS_CHECKED: list[str] = []
 _SPEC_INPUT = re.compile(r"`?spec/[a-z0-9-]+/[a-z0-9-]+/")
+# Only a statement about the absent spec counts; a stray "absent" or "fallback" elsewhere
+# in the body doesn't (review of #610).
 _SPEC_FALLBACK = re.compile(
-    r"\b(absent|isn't reachable|not reachable|unreachable|doesn't resolve|unavailable|fallback|"
-    r"stop and report the missing spec|installed `nolte-shared`)", re.I)
+    r"(spec tree is absent|spec tree isn't reachable|spec isn't present|spec is absent|"
+    r"installed `nolte-shared`|stop and report the missing spec)", re.I)
 
 
 def check_spec_fallback(body: str, target: str) -> list[Finding]:
