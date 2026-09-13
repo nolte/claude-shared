@@ -66,3 +66,17 @@ branches:
       # (nolte/gh-plumbing#414). Operator decision 2026-09-13.
       allow_force_pushes: true
       restrictions: null
+
+# Labels this repository uses that the commons don't declare. probot/settings
+# deletes every live label missing from the merged list (lib/plugins/diffable.js),
+# which would strip them from their issues: `audit` marks audit tracking issues
+# for the pr-body traceability rule (#616), `needs-triage` is set by the issue
+# templates, and `documentations` is kept until someone decides to retire it.
+labels:
+  - name: audit
+    color: "ededed"
+  - name: needs-triage
+    color: "ededed"
+  - name: documentations
+    color: "caa7e8"
+    description: "Update documentation"
