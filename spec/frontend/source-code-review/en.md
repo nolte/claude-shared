@@ -4,11 +4,11 @@ Status: draft
 
 ## Context
 
-`spec/project/source-code-review/` defines the holistic senior-engineer review: a language-agnostic core of ten dimensions (D1–D10), a tooling-first rule, one language profile per programming language, and a report contract whose disjoint work packages route to specialists. Its own Open Questions already name the frontend as the likeliest second profile.
+`spec/project/source-code-review/` defines the holistic senior-engineer review: a language-agnostic core of eleven dimensions (D1–D11), a tooling-first rule, one language profile per programming language, and a report contract whose disjoint work packages route to specialists. Its own Open Questions already name the frontend as the likeliest second profile.
 
-Frontend code breaks that model in one place. The core spec's profile axis is the **language**, but what makes a browser-hosted component hard to review isn't TypeScript—it's the surface. A component owns a DOM tree that must stay operable by keyboard and assistive technology, a render loop whose cost the user feels directly, a trust boundary that sits *outside* the process it runs in, every string the user reads, and design decisions encoded as style values. A review that applies only D1–D10 to a component file passes over all of it: the swallowed `catch` that leaves a spinner turning forever, the discount rule computed in the client and never re-checked by the server, the `div` with a click handler that no keyboard reaches, the hex colour that bypasses the design tokens the project already ships.
+Frontend code breaks that model in one place. The core spec's profile axis is the **language**, but what makes a browser-hosted component hard to review isn't TypeScript—it's the surface. A component owns a DOM tree that must stay operable by keyboard and assistive technology, a render loop whose cost the user feels directly, a trust boundary that sits *outside* the process it runs in, every string the user reads, and design decisions encoded as style values. A review that applies only D1–D11 to a component file passes over all of it: the swallowed `catch` that leaves a spinner turning forever, the discount rule computed in the client and never re-checked by the server, the `div` with a click handler that no keyboard reaches, the hex colour that bypasses the design tokens the project already ships.
 
-This spec is the **frontend extension** of the core review. It adds a dimension overlay (F1–F11) on top of D1–D10, defines a framework-profile contract alongside the core's language profiles, narrows the review unit from the file to the **component slice**, and draws a hard line to the UX review: this review judges code, never taste. It's the foundation of a review process that produces specialist-ready findings with implementation proposals, exactly as the Python review does for server-side code.
+This spec is the **frontend extension** of the core review. It adds a dimension overlay (F1–F11) on top of D1–D11, defines a framework-profile contract alongside the core's language profiles, narrows the review unit from the file to the **component slice**, and draws a hard line to the UX review: this review judges code, never taste. It's the foundation of a review process that produces specialist-ready findings with implementation proposals, exactly as the Python review does for server-side code.
 
 Readers: authors of the frontend reviewer agent and the dispatching skill; reviewers who consume the report; frontend developers who run the review before a release or after a feature lands.
 
@@ -24,7 +24,7 @@ Readers: authors of the frontend reviewer agent and the dispatching skill; revie
 
 ## Non-Goals
 
-- The core review dimensions themselves (D1–D10), the tooling-first rule, the severity vocabulary, and the work-package contract—owned by `spec/project/source-code-review/`, applied here unchanged
+- The core review dimensions themselves (D1–D11), the tooling-first rule, the severity vocabulary, and the work-package contract—owned by `spec/project/source-code-review/`, applied here unchanged
 - UX, usability, visual-design, and content-quality judgment—see §Delimitation from the UX review; owned by `spec/frontend/webview-ui-optimization/` §"UX and native feel" and its `webview-ui-optimize` skill / `frontend-usability-optimizer` agent
 - Deep WCAG conformance auditing, contrast measurement, target-size evaluation, and assistive-technology testing—owned by `spec/frontend/webview-ui-optimization/` §Accessibility; this review flags the code-level defect and routes the conformance question
 - Measured runtime performance: Core Web Vitals thresholds, bundle-size budgets, profiling—owned by `spec/frontend/webview-ui-optimization/` §"Performance and rendering"; this review sees only what the source shows
@@ -250,7 +250,7 @@ This is a load-bearing boundary, not a courtesy note. The two reviews look at th
 
 ## Acceptance Criteria
 
-- [ ] A frontend review runs the core D1–D10 dimensions **and** this overlay's F1–F11, and no finding carries both a D and an F ID
+- [ ] A frontend review runs the core D1–D11 dimensions **and** this overlay's F1–F11, and no finding carries both a D and an F ID
 - [ ] The report header records the framework profile, the design-token or theme source, the internationalisation layer, and the data-access layer; a detected framework without a profile appears as unsupported
 - [ ] A component is reviewed together with its hooks, styles, and tests; a report covering component files but no test files is rejected as incomplete
 - [ ] A domain rule computed in a component is reported under F1 with its class named, and a rule the server must own but doesn't recompute is Critical when confirmed and routed to the security audit
@@ -268,7 +268,7 @@ This is a load-bearing boundary, not a courtesy note. The two reviews look at th
 
 ## References
 
-- [R1] The core review this spec extends (dimensions D1–D10, tooling-first rule, report and reviewer contracts): `spec/project/source-code-review/`
+- [R1] The core review this spec extends (dimensions D1–D11, tooling-first rule, report and reviewer contracts): `spec/project/source-code-review/`
 - [R2] Severity vocabulary and audit-artifact conventions: `spec/claude/review-plan/`
 - [R3] Runtime quality of the web surface—measured performance, security headers and CSP, WCAG conformance, i18n runtime, UX and native feel (the main route-out and delimitation partner): `spec/frontend/webview-ui-optimization/`
 - [R4] Whole-codebase security audit (route-out target for F9 floors): `spec/project/code-security-audit/`

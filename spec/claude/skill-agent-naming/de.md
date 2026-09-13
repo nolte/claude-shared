@@ -39,7 +39,7 @@ Leser: Skill- und Agent-Autoren bei der Wahl eines konformen Namens, Reviewer, d
 ### Agent-Namen: `<subject>-<role-noun>`
 
 - **MUSS** jeden Agent in Objekt-Rolle-Form benennen, `<subject>-<role-noun>`: das nachgestellte Token ist die Rolle, die der Agent über dem führenden Subjekt spielt (`code-security-reviewer`, `feature-consistency-reviewer`, `portfolio-manifest-collector`, `vocab-drift-scanner`, `lektorat-scanner`)
-- Das nachgestellte Rollen-Nomen trägt fast immer `-er`/`-or`/`-ist`-Morphologie (`-reviewer`, `-checker`, `-scanner`, `-collector`, `-curator`, `-enforcer`, `-extractor`, `-generator`, `-author`, `-developer`); ein Akteurs-Nomen, das eine Rolle ohne diese Morphologie benennt, ist weiterhin konform — `webview-ui-expert` ist der stehende Fall
+- Das nachgestellte Rollen-Nomen trägt fast immer `-er`/`-or`/`-ist`/`-ian`/`-eur`-Morphologie (`-reviewer`, `-checker`, `-scanner`, `-collector`, `-curator`, `-enforcer`, `-extractor`, `-generator`, `-author`, `-developer`); ein Akteurs-Nomen, das eine Rolle ohne diese Morphologie benennt, ist weiterhin konform — `webview-ui-expert` ist der stehende Fall
 - **Geschlossene Ausnahmen** (ein Reviewer **DARF** sie **NICHT** flaggen; die Liste ist abschließend): `png-to-transparent-svg` (Transformations-Phrase ohne Rollen-Token) und `audience-review` (nachgestelltes `review` benennt eine Aktion, keinen Akteur). Umbenennung bräche jede `subagent_type:`-Aufrufstelle; die Bruchkosten überwiegen den Kohärenz-Gewinn. Jeder *neue* Agent **MUSS** der Konvention folgen
 
 ### Eine Form pro Artefakt-Typ, pro Plugin
@@ -56,7 +56,7 @@ Leser: Skill- und Agent-Autoren bei der Wahl eines konformen Namens, Reviewer, d
 
 ### Bindung an `scripts/validate_skills.py`
 
-- `scripts/validate_skills.py` operationalisiert diese Spec als **Suggestion-grade** `check_name_form` (eine Form-Abweichung ist ein Discoverability-Smell, kein Plattform-Fehler) mit vier gespiegelten geschlossenen Listen: `SKILL_ACTION_TOKENS`, `SKILL_NAME_FORM_EXCEPTIONS`, `AGENT_ROLE_NOUNS`, `AGENT_NAME_FORM_EXCEPTIONS`
+- `scripts/validate_skills.py` operationalisiert diese Spec als **Suggestion-grade** `check_name_form` (eine Form-Abweichung ist ein Discoverability-Smell, kein Plattform-Fehler) mit fünf gespiegelten geschlossenen Listen: `SKILL_ACTION_TOKENS`, `SKILL_NAME_FORM_EXCEPTIONS`, `AGENT_ROLE_SUFFIXES`, `AGENT_ROLE_NOUNS`, `AGENT_NAME_FORM_EXCEPTIONS`
 - **MUSS** diese Spec und jene Listen im **selben PR** ändern, wann immer sich eine Seite bewegt; ein Listeneintrag ohne Spec-Gegenstück (oder umgekehrt) ist ein Defekt
 
 ### Zeichen-Ebenen-Digest (anderswo besessen)
@@ -67,7 +67,7 @@ Nur zur Bequemlichkeit — die normativen Regeln leben in `skill-management` §F
 
 - [ ] `skill-management` und `agent-management` enthalten keine normative Wiederholung der Form-Konvention — nur den Delegations-Verweis auf diese Spec
 - [ ] Jede reviewer-seitige Zitierung des Namensform-Checks (`skill-review`, `skills-agents-sweep`, die Authoring-Skills) ankert auf dieser Spec
-- [ ] Die vier Validator-Listen matchen die Ausnahme- und Morphologie-Sets dieser Spec exakt
+- [ ] Die fünf Validator-Listen matchen die Ausnahme- und Morphologie-Sets dieser Spec exakt
 - [ ] `spec/README.md` indiziert diese Spec; en/de bleiben strukturell synchron
 
 ## References
@@ -75,7 +75,7 @@ Nur zur Bequemlichkeit — die normativen Regeln leben in `skill-management` §F
 - [R1] Skill authoring best practices, Anthropic platform docs: <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices>
 - [R2] `plugin-scoping` §Namespace- und Benennungs-Kohärenz: `spec/claude/plugin-scoping/`
 - [R3] Zeichen-Ebenen-Owner: `spec/claude/skill-management/` §Frontmatter-Validierung · `spec/claude/agent-management/` §Struktur
-- [R4] `scripts/validate_skills.py` (`check_name_form` und die vier geschlossenen Listen)
+- [R4] `scripts/validate_skills.py` (`check_name_form` und die fünf geschlossenen Listen)
 
 ## Offene Fragen
 

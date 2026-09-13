@@ -106,10 +106,11 @@ Emit a single severity-sorted report. When more than one independent locale tree
 - `key.path` — missing in `en`
 - `key.path` — used in `src/.../file.tsx:42`, defined in no locale
 
-## Warning — orphans / structural mismatch
-- `key.path` — defined, never referenced
+## Warning — structural mismatch
+- `key.path` — a nested object in `de` where `en` has a string
 
-## Info — identical values / empty / placeholder drift
+## Info — orphans / identical values / empty / placeholder drift
+- `key.path` — defined, never referenced
 - `key.path` — identical in `de`/`en`: "Same value"
 ~~~
 

@@ -4,11 +4,11 @@ Status: draft
 
 ## Kontext
 
-`spec/project/source-code-review/` definiert das ganzheitliche Senior-Engineer-Review: einen sprachagnostischen Kern aus zehn Dimensionen (D1–D10), eine Tooling-first-Regel, je Programmiersprache ein Sprachprofil und einen Report-Vertrag, dessen disjunkte Work-Packages an Spezialisten geroutet werden. Ihre eigenen Offenen Fragen benennen das Frontend bereits als wahrscheinlichstes zweites Profil.
+`spec/project/source-code-review/` definiert das ganzheitliche Senior-Engineer-Review: einen sprachagnostischen Kern aus elf Dimensionen (D1–D11), eine Tooling-first-Regel, je Programmiersprache ein Sprachprofil und einen Report-Vertrag, dessen disjunkte Work-Packages an Spezialisten geroutet werden. Ihre eigenen Offenen Fragen benennen das Frontend bereits als wahrscheinlichstes zweites Profil.
 
-Frontend-Code durchbricht dieses Modell an einer Stelle. Die Profilachse der Kern-Spec ist die **Sprache**, aber was ein browsergehostetes Component schwer reviewbar macht, ist nicht TypeScript — es ist die Oberfläche. Ein Component besitzt einen DOM-Baum, der per Tastatur und assistiver Technologie bedienbar bleiben muss, eine Render-Schleife, deren Kosten der Nutzer unmittelbar spürt, eine Vertrauensgrenze, die *außerhalb* des Prozesses liegt, in dem es läuft, jeden Text, den der Nutzer liest, und Design-Entscheidungen, die als Style-Werte kodiert sind. Ein Review, das auf eine Component-Datei nur D1–D10 anwendet, geht an all dem vorbei: am verschluckten `catch`, das einen Spinner ewig drehen lässt; an der Rabattregel, die im Client berechnet und vom Server nie nachgerechnet wird; am `div` mit Click-Handler, das keine Tastatur erreicht; am Hex-Farbwert, der die Design-Tokens umgeht, die das Projekt bereits mitliefert.
+Frontend-Code durchbricht dieses Modell an einer Stelle. Die Profilachse der Kern-Spec ist die **Sprache**, aber was ein browsergehostetes Component schwer reviewbar macht, ist nicht TypeScript — es ist die Oberfläche. Ein Component besitzt einen DOM-Baum, der per Tastatur und assistiver Technologie bedienbar bleiben muss, eine Render-Schleife, deren Kosten der Nutzer unmittelbar spürt, eine Vertrauensgrenze, die *außerhalb* des Prozesses liegt, in dem es läuft, jeden Text, den der Nutzer liest, und Design-Entscheidungen, die als Style-Werte kodiert sind. Ein Review, das auf eine Component-Datei nur D1–D11 anwendet, geht an all dem vorbei: am verschluckten `catch`, das einen Spinner ewig drehen lässt; an der Rabattregel, die im Client berechnet und vom Server nie nachgerechnet wird; am `div` mit Click-Handler, das keine Tastatur erreicht; am Hex-Farbwert, der die Design-Tokens umgeht, die das Projekt bereits mitliefert.
 
-Diese Spec ist die **Frontend-Erweiterung** des Kern-Reviews. Sie legt ein Dimensions-Overlay (F1–F11) über D1–D10, definiert neben den Sprachprofilen des Kerns einen Framework-Profil-Vertrag, verengt die Review-Einheit von der Datei auf den **Component-Slice** und zieht eine harte Grenze zum UX-Review: Dieses Review beurteilt Code, nie Geschmack. Es ist die Grundlage eines Review-Prozesses, der spezialistenfertige Findings mit Umsetzungsvorschlägen liefert — genau so, wie es das Python-Review für serverseitigen Code tut.
+Diese Spec ist die **Frontend-Erweiterung** des Kern-Reviews. Sie legt ein Dimensions-Overlay (F1–F11) über D1–D11, definiert neben den Sprachprofilen des Kerns einen Framework-Profil-Vertrag, verengt die Review-Einheit von der Datei auf den **Component-Slice** und zieht eine harte Grenze zum UX-Review: Dieses Review beurteilt Code, nie Geschmack. Es ist die Grundlage eines Review-Prozesses, der spezialistenfertige Findings mit Umsetzungsvorschlägen liefert — genau so, wie es das Python-Review für serverseitigen Code tut.
 
 Leser: Autoren des Frontend-Reviewer-Agents und des dispatchenden Skills; Reviewer, die den Report konsumieren; Frontend-Entwickler, die das Review vor einem Release oder nach einem gelandeten Feature ausführen.
 
@@ -24,7 +24,7 @@ Leser: Autoren des Frontend-Reviewer-Agents und des dispatchenden Skills; Review
 
 ## Nicht-Ziele
 
-- Die Kern-Review-Dimensionen selbst (D1–D10), die Tooling-first-Regel, das Severity-Vokabular und den Work-Package-Vertrag — gehören `spec/project/source-code-review/` und gelten hier unverändert
+- Die Kern-Review-Dimensionen selbst (D1–D11), die Tooling-first-Regel, das Severity-Vokabular und den Work-Package-Vertrag — gehören `spec/project/source-code-review/` und gelten hier unverändert
 - UX-, Usability-, Visual-Design- und Content-Qualitätsurteile — siehe §Abgrenzung zum UX-Review; gehören `spec/frontend/webview-ui-optimization/` §„UX und Native-Feel" mit dem Skill `webview-ui-optimize` und dem Agent `frontend-usability-optimizer`
 - Tiefes WCAG-Konformitäts-Audit, Kontrastmessung, Zielgrößen-Bewertung und Tests mit assistiver Technologie — gehören `spec/frontend/webview-ui-optimization/` §Accessibility; dieses Review meldet den Code-Defekt und routet die Konformitätsfrage weiter
 - Gemessene Laufzeit-Performance: Core-Web-Vitals-Schwellen, Bundle-Size-Budgets, Profiling — gehören `spec/frontend/webview-ui-optimization/` §„Performance und Rendering"; dieses Review sieht nur, was der Quelltext zeigt
@@ -250,7 +250,7 @@ Dies ist eine tragende Grenze, kein höflicher Hinweis. Beide Reviews blicken au
 
 ## Akzeptanzkriterien
 
-- [ ] Ein Frontend-Review führt die Kern-Dimensionen D1–D10 **und** F1–F11 dieses Overlays aus, und kein Finding trägt zugleich eine D- und eine F-ID
+- [ ] Ein Frontend-Review führt die Kern-Dimensionen D1–D11 **und** F1–F11 dieses Overlays aus, und kein Finding trägt zugleich eine D- und eine F-ID
 - [ ] Der Report-Header hält Framework-Profil, Design-Token- oder Theme-Quelle, Internationalisierungsschicht und Datenzugriffsschicht fest; ein erkanntes Framework ohne Profil erscheint als nicht unterstützt
 - [ ] Ein Component wird zusammen mit seinen Hooks, Styles und Tests reviewt; ein Report über Component-Dateien ohne Testdateien wird als unvollständig zurückgewiesen
 - [ ] Eine in einem Component berechnete Fachregel wird unter F1 mit benannter Klasse gemeldet, und eine Regel, die der Server besitzen müsste, aber nicht nachrechnet, ist bei Bestätigung Critical und wird an das Security-Audit geroutet
@@ -268,7 +268,7 @@ Dies ist eine tragende Grenze, kein höflicher Hinweis. Beide Reviews blicken au
 
 ## Referenzen
 
-- [R1] Das Kern-Review, das diese Spec erweitert (Dimensionen D1–D10, Tooling-first-Regel, Report- und Reviewer-Vertrag): `spec/project/source-code-review/`
+- [R1] Das Kern-Review, das diese Spec erweitert (Dimensionen D1–D11, Tooling-first-Regel, Report- und Reviewer-Vertrag): `spec/project/source-code-review/`
 - [R2] Severity-Vokabular und Audit-Artefakt-Konventionen: `spec/claude/review-plan/`
 - [R3] Laufzeitqualität der Web-Oberfläche — gemessene Performance, Security-Header und CSP, WCAG-Konformität, i18n zur Laufzeit, UX und natives Gefühl (der wichtigste Route-out- und Abgrenzungspartner): `spec/frontend/webview-ui-optimization/`
 - [R4] Whole-Codebase-Security-Audit (Route-out-Ziel für F9-Floors): `spec/project/code-security-audit/`

@@ -161,6 +161,8 @@ class Provider:
 
     name: str = ""
     model: str = ""
+    # A provider that resolves a model alias server-side names what the sidecar can't know.
+    model_variant_note: str | None = None
 
     def source(self) -> str:
         return ""
@@ -215,6 +217,10 @@ class CloudflareProvider(Provider):
 class PollinationsProvider(Provider):
     name = "pollinations"
     model = "flux"
+    model_variant_note = (
+        "Pollinations resolves the `flux` alias server-side and doesn't report the concrete "
+        "FLUX.1 variant, so the output license can't be derived from this sidecar alone"
+    )
 
     def source(self) -> str:
         return "https://image.pollinations.ai/prompt/<prompt>"
@@ -454,6 +460,7 @@ def write_sidecar(image_path: Path, prompt: str, mime: str, provider: Provider) 
     meta = {
         "provider": provider.name,
         "model": provider.model,
+        **({"model_variant_note": provider.model_variant_note} if provider.model_variant_note else {}),
         "source": provider.source(),
         "prompt": prompt,
         "timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),

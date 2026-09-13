@@ -49,7 +49,7 @@ Leser: Agent-Autoren, die den Checker pflegen; Reviewer, die seine Befunde prüf
 ### Ausgabe und Seiteneffekte
 
 - **MUSS [MUST]** strikt read-only sein: nur Lese- und Such-Tools deklarieren und nie Übersetzungsdateien, Code oder eine andere Datei editieren; die einzige Ausgabe ist ein Report
-- **MUSS [MUST]** einen einzigen nach Schweregrad sortierten Report emittieren — **kritisch** (verwendet-aber-undefiniert; fehlend in einer Locale), dann **Warnung** (Orphans, struktureller Mismatch), dann **Info** (identische Werte, leere Werte, Platzhalter-Drift) — angeführt von einer Zusammenfassungs-Metrik-Tabelle (pro-Locale-Key-Zählungen, fehlend, Orphan, leer, identisch, dynamisch-übersprungen)
+- **MUSS [MUST]** einen einzigen nach Schweregrad sortierten Report emittieren — **kritisch** (verwendet-aber-undefiniert; fehlend in einer Locale), dann **Warnung** (struktureller Mismatch), dann **Info** (Orphans, identische Werte, leere Werte, Platzhalter-Drift) — angeführt von einer Zusammenfassungs-Metrik-Tabelle (pro-Locale-Key-Zählungen, fehlend, Orphan, leer, identisch, dynamisch-übersprungen)
 - **MUSS [MUST]** die Pro-Kategorie-Ausgabe deckeln (zum Beispiel: die ersten N Einträge zeigen und den Rest als „… und {n} weitere" zusammenfassen), sodass ein großer Drift keine unlesbare Key-Wand erzeugt
 - **MUSS [MUST]** diese Kleinschreibungs-Namen (`critical` / `warning` / `info`) als die maschinengelesene Editorial-Serialisierung behandeln, sanktioniert durch den Editorial-Sub-Skala-Carve-out in `spec/claude/review-plan/` §Schweregrad-Skala; jeder bildet eins-zu-eins auf die Title-Case-Stufen jener Spec ab
 - **SOLLTE [SHOULD]** jeden verwendet-aber-undefinierten Key einer Source-Location (Datei und Zeile) zuordnen, sodass der Befund umsetzbar ist

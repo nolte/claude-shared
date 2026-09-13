@@ -151,6 +151,7 @@ Der Laufzeit-Ablageort richtet sich nach dem deklarierten `distribution`:
   - `~/.claude/agents/<name>.md` — benutzerbezogene Installation
 
 In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absoluten Installationsort voraussetzen; alle internen Referenzen bleiben relativ zur Agent-Datei oder zum Projekt, auf dem der Agent operiert.
+- **MUSS [MUST]**, wenn der Body eines Agents `spec/<topic>/<slug>/`-Dateien als normativen Input nennt, festhalten, was der Agent tut, wenn dieser Pfad im konsumierenden Projekt nicht auflöst: die Spec aus dem installierten `nolte-shared`-Plugin lesen, das den `spec/`-Baum mitliefert, oder eine im Body eingebettete Baseline anwenden. Ein Agent, der keines von beidem festhält, stoppt und meldet die fehlende Spec, statt aus dem Gedächtnis zu arbeiten. `scripts/validate_skills.py` meldet die Agents, die das noch nicht festhalten, als eine Info-Backlog-Zeile
 
 ### Empfehlungen
 - **SOLLTE [SHOULD]** den System-Prompt mit Rolle und Grenzen des Agents beginnen und das erwartete Ausgabeformat entweder vor der Arbeitsweise **oder** als explizite abschließende „Report"-/Ausgabekontrakt-Phase nennen, die die Arbeitsweise abschließt. Das Haus-Template über die Agents dieses Plugins platziert den Ausgabekontrakt als diese abschließende Phase (ein „Report"- oder „Output"-Schritt nach den Analyse-Phasen); das ist eine bewusste, konforme Haus-Konvention, keine Reihenfolge-Abweichung, weil der Leser Rolle und Grenzen weiterhin zuerst antrifft und die Ausgabeform eindeutig deklariert ist. **Nicht** konform ist, die Ausgabeform implizit zu lassen oder über die Prozedur zu verstreuen
@@ -196,6 +197,7 @@ In beiden Fällen **DARF** der Agent **NICHT [MUST NOT]** einen bestimmten absol
 - [ ] Jeder Agent, der `model` auf einen anderen Wert als `inherit` pinnt, begründet das Pin entweder im System-Prompt oder trägt einen Kommentar mit der Kosten-/Qualitäts-Abwägung
 - [ ] Die Verantwortlichkeit jedes Agents ist eine einzelne — ein Ziel, eine Eingabeform, eine Ausgabeform; ein Agent, dessen `description` als „X und Y" oder „X plus Z" liest, ist aufgeteilt oder hat eine dokumentierte Begründung für die Verschmelzung
 - [ ] Sind `tools` und `disallowedTools` beide deklariert, erscheint kein Tool in beiden Listen, und das aufgelöste Set (deny-then-allow) ist nicht leer
+- [ ] Jeder Agent, dessen Body `spec/<topic>/<slug>/`-Dateien als normativen Input nennt, hält sein Verhalten bei fehlender Spec fest oder ist im vom Validator gemeldeten Backlog gezählt
 
 ## Referenzen
 

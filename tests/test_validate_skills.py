@@ -339,3 +339,20 @@ def test_rpi_citation_inside_a_fence_does_not_count_as_adoption():
     body = "```\nspec/claude/research-plan-implement/\n```\n"
     assert v.check_rpi_binding(body, "x/SKILL.md", "skill") == []
     assert v.RPI_UNADOPTED == ["x/SKILL.md"]
+
+
+# --- agent-management §Runtime location: spec fallback backlog (#592) ---
+def test_agent_reading_spec_without_fallback_counts_in_backlog(monkeypatch):
+    monkeypatch.setattr(v, "SPEC_FALLBACK_UNSTATED", [])
+    monkeypatch.setattr(v, "AGENTS_CHECKED", [])
+    v.check_spec_fallback("Read `spec/project/test-tier-unit/` before reviewing.", "agents/a.md")
+    v.check_spec_fallback("Read `spec/project/x/` first; when the spec tree is absent, apply the inlined checklist.", "agents/b.md")
+    v.check_spec_fallback("No spec input here.", "agents/c.md")
+    [finding] = v.check_spec_fallback_backlog()
+    assert finding.severity == "Info" and "1 of 3 agents" in finding.message
+
+
+def test_spec_fallback_backlog_is_silent_when_every_agent_states_it(monkeypatch):
+    monkeypatch.setattr(v, "SPEC_FALLBACK_UNSTATED", [])
+    monkeypatch.setattr(v, "AGENTS_CHECKED", ["agents/b.md"])
+    assert v.check_spec_fallback_backlog() == []

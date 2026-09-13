@@ -152,6 +152,7 @@ Runtime location follows the declared `distribution`:
   - `~/.claude/agents/<name>.md`: user-level installation
 
 In both cases the agent **MUST NOT** assume a particular absolute install location; all internal references stay relative to the agent file or to the project the agent operates on.
+- **MUST**, when an agent's body names `spec/<topic>/<slug>/` files as normative input, state what the agent does when that path doesn't resolve in the consuming project: read the spec from the installed `nolte-shared` plugin, which ships the `spec/` tree, or apply a baseline embedded in the body. An agent that states neither stops and reports the missing spec instead of working from memory. `scripts/validate_skills.py` reports the agents that don't state it yet as one Info backlog line
 
 ### Recommendations
 - **SHOULD** begin the system prompt with the agent's role and boundaries up front, and state the expected output format either before the working procedure **or** as an explicit terminal "Report" / output-contract phase that closes the working procedure. The house template across this plugin's agents places the output contract as that closing phase (a "Report" or "Output" step after the analysis phases); this is a deliberate, conformant house convention, not an ordering deviation, because the reader still meets the role and boundaries first and the output shape is unambiguously declared. What's **not** conformant is leaving the output shape implicit or scattering it through the procedure
@@ -199,6 +200,7 @@ In both cases the agent **MUST NOT** assume a particular absolute install locati
 - [ ] Every agent that pins `model` to a value other than `inherit` either justifies the pin in the system prompt or carries a comment explaining the cost/quality trade-off
 - [ ] Every agent's responsibility is single—one goal, one input shape, one output shape; an agent whose `description` reads as "X and Y" or "X plus Z" is split or has a documented reason for the conflation
 - [ ] If `tools` and `disallowedTools` are both declared, no tool appears in both lists, and the resolved set (deny-then-allow) is non-empty
+- [ ] Every agent whose body names `spec/<topic>/<slug>/` files as normative input states its behaviour when the spec is absent, or is counted in the validator's reported backlog
 
 ## References
 

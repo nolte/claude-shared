@@ -228,6 +228,20 @@ def test_pollinations_writes_binary_and_needs_no_auth(state):
     assert json.loads((state / "t.png.meta.json").read_text())["provider"] == "pollinations"
 
 
+def test_pollinations_sidecar_says_the_model_variant_is_undisclosed(state):
+    # #592 / F37: `flux` is a Pollinations alias, so the sidecar can't name the licensed variant.
+    run(["--provider", "pollinations", "--prompt", "x", "--out", str(state / "t.png"),
+         "--accept-data-policy"], pollinations_bytes())
+    meta = json.loads((state / "t.png.meta.json").read_text())
+    assert meta["model"] == "flux" and "variant" in meta["model_variant_note"]
+
+
+def test_cloudflare_sidecar_names_the_concrete_model_without_a_note(state, cf_env):
+    run(["--provider", "cloudflare", "--prompt", "x", "--out", str(state / "c.png")], cloudflare_json())
+    meta = json.loads((state / "c.png.meta.json").read_text())
+    assert meta["model"] == "@cf/black-forest-labs/flux-1-schnell" and "model_variant_note" not in meta
+
+
 def test_pollinations_rejects_non_image_response(state):
     code, _ = run(["--provider", "pollinations", "--prompt", "x", "--out", str(state / "x.png"),
                    "--accept-data-policy"], _FakeResp(b"<html>error</html>", "text/html"))
