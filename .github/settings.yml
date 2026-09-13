@@ -10,15 +10,10 @@ repository:
   description: Shared Claude Code skills and agents for consistent development workflows across projects.
   homepage: https://nolte.github.io/claude-shared
   default_branch: develop
-  topics:
-    - claude-code
-    - claude-code-plugin
-    - skills
-    - agents
-    - nolte-shared
-    - nolte-media
-    - nolte-engineering
-    - ai-agents
+  # A comma-separated string, never a YAML list: probot/settings calls .split() on
+  # topics, and a list throws after the repository PATCH, which silently skips the
+  # whole branches block (nolte/gh-plumbing#416).
+  topics: claude-code, claude-code-plugin, skills, agents, nolte-shared, nolte-media, nolte-engineering, ai-agents
   allow_squash_merge: true
   allow_merge_commit: false
   allow_rebase_merge: false
