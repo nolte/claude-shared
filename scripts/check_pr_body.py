@@ -175,11 +175,13 @@ def check_traceability(risk: str | None, audit_issues: list[int]) -> list[str]:
                 '(spec/project/continuous-improvement/ §"Traceability in remediation artifacts")'
             )
     specialist = values["Dispatched specialist"]
-    if specialist and not specialist.lower().startswith(NO_MATCH_NOTE) and BYPASS_RE.search(specialist):
+    bypass = BYPASS_RE.search(specialist or "")
+    note_at = (specialist or "").lower().find(NO_MATCH_NOTE)
+    if bypass and not (0 <= note_at < bypass.start()):
         failures.append(
             "`Dispatched specialist:` records a specialist as not dispatched, which is neither allowed form: "
-            "name the specialist that produced the fix, or start the value with `no matching specialist existed`; "
-            "a remark about another specialist belongs outside this field "
+            "name the specialist that produced the fix, or record that no matching specialist existed before "
+            "any remark about what wasn't dispatched "
             '(spec/project/continuous-improvement/ §"Specialist dispatch")'
         )
     return failures

@@ -337,3 +337,12 @@ def test_linked_issue_urls_of_the_same_repository_count():
     body = _remediation_body("None", linked="Closes https://github.com/nolte/claude-shared/issues/588 and https://github.com/nolte/other/issues/7")
     assert check_pr_body.linked_issue_numbers(body, "nolte/claude-shared") == [588]
     assert check_pr_body.linked_issue_numbers(body) == []
+
+
+@pytest.mark.parametrize("value", [
+    "A generalist handled it; no matching specialist existed, so none was dispatched",
+    "`no matching specialist existed`; none dispatched",
+])
+def test_no_match_note_before_the_bypass_wording_passes(value):
+    risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
+    assert check(TITLE, _remediation_body(risk), audit_issues=[588]) == []
