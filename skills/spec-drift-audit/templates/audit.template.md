@@ -52,9 +52,9 @@ status: open
 <!-- One row per spec acceptance criterion. Use result values: pass | fail | blocked | not-applicable -->
 <!-- blocked = tooling missing or inaccessible; not-applicable requires a reason. -->
 
-| Spec | Criterion (short) | Result | Specialist (fail/blocked only) | Notes |
-|------|--------------------|--------|--------------------------------|-------|
-| `spec/<topic>/<slug>/` | AC: … | pass / fail / blocked / not-applicable | <specialist + subagent_type / skill, or "no matching specialist exists — generalist handled"; blank for pass/N-A> | |
+| Spec | Criterion (short) | Result | Severity (fail/blocked only) | Specialist (fail/blocked only) | Notes |
+|------|--------------------|--------|------------------------------|--------------------------------|-------|
+| `spec/<topic>/<slug>/` | AC: … | pass / fail / blocked / not-applicable | Critical / Warning / Suggestion / Info; blank for pass/N-A | <specialist + subagent_type / skill, or "no matching specialist exists — generalist handled"; blank for pass/N-A> | |
 
 ## Findings
 
@@ -68,7 +68,7 @@ status: open
 **Result:** fail | blocked
 **Observed state:** <What the implementation actually does or has>
 **Expected state:** <What the spec requires>
-**Severity:** critical (security/release blocker) | standard
+**Severity:** Critical | Warning | Suggestion | Info <!-- canonical four-level scale, spec/claude/review-plan/ §Severity scale -->
 **Specialist:** <!-- MANDATORY (continuous-improvement). Either: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>) — OR — "no matching specialist exists — generalist handled". A finding without this field is incomplete. -->
 
 ---
