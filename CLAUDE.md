@@ -21,7 +21,7 @@ All five plugins version in **lockstep** — one release line equal to the repos
 - `skills/<name>/SKILL.md` — `nolte-shared` skills; each folder is one skill
 - `agents/<name>.md` — `nolte-shared` sub-agents
 - `plugins/nolte-media/`, `plugins/nolte-engineering/`, `plugins/nolte-claude-dev/`, `plugins/nolte-planning/` — the second through fifth plugins: each with its own `.claude-plugin/plugin.json`, `skills/`, and `agents/`, scoped to that root
-- `spec/` — bilingual specifications governing all five plugins' skill/agent authoring and project conventions (repo-wide; not shipped with any plugin)
+- `spec/` — bilingual specifications governing all five plugins' skill/agent authoring and project conventions (repo-wide; shipped inside the `nolte-shared` payload because that plugin's root is the repository root, and with none of the other four plugins)
 - `docs/` — MkDocs source, bilingual (`docs/de/`, `docs/en/`); the catalog renders each plugin under its own `{skills,agents}/<plugin>/` subtree, configured in `docs/catalog-sources.yml`
 - `project/` — this repo's own planning surface: `mission.md`, `goals.md`, `roadmap.md`, plus `features/`, `sprints/`, and `blog-triggers/` (driven by the `nolte-planning` skills `sprint-execute`, `feature-decompose`, `roadmap-plan` — this repo runs the cadence, so it dogfoods that plugin too)
 - `portfolio/` — portfolio-level data (`tech-stack.yml`, `aggregate.yml`, `schemas/`)

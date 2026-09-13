@@ -25,6 +25,7 @@ Readers: auditors running the recurring spec-versus-implementation reconciliatio
 ### Audit scope
 - **MUST** treat "implementation" for the purpose of this spec as covering: source code (`src/`, `skills/`, `agents/`), configuration files (`.github/`, `.claude/`, `Taskfile.yml`, `mkdocs.yml`, `pyproject.toml` / `package.json` / equivalents), documentation (`docs/`, `README.md`, `CLAUDE.md`), and workflows plus hooks
 - **MUST** include every spec under `spec/<topic>/<slug>/<canonical_language>.md` that carries a non-empty `## Requirements` or `## Acceptance Criteria` section; specs with `Status: draft` **aren't** exempt
+- **MUST**, when `spec/.spec-config.yml` carries an `inherits:` key, include the local-vs-inherited drift class of `spec/project/portfolio-inherited-spec-layer/` §Drift detection, taking its findings from the `spec` skill's local-vs-inherited drift check (in the hub repository also `scripts/check_spec_inheritance.py`), because an undeclared divergence from an inherited spec is drift no implementation file shows
 - **MAY** narrow the scope to one thematic area when the audit trigger is itself narrow (for example a `pull-request-workflow`-only audit triggered by a change to that spec); the narrowing **MUST** be recorded in the audit result
 
 ### Triggers and cadence

@@ -117,6 +117,7 @@ The rendered portfolio inventory extends the documentation skeleton of `spec/pro
 - [ ] Every `peers:` reference in every manifest resolves to a capability that actually exists in the named Portfolio-Member repository's manifest; running the broken-peer-reference check produces zero `Warning` findings.
 - [ ] The skill `portfolio-audit` exists at `skills/portfolio-audit/SKILL.md` in the `nolte-shared` plugin, conforms to `skill-management`, and has been reviewed against `skill-review` at least once with the resulting plan closed.
 - [ ] At least one quarterly audit Findings-Report exists under `.audits/portfolio/<YYYY-MM-DD>.md` in the `claude-shared` repository, conforming to the `review-plan` four-section structure and the canonical severity vocabulary.
+- [ ] Every quarterly audit Findings-Report under `.audits/portfolio/` carries a `## Tech stack` section that checks each member's declared tech stack against `portfolio/tech-stack.yml`, per `spec/portfolio/tech-stack/`
 - [ ] The aggregated portfolio inventory is published under `docs/<canonical_language>/portfolio/` and renders correctly via `task docs`; a CI check verifies that the rendered output matches what regenerating from the manifests would produce.
 - [ ] `continuous-improvement` lists `portfolio-audit` as a recognized audit source in its "Finding sources in scope" section.
 - [ ] Every capability in every manifest has a non-empty `rationale` field; running the rationale-presence check produces zero `Warning` findings.
