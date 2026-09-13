@@ -4,7 +4,7 @@
 > **Generator:** cloudflare flux-1-schnell
 > **Variants:** Light (default) — dark-mode swaps per `illustration_sloth-mascot.md`
 > **Target size:** 1024×1024px per view
-> **Style reference:** `BRAND-STYLE-REF v1.1`, anchored by `design/brand/mascot/mascot-front-light.svg` (see `../brand/brand-vocabulary.md` §Canonical style reference); the per-view CHARACTER blocks below carry it as text
+> **Style reference:** `BRAND-STYLE-REF v1.1`, anchored by `design/brand/mascot/mascot-front-light.svg`, a v1.0-figure render that is re-render-pending for the v1.1 streak (see `../brand/brand-vocabulary.md` §Canonical style reference); the per-view CHARACTER blocks below carry it as text
 > **Seed:** pass an explicit `--seed` (Cloudflare honours it; the sidecar mis-logs it as None)
 
 ## Context
@@ -119,7 +119,7 @@ phrase right after "facing the viewer, near-symmetrical." (front) and adjust as 
 - `--seed` is honoured by Cloudflare (deterministic); the `.meta.json` sidecar mis-logs
   it as `None`, so track the seed via the filename.
 - The per-view CHARACTER blocks above are the canonical reference — compare each
-  render against them point by point (no external reference image is needed).
+  render against them point by point; the committed reference image `design/brand/mascot/mascot-front-light.svg` anchors the figure, though it predates the v1.1 streak.
 
 ## Avoidance (positive assertions — FLUX has no negative prompt)
 Encode every exclusion as what the image *is*: the artwork is **purely pictorial**

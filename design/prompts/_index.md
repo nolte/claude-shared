@@ -21,11 +21,11 @@ whose fixed reference image is the committed `design/brand/mascot/mascot-front-l
 
 | Document                                  | Type           | Subject                              | Status (v1.1)        |
 | ----------------------------------------- | -------------- | ------------------------------------ | -------------------- |
-| `illustration_sloth-mascot.md`            | illustration   | Full sloth mascot (front, light/dark) | rendered + vectorised ✅ (seed 8505) |
+| `illustration_sloth-mascot.md`            | illustration   | Full sloth mascot (front, light/dark) | rendered + vectorised with the v1.0 figure (seed 8505) · v1.1 re-render pending ⬜ |
 | `illustration_sloth-mascot-turnaround.md` | model sheet    | All angles (front/side/back/3-4) + poses | prompt updated · re-render pending ⬜ |
 | `illustration_sloth-mascot-expressions.md`| expression sheet | 12 facial expressions + UI mapping  | prompt updated · re-render pending ⬜ |
 | `illustration_sloth-coding.md`            | scene          | Sloth coding at a laptop (tech-twist) | prompt updated · re-render pending ⬜ |
-| `logo_sloth-emblem.md`                    | logo           | Compact heraldic sloth mark          | rendered + vectorised ✅ (seed 8521/8505) |
+| `logo_sloth-emblem.md`                    | logo           | Compact heraldic sloth mark          | rendered + vectorised with the v1.0 figure (seed 8521/8505) · v1.1 re-render pending ⬜ |
 
 ## The canonical figure (one-line recall)
 
@@ -54,5 +54,5 @@ body is solid indigo, **no belly patch**.
 - Light vs. dark: re-pull per-mode tokens (indigo → soft cobalt-violet `#939FE3`,
   dark-indigo outline → warm-bone outline on charcoal) — never RGB inversion.
 - Two recurring FLUX.1-schnell traps, handled in every prompt: colour drift to brown
-  (assert indigo, negate brown) and a stray cream patch on the body (assert face-only).
+  (state the indigo positively) and a stray cream patch on the body (assert face-only).
 - All renders isolated on a flat background for a clean `png-to-transparent-svg` cutout.

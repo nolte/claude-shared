@@ -4,7 +4,7 @@
 > **Generator:** cloudflare flux-1-schnell
 > **Variants:** Light (default)
 > **Target size:** 1024×1024px
-> **Style reference:** `BRAND-STYLE-REF v1.1`, anchored by `design/brand/mascot/mascot-front-light.svg` (see `../brand/brand-vocabulary.md` §Canonical style reference); the prompt below carry it as text
+> **Style reference:** `BRAND-STYLE-REF v1.1`, anchored by `design/brand/mascot/mascot-front-light.svg`, a v1.0-figure render that is re-render-pending for the v1.1 streak (see `../brand/brand-vocabulary.md` §Canonical style reference); the prompt below carry it as text
 > **Seed:** pass an explicit `--seed`; verified-good seeds listed below
 
 ## Context
