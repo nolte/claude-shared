@@ -2,10 +2,10 @@ name: pr-lint
 
 # spec/project/pull-request-workflow/ §"PR lint workflow" MUSTs a workflow that
 # lints PR title and body on these four events and registers its job as a
-# required status check for `develop`. That section SHOULDs the linter as a
-# reusable workflow under nolte/gh-plumbing so repositories inherit one
-# implementation. No such reusable workflow exists yet, so this is the first
-# implementation rather than a fork of one; upstreaming it is tracked separately.
+# required status check for `develop`, and SHOULDs the linter as a reusable
+# workflow under nolte/gh-plumbing. The body rules run there, called by the
+# `pr-body` job below (#577); the `pr-lint` job keeps the Vale check of the
+# title, which reads this repository's own Vale configuration.
 on:
   pull_request:
     types: [opened, edited, synchronize, ready_for_review]
@@ -20,12 +20,10 @@ concurrency:
 jobs:
   pr-lint:
     runs-on: ubuntu-latest
-    # pull-requests: read lists the changed files for the spec-anchor rule (#585);
-    # issues: read reads the labels of linked issues for the traceability rule (#616).
+    # The body checks run in the pr-body job below (#577); this job checks the
+    # title prose with Vale and needs no more than read access to the sources.
     permissions:
       contents: read
-      pull-requests: read
-      issues: read
     env:
       # Lock-step with the lint job in ci.yml; the prose-style spec requires local
       # and CI Vale runs to produce identical alerts.
@@ -38,69 +36,11 @@ jobs:
         with:
           python-version: "3.14"
       # spec/project/github-actions-best-practices/ on untrusted input: the PR
-      # title and body are author-controlled, so they reach the checker through
-      # the environment and never through `${{ }}` interpolation into a shell
+      # title is author-controlled, so it reaches check_prose.py through the
+      # environment and never through `${{ }}` interpolation into a shell
       # command, where a crafted title would be executed. The author login is
-      # GitHub-controlled but travels the same way; the checker exempts only the
-      # exact logins on its dependency-bot allowlist from the body checks.
-      # The file names reach the checker through a file, never through the shell.
-      - name: List the pull request's changed files
-        env:
-          GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" --jq '.[].filename' > "${RUNNER_TEMP}/changed-files.txt"
-      # The checker parses `## Linked issues` itself and writes issue numbers of at
-      # most nine digits; the next step re-validates every line before it reaches
-      # the API. On `pull_request` the workflow file and the checker both come from
-      # the pull request, so this split is input hygiene, not a trust boundary: the
-      # token is read-only and fork runs get no secrets.
-      - name: List the linked issue numbers
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: python3 scripts/check_pr_body.py --print-linked-issues > "${RUNNER_TEMP}/linked-issues.txt"
-      # A reference GitHub answers with 404 or 410 (a discussion, a deleted issue)
-      # carries no labels and is skipped; any other failure fails the check, since
-      # the traceability rule can't be judged without the labels.
-      - name: Read the labels of the linked issues
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          count=$(wc -l < "${RUNNER_TEMP}/linked-issues.txt")
-          if [ "${count}" -gt 50 ]; then
-            echo "::error::## Linked issues references ${count} issues; the check reads at most 50"
-            exit 1
-          fi
-          : > "${RUNNER_TEMP}/linked-issue-labels.txt"
-          unreadable=""
-          while read -r n; do
-            if ! [[ "${n}" =~ ^[0-9]{1,9}$ ]]; then
-              echo "::error::unexpected linked-issue line from the checker"
-              exit 1
-            fi
-            if ! labels=$(gh api "repos/${GITHUB_REPOSITORY}/issues/${n}" --jq '.labels[].name' 2> "${RUNNER_TEMP}/gh-error.txt"); then
-              if grep -Eq 'HTTP (404|410)' "${RUNNER_TEMP}/gh-error.txt"; then
-                echo "::notice::linked reference #${n} isn't a readable issue (404/410); skipped"
-                continue
-              fi
-              unreadable="${unreadable} #${n}"
-              continue
-            fi
-            printf '%s\n' "${labels}" | sed '/^$/d' | sed "s/^/${n} /" >> "${RUNNER_TEMP}/linked-issue-labels.txt"
-          done < "${RUNNER_TEMP}/linked-issues.txt"
-          if [ -n "${unreadable}" ]; then
-            echo "::error::could not read the labels of linked issue(s)${unreadable}"
-            exit 1
-          fi
-      - name: Lint the pull-request title and body
-        env:
-          PR_TITLE: ${{ github.event.pull_request.title }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          PR_HEAD_REF: ${{ github.head_ref }}
-          CHANGED_FILES_FILE: ${{ runner.temp }}/changed-files.txt
-          LINKED_ISSUE_LABELS_FILE: ${{ runner.temp }}/linked-issue-labels.txt
-        run: python3 scripts/check_pr_body.py
+      # GitHub-controlled but travels the same way; check_prose.py skips the
+      # title check only for the exact logins on its dependency-bot allowlist.
       - name: Install Vale
         run: |
           curl -fsSL "https://github.com/errata-ai/vale/releases/download/v${VALE_VERSION}/vale_${VALE_VERSION}_Linux_64-bit.tar.gz" \
@@ -119,10 +59,8 @@ jobs:
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: python3 scripts/check_prose.py --title
 
-  # #577: the body checks move to the reusable workflow in nolte/gh-plumbing,
-  # pinned by commit SHA (no release needed for this caller). This job runs next
-  # to the local one until `.github/settings.yml` requires `pr-body / PR Lint`;
-  # the follow-up removes the local body check and keeps the Vale title check.
+  # #577: the pull-request body checks run in the reusable workflow in
+  # nolte/gh-plumbing, pinned by commit SHA; required as `pr-body / PR Lint`.
   pr-body:
     permissions:
       contents: read

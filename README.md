@@ -5,7 +5,7 @@
 
 A shared foundation of [Claude Code](https://docs.claude.com/en/docs/claude-code) agents and skills, intended to be reused across multiple software development projects.
 
-Five required status checks gate `develop`: the `ci` workflow bundles `lint`, `test`, `docs`, and `links`, and the `pr-lint` workflow runs `pr-lint` on every pull request. A green `CI` badge means the first four passed on the latest `develop` commit; the `pr-lint` badge shows its latest pull-request run.
+Six required status checks gate `develop`: the `ci` workflow bundles `lint`, `test`, `docs`, and `links`, and the `pr-lint` workflow runs `pr-lint` (Vale on the pull-request title) and `pr-body / PR Lint` (the body rules, from the reusable workflow in `nolte/gh-plumbing`) on every pull request. A green `CI` badge means the first four passed on the latest `develop` commit; the `pr-lint` badge shows its latest pull-request run.
 
 ## Purpose
 

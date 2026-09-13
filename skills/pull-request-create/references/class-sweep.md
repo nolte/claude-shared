@@ -32,4 +32,4 @@ A fix that repairs the site where a defect was found and says nothing about the 
 
 ## What the check enforces
 
-`scripts/check_pr_body.py` (wired as the `pr-lint` required status check) fails a `fix` PR when the section is missing, when any of the four fields is missing or empty, or when `Hits` or `Repaired` doesn't parse as an integer. It passes the same body on any other type. It can't tell a measured count from a guessed one, which is why that obligation sits here and in the skill's hard rules rather than in the checker.
+The reusable workflow `nolte/gh-plumbing/.github/workflows/reusable-pr-lint.yaml` (wired as the `pr-body / PR Lint` required status check) fails a `fix` PR when the section is missing, when any of the four fields is missing or empty, or when `Hits` or `Repaired` doesn't parse as an integer. It passes the same body on any other type. It can't tell a measured count from a guessed one, which is why that obligation sits here and in the skill's hard rules rather than in the checker.
