@@ -17,21 +17,21 @@ the same brand as the mascot illustration.
 ## Prompt — Light Mode
 
 ```
-BRAND-STYLE-REF v0 (bootstrap): modern flat-design comic / vector cartoon, bold even-weight clean outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, subject centered and isolated on a plain flat background, designed to stay legible at small sizes.
+BRAND-STYLE-REF v0 (bootstrap): modern flat-design comic vector cartoon, bold even-weight clean outlines, rounded geometric friendly shapes, smooth matte fills with one soft cel-shading step, generous negative space, centered and isolated on a plain flat background, designed to stay legible at small sizes.
 
-A minimalist geometric emblem of a cute sloth hanging from a short horizontal branch, front-facing, simplified to a few bold rounded shapes that form a clean badge-like mark. Dominant body color muted indigo, branch and a single leaf in warm moss green, eyes and claws picked out in warm amber, cream warm-bone-white face mask, and a single short cool silver-grey streak on one side of the head as the signature mark. Thick uniform indigo outline. Iconic and balanced, near-symmetrical apart from the one grey side streak, lots of padding around the mark. Flat warm bone-white background.
+Minimalist geometric emblem of a cute sloth hanging from a short horizontal branch, front-facing, bold rounded shapes forming a clean badge-like mark. Muted indigo body, moss green branch and leaf, warm amber eyes and claws, cream face mask, one short cool silver-grey signature streak on one side of the head. Thick indigo outline. Iconic, balanced, near-symmetrical apart from the streak. Flat warm bone-white background.
 
-Brand color reinforcement: muted indigo #4A529D, warm moss green #769244, warm amber #E0A23C, warm bone white #F4F1EA, cool silver-grey streak #AEB2BE. Seed: unset.
+Brand color reinforcement: indigo #4A529D, moss #769244, amber #E0A23C, bone #F4F1EA, streak #AEB2BE. Seed: unset.
 ```
 
 ## Prompt — Dark Mode
 
 ```
-BRAND-STYLE-REF v0 (bootstrap): modern flat-design comic / vector cartoon, bold even-weight clean outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, subject centered and isolated on a plain flat background, designed to stay legible at small sizes.
+BRAND-STYLE-REF v0 (bootstrap): modern flat-design comic vector cartoon, bold even-weight clean outlines, rounded geometric friendly shapes, smooth matte fills with one soft cel-shading step, generous negative space, centered and isolated on a plain flat background, designed to stay legible at small sizes.
 
-A minimalist geometric emblem of a cute sloth hanging from a short horizontal branch, front-facing, simplified to a few bold rounded shapes that form a clean badge-like mark. Dominant body color soft cobalt-violet, branch and a single leaf in soft fern green, eyes and claws picked out in warm amber, cream warm-bone-white face mask, and a single short pale silver-grey streak on one side of the head as the signature mark. Thick uniform warm-bone outline so the mark stays crisp on a dark surface. Iconic and balanced, near-symmetrical apart from the one grey side streak, lots of padding around the mark. Flat deep warm charcoal background.
+Minimalist geometric emblem of a cute sloth hanging from a short horizontal branch, front-facing, bold rounded shapes forming a clean badge-like mark. Soft cobalt-violet body, fern green branch and leaf, warm amber eyes and claws, cream face mask, one short pale silver-grey signature streak on one side of the head. Thick warm-bone outline, crisp on dark. Iconic, balanced, near-symmetrical apart from the streak. Flat deep warm charcoal background.
 
-Brand color reinforcement: soft cobalt-violet #939FE3, soft fern green #95B06A, warm amber #E0A23C, pale silver-grey streak #C9CDD6, deep warm charcoal #20222A. Seed: unset.
+Brand color reinforcement: violet #939FE3, fern #95B06A, amber #E0A23C, streak #C9CDD6, charcoal #20222A. Seed: unset.
 ```
 
 ## Rendered v1.1 asset (committed)

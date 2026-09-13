@@ -8,7 +8,7 @@ prompt documents describe the figure fully in text and name `BRAND-STYLE-REF v1.
 whose fixed reference image is the committed `design/brand/mascot/mascot-front-light.svg`.
 
 > **2026-09-13 prompt rewrite (#589):** every compiled prompt block states its colours
-> positively and stays under 200 words (the FLUX T5 256-token cap); the committed renders
+> positively and measures at most 240 T5 tokens, below the FLUX 256-token cap; the committed renders
 > came from the earlier wording, so they are re-render-pending until the next generation run.
 >
 > **v1.1 figure change:** the canonical figure gained a **cool silver-grey signature

@@ -30,13 +30,13 @@ warm-bone background (easy to cut out).
 ## Prompt (scene-first, dark-charcoal laptop — verified)
 
 ```
-modern flat-design kawaii vector cartoon, bold clean dark outlines, smooth matte fills with a single soft cel-shading step, simple flat shapes.
+flat kawaii vector cartoon, bold clean dark outlines, matte fills, one soft cel-shading step.
 
-A cute chibi cartoon sloth sits on the floor behind a small low wooden table, front view, centered, typing on an open laptop on the table, both small three-clawed hands on the keyboard. The laptop is chunky matte DARK CHARCOAL-GREY with rounded corners and a plain unmarked lid. A small cream mug stands right of the table; two clawed feet peek out below it. Happy focused expression.
+Cute chibi cartoon sloth sits behind a small low wooden table, front view, centered, typing on an open laptop, three-clawed hands on the keyboard. Chunky matte DARK CHARCOAL-GREY laptop with plain blank lid. Small cream mug right of the table; two clawed feet peek out below. Happy focused expression.
 
-The sloth has DEEP BLUE-INDIGO blue-violet fur, a large round head with a small jagged tuft, a heart-shaped cream face mask with two broad dark diagonal eye-stripes, a single cool silver-grey fur streak down one side of the head beside the mask (a grey lock, the only asymmetry), two big round dark eyes with white highlights, a small dark nose, a gentle closed smile, two coral-orange blush cheeks. Its whole body is solid indigo.
+Sloth has deep blue-indigo fur, large round head with small jagged tuft, heart-shaped cream face mask with two broad dark diagonal eye-stripes, cool silver-grey fur streak down one side of the head beside the mask, big round dark eyes with white highlights, small dark nose, closed smile, coral-orange blush cheeks. Whole body solid indigo.
 
-Flat warm bone-white background, soft oval shadow under the scene. Fur deep blue-indigo #4A529D / observed slate #4A4E6B, cream face mask #F4F1EA, coral cheeks #E8825A, side streak cool silver-grey #AEB2BE, dark charcoal laptop, warm wood-brown table.
+Flat warm bone-white background, soft oval shadow. Fur #4A529D, mask #F4F1EA, cheeks #E8825A, streak #AEB2BE.
 ```
 
 ## Generation notes

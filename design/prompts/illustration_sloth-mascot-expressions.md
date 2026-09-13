@@ -18,25 +18,25 @@ change per expression. Compose: `STYLE + HEAD block + EXPRESSION slot + TAIL blo
 **STYLE:**
 
 ```
-modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
+flat kawaii vector cartoon, bold dark outlines, matte fills, one soft cel-shading step, centered on flat warm bone-white background.
 ```
 
 **HEAD (invariant identity, up to the face):**
 
 ```
-a chibi cartoon sloth plush-toy with DEEP BLUE-INDIGO fur, a cool blue-violet indigo. Front view, near-symmetrical. Large round head with a small jagged fur tuft. A big heart-shaped cream face mask with a V-notch. Two broad dark navy-charcoal diagonal stripes cross each eye, pale between them, a small dark nose. A cool silver-grey fur streak runs down one side of the head from the tuft past the cheek, beside the mask.
+chibi cartoon sloth plush toy with deep blue-indigo fur, front view, near-symmetrical. Large round head, small jagged tuft. Heart-shaped cream face mask with V-notch. Two broad dark navy diagonal stripes cross the eyes, pale between them, small dark nose. Cool silver-grey fur streak down one side of head beside the mask.
 ```
 
 **TAIL (invariant body):**
 
 ```
-Cream only on the face mask; the whole body solid deep blue-indigo. Compact rounded body right under the head, short arms, exactly three pale cream claws per hand and foot. Bold dark-indigo outline, soft-grey oval shadow beneath.
+Cream only on face mask, whole body solid indigo. Compact rounded body, short arms, three pale cream claws per hand and foot, bold dark-indigo outline, soft-grey oval shadow.
 ```
 
 **COLOR LOCK:**
 
 ```
-Fur deep blue-indigo #4A529D / observed slate #4A4E6B, mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, side streak cool silver-grey #AEB2BE.
+Fur #4A529D, mask #F4F1EA, blush #E8825A, streak #AEB2BE.
 ```
 
 ## Expressions (insert one slot between HEAD and TAIL)
@@ -65,11 +65,11 @@ smile. The best approximation is the wide-round-eyes + raised-brows variant
 ## Worked example (Happy)
 
 ```
-modern flat-design kawaii vector cartoon, bold even-weight clean dark outlines, rounded geometric friendly shapes, smooth matte fills with a single soft cel-shading step, generous negative space, centered and isolated on a flat warm bone-white background.
+flat kawaii vector cartoon, bold dark outlines, matte fills, one soft cel-shading step, centered on flat warm bone-white background.
 
-a chibi cartoon sloth plush-toy with DEEP BLUE-INDIGO fur, a cool blue-violet indigo. Front view, near-symmetrical. Large round head with a small jagged fur tuft. A big heart-shaped cream face mask with a V-notch. Two broad dark navy-charcoal diagonal stripes cross each eye, pale between them, a small dark nose. A cool silver-grey fur streak runs down one side of the head from the tuft past the cheek, beside the mask. Two large shiny near-black eyes, a wide open cheerful smile, two coral-orange blush patches, a bright happy expression. Cream only on the face mask; the whole body solid deep blue-indigo. Compact rounded body right under the head, short arms, exactly three pale cream claws per hand and foot. Bold dark-indigo outline, soft-grey oval shadow beneath.
+chibi cartoon sloth plush toy with deep blue-indigo fur, front view, near-symmetrical. Large round head, small jagged tuft. Heart-shaped cream face mask with V-notch. Two broad dark navy diagonal stripes cross the eyes, pale between them, small dark nose. Cool silver-grey fur streak down one side of head beside the mask. Two large shiny near-black eyes, a wide open cheerful smile, two coral-orange blush patches, a bright happy expression. Cream only on face mask, whole body solid indigo. Compact rounded body, short arms, three pale cream claws per hand and foot, bold dark-indigo outline, soft-grey oval shadow.
 
-Fur deep blue-indigo #4A529D / observed slate #4A4E6B, mask warm bone white #F4F1EA, cheeks coral orange #E8825A, eyes near-black, side streak cool silver-grey #AEB2BE.
+Fur #4A529D, mask #F4F1EA, blush #E8825A, streak #AEB2BE.
 ```
 
 ## Generation notes
