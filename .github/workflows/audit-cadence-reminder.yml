@@ -90,6 +90,8 @@ jobs:
               "  the offline slice already runs in CI.",
               "- `spec/project/spec-readiness/` — readiness audit of every spec added",
               "  or changed since the last run.",
+              "- `spec/project/code-security-audit/` — whole-codebase code-security review,",
+              "  the out-of-pipeline practice `continuous-integration` §G accepts.",
               "",
               "## Action",
               "",
@@ -105,10 +107,12 @@ jobs:
               "   --external`) and persist `.audits/link-validation/<YYYY>-Q<n>.md`.",
               "5. Dispatch `spec-readiness-reviewer` over the new or changed specs and",
               "   persist `.audits/spec-readiness/<YYYY>-Q<n>.md` with per-spec counts.",
+              "6. Run the `code-security-audit` skill and persist its record under",
+              "   `.audits/code-security-audit/`.",
               "",
               "## Close criteria",
               "",
-              "All five records for this quarter are committed and any non-`allow` /",
+              "All six records for this quarter are committed and any non-`allow` /",
               "non-clean finding carries a recorded response.",
             ].join("\n");
 

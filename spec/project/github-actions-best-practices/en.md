@@ -131,7 +131,7 @@ This section binds the merge-queue mechanics to the platform. Whether a reposito
 
 - [ ] Every third-party action reference in `.github/workflows/` is a full-length commit digest with a comment naming the corresponding version
 - [ ] Every reusable-workflow reference is pinned to an immutable reference rather than a moving branch
-- [ ] Each pinned digest was verified to belong to the action's own repository rather than to a fork, and that verification is recorded in the pinning change
+- [ ] Each pinned digest was verified to belong to the action's own repository rather than to a fork, and that verification is recorded in the pinning change; a Renovate bump carries it by construction, because the github-actions manager resolves the digest from the named repository's own tag
 - [ ] Every workflow declares an explicit `permissions` block, with write scopes granted at job level rather than workflow level
 - [ ] In a repository that runs a merge queue, every workflow backing a required status check triggers on `merge_group` as well, no required check depends on pull-request-only context, and third-party CI runs on the `gh-readonly-queue/` prefix
 - [ ] No workflow grants a blanket write-all permission set

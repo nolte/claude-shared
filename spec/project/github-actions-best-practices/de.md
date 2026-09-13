@@ -131,7 +131,7 @@ Dieser Abschnitt bindet die Merge-Queue-Mechanik an die Plattform. Ob ein Reposi
 
 - [ ] Jede Referenz auf eine Drittanbieter-Action in `.github/workflows/` ist ein vollständiger Commit-Digest mit einem Kommentar, der die zugehörige Version benennt
 - [ ] Jede Reusable-Workflow-Referenz ist auf eine unveränderliche Referenz gepinnt statt auf einen wandernden Branch
-- [ ] Für jeden gepinnten Digest wurde geprüft, dass er zum Repository der Action selbst gehört und nicht zu einem Fork, und diese Prüfung ist in der Pinning-Änderung festgehalten
+- [ ] Für jeden gepinnten Digest wurde geprüft, dass er zum Repository der Action selbst gehört und nicht zu einem Fork, und diese Prüfung ist in der Pinning-Änderung festgehalten; eine Renovate-Aktualisierung trägt sie konstruktionsbedingt, weil der github-actions-Manager den Digest aus dem eigenen Tag des benannten Repositorys auflöst
 - [ ] Jeder Workflow deklariert einen ausdrücklichen `permissions`-Block, wobei Schreibrechte auf Job- statt auf Workflow-Ebene gewährt werden
 - [ ] In einem Repository, das eine Merge Queue betreibt, triggert jeder Workflow hinter einem Required Status Check zusätzlich auf `merge_group`, kein Required Check hängt von Pull-Request-only-Kontext ab, und Drittanbieter-CI läuft auf dem `gh-readonly-queue/`-Präfix
 - [ ] Kein Workflow gewährt pauschale Vollschreibrechte

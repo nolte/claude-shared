@@ -17,6 +17,7 @@ on:
   pull_request:
     paths:
       - "requirements*.txt"
+      - "**/*.lock.txt"
       - "docs/requirements.txt"
       - "evals/requirements-*.txt"
       - "LICENSE"
@@ -60,13 +61,16 @@ jobs:
           python-version: "3.14"
       - name: pip-audit over every Python manifest
         run: |
-          pip install --quiet pip-audit
+          pip install --quiet pip-audit==2.10.1
           pip-audit --progress-spinner=off \
             -r requirements.txt \
             -r requirements-dev.txt \
             -r docs/requirements.txt \
             -r evals/requirements-dev.txt \
-            -r evals/requirements-eval.txt
+            -r evals/requirements-eval.txt \
+            -r requirements-dev.lock.txt \
+            -r docs/requirements.lock.txt \
+            -r evals/requirements-dev.lock.txt
 
   license-drift:
     runs-on: ubuntu-latest
@@ -79,10 +83,10 @@ jobs:
         run: |
           python -m venv .sbom-venv
           .sbom-venv/bin/pip install --quiet \
-            -r docs/requirements.txt \
-            -r evals/requirements-dev.txt \
-            -r requirements-dev.txt \
-            cyclonedx-bom
+            -r docs/requirements.lock.txt \
+            -r evals/requirements-dev.lock.txt \
+            -r requirements-dev.lock.txt \
+            cyclonedx-bom==7.3.1
           .sbom-venv/bin/cyclonedx-py environment .sbom-venv -o sbom.cdx.json
       - name: License-drift gate against the adjudicated baseline
         run: python3 scripts/check_licenses.py

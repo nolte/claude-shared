@@ -220,3 +220,36 @@ def test_bot_fix_title_needs_no_class_sweep():
     title = "fix(deps): update dependency pymdown-extensions to v11.0.2"
     assert check(title, RENOVATE_BODY, author="renovate[bot]") == []
     assert check(title, RENOVATE_BODY, author="nolte")
+
+
+# --- spec/project/spec-driven-development/ Requirement 2: spec anchor (#585) ---
+def _body_with_linked(linked: str) -> str:
+    return FIVE_SECTIONS.replace("## Linked issues\n", "## Linked issues\n\n" + linked + "\n", 1)
+
+
+def test_implementation_change_without_refs_spec_fails():
+    failures = check_pr_body.check("feat(ci): x", _body_with_linked("Closes #1"), "nolte", ["scripts/x.py", "spec/a/b/en.md"])
+    assert any("Refs spec/<topic>/<slug>/" in f for f in failures)
+
+
+@pytest.mark.parametrize("title, files, head, linked", [
+    ("feat(ci): x", ["scripts/x.py"], None, "Refs spec/project/quality-gate/"),
+    ("docs(spec): x", ["spec/project/a/en.md", "spec/project/a/de.md"], None, "Closes #1"),
+    ("feat(ci): x", ["scripts/x.py"], "exp/try", "Closes #1"),
+    ("docs(prose): fix typos", ["docs/en/index.md"], None, "Refs spec/project/prose-style/"),
+    ("feat(ci): x", None, None, "Closes #1"),
+])
+def test_spec_anchor_exemptions_and_anchored_changes_pass(title, files, head, linked):
+    failures = check_pr_body.check(title, _body_with_linked(linked), "nolte", files, head)
+    assert not any("Refs spec/<topic>/<slug>/" in f for f in failures)
+
+
+def test_main_reads_changed_files_and_head_ref_from_the_environment(monkeypatch, tmp_path, capsys):
+    files = tmp_path / "files.txt"; files.write_text("scripts/x.py\n")
+    monkeypatch.setenv("PR_TITLE", "feat(ci): x")
+    monkeypatch.setenv("PR_BODY", _body_with_linked("Closes #1"))
+    monkeypatch.setenv("PR_AUTHOR", "nolte")
+    monkeypatch.setenv("CHANGED_FILES_FILE", str(files))
+    monkeypatch.setenv("PR_HEAD_REF", "feat/x")
+    assert check_pr_body.main([]) == 1
+    assert "Refs spec/" in capsys.readouterr().out

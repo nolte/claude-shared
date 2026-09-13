@@ -2,7 +2,28 @@
   extends: [
     'github>nolte/gh-plumbing//renovate-configs/common#v2.0.0',
   ],
+  // spec/project/continuous-integration/ §C: CI installs from lock files that
+  // `uv pip compile` generates from the requirement manifests; the pip-compile
+  // manager reads each lock file's header to re-run that command on a bump.
+  'pip-compile': {
+    managerFilePatterns: ['/(^|/)requirements(-dev)?\\.lock\\.txt$/'],
+  },
   packageRules: [
+    // The default pip_requirements manager also matches the lock files and
+    // their source manifests. Left on, it bumps a pin inside a lock without
+    // re-running `uv pip compile`, or bumps a manifest the lock doesn't follow.
+    // pip-compile owns both; pip_requirements keeps the unlocked manifests
+    // (requirements.txt, evals/requirements-eval.txt, spec templates).
+    {
+      matchManagers: ['pip_requirements'],
+      matchFileNames: [
+        'requirements-dev.txt',
+        'docs/requirements.txt',
+        'evals/requirements-dev.txt',
+        '**/*.lock.txt',
+      ],
+      enabled: false,
+    },
     // spec/project/workflow-health/ MUST NOTs Renovate automerge for
     // nolte/gh-plumbing tag bumps: a human acknowledgement of each plumbing
     // bump is the portfolio-wide rollback signal (2026-Q3 audit finding
