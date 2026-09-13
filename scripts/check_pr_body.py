@@ -117,10 +117,12 @@ LINKED_ISSUE_RE = re.compile(r"(?<![\w/])#(\d{1,9})\b")
 TRACEABILITY_FIELDS = ("Originating source", "Dispatched specialist")
 NO_MATCH_NOTE = "no matching specialist existed"
 # A named specialist recorded as bypassed satisfies neither allowed form.
-# Only `none`/`neither` after the no-match note name nobody; any other match
-# (`X was not dispatched`) records a bypassed specialist.
+# The two allowed forms are told apart structurally, not by reading clauses: a
+# value that opens with the no-match note is that form and isn't scanned further;
+# any other value names the specialist that produced the fix and so must not
+# record a dispatch as not having happened.
 BYPASS_RE = re.compile(
-    r"\b(?P<word>not|never|none|neither|wasn't|weren't)\b(?:[ \t]+[\w`:-]+){0,3}[ \t]+dispatched\b",
+    r"\b(?:not|never|none|neither|wasn't|weren't)\b(?:[ \t]+[\w`:-]+){0,3}[ \t]+dispatched\b",
     re.IGNORECASE,
 )
 
@@ -177,16 +179,12 @@ def check_traceability(risk: str | None, audit_issues: list[int]) -> list[str]:
                 '(spec/project/continuous-improvement/ §"Traceability in remediation artifacts")'
             )
     specialist = values["Dispatched specialist"]
-    note_at = (specialist or "").lower().find(NO_MATCH_NOTE)
-    bypassed = [
-        m for m in BYPASS_RE.finditer(specialist or "")
-        if not (m.group("word").lower() in ("none", "neither") and 0 <= note_at < m.start())
-    ]
-    if bypassed:
+    opens_with_note = (specialist or "").lstrip("`*_\"' ").lower().startswith(NO_MATCH_NOTE)
+    if specialist and not opens_with_note and BYPASS_RE.search(specialist):
         failures.append(
             "`Dispatched specialist:` records a specialist as not dispatched, which is neither allowed form: "
-            "name the specialist that produced the fix, or record that no matching specialist existed before "
-            "any remark about what wasn't dispatched "
+            "name the specialist that produced the fix, or open the value with "
+            "`no matching specialist existed` "
             '(spec/project/continuous-improvement/ §"Specialist dispatch")'
         )
     return failures
