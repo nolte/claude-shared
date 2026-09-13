@@ -23,6 +23,7 @@ status: open
 Target: `plugins/nolte-engineering/skills/error-tracking-audit/` (SKILL.md, 145 lines, plus three `references/` files — all three resolve and all three carry an explicit load-trigger phrase).
 Specs applied: `skill-management`, `skill-vs-agent`, `review-plan`, `skill-review` (revisions recorded in frontmatter).
 Validator: override — `skills-ref` is not provisioned in this repository. `scripts/validate_skills.py` is used in its place for the structural checks it does cover; its findings are mapped per `skill-review` §Checks derived from external skill-structure validation (error → Critical, warning → Warning). Checks that only `skills-ref` performs remain uncovered.
+Validator version: none recorded — `scripts/validate_skills.py` carried no version constant at `f46a3ef`, so that commit is the only identifier; since 2026-09-13 `python3 scripts/validate_skills.py --version` reports it (1.0.0), and a re-review records that value.
 Narrowing: none — full review.
 Explicitly out of scope: runtime behavior of the skill, Vale/markdown style (handled by `task lint`), the dispatched `error-tracking-audit-scanner` agent beyond confirming the orchestration direction (reviewed separately in this sweep).
 
@@ -33,7 +34,7 @@ Measurement note: a whole-file `chars/4` estimate yields ~5448 tokens and would 
 ## Summary
 
 - Critical: 0
-- Warning: 1
+- Warning: 2 (1 added 2026-09-13, F16)
 - Suggestion: 0
 - Info: 1
 
@@ -43,6 +44,11 @@ Next concrete action: none required before use; move detail to `references/` on 
 ## Findings
 
 ### Warning
+
+- [ ] [skill-review.check-families-not-run] The plan evidences two of the six newer check families: §Checks derived from runtime & lifecycle and §evaluation discipline; each needs its checks run with a `skill-management` §-anchor before the plan can close.
+      Where: this plan's findings and §Verified conformant, against `spec/claude/skill-review/en.md` §Checks derived from progressive disclosure & file references through §Checks derived from `research-plan-implement`.
+      Fix: run the missing families against the target and record a finding or a conformant line for each. Added 2026-09-13 from the 2026-Q4 spec-drift audit (F16).
+      Verify: every named family appears as a finding or a §Verified conformant line.
 
 - [ ] [skill-management.body-token-approaching] The body is ~4762 tokens, inside the 5,000-token hard cap but close enough that the next substantive addition breaches it.
       Where: `plugins/nolte-engineering/skills/error-tracking-audit/SKILL.md`, reported by `scripts/validate_skills.py` at `f46a3ef`.
@@ -70,3 +76,4 @@ Recorded so a later reader knows these were checked rather than skipped:
 ## Processing log
 
 <!-- Append one line per item closure: YYYY-MM-DD — <item-shorthand> — <action taken> — verified: <method> -->
+- 2026-09-13 — check-families-not-run — added as an open Warning and the validator version recorded, from the 2026-Q4 spec-drift audit F15/F16 — verified: re-read against `spec/claude/skill-review/en.md` §Review procedure.

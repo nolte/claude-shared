@@ -127,6 +127,8 @@ Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hyb
 
 ## Akzeptanzkriterien
 <!-- Testbare, abhakbare Bedingungen. Reviewer müssen pro Punkt "erfüllt / nicht erfüllt" markieren können. -->
+
+In diesen Kriterien meint `agents/` jede Agent-Wurzel, die das Repository ausliefert: das Wurzel-`agents/` und jedes `plugins/*/agents/`.
 - [ ] Ein durchgearbeitetes Beispiel existiert, das diese Review-Prozedur auf einen Agent in `nolte-shared` anwendet (z. B. `audience-review`) und einen konformen Plan unter `.audits/agent-review/` erzeugt; `audience-review` wird als gewöhnlicher Einzel-Ziel-Lauf reviewt — `agent-review` ist ein Skill, kein sich selbst reviewender Agent, sodass keine Rekursions-Terminierungs-Logik nötig ist
 - [ ] Jeder Agent in `agents/` wurde seit Adoption dieser Spec mindestens einmal gegen die aktuelle `agent-management`-Revision reviewt, verifizierbar entweder durch einen offenen Plan unter `.audits/agent-review/` oder durch einen schließenden Commit in `git log`, der dem `review-plan`-Löschmuster entspricht
 - [ ] Kein Agent in `agents/` fehlt ein Rationale-Abschnitt; der Rationale-Abschnitts-Check über alle Agents erzeugt null `Critical`
@@ -139,7 +141,7 @@ Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hyb
 - [ ] Jeder Agent in `agents/`, dessen `tools`-Liste `Edit`, `Write`, `Bash` oder `NotebookEdit` enthält, dokumentiert Ziele und Vorbedingungen dieser Schreibeffekte im System-Prompt
 - [ ] Jeder offene Plan unter `.audits/agent-review/` entspricht der Vier-Abschnitts-Struktur und dem YAML-Frontmatter aus `review-plan`
 - [ ] Die Abnahmekriterien der `agent-management`-Spec verweisen für die Review-Seite ihrer Autoren-Regeln auf diese Spec
-- [ ] Eine Stichprobe von drei geschlossenen Plan-Löschungen in `git log` zeigt exakt das Commit-Message-Format `review(agent-review): close <agent> — <counts>`
+- [ ] Eine Stichprobe von drei geschlossenen Plan-Löschungen in `git log` zeigt exakt das Commit-Message-Format `chore(agent-review): close <agent>—<counts>`, oder den früheren Betreff `review(agent-review): close` bei einer Löschung vor der Durchsetzung des Typ-Vokabulars für Pull Requests
 - [ ] Kein Plan unter `.audits/agent-review/` schließt mit einem ungelösten `Critical` für `distribution: plugin`-Agents, die `hooks`, `mcpServers` oder `permissionMode` deklarieren
 - [ ] Jeder Plan unter `.audits/agent-review/` führt die Subagent-Grenzen-Checks (kein Agent-Spawning, kein Skill-Tool-Aufruf) gegen den Ziel-Agent aus
 - [ ] Jeder Plan unter `.audits/agent-review/` führt den Proaktive-Delegation-Absicht-Check gegen jeden Agent aus, dessen `description` „use proactively" oder eine äquivalente Phrase enthält

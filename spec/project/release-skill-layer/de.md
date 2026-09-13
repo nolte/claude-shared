@@ -109,7 +109,7 @@ Leser: Autoren der beiden von dieser Spec definierten Release-Skills (`release-n
 
 ## Akzeptanzkriterien
 
-- [ ] Zwei Skills existieren unter `skills/release-notes-curate/` und `skills/release-publish-trigger/` (oder äquivalente ASCII-kebab-case-Namen), ausgeliefert vom `nolte-shared`-Plugin; jeder hat einen bestandenen `skill-review`-Plan unter `.audits/skill-review/` zum Adoptionszeitpunkt.
+- [ ] Zwei Skills existieren unter `skills/release-notes-curate/` und `skills/release-publish-trigger/` (oder äquivalente ASCII-kebab-case-Namen), ausgeliefert vom `nolte-shared`-Plugin; jeder hat einen bestandenen `skill-review`-Plan unter `.audits/skill-review/` zum Adoptionszeitpunkt oder, nachdem dieser Plan geschlossen und gelöscht ist, dessen schließenden Commit in `git log` gemäß `spec/claude/review-plan/`.
 - [ ] Das Frontmatter-`description` jedes Skills listet konkrete Trigger-Phrasen (EN + DE) und explizite Anti-Trigger gegen die Workflows, die er nicht ersetzt.
 - [ ] Beide Skills erkennen den Projekttyp über dieselben Signale wie `github-issue-templates-apply`, verifizierbar über die Detection-Sektion jeder `SKILL.md`.
 - [ ] Skill A konsumiert das `release-notes-audience-analysis`-Artefakt, wenn vorhanden, und dispatcht `audience-identify`, wenn nicht; verifizierbar im Operator-Transcript auf einem frischen Repo.

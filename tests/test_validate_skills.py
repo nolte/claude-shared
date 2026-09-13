@@ -364,3 +364,10 @@ def test_a_stray_absent_or_fallback_word_is_no_spec_fallback(monkeypatch):
     v.check_spec_fallback("Read `spec/project/x/` first. The absent `Write` tool is intentional; use gh as fallback.", "agents/d.md")
     [finding] = v.check_spec_fallback_backlog()
     assert "1 of 1 agents" in finding.message
+
+
+def test_version_flag_prints_the_recorded_validator_version(monkeypatch, capsys):
+    monkeypatch.setattr(sys, "argv", ["validate_skills.py", "--version"])
+    assert v.main() == 0
+    assert capsys.readouterr().out.strip() == f"validate_skills.py {v.VALIDATOR_VERSION}"
+    assert v.VALIDATOR_VERSION.count(".") == 2

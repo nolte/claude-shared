@@ -1,6 +1,6 @@
 ---
 name: guard-coverage-scanner
-description: "Read-only scanner dispatched by `guard-coverage-check`: inventories the rules a repository asserts about itself (CLAUDE.md, architecture docs, ADRs, NFRs, specs) and returns a per-rule verdict of enforced, advisory, or prose-only, plus a separate drift flag where the text claims enforcement the repository doesn't have. Reads each assertion's own modality before comparing it to the code, so a passage that says a lane is advisory isn't reported as drift. Returns structured findings with the file and line each rule is asserted in; writes nothing."
+description: "Read-only scanner dispatched by `guard-coverage-check`: inventories the rules a repository asserts about itself (CLAUDE.md, architecture docs, ADRs, NFRs, specs) and returns a per-rule verdict of enforced, advisory, or prose-only, plus a separate drift flag where the text claims enforcement the repository doesn't have. Reads each assertion's own modality before comparing it to the code, so a passage that says a lane is advisory isn't reported as drift. Returns structured findings with the file and line each rule is asserted in; writes nothing. Don't use to audit the required-check set (`quality-gate-enforcer`)."
 distribution: plugin
 tools: Read, Grep, Glob
 tags: [review, audit]
@@ -103,7 +103,7 @@ An explicit repository root, or nothing, in which case the current working tree 
 ## Preconditions
 
 1. At least one assertion source exists: `CLAUDE.md`, `README.md`, a `docs/` tree, `spec/`, an ADR directory, or a requirements or NFR directory.
-2. `spec/project/defect-class-guards/<canonical_language>.md` is readable, resolving the canonical language from `spec/.spec-config.yml` and falling back to `en`. When it's absent, say so in **Health** and apply the definitions inlined above; don't silently substitute your own.
+2. `spec/project/defect-class-guards/<canonical_language>.md` and `spec/project/quality-gate/<canonical_language>.md` §"Enforced lane per tier" are readable, resolving the canonical language from `spec/.spec-config.yml` and falling back to `en`. When either is absent in the repository under scan, read it from the installed `nolte-shared` plugin, which ships the `spec/` tree. When that isn't reachable either, say so in **Health** and apply the definitions inlined above (G1, G2) and the lane rules in Step 4; don't silently substitute your own.
 
 ## Procedure
 
@@ -125,7 +125,7 @@ For each rule, search the enforcement surfaces for something that would refuse a
 
 ### Step 4 — place the guard in a lane
 
-For a guard you found, decide where it runs: a required status check, an advisory workflow job, a pre-commit hook, a local-only test target. Read `.github/settings.yml`, following an `_extends` pointer to the commons file, for the required contexts, and match on what the job runs rather than on what the context is called. A job carrying `continue-on-error: true` is advisory whatever its name.
+For a guard you found, decide where it runs: a required status check, an advisory workflow job, a pre-commit hook, a local-only test target. Read `.github/settings.yml` for the required contexts, and match on what the job runs rather than on what the context is called. When it carries an `_extends` pointer to a file outside the repository root, you can't read that file and mustn't widen the scan: use the resolved required contexts if the dispatch brief supplies them; otherwise list every verdict that depends on them under **Health** as undetermined, naming the pointer, and don't set `verdict: enforced` from the local file alone. A job carrying `continue-on-error: true` is advisory whatever its name.
 
 ### Step 5 — set drift and severity
 

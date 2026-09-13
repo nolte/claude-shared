@@ -64,7 +64,7 @@ Expected skill behavior (`close`):
 5. Compose the deletion commit:
 
    ```
-   review(skill-review): close audience-identify — 2C/3W/1S/0I
+   chore(skill-review): close audience-identify—2C/3W/1S/0I
 
    Deferred: https://github.com/<owner>/<repo>/issues/<n>
    Reviewed at repo-revision: <sha-from-frontmatter>
@@ -76,7 +76,7 @@ Expected skill behavior (`close`):
 
 ```text
 $ git log --oneline -- .audits/skill-review/audience-identify.md
-<new-sha> review(skill-review): close audience-identify — 2C/3W/1S/0I
+<new-sha> chore(skill-review): close audience-identify—2C/3W/1S/0I
 <sha-3>   review(skill-review): update audience-identify progress (defer #42)
 <sha-2>   review(skill-review): mark items 2,4 closed
 <sha-1>   review(skill-review): open plan for audience-identify

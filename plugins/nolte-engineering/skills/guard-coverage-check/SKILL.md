@@ -60,7 +60,7 @@ Detect the user's language and respond in it. The report artifact is written in 
 ### `check` (default)
 
 1. **Resolve the sources.** List the assertion-bearing documents you found and present them. Ask before dropping one: a document the operator considers authoritative and you don't is the gap the run exists to close.
-2. **Dispatch `guard-coverage-scanner`** with the resolved root and source list. Per `spec/claude/dispatch-brief/`, the brief names the root, the sources, the scope if any, and the refutation the run would accept: naming the check that enforces a rule you'd otherwise report as prose-only, with its `path:line` and its lane.
+2. **Dispatch `guard-coverage-scanner`** with the resolved root and source list. Per `spec/claude/dispatch-brief/`, the brief names the root, the sources, the scope if any, the resolved required status checks when `.github/settings.yml` extends a file outside the repository (the scanner can't read it), and the refutation the run would accept: naming the check that enforces a rule you'd otherwise report as prose-only, with its `path:line` and its lane.
    When `nolte-engineering` isn't installed in the session the agent can't be dispatched. Record that in the report and stop; don't perform the inventory inline at a generalist's level of care and present it as the scanner's.
 3. **Persist** the returned report to `.audits/guard-coverage/<YYYY-MM-DD-HHMM>/report.md`, unchanged apart from the front matter the artifact needs. The agent's findings block is the load-bearing part; don't re-summarise it into prose that loses the `path:line` pairs.
 4. **Report back**, drift first, then the honest `advisory` and `prose-only` rules as an inventory. State the counts and let the table carry the detail.
