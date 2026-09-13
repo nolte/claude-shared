@@ -5,7 +5,7 @@ issue: "626"
 classification: spec-change
 secondary-classes: [docs]
 route: direct
-status: draft
+status: approved
 created: "2026-09-13"
 ---
 
@@ -33,7 +33,7 @@ No requirement artefact exists under `project/requirements/` for this issue (est
 ## Scope
 
 - **In scope**: the requirement and its acceptance criterion in `spec/project/project-structure/` (EN/DE); `project-structure-apply` references and examples; the global `stale-bot` tech-stack entry and every rendered restatement of it; the `tech-stack-capture` signal map row; this repository's own `.github/stale.yml`.
-- **Out of scope**: other portfolio repositories that carry a `.github/stale.yml` (established: portfolio scan on 2026-09-13 found about ten pointing at the missing `commons-stale.yml` and three with standalone Probot Stale configs) — recorded as a finding in the PR and the issue comment, not changed here. `spec/project/cookiecutter-template-authoring/` only references project-structure's MUSTs; the stale rule is a SHOULD, so no change there (established: `en.md:36`).
+- **Out of scope**: other portfolio repositories that carry a `.github/stale.yml` (established: portfolio scan on 2026-09-13 found about ten pointing at the missing `commons-stale.yml` and three with standalone Probot Stale configs) — recorded as a finding in the PR and the issue comment, not changed here. ~~`spec/project/cookiecutter-template-authoring/` needs no change~~ — **corrected during dispatch:** `en.md:36` / `de.md:36` list `stale.yml` among the baseline GitHub configs, so it moved into P1 (found by the P2 specialist; the original grep missed it because it matched only the file names, not the list).
 
 ## Evidence
 
@@ -103,3 +103,10 @@ P1 → (P2 ; P3 ; P4 independent of each other)
 none
 
 ## Dispatch log
+
+- 2026-09-13 P1 dispatched to `skill: nolte-shared:spec` — SHOULD replaced by a non-normative note, AC narrowed to boring-cyborg.yml; EN/DE 62 requirements / 27 AC each, Vale clean, section references pass (`fb7be75a`).
+- 2026-09-13 P3 (data) — generalist: `stale-bot` removed from `portfolio/tech-stack.yml` and `portfolio/aggregate.yml`, `project/portfolio.yml` comment aligned, pages regenerated with `scripts/docs/gen_portfolio.py`; schema gate clean (`e1620e49`). `portfolio-audit` Render was not dispatched: it re-snapshots every member's manifest and would pull unrelated drift into this change.
+- 2026-09-13 P4 — no matching specialised agent — generalist remediation: `.github/stale.yml` deleted (`1709ab0f`); `project-structure-apply` scaffolds missing artefacts and has no removal operation. Verification dispatched to `nolte-shared:project-structure-reviewer`.
+- 2026-09-13 P2 + P3 (skill references) dispatched to `nolte-claude-dev:claude-plugin-developer` — pending.
+- 2026-09-13 P1 (restatements) — `skill: nolte-shared:spec`: `project-structure` en/de:30 (installation pattern), `tech-stack` en/de:104 (Probot app examples), `workflow-health` en/de:93 (apps to verify), `cookiecutter-template-authoring` en/de:36 (baseline configs, the wrong count "seven" dropped). Found by the P2 specialist and `project-structure-reviewer`; the decomposition's grep matched file names only and missed the backticked app name.
+- 2026-09-13 P4 verification — `nolte-shared:project-structure-reviewer`: `.github/` conformant without `stale.yml`, nothing under `.github/` depends on it; flagged the remaining `stale` restatements in `project-structure-apply/SKILL.md` (3, 10, 72, 96) and `agents/project-structure-reviewer.md`, sent to the P2 specialist.

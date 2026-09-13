@@ -90,7 +90,7 @@ The hands-on implementation work of a workflow fix—editing the broken artifact
 - **MUST NOT** skip the PR step for a version bump of `nolte/gh-plumbing` references just because "it's only a tag change"; the gate exists to catch exactly this class of breakage
 
 ### Probot app availability
-- **SHOULD**, before attributing a failure of `release-drafter.yml`, settings-sync, or label-sync to code, verify that the underlying Probot apps (`settings`, `release-drafter`, `boring-cyborg`, `stale`) are still installed on the repository—the `project-structure-apply` audit checks this
+- **SHOULD**, before attributing a failure of `release-drafter.yml`, settings-sync, or label-sync to code, verify that the underlying Probot apps (`settings`, `release-drafter`, `boring-cyborg`) are still installed on the repository—the `project-structure-apply` audit checks this
 - **MUST** treat "Probot app uninstalled" as a configuration-drift incident distinct from a code defect; the fix is to re-authorize the app, not to change repository code
 
 ### Flake handling
