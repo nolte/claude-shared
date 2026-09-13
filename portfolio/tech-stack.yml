@@ -115,16 +115,6 @@ entries:
     since: "2026-05-18"
     source_of_truth: .github/boring-cyborg.yml
 
-  - name: stale-bot
-    kind: other
-    group: automation
-    role: Probot GitHub App that closes stale issues and PRs per
-      .github/stale.yml.
-    status: active
-    lifecycle: development
-    since: "2026-05-18"
-    source_of_truth: .github/stale.yml
-
   - name: claude-code
     kind: runtime
     group: plugin-platform

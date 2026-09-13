@@ -75,11 +75,6 @@ global_tech_stack:
   group: automation
   role: "Probot GitHub App that auto-labels PRs by touched paths and welcomes first-time contributors per .github/boring-cyborg.yml."
   status: active
-- name: stale-bot
-  kind: other
-  group: automation
-  role: "Probot GitHub App that closes stale issues and PRs per .github/stale.yml."
-  status: active
 - name: claude-code
   kind: runtime
   group: plugin-platform

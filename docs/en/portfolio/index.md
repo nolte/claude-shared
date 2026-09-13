@@ -127,7 +127,6 @@ Paraphrased from the tech-stack-discovery spec's Benefits section; the full word
 | `boring-cyborg` | `other` | ✅ active | Probot GitHub App that auto-labels PRs by touched paths and welcomes first-time contributors per .github/boring-cyborg.yml. |
 | `probot-settings` | `other` | ✅ active | Probot GitHub App that materialises .github/settings.yml (branch protection, labels, required checks) onto every nolte/* repository. |
 | `release-drafter` | `other` | ✅ active | Release-notes drafter that aggregates merged PRs into a draft GitHub Release between version cuts, wired via a gh-plumbing reusable workflow. |
-| `stale-bot` | `other` | ✅ active | Probot GitHub App that closes stale issues and PRs per .github/stale.yml. |
 
 ### `build-tooling`
 
@@ -261,7 +260,6 @@ _No `tech_stack:` block declared yet; this repository's effective stack is the g
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -376,7 +374,6 @@ _No `tech_stack:` block declared yet; this repository's effective stack is the g
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -438,7 +435,6 @@ _No `tech_stack:` block declared yet; this repository's effective stack is the g
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -522,7 +518,6 @@ _None declared._
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -600,7 +595,6 @@ _None declared._
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -665,7 +659,6 @@ _None declared._
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -731,7 +724,6 @@ _None declared._
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -815,7 +807,6 @@ _None declared._
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -882,7 +873,6 @@ _None declared._
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
@@ -943,7 +933,6 @@ _None declared._
 | `boring-cyborg` | `other` | ✅ active | 🔗 inherited | — |
 | `probot-settings` | `other` | ✅ active | 🔗 inherited | — |
 | `release-drafter` | `other` | ✅ active | 🔗 inherited | — |
-| `stale-bot` | `other` | ✅ active | 🔗 inherited | — |
 
 #### `build-tooling`
 
