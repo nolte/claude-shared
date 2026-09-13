@@ -120,7 +120,7 @@ TRACEABILITY_FIELDS = ("Originating source", "Dispatched specialist")
 # in free text leaks in both directions, so the check rejects the vocabulary
 # itself (any form, markdown ignored). A bypass worded without it isn't caught
 # here; the coverage review still reads the field.
-DISPATCH_STATUS_RE = re.compile(r"\b(?:dispatch|invok|bypass)\w*", re.IGNORECASE)
+DISPATCH_STATUS_RE = re.compile(r"(?:dispatch|invo[kc]|bypass)", re.IGNORECASE)
 
 
 def linked_issue_numbers(body: str, repository: str | None = None) -> list[int]:

@@ -360,6 +360,9 @@ def test_no_match_form_variants_pass(value):
     "code-security-reviewer (not **dispatched**)",
     "skill: spec, bypassed in the operator session",
     "the audit named `skill: spec`; it wasn't invoked",
+    "code-security-reviewer; invocation skipped",
+    "skill: spec (undispatched)",
+    "skill: spec, non-bypassed",
 ])
 def test_any_dispatch_status_wording_fails_in_either_form(value):
     risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
