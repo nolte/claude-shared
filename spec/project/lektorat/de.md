@@ -361,7 +361,7 @@ Die Spec lässt die Implementierungsform bewusst **offen**, **SOLLTE [SHOULD]** 
 - [ ] Eine Datei unter `spec/` wird von jeder `Lektorat`-Operation mit einer Ein-Satz-Meldung abgelehnt, die die `spec`-Skill als autoritativen Pfad nennt
 - [ ] Eine Datei unter `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**` oder `agents/*.md` wird von jeder `Lektorat`-Operation abgelehnt
 - [ ] Ein Zielgruppen-Fit-Befund (D5) führt in seinem `audience`-Array die Audience-IDs, gegen die er beurteilt wurde, und jede davon löst im Audience-Artefakt auf; ein fehlendes Artefakt erscheint als Inventar-Befund `audience-artefact-missing` statt als D5-Befund
-- [ ] Wenn das Audience-Artefakt fehlt, stoppt jede `Lektorat`-Operation mit einer Meldung, die auf die `audience-identify`-Skill zeigt, und **DARF NICHT [MUST NOT]** Audiences erfinden
+- [ ] Wenn das Audience-Artefakt fehlt, hält jede `Lektorat`-Operation den Inventar-Befund `audience-artefact-missing` mit Verweis auf die `audience-identify`-Skill fest, überspringt D5 für den ganzen Scope, wertet die übrigen Dimensionen aus und **DARF NICHT [MUST NOT]** Audiences erfinden
 - [ ] Jeder Markdown-Link `[text](target)` ist byte-identisch über jede Operation hinweg, die nicht explizit einen Befund gegen diesen Link produziert
 - [ ] Jede Heading-Text-Änderung, die ein `patch`- oder `revise`-Lauf surfaced, kündigt dem Operator den Slug-Wechsel vor der Write-Zustimmung an
 - [ ] Eine deutsche Datei mit einem Calque (eine Wendung, die eine englische Redewendung spiegelt, zum Beispiel „Was die Kosten kaufen, ist Eigentum.") produziert einen D6-Befund, der die verstoßende Passage zitiert und das `calque`-Muster benennt

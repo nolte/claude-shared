@@ -361,7 +361,7 @@ The spec deliberately leaves the exact implementation shape **open**, but **SHOU
 - [ ] A file under `spec/` is rejected by every `Lektorat` operation with a single-sentence message naming the `spec` skill as the authoritative path
 - [ ] A file under `skills/**/SKILL.md`, `skills/**/templates/**`, `skills/**/examples/**`, or `agents/*.md` is rejected by every `Lektorat` operation
 - [ ] An audience-fit finding (D5) lists in its `audience` array the audience IDs it was judged against, each resolving in the audience artefact; a missing artefact surfaces as the `audience-artefact-missing` inventory finding instead of a D5 finding
-- [ ] When the audience artefact is missing, every `Lektorat` operation stops with a message pointing at the `audience-identify` skill, and **MUST NOT** invent audiences
+- [ ] When the audience artefact is missing, every `Lektorat` operation records the `audience-artefact-missing` inventory finding pointing at the `audience-identify` skill, skips D5 for the whole scope, evaluates the remaining dimensions, and **MUST NOT** invent audiences
 - [ ] Every Markdown link's `[text](target)` is byte-identical across every operation that doesn't explicitly produce a finding against that link
 - [ ] Every heading-text change surfaced by a `patch` or `revise` operation announces the slug change to the operator before the write is approved
 - [ ] A German file containing a calque (a phrase mirroring an English idiom, for example *„Was die Kosten kaufen, ist Eigentum."*) produces a D6 finding that quotes the offending span and names the `calque` pattern
