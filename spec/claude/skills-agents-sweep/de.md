@@ -70,7 +70,7 @@ Leser: Auditoren, die einen portfolioweiten Sweep des Plugin-Inventars durchfüh
 - **MUSS** alle folgenden Abschnitte in dieser Reihenfolge enthalten: YAML-Frontmatter, Executive Summary mit Top-Findings-Tabelle, Artefakt-Inventar-Tabelle, Abgrenzungs-Matrix, spec-induziertes Lücken-Inventar, Adoption-Friction-Analyse, Skill-vs-Agent-Klassifikations-Befunde, wellen-basierte Umsetzungs-Roadmap und ein Processing-Log
 - **MUSS** im YAML-Frontmatter enthalten: `audit-type: skills-agents-sweep`, `target`, `scope` (Artefaktanzahl), `repo-revision`, `created` (ISO-Datum), `status: open` und `per-artefact-plans` (Anzahl)
 - **MUSS** die Per-Artefakt-Plan-Pfade unter `.audits/skill-review/` und `.audits/agent-review/` im Executive Summary zitieren, damit Reviewer Cross-Cutting-Befunde zu konkreten Per-Artefakt-Nachweisen zurückverfolgen können
-- **SOLLTE** eine Go/No-Go-Empfehlung im Executive Summary enthalten, die angibt, ob Critical-Befunde eine Release-Promotion blockieren; diese Empfehlung bleibt menschenlesbar und ist **KEIN** maschinell lesbares Release-Gate, sodass `release-publish-trigger` sein Gate-Set weiterhin an `spec/project/release-automation/` §Pre-publish verification verankert, statt ein Frontmatter-Feld aus dem Sweep-Bericht zu lesen
+- **SOLLTE** eine Go/No-Go-Empfehlung im Executive Summary enthalten, die angibt, ob Critical-Befunde eine Release-Promotion blockieren; diese Empfehlung bleibt menschenlesbar und ist **KEIN** maschinell lesbares Release-Gate, sodass `release-publish-trigger` sein Gate-Set weiterhin an `spec/project/release-automation/` §Pre-Publish-Verifikation verankert, statt ein Frontmatter-Feld aus dem Sweep-Bericht zu lesen
 
 ### Wellen-basierte Umsetzungs-Roadmap
 

@@ -76,8 +76,8 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 
 | Feld | gilt für | Typ | Limits / erlaubte Werte | Provenienz | Owner |
 |---|---|---|---|---|---|
-| `name` | both | string | 1–64 Zeichen; lowercase ASCII Buchstaben/Ziffern/Bindestriche; kein führender/abschließender Bindestrich; kein `--`; kein reserviertes Token `anthropic`/`claude`; keine XML-Tags; gleich dem Ordner-/Dateinamen | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Struktur |
-| `description` | both | string | nicht-leer; ≤1024 Zeichen; dritte Person; nennt *was* / *wann* / *don't-use-for-X→Y*-Form; keine XML-Tags; Agents zusätzlich: keine `user:`/`assistant:`/`<commentary>`/`<example>`-Blöcke, knappe Delimitations-Ketten | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter validation · `agent-management` §Struktur / §Description-Contract |
+| `name` | both | string | 1–64 Zeichen; lowercase ASCII Buchstaben/Ziffern/Bindestriche; kein führender/abschließender Bindestrich; kein `--`; kein reserviertes Token `anthropic`/`claude`; keine XML-Tags; gleich dem Ordner-/Dateinamen | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter-Validierung · `agent-management` §Struktur |
+| `description` | both | string | nicht-leer; ≤1024 Zeichen; dritte Person; nennt *was* / *wann* / *don't-use-for-X→Y*-Form; keine XML-Tags; Agents zusätzlich: keine `user:`/`assistant:`/`<commentary>`/`<example>`-Blöcke, knappe Delimitations-Ketten | Standard·AgentSkills + Standard·Platform | `skill-management` §Frontmatter-Validierung · `agent-management` §Struktur / §Description-Contract |
 | `distribution` | agent | enum | genau `plugin` oder `project` | nolte | `agent-management` §Distribution |
 | `phase` | both | enum | eines von `vision`, `plan`, `design`, `build`, `review`, `quality`, `close-release`, `cross-cutting`; niemals eine Liste | nolte | `skill-agent-catalog` §Phasen-Klassifikation |
 
@@ -85,16 +85,16 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 
 | Feld | gilt für | Typ | Limits / erlaubte Werte | Provenienz | Owner |
 |---|---|---|---|---|---|
-| `when_to_use` | skill | string | kombiniertes `description` + `when_to_use` unter 1.536 Zeichen (Laufzeit schneidet darüber ab) | Standard·CC | `skill-management` §Frontmatter validation / §Runtime & lifecycle |
-| `argument-hint` | skill | string | freiformiger Hinweis für Slash-Command-Argumente | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
-| `arguments` | skill | string | Argument-Deklaration für den Slash-Command | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
-| `disable-model-invocation` | skill | boolean | `true` sperrt modell-getriebene Invokation (nur nutzer-invoziert); blockiert Subagent-`skills:`-Preload; nicht setzen bei einem Skill, den ein anderer Skill mid-flow dispatcht | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
-| `user-invocable` | skill | boolean | ob der Skill als `/`-Command exponiert wird | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
-| `allowed-tools` | skill | Liste von Strings | eine **Berechtigungsgewährung** (vorab-genehmigte Aufrufe), keine Einschränkung | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
-| `context` | skill | enum | `fork`: den Skill in einem geforkten Subagent-Kontext ausführen (mit `agent`) | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
-| `agent` | skill | string | Agent-Typ, der Tools/Modell liefert bei `context: fork` | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
-| `paths` | skill | Liste von Globs | Gate nur auf **automatische** Invokation; explizites `/<plugin>:<name>` funktioniert immer; kein Routing-Budget-Hebel | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
-| `shell` | skill | string | Shell-Bindung für die Command-Ausführung des Skills | Standard·CC | `skill-management` §Runtime & lifecycle awareness |
+| `when_to_use` | skill | string | kombiniertes `description` + `when_to_use` unter 1.536 Zeichen (Laufzeit schneidet darüber ab) | Standard·CC | `skill-management` §Frontmatter-Validierung / §Laufzeit- und Lifecycle-Bewusstsein |
+| `argument-hint` | skill | string | freiformiger Hinweis für Slash-Command-Argumente | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `arguments` | skill | string | Argument-Deklaration für den Slash-Command | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `disable-model-invocation` | skill | boolean | `true` sperrt modell-getriebene Invokation (nur nutzer-invoziert); blockiert Subagent-`skills:`-Preload; nicht setzen bei einem Skill, den ein anderer Skill mid-flow dispatcht | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `user-invocable` | skill | boolean | ob der Skill als `/`-Command exponiert wird | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `allowed-tools` | skill | Liste von Strings | eine **Berechtigungsgewährung** (vorab-genehmigte Aufrufe), keine Einschränkung | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `context` | skill | enum | `fork`: den Skill in einem geforkten Subagent-Kontext ausführen (mit `agent`) | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `agent` | skill | string | Agent-Typ, der Tools/Modell liefert bei `context: fork` | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `paths` | skill | Liste von Globs | Gate nur auf **automatische** Invokation; explizites `/<plugin>:<name>` funktioniert immer; kein Routing-Budget-Hebel | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `shell` | skill | string | Shell-Bindung für die Command-Ausführung des Skills | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
 
 ### Standard-Optionalfelder — Claude Code, Agent-Fläche
 
@@ -116,9 +116,9 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 
 | Feld | gilt für | Typ | Limits / erlaubte Werte | Provenienz | Owner |
 |---|---|---|---|---|---|
-| `model` | both | string | Modell-Alias (`sonnet`/`opus`/`haiku`), eine volle Modell-ID oder `inherit`; **Default `inherit`** bei Weglassen | Standard·CC | `agent-management` §Modell-Wahl · `skill-management` §Runtime & lifecycle awareness |
-| `effort` | both | enum | `low`/`medium`/`high`/`xhigh`/`max`; überschreibt den Session-Effort | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder · `skill-management` §Runtime & lifecycle awareness |
-| `hooks` | both | Mapping | Lifecycle-Hooks; bei Agents **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `skill-management` §Runtime & lifecycle awareness · `agent-management` §Plugin-Verteilungs-Sicherheits-Constraints |
+| `model` | both | string | Modell-Alias (`sonnet`/`opus`/`haiku`), eine volle Modell-ID oder `inherit`; **Default `inherit`** bei Weglassen | Standard·CC | `agent-management` §Modell-Wahl · `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `effort` | both | enum | `low`/`medium`/`high`/`xhigh`/`max`; überschreibt den Session-Effort | Standard·CC | `agent-management` §Optionale Claude-Code-Frontmatter-Felder · `skill-management` §Laufzeit- und Lifecycle-Bewusstsein |
+| `hooks` | both | Mapping | Lifecycle-Hooks; bei Agents **ignoriert bei `distribution: plugin`** (DARF NICHT gesetzt werden) | Standard·CC | `skill-management` §Laufzeit- und Lifecycle-Bewusstsein · `agent-management` §Plugin-Verteilungs-Sicherheits-Constraints |
 
 ### nolte-Optionalfelder — Katalog, Routing, Hauskonvention
 
@@ -135,7 +135,7 @@ Provenienz-Marker: **Standard·AgentSkills** (Agent-Skills-Spec [R1], portabel z
 
 ### Querschnittliche Reservierungen
 
-- **Reservierte Tokens.** `anthropic` und `claude` **DÜRFEN NICHT** irgendwo in `name` erscheinen; andere Felder (`description`, `tags`, `summary`, …) KÖNNEN sie erwähnen. Eine enge geschlossene Ausnahme existiert für Artefakte, die eine Claude-Code-/Anthropic-Fläche autoren, gated durch einen `## Reserved-token rationale`-Body-Abschnitt — siehe `skill-management` §Frontmatter validation und `agent-management` §Struktur.
+- **Reservierte Tokens.** `anthropic` und `claude` **DÜRFEN NICHT** irgendwo in `name` erscheinen; andere Felder (`description`, `tags`, `summary`, …) KÖNNEN sie erwähnen. Eine enge geschlossene Ausnahme existiert für Artefakte, die eine Claude-Code-/Anthropic-Fläche autoren, gated durch einen `## Reserved-token rationale`-Body-Abschnitt — siehe `skill-management` §Frontmatter-Validierung und `agent-management` §Struktur.
 - **Reserviertes Tag-Präfix.** Ein führender Unterstrich (`_translation-pending`) markiert ein generator-emittiertes Auto-Tag; autor-deklarierte `tags` **DÜRFEN** es **NICHT** nutzen — siehe `skill-agent-catalog` §Per-Sprache-Kurzbeschreibung.
 - **Kein Per-Artefakt-Versionsfeld.** Weder Skills noch Agents tragen ein `version`- oder Kompatibilitätsfeld; Versionierung ist plugin-scoped und Per-Artefakt-Historie ist git — siehe `skill-management` §Verteilung und `agent-management` §Distribution.
 

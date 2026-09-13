@@ -23,6 +23,8 @@ _spec.loader.exec_module(guard)
 TARGET_EN = """\
 # Target
 ## Requirements
+### Frontmatter validation (Agent Skills spec)
+### 2. Numbered rules
 ### File location and naming
 ### Delimitation from other specs and skills
 ### H. Consumer contract
@@ -31,6 +33,8 @@ TARGET_EN = """\
 TARGET_DE = """\
 # Ziel
 ## Anforderungen
+### Frontmatter-Validierung (Agent-Skills-Spezifikation)
+### 2. Nummerierte Regeln
 ### Dateiort und Namensgebung
 ### Abgrenzung zu anderen Specs und Skills
 ### H. Konsumenten-Vertrag
@@ -71,6 +75,16 @@ def test_german_file_citing_the_english_heading_is_blocking(repo):
     assert findings[0].blocking and "'Dateiort und Namensgebung'" in findings[0].message
 
 
+def test_shortened_english_heading_in_a_german_file_is_blocking(repo):
+    findings = citing_de(repo, "- siehe `review-plan` §Frontmatter validation, dort")
+    assert classes(findings) == ["section-other-language"]
+
+
+@pytest.mark.parametrize("reference", ["§Abnahmekriterien unten", "§Acceptance Criteria unten"])
+def test_reference_to_a_non_contract_acceptance_name_is_blocking(repo, reference):
+    assert classes(citing_de(repo, f"- siehe {reference}")) == ["heading-contract"]
+
+
 def test_german_file_citing_the_german_heading_passes(repo):
     assert citing_de(repo, "- gemäß `spec/claude/review-plan/` §„Dateiort und Namensgebung“") == []
 
@@ -79,6 +93,8 @@ def test_german_file_citing_the_german_heading_passes(repo):
     "`review-plan` §Dateiort und Namensgebung, gefolgt von Prosa",   # unquoted, prose follows
     "`review-plan` §\"Abgrenzung\"",                                  # quoted prefix of a heading
     "`review-plan` §H legt fest",                                     # letter label
+    "`review-plan` §2 legt fest",                                     # number label
+    "`review-plan` §Frontmatter-Validierung prüft",                   # heading minus its parenthetical
     "[review-plan §Dateiort und Namensgebung](../../claude/review-plan/de.md)",  # relative link
     "`review-plan` §Dateiort und Namensgebung und §Abgrenzung zu anderen Specs und Skills",
 ])

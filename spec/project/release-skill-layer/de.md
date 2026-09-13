@@ -73,7 +73,7 @@ Leser: Autoren der beiden von dieser Spec definierten Release-Skills (`release-n
 
 #### Pre-Dispatch-Validierung
 
-- **MUSS [MUST]** lokal jedes Gate aus `release-automation` §Pre-publish verification vor dem Dispatch validieren:
+- **MUSS [MUST]** lokal jedes Gate aus `release-automation` §Pre-Publish-Verifikation vor dem Dispatch validieren:
   - genau ein offener `release-drafter`-Draft existiert auf `develop`;
   - der Draft-Tag ist vom aktuellen `develop`-Tip erreichbar;
   - jedes Version-Bearing File aus `release-automation` §Versionstragende Dateien (Default-Tabelle pro Repo-Typ oder Override unter `.github/release-automation.yml`) entspricht dem Target-Tag am `target_commitish` des Drafts unter der deklarierten Transformation;
@@ -116,7 +116,7 @@ Leser: Autoren der beiden von dieser Spec definierten Release-Skills (`release-n
 - [ ] Skill As Anreicherung ist in jedem produzierten Draft-Body in `<!-- release-skill-layer:project-context-start -->`- und `<!-- release-skill-layer:project-context-end -->`-Marker eingerahmt.
 - [ ] Ein Re-Run von Skill A auf einem bereits kuratierten Draft erzeugt keinen Diff im Anreicherungs-Block, wenn keine neuen Commits seit dem letzten Lauf gelandet sind; die Marker sind genau einmal vorhanden.
 - [ ] Skill A verändert nie Inhalt außerhalb seiner Marker-Grenzen, verifizierbar durch Diff des Bodys vor und nach einem Lauf.
-- [ ] Skill B verweigert den Dispatch, wenn irgendein `release-automation` §Pre-publish verification-Gate versagt, und benennt das gescheiterte Gate wörtlich.
+- [ ] Skill B verweigert den Dispatch, wenn irgendein `release-automation` §Pre-Publish-Verifikation-Gate versagt, und benennt das gescheiterte Gate wörtlich.
 - [ ] Skill Bs Run-Transcript zeigt `gh workflow run release-publish.yml ...` als einzige Mutation; ein Grep des Transcripts auf `gh release edit --draft=false` findet keinen Treffer.
 - [ ] Skill B meldet die Workflow-Run-URL nach dem Dispatch und zeigt den aktuellen Run-Status; es verfolgt den Run, bis dieser die Warteschlange verlassen hat, und pollt nicht bis zum Abschluss (außer der Operator hat sich für Wait-Mode entschieden, analog zu `pull-request-merge`).
 - [ ] Skill B kann für einen Dispatch, dessen Run `cancelled` endete, ohne veröffentlicht zu haben, keinen Erfolg melden; ein bei Erreichen der Obergrenzen weiterhin `queued` stehender Run wird als ungeklärt gemeldet statt als funktionierender Dispatch.

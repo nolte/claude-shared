@@ -307,7 +307,7 @@ verifiziert und gemergt ist.
   Spezialist (oder, mangels Match, der Generalist unter der Gap-Regel) verfasst den
   Fix, und das eingebaute `security-review`-Skill verifiziert den Diff
 - **MUSS [MUST]** ein Arbeitspaket, für das kein Spezialist passt, als Portfoliolücke
-  gemäß `continuous-improvement` §Portfolio gap closure behandeln: Der Orchestrator
+  gemäß `continuous-improvement` §Portfoliolücken-Schließung behandeln: Der Orchestrator
   hält den No-Match fest, wendet die Drei-Wiederholungen-Regel an und **KANN [MAY]**
   `claude-plugin-developer` dispatchen, um einen neuen Spezialisten zu verfassen,
   wenn die Regel (oder eine festgehaltene High-Impact-Begründung) erfüllt ist; bis

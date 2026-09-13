@@ -24,12 +24,16 @@ How a reference resolves:
 
 - A quoted reference (§"…", §„…") names a heading or a prefix of one.
 - An unquoted reference is followed by text that starts with a heading at a
-  word boundary, or by a letter or number label (§H, §2).
+  word boundary, or with the heading minus a trailing parenthetical
+  (§Frontmatter validation for "Frontmatter validation (Agent Skills spec)"),
+  or by a letter or number label (§H, §2, §2.3).
 - The candidate targets are the citing file and the last spec reference
   earlier on the same line (`spec/<topic>/<slug>/`, `slug`, or a relative
   link to `../<slug>/<lang>.md`); any candidate that resolves is enough.
 - Fenced code, references inside code spans, `§ 5`-style legal citations
-  and §`name` are not section references.
+  (a space before the number) and §`name` are not section references.
+- A reference to a non-contract acceptance-criteria name (§Abnahmekriterien,
+  or §Acceptance Criteria from a German file) is a heading-contract finding.
 
 Exit codes: 0 clean, 1 blocking findings, 2 usage error.
 """
@@ -50,6 +54,7 @@ FENCE = re.compile(r"^\s*(```|~~~)")
 HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*(?:\{#[^}]*\})?\s*$")
 CODE_SPAN = re.compile(r"(`+)(?:(?!\1).)+?\1")
 QUOTES = {'"': '"', "„": "“\"”", "“": "”\""}
+PARENTHETICAL = re.compile(r"\s*\([^()]*\)\s*$")
 REFERENCE = re.compile(
     r"`(?P<path>spec/[\w./-]+?)/?(?:[a-z]{2}\.md)?`"
     r"|`(?P<name>[a-z0-9][\w-]*)`"
@@ -140,8 +145,9 @@ def resolves(cited: str, headings: list[tuple[int, str]], quoted: bool) -> bool:
     if quoted:
         return any(name.startswith(wanted) for name in names)
     for name in names:
-        if name and wanted.startswith(name) and (len(wanted) == len(name) or not wanted[len(name)].isalnum()):
-            return True
+        for form in {name, PARENTHETICAL.sub("", name)}:
+            if form and wanted.startswith(form) and (len(wanted) == len(form) or not wanted[len(form)].isalnum()):
+                return True
     label = LABEL.match(wanted)
     return bool(label) and any(re.match(re.escape(label.group(1)) + r"(?:[.\s)]|$)", name) for name in names)
 
@@ -167,7 +173,7 @@ def section_findings(corpus: Corpus, path: Path, rel: str) -> list[Finding]:
             rest = line[start + 1:]
             if any(a <= start < b for a, b in spans) or not rest.strip():
                 continue
-            if re.match(r"\s?\d", rest) or rest.startswith("`"):
+            if re.match(r"\s\d", rest) or rest.startswith("`"):
                 continue
             quoted = rest[0] in QUOTES
             if quoted:
@@ -175,6 +181,12 @@ def section_findings(corpus: Corpus, path: Path, rel: str) -> list[Finding]:
                 cited = rest[1:end]
             else:
                 cited = rest
+            contract = AC_CONTRACT.get(lang)
+            named = normalize(cited)
+            if contract and any(named.startswith(v) for v in AC_VARIANTS if v != contract.casefold()):
+                findings.append(Finding("heading-contract", rel, number,
+                                        f"cite the acceptance-criteria section as §{contract}, not §{cited.strip()[:40]!r}"))
+                continue
             earlier = [d for d in (corpus.spec_dir(m) for m in REFERENCE.finditer(line[:start])) if d]
             candidates = [path.parent] + earlier[-1:]
             if any(resolves(cited, corpus.headings(c / f"{lang}.md"), quoted) for c in candidates):
