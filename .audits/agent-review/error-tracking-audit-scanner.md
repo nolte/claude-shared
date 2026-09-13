@@ -49,7 +49,7 @@ Next concrete action: route the Warning to the sweep's spec-extension wave; do n
 ### Info
 
 - [x] [agent-review.recurring-gap] This is the same spec gap the 2026-07-25 sweep recorded and deferred, now on its second and third artefacts with a third command class.
-      Where: `.audits/skills-agents-sweep/2026-07-25-post-0720-delta.md` finding 3 raised it for `api-documentation-scanner` and `capability-maturity-scanner` (documented export command; report-mode analysis runs) and deferred it to a spec-extension wave. That wave never landed — `agent-management` §Tool access is unchanged. `observability-audit-scanner` carries the identical `pip show` / `npm ls` justification as this agent.
+      Where: `.audits/skills-agents-sweep/2026-07-25-post-0720-delta.md` finding 3 raised it for `api-documentation-scanner` and `capability-maturity-scanner` (documented export command; report-mode analysis runs) and deferred it to a spec-extension wave. That wave never landed — `agent-management` §Tool access is unchanged. (Update 2026-09-13: the gap closed with #560, which added package-manager metadata reads and the documented export or report-mode run as sanctioned classes 4 and 5; the 2026-07-25 report was retired by its close pull request and stays readable in git history.) `observability-audit-scanner` carries the identical `pip show` / `npm ls` justification as this agent.
       Fix: n/a (observation). Recorded so the consolidated report can weigh the gap by recurrence rather than treating it as a fresh single-artefact finding.
       Verify: n/a.
 
