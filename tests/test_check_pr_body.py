@@ -253,3 +253,118 @@ def test_main_reads_changed_files_and_head_ref_from_the_environment(monkeypatch,
     monkeypatch.setenv("PR_HEAD_REF", "feat/x")
     assert check_pr_body.main([]) == 1
     assert "Refs spec/" in capsys.readouterr().out
+
+
+def _remediation_body(risk: str, linked: str = "Closes #588\n\nRefs spec/project/spec-drift-audit/") -> str:
+    return FIVE_SECTIONS.replace("Closes #1", linked).replace("## Risk / rollout notes\n\nNone", f"## Risk / rollout notes\n\n{risk}")
+
+
+TITLE = "chore(audits): record the decisions"
+BOTH_FIELDS = ("- Originating source: 2026-Q4 spec-drift audit F52, tracked in #588.\n"
+               "- Dispatched specialist: skill: continuous-improvement-triage")
+
+
+def test_audit_remediation_without_traceability_fields_fails():
+    failures = check(TITLE, _remediation_body("None"), audit_issues=[588])
+    assert sum("Linked issues" in f and "audit issue" in f for f in failures) == 2
+
+
+def test_same_body_passes_when_no_linked_issue_is_an_audit_issue():
+    assert check(TITLE, _remediation_body("None"), audit_issues=[]) == []
+
+
+def test_both_fields_pass_for_an_audit_remediation():
+    assert check(TITLE, _remediation_body(BOTH_FIELDS), audit_issues=[588]) == []
+
+
+def test_no_match_note_passes():
+    risk = "- Originating source: #588\n- Dispatched specialist: no matching specialist existed — generalist handled"
+    assert check(TITLE, _remediation_body(risk), audit_issues=[588]) == []
+
+
+@pytest.mark.parametrize("value", [
+    "the audit named `skill: spec`, not dispatched; the edit was made in the operator session",
+    "none, `skill: spec` matches these findings but was not dispatched",
+    "the audit named `claude-plugin-developer` and `skill: spec`; neither dispatched",
+])
+def test_named_but_not_dispatched_specialist_fails(value):
+    risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
+    failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
+    assert any("dispatch-status wording" in f for f in failures)
+
+
+def test_specialist_value_continues_on_indented_lines():
+    risk = ("- Originating source: #588\n- Dispatched specialist:\n"
+            "  - The audit named `skill: spec`.\n  - It wasn't dispatched.\n- Another note")
+    failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
+    assert any("dispatch-status wording" in f for f in failures)
+    assert not any("carries no `Dispatched specialist:`" in f for f in failures)
+
+
+def test_linked_issue_numbers_reads_only_the_linked_issues_section():
+    body = _remediation_body("See #999", linked="Closes #588. Refs nolte/kamerplanter#1228 and #616, #588.")
+    assert check_pr_body.linked_issue_numbers(body) == [588, 616]
+
+
+def test_main_prints_linked_issues_and_reads_labels(monkeypatch, tmp_path, capsys):
+    body = _remediation_body("None")
+    monkeypatch.setenv("PR_BODY", body)
+    assert check_pr_body.main(["--print-linked-issues"]) == 0
+    assert capsys.readouterr().out.split() == ["588"]
+    labels = tmp_path / "labels.txt"
+    labels.write_text("588 audit\n588 spec\n", encoding="utf-8")
+    monkeypatch.setenv("PR_TITLE", TITLE)
+    monkeypatch.setenv("LINKED_ISSUE_LABELS_FILE", str(labels))
+    assert check_pr_body.main([]) == 1
+    labels.write_text("588 spec\n", encoding="utf-8")
+    assert check_pr_body.main([]) == 0
+
+
+def test_overlong_issue_number_is_ignored_and_does_not_hide_a_real_one():
+    body = _remediation_body("None", linked="Closes #588 and #" + "9" * 5000)
+    assert check_pr_body.linked_issue_numbers(body) == [588]
+
+
+
+def test_no_match_note_exempts_only_when_it_opens_the_value():
+    risk = ("- Originating source: #588\n- Dispatched specialist: skill: spec was not dispatched; "
+            "no matching specialist existed for the workflow")
+    failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
+    assert any("dispatch-status wording" in f for f in failures)
+
+
+def test_linked_issue_urls_of_the_same_repository_count():
+    body = _remediation_body("None", linked="Closes https://github.com/nolte/claude-shared/issues/588 and https://github.com/nolte/other/issues/7")
+    assert check_pr_body.linked_issue_numbers(body, "nolte/claude-shared") == [588]
+    assert check_pr_body.linked_issue_numbers(body) == []
+
+
+@pytest.mark.parametrize("value", [
+    "no matching specialist existed — generalist handled",
+    "`no matching specialist exists` — generalist handled",
+    "“no matching specialist existed” (generalist handled)",
+])
+def test_no_match_form_variants_pass(value):
+    risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
+    assert check(TITLE, _remediation_body(risk), audit_issues=[588]) == []
+
+
+@pytest.mark.parametrize("value", [
+    "no matching specialist existed; code-security-reviewer matches but was not dispatched",
+    "no matching specialist existed, so none was dispatched",
+    "code-security-reviewer; neither code-security-reviewer nor docs dispatched",
+    "skill: spec, none but code-security-reviewer not dispatched",
+    "no matching specialist existed; no specialist was dispatched",
+    "spec; code-security-reviewer matched but nobody dispatched it",
+    "code-security-reviewer matches but did not dispatch it",
+    "code-security-reviewer (not **dispatched**)",
+    "skill: spec, bypassed in the operator session",
+    "the audit named `skill: spec`; it wasn't invoked",
+    "code-security-reviewer; invocation skipped",
+    "skill: spec (undispatched)",
+    "skill: spec, non-bypassed",
+])
+def test_any_dispatch_status_wording_fails_in_either_form(value):
+    risk = f"- Originating source: #588\n- Dispatched specialist: {value}"
+    failures = check(TITLE, _remediation_body(risk), audit_issues=[588])
+    assert any("dispatch-status wording" in f for f in failures)

@@ -107,8 +107,87 @@ def check_spec_anchor(pr_type: str | None, linked_issues: str | None, changed_fi
     ]
 
 
+# spec/project/continuous-improvement/ §"Traceability in remediation artifacts" (#616):
+# a pull request whose `## Linked issues` references an issue carrying the audit
+# label remediates an audit finding, so its Risk / rollout notes name the finding
+# source and the specialist. Only issue numbers leave the checker; the workflow
+# reads their labels and hands them back through a file.
+AUDIT_LABEL = "audit"
+LINKED_ISSUE_RE = re.compile(r"(?<![\w/])#(\d{1,9})\b")
+TRACEABILITY_FIELDS = ("Originating source", "Dispatched specialist")
+# Neither allowed form needs dispatch-status wording: the specialist form names
+# who produced the fix, the no-match form says none existed. Reading negations
+# in free text leaks in both directions, so the check rejects the vocabulary
+# itself (any form, markdown ignored). A bypass worded without it isn't caught
+# here; the coverage review still reads the field.
+DISPATCH_STATUS_RE = re.compile(r"(?:dispatch|invo[kc]|bypass)", re.IGNORECASE)
+
+
+def linked_issue_numbers(body: str, repository: str | None = None) -> list[int]:
+    """Same-repository references in `## Linked issues`, in order, without duplicates.
+
+    Reads `#N` and, when `repository` (`owner/name`) is known, full issue or pull
+    request URLs of that repository, which GitHub links the same way.
+    """
+    content = strip_comments(dict(split_sections(body)).get("Linked issues") or "")
+    found = [(m.start(), m.group(1)) for m in LINKED_ISSUE_RE.finditer(content)]
+    if repository:
+        url_re = re.compile(rf"github\.com/{re.escape(repository)}/(?:issues|pull)/(\d{{1,9}})\b", re.IGNORECASE)
+        found += [(m.start(), m.group(1)) for m in url_re.finditer(content)]
+    seen: list[int] = []
+    for _, number in sorted(found):
+        if int(number) not in seen:
+            seen.append(int(number))
+    return seen
+
+
+def risk_field(content: str, field: str) -> str | None:
+    """The value of `field:` in `content`, joined with its more deeply indented continuation lines."""
+    lines = strip_comments(content).split("\n")
+    pattern = re.compile(rf"^(?P<indent>[ \t]*)(?:[-*][ \t]+)?{re.escape(field)}:[ \t]*(?P<value>.*)$")
+    for i, line in enumerate(lines):
+        match = pattern.match(line)
+        if match is None:
+            continue
+        indent = len(match.group("indent").expandtabs())
+        parts = [match.group("value").strip()]
+        for follow in lines[i + 1:]:
+            if not follow.strip():
+                break
+            if len(follow) - len(follow.lstrip()) <= indent:
+                break
+            parts.append(follow.strip())
+        return " ".join(p for p in parts if p)
+    return None
+
+
+def check_traceability(risk: str | None, audit_issues: list[int]) -> list[str]:
+    if not audit_issues:
+        return []
+    refs = ", ".join(f"#{n}" for n in audit_issues)
+    failures: list[str] = []
+    values = {field: risk_field(risk or "", field) for field in TRACEABILITY_FIELDS}
+    for field, value in values.items():
+        if not value or value.startswith("<"):
+            failures.append(
+                f"`## Linked issues` references the audit issue(s) {refs}, but `## Risk / rollout notes` "
+                f"carries no `{field}:` line with a value "
+                '(spec/project/continuous-improvement/ §"Traceability in remediation artifacts")'
+            )
+    specialist = values["Dispatched specialist"]
+    plain = re.sub(r"[`*_~]", "", specialist or "")
+    if DISPATCH_STATUS_RE.search(plain):
+        failures.append(
+            "`Dispatched specialist:` carries dispatch-status wording (dispatch, invoke, bypass), which neither "
+            "allowed form needs: name the specialist that produced the fix, or write `no matching specialist "
+            "existed — generalist handled`, and keep any remark about what was or wasn't dispatched out of this field "
+            '(spec/project/continuous-improvement/ §"Specialist dispatch")'
+        )
+    return failures
+
+
 def check(title: str, body: str, author: str | None = None, changed_files: list[str] | None = None,
-          head_ref: str | None = None) -> list[str]:
+          head_ref: str | None = None, audit_issues: list[int] | None = None) -> list[str]:
     failures: list[str] = []
 
     title_match = TITLE_RE.match(title.strip())
@@ -151,6 +230,7 @@ def check(title: str, body: str, author: str | None = None, changed_files: list[
             )
 
     failures += check_spec_anchor(pr_type, by_name.get("Linked issues"), changed_files, head_ref)
+    failures += check_traceability(by_name.get("Risk / rollout notes"), audit_issues or [])
 
     for name in NON_EMPTY_SECTIONS:
         if name in by_name and is_empty(by_name[name]):
@@ -200,6 +280,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--body-file", default=None, help="file holding the PR body; defaults to $PR_BODY")
     parser.add_argument("--author", default=None, help="PR author login from the event payload; defaults to $PR_AUTHOR")
     parser.add_argument("--changed-files-file", default=None, help="file listing changed paths, one per line; defaults to $CHANGED_FILES_FILE")
+    parser.add_argument("--linked-issue-labels-file", default=None, help="file of `<issue> <label>` lines; defaults to $LINKED_ISSUE_LABELS_FILE")
+    parser.add_argument("--print-linked-issues", action="store_true", help="print the `## Linked issues` numbers of the body, one per line, and exit")
     args = parser.parse_args(argv)
 
     title = args.title if args.title is not None else os.environ.get("PR_TITLE")
@@ -210,6 +292,14 @@ def main(argv: list[str] | None = None) -> int:
         body = os.environ.get("PR_BODY")
     author = args.author if args.author is not None else os.environ.get("PR_AUTHOR")
 
+    if args.print_linked_issues:
+        if body is None:
+            print("usage: provide --body-file or set PR_BODY", file=sys.stderr)
+            return 2
+        for number in linked_issue_numbers(body, os.environ.get("GITHUB_REPOSITORY")):
+            print(number)
+        return 0
+
     if title is None or body is None:
         print("usage: provide --title/--body-file or set PR_TITLE/PR_BODY", file=sys.stderr)
         return 2
@@ -219,7 +309,15 @@ def main(argv: list[str] | None = None) -> int:
     if files_path:
         with open(files_path, encoding="utf-8") as handle:
             changed_files = [line.strip() for line in handle if line.strip()]
-    failures = check(title, body, author, changed_files, os.environ.get("PR_HEAD_REF"))
+    labels_path = args.linked_issue_labels_file or os.environ.get("LINKED_ISSUE_LABELS_FILE")
+    audit_issues: list[int] = []
+    if labels_path:
+        with open(labels_path, encoding="utf-8") as handle:
+            for line in handle:
+                number, _, label = line.strip().partition(" ")
+                if number.isdigit() and label == AUDIT_LABEL and int(number) not in audit_issues:
+                    audit_issues.append(int(number))
+    failures = check(title, body, author, changed_files, os.environ.get("PR_HEAD_REF"), audit_issues)
     if failures:
         print(f"PR body lint: {len(failures)} failure(s)\n")
         for failure in failures:

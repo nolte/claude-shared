@@ -55,6 +55,7 @@ The portfolio already declares **how** specifications and implementation are rec
 
 ### Traceability in remediation artifacts
 - **MUST** record in the **Risk / rollout notes** section of every remediation PR (per `pull-request-workflow`) either the specialized agent or skill that produced the fix, or an explicit note that no matching specialist existed and a generalist handled it—this is the primary signal for portfolio-level coverage gaps
+- **MUST NOT** record a matching specialist as named but not dispatched: that entry is neither the specialist that produced the fix nor a no-match note, and it documents the breach of §Specialist dispatch rather than a coverage gap. When a matching specialist exists, dispatch it; on every PR that links an audit-labelled issue, the `pull-request-workflow` §PR lint workflow rejects dispatch-status wording in the field, a mechanical guard that a differently worded bypass passes, so the coverage review still reads the field
 - **MUST** name the originating finding source (`spec-drift-audit` entry, `workflow-health` incident, `project-structure-apply` report, manual review Issue, etc.) in the same section, so the PR is traceable back to the audit entry that triggered it
 - **MUST NOT** collapse multiple unrelated findings into a single remediation PR merely to reduce paperwork; one PR per finding class keeps the dispatch record meaningful, and related findings of the same class **MAY** still be grouped when the fix is genuinely atomic
 
@@ -82,6 +83,7 @@ The portfolio already declares **how** specifications and implementation are rec
 
 ## Acceptance Criteria
 - [ ] For the last 10 merged remediation PRs across the repository that addressed an in-scope audit finding, the **Risk / rollout notes** section names either the dispatched specialist (agent or skill) or explicitly records that no matching specialist existed and a generalist handled it
+- [ ] No merged remediation PR since #616 records a matching specialist as named but not dispatched in its **Risk / rollout notes**
 - [ ] For the same 10 PRs, the **Risk / rollout notes** section names the originating finding source (audit entry, workflow incident, project-structure report, manual review Issue, etc.), so each PR is traceable back to its trigger
 - [ ] No in-scope finding from the most recent `spec-drift-audit` run is recorded as "no specialist considered"—each has either a dispatched specialist or an explicit "no matching specialist exists" note
 - [ ] For every finding class that has been generalist-handled three or more times in the last two calendar quarters, either a specialist now exists in the portfolio (agent per `agent-management` or skill per `skill-management`) or an open Issue tracks its creation with a named owner
