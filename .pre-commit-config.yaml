@@ -29,9 +29,14 @@ repos:
         always_run: true
         pass_filenames: false
 
+      # `--yes` is load-bearing, not noise: without it `task` stops at the remote
+      # include with `Taskfile … not trusted by user` and exits 104 — before the
+      # task's own `vale sync` step runs. The hook then never reaches Vale, and
+      # `.github/styles/` stays empty in every fresh worktree. The CI job already
+      # invokes `task --yes lint`; this keeps the local gate identical to it.
       - id: vale-prose
         name: vale (prose style)
-        entry: task lint:prose
+        entry: task --yes lint:prose
         language: system
         types: [markdown]
         pass_filenames: false
