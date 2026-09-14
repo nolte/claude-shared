@@ -1,6 +1,6 @@
 {
   extends: [
-    'github>nolte/gh-plumbing//renovate-configs/common#v2.0.0',
+    'github>nolte/gh-plumbing//renovate-configs/common#v2.0.1',
   ],
   // spec/project/continuous-integration/ §C: CI installs from lock files that
   // `uv pip compile` generates from the requirement manifests; the pip-compile
