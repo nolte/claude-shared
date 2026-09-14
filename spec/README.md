@@ -73,6 +73,7 @@ Canonical language: `en` · Translations: `de`
 | project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-08-08 |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | local | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | local | unversioned |
+| project | issue-batch-integration | Issue Batch Integration | Issue-Bündel-Integration | draft | local | unversioned |
 | project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | unversioned |
 | project | kpi-definition-process | KPI Definition Process | KPI-Definitionsprozess | draft | portfolio | unversioned |
 | project | kubernetes-deployment-best-practices | Kubernetes Deployment Best Practices | Kubernetes-Deployment-Best-Practices | draft | local | unversioned |
