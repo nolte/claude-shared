@@ -41,7 +41,7 @@ concurrency:
 
 jobs:
   refresh_presentation_branch:
-    uses: nolte/gh-plumbing/.github/workflows/reusable-release-cd-refresh-master.yml@6eeab5f407a63c182d82290dbf78faca18b2af3b # v2.0.1
+    uses: nolte/gh-plumbing/.github/workflows/reusable-release-cd-refresh-master.yml@3fccbb333146cd2a65902afd7394db870ae6a978 # v2.1.0
     # Open gaps, recorded per spec/project/workflow-health/ (#586):
     # - The reusable resets `main` to the release tag with a force push; `main`
     #   allows force pushes for exactly that (.github/settings.yml, 2026-09-13), so
