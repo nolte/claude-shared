@@ -3,7 +3,7 @@ title: Image Generation
 audience: [maintainer, external-contributor]
 content_mode: how-to
 track: developer-docs
-last_updated: 2026-05-30
+last_updated: 2026-09-19
 ---
 
 # Image Generation
@@ -16,17 +16,17 @@ The deterministic engine is a stdlib-only script, `plugins/nolte-media/skills/im
 
 | `--provider` | Credentials needed | Free? | Output licence | Use it for |
 |---|---|---|---|---|
-| `cloudflare` (**default**) | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` | Yes, real free tier (no card) | FLUX.1-schnell, Apache-2.0; you own the output | Blog and production images |
+| `cloudflare` (**default**) | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` | Yes, real free tier (no card) | FLUX.1-schnell (default) or FLUX.2 Klein 4B via `--model`, both Apache-2.0; you own the output | Blog and production images; Klein 4B for non-square sizes and reference images |
 | `pollinations` | none (optional `POLLINATIONS_API_TOKEN`) | Yes, auth-free | No explicit licence (defers to the model); public-feed default | Quick throwaway images |
 | `gemini` | `GEMINI_API_KEY` | No, **requires billing** | Commercial use allowed | Only if you already pay for it |
 
-**Recommendation:** use `cloudflare` for anything you publish. It's free, carries no watermark or public feed, and FLUX.1-schnell is Apache-2.0, so the generated images are clearly yours to use. `pollinations` is fine for disposable images but grants no explicit output licence; `gemini` needs a billed project (its free-tier quota for this image model is zero).
+**Recommendation:** use `cloudflare` for anything you publish. It's free, carries no watermark or public feed, and both of its models, FLUX.1-schnell and FLUX.2 Klein 4B, are Apache-2.0, so the generated images are clearly yours to use. The licence is a property of the model, not of the provider: Cloudflare also hosts `flux-2-klein-9b` and `flux-2-dev` under the FLUX Non-Commercial License, and the tool deliberately doesn't offer them. `pollinations` is fine for disposable images but grants no explicit output licence; `gemini` needs a billed project (its free-tier quota for this image model is zero).
 
 ## Which token does each provider need?
 
 ### Cloudflare (default, recommended)
 
-Cloudflare Workers AI runs FLUX.1-schnell on a real recurring free tier (10,000 neurons/day, no credit card). You need a **token** and your **account id**:
+Cloudflare Workers AI runs FLUX.1-schnell and FLUX.2 Klein 4B on a real recurring free tier (10,000 neurons/day, no credit card). You need a **token** and your **account id**:
 
 1. Create a free account at <https://dash.cloudflare.com/sign-up> (no card required).
 2. In the dashboard go to **AI → Workers AI → "Use REST API"** (REST is Representational State Transfer).
@@ -43,7 +43,7 @@ export CLOUDFLARE_API_TOKEN="your_token"
 export CLOUDFLARE_ACCOUNT_ID="your_account_id"
 ```
 
-The free tier resets daily; FLUX.1-schnell costs ~4.8 neurons per 512x512 tile, so 10,000 neurons/day is roughly hundreds of images.
+The free tier resets daily. FLUX.1-schnell costs about 58 neurons per 1024x1024 image (4.8 per 512x512 tile plus 9.6 per step), FLUX.2 Klein 4B about 104 (26 per output tile), so 10,000 neurons/day is roughly 170 schnell images or 95 Klein 4B images.
 
 ### Pollinations (auth-free)
 
@@ -75,10 +75,32 @@ python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" 
 
 Every run writes the image plus a `<image>.meta.json` sidecar recording `provider`, `model`, `source`, `prompt`, `timestamp`, and `mime_type`.
 
-Useful flags: `--from-prompt-doc <doc> --variant light|dark` (render a `graphic-prompt-generator` document), `-n <N>` (several images of the same prompt), `--seed`, `--width`/`--height`, `--force` (overwrite an existing file).
+Useful flags: `--from-prompt-doc <doc> --variant light|dark` (render a `graphic-prompt-generator` document), `-n <N>` (several images of the same prompt), `--seed`, `--width`/`--height`, `--model` and `--ref-image` (Cloudflare only, see below), `--force` (overwrite an existing file).
+
+## Choosing the Cloudflare model
+
+`--provider cloudflare` offers two models, selected with `--model`:
+
+| `--model` | Licence | Size control | Reference images | Cost per 1024x1024 image |
+|---|---|---|---|---|
+| `flux-1-schnell` (**default**) | Apache-2.0 | none: always about 1024x1024, `--width`/`--height` are ignored with a warning | no | about 58 neurons |
+| `flux-2-klein-4b` | Apache-2.0 | `--width`/`--height` honoured, 256 to 1920 each | up to four `--ref-image` files, each under 512x512 | about 104 neurons |
+
+Render a wide hero image and condition it on a reference image:
+
+```bash
+python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
+    --model flux-2-klein-4b --width 1280 --height 720 \
+    --ref-image design/mascot-ref.png \
+    --prompt "the mascot waving in front of a sunrise, flat illustration" --out hero.png
+```
+
+The sidecar then records `model: @cf/black-forest-labs/flux-2-klein-4b` and a `reference_images` list with each file's name and SHA-256 digest. Reference images are uploaded to Cloudflare as part of the request; keep confidential material out of them. `--model` and `--ref-image` are rejected with a usage error on every other provider, and `--ref-image` also on `flux-1-schnell`.
+
+`flux-1-schnell` stays the default because it costs about half as much per image and its response format is long verified; Klein 4B's response handling covers both shapes Cloudflare documents (base64 JSON and raw bytes) but hasn't been confirmed against a live call yet.
 
 !!! tip
-    Cloudflare and Pollinations both return JPEG. Use a `.jpg` target to avoid the extension/MIME-mismatch warning (MIME is Multipurpose Internet Mail Extensions) (the image is still written either way).
+    FLUX.1-schnell and Pollinations both return JPEG. Use a `.jpg` target to avoid the extension/MIME-mismatch warning (MIME is Multipurpose Internet Mail Extensions) (the image is still written either way). Klein 4B's format is detected from the response, so match the extension to what the sidecar's `mime_type` reports.
 
 ## Using it in another repo
 

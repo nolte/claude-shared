@@ -1,14 +1,15 @@
 ---
 name: image-generate
-description: "Generates an image from a text prompt via a pluggable provider backend, writing the image plus a `<image>.meta.json` sidecar to an operator-chosen path. Backends are swappable via `--provider`: cloudflare (Cloudflare Workers AI FLUX.1-schnell, real free tier, DEFAULT), pollinations (auth-free, but public-feed/undocumented-licence — the tool forces private=true and shows a disclaimer), gemini (gemini-3.1-flash-image, requires billing). Wraps the bundled, stdlib-only `scripts/image_generate.py`. Invoke when the user asks to \"generate an image\", \"create a hero image or icon from a prompt\", \"render this prompt to a PNG\", \"turn a graphic-prompt-generator document into an image\", or equivalent German-language requests. Don't use for image editing, in-painting, or multi-turn refinement; for batch pipelines; or to author the prompt itself (use graphic-prompt-generator). Supports resume is not applicable: a generation is a single terminal call."
+description: "Generates an image from a text prompt via a pluggable provider backend, writing the image plus a `<image>.meta.json` sidecar to a chosen path. Providers via `--provider`: cloudflare (Cloudflare Workers AI, free tier, DEFAULT; `--model` selects flux-1-schnell (default) or flux-2-klein-4b, with width/height control and up to 4 reference images), pollinations (auth-free, but public-feed/undocumented-licence — forces private=true, shows a disclaimer), gemini (gemini-3.1-flash-image, requires billing). Wraps the bundled, stdlib-only `scripts/image_generate.py`. Invoke when the user asks to \"generate an image\", \"create a hero image or icon from a prompt\", \"render this prompt to a PNG\", \"turn a graphic-prompt-generator document into an image\", or equivalent German-language requests. Don't use for in-painting or multi-turn refinement; for batch pipelines; or to author the prompt itself (use graphic-prompt-generator). No resume: a generation is a single terminal call."
 tags: [design]
 phase: build
-summary: "Generates an image from a text prompt via a swappable provider backend (Cloudflare/Pollinations/Gemini), writing the image plus a metadata sidecar to a chosen path."
-summary_de: "Erzeugt aus einem Text-Prompt ein Bild über ein austauschbares Provider-Backend (Cloudflare/Pollinations/Gemini) und schreibt Bild plus Metadaten-Sidecar an einen gewählten Pfad."
+summary: "Generates an image from a text prompt via a swappable provider backend (Cloudflare with two FLUX models, Pollinations, Gemini), writing the image plus a metadata sidecar to a chosen path."
+summary_de: "Erzeugt aus einem Text-Prompt ein Bild über ein austauschbares Provider-Backend (Cloudflare mit zwei FLUX-Modellen, Pollinations, Gemini) und schreibt Bild plus Metadaten-Sidecar an einen Zielpfad."
 use_when:
   - "you want to generate an image from a text prompt to a chosen file path"
   - "you want a free, terminal-driven text-to-image call without a chat UI"
   - "you want to render a graphic-prompt-generator prompt document into an image"
+  - "you want a non-square image, or one conditioned on up to four reference images, via Cloudflare's FLUX.2 Klein 4B"
 dont_use_when:
   - situation: "You want to author the prompt rather than render it"
     alternative: graphic-prompt-generator
@@ -34,21 +35,24 @@ Implements `spec/tools/image-generation/<canonical_language>.md`, resolved in th
 
 ## German trigger phrases
 
-- „erzeuge ein Bild aus diesem Prompt", „generiere ein Hero-Bild / Icon", „rendere diesen Prompt als PNG", „mach aus dem graphic-prompt-generator-Dokument ein Bild"
+- „erzeuge ein Bild aus diesem Prompt", „generiere ein Hero-Bild / Icon", „rendere diesen Prompt als PNG", „mach aus dem graphic-prompt-generator-Dokument ein Bild", „erzeuge ein 16:9-Bild mit Referenzbild"
 
 ## Providers
 
 | `--provider` | Auth | Free? | Notes |
 |---|---|---|---|
-| `cloudflare` (default) | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` | Yes — 10k neurons/day, no credit card | FLUX.1-schnell (Apache-2.0), no watermark, no feed |
+| `cloudflare` (default) | `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` | Yes — 10k neurons/day, no credit card | Two models via `--model`: `flux-1-schnell` (default; FLUX.1-schnell, Apache-2.0; fixed 1024×1024, ignores `--width`/`--height`) and `flux-2-klein-4b` (FLUX.2 Klein 4B, Apache-2.0; honours `--width`/`--height` 256–1920, accepts up to 4 `--ref-image` inputs). No watermark, no feed. |
 | `pollinations` | none (opt. `POLLINATIONS_API_TOKEN`) | Yes, auth-free | Operated by Myceli.AI OU (Estonia, GDPR). **Public feed by default — the tool forces `private=true`** (feed opt-out only, *not* a non-storage guarantee). The Terms grant **no explicit output licence** ("verify the model licence"); `safe` filter is off by default. One-time disclaimer; never the default. |
 | `gemini` | `GEMINI_API_KEY` | **No — requires billing** (no Gemini image model has a free tier) | `gemini-3.1-flash-image`; data-use notice plus SynthID watermark shown |
+
+Cloudflare bills both models against the same free allocation, but not at the same rate: on the pricing in force a 1024×1024 image costs ≈ 58 neurons on FLUX.1-schnell and ≈ 104 on FLUX.2 Klein 4B (≈ 1.8×), so the free 10,000-neuron day yields roughly 170 versus 95 images. Pick Klein 4B when you need a non-square size or reference-image conditioning; stay on schnell otherwise.
 
 ## Inputs
 
 - A **prompt**: inline `--prompt`, a `--prompt-file`, or a `--from-prompt-doc` graphic-prompt-generator document (`--variant light|dark` selects a section).
 - A **target path** (`--out`), always explicit — never a silent default.
 - The selected provider's credentials in the environment (none for pollinations).
+- Optionally, on `--provider cloudflare --model flux-2-klein-4b`: a size (`--width`/`--height`) and up to four `--ref-image <path>` reference images, each ideally under 512×512.
 
 ## Operations
 
@@ -56,19 +60,20 @@ Implements `spec/tools/image-generation/<canonical_language>.md`, resolved in th
 
 Generate one image (or `n`) from the resolved prompt to the target path.
 
-1. **Resolve prompt, provider, and path.** Default provider is `cloudflare`. If `--out` is missing, ask the operator — never invent a default.
+1. **Resolve prompt, provider, model, and path.** Default provider is `cloudflare`, default model `flux-1-schnell`. If `--out` is missing, ask the operator — never invent a default. If the operator asks for a non-square image or supplies reference images, select `--model flux-2-klein-4b` and tell them that reference images are uploaded to Cloudflare and that Klein 4B costs ≈ 1.8× schnell per image.
 2. **Pre-flight obvious failures in conversation.** If the provider's credentials are unset, relay the script's setup hint and stop. If the target file exists, confirm overwrite before passing `--force`.
 3. **Run the bundled engine:**
 
    ```bash
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-generate/scripts/image_generate.py" \
        --provider <cloudflare|pollinations|gemini> --prompt "<prompt>" --out <path> \
+       [--model <flux-1-schnell|flux-2-klein-4b>] [--ref-image <img> …] \
        [--from-prompt-doc <doc> --variant <light|dark>] [-n <N>] [--seed <S>] \
        [--width <W> --height <H>] [--force]
    ```
 
    On the **first use of a provider that has a notice** (pollinations, gemini), the script prints a one-time disclaimer and requires acknowledgement; relay it and only pass `--accept-data-policy` once the operator has explicitly acknowledged it (a SHA-256 digest is persisted per provider, so they are not re-prompted until the notice text changes).
-4. **Report the result.** On success, report each written image path and its `<image>.meta.json` sidecar (which records `provider`, `model`, `source`, `prompt`, `timestamp`, `mime_type`). On a non-zero exit, relay the script's actionable message and the exit code (`3` = quota/rate-limit or billing-required, `4` = auth failure, `1` = other, `2` = usage).
+4. **Report the result.** On success, report each written image path and its `<image>.meta.json` sidecar (which records `provider`, `model` as the full `@cf/black-forest-labs/…` ID on cloudflare, `source`, `prompt`, `timestamp`, `mime_type`, and — when reference images were used — `reference_images` as a list of `{name, sha256}` entries). On a non-zero exit, relay the script's actionable message and the exit code (`3` = quota/rate-limit or billing-required, `4` = auth failure, `1` = other, `2` = usage).
 
 ## Hard rules
 
@@ -77,18 +82,23 @@ Generate one image (or `n`) from the resolved prompt to the target path.
 - **Never** pass `--force` to overwrite an existing file without explicit operator confirmation in the same turn.
 - **Never** pass any provider's API key/token on the command line or echo it into the conversation; credentials travel only through environment variables.
 - **Never** retry automatically on an HTTP 429 / billing-required (`limit: 0`) — surface the message and stop.
-- For confidential or commercial work, prefer `cloudflare` (Cloudflare grants output ownership + FLUX.1-schnell is Apache-2.0, no feed) over `pollinations` (Terms grant no explicit output licence — they defer to the model's licence — and `private=true` is feed-opt-out only, not a non-storage guarantee).
+- **Never** claim Apache-2.0 for the `cloudflare` provider as a whole: the licence is a property of the model ID. FLUX.1-schnell and FLUX.2 Klein 4B carry Apache-2.0 weights; `flux-2-klein-9b` and `flux-2-dev` carry the FLUX Non-Commercial License and **must not** be added as `--model` values or reached by any other route.
+- For confidential or commercial work, prefer `cloudflare` with either offered model (Cloudflare grants output ownership; FLUX.1-schnell and FLUX.2 Klein 4B are both Apache-2.0; no feed) over `pollinations` (Terms grant no explicit output licence — they defer to the model's licence — and `private=true` is feed-opt-out only, not a non-storage guarantee).
 
 ## Gotchas
 
+- **`flux-1-schnell` ignores `--width`/`--height`** and always renders 1024×1024; a non-default size prints `warning: flux-1-schnell ignores --width/--height and always renders 1024x1024; pass --model flux-2-klein-4b to control width and height.` on stderr and proceeds. FLUX.2 Klein 4B honours both within 256–1920 (the CLI default stays 1024×1024; the endpoint's own default would be 1024×768).
+- **`--ref-image` works only on `--provider cloudflare --model flux-2-klein-4b`**, at most four files, each meant to be under 512×512 (the endpoint's limit — not checked client-side, the server error is surfaced verbatim). On schnell or any other provider it exits `2` before any network call. **Reference images are uploaded to Cloudflare**; say so to the operator before sending confidential material.
+- **Klein 4B costs ≈ 1.8× schnell per image** (≈ 104 versus ≈ 58 neurons per 1024×1024); the same free allocation yields roughly 95 versus 170 images a day.
+- **Klein 4B's response shape isn't live-verified yet.** Cloudflare's schema declares base64 JSON, its changelog describes raw image bytes; the script handles both and sniffs the MIME type (PNG/JPEG/WEBP) from the bytes. If a live call fails on the response shape, report it verbatim rather than patching around it.
 - **Pollinations returns JPEG.** Use a `.jpg` target to avoid the extension/MIME-mismatch warning (the image is still written either way).
 - **Per-provider, digest-versioned consent.** Acks live at `$XDG_STATE_HOME/nolte-shared/image-generate/<provider>/ack`; each provider is acknowledged independently, and a changed notice re-prompts automatically.
 - **`n>1` writes `<stem>-1`, `<stem>-2`, …** with one sidecar each; the `prompt` is identical across all.
 - **Cloudflare needs both** `CLOUDFLARE_API_TOKEN` (scope: Workers AI) **and** `CLOUDFLARE_ACCOUNT_ID`.
-- **`${CLAUDE_PLUGIN_ROOT}` is load-bearing — don't "simplify" it to a repo-relative path.** The bundled script lives in the installed plugin directory, not the consumer repo's working tree; `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin root in every context (marketplace install and `claude --plugin-dir .` dogfooding). A bare `skills/image-generate/scripts/…` path only works inside `claude-shared` itself and breaks the skill in every consumer repo. Data paths (`--out`, `--from-prompt-doc`) stay relative to the consumer's working directory — only the script path is plugin-rooted.
+- **`${CLAUDE_PLUGIN_ROOT}` is load-bearing — don't "simplify" it to a repo-relative path.** The bundled script lives in the installed plugin directory, not the consumer repo's working tree; `${CLAUDE_PLUGIN_ROOT}` resolves to the plugin root in every context (marketplace install and `claude --plugin-dir .` dogfooding). A bare `skills/image-generate/scripts/…` path only works inside `claude-shared` itself and breaks the skill in every consumer repo. Data paths (`--out`, `--from-prompt-doc`, `--ref-image`) stay relative to the consumer's working directory — only the script path is plugin-rooted.
 
 ## Examples
 
-- Read `examples/01-cloudflare-default.md` for the default free-tier path (Cloudflare token + account id → PNG).
+- Read `examples/01-cloudflare-default.md` for the default free-tier path (Cloudflare token + account id → PNG) and for the FLUX.2 Klein 4B call with a non-square size and reference images.
 - Read `examples/02-pollinations-disclaimer.md` for the auth-free path and the public-feed/licence disclaimer.
 - Read `examples/03-from-prompt-doc.md` for rendering a `graphic-prompt-generator` document's Dark-Mode section.
