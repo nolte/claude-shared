@@ -29,7 +29,7 @@ Canonical language: `en` · Translations: `de`
 | claude | skills-agents-sweep | Skills and Agents Sweep Audit | Skills-und-Agents-Sweep-Audit | draft | local | unversioned |
 | claude | trusted-author-injection-guard | Trusted-Author Injection Guard | Trusted-Author Injection Guard | draft | portfolio | unversioned |
 | design | corporate-design-colors | Corporate Design — Color System | Corporate Design — Farbsystem | draft | local | unversioned |
-| design | flux-image-generation | FLUX Image Generation | FLUX-Bildgenerierung | draft | local | unversioned |
+| design | flux-image-generation | FLUX Image Generation | FLUX-Bildgenerierung | draft | local | 2026-09-19 |
 | design | gemini-image-generation | Gemini Image Generation | Gemini-Bildgenerierung | draft | local | unversioned |
 | design | graphic-prompt-authoring | Graphic Prompt Authoring | Grafik-Prompt-Autorenschaft | draft | local | unversioned |
 | frontend | source-code-review | Frontend Source Code Review | Frontend-Source-Code-Review | draft | local | unversioned |
@@ -124,4 +124,4 @@ Canonical language: `en` · Translations: `de`
 | project | test-tier-unit | Test Tier: Unit | Test-Stufe: Unit | draft | local | unversioned |
 | project | workflow-health | Workflow Health | Workflow-Gesundheit | draft | portfolio | 2026-08-18 |
 | project | yaml-json-schema | YAML JSON Schema | YAML JSON Schema | draft | local | unversioned |
-| tools | image-generation | Image Generation (Multi-Provider) | Bildgenerierung (Multi-Provider) | draft | local | 2026-05-30 |
+| tools | image-generation | Image Generation (Multi-Provider) | Bildgenerierung (Multi-Provider) | draft | local | 2026-09-19 |
