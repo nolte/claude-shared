@@ -99,8 +99,8 @@ Reading the three governing specs plus the neighbours named above is part of pas
 ## Severity
 
 - **Critical** — a rule violation that lets a wrong result ship or a credential leak: an unpinned third-party action, an untrusted value interpolated into a script, untrusted code checked out with secrets in scope, a required stage that can't fail, a vacuous test stage, a mutable published version reference, a bypassed pre-publish gate, a public repository on a self-hosted runner.
-- **Warning** — a rule violation that degrades reproducibility or blast radius without an immediate path to a wrong result: a floating toolchain reference, a cache key missing a determining input, permissions wider than needed, a missing concurrency group, an artifact class with no securing stage, a rollback path that rebuilds, a sub-minute gate job in `needs:` ahead of the expensive jobs.
-- **Suggestion** — a SHOULD-level deviation or a maintainability concern: a digest without a version comment, a deep reusable-workflow chain, an extraction candidate duplicated across repositories, an unrehearsed rollback path, a stand-alone sub-minute job with none of §L's four reasons.
+- **Warning** — a rule violation that degrades reproducibility or blast radius without an immediate path to a wrong result: a floating toolchain reference, a cache key missing a determining input, permissions wider than needed, a missing concurrency group, an artifact class with no securing stage, a rollback path that rebuilds, a sub-minute gate job in `needs:` ahead of the expensive jobs (it multiplies its own slot wait onto everything behind it, so its blast radius is the whole pipeline).
+- **Suggestion** — a SHOULD-level deviation or a maintainability concern: a digest without a version comment, a deep reusable-workflow chain, an extraction candidate duplicated across repositories, an unrehearsed rollback path, a stand-alone sub-minute job with none of §L's four reasons (it costs one slot and delays nothing behind it, so it's a consolidation candidate rather than a blast-radius problem).
 
 ## Delimitation
 

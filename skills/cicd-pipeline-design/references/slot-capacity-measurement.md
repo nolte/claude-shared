@@ -13,7 +13,7 @@ A job's wall-clock time is queue wait plus runtime. Runtime is fixed inside the 
 (cache, parallelism, a smaller test set). Wait is fixed by asking the shared pool for
 fewer jobs, because GitHub-hosted runners draw on one concurrent-job allotment per plan
 (Free 20, Pro 40, Team 60 per `github-actions-best-practices` §"Runner-slot economy"
-and its [R13]) and every repository of the account draws on it at once. Optimising a
+and its [R13]–[R15]) and every repository of the account draws on it at once. Optimising a
 job's runtime when its wait dominates changes nothing the operator can see.
 
 ## The reads
