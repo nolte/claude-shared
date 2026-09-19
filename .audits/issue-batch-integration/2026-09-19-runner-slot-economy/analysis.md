@@ -141,8 +141,12 @@ All three answered 2026-09-19 ("Ja").
 
 | Member | Specialist | Check | Actual output |
 |---|---|---|---|
+| #645 | skill `nolte-shared:spec` | EN/DE parity `grep -c` on github-actions-best-practices | `H=20 B=117 AC=21 R=13` both |
+| #645 | — | `vale --output=line …/en.md` | 4 hits (percentage wording, SHOULD NOT ×2, "diagnosability") → reworded; re-run: no output, exit 0 |
+| #645 | — | `SKIP=vale-prose pre-commit run --files <en,de>` | no Failed hook |
 
 ## Deviations
 
 | Member | Kind | What changed |
 |---|---|---|
+| #645 | local adaptation | section placed as §L after §K instead of after §I, keeping §J/§K letters stable; two SHOULD NOT rules phrased as SHOULD (Vale) with identical meaning |

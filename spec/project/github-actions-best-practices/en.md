@@ -116,6 +116,8 @@ This spec also writes against a structure the portfolio already has. `spec/proje
 - **MUST** route a red run to `spec/project/workflow-health/` for triage
 - **MUST** route the decision of whether to run a merge queue at all to `spec/project/pull-request-workflow/` §"Merge queue" as the owner of the merge path; §K binds only the platform mechanics that follow from that decision
 
+- **MUST** route the run-time observation of runner-slot starvation (queue time, cancellation caused by churn) to `spec/project/workflow-health/` §"Cancellation rates"; §L binds only the design-time rule that a job has a slot cost
+
 ### K. Merge-queue event wiring
 
 This section binds the merge-queue mechanics to the platform. Whether a repository should run a merge queue at all is owned by `spec/project/pull-request-workflow/` §"Merge queue" and isn't decided here; these rules apply once one is enabled.
@@ -126,6 +128,16 @@ This section binds the merge-queue mechanics to the platform. Whether a reposito
 - **MUST NOT** protect a queued branch through a branch-protection rule whose name pattern uses a wildcard: a merge queue can't be enabled on such a rule [R12]
 - **MUST** derive the concurrency group of a merge-group run (§F) from a key that's populated in that context; a group keyed on a pull-request-only expression collapses every merge-group run into one group, so a newly queued entry cancels the run the queue is still waiting on
 - **SHOULD** account for the doubled execution before enabling a queue: the same pipeline now runs once per pull request and again per merge group, and a removed entry rebuilds the entries behind it. Where that cost matters, the stage-scoping rules of `spec/project/continuous-integration/` §A and §E decide what runs in which context—this spec doesn't re-derive them
+
+### L. Runner-slot economy
+
+GitHub-hosted runners run jobs from one concurrent-job allotment per GitHub plan (Free 20, Pro 40, Team 60, Enterprise 500 standard jobs at the time of writing [R13]), and that allotment is drawn on by every repository of the account at once: a job queued in one repository waits for a slot a job in another repository holds. Measured in this portfolio on 2026-09-19, `needs:`-free jobs of 16–68 seconds waited 10–24 minutes for a runner while their own repository ran nothing, and two thirds of all jobs finished under a minute while carrying 7 % of the work (`nolte/claude-shared#644`). On this platform a job, not a second of runtime, is the unit of the scarce resource, and `continuous-integration` §B's remedy "run it concurrently" isn't free.
+
+- **MUST** treat the account-wide concurrent-job allotment as a finite resource shared across every repository of the account, and account for a job's *slot* cost, not only its runtime, when designing a workflow. This is the platform binding of `spec/project/continuous-integration/` §B's "make the stage cheaper"; per §J it references that rule rather than restating it
+- **MUST**, when judging a pipeline as slow, measure the wait for a runner slot separately from the job runtime, because the two have opposite remedies: a runtime problem is fixed inside the job, a wait problem is fixed by asking for fewer jobs. The run-time observation duty and the reading rule live in `spec/project/workflow-health/` §"Cancellation rates"; the measurement recipe ships with the `cicd-pipeline-design` skill
+- **SHOULD** keep work that finishes in well under a minute inside an existing job rather than spending a separate one on it, unless it needs a different runner image, different `permissions`, matrix parallelism, or has to report under its own name as a required status check—the four reasons that genuinely require a separate job
+- **SHOULD** keep a sub-minute gate job out of `needs:` ahead of the expensive jobs: under a saturated pool each dependency hop costs a full slot wait, so a 14-second linter can add 20 minutes to everything behind it
+- **MAY** merge advisory checks into one job provided each merged step still reports its own verdict (`if: always()` on the following steps, one step summary per check), so consolidation doesn't buy throughput at the price of a verdict nobody can attribute
 
 ## Acceptance Criteria
 
@@ -148,6 +160,8 @@ This section binds the merge-queue mechanics to the platform. Whether a reposito
 - [ ] No public repository in the portfolio targets a self-hosted runner
 - [ ] No job depends on state a previous job or run left on the runner
 - [ ] Reviewing this spec against `continuous-integration`, `continuous-delivery`, `workflow-health`, and `branching-model` surfaces no restated rule, only platform bindings
+- [ ] No workflow spends a separate job on sub-minute work without one of the four stated reasons, and no sub-minute gate job sits in `needs:` ahead of the expensive jobs; both are checkable from the workflow file alone, without running anything
+- [ ] §L references `continuous-integration` §B and `workflow-health` §"Cancellation rates" rather than restating either, and its scarcity claim carries a dated source in §References, because the concurrency numbers are plan-dependent and will age
 
 ## References
 
@@ -165,6 +179,7 @@ Source classes are labelled per `spec/claude/research-triangulate/`. The load-be
 - [R10] *SLSA v1.0 build levels* (**Primary**, independent of GitHub): the requirement that the build platform generates and signs provenance rather than the build process itself: <https://slsa.dev/spec/v1.0/levels>
 - [R11] *Events that trigger workflows* (GitHub Docs, **Primary**): the `merge_group` event with its single activity type `checks_requested`, and the statement that a repository using Actions for required pull-request checks must add the event or the merge fails because the status is never reported, `https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows`
 - [R12] *Managing a merge queue* (GitHub Docs, **Primary**): the CI-configuration requirement to trigger and report on merge-group events, the `gh-readonly-queue/{base_branch}` temporary-branch prefix carrying a different SHA, the wildcard branch-protection limitation, and the worked scenarios where a removed entry causes the temporary branches behind it to be recreated, `https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-a-merge-queue`
+- [R13] *Actions limits* (GitHub Docs, **Primary**, read 2026-09-19): the concurrent-job table per plan (Free 20, Pro 40, Team 60, Enterprise 500 standard jobs; a shared macOS sub-limit). The page states the numbers, not the account-wide scope in words; that scope is established by observation in this portfolio, where jobs of one repository queued behind jobs of another while the first repository was idle (`nolte/claude-shared#644`, re-measured 2026-09-19 in the group that followed `nolte/claude-shared#648`)
 - `spec/project/continuous-integration/`, `spec/project/continuous-delivery/`: the tool-independent specs this spec binds to the platform
 - `spec/project/branching-model/`, `spec/project/pull-request-workflow/`, `spec/project/project-structure/`, `spec/project/workflow-health/`, `spec/project/release-automation/`: the neighbouring specs whose rules this spec references rather than restates
 
