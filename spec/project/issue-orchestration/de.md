@@ -125,6 +125,7 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   die das Issue ganz oder teilweise bereits adressieren; ein Issue, das zum
   Analysezeitpunkt bereits durch einen gemergten Fix geschlossen ist, **KANN [MAY]**
   als selbst-aufgelöst ohne Dekomposition gemeldet werden
+- **MUSS [MUST]**, wo das Issue eine **Ursache** behauptet und nicht nur einen Defekt, diese Ursache vor der ersten getrackten Änderung an den Dateien des Issues gegen den Code verifizieren: die zitierten Zeilen lesen, die Lesung oder den Check ausführen, auf dem die Ursache ruht, und das Ergebnis im Voranalyse-Artefakt festhalten. Eine Abweichung zwischen behaupteter Ursache und Messung **MUSS [MUST]** mit der Messung festgehalten werden, die sie zeigte, und die Messung gewinnt gegen den Issue-Text. Das Lesen der zitierten Zeilen zählt als Verifikation; das erneute Lesen des Issues nicht, und ein grüner bestehender Check ebenso wenig, weil er denselben blinden Fleck wie das Issue haben kann. Die Pflicht bindet nur, wo eine Ursache behauptet wird: Ein Issue, das einen Defekt beschreibt, ohne seine Ursache zu nennen, erwirbt keine Zeremonie, und ein Einzeiler-Tippfehler-Fix gar keine. Den Defekt konnte der Melder beobachten; die Ursache ist eine Hypothese, und fünf Konsumentenfälle, in denen ihr Befolgen keine Reparatur, eine falsche Reparatur oder einen neuen Defekt erzeugt hätte, sind in `nolte/claude-shared#641` festgehalten
 - **MUSS [MUST]** vor der Dekomposition den Requirements-Elicitation-Consumer-Vertrag
   anwenden (`spec/project/requirements-elicitation/` §H Consumer contract, der
   `issue-orchestrate` als gegateten Consumer benennt): prüfen, ob ein Requirement-
@@ -542,6 +543,7 @@ Diese Kriterien gelten für Läufe, die begonnen haben, nachdem die Transient-Re
   `.resume/issue-orchestrate/` einen Entscheidungs-Eintrag für jedes extern sichtbare
   Gate fest — das Schreiben des Artefakts, jeden Spezialisten-Dispatch, den
   Issue-Kommentar und die PR-Erstellung
+- [ ] Für jedes orchestrierte Issue, das eine Ursache behauptet, hält das Voranalyse-Artefakt vor der ersten getrackten Änderung die Beobachtung fest, die sie verifiziert oder widerlegt hat, und eine widerlegte Ursache wird mit der Messung festgehalten, die sie widerlegte. Auf die fünf Fälle in `nolte/claude-shared#641` angewandt (ein Fixture-Größen-Flake, ein Login-Gate, ein Favoriten-Resolver, eine Favoriten-Fehlerklausel, ein Abhängigkeits-Sweep), greift die Regel bei jedem; ein Regelwerk, das sie als konform bewertet, ist falsch
 
 ## Open Questions
 - §Routing definiert *bounded* nun operational (ein Goal-Outcome, ein Feature-Branch
