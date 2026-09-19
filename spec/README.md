@@ -57,7 +57,7 @@ Canonical language: `en` · Translations: `de`
 | project | continuous-integration | Continuous Integration Pipeline Design | Continuous-Integration-Pipeline-Design | draft | portfolio | unversioned |
 | project | cookiecutter-template-authoring | Cookiecutter Template Authoring | Cookiecutter-Template-Autorenschaft | draft | local | unversioned |
 | project | dependency-audit | Dependency Audit | Dependency-Audit | draft | local | unversioned |
-| project | defect-class-guards | Defect-Class Guards | Defektklassen-Guards | draft | portfolio | unversioned |
+| project | defect-class-guards | Defect-Class Guards | Defektklassen-Guards | draft | portfolio | 2026-09-19 |
 | project | dockerfile-best-practices | Dockerfile Best Practices | Dockerfile-Best-Practices | draft | local | unversioned |
 | project | diagram-opportunity | Diagram Opportunities in Documentation Prose | Diagramm-Vorschläge in Dokumentations-Prosa | draft | local | unversioned |
 | project | docs-audience-tracks | Documentation Audience Tracks | Dokumentations-Zielgruppen-Spuren | draft | local | unversioned |
@@ -73,8 +73,8 @@ Canonical language: `en` · Translations: `de`
 | project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-08-08 |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | local | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | local | unversioned |
-| project | issue-batch-integration | Issue Batch Integration | Issue-Bündel-Integration | draft | local | unversioned |
-| project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | unversioned |
+| project | issue-batch-integration | Issue Batch Integration | Issue-Bündel-Integration | draft | local | 2026-09-19 |
+| project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | 2026-09-19 |
 | project | kpi-definition-process | KPI Definition Process | KPI-Definitionsprozess | draft | portfolio | unversioned |
 | project | kubernetes-deployment-best-practices | Kubernetes Deployment Best Practices | Kubernetes-Deployment-Best-Practices | draft | local | unversioned |
 | project | lektorat | Lektorat | Lektorat | accepted | local | unversioned |
@@ -115,7 +115,7 @@ Canonical language: `en` · Translations: `de`
 | project | test-cycle-execution | Test Cycle: Execution | Test-Zyklus: Ausführung | draft | local | unversioned |
 | project | test-cycle-foundation | Test Cycle Foundation | Fundament des Test-Zyklus | draft | local | unversioned |
 | project | test-cycle-result-analysis | Test Cycle: Result Analysis | Test-Zyklus: Ergebnis-Analyse | draft | local | unversioned |
-| project | test-falsifiability | Test Falsifiability | Test-Falsifizierbarkeit | draft | portfolio | 2026-08-01 |
+| project | test-falsifiability | Test Falsifiability | Test-Falsifizierbarkeit | draft | portfolio | 2026-09-19 |
 | project | test-pyramid-foundation | Test Pyramid Foundation | Fundament der Testpyramide | draft | local | unversioned |
 | project | test-tier-component | Test Tier: Component | Test-Stufe: Component | draft | local | unversioned |
 | project | test-tier-contract | Test Tier: Contract | Test-Stufe: Contract | draft | local | unversioned |

@@ -33,6 +33,7 @@ created: ""
 - **Primary class**: <!-- bug | feature-request | spec-change | security | docs | refactor | question | infra -->
 - **Secondary class(es)**: <!-- none | <class>, ... -->
 - **Rationale**: <!-- one line -->
+- **Asserted cause verified**: <!-- none asserted | confirmed: <file:line / command output> | refuted: <measurement that showed the divergence> -->
 
 ## Scope
 

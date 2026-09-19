@@ -47,6 +47,7 @@ Leserschaft: Operatoren, die einen gruppierten Backlog-Durchlauf fahren, Skill- 
 - **MUSS [MUST]** je aufgenommenem Mitglied festhalten, welches Prädikat es aufgenommen hat und welcher Beleg dieses Prädikat stützt
 - **MUSS [MUST]** die eine logische Änderung der Gruppe in einem Satz im Gruppen-Artefakt formulieren. Dieser Satz ist es, der ein Mehr-Issue-Bündel mit der Ein-logische-Änderung-Regel aus `pull-request-workflow` §"PR-Rahmenbedingungen" versöhnt: Eine Gruppe, die die Aufnahmeprädikate erfüllt, *ist* eine logische Änderung und braucht daher keine `exp/`-Ausnahme. Ein Cluster, dessen Änderung sich nicht in einem Satz sagen lässt, ist keine Gruppe — seine Issues werden einzeln abgearbeitet
 - **MUSS [MUST]** jedes Mitglied innerhalb der *bounded*-Definition von `issue-orchestration` halten (ein Goal-Outcome, ein Pull-Request-Strang, kein neues oder umgehängtes Roadmap-Item). Ein unbeschränktes Issue wird in die formale Pipeline geroutet und **MUSS NICHT [MUST NOT]** in einer Gruppe mitgeführt werden
+- **MUSS [MUST]** je Mitglied, dessen Issue eine **Ursache** behauptet, diese Ursache vor der ersten getrackten Änderung des Mitglieds gegen den Code verifizieren, gemäß `spec/project/issue-orchestration/` §„Issue-Akquise und Durchdringung"; die Gruppenanalyse aus §E sucht eine strukturelle Ursache über die Mitglieder hinweg und ersetzt nicht die Prüfung, ob die eigene behauptete Ursache jedes Mitglieds trägt. Eine widerlegte Mitgliedsursache wird im Gruppen-Artefakt mit der Messung festgehalten, die sie widerlegte, und der Plan des Mitglieds folgt der Messung
 - **MUSS NICHT [MUST NOT]** ein Issue der Klasse `question` aufnehmen, das konstruktionsbedingt keine Work-Packages erzeugt
 - **MUSS [MUST]** der Gruppe eine stabile Id `<YYYY-MM-DD>-<slug>` geben, die wortgleich für Integrationsbranch, Artefaktpfad und Checkpoint verwendet wird, damit die drei nicht auseinanderlaufen
 - **SOLLTE [SHOULD]** eine Gruppe klein genug halten, dass ihr Bündel-Diff in einer Sitzung reviewbar ist; eine Gruppe, die darüber hinauswächst, wird in zwei Gruppen geteilt statt als unreviewbares Bündel gemergt
@@ -157,6 +158,7 @@ Leserschaft: Operatoren, die einen gruppierten Backlog-Durchlauf fahren, Skill- 
 - [ ] Jedes Mitglieds-Issue wurde nach dem `develop`-Merge mit einem Kommentar geschlossen, der den Bündel-Pull-Request, den Merge-Commit-SHA und die Gruppen-Id nennt; keines wurde stillschweigend vom Autolink der Plattform geschlossen
 - [ ] Nach dem Merge erwähnen weder `git worktree list` noch `git branch --list` den Integrationsbranch oder einen Mitglieds-Sub-Branch
 - [ ] Der Checkpoint unter `.resume/` hält einen Entscheidungseintrag für jedes Gate fest: das Schreiben des Artefakts, die Modus-Entscheidung, jeden Mitglieds-Dispatch, den Bündel-Pull-Request und jede Issue-Schließung
+- [ ] Jedes Mitglied, dessen Issue eine Ursache behauptet, hat diese Ursache vor seiner ersten getrackten Änderung gegen den Code verifiziert und im Gruppen-Artefakt festgehalten, und einer widerlegten Ursache folgt die Messung statt des Issue-Texts
 
 ## Offene Fragen
 

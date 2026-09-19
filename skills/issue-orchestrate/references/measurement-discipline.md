@@ -1,6 +1,7 @@
 # Measurement discipline
 
-Per `spec/claude/claim-provenance/` and `spec/claude/dispatch-brief/` — the three
+Per `spec/claude/claim-provenance/`, `spec/claude/dispatch-brief/`, and
+`spec/project/issue-orchestration/` §"Issue acquisition and comprehension" — the four
 points in this flow where a claim can travel further than its evidence. Each is
 written from a measured failure, not from caution.
 
@@ -21,6 +22,50 @@ branch alias, or a floating tag answers for the moment the command ran. Resolve 
 a commit SHA or a digest and re-read there before it becomes load-bearing, and check
 that two values quoted together came from the *same* revision — values that never
 co-existed compose into a false statement whose every part is separately true.
+
+## Verify an asserted cause before the first tracked change
+
+An issue that names a **cause** — "the flake comes from the fixture size", "the gate
+rejects because the token is stale" — and not only a defect makes a claim about the
+code. That claim is the author's reading, and the author had no more access to the
+code than this run has now. Before the first tracked change to the issue's files, the
+cause **MUST** be verified against the code: read the cited lines, run the reading or
+the check the cause rests on, and record the result in the pre-analysis artifact under
+`## Classification` → **Asserted cause verified**. A divergence **MUST** be recorded
+with the measurement that showed it, and the measurement wins over the issue text: the
+decomposition rests on what was observed, and the refuted cause is named as refuted so
+the dispatch brief cannot hand it on as a given.
+
+**What counts as verification.** Reading the cited lines at the cited revision. Running
+the reproduction, the query, or the checker the cause rests on and reading its output.
+Tracing the code path the issue names to the point where it does or does not do what
+the issue says.
+
+**What does not count.** Re-reading the issue, however carefully — it restates the
+claim, it does not test it. A green existing check — it may share the author's blind
+spot, and in the dependency-sweep case below the checker *was* the defect. A comment
+by another author agreeing with the cause — that is prior art, and prior art is input,
+not evidence. The absence of an obvious alternative explanation.
+
+**Proportionality.** The obligation binds only where a cause is asserted. A one-line
+typo fix, a wording change, or an issue that reports a symptom without explaining it
+acquires no ceremony; the verification is then the ordinary comprehension of operation
+1. Where a cause is asserted, the cost of verifying it is the cost of reading the lines
+it cites — cheaper than any of the outcomes below.
+
+**Background.** Five consumer cases in which following the asserted cause would have
+produced no repair, a wrong repair, or a new defect:
+
+- a **fixture-size flake** blamed on the fixture's size, where the size was not the
+  variable that flaked;
+- a **login gate** whose stated cause pointed at the wrong check, so the fix would have
+  loosened a gate that was already correct;
+- a **favourites resolver** whose asserted cause was upstream of the real one, so the
+  repair would have changed working code and left the defect in place;
+- a **favourites error clause** whose named branch was never reached, so the "fix" would
+  have added dead code and closed the issue with the defect intact;
+- a **dependency sweep** whose evidence was the author's own checker, and the checker
+  was the thing that was wrong — a green run of it was the blind spot, not the proof.
 
 ## Search the corpus before declaring a correction done
 

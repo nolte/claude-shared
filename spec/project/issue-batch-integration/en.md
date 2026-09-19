@@ -47,6 +47,7 @@ Readers: operators running a grouped backlog pass, skill and agent authors imple
 - **MUST** record, per admitted member, which predicate admitted it and the evidence for that predicate
 - **MUST** state the group's single logical change in one sentence in the group artifact. This sentence is what reconciles a multi-issue bundle with `pull-request-workflow` §PR preconditions' one-logical-change rule: a group that satisfies the admission predicates *is* one logical change, so it needs no `exp/` carve-out. A cluster whose change can't be stated in one sentence isn't a group—its issues are processed individually
 - **MUST** keep every member inside `issue-orchestration`'s *bounded* definition (one goal outcome, one pull-request strand, no new or retargeted roadmap item). An unbounded issue routes to the formal pipeline and **MUST NOT** be carried in a group
+- **MUST**, per member whose issue asserts a **cause**, verify that cause against the code before the member's first tracked change, per `spec/project/issue-orchestration/` §"Issue acquisition and comprehension"; the group analysis of §E looks for a structural cause across members and doesn't stand in for checking whether each member's own stated cause holds. A refuted member cause is recorded in the group artifact with the measurement that refuted it, and the member's plan follows the measurement
 - **MUST NOT** admit a `question`-class issue, which yields no work packages by construction
 - **MUST** assign the group a stable id `<YYYY-MM-DD>-<slug>`, used verbatim for the integration branch, the artifact path, and the checkpoint, so the three can't drift apart
 - **SHOULD** keep a group small enough that its bundle diff is reviewable in one sitting; a group larger than that gets split into two groups rather than merged as one bundle too large to review
@@ -157,6 +158,7 @@ Readers: operators running a grouped backlog pass, skill and agent authors imple
 - [ ] Every member issue was closed after the `develop` merge with a comment naming the bundle pull request, the merge-commit SHA, and the group id; none was closed silently by the platform autolink
 - [ ] After the merge, neither `git worktree list` nor `git branch --list` mentions the integration branch or any member sub-branch
 - [ ] The checkpoint under `.resume/` records a decision entry for every gate: the artifact write, the mode decision, each member dispatch, the bundle pull request, and each issue closure
+- [ ] Every member whose issue asserts a cause has that cause verified against the code before its first tracked change, recorded in the group artifact, and a refuted cause is followed by the measurement rather than by the issue text
 
 ## Open Questions
 

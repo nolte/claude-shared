@@ -174,8 +174,15 @@ Filled during implementation. Each entry records the dispatched specialist and t
 | #640 | — | `python3 scripts/validate_skills.py` (issue-orchestrate) | pre-existing Warning body ~4888/5000 tokens, Info description 977/1024; no Critical |
 | #637 | skill `nolte-shared:spec` | EN/DE parity `grep -c` on defect-class-guards | `H=11 B=36 AC=9` both |
 | #637 | — | `vale --output=line spec/project/defect-class-guards/en.md` | no output, exit 0 |
+| #641 | skill `nolte-shared:spec` (specs) + `nolte-claude-dev:claude-plugin-developer` (skills) | EN/DE parity `grep -c` on issue-orchestration / issue-batch-integration | `H=16 B=92 AC=23` both / `H=16 B=107 AC=27` both |
+| #641 | — | `vale --output=line` on both EN specs | no output, exit 0 |
+| #641 | — | `SKIP=vale-prose pre-commit run --files <9 files>` | no Failed hook |
+| #641 | — | `python3 scripts/validate_skills.py` | no Critical; issue-orchestrate body ~4965/5000 (pre-existing Warning), issue-batch-orchestrate ~3312 |
+| #641 | — | falsification against the five cases in the issue | rule fires on each (table in `.audits/issue-orchestrate/641/analysis.md`) |
 
 ## Deviations
 
 | Member | Kind | What changed |
 |---|---|---|
+| #641 | local adaptation | `skills/issue-orchestrate/templates/analysis.template.md` gained the placeholder `Asserted cause verified` under `## Classification`, because the template had no place to record the verification the new rule requires; admission, mode and ordering unchanged |
+| #637 | local adaptation | G8's EN wording reworded after commit for Vale (quoted examples → described examples); commit amended before push |

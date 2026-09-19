@@ -114,6 +114,18 @@ specialist exists.
   entries, `project/roadmap.md` items, and open pull requests that already address
   the issue in whole or in part; an issue already closed by a merged fix at the
   moment of analysis **MAY** be reported as self-resolved with no decomposition
+- **MUST**, where the issue asserts a **cause** and not only a defect, verify that cause
+  against the code before the first tracked change to the issue's files: read the cited
+  lines, run the reading or the check the cause rests on, and record the result in the
+  pre-analysis artifact. A divergence between the asserted cause and the measurement
+  **MUST** be recorded with the measurement that showed it, and the measurement wins over
+  the issue text. Reading the cited lines counts as verification; re-reading the issue
+  doesn't, and neither does a green existing check, which may share the blind spot the
+  issue does. The obligation binds only where a cause is asserted: an issue that describes
+  a defect without naming its cause acquires no ceremony, and a one-line typo fix none at
+  all. The reporter could observe the defect; the cause is a hypothesis, and five
+  consumer cases in which following it would have produced no repair, a wrong repair, or a
+  new defect are recorded in `nolte/claude-shared#641`
 - **MUST**, before decomposition, apply the requirements-elicitation consumer
   contract (`spec/project/requirements-elicitation/` §H Consumer contract, which
   names `issue-orchestrate` as a gated consumer): check whether a requirement
@@ -490,6 +502,7 @@ These criteria apply to runs started after the transient pre-analysis rule becam
   `.resume/issue-orchestrate/` records a decision entry for every externally-visible
   gate—the artifact write, each specialist dispatch, the issue comment, and the PR
   creation
+- [ ] For every orchestrated issue that asserts a cause, the pre-analysis artifact records the observation that verified or refuted it before the first tracked change, and a refuted cause is recorded with the measurement that refuted it. Applied to the five cases in `nolte/claude-shared#641` (a fixture-size flake, a login gate, a favourites resolver, a favourites error clause, a dependency sweep), the rule fires on each; a rule set that grades them as conformant is wrong
 
 ## Open Questions
 - §Routing now defines *bounded* operationally (one goal outcome, one feature branch
