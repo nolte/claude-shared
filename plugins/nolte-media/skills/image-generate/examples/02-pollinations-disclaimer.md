@@ -11,7 +11,8 @@ but two risks remain that the tool surfaces before the first generation:
 2. **No explicit output licence.** The Terms grant no ownership/licence for the generated
    images; they state *"model licences vary; verify before commercial use"* and defer to
    the underlying model's licence (this tool uses FLUX). For confidential or commercial
-   work, prefer `cloudflare` (output ownership + Apache-2.0).
+   work, prefer `cloudflare` (output ownership; FLUX.1-schnell and FLUX.2 Klein 4B are
+   Apache-2.0).
 
 ## Generate (first time → disclaimer)
 

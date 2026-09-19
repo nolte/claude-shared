@@ -19,9 +19,10 @@ wrong, not the prompt.
    disable it. A watermark-free commercial or store asset cannot come
    from this route.
 2. **Reroute recommended.** The skill steers the operator to
-   `image-generate --provider cloudflare` (FLUX.1-schnell, Apache-2.0,
-   no watermark, no public feed) as the correct path for a
-   watermark-free asset — the route is wrong, not the prompt.
+   `image-generate --provider cloudflare` (FLUX.1-schnell or FLUX.2
+   Klein 4B via `--model`, both Apache-2.0, no watermark, no public
+   feed) as the correct path for a watermark-free asset — the route is
+   wrong, not the prompt.
 3. **Does not proceed with the handoff by default.** It does not paste
    the operator into a Gemini UI flow that would only produce a
    watermarked, unusable result; if the operator insists on Gemini
