@@ -167,6 +167,11 @@ Filled during implementation. Each entry records the dispatched specialist and t
 | #642 | — | `vale --output=line …/en.md` | 1 spelling hit ("accessor") → reworded to "reader"; re-run: no output, exit 0 |
 | #642 | — | `SKIP=vale-prose pre-commit run --files <en,de>` | MD012 double blank ×4 from the insert helper → collapsed; re-run: no Failed hook |
 | #642 | — | restatement sweep `grep -rn -E "T1[–-]T9\|\bT9\b" spec skills plugins agents docs/en/guides` | 11 hits, all T9 fidelity references, none enumerates the taxonomy → no T10 restatement needed |
+| #640 | skill `nolte-shared:spec` | EN/DE parity `grep -c` on defect-class-guards / test-falsifiability | `H=11 B=34 AC=8` both / `H=17 B=102 AC=13` both |
+| #640 | — | `vale --output=line` on both EN specs | 5 spelling hits (unrepaired ×4, accessor) → reworded; re-run: no output, exit 0 |
+| #640 | — | `SKIP=vale-prose pre-commit run --files <5 files>` | no Failed hook |
+| #640 | — | restatement sweep `grep -rn -E "G1[–-]G6\|\bG[1-7]\b"` outside the spec | 2 files: `issue-orchestrate/SKILL.md:247-249` (G7 clause added), `guard-coverage-check/SKILL.md:76` (G3-only citation, unchanged) |
+| #640 | — | `python3 scripts/validate_skills.py` (issue-orchestrate) | pre-existing Warning body ~4888/5000 tokens, Info description 977/1024; no Critical |
 
 ## Deviations
 

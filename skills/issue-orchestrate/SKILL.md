@@ -246,7 +246,8 @@ run's own measurement until this gate is green — both per
 condition.** Per `spec/project/defect-class-guards/`, decide before the PR opens
 whether the fix leaves a mechanical guard that refuses the class (G1), whether that
 guard enumerates the class rather than the sites the defect was found at (G3), and
-whether its selector is as wide as the property it asserts (G6). Where no guard is
+whether its selector is as wide as the property it asserts (G6), and whether it asserts
+nothing the fix didn't repair (G7). Where no guard is
 possible, the note saying why is the deliverable and goes in the issue. Where the
 guard is too large for this change, it becomes its own referenced issue, never an
 intention in the PR body, which is lost at merge. Record the decision in the
