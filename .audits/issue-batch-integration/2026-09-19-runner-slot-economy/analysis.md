@@ -144,6 +144,9 @@ All three answered 2026-09-19 ("Ja").
 | #645 | skill `nolte-shared:spec` | EN/DE parity `grep -c` on github-actions-best-practices | `H=20 B=117 AC=21 R=13` both |
 | #645 | — | `vale --output=line …/en.md` | 4 hits (percentage wording, SHOULD NOT ×2, "diagnosability") → reworded; re-run: no output, exit 0 |
 | #645 | — | `SKIP=vale-prose pre-commit run --files <en,de>` | no Failed hook |
+| #646 | skill `nolte-shared:spec` | EN/DE parity `grep -c` on workflow-health | `H=20 B=89 AC=19` both |
+| #646 | — | `vale --output=line …/en.md` | 2 hits (auto-merge, quote punctuation) → reworded; re-run: no output, exit 0 |
+| #646 | — | `SKIP=vale-prose pre-commit run --files <en,de,spec/README.md>` | no Failed hook |
 
 ## Deviations
 
