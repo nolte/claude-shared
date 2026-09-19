@@ -12,6 +12,8 @@ import json
 import re
 import sys
 import urllib.error
+from email import policy
+from email.parser import BytesParser
 from io import BytesIO
 from pathlib import Path
 from unittest import mock
@@ -532,17 +534,48 @@ KLEIN_ID = "@cf/black-forest-labs/flux-2-klein-4b"
 
 
 def _multipart(m, call: int = 0):
-    """Return (url, content_type, {part_name: {"headers": str, "body": bytes}})."""
+    """Return (url, content_type, {part_name: {"headers": str, "body": bytes}}).
+
+    Asserts RFC 2046 framing byte for byte on the way through — a dropped CRLF, a
+    missing blank line after a header block, or a missing closing delimiter fails
+    here rather than silently producing a body Cloudflare would reject.
+    """
     req = m.call_args_list[call].args[0]
     ctype = req.get_header("Content-type")
     boundary = ctype.split("boundary=", 1)[1]
+    body, marker = req.data, b"--" + boundary.encode()
+
+    assert body.startswith(marker + b"\r\n"), "body must open with the first delimiter"
+    assert body.endswith(marker + b"--\r\n"), "body must end with the closing delimiter"
+    idx = body.find(marker, 1)
+    while idx != -1:
+        assert body[idx - 2:idx] == b"\r\n", f"delimiter at offset {idx} not preceded by CRLF"
+        idx = body.find(marker, idx + len(marker))
+
     parts = {}
-    for chunk in req.data.split(b"--" + boundary.encode()):
+    for chunk in body.split(marker):
         if not chunk.strip(b"-\r\n"):
             continue
-        head, _, body = chunk.lstrip(b"\r\n").partition(b"\r\n\r\n")
+        head, sep, raw = chunk.lstrip(b"\r\n").partition(b"\r\n\r\n")
+        assert sep == b"\r\n\r\n", f"header block not terminated by a blank line: {head!r}"
+        assert raw.endswith(b"\r\n"), "part payload must be followed by CRLF"
         name = re.search(r'name="([^"]+)"', head.decode()).group(1)
-        parts[name] = {"headers": head.decode(), "body": body[:-2] if body.endswith(b"\r\n") else body}
+        parts[name] = {"headers": head.decode(), "body": raw[:-2]}
+
+    # Cross-check with a real MIME parser: escaping and framing must survive it.
+    parsed = BytesParser(policy=policy.default).parsebytes(
+        b"Content-Type: " + ctype.encode() + b"\r\n\r\n" + body
+    )
+    assert parsed.is_multipart(), "a real MIME parser must see a multipart body"
+    seen = {}
+    for part in parsed.iter_parts():
+        name = part.get_param("name", header="content-disposition")
+        seen[name] = {"filename": part.get_filename(), "body": part.get_payload(decode=True)}
+    assert set(seen) == set(parts), f"parser saw {sorted(seen)}, splitter saw {sorted(parts)}"
+    for name, got in seen.items():
+        assert got["body"] == parts[name]["body"], f"payload mismatch for part {name!r}"
+        if got["filename"] is not None:
+            parts[name]["filename"] = got["filename"]
     return req.full_url, ctype, parts
 
 
@@ -688,3 +721,120 @@ def test_no_credentials_leak_into_a_klein_multipart_body(state, cf_env, capsys):
         assert secret not in body  # the token travels in the Authorization header only
         assert secret.decode() not in sidecar
         assert secret.decode() not in err
+
+
+# --------------------------------------------------------------------------- #
+# Reference-image filename handling (SCR-001/SEC-001): a basename is attacker-
+# influenced input that lands in a Content-Disposition header, so it must be
+# escaped there while the sidecar keeps the untouched original.
+# --------------------------------------------------------------------------- #
+def _hostile_ref_image(state):
+    """Create a ref image whose basename carries a quote (and CR/LF where allowed)."""
+    for name in ('a"b\r\nc.png', 'a"b.png'):
+        path = state / name
+        try:
+            path.write_bytes(PNG)
+        except OSError:  # filesystem refuses CR/LF in names -> fall back to the quote
+            continue
+        return path
+    raise AssertionError("could not create a reference image with a quote in its name")
+
+
+def test_ref_image_filename_is_escaped_in_the_part_header(state, cf_env):
+    ref = _hostile_ref_image(state)
+    code, m = run(["--prompt", "x", "--out", str(state / "k.png"), "--ref-image", str(ref)] + KLEIN,
+                  cloudflare_json(PNG))
+    assert code == 0
+    _, _, parts = _multipart(m)
+    head = parts["input_image_0"]["headers"]
+    assert '\\"' in head, f"the quote in the filename was not escaped: {head!r}"
+    assert '"; filename="' in head  # name= parameter still terminates correctly
+    for line in head.split("\r\n"):
+        assert "\r" not in line and "\n" not in line
+    assert head.count("Content-Disposition:") == 1  # no injected extra header
+    # A real MIME parser recovers the sanitized name, not a truncated one.
+    assert parts["input_image_0"]["filename"] == ref.name.replace("\r", "").replace("\n", "")
+    assert parts["input_image_0"]["body"] == PNG
+    refs = json.loads((state / "k.png.meta.json").read_text())["reference_images"]
+    assert refs[0]["name"] == ref.name  # the sidecar keeps the original basename
+
+
+def test_encode_multipart_sanitizes_crlf_in_filename_and_content_type():
+    body, _ = ig._encode_multipart({}, [("f", "a\r\nX-Evil: 1\rb.png", "image/png\r\nX-Evil: 2", b"d")])
+    head = body.split(b"\r\n\r\n", 1)[0].decode()
+    lines = head.split("\r\n")
+    assert len(lines) == 3 and lines[0].startswith("--")  # delimiter + exactly two headers
+    assert lines[1].startswith('Content-Disposition: form-data; name="f"; filename="')
+    assert lines[2] == "Content-Type: image/pngX-Evil: 2"  # CRLF stripped, no third header
+    assert "X-Evil: 1" in lines[1]  # kept, but inside the quoted filename
+
+
+def test_encode_multipart_falls_back_when_the_filename_sanitizes_to_nothing():
+    body, _ = ig._encode_multipart({}, [("f", "\r\n", "image/png", b"d")])
+    assert b'filename="image"' in body
+
+
+# --------------------------------------------------------------------------- #
+# Klein base64 responses carry no content type, so the sidecar MIME comes from
+# magic bytes (SCR-003).
+# --------------------------------------------------------------------------- #
+WEBP = b"RIFF\x20\x00\x00\x00WEBPVP8 rest"
+UNKNOWN = b"\x00\x01\x02not-an-image"
+
+
+@pytest.mark.parametrize(
+    "payload, expected",
+    [(JPEG, "image/jpeg"), (WEBP, "image/webp"), (UNKNOWN, "image/png")],
+    ids=["jpeg-magic", "webp-magic", "unknown-falls-back-to-png"],
+)
+def test_cloudflare_klein_sidecar_mime_comes_from_the_magic_bytes(state, cf_env, payload, expected):
+    out = state / "k.png"
+    code, _ = run(["--prompt", "x", "--out", str(out)] + KLEIN, cloudflare_json(payload))
+    assert code == 0
+    assert out.read_bytes() == payload
+    assert json.loads((state / "k.png.meta.json").read_text())["mime_type"] == expected
+
+
+# --------------------------------------------------------------------------- #
+# Klein error paths (SCR-004/SEC-005): every malformed response shape exits 1
+# with a readable message — never an AttributeError traceback.
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize(
+    "response, expected_fragment",
+    [
+        (_FakeResp(b"", "image/png"), "no image data"),
+        (_FakeResp(b"[1, 2]", "application/json"), "no image data"),
+        (_FakeResp(b"<html>gateway</html>", "application/json"), "malformed"),
+        (_FakeResp(json.dumps({"result": {"image": "!!!not base64!!!"}}).encode(),
+                   "application/json"), "undecodable"),
+        (_FakeResp(json.dumps({"result": [1, 2]}).encode(), "application/json"), "no image data"),
+    ],
+    ids=["empty-image-body", "json-not-an-object", "non-json-json-type",
+         "undecodable-base64", "result-not-an-object"],
+)
+def test_cloudflare_klein_malformed_responses_exit_one_without_a_traceback(
+    state, cf_env, capsys, response, expected_fragment
+):
+    code, _ = run(["--prompt", "x", "--out", str(state / "k.png")] + KLEIN, response)
+    assert code == ig.EXIT_ERROR
+    err = capsys.readouterr().err
+    assert expected_fragment in err.lower()
+    assert err.startswith("error: ")
+    assert "Traceback" not in err
+    assert not (state / "k.png").exists()
+
+
+def test_schnell_survives_a_result_that_is_not_an_object(state, cf_env, capsys):
+    # SEC-005 on the JSON path: `(resp.get("result") or {}).get(...)` used to raise.
+    code, _ = run(["--prompt", "x", "--out", str(state / "s.png")],
+                  _FakeResp(json.dumps({"result": [1, 2]}).encode(), "application/json"))
+    assert code == ig.EXIT_ERROR
+    assert "no image data" in capsys.readouterr().err.lower()
+
+
+def test_klein_gate_uses_the_named_registry_key(state):
+    # SCR-005: the --ref-image gate compares against the registry key, not a literal.
+    assert ig.CloudflareProvider.KLEIN_MODEL_KEY in ig.CloudflareProvider.MODELS
+    assert ig.CloudflareProvider.KLEIN_MODEL == ig.CloudflareProvider.MODELS[
+        ig.CloudflareProvider.KLEIN_MODEL_KEY
+    ]

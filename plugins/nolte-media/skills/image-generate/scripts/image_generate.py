@@ -151,6 +151,22 @@ def _post_json(url: str, body: dict, headers: dict, key_page: str | None) -> dic
         raise GenerationError("the provider returned a malformed (non-JSON) response") from exc
 
 
+def _header_line_safe(value: str) -> str:
+    """Drop CR and LF so a caller-supplied value can never inject a header line."""
+    return value.replace("\r", "").replace("\n", "")
+
+
+def _quoted_filename(filename: str) -> str:
+    """Escape a filename for an RFC 2183 quoted-string ``filename="..."`` parameter.
+
+    CR/LF are removed first (header injection), then ``\\`` and ``"`` are escaped so
+    the value cannot terminate the quoted string early. An empty result falls back
+    to ``image`` — a part without a usable filename still needs one.
+    """
+    safe = _header_line_safe(filename).replace("\\", "\\\\").replace('"', '\\"')
+    return safe or "image"
+
+
 def _encode_multipart(
     fields: dict[str, str],
     files: list[tuple[str, str, str, bytes]] | None = None,
@@ -158,8 +174,9 @@ def _encode_multipart(
     """Encode form fields and files as multipart/form-data; return (body, content_type).
 
     Stdlib-only by design (no `requests`). ``files`` entries are
-    ``(field_name, filename, content_type, data)``. The boundary is random per
-    call, so it can never collide with payload bytes.
+    ``(field_name, filename, content_type, data)``; ``filename`` and
+    ``content_type`` are sanitized here, so every caller is covered. The boundary
+    is random per call, so it can never collide with payload bytes.
     """
     boundary = "----imageGenerate" + secrets.token_hex(16)
     marker = f"--{boundary}".encode("ascii")
@@ -171,8 +188,9 @@ def _encode_multipart(
     for name, filename, content_type, data in files or []:
         out += marker + b"\r\n"
         out += (
-            f'Content-Disposition: form-data; name="{name}"; filename="{filename}"\r\n'
-            f"Content-Type: {content_type}\r\n\r\n"
+            f'Content-Disposition: form-data; name="{name}"; '
+            f'filename="{_quoted_filename(filename)}"\r\n'
+            f"Content-Type: {_header_line_safe(content_type)}\r\n\r\n"
         ).encode("utf-8")
         out += data + b"\r\n"
     out += marker + b"--\r\n"
@@ -194,6 +212,23 @@ def _post_multipart(
         method="POST",
     )
     return _request(req, key_page)
+
+
+def _result_image(resp: object) -> str | None:
+    """Pull ``result.image`` out of a provider envelope.
+
+    Returns None when ``result`` is absent, null, or not an object — a malformed
+    envelope is "no image data", not an AttributeError traceback.
+    """
+    result = resp.get("result") if isinstance(resp, dict) else None
+    return result.get("image") if isinstance(result, dict) else None
+
+
+def _envelope_errors(resp: object) -> object:
+    """Best-effort operator-facing detail from a response that carried no image."""
+    if not isinstance(resp, dict):
+        return resp
+    return resp.get("errors") or resp.get("messages")
 
 
 def _sniff_image_mime(raw: bytes) -> str:
@@ -251,7 +286,8 @@ class CloudflareProvider(Provider):
         "flux-2-klein-4b": "@cf/black-forest-labs/flux-2-klein-4b",
     }
     DEFAULT_MODEL = "flux-1-schnell"
-    KLEIN_MODEL = MODELS["flux-2-klein-4b"]
+    KLEIN_MODEL_KEY = "flux-2-klein-4b"
+    KLEIN_MODEL = MODELS[KLEIN_MODEL_KEY]
     MAX_REF_IMAGES = 4
     model = MODELS[DEFAULT_MODEL]
     KEY_PAGE = "https://dash.cloudflare.com/profile/api-tokens"
@@ -290,9 +326,9 @@ class CloudflareProvider(Provider):
             if seed is not None:
                 body["seed"] = seed + i
             resp = _post_json(url, body, headers, self.KEY_PAGE)
-            b64 = (resp.get("result") or {}).get("image")
+            b64 = _result_image(resp)
             if not b64:
-                errs = resp.get("errors") or resp.get("messages")
+                errs = _envelope_errors(resp)
                 raise GenerationError(f"Cloudflare returned no image data: {errs}")
             try:
                 images.append(("image/jpeg", base64.b64decode(b64)))
@@ -336,9 +372,9 @@ class CloudflareProvider(Provider):
             ) from exc
         if not isinstance(resp, dict):
             raise GenerationError(f"Cloudflare returned no image data: {resp!r}")
-        b64 = (resp.get("result") or {}).get("image")
+        b64 = _result_image(resp)
         if not b64:
-            errs = resp.get("errors") or resp.get("messages")
+            errs = _envelope_errors(resp)
             raise GenerationError(f"Cloudflare returned no image data: {errs}")
         try:
             data = base64.b64decode(b64)
@@ -599,7 +635,7 @@ def write_sidecar(image_path: Path, prompt: str, mime: str, provider: Provider) 
         "timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "mime_type": mime,
         # Only the basename and digest: never the bytes, never an absolute path.
-        **({"reference_images": provider.reference_images} if getattr(provider, "reference_images", None) else {}),
+        **({"reference_images": provider.reference_images} if provider.reference_images else {}),
     }
     sidecar = image_path.with_name(image_path.name + ".meta.json")
     sidecar.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -703,7 +739,7 @@ def check_model_options(args: argparse.Namespace) -> None:
     selected = args.model or (
         CloudflareProvider.DEFAULT_MODEL if args.provider == "cloudflare" else args.provider
     )
-    if args.provider != "cloudflare" or args.model != "flux-2-klein-4b":
+    if args.provider != "cloudflare" or args.model != CloudflareProvider.KLEIN_MODEL_KEY:
         raise GenerationError(
             "--ref-image requires --provider cloudflare --model flux-2-klein-4b; "
             f"'{selected}' does not accept reference images",
