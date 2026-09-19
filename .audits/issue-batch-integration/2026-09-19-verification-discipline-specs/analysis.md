@@ -163,6 +163,10 @@ Filled during implementation. Each entry records the dispatched specialist and t
 | #636 | — | `vale --output=line spec/project/test-falsifiability/en.md` | no output, exit 0 |
 | #636 | — | `SKIP=vale-prose pre-commit run --files <en,de>` | no Failed hook |
 | #636 | — | `python3 scripts/validate_skills.py` (test-pyramid-check) | no new finding; pre-existing Info description 1004/1024 |
+| #642 | skill `nolte-shared:spec` | EN/DE parity `grep -c` on test-falsifiability | `en H=17 B=101 AC=13` / `de H=17 B=101 AC=13` |
+| #642 | — | `vale --output=line …/en.md` | 1 spelling hit ("accessor") → reworded to "reader"; re-run: no output, exit 0 |
+| #642 | — | `SKIP=vale-prose pre-commit run --files <en,de>` | MD012 double blank ×4 from the insert helper → collapsed; re-run: no Failed hook |
+| #642 | — | restatement sweep `grep -rn -E "T1[–-]T9\|\bT9\b" spec skills plugins agents docs/en/guides` | 11 hits, all T9 fidelity references, none enumerates the taxonomy → no T10 restatement needed |
 
 ## Deviations
 
