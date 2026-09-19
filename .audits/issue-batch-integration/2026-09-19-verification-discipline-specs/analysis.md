@@ -172,6 +172,8 @@ Filled during implementation. Each entry records the dispatched specialist and t
 | #640 | — | `SKIP=vale-prose pre-commit run --files <5 files>` | no Failed hook |
 | #640 | — | restatement sweep `grep -rn -E "G1[–-]G6\|\bG[1-7]\b"` outside the spec | 2 files: `issue-orchestrate/SKILL.md:247-249` (G7 clause added), `guard-coverage-check/SKILL.md:76` (G3-only citation, unchanged) |
 | #640 | — | `python3 scripts/validate_skills.py` (issue-orchestrate) | pre-existing Warning body ~4888/5000 tokens, Info description 977/1024; no Critical |
+| #637 | skill `nolte-shared:spec` | EN/DE parity `grep -c` on defect-class-guards | `H=11 B=36 AC=9` both |
+| #637 | — | `vale --output=line spec/project/defect-class-guards/en.md` | no output, exit 0 |
 
 ## Deviations
 
