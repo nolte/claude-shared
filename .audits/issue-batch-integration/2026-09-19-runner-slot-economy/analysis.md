@@ -147,9 +147,13 @@ All three answered 2026-09-19 ("Ja").
 | #646 | skill `nolte-shared:spec` | EN/DE parity `grep -c` on workflow-health | `H=20 B=89 AC=19` both |
 | #646 | — | `vale --output=line …/en.md` | 2 hits (auto-merge, quote punctuation) → reworded; re-run: no output, exit 0 |
 | #646 | — | `SKIP=vale-prose pre-commit run --files <en,de,spec/README.md>` | no Failed hook |
+| #647 | `nolte-claude-dev:claude-plugin-developer` | `python3 scripts/validate_skills.py` | exit 0, 0 Critical; bodies ~3012 / ~4189 / ~2670 tokens; design description 949 chars |
+| #647 | — | `pre-commit run --files <4 files>` (all hooks) | no Failed hook |
+| #647 | — | `python3 scripts/check_section_refs.py` | exit 0; §"Runner-slot economy" and §"Cancellation rates" resolve |
 
 ## Deviations
 
 | Member | Kind | What changed |
 |---|---|---|
 | #645 | local adaptation | section placed as §L after §K instead of after §I, keeping §J/§K letters stable; two SHOULD NOT rules phrased as SHOULD (Vale) with identical meaning |
+| #647 | local adaptation | stand-alone sub-minute-job check graded Suggestion instead of Warning, per the reviewer agent's own §Severity scale; gate-in-`needs:` stays Warning |

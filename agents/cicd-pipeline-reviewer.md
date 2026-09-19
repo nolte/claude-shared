@@ -56,7 +56,7 @@ Audit `.github/workflows/`, the `Taskfile.yml` targets those workflows invoke, t
 Work in three passes, and keep the read volume proportional to the finding set:
 
 1. **Enumerate with `Glob`.** Resolve the review surface before reading any of it: `.github/workflows/*.{yml,yaml}`, `Taskfile.yml`, the lock files, `Dockerfile*`, and any chart directory. An audit that misses a workflow file reports a clean pipeline that isn't one.
-2. **Locate with `Grep`.** Sweep the enumerated set for the patterns the checks below turn on — `uses:` references, `permissions:`, `${{` interpolation inside `run:` blocks, `concurrency:`, cache `key:` and `restore-keys:`, `continue-on-error`, `|| true`, `runs-on:` values, and `secrets:` forwarding. Grep locates candidates; it never decides a verdict.
+2. **Locate with `Grep`.** Sweep the enumerated set for the patterns the checks below turn on — `uses:` references, `permissions:`, `${{` interpolation inside `run:` blocks, `concurrency:`, cache `key:` and `restore-keys:`, `continue-on-error`, `|| true`, `runs-on:` values, `needs:` edges, and `secrets:` forwarding. Grep locates candidates; it never decides a verdict.
 3. **Read with `Read`.** Open each candidate's surrounding context before recording a finding, so a rule is judged against what the file actually does rather than against a matching line. Every finding carries the `file:line` this pass established.
 
 Reading the three governing specs plus the neighbours named above is part of pass 3, not optional context.
@@ -93,18 +93,20 @@ Reading the three governing specs plus the neighbours named above is part of pas
 - **Reuse** (§E): a consumer-local patch of shared logic with no recorded interim-measure note; a reusable workflow assuming ambient environment values instead of declared inputs.
 - **Concurrency** (§F): a missing concurrency group where concurrent runs would interfere; a group expression that lets different branches cancel each other; cancel-on-new-run on a delivery or release workflow.
 - **Runners** (§I): a public repository targeting a self-hosted runner; a job depending on state left by a previous run.
+- **Slot cost** (§L): a job whose steps plausibly finish in well under a minute (a single linter, formatter, or changes-filter step) and that has none of §L's four reasons to be separate—a different runner image, different `permissions`, matrix parallelism, or a required status check under its own name. Judged from the file alone; no runtime is measured.
+- **Gate in the chain** (§L): a sub-minute gate job listed in `needs:` ahead of the expensive jobs, so each dependency hop costs a full slot wait under a saturated pool.
 
 ## Severity
 
 - **Critical** — a rule violation that lets a wrong result ship or a credential leak: an unpinned third-party action, an untrusted value interpolated into a script, untrusted code checked out with secrets in scope, a required stage that can't fail, a vacuous test stage, a mutable published version reference, a bypassed pre-publish gate, a public repository on a self-hosted runner.
-- **Warning** — a rule violation that degrades reproducibility or blast radius without an immediate path to a wrong result: a floating toolchain reference, a cache key missing a determining input, permissions wider than needed, a missing concurrency group, an artifact class with no securing stage, a rollback path that rebuilds.
-- **Suggestion** — a SHOULD-level deviation or a maintainability concern: a digest without a version comment, a deep reusable-workflow chain, an extraction candidate duplicated across repositories, an unrehearsed rollback path.
+- **Warning** — a rule violation that degrades reproducibility or blast radius without an immediate path to a wrong result: a floating toolchain reference, a cache key missing a determining input, permissions wider than needed, a missing concurrency group, an artifact class with no securing stage, a rollback path that rebuilds, a sub-minute gate job in `needs:` ahead of the expensive jobs.
+- **Suggestion** — a SHOULD-level deviation or a maintainability concern: a digest without a version comment, a deep reusable-workflow chain, an extraction candidate duplicated across repositories, an unrehearsed rollback path, a stand-alone sub-minute job with none of §L's four reasons.
 
 ## Delimitation
 
 - **Don't** report a rule owned by another spec as a finding of these three. Quality-gate composition belongs to `quality-gate-enforcer`; which workflows must exist belongs to `branching-model`; required status checks belong to `pull-request-workflow`; the `GITHUB_TOKEN` event-cascade constraint belongs to `workflow-health`. Note them as context if useful, never as findings here.
 - **Don't** triage a red run. A failing workflow is `workflow-health-triage`'s subject; you audit the definition, not the execution.
-- **Don't** propose a runtime threshold. Efficiency is a guide in these specs, not a gate, so a slow pipeline isn't a finding unless a rule was broken to make it fast.
+- **Don't** propose a runtime threshold. Efficiency is a guide in these specs, not a gate, so a slow pipeline isn't a finding unless a rule was broken to make it fast. The §L checks above are shape checks on the workflow file, not runtime measurements; measuring wait against work is the `cicd-pipeline-design` skill's reference recipe, not this agent's.
 - **Don't** quote upstream platform limits as fixed numbers. Where a limit matters, cite the spec's reference rather than a value that goes stale.
 
 ## Output

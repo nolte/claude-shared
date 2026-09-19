@@ -1,6 +1,6 @@
 ---
 name: cicd-pipeline-design
-description: "Designs, scaffolds, and audits a repository's CI/CD pipeline against spec/project/continuous-integration/ (pre-merge stage sequence, reproducible inputs, cache discipline, local↔CI parity), spec/project/continuous-delivery/ (artifact immutability, provenance, the artifact-to-securing-stage matrix, rollback, the handover boundary to deployment), and spec/project/github-actions-best-practices/ (digest pinning, least-privilege permissions, untrusted input, short-lived credentials, reusable-workflow reuse, concurrency, caching). Writes and patches workflow files in the target repository. Invoke when the user asks to design, set up, rework, harden, or audit a CI/CD pipeline or GitHub Actions workflows; also German. Don't use to triage a red run (`workflow-health-triage`), run the gate (`quality-gate`), or publish a release (`release-publish-trigger`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
+description: "Designs, scaffolds, and audits a repository's CI/CD pipeline against spec/project/continuous-integration/ (pre-merge stage sequence, reproducible inputs, cache discipline, local↔CI parity), spec/project/continuous-delivery/ (artifact immutability, provenance, the artifact-to-securing-stage matrix, rollback, the handover boundary to deployment), and spec/project/github-actions-best-practices/ (digest pinning, least-privilege permissions, untrusted input, short-lived credentials, reusable-workflow reuse, concurrency, caching, runner-slot economy). Writes and patches workflow files in the target repository. Invoke when the user asks to design, set up, rework, harden, or audit a CI/CD pipeline or GitHub Actions workflows; also German. Don't use to triage a red run (`workflow-health-triage`), run the gate (`quality-gate`), or publish a release (`release-publish-trigger`). Supports resume on re-invocation per `spec/claude/resumable-work/`."
 resumable: true
 tags: [scaffolding, release]
 phase: design
@@ -69,7 +69,7 @@ If any is missing, stop and say so. These specs are the input; without them ther
 Produces a proposed stage set and the reasoning behind it. Writes nothing.
 
 1. **Detect the project type and its artifact classes.** Read the repository: lock files, `Taskfile.yml`, `.github/workflows/`, the container and chart definitions, and `project/portfolio.yml` where present. Resolve the artifact classes against `spec/project/release-artifact/` §Artefact taxonomy—never re-enumerate that taxonomy, read it.
-2. **Map the canonical stage sequence onto the repository** per `continuous-integration` §A. For every stage the repository doesn't need, record the omission and its reason; a silent omission is what §A forbids.
+2. **Map the canonical stage sequence onto the repository** per `continuous-integration` §A. For every stage the repository doesn't need, record the omission and its reason; a silent omission is what §A forbids. The slot budget is a design input here per `github-actions-best-practices` §"Runner-slot economy": don't scaffold one job per check by reflex. Sub-minute work stays inside an existing job unless one of §L's four reasons applies (different runner image, different `permissions`, matrix parallelism, its own name as a required status check), and a sub-minute gate stays out of `needs:` ahead of expensive jobs. Read `references/slot-capacity-measurement.md` when the operator reports a slow pipeline or when the stage set exceeds a handful of jobs per pull request, to separate wait from work before deciding.
 3. **Order for feedback** per §B: cheapest-with-broadest-coverage first. Name which stages are required and which are advisory, and confirm the split with the operator—an advisory stage that can't fail is the failure mode §B calls out.
 4. **Derive the artifact-to-securing-stage matrix** per `continuous-delivery` §D: for each artifact class the project ships, which delivery stage secures it and which guarantee it carries (`built-from-source`, `integrity`, `provenance`, `policy-cleared`). An artifact class with no securing stage is a defect to surface, not a gap to leave.
 5. **Locate the handover boundary** per `continuous-delivery` §F: name the artifact reference the deployment side consumes. Stop there.
@@ -108,6 +108,10 @@ Applies an agreed design to disk.
 - Read `examples/01-design-greenfield-pipeline.md` when running `design` against a repository that has only its release workflows and needs a full stage set derived.
 - Read `examples/02-audit-existing-workflows.md` when running `audit` over existing workflow files and deciding which findings to fix in place versus route elsewhere.
 - Read `examples/03-upstream-work-package.md` when a finding's correct remedy lives in `nolte/gh-plumbing` and the consumer repository must be left alone.
+
+## References
+
+- Read `references/slot-capacity-measurement.md` when a pipeline is reported slow, when `design` produces many small jobs per pull request, or when `audit` needs the wait-versus-work reading behind a `github-actions-best-practices` §"Runner-slot economy" finding. It carries the REST reads, the three derived numbers, the account-wide sweep, and the reading rule shared with `workflow-health` §"Cancellation rates".
 
 ## Gotchas
 
