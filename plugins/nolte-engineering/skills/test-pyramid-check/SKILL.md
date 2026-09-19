@@ -75,6 +75,7 @@ Per `spec/project/test-falsifiability/`, a tier whose tests can't fail isn't cov
 - Assertions consisting solely of a negative ("no error shown") with no paired positive assertion (T2)
 - Duplicate selector values under differently named locator constants in E2E page objects (T6)
 - Test functions whose body holds no assertion statement and no call to an asserting helper, and assertions sitting after an unconditional early return (T8) — a documented smoke test naming that contract is exempt
+- A pre-state captured into a local that no later assertion reads (`before = page.count()`), so the after-vs-before comparison the test claims never executes (T8) — **not** part of this grep sweep: the static-analysis tier's unused-local rule (`ruff F841` or the linter's equivalent) catches it per `spec/project/test-falsifiability/` §"Detection: Static criteria". When that tier is missing or disabled for test code, the report's "Falsifiability suspects" section points at that lane rather than claiming the sweep covered it
 
 Flag each hit by file with its T-category, exclude flagged tests from every tier's effective count in the report, and route each hit to the owning tier reviewer for the graded review.
 

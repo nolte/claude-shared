@@ -159,6 +159,10 @@ Filled during implementation. Each entry records the dispatched specialist and t
 
 | Member | Specialist | Check | Actual output |
 |---|---|---|---|
+| #636 | skill `nolte-shared:spec` (spec) + `nolte-claude-dev:claude-plugin-developer` (skill) | EN/DE parity `grep -c` on test-falsifiability | `en H=17 B=94 AC=11` / `de H=17 B=94 AC=11` |
+| #636 | — | `vale --output=line spec/project/test-falsifiability/en.md` | no output, exit 0 |
+| #636 | — | `SKIP=vale-prose pre-commit run --files <en,de>` | no Failed hook |
+| #636 | — | `python3 scripts/validate_skills.py` (test-pyramid-check) | no new finding; pre-existing Info description 1004/1024 |
 
 ## Deviations
 
