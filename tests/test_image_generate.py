@@ -7,6 +7,7 @@ No real network calls: every test that exercises a provider mocks
 from __future__ import annotations
 
 import base64
+import hashlib
 import json
 import re
 import sys
@@ -519,3 +520,171 @@ def test_flag_guard_counts_aliases():
     parser = argparse.ArgumentParser()
     parser.add_argument("-o", "--out")
     assert {"-o", "--out"} <= _option_strings(parser)
+
+
+# --------------------------------------------------------------------------- #
+# Cloudflare model selection (#638): FLUX.2 [klein] 4B via --model. The klein-4b
+# endpoint takes multipart/form-data only and fixes steps server-side, so the
+# request shape is the thing to pin; the schnell path must stay byte-identical.
+# --------------------------------------------------------------------------- #
+KLEIN = ["--model", "flux-2-klein-4b"]
+KLEIN_ID = "@cf/black-forest-labs/flux-2-klein-4b"
+
+
+def _multipart(m, call: int = 0):
+    """Return (url, content_type, {part_name: {"headers": str, "body": bytes}})."""
+    req = m.call_args_list[call].args[0]
+    ctype = req.get_header("Content-type")
+    boundary = ctype.split("boundary=", 1)[1]
+    parts = {}
+    for chunk in req.data.split(b"--" + boundary.encode()):
+        if not chunk.strip(b"-\r\n"):
+            continue
+        head, _, body = chunk.lstrip(b"\r\n").partition(b"\r\n\r\n")
+        name = re.search(r'name="([^"]+)"', head.decode()).group(1)
+        parts[name] = {"headers": head.decode(), "body": body[:-2] if body.endswith(b"\r\n") else body}
+    return req.full_url, ctype, parts
+
+
+def test_cloudflare_klein_sends_multipart_with_size_and_no_steps(state, cf_env):
+    out = state / "k.png"
+    code, m = run(["--prompt", "a fox", "--out", str(out), "--width", "1280", "--height", "720"] + KLEIN,
+                  cloudflare_json(PNG))
+    assert code == 0
+    url, ctype, parts = _multipart(m)
+    assert ctype.startswith("multipart/form-data; boundary=")
+    assert url.endswith("/ai/run/" + KLEIN_ID)
+    assert parts["prompt"]["body"] == b"a fox"
+    assert parts["width"]["body"] == b"1280"
+    assert parts["height"]["body"] == b"720"
+    assert "steps" not in parts  # the endpoint fixes steps at 4; sending it is rejected
+    assert b'name="steps"' not in m.call_args.args[0].data
+    assert json.loads((state / "k.png.meta.json").read_text())["model"] == KLEIN_ID
+
+
+def test_cloudflare_klein_accepts_base64_json_response(state, cf_env):
+    out = state / "k.png"
+    code, _ = run(["--prompt", "x", "--out", str(out)] + KLEIN, cloudflare_json(PNG))
+    assert code == 0
+    assert out.read_bytes() == PNG
+    assert json.loads((state / "k.png.meta.json").read_text())["mime_type"] == "image/png"
+
+
+def test_cloudflare_klein_accepts_raw_image_bytes_response(state, cf_env):
+    out = state / "k.png"
+    code, _ = run(["--prompt", "x", "--out", str(out)] + KLEIN, _FakeResp(PNG, "image/png"))
+    assert code == 0
+    assert out.read_bytes() == PNG
+    assert json.loads((state / "k.png.meta.json").read_text())["mime_type"] == "image/png"
+
+
+def test_cloudflare_without_model_keeps_the_schnell_json_body(state, cf_env):
+    code, m = run(["--prompt", "a fox", "--out", str(state / "s.png")], cloudflare_json())
+    assert code == 0
+    req = m.call_args.args[0]
+    assert req.get_header("Content-type") == "application/json"
+    assert json.loads(req.data) == {"prompt": "a fox", "steps": 4}
+    assert json.loads((state / "s.png.meta.json").read_text())["model"] == "@cf/black-forest-labs/flux-1-schnell"
+
+
+def test_unknown_model_is_a_usage_error(state):
+    with pytest.raises(SystemExit) as exc:
+        ig.main(["--model", "nonsense", "--prompt", "x", "--out", str(state / "x.png")])
+    assert exc.value.code == 2
+
+
+def test_model_on_a_non_cloudflare_provider_is_a_usage_error(state, capsys):
+    code, m = run(["--provider", "pollinations", "--prompt", "x", "--out", str(state / "x.png"),
+                   "--accept-data-policy"] + KLEIN)
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    assert "--model" in capsys.readouterr().err
+
+
+def test_schnell_warns_that_it_ignores_width_and_height(state, cf_env, capsys):
+    code, m = run(["--prompt", "x", "--out", str(state / "s.png"), "--width", "512"], cloudflare_json())
+    assert code == 0
+    err = capsys.readouterr().err.lower()
+    assert "width" in err and "height" in err and "ignore" in err
+    assert "width" not in json.loads(m.call_args.args[0].data)
+
+
+def test_cloudflare_klein_increments_the_seed_per_image(state, cf_env):
+    code, m = run(["--prompt", "x", "-n", "2", "--seed", "7", "--out", str(state / "k.png")] + KLEIN,
+                  cloudflare_json(PNG))
+    assert code == 0
+    assert m.call_count == 2
+    assert [_multipart(m, i)[2]["seed"]["body"] for i in (0, 1)] == [b"7", b"8"]
+
+
+def _ref_files(state):
+    (state / "a.png").write_bytes(PNG)
+    (state / "b.jpg").write_bytes(JPEG)
+    return str(state / "a.png"), str(state / "b.jpg")
+
+
+def test_cloudflare_klein_uploads_reference_images_and_records_their_digests(state, cf_env):
+    a, b = _ref_files(state)
+    code, m = run(["--prompt", "x", "--out", str(state / "k.png"),
+                   "--ref-image", a, "--ref-image", b] + KLEIN, cloudflare_json(PNG))
+    assert code == 0
+    _, _, parts = _multipart(m)
+    assert parts["input_image_0"]["body"] == PNG
+    assert 'filename="a.png"' in parts["input_image_0"]["headers"]
+    assert "Content-Type: image/png" in parts["input_image_0"]["headers"]
+    assert parts["input_image_1"]["body"] == JPEG
+    assert 'filename="b.jpg"' in parts["input_image_1"]["headers"]
+    assert "Content-Type: image/jpeg" in parts["input_image_1"]["headers"]
+    refs = json.loads((state / "k.png.meta.json").read_text())["reference_images"]
+    assert refs == [
+        {"name": "a.png", "sha256": hashlib.sha256(PNG).hexdigest()},
+        {"name": "b.jpg", "sha256": hashlib.sha256(JPEG).hexdigest()},
+    ]
+    assert not any("/" in r["name"] for r in refs)  # basenames only, never a path
+
+
+def test_ref_image_on_schnell_is_a_usage_error(state, cf_env, capsys):
+    a, _ = _ref_files(state)
+    code, m = run(["--prompt", "x", "--out", str(state / "x.png"), "--ref-image", a])
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    assert "flux-2-klein-4b" in capsys.readouterr().err
+
+
+def test_ref_image_on_another_provider_is_a_usage_error(state):
+    a, _ = _ref_files(state)
+    code, m = run(["--provider", "pollinations", "--prompt", "x", "--out", str(state / "x.png"),
+                   "--accept-data-policy", "--ref-image", a])
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+
+
+def test_more_than_four_ref_images_is_a_usage_error(state, cf_env):
+    a, _ = _ref_files(state)
+    argv = ["--prompt", "x", "--out", str(state / "x.png")] + KLEIN
+    for _ in range(5):
+        argv += ["--ref-image", a]
+    code, m = run(argv)
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+
+
+def test_unreadable_ref_image_is_a_runtime_error_before_the_call(state, cf_env):
+    code, m = run(["--prompt", "x", "--out", str(state / "x.png"),
+                   "--ref-image", str(state / "missing.png")] + KLEIN)
+    assert code == ig.EXIT_ERROR
+    assert m.call_count == 0
+
+
+def test_no_credentials_leak_into_a_klein_multipart_body(state, cf_env, capsys):
+    a, _ = _ref_files(state)
+    code, m = run(["--prompt", "a secret subject", "--out", str(state / "k.png"),
+                   "--ref-image", a] + KLEIN, cloudflare_json(PNG))
+    assert code == 0
+    body = m.call_args.args[0].data
+    err = capsys.readouterr().err
+    sidecar = (state / "k.png.meta.json").read_text()
+    for secret in (b"cf-token-xyz", b"acct-123"):
+        assert secret not in body  # the token travels in the Authorization header only
+        assert secret.decode() not in sidecar
+        assert secret.decode() not in err

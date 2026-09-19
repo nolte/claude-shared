@@ -5,7 +5,9 @@ A prompt in, an image file on disk out — no chat UI, scriptable into any
 pipeline. Backends are swappable via ``--provider`` so the tool is not locked to
 one vendor's pricing or availability:
 
-  cloudflare    Cloudflare Workers AI, FLUX.1-schnell (Apache-2.0). Real
+  cloudflare    Cloudflare Workers AI: FLUX.1-schnell (Apache-2.0, default) or
+                FLUX.2 [klein] 4B via --model flux-2-klein-4b (Apache-2.0,
+                honours --width/--height, up to 4 --ref-image inputs). Real
                 recurring free tier (10k neurons/day, no credit card). DEFAULT.
   pollinations  Pollinations.ai, FLUX. Auth-free. NOTE: public feed by default
                 (this tool forces private=true) and the output licence is
@@ -38,6 +40,7 @@ import hashlib
 import json
 import os
 import re
+import secrets
 import sys
 import urllib.error
 import urllib.parse
@@ -60,6 +63,7 @@ USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/1
 # Exit codes
 EXIT_OK = 0
 EXIT_ERROR = 1
+EXIT_USAGE = 2  # argparse's own code for a bad invocation; reused for semantic misuse
 EXIT_RATE_LIMIT = 3
 EXIT_AUTH = 4
 
@@ -147,6 +151,62 @@ def _post_json(url: str, body: dict, headers: dict, key_page: str | None) -> dic
         raise GenerationError("the provider returned a malformed (non-JSON) response") from exc
 
 
+def _encode_multipart(
+    fields: dict[str, str],
+    files: list[tuple[str, str, str, bytes]] | None = None,
+) -> tuple[bytes, str]:
+    """Encode form fields and files as multipart/form-data; return (body, content_type).
+
+    Stdlib-only by design (no `requests`). ``files`` entries are
+    ``(field_name, filename, content_type, data)``. The boundary is random per
+    call, so it can never collide with payload bytes.
+    """
+    boundary = "----imageGenerate" + secrets.token_hex(16)
+    marker = f"--{boundary}".encode("ascii")
+    out = bytearray()
+    for name, value in fields.items():
+        out += marker + b"\r\n"
+        out += f'Content-Disposition: form-data; name="{name}"\r\n\r\n'.encode("utf-8")
+        out += str(value).encode("utf-8") + b"\r\n"
+    for name, filename, content_type, data in files or []:
+        out += marker + b"\r\n"
+        out += (
+            f'Content-Disposition: form-data; name="{name}"; filename="{filename}"\r\n'
+            f"Content-Type: {content_type}\r\n\r\n"
+        ).encode("utf-8")
+        out += data + b"\r\n"
+    out += marker + b"--\r\n"
+    return bytes(out), f"multipart/form-data; boundary={boundary}"
+
+
+def _post_multipart(
+    url: str, body: bytes, content_type: str, headers: dict, key_page: str | None
+) -> tuple[bytes, str]:
+    """POST a multipart body; return (raw_bytes, response_content_type).
+
+    Goes through _request so 401/403/429 handling and error-body surfacing are
+    identical to the JSON path. urllib derives Content-Length from ``data``.
+    """
+    req = urllib.request.Request(
+        url,
+        data=body,
+        headers={"Content-Type": content_type, "User-Agent": USER_AGENT, **headers},
+        method="POST",
+    )
+    return _request(req, key_page)
+
+
+def _sniff_image_mime(raw: bytes) -> str:
+    """Derive the MIME type from magic bytes (base64 payloads carry no type)."""
+    if raw.startswith(b"\x89PNG"):
+        return "image/png"
+    if raw.startswith(b"\xff\xd8"):
+        return "image/jpeg"
+    if raw[:4] == b"RIFF" and raw[8:12] == b"WEBP":
+        return "image/webp"
+    return "image/png"
+
+
 def _get_bytes(url: str, headers: dict, key_page: str | None) -> tuple[str, bytes]:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **headers}, method="GET")
     raw, content_type = _request(req, key_page)
@@ -164,6 +224,13 @@ class Provider:
     # A provider that resolves a model alias server-side names what the sidecar can't know.
     model_variant_note: str | None = None
 
+    def __init__(self, model: str | None = None) -> None:
+        # --model pins a non-default model; the sidecar then reports the id actually used.
+        if model:
+            self.model = model
+        # Filled in by run() when --ref-image was given; recorded in the sidecar.
+        self.reference_images: list[dict[str, str]] = []
+
     def source(self) -> str:
         return ""
 
@@ -177,7 +244,16 @@ class Provider:
 
 class CloudflareProvider(Provider):
     name = "cloudflare"
-    model = "@cf/black-forest-labs/flux-1-schnell"
+    # Exactly two models, both Apache-2.0-licensed weights. klein-9b and flux-2-dev
+    # are deliberately absent: they carry the FLUX Non-Commercial License.
+    MODELS = {
+        "flux-1-schnell": "@cf/black-forest-labs/flux-1-schnell",
+        "flux-2-klein-4b": "@cf/black-forest-labs/flux-2-klein-4b",
+    }
+    DEFAULT_MODEL = "flux-1-schnell"
+    KLEIN_MODEL = MODELS["flux-2-klein-4b"]
+    MAX_REF_IMAGES = 4
+    model = MODELS[DEFAULT_MODEL]
     KEY_PAGE = "https://dash.cloudflare.com/profile/api-tokens"
 
     def source(self) -> str:
@@ -195,6 +271,17 @@ class CloudflareProvider(Provider):
             )
         url = f"https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{self.model}"
         headers = {"Authorization": f"Bearer {token}"}
+        if self.model == self.KLEIN_MODEL:
+            return self._generate_klein(prompt, n, seed, opts, url, headers)
+        return self._generate_schnell(prompt, n, seed, opts, url, headers)
+
+    def _generate_schnell(self, prompt, n, seed, opts, url, headers):
+        if opts.get("width", 1024) != 1024 or opts.get("height", 1024) != 1024:
+            print(
+                "warning: flux-1-schnell ignores --width/--height and always renders "
+                "1024x1024; pass --model flux-2-klein-4b to control width and height.",
+                file=sys.stderr,
+            )
         images: list[tuple[str, bytes]] = []
         for i in range(n):
             # FLUX.1-schnell is optimal at 1-4 steps; 8 is only Cloudflare's cap and
@@ -212,6 +299,52 @@ class CloudflareProvider(Provider):
             except (ValueError, TypeError) as exc:
                 raise GenerationError("Cloudflare returned undecodable image data") from exc
         return images
+
+    def _generate_klein(self, prompt, n, seed, opts, url, headers):
+        # The klein-4b schema accepts multipart/form-data only, and fixes steps at 4
+        # server-side — sending `steps` would be rejected.
+        files = [
+            (f"input_image_{i}", name, mime, data)
+            for i, (name, mime, data) in enumerate(opts.get("ref_images") or [])
+        ]
+        images: list[tuple[str, bytes]] = []
+        for i in range(n):
+            fields = {
+                "prompt": prompt,
+                "width": str(opts.get("width", 1024)),
+                "height": str(opts.get("height", 1024)),
+            }
+            if seed is not None:
+                fields["seed"] = str(seed + i)
+            body, content_type = _encode_multipart(fields, files)
+            raw, response_type = _post_multipart(url, body, content_type, headers, self.KEY_PAGE)
+            images.append(self._decode_klein_response(raw, response_type))
+        return images
+
+    @staticmethod
+    def _decode_klein_response(raw: bytes, content_type: str) -> tuple[str, bytes]:
+        """Accept both documented shapes: raw image/* bytes or a base64 JSON envelope."""
+        if (content_type or "").startswith("image/"):
+            if not raw:
+                raise GenerationError("Cloudflare returned no image data: empty response body")
+            return content_type, raw
+        try:
+            resp = json.loads(raw)
+        except (ValueError, TypeError) as exc:
+            raise GenerationError(
+                "the provider returned a malformed (non-JSON) response"
+            ) from exc
+        if not isinstance(resp, dict):
+            raise GenerationError(f"Cloudflare returned no image data: {resp!r}")
+        b64 = (resp.get("result") or {}).get("image")
+        if not b64:
+            errs = resp.get("errors") or resp.get("messages")
+            raise GenerationError(f"Cloudflare returned no image data: {errs}")
+        try:
+            data = base64.b64decode(b64)
+        except (ValueError, TypeError) as exc:
+            raise GenerationError("Cloudflare returned undecodable image data") from exc
+        return _sniff_image_mime(data), data
 
 
 class PollinationsProvider(Provider):
@@ -465,6 +598,8 @@ def write_sidecar(image_path: Path, prompt: str, mime: str, provider: Provider) 
         "prompt": prompt,
         "timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "mime_type": mime,
+        # Only the basename and digest: never the bytes, never an absolute path.
+        **({"reference_images": provider.reference_images} if getattr(provider, "reference_images", None) else {}),
     }
     sidecar = image_path.with_name(image_path.name + ".meta.json")
     sidecar.write_text(json.dumps(meta, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
@@ -496,6 +631,25 @@ def build_parser() -> argparse.ArgumentParser:
         default=DEFAULT_PROVIDER,
         help=f"backend provider (default: {DEFAULT_PROVIDER})",
     )
+    parser.add_argument(
+        "--model",
+        choices=sorted(CloudflareProvider.MODELS),
+        help=(
+            "cloudflare only: image model (default: "
+            f"{CloudflareProvider.DEFAULT_MODEL}). flux-2-klein-4b honours "
+            "--width/--height and accepts --ref-image."
+        ),
+    )
+    parser.add_argument(
+        "--ref-image",
+        action="append",
+        metavar="PATH",
+        help=(
+            "reference image, only with --provider cloudflare --model flux-2-klein-4b; "
+            f"repeatable up to {CloudflareProvider.MAX_REF_IMAGES} times. The file is "
+            "uploaded to Cloudflare."
+        ),
+    )
     src = parser.add_mutually_exclusive_group(required=True)
     src.add_argument("--prompt", help="inline prompt text")
     src.add_argument("--prompt-file", help="path to a file holding the raw prompt text")
@@ -522,13 +676,57 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def load_reference_images(paths: list[str]) -> list[tuple[str, str, bytes]]:
+    """Read every --ref-image; return [(basename, mime, data), ...]. Fails before any call."""
+    loaded: list[tuple[str, str, bytes]] = []
+    for raw_path in paths:
+        path = Path(raw_path)
+        try:
+            data = path.read_bytes()
+        except OSError as exc:
+            raise GenerationError(f"cannot read --ref-image: {exc}") from exc
+        mime = EXT_TO_MIME.get(path.suffix.lower(), "application/octet-stream")
+        loaded.append((path.name, mime, data))
+    return loaded
+
+
+def check_model_options(args: argparse.Namespace) -> None:
+    """Reject model/reference-image combinations no provider supports — before any call."""
+    if args.model and args.provider != "cloudflare":
+        raise GenerationError(
+            f"--model is only supported by the cloudflare provider, not '{args.provider}'",
+            code=EXIT_USAGE,
+        )
+    refs = args.ref_image or []
+    if not refs:
+        return
+    selected = args.model or (
+        CloudflareProvider.DEFAULT_MODEL if args.provider == "cloudflare" else args.provider
+    )
+    if args.provider != "cloudflare" or args.model != "flux-2-klein-4b":
+        raise GenerationError(
+            "--ref-image requires --provider cloudflare --model flux-2-klein-4b; "
+            f"'{selected}' does not accept reference images",
+            code=EXIT_USAGE,
+        )
+    if len(refs) > CloudflareProvider.MAX_REF_IMAGES:
+        raise GenerationError(
+            f"--ref-image accepts at most {CloudflareProvider.MAX_REF_IMAGES} images "
+            f"(got {len(refs)})",
+            code=EXIT_USAGE,
+        )
+
+
 def run(args: argparse.Namespace) -> int:
     if args.n < 1:
         raise GenerationError("-n must be at least 1")
     if args.variant and not args.from_prompt_doc:
         raise GenerationError("--variant only applies together with --from-prompt-doc")
+    check_model_options(args)
 
-    provider = PROVIDERS[args.provider]()
+    provider = PROVIDERS[args.provider](
+        CloudflareProvider.MODELS[args.model] if args.model else None
+    )
     prompt = resolve_prompt(args)
     out = Path(args.out)
     paths = target_paths(out, args.n)
@@ -536,7 +734,12 @@ def run(args: argparse.Namespace) -> int:
 
     ensure_consent(provider, args.accept_data_policy)
 
-    opts = {"width": args.width, "height": args.height}
+    refs = load_reference_images(args.ref_image or [])
+    provider.reference_images = [
+        {"name": name, "sha256": hashlib.sha256(data).hexdigest()} for name, _, data in refs
+    ]
+
+    opts = {"width": args.width, "height": args.height, "ref_images": refs}
     images = provider.generate(prompt, args.n, args.seed, opts)
 
     if len(images) < args.n:
