@@ -262,8 +262,9 @@ a member whose result is already recorded in the artifact.
 
 - A green `quality-gate` in a member's worktree says nothing about the bundle; each
   worktree has its own working tree. Gate the integration branch tip.
-- `Closes #n` does not fire on a `develop` merge — the repository's default branch is
-  `main`. Operation 7 exists because of that, not as a courtesy.
+- `Closes #n` can fire on the bundle's merge and has also been seen not firing; why
+  isn't established. Operation 7 checks each member's state instead of predicting the
+  platform — that is why it exists, not as a courtesy.
 - The built-in review skills compose their diff from the session's working directory,
   not from any path passed to them. Run them from the worktree, or capture
   `git -C <worktree> diff --stat origin/develop...HEAD` yourself; a clean report over an
