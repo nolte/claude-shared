@@ -1433,3 +1433,106 @@ def test_a_hostless_target_names_its_scheme_rather_than_its_path():
     """The path of a ``file:``/``data:`` target is attacker text; the scheme is not."""
     assert ig._host_for_message("file:///etc/passwd") == "(no host; scheme file)"
     assert "etc/passwd" not in ig._host_for_message("file:///etc/passwd")
+
+
+# --------------------------------------------------------------------------- #
+# #657: the two operator-named prompt sources are bounded exactly like --ref-image.
+#
+# Both --prompt-file and --from-prompt-doc used to go through
+# Path(...).read_text(), which accepts a directory (opaque error), a device, a FIFO
+# (hangs), or a file of any size. The bounds below are decided on the open
+# descriptor and, for --from-prompt-doc, *before* section extraction -- the memory
+# is spent at the read, so a cap applied after parsing would bound nothing.
+# --------------------------------------------------------------------------- #
+PROMPT_SOURCE_FLAGS = ("--prompt-file", "--from-prompt-doc")
+
+
+def _prompt_source_argv(state, flag, path):
+    argv = [flag, str(path), "--out", str(state / "p.png")]
+    if flag == "--from-prompt-doc":
+        argv += ["--variant", "light"]
+    return argv
+
+
+def test_prompt_file_cap_is_the_decided_constant():
+    assert ig.MAX_PROMPT_FILE_BYTES == 1024 * 1024
+
+
+@pytest.mark.parametrize("flag", PROMPT_SOURCE_FLAGS)
+def test_a_prompt_source_that_is_a_directory_is_refused_before_the_call(flag, state, cf_env, capsys):
+    target = state / "prompts"
+    target.mkdir()
+    code, m = run(_prompt_source_argv(state, flag, target))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0  # refused before anything leaves the machine
+    err = capsys.readouterr().err
+    assert "not a regular file" in err and flag in err
+
+
+@pytest.mark.parametrize("flag", PROMPT_SOURCE_FLAGS)
+def test_a_prompt_source_that_is_a_fifo_is_refused_without_hanging(flag, state, cf_env, capsys):
+    # The /dev/zero and FIFO hazards in reproducible form. Without the descriptor
+    # check the read blocks forever, so the alarm -- not an assertion -- is what
+    # catches a regression here.
+    fifo = state / "pipe.md"
+    try:
+        os.mkfifo(fifo)
+    except (AttributeError, OSError):  # pragma: no cover - platform without FIFOs
+        pytest.skip("this platform cannot create a FIFO")
+
+    def _timeout(*_):  # pragma: no cover - only runs when the read blocks
+        raise AssertionError(f"reading {flag} on a FIFO blocked; the bound is missing")
+
+    signal.signal(signal.SIGALRM, _timeout)
+    signal.setitimer(signal.ITIMER_REAL, 5.0)
+    try:
+        code, m = run(_prompt_source_argv(state, flag, fifo))
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    assert "not a regular file" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("flag", PROMPT_SOURCE_FLAGS)
+def test_a_prompt_source_above_the_read_cap_is_refused_before_the_call(flag, state, cf_env, capsys):
+    # The document starts out perfectly usable, so an unbounded read would extract a
+    # prompt from it and call the provider: only the cap can refuse it.
+    src = state / "fox.md"
+    src.write_text(DOC)
+    os.truncate(src, ig.MAX_PROMPT_FILE_BYTES + 1)  # sparse: no 1 MiB of real I/O
+    code, m = run(_prompt_source_argv(state, flag, src))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    err = capsys.readouterr().err
+    assert "1 MiB" in err and "MAX_PROMPT_FILE_BYTES" in err
+    assert "truncated" in err  # says the prompt is refused, never shortened
+
+
+@pytest.mark.parametrize("flag", PROMPT_SOURCE_FLAGS)
+def test_a_prompt_source_exactly_at_the_read_cap_is_still_accepted(flag, state, cf_env):
+    # Positive control for the bound's direction: the cap itself is not "too big".
+    src = state / "edge.md"
+    src.write_text(DOC)
+    os.truncate(src, ig.MAX_PROMPT_FILE_BYTES)
+    code, m = run(_prompt_source_argv(state, flag, src), cloudflare_json(PNG))
+    assert code == 0
+    assert m.call_count == 1
+
+
+@pytest.mark.parametrize("flag", PROMPT_SOURCE_FLAGS)
+def test_a_non_utf8_prompt_source_fails_with_a_message_not_a_traceback(flag, state, cf_env, capsys):
+    src = state / "latin1.md"
+    src.write_bytes(b"# Prompt\n\n```\nteal f\xf8x\n```\n")
+    code, m = run(_prompt_source_argv(state, flag, src))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    assert "not valid UTF-8" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("flag", PROMPT_SOURCE_FLAGS)
+def test_a_missing_prompt_source_still_exits_one_not_two(flag, state, cf_env):
+    # The new refusals must not reclassify the pre-existing unreadable-file error.
+    code, m = run(_prompt_source_argv(state, flag, state / "nope.md"))
+    assert code == ig.EXIT_ERROR
+    assert m.call_count == 0
