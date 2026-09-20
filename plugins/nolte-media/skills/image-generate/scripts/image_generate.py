@@ -60,6 +60,28 @@ EXT_TO_MIME = {
 # (error 1010). A normal browser-style UA passes; without it the GET is blocked.
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
 
+# --------------------------------------------------------------------------- #
+# Safety bounds on operator- and provider-supplied data
+# --------------------------------------------------------------------------- #
+# Cap on a single --ref-image. The klein-4b endpoint's own limit is expressed in
+# pixels ("under 512x512"), which no byte count states exactly, so this bound is
+# deliberately loose: far above any conforming image, far below a memory hazard
+# (a symlink to a huge file, a sparse file). The endpoint stays authoritative on
+# dimensions — this tool never validates them client-side.
+MAX_REF_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MiB
+# Cap on a response body. A malicious or intercepted endpoint must not be able to
+# exhaust memory, and on the klein `image/*` branch those bytes go straight to disk.
+MAX_RESPONSE_BYTES = 64 * 1024 * 1024  # 64 MiB
+# Cap on any server-controlled string surfaced to the operator or the sidecar.
+MAX_PROVIDER_TEXT_CHARS = 500
+TRUNCATION_MARKER = " [truncated]"
+
+# C0 (including ESC, so ANSI escape sequences never reach a terminal), DEL, and C1.
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f]")
+# Control characters that carry word separation; folded to a space before the rest
+# is dropped, so a multi-line provider message stays readable on one line.
+_WHITESPACE_CONTROLS = re.compile(r"[\t\n\v\f\r]")
+
 # Exit codes
 EXIT_OK = 0
 EXIT_ERROR = 1
@@ -79,16 +101,62 @@ class GenerationError(Exception):
 # --------------------------------------------------------------------------- #
 # Shared HTTP layer (one place for error-body surfacing + limit:0 detection)
 # --------------------------------------------------------------------------- #
+def _safe_text(value: object) -> str:
+    """Make a server-controlled string safe to print or to store in the sidecar.
+
+    Strips C0 (ESC included, so ANSI escape sequences cannot forge terminal
+    output), DEL, and C1, and caps the result at ``MAX_PROVIDER_TEXT_CHARS`` with
+    an explicit marker. The provider's own wording stays intact — the shared layer
+    is required to surface the upstream ``error.message``, so this sanitizes the
+    text without swallowing it.
+    """
+    text = _WHITESPACE_CONTROLS.sub(" ", value if isinstance(value, str) else str(value))
+    text = _CONTROL_CHARS.sub("", text).strip()
+    if len(text) > MAX_PROVIDER_TEXT_CHARS:
+        text = text[:MAX_PROVIDER_TEXT_CHARS].rstrip() + TRUNCATION_MARKER
+    return text
+
+
+def _read_capped(stream: object, limit: int, what: str) -> bytes:
+    """Read at most ``limit`` bytes; refuse anything larger instead of buffering it.
+
+    Reads ``limit + 1`` bytes so "exactly at the cap" still succeeds and the first
+    byte past it is enough to refuse — the oversize body is never held in memory.
+    """
+    chunks: list[bytes] = []
+    remaining = limit + 1
+    while remaining > 0:
+        chunk = stream.read(remaining)
+        got = len(chunk) if chunk else 0
+        if got == 0:  # EOF — and a zero-length chunk could never make progress
+            break
+        chunks.append(chunk)
+        remaining -= got
+    data = b"".join(chunks)
+    if len(data) > limit:
+        raise GenerationError(
+            f"{what} exceeds the {limit // (1024 * 1024)} MiB safety cap "
+            f"(MAX_RESPONSE_BYTES); the response was discarded and nothing was "
+            "written. Re-run with a smaller request, or verify you are talking to "
+            "the real provider endpoint."
+        )
+    return data
+
+
 def _api_error_detail(exc: urllib.error.HTTPError) -> tuple[str, bool]:
     """Read the API error body; return (human-readable detail, is_zero_quota).
 
-    Surfaces the provider's actual ``error.message`` instead of swallowing it.
+    Surfaces the provider's actual ``error.message`` instead of swallowing it —
+    sanitized (control characters stripped, length capped) because it is
+    server-controlled text on its way to the operator's terminal.
     ``is_zero_quota`` is True when the body reports a quota of ``limit: 0`` — the
     model requires billing rather than being temporarily rate-limited, so
     "retry later" would be wrong.
     """
     try:
-        body = exc.read().decode("utf-8", "replace")
+        body = _read_capped(exc, MAX_RESPONSE_BYTES, "the provider error body").decode(
+            "utf-8", "replace"
+        )
     except Exception:
         return "", False
     try:
@@ -96,7 +164,7 @@ def _api_error_detail(exc: urllib.error.HTTPError) -> tuple[str, bool]:
     except (ValueError, TypeError, AttributeError):
         detail = body.strip()
     zero_quota = re.search(r"limit:\s*0\b", body) is not None
-    return detail, zero_quota
+    return _safe_text(detail), zero_quota
 
 
 def _raise_http_error(exc: urllib.error.HTTPError, key_page: str | None) -> None:
@@ -127,10 +195,17 @@ def _raise_http_error(exc: urllib.error.HTTPError, key_page: str | None) -> None
 
 
 def _request(req: urllib.request.Request, key_page: str | None = None) -> tuple[bytes, str]:
-    """Perform a request; return (body_bytes, content_type). Maps errors to GenerationError."""
+    """Perform a request; return (body_bytes, content_type). Maps errors to GenerationError.
+
+    The body is read under ``MAX_RESPONSE_BYTES``: every caller (the JSON paths,
+    the klein multipart path, the Pollinations raw-bytes path) wants the whole
+    body, so one cap here bounds them all. The content type is sanitized here too,
+    since it reaches both the stderr mismatch warning and the sidecar.
+    """
     try:
         with urllib.request.urlopen(req) as response:
-            return response.read(), response.headers.get_content_type()
+            body = _read_capped(response, MAX_RESPONSE_BYTES, "the provider response body")
+            return body, _safe_text(response.headers.get_content_type())
     except urllib.error.HTTPError as exc:
         _raise_http_error(exc, key_page)
     except urllib.error.URLError as exc:
@@ -329,7 +404,9 @@ class CloudflareProvider(Provider):
             b64 = _result_image(resp)
             if not b64:
                 errs = _envelope_errors(resp)
-                raise GenerationError(f"Cloudflare returned no image data: {errs}")
+                raise GenerationError(
+                    f"Cloudflare returned no image data: {_safe_text(errs)}"
+                )
             try:
                 images.append(("image/jpeg", base64.b64decode(b64)))
             except (ValueError, TypeError) as exc:
@@ -371,11 +448,13 @@ class CloudflareProvider(Provider):
                 "the provider returned a malformed (non-JSON) response"
             ) from exc
         if not isinstance(resp, dict):
-            raise GenerationError(f"Cloudflare returned no image data: {resp!r}")
+            raise GenerationError(f"Cloudflare returned no image data: {_safe_text(repr(resp))}")
         b64 = _result_image(resp)
         if not b64:
             errs = _envelope_errors(resp)
-            raise GenerationError(f"Cloudflare returned no image data: {errs}")
+            raise GenerationError(
+                    f"Cloudflare returned no image data: {_safe_text(errs)}"
+                )
         try:
             data = base64.b64decode(b64)
         except (ValueError, TypeError) as exc:
@@ -491,7 +570,8 @@ class GeminiProvider(Provider):
                 inline = part.get("inlineData") or part.get("inline_data")
                 if not inline or not inline.get("data"):
                     continue
-                mime = inline.get("mimeType") or inline.get("mime_type") or "image/png"
+                # Server-controlled: it reaches the stderr warning and the sidecar.
+                mime = _safe_text(inline.get("mimeType") or inline.get("mime_type") or "") or "image/png"
                 try:
                     images.append((mime, base64.b64decode(inline["data"])))
                 except (ValueError, TypeError) as exc:
@@ -713,15 +793,60 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def load_reference_images(paths: list[str]) -> list[tuple[str, str, bytes]]:
-    """Read every --ref-image; return [(basename, mime, data), ...]. Fails before any call."""
+    """Read every --ref-image; return [(basename, mime, data), ...]. Fails before any call.
+
+    Three bounds guard what leaves the machine: the file must be a regular file
+    (``is_file()`` follows a symlink to one, and excludes directories, devices, and
+    FIFOs — ``/dev/zero`` never gets read), its extension must be a known image type
+    (an unknown one is refused, never uploaded as ``application/octet-stream``), and
+    its size must stay under ``MAX_REF_IMAGE_BYTES``.
+    """
+    supported = ", ".join(sorted(EXT_TO_MIME))
     loaded: list[tuple[str, str, bytes]] = []
     for raw_path in paths:
         path = Path(raw_path)
         try:
-            data = path.read_bytes()
+            size = path.stat().st_size
         except OSError as exc:
             raise GenerationError(f"cannot read --ref-image: {exc}") from exc
-        mime = EXT_TO_MIME.get(path.suffix.lower(), "application/octet-stream")
+        if not path.is_file():
+            raise GenerationError(
+                f"--ref-image '{raw_path}' is not a regular file. Directories, devices, "
+                "and FIFOs cannot be uploaded — pass the path of an image file.",
+                code=EXIT_USAGE,
+            )
+        mime = EXT_TO_MIME.get(path.suffix.lower())
+        if mime is None:
+            raise GenerationError(
+                f"--ref-image '{raw_path}' has an unsupported extension "
+                f"'{path.suffix or '(none)'}'. Supported: {supported}. Convert the file "
+                "or give it the extension matching its real format; it is not uploaded "
+                "with an unknown type.",
+                code=EXIT_USAGE,
+            )
+        if size > MAX_REF_IMAGE_BYTES:
+            raise GenerationError(
+                f"--ref-image '{raw_path}' is {size} bytes, above the "
+                f"{MAX_REF_IMAGE_BYTES // (1024 * 1024)} MiB read cap "
+                "(MAX_REF_IMAGE_BYTES). Downscale or re-encode the image; the endpoint "
+                "expects a small reference anyway.",
+                code=EXIT_USAGE,
+            )
+        try:
+            with path.open("rb") as handle:
+                # Bounded read: one byte past the cap is enough to refuse a file that
+                # grew between stat() and read(), without buffering the rest.
+                data = handle.read(MAX_REF_IMAGE_BYTES + 1)
+        except OSError as exc:
+            raise GenerationError(f"cannot read --ref-image: {exc}") from exc
+        if len(data) > MAX_REF_IMAGE_BYTES:
+            # The file grew between stat() and read(); refuse rather than upload it.
+            raise GenerationError(
+                f"--ref-image '{raw_path}' grew past the "
+                f"{MAX_REF_IMAGE_BYTES // (1024 * 1024)} MiB read cap "
+                "(MAX_REF_IMAGE_BYTES) while being read. Retry with a stable file.",
+                code=EXIT_USAGE,
+            )
         loaded.append((path.name, mime, data))
     return loaded
 

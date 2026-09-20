@@ -42,18 +42,30 @@ class _Headers:
 
 
 class _FakeResp:
+    """Stand-in for an HTTPResponse, with its ``read(amt=None)`` signature.
+
+    Reads consume the payload like the real stream does, so a bounded reader that
+    loops until EOF terminates here too; the cursor resets per ``with`` block, so a
+    single fake can still answer repeated calls (``-n 2``).
+    """
+
     def __init__(self, payload: bytes, content_type: str = "application/json") -> None:
         self._payload = payload
+        self._pos = 0
         self.headers = _Headers(content_type)
 
     def __enter__(self):
+        self._pos = 0
         return self
 
     def __exit__(self, *exc):
         return False
 
-    def read(self) -> bytes:
-        return self._payload
+    def read(self, amt: int | None = None) -> bytes:
+        end = len(self._payload) if amt is None else min(len(self._payload), self._pos + amt)
+        chunk = self._payload[self._pos:end]
+        self._pos = end
+        return chunk
 
 
 def cloudflare_json(img: bytes = JPEG) -> _FakeResp:
@@ -838,3 +850,192 @@ def test_klein_gate_uses_the_named_registry_key(state):
     assert ig.CloudflareProvider.KLEIN_MODEL == ig.CloudflareProvider.MODELS[
         ig.CloudflareProvider.KLEIN_MODEL_KEY
     ]
+
+
+# --------------------------------------------------------------------------- #
+# P1 hardening (#643): three bounds on untrusted input.
+#   H1/D1/D3/D5 -- a --ref-image is read only when it is a regular file of a known
+#                  image type under the read cap; nothing else is uploaded.
+#   H2/D2       -- a response body is read under a cap, so a hostile endpoint
+#                  cannot exhaust memory or stream gigabytes onto disk.
+#   H3/D4       -- server-controlled text is stripped of control characters and
+#                  truncated before it reaches stderr or the sidecar, while the
+#                  provider's own wording stays visible.
+# --------------------------------------------------------------------------- #
+import os
+
+ESC = "\x1b"
+
+
+def test_hardening_bounds_are_the_decided_constants():
+    assert ig.MAX_REF_IMAGE_BYTES == 20 * 1024 * 1024
+    assert ig.MAX_RESPONSE_BYTES == 64 * 1024 * 1024
+    assert ig.MAX_PROVIDER_TEXT_CHARS == 500
+
+
+def _klein_ref_argv(state, ref):
+    return ["--prompt", "x", "--out", str(state / "k.png"), "--ref-image", str(ref)] + KLEIN
+
+
+def test_ref_image_on_a_directory_is_refused_before_the_call(state, cf_env, capsys):
+    target = state / "refs"
+    target.mkdir()
+    code, m = run(_klein_ref_argv(state, target))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0  # refused before anything leaves the machine
+    assert "not a regular file" in capsys.readouterr().err
+
+
+def test_ref_image_on_a_fifo_is_refused_before_the_call(state, cf_env, capsys):
+    # The /dev/zero hazard in reproducible form: a non-regular file would otherwise
+    # be read unbounded. is_file() excludes it without ever opening it.
+    fifo = state / "pipe.png"
+    try:
+        os.mkfifo(fifo)
+    except (AttributeError, OSError):  # pragma: no cover - platform without FIFOs
+        pytest.skip("this platform cannot create a FIFO")
+    code, m = run(_klein_ref_argv(state, fifo))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    assert "not a regular file" in capsys.readouterr().err
+
+
+def test_ref_image_with_an_unknown_extension_is_refused_not_uploaded(state, cf_env, capsys):
+    blob = state / "payload.bin"
+    blob.write_bytes(PNG)
+    code, m = run(_klein_ref_argv(state, blob))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    err = capsys.readouterr().err
+    assert "unsupported extension" in err and ".bin" in err
+    assert ".png" in err and ".webp" in err  # names what is supported
+    assert "application/octet-stream" not in err  # never the silent fallback
+
+
+def test_ref_image_above_the_read_cap_is_refused_before_the_call(state, cf_env, capsys):
+    big = state / "big.png"
+    big.write_bytes(PNG)
+    os.truncate(big, ig.MAX_REF_IMAGE_BYTES + 1)  # sparse: no 20 MiB of real I/O
+    code, m = run(_klein_ref_argv(state, big))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    err = capsys.readouterr().err
+    assert "20 MiB" in err and "MAX_REF_IMAGE_BYTES" in err
+    assert "Downscale" in err  # says what to do
+
+
+def test_ref_image_exactly_at_the_read_cap_is_still_accepted(state, cf_env):
+    # Positive control for the bound's direction: the cap itself is not "too big".
+    ref = state / "edge.png"
+    ref.write_bytes(PNG)
+    os.truncate(ref, ig.MAX_REF_IMAGE_BYTES)
+    code, m = run(_klein_ref_argv(state, ref), cloudflare_json(PNG))
+    assert code == 0
+    assert m.call_count == 1
+
+
+def test_missing_ref_image_still_exits_one_not_two(state, cf_env):
+    # The new refusals must not reclassify the pre-existing unreadable-file error.
+    code, m = run(_klein_ref_argv(state, state / "nope.png"))
+    assert code == ig.EXIT_ERROR
+    assert m.call_count == 0
+
+
+# --------------------------------------------------------------------------- #
+# H2/D2: response-body cap
+# --------------------------------------------------------------------------- #
+class _EndlessResp:
+    """A hostile endpoint: answers every read with as many bytes as were asked for."""
+
+    def __init__(self, content_type: str = "image/png") -> None:
+        self.headers = _Headers(content_type)
+        self.served = 0
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def read(self, amt: int | None = None) -> bytes:
+        amt = 1 << 20 if amt is None else amt
+        self.served += amt
+        return bytes(amt)
+
+
+def test_read_capped_accepts_a_body_exactly_at_the_limit():
+    assert ig._read_capped(BytesIO(b"abc"), 3, "the provider response body") == b"abc"
+
+
+def test_read_capped_refuses_one_byte_past_the_limit():
+    with pytest.raises(ig.GenerationError) as exc:
+        ig._read_capped(BytesIO(b"abcd"), 3, "the provider response body")
+    assert "safety cap" in str(exc.value)
+
+
+def test_oversize_response_body_exits_one_and_leaves_no_file(state, cf_env, capsys):
+    out = state / "k.png"
+    code, _ = run(["--prompt", "x", "--out", str(out)] + KLEIN, _EndlessResp("image/png"))
+    assert code == ig.EXIT_ERROR
+    err = capsys.readouterr().err
+    assert "64 MiB" in err and "MAX_RESPONSE_BYTES" in err
+    assert "Traceback" not in err
+    assert not out.exists() and not (state / "k.png.meta.json").exists()
+
+
+def test_oversize_response_body_stops_reading_at_the_cap(state, cf_env):
+    # Bounds the memory: the reader never asks for more than the cap plus one byte.
+    resp = _EndlessResp("image/png")
+    run(["--prompt", "x", "--out", str(state / "k.png")] + KLEIN, resp)
+    assert resp.served <= ig.MAX_RESPONSE_BYTES + 1
+
+
+# --------------------------------------------------------------------------- #
+# H3/D4: sanitizing server-controlled text
+# --------------------------------------------------------------------------- #
+def test_ansi_error_message_reaches_stderr_sanitized_but_still_readable(state, cf_env, capsys):
+    hostile = f"{ESC}[31mQuota exceeded{ESC}[0m\r\nfor model x"
+    body = json.dumps({"error": {"message": hostile}})
+    with mock.patch("urllib.request.urlopen", side_effect=http_error(500, body)):
+        code = ig.main(["--prompt", "x", "--out", str(state / "x.png")])
+    assert code == ig.EXIT_ERROR
+    err = capsys.readouterr().err
+    assert ESC not in err and "\r" not in err
+    assert "Quota exceeded" in err and "for model x" in err  # the provider's text survives
+    assert err.count("\n") == 1  # one line: no injected extra output line
+
+
+def test_overlong_error_message_is_truncated_with_a_marker(state, cf_env, capsys):
+    detail = "Upstream said: " + "A" * 5000
+    body = json.dumps({"error": {"message": detail}})
+    with mock.patch("urllib.request.urlopen", side_effect=http_error(500, body)):
+        ig.main(["--prompt", "x", "--out", str(state / "x.png")])
+    err = capsys.readouterr().err
+    assert "Upstream said:" in err  # the head of the provider's text is kept
+    assert ig.TRUNCATION_MARKER.strip() in err
+    assert err.count("A") <= ig.MAX_PROVIDER_TEXT_CHARS
+
+
+def test_a_normal_error_message_passes_through_unchanged(state, cf_env, capsys):
+    # Positive control for D4: sanitizing must not rewrite benign provider text.
+    detail = "Input prompt rejected (policy: no real people); see docs at https://x/y?a=1&b=2."
+    body = json.dumps({"error": {"message": detail}})
+    with mock.patch("urllib.request.urlopen", side_effect=http_error(400, body)):
+        ig.main(["--prompt", "x", "--out", str(state / "x.png")])
+    assert detail in capsys.readouterr().err
+
+
+def test_hostile_content_type_is_sanitized_into_the_sidecar(state, cf_env, capsys):
+    out = state / "k.png"
+    code, _ = run(["--prompt", "x", "--out", str(out)] + KLEIN,
+                  _FakeResp(PNG, f"image/png{ESC}[2J{ESC}[1;1H"))
+    assert code == 0
+    sidecar = (state / "k.png.meta.json").read_text()
+    err = capsys.readouterr().err
+    assert ESC not in sidecar and ESC not in err
+    assert json.loads(sidecar)["mime_type"].startswith("image/png")
+
+
+def test_safe_text_strips_c0_and_c1_but_keeps_the_words():
+    assert ig._safe_text(f"{ESC}[31mred\x00\x9bbold\x7f") == "[31mredbold"
+    assert ig._safe_text("line one\nline two") == "line one line two"
