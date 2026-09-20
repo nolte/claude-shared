@@ -103,3 +103,34 @@ All three answered 2026-09-20: classification `security` confirmed, D1 to D5 con
 ## Dispatch log
 
 <!-- Appended during operation 5. -->
+
+## Member results
+
+- **P1** — `nolte-engineering:fullstack-developer`, commit `1bcf27ae`. Hypothesis held: all three `_request` call sites want the whole body, so one cap covers them. Constants `MAX_REF_IMAGE_BYTES`, `MAX_RESPONSE_BYTES`, `MAX_PROVIDER_TEXT_CHARS`. Negative verification over 8 rules from a file copy, each killing exactly its test; the `is_file` mutant made the FIFO test block for ever, which is the hazard itself. Orchestrator re-measurement: suite 314 → **330 passed, 2 skipped**; the transient third skip was this worktree's unsynced Vale styles, confirmed by running `vale sync` and re-running. Side effect worth noting: the test fake's `read()` gained the real `HTTPResponse` signature with a consuming cursor — it had been more permissive than production, the T9 shape this corpus named in `fdb9d53e`.
+- **P2** — `nolte-claude-dev:claude-plugin-developer`, commit below. SKILL.md §Inputs, §Operations step 2, §Gotchas; the example's §Failure modes carries the verbatim strings. Description 973/1024, body ~3,086 tokens, `validate_skills.py` 0 Critical, markdownlint green. Orchestrator verification: a source grep for the quoted messages fails by construction, because each message is assembled across several f-string lines — so the three refusals were **triggered** instead and their stderr compared to the documentation. All three match verbatim.
+
+## Security chain (operation 6, class `security`)
+
+`nolte-engineering:code-security-reviewer` read the whole script, the hardening test block, the spec's shared-layer requirements and CPython's `urllib/request.py`. **Nothing in the diff blocks.** Verified as sound: one `urlopen` entry point so the cap covers all three call sites and the error body; a lying `Content-Length` cannot defeat the loop's own counter; the `limit: 0` billing signal is read from the full body before truncation; C1 stripping runs on decoded text and cannot mangle UTF-8; no new path exposes a credential.
+
+Four findings, attributed by re-measurement rather than accepted as reported:
+
+| Finding | Introduced by this PR? | Evidence |
+|---|---|---|
+| SEC-003 operator paths unsanitised on stderr | **yes** | all four interpolations appear as `+` lines in this diff |
+| SEC-002 TOCTOU between `is_file()` and `open()` | **yes** | the sequence is new in `load_reference_images` |
+| SEC-004 `_CONTROL_CHARS` misses bidi and isolate overrides | **yes** | the function is new; its class is `[\x00-\x1f\x7f-\x9f]` |
+| SEC-001 credentials forwarded across a cross-host redirect | **no** | the diff contains no `urlopen`, redirect-handler or opener line; CPython's default handler copies every header but `content-length`/`content-type` |
+- **P3** — `nolte-engineering:fullstack-developer`, the three findings this pull request introduced. SEC-003: one `_safe_text` of the operator path reused across all four refusals plus the two pre-existing message paths; no refusal wording changed, so `c41e6bae`'s documentation stays correct. SEC-002: `_open_ref_image` decides type and size from `os.fstat` on the open descriptor, one path resolution instead of two. SEC-004: direction overrides and isolates added to the control class, with U+200E/200F deliberately left out and the reason recorded.
+  **Refutation, measured, and it changed the implementation:** the reviewer's proposed remediation for SEC-002 was `open()` then `fstat`. Measured with a SIGALRM probe on Linux: `open(fifo, "rb")` blocks, so that sequence hangs before `fstat` can run. `os.open(..., O_RDONLY|O_NONBLOCK)` returns at once and `fstat` reports `S_ISFIFO`. `O_NONBLOCK` is therefore load-bearing, and its removal is pinned by a test that fails by alarm.
+  **A negative verification that failed on the first attempt, and was strengthened rather than accepted:** mutating the size check back to `path.stat()` first left the descriptor test green, because the "grew past the cap" message shares the strings `20 MiB`, `MAX_REF_IMAGE_BYTES` and exit 2 with the oversize message. The assertions were tightened until the mutation failed.
+  Suite 330 → **335 passed, 2 skipped**; `pre-commit` clean.
+
+## An edge reported by P3, measured by the orchestrator and deliberately not fixed
+
+P3 reported that the reference image's basename reaches the sidecar's `reference_images[].name` and the multipart header without sanitisation. Measured rather than assumed:
+
+- **Sidecar: not a hazard.** `json.dumps` encodes a control character as its `\uXXXX` escape, so no raw ESC reaches the file. Verified by encoding a name containing `\x1b[2J`: the output contains `\u001b` and no raw escape byte.
+- **Multipart header: raw, and still not a hazard.** The byte does survive into the body, verified by calling `_encode_multipart` directly. That body travels to the provider and is never rendered in a terminal; the attack that matters there is header injection through a quote or CRLF, and `_encode_multipart` has escaped both since #639.
+
+Recorded here, and in the pull request, so that a later reader does not mistake the deliberately partial sanitisation for an oversight. Per `spec/project/defect-class-guards/` G7, a fix must not leave the unrepaired part of its class looking intended without saying so.
