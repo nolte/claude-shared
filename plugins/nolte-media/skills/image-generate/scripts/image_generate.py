@@ -70,6 +70,14 @@ USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/1
 # (a symlink to a huge file, a sparse file). The endpoint stays authoritative on
 # dimensions — this tool never validates them client-side.
 MAX_REF_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MiB
+# Cap on a --prompt-file or --from-prompt-doc source document. Cloudflare caps the
+# prompt *string* at 2048 characters, and FLUX.1-schnell at 256 tokens
+# (spec/design/flux-image-generation/en.md), so a document carrying a prompt plus its
+# prose and its variants stays orders of magnitude below a megabyte: 1 MiB never
+# refuses a real prompt document and still refuses a runaway file. Over the cap the
+# read is refused, never truncated -- a silently shortened prompt would generate an
+# image for a prompt the operator did not write.
+MAX_PROMPT_FILE_BYTES = 1024 * 1024  # 1 MiB
 # Cap on a response body. A malicious or intercepted endpoint must not be able to
 # exhaust memory, and on the klein `image/*` branch those bytes go straight to disk.
 MAX_RESPONSE_BYTES = 64 * 1024 * 1024  # 64 MiB
@@ -726,19 +734,93 @@ def extract_prompt_from_doc(text: str, variant: str | None) -> str:
     return prompt
 
 
+def _open_unblocked(raw_path: str) -> int:
+    """Open a path without ever blocking on what it points at; return the descriptor.
+
+    ``O_NONBLOCK`` is load-bearing: a plain ``open()`` on a FIFO blocks until a writer
+    appears, so the descriptor the type check needs would never come into existence.
+    With it the open returns immediately for a FIFO, a device, or a directory, and the
+    caller decides on the object it actually holds. Measured on Linux: plain
+    ``open(fifo, "rb")`` hangs; ``os.open(fifo, O_RDONLY | O_NONBLOCK)`` returns a
+    descriptor whose ``fstat`` reports ``S_ISFIFO``. Checking the path first and opening
+    it afterwards would both race and hang, so the check belongs on the descriptor.
+    """
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0)
+    return os.open(raw_path, flags)
+
+
+def _read_prompt_source(raw_path: str, flag: str) -> str:
+    """Read a ``--prompt-file`` / ``--from-prompt-doc`` document under a size bound.
+
+    Two bounds guard the read, both decided by ``os.fstat`` on the **open descriptor**
+    and both applied *before* any section or fence is extracted, because the memory is
+    spent at the read: the path must resolve to a regular file (a symlink to one is
+    followed; a directory, a device, or a FIFO is refused, so ``/dev/zero`` is never
+    read and a FIFO never hangs the tool), and its size must stay under
+    ``MAX_PROMPT_FILE_BYTES``. Both refusals exit ``EXIT_USAGE`` before any network
+    call. An over-cap file is refused, never truncated. Every path echoed back goes
+    through ``_safe_text`` first -- a file name is untrusted input.
+    """
+    shown = _safe_text(raw_path)
+    try:
+        descriptor = _open_unblocked(raw_path)
+    except OSError as exc:
+        raise GenerationError(f"cannot read {flag}: {_safe_text(exc)}") from exc
+    try:
+        info = os.fstat(descriptor)
+        if not stat.S_ISREG(info.st_mode):
+            raise GenerationError(
+                f"{flag} '{shown}' is not a regular file. Directories, devices, and "
+                "FIFOs cannot be read as a prompt — pass the path of a text file.",
+                code=EXIT_USAGE,
+            )
+        if info.st_size > MAX_PROMPT_FILE_BYTES:
+            raise GenerationError(
+                f"{flag} '{shown}' is {info.st_size} bytes, above the "
+                f"{MAX_PROMPT_FILE_BYTES // (1024 * 1024)} MiB read cap "
+                "(MAX_PROMPT_FILE_BYTES). Pass the prompt document itself; it is "
+                "refused rather than truncated, because a shortened prompt would "
+                "generate an image for a prompt you did not write.",
+                code=EXIT_USAGE,
+            )
+        handle = os.fdopen(descriptor, "rb")
+    except BaseException:
+        os.close(descriptor)
+        raise
+    with handle:  # owns the descriptor from here on
+        try:
+            # Bounded read: one byte past the cap is enough to refuse a file that grew
+            # after it was fstat'd, without buffering the rest.
+            data = handle.read(MAX_PROMPT_FILE_BYTES + 1)
+        except OSError as exc:
+            raise GenerationError(f"cannot read {flag}: {_safe_text(exc)}") from exc
+    if len(data) > MAX_PROMPT_FILE_BYTES:
+        # The file grew between fstat() and read(); refuse rather than read on.
+        raise GenerationError(
+            f"{flag} '{shown}' grew past the "
+            f"{MAX_PROMPT_FILE_BYTES // (1024 * 1024)} MiB read cap "
+            "(MAX_PROMPT_FILE_BYTES) while being read. Retry with a stable file.",
+            code=EXIT_USAGE,
+        )
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        raise GenerationError(
+            f"{flag} '{shown}' is not valid UTF-8 text ({_safe_text(exc.reason)}). "
+            "Pass a UTF-8 prompt document.",
+            code=EXIT_USAGE,
+        ) from exc
+
+
 def resolve_prompt(args: argparse.Namespace) -> str:
     if args.prompt is not None:
         prompt = args.prompt
     elif args.prompt_file is not None:
-        try:
-            prompt = Path(args.prompt_file).read_text(encoding="utf-8")
-        except OSError as exc:
-            raise GenerationError(f"cannot read --prompt-file: {exc}") from exc
+        prompt = _read_prompt_source(args.prompt_file, "--prompt-file")
     else:  # args.from_prompt_doc
-        try:
-            doc = Path(args.from_prompt_doc).read_text(encoding="utf-8")
-        except OSError as exc:
-            raise GenerationError(f"cannot read --from-prompt-doc: {exc}") from exc
+        # Bounded at the read, before extraction: a cap applied after parsing would
+        # bound nothing, because the whole document is already in memory by then.
+        doc = _read_prompt_source(args.from_prompt_doc, "--from-prompt-doc")
         prompt = extract_prompt_from_doc(doc, args.variant)
     prompt = prompt.strip()
     if not prompt:
@@ -905,15 +987,11 @@ def build_parser() -> argparse.ArgumentParser:
 def _open_ref_image(raw_path: str) -> int:
     """Open a --ref-image without ever blocking on what the path points at.
 
-    ``O_NONBLOCK`` is load-bearing: a plain ``open()`` on a FIFO blocks until a writer
-    appears, so the descriptor the type check needs would never come into existence.
-    With it the open returns immediately for a FIFO, a device, or a directory, and the
-    caller decides on the object it actually holds. Measured on Linux: plain
-    ``open(fifo, "rb")`` hangs; ``os.open(fifo, O_RDONLY | O_NONBLOCK)`` returns a
-    descriptor whose ``fstat`` reports ``S_ISFIFO``.
+    Only the descriptor-opening step is shared with the prompt-source reads
+    (``_open_unblocked``); the image-specific bounds -- the extension allowlist and
+    ``MAX_REF_IMAGE_BYTES`` -- stay in ``load_reference_images``, where they belong.
     """
-    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0)
-    return os.open(raw_path, flags)
+    return _open_unblocked(raw_path)
 
 
 def load_reference_images(paths: list[str]) -> list[tuple[str, str, bytes]]:
