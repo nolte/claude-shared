@@ -52,7 +52,7 @@ Cloudflare bills both models against the same free allocation, but not at the sa
 - A **prompt**: inline `--prompt`, a `--prompt-file`, or a `--from-prompt-doc` graphic-prompt-generator document (`--variant light|dark` selects a section).
 - A **target path** (`--out`), always explicit — never a silent default.
 - The selected provider's credentials in the environment (none for pollinations).
-- Optionally, on `--provider cloudflare --model flux-2-klein-4b`: a size (`--width`/`--height`) and up to four `--ref-image <path>` reference images, each ideally under 512×512.
+- Optionally, on `--provider cloudflare --model flux-2-klein-4b`: a size (`--width`/`--height`) and up to four `--ref-image <path>` reference images. Three properties are **hard refusals**, checked before any network call: the path must be a regular file, its extension must be one of `.jpeg`/`.jpg`/`.png`/`.webp`, and the file must stay under 20 MiB. Pixel dimensions are a separate matter — the endpoint wants each reference under 512×512, but nothing checks that client-side, so an oversized image is sent and the server's complaint comes back verbatim.
 
 ## Operations
 
@@ -61,7 +61,7 @@ Cloudflare bills both models against the same free allocation, but not at the sa
 Generate one image (or `n`) from the resolved prompt to the target path.
 
 1. **Resolve prompt, provider, model, and path.** Default provider is `cloudflare`, default model `flux-1-schnell`. If `--out` is missing, ask the operator — never invent a default. If the operator asks for a non-square image or supplies reference images, select `--model flux-2-klein-4b` and tell them that reference images are uploaded to Cloudflare and that Klein 4B costs ≈ 1.8× schnell per image.
-2. **Pre-flight obvious failures in conversation.** If the provider's credentials are unset, relay the script's setup hint and stop. If the target file exists, confirm overwrite before passing `--force`.
+2. **Pre-flight obvious failures in conversation.** If the provider's credentials are unset, relay the script's setup hint and stop. If the target file exists, confirm overwrite before passing `--force`. If the operator supplied `--ref-image` paths, screen them here too: a directory, device, or FIFO (`is not a regular file`), an extension outside `.jpeg`/`.jpg`/`.png`/`.webp` (`has an unsupported extension`), and a file above 20 MiB each exit `2` before any network call, and a missing path exits `1` — naming the offending path in conversation saves the operator a round trip through the script.
 3. **Run the bundled engine:**
 
    ```bash
@@ -89,6 +89,9 @@ Generate one image (or `n`) from the resolved prompt to the target path.
 
 - **`flux-1-schnell` ignores `--width`/`--height`** and always renders 1024×1024; a non-default size prints `warning: flux-1-schnell ignores --width/--height and always renders 1024x1024; pass --model flux-2-klein-4b to control width and height.` on stderr and proceeds. FLUX.2 Klein 4B honours both within 256–1920 (the CLI default stays 1024×1024; the endpoint's own default would be 1024×768).
 - **`--ref-image` works only on `--provider cloudflare --model flux-2-klein-4b`**, at most four files, each meant to be under 512×512 (the endpoint's limit — not checked client-side, the server error is surfaced verbatim). On schnell or any other provider it exits `2` before any network call. **Reference images are uploaded to Cloudflare**; say so to the operator before sending confidential material.
+- **`--ref-image` is refused by extension, not by content.** The check is the lowercased suffix against `.jpeg`/`.jpg`/`.png`/`.webp`; nothing sniffs the bytes. A correctly-formatted PNG saved as `logo.bin` is refused with `has an unsupported extension` and exit `2` — deliberately, since it would otherwise be uploaded under an unknown type. The fix is to rename or re-encode the file, never to route around the check.
+- **Two byte caps, both module constants in the bundled script.** A `--ref-image` above `MAX_REF_IMAGE_BYTES` (20 MiB) exits `2` before any network call; a provider response body above `MAX_RESPONSE_BYTES` (64 MiB) exits `1`, is discarded, and writes no file. Both are set far above any conforming image, so hitting one usually means something is wrong — but a job that legitimately needs a larger bound raises the constant in `scripts/image_generate.py`, one line, rather than working around it.
+- **A shortened provider message is marked as shortened.** Server-controlled text on its way to stderr or the sidecar — the upstream error message, the response content type — has its control characters stripped (an ANSI escape cannot forge terminal output) and is cut at 500 characters with a trailing `[truncated]` marker. The provider's own wording still comes through; the marker tells a reader the tail was cut rather than that the provider stopped there.
 - **Klein 4B costs ≈ 1.8× schnell per image** (≈ 104 versus ≈ 58 neurons per 1024×1024); the same free allocation yields roughly 95 versus 170 images a day.
 - **Klein 4B's response shape isn't live-verified yet.** Cloudflare's schema declares base64 JSON, its changelog describes raw image bytes; the script handles both and sniffs the MIME type (PNG/JPEG/WEBP) from the bytes. If a live call fails on the response shape, report it verbatim rather than patching around it.
 - **Pollinations returns JPEG.** Use a `.jpg` target to avoid the extension/MIME-mismatch warning (the image is still written either way).

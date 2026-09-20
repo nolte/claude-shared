@@ -93,5 +93,17 @@ accepts both a base64 JSON envelope and raw image bytes and sniffs the MIME type
   accepts at most 4 images (got 5)`, exit code 2.
 - **Unreadable `--ref-image` path** → `cannot read --ref-image: <OSError>`; exit code 1,
   no network call.
+- **`--ref-image` that is not a regular file** (directory, device, FIFO) → `--ref-image
+  '<path>' is not a regular file. Directories, devices, and FIFOs cannot be uploaded —
+  pass the path of an image file.`; exit code 2, no network call.
+- **`--ref-image` with an unsupported extension** (`.gif`, or none) → `--ref-image '<path>'
+  has an unsupported extension '.gif'. Supported: .jpeg, .jpg, .png, .webp.` plus the
+  convert-or-rename hint; exit code 2, no network call — the file is never uploaded under
+  an unknown type.
+- **`--ref-image` above 20 MiB** → `--ref-image '<path>' is <size> bytes, above the 20 MiB
+  read cap (MAX_REF_IMAGE_BYTES).` plus the downscale hint; exit code 2, no network call.
+- **Response body above 64 MiB** → `the provider response body exceeds the 64 MiB safety
+  cap (MAX_RESPONSE_BYTES); the response was discarded and nothing was written.`; exit
+  code 1, no file written.
 - **`--model` on `pollinations` or `gemini`** → `--model is only supported by the
   cloudflare provider, not '<provider>'`; exit code 2.
