@@ -128,4 +128,3 @@ A green guard run means no *detectable* claim contradicts `.github/settings.yml`
 | `python3 -m pytest tests/test_check_default_branch_claims.py -q` | 31 passed |
 | `python3 -m pytest tests -q` | see bundle line below |
 | EN/DE parity, pull-request-workflow | `H=24 B=122 AC=25` both |
-
