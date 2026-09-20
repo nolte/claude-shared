@@ -1164,3 +1164,272 @@ def test_bidi_override_in_a_provider_message_never_reaches_stderr(state, cf_env,
 def test_safe_text_strips_bidi_overrides_and_isolates():
     assert ig._safe_text("a‪b‫c‬d‭e‮f") == "abcdef"
     assert ig._safe_text("a⁦b⁧c⁨d⁩e") == "abcde"
+
+
+# --------------------------------------------------------------------------- #
+# P1 (#655): a redirect must never carry a provider credential to another host.
+#
+# This block deliberately breaks the file's mocking convention. Every other test
+# patches ``urllib.request.urlopen``, which *replaces the opener entirely* -- so a
+# test in that style cannot observe redirect handling at all and would pass against
+# the unfixed script. Measured and confirmed. The behaviour only exists against a
+# real server, so these tests run two loopback ``http.server`` instances: the first
+# answers with a redirect to the second, the second records everything it receives.
+# --------------------------------------------------------------------------- #
+import socket
+import threading
+import urllib.request
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+SECRET = "SECRET-TOKEN-must-not-travel"
+
+
+class _SinkHandler(BaseHTTPRequestHandler):
+    """The host the request was *not* addressed to. Records anything that arrives."""
+
+    protocol_version = "HTTP/1.0"
+
+    def log_message(self, *args):  # keep pytest output clean
+        pass
+
+    def _record(self):
+        self.server.received.append((self.command, dict(self.headers)))
+        self.send_response(200)
+        self.send_header("Content-Type", "application/json")
+        self.end_headers()
+        self.wfile.write(b'{"result": {}}')
+
+    do_GET = _record
+    do_POST = _record
+
+
+def _redirect_handler_class(target: str):
+    class _RedirectHandler(BaseHTTPRequestHandler):
+        """The provider endpoint, answering /start/<code> with a redirect to the sink."""
+
+        protocol_version = "HTTP/1.0"
+
+        def log_message(self, *args):
+            pass
+
+        def _redirect(self):
+            try:
+                code = int(self.path.rsplit("/", 1)[-1])
+            except ValueError:  # pragma: no cover - only reachable on a typo in a test
+                code = 302
+            self.send_response(code)
+            self.send_header("Location", target)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        do_GET = _redirect
+        do_POST = _redirect
+
+    return _RedirectHandler
+
+
+@pytest.fixture
+def redirect_pair():
+    """(provider_base_url, sink) -- two loopback servers, torn down after the test."""
+    try:
+        sink = HTTPServer(("127.0.0.1", 0), _SinkHandler)
+    except OSError as exc:  # no loopback bind in this environment: skip loudly
+        pytest.skip(f"cannot bind a loopback port for the redirect test: {exc}")
+    sink.received = []
+    target = f"http://127.0.0.1:{sink.server_port}/sink"
+    try:
+        provider = HTTPServer(("127.0.0.1", 0), _redirect_handler_class(target))
+    except OSError as exc:  # pragma: no cover - the first bind already proved it works
+        sink.server_close()
+        pytest.skip(f"cannot bind a loopback port for the redirect test: {exc}")
+    threads = []
+    for srv in (sink, provider):
+        srv.timeout = 5
+        t = threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.02}, daemon=True)
+        t.start()
+        threads.append(t)
+    try:
+        yield f"http://127.0.0.1:{provider.server_port}", sink
+    finally:
+        for srv in (provider, sink):
+            srv.shutdown()
+            srv.server_close()
+        for t in threads:
+            t.join(timeout=5)
+
+
+def _sink_saw_credential(sink) -> bool:
+    return any(
+        SECRET in " ".join(str(v) for v in headers.values()) for _, headers in sink.received
+    )
+
+
+@pytest.mark.parametrize("status", [301, 302, 303, 307, 308])
+def test_post_redirect_is_refused_and_no_credential_reaches_the_other_host(
+    redirect_pair, status
+):
+    """The Cloudflare / Gemini shape: credentials in headers on a POST."""
+    base, sink = redirect_pair
+    with pytest.raises(ig.GenerationError) as excinfo:
+        ig._post_json(
+            f"{base}/start/{status}",
+            {"prompt": "x"},
+            {"Authorization": f"Bearer {SECRET}"},
+            None,
+        )
+    assert sink.received == [], f"the redirect target was contacted: {sink.received!r}"
+    assert not _sink_saw_credential(sink)
+    message = str(excinfo.value)
+    assert "Refused" in message and str(status) in message
+    assert excinfo.value.code == ig.EXIT_ERROR
+
+
+@pytest.mark.parametrize("status", [301, 302, 303, 307, 308])
+def test_get_redirect_is_refused_and_no_credential_reaches_the_other_host(
+    redirect_pair, status
+):
+    """The Pollinations shape: a GET, which urllib follows on *all five* statuses."""
+    base, sink = redirect_pair
+    with pytest.raises(ig.GenerationError) as excinfo:
+        ig._get_bytes(f"{base}/start/{status}", {"Authorization": f"Bearer {SECRET}"}, None)
+    assert sink.received == [], f"the redirect target was contacted: {sink.received!r}"
+    assert not _sink_saw_credential(sink)
+    message = str(excinfo.value)
+    assert "Refused" in message and str(status) in message
+    assert excinfo.value.code == ig.EXIT_ERROR
+
+
+def test_refusal_is_distinguishable_from_a_real_provider_http_error(redirect_pair):
+    """A refused redirect must not read as "Provider API returned HTTP 302".
+
+    Returning ``None`` from ``redirect_request`` -- the obvious implementation --
+    falls through to ``HTTPDefaultErrorHandler``, which raises ``HTTPError(302)``;
+    ``_request`` would then classify it as a provider status and the operator would
+    never learn a credential leak was blocked. This pins the distinction.
+    """
+    base, sink = redirect_pair
+    with pytest.raises(ig.GenerationError) as excinfo:
+        ig._get_bytes(f"{base}/start/302", {"Authorization": f"Bearer {SECRET}"}, None)
+    message = str(excinfo.value)
+    assert "Provider API returned HTTP" not in message
+    assert "credentials to a host the request was not addressed to" in message
+    assert "127.0.0.1" in message  # names both the endpoint host and the target host
+    assert sink.received == []
+
+
+def test_a_non_redirect_response_still_carries_its_own_headers_to_its_own_host(
+    redirect_pair,
+):
+    """The opener only refuses redirects -- it must not strip legitimate headers.
+
+    Pollinations sits behind Cloudflare bot protection that rejects the default
+    urllib User-Agent, so a request reaching *its own* host must still carry the
+    script's ``User-Agent``.
+    """
+    _, sink = redirect_pair
+    url = f"http://127.0.0.1:{sink.server_port}/sink"
+    content_type, raw = ig._get_bytes(url, {}, None)
+    assert raw == b'{"result": {}}'
+    assert len(sink.received) == 1
+    command, headers = sink.received[0]
+    assert command == "GET"
+    assert headers.get("User-Agent") == ig.USER_AGENT
+    assert content_type == "application/json"
+
+
+def test_the_installed_opener_refuses_redirects_and_is_the_one_urlopen_uses():
+    """The shape of the fix: one opener, built once, installed as the default."""
+    assert any(isinstance(h, ig._RefuseRedirects) for h in ig._OPENER.handlers)
+    assert urllib.request._opener is ig._OPENER
+
+
+def test_host_for_message_drops_userinfo_so_a_target_cannot_forge_the_provider_host():
+    assert ig._host_for_message("https://api.example.com/v1") == "api.example.com"
+    assert ig._host_for_message("http://127.0.0.1:8080/x") == "127.0.0.1:8080"
+    assert ig._host_for_message("http://api.cloudflare.com@evil.example/x") == "evil.example"
+
+
+def test_loopback_is_actually_available_for_these_tests():
+    """A positive control: if this fails, the skips above are hiding a broken env."""
+    with socket.socket() as s:
+        s.bind(("127.0.0.1", 0))
+        assert s.getsockname()[0] == "127.0.0.1"
+
+
+# --------------------------------------------------------------------------- #
+# Pre-merge review of PR #658 (SEC-001 / SEC-002), both confirmed by measurement.
+#
+# SEC-001: stock ``http_error_302`` returns early when no ``Location``/``URI``
+# header is present, and raises ``HTTPError`` itself when the target scheme is not
+# http/https/ftp -- both *before* ``redirect_request`` runs. Measured against the
+# first version of the fix: each produced "Provider API returned HTTP 302", the
+# misreading the refusal exists to prevent.
+#
+# SEC-002: a ``Location`` whose port is out of range makes ``urlsplit(...).port``
+# raise, and the first version fell back to printing the raw URL -- putting
+# ``api.cloudflare.com@evil.example`` back in the message and breaking the MUST in
+# ``spec/tools/image-generation/`` that the host is read from the host field alone.
+# --------------------------------------------------------------------------- #
+def _odd_redirect_class(location: str | None):
+    class _OddRedirect(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.0"
+
+        def log_message(self, *args):
+            pass
+
+        def _answer(self):
+            self.send_response(302)
+            if location is not None:
+                self.send_header("Location", location)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        do_GET = _answer
+        do_POST = _answer
+
+    return _OddRedirect
+
+
+@pytest.mark.parametrize(
+    ("location", "rendered"),
+    [
+        (None, "(no Location header)"),
+        ("file:///etc/passwd", "(no host; scheme file)"),
+    ],
+    ids=["absent-location", "non-http-scheme"],
+)
+def test_an_odd_shaped_3xx_still_reads_as_a_refusal(location, rendered):
+    """Every 3xx renders as a refusal, never as a provider error."""
+    try:
+        srv = HTTPServer(("127.0.0.1", 0), _odd_redirect_class(location))
+    except OSError as exc:  # pragma: no cover - environment without loopback
+        pytest.skip(f"cannot bind a loopback port for this test: {exc}")
+    thread = threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.02})
+    thread.daemon = True
+    thread.start()
+    try:
+        url = f"http://127.0.0.1:{srv.server_port}/x"
+        with pytest.raises(ig.GenerationError) as excinfo:
+            ig._post_json(url, {"prompt": "x"}, {"Authorization": f"Bearer {SECRET}"}, "https://k")
+        message = str(excinfo.value)
+        assert "Refused" in message, message
+        assert "Provider API returned" not in message, message
+        assert rendered in message, message
+        assert SECRET not in message
+    finally:
+        srv.shutdown()
+        srv.server_close()
+        thread.join(timeout=5)
+
+
+def test_an_unparsable_port_never_puts_userinfo_back_in_the_message():
+    """The ValueError fallback must not degrade to printing the raw URL."""
+    rendered = ig._host_for_message("http://api.cloudflare.com@evil.example:999999/x")
+    assert "api.cloudflare.com@" not in rendered
+    assert "evil.example" in rendered
+
+
+def test_a_hostless_target_names_its_scheme_rather_than_its_path():
+    """The path of a ``file:``/``data:`` target is attacker text; the scheme is not."""
+    assert ig._host_for_message("file:///etc/passwd") == "(no host; scheme file)"
+    assert "etc/passwd" not in ig._host_for_message("file:///etc/passwd")

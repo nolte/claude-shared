@@ -75,6 +75,11 @@ MAX_REF_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MiB
 MAX_RESPONSE_BYTES = 64 * 1024 * 1024  # 64 MiB
 # Cap on any server-controlled string surfaced to the operator or the sidecar.
 MAX_PROVIDER_TEXT_CHARS = 500
+
+# Stand-ins used in an operator message when a server-controlled URL cannot be
+# reduced to a host. Printing the raw URL instead would defeat the userinfo rule.
+UNPARSABLE_HOST = "(unparsable host)"
+NO_REDIRECT_TARGET = "(no Location header)"
 TRUNCATION_MARKER = " [truncated]"
 
 # C0 (including ESC, so ANSI escape sequences never reach a terminal), DEL, C1, and
@@ -203,6 +208,100 @@ def _raise_http_error(exc: urllib.error.HTTPError, key_page: str | None) -> None
     raise GenerationError(
         f"Provider API returned HTTP {status}. The request was not fulfilled.{suffix}"
     ) from exc
+
+
+def _host_for_message(url: str) -> str:
+    """Render a URL's host (with port, without userinfo) for an operator message.
+
+    The redirect target is server-controlled, so the result goes through
+    ``_safe_text`` like every other untrusted string. Userinfo is dropped because
+    a ``Location`` of ``http://real-provider.example@evil.example/`` would
+    otherwise read as the provider's own host in the refusal message.
+    """
+    try:
+        parts = urllib.parse.urlsplit(url)
+    except ValueError:
+        return UNPARSABLE_HOST
+    try:
+        host = parts.hostname or ""
+        port = parts.port
+    except ValueError:
+        # An out-of-range port makes ``.port`` raise. Fall back to the authority
+        # with any userinfo removed — never the raw URL, which would put
+        # ``api.provider.example@attacker.example`` back in the message and read
+        # as the provider's own host, the exact forgery this helper prevents.
+        return _safe_text(parts.netloc.rsplit("@", 1)[-1]) or UNPARSABLE_HOST
+    if not host:
+        # A target with no host at all (``file:///etc/passwd``, ``data:``). Name the
+        # scheme rather than the path, which is attacker-controlled text.
+        scheme = _safe_text(parts.scheme) or "?"
+        return f"(no host; scheme {scheme})"
+    return _safe_text(f"{host}:{port}" if port else host) or UNPARSABLE_HOST
+
+
+class _RefuseRedirects(urllib.request.HTTPRedirectHandler):
+    """Refuse every redirect instead of replaying the request at the new location.
+
+    ``urllib``'s stock ``HTTPRedirectHandler.redirect_request`` rebuilds the
+    redirected request from the original headers with **no host comparison**, so a
+    301/302/303 (and, on GET, a 307/308) from any of our endpoints would forward
+    ``Authorization: Bearer <token>`` or ``x-goog-api-key`` to whatever host the
+    ``Location`` names. All three providers are single documented URLs, so a
+    redirect is far likelier to be an incident (DNS hijack, captive portal,
+    compromised endpoint) than a feature — refusing generalises what the library
+    already does for 307/308 on POST. The accepted cost: a provider that
+    legitimately relocates an endpoint fails loudly here instead of succeeding
+    silently, and this script's URL is updated.
+
+    Raising ``GenerationError`` rather than returning ``None`` is load-bearing.
+    Returning ``None`` makes the handler chain fall through to
+    ``HTTPDefaultErrorHandler``, which raises ``HTTPError(30x)`` — indistinguishable
+    in ``_request`` from a genuine provider status, so the operator would read
+    "Provider API returned HTTP 302" and never learn a credential leak was blocked.
+    ``GenerationError`` is neither ``HTTPError`` nor ``URLError``, so it passes
+    ``_request``'s ``except`` branches untouched and reaches ``main`` as exit 1 — a
+    refused redirect is neither a rate limit nor an auth failure.
+    """
+
+    def http_error_302(self, req, fp, code, msg, headers):  # noqa: D102
+        # Stock ``http_error_302`` returns early when no ``Location``/``URI`` header
+        # is present, and raises ``HTTPError`` itself for a target scheme outside
+        # http/https/ftp — both *before* ``redirect_request`` runs. Either shape would
+        # surface as "Provider API returned HTTP 302", the misreading this handler
+        # exists to prevent. Routing every 3xx through ``redirect_request`` makes the
+        # refusal the only thing an operator can read off a 3xx.
+        raw = headers.get("Location") or headers.get("URI")
+        newurl = urllib.parse.urljoin(req.full_url, raw) if raw else ""
+        return self.redirect_request(req, fp, code, msg, headers, newurl)
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_308 = http_error_302
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D102
+        origin = _host_for_message(req.full_url)
+        target = _host_for_message(newurl) if newurl else NO_REDIRECT_TARGET
+        try:
+            fp.close()  # abandon the connection; the body is never read
+        except Exception:  # pragma: no cover - closing a dead socket must not mask the refusal
+            pass
+        raise GenerationError(
+            f"The provider endpoint at {origin} answered HTTP {code} with a redirect "
+            f"to {target}. Refused: following it would have sent this request's "
+            f"credentials to a host the request was not addressed to. No credential "
+            f"left this machine for {target} and nothing was written. If the provider "
+            f"has genuinely moved this endpoint, update the URL in this script."
+        )
+
+
+# One opener, built once, installed as the process default. Installing it (rather
+# than calling ``_OPENER.open`` at the single call site) keeps ``_request`` going
+# through ``urllib.request.urlopen``, which remains the one seam the tests mock —
+# and ``urlopen`` delegates straight to this opener, so the refusal is live in
+# production either way. Everything else stays stock: the handler only replaces
+# redirect following, so headers a request legitimately carries to *its own* host
+# (Pollinations' non-default ``User-Agent``, needed past Cloudflare bot protection)
+# are untouched.
+_OPENER = urllib.request.build_opener(_RefuseRedirects)
+urllib.request.install_opener(_OPENER)
 
 
 def _request(req: urllib.request.Request, key_page: str | None = None) -> tuple[bytes, str]:
