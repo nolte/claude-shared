@@ -97,6 +97,19 @@ repos:
         files: '^(spec|docs|skills|agents|plugins)/.*\.md$'
         pass_filenames: false
 
+      # spec/project/defect-class-guards/ G1–G7, issue #652: prose must not state
+      # a default branch that `.github/settings.yml` contradicts. The expected
+      # value is read from the configuration, never hard-coded, so a branch rename
+      # changes the verdict without a code edit. A claim about the repository can
+      # sit in any file the commit doesn't touch, so the hook scans the whole
+      # corpus instead of the staged files; a stale allowlist entry fails it (G4).
+      - id: check-default-branch-claims
+        name: prose matches the configured default branch (defect-class guard #652)
+        entry: python3 scripts/check_default_branch_claims.py
+        language: system
+        files: '^(spec|docs|skills|agents|plugins)/.*\.md$|^\.github/settings\.yml$|^[^/]+\.md$'
+        pass_filenames: false
+
   - repo: https://github.com/igorshubovych/markdownlint-cli
     rev: v0.49.1
     hooks:

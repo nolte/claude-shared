@@ -98,3 +98,34 @@ None — the guard decision was taken by the operator ("direkt hier").
 ## Dispatch log
 
 <!-- Appended during operation 5. -->
+
+## Member results
+
+- **P1** — `nolte-shared:spec` (inline): `pull-request-workflow/{en,de}.md` rule and acceptance criterion. Checks: EN/DE parity `H=24 B=122 AC=25` both; vale clean after one spaced-em-dash rewording; hooks green.
+- **P2** — `nolte-claude-dev:claude-plugin-developer`: `gotchas.md:8`, `issue-closure.md:3`, `:15`, **`:22`**, `issue-batch-orchestrate/SKILL.md` gotcha. Checks: `validate_skills.py` 0 Critical, body ~3,331 tokens (from ~3,312); full `pre-commit run --files` green; the guard predicate returns empty over all three files. Skip check and operation 7 verified intact by the orchestrator (`grep -c` = 1 each).
+  **Refutation, accepted and consequential:** the brief scoped `issue-closure.md` to lines 3 and 15. Line 22 — the `gh issue close --comment` template — carried the same false claim in shell-escaped backticks (`\`main\``), and that text is posted onto **every issue the procedure closes**, making it the most operator-visible instance of the defect in the corpus. It is also invisible to P3's predicate, because escaped backticks defeat the literal match. Repaired by hand; relayed to P3 for its docstring gap list.
+- **P3** — `nolte-engineering:fullstack-developer`: `scripts/check_default_branch_claims.py`, a `.pre-commit-config.yaml` hook in the enforced `lint` lane (G2, name carries `#652` per G5), `tests/test_check_default_branch_claims.py`. Expected branch read from `.github/settings.yml`, never hard-coded; wrapped lines joined; fenced content scanned; escaped backticks accepted as delimiters. Allowlist granularity: path **plus** a distinctive substring of the excused sentence, because a path alone survives every rewording and would silently excuse a different sentence later; a stale entry fails the run (G4). Negative verification: 14 mutants over a file copy, never `git stash`; one survived at first (the backtick requirement) and a test was added until it died.
+  **Two refutations from the specialist, both accepted:** fenced content must be scanned and escaped backticks accepted, because the operator-visible `gh issue close` template sat inside a fence with escaped delimiters — measured over both trees, that widening adds one true positive and no false positive. `.audits/` must be out of scope, because the guard otherwise fails against its own evidence record.
+  **One refutation by the orchestrator, applied:** the specialist also excluded `project/`. Measured over both trees, `project/` produces **zero** hits, so the exclusion was an assumption rather than a finding, and it removes roughly sixty live mission, roadmap, feature and sprint files from a guard whose property covers them. That is the selector-narrower-than-the-property failure of G6 — the rule this guard exists to enforce. Exclusion narrowed to `.audits/` alone, docstring records why, and a new test `test_the_planning_tree_is_in_scope` pins it; negative-verified by restoring the exclusion, which kills exactly that test.
+
+## Guard gap list (G7: what a green run does not certify)
+
+Three shapes of this defect class the predicate cannot decide, all repaired by hand in this pull request:
+
+1. The consequence form — "waiting for the `release-cd-refresh-master.yml` fast-forward of `main`" names no default branch (`issue-closure.md:15`).
+2. The escaped-backtick form — a branch name inside a shell-comment template (`issue-closure.md:22`).
+3. Any claim phrased without a default-branch marker at all.
+
+A green guard run means no *detectable* claim contradicts `.github/settings.yml`. It does not mean the corpus is free of the class.
+
+## Verify (operation 6)
+
+| Gate | Result |
+|---|---|
+| `git diff --stat origin/develop...HEAD` | non-empty, captured before any verdict |
+| `python3 scripts/check_default_branch_claims.py` on the tip | `pass (configured branch \`develop\`, 1 allowlist entry live)`, exit 0 |
+| Same guard against the pre-fix tree `fc104be7` (positive control) | **5 findings**, including the escaped-backtick template line the hand repair fixed — the guard is red where the defect was and green where it isn't |
+| `python3 -m pytest tests/test_check_default_branch_claims.py -q` | 31 passed |
+| `python3 -m pytest tests -q` | see bundle line below |
+| EN/DE parity, pull-request-workflow | `H=24 B=122 AC=25` both |
+
