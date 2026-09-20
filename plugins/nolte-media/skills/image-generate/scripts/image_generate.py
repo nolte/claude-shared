@@ -205,6 +205,75 @@ def _raise_http_error(exc: urllib.error.HTTPError, key_page: str | None) -> None
     ) from exc
 
 
+def _host_for_message(url: str) -> str:
+    """Render a URL's host (with port, without userinfo) for an operator message.
+
+    The redirect target is server-controlled, so the result goes through
+    ``_safe_text`` like every other untrusted string. Userinfo is dropped because
+    a ``Location`` of ``http://real-provider.example@evil.example/`` would
+    otherwise read as the provider's own host in the refusal message.
+    """
+    try:
+        parts = urllib.parse.urlsplit(url)
+        host = parts.hostname or ""
+        port = parts.port
+    except ValueError:  # malformed host/port — show the raw value instead
+        return _safe_text(url)
+    return _safe_text(f"{host}:{port}" if port else host) or _safe_text(url)
+
+
+class _RefuseRedirects(urllib.request.HTTPRedirectHandler):
+    """Refuse every redirect instead of replaying the request at the new location.
+
+    ``urllib``'s stock ``HTTPRedirectHandler.redirect_request`` rebuilds the
+    redirected request from the original headers with **no host comparison**, so a
+    301/302/303 (and, on GET, a 307/308) from any of our endpoints would forward
+    ``Authorization: Bearer <token>`` or ``x-goog-api-key`` to whatever host the
+    ``Location`` names. All three providers are single documented URLs, so a
+    redirect is far likelier to be an incident (DNS hijack, captive portal,
+    compromised endpoint) than a feature — refusing generalises what the library
+    already does for 307/308 on POST. The accepted cost: a provider that
+    legitimately relocates an endpoint fails loudly here instead of succeeding
+    silently, and this script's URL is updated.
+
+    Raising ``GenerationError`` rather than returning ``None`` is load-bearing.
+    Returning ``None`` makes the handler chain fall through to
+    ``HTTPDefaultErrorHandler``, which raises ``HTTPError(30x)`` — indistinguishable
+    in ``_request`` from a genuine provider status, so the operator would read
+    "Provider API returned HTTP 302" and never learn a credential leak was blocked.
+    ``GenerationError`` is neither ``HTTPError`` nor ``URLError``, so it passes
+    ``_request``'s ``except`` branches untouched and reaches ``main`` as exit 1 — a
+    refused redirect is neither a rate limit nor an auth failure.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D102
+        origin = _host_for_message(req.full_url)
+        target = _host_for_message(newurl)
+        try:
+            fp.close()  # abandon the connection; the body is never read
+        except Exception:  # pragma: no cover - closing a dead socket must not mask the refusal
+            pass
+        raise GenerationError(
+            f"The provider endpoint at {origin} answered HTTP {code} with a redirect "
+            f"to {target}. Refused: following it would have sent this request's "
+            f"credentials to a host the request was not addressed to. No credential "
+            f"left this machine for {target} and nothing was written. If the provider "
+            f"has genuinely moved this endpoint, update the URL in this script."
+        )
+
+
+# One opener, built once, installed as the process default. Installing it (rather
+# than calling ``_OPENER.open`` at the single call site) keeps ``_request`` going
+# through ``urllib.request.urlopen``, which remains the one seam the tests mock —
+# and ``urlopen`` delegates straight to this opener, so the refusal is live in
+# production either way. Everything else stays stock: the handler only replaces
+# redirect following, so headers a request legitimately carries to *its own* host
+# (Pollinations' non-default ``User-Agent``, needed past Cloudflare bot protection)
+# are untouched.
+_OPENER = urllib.request.build_opener(_RefuseRedirects)
+urllib.request.install_opener(_OPENER)
+
+
 def _request(req: urllib.request.Request, key_page: str | None = None) -> tuple[bytes, str]:
     """Perform a request; return (body_bytes, content_type). Maps errors to GenerationError.
 
