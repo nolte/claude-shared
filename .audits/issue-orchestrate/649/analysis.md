@@ -115,3 +115,6 @@ None blocking — D1 to D5 were approved before this artifact was written. P3's 
 ## Dispatch log
 
 <!-- Appended during operation 5. -->
+
+- **P1** — specialist `nolte-shared:spec` (skill, run inline): `spec/project/continuous-improvement/{en,de}.md` — §"Finding sources in scope" gains the consumer-measured finding as a listed source; §"Portfolio gap closure" gains five bullets (union detector with the measured under-count of each half, threshold three with the recorded-override clause, SHOULD schedule with operator authority preserved, the report/threshold split against `portfolio-inflight-management`, and the observation the trigger comes from); two acceptance criteria carrying the 5-vs-1 falsification and the single-place threshold. Hypothesis held. Checks: EN/DE parity `H=13 B=67 SUB=14 AC=16` both; `vale` exit 0 after rephrasing two spaced em-dashes (Microsoft.Dashes); `SKIP=vale-prose pre-commit run --files` no Failed hook; threshold sweep `grep -rn -E "three or more|drei oder mehr"` finds the number only in this spec (the `portfolio-inflight-management:92` hit is its pre-existing no-specialist rule, not the threshold).
+
