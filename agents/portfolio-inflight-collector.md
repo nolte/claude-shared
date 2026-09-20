@@ -96,6 +96,7 @@ The agent **does not**:
 - Apply the stalling thresholds from §Stalling thresholds (the skill applies them after collection).
 - Derive any matrix-axis value (`security_relevance`, `release_blocking`, `age_multiplier`, `cross_repo_blocking`) per §Classification and prioritisation — collection only; the skill classifies.
 - Classify any finding as `Critical`, `Warning`, `Suggestion`, or `Info`. Severity assignment is exclusively a §Classification and prioritisation responsibility of the orchestrating skill.
+- Count, unite, or threshold the per-issue `namesOtherPortfolioMember` / `hasSpecFindingLabel` flags — the agent detects, the calling skill counts, and `spec/project/continuous-improvement/` §Portfolio gap closure owns the threshold and the action.
 - Attach a recommended specialist or recommended action to any item — that's the §Specialist recommendation responsibility of the skill.
 - Open GitHub issues or pull requests against any Portfolio-Member repository; never invoke `gh api -X POST`, `-X PATCH`, or `-X DELETE` per §Operator authority.
 - Close any GitHub issue, merge any PR, delete any branch, mark any review comment resolved, or close any Discussion per §Operator authority.
@@ -143,6 +144,8 @@ Per-source opt-outs honoured: <list of <repo>:<source> or "none">
   - labels: <list or "none">
   - hasMaintainerCommentLast30d: yes | no
   - isBotAuthored: yes | no (true when author is `renovate[bot]`, `dependabot[bot]`, or `github-actions[bot]`; the skill applies the §Stalling thresholds exclusion)
+  - namesOtherPortfolioMember: yes | no (the body names a Portfolio-Member repository other than this one; collected only for the repository that holds the portfolio-wide specs)
+  - hasSpecFindingLabel: yes | no (that repository's spec-finding label is present; same scope)
   - excludedByLabel: false (or true with label name; included only when caller requests excluded-items audit trail)
 - ...
 
@@ -252,7 +255,7 @@ Before collecting:
 
 4. **For each in-scope Portfolio-Member repository, collect the four primary data sources** (skipping any source marked `inflight: skip-<source>` for that repository). Each source prefers the corresponding GitHub MCP read tool per §GitHub MCP-preferred reads when a server is connected, otherwise the read-only `gh` command already enumerated in §Read-only Bash justification — don't restate the full flag strings here; the filters and derivations below are the load-bearing part and are identical on both paths:
 
-   a. **Open issues (`issue`):** via the `gh issue list` command. Filter out issues carrying any of `triage-done`, `wontfix`, `parking-lot` labels per §Data sources. For each remaining issue, capture the `author` login and derive `daysOpen`, `daysSinceLastActivity`, `hasMaintainerCommentLast30d`, and `isBotAuthored` (true when the author login is `renovate[bot]`, `dependabot[bot]`, or `github-actions[bot]`) from the JSON. The bot-author signal is carried through only; the calling skill applies the §Stalling thresholds bot-authored-dashboard exclusion. Assign identifier `<repo>/issue/<number>`.
+   a. **Open issues (`issue`):** via the `gh issue list` command. Filter out issues carrying any of `triage-done`, `wontfix`, `parking-lot` labels per §Data sources. For each remaining issue, capture the `author` login and derive `daysOpen`, `daysSinceLastActivity`, `hasMaintainerCommentLast30d`, and `isBotAuthored` (true when the author login is `renovate[bot]`, `dependabot[bot]`, or `github-actions[bot]`) from the JSON. The bot-author signal is carried through only; the calling skill applies the §Stalling thresholds bot-authored-dashboard exclusion. For the repository that holds the portfolio-wide specs, additionally derive two detection-only flags per issue: `namesOtherPortfolioMember` (the body names a Portfolio-Member repository other than that one, whether as an `owner/repo#number` reference or by repository name in prose, resolved against the member list from step 1 and never a hard-coded list) and `hasSpecFindingLabel` (that repository's spec-finding label — `spec` in `claude-shared` — appears in `labels`). Report both flags as collected; form no union, no count, and no threshold from them. Assign identifier `<repo>/issue/<number>`.
 
    b. **Open pull requests (`pr`):** via the `gh pr list` command (drafts included). For each PR, derive `daysOpen`, `daysSinceLastReviewerActivity`, `requiredChecksState` from the `statusCheckRollup` field, and the `mergeable` flag (the skill uses `CONFLICTING` to set the conflicts-against-`develop` driver). Assign identifier `<repo>/pr/<number>`.
 
