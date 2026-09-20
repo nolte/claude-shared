@@ -75,6 +75,11 @@ MAX_REF_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MiB
 MAX_RESPONSE_BYTES = 64 * 1024 * 1024  # 64 MiB
 # Cap on any server-controlled string surfaced to the operator or the sidecar.
 MAX_PROVIDER_TEXT_CHARS = 500
+
+# Stand-ins used in an operator message when a server-controlled URL cannot be
+# reduced to a host. Printing the raw URL instead would defeat the userinfo rule.
+UNPARSABLE_HOST = "(unparsable host)"
+NO_REDIRECT_TARGET = "(no Location header)"
 TRUNCATION_MARKER = " [truncated]"
 
 # C0 (including ESC, so ANSI escape sequences never reach a terminal), DEL, C1, and
@@ -215,11 +220,23 @@ def _host_for_message(url: str) -> str:
     """
     try:
         parts = urllib.parse.urlsplit(url)
+    except ValueError:
+        return UNPARSABLE_HOST
+    try:
         host = parts.hostname or ""
         port = parts.port
-    except ValueError:  # malformed host/port — show the raw value instead
-        return _safe_text(url)
-    return _safe_text(f"{host}:{port}" if port else host) or _safe_text(url)
+    except ValueError:
+        # An out-of-range port makes ``.port`` raise. Fall back to the authority
+        # with any userinfo removed — never the raw URL, which would put
+        # ``api.provider.example@attacker.example`` back in the message and read
+        # as the provider's own host, the exact forgery this helper prevents.
+        return _safe_text(parts.netloc.rsplit("@", 1)[-1]) or UNPARSABLE_HOST
+    if not host:
+        # A target with no host at all (``file:///etc/passwd``, ``data:``). Name the
+        # scheme rather than the path, which is attacker-controlled text.
+        scheme = _safe_text(parts.scheme) or "?"
+        return f"(no host; scheme {scheme})"
+    return _safe_text(f"{host}:{port}" if port else host) or UNPARSABLE_HOST
 
 
 class _RefuseRedirects(urllib.request.HTTPRedirectHandler):
@@ -246,9 +263,22 @@ class _RefuseRedirects(urllib.request.HTTPRedirectHandler):
     refused redirect is neither a rate limit nor an auth failure.
     """
 
+    def http_error_302(self, req, fp, code, msg, headers):  # noqa: D102
+        # Stock ``http_error_302`` returns early when no ``Location``/``URI`` header
+        # is present, and raises ``HTTPError`` itself for a target scheme outside
+        # http/https/ftp — both *before* ``redirect_request`` runs. Either shape would
+        # surface as "Provider API returned HTTP 302", the misreading this handler
+        # exists to prevent. Routing every 3xx through ``redirect_request`` makes the
+        # refusal the only thing an operator can read off a 3xx.
+        raw = headers.get("Location") or headers.get("URI")
+        newurl = urllib.parse.urljoin(req.full_url, raw) if raw else ""
+        return self.redirect_request(req, fp, code, msg, headers, newurl)
+
+    http_error_301 = http_error_303 = http_error_307 = http_error_308 = http_error_302
+
     def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: D102
         origin = _host_for_message(req.full_url)
-        target = _host_for_message(newurl)
+        target = _host_for_message(newurl) if newurl else NO_REDIRECT_TARGET
         try:
             fp.close()  # abandon the connection; the body is never read
         except Exception:  # pragma: no cover - closing a dead socket must not mask the refusal

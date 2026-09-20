@@ -1354,3 +1354,82 @@ def test_loopback_is_actually_available_for_these_tests():
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
         assert s.getsockname()[0] == "127.0.0.1"
+
+
+# --------------------------------------------------------------------------- #
+# Pre-merge review of PR #658 (SEC-001 / SEC-002), both confirmed by measurement.
+#
+# SEC-001: stock ``http_error_302`` returns early when no ``Location``/``URI``
+# header is present, and raises ``HTTPError`` itself when the target scheme is not
+# http/https/ftp -- both *before* ``redirect_request`` runs. Measured against the
+# first version of the fix: each produced "Provider API returned HTTP 302", the
+# misreading the refusal exists to prevent.
+#
+# SEC-002: a ``Location`` whose port is out of range makes ``urlsplit(...).port``
+# raise, and the first version fell back to printing the raw URL -- putting
+# ``api.cloudflare.com@evil.example`` back in the message and breaking the MUST in
+# ``spec/tools/image-generation/`` that the host is read from the host field alone.
+# --------------------------------------------------------------------------- #
+def _odd_redirect_class(location: str | None):
+    class _OddRedirect(BaseHTTPRequestHandler):
+        protocol_version = "HTTP/1.0"
+
+        def log_message(self, *args):
+            pass
+
+        def _answer(self):
+            self.send_response(302)
+            if location is not None:
+                self.send_header("Location", location)
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+
+        do_GET = _answer
+        do_POST = _answer
+
+    return _OddRedirect
+
+
+@pytest.mark.parametrize(
+    ("location", "rendered"),
+    [
+        (None, "(no Location header)"),
+        ("file:///etc/passwd", "(no host; scheme file)"),
+    ],
+    ids=["absent-location", "non-http-scheme"],
+)
+def test_an_odd_shaped_3xx_still_reads_as_a_refusal(location, rendered):
+    """Every 3xx renders as a refusal, never as a provider error."""
+    try:
+        srv = HTTPServer(("127.0.0.1", 0), _odd_redirect_class(location))
+    except OSError as exc:  # pragma: no cover - environment without loopback
+        pytest.skip(f"cannot bind a loopback port for this test: {exc}")
+    thread = threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.02})
+    thread.daemon = True
+    thread.start()
+    try:
+        url = f"http://127.0.0.1:{srv.server_port}/x"
+        with pytest.raises(ig.GenerationError) as excinfo:
+            ig._post_json(url, {"prompt": "x"}, {"Authorization": f"Bearer {SECRET}"}, "https://k")
+        message = str(excinfo.value)
+        assert "Refused" in message, message
+        assert "Provider API returned" not in message, message
+        assert rendered in message, message
+        assert SECRET not in message
+    finally:
+        srv.shutdown()
+        srv.server_close()
+        thread.join(timeout=5)
+
+
+def test_an_unparsable_port_never_puts_userinfo_back_in_the_message():
+    """The ValueError fallback must not degrade to printing the raw URL."""
+    rendered = ig._host_for_message("http://api.cloudflare.com@evil.example:999999/x")
+    assert "api.cloudflare.com@" not in rendered
+    assert "evil.example" in rendered
+
+
+def test_a_hostless_target_names_its_scheme_rather_than_its_path():
+    """The path of a ``file:``/``data:`` target is attacker text; the scheme is not."""
+    assert ig._host_for_message("file:///etc/passwd") == "(no host; scheme file)"
+    assert "etc/passwd" not in ig._host_for_message("file:///etc/passwd")
