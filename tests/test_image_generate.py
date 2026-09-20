@@ -888,7 +888,8 @@ def test_ref_image_on_a_directory_is_refused_before_the_call(state, cf_env, caps
 
 def test_ref_image_on_a_fifo_is_refused_before_the_call(state, cf_env, capsys):
     # The /dev/zero hazard in reproducible form: a non-regular file would otherwise
-    # be read unbounded. is_file() excludes it without ever opening it.
+    # be read unbounded. The descriptor is opened non-blocking and fstat'd, so the
+    # FIFO is refused without a single byte being read and without hanging.
     fifo = state / "pipe.png"
     try:
         os.mkfifo(fifo)
@@ -1039,3 +1040,127 @@ def test_hostile_content_type_is_sanitized_into_the_sidecar(state, cf_env, capsy
 def test_safe_text_strips_c0_and_c1_but_keeps_the_words():
     assert ig._safe_text(f"{ESC}[31mred\x00\x9bbold\x7f") == "[31mredbold"
     assert ig._safe_text("line one\nline two") == "line one line two"
+
+
+# --------------------------------------------------------------------------- #
+# P3 hardening (#643): the three findings this PR's own code introduced.
+#   SEC-003 -- an operator-supplied path is untrusted text too, so it is
+#              sanitized before it is echoed back in a refusal.
+#   SEC-002 -- type and size are decided by fstat() on the descriptor that is
+#              then read, not by resolving the name a second time.
+#   SEC-004 -- the control-character class covers the Unicode bidirectional
+#              overrides and isolates, not only C0/DEL/C1.
+# --------------------------------------------------------------------------- #
+import signal
+import stat as stat_module
+
+RLO = "‮"  # RIGHT-TO-LEFT OVERRIDE
+PDI = "⁩"  # POP DIRECTIONAL ISOLATE
+
+
+def test_ansi_in_a_ref_image_path_is_stripped_from_the_refusal(state, cf_env, capsys):
+    # A path is picked up by a shell glob over a directory the operator does not
+    # control, so its bytes forge terminal output exactly like a provider message.
+    hostile_dir = state / f"pack{ESC}[31m.png"
+    hostile_dir.mkdir()
+    hostile_file = state / f"sheet{ESC}[2J.bin"
+    hostile_file.write_bytes(PNG)
+    for target, expected in ((hostile_dir, "not a regular file"),
+                             (hostile_file, "unsupported extension")):
+        code, m = run(_klein_ref_argv(state, target))
+        assert code == ig.EXIT_USAGE
+        assert m.call_count == 0
+        err = capsys.readouterr().err
+        assert expected in err
+        assert ESC not in err, f"the escape survived into stderr: {err!r}"
+        # The path stays recognizable: only the escape byte is dropped.
+        assert target.name.replace(ESC, "") in err
+
+
+def test_open_ref_image_does_not_block_on_a_fifo(state):
+    # The measurement behind SEC-002's remediation: a plain open() on a FIFO blocks
+    # until a writer appears, so the descriptor the type check needs would never
+    # exist. O_NONBLOCK is what makes "fstat what you hold" possible at all.
+    fifo = state / "pipe.png"
+    try:
+        os.mkfifo(fifo)
+    except (AttributeError, OSError):  # pragma: no cover - platform without FIFOs
+        pytest.skip("this platform cannot create a FIFO")
+
+    def _timeout(*_):  # pragma: no cover - only runs when the open blocks
+        raise AssertionError("opening the FIFO blocked; O_NONBLOCK is missing")
+
+    signal.signal(signal.SIGALRM, _timeout)
+    signal.setitimer(signal.ITIMER_REAL, 3.0)
+    try:
+        descriptor = ig._open_ref_image(str(fifo))
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+    try:
+        assert stat_module.S_ISFIFO(os.fstat(descriptor).st_mode)
+    finally:
+        os.close(descriptor)
+
+
+def test_ref_image_type_and_size_are_decided_on_the_open_descriptor(state, cf_env, capsys, monkeypatch):
+    """Pins the mechanism, not the race.
+
+    A genuine TOCTOU race -- swapping the path between the check and the read -- is
+    not reproducible in a unit test. What is testable is the property the fix rests
+    on: both decisions read ``os.fstat`` on the descriptor that is then read, so a
+    lie told by the *name* cannot get a FIFO or an oversize file past the gate.
+    Here ``Path.is_file``/``Path.stat`` are forced to report a small regular file;
+    a name-based gate would accept both inputs, a descriptor-based one refuses them.
+    """
+    fifo = state / "pipe.png"
+    try:
+        os.mkfifo(fifo)
+    except (AttributeError, OSError):  # pragma: no cover - platform without FIFOs
+        pytest.skip("this platform cannot create a FIFO")
+    big = state / "big.png"
+    big.write_bytes(PNG)
+    os.truncate(big, ig.MAX_REF_IMAGE_BYTES + 1)  # sparse: no 20 MiB of real I/O
+
+    honest_stat = Path.stat
+
+    class _SmallRegular:
+        st_mode = stat_module.S_IFREG | 0o644
+        st_size = 8
+
+    def _lying_stat(self, *args, **kwargs):
+        if Path(self) in (fifo, big):
+            return _SmallRegular()
+        return honest_stat(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "stat", _lying_stat)
+    monkeypatch.setattr(Path, "is_file", lambda self: True)
+
+    code, m = run(_klein_ref_argv(state, fifo))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    assert "not a regular file" in capsys.readouterr().err
+
+    code, m = run(_klein_ref_argv(state, big))
+    assert code == ig.EXIT_USAGE
+    assert m.call_count == 0
+    err = capsys.readouterr().err
+    # The *size* refusal, not the "grew past the cap while being read" fallback: the
+    # cap has to be decided before the read, on the descriptor's own st_size.
+    assert "bytes, above the" in err and "Downscale" in err
+    assert "grew past" not in err
+
+
+def test_bidi_override_in_a_provider_message_never_reaches_stderr(state, cf_env, capsys):
+    hostile = f"Quota {RLO}exceeded{PDI} for model x"
+    body = json.dumps({"error": {"message": hostile}})
+    with mock.patch("urllib.request.urlopen", side_effect=http_error(500, body)):
+        code = ig.main(["--prompt", "x", "--out", str(state / "x.png")])
+    assert code == ig.EXIT_ERROR
+    err = capsys.readouterr().err
+    assert RLO not in err and PDI not in err, f"a direction control survived: {err!r}"
+    assert "Quota" in err and "exceeded" in err and "for model x" in err
+
+
+def test_safe_text_strips_bidi_overrides_and_isolates():
+    assert ig._safe_text("a‪b‫c‬d‭e‮f") == "abcdef"
+    assert ig._safe_text("a⁦b⁧c⁨d⁩e") == "abcde"

@@ -41,6 +41,7 @@ import json
 import os
 import re
 import secrets
+import stat
 import sys
 import urllib.error
 import urllib.parse
@@ -76,8 +77,12 @@ MAX_RESPONSE_BYTES = 64 * 1024 * 1024  # 64 MiB
 MAX_PROVIDER_TEXT_CHARS = 500
 TRUNCATION_MARKER = " [truncated]"
 
-# C0 (including ESC, so ANSI escape sequences never reach a terminal), DEL, and C1.
-_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f]")
+# C0 (including ESC, so ANSI escape sequences never reach a terminal), DEL, C1, and
+# the Unicode bidirectional controls: the embeddings/overrides U+202A-U+202E and the
+# isolates U+2066-U+2069 are not control *characters* by codepoint range, but a
+# terminal that honours them lets a message reorder its own visible text, which is
+# the same forgery ESC buys.
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]")
 # Control characters that carry word separation; folded to a space before the rest
 # is dropped, so a multi-line provider message stays readable on one line.
 _WHITESPACE_CONTROLS = re.compile(r"[\t\n\v\f\r]")
@@ -102,13 +107,19 @@ class GenerationError(Exception):
 # Shared HTTP layer (one place for error-body surfacing + limit:0 detection)
 # --------------------------------------------------------------------------- #
 def _safe_text(value: object) -> str:
-    """Make a server-controlled string safe to print or to store in the sidecar.
+    """Make an untrusted string safe to print or to store in the sidecar.
+
+    Untrusted means server-controlled *and* operator-supplied: a path picked up by a
+    shell glob over a directory the operator does not control carries whatever bytes
+    its file name carries, so it forges terminal output exactly like a provider
+    message does. Both classes go through here before reaching stderr.
 
     Strips C0 (ESC included, so ANSI escape sequences cannot forge terminal
-    output), DEL, and C1, and caps the result at ``MAX_PROVIDER_TEXT_CHARS`` with
-    an explicit marker. The provider's own wording stays intact — the shared layer
-    is required to surface the upstream ``error.message``, so this sanitizes the
-    text without swallowing it.
+    output), DEL, C1, and the Unicode bidirectional overrides/isolates, and caps
+    the result at ``MAX_PROVIDER_TEXT_CHARS`` with an explicit marker. The
+    provider's own wording stays intact — the shared layer is required to
+    surface the upstream ``error.message``, so this sanitizes the text without
+    swallowing it.
     """
     text = _WHITESPACE_CONTROLS.sub(" ", value if isinstance(value, str) else str(value))
     text = _CONTROL_CHARS.sub("", text).strip()
@@ -792,57 +803,84 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _open_ref_image(raw_path: str) -> int:
+    """Open a --ref-image without ever blocking on what the path points at.
+
+    ``O_NONBLOCK`` is load-bearing: a plain ``open()`` on a FIFO blocks until a writer
+    appears, so the descriptor the type check needs would never come into existence.
+    With it the open returns immediately for a FIFO, a device, or a directory, and the
+    caller decides on the object it actually holds. Measured on Linux: plain
+    ``open(fifo, "rb")`` hangs; ``os.open(fifo, O_RDONLY | O_NONBLOCK)`` returns a
+    descriptor whose ``fstat`` reports ``S_ISFIFO``.
+    """
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0)
+    return os.open(raw_path, flags)
+
+
 def load_reference_images(paths: list[str]) -> list[tuple[str, str, bytes]]:
     """Read every --ref-image; return [(basename, mime, data), ...]. Fails before any call.
 
-    Three bounds guard what leaves the machine: the file must be a regular file
-    (``is_file()`` follows a symlink to one, and excludes directories, devices, and
-    FIFOs — ``/dev/zero`` never gets read), its extension must be a known image type
-    (an unknown one is refused, never uploaded as ``application/octet-stream``), and
-    its size must stay under ``MAX_REF_IMAGE_BYTES``.
+    Three bounds guard what leaves the machine: the file must be a regular file (a
+    symlink to one is followed; directories, devices, and FIFOs are refused, so
+    ``/dev/zero`` never gets read), its extension must be a known image type (an unknown
+    one is refused, never uploaded as ``application/octet-stream``), and its size must
+    stay under ``MAX_REF_IMAGE_BYTES``.
+
+    Type and size are decided by ``os.fstat`` on the **open descriptor**, and the bytes
+    are read from that same descriptor, so the path is resolved once: swapping it for a
+    FIFO or a device after the check cannot change what is read. Every path echoed back
+    to the operator goes through ``_safe_text`` first -- a file name is untrusted input
+    just like a provider message.
     """
     supported = ", ".join(sorted(EXT_TO_MIME))
     loaded: list[tuple[str, str, bytes]] = []
     for raw_path in paths:
         path = Path(raw_path)
+        shown = _safe_text(raw_path)
         try:
-            size = path.stat().st_size
+            descriptor = _open_ref_image(raw_path)
         except OSError as exc:
-            raise GenerationError(f"cannot read --ref-image: {exc}") from exc
-        if not path.is_file():
-            raise GenerationError(
-                f"--ref-image '{raw_path}' is not a regular file. Directories, devices, "
-                "and FIFOs cannot be uploaded — pass the path of an image file.",
-                code=EXIT_USAGE,
-            )
-        mime = EXT_TO_MIME.get(path.suffix.lower())
-        if mime is None:
-            raise GenerationError(
-                f"--ref-image '{raw_path}' has an unsupported extension "
-                f"'{path.suffix or '(none)'}'. Supported: {supported}. Convert the file "
-                "or give it the extension matching its real format; it is not uploaded "
-                "with an unknown type.",
-                code=EXIT_USAGE,
-            )
-        if size > MAX_REF_IMAGE_BYTES:
-            raise GenerationError(
-                f"--ref-image '{raw_path}' is {size} bytes, above the "
-                f"{MAX_REF_IMAGE_BYTES // (1024 * 1024)} MiB read cap "
-                "(MAX_REF_IMAGE_BYTES). Downscale or re-encode the image; the endpoint "
-                "expects a small reference anyway.",
-                code=EXIT_USAGE,
-            )
+            raise GenerationError(f"cannot read --ref-image: {_safe_text(exc)}") from exc
         try:
-            with path.open("rb") as handle:
+            info = os.fstat(descriptor)
+            if not stat.S_ISREG(info.st_mode):
+                raise GenerationError(
+                    f"--ref-image '{shown}' is not a regular file. Directories, devices, "
+                    "and FIFOs cannot be uploaded — pass the path of an image file.",
+                    code=EXIT_USAGE,
+                )
+            mime = EXT_TO_MIME.get(path.suffix.lower())
+            if mime is None:
+                raise GenerationError(
+                    f"--ref-image '{shown}' has an unsupported extension "
+                    f"'{_safe_text(path.suffix) or '(none)'}'. Supported: {supported}. "
+                    "Convert the file or give it the extension matching its real format; "
+                    "it is not uploaded with an unknown type.",
+                    code=EXIT_USAGE,
+                )
+            if info.st_size > MAX_REF_IMAGE_BYTES:
+                raise GenerationError(
+                    f"--ref-image '{shown}' is {info.st_size} bytes, above the "
+                    f"{MAX_REF_IMAGE_BYTES // (1024 * 1024)} MiB read cap "
+                    "(MAX_REF_IMAGE_BYTES). Downscale or re-encode the image; the endpoint "
+                    "expects a small reference anyway.",
+                    code=EXIT_USAGE,
+                )
+            handle = os.fdopen(descriptor, "rb")
+        except BaseException:
+            os.close(descriptor)
+            raise
+        with handle:  # owns the descriptor from here on
+            try:
                 # Bounded read: one byte past the cap is enough to refuse a file that
-                # grew between stat() and read(), without buffering the rest.
+                # grew after it was fstat'd, without buffering the rest.
                 data = handle.read(MAX_REF_IMAGE_BYTES + 1)
-        except OSError as exc:
-            raise GenerationError(f"cannot read --ref-image: {exc}") from exc
+            except OSError as exc:
+                raise GenerationError(f"cannot read --ref-image: {_safe_text(exc)}") from exc
         if len(data) > MAX_REF_IMAGE_BYTES:
-            # The file grew between stat() and read(); refuse rather than upload it.
+            # The file grew between fstat() and read(); refuse rather than upload it.
             raise GenerationError(
-                f"--ref-image '{raw_path}' grew past the "
+                f"--ref-image '{shown}' grew past the "
                 f"{MAX_REF_IMAGE_BYTES // (1024 * 1024)} MiB read cap "
                 "(MAX_REF_IMAGE_BYTES) while being read. Retry with a stable file.",
                 code=EXIT_USAGE,
@@ -855,7 +893,8 @@ def check_model_options(args: argparse.Namespace) -> None:
     """Reject model/reference-image combinations no provider supports — before any call."""
     if args.model and args.provider != "cloudflare":
         raise GenerationError(
-            f"--model is only supported by the cloudflare provider, not '{args.provider}'",
+            "--model is only supported by the cloudflare provider, not "
+            f"'{_safe_text(args.provider)}'",
             code=EXIT_USAGE,
         )
     refs = args.ref_image or []
@@ -867,7 +906,7 @@ def check_model_options(args: argparse.Namespace) -> None:
     if args.provider != "cloudflare" or args.model != CloudflareProvider.KLEIN_MODEL_KEY:
         raise GenerationError(
             "--ref-image requires --provider cloudflare --model flux-2-klein-4b; "
-            f"'{selected}' does not accept reference images",
+            f"'{_safe_text(selected)}' does not accept reference images",
             code=EXIT_USAGE,
         )
     if len(refs) > CloudflareProvider.MAX_REF_IMAGES:
