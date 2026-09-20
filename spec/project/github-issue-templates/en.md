@@ -49,6 +49,7 @@ Repos **SHOULD** add further templates only when the audience analysis or the pr
 - `documentation.yml`: for repos whose primary deliverable is documentation, or whose docs are heavy.
 - `question.yml`: only when GitHub Discussions aren't enabled; otherwise route to Discussions via `config.yml`.
 - `chore.yml` / `maintenance.yml`: for repos with frequent dependency or housekeeping issues.
+- `spec_finding.yml`: for a repository that holds portfolio-wide specs. It captures a failure form or a gap **measured in another repository** and pre-fills the repository's spec-finding label. The label isn't cosmetic. `spec/project/continuous-improvement/` §"Portfolio gap closure" counts these open issues as a gap signal, and one half of its detector reads that label. A finding filed without it is still counted by the other half, but only if its body happens to name the other repository, which three of five bodies in the corpus that motivated the rule didn't do (`nolte/claude-shared#649`).
 
 ### Project-type-driven derivation
 
@@ -74,6 +75,7 @@ A template-generation skill **MUST** follow this derivation procedure, in order:
    - Multiple-of choice → `checkboxes`.
    - Acknowledgement gates (code of conduct, search check) → `checkboxes` with `required: true`.
 5. **Set labels and assignees.** Pre-fill `labels:` from the project's label taxonomy (often a `.github/labels.yml` or Probot `settings.yml`). Only pre-fill `assignees:` when the repo has a stable triage owner.
+   A template whose issues are counted by a portfolio rule **MUST** pre-fill the label that rule reads, rather than leaving it to the filing author. A label a person has to remember reintroduces the human step the counting rule exists to remove.
 6. **Wire the chooser.** Update `.github/ISSUE_TEMPLATE/config.yml` with `contact_links` for any external destinations (Discussions, support forum, security policy) so the chooser surfaces them alongside the templates. A security `contact_link` is **REQUIRED**: until `project-structure` specifies a `SECURITY.md` location, point it at GitHub private vulnerability reporting; once that location is specified, point it at the repo's `SECURITY.md` instead.
 7. **Record the applied derivation.** The applied derivation **MUST** be recorded as a YAML comment block at the top of `config.yml` (project type, audience artefact path + date, generated-template list, audience-set identifier), so a re-run can re-read it inline.
 
@@ -131,6 +133,7 @@ A downstream skill that applies this spec **MUST**:
 - [ ] No template uses Markdown (`.md`) form unless the template is a purely informational stub.
 - [ ] The applied derivation (project type, audiences, chosen templates, project-specific fields) is recorded somewhere the skill can re-read on the next run, either inside the templates as comments or in a sibling artefact.
 - [ ] Re-running the generator on a repo that already conforms produces no diff.
+- [ ] In a repository that holds portfolio-wide specs, a template exists for a finding measured in another repository, and it pre-fills the label the counting rule in `spec/project/continuous-improvement/` reads
 
 ## Open Questions
 

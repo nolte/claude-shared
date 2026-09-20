@@ -47,6 +47,7 @@ Repos **SOLLTEN [SHOULD]** weitere Templates nur ergänzen, wenn die Audience-An
 - `documentation.yml` — für Repos, deren primäres Liefer-Artefakt Dokumentation ist oder deren Doku schwer wiegt.
 - `question.yml` — nur wenn GitHub Discussions nicht aktiv sind; sonst über `config.yml` an Discussions weiterleiten.
 - `chore.yml` / `maintenance.yml` — für Repos mit häufigen Dependency- oder Housekeeping-Issues.
+- `spec_finding.yml`: für ein Repository, das portfolioweite Specs hält. Es erfasst eine Fehlerform oder Lücke, die **in einem anderen Repository gemessen** wurde, und füllt das Spec-Finding-Label des Repositories vor. Das Label ist nicht kosmetisch: `spec/project/continuous-improvement/` §„Portfoliolücken-Schließung" zählt diese offenen Issues als Lückensignal, und eine Hälfte seines Detektors liest dieses Label. Ein ohne Label eingereichtes Finding zählt weiterhin über die andere Hälfte, aber nur, wenn sein Body zufällig das andere Repository nennt — was drei von fünf Bodies des Korpus, das die Regel motivierte, nicht taten (`nolte/claude-shared#649`).
 
 ### Projekttyp-getriebene Ableitung
 
@@ -72,6 +73,7 @@ Ein Template-erzeugender Skill **MUSS [MUST]** dieses Ableitungsverfahren in der
    - Mehrere-aus-vielen → `checkboxes`.
    - Bestätigungsgates (Code of Conduct, Suchprüfung) → `checkboxes` mit `required: true`.
 5. **Labels und Assignees setzen.** `labels:` aus der Label-Taxonomie des Projekts vorbelegen (häufig `.github/labels.yml` oder Probot `settings.yml`). `assignees:` nur dann vorbelegen, wenn das Repo einen stabilen Triage-Owner hat.
+   Ein Template, dessen Issues von einer Portfolio-Regel gezählt werden, **MUSS** das Label vorfüllen, das diese Regel liest, statt es der einreichenden Person zu überlassen. Ein Label, an das sich jemand erinnern muss, führt genau den menschlichen Schritt wieder ein, den die zählende Regel beseitigen soll.
 6. **Den Chooser verdrahten.** `.github/ISSUE_TEMPLATE/config.yml` mit `contact_links` für externe Ziele (Discussions, Support-Forum, Security-Policy) ergänzen, damit der Chooser sie neben den Templates anzeigt. Ein Security-`contact_link` ist **ERFORDERLICH [REQUIRED]**: Solange `project-structure` keinen `SECURITY.md`-Ort spezifiziert, auf GitHub Private Vulnerability Reporting zeigen; sobald dieser Ort spezifiziert ist, stattdessen auf die `SECURITY.md` des Repos zeigen.
 7. **Die angewendete Ableitung festhalten.** Die angewendete Ableitung **MUSS [MUST]** als YAML-Kommentarblock am Anfang der `config.yml` festgehalten werden (Projekttyp, Pfad + Datum des Audience-Artefakts, Liste der generierten Templates, Audience-Set-Bezeichner), damit ein erneuter Lauf sie inline wieder lesen kann.
 
@@ -127,6 +129,7 @@ Ein nachgelagerter Skill, der diese Spec anwendet, **MUSS [MUST]**:
 - [ ] Kein Template nutzt das Markdown-Format (`.md`), außer es handelt sich um einen rein informativen Stub.
 - [ ] Die angewendete Ableitung (Projekttyp, Audiences, gewählte Templates, projektspezifische Felder) ist an einer Stelle festgehalten, die der Skill beim nächsten Lauf wieder lesen kann — entweder als Kommentar in den Templates oder in einem benachbarten Artefakt.
 - [ ] Ein erneuter Lauf des Generators auf einem Repo, das bereits konform ist, erzeugt keinen Diff.
+- [ ] In einem Repository, das portfolioweite Specs hält, existiert ein Template für ein in einem anderen Repository gemessenes Finding, und es füllt das Label vor, das die zählende Regel in `spec/project/continuous-improvement/` liest
 
 ## Open Questions
 
