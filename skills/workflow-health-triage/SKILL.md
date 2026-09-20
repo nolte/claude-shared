@@ -61,7 +61,7 @@ and verify the exact tool names against the pinned server version, per
 toolset, so these reads stay on `gh` (a documented OQ-D coverage gap). `gh` stays
 authoritative and the fallback is never removed.
 
-Confirm the run is on `develop` or `main` (the spec's scope) and is `conclusion: failure`. If it's still `in_progress`, stop and ask the user to wait for completion before triage; if it's `cancelled`, classify as `other` with a one-line note and stop.
+Confirm the run is on `develop` or `main` (the spec's scope) and is `conclusion: failure`. If it's still `in_progress`, stop and ask the user to wait for completion before triage. If it's `cancelled`, classify as `other` with a one-line note and stop—unless the lane's recent runs (`gh run list --workflow <file> --limit 20`) are majority-cancelled: then the lane delivers no verdict at all, and the subject is the lane, not the run. Route it to `spec/project/workflow-health/` §"Cancellation rates" and its two-cause fork: measure the median wait (`started_at − created_at`, jobs with no `needs:` only) beside the runtime per `${CLAUDE_PLUGIN_ROOT}/skills/cicd-pipeline-design/references/slot-capacity-measurement.md`; wait that dominates runtime is a capacity finding for `cicd-pipeline-design`, runtime above the trigger cadence is the cadence remedy, runtime far below it is churn. Stop after naming which of the three applies; the remediation isn't a `fix/` PR from this skill.
 
 ### 2. Classify before any re-run
 
