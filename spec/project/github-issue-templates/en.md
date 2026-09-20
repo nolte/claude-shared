@@ -49,7 +49,7 @@ Repos **SHOULD** add further templates only when the audience analysis or the pr
 - `documentation.yml`: for repos whose primary deliverable is documentation, or whose docs are heavy.
 - `question.yml`: only when GitHub Discussions aren't enabled; otherwise route to Discussions via `config.yml`.
 - `chore.yml` / `maintenance.yml`: for repos with frequent dependency or housekeeping issues.
-- `spec_finding.yml`: for a repository that holds portfolio-wide specs. It captures a failure form or a gap **measured in another repository** and pre-fills the repository's spec-finding label. The label isn't cosmetic. `spec/project/continuous-improvement/` §"Portfolio gap closure" counts these open issues as a gap signal, and one half of its detector reads that label. A finding filed without it is still counted by the other half, but only if its body happens to name the other repository, which three of five bodies in the corpus that motivated the rule didn't do (`nolte/claude-shared#649`).
+- `spec_finding.yml`: for a repository that holds portfolio-wide specs. It captures a failure form or a gap **measured in another repository** and pre-fills the repository's spec-finding label. The label isn't cosmetic. `spec/project/continuous-improvement/` §"Portfolio gap closure" counts these open issues as a gap signal, and one half of its detector reads that label. A finding filed without the label is still counted by the other half, but only if its body happens to name the other repository, which three of five bodies in the corpus that motivated the rule didn't do (`nolte/claude-shared#649`).
 
 ### Project-type-driven derivation
 
