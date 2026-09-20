@@ -791,6 +791,11 @@ def _read_prompt_source(raw_path: str, flag: str) -> str:
         try:
             # Bounded read: one byte past the cap is enough to refuse a file that grew
             # after it was fstat'd, without buffering the rest.
+            # A single ``read`` is enough here, and deliberately so: the descriptor
+            # passed ``S_ISREG`` above, and ``O_NONBLOCK`` has no effect on a regular
+            # file, so this cannot come back short. Were it ever opened on something
+            # else, a short read would silently truncate -- which is why the type
+            # check runs first rather than alongside.
             data = handle.read(MAX_PROMPT_FILE_BYTES + 1)
         except OSError as exc:
             raise GenerationError(f"cannot read {flag}: {_safe_text(exc)}") from exc
@@ -1051,6 +1056,11 @@ def load_reference_images(paths: list[str]) -> list[tuple[str, str, bytes]]:
             try:
                 # Bounded read: one byte past the cap is enough to refuse a file that
                 # grew after it was fstat'd, without buffering the rest.
+                # A single ``read`` is enough here, and deliberately so: the descriptor
+                # passed ``S_ISREG`` above, and ``O_NONBLOCK`` has no effect on a regular
+                # file, so this cannot come back short. Were it ever opened on something
+                # else, a short read would silently truncate -- which is why the type
+                # check runs first rather than alongside.
                 data = handle.read(MAX_REF_IMAGE_BYTES + 1)
             except OSError as exc:
                 raise GenerationError(f"cannot read --ref-image: {_safe_text(exc)}") from exc
