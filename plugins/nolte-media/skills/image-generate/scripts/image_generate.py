@@ -41,6 +41,7 @@ import json
 import os
 import re
 import secrets
+import stat
 import sys
 import urllib.error
 import urllib.parse
@@ -59,6 +60,32 @@ EXT_TO_MIME = {
 # rejects the default urllib User-Agent ("Python-urllib/x.y") with HTTP 403
 # (error 1010). A normal browser-style UA passes; without it the GET is blocked.
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:128.0) Gecko/20100101 Firefox/128.0"
+
+# --------------------------------------------------------------------------- #
+# Safety bounds on operator- and provider-supplied data
+# --------------------------------------------------------------------------- #
+# Cap on a single --ref-image. The klein-4b endpoint's own limit is expressed in
+# pixels ("under 512x512"), which no byte count states exactly, so this bound is
+# deliberately loose: far above any conforming image, far below a memory hazard
+# (a symlink to a huge file, a sparse file). The endpoint stays authoritative on
+# dimensions — this tool never validates them client-side.
+MAX_REF_IMAGE_BYTES = 20 * 1024 * 1024  # 20 MiB
+# Cap on a response body. A malicious or intercepted endpoint must not be able to
+# exhaust memory, and on the klein `image/*` branch those bytes go straight to disk.
+MAX_RESPONSE_BYTES = 64 * 1024 * 1024  # 64 MiB
+# Cap on any server-controlled string surfaced to the operator or the sidecar.
+MAX_PROVIDER_TEXT_CHARS = 500
+TRUNCATION_MARKER = " [truncated]"
+
+# C0 (including ESC, so ANSI escape sequences never reach a terminal), DEL, C1, and
+# the Unicode bidirectional controls: the embeddings/overrides U+202A-U+202E and the
+# isolates U+2066-U+2069 are not control *characters* by codepoint range, but a
+# terminal that honours them lets a message reorder its own visible text, which is
+# the same forgery ESC buys.
+_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]")
+# Control characters that carry word separation; folded to a space before the rest
+# is dropped, so a multi-line provider message stays readable on one line.
+_WHITESPACE_CONTROLS = re.compile(r"[\t\n\v\f\r]")
 
 # Exit codes
 EXIT_OK = 0
@@ -79,16 +106,68 @@ class GenerationError(Exception):
 # --------------------------------------------------------------------------- #
 # Shared HTTP layer (one place for error-body surfacing + limit:0 detection)
 # --------------------------------------------------------------------------- #
+def _safe_text(value: object) -> str:
+    """Make an untrusted string safe to print or to store in the sidecar.
+
+    Untrusted means server-controlled *and* operator-supplied: a path picked up by a
+    shell glob over a directory the operator does not control carries whatever bytes
+    its file name carries, so it forges terminal output exactly like a provider
+    message does. Both classes go through here before reaching stderr.
+
+    Strips C0 (ESC included, so ANSI escape sequences cannot forge terminal
+    output), DEL, C1, and the Unicode bidirectional overrides/isolates, and caps
+    the result at ``MAX_PROVIDER_TEXT_CHARS`` with an explicit marker. The
+    provider's own wording stays intact — the shared layer is required to
+    surface the upstream ``error.message``, so this sanitizes the text without
+    swallowing it.
+    """
+    text = _WHITESPACE_CONTROLS.sub(" ", value if isinstance(value, str) else str(value))
+    text = _CONTROL_CHARS.sub("", text).strip()
+    if len(text) > MAX_PROVIDER_TEXT_CHARS:
+        text = text[:MAX_PROVIDER_TEXT_CHARS].rstrip() + TRUNCATION_MARKER
+    return text
+
+
+def _read_capped(stream: object, limit: int, what: str) -> bytes:
+    """Read at most ``limit`` bytes; refuse anything larger instead of buffering it.
+
+    Reads ``limit + 1`` bytes so "exactly at the cap" still succeeds and the first
+    byte past it is enough to refuse — the oversize body is never held in memory.
+    """
+    chunks: list[bytes] = []
+    remaining = limit + 1
+    while remaining > 0:
+        chunk = stream.read(remaining)
+        got = len(chunk) if chunk else 0
+        if got == 0:  # EOF — and a zero-length chunk could never make progress
+            break
+        chunks.append(chunk)
+        remaining -= got
+    data = b"".join(chunks)
+    if len(data) > limit:
+        raise GenerationError(
+            f"{what} exceeds the {limit // (1024 * 1024)} MiB safety cap "
+            f"(MAX_RESPONSE_BYTES); the response was discarded and nothing was "
+            "written. Re-run with a smaller request, or verify you are talking to "
+            "the real provider endpoint."
+        )
+    return data
+
+
 def _api_error_detail(exc: urllib.error.HTTPError) -> tuple[str, bool]:
     """Read the API error body; return (human-readable detail, is_zero_quota).
 
-    Surfaces the provider's actual ``error.message`` instead of swallowing it.
+    Surfaces the provider's actual ``error.message`` instead of swallowing it —
+    sanitized (control characters stripped, length capped) because it is
+    server-controlled text on its way to the operator's terminal.
     ``is_zero_quota`` is True when the body reports a quota of ``limit: 0`` — the
     model requires billing rather than being temporarily rate-limited, so
     "retry later" would be wrong.
     """
     try:
-        body = exc.read().decode("utf-8", "replace")
+        body = _read_capped(exc, MAX_RESPONSE_BYTES, "the provider error body").decode(
+            "utf-8", "replace"
+        )
     except Exception:
         return "", False
     try:
@@ -96,7 +175,7 @@ def _api_error_detail(exc: urllib.error.HTTPError) -> tuple[str, bool]:
     except (ValueError, TypeError, AttributeError):
         detail = body.strip()
     zero_quota = re.search(r"limit:\s*0\b", body) is not None
-    return detail, zero_quota
+    return _safe_text(detail), zero_quota
 
 
 def _raise_http_error(exc: urllib.error.HTTPError, key_page: str | None) -> None:
@@ -127,10 +206,17 @@ def _raise_http_error(exc: urllib.error.HTTPError, key_page: str | None) -> None
 
 
 def _request(req: urllib.request.Request, key_page: str | None = None) -> tuple[bytes, str]:
-    """Perform a request; return (body_bytes, content_type). Maps errors to GenerationError."""
+    """Perform a request; return (body_bytes, content_type). Maps errors to GenerationError.
+
+    The body is read under ``MAX_RESPONSE_BYTES``: every caller (the JSON paths,
+    the klein multipart path, the Pollinations raw-bytes path) wants the whole
+    body, so one cap here bounds them all. The content type is sanitized here too,
+    since it reaches both the stderr mismatch warning and the sidecar.
+    """
     try:
         with urllib.request.urlopen(req) as response:
-            return response.read(), response.headers.get_content_type()
+            body = _read_capped(response, MAX_RESPONSE_BYTES, "the provider response body")
+            return body, _safe_text(response.headers.get_content_type())
     except urllib.error.HTTPError as exc:
         _raise_http_error(exc, key_page)
     except urllib.error.URLError as exc:
@@ -329,7 +415,9 @@ class CloudflareProvider(Provider):
             b64 = _result_image(resp)
             if not b64:
                 errs = _envelope_errors(resp)
-                raise GenerationError(f"Cloudflare returned no image data: {errs}")
+                raise GenerationError(
+                    f"Cloudflare returned no image data: {_safe_text(errs)}"
+                )
             try:
                 images.append(("image/jpeg", base64.b64decode(b64)))
             except (ValueError, TypeError) as exc:
@@ -371,11 +459,13 @@ class CloudflareProvider(Provider):
                 "the provider returned a malformed (non-JSON) response"
             ) from exc
         if not isinstance(resp, dict):
-            raise GenerationError(f"Cloudflare returned no image data: {resp!r}")
+            raise GenerationError(f"Cloudflare returned no image data: {_safe_text(repr(resp))}")
         b64 = _result_image(resp)
         if not b64:
             errs = _envelope_errors(resp)
-            raise GenerationError(f"Cloudflare returned no image data: {errs}")
+            raise GenerationError(
+                    f"Cloudflare returned no image data: {_safe_text(errs)}"
+                )
         try:
             data = base64.b64decode(b64)
         except (ValueError, TypeError) as exc:
@@ -491,7 +581,8 @@ class GeminiProvider(Provider):
                 inline = part.get("inlineData") or part.get("inline_data")
                 if not inline or not inline.get("data"):
                     continue
-                mime = inline.get("mimeType") or inline.get("mime_type") or "image/png"
+                # Server-controlled: it reaches the stderr warning and the sidecar.
+                mime = _safe_text(inline.get("mimeType") or inline.get("mime_type") or "") or "image/png"
                 try:
                     images.append((mime, base64.b64decode(inline["data"])))
                 except (ValueError, TypeError) as exc:
@@ -712,16 +803,88 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _open_ref_image(raw_path: str) -> int:
+    """Open a --ref-image without ever blocking on what the path points at.
+
+    ``O_NONBLOCK`` is load-bearing: a plain ``open()`` on a FIFO blocks until a writer
+    appears, so the descriptor the type check needs would never come into existence.
+    With it the open returns immediately for a FIFO, a device, or a directory, and the
+    caller decides on the object it actually holds. Measured on Linux: plain
+    ``open(fifo, "rb")`` hangs; ``os.open(fifo, O_RDONLY | O_NONBLOCK)`` returns a
+    descriptor whose ``fstat`` reports ``S_ISFIFO``.
+    """
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_CLOEXEC", 0)
+    return os.open(raw_path, flags)
+
+
 def load_reference_images(paths: list[str]) -> list[tuple[str, str, bytes]]:
-    """Read every --ref-image; return [(basename, mime, data), ...]. Fails before any call."""
+    """Read every --ref-image; return [(basename, mime, data), ...]. Fails before any call.
+
+    Three bounds guard what leaves the machine: the file must be a regular file (a
+    symlink to one is followed; directories, devices, and FIFOs are refused, so
+    ``/dev/zero`` never gets read), its extension must be a known image type (an unknown
+    one is refused, never uploaded as ``application/octet-stream``), and its size must
+    stay under ``MAX_REF_IMAGE_BYTES``.
+
+    Type and size are decided by ``os.fstat`` on the **open descriptor**, and the bytes
+    are read from that same descriptor, so the path is resolved once: swapping it for a
+    FIFO or a device after the check cannot change what is read. Every path echoed back
+    to the operator goes through ``_safe_text`` first -- a file name is untrusted input
+    just like a provider message.
+    """
+    supported = ", ".join(sorted(EXT_TO_MIME))
     loaded: list[tuple[str, str, bytes]] = []
     for raw_path in paths:
         path = Path(raw_path)
+        shown = _safe_text(raw_path)
         try:
-            data = path.read_bytes()
+            descriptor = _open_ref_image(raw_path)
         except OSError as exc:
-            raise GenerationError(f"cannot read --ref-image: {exc}") from exc
-        mime = EXT_TO_MIME.get(path.suffix.lower(), "application/octet-stream")
+            raise GenerationError(f"cannot read --ref-image: {_safe_text(exc)}") from exc
+        try:
+            info = os.fstat(descriptor)
+            if not stat.S_ISREG(info.st_mode):
+                raise GenerationError(
+                    f"--ref-image '{shown}' is not a regular file. Directories, devices, "
+                    "and FIFOs cannot be uploaded — pass the path of an image file.",
+                    code=EXIT_USAGE,
+                )
+            mime = EXT_TO_MIME.get(path.suffix.lower())
+            if mime is None:
+                raise GenerationError(
+                    f"--ref-image '{shown}' has an unsupported extension "
+                    f"'{_safe_text(path.suffix) or '(none)'}'. Supported: {supported}. "
+                    "Convert the file or give it the extension matching its real format; "
+                    "it is not uploaded with an unknown type.",
+                    code=EXIT_USAGE,
+                )
+            if info.st_size > MAX_REF_IMAGE_BYTES:
+                raise GenerationError(
+                    f"--ref-image '{shown}' is {info.st_size} bytes, above the "
+                    f"{MAX_REF_IMAGE_BYTES // (1024 * 1024)} MiB read cap "
+                    "(MAX_REF_IMAGE_BYTES). Downscale or re-encode the image; the endpoint "
+                    "expects a small reference anyway.",
+                    code=EXIT_USAGE,
+                )
+            handle = os.fdopen(descriptor, "rb")
+        except BaseException:
+            os.close(descriptor)
+            raise
+        with handle:  # owns the descriptor from here on
+            try:
+                # Bounded read: one byte past the cap is enough to refuse a file that
+                # grew after it was fstat'd, without buffering the rest.
+                data = handle.read(MAX_REF_IMAGE_BYTES + 1)
+            except OSError as exc:
+                raise GenerationError(f"cannot read --ref-image: {_safe_text(exc)}") from exc
+        if len(data) > MAX_REF_IMAGE_BYTES:
+            # The file grew between fstat() and read(); refuse rather than upload it.
+            raise GenerationError(
+                f"--ref-image '{shown}' grew past the "
+                f"{MAX_REF_IMAGE_BYTES // (1024 * 1024)} MiB read cap "
+                "(MAX_REF_IMAGE_BYTES) while being read. Retry with a stable file.",
+                code=EXIT_USAGE,
+            )
         loaded.append((path.name, mime, data))
     return loaded
 
@@ -730,7 +893,8 @@ def check_model_options(args: argparse.Namespace) -> None:
     """Reject model/reference-image combinations no provider supports — before any call."""
     if args.model and args.provider != "cloudflare":
         raise GenerationError(
-            f"--model is only supported by the cloudflare provider, not '{args.provider}'",
+            "--model is only supported by the cloudflare provider, not "
+            f"'{_safe_text(args.provider)}'",
             code=EXIT_USAGE,
         )
     refs = args.ref_image or []
@@ -742,7 +906,7 @@ def check_model_options(args: argparse.Namespace) -> None:
     if args.provider != "cloudflare" or args.model != CloudflareProvider.KLEIN_MODEL_KEY:
         raise GenerationError(
             "--ref-image requires --provider cloudflare --model flux-2-klein-4b; "
-            f"'{selected}' does not accept reference images",
+            f"'{_safe_text(selected)}' does not accept reference images",
             code=EXIT_USAGE,
         )
     if len(refs) > CloudflareProvider.MAX_REF_IMAGES:
