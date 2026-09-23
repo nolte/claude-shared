@@ -28,6 +28,7 @@ Readers: whoever closes a defect and authors its pull request, and reviewers app
 - Prescribing test design. A guard is often a test, and when it's one, `spec/project/test-falsifiability/` and the tier specs govern how it's written
 - Owning branch protection. Whether a lane is enforced is `spec/project/quality-gate/` §"Enforced lane per tier"; G2 consumes that answer rather than restating it
 - Retroactive application. These rules bind defects closed after the spec is adopted; sweeping a repository's history is a separate, optional exercise
+- Not a source of coverage. A guard exists only once somebody has named the class, so this spec is reactive by construction and can't tell anybody where to look. `spec/project/capability-reach-audit/` is the deliberate search that produces the classes a guard then refuses.
 
 ## Requirements
 

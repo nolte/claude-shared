@@ -33,6 +33,7 @@ Readers: authors and reviewers of test code at every tier; the tier generator an
 - The tier taxonomy itself: owned by `spec/project/test-pyramid-foundation/`; falsifiability is a cross-cutting property of tests at every tier, not a tier
 - The fidelity requirement on test-controlled arrangements: owned by `spec/project/test-pyramid-foundation/` §"Arrangement fidelity" portfolio-wide, with §"Test-double taxonomy" fixing the reference point for the double case, and expressed per tier by the tier specs; T9 is the failure mode this spec makes citable and detectable, and restating the rule here would fork it
 - The operational mechanics of static-analysis rules (rule identifiers, baselines, ratchets, noise governance): owned by `spec/project/test-tier-static-analysis/`; this spec defines what the checks look for, that tier owns how they run
+- Not a way to decide where to look. This spec asks whether a test proves what it claims, and it settled several defects recorded in `spec/project/capability-reach-audit/` once somebody looked at them. Producing the list of places worth looking at is that audit's job, not this one's.
 
 ## Requirements
 

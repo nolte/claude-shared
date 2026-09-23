@@ -33,6 +33,7 @@ Leser: Autor:innen und Reviewer von Testcode auf jedem Tier; die Tier-Generator-
 - Die Tier-Taxonomie selbst — liegt bei `spec/project/test-pyramid-foundation/`; Falsifizierbarkeit ist eine tier-übergreifende Eigenschaft von Tests, kein Tier
 - Die Treue-Anforderung an testgesteuerte Arrangements — liegt portfolioweit bei `spec/project/test-pyramid-foundation/` §„Arrangement-Treue“, wobei §„Test-Double-Taxonomie“ den Bezugspunkt für den Double-Fall festlegt, und wird von den Stufen-Specs je Stufe ausgeprägt; T9 ist der Fehlermodus, den diese Spec zitierbar und detektierbar macht, und die Regel hier zu wiederholen würde sie forken
 - Die operative Mechanik von Static-Analysis-Regeln (Regel-Identifier, Baselines, Ratchets, Noise-Governance) — liegt bei `spec/project/test-tier-static-analysis/`; diese Spec definiert, wonach die Checks suchen, jenes Tier verantwortet, wie sie laufen
+- Kein Mittel zu entscheiden, wo nachzusehen ist. Dieser Spec fragt, ob ein Test belegt, was er behauptet, und er klärte mehrere in `spec/project/capability-reach-audit/` festgehaltene Defekte, nachdem jemand sie angesehen hatte. Die Liste der Stellen zu erzeugen, an denen nachzusehen sich lohnt, ist Aufgabe jenes Audits, nicht dieses.
 
 ## Requirements
 

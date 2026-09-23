@@ -30,6 +30,7 @@ Readers: agent authors maintaining the auditor; reviewers and Data Protection Of
 - **Applying fixes or remediation.** The agent is read-only; the fix step belongs to a human or a separate skill, so the audit stays single-responsibility
 - Authoring the legal artifacts themselves (the privacy notice text, the Records of Processing Activities, the DPIA)—the audit checks for their presence and for code consistency with them, it doesn't write them
 - Running third-party privacy/PII-scanning tooling or DSAR-automation platforms—the agent performs LLM-driven pattern analysis over the repository; external runners stay out of scope
+- Not an execution-based audit. This one confirms or refutes a signal by reading the repository, so a function that returns normally while reaching nothing passes it. `spec/project/capability-reach-audit/` establishes reach by executing a probe, and it records two data-protection capabilities, an export and an erasure, that this audit's domain covers and that it didn't catch.
 
 ## Requirements
 
