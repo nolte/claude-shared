@@ -17,10 +17,11 @@ Render each batch as one table, followed by the `assumes[]` of every row that ha
 ```text
 ### Batch <source> (<k>/<n>): <count> drafts
 
-| # | id | declaration | tier | expected | observe | derived_from |
-|---|---|---|---|---|---|---|
-| 1 | endpoint-scan-workflow-dispatch-runs | .github/workflows/scan.yml (on.workflow_dispatch) | T0 | 300 runs | gh run list --workflow scan.yml … --jq length | 9feca6a8d2c1 |
-| 2 | … | … | … | … | … | … |
+| # | id | declaration | tier | expected | environment | teardown | observe (full argv) | derived_from |
+|---|---|---|---|---|---|---|---|---|
+| 1 | endpoint-scan-workflow-dispatch-runs | .github/workflows/scan.yml (on.workflow_dispatch) | T0 | 300 runs | – | – | `gh run list --workflow scan.yml --event workflow_dispatch --limit 300 --json conclusion --jq length` | 9feca6a8d2c1 |
+| 2 | requirement-ranking-endpoint-answers | project/requirements/ranking.md (L14) | T1 | 1 answers | `db:up` | `db:down` | **[inline code]** `python3` `-c` `<the full program text, one line per element>` | 9feca6a8d2c1 |
+| 3 | … | … | … | … | … | … | … | … |
 
 Assumes:
 - #1 needs `gh` authenticated for this repository (evidence: .github/workflows/scan.yml:3)
@@ -31,7 +32,10 @@ Answer: approve all | approve <ids or #s> | reject <ids or #s> [reason] | skip
 
 - `declaration` is `path (location)` for an in-repository anchor, `inherited <topic/slug> @ <ref>` for an inherited spec, `external: <where>` for the rest. Show `monitoring: unmonitored` in the same cell when the scanner set it, so the operator knows this probe re-derives only on request (R6).
 - `expected` is `<value> <unit>` for a count and `<n> values, <unit>` for a set; the full set is shown on request.
-- `observe` is the argv joined by spaces, cut at 80 characters with `…`; the full argv is shown on request. Never paraphrase it: the argv is what the operator approves.
+- `observe` is the **full** argv, never truncated and never paraphrased: the argv is what the operator approves, and a cut-off cell hides exactly the part that runs. Join short argvs with spaces; when the joined form exceeds one line, render one element per line inside the cell (`<br>`-separated, or as a fenced block under the table keyed by row number).
+- `environment` and `teardown` list the Taskfile targets as drafted, `–` when absent. They run on the operator's machine like any `task` invocation in that repository; they belong in the row the operator approves, not in a footnote.
+- A row whose `argv[0]` is a shell or an interpreter followed by an inline-code flag (`sh -c`, `bash -c`, `python3 -c`, `node -e`, `perl -e`, and the like) is shown in full and prefixed with the marker **[inline code]**, because the program that runs is inside the argument rather than in a file the operator can read in the repository. The form isn't forbidden (two shipped examples use `python3 -c`); tell the operator to prefer a helper script in the repository for anything longer than a line, and to reject the row with that wish when they want one.
+- Above the first batch of a run, state once what approval is: by approving a row the operator accepts that the listed `environment` and `teardown` targets and the `observe` command run on their machine with their environment, `PATH` and any tokens in it included, exactly as running `task` in that repository already would. A recorded approval is that acceptance, not a proof of safety or correctness.
 - Show the scanner's `note` under the table when present. It is an inventory fact ("no local referent found by …"); never turn it into a verdict word.
 
 ## Answer vocabulary
@@ -67,11 +71,14 @@ observe: {<as drafted>}
 approval:
   approved_at: "2026-09-23T14:30:12Z"
   approved_by: "<operator>"
+  observation_digest: "<64 lowercase hex characters>"
 ```
 
 - Copy the draft **as returned**: same keys, same values, no additions except `approval`. The schema (`schemas/reach-probe-v1.0.schema.yaml`) has `additionalProperties: false` at every level.
 - `approved_at` is the current UTC time in `YYYY-MM-DDTHH:MM:SSZ` form and **quoted**; unquoted, the loader turns it into a timestamp object and the probe fails the schema.
 - `approved_by` is `git -C <target> config user.name`. When that is empty, ask the operator for the name to record; never write an empty string (schema `minLength: 1`) and never fall back to a generic label.
+- `observation_digest` is **mandatory**: the SHA-256 hex digest (64 lowercase hex digits) of the canonical JSON of an object with exactly the three keys `observe`, `environment`, and `teardown`, where an absent `environment` or `teardown` counts as an empty list, serialised with `sort_keys=True` and `separators=(",", ":")` as UTF-8; the runner's implementation is the authority on the byte form. Treating an absent list as empty means that adding an explicit `environment: []` later leaves the digest unchanged, as it leaves behaviour unchanged. Compute it from the draft you are about to persist, never from memory of the batch table. The runner recomputes it on every `run` and refuses a probe whose current fields no longer match, reporting `approval does not cover the current observation step`. This protects against a later commit that swaps `argv` (or a target) while leaving the old approval block in place, which git-history weakening detection alone can't distinguish from a legitimate re-approval when history is shallow or rewritten.
+- What the block means: it records that someone approved this probe at that time and accepted that its targets and `observe` command run with the executing operator's environment. It isn't evidence that the operator running `run` approved it; the runner can't tell the two apart and doesn't try, which is the same trust the operator already extends to the target's Taskfile.
 - Create `project/reach-probes/` when absent. When `<id>.yml` already exists, overwrite it only if this derive round re-derived its declaration path (entry filter or stale routing); otherwise stop and ask, because two declarations mapped to one id.
 - Rejected and skipped drafts are written nowhere in the target. Their only trace is `decisions[]` in the checkpoint.
 
