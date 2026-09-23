@@ -1,0 +1,1027 @@
+"""Tests for plugins/nolte-engineering/skills/capability-reach-audit/scripts/reach_audit.py.
+
+Requirement ids refer to project/requirements/capability-reach-executor.md.
+
+The doubles are honest ones: change detection runs against real git repositories
+created in ``tmp_path`` (git is never mocked), and the environment step runs a
+``task`` executable placed first on ``PATH`` that reads the target's
+``Taskfile.yml`` and fails an unknown target the way go-task does. The T1 case
+stands up a real loopback HTTP server through that shim.
+"""
+from __future__ import annotations
+
+import json
+import os
+import shutil
+import signal
+import subprocess
+import sys
+import textwrap
+import time
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pytest
+import yaml
+from jsonschema import Draft202012Validator
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+SCRIPTS = REPO_ROOT / "plugins" / "nolte-engineering" / "skills" / "capability-reach-audit" / "scripts"
+sys.path.insert(0, str(SCRIPTS))
+
+import reach_audit as ra  # noqa: E402
+
+SCRIPT_PATH = SCRIPTS / "reach_audit.py"
+SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.0.schema.yaml"
+EXAMPLES = SCRIPTS.parent / "examples"
+FIXED_NOW = datetime(2026, 9, 23, 10, 0, 0, tzinfo=timezone.utc)
+PY = sys.executable
+DECL = "docs/requirements.md"
+
+
+# --------------------------------------------------------------------------- #
+# Fixtures and helpers
+# --------------------------------------------------------------------------- #
+@pytest.fixture(autouse=True)
+def _isolated_git(tmp_path_factory, monkeypatch):
+    """Git identity for test commits, without touching the operator's config."""
+    cfg = tmp_path_factory.mktemp("gitcfg") / "gitconfig"
+    cfg.write_text(
+        "[user]\n\tname = Reach Test\n\temail = reach@example.invalid\n"
+        "[commit]\n\tgpgsign = false\n[init]\n\tdefaultBranch = main\n"
+    )
+    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(cfg))
+    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
+
+
+class Target:
+    """A real git working copy standing in for an audited repository."""
+
+    def __init__(self, path: Path) -> None:
+        self.path = path
+        path.mkdir(parents=True, exist_ok=True)
+        self.git("init", "-q")
+
+    def git(self, *args: str) -> str:
+        return subprocess.run(
+            ["git", "-C", str(self.path), *args], check=True, capture_output=True, text=True
+        ).stdout.strip()
+
+    def write(self, rel: str, text: str) -> None:
+        f = self.path / rel
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(text)
+
+    def commit(self, msg: str = "change") -> str:
+        self.git("add", "-A")
+        self.git("commit", "-q", "--allow-empty", "-m", msg)
+        return self.git("rev-parse", "HEAD")
+
+    def write_probe(self, data: dict, name: str | None = None) -> str:
+        rel = f"project/reach-probes/{name or data['id']}.yml"
+        self.write(rel, yaml.safe_dump(data, sort_keys=False))
+        return rel
+
+    def report(self) -> str:
+        files = sorted((self.path / ".audits" / "capability-reach").glob("*.md"))
+        assert len(files) == 1, files
+        return files[0].read_text()
+
+
+def make_probe(pid: str = "p1", *, derived_from: str, tier: str = "T0", path: str | None = DECL,
+               expected: dict | None = None, argv: list[str] | None = None, approved: bool = True,
+               **extra) -> dict:
+    declaration: dict = {"source": "requirement", "location": "§Export"}
+    if path is not None:
+        declaration["path"] = path
+    probe: dict = {
+        "id": pid,
+        "declaration": declaration,
+        "tier": tier,
+        "expected": expected or {"kind": "count", "value": 3, "unit": "collections"},
+    }
+    if approved:
+        probe["approval"] = {"approved_at": "2026-09-20T09:00:00Z", "approved_by": "nolte"}
+    probe["derived_from"] = derived_from
+    probe.update(extra)
+    probe["observe"] = {"argv": argv or [PY, "-c", "print(3)"], "timeout_seconds": 30}
+    return probe
+
+
+def marker_argv(marker: Path, output: str = "3") -> list[str]:
+    """An observation step that leaves a trace, so a test can prove it never ran."""
+    return [PY, "-c", f"open({str(marker)!r}, 'w').write('ran'); print({output!r})"]
+
+
+@pytest.fixture
+def target(tmp_path) -> Target:
+    t = Target(tmp_path / "target")
+    t.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
+    t.commit("declare")
+    return t
+
+
+def derived_probe(target: Target, **kw) -> tuple[str, str]:
+    """Derive at HEAD, then commit the probe: the natural lifecycle."""
+    sha = target.git("rev-parse", "HEAD")
+    rel = target.write_probe(make_probe(derived_from=sha, **kw))
+    target.commit("approve probe")
+    return sha, rel
+
+
+def run_audit(target: Target, include_t2: bool = False, env_timeout: float = 30) -> tuple[int, str]:
+    code, _ = ra.run(str(target.path), include_t2=include_t2, env_timeout=env_timeout, clock=lambda: FIXED_NOW)
+    return code, target.report()
+
+
+def row_of(report: str, pid: str) -> list[str]:
+    for line in report.splitlines():
+        if line.startswith(f"| {pid} |"):
+            return [c.strip() for c in line.strip("|").split(" | ")]
+    raise AssertionError(f"no row for {pid} in report:\n{report}")
+
+
+def validate(probe: object) -> list[str]:
+    return [e.message for e in Draft202012Validator(ra.PROBE_SCHEMA).iter_errors(probe)]
+
+
+# --------------------------------------------------------------------------- #
+# Schema (R1, R7)
+# --------------------------------------------------------------------------- #
+_ANNOTATIONS = {"title", "description", "examples"}
+
+
+def _structural(node):
+    if isinstance(node, dict):
+        return {k: _structural(v) for k, v in node.items() if k not in _ANNOTATIONS or not isinstance(v, (str, list))}
+    if isinstance(node, list):
+        return [_structural(v) for v in node]
+    return node
+
+
+def test_runner_schema_copy_matches_the_shipped_schema():
+    """R1: the runner validates with exactly the structure schemas/ declares."""
+    shipped = yaml.safe_load(SCHEMA_PATH.read_text())
+    assert _structural(shipped) == _structural(ra.PROBE_SCHEMA)
+
+
+def test_shipped_schema_is_valid_and_its_examples_validate():
+    shipped = yaml.safe_load(SCHEMA_PATH.read_text())
+    Draft202012Validator.check_schema(shipped)
+    for example in shipped["examples"]:
+        assert validate(example) == []
+
+
+def test_example_probes_validate():
+    files = sorted(EXAMPLES.glob("*.yml"))
+    assert files, "the .schemas-config.yaml mapping needs at least one example to exercise"
+    for f in files:
+        assert validate(yaml.safe_load(f.read_text())) == [], f
+
+
+def test_schemas_config_binds_the_example_glob():
+    config = yaml.safe_load((REPO_ROOT / ".schemas-config.yaml").read_text())
+    bound = {glob: schema for glob, schema in config["mappings"].items() if list(REPO_ROOT.glob(glob))}
+    assert "schemas/reach-probe-v1.0.schema.yaml" in bound.values()
+
+
+def _valid() -> dict:
+    return make_probe(derived_from="a" * 40)
+
+
+def test_a_valid_probe_passes():
+    assert validate(_valid()) == []
+
+
+@pytest.mark.parametrize("verdict", ["passed", "status", "result", "reached", "verdict"])
+def test_R1_probe_cannot_state_a_verdict_at_top_level(verdict):
+    """R1: the comparison happens in the runner; a probe has no verdict field."""
+    probe = _valid() | {verdict: True}
+    assert any("Additional properties" in m for m in validate(probe))
+
+
+@pytest.mark.parametrize("where", ["expected", "observe", "declaration", "approval"])
+def test_R1_probe_cannot_state_a_verdict_in_a_nested_object(where):
+    probe = _valid()
+    probe[where] = dict(probe[where], status="passed")
+    assert validate(probe)
+
+
+def test_R1_expected_as_free_text_is_rejected():
+    probe = _valid() | {"expected": "all 15 collections are exported"}
+    assert validate(probe)
+
+
+def test_R1_expected_count_needs_an_integer():
+    probe = _valid() | {"expected": {"kind": "count", "value": "fifteen", "unit": "collections"}}
+    assert validate(probe)
+
+
+def test_R1_expected_set_needs_members():
+    probe = _valid() | {"expected": {"kind": "set", "values": []}}
+    assert validate(probe)
+
+
+def test_R7_probe_missing_tier_is_rejected():
+    probe = _valid()
+    del probe["tier"]
+    assert any("'tier' is a required property" in m for m in validate(probe))
+
+
+def test_R7_unknown_tier_is_rejected():
+    assert validate(_valid() | {"tier": "T3"})
+
+
+def test_R6_declaration_cannot_carry_both_path_and_inherited_spec():
+    probe = _valid()
+    probe["declaration"]["inherited_spec"] = "project/rest-api-design"
+    assert validate(probe)
+
+
+def test_environment_name_cannot_be_read_as_an_option():
+    assert validate(_valid() | {"tier": "T1", "environment": ["--dry"]})
+
+
+# --------------------------------------------------------------------------- #
+# Load-time validation inside the runner (R1, R7)
+# --------------------------------------------------------------------------- #
+def test_R1_runner_validates_at_load_and_never_executes_a_self_asserting_probe(target, tmp_path):
+    marker = tmp_path / "ran"
+    sha = target.git("rev-parse", "HEAD")
+    probe = make_probe(derived_from=sha, argv=marker_argv(marker)) | {"status": "passed"}
+    target.write_probe(probe)
+    target.commit("probe")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert not marker.exists()
+    assert "**invalid probe** `p1`" in report
+    assert "no verdict or other undeclared field" in report
+    assert row_of(report, "p1")[1] == ra.NOT_PROBED
+
+
+def test_R7_T0_probe_with_an_environment_is_invalid(target):
+    sha = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe(derived_from=sha, environment=["up"]))
+    target.commit("probe")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert "a T0 probe runs against what already exists" in report
+
+
+def test_duplicate_probe_ids_are_invalid(target):
+    sha = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe(derived_from=sha), name="a")
+    target.write_probe(make_probe(derived_from=sha), name="b")
+    target.commit("probes")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert "duplicate probe id, already used by project/reach-probes/a.yml" in report
+
+
+def test_unquoted_timestamp_gets_an_actionable_hint(target):
+    sha = target.git("rev-parse", "HEAD")
+    text = yaml.safe_dump(make_probe(derived_from=sha), sort_keys=False).replace(
+        "'2026-09-20T09:00:00Z'", "2026-09-20T09:00:00Z"
+    )
+    target.write("project/reach-probes/p1.yml", text)
+    target.commit("probe")
+    _, report = run_audit(target)
+    assert "quote the value" in report
+
+
+def test_missing_dependency_fails_with_an_install_hint(monkeypatch, capsys, target):
+    real_import = __builtins__["__import__"] if isinstance(__builtins__, dict) else __builtins__.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "jsonschema":
+            raise ImportError("No module named 'jsonschema'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr("builtins.__import__", fake_import)
+    assert ra.main(["--repo", str(target.path)]) == ra.EXIT_MISSING_DEPENDENCY
+    assert "pip install" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------- #
+# R13: local working copy only
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("remote", ["https://github.com/nolte/kamerplanter", "git@github.com:nolte/kamerplanter.git"])
+def test_R13_remote_address_is_refused(remote, capsys):
+    assert ra.main(["--repo", remote]) == ra.EXIT_USAGE
+    err = capsys.readouterr().err
+    # The generic "not a local directory" fallback also says "local working copy",
+    # so asserting only that would pass with the remote-address branch deleted
+    # (measured by mutation). The branch's own wording is what proves the rule.
+    assert "is a remote address" in err
+    assert "clone the repository" in err
+
+
+def test_R13_missing_directory_is_refused(tmp_path, capsys):
+    assert ra.main(["--repo", str(tmp_path / "nope")]) == ra.EXIT_USAGE
+    assert "not a local directory" in capsys.readouterr().err
+
+
+def test_R13_directory_without_git_is_refused(tmp_path, capsys):
+    plain = tmp_path / "plain"
+    plain.mkdir()
+    assert ra.main(["--repo", str(plain)]) == ra.EXIT_USAGE
+    assert "has no .git" in capsys.readouterr().err
+
+
+def test_R13_subdirectory_of_a_working_copy_is_refused(target, capsys):
+    assert ra.main(["--repo", str(target.path / "docs")]) == ra.EXIT_USAGE
+    assert "has no .git" in capsys.readouterr().err
+
+
+def test_R13_bogus_git_marker_is_refused(tmp_path, capsys):
+    fake = tmp_path / "fake"
+    (fake / ".git").mkdir(parents=True)
+    assert ra.main(["--repo", str(fake)]) == ra.EXIT_USAGE
+    assert "--show-toplevel" in capsys.readouterr().err
+
+
+def test_R13_working_copy_without_commits_is_refused(tmp_path, capsys):
+    Target(tmp_path / "empty")
+    assert ra.main(["--repo", str(tmp_path / "empty")]) == ra.EXIT_USAGE
+    assert "no commit yet" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------- #
+# R11, R12, R15: paths and the empty probe set
+# --------------------------------------------------------------------------- #
+def test_R11_R12_probes_read_from_project_and_report_written_under_audits(target):
+    derived_probe(target)
+    target.write("elsewhere/p2.yml", yaml.safe_dump(make_probe("p2", derived_from="x")))
+    target.commit("stray probe outside the probe directory")
+    before = set(target.git("ls-files", "--others", "--exclude-standard").splitlines())
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    assert "| p1 |" in report and "| p2 |" not in report
+    after = set(target.git("ls-files", "--others", "--exclude-standard").splitlines())
+    assert after - before == {".audits/capability-reach/2026-09-23.md"}
+    assert target.git("status", "--porcelain", "--untracked-files=no") == ""
+
+
+def test_R11_yaml_suffix_is_part_of_the_probe_set(target):
+    sha = target.git("rev-parse", "HEAD")
+    target.write("project/reach-probes/p1.yaml", yaml.safe_dump(make_probe(derived_from=sha)))
+    target.commit("probe")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[1] == ra.REACHED
+
+
+def test_R12_report_of_the_day_is_overwritten(target):
+    derived_probe(target)
+    run_audit(target)
+    report = target.path / ".audits" / "capability-reach" / "2026-09-23.md"
+    report.write_text("hand edit\n")
+    run_audit(target)
+    assert "hand edit" not in report.read_text()
+    assert "| p1 |" in report.read_text()
+
+
+def test_R12_report_is_not_written_through_a_symlink_outside_the_repo(target, tmp_path):
+    derived_probe(target)
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (target.path / ".audits").symlink_to(outside, target_is_directory=True)
+    assert ra.main(["--repo", str(target.path)]) == ra.EXIT_ERROR
+    assert not any(outside.rglob("*.md"))
+
+
+def test_R15_absent_probe_directory_is_not_a_clean_result(target):
+    code, report = run_audit(target)
+    assert code == ra.EXIT_NO_PROBES
+    assert "`project/reach-probes/` does not exist" in report
+    assert "This is not a clean result" in report
+
+
+def test_R15_empty_probe_directory_is_not_a_clean_result(target):
+    (target.path / "project" / "reach-probes").mkdir(parents=True)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_NO_PROBES
+    assert "holds no probe file" in report
+
+
+# --------------------------------------------------------------------------- #
+# R2, R5: change detection against the declaration
+# --------------------------------------------------------------------------- #
+def test_R5_stored_probe_executes_without_being_rewritten(target, tmp_path):
+    marker = tmp_path / "ran"
+    _, rel = derived_probe(target, argv=marker_argv(marker))
+    before = (target.path / rel).read_text()
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK and marker.exists()
+    assert (target.path / rel).read_text() == before
+    row = row_of(report, "p1")
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+
+
+def test_R2_declaration_changed_after_derivation_is_stale_and_not_executed(target, tmp_path):
+    marker = tmp_path / "ran"
+    derived_probe(target, argv=marker_argv(marker))
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 4 collections.\n")
+    changed = target.commit("move the declaration")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_STALE
+    assert f"declaration changed since derivation: {DECL} last changed in {changed[:12]}" in row[9]
+    assert not marker.exists()
+
+
+def test_R2_unrelated_commits_after_derivation_do_not_make_it_stale(target):
+    derived_probe(target)
+    target.write("README.md", "unrelated\n")
+    target.commit("unrelated")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+def test_R2_uncommitted_declaration_edit_is_stale(target):
+    derived_probe(target)
+    target.write(DECL, "edited, not committed\n")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE and "uncommitted changes" in row[9]
+
+
+def test_R2_renamed_declaration_is_stale(target):
+    derived_probe(target)
+    target.git("mv", DECL, "docs/requirements-v2.md")
+    target.commit("rename")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_STALE
+
+
+def test_R2_declaration_on_a_merged_side_branch_is_stale(target):
+    base = target.git("rev-parse", "HEAD")
+    target.git("checkout", "-q", "-b", "side")
+    target.write(DECL, "side edit\n")
+    target.commit("side edit")
+    target.git("checkout", "-q", "main")
+    target.write_probe(make_probe(derived_from=base))
+    target.commit("probe on main")
+    target.git("merge", "-q", "--no-edit", "side")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_STALE
+
+
+def test_R2_unknown_derived_from_is_unresolved(target):
+    target.write_probe(make_probe(derived_from="0" * 40))
+    target.commit("probe")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_UNRESOLVED
+    assert "is not a commit of the target repository" in row[9]
+
+
+def test_R2_derived_from_outside_the_history_of_head_is_unresolved(target):
+    target.git("checkout", "-q", "-b", "other")
+    other = target.commit("elsewhere")
+    target.git("checkout", "-q", "main")
+    target.write_probe(make_probe(derived_from=other))
+    target.commit("probe")
+    _, report = run_audit(target)
+    assert "is not in the history of HEAD" in row_of(report, "p1")[9]
+
+
+def test_R2_declaration_path_without_history_is_unresolved(target):
+    derived_probe(target, path="docs/never-committed.md")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_UNRESOLVED and "has no history" in row[9]
+
+
+# --------------------------------------------------------------------------- #
+# R3: weakened probes
+# --------------------------------------------------------------------------- #
+def _weaken(target: Target, rel: str) -> None:
+    data = yaml.safe_load((target.path / rel).read_text())
+    data["expected"]["value"] = 1
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+
+
+def test_R3_probe_changed_after_derivation_is_a_weakened_finding(target, tmp_path):
+    marker = tmp_path / "ran"
+    _, rel = derived_probe(target, argv=marker_argv(marker))
+    _weaken(target, rel)
+    weakening = target.commit("lower the bar")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert not marker.exists()
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED
+    assert f"probe changed in {weakening[:12]}" in report
+    assert report.index("## Findings") < report.index("## Probes")
+    assert "**weakened** `p1`" in report
+
+
+def test_R3_probe_and_declaration_changed_in_the_same_commit_is_weakened(target):
+    _, rel = derived_probe(target)
+    _weaken(target, rel)
+    target.write(DECL, "moved\n")
+    target.commit("both at once")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+def test_R3_probe_and_declaration_changed_in_separate_commits_is_weakened(target):
+    _, rel = derived_probe(target)
+    target.write(DECL, "moved\n")
+    target.commit("declaration first")
+    _weaken(target, rel)
+    target.commit("probe second")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+def test_R3_uncommitted_probe_edit_is_weakened(target):
+    _, rel = derived_probe(target)
+    _weaken(target, rel)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert "probe file has uncommitted changes" in row_of(report, "p1")[9]
+
+
+def test_R3_renaming_the_probe_does_not_launder_a_weakening(target):
+    _, rel = derived_probe(target)
+    new_rel = "project/reach-probes/renamed.yml"
+    target.git("mv", rel, new_rel)
+    _weaken(target, new_rel)
+    target.commit("rename and weaken")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+def test_R3_R5_re_derivation_after_a_declaration_change_is_clean(target):
+    _, rel = derived_probe(target)
+    target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
+    moved = target.commit("move declaration")
+    data = yaml.safe_load((target.path / rel).read_text())
+    data["derived_from"] = moved
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+    target.commit("re-derive")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    assert row_of(report, "p1")[1] == ra.REACHED
+
+
+def test_uncommitted_probe_is_not_probed(target):
+    sha = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe(derived_from=sha))
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_UNCOMMITTED
+
+
+# --------------------------------------------------------------------------- #
+# R6: inherited and external anchors
+# --------------------------------------------------------------------------- #
+def _inherited_probe(target: Target, derived_from: str, hub: str | None = None) -> None:
+    probe = make_probe(derived_from=derived_from, path=None)
+    probe["declaration"]["inherited_spec"] = "project/rest-api-design"
+    if hub:
+        probe["declaration"]["hub"] = hub
+    target.write_probe(probe)
+
+
+def _spec_config(target: Target, *refs: tuple[str, str]) -> None:
+    config = {"canonical_language": "en", "languages": ["en"], "spec_root": "spec",
+              "inherits": [{"source": s, "ref": r} for s, r in refs]}
+    target.write("spec/.spec-config.yml", yaml.safe_dump(config))
+
+
+def test_R6_inherited_spec_with_unchanged_ref_executes(target):
+    _spec_config(target, ("nolte-shared", "v0.1.8"))
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+
+
+def test_R6_inherited_spec_with_moved_ref_is_stale(target):
+    _spec_config(target, ("nolte-shared", "v0.1.9"))
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE and "pinned ref moved from v0.1.8 to v0.1.9" in row[9]
+
+
+def test_R6_inherited_spec_without_config_is_unresolved(target):
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_UNRESOLVED
+
+
+def test_R6_several_hubs_need_the_probe_to_name_one(target):
+    _spec_config(target, ("nolte-shared", "v0.1.8"), ("other-hub", "v2.0.0"))
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    _, report = run_audit(target)
+    assert "set declaration.hub" in row_of(report, "p1")[9]
+
+
+def test_R6_hub_selects_the_pinning_entry(target):
+    _spec_config(target, ("nolte-shared", "v0.1.8"), ("other-hub", "v2.0.0"))
+    _inherited_probe(target, "v2.0.0", hub="other-hub")
+    target.commit("probe")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+@pytest.mark.parametrize("path", [None, "../other-repo/docs/req.md", "https://example.invalid/spec"])
+def test_R6_external_anchor_is_unmonitored_and_still_executes(target, tmp_path, path):
+    marker = tmp_path / "ran"
+    derived_probe(target, path=path, argv=marker_argv(marker))
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7].startswith(ra.STATE_UNMONITORED) and row[1] == ra.REACHED
+    assert marker.exists()
+
+
+def test_R6_external_anchor_is_still_checked_for_weakening(target):
+    _, rel = derived_probe(target, path=None)
+    _weaken(target, rel)
+    target.commit("weaken")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+# --------------------------------------------------------------------------- #
+# Approval and R8 (T2 opt-in)
+# --------------------------------------------------------------------------- #
+def test_unapproved_probe_is_never_executed(target, tmp_path):
+    marker = tmp_path / "ran"
+    derived_probe(target, approved=False, argv=marker_argv(marker))
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[9] == ra.REASON_NOT_APPROVED
+    assert not marker.exists()
+
+
+def test_R8_T2_probe_is_not_probed_without_the_flag(target, tmp_path):
+    marker = tmp_path / "ran"
+    derived_probe(target, tier="T2", argv=marker_argv(marker))
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[9] == ra.REASON_T2
+    assert not marker.exists()
+    assert "Tier T2: not requested" in report
+
+
+def test_R8_T2_probe_runs_with_the_flag(target, tmp_path):
+    marker = tmp_path / "ran"
+    derived_probe(target, tier="T2", argv=marker_argv(marker))
+    _, report = run_audit(target, include_t2=True)
+    assert row_of(report, "p1")[1] == ra.REACHED and marker.exists()
+
+
+def test_R8_T1_probe_runs_without_the_flag(target):
+    derived_probe(target, tier="T1")
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[1] == ra.REACHED
+
+
+# --------------------------------------------------------------------------- #
+# The `task` shim (R9, R10)
+# --------------------------------------------------------------------------- #
+TASK_SHIM = textwrap.dedent(
+    f"""\
+    #!{PY}
+    # Test double for go-task: `task [--silent] <name>` reads Taskfile.yml in the
+    # working directory, runs the named task's cmds through a shell, and fails an
+    # unknown name the way go-task does (message on stderr, exit 200).
+    import subprocess, sys, yaml
+    args = [a for a in sys.argv[1:] if not a.startswith("-")]
+    try:
+        tasks = (yaml.safe_load(open("Taskfile.yml")) or {{}}).get("tasks", {{}})
+    except FileNotFoundError:
+        sys.stderr.write("task: No Taskfile found in the current directory\\n")
+        sys.exit(200)
+    for name in args:
+        if name not in tasks:
+            sys.stderr.write(f'task: Task "{{name}}" does not exist\\n')
+            sys.exit(200)
+        for cmd in tasks[name].get("cmds", []):
+            rc = subprocess.call(cmd, shell=True)
+            if rc:
+                sys.stderr.write(f'task: Failed to run task "{{name}}": exit status {{rc}}\\n')
+                sys.exit(201)
+    """
+)
+
+SERVER = textwrap.dedent(
+    """\
+    # Loopback stand-in for a T1 dependency: `up` starts a detached HTTP server and
+    # returns once it listens; `down` stops it. State lives in REACH_STATE.
+    import http.server, os, signal, subprocess, sys, time
+    state = os.environ["REACH_STATE"]
+    port_file, pid_file = os.path.join(state, "port"), os.path.join(state, "pid")
+    cmd = sys.argv[1]
+    if cmd == "up":
+        subprocess.Popen([sys.executable, __file__, "serve"], start_new_session=True,
+                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for _ in range(200):
+            if os.path.exists(port_file):
+                sys.exit(0)
+            time.sleep(0.02)
+        sys.exit("server did not come up")
+    if cmd == "serve":
+        class H(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                body = open(os.path.join(state, "items")).read().encode()
+                self.send_response(200); self.end_headers(); self.wfile.write(body)
+            def log_message(self, *a):
+                pass
+        srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+        open(pid_file, "w").write(str(os.getpid()))
+        open(port_file + ".tmp", "w").write(str(srv.server_address[1]))
+        os.replace(port_file + ".tmp", port_file)
+        srv.serve_forever(poll_interval=0.05)
+    if cmd == "down":
+        os.kill(int(open(pid_file).read()), signal.SIGTERM)
+        os.remove(port_file)
+    """
+)
+
+OBSERVE_SERVER = [
+    PY, "-c",
+    "import os, urllib.request\n"
+    "port = open(os.path.join(os.environ['REACH_STATE'], 'port')).read().strip()\n"
+    "print(urllib.request.urlopen(f'http://127.0.0.1:{port}/items', timeout=5).read().decode())",
+]
+
+
+@pytest.fixture
+def task_shim(tmp_path, monkeypatch):
+    """Put the `task` double first on PATH; yield the state dir; stop any server."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    shim = bin_dir / "task"
+    shim.write_text(TASK_SHIM)
+    shim.chmod(0o755)
+    state = tmp_path / "state"
+    state.mkdir()
+    (state / "server.py").write_text(SERVER)
+    (state / "items").write_text("alpha\nbeta\n")
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
+    monkeypatch.setenv("REACH_STATE", str(state))
+    yield state
+    pid_file = state / "pid"
+    if pid_file.exists():
+        try:
+            os.kill(int(pid_file.read_text()), signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+
+
+def _taskfile(target: Target, state: Path, extra: dict | None = None) -> None:
+    server = state / "server.py"
+    tasks = {
+        "reach:up": {"cmds": [f"{PY} {server} up"]},
+        "reach:down": {"cmds": [f"{PY} {server} down"]},
+        "reach:broken": {"cmds": ["echo 'image pull failed: registry unreachable' >&2", "exit 3"]},
+        "reach:slow": {"cmds": ["sleep 5"]},
+    }
+    tasks.update(extra or {})
+    target.write("Taskfile.yml", yaml.safe_dump({"version": "3", "tasks": tasks}))
+
+
+def _set_probe(**kw) -> dict:
+    return {"expected": {"kind": "set", "values": ["alpha", "beta"], "unit": "endpoints"}, "tier": "T1", **kw}
+
+
+def test_R9_environment_targets_run_before_the_observation(target, task_shim):
+    _taskfile(target, task_shim)
+    derived_probe(target, argv=OBSERVE_SERVER, **_set_probe(environment=["reach:up"], teardown=["reach:down"]))
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.REACHED and row[2] == "2/2 endpoints"
+    assert not (task_shim / "port").exists(), "teardown must have stopped the server"
+
+
+def test_R9_unknown_target_is_not_probed_naming_it(target, task_shim):
+    _taskfile(target, task_shim)
+    derived_probe(target, argv=OBSERVE_SERVER, **_set_probe(environment=["reach:missing"]))
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED
+    assert 'environment target `reach:missing` failed (exit 200): task: Task "reach:missing" does not exist' in row[9]
+
+
+def test_R9_task_not_on_path_is_not_probed(target, tmp_path, monkeypatch):
+    bin_dir = tmp_path / "bin-no-task"
+    bin_dir.mkdir()
+    (bin_dir / "git").symlink_to(shutil.which("git"))
+    monkeypatch.setenv("PATH", str(bin_dir))
+    derived_probe(target, argv=OBSERVE_SERVER, **_set_probe(environment=["reach:up"]))
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and "`task` not found on PATH" in row[9]
+
+
+def test_R10_failing_environment_is_not_probed_with_its_output_never_not_reached(target, task_shim, tmp_path):
+    marker = tmp_path / "ran"
+    _taskfile(target, task_shim)
+    derived_probe(target, argv=marker_argv(marker), **_set_probe(environment=["reach:broken"]))
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED
+    assert "image pull failed: registry unreachable" in row[9]
+    assert not marker.exists()
+
+
+def test_R10_environment_timeout_is_not_probed(target, task_shim):
+    _taskfile(target, task_shim)
+    derived_probe(target, argv=OBSERVE_SERVER, **_set_probe(environment=["reach:slow"]))
+    started = time.monotonic()
+    _, report = run_audit(target, env_timeout=0.5)
+    assert time.monotonic() - started < 4
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and "timed out after 0.5s" in row[9]
+
+
+def test_teardown_runs_when_the_observation_fails(target, task_shim):
+    _taskfile(target, task_shim)
+    derived_probe(target, argv=[PY, "-c", "raise SystemExit(7)"],
+                  **_set_probe(environment=["reach:up"], teardown=["reach:down"]))
+    _, report = run_audit(target)
+    assert "observation step exited 7" in row_of(report, "p1")[9]
+    assert not (task_shim / "port").exists()
+
+
+# --------------------------------------------------------------------------- #
+# Classification: the runner compares, the probe only observes
+# --------------------------------------------------------------------------- #
+COUNT = {"kind": "count", "value": 15, "unit": "collections"}
+SET = {"kind": "set", "values": ["a", "b", "c", "d"], "unit": "endpoints"}
+
+
+@pytest.mark.parametrize(("observed", "cls", "reach"), [
+    (15, ra.REACHED, "15/15 collections"),
+    (0, ra.NOT_REACHED, "0/15 collections"),
+    (6, ra.PARTIAL, "6/15 collections"),
+    (16, ra.NOT_PROBED, "16/15 collections"),
+])
+def test_count_classification(observed, cls, reach):
+    outcome = ra.classify(COUNT, observed)
+    assert (outcome.cls, outcome.reach) == (cls, reach)
+
+
+@pytest.mark.parametrize(("observed", "cls", "reach"), [
+    ({"a", "b", "c", "d", "extra"}, ra.REACHED, "4/4 endpoints"),
+    ({"x", "y"}, ra.NOT_REACHED, "0/4 endpoints"),
+    (set(), ra.NOT_REACHED, "0/4 endpoints"),
+    ({"a", "c", "x"}, ra.PARTIAL, "2/4 endpoints"),
+])
+def test_set_classification(observed, cls, reach):
+    outcome = ra.classify(SET, observed)
+    assert (outcome.cls, outcome.reach) == (cls, reach)
+
+
+def test_partial_set_names_the_missing_members():
+    assert ra.classify(SET, {"a", "c"}).reason == "missing: b, d"
+
+
+@pytest.mark.parametrize(("argv", "reason"), [
+    ([PY, "-c", "print(3); raise SystemExit(2)"], "observation step exited 2"),
+    ([PY, "-c", "print('three')"], "is not a single non-negative integer"),
+    ([PY, "-c", "print(-1)"], "is not a single non-negative integer"),
+    ([PY, "-c", "pass"], "is not a single non-negative integer"),
+    (["/nonexistent/probe-binary"], "not found on PATH"),
+])
+def test_observation_failure_is_not_probed(target, argv, reason):
+    derived_probe(target, argv=argv)
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and reason in row[9]
+
+
+def test_zero_exit_alone_is_never_reached(target):
+    """A silent success is no observation: the exit code is not the measurement."""
+    derived_probe(target, argv=[PY, "-c", "import sys; sys.exit(0)"],
+                  expected={"kind": "set", "values": ["a"], "unit": "endpoints"})
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[1] == ra.NOT_REACHED
+
+
+def test_oversized_observation_is_not_probed(target, monkeypatch):
+    monkeypatch.setattr(ra, "MAX_OBSERVATION_BYTES", 16)
+    derived_probe(target, argv=[PY, "-c", "print('x' * 100)"])
+    _, report = run_audit(target)
+    assert "observation exceeds 16 bytes" in row_of(report, "p1")[9]
+
+
+def test_observation_timeout_is_not_probed(target):
+    derived_probe(target, argv=[PY, "-c", "import time; time.sleep(5)"])
+    rel = "project/reach-probes/p1.yml"
+    data = yaml.safe_load((target.path / rel).read_text())
+    data["observe"]["timeout_seconds"] = 1
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+    target.commit("tighten timeout")  # a probe edit: re-record derivation to keep it clean
+    data["derived_from"] = target.git("rev-parse", "HEAD")
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+    target.commit("re-derive")
+    _, report = run_audit(target)
+    assert "observation step timed out after 1s" in row_of(report, "p1")[9]
+
+
+# --------------------------------------------------------------------------- #
+# R14, R16: the report
+# --------------------------------------------------------------------------- #
+def test_R14_report_leads_with_the_not_probed_count(target):
+    sha, _ = derived_probe(target)
+    target.write_probe(make_probe("p2", derived_from=sha, approved=False))
+    target.commit("unapproved probe")
+    _, report = run_audit(target)
+    first_content = [ln for ln in report.splitlines() if ln and not ln.startswith(("#", "<!--"))][0]
+    assert first_content == "**Not probed: 1 of 2 probes.**"
+
+
+def test_R14_report_states_provenance(target):
+    derived_probe(target)
+    _, report = run_audit(target)
+    assert "Audited set: the 1 probe file(s) on disk under `project/reach-probes/`" in report
+    assert "Declaration sources covered by the probe set: requirement (1)." in report
+    assert "Declaration sources with no probe: endpoint, capability, inventory." in report
+
+
+def test_R14_R16_row_carries_ratio_command_tier_timestamp_derivation_and_state(target):
+    sha, _ = derived_probe(target, argv=[PY, "-c", "print(2)"])
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.PARTIAL
+    assert row[2] == "2/3 collections"
+    assert row[3] == f"`{PY} -c 'print(2)'`"
+    assert row[4] == "T0"
+    assert row[5] == "2026-09-23T10:00:00Z"
+    assert row[6] == sha[:12]
+    assert row[7] == ra.STATE_CLEAN
+    assert row[8] == f"requirement: {DECL} (§Export)"
+
+
+def test_R16_unexecuted_probe_says_so_instead_of_a_timestamp(target):
+    derived_probe(target, approved=False)
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[5] == "not executed"
+
+
+def test_report_reach_per_tier(target):
+    sha, _ = derived_probe(target)
+    target.write_probe(make_probe("p2", derived_from=sha, tier="T2"))
+    target.commit("t2")
+    _, report = run_audit(target)
+    assert "| T0 | 1 | 0 | 0 | 0 |" in report
+    assert "| T2 | 0 | 0 | 0 | 1 |" in report
+
+
+def test_report_neutralises_untrusted_tool_output(target):
+    derived_probe(target, argv=[PY, "-c", "import sys; sys.stderr.write('bad | cell\\x1b[31m\\nnext'); sys.exit(1)"])
+    _, report = run_audit(target)
+    line = next(ln for ln in report.splitlines() if ln.startswith("| p1 |"))
+    assert "\x1b" not in line and "bad \\| cell" in line
+
+
+# --------------------------------------------------------------------------- #
+# End to end through the CLI (R5, R9, R12, R14, R16)
+# --------------------------------------------------------------------------- #
+def test_end_to_end_T0_and_T1_through_the_cli(target, task_shim):
+    _taskfile(target, task_shim)
+    target.commit("taskfile")
+    commits = int(target.git("rev-list", "--count", "HEAD")) + 1  # the probe commit below
+    sha = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe(
+        "history-count", derived_from=sha,
+        expected={"kind": "count", "value": commits, "unit": "commits"},
+        argv=["git", "rev-list", "--count", "HEAD"],
+    ))
+    target.write_probe(make_probe(
+        "loopback-items", derived_from=sha, tier="T1", argv=OBSERVE_SERVER,
+        expected={"kind": "set", "values": ["alpha", "beta", "gamma"], "unit": "items"},
+        environment=["reach:up"], teardown=["reach:down"],
+    ))
+    target.commit("approve probes")
+    started = time.monotonic()
+    proc = subprocess.run([PY, str(SCRIPT_PATH), "--repo", str(target.path)],
+                          capture_output=True, text=True, timeout=60, check=False)
+    elapsed = time.monotonic() - started
+    assert proc.returncode == ra.EXIT_OK, proc.stderr
+    assert "report written" in proc.stdout
+    report = target.report()
+    assert row_of(report, "history-count")[1:3] == [ra.REACHED, f"{commits}/{commits} commits"]
+    assert row_of(report, "loopback-items")[1:3] == [ra.PARTIAL, "2/3 items"]
+    assert "missing: gamma" in row_of(report, "loopback-items")[9]
+    assert "**Not probed: 0 of 2 probes.**" in report
+    assert elapsed < 20
+    print(json.dumps({"end_to_end_seconds": round(elapsed, 2)}))
+
+
+def test_end_to_end_empty_set_exit_code_is_distinct_from_success(target):
+    proc = subprocess.run([PY, str(SCRIPT_PATH), "--repo", str(target.path)],
+                          capture_output=True, text=True, timeout=60, check=False)
+    assert proc.returncode == ra.EXIT_NO_PROBES != ra.EXIT_OK
+    assert "not a clean result" in proc.stdout

@@ -1,0 +1,22 @@
+# Example T0 probe (spec/project/capability-reach-audit/ §"Worked acceptance",
+# scan lane row). The observation step prints one integer: how many executions
+# the platform recorded for the job. The probe states no verdict; the runner
+# compares the printed count with `expected` and decides the class.
+id: scan-lane-runs
+summary: executions of the on-demand scan job across the last 300 trigger events
+declaration:
+  source: endpoint
+  path: .github/workflows/scan.yml
+  location: "on.workflow_dispatch"
+tier: T0
+expected:
+  kind: count
+  value: 300
+  unit: runs
+approval:
+  approved_at: "2026-09-23T10:00:00Z"
+  approved_by: nolte
+derived_from: cd7d540a0000000000000000000000000000abcd
+observe:
+  argv: [task, --silent, "reach:scan-lane-runs"]
+  timeout_seconds: 120

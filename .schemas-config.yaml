@@ -1,0 +1,5 @@
+# Repository-level data-to-schema bindings for scripts/validate_schemas.py, per
+# spec/project/yaml-json-schema/ §Validation contract: each key is a glob relative
+# to the repository root, each value the schema the matching files must satisfy.
+mappings:
+  "plugins/nolte-engineering/skills/capability-reach-audit/examples/**/*.yml": schemas/reach-probe-v1.0.schema.yaml
