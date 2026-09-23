@@ -30,6 +30,7 @@ Leser: Agent-Autoren, die den Auditor pflegen; Reviewer und Datenschutzbeauftrag
 - **Korrekturen oder Remediation anwenden.** Der Agent ist read-only; der Korrekturschritt gehört einer Person oder einer separaten Skill, sodass das Audit single-responsibility bleibt
 - Die rechtlichen Artefakte selbst verfassen (Datenschutzerklärungstext, Verzeichnis von Verarbeitungstätigkeiten, DSFA) — das Audit prüft auf deren Vorhandensein und auf Code-Konsistenz mit ihnen, es schreibt sie nicht
 - Drittanbieter-Privacy-/PII-Scan-Tooling oder DSAR-Automatisierungsplattformen ausführen — der Agent führt LLM-gestützte Musteranalyse über das Repository durch; externe Runner bleiben außerhalb des Geltungsbereichs
+- Kein ausführungsbasiertes Audit. Dieses bestätigt oder widerlegt ein Signal durch Lesen des Repositorys, sodass eine Funktion, die normal zurückkehrt und dabei nichts erreicht, es besteht. `spec/project/capability-reach-audit/` stellt die Reichweite durch Ausführung einer Probe fest und hält zwei Datenschutz-Fähigkeiten fest, einen Export und eine Löschung, die in die Domäne dieses Audits fallen und die es nicht gefunden hat.
 
 ## Anforderungen
 

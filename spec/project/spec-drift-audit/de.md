@@ -19,6 +19,7 @@ Leser: Auditoren, die den wiederkehrenden Abgleich von Spec und Implementierung 
 - Ersatz existierender Linter und CI-Checks — diese bleiben der laufende Schutzwall; der Audit ist die periodische Tiefen-Bohrung
 - Festlegung von Release-Cadence oder Sprint-Ritualen — nicht vorgegeben; Audits sind anlassbezogen oder quartalsweise, passend zum Repository-Kontext
 - Vorgabe einer konkreten Tooling-Pipeline — die Spec verlangt dokumentierte Durchführung, nicht eine bestimmte Technologie
+- Keine Prüfung, ob die von einem Spec beschriebene Umsetzung überhaupt etwas erreicht. Dieses Audit liest beide Seiten, was einen Spec fängt, der einen nicht existierenden Konfigurationsschlüssel nennt, und keine Funktion fängt, deren Körper nichts erreicht. `spec/project/capability-reach-audit/` deckt den zweiten Fall durch Ausführung einer Probe ab.
 
 ## Anforderungen
 

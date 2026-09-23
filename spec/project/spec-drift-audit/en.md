@@ -19,6 +19,7 @@ Readers: auditors running the recurring spec-versus-implementation reconciliatio
 - Replacement of existing linters and CI checks—they remain the continuous guardrail; this audit is the periodic deep dive
 - Release-cadence policy or sprint rituals—not prescribed here; audits are event-driven or quarterly, fitted to the repository context
 - Mandating a concrete tooling pipeline—the spec requires documented execution, not any particular technology
+- Not a check that the implementation a spec describes reaches anything. This audit reads both sides, which catches a spec naming a config key that doesn't exist and doesn't catch a function whose body reaches nothing. `spec/project/capability-reach-audit/` covers the second case by executing a probe.
 
 ## Requirements
 

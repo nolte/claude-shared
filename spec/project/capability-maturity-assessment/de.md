@@ -38,6 +38,7 @@ Leser: Teams, die wissen müssen, wie vollständig und vertrauenswürdig jede Fu
 - **Die Teststufen oder die Coverage-als-Leitfaden-Regel neu definieren.** Die funktionale Teststufen-Taxonomie (static → unit → component → integration → contract → E2E) und die „Coverage ist ein Leitfaden, kein Zielwert"-Governance-Regel gehören `spec/project/test-pyramid-foundation/` [R2]; die Test-Achse *konsumiert* sie
 - **Eine feste, universelle Capability-Liste.** Diese Spec definiert den *Prozess und die Rubrik* zur Einstufung projektspezifischer Capabilities, nicht einen Konserven-Katalog „der Funktionen, die jede App hat"; die Capabilities werden immer aus *dieser* Anwendung inventarisiert
 - **Organisations- oder Prozessreife bewerten.** CMMI-artige Prozess-Reifegrad-Stufen [R12] stufen ein, wie eine Organisation Software baut; diese Spec stuft ein, wie reif eine gebaute Capability ist. Die Namensähnlichkeit ist zufällig und die Grenze bewusst
+- Keine Feststellung, ob der ausführende Pfad einer Fähigkeit den Umfang erreicht, den sie deklariert. Achse A benotet Vollständigkeit gegen Akzeptanzkriterien durch Lesen, und ihr Scanner fördert Markierungen zutage, die ein funktionierend aussehendes Gerüst nicht trägt. `spec/project/capability-reach-audit/` misst die Reichweite durch Ausführung einer Probe, deren Beobachtungspunkt außerhalb des Artefakts liegt, und diese Bewertung **KANN [MAY]** dieses Ergebnis verbrauchen, statt die Reichweite auf Treu und Glauben zu nehmen.
 
 ## Anforderungen
 

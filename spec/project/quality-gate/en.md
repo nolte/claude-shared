@@ -18,6 +18,7 @@ Every repository in the portfolio runs lint, type-check, and test commands in so
 - Defining the content of any given test suite or lint rule set—those live in the repositories' own configs
 - Replacing CI: the gate is a local-or-invocable pre-check that mirrors what CI will also run; CI remains the source of truth for merge protection
 - Declaring operational details of the skill that implements the gate (`plugins/nolte-engineering/skills/quality-gate/`)—those can evolve without a spec change
+- Not a measurement of whether a capability reaches the scope it declares. Four defects recorded in `spec/project/capability-reach-audit/` shipped through these checks while they were green, because a scaffold that returns normally passes a lint, a type check, and its own tests. That audit establishes reach by execution and doesn't run here.
 
 ## Requirements
 

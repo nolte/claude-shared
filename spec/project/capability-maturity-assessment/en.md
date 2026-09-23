@@ -38,6 +38,7 @@ Readers: teams that need to know how complete and trustworthy each of their appl
 - **Redefining the test tiers or the coverage-as-guide rule.** The functional tier taxonomy (static → unit → component → integration → contract → E2E) and the "coverage is a guide, not a target" governance rule are owned by `spec/project/test-pyramid-foundation/` [R2]; the test axis *consumes* them
 - **A fixed, universal capability list.** This spec defines the *process and rubric* to grade project-specific capabilities, not a canned catalogue of "the functions every app has"; the capabilities are always inventoried from *this* application
 - **Assessing organisational or process maturity.** CMMI-style process-capability levels [R12] grade how an organisation builds software; this spec grades how mature a built capability is. The name similarity is coincidental and the boundary is deliberate
+- Not an establishment of whether a capability's executing path reaches the scope it declares. Axis A grades completeness against acceptance criteria by reading, and its scanner surfaces markers that a working-looking scaffold doesn't carry. `spec/project/capability-reach-audit/` measures reach by executing a probe whose observation point lies outside the artefact, and this assessment **MAY** consume that result instead of taking reach on trust.
 
 ## Requirements
 

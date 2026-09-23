@@ -18,6 +18,7 @@ Jedes Repository im Portfolio führt Lint-, Typprüfungs- und Testkommandos in i
 - Die Definition des Inhalts eines Testsuites oder eines Lint-Regelwerks — diese leben in den eigenen Konfigurationen der Repositories
 - Den Ersatz von CI: das Gate ist ein lokal-oder-aufrufbarer Vorab-Check, der spiegelt, was CI ebenfalls laufen lässt; CI bleibt die Quelle der Wahrheit für Merge-Schutz
 - Die Deklaration operativer Details des Skills, der das Gate implementiert (`plugins/nolte-engineering/skills/quality-gate/`) — diese können sich ohne Spec-Änderung entwickeln
+- Keine Messung, ob eine Fähigkeit den Umfang erreicht, den sie deklariert. Vier in `spec/project/capability-reach-audit/` festgehaltene Defekte gingen durch eben diese Prüfungen, während sie grün waren, denn ein Gerüst, das normal zurückkehrt, besteht einen Linter, eine Typprüfung und seine eigenen Tests. Jenes Audit stellt die Reichweite durch Ausführung fest und läuft nicht hier.
 
 ## Anforderungen
 

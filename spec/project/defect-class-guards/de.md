@@ -28,6 +28,7 @@ Leser: wer einen Defekt schließt und dessen Pull Request verfasst, sowie Review
 - Testdesign vorzuschreiben. Ein Guard ist oft ein Test, und dann regeln `spec/project/test-falsifiability/` und die Stufen-Specs, wie er geschrieben wird
 - Branch Protection zu besitzen. Ob eine Lane erzwungen ist, entscheidet `spec/project/quality-gate/` §"Erzwungene Lane je Stufe"; G2 konsumiert diese Antwort, statt sie zu wiederholen
 - Rückwirkende Anwendung. Diese Regeln binden Defekte, die nach Annahme der Spec geschlossen werden; die Historie eines Repositories durchzukehren ist eine separate, optionale Übung
+- Keine Quelle von Abdeckung. Ein Wächter existiert erst, wenn jemand die Klasse benannt hat, sodass dieser Spec von Konstruktion her reaktiv ist und niemandem sagen kann, wo nachzusehen ist. `spec/project/capability-reach-audit/` ist die bewusste Suche, die die Klassen erzeugt, die ein Wächter danach verweigert.
 
 ## Anforderungen
 
