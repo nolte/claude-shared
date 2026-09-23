@@ -13,12 +13,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import os
 import shutil
 import signal
 import subprocess
 import sys
-import textwrap
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -27,11 +25,7 @@ import pytest
 import yaml
 from jsonschema import Draft202012Validator
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = REPO_ROOT / "plugins" / "nolte-engineering" / "skills" / "capability-reach-audit" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
-
-import reach_audit as ra  # noqa: E402
+from tests.conftest import REPO_ROOT, SCRIPTS, Target, ra, row_of, validate
 
 SCRIPT_PATH = SCRIPTS / "reach_audit.py"
 SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.0.schema.yaml"
@@ -44,52 +38,8 @@ DECL = "docs/requirements.md"
 # --------------------------------------------------------------------------- #
 # Fixtures and helpers
 # --------------------------------------------------------------------------- #
-@pytest.fixture(autouse=True)
-def _isolated_git(tmp_path_factory, monkeypatch):
-    """Git identity for test commits, without touching the operator's config."""
-    cfg = tmp_path_factory.mktemp("gitcfg") / "gitconfig"
-    cfg.write_text(
-        "[user]\n\tname = Reach Test\n\temail = reach@example.invalid\n"
-        "[commit]\n\tgpgsign = false\n[init]\n\tdefaultBranch = main\n"
-    )
-    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(cfg))
-    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
-
-
-class Target:
-    """A real git working copy standing in for an audited repository."""
-
-    def __init__(self, path: Path) -> None:
-        self.path = path
-        path.mkdir(parents=True, exist_ok=True)
-        self.git("init", "-q")
-
-    def git(self, *args: str) -> str:
-        return subprocess.run(
-            ["git", "-C", str(self.path), *args], check=True, capture_output=True, text=True
-        ).stdout.strip()
-
-    def write(self, rel: str, text: str) -> None:
-        f = self.path / rel
-        f.parent.mkdir(parents=True, exist_ok=True)
-        f.write_text(text)
-
-    def commit(self, msg: str = "change") -> str:
-        self.git("add", "-A")
-        self.git("commit", "-q", "--allow-empty", "-m", msg)
-        return self.git("rev-parse", "HEAD")
-
-    def write_probe(self, data: dict, name: str | None = None) -> str:
-        rel = f"project/reach-probes/{name or data['id']}.yml"
-        self.write(rel, yaml.safe_dump(data, sort_keys=False))
-        return rel
-
-    def report(self) -> str:
-        files = sorted((self.path / ".audits" / "capability-reach").glob("*.md"))
-        assert len(files) == 1, files
-        return files[0].read_text()
-
-
+# _isolated_git, Target, row_of and validate are shared fixtures/helpers defined
+# in tests/conftest.py (SCR-007); imported above rather than redefined here.
 def make_probe(pid: str = "p1", *, derived_from: str, tier: str = "T0", path: str | None = DECL,
                expected: dict | None = None, argv: list[str] | None = None, approved: bool = True,
                **extra) -> dict:
@@ -134,17 +84,6 @@ def derived_probe(target: Target, **kw) -> tuple[str, str]:
 def run_audit(target: Target, include_t2: bool = False, env_timeout: float = 30) -> tuple[int, str]:
     code, _ = ra.run(str(target.path), include_t2=include_t2, env_timeout=env_timeout, clock=lambda: FIXED_NOW)
     return code, target.report()
-
-
-def row_of(report: str, pid: str) -> list[str]:
-    for line in report.splitlines():
-        if line.startswith(f"| {pid} |"):
-            return [c.strip() for c in line.strip("|").split(" | ")]
-    raise AssertionError(f"no row for {pid} in report:\n{report}")
-
-
-def validate(probe: object) -> list[str]:
-    return [e.message for e in Draft202012Validator(ra.PROBE_SCHEMA).iter_errors(probe)]
 
 
 # --------------------------------------------------------------------------- #
@@ -691,94 +630,14 @@ def test_R8_T1_probe_runs_without_the_flag(target):
 # --------------------------------------------------------------------------- #
 # The `task` shim (R9, R10)
 # --------------------------------------------------------------------------- #
-TASK_SHIM = textwrap.dedent(
-    f"""\
-    #!{PY}
-    # Test double for go-task: `task [--silent] <name>` reads Taskfile.yml in the
-    # working directory, runs the named task's cmds through a shell, and fails an
-    # unknown name the way go-task does (message on stderr, exit 200).
-    import subprocess, sys, yaml
-    args = [a for a in sys.argv[1:] if not a.startswith("-")]
-    try:
-        tasks = (yaml.safe_load(open("Taskfile.yml")) or {{}}).get("tasks", {{}})
-    except FileNotFoundError:
-        sys.stderr.write("task: No Taskfile found in the current directory\\n")
-        sys.exit(200)
-    for name in args:
-        if name not in tasks:
-            sys.stderr.write(f'task: Task "{{name}}" does not exist\\n')
-            sys.exit(200)
-        for cmd in tasks[name].get("cmds", []):
-            rc = subprocess.call(cmd, shell=True)
-            if rc:
-                sys.stderr.write(f'task: Failed to run task "{{name}}": exit status {{rc}}\\n')
-                sys.exit(201)
-    """
-)
-
-SERVER = textwrap.dedent(
-    """\
-    # Loopback stand-in for a T1 dependency: `up` starts a detached HTTP server and
-    # returns once it listens; `down` stops it. State lives in REACH_STATE.
-    import http.server, os, signal, subprocess, sys, time
-    state = os.environ["REACH_STATE"]
-    port_file, pid_file = os.path.join(state, "port"), os.path.join(state, "pid")
-    cmd = sys.argv[1]
-    if cmd == "up":
-        subprocess.Popen([sys.executable, __file__, "serve"], start_new_session=True,
-                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        for _ in range(200):
-            if os.path.exists(port_file):
-                sys.exit(0)
-            time.sleep(0.02)
-        sys.exit("server did not come up")
-    if cmd == "serve":
-        class H(http.server.BaseHTTPRequestHandler):
-            def do_GET(self):
-                body = open(os.path.join(state, "items")).read().encode()
-                self.send_response(200); self.end_headers(); self.wfile.write(body)
-            def log_message(self, *a):
-                pass
-        srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
-        open(pid_file, "w").write(str(os.getpid()))
-        open(port_file + ".tmp", "w").write(str(srv.server_address[1]))
-        os.replace(port_file + ".tmp", port_file)
-        srv.serve_forever(poll_interval=0.05)
-    if cmd == "down":
-        os.kill(int(open(pid_file).read()), signal.SIGTERM)
-        os.remove(port_file)
-    """
-)
-
+# TASK_SHIM and the task_shim fixture are defined in tests/conftest.py (SCR-007)
+# and imported above; only the observation argv for the loopback server is local.
 OBSERVE_SERVER = [
     PY, "-c",
     "import os, urllib.request\n"
     "port = open(os.path.join(os.environ['REACH_STATE'], 'port')).read().strip()\n"
     "print(urllib.request.urlopen(f'http://127.0.0.1:{port}/items', timeout=5).read().decode())",
 ]
-
-
-@pytest.fixture
-def task_shim(tmp_path, monkeypatch):
-    """Put the `task` double first on PATH; yield the state dir; stop any server."""
-    bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    shim = bin_dir / "task"
-    shim.write_text(TASK_SHIM)
-    shim.chmod(0o755)
-    state = tmp_path / "state"
-    state.mkdir()
-    (state / "server.py").write_text(SERVER)
-    (state / "items").write_text("alpha\nbeta\n")
-    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
-    monkeypatch.setenv("REACH_STATE", str(state))
-    yield state
-    pid_file = state / "pid"
-    if pid_file.exists():
-        try:
-            os.kill(int(pid_file.read_text()), signal.SIGKILL)
-        except ProcessLookupError:
-            pass
 
 
 def _taskfile(target: Target, state: Path, extra: dict | None = None) -> None:

@@ -17,11 +17,12 @@ What is pinned here:
   are proven by a dogfooding run in the target repository, not here (R19);
 * each example fails the closed schema once a verdict line is appended.
 
-The doubles are the same honest ones ``tests/test_reach_audit.py`` uses: real git
-repositories (git is never mocked) and that module's ``task`` shim, which reads
-the target's ``Taskfile.yml`` and runs the named target's commands. Beside it, a
-``gh`` shim of the same shape answers ``gh run list`` with gh's argv, exit codes
-and JSON, from a run-history file instead of the network.
+The doubles are the same honest ones ``tests/test_reach_audit.py`` uses, shared
+through ``tests/conftest.py``: real git repositories (git is never mocked) and
+the ``task`` shim, which reads the target's ``Taskfile.yml`` and runs the named
+target's commands. Beside it, a ``gh`` shim of the same shape answers ``gh run
+list`` with gh's argv, exit codes and JSON, from a run-history file instead of
+the network.
 """
 from __future__ import annotations
 
@@ -29,23 +30,15 @@ import json
 import os
 import re
 import signal
-import subprocess
 import sys
 import textwrap
 import time
-from pathlib import Path
 
 import pytest
 import yaml
 from jsonschema import Draft202012Validator
 
-from tests.test_reach_audit import TASK_SHIM, Target, row_of
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = REPO_ROOT / "plugins" / "nolte-engineering" / "skills" / "capability-reach-audit" / "scripts"
-sys.path.insert(0, str(SCRIPTS))
-
-import reach_audit as ra  # noqa: E402
+from tests.conftest import SCRIPTS, TASK_SHIM, Target, install_shim, ra, row_of, validate
 
 EXAMPLES = SCRIPTS.parent / "examples"
 PY = sys.executable
@@ -73,28 +66,14 @@ TIERS = {
 NAMES = sorted(DEFECT)
 
 
-@pytest.fixture(autouse=True)
-def _isolated_git(tmp_path_factory, monkeypatch):
-    """Git identity for test commits, without touching the operator's config."""
-    cfg = tmp_path_factory.mktemp("gitcfg") / "gitconfig"
-    cfg.write_text(
-        "[user]\n\tname = Reach Test\n\temail = reach@example.invalid\n"
-        "[commit]\n\tgpgsign = false\n[init]\n\tdefaultBranch = main\n"
-    )
-    monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(cfg))
-    monkeypatch.setenv("GIT_CONFIG_NOSYSTEM", "1")
-
-
+# _isolated_git and validate are shared fixtures/helpers from tests/conftest.py
+# (SCR-007); imported above rather than redefined here.
 def example_text(name: str) -> str:
     return (EXAMPLES / name).read_text(encoding="utf-8")
 
 
 def example(name: str) -> dict:
     return yaml.safe_load(example_text(name))
-
-
-def validate(probe: object) -> list[str]:
-    return [e.message for e in Draft202012Validator(ra.PROBE_SCHEMA).iter_errors(probe)]
 
 
 def derive(target: Target, name: str, *, approve: bool = False) -> str:
@@ -216,42 +195,9 @@ def test_example_with_a_verdict_line_fails_the_schema(name):
 # --------------------------------------------------------------------------- #
 # End to end: T0 scan lane
 # --------------------------------------------------------------------------- #
-GH_SHIM = textwrap.dedent(
-    f"""\
-    #!{PY}
-    # Test double for the GitHub CLI's `gh run list`: same argv, same exit codes,
-    # same JSON on stdout, no network. Runs come from the JSON file GH_RUNS
-    # (newest first, each carrying workflow, event, branch, conclusion); the
-    # filters and --limit apply the way gh applies them, and an unknown workflow
-    # or a missing --json fails the way gh does.
-    import json, os, sys
-    args = sys.argv[1:]
-    if args[:2] != ["run", "list"]:
-        sys.stderr.write(f"unknown command {{' '.join(args[:2])!r}} for gh\\n")
-        sys.exit(1)
-    opts, i = {{}}, 2
-    while i < len(args):
-        if not args[i].startswith("--") or i + 1 >= len(args):
-            sys.stderr.write(f"unknown argument {{args[i]!r}}\\n")
-            sys.exit(1)
-        opts[args[i][2:]] = args[i + 1]
-        i += 2
-    runs = json.load(open(os.environ["GH_RUNS"]))
-    workflow = opts.get("workflow")
-    if workflow is not None and workflow not in {{r["workflow"] for r in runs}}:
-        sys.stderr.write(f"could not find any workflows named {{workflow}}\\n")
-        sys.exit(1)
-    for key, field in (("workflow", "workflow"), ("event", "event"), ("branch", "branch")):
-        if key in opts:
-            runs = [r for r in runs if r[field] == opts[key]]
-    runs = runs[: int(opts.get("limit", "20"))]
-    if "json" not in opts:
-        sys.stderr.write("this shim only emulates --json output\\n")
-        sys.exit(1)
-    fields = opts["json"].split(",")
-    print(json.dumps([{{f: r.get(f) for f in fields}} for r in runs]))
-    """
-)
+# GH_SHIM and the gh_shim fixture are defined in tests/conftest.py (SCR-007);
+# imported above. The run-history records below use gh's own `--json` field
+# names (``workflowName``, ``headBranch``), which is what the shim now enforces.
 SCAN_DECL = ".github/workflows/security-zap-postmerge.yml"
 SCAN_WORKFLOW = "security-zap-postmerge.yml"
 
@@ -264,32 +210,18 @@ def _runs(executed: int) -> list[dict]:
     newest. A probe that drops a filter or the limit over-counts and fails."""
     not_run = [None, "skipped", "cancelled", "startup_failure"]
     foreign = [
-        {"workflow": SCAN_WORKFLOW, "event": "workflow_dispatch", "branch": "develop", "conclusion": "success"},
-        {"workflow": SCAN_WORKFLOW, "event": "push", "branch": "main", "conclusion": "success"},
-        {"workflow": "backend.yml", "event": "push", "branch": "develop", "conclusion": "success"},
+        {"workflowName": SCAN_WORKFLOW, "event": "workflow_dispatch", "headBranch": "develop", "conclusion": "success"},
+        {"workflowName": SCAN_WORKFLOW, "event": "push", "headBranch": "main", "conclusion": "success"},
+        {"workflowName": "backend.yml", "event": "push", "headBranch": "develop", "conclusion": "success"},
     ]
     runs = []
     for i in range(300):
         if i < 120:
             runs.append(foreign[i % 3])
         conclusion = ("success", "failure")[i % 2] if i < executed else not_run[i % len(not_run)]
-        runs.append({"workflow": SCAN_WORKFLOW, "event": "push", "branch": "develop", "conclusion": conclusion})
-    runs += [{"workflow": SCAN_WORKFLOW, "event": "push", "branch": "develop", "conclusion": "success"}] * 50
+        runs.append({"workflowName": SCAN_WORKFLOW, "event": "push", "headBranch": "develop", "conclusion": conclusion})
+    runs += [{"workflowName": SCAN_WORKFLOW, "event": "push", "headBranch": "develop", "conclusion": "success"}] * 50
     return runs
-
-
-@pytest.fixture
-def gh_shim(tmp_path, monkeypatch) -> Path:
-    """Put the `gh` double first on PATH; return the run-history file it serves."""
-    bin_dir = tmp_path / "ghbin"
-    bin_dir.mkdir()
-    shim = bin_dir / "gh"
-    shim.write_text(GH_SHIM)
-    shim.chmod(0o755)
-    history = tmp_path / "runs.json"
-    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
-    monkeypatch.setenv("GH_RUNS", str(history))
-    return history
 
 
 def test_end_to_end_T0_scan_lane_classifies_the_platform_run_history(tmp_path, gh_shim):
@@ -320,12 +252,14 @@ def test_T0_scan_lane_failing_gh_is_not_probed_never_zero_runs(tmp_path, gh_shim
     target.write(SCAN_DECL, "on:\n  push:\n    branches: [develop]\n")
     target.commit("declare the lane")
     pid = derive(target, "scan-lane-runs.yml", approve=True)
-    gh_shim.write_text(json.dumps([{"workflow": "backend.yml", "event": "push", "branch": "develop",
+    gh_shim.write_text(json.dumps([{"workflowName": "backend.yml", "event": "push", "headBranch": "develop",
                                     "conclusion": "success"}]))
     _, report = run_main(target)
     row = row_of(report, pid)
     assert row[1] == ra.NOT_PROBED
-    assert "could not find any workflows named security-zap-postmerge.yml" in row[9]
+    # gh's own wording (measured against gh 2.96.0), not a shim invention: an
+    # unknown --workflow value is an HTTP 404 from the API, not a local lookup.
+    assert "workflow security-zap-postmerge.yml not found on the default branch" in row[9]
 
 
 # --------------------------------------------------------------------------- #
@@ -383,10 +317,7 @@ RANKING_SERVER = textwrap.dedent(
 def ranking_target(tmp_path, monkeypatch):
     """A target with the `task` shim on PATH and the two ranking targets declared."""
     bin_dir = tmp_path / "bin"
-    bin_dir.mkdir()
-    shim = bin_dir / "task"
-    shim.write_text(TASK_SHIM)
-    shim.chmod(0o755)
+    install_shim(bin_dir, "task", TASK_SHIM)
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
     server = tmp_path / "ranking_server.py"
     server.write_text(RANKING_SERVER)
