@@ -1,5 +1,7 @@
 # Approval batching and persistence
 
+Contents: §Batch order and size · §Batch table · §Answer vocabulary · §Persistence · §Not-constructible manifest
+
 Loaded by `capability-reach-audit` `derive` step 3 (rendering a batch, reading an answer) and step 4 (writing approved probes). Governing rules: `spec/project/capability-reach-audit/` §"Derivation, approval, and durability" and executor requirement R4 (present before persisting; persist only the approved set).
 
 ## Batch order and size
@@ -75,9 +77,28 @@ approval:
 
 After writing, tell the operator: the runner reads the probe set from git history, so the set must be **committed** before `run` can execute it; recommend one commit per derive round touching only `project/reach-probes/`, so the baseline commit is unambiguous.
 
-## Not-constructible handover
+## Not-constructible manifest
 
-Group the payload's `not_constructible` entries by reason code, show each entry's `detail` under its code, and propose the two actionable groups as work in the target repository:
+Write `<target>/project/reach-probes/_not-constructible.yml` on every derive round, validated by `schemas/reach-not-constructible-v1.0.schema.yaml` (closed objects, no verdict field):
+
+```yaml
+# Not-constructible manifest; written by capability-reach-audit derive, read by the runner.
+# Empty `entries` means every declared entry received a probe; an absent file means nothing was recorded.
+entries:
+  - id: <scanner entry id>
+    declaration: {source: <src>, path: <as returned> | inherited_spec: <topic/slug> [, hub: <source>], location: "<as returned>"}
+    reason: <scope_not_countable | needs_model_judgement | effect_in_third_party | missing_environment_target | missing_observation_helper>
+    detail: <the scanner's detail, if any>
+    derived_from: "<as returned>"
+    recorded_at: "2026-09-23T14:30:12Z"
+```
+
+- Only entries the scanner returned as `not_constructible` go in. A draft the operator rejected or skipped is not one: it had a probe, the operator declined it, and it is re-drafted on the next `derive`. Putting it here would count a decision as an audit blind spot.
+- An external anchor has neither `path` nor `inherited_spec`; copy the declaration exactly as returned. `recorded_at` is quoted UTC, like `approved_at`.
+- Ids must be unique and must not name a probe file; when a re-derive turns a manifest entry into an approved probe, remove it from the manifest in the same round, or the runner reports a `contradiction` and withholds the probe.
+- The manifest is part of the probe set: commit it with the probes. When the round produced no `not_constructible` entry, write `entries: []` anyway.
+
+Then group the entries by reason code in the summary, show each entry's `detail` under its code, and propose the two actionable groups as work in the target repository:
 
 | Reason code | Meaning | Proposed work |
 |---|---|---|
@@ -87,4 +108,4 @@ Group the payload's `not_constructible` entries by reason code, show each entry'
 | `needs_model_judgement` | the only executing path is a Claude session; no deterministic observation point | no probe possible; record as a known not-probed remainder |
 | `effect_in_third_party` | the effect lands in a system with no readable record; the spec's open question | no probe possible today; record as a known not-probed remainder |
 
-These entries have no probe file, so the runner's report never counts them. Keep the list in the `derive` summary and in the checkpoint's `state:` so it survives the session; the operator decides whether each becomes an issue in the target repository.
+The runner reports each manifest entry as `not probed` with reason `not constructible: <code>` and counts it in the headline. The operator decides whether each actionable entry becomes an issue in the target repository; the manifest keeps it counted until it does.
