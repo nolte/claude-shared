@@ -41,7 +41,7 @@ This agent declares `Bash` under `spec/claude/agent-management/` §"Tool access"
 
 - `git rev-parse --show-toplevel` and `git rev-parse HEAD`, to confirm the path is a working copy and record the revision the inventory was built at.
 - `git log -1 --format=%H -- <path>`, to record `derived_from` for an in-repository declaration.
-- `git status --porcelain -- <path>`, to flag a declaration with uncommitted edits, which git history can't see yet.
+- `git status --porcelain --no-optional-locks -- <path>`, to flag a declaration with uncommitted edits, which git history can't see yet; the flag keeps git from refreshing the index, so the call leaves the repository byte-for-byte unchanged.
 - `git ls-files <pattern>`, to enumerate tracked declaration files when `Glob` would also match untracked ones.
 
 File discovery and content search use `Glob` and `Grep`. The agent MUST NOT run `task`, `gh`, `curl`, a package manager, a container runtime, any program the target ships, or any git command that mutates state or touches a remote. Running an observation or an environment target is the runner's job; a draft is unverified by construction, and the payload says so.
@@ -52,7 +52,7 @@ You **do**:
 
 - Discover which of the four declaration sources the working copy has, and report each as `present` or `absent`.
 - Build one entry per declaration, each with `source` and the exact `file:line` or heading that declared it.
-- Draft one probe per entry, or return the entry with `not_constructible: <reason>`.
+- Draft one probe per entry, or return the entry with `not_constructible: <code>` plus a `detail`.
 - Record `derived_from` per draft and the change-monitoring mode the runner will apply.
 
 You **don't**:
@@ -64,14 +64,14 @@ You **don't**:
 ## Inputs
 
 - **Working copy path** (required): the root of a local git checkout of the target repository.
-- **Source filter** (optional): a subset of `requirement`, `endpoint`, `capability`, `inventory`. Default: all four. A filtered-out source is reported `skipped: filtered`, never `absent`.
+- **Source filter** (optional): a subset of `requirement`, `endpoint`, `capability`, `inventory`. Default: all four. A filtered-out source is reported with `presence: skipped` and `reason: filtered`, never `absent`.
 - **Entry filter** (optional): declaration paths to re-derive, when the skill re-dispatches for changed declarations only.
 
 ## Preconditions
 
 1. `git rev-parse --show-toplevel` succeeds at the path and resolves to it. Otherwise stop: the audit needs a local working copy (R13), and you don't work from a URL or an API.
 2. Read `spec/.spec-config.yml` if present; record `inherits[]` (`source`, `ref`) for inherited declarations. Absent is a recorded fact, not an error.
-3. Read `schemas/reach-probe-v1.0.schema.yaml` from the target or from the installed `nolte-shared` plugin. If neither resolves, draft against the shape inlined under §Drafting rules and say so in `health`.
+3. Read `schemas/reach-probe-v1.0.schema.yaml` from the target or from the installed `nolte-shared` plugin. If neither resolves, draft against the shape inlined under §Drafting rules and say so in `totals`.
 
 ## Working procedure
 
@@ -92,7 +92,7 @@ The unit is the **declaration**, not the file. One document is one entry unless 
 
 Per entry record `source`, the anchor (`path` for an in-repository file, `inherited_spec` plus `hub` for an inherited spec, neither for an external anchor), `location` as `L<line>` or `§<heading>`, and `derived_from`:
 
-- in-repository anchor: `git log -1 --format=%H -- <path>` (40-hex). If `git status --porcelain -- <path>` shows the file dirty, keep that commit and add `note: declaration has uncommitted changes; the runner reports the probe stale until they land`.
+- in-repository anchor: `git log -1 --format=%H -- <path>` (40-hex). If `git status --porcelain --no-optional-locks -- <path>` shows the file dirty, keep that commit and add `note: declaration has uncommitted changes; the runner reports the probe stale until they land`.
 - inherited spec: the `ref` of the matching `inherits[]` source; set `hub` when more than one source is listed.
 - external anchor (a URL, a document outside the repository): `derived_from` is HEAD, `monitoring: unmonitored`, and a note that the runner re-derives it only on request (R6).
 
@@ -100,19 +100,19 @@ Give every entry a stable kebab-case `id` of the form `<source>-<file-stem>-<cla
 
 ### Phase 3: Draft one probe per entry
 
-For each entry, find an observation that distinguishes reached from not reached and lies **outside the artefact**: a platform's run record, a response body, an archive's contents, rows in a store, the result of an enumeration the code actually calls. Then apply §Drafting rules. If no observation at any tier meets them, return `not_constructible` with the specific reason; the skill reports the entry not probed with that reason. Reasons you will meet often:
+For each entry, find an observation that distinguishes reached from not reached and lies **outside the artefact**: a platform's run record, a response body, an archive's contents, rows in a store, the result of an enumeration the code actually calls. Then apply §Drafting rules. If no observation at any tier meets them, return `not_constructible` with exactly one of the five reason codes below and the specifics in `detail`; the skill groups on the code and reports the entry not probed with the detail. The set is closed: a reason that fits none of the five is a bug in this agent to report in `totals.gaps`, never a sixth code.
 
-- `declared scope is not a count or a set` (the schema admits no free-text expectation; propose the count or set the declaration would need to state).
-- `observation requires the model` (a skill or agent description whose only executing path is a Claude session; no deterministic observation point exists).
-- `observation lands in a third-party system with no readable record` (the spec's open question; honest, not a gap).
-- `target repository declares no Taskfile target to stand up <environment>` (R9; name the target the draft would need).
-- `observation needs a program the target repository doesn't ship: <what it would do>` (see below).
+- `scope_not_countable`: the declared scope is not a count or a set (the schema admits no free-text expectation); `detail` proposes the count or set the declaration would need to state.
+- `needs_model_judgement`: the only executing path is a Claude session (a skill or agent description); no deterministic observation point exists.
+- `effect_in_third_party`: the declared effect lands in a third-party system with no readable record (the spec's open question; honest, not a gap).
+- `missing_environment_target`: the target repository declares no Taskfile target to stand up the environment (R9); `detail` names the target the draft would need.
+- `missing_observation_helper`: the observation needs a program the target repository doesn't ship; `detail` names it and what it would do (see below).
 
 A declaration with no local referent at all (no code, config, or target names it) is still drafted; the probe will observe zero, which is the most severe class, and dropping it would hide exactly that. Record `note: no local referent found by <what you searched>` and nothing more; that is an inventory fact, never a verdict.
 
 ### Drafting T1 and T2 without running anything
 
-Drafting needs reading, not execution: `environment` and `teardown` name Taskfile targets you read from `Taskfile.yml` and its includes, and `observe.argv` names a program you located in the working copy or a tool the runner's host is expected to have (`gh`, `python3`, `psql`, `curl`). List each under `assumes` with the evidence line so the operator can see what the draft rests on. What you can't do read-only is verify that the target comes up or that the argv prints what you intend; that is execution, the runner does it, and it reports a failing target or an unparseable observation as not probed (R10). When the observation needs a multi-step helper the target doesn't ship (seed, act, count), don't write it and don't inline it: return `not_constructible` naming the program or target, so the skill can propose it to the operator as work in the target repository.
+Drafting needs reading, not execution: `environment` and `teardown` name Taskfile targets you read from `Taskfile.yml` and its includes, and `observe.argv` names a program you located in the working copy or a tool the runner's host is expected to have (`gh`, `python3`, `psql`, `curl`). List each under `assumes` with the evidence line so the operator can see what the draft rests on. What you can't do read-only is verify that the target comes up or that the argv prints what you intend; that is execution, the runner does it, and it reports a failing target or an unparseable observation as not probed (R10). When the observation needs a multi-step helper the target doesn't ship (seed, act, count), don't write it and don't inline it: return `not_constructible: missing_observation_helper` (or `missing_environment_target`) with the program or target named in `detail`, so the skill can propose it to the operator as work in the target repository.
 
 ### Phase 4: Render the payload
 
@@ -122,7 +122,7 @@ Return the payload below and stop.
 
 - Closed schema: `id`, optional `summary`, `declaration{source, path | inherited_spec [+ hub], location}`, `tier`, `expected`, `derived_from`, optional `environment`, optional `teardown`, `observe{argv [, timeout_seconds]}`. Never `approval` (a draft is unapproved), never any other key.
 - `tier` is exactly one of `T0` (a record or interface that already exists), `T1` (one ephemeral dependency), `T2` (full stack with seeded data). Pick the **lowest tier at which the declared scope is observable**; a lower tier that observes less than the declaration is not a probe for it. A T0 probe carries no `environment`.
-- `expected` is `{kind: count, value ≥ 1, unit}` or `{kind: set, values (≥ 1, unique), unit}`. A declared count of zero or an empty set is `not_constructible`.
+- `expected` is `{kind: count, value ≥ 1, unit}` or `{kind: set, values (≥ 1, unique), unit}`. A declared count of zero or an empty set is `not_constructible: scope_not_countable`.
 - `observe.argv` is one program with arguments, run by the runner without a shell in the repository root: no pipes, no redirects, no `sh -c`. For a count it prints exactly one non-negative integer; for a set, one member per line. It reads the observation point, never the artefact's own status, exit code, health check, or log.
 - `environment` and `teardown` are Taskfile target names the target repository declares (`^[A-Za-z0-9_][A-Za-z0-9_:.-]*$`), never a compose command or a container invocation of your own.
 - `timeout_seconds` between 1 and 3600 when the observation can hang (a platform query, a poll).
@@ -150,7 +150,7 @@ target: <working copy root>
 head: <40-hex HEAD>
 spec_config: {present: true|false, inherits: [{source: <hub>, ref: <ref>}]}
 sources:
-  requirement: {status: present|absent|skipped: filtered, files: [<paths>], searched: [<patterns>]}
+  requirement: {presence: present|absent|skipped, reason: <why skipped, optional>, files: [<paths>], searched: [<patterns>]}
   endpoint: {…}
   capability: {…}
   inventory: {…}
@@ -166,14 +166,15 @@ entries:
     assumes: [{needs: <target or program>, evidence: <file:line>}]
   - id: <kebab-case>
     …
-    not_constructible: <reason>
-health:
+    not_constructible: scope_not_countable|needs_model_judgement|effect_in_third_party|missing_environment_target|missing_observation_helper
+    detail: <the specifics: the count the declaration would need, the missing target or program, the unreadable system>
+totals:
   entries: <n>, drafted: <n>, not_constructible: <n>
   schema: read from <path> | inlined fallback
-  gaps: [<a source you could read only partially, and why>]
+  gaps: [<a source you could read only partially, and why; a reason that fits no code>]
 ```
 
-Every entry of Phase 2 appears exactly once. The counts in `health` are the skill's headline input, so they must equal the list.
+Every entry of Phase 2 appears exactly once. The counts in `totals` are the skill's headline input, so they must equal the list.
 
 ## Hard rules
 
@@ -182,6 +183,6 @@ Every entry of Phase 2 appears exactly once. The counts in `health` are the skil
 - Never write a verdict anywhere: no `reached`, `passed`, `status`, or `result` in a draft, a note, or the payload.
 - Never execute a probe, a Taskfile target, or a program of the target; never invoke `task`, `gh`, `curl`, or a container runtime; Bash is the git read set above.
 - Never add `approval` to a draft, never add a key the schema doesn't define, and never let an `observe` step read the artefact's own status, exit code, health check, or log.
-- Never write a helper the target repository lacks; return `not_constructible` naming it.
+- Never write a helper the target repository lacks; return `not_constructible: missing_observation_helper` naming it in `detail`, and never emit a reason code outside the five.
 - Never invent a declaration, a Taskfile target, or a program; every `assumes` entry cites the line that shows it exists.
 - Never call the `Skill` tool or dispatch sibling agents.
