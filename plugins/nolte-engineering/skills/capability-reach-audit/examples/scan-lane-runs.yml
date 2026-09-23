@@ -1,0 +1,47 @@
+# Worked example, spec/project/capability-reach-audit/ §"Worked acceptance: The
+# five defects", row "Scan lane never executes" (T0, `0/300 runs executed`).
+#
+# ILLUSTRATIVE TARGET: the declaration path and location name where the anchor
+# would sit in nolte/kamerplanter, not in this repository.
+# PLACEHOLDER derived_from: the all-zero commit stands in for the kamerplanter
+# commit the probe is derived at; replace it when deriving.
+# UNAPPROVED ON PURPOSE: this file carries no `approval` block. The runner
+# reports it `not probed` (reason `not approved`) until an operator who read it
+# adds approval, so copying it never runs anything by accident.
+#
+# The observation queries the platform's run history (T0: a record that already
+# exists) for the last 300 runs the lane's declared trigger, a push to
+# `develop`, started, and prints how many of them executed. A run whose
+# conclusion is still unset (queued or in progress), `skipped`, `cancelled`, or
+# `startup_failure` didn't execute the job and doesn't count. The workflow file
+# that declares the trigger is never read. It needs an authenticated `gh` whose
+# default repository is the audited one; a failing `gh` exits non-zero, which
+# the runner reports as not probed, never as zero runs.
+id: scan-lane-runs
+summary: runs of the post-merge scan lane, among its last 300 push-triggered runs, that executed
+declaration:
+  source: endpoint
+  path: .github/workflows/security-zap-postmerge.yml
+  location: "on.push.branches: develop"
+tier: T0
+expected:
+  kind: count
+  value: 300
+  unit: runs executed
+derived_from: "0000000000000000000000000000000000000000"
+observe:
+  argv:
+    - python3
+    - -c
+    - |-
+      import json, subprocess, sys
+      gh = subprocess.run(
+          ["gh", "run", "list", "--workflow", "security-zap-postmerge.yml", "--event", "push",
+           "--branch", "develop", "--limit", "300", "--json", "conclusion"],
+          capture_output=True, text=True, timeout=90)
+      if gh.returncode != 0:
+          sys.exit(f"gh run list exited {gh.returncode}: {gh.stderr.strip()}")
+      runs = json.loads(gh.stdout)
+      not_executed = {None, "", "skipped", "cancelled", "startup_failure"}
+      print(sum(1 for run in runs if run.get("conclusion") not in not_executed))
+  timeout_seconds: 120

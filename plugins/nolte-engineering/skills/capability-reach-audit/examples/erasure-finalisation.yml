@@ -1,0 +1,49 @@
+# Worked example, spec/project/capability-reach-audit/ §"Worked acceptance: The
+# five defects", row "Erasure finalisation deletes nothing" (T2,
+# `0/26 erased, 0/26 redacted`).
+#
+# ILLUSTRATIVE TARGET: the declaration path and location name where the anchor
+# would sit in nolte/kamerplanter, not in this repository, and so does the
+# observation script: kamerplanter would have to ship it. The Taskfile targets
+# below are the ones kamerplanter would have to declare: `reach:stack:up` starts
+# the full stack, `reach:seed:privacy-subject` seeds one data subject into every
+# declared collection, `reach:stack:down` removes the stack and its volumes.
+# PLACEHOLDER derived_from: the all-zero commit stands in for the kamerplanter
+# commit the probe is derived at; replace it when deriving.
+# UNAPPROVED ON PURPOSE: this file carries no `approval` block. The runner
+# reports it `not probed` (reason `not approved`) until an operator who read it
+# adds approval, so copying it never runs anything by accident. As a T2 probe it
+# also runs only under `--include-t2`.
+#
+# A count, not a set: the 26 collection names come from the erasure plan at
+# derivation, and this example doesn't pin them. The 52 checks are two per
+# collection: `erased` holds when no row still matches the subject, `redacted`
+# when every retained row's personal values changed. One erasure run is
+# observed by one command, so both halves stay in one probe. The report then
+# shows only the combined ratio; once the names are copied from the plan, the
+# set form (`erased/<collection>`, `redacted/<collection>`) names each gap.
+#
+# The observation seeds nothing itself: after erasure it counts rows still
+# matching the subject and rows whose values changed, and prints the number of
+# passed checks. The erasure request's recorded `status` is never read.
+id: erasure-finalisation
+summary: per-collection erasure and redaction checks passed after the subject's erasure
+declaration:
+  source: requirement
+  path: spec/req/REQ-025_Datenschutz-Betroffenenrechte.md
+  location: "§3.4 Löschung (Art. 17)"
+tier: T2
+expected:
+  kind: count
+  value: 52
+  unit: checks passed (26 erased, 26 redacted)
+derived_from: "0000000000000000000000000000000000000000"
+environment:
+  - "reach:stack:up"
+  - "reach:seed:privacy-subject"
+  - "reach:erasure:finalise-for-subject"
+teardown:
+  - "reach:stack:down"
+observe:
+  argv: [python3, scripts/reach/observe_erasure_residue.py, --subject, reach-subject]
+  timeout_seconds: 300

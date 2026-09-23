@@ -1,0 +1,44 @@
+# Worked example, spec/project/capability-reach-audit/ §"Worked acceptance: The
+# five defects", row "Two personal-data inventories, one executing" (T2,
+# `1 of 2 declared inventories matches the executing one`).
+#
+# ILLUSTRATIVE TARGET: the declaration path and location name where the anchor
+# would sit in nolte/kamerplanter, not in this repository, and so does the
+# observation script: kamerplanter would have to ship it. The Taskfile targets
+# below are the ones kamerplanter would have to declare: `reach:stack:up` starts
+# the full stack, `reach:seed:privacy-subject` seeds one data subject into every
+# declared collection, `reach:stack:down` removes the stack and its volumes.
+# PLACEHOLDER derived_from: the all-zero commit stands in for the kamerplanter
+# commit the probe is derived at; replace it when deriving.
+# UNAPPROVED ON PURPOSE: this file carries no `approval` block. The runner
+# reports it `not probed` (reason `not approved`) until an operator who read it
+# adds approval, so copying it never runs anything by accident. As a T2 probe it
+# also runs only under `--include-t2`.
+#
+# The two declared inventories are the export manifest and the erasure plan.
+# The observation executes the enumeration the running backend actually calls
+# for the seeded subject, diffs what it returns against each declared inventory,
+# and prints the name of every inventory that matches it exactly. With one
+# inventory executing and the other not, it prints one name: partially reached.
+id: personal-data-inventories
+summary: declared personal-data inventories that match the enumeration the code executes
+declaration:
+  source: inventory
+  path: src/backend/app/domain/engines/data_export_engine.py
+  location: "DataExportEngine.USER_DATA_MANIFEST, ErasureEngine.build_erasure_plan"
+tier: T2
+expected:
+  kind: set
+  unit: declared inventories matching the executing one
+  values:
+    - export-manifest
+    - erasure-plan
+derived_from: "0000000000000000000000000000000000000000"
+environment:
+  - "reach:stack:up"
+  - "reach:seed:privacy-subject"
+teardown:
+  - "reach:stack:down"
+observe:
+  argv: [python3, scripts/reach/observe_executing_inventory.py, --subject, reach-subject]
+  timeout_seconds: 300
