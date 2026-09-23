@@ -1,0 +1,62 @@
+# Worked example, spec/project/capability-reach-audit/ §"Worked acceptance: The
+# five defects", row "Ranking service never becomes ready" (T1,
+# `0/1 endpoints answer`).
+#
+# ILLUSTRATIVE TARGET: the declaration path and location name where the anchor
+# would sit in nolte/kamerplanter, not in this repository. The Taskfile targets
+# below are the ones kamerplanter would have to declare: `reach:ranking:up`
+# starts the ranking container and writes its base URL to `.reach/ranking.url`;
+# `reach:ranking:down` stops it and removes that file.
+# PLACEHOLDER derived_from: the all-zero commit stands in for the kamerplanter
+# commit the probe is derived at; replace it when deriving.
+# UNAPPROVED ON PURPOSE: this file carries no `approval` block. The runner
+# reports it `not probed` (reason `not approved`) until an operator who read it
+# adds approval, so copying it never runs anything by accident.
+#
+# The observation polls the ranking endpoint itself until it answers or a
+# 90-second deadline passes, never `HEALTHCHECK` or `/ready`. It then posts two
+# queries whose correct orderings differ and prints 1 only when both response
+# orderings are correct, so a constant answer or a stub prints 0. An endpoint
+# that never answers prints 0 as well: that is the defect, not a failed probe.
+id: ranking-endpoint-answers
+summary: the ranking endpoint answers two queries with their distinct correct orderings
+declaration:
+  source: capability
+  path: spec/req/REQ-031_KI-Assistent-Pflanzenberatung.md
+  location: "RerankerEngine (bge-reranker-v2-m3)"
+tier: T1
+expected:
+  kind: count
+  value: 1
+  unit: endpoints answer
+derived_from: "0000000000000000000000000000000000000000"
+environment:
+  - "reach:ranking:up"
+teardown:
+  - "reach:ranking:down"
+observe:
+  argv:
+    - python3
+    - -c
+    - |-
+      import json, pathlib, time, urllib.error, urllib.request
+      base = pathlib.Path(".reach/ranking.url").read_text(encoding="utf-8").strip()
+      docs = ["Basil grows well next to tomatoes.", "Dill attracts pollinators to cucumbers."]
+      cases = [("companion plants for tomatoes", [0, 1]), ("companion plants for cucumbers", [1, 0])]
+      def rank(query):
+          body = json.dumps({"query": query, "documents": docs}).encode()
+          req = urllib.request.Request(base + "/rerank", data=body, headers={"Content-Type": "application/json"})
+          with urllib.request.urlopen(req, timeout=10) as resp:
+              return json.load(resp).get("order")
+      deadline = time.monotonic() + 90
+      while True:
+          try:
+              first = rank(cases[0][0])
+              break
+          except (urllib.error.URLError, ConnectionError, TimeoutError, ValueError):
+              if time.monotonic() > deadline:
+                  print(0)
+                  raise SystemExit(0)
+              time.sleep(1)
+      print(1 if first == cases[0][1] and rank(cases[1][0]) == cases[1][1] else 0)
+  timeout_seconds: 150

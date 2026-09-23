@@ -1,0 +1,71 @@
+# Worked example, spec/project/capability-reach-audit/ §"Worked acceptance: The
+# five defects", row "Data export reaches 0 collections" (T2,
+# `0/15 collections, 0/8 edges`).
+#
+# ILLUSTRATIVE TARGET: the declaration path and location name where the anchor
+# would sit in nolte/kamerplanter, not in this repository, and so does the
+# observation script: kamerplanter would have to ship it. The Taskfile targets
+# below are the ones kamerplanter would have to declare: `reach:stack:up` starts
+# the full stack, `reach:seed:privacy-subject` seeds one data subject into every
+# declared collection, `reach:stack:down` removes the stack and its volumes.
+# PLACEHOLDER derived_from: the all-zero commit stands in for the kamerplanter
+# commit the probe is derived at; replace it when deriving.
+# UNAPPROVED ON PURPOSE: this file carries no `approval` block. The runner
+# reports it `not probed` (reason `not approved`) until an operator who read it
+# adds approval, so copying it never runs anything by accident. As a T2 probe it
+# also runs only under `--include-t2`.
+#
+# One probe, not two: one seeded export run produces one archive, and one
+# command reads it. The runner shares no state between probes, so a second probe
+# would re-seed and re-export, doubling the T2 cost to observe a different
+# archive. The member prefixes keep the two units apart in the report's missing
+# list, and the 23 names are the export manifest's 15 collections and 8 edges.
+#
+# The observation opens the produced archive and prints the member name of every
+# collection or edge whose record count equals what was seeded for the subject.
+# Counting the collections present would measure presence: an archive of 15 empty
+# files must print nothing. The export job's status field is never read.
+id: data-export-populated
+summary: collections and edges in the subject's export archive holding every seeded record
+declaration:
+  source: requirement
+  path: spec/req/REQ-025_Datenschutz-Betroffenenrechte.md
+  location: "§3.4 Export (Art. 15/20)"
+tier: T2
+expected:
+  kind: set
+  unit: collections and edges populated
+  values:
+    - collection/users
+    - collection/auth_providers
+    - collection/refresh_tokens
+    - collection/memberships
+    - collection/consent_records
+    - collection/processing_restrictions
+    - collection/erasure_requests
+    - collection/email_change_requests
+    - collection/data_export_requests
+    - collection/tasks
+    - collection/harvest_batches
+    - collection/inspections
+    - collection/treatment_applications
+    - collection/plant_diary_entries
+    - collection/identification_requests
+    - edge/has_auth_provider
+    - edge/has_session
+    - edge/membership_in
+    - edge/has_consent
+    - edge/has_restriction
+    - edge/requested_erasure
+    - edge/requested_email_change
+    - edge/requested_export
+derived_from: "0000000000000000000000000000000000000000"
+environment:
+  - "reach:stack:up"
+  - "reach:seed:privacy-subject"
+  - "reach:export:run-for-subject"
+teardown:
+  - "reach:stack:down"
+observe:
+  argv: [python3, scripts/reach/observe_export_archive.py, --subject, reach-subject]
+  timeout_seconds: 300
