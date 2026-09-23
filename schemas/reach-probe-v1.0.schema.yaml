@@ -204,6 +204,19 @@ $defs:
         type: string
         minLength: 1
         description: The approving operator.
+      observation_digest:
+        type: string
+        pattern: "^[0-9a-f]{64}$"
+        description: >-
+          Binds the approval to what the runner executes. SHA-256, as 64
+          lowercase hex digits, of the UTF-8 encoding of
+          json.dumps({"observe": ..., "environment": ..., "teardown": ...},
+          sort_keys=True, separators=(",", ":"), ensure_ascii=False), with an
+          absent environment or teardown taken as []. The runner's
+          observation_digest() computes it. When the committed observation step
+          no longer matches, the probe is not probed and the mismatch is a
+          finding; when the field is absent, the probe runs with a note saying
+          so.
   Observe:
     type: object
     description: >-

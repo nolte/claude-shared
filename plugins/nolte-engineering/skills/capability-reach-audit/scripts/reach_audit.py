@@ -22,6 +22,12 @@ probed with reason ``not constructible: <code>`` and counts in the headline; an
 absent manifest is stated in the headline and the provenance, because the runner
 can't tell "every entry was constructible" from "the manifest was never written".
 
+Every file the runner reads from the target's working tree (probe files, the
+manifest, spec/.spec-config.yml) must be a regular file that resolves inside the
+repository: a symlink is refused and never followed, so a probe set cannot pull
+an operator's private files into the committed report. The report itself is
+opened with O_NOFOLLOW.
+
 Dependencies: PyYAML and jsonschema. The probe set lives in the audited
 repository, which has no pre-commit hook of this repository's, so the runner
 validates every probe against the schema itself; a missing validator fails the
@@ -38,10 +44,11 @@ Exit codes:
      then counts them (every entry not probed) instead of saying there is no
      probe set, but a run whose only entries are not constructible measured
      nothing either.
-  4  report written, and it carries findings: weakened or invalid probes, an
-     unreadable manifest or an invalid manifest entry, a manifest id listed
-     twice, or an id that is both a probe file and a manifest entry. Takes
-     precedence over 3.
+  4  report written, and it carries findings: weakened or invalid probes
+     (a symlinked probe file included), an approval whose observation digest no
+     longer matches the observation step, an unreadable manifest or an invalid
+     manifest entry, a manifest id listed twice, or an id that is both a probe
+     file and a manifest entry. Takes precedence over 3.
   5  PyYAML or jsonschema is not installed
 
 Usage:
@@ -51,14 +58,18 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import errno
+import hashlib
+import json
 import os
 import posixpath
 import re
+import selectors
 import shlex
 import signal
 import subprocess
 import sys
-import tempfile
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -99,11 +110,24 @@ TRUNCATION_MARKER = " [truncated]"
 # How many missing set members a reason lists before summarising the rest.
 MAX_LISTED_MEMBERS = 10
 
-# Terminal and bidi control characters are stripped from every string quoted in
-# the report: tool output is untrusted and must not reorder or forge report text.
-_CONTROL_CHARS = re.compile(r"[\x00-\x1f\x7f-\x9f\u202a-\u202e\u2066-\u2069]")
+# How often a running child is checked while its output is read.
+POLL_SECONDS = 0.05
+# Bytes read from a child's pipe per system call.
+READ_CHUNK = 64 * 1024
+
+# Terminal, bidi, zero-width, and line-separator characters are stripped from
+# every string quoted in the report or on stderr: tool output and file names are
+# untrusted and must not reorder, hide, or forge report text.
+_CONTROL_CHARS = re.compile(
+    r"[\x00-\x1f\x7f-\x9f\u061c\u200b-\u200f\u2028-\u202e\u2060\u2066-\u2069\ufeff]"
+)
 _WHITESPACE_CONTROLS = re.compile(r"[\t\n\v\f\r]")
-_COUNT_RE = re.compile(r"^[0-9]+$")
+# Markdown that could open a comment, a raw HTML block, or a link in a report cell.
+_MARKDOWN_SPECIALS = re.compile(r"([\\<>\[\]])")
+# At most 18 digits: always below int_max_str_digits, and a count that large is
+# a runaway command, not a measurement.
+_COUNT_RE = re.compile(r"^[0-9]{1,18}$")
+_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 
 # Exit codes
@@ -142,6 +166,8 @@ STATE_INVALID = "invalid"
 STATE_NOT_CONSTRUCTIBLE = "not constructible"
 # One id is both a probe file and a manifest entry.
 STATE_CONTRADICTION = "contradiction"
+# The approval's observation digest does not match the current observation step.
+STATE_APPROVAL_MISMATCH = "approval mismatch"
 
 DECLARATION_SOURCES = ("requirement", "endpoint", "capability", "inventory")
 
@@ -149,6 +175,9 @@ REASON_NOT_APPROVED = "not approved"
 REASON_T2 = "tier T2 not requested"
 REASON_STALE = "declaration changed since derivation"
 REASON_NOT_CONSTRUCTIBLE = "not constructible"
+REASON_DIGEST_MISMATCH = "approval does not cover the current observation step"
+NOTE_NO_DIGEST = "approval carries no observation digest"
+REASON_SILENT = "observation step printed nothing"
 
 NOT_CONSTRUCTIBLE_REASONS = (
     "scope_not_countable",
@@ -241,6 +270,7 @@ PROBE_SCHEMA: dict[str, Any] = {
                     "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z$",
                 },
                 "approved_by": {"type": "string", "minLength": 1},
+                "observation_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
             },
         },
         "Observe": {
@@ -310,9 +340,36 @@ def safe_text(value: object, limit: int = MAX_REASON_CHARS) -> str:
     return text
 
 
+def md_text(value: object, limit: int = MAX_REASON_CHARS) -> str:
+    """Safe text for Markdown prose: ``\\ < > [ ]`` escaped.
+
+    Untrusted text must not open an HTML comment (``<!--`` would swallow the rest
+    of the report), a raw HTML block, or a link. The backslash is escaped first,
+    so an input backslash cannot cancel the escape added after it.
+    """
+    return _MARKDOWN_SPECIALS.sub(r"\\\1", safe_text(value, limit))
+
+
 def cell(value: object) -> str:
-    """A markdown table cell: safe text with the column separator escaped."""
-    return safe_text(value).replace("|", "\\|") or "—"
+    """A markdown table cell: Markdown-safe text with the column separator escaped."""
+    return md_text(value).replace("|", "\\|") or "—"
+
+
+def code_span(text: str, table: bool = False) -> str:
+    """``text`` as an inline code span that no backtick inside it can end.
+
+    The fence is one backtick longer than the longest backtick run in the text,
+    and padded with a space when the text holds a backtick, so the span's own
+    delimiters are the only ones. Backslash escapes are literal inside a code
+    span, so only the table's column separator is escaped (``table=True``).
+    """
+    body = safe_text(text)
+    if table:
+        body = body.replace("|", "\\|")
+    runs = [len(r) for r in re.findall(r"`+", body)]
+    fence = "`" * (max(runs, default=0) + 1)
+    pad = " " if runs else ""
+    return f"{fence}{pad}{body}{pad}{fence}"
 
 
 def code_cell(command: str) -> str:
@@ -322,10 +379,7 @@ def code_cell(command: str) -> str:
     the rendered command does not read as a different one; a backtick in the
     command widens the code-span delimiter instead of ending it.
     """
-    text = cell(command.replace("\r", "\\r").replace("\n", "\\n"))
-    fence = "``" if "`" in text else "`"
-    pad = " " if fence == "``" else ""
-    return f"{fence}{pad}{text}{pad}{fence}"
+    return code_span(command.replace("\r", "\\r").replace("\n", "\\n"), table=True)
 
 
 def _load_dependencies() -> tuple[Any, Any]:
@@ -346,43 +400,108 @@ class CommandResult:
     oversized: bool = False
 
 
-def run_command(argv: list[str], cwd: Path, timeout: float, max_stdout: int | None = None) -> CommandResult:
-    """Run ``argv`` without a shell, bounded in time and in the bytes read back.
+def run_command(argv: list[str], cwd: Path, timeout: float, max_stdout: int | None = None,
+                kill_on_overflow: bool = False) -> CommandResult:
+    """Run ``argv`` without a shell, bounded in time and in the bytes it may emit.
 
-    Output goes to temporary files, not pipes: an environment target that leaves a
-    server running in the background keeps inherited pipe ends open, and reading a
-    pipe until EOF would then block for the server's whole lifetime.
+    Output is read from pipes in chunks and never spooled to disk, so a runaway
+    command cannot fill the temp directory. At most ``max_stdout`` bytes of
+    stdout and a reason-sized prefix of stderr are kept; the rest is read and
+    discarded so the child never blocks on a full pipe. With
+    ``kill_on_overflow`` (the observation step, whose stdout is the measurement)
+    the process group is killed as soon as stdout passes the bound.
+
+    Reading stops when the direct child exits, not at EOF: an environment target
+    that leaves a server running in the background keeps inherited pipe ends open,
+    and waiting for EOF would then block for the server's whole lifetime.
+
+    The child runs in its own session, so a Ctrl-C at the terminal does not reach
+    it; any exception while it runs, KeyboardInterrupt included, kills its process
+    group before propagating instead of orphaning it.
     """
     if max_stdout is None:
         max_stdout = MAX_OBSERVATION_BYTES
-    with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
-        try:
-            proc = subprocess.Popen(  # noqa: S603 - argv list, no shell
-                argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=out, stderr=err, start_new_session=True
-            )
-        except FileNotFoundError:
-            return CommandResult(None, b"", b"", error=f"`{argv[0]}` not found on PATH")
-        except OSError as exc:
-            return CommandResult(None, b"", b"", error=f"`{argv[0]}` could not be started: {exc.strerror}")
-        try:
-            returncode: int | None = proc.wait(timeout=timeout)
-            error = None
-        except subprocess.TimeoutExpired:
-            _kill_group(proc)
-            returncode, error = None, f"timed out after {timeout:g}s"
-        out.seek(0)
-        stdout = out.read(max_stdout + 1)
-        err.seek(0)
-        stderr = err.read(MAX_REASON_CHARS * 4)
-    oversized = len(stdout) > max_stdout
-    return CommandResult(returncode, stdout[:max_stdout], stderr, error=error, oversized=oversized)
+    try:
+        proc = subprocess.Popen(  # noqa: S603 - argv list, no shell
+            argv, cwd=cwd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
+    except FileNotFoundError:
+        return CommandResult(None, b"", b"", error=f"`{argv[0]}` not found on PATH")
+    except OSError as exc:
+        return CommandResult(None, b"", b"", error=f"`{argv[0]}` could not be started: {exc.strerror}")
+    assert proc.stdout is not None and proc.stderr is not None
+    out_fd, err_fd = proc.stdout.fileno(), proc.stderr.fileno()
+    kept = {out_fd: bytearray(), err_fd: bytearray()}
+    limits = {out_fd: max_stdout + 1, err_fd: MAX_REASON_CHARS * 4}
+    seen_stdout = 0
+    sel = selectors.DefaultSelector()
+    returncode: int | None = None
+    error: str | None = None
+
+    def pump(wait: float) -> bool:
+        """Read one chunk from each ready pipe; True when anything was kept or closed."""
+        nonlocal seen_stdout
+        progressed = False
+        for key, _ in sel.select(timeout=wait):
+            chunk = os.read(key.fd, READ_CHUNK)
+            if not chunk:
+                sel.unregister(key.fd)
+                progressed = True
+                continue
+            if key.fd == out_fd:
+                seen_stdout += len(chunk)
+            room = limits[key.fd] - len(kept[key.fd])
+            if room > 0:
+                kept[key.fd] += chunk[:room]
+                progressed = True
+        return progressed
+
+    try:
+        sel.register(out_fd, selectors.EVENT_READ)
+        sel.register(err_fd, selectors.EVENT_READ)
+        deadline = time.monotonic() + timeout
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                _kill_group(proc)
+                error = f"timed out after {timeout:g}s"
+                break
+            if kill_on_overflow and seen_stdout > max_stdout:
+                _kill_group(proc)
+                error = f"printed more than {max_stdout} bytes"
+                break
+            wait = min(remaining, POLL_SECONDS)
+            if sel.get_map():
+                pump(wait)
+                wait = 0.0
+            try:
+                returncode = proc.wait(timeout=wait)
+            except subprocess.TimeoutExpired:
+                continue
+            # The child exited: take what is already buffered, without waiting for
+            # an EOF that a background process holding the pipe may never send.
+            while sel.get_map() and time.monotonic() < deadline and pump(0):
+                pass
+            break
+    except BaseException:
+        _kill_group(proc)
+        raise
+    finally:
+        sel.close()
+        proc.stdout.close()
+        proc.stderr.close()
+    oversized = seen_stdout > max_stdout
+    return CommandResult(returncode, bytes(kept[out_fd][:max_stdout]), bytes(kept[err_fd]), error=error,
+                         oversized=oversized)
 
 
 def _kill_group(proc: subprocess.Popen) -> None:
     try:
         os.killpg(proc.pid, signal.SIGKILL)
     except (ProcessLookupError, PermissionError):
-        proc.kill()
+        if proc.poll() is None:
+            proc.kill()
     proc.wait()
 
 
@@ -403,23 +522,30 @@ class Git:
         self.repo = repo
 
     def run(self, *args: str) -> subprocess.CompletedProcess:
+        """Run git read-only. Output is decoded as UTF-8 with replacement: a historical
+        probe revision or a path that is not UTF-8 must yield a classified entry, not
+        a crash. core.quotePath is off so non-ASCII paths come back verbatim and can
+        be passed to ``git show`` again."""
         try:
             return subprocess.run(  # noqa: S603 - fixed argv, no shell
-                ["git", "-C", str(self.repo), *args],
+                ["git", "-c", "core.quotePath=false", "-C", str(self.repo), *args],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=GIT_TIMEOUT_SECONDS,
                 check=False,
             )
         except FileNotFoundError as exc:
             raise AuditError("`git` not found on PATH; the runner reads the target's history with it.") from exc
         except subprocess.TimeoutExpired as exc:
-            raise AuditError(f"`git {' '.join(args)}` timed out after {GIT_TIMEOUT_SECONDS}s.") from exc
+            raise AuditError(f"`git {safe_text(' '.join(args))}` timed out after {GIT_TIMEOUT_SECONDS}s.") from exc
 
     def out(self, *args: str) -> str:
         res = self.run(*args)
         if res.returncode != 0:
-            raise AuditError(f"`git {' '.join(args)}` failed: {safe_text(res.stderr)}")
+            # The arguments carry file names from the target's working tree.
+            raise AuditError(f"`git {safe_text(' '.join(args))}` failed: {safe_text(res.stderr)}")
         return res.stdout
 
     def resolve_commit(self, rev: str) -> str | None:
@@ -434,8 +560,9 @@ class Git:
             raise AuditError(f"`git merge-base` failed: {safe_text(res.stderr)}")
         return res.returncode == 0
 
-    def last_commit(self, path: str) -> str | None:
-        return self.out("log", "-1", "--format=%H", "--", path).strip() or None
+    def last_commit(self, path: str, rev: str = "HEAD") -> str | None:
+        """The latest commit reachable from ``rev`` (a resolved commit) that touched ``path``."""
+        return self.out("log", "-1", "--format=%H", rev, "--", path).strip() or None
 
     def is_dirty(self, path: str) -> bool:
         return bool(self.out("status", "--porcelain", "--untracked-files=no", "--", path).strip())
@@ -528,17 +655,46 @@ def _schema_error_text(err: Any) -> str:
     return f"{loc}: {err.message}{hint}"
 
 
+class UnsafePathError(Exception):
+    """A file the runner must not read: a symlink, or a path resolving outside the repository."""
+
+
+def read_inside(repo: Path, path: Path) -> str:
+    """Read ``path`` only if it is no symlink and resolves inside ``repo``.
+
+    A symlink is refused before anything is opened, so its target is never read:
+    a probe linked to a private key would otherwise put the key into the
+    committed report through the schema error that quotes the parsed document.
+    """
+    if path.is_symlink():
+        raise UnsafePathError("is a symlink; the runner does not follow links in the audited tree")
+    if not path.resolve().is_relative_to(repo):
+        raise UnsafePathError("resolves outside the repository; the runner reads only files inside it")
+    return path.read_text(encoding="utf-8")
+
+
 def load_probes(repo: Path, yaml: Any, validator_cls: Any) -> list[Probe]:
     directory = repo / PROBE_DIR
     if not directory.is_dir():
         return []
     validator = validator_cls(PROBE_SCHEMA)
     probes: list[Probe] = []
-    candidates = (p for p in directory.iterdir() if p.suffix in PROBE_SUFFIXES and p.is_file())
-    for file in sorted(p for p in candidates if p.name != MANIFEST_NAME):
+    for file in sorted(directory.iterdir()):
+        if file.name == MANIFEST_NAME:
+            continue
         rel = file.relative_to(repo).as_posix()
+        if file.is_symlink():
+            # Any link under the probe directory is a finding, whatever it is named
+            # and wherever it points; it is listed, never read.
+            probes.append(Probe(rel, None, ["symlink: refused and not read; a probe file must be a regular file"]))
+            continue
+        if file.suffix not in PROBE_SUFFIXES or not file.is_file():
+            continue
         try:
-            data = yaml.safe_load(file.read_text(encoding="utf-8"))
+            data = yaml.safe_load(read_inside(repo, file))
+        except UnsafePathError as exc:
+            probes.append(Probe(rel, None, [f"refused and not read: {exc}"]))
+            continue
         except (yaml.YAMLError, UnicodeDecodeError) as exc:
             probes.append(Probe(rel, None, [f"not parseable as YAML: {safe_text(exc)}"]))
             continue
@@ -583,11 +739,13 @@ def load_manifest(repo: Path, yaml: Any, validator_cls: Any) -> Manifest | None:
     probe. Errors anywhere else make the whole document unreadable.
     """
     path = repo / MANIFEST_PATH
-    if not path.is_file():
+    if not path.is_file() and not path.is_symlink():
         return None
     rel = MANIFEST_PATH.as_posix()
     try:
-        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        data = yaml.safe_load(read_inside(repo, path))
+    except UnsafePathError as exc:
+        return Manifest(rel, errors=[f"refused and not read: {exc}"], readable=False)
     except (yaml.YAMLError, UnicodeDecodeError) as exc:
         return Manifest(rel, errors=[f"not parseable as YAML: {safe_text(exc)}"], readable=False)
     per_entry: dict[int, list[str]] = {}
@@ -635,8 +793,9 @@ def _derived_from_of(text: str | None, yaml: Any) -> object:
     return doc.get("derived_from") if isinstance(doc, dict) else None
 
 
-def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[str], bool]:
-    """The probe's derivation baseline, the commits that touched it since, and dirtiness.
+def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[str], bool, tuple[str, str] | None]:
+    """The probe's derivation baseline, the commits that touched it since, dirtiness,
+    and the revision before the baseline.
 
     The baseline is the commit that recorded the probe's current ``derived_from``:
     walking the file's history newest first, the oldest commit of the unbroken run
@@ -644,10 +803,15 @@ def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[s
     derived at, so comparing its latest commit against ``derived_from`` directly
     would flag every freshly committed probe; the recording commit is the approved
     state, and every later commit to the file is an unapproved change.
+
+    The fourth value is ``(commit, path)`` of the probe's revision just before the
+    baseline, or None when the baseline is the probe's first commit. When it is
+    set, the baseline commit moved ``derived_from``, and detect_change must check
+    that the move was a re-derivation rather than a re-baseline.
     """
     history = git.file_history(probe.file)
     if not history:
-        return None, [], False
+        return None, [], False, None
     current = probe.data["derived_from"] if probe.data else None
     run: list[str] = []
     for commit, path_then in history:
@@ -658,8 +822,9 @@ def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[s
     if not run:
         # HEAD's version already differs from the working tree's derived_from: the
         # recording itself is uncommitted, and the newest commit is the baseline.
-        return history[0][0], [], True
-    return run[-1], run[:-1], dirty
+        return history[0][0], [], True, None
+    prior = history[len(run)] if len(run) < len(history) else None
+    return run[-1], run[:-1], dirty, prior
 
 
 def _repo_relative(path: str) -> str | None:
@@ -674,10 +839,23 @@ def _repo_relative(path: str) -> str | None:
 
 def _inherited_ref(repo: Path, declaration: dict[str, Any], yaml: Any) -> tuple[str | None, str]:
     config_path = repo / SPEC_CONFIG
-    if not config_path.is_file():
+    if not config_path.is_file() and not config_path.is_symlink():
         return None, f"{SPEC_CONFIG.as_posix()} not found, so the pinned ref of the inherited spec is unknown"
     try:
-        config = yaml.safe_load(config_path.read_text(encoding="utf-8")) or {}
+        text = read_inside(repo, config_path)
+    except UnsafePathError as exc:
+        return None, f"{SPEC_CONFIG.as_posix()} {exc}, so the pinned ref of the inherited spec is unknown"
+    except UnicodeDecodeError:
+        return None, f"{SPEC_CONFIG.as_posix()} is not UTF-8"
+    return _pinned_ref(text, declaration, yaml)
+
+
+def _pinned_ref(text: str | None, declaration: dict[str, Any], yaml: Any) -> tuple[str | None, str]:
+    """The inherits[].ref pinning ``declaration``'s inherited spec, read from a config text."""
+    if text is None:
+        return None, f"{SPEC_CONFIG.as_posix()} not found, so the pinned ref of the inherited spec is unknown"
+    try:
+        config = yaml.safe_load(text) or {}
     except yaml.YAMLError as exc:
         return None, f"{SPEC_CONFIG.as_posix()} is not parseable: {safe_text(exc)}"
     inherits = config.get("inherits") if isinstance(config, dict) else None
@@ -696,11 +874,60 @@ def _inherited_ref(repo: Path, declaration: dict[str, Any], yaml: Any) -> tuple[
     return ref, ""
 
 
+def _rebaseline_problem(git: Git, new_df: str, baseline: str, prior: tuple[str, str], yaml: Any) -> str | None:
+    """Why the baseline commit's move of ``derived_from`` is no re-derivation, or None.
+
+    Moving ``derived_from`` re-baselines the probe: every change of that commit
+    becomes the approved state. That is legitimate only when the declaration the
+    probe checked actually changed between the previous ``derived_from`` and the
+    new one. Otherwise one commit that lowers the expectation and bumps
+    ``derived_from`` to the then-HEAD would launder its own weakening (spec: a
+    guard disarmed through its own entry).
+
+    The anchor is read from the probe's *previous* revision, so re-pointing the
+    anchor at some other, recently changed file in the same commit proves
+    nothing. A path anchor needs its latest commit as of the new ``derived_from``
+    to lie outside the previous one's ancestry; an inherited spec needs the pin in
+    spec/.spec-config.yml to have moved to the new value; an external anchor can't
+    show a change, so its re-baseline is never accepted.
+    """
+    prior_commit, prior_path = prior
+    moved = f"{baseline[:12]} moved derived_from"
+    try:
+        prior_doc = yaml.safe_load(git.show(prior_commit, prior_path) or "")
+    except yaml.YAMLError:
+        prior_doc = None
+    prev_df = prior_doc.get("derived_from") if isinstance(prior_doc, dict) else None
+    if not isinstance(prev_df, str) or not prev_df:
+        return (f"{moved} to {safe_text(new_df, 40)}, but the probe's previous revision "
+                f"({prior_commit[:12]}) carries no readable derived_from, so no declaration change can justify it")
+    moved += f" from {safe_text(prev_df[:12], 40)} to {safe_text(new_df[:12], 40)}"
+    decl = prior_doc.get("declaration")
+    decl = decl if isinstance(decl, dict) else {}
+    if decl.get("inherited_spec"):
+        before, _ = _pinned_ref(git.show(prior_commit, SPEC_CONFIG.as_posix()), decl, yaml)
+        after, _ = _pinned_ref(git.show(baseline, SPEC_CONFIG.as_posix()), decl, yaml)
+        if after == new_df and before != new_df:
+            return None
+        return f"{moved}, but the pinned ref of {safe_text(decl['inherited_spec'])} did not move to it"
+    raw = decl.get("path")
+    rel = _repo_relative(raw) if isinstance(raw, str) and raw else None
+    if rel is None:
+        return f"{moved} for an anchor outside the repository, whose change the runner cannot confirm"
+    prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
+    if prev_commit is None or new_commit is None:
+        return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
+    last = git.last_commit(rel, new_commit)
+    if last is not None and not git.is_ancestor_or_equal(last, prev_commit):
+        return None
+    return f"{moved}, but {safe_text(rel)} did not change in between"
+
+
 def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
     """Classify one valid probe's change state from the target's history."""
     data = probe.data or {}
     derived_from = data["derived_from"]
-    baseline, later, dirty = probe_changes(git, probe, yaml)
+    baseline, later, dirty, prior = probe_changes(git, probe, yaml)
     if baseline is None:
         return ChangeState(
             STATE_UNCOMMITTED,
@@ -711,8 +938,11 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
     # The probe itself: any change after the recorded derivation is a weakening,
     # whether or not the declaration moved too (spec: "whether or not both changed
     # together"). Checked first so a combined change is surfaced as a finding.
-    if later or dirty:
+    rebaseline = _rebaseline_problem(git, derived_from, baseline, prior, yaml) if prior else None
+    if later or dirty or rebaseline:
         parts = []
+        if rebaseline:
+            parts.append(f"re-baselined without a declaration change: {rebaseline}")
         if later:
             parts.append(f"probe changed in {', '.join(c[:12] for c in reversed(later))} after its derivation was recorded in {baseline[:12]}")
         if dirty:
@@ -766,11 +996,20 @@ def parse_observation(stdout: bytes, kind: str) -> tuple[int | set[str] | None, 
         text = stdout.decode("utf-8")
     except UnicodeDecodeError:
         return None, "observation is not UTF-8 text"
+    if not text.strip():
+        # A command that fails silently with exit 0 has observed nothing, for a
+        # set as much as for a count; an empty set is never read as "none reached".
+        return None, REASON_SILENT
     if kind == "count":
         value = text.strip()
         if not _COUNT_RE.match(value):
+            if value.isascii() and value.isdigit():
+                return None, f"observation has {len(value)} digits; a count has at most 18"
             return None, f"observation {safe_text(value, 80)!r} is not a single non-negative integer"
-        return int(value), ""
+        try:
+            return int(value), ""
+        except ValueError as exc:
+            return None, f"observation is not a usable integer: {safe_text(exc, 120)}"
     return {ln.strip() for ln in text.splitlines() if ln.strip()}, ""
 
 
@@ -803,6 +1042,25 @@ def classify(expected: dict[str, Any], observed: int | set[str]) -> Outcome:
     return Outcome(PARTIAL, reach, f"missing: {listed}")
 
 
+def observation_digest(data: dict[str, Any]) -> str:
+    """The digest an approval binds to: what the runner will actually execute.
+
+    Canonical input: a JSON object with exactly the keys ``observe``,
+    ``environment`` and ``teardown`` (an absent list taken as ``[]``), serialised
+    with ``json.dumps(obj, sort_keys=True, separators=(",", ":"),
+    ensure_ascii=False)``, encoded UTF-8, hashed with SHA-256, written as 64
+    lowercase hex digits. ``approval.observation_digest`` carries this value, so
+    an approval stops covering a probe whose argv, timeout, or targets changed.
+    """
+    canonical = {
+        "observe": data["observe"],
+        "environment": data.get("environment", []),
+        "teardown": data.get("teardown", []),
+    }
+    text = json.dumps(canonical, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 def execute(repo: Path, data: dict[str, Any], env_timeout: float) -> tuple[Outcome, list[str]]:
     """Environment, observation, teardown. Returns the outcome and teardown notes."""
     notes: list[str] = []
@@ -816,11 +1074,12 @@ def execute(repo: Path, data: dict[str, Any], env_timeout: float) -> tuple[Outco
                 return Outcome(NOT_PROBED, reason=f"environment target `{name}` failed ({status}){detail}"), notes
         observe = data["observe"]
         argv = observe["argv"]
-        res = run_command(argv, repo, observe.get("timeout_seconds", DEFAULT_OBSERVE_TIMEOUT_SECONDS))
-        if res.returncode is None:
-            return Outcome(NOT_PROBED, reason=f"observation step {res.error}"), notes
+        res = run_command(argv, repo, observe.get("timeout_seconds", DEFAULT_OBSERVE_TIMEOUT_SECONDS),
+                          kill_on_overflow=True)
         if res.oversized:
             return Outcome(NOT_PROBED, reason=f"observation exceeds {MAX_OBSERVATION_BYTES} bytes"), notes
+        if res.returncode is None:
+            return Outcome(NOT_PROBED, reason=f"observation step {res.error}"), notes
         if res.returncode != 0:
             return Outcome(NOT_PROBED, reason=f"observation step exited {res.returncode}: {_output_tail(res)}"), notes
         observed, why = parse_observation(res.stdout, data["expected"]["kind"])
@@ -886,10 +1145,16 @@ def evaluate(repo: Path, git: Git, probe: Probe, yaml: Any, include_t2: bool, en
         return Entry(probe, change, Outcome(NOT_PROBED, reason=change.reason))
     if "approval" not in data:
         return Entry(probe, change, Outcome(NOT_PROBED, reason=REASON_NOT_APPROVED))
+    approved_digest = data["approval"].get("observation_digest")
+    if approved_digest is not None and approved_digest != observation_digest(data):
+        why = f"{REASON_DIGEST_MISMATCH}: the approval's observation_digest {approved_digest[:12]} does not match observe, environment and teardown as committed"
+        return Entry(probe, ChangeState(STATE_APPROVAL_MISMATCH, why), Outcome(NOT_PROBED, reason=REASON_DIGEST_MISMATCH))
     if data["tier"] == "T2" and not include_t2:
         return Entry(probe, change, Outcome(NOT_PROBED, reason=REASON_T2))
     executed_at = clock().strftime("%Y-%m-%dT%H:%M:%SZ")
     outcome, notes = execute(repo, data, env_timeout)
+    if approved_digest is None:
+        notes = [NOTE_NO_DIGEST, *notes]
     return Entry(probe, change, outcome, executed_at, notes)
 
 
@@ -902,12 +1167,36 @@ def report_path(repo: Path, today: str) -> Path:
     resolved_parent = (repo / REPORT_DIR).resolve()
     if not resolved_parent.is_relative_to(repo):
         raise AuditError(
-            f"{REPORT_DIR.as_posix()} resolves outside the repository ({resolved_parent}); refusing to write there."
+            f"{REPORT_DIR.as_posix()} resolves outside the repository ({safe_text(resolved_parent)}); "
+            "refusing to write there."
         )
     return resolved_parent / f"{today}.md"
 
 
-FINDING_STATES = (STATE_WEAKENED, STATE_INVALID, STATE_CONTRADICTION)
+def write_report(out: Path, text: str) -> None:
+    """Write the report without following a symlink at the file itself.
+
+    report_path resolved the directory; O_NOFOLLOW closes the remaining gap, a
+    ``<date>.md`` that is itself a link to a file elsewhere.
+    """
+    try:
+        out.parent.mkdir(parents=True, exist_ok=True)
+        fd = os.open(out, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o644)
+    except OSError as exc:
+        if exc.errno == errno.ELOOP:
+            raise AuditError(
+                f"the report path {safe_text(out)} is a symlink; refusing to write through it. "
+                "Remove the link and run again."
+            ) from exc
+        raise AuditError(f"cannot write the report {safe_text(out)}: {exc.strerror}") from exc
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(text)
+    except OSError as exc:
+        raise AuditError(f"cannot write the report {safe_text(out)}: {exc.strerror}") from exc
+
+
+FINDING_STATES = (STATE_WEAKENED, STATE_INVALID, STATE_CONTRADICTION, STATE_APPROVAL_MISMATCH)
 
 
 def _tier_bucket(e: Entry) -> str:
@@ -1015,16 +1304,18 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
     findings = [e for e in entries if e.change.state in FINDING_STATES]
     lines += ["## Findings", ""]
     for text in manifest_findings or []:
-        lines.append(f"- **invalid manifest** ({cell(MANIFEST_PATH.as_posix())}): {safe_text(text)}")
+        lines.append(f"- **invalid manifest** ({cell(MANIFEST_PATH.as_posix())}): {md_text(text)}")
     for e in findings:
         if e.change.state == STATE_WEAKENED:
             kind, detail = "weakened", e.change.reason
         elif e.change.state == STATE_CONTRADICTION:
             kind, detail = "contradiction", e.change.reason
+        elif e.change.state == STATE_APPROVAL_MISMATCH:
+            kind, detail = "approval mismatch", e.change.reason
         else:
             kind = "invalid probe" if e.probe.constructible else "invalid manifest entry"
             detail = "; ".join(e.probe.errors)
-        lines.append(f"- **{kind}** `{cell(e.probe.pid)}` ({cell(e.probe.file)}): {safe_text(detail)}")
+        lines.append(f"- **{kind}** {code_span(e.probe.pid)} ({cell(e.probe.file)}): {md_text(detail)}")
     if not findings and not manifest_findings:
         lines.append("- none")
     lines.append("")
@@ -1087,11 +1378,7 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
             entries.append(evaluate(repo, git, probe, yaml, include_t2, env_timeout, clock))
     entries += [not_constructible_entry(item) for item in listed.values()]
     text = render(repo, head, entries, include_t2, run_at, empty_reason, manifest, manifest_findings)
-    try:
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(text, encoding="utf-8")
-    except OSError as exc:
-        raise AuditError(f"cannot write the report {out}: {exc.strerror}") from exc
+    write_report(out, text)
 
     if manifest_findings or any(e.change.state in FINDING_STATES for e in entries):
         return EXIT_FINDINGS, out
@@ -1132,7 +1419,7 @@ def main(argv: list[str] | None = None) -> int:
     messages = {
         EXIT_OK: "report written",
         EXIT_NO_PROBES: "no probe file, nothing executed; the report says so (not a clean result)",
-        EXIT_FINDINGS: "report written with findings (weakened or invalid probes, or a manifest finding)",
+        EXIT_FINDINGS: "report written with findings (weakened, invalid, or unapproved-content probes, or a manifest finding)",
     }
     print(f"reach_audit: {messages[code]}: {out}")
     return code

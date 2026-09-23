@@ -10,7 +10,9 @@ stands up a real loopback HTTP server through that shim.
 """
 from __future__ import annotations
 
+import hashlib
 import json
+import re
 import os
 import shutil
 import signal
@@ -891,7 +893,7 @@ def test_partial_set_names_the_missing_members():
     ([PY, "-c", "print(3); raise SystemExit(2)"], "observation step exited 2"),
     ([PY, "-c", "print('three')"], "is not a single non-negative integer"),
     ([PY, "-c", "print(-1)"], "is not a single non-negative integer"),
-    ([PY, "-c", "pass"], "is not a single non-negative integer"),
+    ([PY, "-c", "pass"], ra.REASON_SILENT),
     (["/nonexistent/probe-binary"], "not found on PATH"),
 ])
 def test_observation_failure_is_not_probed(target, argv, reason):
@@ -902,11 +904,16 @@ def test_observation_failure_is_not_probed(target, argv, reason):
 
 
 def test_zero_exit_alone_is_never_reached(target):
-    """A silent success is no observation: the exit code is not the measurement."""
+    """A silent success is no observation: the exit code is not the measurement.
+
+    SCR-003: for a set as much as for a count, empty stdout is not probed, never
+    "not reached"; a command failing silently with exit 0 measured nothing.
+    """
     derived_probe(target, argv=[PY, "-c", "import sys; sys.exit(0)"],
                   expected={"kind": "set", "values": ["a"], "unit": "endpoints"})
     _, report = run_audit(target)
-    assert row_of(report, "p1")[1] == ra.NOT_REACHED
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[9].startswith("observation step printed nothing")
 
 
 def test_oversized_observation_is_not_probed(target, monkeypatch):
@@ -917,15 +924,13 @@ def test_oversized_observation_is_not_probed(target, monkeypatch):
 
 
 def test_observation_timeout_is_not_probed(target):
-    derived_probe(target, argv=[PY, "-c", "import time; time.sleep(5)"])
-    rel = "project/reach-probes/p1.yml"
-    data = yaml.safe_load((target.path / rel).read_text())
+    # Derived with the tight timeout from the start: tightening it later and bumping
+    # derived_from without a declaration change is the SCR-001 laundering shape.
+    sha = target.git("rev-parse", "HEAD")
+    data = make_probe(derived_from=sha, argv=[PY, "-c", "import time; time.sleep(5)"])
     data["observe"]["timeout_seconds"] = 1
-    target.write(rel, yaml.safe_dump(data, sort_keys=False))
-    target.commit("tighten timeout")  # a probe edit: re-record derivation to keep it clean
-    data["derived_from"] = target.git("rev-parse", "HEAD")
-    target.write(rel, yaml.safe_dump(data, sort_keys=False))
-    target.commit("re-derive")
+    target.write_probe(data)
+    target.commit("approve probe")
     _, report = run_audit(target)
     assert "observation step timed out after 1s" in row_of(report, "p1")[9]
 
@@ -1221,3 +1226,379 @@ class TestNotConstructibleManifest:
         self.write_manifest(target, manifest_entry("nc1", reason="too_hard"))
         code, _ = run_audit(target)
         assert code == ra.EXIT_FINDINGS
+
+
+# --------------------------------------------------------------------------- #
+# Pre-merge review fixes (SCR-001..003, W1, W3, S1..S4)
+# --------------------------------------------------------------------------- #
+def _rewrite(target: Target, rel: str, **changes) -> dict:
+    data = yaml.safe_load((target.path / rel).read_text())
+    for key, value in changes.items():
+        if key == "expected_value":
+            data["expected"]["value"] = value
+        elif key == "declaration_path":
+            data["declaration"]["path"] = value
+        else:
+            data[key] = value
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+    return data
+
+
+def test_SCR001_derived_from_bump_without_declaration_change_is_weakened(target, tmp_path):
+    """One commit lowers `expected` and re-records derived_from at the then-HEAD.
+
+    The declaration did not move, so the bump re-baselines nothing: the probe is
+    weakened, a finding, and never executed.
+    """
+    marker = tmp_path / "ran"
+    _, rel = derived_probe(target, argv=marker_argv(marker, "1"))
+    _rewrite(target, rel, expected_value=1, derived_from=target.git("rev-parse", "HEAD"))
+    laundering = target.commit("lower the bar and re-record the derivation")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert not marker.exists()
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED
+    assert f"re-baselined without a declaration change: {laundering[:12]} moved derived_from" in row[9]
+    assert f"but {DECL} did not change in between" in row[9]
+    assert "**weakened** `p1`" in report
+
+
+def test_SCR001_re_pointing_the_anchor_at_a_changed_file_does_not_launder(target):
+    """The anchor is read from the probe's previous revision, not from the laundering commit."""
+    _, rel = derived_probe(target)
+    target.write("docs/other.md", "recently changed\n")
+    target.commit("unrelated file changes")
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/other.md",
+             derived_from=target.git("rev-parse", "HEAD"))
+    target.commit("re-point, weaken, re-record")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED and f"but {DECL} did not change in between" in row[9]
+
+
+def test_SCR001_re_derivation_after_a_renamed_declaration_is_clean(target):
+    _, rel = derived_probe(target)
+    target.git("mv", DECL, "docs/requirements-v2.md")
+    renamed = target.commit("rename the declaration")
+    _rewrite(target, rel, declaration_path="docs/requirements-v2.md", derived_from=renamed)
+    target.commit("re-derive against the renamed file")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+def test_SCR001_inherited_re_baseline_needs_the_pin_to_move(target):
+    """Two-step laundering: weaken under a bogus ref (stale, silent), then restore the ref."""
+    _spec_config(target, ("nolte-shared", "v0.1.8"))
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    rel = "project/reach-probes/p1.yml"
+    _rewrite(target, rel, expected_value=1, derived_from="v0.1.9")
+    target.commit("weaken under a ref nobody pins")
+    _rewrite(target, rel, derived_from="v0.1.8")
+    target.commit("restore the pinned ref")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED
+    assert "the pinned ref of project/rest-api-design did not move to it" in row[9]
+
+
+def test_SCR001_inherited_re_derivation_with_the_pin_is_clean(target):
+    _spec_config(target, ("nolte-shared", "v0.1.8"))
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    _spec_config(target, ("nolte-shared", "v0.1.9"))
+    _rewrite(target, "project/reach-probes/p1.yml", derived_from="v0.1.9")
+    target.commit("bump the pin and re-derive")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+
+
+def test_SCR001_external_anchor_cannot_be_re_baselined(target):
+    _, rel = derived_probe(target, path=None)
+    _rewrite(target, rel, expected_value=1, derived_from=target.git("rev-parse", "HEAD"))
+    target.commit("weaken and re-record")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED and "anchor outside the repository" in row[9]
+
+
+def test_SCR001_delete_and_re_add_does_not_launder(target):
+    _, rel = derived_probe(target)
+    text = (target.path / rel).read_text()
+    (target.path / rel).unlink()
+    target.commit("drop the probe")
+    target.write(rel, text.replace("value: 3", "value: 1"))
+    target.commit("re-add it weakened")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED and "carries no readable derived_from" in row[9]
+
+
+def test_SCR002_count_of_5000_digits_is_not_probed_not_a_traceback(target):
+    derived_probe(target, argv=[PY, "-c", "print('9' * 5000)"])
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[9].startswith("observation has 5000 digits; a count has at most 18")
+
+
+def test_SCR002_a_remaining_value_error_is_not_probed(monkeypatch):
+    """The int() guard holds even when the digit bound is loosened."""
+    monkeypatch.setattr(ra, "_COUNT_RE", ra.re.compile(r"^[0-9]+$"))
+    observed, why = ra.parse_observation(b"9" * 5000 + b"\n", "count")
+    assert observed is None and why.startswith("observation is not a usable integer")
+
+
+def test_SCR002_latin1_byte_in_probe_history_is_classified_not_a_crash(target):
+    sha = target.git("rev-parse", "HEAD")
+    rel = "project/reach-probes/p1.yml"
+    first = yaml.safe_dump(make_probe(derived_from=sha), sort_keys=False).encode() + b"# caf\xe9\n"
+    (target.path / rel).parent.mkdir(parents=True, exist_ok=True)
+    (target.path / rel).write_bytes(first)
+    target.commit("probe with a Latin-1 comment")
+    target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
+    moved = target.commit("move declaration")
+    target.write_probe(make_probe(derived_from=moved))
+    target.commit("re-derive as UTF-8")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    row = row_of(report, "p1")
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+
+
+# -- W1: approval bound to the observation step ------------------------------ #
+def test_W1_observation_digest_pins_the_canonical_bytes():
+    probe = {"observe": {"argv": ["python3", "-c", "print('ü')"], "timeout_seconds": 30}, "tier": "T0"}
+    canonical = '{"environment":[],"observe":{"argv":["python3","-c","print(\'ü\')"],"timeout_seconds":30},"teardown":[]}'
+    assert ra.observation_digest(probe) == hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+    with_env = probe | {"environment": ["up"], "teardown": ["down"]}
+    assert ra.observation_digest(with_env) != ra.observation_digest(probe)
+
+
+def test_W1_schema_admits_a_digest_and_rejects_a_malformed_one():
+    probe = _valid()
+    probe["approval"]["observation_digest"] = "a" * 64
+    assert validate(probe) == []
+    probe["approval"]["observation_digest"] = "A" * 64
+    assert validate(probe)
+
+
+def _digest_probe(target: Target, argv: list[str], approved_argv: list[str]) -> None:
+    sha = target.git("rev-parse", "HEAD")
+    data = make_probe(derived_from=sha, argv=approved_argv)
+    data["approval"]["observation_digest"] = ra.observation_digest(data)
+    data["observe"]["argv"] = argv
+    target.write_probe(data)
+    target.commit("approve probe")
+
+
+def test_W1_swapped_argv_under_an_old_digest_is_refused(target, tmp_path):
+    marker = tmp_path / "ran"
+    _digest_probe(target, argv=marker_argv(marker), approved_argv=[PY, "-c", "print(3)"])
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert not marker.exists()
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[9] == "approval does not cover the current observation step"
+    assert row[7] == ra.STATE_APPROVAL_MISMATCH and "**approval mismatch** `p1`" in report
+
+
+def test_W1_matching_digest_runs_without_a_note(target):
+    _digest_probe(target, argv=[PY, "-c", "print(3)"], approved_argv=[PY, "-c", "print(3)"])
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    row = row_of(report, "p1")
+    assert row[1] == ra.REACHED and ra.NOTE_NO_DIGEST not in row[9]
+
+
+def test_W1_absent_digest_runs_with_a_note(target):
+    derived_probe(target)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    row = row_of(report, "p1")
+    assert row[1] == ra.REACHED and row[9] == "approval carries no observation digest"
+
+
+# -- W3: symlinks ------------------------------------------------------------ #
+SECRET = "-----BEGIN OPENSSH PRIVATE KEY----- s3cr3t-key-material"
+
+
+def test_W3_symlinked_probe_is_a_finding_and_its_target_is_never_read(target, tmp_path):
+    secret = tmp_path / "id_ed25519"
+    secret.write_text(f"tier: {SECRET!r}\n")
+    derived_probe(target)
+    (target.path / "project" / "reach-probes" / "key.yml").symlink_to(secret)
+    target.commit("link a probe")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert "s3cr3t" not in report
+    assert "symlink: refused and not read" in row_of(report, "key")[9]
+    assert "**invalid probe** `key`" in report
+
+
+def test_W3_read_inside_refuses_an_in_repo_link_and_an_outside_resolution(target, tmp_path):
+    (target.path / "docs" / "link.yml").symlink_to(target.path / DECL)
+    with pytest.raises(ra.UnsafePathError, match="is a symlink"):
+        ra.read_inside(target.path, target.path / "docs" / "link.yml")
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "p.yml").write_text(SECRET)
+    (target.path / "linked-dir").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ra.UnsafePathError, match="resolves outside the repository"):
+        ra.read_inside(target.path, target.path / "linked-dir" / "p.yml")
+
+
+def test_W3_symlinked_report_path_is_refused(target, tmp_path):
+    derived_probe(target)
+    victim = tmp_path / "victim.txt"
+    victim.write_text("precious\n")
+    report_dir = target.path / ".audits" / "capability-reach"
+    report_dir.mkdir(parents=True)
+    (report_dir / "2026-09-23.md").symlink_to(victim)
+    with pytest.raises(ra.AuditError, match="is a symlink; refusing to write through it"):
+        ra.run(str(target.path), clock=lambda: FIXED_NOW)
+    assert victim.read_text() == "precious\n"
+
+
+def test_W3_symlinked_spec_config_is_unresolved_not_read(target):
+    target.write("docs/pins.yml", yaml.safe_dump({"inherits": [{"source": "nolte-shared", "ref": "v0.1.8"}]}))
+    (target.path / "spec").mkdir()
+    (target.path / "spec" / ".spec-config.yml").symlink_to(target.path / "docs" / "pins.yml")
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_UNRESOLVED and "spec/.spec-config.yml is a symlink" in row[9]
+
+
+def test_W3_spec_config_resolving_outside_the_repo_is_unresolved(target, tmp_path):
+    outside = tmp_path / "outside-spec"
+    outside.mkdir()
+    (outside / ".spec-config.yml").write_text(yaml.safe_dump({"inherits": [{"source": "hub", "ref": "v0.1.8"}]}))
+    (target.path / "spec").symlink_to(outside, target_is_directory=True)
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    _, report = run_audit(target)
+    assert "resolves outside the repository" in row_of(report, "p1")[9]
+
+
+def test_W3_symlinked_manifest_is_an_unreadable_finding(target, tmp_path):
+    derived_probe(target)
+    secret = tmp_path / "manifest-secret.yml"
+    secret.write_text(f"entries: [{SECRET!r}]\n")
+    (target.path / MANIFEST_REL).symlink_to(secret)
+    target.commit("link the manifest")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert "s3cr3t" not in report and "present but unreadable" in report
+    assert "refused and not read: is a symlink" in report
+
+
+# -- S1: Markdown and code-span injection ------------------------------------ #
+def test_S1_cell_escapes_markdown_that_opens_comments_html_or_links():
+    assert ra.cell("a<!--b[c](d)>") == "a\\<!--b\\[c\\](d)\\>"
+    assert ra.cell("\\<!--") == "\\\\\\<!--"
+
+
+def test_S1_schema_error_cannot_comment_out_the_report(target):
+    sha = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe(derived_from=sha, tier="<!--"))
+    target.commit("probe")
+    _, report = run_audit(target)
+    unescaped = [m.start() for m in re.finditer(r"(?<!\\)<!--", report)]
+    assert len(unescaped) == 1, "only the generator comment may open an HTML comment"
+    assert "tier: '\\<!--' is not one of \\['T0', 'T1', 'T2'\\]" in report
+    assert "## Probes" in report
+
+
+def test_S1_code_cell_fence_outgrows_any_backtick_run():
+    assert ra.code_cell("echo ``x`` | y") == "``` echo ``x`` \\| y ```"
+    assert ra.code_cell("plain") == "`plain`"
+
+
+def test_S1_backtick_in_argv_stays_inside_its_code_span(target):
+    derived_probe(target, argv=[PY, "-c", "print(3) # ``"])
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[3] == f"``` {PY} -c 'print(3) # ``' ```"
+
+
+# -- S3, S4: process control ------------------------------------------------- #
+def test_S3_keyboard_interrupt_kills_the_process_group(tmp_path, monkeypatch):
+    started: list[subprocess.Popen] = []
+
+    class InterruptedPopen(subprocess.Popen):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            started.append(self)
+
+        def wait(self, timeout=None):
+            if timeout is not None:
+                raise KeyboardInterrupt
+            return super().wait()
+
+    monkeypatch.setattr(ra.subprocess, "Popen", InterruptedPopen)
+    try:
+        with pytest.raises(KeyboardInterrupt):
+            ra.run_command([PY, "-c", "import time; time.sleep(30)"], tmp_path, timeout=60)
+        assert started and started[0].returncode == -signal.SIGKILL
+    finally:
+        for proc in started:
+            if proc.returncode is None:
+                proc.kill()
+                subprocess.Popen.wait(proc)
+
+
+def test_S4_runaway_observation_is_killed_at_the_byte_bound(tmp_path):
+    argv = [PY, "-c", "import sys\nwhile True: sys.stdout.write('x' * 65536)"]
+    started = time.monotonic()
+    res = ra.run_command(argv, tmp_path, timeout=20, max_stdout=1024 * 1024, kill_on_overflow=True)
+    assert time.monotonic() - started < 10
+    assert res.oversized and res.returncode is None
+    assert len(res.stdout) == 1024 * 1024
+
+
+def test_S4_environment_output_past_the_bound_is_discarded_not_fatal(tmp_path):
+    argv = [PY, "-c", "import sys; sys.stdout.write('x' * 200000); sys.exit(0)"]
+    res = ra.run_command(argv, tmp_path, timeout=20, max_stdout=100)
+    assert res.returncode == 0 and len(res.stdout) == 100
+
+
+# -- S2: sanitiser ----------------------------------------------------------- #
+@pytest.mark.parametrize("char", ["\u200e", "\u200f", "\u061c", "\u2028", "\u2029",
+                                  "\u200b", "\u200c", "\u200d", "\u2060", "\ufeff"])
+def test_S2_invisible_and_direction_characters_are_stripped(char):
+    assert ra.safe_text(f"a{char}b") == "ab"
+
+
+def test_S2_file_name_in_a_git_error_is_sanitised(monkeypatch, tmp_path):
+    git = ra.Git(tmp_path)
+    monkeypatch.setattr(git, "run", lambda *a: subprocess.CompletedProcess(a, 128, "", "fatal: no\u202e"))
+    with pytest.raises(ra.AuditError) as err:
+        git.out("log", "--", "project/reach-probes/a\u202eb.yml")
+    assert "\u202e" not in str(err.value) and "a" + "b.yml" in str(err.value)
+
+
+def test_S2_report_directory_outside_the_repo_is_named_sanitised(target, tmp_path):
+    outside = tmp_path / "evil\u202edir"
+    outside.mkdir()
+    (target.path / ".audits").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ra.AuditError) as err:
+        ra.report_path(target.path, "2026-09-23")
+    assert "\u202e" not in str(err.value) and "evildir" in str(err.value)
+
+
+def test_S2_probe_file_name_with_rlo_is_rendered_stripped(target):
+    sha = target.git("rev-parse", "HEAD")
+    target.write("project/reach-probes/bad\u202egnp.yml", "tier: [unclosed\n")
+    target.write_probe(make_probe(derived_from=sha), name="p\u202eok")
+    target.commit("probes with RLO in their names")
+    code, report = run_audit(target)
+    assert "\u202e" not in report
+    assert "**invalid probe** `badgnp` (project/reach-probes/badgnp.yml)" in report
+    # A non-ASCII probe path still classifies: git returns it unquoted.
+    row = row_of(report, "p1")
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+    assert code == ra.EXIT_FINDINGS
