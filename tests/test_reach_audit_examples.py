@@ -129,7 +129,15 @@ def run_main(target: Target, *extra: str) -> tuple[int, str]:
 # The set as shipped (R19)
 # --------------------------------------------------------------------------- #
 def test_the_example_directory_holds_exactly_the_five_rows():
-    assert sorted(p.name for p in EXAMPLES.iterdir() if p.name != ra.MANIFEST_NAME) == NAMES
+    """Exactly five probe files ship. Only probe suffixes count: the directory also
+    holds the manifest example and the evaluation scenarios in Markdown, which are
+    not rows. A sixth probe file still fails this test (checked by adding one)."""
+    probes = sorted(
+        p.name
+        for p in EXAMPLES.iterdir()
+        if p.suffix in ra.PROBE_SUFFIXES and p.name != ra.MANIFEST_NAME
+    )
+    assert probes == NAMES
 
 
 @pytest.mark.parametrize("name", NAMES)
