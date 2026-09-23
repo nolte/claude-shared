@@ -1,0 +1,157 @@
+# Schema for the not-constructible manifest of a capability-reach probe set: the
+# one file project/reach-probes/_not-constructible.yml in an audited repository,
+# written by the capability-reach-audit skill's derive operation next to the
+# approved probes and read by the runner
+# (plugins/nolte-engineering/skills/capability-reach-audit/scripts/reach_audit.py).
+#
+# It lists every declared entry the scanner could not construct a probe for at
+# any tier. The runner reports each as not probed with its reason and counts it
+# in the headline (spec/project/capability-reach-audit/ §"The probe": such an
+# entry MUST be reported not probed and MUST NOT be dropped from the set). An
+# empty `entries` list is meaningful: it records that the derivation found no
+# entry it could not probe, which an absent file cannot say.
+#
+# Like the probe schema, every object is closed, so an entry has no field in
+# which to state a verdict: no passed, no status, no result, no reached. The
+# reason is one of five closed codes; a sixth is a scanner bug, never data.
+#
+# The runner embeds the structural part of this document (everything except
+# title, description, and examples) because the schemas/ tree ships with the
+# nolte-shared payload, not with nolte-engineering; tests/test_reach_audit.py
+# fails when the two drift apart.
+#
+# Rules this schema cannot express and the runner enforces instead: entry ids
+# are unique within the manifest, and an id that also names a probe file is a
+# contradiction reported as a finding.
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/nolte/claude-shared/blob/main/schemas/reach-not-constructible-v1.0.schema.yaml
+title: Capability Reach Not-Constructible Manifest
+description: >-
+  Validates project/reach-probes/_not-constructible.yml in an audited
+  repository: the declared entries for which no probe could be constructed at
+  any tier, each with its declaration anchor, one of five closed reason codes,
+  optional detail, the derivation commit, and the recording time. It carries no
+  verdict field. Refs spec/project/capability-reach-audit/ §"The probe" and
+  §Reporting.
+type: object
+required:
+  - entries
+additionalProperties: false
+properties:
+  entries:
+    type: array
+    description: >-
+      One item per entry the derivation could not probe. Empty when every
+      declared entry received a probe.
+    items:
+      $ref: "#/$defs/NotConstructibleEntry"
+$defs:
+  NotConstructibleEntry:
+    type: object
+    description: >-
+      One declared entry without a probe. The runner reports it not probed with
+      the reason `not constructible: <reason>` and counts it in the headline.
+    required:
+      - id
+      - declaration
+      - reason
+      - derived_from
+      - recorded_at
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+        description: >-
+          Stable kebab-case entry identifier, unique within the manifest and
+          distinct from every probe id of the set.
+        pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+      declaration:
+        $ref: "#/$defs/Declaration"
+      reason:
+        type: string
+        enum:
+          - scope_not_countable
+          - needs_model_judgement
+          - effect_in_third_party
+          - missing_environment_target
+          - missing_observation_helper
+        description: >-
+          Why no probe could be constructed, as exactly one of the scanner's five
+          closed reason codes.
+      detail:
+        type: string
+        minLength: 1
+        description: >-
+          The specifics behind the code: the count the declaration would need,
+          the missing Taskfile target or observation helper, the unreadable
+          third-party system. Never a verdict.
+      derived_from:
+        type: string
+        minLength: 1
+        description: >-
+          The commit of the target repository (or, for an inherited spec, the
+          pinned inherits[].ref) the derivation read the declaration at.
+      recorded_at:
+        type: string
+        description: >-
+          UTC time the derive operation recorded the entry, in ISO 8601 form.
+          Quote it in YAML, or the loader turns it into a timestamp object.
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z$"
+  Declaration:
+    type: object
+    description: >-
+      The anchor the entry was derived from, in the probe schema's shape.
+      `path` names a file relative to the audited repository; `inherited_spec`
+      names a spec inherited through spec/.spec-config.yml; neither marks an
+      external anchor.
+    required:
+      - source
+      - location
+    additionalProperties: false
+    not:
+      required: [path, inherited_spec]
+    dependentRequired:
+      hub: [inherited_spec]
+    properties:
+      source:
+        type: string
+        enum: [requirement, endpoint, capability, inventory]
+        description: >-
+          Which of the four declaration sources declared the entry.
+      path:
+        type: string
+        minLength: 1
+        description: >-
+          Declaration file, relative to the audited repository's root.
+      inherited_spec:
+        type: string
+        description: >-
+          Logical key <topic>/<slug> of a spec inherited through
+          spec/.spec-config.yml inherits[].
+        pattern: "^([a-z0-9]+(-[a-z0-9]+)*/)?[a-z0-9]+(-[a-z0-9]+)*$"
+      hub:
+        type: string
+        minLength: 1
+        description: >-
+          The inherits[].source whose ref pins the inherited spec. Needed only
+          when spec/.spec-config.yml lists more than one inherits[] entry.
+      location:
+        type: string
+        minLength: 1
+        description: >-
+          Human-readable place inside the declaration, such as a heading or a
+          line number.
+examples:
+  - entries:
+      - id: skill-routing-precision
+        declaration:
+          source: capability
+          path: skills/triage/SKILL.md
+          location: "description"
+        reason: needs_model_judgement
+        detail: >-
+          The only executing path is a Claude session choosing the skill; no
+          deterministic observation point exists.
+        derived_from: 9feca6a8d2c1b7e4f0a3c5d6e7f8091a2b3c4d5e
+        recorded_at: "2026-09-23T10:00:00Z"
+  - entries: []

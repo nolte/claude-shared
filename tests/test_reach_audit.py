@@ -173,7 +173,7 @@ def test_shipped_schema_is_valid_and_its_examples_validate():
 
 
 def test_example_probes_validate():
-    files = sorted(EXAMPLES.glob("*.yml"))
+    files = sorted(f for f in EXAMPLES.glob("*.yml") if f.name != ra.MANIFEST_NAME)
     assert files, "the .schemas-config.yaml mapping needs at least one example to exercise"
     for f in files:
         assert validate(yaml.safe_load(f.read_text())) == [], f
@@ -939,7 +939,7 @@ def test_R14_report_leads_with_the_not_probed_count(target):
     target.commit("unapproved probe")
     _, report = run_audit(target)
     first_content = [ln for ln in report.splitlines() if ln and not ln.startswith(("#", "<!--"))][0]
-    assert first_content == "**Not probed: 1 of 2 probes.**"
+    assert first_content.startswith("**Not probed: 1 of 2 probes.** No not-constructible manifest")
 
 
 def test_R14_report_states_provenance(target):
@@ -1025,3 +1025,199 @@ def test_end_to_end_empty_set_exit_code_is_distinct_from_success(target):
                           capture_output=True, text=True, timeout=60, check=False)
     assert proc.returncode == ra.EXIT_NO_PROBES != ra.EXIT_OK
     assert "not a clean result" in proc.stdout
+
+
+# --------------------------------------------------------------------------- #
+# The not-constructible manifest (#662 P1b): entries without a probe still count
+# --------------------------------------------------------------------------- #
+MANIFEST_SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-not-constructible-v1.0.schema.yaml"
+MANIFEST_REL = "project/reach-probes/_not-constructible.yml"
+
+
+def manifest_entry(eid: str = "nc1", reason: str = "needs_model_judgement", detail: str | None = "only a Claude session executes it",
+                   **extra) -> dict:
+    entry: dict = {
+        "id": eid,
+        "declaration": {"source": "capability", "path": DECL, "location": "§Routing"},
+        "reason": reason,
+    }
+    if detail is not None:
+        entry["detail"] = detail
+    entry |= {"derived_from": "a" * 40, "recorded_at": "2026-09-22T08:00:00Z"}
+    return entry | extra
+
+
+class TestNotConstructibleManifest:
+    """The runner counts the entries the derivation could not probe (spec §"The probe", §Reporting)."""
+
+    @staticmethod
+    def write_manifest(target: Target, *entries: dict, raw: str | None = None) -> None:
+        target.write(MANIFEST_REL, raw if raw is not None else yaml.safe_dump({"entries": list(entries)}, sort_keys=False))
+        target.commit("record not-constructible entries")
+
+    @staticmethod
+    def validate(doc: object) -> list[str]:
+        return [e.message for e in Draft202012Validator(ra.NOT_CONSTRUCTIBLE_SCHEMA).iter_errors(doc)]
+
+    @staticmethod
+    def headline(report: str) -> str:
+        return [ln for ln in report.splitlines() if ln and not ln.startswith(("#", "<!--"))][0]
+
+    # -- schema ------------------------------------------------------------- #
+    def test_runner_copy_matches_the_shipped_manifest_schema(self):
+        shipped = yaml.safe_load(MANIFEST_SCHEMA_PATH.read_text())
+        assert _structural(shipped) == _structural(ra.NOT_CONSTRUCTIBLE_SCHEMA)
+
+    def test_shipped_schema_is_valid_and_its_examples_and_the_shipped_example_validate(self):
+        shipped = yaml.safe_load(MANIFEST_SCHEMA_PATH.read_text())
+        Draft202012Validator.check_schema(shipped)
+        for example in shipped["examples"]:
+            assert self.validate(example) == []
+        assert self.validate(yaml.safe_load((EXAMPLES / ra.MANIFEST_NAME).read_text())) == []
+
+    def test_schemas_config_binds_the_example_to_the_manifest_schema_only(self):
+        config = yaml.safe_load((REPO_ROOT / ".schemas-config.yaml").read_text())
+        bound = [schema for glob, schema in config["mappings"].items()
+                 if (EXAMPLES / ra.MANIFEST_NAME) in {p.resolve() for p in REPO_ROOT.glob(glob)}]
+        assert bound == ["schemas/reach-not-constructible-v1.0.schema.yaml"]
+
+    def test_a_valid_manifest_and_an_empty_one_pass(self):
+        assert self.validate({"entries": [manifest_entry(), manifest_entry("nc2", detail=None)]}) == []
+        assert self.validate({"entries": []}) == []
+
+    @pytest.mark.parametrize("verdict", ["passed", "status", "result", "reached", "verdict"])
+    def test_an_entry_cannot_state_a_verdict(self, verdict):
+        assert any("Additional properties" in m for m in self.validate({"entries": [manifest_entry() | {verdict: True}]}))
+        assert any("Additional properties" in m for m in self.validate({"entries": [], verdict: True}))
+
+    def test_a_sixth_reason_code_is_rejected(self):
+        assert any("is not one of" in m for m in self.validate({"entries": [manifest_entry(reason="too_hard")]}))
+
+    @pytest.mark.parametrize("missing", ["id", "declaration", "reason", "derived_from", "recorded_at"])
+    def test_required_fields(self, missing):
+        entry = manifest_entry()
+        del entry[missing]
+        assert any("is a required property" in m for m in self.validate({"entries": [entry]}))
+
+    # -- headline, table, row ----------------------------------------------- #
+    def test_entries_count_in_the_headline_and_the_manifest_is_no_probe(self, target):
+        derived_probe(target)
+        self.write_manifest(target, manifest_entry("nc1"), manifest_entry("nc2", reason="effect_in_third_party", detail=None))
+        code, report = run_audit(target)
+        assert code == ra.EXIT_OK
+        assert self.headline(report) == "**Not probed: 2 of 3 entries, 2 of them not constructible.**"
+        assert "invalid probe" not in report
+        assert "| _not-constructible |" not in report
+
+    def test_entries_appear_in_the_tier_table_and_as_rows(self, target):
+        derived_probe(target)
+        self.write_manifest(target, manifest_entry("nc1"))
+        _, report = run_audit(target)
+        assert "| T0 | 1 | 0 | 0 | 0 |" in report
+        assert f"| {ra.TIER_NONE} | 0 | 0 | 0 | 1 |" in report
+        row = row_of(report, "nc1")
+        assert row[1] == ra.NOT_PROBED
+        assert row[3] == "—" and row[4] == "none" and row[5] == "not executed"
+        assert row[7] == ra.STATE_NOT_CONSTRUCTIBLE
+        assert row[8] == f"capability: {DECL} (§Routing)"
+        assert row[9] == "not constructible: needs_model_judgement: only a Claude session executes it"
+
+    def test_no_tier_row_without_manifest_entries(self, target):
+        derived_probe(target)
+        _, report = run_audit(target)
+        assert ra.TIER_NONE not in report
+
+    # -- provenance --------------------------------------------------------- #
+    def test_provenance_names_both_counts(self, target):
+        derived_probe(target)
+        self.write_manifest(target, manifest_entry("nc1"), manifest_entry("nc2"))
+        _, report = run_audit(target)
+        assert ("Audited set: the 1 probe file(s) on disk under `project/reach-probes/` plus "
+                "2 not-constructible manifest entries, 3 in all") in report
+        assert f"`{MANIFEST_REL}` lists 2 entries no probe could be constructed for" in report
+        assert "Declaration sources with not-constructible entries: capability (2)." in report
+
+    def test_absent_manifest_is_stated_in_headline_and_provenance(self, target):
+        derived_probe(target)
+        _, report = run_audit(target)
+        assert "No not-constructible manifest" in self.headline(report)
+        assert f"manifest `{MANIFEST_REL}` is absent" in report
+        assert "This audit did not check which" in report
+
+    def test_empty_manifest_says_nothing_was_left_out(self, target):
+        derived_probe(target)
+        self.write_manifest(target)
+        code, report = run_audit(target)
+        assert code == ra.EXIT_OK
+        assert self.headline(report) == "**Not probed: 0 of 1 entries, 0 of them not constructible.**"
+        assert "lists 0 entries: the derivation recorded no entry it could not probe" in report
+
+    # -- contradictions and invalid manifests ------------------------------- #
+    def test_id_both_probe_and_manifest_entry_is_one_not_probed_finding(self, target, tmp_path):
+        marker = tmp_path / "ran"
+        derived_probe(target, argv=marker_argv(marker))
+        self.write_manifest(target, manifest_entry("p1"))
+        code, report = run_audit(target)
+        assert code == ra.EXIT_FINDINGS
+        assert not marker.exists(), "a contradicted probe must not execute"
+        assert self.headline(report) == "**Not probed: 1 of 1 entries, 0 of them not constructible.**"
+        assert sum(1 for ln in report.splitlines() if ln.startswith("| p1 |")) == 1
+        assert row_of(report, "p1")[1] == ra.NOT_PROBED
+        assert row_of(report, "p1")[7].startswith(ra.STATE_CONTRADICTION)
+        assert "- **contradiction** `p1`" in report
+
+    def test_duplicate_manifest_id_is_a_finding_counted_once(self, target):
+        derived_probe(target)
+        self.write_manifest(target, manifest_entry("nc1"), manifest_entry("nc1"))
+        code, report = run_audit(target)
+        assert code == ra.EXIT_FINDINGS
+        assert self.headline(report) == "**Not probed: 1 of 2 entries, 1 of them not constructible.**"
+        assert "- **invalid manifest**" in report and "listed more than once" in report
+
+    def test_invalid_entry_still_counts_and_is_a_finding(self, target):
+        derived_probe(target)
+        self.write_manifest(target, manifest_entry("nc1", reason="too_hard", status="reached"))
+        code, report = run_audit(target)
+        assert code == ra.EXIT_FINDINGS
+        assert self.headline(report) == "**Not probed: 1 of 2 entries, 1 of them not constructible.**"
+        assert row_of(report, "nc1")[1] == ra.NOT_PROBED
+        assert "manifest entry fails the not-constructible schema" in row_of(report, "nc1")[9]
+        assert "- **invalid manifest entry** `nc1`" in report
+
+    @pytest.mark.parametrize("raw", ["entries: [unclosed\n", "entries: []\nverdict: reached\n", "- nc1\n"])
+    def test_unreadable_manifest_is_a_finding_and_counted_as_such(self, target, raw):
+        derived_probe(target)
+        self.write_manifest(target, raw=raw)
+        code, report = run_audit(target)
+        assert code == ra.EXIT_FINDINGS
+        assert "The not-constructible manifest is unreadable" in self.headline(report)
+        assert "present but unreadable" in report
+        assert "- **invalid manifest**" in report
+
+    # -- exit codes --------------------------------------------------------- #
+    def test_only_not_constructible_entries_is_not_a_clean_result(self, target):
+        self.write_manifest(target, manifest_entry("nc1"), manifest_entry("nc2"))
+        code, report = run_audit(target)
+        assert code == ra.EXIT_NO_PROBES != ra.EXIT_OK
+        assert "No probe set" not in report
+        assert self.headline(report) == "**Not probed: 2 of 2 entries, 2 of them not constructible.**"
+        assert "the 0 probe file(s)" in report
+
+    def test_only_not_constructible_entries_through_the_cli(self, target):
+        self.write_manifest(target, manifest_entry("nc1"))
+        proc = subprocess.run([PY, str(SCRIPT_PATH), "--repo", str(target.path)],
+                              capture_output=True, text=True, timeout=60, check=False)
+        assert proc.returncode == ra.EXIT_NO_PROBES
+        assert "nothing executed" in proc.stdout and "not a clean result" in proc.stdout
+
+    def test_empty_manifest_without_probes_is_the_no_probe_set_report(self, target):
+        self.write_manifest(target)
+        code, report = run_audit(target)
+        assert code == ra.EXIT_NO_PROBES
+        assert "**Not probed: all. No probe set.**" in report
+        assert "lists 0 entries" in report
+
+    def test_findings_take_precedence_over_no_probe_file(self, target):
+        self.write_manifest(target, manifest_entry("nc1", reason="too_hard"))
+        code, _ = run_audit(target)
+        assert code == ra.EXIT_FINDINGS

@@ -1,0 +1,27 @@
+# Not-constructible manifest: the entries of the worked example set for which
+# the scanner could construct no probe at any tier. The skill's derive operation
+# writes this file as project/reach-probes/_not-constructible.yml next to the
+# approved probes; the runner counts every entry here as not probed.
+entries:
+  - id: export-reaches-partner-archive
+    declaration:
+      source: requirement
+      path: docs/requirements/data-export.md
+      location: "§Partner delivery"
+    reason: effect_in_third_party
+    detail: >-
+      The export lands in the partner's SFTP archive, which the audit
+      environment can't read; no observation point outside the artefact exists.
+    derived_from: 9feca6a8d2c1b7e4f0a3c5d6e7f8091a2b3c4d5e
+    recorded_at: "2026-09-23T10:00:00Z"
+  - id: retention-sweep-covers-all-stores
+    declaration:
+      source: capability
+      path: docs/capabilities.md
+      location: "§Retention"
+    reason: scope_not_countable
+    detail: >-
+      "Sweeps all personal-data stores" names no count and no set; the
+      declaration would need to list the stores it sweeps.
+    derived_from: 9feca6a8d2c1b7e4f0a3c5d6e7f8091a2b3c4d5e
+    recorded_at: "2026-09-23T10:00:00Z"

@@ -129,7 +129,7 @@ def run_main(target: Target, *extra: str) -> tuple[int, str]:
 # The set as shipped (R19)
 # --------------------------------------------------------------------------- #
 def test_the_example_directory_holds_exactly_the_five_rows():
-    assert sorted(p.name for p in EXAMPLES.iterdir()) == NAMES
+    assert sorted(p.name for p in EXAMPLES.iterdir() if p.name != ra.MANIFEST_NAME) == NAMES
 
 
 @pytest.mark.parametrize("name", NAMES)

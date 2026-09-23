@@ -14,7 +14,13 @@ observation step's exit code alone is never read as success: only its stdout,
 parsed as a count or a set, is the observation.
 
 Deriving probes from declarations is not this script's job. The audited set is
-the probe set on disk.
+what the derivation left on disk: the probe files, plus the entries of the
+not-constructible manifest ``project/reach-probes/_not-constructible.yml``
+(schemas/reach-not-constructible-v1.0.schema.yaml), which lists every declared
+entry no probe could be constructed for. Each manifest entry is reported not
+probed with reason ``not constructible: <code>`` and counts in the headline; an
+absent manifest is stated in the headline and the provenance, because the runner
+can't tell "every entry was constructible" from "the manifest was never written".
 
 Dependencies: PyYAML and jsonschema. The probe set lives in the audited
 repository, which has no pre-commit hook of this repository's, so the runner
@@ -22,12 +28,20 @@ validates every probe against the schema itself; a missing validator fails the
 run with an install hint instead of skipping validation.
 
 Exit codes:
-  0  report written; every probe was classified (any class)
+  0  report written; at least one probe file, every entry classified (any
+     class), no finding
   1  runtime error (git failed, report not writable)
   2  usage error: bad arguments, or the target is not a local git working copy
-  3  no probe set: project/reach-probes/ is absent or holds no probe file;
-     the report says so, and it is never a clean result
-  4  report written, and it carries findings (weakened or invalid probes)
+  3  no probe file: project/reach-probes/ is absent or holds no probe file
+     besides the manifest, so nothing was executed and it is never a clean
+     result. A manifest listing entries does not change the code: the report
+     then counts them (every entry not probed) instead of saying there is no
+     probe set, but a run whose only entries are not constructible measured
+     nothing either.
+  4  report written, and it carries findings: weakened or invalid probes, an
+     unreadable manifest or an invalid manifest entry, a manifest id listed
+     twice, or an id that is both a probe file and a manifest entry. Takes
+     precedence over 3.
   5  PyYAML or jsonschema is not installed
 
 Usage:
@@ -57,6 +71,10 @@ PROBE_DIR = Path("project") / "reach-probes"
 # Both suffixes are read: a probe saved as .yaml and silently skipped would drop an
 # entry from the audited set, which the spec forbids.
 PROBE_SUFFIXES = (".yml", ".yaml")
+# The companion manifest of entries no probe could be constructed for. It lives
+# in the probe directory, so the probe loader skips exactly this name.
+MANIFEST_NAME = "_not-constructible.yml"
+MANIFEST_PATH = PROBE_DIR / MANIFEST_NAME
 REPORT_DIR = Path(".audits") / "capability-reach"
 SPEC_CONFIG = Path("spec") / ".spec-config.yml"
 
@@ -120,12 +138,27 @@ STATE_UNRESOLVED = "unresolved"
 # The probe file is not under version control, so it has no derivation baseline.
 STATE_UNCOMMITTED = "uncommitted"
 STATE_INVALID = "invalid"
+# A manifest entry: no probe exists, so there is nothing to detect a change on.
+STATE_NOT_CONSTRUCTIBLE = "not constructible"
+# One id is both a probe file and a manifest entry.
+STATE_CONTRADICTION = "contradiction"
 
 DECLARATION_SOURCES = ("requirement", "endpoint", "capability", "inventory")
 
 REASON_NOT_APPROVED = "not approved"
 REASON_T2 = "tier T2 not requested"
 REASON_STALE = "declaration changed since derivation"
+REASON_NOT_CONSTRUCTIBLE = "not constructible"
+
+NOT_CONSTRUCTIBLE_REASONS = (
+    "scope_not_countable",
+    "needs_model_judgement",
+    "effect_in_third_party",
+    "missing_environment_target",
+    "missing_observation_helper",
+)
+# Per-tier table bucket of the entries that have no tier because they have no probe.
+TIER_NONE = "none (not constructible)"
 
 # The structural part of schemas/reach-probe-v1.0.schema.yaml (annotations
 # stripped). The schemas/ tree ships with the nolte-shared payload, not with this
@@ -220,6 +253,38 @@ PROBE_SCHEMA: dict[str, Any] = {
             },
         },
         "TaskName": _TASK_NAME,
+    },
+}
+
+# The structural part of schemas/reach-not-constructible-v1.0.schema.yaml, embedded
+# for the same reason as PROBE_SCHEMA and pinned to it by the same parity test.
+NOT_CONSTRUCTIBLE_SCHEMA: dict[str, Any] = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/nolte/claude-shared/blob/main/schemas/reach-not-constructible-v1.0.schema.yaml",
+    "type": "object",
+    "required": ["entries"],
+    "additionalProperties": False,
+    "properties": {
+        "entries": {"type": "array", "items": {"$ref": "#/$defs/NotConstructibleEntry"}},
+    },
+    "$defs": {
+        "NotConstructibleEntry": {
+            "type": "object",
+            "required": ["id", "declaration", "reason", "derived_from", "recorded_at"],
+            "additionalProperties": False,
+            "properties": {
+                "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+                "declaration": {"$ref": "#/$defs/Declaration"},
+                "reason": {"type": "string", "enum": list(NOT_CONSTRUCTIBLE_REASONS)},
+                "detail": {"type": "string", "minLength": 1},
+                "derived_from": {"type": "string", "minLength": 1},
+                "recorded_at": {
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z$",
+                },
+            },
+        },
+        "Declaration": PROBE_SCHEMA["$defs"]["Declaration"],
     },
 }
 
@@ -439,9 +504,12 @@ def require_local_working_copy(raw: str) -> Path:
 # --------------------------------------------------------------------------- #
 @dataclass
 class Probe:
+    """One audited entry: a probe file, or an entry of the not-constructible manifest."""
+
     file: str  # relative to the repository root, posix
     data: dict[str, Any] | None
     errors: list[str] = field(default_factory=list)
+    constructible: bool = True  # False: a manifest entry, which has no probe
 
     @property
     def pid(self) -> str:
@@ -456,7 +524,7 @@ def _schema_error_text(err: Any) -> str:
     if err.validator == "type" and err.validator_value == "string" and not isinstance(err.instance, str):
         hint = " (YAML reads unquoted timestamps and all-digit values as non-strings; quote the value)"
     if err.validator == "additionalProperties":
-        hint = " (a probe carries no verdict or other undeclared field; the runner decides the class)"
+        hint = " (a probe or manifest entry carries no verdict or other undeclared field; the runner decides the class)"
     return f"{loc}: {err.message}{hint}"
 
 
@@ -466,7 +534,8 @@ def load_probes(repo: Path, yaml: Any, validator_cls: Any) -> list[Probe]:
         return []
     validator = validator_cls(PROBE_SCHEMA)
     probes: list[Probe] = []
-    for file in sorted(p for p in directory.iterdir() if p.suffix in PROBE_SUFFIXES and p.is_file()):
+    candidates = (p for p in directory.iterdir() if p.suffix in PROBE_SUFFIXES and p.is_file())
+    for file in sorted(p for p in candidates if p.name != MANIFEST_NAME):
         rel = file.relative_to(repo).as_posix()
         try:
             data = yaml.safe_load(file.read_text(encoding="utf-8"))
@@ -488,6 +557,63 @@ def load_probes(repo: Path, yaml: Any, validator_cls: Any) -> list[Probe]:
         else:
             seen[probe.pid] = probe.file
     return probes
+
+
+@dataclass
+class Manifest:
+    """The not-constructible manifest as read from disk.
+
+    ``entries`` are the rows it contributes to the audited set, one per distinct
+    id; ``errors`` are manifest-level findings (unparseable, a top-level schema
+    violation, a repeated id). When the document itself is unreadable, ``readable``
+    is False and it contributes no row, because no entry in it can be trusted.
+    """
+
+    file: str
+    entries: list[Probe] = field(default_factory=list)
+    errors: list[str] = field(default_factory=list)
+    readable: bool = True
+
+
+def load_manifest(repo: Path, yaml: Any, validator_cls: Any) -> Manifest | None:
+    """Read project/reach-probes/_not-constructible.yml, or None when it is absent.
+
+    Schema errors under ``entries/<i>`` mark only that entry invalid: it still
+    counts as not probed, since the derivation recorded it as an entry without a
+    probe. Errors anywhere else make the whole document unreadable.
+    """
+    path = repo / MANIFEST_PATH
+    if not path.is_file():
+        return None
+    rel = MANIFEST_PATH.as_posix()
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except (yaml.YAMLError, UnicodeDecodeError) as exc:
+        return Manifest(rel, errors=[f"not parseable as YAML: {safe_text(exc)}"], readable=False)
+    per_entry: dict[int, list[str]] = {}
+    document_errors: list[str] = []
+    for err in sorted(validator_cls(NOT_CONSTRUCTIBLE_SCHEMA).iter_errors(data), key=lambda e: list(e.absolute_path)):
+        where = list(err.absolute_path)
+        if len(where) >= 2 and where[0] == "entries" and isinstance(where[1], int):
+            per_entry.setdefault(where[1], []).append(_schema_error_text(err))
+        else:
+            document_errors.append(_schema_error_text(err))
+    if document_errors:
+        return Manifest(rel, errors=document_errors, readable=False)
+    manifest = Manifest(rel)
+    seen: set[str] = set()
+    for index, item in enumerate(data["entries"]):
+        item_data = item if isinstance(item, dict) else None
+        entry = Probe(f"{rel}#entries[{index}]", item_data, per_entry.get(index, []), constructible=False)
+        if entry.data is None or not isinstance(entry.data.get("id"), str):
+            # No usable id: the entry still counts, under its position.
+            entry.data = (item_data or {}) | {"id": f"entries-{index}"}
+        if entry.pid in seen:
+            manifest.errors.append(f"id: {entry.pid!r} is listed more than once; counted once")
+            continue
+        seen.add(entry.pid)
+        manifest.entries.append(entry)
+    return manifest
 
 
 # --------------------------------------------------------------------------- #
@@ -720,7 +846,36 @@ class Entry:
     notes: list[str] = field(default_factory=list)
 
 
+def not_constructible_entry(item: Probe) -> Entry:
+    """A manifest entry: not probed, never executed, no change detection."""
+    if item.errors:
+        return Entry(item, ChangeState(STATE_INVALID), Outcome(
+            NOT_PROBED, reason="manifest entry fails the not-constructible schema: " + "; ".join(item.errors)))
+    data = item.data or {}
+    reason = f"{REASON_NOT_CONSTRUCTIBLE}: {data['reason']}"
+    if data.get("detail"):
+        reason += f": {data['detail']}"
+    return Entry(item, ChangeState(STATE_NOT_CONSTRUCTIBLE), Outcome(NOT_PROBED, reason=reason))
+
+
+def contradiction_entry(probe: Probe, listed: Probe) -> Entry:
+    """An id that is both a probe file and a manifest entry: one row, not probed, a finding.
+
+    The probe is not executed: the derivation said no probe could be built for this
+    entry, so a probe file under its id is unexplained, and running it would let
+    an unapproved claim of constructibility produce a class.
+    """
+    code = (listed.data or {}).get("reason", "invalid entry")
+    why = (
+        f"id is both the probe file {probe.file} and a not-constructible manifest entry "
+        f"({code}); re-derive the entry to decide which is true"
+    )
+    return Entry(probe, ChangeState(STATE_CONTRADICTION, why), Outcome(NOT_PROBED, reason=f"contradiction: {why}"))
+
+
 def evaluate(repo: Path, git: Git, probe: Probe, yaml: Any, include_t2: bool, env_timeout: float, clock: Callable[[], datetime]) -> Entry:
+    if not probe.constructible:
+        return not_constructible_entry(probe)
     if probe.errors:
         return Entry(probe, ChangeState(STATE_INVALID), Outcome(NOT_PROBED, reason="probe fails the probe schema: " + "; ".join(probe.errors)))
     data = probe.data or {}
@@ -752,7 +907,58 @@ def report_path(repo: Path, today: str) -> Path:
     return resolved_parent / f"{today}.md"
 
 
-def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at: str, empty_reason: str | None) -> str:
+FINDING_STATES = (STATE_WEAKENED, STATE_INVALID, STATE_CONTRADICTION)
+
+
+def _tier_bucket(e: Entry) -> str:
+    if not e.probe.constructible:
+        return TIER_NONE
+    if e.probe.errors and e.change.state != STATE_CONTRADICTION:
+        return "invalid"
+    return str((e.probe.data or {}).get("tier", "invalid"))
+
+
+def _source_counts(entries: list[Entry]) -> dict[str, int]:
+    counts = {s: 0 for s in DECLARATION_SOURCES}
+    for e in entries:
+        decl = (e.probe.data or {}).get("declaration")
+        src = decl.get("source") if isinstance(decl, dict) else None
+        if src in counts:
+            counts[src] += 1
+    return counts
+
+
+def _manifest_provenance(manifest: Manifest | None, listed: int) -> str:
+    where = f"`{MANIFEST_PATH.as_posix()}`"
+    if manifest is None:
+        return (
+            f"The not-constructible manifest {where} is absent: either every declared entry received a "
+            "probe, or the derivation never recorded the entries it could not probe. This audit did not "
+            "check which, so entries without a probe are not counted."
+        )
+    if not manifest.readable:
+        return f"The not-constructible manifest {where} is present but unreadable (see Findings); none of its entries is counted."
+    if listed == 0:
+        return f"The not-constructible manifest {where} lists 0 entries: the derivation recorded no entry it could not probe."
+    return f"The not-constructible manifest {where} lists {listed} entr{'y' if listed == 1 else 'ies'} no probe could be constructed for; each is not probed."
+
+
+def _headline(not_probed: int, total: int, listed: int, manifest: Manifest | None) -> str:
+    if manifest is None:
+        return (
+            f"**Not probed: {not_probed} of {total} probes.** No not-constructible manifest, so entries "
+            "the derivation could not probe are not counted here."
+        )
+    if not manifest.readable:
+        return (
+            f"**Not probed: {not_probed} of {total} probes.** The not-constructible manifest is unreadable, "
+            "so entries the derivation could not probe are not counted here."
+        )
+    return f"**Not probed: {not_probed} of {total} entries, {listed} of them not constructible.**"
+
+
+def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at: str, empty_reason: str | None,
+           manifest: Manifest | None = None, manifest_findings: list[str] | None = None) -> str:
     lines = [f"# Capability reach audit — {repo.name}", ""]
     lines.append(
         "<!-- Generated by reach_audit.py on every run; never edit by hand "
@@ -769,47 +975,57 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
             "This is not a clean result: derive and approve probes from the repository's "
             "declarations (requirements, endpoints, documented capabilities, inventories) first.",
             "",
+            f"- {_manifest_provenance(manifest, 0)}",
             f"- Run at: {run_at} (UTC), HEAD {head[:12]}",
         ]
         return "\n".join(lines) + "\n"
 
-    lines += [f"**Not probed: {not_probed} of {total} probes.**", ""]
+    probe_rows = [e for e in entries if e.probe.constructible]
+    listed = total - len(probe_rows)
+    lines += [_headline(not_probed, total, listed, manifest), ""]
     lines += ["## Provenance", ""]
     lines.append(
-        f"- Audited set: the {total} probe file(s) on disk under `{PROBE_DIR.as_posix()}/` at HEAD "
+        f"- Audited set: the {len(probe_rows)} probe file(s) on disk under `{PROBE_DIR.as_posix()}/` plus "
+        f"{listed} not-constructible manifest entr{'y' if listed == 1 else 'ies'}, {total} in all, at HEAD "
         f"{head[:12]}. This run executed stored probes; it read no declaration to find new entries."
     )
-    by_source = {s: 0 for s in DECLARATION_SOURCES}
-    for e in entries:
-        src = (e.probe.data or {}).get("declaration", {}).get("source") if isinstance((e.probe.data or {}).get("declaration"), dict) else None
-        if src in by_source:
-            by_source[src] += 1
+    lines.append(f"- {_manifest_provenance(manifest, listed)}")
+    by_source = _source_counts(probe_rows)
     covered = ", ".join(f"{s} ({n})" for s, n in by_source.items() if n)
     uncovered = [s for s, n in by_source.items() if not n]
     lines.append(f"- Declaration sources covered by the probe set: {covered or 'none'}.")
     if uncovered:
         lines.append(f"- Declaration sources with no probe: {', '.join(uncovered)}. This audit can't speak about them.")
+    unprobeable = ", ".join(f"{s} ({n})" for s, n in _source_counts([e for e in entries if not e.probe.constructible]).items() if n)
+    if unprobeable:
+        lines.append(f"- Declaration sources with not-constructible entries: {unprobeable}.")
     lines.append(f"- Tier T2: {'requested (--include-t2)' if include_t2 else 'not requested; every T2 probe is not probed'}.")
     lines.append(f"- Run at: {run_at} (UTC).")
     lines.append("")
 
     lines += ["## Reach per tier", "", "| Tier | reached | partially reached | not reached | not probed |", "|---|---|---|---|---|"]
-    for tier in ("T0", "T1", "T2", "invalid"):
-        subset = [e for e in entries if ((e.probe.data or {}).get("tier") if not e.probe.errors else "invalid") == tier]
-        if tier == "invalid" and not subset:
+    for tier in ("T0", "T1", "T2", "invalid", TIER_NONE):
+        subset = [e for e in entries if _tier_bucket(e) == tier]
+        if tier in ("invalid", TIER_NONE) and not subset:
             continue
         counts = [sum(1 for e in subset if e.outcome.cls == c) for c in CLASSES]
         lines.append(f"| {tier} | " + " | ".join(str(c) for c in counts) + " |")
     lines.append("")
 
-    findings = [e for e in entries if e.change.state in (STATE_WEAKENED, STATE_INVALID)]
+    findings = [e for e in entries if e.change.state in FINDING_STATES]
     lines += ["## Findings", ""]
-    if findings:
-        for e in findings:
-            kind = "weakened" if e.change.state == STATE_WEAKENED else "invalid probe"
-            detail = e.change.reason if e.change.state == STATE_WEAKENED else "; ".join(e.probe.errors)
-            lines.append(f"- **{kind}** `{cell(e.probe.pid)}` ({cell(e.probe.file)}): {safe_text(detail)}")
-    else:
+    for text in manifest_findings or []:
+        lines.append(f"- **invalid manifest** ({cell(MANIFEST_PATH.as_posix())}): {safe_text(text)}")
+    for e in findings:
+        if e.change.state == STATE_WEAKENED:
+            kind, detail = "weakened", e.change.reason
+        elif e.change.state == STATE_CONTRADICTION:
+            kind, detail = "contradiction", e.change.reason
+        else:
+            kind = "invalid probe" if e.probe.constructible else "invalid manifest entry"
+            detail = "; ".join(e.probe.errors)
+        lines.append(f"- **{kind}** `{cell(e.probe.pid)}` ({cell(e.probe.file)}): {safe_text(detail)}")
+    if not findings and not manifest_findings:
         lines.append("- none")
     lines.append("")
 
@@ -833,7 +1049,8 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
         derived = derived[:12] if _SHA_RE.match(derived) else derived
         row = [
             cell(e.probe.pid), e.outcome.cls, cell(e.outcome.reach), measured,
-            cell(data.get("tier", "—")), e.executed_at or "not executed", cell(derived), cell(change),
+            cell(data.get("tier", "—") if e.probe.constructible else "none"), e.executed_at or "not executed",
+            cell(derived), cell(change),
             cell(declaration), cell(reason),
         ]
         lines.append("| " + " | ".join(row) + " |")
@@ -851,24 +1068,36 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
     out = report_path(repo, now.strftime("%Y-%m-%d"))
 
     probes = load_probes(repo, yaml, validator_cls)
+    manifest = load_manifest(repo, yaml, validator_cls)
+    listed = {e.pid: e for e in manifest.entries} if manifest else {}
+    manifest_findings = list(manifest.errors) if manifest else []
     empty_reason = None
     if not (repo / PROBE_DIR).is_dir():
         empty_reason = f"`{PROBE_DIR.as_posix()}/` does not exist in this repository."
-    elif not probes:
-        empty_reason = f"`{PROBE_DIR.as_posix()}/` holds no probe file (*.yml, *.yaml)."
+    elif not probes and not listed and not manifest_findings:
+        empty_reason = f"`{PROBE_DIR.as_posix()}/` holds no probe file (*.yml, *.yaml besides `{MANIFEST_NAME}`)."
 
-    entries = [evaluate(repo, git, p, yaml, include_t2, env_timeout, clock) for p in probes]
-    text = render(repo, head, entries, include_t2, run_at, empty_reason)
+    entries: list[Entry] = []
+    for probe in probes:
+        twin = listed.pop(probe.pid, None)
+        if twin is not None:
+            # Counted once, as not probed; the manifest row is folded into this one.
+            entries.append(contradiction_entry(probe, twin))
+        else:
+            entries.append(evaluate(repo, git, probe, yaml, include_t2, env_timeout, clock))
+    entries += [not_constructible_entry(item) for item in listed.values()]
+    text = render(repo, head, entries, include_t2, run_at, empty_reason, manifest, manifest_findings)
     try:
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(text, encoding="utf-8")
     except OSError as exc:
         raise AuditError(f"cannot write the report {out}: {exc.strerror}") from exc
 
-    if empty_reason is not None:
-        return EXIT_NO_PROBES, out
-    if any(e.change.state in (STATE_WEAKENED, STATE_INVALID) for e in entries):
+    if manifest_findings or any(e.change.state in FINDING_STATES for e in entries):
         return EXIT_FINDINGS, out
+    if not probes:
+        # Nothing was executed, whether or not the manifest lists entries.
+        return EXIT_NO_PROBES, out
     return EXIT_OK, out
 
 
@@ -876,7 +1105,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Execute the stored capability-reach probes of a local repository and write the report.",
         epilog="Exit codes: 0 report written, 1 runtime error, 2 usage error or non-local target, "
-        "3 no probe set, 4 report written with findings, 5 PyYAML/jsonschema missing.",
+        "3 no probe file (nothing executed), 4 report written with findings, 5 PyYAML/jsonschema missing.",
     )
     parser.add_argument("--repo", required=True, help="Path to the local git working copy to audit (R13: no remote mode).")
     parser.add_argument("--include-t2", action="store_true", help="Also execute T2 probes (full stack with seeded data).")
@@ -902,8 +1131,8 @@ def main(argv: list[str] | None = None) -> int:
         return exc.code
     messages = {
         EXIT_OK: "report written",
-        EXIT_NO_PROBES: "no probe set; the report says so (not a clean result)",
-        EXIT_FINDINGS: "report written with findings (weakened or invalid probes)",
+        EXIT_NO_PROBES: "no probe file, nothing executed; the report says so (not a clean result)",
+        EXIT_FINDINGS: "report written with findings (weakened or invalid probes, or a manifest finding)",
     }
     print(f"reach_audit: {messages[code]}: {out}")
     return code
