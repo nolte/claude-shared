@@ -5,7 +5,7 @@ issue: "667"
 classification: "feature-request"
 secondary-classes: [infra]
 route: "direct"
-status: approved-pending
+status: implemented
 created: "2026-09-25"
 ---
 
@@ -90,3 +90,7 @@ P1 → P2 → P3.
 none
 
 ## Dispatch log
+
+2026-09-25 P1 dispatched to nolte-engineering:fullstack-developer — cwd-relative resolution (`_display`, `root = Path.cwd()`), budget keyed via `resolve().relative_to(REPO)` (refutation recorded), 4 new tests; pytest 568 passed, before/after validator diff empty.
+2026-09-25 P2 dispatched to nolte-engineering:fullstack-developer — `[project.scripts] validate-skills`, `[tool.setuptools]` py-modules mapping, license classifier removed, `.pre-commit-hooks.yaml`; pip install exit 0, try-repo hub Passed, consumer negative Failed exit 1.
+2026-09-25 P3 generalist — snippet in docs/en/using.md and docs/de/using.md §Install; pre-commit Passed, mkdocs --strict built.

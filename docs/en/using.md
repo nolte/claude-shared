@@ -84,3 +84,22 @@ After install, every skill is callable as `/<plugin>:<name>` (for example
 skills, or directly via the `Task` tool when you know which agent you want. You don't need a clone of this
 repository or its local toolchain to consume the plugin: installation happens
 entirely inside your own Claude Code environment.
+
+### Validate your own skills and agents on every commit
+
+If your project authors skills or agents of its own, pin the frontmatter validator
+that this repository runs on its plugins as a [pre-commit](https://pre-commit.com)
+hook. It checks every `skills/*/SKILL.md` and `agents/*.md` against
+`spec/claude/skill-management/` and `spec/claude/agent-management/`, and it needs
+neither a clone of this repository nor its toolchain:
+
+```yaml
+- repo: https://github.com/nolte/claude-shared
+  rev: <release tag>  # the first release that ships the hook, or a newer one
+  hooks:
+    - id: validate-skills
+```
+
+The hook runs per changed file, so the directory-level checks (the phantom-agent
+tree scan and the per-plugin description budget) stay with this repository's own
+`task test`.

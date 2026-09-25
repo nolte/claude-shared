@@ -88,3 +88,6 @@ docs/en/agents/
 docs/de/agents/
 docs/en/references/tags.md
 docs/de/references/tags.md
+
+# setuptools build output of `pip install .` (the validate-skills console script)
+/build/

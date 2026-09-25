@@ -1,0 +1,11 @@
+# Hooks this repository exposes to consuming repositories. Reference it from a
+# consumer's .pre-commit-config.yaml as `repo: https://github.com/nolte/claude-shared`
+# with `rev:` pinned to a release tag.
+- id: validate-skills
+  name: validate skill/agent frontmatter
+  description: Validates skill and agent frontmatter per file; per-file invocation skips the directory-level checks (phantom-agent tree scan, description budget).
+  entry: validate-skills
+  language: python
+  additional_dependencies: ["PyYAML>=6"]
+  files: '(^|/)(skills/[^/]+/SKILL\.md|agents/[^/]+\.md)$'
+  pass_filenames: true

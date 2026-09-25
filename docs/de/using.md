@@ -91,3 +91,23 @@ Skills dispatcht oder direkt über das `Task`-Tool, wenn du weißt, welchen Agen
 du willst. Du brauchst keinen
 Clone dieses Repositories und keine lokale Toolchain, um das Plugin zu nutzen —
 die Installation passiert vollständig in deiner eigenen Claude-Code-Umgebung.
+
+### Eigene Skills und Agents bei jedem Commit validieren
+
+Wenn dein Projekt eigene Skills oder Agents pflegt, kannst du den
+Frontmatter-Validator, den dieses Repository auf seine Plugins anwendet, als
+[pre-commit](https://pre-commit.com)-Hook pinnen. Er prüft jede
+`skills/*/SKILL.md` und jede `agents/*.md` gegen
+`spec/claude/skill-management/` und `spec/claude/agent-management/` und braucht
+weder einen Clone dieses Repositories noch seine Toolchain:
+
+```yaml
+- repo: https://github.com/nolte/claude-shared
+  rev: <Release-Tag>  # das erste Release, das den Hook ausliefert, oder ein neueres
+  hooks:
+    - id: validate-skills
+```
+
+Der Hook läuft je geänderter Datei; die Prüfungen auf Verzeichnisebene (der
+Phantom-Agent-Scan und das Description-Budget je Plugin) bleiben beim `task test`
+dieses Repositories.

@@ -2,13 +2,18 @@
 # Claude Code plugin, per spec/project/project-structure/ §Python development.
 #
 # This repository ships a Claude Code plugin (skills, agents, specs, docs), not
-# an installable Python library: its Python surface is the repository's own
+# a published Python library: its Python surface is the repository's own
 # tooling (frontmatter/schema validators under scripts/, the docs catalog/
 # portfolio generators, and the eval-harness tests). There are therefore no
 # *runtime* package dependencies — requirements.txt is a documented placeholder
 # (per §Requirements file format) and the script toolchain lives in
 # requirements-dev.txt. Run everything inside a project-local virtual
 # environment (`task install`), never against system Python.
+#
+# The one installable piece is scripts/validate_skills.py, packaged as the
+# `validate-skills` console script so consuming repositories can run it as a
+# pre-commit hook (`.pre-commit-hooks.yaml`, `language: python`). Nothing else
+# is packaged; the mapping under [tool.setuptools] keeps it that way.
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -25,12 +30,21 @@ authors = [{ name = "nolte", email = "nolte07@gmail.com" }]
 classifiers = [
   "Private :: Do Not Upload",
   "Programming Language :: Python :: 3.12",
-  "License :: OSI Approved :: MIT License",
 ]
+
+[project.scripts]
+validate-skills = "validate_skills:main"
 
 [project.urls]
 Homepage = "https://github.com/nolte/claude-shared"
 Repository = "https://github.com/nolte/claude-shared"
+
+[tool.setuptools]
+# Package only the validator module; this also disables flat-layout
+# auto-discovery, which would otherwise reject the several top-level packages.
+package-dir = { "" = "scripts" }
+py-modules = ["validate_skills"]
+packages = []
 
 [tool.pytest.ini_options]
 # Migrated from the former pytest.ini so there is a single tooling-config source
