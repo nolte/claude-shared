@@ -13,7 +13,8 @@ matrix, teach-back before any `confirmed` tag, and the written artifact.
 ## Input files
 
 Greenfield — no prior `project/requirements/` docs exist.
-`spec/project/requirements-elicitation/en.md` is reachable in the repo.
+`spec/project/requirements-elicitation/en.md` is reachable — in the repo
+or, when absent there, at `${CLAUDE_PLUGIN_ROOT}/spec/project/requirements-elicitation/en.md`.
 The surrounding `project/` docs are English, so the artifact will be
 English.
 

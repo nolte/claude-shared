@@ -5,7 +5,7 @@ issue: "665"
 classification: "bug"
 secondary-classes: []
 route: "direct"
-status: approved-pending
+status: implemented
 created: "2026-09-25"
 ---
 
@@ -73,3 +73,5 @@ P1 only.
 none
 
 ## Dispatch log
+
+2026-09-25 P1 dispatched to nolte-claude-dev:claude-plugin-developer — Precondition rewritten with plugin-root fallback; second site examples/01 line 16 adapted; validator 0C, exit 0.

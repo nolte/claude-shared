@@ -161,10 +161,13 @@ Filled during implementation. Each entry records the dispatched specialist and t
 
 | Member | Specialist | Check | Actual output |
 |---|---|---|---|
-| — | — | — | — |
+| #665 | `nolte-claude-dev:claude-plugin-developer` | `python3 scripts/validate_skills.py skills/requirements-elicit/` | `validate_skills: 1 artifacts; 0C / 0W / 0S / 2I` (Info: description-headroom 999/1024, rpi-adoption-backlog — beide vorbestehend); Exit 0 |
+| #665 | `nolte-claude-dev:claude-plugin-developer` | `git diff --stat` | `skills/requirements-elicit/SKILL.md \| 2 +-`, `skills/requirements-elicit/examples/01-vague-greenfield-elicit.md \| 3 ++-` — 2 files changed, 3 insertions(+), 2 deletions(-) |
+| #665 | `nolte-claude-dev:claude-plugin-developer` | `grep -c CLAUDE_PLUGIN_ROOT skills/requirements-elicit/SKILL.md` | `1` |
+| #665 | `nolte-claude-dev:claude-plugin-developer` | `task lint` (Agent-Lauf) + `pre-commit` beim Commit | alle Hooks Passed |
 
 ## Deviations
 
 | Member | Kind | What changed |
 |---|---|---|
-| — | — | — |
+| #665 | local adaptation | Zweite Gate-Restatement-Stelle `skills/requirements-elicit/examples/01-vague-greenfield-elicit.md:16` mitgezogen (skill-management §Progressive disclosure); Matrix-Zelle „Plugin artefacts" um die Beispieldatei erweitert. Admission, Mode und Ordering unverändert. |
