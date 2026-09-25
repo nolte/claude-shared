@@ -189,6 +189,10 @@ Filled during implementation. Each entry records the dispatched specialist and t
 | group | — (quality-gate on the integration branch tip `ee40f752`) | `task --yes lint` (pre-commit run --all-files) | alle Hooks Passed; Exit 0 |
 | group | — (quality-gate on the integration branch tip `ee40f752`) | `task --yes test` | `568 passed, 2 skipped in 16.90s`; Exit 0 |
 | group | — | `git diff --stat origin/develop...HEAD` | 14 files changed, 628 insertions(+), 27 deletions(-) (davon 4 Artefakt-Dateien unter `.audits/`, die vor dem Bündel entfernt werden) |
+| group | review fixes `ff91c82f` (`fullstack-developer`: SCR-001/-002/-003/-004/-006; `claude-plugin-developer`: beide Prosa-Warnings + Output-Contract) | `python3 -m pytest tests -q` | `569 passed, 2 skipped in 16.09s`; Exit 0 (neuer Test `test_default_targets_are_discovered_in_the_working_directory`, per Mutation gegen `REPO / "plugins"` und hart kodierte Roots geprüft: je `1 failed`) |
+| group | review fixes `ff91c82f` | `python3 scripts/validate_skills.py` vor/nach, `diff` | Exit 0; diff leer |
+| group | review fixes `ff91c82f` | `pre-commit try-repo <worktree> validate-skills --files skills/x/SKILL.md` im Consumer-Testrepo, ohne `additional_dependencies` | `- exit code: 1`, `Critical    skills/x/SKILL.md  [skill-management.frontmatter-yaml-invalid] …` — PyYAML kommt über die Paketabhängigkeit |
+| group | review fixes `ff91c82f` | Regex-Probe des `files`-Musters | `skills/x/SKILL.md`, `agents/a.md`, `plugins/p/agents/a.md`, `.claude/agents/a.md` True; `docs/agents/overview.md`, `docs/en/skills/x/SKILL.md` False |
 
 ## Deviations
 
