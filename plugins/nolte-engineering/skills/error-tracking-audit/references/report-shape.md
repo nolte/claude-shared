@@ -28,7 +28,7 @@ Previous artifact: <path | none>
 - No production value pinned on a dev/local path: <PASS | FAIL: <value at file:line>> [<file:line>]
 - Release tagging (<moves per build | static constant | missing>): <PASS | FAIL: <what>> [<file:line>]
 - Sampling decision explicit: <PASS: <rate> | FAIL: no decision> [<file:line>]
-- default-PII off (<explicit false | unset | explicit true>): <PASS | WARN: unasserted | FAIL: <why>> [<file:line>]
+- default-PII off (<scanner overall state>; category source: <package@version> via <installed source | body table>): <PASS | per non-PASS category: <category>=<state> → <WARN | FAIL>: <why>> [<file:line>]
 - Before-send scrubbing wired: <PASS (shape: allow-list | deny-list; breadcrumbs: covered | not covered) | FAIL> [<file:line>]  (PII verdict → gdpr-data-protection-reviewer)
 - No log-sink misuse: <PASS | FAIL: <levels routed>> [<file:line>]
 ### Advisory (scored)

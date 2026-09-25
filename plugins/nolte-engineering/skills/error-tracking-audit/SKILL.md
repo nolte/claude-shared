@@ -55,7 +55,7 @@ Detect the user's language from their message and respond in it. The audit artif
 - **Operation**: `audit` (default, read-only) or `plan` (dispatches the plan author against an existing audit artifact). Never author a plan without an audit artifact to ground it.
 - **Stage vocabulary**: the project's declared, closed set of `environment` values and where it is declared. Absent an operator-supplied set, take the scanner's detected one; no declaration anywhere is itself a finding.
 - **Adoption context**: whether the repository declares a production deployment for the audited components, and the path of any recorded adoption exception. Never infer real-user exposure — see Hard-fail policy.
-- **SDK anchors**: the tracker SDK package and pinned version per component. Record them; the default-PII ruling depends on the pinned SDK's documented default, so a floating anchor gives a non-reproducible verdict.
+- **SDK anchors**: the tracker SDK package and pinned version per component. Record them with the scanner's default-PII category source; the ruling depends on the pinned SDK's documented per-category default, so a floating anchor gives a non-reproducible verdict.
 
 ## Operations
 
@@ -99,7 +99,17 @@ Every check in the scanner's `### Tool contract` traces to a MUST in the spec's 
 
 The scanner reports these as multi-state on purpose; the split is this skill's to own.
 
-- **`default-PII off`**: explicit `false` → **PASS**. Explicit `true` → **Critical**, the spec's MUST being unconditional. **Unset** (relying on the SDK default) → **Warning**, not a hard fail: the outcome is off for Sentry-protocol SDKs whose documented default is off, but the control is unasserted and an SDK major can flip it silently. It escalates to **Critical** only when the pinned SDK's documented default is *established as* PII-on. When the default cannot be established from the recorded anchor, the finding stays a **Warning** carrying an operator action ("establish the pinned SDK's documented default"); an undetermined state is not a proven MUST violation, and ruling it Critical would contradict how every other undetermined case here is handled. Note that a missing before-send hook is already its own hard fail — don't double-count it as an escalation of this one.
+- **`default-PII off`**: one finding per non-PASS category, grouped under the component, so an SDK bump adding a category surfaces as a new `UNSET→ON` line. The scanner's category source establishes a default.
+
+  | State | Severity |
+  |---|---|
+  | `PASS: legacy flag off`, `PASS: every category OFF` | **PASS** |
+  | `EXPLICIT TRUE`; a category `ON` or `UNSET→ON` | **Critical**; the MUST is unconditional |
+  | `RESTRICTED` (allow or deny list) | **Warning**: deliberate but not off; a deny list leaves the rest collected |
+  | `UNSET→UNKNOWN` | **Warning** + operator action "establish the pinned SDK's documented default" |
+  | `UNSET`, legacy-flag SDK defaulting off | **Warning**: unasserted; a major can flip it |
+
+  `NOT ALL OFF` and other `UNSET` follow their categories (JS ≥ 11 without a block: all `UNSET→ON`). A `legacy flag ignored` note never yields PASS; the structured block, or its absence on JS ≥ 11, decides. A missing before-send hook is its own hard fail; don't double-count it.
 - **DSN source**: deployment environment → **PASS**. Runtime-injected config (secret manager, config service, a container entrypoint writing a served runtime config) → **PASS**; that is deployment configuration by another mechanism, and it keeps the value out of the source tree. **Build-baked** (a build-time bundler variable such as `VITE_*` or `NEXT_PUBLIC_*` frozen into the artifact) → **Warning for every component type**, never Critical: read literally, the spec's rule has two halves — injected via environment/deployment configuration, and no literal in the source tree — and a build-time deployment variable satisfies both. What it costs is stage portability, since one artifact then serves one stage and cannot be redeployed without a rebuild; that is a real concern the spec does not currently mandate, so it is reported and not hard-failed. Do not invent a component-type split here: hard-failing it server-side would enforce an unwritten requirement, and demoting it for browsers would demote a MUST. **Hardcoded literal in the source tree** → **Critical** always; that is the spec's explicit MUST NOT.
 - **`release`**: present and moving per build (release tag or commit SHA injected at build/deploy) → **PASS**. **Static constant that never moves** → **Critical**, reported distinctly as a *stale release constant*: every event lands in one bucket forever, so regression detection and deploy attribution — the whole point of the MUST — are defeated exactly as by a missing value, while the remediation differs (wire the build to inject it, do not add the field). One exemption: a version constant the project's release automation bumps per release *is* resolvable to a unique code state; confirm the file is a declared version-bearing file of that flow first. **Missing** → **Critical**.
 
@@ -131,7 +141,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** treat a `release` value that never moves per build as present, and never accept a DSN literal in the source tree for any component type.
 - **Never** render the PII-class or leak verdict (`gdpr-data-protection-reviewer`), audit the telemetry pillars or the browser listener floor (`observability-audit`), or triage CI failures (`workflow-health-triage`).
 - **Never** promote an advisory (SHOULD) item — source maps, explicit capture, the CSP ingest origin, shared-module drift — to a hard fail, and never demote a mandatory tool-contract check to advisory, without a spec change.
-- **Always** record the pinned SDK package and version per component; the unset-default-PII ruling depends on it.
+- **Always** record the pinned SDK package and version per component and the default-PII category source; the `UNSET` rulings depend on them.
 - **Always** persist the audit artifact under `.audits/error-tracking-audit/` with the per-component verdict, hard-fail reasons, runtime-verify items, declared stage vocabulary, and Git revision, and ground the `plan` operation in that artifact.
 - When `spec/project/error-tracking/` and this skill disagree, the spec wins; this skill needs the update.
 
