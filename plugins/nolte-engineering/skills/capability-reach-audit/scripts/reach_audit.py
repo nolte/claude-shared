@@ -993,8 +993,9 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     when the new anchor is the declaration's content at the recording commit and
     the previously anchored file (``rel``, read from the probe's previous
     revision) no longer holds the previously anchored content there. A previous
-    commit anchor (migration from v1.0) is the one case where a commit must still
-    resolve: its content at that commit is what the declaration is compared with.
+    commit anchor (migration from v1.0) is compared by its content at that commit;
+    when a squash merge dropped the commit, by the declaration's content at the
+    commit that recorded the derivation, which is what the derivation saw.
 
     The previous anchor is itself proven first: it must be the declaration's
     content at the commit that recorded it. An anchor that never matched the
@@ -1005,7 +1006,7 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     clean previous derivation (_continuation_problem): a pure move of the
     declaration (same blob, new path, nothing else changed but the approval
     stamp its re-derive writes) and a pure commit-to-content migration (the old
-    commit's content, same path, nothing else changed).
+    commit's content, same path, nothing else changed but the approval stamp).
     """
     if not _BLOB_ANCHOR_RE.match(new_df):
         return f"{moved}, but {safe_text(new_df, 60)} is not a content anchor of the form {BLOB_FORM}"
@@ -1031,15 +1032,24 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     else:
         prev_commit = git.resolve_commit(prev_df)
         if prev_commit is None:
-            return (f"{moved}, but the previous derived_from cannot be resolved to a commit, "
-                    "so no declaration change can be shown")
-        before = git.blob_at(prev_commit, rel)
-        if before != recorded:
-            return (f"{moved}, but the content of {safe_text(rel)} at the previous derived_from {prev_commit[:12]} "
-                    f"is not its content at {recording[:12]}, where it was recorded, "
-                    "so no declaration change can be shown")
+            # A squash merge drops the commit a v1.0 derivation named, but the
+            # commit that recorded it is still here: the declaration's content
+            # there is what the derivation saw, and what a change is shown against.
+            if recorded is None:
+                return (f"{moved}, but the previous derived_from cannot be resolved to a commit and "
+                        f"{safe_text(rel)} did not exist at {recording[:12]}, where it was recorded, "
+                        "so no declaration change can be shown")
+            before = recorded
+        else:
+            before = git.blob_at(prev_commit, rel)
+            if before != recorded:
+                return (f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
+                        f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was recorded, "
+                        "so no declaration change can be shown")
+        # `derive` re-stamps the approval on every run, a migration included.
+        migration = (("derived_from",), ("approval",))
         if (new_blob == before and new_rel == rel
-                and _without(new_doc, ("derived_from",)) == _without(prior_doc, ("derived_from",))):
+                and _without(new_doc, *migration) == _without(prior_doc, *migration)):
             return _continuation_problem(git, moved, earlier, span, yaml)
     if git.blob_at(baseline, rel) == before:
         return f"{moved}, but {safe_text(rel)} did not change in between"
