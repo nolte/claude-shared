@@ -36,7 +36,7 @@ from pathlib import Path
 
 try:
     import yaml
-except ModuleNotFoundError:  # pragma: no cover - PyYAML is a pinned dev dependency
+except ModuleNotFoundError:  # pragma: no cover - PyYAML is a declared package dependency
     yaml = None  # the strict-parse check degrades to a no-op rather than crashing
 
 REPO = Path(__file__).resolve().parent.parent
@@ -973,9 +973,12 @@ def discover_default_targets() -> list[str]:
     in-repo plugin under plugins/<name>/ that ships a skills/ or agents/ tree.
     Keeps `task test` and CI (which call this script with no arguments) covering
     every plugin in a multi-plugin repo without per-plugin wiring. Discovery runs
-    in the current working directory, where the targets are resolved."""
-    targets = ["skills/", "agents/"]
-    plugins_dir = Path.cwd() / "plugins"
+    in the current working directory, where the targets are resolved; only roots
+    that exist there are returned, so a consumer shipping just one of them is
+    scanned rather than rejected as a missing path."""
+    cwd = Path.cwd()
+    targets = [f"{sub}/" for sub in ("skills", "agents") if (cwd / sub).is_dir()]
+    plugins_dir = cwd / "plugins"
     if plugins_dir.is_dir():
         for plugin in sorted(plugins_dir.iterdir()):
             if not plugin.is_dir():

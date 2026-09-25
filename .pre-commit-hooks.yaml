@@ -6,6 +6,5 @@
   description: Validates skill and agent frontmatter per file; per-file invocation skips the directory-level checks (phantom-agent tree scan, description budget).
   entry: validate-skills
   language: python
-  additional_dependencies: ["PyYAML>=6"]
-  files: '(^|/)(skills/[^/]+/SKILL\.md|agents/[^/]+\.md)$'
+  files: '^(\.claude/)?(plugins/[^/]+/)?(skills/[^/]+/SKILL\.md|agents/[^/]+\.md)$'
   pass_filenames: true

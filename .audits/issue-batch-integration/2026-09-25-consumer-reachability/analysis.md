@@ -154,6 +154,15 @@ ist gitignored und wird bei `task docs` erzeugt; `spec/README.md`).
 - **Mode A** bestätigen.
 - **Process-Finding** als eigenes Issue anlegen (Spec-Fallback-Check auf Skills ausdehnen)?
 
+## Tier-3 independent verification pass
+
+Zwei rein lesende Kontexte, die die Änderung nicht produziert haben, nach dem grünen Gate auf `ee40f752`:
+
+| Reviewer | Scope | Critical | Warning | Suggestion | Umgang |
+|---|---|---|---|---|---|
+| `nolte-engineering:python-code-reviewer` | `scripts/validate_skills.py`, `tests/test_validate_skills.py`, `pyproject.toml`, `.pre-commit-hooks.yaml` | 0 | 1 — SCR-001: PyYAML keine Paketabhängigkeit; ein nacktes `pip install .` liefert `validate-skills` ohne PyYAML, `yaml = None` überspringt `check_frontmatter_yaml` und `check_use_case_field_lengths` still (Exit 0 bei strikt ungültigem Frontmatter) | 5 — SCR-002 Default-Roots hart kodiert (Consumer ohne `skills/` → Exit 2); SCR-003 `files`-Muster trifft jedes `.md` unter irgendeinem `agents/` (z. B. `docs/agents/`); SCR-004 `setuptools>=68` zu niedrig für PEP-639-`license` (braucht ≥ 77); SCR-005 `requires-python >= 3.12`; SCR-006 kein Test für `discover_default_targets` unter cwd (Revert bliebe grün) | SCR-001/-002/-003/-004/-006 an `fullstack-developer` re-dispatcht; SCR-005 bewusst belassen (Python-Floor 3.12 ist Repo-Konvention). Falsifizierbarkeit der 4 neuen Tests gegen Revert bestätigt. |
+| `Explore` (read-only, Spec-Konformität) | `skills/requirements-elicit/`, `plugins/nolte-engineering/agents/implementation-plan-author.md` gegen `spec/claude/skill-management/`, `spec/claude/agent-management/`, `spec/project/issue-orchestration/`, `spec/project/requirements-elicitation/` §H | 0 | 2 — Lifecycle von `.audits/requirements/<slug>-plan.md` undefiniert (Step 4); Pipeline-Absatz `:84-91` sagt noch „takes the issue id as its parameter" | 4 — Output-Contract „naming the issue"; issue-only-Wortlaut `:66`, `:177`; `summary`/`summary_de` vorbestehend issue-only; `## Precondition` (Singular) in requirements-elicit vorbestehend | beide Warnings + Output-Contract-Suggestion an `claude-plugin-developer` re-dispatcht; `summary`-Felder und Precondition-Überschrift unverändert (vorbestehend, nicht Teil der Gruppe). Corpus-Grep: keine veraltete „four sources"-Aussage außerhalb der Datei. |
+
 ## Member results
 
 Filled during implementation. Each entry records the dispatched specialist and the

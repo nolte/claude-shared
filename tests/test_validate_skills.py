@@ -429,3 +429,13 @@ def test_path_outside_the_working_directory_is_reported_absolute(monkeypatch, tm
     outside = tmp_path / "elsewhere" / "SKILL.md"
     assert v._display(outside) == outside.as_posix()
     assert v._display(inside / "skills" / "x" / "SKILL.md") == "skills/x/SKILL.md"
+
+
+def test_default_targets_are_discovered_in_the_working_directory(monkeypatch, tmp_path):
+    # A consumer shipping only a root agents/ plus one plugin's agents/: the
+    # absent root skills/ must not be returned (it would abort with exit 2).
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "plugins" / "p" / "agents").mkdir(parents=True)
+    (tmp_path / "plugins" / "q").mkdir()
+    monkeypatch.chdir(tmp_path)
+    assert v.discover_default_targets() == ["agents/", "plugins/p/agents/"]

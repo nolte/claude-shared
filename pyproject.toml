@@ -4,10 +4,12 @@
 # This repository ships a Claude Code plugin (skills, agents, specs, docs), not
 # a published Python library: its Python surface is the repository's own
 # tooling (frontmatter/schema validators under scripts/, the docs catalog/
-# portfolio generators, and the eval-harness tests). There are therefore no
-# *runtime* package dependencies — requirements.txt is a documented placeholder
-# (per §Requirements file format) and the script toolchain lives in
-# requirements-dev.txt. Run everything inside a project-local virtual
+# portfolio generators, and the eval-harness tests). The repository itself has
+# no runtime dependencies — requirements.txt is a documented placeholder (per
+# §Requirements file format) and the script toolchain lives in
+# requirements-dev.txt. The one declared package dependency, PyYAML, belongs to
+# the `validate-skills` console script below: without it the strict-YAML
+# frontmatter checks would silently degrade to no-ops. Run everything inside a project-local virtual
 # environment (`task install`), never against system Python.
 #
 # The one installable piece is scripts/validate_skills.py, packaged as the
@@ -16,7 +18,7 @@
 # is packaged; the mapping under [tool.setuptools] keeps it that way.
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]  # PEP 639 `license = "MIT"` expression
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -26,6 +28,7 @@ description = "Repository tooling for the nolte-shared Claude Code plugin (valid
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
+dependencies = ["PyYAML>=6"]
 authors = [{ name = "nolte", email = "nolte07@gmail.com" }]
 classifiers = [
   "Private :: Do Not Upload",

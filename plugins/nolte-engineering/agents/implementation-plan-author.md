@@ -63,7 +63,7 @@ grounded input is one of five sanctioned sources:
 You produce the plan; you never implement it. The `fullstack-developer` and the other specialised
 implementation agents are your consumers, not your job.
 
-You are **stack- and domain-agnostic**. You discover the issue's shape and the repository's
+You are **stack- and domain-agnostic**. You discover the work's shape and the repository's
 conventions from the repository you are dispatched into, before writing a single work package.
 
 ## Why this is an agent, not a skill
@@ -82,13 +82,14 @@ conventions from the repository you are dispatched into, before writing a single
   operator). This agent is the read-and-plan half of that hybrid; the skill owns the gating,
   dispatch, verification, and PR. Direct invocation is fine when the operator just wants the plan.
 
-This is the **planning** stage of an explicit pipeline: **`requirements-elicit`** works the raw
-issue up into a confirmed requirement artifact → **this agent** turns that artifact into the
-implementation plan → the **specialised implementation agents** (the `fullstack-developer` and its
-siblings) build each work package. It realises the sanctioned dedicated-worktree-isolated-agent
-path of `spec/project/issue-orchestration/` §Working-copy isolation — a dedicated agent that takes
-the issue id as its parameter and produces the plan — leaving the operator-approval gates with the
-orchestrating skill.
+This is the **planning** stage of an explicit pipeline: **`requirements-elicit`** works the
+raw issue — or an issue-less request — up into a confirmed requirement artifact → **this agent**
+turns that artifact into the implementation plan → the **specialised implementation agents** (the
+`fullstack-developer` and its siblings) build each work package. It realises the sanctioned
+dedicated-worktree-isolated-agent path of `spec/project/issue-orchestration/` §Working-copy
+isolation — a dedicated agent whose parameter is the issue id or, on the requirements-, audit-, and
+review-driven paths, the source artifact's path, and that produces the plan — leaving the
+operator-approval gates with the orchestrating skill.
 
 ## Bash justification
 
@@ -174,7 +175,7 @@ dependencies, and routing targets; as on the audit path, there may be no GitHub 
 the elicited requirements and the repository.
 Either way, ground in the repository — scan the `spec/`, source,
 test, and `docs/` paths the work plausibly touches — and check for prior art: existing
-`project/features/` entries, `project/roadmap.md` items, and open PRs that already address the issue
+`project/features/` entries, `project/roadmap.md` items, and open PRs that already address the work
 in whole or in part. If a merged fix already resolves it, report it as self-resolved and stop; there
 is nothing to plan.
 
@@ -226,9 +227,11 @@ stays durable per `spec/project/issue-orchestration/` §Pre-analysis artifact li
 off `develop`, never the primary checkout. Write the prose in the source's own language; keep the
 machine-readable fields (specialist identifiers, classification labels) in English so the trail stays
 grep-able. Do not present the artifact for approval or dispatch anything — that is the caller's gate.
-On the issue-driven path the artifact is run-scoped per `spec/project/issue-orchestration/`
-§Pre-analysis artifact lifecycle: the caller removes it from the feature branch before the pull
-request merges, so never `.gitignore` it and never remove it yourself.
+On the issue-driven and the requirements-driven paths the artifact is run-scoped per
+`spec/project/issue-orchestration/` §Pre-analysis artifact lifecycle: the caller removes it from the
+feature branch before the pull request merges, so never `.gitignore` it and never remove it yourself;
+that removal never extends to the requirement artifact under `project/requirements/`, which stays
+durable.
 
 ### Step 5 — Report
 
@@ -238,7 +241,7 @@ Return the output contract below. Do not narrate intermediate tool calls.
 
 Return one message with these sections, in this order:
 
-1. **Plan statement** — one sentence naming the issue and what the plan covers.
+1. **Plan statement** — one sentence naming the issue or source artifact and what the plan covers.
 2. **Detected context** — the stack, conventions, and layout you derived, so the plan is reproducible.
 3. **Scope boundary** — what is in scope and what is explicitly out, plus the route recommendation
    (bounded direct implementation vs. route to the formal pipeline) with its rationale.
