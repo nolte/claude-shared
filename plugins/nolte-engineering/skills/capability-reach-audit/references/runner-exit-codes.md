@@ -32,7 +32,7 @@ The runner writes every not-probed reason into the report's Probes table. These 
 
 | Reason (as written by the runner) | Meaning | Next step |
 |---|---|---|
-| `declaration changed since derivation: …` | the declaration's content at HEAD is no longer the `blob:` anchor (`the content of <rel> at HEAD is no longer <df>`), the file is gone (`<rel> no longer exists at HEAD`), it has uncommitted edits, its latest commit postdates a commit anchor, or a moved inherited `ref` (stale, R2) | offer `derive` with the entry filter set to exactly these probes' declaration paths (R5) |
+| `declaration changed since derivation: …` | the declaration's content at HEAD is no longer the `blob:` anchor (`the content of <rel> at HEAD is no longer <df>`), the file is gone (`<rel> no longer exists at HEAD`) or is no regular file (`<rel> is not a regular file at HEAD`), it has uncommitted edits, its latest commit postdates a commit anchor, or a moved inherited `ref` (stale, R2) | offer `derive` with the entry filter set to exactly these probes' declaration paths (R5) |
 | `probe file is not committed; …` | the approved set isn't under version control yet (R11) | the operator commits `project/reach-probes/`, then `run` again |
 | `not approved` | a probe file without an `approval` block, for example a copied example | the file was never approved through the gate; remove it or re-derive and approve the entry |
 | `approval does not cover the current observation step` | the probe's `observe`, `environment`, or `teardown` no longer match `approval.observation_digest`: a later commit swapped the argv or a target and left the old approval in place, or the block was written without the digest | the probe was **withheld**, never executed. Never recompute or paste the digest by hand; re-derive and re-approve the entry, and tell the operator to read the file's history, since the approved step and the committed step differ |
@@ -52,7 +52,7 @@ Every other reason is quoted as written and needs no routing.
 
 `derived_from` takes one of three forms (probe schema v1.1):
 
-- **Content anchor** `blob:<40 hex>` for an in-repository declaration: the declaration file's git blob at derivation (`git rev-parse <commit>:<path>`). It names no commit, so a probe re-derived in the same pull request as its declaration change stays clean after a squash merge. The probe is stale when the file is dirty, gone at HEAD, or its HEAD blob differs.
+- **Content anchor** `blob:<40 hex>` for an in-repository declaration: the declaration file's git blob at derivation (`git rev-parse <commit>:<path>`). It names no commit, so a probe re-derived in the same pull request as its declaration change stays clean after a squash merge. The probe is stale when the file is dirty, gone at HEAD, or its HEAD blob differs. A directory or submodule at the path is no regular file and reads as stale; a symlink is anchored by its link text, not by the file it points to.
 - **Pinned ref** for an inherited spec, compared with `inherits[].ref`; a content anchor there is refused.
 - **Commit** for an external anchor (HEAD, unmonitored), and, as a migration rule, for an in-repository probe derived before v1.1: it stays valid, with its commit-ancestry check, until the next re-derivation records a content anchor. A SHA-256 repository keeps commit anchors, since the content anchor is SHA-1 only.
 
@@ -77,9 +77,17 @@ Otherwise the probe is reported `weakened` with `re-baselined without a declarat
 | `…, but the previous derived_from is not a content anchor of the form blob:<40 hex digits>, so no declaration change can be shown` | the old anchor was a malformed `blob:` value |
 | `…, but the previous derived_from cannot be resolved to a commit, so no declaration change can be shown` | the old commit anchor is gone (for example after a squash merge) |
 | `…, but <rel> did not change in between` | the anchored content is the same before and after the move |
+| `…, but the previous derived_from <df> is not the content of <rel> at <recording>, where it was recorded, so no declaration change can be shown` | the old `blob:` anchor never matched the declaration when it was recorded, so it proves no change |
+| `…, but the content of <rel> at the previous derived_from <commit> is not its content at <recording>, where it was recorded, so no declaration change can be shown` | the old commit anchor pointed at other declaration content than the file held when it was recorded |
+| `…, but the same commit changed the probe beyond declaration.path, which a pure move of the declaration does not justify` | a pure move may change only `declaration.path` and the `approval` stamp of its re-derive; `expected`, `observe`, `tier`, or `declaration.location` changed too |
+| `…, but <new_rel> already held <new_df> when the previous derivation was recorded in <recording>, so re-pointing at it shows no declaration change` | the probe was re-pointed at a file that already held that content, so nothing changed |
+| `…, but the probe changed in <commits> after its previous derivation was recorded in <recording>` | a pure move or migration only relabels the previous derivation, and the probe was edited after it |
+| `…, but its previous derivation was no re-derivation either: <reason>` | the relabelled derivation was itself a re-baseline without a declaration change; `<reason>` names why |
 
 Consequences to state plainly to the operator:
 
 - A corrected typo in `derived_from`, a re-approval made "to be safe", or any `derived_from` move on a probe with an external anchor stays `weakened` until its declaration changes. The way back to clean is a re-derive **after a real declaration change**, never a hand edit and never a revert of the revert.
 - The rule can't tell a whitespace-only declaration change from a substantive one; a reformatting commit to the declaration file counts as a change. That is a stated limit of the mechanism, not a bug to route around.
 - A probe that was weakened for another reason (a later commit to the file) isn't cleared by a re-approval alone either; the re-derive must move `derived_from` to an anchor the declaration actually changed to.
+- Residual risk: deleting the declaration and re-pointing the probe at a file created or changed after the previous recording, with a weakening in the same commit, is indistinguishable from a rename plus edit and is accepted.
+- Residual risk: commit anchors keep the pre-v1.1 rules, including the two-commit re-anchor that a content anchor now refuses; re-derive to a content anchor to close it. A later pure move over an old commit anchor that no longer resolves reads `weakened`.

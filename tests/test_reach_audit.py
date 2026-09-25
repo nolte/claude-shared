@@ -1709,3 +1709,176 @@ def test_668_commit_to_content_anchor_migration_needs_the_old_commit(target):
 
 def test_668_schema_admits_a_content_anchor():
     assert validate(_valid() | {"derived_from": "blob:" + "a" * 40}) == []
+
+
+# --------------------------------------------------------------------------- #
+# Independent-review findings on #668 (F1-F4): laundering through unproven anchors
+# --------------------------------------------------------------------------- #
+def _weakened_reason(target: Target, marker: Path | None = None) -> str:
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_FINDINGS, row[7:]
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED, row[7:]
+    assert marker is None or not marker.exists()
+    return _plain(row[9])
+
+
+def _assert_clean(target: Target) -> None:
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK, row[7:]
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+
+
+def test_668_F1_laundering_through_an_unproven_content_anchor_is_weakened(target, tmp_path):
+    """Y lowers `expected` and records a blob that never existed; Z restores the real blob."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    anchor = _blob(target)
+    _rewrite(target, rel, expected_value=1, derived_from="blob:" + "b" * 40)
+    weakening = target.commit("lower the bar under a made-up anchor")
+    _rewrite(target, rel, derived_from=anchor)
+    target.commit("restore the real anchor")
+    reason = _weakened_reason(target, marker)
+    assert (f"but the previous derived_from blob:bbbbbbb is not the content of {DECL} at {weakening[:12]}, "
+            "where it was recorded, so no declaration change can be shown") in reason
+
+
+def test_668_F1_laundering_through_an_unproven_commit_anchor_is_weakened(target, tmp_path):
+    """Same laundering with a commit anchor whose declaration content is another one."""
+    marker = tmp_path / "ran"
+    old = target.git("rev-parse", "HEAD")
+    target.write(DECL, "# Requirements\n\nExports 3 collections, v2.\n")
+    target.commit("edit the declaration")
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    anchor = _blob(target)
+    _rewrite(target, rel, expected_value=1, derived_from=old)
+    weakening = target.commit("lower the bar under an old commit anchor")
+    _rewrite(target, rel, derived_from=anchor)
+    target.commit("restore the real anchor")
+    reason = _weakened_reason(target, marker)
+    assert (f"but the content of {DECL} at the previous derived_from {old[:12]} is not its content at "
+            f"{weakening[:12]}, where it was recorded, so no declaration change can be shown") in reason
+
+
+@pytest.mark.parametrize("flow", ["later-commit", "same-commit"])
+def test_668_F1_re_derivation_after_a_real_declaration_change_stays_clean(target, flow):
+    rel = _content_probe(target)
+    target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
+    if flow == "later-commit":
+        target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from="blob:" + target.git("hash-object", DECL))
+    target.commit("re-derive")
+    _assert_clean(target)
+
+
+def test_668_F2_rename_and_weakening_in_one_commit_is_weakened(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/v2.md")
+    laundering = target.commit("rename the declaration and lower the bar")
+    reason = _weakened_reason(target, marker)
+    assert f"{laundering[:12]} moved the declaration of blob:" in reason
+    assert (f"from {DECL} to docs/v2.md, but the same commit changed the probe beyond declaration.path, "
+            "which a pure move of the declaration does not justify") in reason
+
+
+def test_668_F2_rename_and_path_update_in_one_commit_stays_clean(target):
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, declaration_path="docs/v2.md")
+    target.commit("rename the declaration and follow it")
+    _assert_clean(target)
+
+
+def _restamp(target: Target, rel: str) -> dict:
+    """The approval block a re-derive writes: new time and operator, same observation digest."""
+    approval = dict(yaml.safe_load((target.path / rel).read_text())["approval"])
+    approval.update(approved_at="2026-09-25T08:00:00Z", approved_by="another operator")
+    return approval
+
+
+def test_668_F2_rename_path_update_and_re_approval_in_one_commit_stays_clean(target):
+    """A re-derive after a rename re-approves the probe, so `approval` moves with the path."""
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, declaration_path="docs/v2.md", approval=_restamp(target, rel))
+    target.commit("rename the declaration, re-derive and re-approve")
+    _assert_clean(target)
+
+
+def test_668_F2_re_approval_does_not_cover_a_weakening_in_the_rename_commit(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/v2.md", approval=_restamp(target, rel))
+    target.commit("rename, re-approve and lower the bar")
+    assert "the same commit changed the probe beyond declaration.path" in _weakened_reason(target, marker)
+
+
+def test_668_F2_delete_and_re_point_at_an_existing_file_is_weakened(target, tmp_path):
+    marker = tmp_path / "ran"
+    target.write("docs/other.md", "# Other\n\nExports 1 collection.\n")
+    target.commit("an unrelated document")
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    recorded = target.git("rev-parse", "HEAD")
+    other = _blob(target, path="docs/other.md")
+    target.git("rm", "-q", DECL)
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/other.md", derived_from=other)
+    target.commit("delete the declaration, re-point and lower the bar")
+    reason = _weakened_reason(target, marker)
+    assert (f"but docs/other.md already held {other[:12]} when the previous derivation was recorded in "
+            f"{recorded[:12]}, so re-pointing at it shows no declaration change") in reason
+
+
+def test_668_F2_path_only_commit_cannot_adopt_an_earlier_weakening(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    recorded = target.git("rev-parse", "HEAD")
+    _rewrite(target, rel, expected_value=1)
+    weakening = target.commit("lower the bar")
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, declaration_path="docs/v2.md")
+    target.commit("rename the declaration and follow it")
+    reason = _weakened_reason(target, marker)
+    assert (f"but the probe changed in {weakening[:12]} after its previous derivation was recorded in "
+            f"{recorded[:12]}") in reason
+
+
+def test_668_F3_pure_commit_to_content_anchor_migration_is_clean(target):
+    _, rel = derived_probe(target)
+    _rewrite(target, rel, derived_from=_blob(target))
+    target.commit("migrate the anchor, nothing else")
+    _assert_clean(target)
+
+
+def test_668_F3_migration_cannot_adopt_an_earlier_weakening(target, tmp_path):
+    marker = tmp_path / "ran"
+    sha, rel = derived_probe(target, argv=marker_argv(marker, "1"))
+    recorded = target.git("rev-parse", "HEAD")
+    _rewrite(target, rel, expected_value=1)
+    weakening = target.commit("lower the bar")
+    _rewrite(target, rel, derived_from=_blob(target))
+    target.commit("migrate the anchor")
+    reason = _weakened_reason(target, marker)
+    assert (f"but the probe changed in {weakening[:12]} after its previous derivation was recorded in "
+            f"{recorded[:12]}") in reason
+
+
+@pytest.mark.parametrize("kind", ["directory", "submodule"])
+def test_668_F4_declaration_replaced_by_a_non_file_is_named_so(target, kind):
+    _content_probe(target)
+    target.git("rm", "-q", DECL)
+    if kind == "directory":
+        target.write(f"{DECL}/part.md", "a directory now\n")
+        target.git("add", "-A")
+    else:
+        head = target.git("rev-parse", "HEAD")
+        target.git("update-index", "--add", "--cacheinfo", f"160000,{head},{DECL}")
+        (target.path / DECL).mkdir(parents=True)  # an uninitialised submodule: an empty directory, not dirty
+    target.git("commit", "-q", "-m", f"replace the declaration with a {kind}")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE
+    assert f"declaration changed since derivation: {DECL} is not a regular file at HEAD" in row[9]
