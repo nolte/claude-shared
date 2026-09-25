@@ -103,7 +103,7 @@ The scanner reports these as multi-state on purpose; the split is this skill's t
 
   | State | Severity |
   |---|---|
-  | `PASS: legacy flag off` (its still-collected note is informational), `PASS: every category OFF` | **PASS** |
+  | `PASS: every category OFF` | **PASS** |
   | `EXPLICIT TRUE`; a category `ON`, `UNSET→ON`, or `RESTRICTED` (allow/deny list: not off, the rest is still collected); `UNSET` on a legacy-flag SDK defaulting on | **Critical**; the MUST is unconditional |
   | `UNSET→UNKNOWN`; `UNSET` on a legacy-flag SDK with no established default | **Warning** + operator action "establish the pinned SDK's documented default" |
   | `UNSET`, legacy-flag SDK defaulting off | **Warning**: unasserted; a major can flip it |
