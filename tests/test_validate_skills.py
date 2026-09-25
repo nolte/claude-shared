@@ -371,3 +371,116 @@ def test_version_flag_prints_the_recorded_validator_version(monkeypatch, capsys)
     assert v.main() == 0
     assert capsys.readouterr().out.strip() == f"validate_skills.py {v.VALIDATOR_VERSION}"
     assert v.VALIDATOR_VERSION.count(".") == 2
+
+
+# --- #667: targets and reported paths follow the caller's working directory ---
+# A consumer's pre-commit hook runs the validator from the consumer's repository
+# root and passes consumer-relative filenames, so neither may resolve against
+# this repository.
+
+_VALID_SKILL = (
+    "---\nname: report-create\n"
+    "description: Creates a short status report from the open issues. "
+    "Use when the user asks for a status report.\nphase: build\n---\n\n"
+    "# Report create\n\n## Why this is a skill, not an agent\n\n"
+    "- Interactive: the user reviews the draft inline.\n"
+)
+
+
+def _consumer_run(monkeypatch, tmp_path, rel, text, *args):
+    target = tmp_path / rel
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(text, encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(v, "RPI_UNADOPTED", [])
+    monkeypatch.setattr(v, "SPEC_FALLBACK_UNSTATED", [])
+    monkeypatch.setattr(v, "AGENTS_CHECKED", [])
+    monkeypatch.setattr(sys, "argv", ["validate_skills.py", *(args or (rel,))])
+    return v.main()
+
+
+def test_consumer_broken_skill_fails_and_names_the_cwd_relative_path(monkeypatch, tmp_path, capsys):
+    broken = "---\nname: x\ndescription: Read-only: reports things\n---\nbody\n"
+    assert _consumer_run(monkeypatch, tmp_path, "skills/x/SKILL.md", broken) == 1
+    critical = [line for line in capsys.readouterr().out.splitlines() if line.startswith("Critical")]
+    assert critical
+    for line in critical:
+        assert line.split()[1] == "skills/x/SKILL.md"
+
+
+def test_consumer_valid_skill_passes(monkeypatch, tmp_path):
+    assert _consumer_run(monkeypatch, tmp_path, "skills/report-create/SKILL.md", _VALID_SKILL) == 0
+
+
+def test_consumer_agents_tree_is_not_gated_by_the_hub_budget(monkeypatch, tmp_path):
+    # The consumer's `agents/` shares the key of the nolte-shared baseline; it must
+    # not be measured against that ceiling, however heavy its descriptions are.
+    monkeypatch.setitem(v.AGENT_DESC_BASELINE_CHARS, "agents", 1)
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "agents" / "a.md").write_text("---\nname: a\ndescription: long\n---\n", encoding="utf-8")
+    monkeypatch.chdir(tmp_path)
+    assert v.check_agent_description_budget(tmp_path / "agents") == []
+
+
+def test_path_outside_the_working_directory_is_reported_absolute(monkeypatch, tmp_path):
+    inside = tmp_path / "work"
+    inside.mkdir()
+    monkeypatch.chdir(inside)
+    outside = tmp_path / "elsewhere" / "SKILL.md"
+    assert v._display(outside) == outside.as_posix()
+    assert v._display(inside / "skills" / "x" / "SKILL.md") == "skills/x/SKILL.md"
+
+
+def test_default_targets_are_discovered_in_the_working_directory(monkeypatch, tmp_path):
+    # A consumer shipping only a root agents/ plus one plugin's agents/: the
+    # absent root skills/ must not be returned (it would abort with exit 2).
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "plugins" / "p" / "agents").mkdir(parents=True)
+    (tmp_path / "plugins" / "q").mkdir()
+    monkeypatch.chdir(tmp_path)
+    assert v.discover_default_targets() == ["agents/", "plugins/p/agents/"]
+
+
+def test_no_targets_and_nothing_discovered_is_a_usage_error(monkeypatch, tmp_path, capsys):
+    # An empty run would otherwise report "0 artifacts checked, no findings".
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["validate_skills.py"])
+    assert v.main() == 2
+    err = capsys.readouterr().err
+    assert err.startswith("ERROR: no targets given")
+    assert str(tmp_path) in err
+
+
+_BROKEN_AGENT = "---\nname: a\ndescription: Read-only: reports things\n---\nbody\n"
+
+
+def test_consumer_under_a_skills_named_ancestor_still_checks_agents(monkeypatch, tmp_path, capsys):
+    # Classification must use the cwd-relative segments: the absolute path of
+    # this consumer contains a `skills` segment above its agents/ tree.
+    repo = tmp_path / "skills" / "repo"
+    assert _consumer_run(monkeypatch, repo, "agents/a.md", _BROKEN_AGENT, "agents/") == 1
+    critical = [line for line in capsys.readouterr().out.splitlines() if line.startswith("Critical")]
+    assert critical
+    assert all(line.split()[1] == "agents/a.md" for line in critical)
+
+
+def test_nested_agent_markdown_file_target_triggers_the_tree_scan(monkeypatch, tmp_path, capsys):
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "agents" / "ok.md").write_text(_BROKEN_AGENT.replace("Read-only: r", "R"), encoding="utf-8")
+    rel = "agents/reviewer/notes.md"
+    assert _consumer_run(monkeypatch, tmp_path, rel, "# Notes\n") == 1
+    out = capsys.readouterr().out
+    hits = [line for line in out.splitlines() if "agent-management.nested-companion-markdown" in line]
+    assert len(hits) == 1
+    assert rel in hits[0]
+
+
+def test_agent_tree_scan_runs_once_for_several_file_targets(monkeypatch, tmp_path, capsys):
+    (tmp_path / "agents" / "reviewer").mkdir(parents=True)
+    (tmp_path / "agents" / "reviewer" / "notes.md").write_text("# Notes\n", encoding="utf-8")
+    assert _consumer_run(
+        monkeypatch, tmp_path, "agents/b.md", "---\nname: b\ndescription: Reports.\n---\n",
+        "agents/b.md", "agents/reviewer/notes.md", "agents/",
+    ) == 1
+    out = capsys.readouterr().out
+    assert out.count("agent-management.nested-companion-markdown") == 1

@@ -2,16 +2,23 @@
 # Claude Code plugin, per spec/project/project-structure/ §Python development.
 #
 # This repository ships a Claude Code plugin (skills, agents, specs, docs), not
-# an installable Python library: its Python surface is the repository's own
+# a published Python library: its Python surface is the repository's own
 # tooling (frontmatter/schema validators under scripts/, the docs catalog/
-# portfolio generators, and the eval-harness tests). There are therefore no
-# *runtime* package dependencies — requirements.txt is a documented placeholder
-# (per §Requirements file format) and the script toolchain lives in
-# requirements-dev.txt. Run everything inside a project-local virtual
+# portfolio generators, and the eval-harness tests). The repository itself has
+# no runtime dependencies — requirements.txt is a documented placeholder (per
+# §Requirements file format) and the script toolchain lives in
+# requirements-dev.txt. The one declared package dependency, PyYAML, belongs to
+# the `validate-skills` console script below: without it the strict-YAML
+# frontmatter checks would silently degrade to no-ops. Run everything inside a project-local virtual
 # environment (`task install`), never against system Python.
+#
+# The one installable piece is scripts/validate_skills.py, packaged as the
+# `validate-skills` console script so consuming repositories can run it as a
+# pre-commit hook (`.pre-commit-hooks.yaml`, `language: python`). Nothing else
+# is packaged; the mapping under [tool.setuptools] keeps it that way.
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]  # PEP 639 `license = "MIT"` expression
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -19,18 +26,30 @@ name = "nolte-shared-tooling"
 version = "0.1.4"
 description = "Repository tooling for the nolte-shared Claude Code plugin (validators, docs generators, eval harness). Not a published library."
 readme = "README.md"
-requires-python = ">=3.12"
+# Floor = the console script's contract for consumers (3.10 syntax, installed
+# by pre-commit on their interpreter); the hub's own tooling runs in its venv.
+requires-python = ">=3.10"
 license = "MIT"
+dependencies = ["PyYAML>=6"]
 authors = [{ name = "nolte", email = "nolte07@gmail.com" }]
 classifiers = [
   "Private :: Do Not Upload",
-  "Programming Language :: Python :: 3.12",
-  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
 ]
+
+[project.scripts]
+validate-skills = "validate_skills:main"
 
 [project.urls]
 Homepage = "https://github.com/nolte/claude-shared"
 Repository = "https://github.com/nolte/claude-shared"
+
+[tool.setuptools]
+# Package only the validator module; this also disables flat-layout
+# auto-discovery, which would otherwise reject the several top-level packages.
+package-dir = { "" = "scripts" }
+py-modules = ["validate_skills"]
+packages = []
 
 [tool.pytest.ini_options]
 # Migrated from the former pytest.ini so there is a single tooling-config source

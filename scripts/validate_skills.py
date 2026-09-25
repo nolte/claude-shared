@@ -18,6 +18,12 @@ Usage:
   python scripts/validate_skills.py skills/foo/  # checks one target
   python scripts/validate_skills.py --version    # prints the validator version
 
+Targets resolve against the current working directory, and findings name paths
+relative to it, so the same script validates a consuming repository when it
+runs there (the `validate-skills` pre-commit hook in `.pre-commit-hooks.yaml`).
+Only the hub-only checks (the per-plugin description budget) stay keyed to this
+repository's own layout and are inert elsewhere.
+
 Output is one finding per line, prefixed with severity in Title Case so
 downstream tooling can grep deterministically.
 """
@@ -30,10 +36,19 @@ from pathlib import Path
 
 try:
     import yaml
-except ModuleNotFoundError:  # pragma: no cover - PyYAML is a pinned dev dependency
+except ModuleNotFoundError:  # pragma: no cover - PyYAML is a declared package dependency
     yaml = None  # the strict-parse check degrades to a no-op rather than crashing
 
 REPO = Path(__file__).resolve().parent.parent
+
+
+def _display(path: Path) -> str:
+    """The path a finding names: relative to the caller's working directory,
+    or absolute when the path lies outside it."""
+    try:
+        return path.relative_to(Path.cwd()).as_posix()
+    except ValueError:
+        return path.as_posix()
 
 # Recorded in every skill-review plan's `## Scope` so a later re-review can
 # detect validator drift (`spec/claude/skill-review/` §"Checks derived from
@@ -780,7 +795,7 @@ def check_bash_justification(tools, desc: str | None, body: str, target: str) ->
 
 
 def check_skill(path: Path) -> list[Finding]:
-    rel = path.relative_to(REPO).as_posix()
+    rel = _display(path)
     text = path.read_text(encoding="utf-8")
     fm = parse_frontmatter(text)
     if fm is None:
@@ -845,7 +860,7 @@ def check_spec_fallback_backlog() -> list[Finding]:
 
 
 def check_agent(path: Path) -> list[Finding]:
-    rel = path.relative_to(REPO).as_posix()
+    rel = _display(path)
     text = path.read_text(encoding="utf-8")
     fm = parse_frontmatter(text)
     if fm is None:
@@ -886,7 +901,7 @@ def check_agent_tree(agents_dir: Path) -> list[Finding]:
     for md in sorted(agents_dir.rglob("*.md")):
         if md.parent == agents_dir:
             continue  # top-level agent file — the only legitimate shape
-        rel = md.relative_to(REPO).as_posix()
+        rel = _display(md)
         findings.append(Finding(
             "Critical", rel, "agent-management.nested-companion-markdown",
             "markdown nested under agents/ is registered as a phantom all-tools "
@@ -922,9 +937,15 @@ def check_agent_description_budget(agents_dir: Path) -> list[Finding]:
     frozen R-9 ceiling (baseline + headroom). Reuses the 4-char/token estimate.
 
     A plugin without a recorded baseline is not gated (returns no findings), so a
-    newly-added plugin doesn't fail closed before its baseline is captured.
+    newly-added plugin doesn't fail closed before its baseline is captured. An
+    agents/ tree outside this repository is never gated: the baselines describe
+    this repository's plugins, and a consuming repository's own `agents/` must not
+    be measured against the `nolte-shared` ceiling that shares its key.
     """
-    key = agents_dir.relative_to(REPO).as_posix()
+    try:
+        key = agents_dir.resolve().relative_to(REPO).as_posix()
+    except ValueError:
+        return []
     baseline = AGENT_DESC_BASELINE_CHARS.get(key)
     if baseline is None:
         return []
@@ -951,9 +972,13 @@ def discover_default_targets() -> list[str]:
     """Default scan scope: the root plugin's skills/ + agents/, plus every
     in-repo plugin under plugins/<name>/ that ships a skills/ or agents/ tree.
     Keeps `task test` and CI (which call this script with no arguments) covering
-    every plugin in a multi-plugin repo without per-plugin wiring."""
-    targets = ["skills/", "agents/"]
-    plugins_dir = REPO / "plugins"
+    every plugin in a multi-plugin repo without per-plugin wiring. Discovery runs
+    in the current working directory, where the targets are resolved; only roots
+    that exist there are returned, so a consumer shipping just one of them is
+    scanned rather than rejected as a missing path."""
+    cwd = Path.cwd()
+    targets = [f"{sub}/" for sub in ("skills", "agents") if (cwd / sub).is_dir()]
+    plugins_dir = cwd / "plugins"
     if plugins_dir.is_dir():
         for plugin in sorted(plugins_dir.iterdir()):
             if not plugin.is_dir():
@@ -964,31 +989,69 @@ def discover_default_targets() -> list[str]:
     return targets
 
 
+def _rel_parts(p: Path, root: Path, target: str) -> tuple[str, ...]:
+    """Path segments of a target below the working directory; for a target
+    outside it, the segments of the target string as given."""
+    try:
+        return p.relative_to(root).parts
+    except ValueError:
+        return Path(target).parts
+
+
+def _enclosing_agents_dir(p: Path, rel_parts: tuple[str, ...]) -> Path | None:
+    """The nearest `agents/` directory holding file target `p`, searched only
+    within its working-directory-relative segments; None outside any."""
+    for depth in range(len(rel_parts) - 2, -1, -1):
+        if rel_parts[depth] == "agents":
+            return p.parents[len(rel_parts) - 2 - depth]
+    return None
+
+
 def main() -> int:
     if sys.argv[1:] == ["--version"]:
         print(f"validate_skills.py {VALIDATOR_VERSION}")
         return 0
     targets = sys.argv[1:] or discover_default_targets()
+    root = Path.cwd()
+    if not targets:
+        # Nothing passed and nothing discovered: a green run here would check
+        # zero artifacts, so it is a usage error like an unknown path.
+        print(
+            f"ERROR: no targets given and none discovered in {root} "
+            f"(looked for skills/, agents/, plugins/<name>/skills/, "
+            f"plugins/<name>/agents/)",
+            file=sys.stderr,
+        )
+        return 2
     paths: list[Path] = []
+    # agents/ trees owed the recursive phantom-agent scan because a file inside
+    # them was passed (pre-commit invokes per file), keyed by resolved path.
+    file_agent_trees: dict[Path, Path] = {}
     for t in targets:
-        p = REPO / t
+        p = root / t
         if not p.exists():
             print(f"ERROR: path not found: {p}", file=sys.stderr)
             return 2
+        # Classify on the segments below the working directory, never on the
+        # absolute path: a consumer checked out under e.g. /home/me/skills/repo
+        # must not have its agents/ tree mistaken for a skills tree.
+        rel_parts = _rel_parts(p, root, t)
         if p.is_dir():
-            if "skills" in p.parts:
+            if "skills" in rel_parts:
                 paths.extend(sorted(p.rglob("SKILL.md")))
-            elif "agents" in p.parts:
+            elif "agents" in rel_parts:
                 paths.extend(sorted(p.glob("*.md")))
             else:
                 paths.extend(sorted(p.rglob("SKILL.md")))
                 paths.extend(sorted(p.glob("*.md")))
         else:
             paths.append(p)
+            agents_dir = _enclosing_agents_dir(p, rel_parts)
+            if agents_dir is not None:
+                file_agent_trees.setdefault(agents_dir.resolve(), agents_dir)
 
     all_findings: list[Finding] = []
     for path in paths:
-        rel = path.relative_to(REPO).as_posix()
         # Classify by path segment, not a root-anchored prefix, so a skill or
         # agent living under an in-repo plugin root (plugins/<name>/skills/...,
         # plugins/<name>/agents/...) is validated exactly like the root plugin's.
@@ -1002,10 +1065,16 @@ def main() -> int:
     # recursive tree check over every agents/ tree in scope — the root plugin's
     # and each in-repo plugin's (plugins/<name>/agents/).
     for t in targets:
-        p = REPO / t
+        p = root / t
         if p.is_dir() and p.name == "agents":
             all_findings.extend(check_agent_tree(p))
             all_findings.extend(check_agent_description_budget(p))
+            file_agent_trees.pop(p.resolve(), None)
+    # Per-file invocation (the consumer pre-commit hook): scan each agents/ tree
+    # that holds a passed file once, unless the tree itself was a target above.
+    # The description budget stays a directory-target (hub) check.
+    for agents_dir in file_agent_trees.values():
+        all_findings.extend(check_agent_tree(agents_dir))
 
     # Drain the spec-fallback backlog (#592) and the research-plan-implement adoption backlog.
     all_findings.extend(check_spec_fallback_backlog())

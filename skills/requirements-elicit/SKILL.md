@@ -50,7 +50,7 @@ The frontmatter `description` keeps the trigger lexicon English-only per `spec/c
 
 ## Precondition
 
-Before any operation, verify that `spec/project/requirements-elicitation/<canonical_language>.md` is reachable in the current project. If the spec is missing, stop and tell the user the methodology spec is the input to this skill — without it there is no authoritative definition of the dimensions, the KPI, or the gating thresholds. Do not improvise a replacement.
+Before any operation, locate `spec/project/requirements-elicitation/` — either in the target repo or, when absent, at `${CLAUDE_PLUGIN_ROOT}/spec/project/requirements-elicitation/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin). If neither is reachable, stop and ask the user which spec source to use; the methodology spec is the input to this skill — without it there is no authoritative definition of the dimensions, the KPI, or the gating thresholds. Do not improvise a replacement.
 
 ## The understanding KPI (load-bearing)
 
