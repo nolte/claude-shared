@@ -131,7 +131,16 @@ Per component: the SDK is declared in the dependency table **and** initialised a
 
 Two conditions, both required, reported separately:
 
-- **Default PII off** — an explicit `send_default_pii=False` / `sendDefaultPii: false` is a pass; an explicit `true` is a finding; an unset flag is reported as "relies on the SDK default", because that default is platform- and version-dependent and is therefore not a wired control.
+- **Default PII off** — judge the *effect* per PII category, never one literal. Two spellings are evidence: the legacy boolean (`send_default_pii` / `sendDefaultPii`) and the structured block (`data_collection` / `dataCollection`). Resolve the category set and each category's default from the pinned SDK's own source when it's installed in the audited working copy — JS: `node_modules/@sentry/core/build/types/types/datacollection.d.ts` and `build/esm/utils/data-collection/resolveDataCollectionOptions.js`; Python: `sentry_sdk/data_collection.py` and `sentry_sdk/consts.py` in the installed site-packages. Otherwise fall back to the table below. Record which source you used.
+
+  | SDK (measured 2026-09-25) | Evidence spelling honoured | Omitted category resolves to |
+  |---|---|---|
+  | Sentry JS ≤ 10 (`@sentry/core@10.75.3`) | legacy `sendDefaultPii` only | legacy flag decides |
+  | Sentry JS ≥ 11 (`@sentry/core@11.0.0`) | `dataCollection` only; `sendDefaultPii` removed, so a set flag has no effect | ON for `userInfo`, `cookies`, `httpHeaders`, `httpBodies`, `urlQueryParams`, `graphQL`, `genAI`, `databaseQueryData`, `queues`, `stackFrameVariables` |
+  | `sentry-sdk` Python with `data_collection` (`2.70.0`) | structured block; takes precedence over `send_default_pii` | collected for most categories |
+  | `sentry-sdk` Python without `data_collection` | legacy `send_default_pii` | legacy flag decides |
+
+  `frameContextLines` (JS, default 5) is a source-context line count, not a PII category; exclude it. Per-category states: `OFF` (explicit `false`, `[]`, or `"off"`), `RESTRICTED` (`{allow: […]}` / `{deny: […]}`, `"allowlist"` / `"denylist"`), `ON` (explicit `true` or the full target list), `UNSET→ON` (omitted, default established as collected by the source or table), `UNSET→UNKNOWN` (omitted, default not established). Overall state: `PASS: legacy flag off` only when the SDK honours the legacy flag, it's explicitly off, and no structured block is present; `PASS: every category OFF` only when a structured block is present and every PII category is `OFF`; `NOT ALL OFF` when a structured block is present and any category is otherwise; `EXPLICIT TRUE` when the honoured legacy flag is `true` and no structured block is present; `UNSET` when no honoured spelling is present. When both spellings are present, the structured block decides; report the legacy value as ignored rather than dropping it. A legacy flag on Sentry JS ≥ 11 is likewise reported as ignored, and the overall state follows the structured block or, without one, is `UNSET`.
 - **A before-send scrubbing hook is wired** — `before_send`/`beforeSend` (and, where the SDK offers it, the breadcrumb hook, since breadcrumbs are collected before anyone knows an error will occur). Record whether the hook filters by **allow-list** (keep a known-safe set) or **deny-list**; the allow-list preference is advisory, not mandatory.
 
 Check only that scrubbing is **wired**. Never decide whether a specific field is personal data and never render the leak verdict — both belong to `gdpr-data-protection-reviewer`.
@@ -173,7 +182,7 @@ Declared stage vocabulary: <values + where declared | NOT DECLARED>
 - Dev/local paths pinning a production value — <clean | PROD VALUE PINNED: <value> | DSN LITERAL ON LOCAL PATH> [static] [<file:line>]
 - release tagging — <present: <source> (fallback: <value>) | STATIC CONSTANT | MISSING> [static] [<file:line>]; deploy-time value [runtime-verify]
 - Sampling decision — <explicit: <rate> | SDK DEFAULT UNTOUCHED> [static] [<file:line>]
-- PII: default-PII off — <explicit false | UNSET (relies on SDK default) | EXPLICIT TRUE> [static] [<file:line>]
+- PII: default-PII off — <PASS: legacy flag off | PASS: every category OFF | NOT ALL OFF: <categories> | EXPLICIT TRUE | UNSET>; evidence: <legacy flag | structured block | none> (legacy flag ignored: <value>, <structured block precedence | removed in JS ≥ 11>); categories: <name=OFF|RESTRICTED|ON|UNSET→ON|UNSET→UNKNOWN, …>; category source: <SDK package@version> via <installed source: <path> | body table> [static] [<file:line> evidence, <file:line> category source]
 - PII: before-send scrubbing wired — <present (allow-list | deny-list), breadcrumbs <covered | not covered> | MISSING> [static] [<file:line>]  (PII-class/verdict → gdpr-data-protection-reviewer)
 - No log-sink misuse — <PASS | FAIL: <integration/level>> [static] [<file:line>]; actual event mix [runtime-verify]
 
@@ -217,5 +226,6 @@ If a dependency probe fails, record the command and a stderr excerpt under `## H
 - Never statically pass or fail a `[runtime-verify]` item (events arriving, alerts firing, triage adherence, server-side retention); tag it and leave it for a live check.
 - Never re-report the browser `error`/`unhandledrejection` listener floor, the telemetry pillars, cardinality, or the third-party floor — all owned by `observability-audit-scanner`; your global-handlers check is limited to the SDK's own integrations not being disabled.
 - Never render the PII-class definition or the GDPR leak verdict (owned by `gdpr-data-protection-reviewer`); check only that scrubbing is wired.
+- Never pass default-PII off on a literal the pinned SDK ignores or on a single flag while a structured `data_collection` / `dataCollection` block decides; resolve the per-category effect and name the category source.
 - Always attribute every finding to its component and, where a line is known, to `file:line`, and tag each `[static]` or `[runtime-verify]`.
 - Never assign the verdict or severity, never author the remediation plan, and never call the `Skill` tool or dispatch sibling agents.

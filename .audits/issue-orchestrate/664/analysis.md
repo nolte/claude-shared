@@ -96,3 +96,6 @@ P3 ; P1 → P2 (P3 independent).
 none — resolved 2026-09-25: RESTRICTED categories (allow or deny list) rule as **Warning** (operator decision).
 
 ## Dispatch log
+
+2026-09-25 P3 via skill nolte-shared:spec (operation 2, update) — evidence sentence added to spec/project/error-tracking/en.md:52 and de.md:52; restatements walked (AC :103 and check set :118 phrase "default-PII off" and stay consistent; no count changed); structure EN/DE 69 bullets, 11 AC, 15 headings each; pre-commit Vale 0 errors, markdownlint Passed.
+2026-09-25 P1 dispatched to nolte-claude-dev:claude-plugin-developer — Phase 5 judges the effect per PII category with a dated per-major table (JS ≤ 10, JS ≥ 11, Python with/without data_collection) and installed-source resolution; new output vocabulary. **Refutation recorded:** rule (a) "legacy flag off and no block → PASS" is a false PASS on Sentry JS ≥ 11, where `sendDefaultPii` is removed and ignored; restricted to SDKs that still honour the flag (JS ≤ 10, Python), JS ≥ 11 reports the flag as ignored and UNSET; new hard rule. Spec sentence (P3) aligned: "where the pinned SDK still honours it". validate_skills 39 artifacts 0C/0W/0S/1I, pre-commit Passed.
