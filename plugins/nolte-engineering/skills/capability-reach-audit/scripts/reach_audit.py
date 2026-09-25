@@ -9,7 +9,7 @@ that may, compares each raw observation against the probe's typed expectation,
 and writes ``<repo>/.audits/capability-reach/<YYYY-MM-DD>.md``.
 
 The runner, never the probe, decides the class. A probe file has no field in
-which to state a verdict (schemas/reach-probe-v1.1.schema.yaml), and the
+which to state a verdict (schemas/reach-probe-v1.2.schema.yaml), and the
 observation step's exit code alone is never read as success: only its stdout,
 parsed as a count or a set, is the observation.
 
@@ -136,6 +136,16 @@ _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
 BLOB_PREFIX = "blob:"
 _BLOB_ANCHOR_RE = re.compile(r"^blob:[0-9a-f]{40}$")
 BLOB_FORM = "blob:<40 hex digits>"
+# A section anchor (probe schema v1.2): the SHA-256 over the locators and digests
+# in declaration.sections (section_anchor()). An edit elsewhere in the Markdown
+# declaration leaves every anchored section, and so the probe, unchanged.
+SECTIONS_PREFIX = "sections:"
+_SECTIONS_ANCHOR_RE = re.compile(r"^sections:[0-9a-f]{64}$")
+SECTIONS_FORM = "sections:<64 hex digits>"
+SECTION_KINDS = ("heading", "row")
+# approval.mode: a re-confirmation re-approves an unchanged probe after its
+# declaration changed; anything but the anchor and the approval moving is weakened.
+MODE_RECONFIRMED = "reconfirmed"
 
 # Exit codes
 EXIT_OK = 0
@@ -185,6 +195,8 @@ REASON_NOT_CONSTRUCTIBLE = "not constructible"
 REASON_DIGEST_MISMATCH = "approval does not cover the current observation step"
 NOTE_NO_DIGEST = "approval carries no observation digest"
 REASON_SILENT = "observation step printed nothing"
+NOTE_RECONFIRMED = "approval is a re-confirmation, not a re-derivation"
+PROVENANCE_RECONFIRMED = "Probes whose approval is a re-confirmation rather than a re-derivation"
 
 NOT_CONSTRUCTIBLE_REASONS = (
     "scope_not_countable",
@@ -196,14 +208,14 @@ NOT_CONSTRUCTIBLE_REASONS = (
 # Per-tier table bucket of the entries that have no tier because they have no probe.
 TIER_NONE = "none (not constructible)"
 
-# The structural part of schemas/reach-probe-v1.1.schema.yaml (annotations
+# The structural part of schemas/reach-probe-v1.2.schema.yaml (annotations
 # stripped). The schemas/ tree ships with the nolte-shared payload, not with this
 # plugin, so the runner carries its own copy; tests/test_reach_audit.py fails when
 # the two drift apart.
 _TASK_NAME = {"type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_:.-]*$"}
 PROBE_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/nolte/claude-shared/blob/main/schemas/reach-probe-v1.1.schema.yaml",
+    "$id": "https://github.com/nolte/claude-shared/blob/main/schemas/reach-probe-v1.2.schema.yaml",
     "type": "object",
     "required": ["id", "declaration", "tier", "expected", "derived_from", "observe"],
     "additionalProperties": False,
@@ -230,7 +242,7 @@ PROBE_SCHEMA: dict[str, Any] = {
             "required": ["source", "location"],
             "additionalProperties": False,
             "not": {"required": ["path", "inherited_spec"]},
-            "dependentRequired": {"hub": ["inherited_spec"]},
+            "dependentRequired": {"hub": ["inherited_spec"], "sections": ["path"]},
             "properties": {
                 "source": {"type": "string", "enum": list(DECLARATION_SOURCES)},
                 "path": {"type": "string", "minLength": 1},
@@ -240,6 +252,18 @@ PROBE_SCHEMA: dict[str, Any] = {
                 },
                 "hub": {"type": "string", "minLength": 1},
                 "location": {"type": "string", "minLength": 1},
+                "sections": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/Section"}},
+            },
+        },
+        "Section": {
+            "type": "object",
+            "required": ["digest"],
+            "additionalProperties": False,
+            "oneOf": [{"required": ["heading"]}, {"required": ["row"]}],
+            "properties": {
+                "heading": {"type": "string", "pattern": r"^[^\s]*[^\s.]$"},
+                "row": {"type": "string", "pattern": r"^[^|\s]([^|]*[^|\s])?$"},
+                "digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
             },
         },
         "CountExpectation": {
@@ -278,6 +302,7 @@ PROBE_SCHEMA: dict[str, Any] = {
                 },
                 "approved_by": {"type": "string", "minLength": 1},
                 "observation_digest": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+                "mode": {"type": "string", "enum": ["derived", MODE_RECONFIRMED]},
             },
         },
         "Observe": {
@@ -292,6 +317,12 @@ PROBE_SCHEMA: dict[str, Any] = {
         "TaskName": _TASK_NAME,
     },
 }
+
+# The manifest's declaration is the probe's without the v1.2 section locators:
+# a not-constructible entry has no probe to anchor on sections.
+_MANIFEST_DECLARATION: dict[str, Any] = copy.deepcopy(PROBE_SCHEMA["$defs"]["Declaration"])
+del _MANIFEST_DECLARATION["properties"]["sections"]
+del _MANIFEST_DECLARATION["dependentRequired"]["sections"]
 
 # The structural part of schemas/reach-not-constructible-v1.0.schema.yaml, embedded
 # for the same reason as PROBE_SCHEMA and pinned to it by the same parity test.
@@ -321,7 +352,7 @@ NOT_CONSTRUCTIBLE_SCHEMA: dict[str, Any] = {
                 },
             },
         },
-        "Declaration": PROBE_SCHEMA["$defs"]["Declaration"],
+        "Declaration": _MANIFEST_DECLARATION,
     },
 }
 
@@ -615,6 +646,28 @@ class Git:
         res = self.run("show", f"{commit}:{path}")
         return res.stdout if res.returncode == 0 else None
 
+    def read_blob(self, blob: str) -> bytes | None:
+        """The exact bytes of ``blob``: a section digest covers line endings too."""
+        if not _SHA_RE.match(blob):
+            return None
+        try:
+            res = subprocess.run(  # noqa: S603 - fixed argv, no shell
+                ["git", "-C", str(self.repo), "cat-file", "blob", blob],
+                capture_output=True,
+                timeout=GIT_TIMEOUT_SECONDS,
+                check=False,
+            )
+        except FileNotFoundError as exc:
+            raise AuditError("`git` not found on PATH; the runner reads the target's history with it.") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise AuditError(f"`git cat-file blob {blob}` timed out after {GIT_TIMEOUT_SECONDS}s.") from exc
+        return res.stdout if res.returncode == 0 else None
+
+    def file_bytes(self, commit: str, path: str) -> bytes | None:
+        """The bytes of the file ``path`` at ``commit``, or None when it is absent or no file."""
+        blob = self.blob_at(commit, path)
+        return self.read_blob(blob) if blob is not None else None
+
 
 def require_local_working_copy(raw: str) -> Path:
     """R13: the target must be a local git working copy, checked out, with history."""
@@ -805,6 +858,166 @@ def load_manifest(repo: Path, yaml: Any, validator_cls: Any) -> Manifest | None:
 
 
 # --------------------------------------------------------------------------- #
+# Markdown sections (section anchors, schema v1.2)
+# --------------------------------------------------------------------------- #
+_FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
+_ATX_RE = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
+_ATX_CLOSING_RE = re.compile(r"(?:^|[ \t]+)#+$")
+_ROW_RE = re.compile(r"^ {0,3}\|(.*)$")
+_CELL_SPLIT_RE = re.compile(r"(?<!\\)\|")
+
+
+def _markdown_structure(lines: list[bytes]) -> tuple[list[tuple[int, int, str]], list[tuple[int, str]]]:
+    """``(index, level, first token)`` of each ATX heading and ``(index, first cell)`` of each pipe row.
+
+    Lines inside fenced code blocks and a leading front-matter block are neither.
+    A setext heading is no heading here, and a table row must start with a pipe:
+    a locator that only hits one of them does not resolve, rather than cutting a
+    section by a rule the document's renderer may not share.
+    """
+    text = [raw.decode("utf-8", "replace").rstrip("\r\n") for raw in lines]
+    start = 0
+    if text and text[0].rstrip() == "---":
+        closing = next((i for i in range(1, len(text)) if text[i].rstrip() in ("---", "...")), None)
+        start = closing + 1 if closing is not None else 0
+    headings: list[tuple[int, int, str]] = []
+    rows: list[tuple[int, str]] = []
+    fence: tuple[str, int] | None = None
+    for index in range(start, len(text)):
+        line = text[index]
+        opener = _FENCE_RE.match(line)
+        if fence is not None:
+            if opener and opener.group(1)[0] == fence[0] and len(opener.group(1)) >= fence[1] \
+                    and not opener.group(2).strip():
+                fence = None
+            continue
+        if opener and not (opener.group(1)[0] == "`" and "`" in opener.group(2)):
+            fence = (opener.group(1)[0], len(opener.group(1)))
+            continue
+        heading = _ATX_RE.match(line)
+        if heading:
+            title = _ATX_CLOSING_RE.sub("", heading.group(2) or "").strip()
+            token = title.split()[0].removesuffix(".") if title else ""
+            headings.append((index, len(heading.group(1)), token))
+            continue
+        row = _ROW_RE.match(line)
+        if row:
+            cells = _CELL_SPLIT_RE.split(row.group(1))
+            if len(cells) >= 2:
+                rows.append((index, cells[0].strip()))
+    return headings, rows
+
+
+def find_sections(content: bytes, kind: str, locator: str) -> list[bytes]:
+    """Every section of the Markdown ``content`` that the locator selects, as exact bytes.
+
+    ``heading``: the ATX heading whose first token, one trailing dot stripped,
+    equals ``locator``, through the line before the next ATX heading of the same
+    or a higher level (deeper headings stay inside), or the end of the file.
+    ``row``: the pipe-table row whose first cell, trimmed, equals ``locator``.
+    One element is a resolved locator; none is not found; more is ambiguous.
+    Lines keep their line endings, so the bytes are what the digest covers.
+    """
+    if not locator:
+        return []
+    lines = content.splitlines(keepends=True)
+    headings, rows = _markdown_structure(lines)
+    if kind == "heading":
+        found = []
+        for n, (index, level, token) in enumerate(headings):
+            if token != locator:
+                continue
+            end = next((i for i, lvl, _ in headings[n + 1:] if lvl <= level), len(lines))
+            found.append(b"".join(lines[index:end]))
+        return found
+    if kind == "row":
+        return [lines[index] for index, first in rows if first == locator]
+    raise ValueError(f"unknown locator kind {kind!r}")
+
+
+def section_digest(section: bytes) -> str:
+    return hashlib.sha256(section).hexdigest()
+
+
+def _locators(sections: object) -> list[tuple[str, str, str]] | None:
+    """``(kind, locator, digest)`` per entry of declaration.sections, or None when malformed.
+
+    Historical probe revisions are not schema-validated, so the shape is checked here.
+    """
+    if not isinstance(sections, list) or not sections:
+        return None
+    out = []
+    for item in sections:
+        if not isinstance(item, dict) or not isinstance(item.get("digest"), str):
+            return None
+        kinds = [k for k in item if k != "digest"]
+        if len(kinds) != 1 or kinds[0] not in SECTION_KINDS or not isinstance(item[kinds[0]], str):
+            return None
+        out.append((kinds[0], item[kinds[0]], item["digest"]))
+    return out
+
+
+def section_anchor(sections: object) -> str:
+    """The derived_from of a section-anchored probe: ``sections:<sha256>``.
+
+    Canonical input: ``[[kind, locator, digest], ...]`` in the order of
+    declaration.sections, serialised with ``json.dumps(obj, separators=(",", ":"),
+    ensure_ascii=False)`` and encoded UTF-8. Any locator or digest change moves
+    it, so the baseline walk sees a re-anchoring as a new derivation.
+    """
+    locators = _locators(sections)
+    if locators is None:
+        raise ValueError("declaration.sections is not a list of heading or row locators with a digest")
+    canonical = json.dumps([list(entry) for entry in locators], separators=(",", ":"), ensure_ascii=False)
+    return SECTIONS_PREFIX + hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _is_section_anchor(derived_from: str) -> bool:
+    """Whether ``derived_from`` claims the section-anchor form; well-formed or not."""
+    return derived_from.startswith(SECTIONS_PREFIX)
+
+
+def _section_anchor_problem(derived_from: str, sections: object) -> str | None:
+    """Why ``derived_from`` and ``declaration.sections`` are no consistent section anchor, or None."""
+    shown = safe_text(derived_from[:21], 40)
+    if sections is None:
+        if _is_section_anchor(derived_from):
+            return f"derived_from {shown} is a section anchor, but declaration.sections is absent"
+        return None
+    if not _is_section_anchor(derived_from):
+        return f"declaration.sections needs derived_from of the form {SECTIONS_FORM}, not {shown}"
+    if not _SECTIONS_ANCHOR_RE.match(derived_from):
+        return f"derived_from {safe_text(derived_from, 80)!r} is not a section anchor of the form {SECTIONS_FORM}"
+    locators = _locators(sections)
+    if locators is None:
+        return "declaration.sections is not a list of heading or row locators with a digest"
+    seen: set[tuple[str, str]] = set()
+    for kind, locator, _ in locators:
+        if (kind, locator) in seen:
+            return f"declaration.sections lists {kind} {safe_text(locator, 80)} more than once"
+        seen.add((kind, locator))
+    if section_anchor(sections) != derived_from:
+        return f"derived_from {shown} does not match the digests in declaration.sections"
+    return None
+
+
+def _section_mismatches(git: Git, commit: str, rel: str, locators: list[tuple[str, str, str]]) -> list[str]:
+    """Per locator whose section at ``commit`` is not its recorded digest: why, naming the locator."""
+    content = git.file_bytes(commit, rel)
+    problems = []
+    for kind, locator, digest in locators:
+        found = find_sections(content, kind, locator) if content is not None else []
+        name = f"{kind} {safe_text(locator, 80)}"
+        if not found:
+            problems.append(f"{name} not found")
+        elif len(found) > 1:
+            problems.append(f"{name} is ambiguous ({len(found)} matches)")
+        elif section_digest(found[0]) != digest:
+            problems.append(f"{name} changed")
+    return problems
+
+
+# --------------------------------------------------------------------------- #
 # Change detection (R2, R3, R6)
 # --------------------------------------------------------------------------- #
 @dataclass
@@ -829,11 +1042,12 @@ def _anchor_key(doc: dict[str, Any]) -> object:
     A content anchor names the declaration's content, so a pure rename keeps its
     value; re-deriving after one changes only ``declaration.path``. Keying the
     derivation on the pair lets that commit record a re-derivation (checked by
-    _rebaseline_problem) instead of reading as a later probe change. A commit
-    anchor keys on ``derived_from`` alone, exactly as before v1.1.
+    _rebaseline_problem) instead of reading as a later probe change. A section
+    anchor is keyed the same way; its value covers every locator and digest. A
+    commit anchor keys on ``derived_from`` alone, exactly as before v1.1.
     """
     derived_from = doc.get("derived_from")
-    if isinstance(derived_from, str) and _is_content_anchor(derived_from):
+    if isinstance(derived_from, str) and (_is_content_anchor(derived_from) or _is_section_anchor(derived_from)):
         declaration = doc.get("declaration")
         path = declaration.get("path") if isinstance(declaration, dict) else None
         return (derived_from, path)
@@ -983,6 +1197,70 @@ def _continuation_problem(git: Git, moved: str, earlier: list[tuple[str, str]], 
     return None
 
 
+def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], rel: str, recording: str,
+                  baseline: str) -> tuple[str | None, str | None, bool]:
+    """Prove the previous anchor where it was recorded; say whether its content moved since.
+
+    Returns ``(problem, before, changed)``: why the previous anchor is unproven
+    (or None), the blob of ``rel`` the previous derivation saw, and whether the
+    anchored content differs at ``baseline``. A content anchor must be the
+    declaration's blob at ``recording``; a commit anchor's blob must equal it, or,
+    when a squash merge dropped the commit, the blob at ``recording`` stands in;
+    a section anchor's digests must be its sections at ``recording``, and it
+    changed when any of them differs at ``baseline`` or no longer resolves.
+    An anchor that never matched the declaration shows no change, and accepting
+    it would let one commit record a weakening under a made-up anchor and the
+    next restore the real one.
+    """
+    recorded = git.blob_at(recording, rel)
+    if _is_section_anchor(prev_df):
+        sections = prior_doc.get("declaration", {}).get("sections") if isinstance(
+            prior_doc.get("declaration"), dict) else None
+        why = _section_anchor_problem(prev_df, sections)
+        shown = safe_text(prev_df[:12], 40)
+        if why:
+            return (f"{moved}, but the previous derived_from {shown} is no consistent section anchor ({why}), "
+                    "so no declaration change can be shown"), None, False
+        locators = _locators(sections) or []
+        if _section_mismatches(git, recording, rel, locators):
+            return (f"{moved}, but the previous derived_from {shown} is not the content of its sections of "
+                    f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change "
+                    "can be shown"), None, False
+        return None, recorded, bool(_section_mismatches(git, baseline, rel, locators))
+    if _is_content_anchor(prev_df):
+        if not _BLOB_ANCHOR_RE.match(prev_df):
+            return (f"{moved}, but the previous derived_from is not a content anchor of the form {BLOB_FORM}, "
+                    "so no declaration change can be shown"), None, False
+        before: str | None = prev_df[len(BLOB_PREFIX):]
+        if before != recorded:
+            return (f"{moved}, but the previous derived_from {safe_text(prev_df[:12], 40)} is not the content of "
+                    f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change can be "
+                    "shown"), None, False
+    else:
+        prev_commit = git.resolve_commit(prev_df)
+        if prev_commit is None:
+            # A squash merge drops the commit a v1.0 derivation named, but the
+            # commit that recorded it is still here: the declaration's content
+            # there is what the derivation saw, and what a change is shown against.
+            if recorded is None:
+                return (f"{moved}, but the previous derived_from cannot be resolved to a commit and "
+                        f"{safe_text(rel)} did not exist at {recording[:12]}, where it was recorded, "
+                        "so no declaration change can be shown"), None, False
+            before = recorded
+        else:
+            before = git.blob_at(prev_commit, rel)
+            if before != recorded:
+                return (f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
+                        f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was recorded, "
+                        "so no declaration change can be shown"), None, False
+    return None, before, git.blob_at(baseline, rel) != before
+
+
+def _unchanged_since(prev_df: str, rel: str) -> str:
+    what = f"the anchored sections of {safe_text(rel)}" if _is_section_anchor(prev_df) else safe_text(rel)
+    return f"{what} did not change in between"
+
+
 def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str, baseline: str, rel: str,
                                 earlier: list[tuple[str, str]], yaml: Any, prior_doc: dict[str, Any],
                                 new_doc: dict[str, Any]) -> str | None:
@@ -991,22 +1269,17 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     No commit named by either anchor has to exist, so a squash merge that dropped
     the derivation commits leaves the check intact. The move is a re-derivation
     when the new anchor is the declaration's content at the recording commit and
-    the previously anchored file (``rel``, read from the probe's previous
-    revision) no longer holds the previously anchored content there. A previous
-    commit anchor (migration from v1.0) is compared by its content at that commit;
-    when a squash merge dropped the commit, by the declaration's content at the
-    commit that recorded the derivation, which is what the derivation saw.
-
-    The previous anchor is itself proven first: it must be the declaration's
-    content at the commit that recorded it. An anchor that never matched the
-    declaration shows no change, and accepting it would let one commit record a
-    weakening under a made-up anchor and the next restore the real one.
+    the previously anchored content (``rel``, read from the probe's previous
+    revision) changed since it was recorded (_prior_anchor proves the previous
+    anchor first, whichever form it has).
 
     Two moves re-approve nothing and so are clean only as continuations of a
     clean previous derivation (_continuation_problem): a pure move of the
     declaration (same blob, new path, nothing else changed but the approval
-    stamp its re-derive writes) and a pure commit-to-content migration (the old
-    commit's content, same path, nothing else changed but the approval stamp).
+    stamp its re-derive writes) and a pure migration onto the content anchor
+    (from a commit anchor: the old commit's content; from a section anchor:
+    no anchored section changed; same path, nothing else changed but the
+    approval stamp and, for a section anchor, declaration.sections).
     """
     if not _BLOB_ANCHOR_RE.match(new_df):
         return f"{moved}, but {safe_text(new_df, 60)} is not a content anchor of the form {BLOB_FORM}"
@@ -1020,52 +1293,130 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
         return f"{moved}, but {safe_text(new_df[:12], 40)} is not the content of {safe_text(new_rel)} at {baseline[:12]}"
     span = _run_length(git, earlier, yaml)
     recording = earlier[span - 1][0]
-    recorded = git.blob_at(recording, rel)
-    if _is_content_anchor(prev_df):
-        if not _BLOB_ANCHOR_RE.match(prev_df):
-            return (f"{moved}, but the previous derived_from is not a content anchor of the form {BLOB_FORM}, "
-                    "so no declaration change can be shown")
-        before: str | None = prev_df[len(BLOB_PREFIX):]
-        if before != recorded:
-            return (f"{moved}, but the previous derived_from {safe_text(prev_df[:12], 40)} is not the content of "
-                    f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change can be shown")
+    problem, before, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
+    if problem:
+        return problem
+    # `derive` re-stamps the approval on every run, a migration included.
+    if _is_section_anchor(prev_df):
+        relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
+        pure = not changed
     else:
-        prev_commit = git.resolve_commit(prev_df)
-        if prev_commit is None:
-            # A squash merge drops the commit a v1.0 derivation named, but the
-            # commit that recorded it is still here: the declaration's content
-            # there is what the derivation saw, and what a change is shown against.
-            if recorded is None:
-                return (f"{moved}, but the previous derived_from cannot be resolved to a commit and "
-                        f"{safe_text(rel)} did not exist at {recording[:12]}, where it was recorded, "
-                        "so no declaration change can be shown")
-            before = recorded
-        else:
-            before = git.blob_at(prev_commit, rel)
-            if before != recorded:
-                return (f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
-                        f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was recorded, "
-                        "so no declaration change can be shown")
-        # `derive` re-stamps the approval on every run, a migration included.
-        migration = (("derived_from",), ("approval",))
-        if (new_blob == before and new_rel == rel
-                and _without(new_doc, *migration) == _without(prior_doc, *migration)):
-            return _continuation_problem(git, moved, earlier, span, yaml)
-    if git.blob_at(baseline, rel) == before:
-        return f"{moved}, but {safe_text(rel)} did not change in between"
-    if prev_df == new_df:
-        # The re-derive that follows a rename re-approves the probe, so the
-        # approval stamp may move with the path; the observation digest inside it
-        # is still checked on every run.
-        pure_move = (("declaration", "path"), ("approval",))
-        if _without(new_doc, *pure_move) != _without(prior_doc, *pure_move):
-            return (f"{moved}, but the same commit changed the probe beyond declaration.path, "
-                    "which a pure move of the declaration does not justify")
+        relabel = (("derived_from",), ("approval",))
+        pure = new_blob == before
+    if pure and new_rel == rel and _without(new_doc, *relabel) == _without(prior_doc, *relabel):
         return _continuation_problem(git, moved, earlier, span, yaml)
+    if not changed:
+        return f"{moved}, but {_unchanged_since(prev_df, rel)}"
+    if prev_df == new_df:
+        return _pure_move_problem(git, moved, earlier, span, yaml, prior_doc, new_doc)
     if new_rel != rel and git.blob_at(recording, new_rel) == new_blob:
         return (f"{moved}, but {safe_text(new_rel)} already held {safe_text(new_df[:12], 40)} when the previous "
                 f"derivation was recorded in {recording[:12]}, so re-pointing at it shows no declaration change")
     return None
+
+
+def _pure_move_problem(git: Git, moved: str, earlier: list[tuple[str, str]], span: int, yaml: Any,
+                       prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
+    """Same anchor, new declaration path: clean only as a continuation that changed nothing else.
+
+    The re-derive that follows a rename re-approves the probe, so the approval
+    stamp may move with the path; the observation digest inside it is still
+    checked on every run.
+    """
+    pure_move = (("declaration", "path"), ("approval",))
+    if _without(new_doc, *pure_move) != _without(prior_doc, *pure_move):
+        return (f"{moved}, but the same commit changed the probe beyond declaration.path, "
+                "which a pure move of the declaration does not justify")
+    return _continuation_problem(git, moved, earlier, span, yaml)
+
+
+def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str, baseline: str, rel: str,
+                                earlier: list[tuple[str, str]], yaml: Any, prior_doc: dict[str, Any],
+                                new_doc: dict[str, Any]) -> str | None:
+    """Why moving ``derived_from`` onto the section anchor ``new_df`` is no re-derivation.
+
+    The same strength as a content anchor, per section: the new digests must be
+    the sections at the recording commit (each locator resolving to exactly one
+    section, so an ambiguous locator cannot anchor), the previous anchor must be
+    proven where it was recorded (_prior_anchor), and the previously anchored
+    content must have changed since. Two moves re-approve nothing and are clean
+    only as continuations of a clean previous derivation: the migration of a
+    content or commit anchor onto sections while the file is unchanged (only
+    derived_from, declaration.sections, and the approval stamp may differ), and
+    a pure move of the declaration file with the same sections.
+    """
+    new_decl = new_doc.get("declaration")
+    new_decl = new_decl if isinstance(new_decl, dict) else {}
+    raw_new = new_decl.get("path")
+    new_rel = _repo_relative(raw_new) if isinstance(raw_new, str) and raw_new else None
+    if new_rel is None:
+        return f"{moved}, but a section anchor needs a declaration file inside the repository"
+    why = _section_anchor_problem(new_df, new_decl.get("sections"))
+    if why:
+        return f"{moved}, but {why}"
+    locators = _locators(new_decl.get("sections")) or []
+    mismatches = _section_mismatches(git, baseline, new_rel, locators)
+    if mismatches:
+        return (f"{moved}, but the recorded sections are not the content of {safe_text(new_rel)} at "
+                f"{baseline[:12]}: {'; '.join(mismatches)}")
+    span = _run_length(git, earlier, yaml)
+    recording = earlier[span - 1][0]
+    problem, _, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
+    if problem:
+        return problem
+    relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
+    if (not changed and not _is_section_anchor(prev_df) and new_rel == rel
+            and _without(new_doc, *relabel) == _without(prior_doc, *relabel)):
+        return _continuation_problem(git, moved, earlier, span, yaml)
+    if not changed:
+        return f"{moved}, but {_unchanged_since(prev_df, rel)}"
+    if prev_df == new_df:
+        return _pure_move_problem(git, moved, earlier, span, yaml, prior_doc, new_doc)
+    if new_rel != rel and not _section_mismatches(git, recording, new_rel, locators):
+        return (f"{moved}, but {safe_text(new_rel)} already held these sections when the previous derivation "
+                f"was recorded in {recording[:12]}, so re-pointing at it shows no declaration change")
+    return None
+
+
+def _reconfirm_view(doc: dict[str, Any] | None) -> dict[str, Any]:
+    """What a re-confirmation must leave as it was: the probe without its anchor, approval, and digests."""
+    view = copy.deepcopy(doc) if isinstance(doc, dict) else {}
+    view.pop("derived_from", None)
+    view.pop("approval", None)
+    declaration = view.get("declaration")
+    if isinstance(declaration, dict) and isinstance(declaration.get("sections"), list):
+        declaration["sections"] = [{k: v for k, v in item.items() if k != "digest"} if isinstance(item, dict)
+                                   else item for item in declaration["sections"]]
+    return view
+
+
+def _reconfirmation_problem(git: Git, moved: str, earlier: list[tuple[str, str]], yaml: Any,
+                            new_doc: dict[str, Any]) -> str | None:
+    """Why the baseline's re-confirmation is more than a re-approval of the previous derivation, or None.
+
+    A re-confirmation (approval.mode reconfirmed) says the probe still holds
+    after its declaration changed. So against the derivation it re-confirms,
+    only derived_from, the section digests, and the approval may differ; a
+    changed expected, observe, tier, environment, or declaration target
+    (path, location, locators) is a weakening. It inherits that derivation, so
+    it is clean only as a continuation of it (_continuation_problem), which
+    also keeps a weakening committed in between from being adopted.
+    """
+    span = _run_length(git, earlier, yaml)
+    recording = earlier[span - 1]
+    before, after = _reconfirm_view(_probe_doc(git, recording, yaml)), _reconfirm_view(new_doc)
+    changed: list[str] = []
+    for key in sorted(set(before) | set(after)):
+        old, new = before.get(key), after.get(key)
+        if key == "declaration" and isinstance(old, dict) and isinstance(new, dict):
+            changed += [f"declaration.{k}" for k in sorted(set(old) | set(new)) if old.get(k) != new.get(k)]
+        elif old != new:
+            changed.append(key)
+    if changed:
+        return (f"{moved}, but a re-confirmation may change only derived_from, the section digests and approval, "
+                f"and it also changed {safe_text(', '.join(changed), 200)} against the derivation recorded in "
+                f"{recording[0][:12]}")
+    return _continuation_problem(git, moved, earlier, span, yaml)
 
 
 def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
@@ -1086,8 +1437,11 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     previous one's ancestry; an inherited spec needs the pin in
     spec/.spec-config.yml to have moved to the new value; an external anchor can't
     show a change, so its re-baseline is never accepted. A move onto a content
-    anchor is judged by content instead (_content_rebaseline_problem); ``new_doc``
-    is the probe document the baseline recorded.
+    anchor is judged by content instead (_content_rebaseline_problem), a move onto
+    a section anchor by its sections (_section_rebaseline_problem); ``new_doc``
+    is the probe document the baseline recorded. A move recorded as a
+    re-confirmation must, on top, leave the probe itself as it was
+    (_reconfirmation_problem).
     """
     prior_commit, _ = earlier[0]
     moved = f"{baseline[:12]} moved derived_from"
@@ -1100,12 +1454,27 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     decl = decl if isinstance(decl, dict) else {}
     new_decl = new_doc.get("declaration")
     if prev_df == new_df:
-        # Only a content anchor gets here: its key includes declaration.path.
+        # Only a content or section anchor gets here: its key includes declaration.path.
         moved = (f"{baseline[:12]} moved the declaration of {safe_text(new_df[:12], 40)} "
                  f"from {safe_text(decl.get('path'), 80)} to "
                  f"{safe_text(new_decl.get('path') if isinstance(new_decl, dict) else None, 80)}")
     else:
         moved += f" from {safe_text(prev_df[:12], 40)} to {safe_text(new_df[:12], 40)}"
+    problem = _anchor_move_problem(git, moved, decl, prior_doc, prev_df, new_df, baseline, earlier, yaml, new_doc)
+    approval = new_doc.get("approval")
+    if (problem is None and prev_df != new_df and isinstance(approval, dict)
+            and approval.get("mode") == MODE_RECONFIRMED):
+        # A pure move (prev_df == new_df) is already held to "nothing but the path
+        # and the approval changed", whatever mode the approval carries over.
+        return _reconfirmation_problem(git, moved, earlier, yaml, new_doc)
+    return problem
+
+
+def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: dict[str, Any], prev_df: str,
+                         new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
+                         new_doc: dict[str, Any]) -> str | None:
+    """The anchor-specific half of _rebaseline_problem: did the anchored declaration change?"""
+    prior_commit, _ = earlier[0]
     if decl.get("inherited_spec"):
         before, _ = _pinned_ref(git.show(prior_commit, SPEC_CONFIG.as_posix()), decl, yaml)
         after, _ = _pinned_ref(git.show(baseline, SPEC_CONFIG.as_posix()), decl, yaml)
@@ -1118,6 +1487,9 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
         return f"{moved} for an anchor outside the repository, whose change the runner cannot confirm"
     if _is_content_anchor(new_df):
         return _content_rebaseline_problem(git, moved, prev_df, new_df, baseline, rel, earlier, yaml,
+                                           prior_doc, new_doc)
+    if _is_section_anchor(new_df):
+        return _section_rebaseline_problem(git, moved, prev_df, new_df, baseline, rel, earlier, yaml,
                                            prior_doc, new_doc)
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
     if prev_commit is None or new_commit is None:
@@ -1156,6 +1528,12 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
 
     declaration = data["declaration"]
     content_anchor = _is_content_anchor(derived_from)
+    # declaration.sections without a section derived_from is judged here too, as
+    # an inconsistent section anchor, never silently as a file or commit anchor.
+    section_anchored = _is_section_anchor(derived_from) or "sections" in declaration
+    if section_anchored and "inherited_spec" in declaration:
+        return ChangeState(STATE_UNRESOLVED, f"derived_from {safe_text(derived_from[:21], 40)} is a section anchor, "
+                           "but an inherited spec is anchored by its pinned inherits[].ref")
     if content_anchor and "inherited_spec" in declaration:
         return ChangeState(STATE_UNRESOLVED, f"derived_from {safe_text(derived_from[:17], 40)} is a content anchor, "
                            "but an inherited spec is anchored by its pinned inherits[].ref")
@@ -1171,10 +1549,15 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
     rel = _repo_relative(raw_path) if raw_path else None
     if rel is None:
         where = f"anchor {raw_path!r} lies outside the repository" if raw_path else "anchor has no path"
+        if section_anchored:
+            return ChangeState(STATE_UNRESOLVED, f"derived_from {safe_text(derived_from[:21], 40)} is a section "
+                               f"anchor, but {where}; a section anchor needs a declaration file inside the repository")
         if content_anchor:
             return ChangeState(STATE_UNRESOLVED, f"derived_from {safe_text(derived_from[:17], 40)} is a content anchor, "
                                f"but {where}; a content anchor needs a declaration file inside the repository")
         return ChangeState(STATE_UNMONITORED, f"{where}; change is not monitored, re-derive on request")
+    if section_anchored:
+        return _section_change(git, derived_from, declaration.get("sections"), rel)
     if content_anchor:
         return _content_change(git, derived_from, rel)
 
@@ -1220,6 +1603,41 @@ def _content_change(git: Git, derived_from: str, rel: str) -> ChangeState:
     if current != derived_from[len(BLOB_PREFIX):]:
         return ChangeState(STATE_STALE, f"{REASON_STALE}: the content of {rel} at HEAD is no longer {derived_from[:17]}")
     return ChangeState(STATE_CLEAN)
+
+
+def _section_change(git: Git, derived_from: str, sections: object, rel: str) -> ChangeState:
+    """Change state of a Markdown declaration under a section anchor.
+
+    Like a content anchor it names content, not a commit, so it holds after a
+    squash merge; unlike one, only the anchored sections count. Each locator is
+    resolved at HEAD and compared with its digest; the probe is stale naming
+    every locator whose section changed, is not found, or is ambiguous. The
+    runner never follows a renumbered or renamed section. An anchor whose
+    derived_from does not match its declaration.sections is unresolved: the
+    anchor was edited by hand or is inconsistent, so nothing can be compared.
+    """
+    why = _section_anchor_problem(derived_from, sections)
+    if why:
+        return ChangeState(STATE_UNRESOLVED, why)
+    if git.last_commit(rel) is None:
+        return ChangeState(STATE_UNRESOLVED, f"declaration {rel} has no history in the target repository")
+    if git.is_dirty(rel):
+        return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} has uncommitted changes")
+    entry = git.entry_at("HEAD", rel)
+    if entry is None:
+        return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} no longer exists at HEAD")
+    if entry[0] != "blob":
+        return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} is not a regular file at HEAD")
+    mismatches = _section_mismatches(git, "HEAD", rel, _locators(sections) or [])
+    if mismatches:
+        return ChangeState(STATE_STALE, f"{REASON_STALE}: in {rel}, {'; '.join(mismatches)}")
+    return ChangeState(STATE_CLEAN)
+
+
+def is_reconfirmed(data: dict[str, Any] | None) -> bool:
+    """Whether the probe's approval is a re-confirmation rather than a re-derivation (R6)."""
+    approval = (data or {}).get("approval")
+    return isinstance(approval, dict) and approval.get("mode") == MODE_RECONFIRMED
 
 
 # --------------------------------------------------------------------------- #
@@ -1396,6 +1814,8 @@ def evaluate(repo: Path, git: Git, probe: Probe, yaml: Any, include_t2: bool, en
     outcome, notes = execute(repo, data, env_timeout)
     if approved_digest is None:
         notes = [NOTE_NO_DIGEST, *notes]
+    if is_reconfirmed(data):
+        notes = [*notes, NOTE_RECONFIRMED]
     return Entry(probe, change, outcome, executed_at, notes)
 
 
@@ -1529,6 +1949,9 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
     unprobeable = ", ".join(f"{s} ({n})" for s, n in _source_counts([e for e in entries if not e.probe.constructible]).items() if n)
     if unprobeable:
         lines.append(f"- Declaration sources with not-constructible entries: {unprobeable}.")
+    reconfirmed = [e.probe.pid for e in probe_rows if not e.probe.errors and is_reconfirmed(e.probe.data)]
+    if reconfirmed:
+        lines.append(f"- {PROVENANCE_RECONFIRMED}: {len(reconfirmed)} ({md_text(', '.join(reconfirmed))}).")
     lines.append(f"- Tier T2: {'requested (--include-t2)' if include_t2 else 'not requested; every T2 probe is not probed'}.")
     lines.append(f"- Run at: {run_at} (UTC).")
     lines.append("")
