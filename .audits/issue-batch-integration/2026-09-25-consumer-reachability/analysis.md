@@ -177,6 +177,9 @@ Filled during implementation. Each entry records the dispatched specialist and t
 | #667 | `nolte-engineering:fullstack-developer` | `pre-commit try-repo <worktree> validate-skills --files skills/x/SKILL.md` in einem Consumer-Testrepo | `Failed - exit code: 1`, `Critical    skills/x/SKILL.md  [skill-management.frontmatter-yaml-invalid] …` (PyYAML kommt über `additional_dependencies` an); Exit 1 |
 | #667 | `nolte-engineering:fullstack-developer` | `pre-commit run --files .pre-commit-hooks.yaml pyproject.toml scripts/validate_skills.py tests/test_validate_skills.py` | alle Hooks Passed; Exit 0 |
 | #667 | generalist (P3) | `pre-commit run --files docs/en/using.md docs/de/using.md`; `task --yes docs` (mkdocs `--strict`, Docs-venv aus `docs/requirements.lock.txt`) | alle Hooks Passed; `Documentation built in 22.70 seconds`, Exit 0 |
+| group | — (quality-gate on the integration branch tip `ee40f752`) | `task --yes lint` (pre-commit run --all-files) | alle Hooks Passed; Exit 0 |
+| group | — (quality-gate on the integration branch tip `ee40f752`) | `task --yes test` | `568 passed, 2 skipped in 16.90s`; Exit 0 |
+| group | — | `git diff --stat origin/develop...HEAD` | 14 files changed, 628 insertions(+), 27 deletions(-) (davon 4 Artefakt-Dateien unter `.audits/`, die vor dem Bündel entfernt werden) |
 
 ## Deviations
 
