@@ -28,7 +28,7 @@ Previous artifact: <path | none>
 - No production value pinned on a dev/local path: <PASS | FAIL: <value at file:line>> [<file:line>]
 - Release tagging (<moves per build | static constant | missing>): <PASS | FAIL: <what>> [<file:line>]
 - Sampling decision explicit: <PASS: <rate> | FAIL: no decision> [<file:line>]
-- default-PII off (<explicit false | unset | explicit true>): <PASS | WARN: unasserted | FAIL: <why>> [<file:line>]
+- default-PII off (<scanner overall state>; category source: <package@version> via <installed source | body table>): <PASS | per non-PASS category: <category>=<state> → <WARN | FAIL>: <why> | component-level: <overall state> → <WARN | FAIL>: <why>> [<file:line>]
 - Before-send scrubbing wired: <PASS (shape: allow-list | deny-list; breadcrumbs: covered | not covered) | FAIL> [<file:line>]  (PII verdict → gdpr-data-protection-reviewer)
 - No log-sink misuse: <PASS | FAIL: <levels routed>> [<file:line>]
 ### Advisory (scored)
@@ -51,5 +51,7 @@ Previous artifact: <path | none>
 - Scanner gaps carried over (stack not identified, fallback detection used): <list or none>
 - Runtime-verify items surfaced: <count>
 ```
+
+On the `default-PII off` line, render one finding per non-PASS category; when the scanner's overall state carries no categories (`EXPLICIT TRUE`, or `UNSET` on a legacy-flag SDK with no spelling present), render one component-level finding instead, such as `EXPLICIT TRUE → FAIL: legacy flag true, no structured block`. A Critical ruling renders as `FAIL`, a Warning as `WARN`.
 
 Severity mapping is stated once, in `SKILL.md` §"Hard-fail policy" — follow it there rather than re-deriving it here, so the two cannot drift apart.
