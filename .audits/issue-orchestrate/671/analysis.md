@@ -88,3 +88,5 @@ P1 ; P2 → P3.
 none
 
 ## Dispatch log
+2026-09-25 P1 via skill nolte-shared:spec (operation 2, update) — spec/project/error-tracking/en.md:52 and de.md:52: evidence = every collected personal-data category resolves off; an explicitly-off legacy flag counts only for the categories it switches off (Python still sends request bodies); where both forms are set the honoured one decides. Restatements walked (AC and check set phrase "default-PII off"; no other "legacy" mention in the spec); structure EN/DE 69 bullets, 11 AC, 15 headings; vale --output=line on en.md empty.
+2026-09-25 P2 dispatched to nolte-claude-dev:claude-plugin-developer — legacy rows resolved through the SDK mappings; `PASS: legacy flag off` and the informational note retired; hypothesis confirmed (no SDK line reaches all-off through the flag alone: JS 10 keeps graphQL and stackFrameVariables on, Python keeps http_bodies). Overall vocabulary: PASS: every category OFF | NOT ALL OFF | EXPLICIT TRUE | UNSET. validate_skills 39 artifacts 0C/0W/0S/1I.
