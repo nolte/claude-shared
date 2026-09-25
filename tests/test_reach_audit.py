@@ -123,7 +123,7 @@ def test_example_probes_validate():
 def test_schemas_config_binds_the_example_glob():
     config = yaml.safe_load((REPO_ROOT / ".schemas-config.yaml").read_text())
     bound = {glob: schema for glob, schema in config["mappings"].items() if list(REPO_ROOT.glob(glob))}
-    assert "schemas/reach-probe-v1.0.schema.yaml" in bound.values()
+    assert "schemas/reach-probe-v1.1.schema.yaml" in bound.values()
 
 
 def _valid() -> dict:

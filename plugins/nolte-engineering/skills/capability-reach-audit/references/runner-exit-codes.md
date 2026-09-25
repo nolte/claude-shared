@@ -32,7 +32,7 @@ The runner writes every not-probed reason into the report's Probes table. These 
 
 | Reason (as written by the runner) | Meaning | Next step |
 |---|---|---|
-| `declaration changed since derivation: …` | the declaration's latest commit, its uncommitted edit, or a moved inherited `ref` postdates `derived_from` (stale, R2) | offer `derive` with the entry filter set to exactly these probes' declaration paths (R5) |
+| `declaration changed since derivation: …` | the declaration's content at HEAD is no longer the `blob:` anchor (`the content of <rel> at HEAD is no longer <df>`), the file is gone (`<rel> no longer exists at HEAD`), it has uncommitted edits, its latest commit postdates a commit anchor, or a moved inherited `ref` (stale, R2) | offer `derive` with the entry filter set to exactly these probes' declaration paths (R5) |
 | `probe file is not committed; …` | the approved set isn't under version control yet (R11) | the operator commits `project/reach-probes/`, then `run` again |
 | `not approved` | a probe file without an `approval` block, for example a copied example | the file was never approved through the gate; remove it or re-derive and approve the entry |
 | `approval does not cover the current observation step` | the probe's `observe`, `environment`, or `teardown` no longer match `approval.observation_digest`: a later commit swapped the argv or a target and left the old approval in place, or the block was written without the digest | the probe was **withheld**, never executed. Never recompute or paste the digest by hand; re-derive and re-approve the entry, and tell the operator to read the file's history, since the approved step and the committed step differ |
@@ -43,16 +43,43 @@ The runner writes every not-probed reason into the report's Probes table. These 
 | `observation step printed nothing` | the argv exited 0 without output; for a count and a set alike, silence is no observation and is never read as zero or as an empty set | the argv must print the observation (one integer, or one member per line, or a genuine `0` when nothing matches); re-derive the entry with an argv that does |
 | `observation has <n> digits; a count has at most 18` | the printed count exceeds eighteen digits, which is a runaway command, not a measurement | relay; the argv is counting the wrong thing (a byte count, a concatenation); re-derive the entry |
 | `anchor … lies outside the repository; change is not monitored` | external anchor (R6) | inform the operator; re-derive only on their request |
-| `derived_from … is not a commit of the target repository` / `… not in the history of HEAD` | the recorded commit doesn't resolve in this clone (shallow clone, rewritten history) | fetch full history or re-derive; never edit `derived_from` by hand |
+| `derived_from … is not a commit of the target repository` / `… not in the history of HEAD` | a commit anchor doesn't resolve in this clone (shallow clone, rewritten history, a squash merge that dropped the derivation commit) | fetch full history or re-derive, which records a content anchor; never edit `derived_from` by hand |
+| `derived_from <df> is a content anchor, but an inherited spec is anchored by its pinned inherits[].ref` / `derived_from <df> is a content anchor, but <where>; a content anchor needs a declaration file inside the repository` / `derived_from <df> is not a content anchor of the form blob:<40 hex digits>` | a `blob:` anchor on an inherited or external declaration, or a malformed one (unresolved) | re-derive the entry; the scanner records the right anchor form per §Derivation anchors |
 
 Every other reason is quoted as written and needs no routing.
 
+## Derivation anchors
+
+`derived_from` takes one of three forms (probe schema v1.1):
+
+- **Content anchor** `blob:<40 hex>` for an in-repository declaration: the declaration file's git blob at derivation (`git rev-parse <commit>:<path>`). It names no commit, so a probe re-derived in the same pull request as its declaration change stays clean after a squash merge. The probe is stale when the file is dirty, gone at HEAD, or its HEAD blob differs.
+- **Pinned ref** for an inherited spec, compared with `inherits[].ref`; a content anchor there is refused.
+- **Commit** for an external anchor (HEAD, unmonitored), and, as a migration rule, for an in-repository probe derived before v1.1: it stays valid, with its commit-ancestry check, until the next re-derivation records a content anchor. A SHA-256 repository keeps commit anchors, since the content anchor is SHA-1 only.
+
+Two limits to state when asked: an edit that goes A→B→A reads clean against A, since the content is the anchored one again (an accepted trade-off); and any byte change, whitespace included, is a change.
+
 ## Re-baseline rule
 
-The runner's baseline for a probe is the commit that recorded its current `derived_from`. Moving `derived_from` starts a fresh baseline, so every earlier change to the file is forgiven, and that is exactly how a single commit could lower an expectation and bump `derived_from` to launder its own weakening. The runner therefore accepts a moved `derived_from` as a **re-derivation only when the declaration itself changed between the old and the new commit**: for a path anchor, the declaration's latest commit as of the new `derived_from` must lie outside the old one's history; for an inherited spec, the pin in `spec/.spec-config.yml` must have moved to the new value; an external anchor can't show a change, so its re-baseline is never accepted. Otherwise the probe is reported `weakened` with `re-baselined without a declaration change: …`.
+The runner's baseline for a probe is the commit that recorded its current `derived_from`. Moving `derived_from` starts a fresh baseline, so every earlier change to the file is forgiven, and that is exactly how a single commit could lower an expectation and bump `derived_from` to launder its own weakening. The runner therefore accepts a moved `derived_from` as a **re-derivation only when the declaration itself changed**:
+
+- content anchor: the new `blob:` must be the declaration's content at the baseline commit, and the previously anchored content (the old blob, or for a migrating commit anchor the file's content at that commit) must differ from it. A pure rename keeps the blob and moves `declaration.path`; the runner recognises it by path plus blob;
+- commit anchor: the declaration's latest commit as of the new `derived_from` must lie outside the old one's history;
+- inherited spec: the pin in `spec/.spec-config.yml` must have moved to the new value;
+- external anchor: it can't show a change, so its re-baseline is never accepted.
+
+Otherwise the probe is reported `weakened` with `re-baselined without a declaration change: <moved>`, where `<moved>` names the baseline and the old and new anchor (or, for a path move, `<baseline> moved the declaration of <df> from <old> to <new>`), followed by the reason:
+
+| Reason suffix | Meaning |
+|---|---|
+| `…, but <new> is not the content of <rel> at <baseline>` | the new blob isn't what the declaration held when the probe was recorded |
+| `…, but <new_df> is not a content anchor of the form blob:<40 hex digits>` | the new anchor is malformed |
+| `…, but a content anchor needs a declaration file inside the repository` | the new anchor sits on a declaration without a repository path |
+| `…, but the previous derived_from is not a content anchor of the form blob:<40 hex digits>, so no declaration change can be shown` | the old anchor was a malformed `blob:` value |
+| `…, but the previous derived_from cannot be resolved to a commit, so no declaration change can be shown` | the old commit anchor is gone (for example after a squash merge) |
+| `…, but <rel> did not change in between` | the anchored content is the same before and after the move |
 
 Consequences to state plainly to the operator:
 
 - A corrected typo in `derived_from`, a re-approval made "to be safe", or any `derived_from` move on a probe with an external anchor stays `weakened` until its declaration changes. The way back to clean is a re-derive **after a real declaration change**, never a hand edit and never a revert of the revert.
-- The rule reads git history, so it can't tell a whitespace-only declaration change from a substantive one; a reformatting commit to the declaration file counts as a change. That is a stated limit of the mechanism, not a bug to route around.
-- A probe that was weakened for another reason (a later commit to the file) isn't cleared by a re-approval alone either; the re-derive must move `derived_from` to a commit the declaration actually changed in.
+- The rule can't tell a whitespace-only declaration change from a substantive one; a reformatting commit to the declaration file counts as a change. That is a stated limit of the mechanism, not a bug to route around.
+- A probe that was weakened for another reason (a later commit to the file) isn't cleared by a re-approval alone either; the re-derive must move `derived_from` to an anchor the declaration actually changed to.
