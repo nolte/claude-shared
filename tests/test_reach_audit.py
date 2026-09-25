@@ -2765,3 +2765,67 @@ def test_674_exit_c_fresh_probe_under_a_new_id_and_file(sectioned, flow, expecte
     sectioned.commit("derive afresh under a new id")
     state, reason = _state(sectioned, "p1-rederived")
     assert state == expected, reason
+
+
+# --------------------------------------------------------------------------- #
+# Pre-merge review of #675: moves onto a commit anchor (F1), SHA-256 repositories (F2)
+# --------------------------------------------------------------------------- #
+NO_COMMIT_PAIR = "the two cannot both be resolved to commits, so no declaration change can be shown"
+
+
+def test_675_F1_section_to_commit_anchor_move_cannot_launder_a_weakening(sectioned, tmp_path):
+    """A anchors on sections; B edits outside them (clean); C re-points at B's commit and lowers the bar."""
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _edit(sectioned, *OUTSIDE)
+    outside = sectioned.commit("edit another section")
+    assert _state(sectioned)[0] == ra.STATE_CLEAN
+    marker.unlink()
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"].pop("sections")
+    data["derived_from"] = outside
+    data["expected"]["value"] = 1
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("re-point at the edit commit and lower the bar")
+    assert NO_COMMIT_PAIR in _weakened_reason(sectioned, marker)
+
+
+def test_675_F1_blob_to_commit_anchor_move_cannot_launder_a_weakening(target, tmp_path):
+    """A anchors on the file's content; B edits it (stale); C re-points at B's commit and lowers the bar."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    target.write(DECL, "# Requirements\n\nExports 3 collections, edited.\n")
+    edit = target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from=edit, expected_value=1)
+    target.commit("re-point at the edit commit and lower the bar")
+    assert NO_COMMIT_PAIR in _weakened_reason(target, marker)
+
+
+@pytest.fixture
+def sha256_sectioned(tmp_path) -> Target:
+    path = tmp_path / "target"
+    path.mkdir()
+    res = subprocess.run(["git", "init", "-q", "--object-format=sha256", str(path)],
+                         capture_output=True, text=True, check=False)
+    if res.returncode != 0:
+        pytest.skip(f"local git cannot create a SHA-256 repository: {res.stderr.strip()}")
+    t = Target(path)
+    assert t.git("rev-parse", "--show-object-format") == "sha256"
+    t.write(DECL, SECTIONED)
+    t.commit("declare")
+    return t
+
+
+def test_675_F2_section_anchor_works_in_a_sha256_repository(sha256_sectioned):
+    """The scanner records section anchors in SHA-256 repositories: the runner must read their blobs."""
+    git = ra.Git(sha256_sectioned.path)
+    assert git.file_bytes("HEAD", DECL) == SECTIONED.encode()
+    _section_probe(sha256_sectioned)
+    _assert_clean(sha256_sectioned)
+    _edit(sha256_sectioned, *OUTSIDE)
+    sha256_sectioned.commit("edit another section")
+    _assert_clean(sha256_sectioned)
+    _edit(sha256_sectioned, *INSIDE)
+    sha256_sectioned.commit("edit 3.1.1, inside 3.1")
+    state, reason = _state(sha256_sectioned)
+    assert state == ra.STATE_STALE and "heading 3.1 changed" in reason, reason

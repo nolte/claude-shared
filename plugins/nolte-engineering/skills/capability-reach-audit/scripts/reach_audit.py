@@ -130,6 +130,9 @@ _MARKDOWN_SPECIALS = re.compile(r"([\\<>\[\]])")
 _COUNT_RE = re.compile(r"^[0-9]{1,18}$")
 _DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+# A git object id: SHA-1 (40 hex) or SHA-256 (64 hex). Reading accepts both, so a
+# section anchor, which hashes bytes rather than git objects, works in either repository.
+_OBJECT_ID_RE = re.compile(r"^(?:[0-9a-f]{40}|[0-9a-f]{64})$")
 # A content anchor (probe schema v1.1): the git blob hash of an in-repository
 # declaration file at derivation. It names no commit, so a squash merge that
 # discards the derivation commit leaves it resolvable.
@@ -648,7 +651,7 @@ class Git:
 
     def read_blob(self, blob: str) -> bytes | None:
         """The exact bytes of ``blob``: a section digest covers line endings too."""
-        if not _SHA_RE.match(blob):
+        if not _OBJECT_ID_RE.match(blob):
             return None
         try:
             res = subprocess.run(  # noqa: S603 - fixed argv, no shell
@@ -1524,6 +1527,13 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
     if _is_section_anchor(new_df):
         return _section_rebaseline_problem(git, moved, prev_df, new_df, baseline, rel, earlier, yaml,
                                            prior_doc, new_doc)
+    if _is_content_anchor(prev_df) or _is_section_anchor(prev_df):
+        # A content or section anchor names no commit, so a move from it back onto
+        # a commit anchor is refused, as before v1.2. The recording-commit fallback
+        # below stands in only for a commit anchor a squash merge dropped; applied
+        # here it would compare the whole file for an anchor that never covered it
+        # and skip proving the previous anchor, which launders a weakening.
+        return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
     if prev_commit is not None and new_commit is not None:
         last = git.last_commit(rel, new_commit)
