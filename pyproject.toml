@@ -26,13 +26,15 @@ name = "nolte-shared-tooling"
 version = "0.1.4"
 description = "Repository tooling for the nolte-shared Claude Code plugin (validators, docs generators, eval harness). Not a published library."
 readme = "README.md"
-requires-python = ">=3.12"
+# Floor = the console script's contract for consumers (3.10 syntax, installed
+# by pre-commit on their interpreter); the hub's own tooling runs in its venv.
+requires-python = ">=3.10"
 license = "MIT"
 dependencies = ["PyYAML>=6"]
 authors = [{ name = "nolte", email = "nolte07@gmail.com" }]
 classifiers = [
   "Private :: Do Not Upload",
-  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3",
 ]
 
 [project.scripts]

@@ -389,7 +389,7 @@ _VALID_SKILL = (
 
 def _consumer_run(monkeypatch, tmp_path, rel, text, *args):
     target = tmp_path / rel
-    target.parent.mkdir(parents=True)
+    target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(text, encoding="utf-8")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(v, "RPI_UNADOPTED", [])
@@ -439,3 +439,48 @@ def test_default_targets_are_discovered_in_the_working_directory(monkeypatch, tm
     (tmp_path / "plugins" / "q").mkdir()
     monkeypatch.chdir(tmp_path)
     assert v.discover_default_targets() == ["agents/", "plugins/p/agents/"]
+
+
+def test_no_targets_and_nothing_discovered_is_a_usage_error(monkeypatch, tmp_path, capsys):
+    # An empty run would otherwise report "0 artifacts checked, no findings".
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(sys, "argv", ["validate_skills.py"])
+    assert v.main() == 2
+    err = capsys.readouterr().err
+    assert err.startswith("ERROR: no targets given")
+    assert str(tmp_path) in err
+
+
+_BROKEN_AGENT = "---\nname: a\ndescription: Read-only: reports things\n---\nbody\n"
+
+
+def test_consumer_under_a_skills_named_ancestor_still_checks_agents(monkeypatch, tmp_path, capsys):
+    # Classification must use the cwd-relative segments: the absolute path of
+    # this consumer contains a `skills` segment above its agents/ tree.
+    repo = tmp_path / "skills" / "repo"
+    assert _consumer_run(monkeypatch, repo, "agents/a.md", _BROKEN_AGENT, "agents/") == 1
+    critical = [line for line in capsys.readouterr().out.splitlines() if line.startswith("Critical")]
+    assert critical
+    assert all(line.split()[1] == "agents/a.md" for line in critical)
+
+
+def test_nested_agent_markdown_file_target_triggers_the_tree_scan(monkeypatch, tmp_path, capsys):
+    (tmp_path / "agents").mkdir()
+    (tmp_path / "agents" / "ok.md").write_text(_BROKEN_AGENT.replace("Read-only: r", "R"), encoding="utf-8")
+    rel = "agents/reviewer/notes.md"
+    assert _consumer_run(monkeypatch, tmp_path, rel, "# Notes\n") == 1
+    out = capsys.readouterr().out
+    hits = [line for line in out.splitlines() if "agent-management.nested-companion-markdown" in line]
+    assert len(hits) == 1
+    assert rel in hits[0]
+
+
+def test_agent_tree_scan_runs_once_for_several_file_targets(monkeypatch, tmp_path, capsys):
+    (tmp_path / "agents" / "reviewer").mkdir(parents=True)
+    (tmp_path / "agents" / "reviewer" / "notes.md").write_text("# Notes\n", encoding="utf-8")
+    assert _consumer_run(
+        monkeypatch, tmp_path, "agents/b.md", "---\nname: b\ndescription: Reports.\n---\n",
+        "agents/b.md", "agents/reviewer/notes.md", "agents/",
+    ) == 1
+    out = capsys.readouterr().out
+    assert out.count("agent-management.nested-companion-markdown") == 1

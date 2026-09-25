@@ -222,16 +222,18 @@ the report's work-package disjointness and dependency ordering intact so undecla
 packages stay concurrently dispatchable. On the **requirements-driven path** (no issue number) write
 to `.audits/requirements/<slug>-plan.md`, `<slug>` being the requirement artifact's own slug,
 carrying the requirement metadata (artifact path, `U_gate`, surviving assumptions) in place of the
-issue metadata; never write next to the requirement artifact under `project/requirements/`, which
-stays durable per `spec/project/issue-orchestration/` §Pre-analysis artifact lifecycle. Per §Working-copy isolation this write lands in a dedicated worktree
+issue metadata; never write next to the requirement artifact under `project/requirements/`, whose
+lifecycle `spec/project/requirements-elicitation/` §G owns. Per §Working-copy isolation this write lands in a dedicated worktree
 off `develop`, never the primary checkout. Write the prose in the source's own language; keep the
 machine-readable fields (specialist identifiers, classification labels) in English so the trail stays
 grep-able. Do not present the artifact for approval or dispatch anything — that is the caller's gate.
-On the issue-driven and the requirements-driven paths the artifact is run-scoped per
-`spec/project/issue-orchestration/` §Pre-analysis artifact lifecycle: the caller removes it from the
-feature branch before the pull request merges, so never `.gitignore` it and never remove it yourself;
-that removal never extends to the requirement artifact under `project/requirements/`, which stays
-durable.
+On the **issue-driven path** the artifact is run-scoped per `spec/project/issue-orchestration/`
+§Pre-analysis artifact lifecycle: the caller removes it from the feature branch before the pull
+request merges, so never `.gitignore` it and never remove it yourself. On the **requirements-, audit-,
+and review-driven paths** the plan is a durable audit record under `.audits/`: it stays on the branch
+and merges with it, because that lifecycle section scopes transience to the issue-driven artifact
+alone and does not generalise it to other `.audits/` paths. The requirement artifact under
+`project/requirements/` stays durable in every case.
 
 ### Step 5 — Report
 

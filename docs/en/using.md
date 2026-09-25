@@ -89,9 +89,11 @@ entirely inside your own Claude Code environment.
 
 If your project authors skills or agents of its own, pin the frontmatter validator
 that this repository runs on its plugins as a [pre-commit](https://pre-commit.com)
-hook. It checks every `skills/*/SKILL.md` and `agents/*.md` against
-`spec/claude/skill-management/` and `spec/claude/agent-management/`, and it needs
-neither a clone of this repository nor its toolchain:
+hook. It checks every `SKILL.md` under a `skills/` directory and every Markdown
+file under an `agents/` directory, whether at the repository root, under
+`plugins/<name>/`, or under `.claude/`, against `spec/claude/skill-management/`
+and `spec/claude/agent-management/`, and it needs neither a clone of this
+repository nor its toolchain:
 
 ```yaml
 - repo: https://github.com/nolte/claude-shared
@@ -100,6 +102,6 @@ neither a clone of this repository nor its toolchain:
     - id: validate-skills
 ```
 
-The hook runs per changed file, so the directory-level checks (the phantom-agent
-tree scan and the per-plugin description budget) stay with this repository's own
-`task test`.
+The hook runs per changed file; a Markdown file nested below an `agents/`
+directory is reported as a phantom agent, exactly as in this repository. Only the
+per-plugin description budget stays with this repository's own `task test`.

@@ -989,28 +989,66 @@ def discover_default_targets() -> list[str]:
     return targets
 
 
+def _rel_parts(p: Path, root: Path, target: str) -> tuple[str, ...]:
+    """Path segments of a target below the working directory; for a target
+    outside it, the segments of the target string as given."""
+    try:
+        return p.relative_to(root).parts
+    except ValueError:
+        return Path(target).parts
+
+
+def _enclosing_agents_dir(p: Path, rel_parts: tuple[str, ...]) -> Path | None:
+    """The nearest `agents/` directory holding file target `p`, searched only
+    within its working-directory-relative segments; None outside any."""
+    for depth in range(len(rel_parts) - 2, -1, -1):
+        if rel_parts[depth] == "agents":
+            return p.parents[len(rel_parts) - 2 - depth]
+    return None
+
+
 def main() -> int:
     if sys.argv[1:] == ["--version"]:
         print(f"validate_skills.py {VALIDATOR_VERSION}")
         return 0
     targets = sys.argv[1:] or discover_default_targets()
     root = Path.cwd()
+    if not targets:
+        # Nothing passed and nothing discovered: a green run here would check
+        # zero artifacts, so it is a usage error like an unknown path.
+        print(
+            f"ERROR: no targets given and none discovered in {root} "
+            f"(looked for skills/, agents/, plugins/<name>/skills/, "
+            f"plugins/<name>/agents/)",
+            file=sys.stderr,
+        )
+        return 2
     paths: list[Path] = []
+    # agents/ trees owed the recursive phantom-agent scan because a file inside
+    # them was passed (pre-commit invokes per file), keyed by resolved path.
+    file_agent_trees: dict[Path, Path] = {}
     for t in targets:
         p = root / t
         if not p.exists():
             print(f"ERROR: path not found: {p}", file=sys.stderr)
             return 2
+        # Classify on the segments below the working directory, never on the
+        # absolute path: a consumer checked out under e.g. /home/me/skills/repo
+        # must not have its agents/ tree mistaken for a skills tree.
+        rel_parts = _rel_parts(p, root, t)
         if p.is_dir():
-            if "skills" in p.parts:
+            if "skills" in rel_parts:
                 paths.extend(sorted(p.rglob("SKILL.md")))
-            elif "agents" in p.parts:
+            elif "agents" in rel_parts:
                 paths.extend(sorted(p.glob("*.md")))
             else:
                 paths.extend(sorted(p.rglob("SKILL.md")))
                 paths.extend(sorted(p.glob("*.md")))
         else:
             paths.append(p)
+            agents_dir = _enclosing_agents_dir(p, rel_parts)
+            if agents_dir is not None:
+                file_agent_trees.setdefault(agents_dir.resolve(), agents_dir)
 
     all_findings: list[Finding] = []
     for path in paths:
@@ -1031,6 +1069,12 @@ def main() -> int:
         if p.is_dir() and p.name == "agents":
             all_findings.extend(check_agent_tree(p))
             all_findings.extend(check_agent_description_budget(p))
+            file_agent_trees.pop(p.resolve(), None)
+    # Per-file invocation (the consumer pre-commit hook): scan each agents/ tree
+    # that holds a passed file once, unless the tree itself was a target above.
+    # The description budget stays a directory-target (hub) check.
+    for agents_dir in file_agent_trees.values():
+        all_findings.extend(check_agent_tree(agents_dir))
 
     # Drain the spec-fallback backlog (#592) and the research-plan-implement adoption backlog.
     all_findings.extend(check_spec_fallback_backlog())

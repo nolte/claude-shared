@@ -96,10 +96,12 @@ die Installation passiert vollständig in deiner eigenen Claude-Code-Umgebung.
 
 Wenn dein Projekt eigene Skills oder Agents pflegt, kannst du den
 Frontmatter-Validator, den dieses Repository auf seine Plugins anwendet, als
-[pre-commit](https://pre-commit.com)-Hook pinnen. Er prüft jede
-`skills/*/SKILL.md` und jede `agents/*.md` gegen
-`spec/claude/skill-management/` und `spec/claude/agent-management/` und braucht
-weder einen Clone dieses Repositories noch seine Toolchain:
+[pre-commit](https://pre-commit.com)-Hook pinnen. Er prüft jede `SKILL.md`
+unter einem `skills/`-Verzeichnis und jede Markdown-Datei unter einem
+`agents/`-Verzeichnis — auf Repository-Ebene, unter `plugins/<name>/` oder unter
+`.claude/` — gegen `spec/claude/skill-management/` und
+`spec/claude/agent-management/` und braucht weder einen Clone dieses
+Repositories noch seine Toolchain:
 
 ```yaml
 - repo: https://github.com/nolte/claude-shared
@@ -108,6 +110,6 @@ weder einen Clone dieses Repositories noch seine Toolchain:
     - id: validate-skills
 ```
 
-Der Hook läuft je geänderter Datei; die Prüfungen auf Verzeichnisebene (der
-Phantom-Agent-Scan und das Description-Budget je Plugin) bleiben beim `task test`
-dieses Repositories.
+Der Hook läuft je geänderter Datei; eine Markdown-Datei unterhalb eines
+`agents/`-Verzeichnisses wird wie in diesem Repository als Phantom-Agent gemeldet.
+Nur das Description-Budget je Plugin bleibt beim `task test` dieses Repositories.
