@@ -68,12 +68,17 @@ load-bearing, whether the artefact under audit can assert its own success, which
   SHALL happen in the runner, never in the probe.
   - _dimension_: `functional` · _status_: `confirmed` · _source_: "Deklarativer Kopf, Runner
     vergleicht" (Q3); teach-back Q4a "Ja, aber ohne Hash"
-- **R2** — WHEN a probe is derived, the executor SHALL record the commit of the declaration
-  file it was derived from, and SHALL detect a changed declaration by comparing that commit
-  against the declaration file's latest commit in the target repository's history. No
-  content hash is stored.
+- **R2** — WHEN a probe is derived from a declaration file inside the target repository, the
+  executor SHALL record that file's git blob hash (`derived_from: blob:<sha1>`), and SHALL
+  detect a changed declaration by comparing the recorded blob against the file's content at
+  HEAD. A commit recorded before this amendment stays valid and is compared through the
+  repository's history as before.
   - _dimension_: `functional` · _status_: `confirmed` · _source_: Q4a "Git-Historie reicht"
-- **R3** — WHEN the probe file has changed since the recorded derivation commit while the
+  - _amended 2026-09-25 by #668 (operator decision)_: the commit anchor could not survive the
+    squash merge the portfolio mandates, so a probe re-derived in the same pull request as its
+    declaration read `unresolved` after the merge; the blob is the content git already stores,
+    not a separately maintained hash.
+- **R3** — WHEN the probe file has changed since the commit that recorded its derivation while the
   declaration file has not, the executor SHALL surface the probe as **weakened** and report it
   as a finding rather than executing it as approved, whether or not the two changed in the
   same commit.
@@ -145,8 +150,10 @@ load-bearing, whether the artefact under audit can assert its own success, which
   - _dimension_: `edge_cases` · _status_: `confirmed` · _source_: issue #662 acceptance
     criterion 4; Q5c teach-back
 - **R16** — Every report entry SHALL carry the timestamp of its probe's last execution and the
-  probe's recorded derivation commit.
+  probe's recorded derivation anchor (`derived_from`).
   - _dimension_: `functional` · _status_: `confirmed` · _source_: governing spec; Q4a
+  - _amended 2026-09-25 by #668_: "derivation commit" became "derivation anchor", which is a
+    blob for an in-repository declaration (R2).
 
 ### Plugin placement and process
 
@@ -192,6 +199,8 @@ load-bearing, whether the artefact under audit can assert its own success, which
   turn R1 into something checkable.
 - **Git history as change detection covers only committed declarations.** An uncommitted edit
   to a declaration is invisible to R2 until it lands. The interview accepted this in exchange
-  for not maintaining a stored hash.
+  for not maintaining a stored hash. _Amended 2026-09-25 by #668:_ R2 now records the
+  declaration's git blob, which git maintains itself, and the runner reads an uncommitted
+  declaration edit as stale.
 
 Refs: `nolte/claude-shared#662`, `nolte/claude-shared#660`, `spec/project/capability-reach-audit/`.

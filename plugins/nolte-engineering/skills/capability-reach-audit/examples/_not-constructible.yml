@@ -12,7 +12,7 @@ entries:
     detail: >-
       The export lands in the partner's SFTP archive, which the audit
       environment can't read; no observation point outside the artefact exists.
-    derived_from: 9feca6a8d2c1b7e4f0a3c5d6e7f8091a2b3c4d5e
+    derived_from: "blob:3b18e512dba79e4c8300dd08aeb37f8e728b8dad"
     recorded_at: "2026-09-23T10:00:00Z"
   - id: retention-sweep-covers-all-stores
     declaration:
@@ -23,5 +23,5 @@ entries:
     detail: >-
       "Sweeps all personal-data stores" names no count and no set; the
       declaration would need to list the stores it sweeps.
-    derived_from: 9feca6a8d2c1b7e4f0a3c5d6e7f8091a2b3c4d5e
+    derived_from: "blob:8d0e41b9c7a25f36e1d04b7a92c3f5e6a1b8d0c4"
     recorded_at: "2026-09-23T10:00:00Z"

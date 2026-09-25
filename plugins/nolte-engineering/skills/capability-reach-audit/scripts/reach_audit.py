@@ -9,7 +9,7 @@ that may, compares each raw observation against the probe's typed expectation,
 and writes ``<repo>/.audits/capability-reach/<YYYY-MM-DD>.md``.
 
 The runner, never the probe, decides the class. A probe file has no field in
-which to state a verdict (schemas/reach-probe-v1.0.schema.yaml), and the
+which to state a verdict (schemas/reach-probe-v1.1.schema.yaml), and the
 observation step's exit code alone is never read as success: only its stdout,
 parsed as a count or a set, is the observation.
 
@@ -58,6 +58,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import copy
 import errno
 import hashlib
 import json
@@ -129,6 +130,12 @@ _MARKDOWN_SPECIALS = re.compile(r"([\\<>\[\]])")
 _COUNT_RE = re.compile(r"^[0-9]{1,18}$")
 _DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
 _SHA_RE = re.compile(r"^[0-9a-f]{40}$")
+# A content anchor (probe schema v1.1): the git blob hash of an in-repository
+# declaration file at derivation. It names no commit, so a squash merge that
+# discards the derivation commit leaves it resolvable.
+BLOB_PREFIX = "blob:"
+_BLOB_ANCHOR_RE = re.compile(r"^blob:[0-9a-f]{40}$")
+BLOB_FORM = "blob:<40 hex digits>"
 
 # Exit codes
 EXIT_OK = 0
@@ -189,14 +196,14 @@ NOT_CONSTRUCTIBLE_REASONS = (
 # Per-tier table bucket of the entries that have no tier because they have no probe.
 TIER_NONE = "none (not constructible)"
 
-# The structural part of schemas/reach-probe-v1.0.schema.yaml (annotations
+# The structural part of schemas/reach-probe-v1.1.schema.yaml (annotations
 # stripped). The schemas/ tree ships with the nolte-shared payload, not with this
 # plugin, so the runner carries its own copy; tests/test_reach_audit.py fails when
 # the two drift apart.
 _TASK_NAME = {"type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_:.-]*$"}
 PROBE_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/nolte/claude-shared/blob/main/schemas/reach-probe-v1.0.schema.yaml",
+    "$id": "https://github.com/nolte/claude-shared/blob/main/schemas/reach-probe-v1.1.schema.yaml",
     "type": "object",
     "required": ["id", "declaration", "tier", "expected", "derived_from", "observe"],
     "additionalProperties": False,
@@ -581,6 +588,29 @@ class Git:
                 history.append((lines[0], lines[1] if len(lines) > 1 else path))
         return history
 
+    def entry_at(self, commit: str, path: str) -> tuple[str, str] | None:
+        """``(type, hash)`` of the tree entry ``path`` at ``commit``, or None when absent.
+
+        ``ls-tree`` with literal pathspecs rather than ``rev-parse <commit>:<path>``,
+        so a path is never parsed as revision syntax; the hash is the same. The type
+        is ``blob`` for a file or a symlink (whose blob is the link text), ``tree``
+        for a directory and ``commit`` for a submodule.
+        """
+        res = self.run("--literal-pathspecs", "ls-tree", "-z", commit, "--", path)
+        if res.returncode != 0:
+            return None
+        for record in res.stdout.split("\x00"):
+            meta, _, name = record.partition("\t")
+            parts = meta.split()
+            if name == path and len(parts) == 3:
+                return parts[1], parts[2]
+        return None
+
+    def blob_at(self, commit: str, path: str) -> str | None:
+        """The blob hash of ``path`` at ``commit``, or None when it is absent or no file."""
+        entry = self.entry_at(commit, path)
+        return entry[1] if entry is not None and entry[0] == "blob" else None
+
     def show(self, commit: str, path: str) -> str | None:
         res = self.run("show", f"{commit}:{path}")
         return res.stdout if res.returncode == 0 else None
@@ -790,12 +820,29 @@ def _derived_from_of(text: str | None, yaml: Any) -> object:
         doc = yaml.safe_load(text)
     except yaml.YAMLError:
         return None
-    return doc.get("derived_from") if isinstance(doc, dict) else None
+    return _anchor_key(doc) if isinstance(doc, dict) else None
 
 
-def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[str], bool, tuple[str, str] | None]:
+def _anchor_key(doc: dict[str, Any]) -> object:
+    """What a derivation records: ``derived_from``, and for a content anchor also the path.
+
+    A content anchor names the declaration's content, so a pure rename keeps its
+    value; re-deriving after one changes only ``declaration.path``. Keying the
+    derivation on the pair lets that commit record a re-derivation (checked by
+    _rebaseline_problem) instead of reading as a later probe change. A commit
+    anchor keys on ``derived_from`` alone, exactly as before v1.1.
+    """
+    derived_from = doc.get("derived_from")
+    if isinstance(derived_from, str) and _is_content_anchor(derived_from):
+        declaration = doc.get("declaration")
+        path = declaration.get("path") if isinstance(declaration, dict) else None
+        return (derived_from, path)
+    return derived_from
+
+
+def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[str], bool, list[tuple[str, str]]]:
     """The probe's derivation baseline, the commits that touched it since, dirtiness,
-    and the revision before the baseline.
+    and the revisions before the baseline.
 
     The baseline is the commit that recorded the probe's current ``derived_from``:
     walking the file's history newest first, the oldest commit of the unbroken run
@@ -804,15 +851,16 @@ def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[s
     would flag every freshly committed probe; the recording commit is the approved
     state, and every later commit to the file is an unapproved change.
 
-    The fourth value is ``(commit, path)`` of the probe's revision just before the
-    baseline, or None when the baseline is the probe's first commit. When it is
-    set, the baseline commit moved ``derived_from``, and detect_change must check
-    that the move was a re-derivation rather than a re-baseline.
+    The fourth value lists ``(commit, path)`` of the probe's revisions before the
+    baseline, newest first; it is empty when the baseline is the probe's first
+    commit. When it is not, the baseline commit moved ``derived_from``, and
+    detect_change must check that the move was a re-derivation rather than a
+    re-baseline; the older revisions let that check prove the previous anchor.
     """
     history = git.file_history(probe.file)
     if not history:
-        return None, [], False, None
-    current = probe.data["derived_from"] if probe.data else None
+        return None, [], False, []
+    current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
     for commit, path_then in history:
         if _derived_from_of(git.show(commit, path_then), yaml) != current:
@@ -822,9 +870,8 @@ def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[s
     if not run:
         # HEAD's version already differs from the working tree's derived_from: the
         # recording itself is uncommitted, and the newest commit is the baseline.
-        return history[0][0], [], True, None
-    prior = history[len(run)] if len(run) < len(history) else None
-    return run[-1], run[:-1], dirty, prior
+        return history[0][0], [], True, []
+    return run[-1], run[:-1], dirty, history[len(run):]
 
 
 def _repo_relative(path: str) -> str | None:
@@ -874,7 +921,155 @@ def _pinned_ref(text: str | None, declaration: dict[str, Any], yaml: Any) -> tup
     return ref, ""
 
 
-def _rebaseline_problem(git: Git, new_df: str, baseline: str, prior: tuple[str, str], yaml: Any) -> str | None:
+def _is_content_anchor(derived_from: str) -> bool:
+    """Whether ``derived_from`` claims the content-anchor form; well-formed or not."""
+    return derived_from.startswith(BLOB_PREFIX)
+
+
+def _probe_doc(git: Git, revision: tuple[str, str], yaml: Any) -> dict[str, Any] | None:
+    """The probe document at ``(commit, path)``, or None when it is unreadable."""
+    try:
+        doc = yaml.safe_load(git.show(*revision) or "")
+    except yaml.YAMLError:
+        return None
+    return doc if isinstance(doc, dict) else None
+
+
+def _without(doc: dict[str, Any] | None, *paths: tuple[str, ...]) -> object:
+    """``doc`` deep-copied without the (nested) keys named by ``paths``."""
+    stripped = copy.deepcopy(doc)
+    for path in paths:
+        node: object = stripped
+        for key in path[:-1]:
+            node = node.get(key) if isinstance(node, dict) else None
+        if isinstance(node, dict):
+            node.pop(path[-1], None)
+    return stripped
+
+
+def _run_length(git: Git, revisions: list[tuple[str, str]], yaml: Any) -> int:
+    """How many of ``revisions`` (newest first) carry the anchor key of the first one.
+
+    The last of them is the commit that recorded that derivation.
+    """
+    key = _derived_from_of(git.show(*revisions[0]), yaml)
+    span = 1
+    while span < len(revisions) and _derived_from_of(git.show(*revisions[span]), yaml) == key:
+        span += 1
+    return span
+
+
+def _continuation_problem(git: Git, moved: str, earlier: list[tuple[str, str]], span: int,
+                          yaml: Any) -> str | None:
+    """Why a move that re-approves nothing cannot inherit the previous derivation.
+
+    A pure move of the declaration and a pure commit-to-content migration only
+    re-label the previous derivation; they are clean exactly when that derivation
+    was. So the previous revision must still be the document its derivation
+    recorded, and that recording must itself have been a re-derivation. Otherwise
+    one relabelling commit would adopt a weakening committed before it.
+    """
+    recording = earlier[span - 1]
+    recording_doc = _probe_doc(git, recording, yaml)
+    changed = [c for c, path in earlier[:span - 1] if _probe_doc(git, (c, path), yaml) != recording_doc]
+    if changed:
+        return (f"{moved}, but the probe changed in {', '.join(c[:12] for c in reversed(changed))} "
+                f"after its previous derivation was recorded in {recording[0][:12]}")
+    if span < len(earlier) and recording_doc is not None:
+        inner = _rebaseline_problem(git, str(recording_doc.get("derived_from")), recording[0], earlier[span:],
+                                    yaml, recording_doc)
+        if inner:
+            return f"{moved}, but its previous derivation was no re-derivation either: {inner}"
+    return None
+
+
+def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str, baseline: str, rel: str,
+                                earlier: list[tuple[str, str]], yaml: Any, prior_doc: dict[str, Any],
+                                new_doc: dict[str, Any]) -> str | None:
+    """Why moving ``derived_from`` onto the content anchor ``new_df`` is no re-derivation.
+
+    No commit named by either anchor has to exist, so a squash merge that dropped
+    the derivation commits leaves the check intact. The move is a re-derivation
+    when the new anchor is the declaration's content at the recording commit and
+    the previously anchored file (``rel``, read from the probe's previous
+    revision) no longer holds the previously anchored content there. A previous
+    commit anchor (migration from v1.0) is compared by its content at that commit;
+    when a squash merge dropped the commit, by the declaration's content at the
+    commit that recorded the derivation, which is what the derivation saw.
+
+    The previous anchor is itself proven first: it must be the declaration's
+    content at the commit that recorded it. An anchor that never matched the
+    declaration shows no change, and accepting it would let one commit record a
+    weakening under a made-up anchor and the next restore the real one.
+
+    Two moves re-approve nothing and so are clean only as continuations of a
+    clean previous derivation (_continuation_problem): a pure move of the
+    declaration (same blob, new path, nothing else changed but the approval
+    stamp its re-derive writes) and a pure commit-to-content migration (the old
+    commit's content, same path, nothing else changed but the approval stamp).
+    """
+    if not _BLOB_ANCHOR_RE.match(new_df):
+        return f"{moved}, but {safe_text(new_df, 60)} is not a content anchor of the form {BLOB_FORM}"
+    new_decl = new_doc.get("declaration")
+    raw_new = new_decl.get("path") if isinstance(new_decl, dict) else None
+    new_rel = _repo_relative(raw_new) if isinstance(raw_new, str) and raw_new else None
+    if new_rel is None:
+        return f"{moved}, but a content anchor needs a declaration file inside the repository"
+    new_blob = new_df[len(BLOB_PREFIX):]
+    if git.blob_at(baseline, new_rel) != new_blob:
+        return f"{moved}, but {safe_text(new_df[:12], 40)} is not the content of {safe_text(new_rel)} at {baseline[:12]}"
+    span = _run_length(git, earlier, yaml)
+    recording = earlier[span - 1][0]
+    recorded = git.blob_at(recording, rel)
+    if _is_content_anchor(prev_df):
+        if not _BLOB_ANCHOR_RE.match(prev_df):
+            return (f"{moved}, but the previous derived_from is not a content anchor of the form {BLOB_FORM}, "
+                    "so no declaration change can be shown")
+        before: str | None = prev_df[len(BLOB_PREFIX):]
+        if before != recorded:
+            return (f"{moved}, but the previous derived_from {safe_text(prev_df[:12], 40)} is not the content of "
+                    f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change can be shown")
+    else:
+        prev_commit = git.resolve_commit(prev_df)
+        if prev_commit is None:
+            # A squash merge drops the commit a v1.0 derivation named, but the
+            # commit that recorded it is still here: the declaration's content
+            # there is what the derivation saw, and what a change is shown against.
+            if recorded is None:
+                return (f"{moved}, but the previous derived_from cannot be resolved to a commit and "
+                        f"{safe_text(rel)} did not exist at {recording[:12]}, where it was recorded, "
+                        "so no declaration change can be shown")
+            before = recorded
+        else:
+            before = git.blob_at(prev_commit, rel)
+            if before != recorded:
+                return (f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
+                        f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was recorded, "
+                        "so no declaration change can be shown")
+        # `derive` re-stamps the approval on every run, a migration included.
+        migration = (("derived_from",), ("approval",))
+        if (new_blob == before and new_rel == rel
+                and _without(new_doc, *migration) == _without(prior_doc, *migration)):
+            return _continuation_problem(git, moved, earlier, span, yaml)
+    if git.blob_at(baseline, rel) == before:
+        return f"{moved}, but {safe_text(rel)} did not change in between"
+    if prev_df == new_df:
+        # The re-derive that follows a rename re-approves the probe, so the
+        # approval stamp may move with the path; the observation digest inside it
+        # is still checked on every run.
+        pure_move = (("declaration", "path"), ("approval",))
+        if _without(new_doc, *pure_move) != _without(prior_doc, *pure_move):
+            return (f"{moved}, but the same commit changed the probe beyond declaration.path, "
+                    "which a pure move of the declaration does not justify")
+        return _continuation_problem(git, moved, earlier, span, yaml)
+    if new_rel != rel and git.blob_at(recording, new_rel) == new_blob:
+        return (f"{moved}, but {safe_text(new_rel)} already held {safe_text(new_df[:12], 40)} when the previous "
+                f"derivation was recorded in {recording[:12]}, so re-pointing at it shows no declaration change")
+    return None
+
+
+def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
+                        new_doc: dict[str, Any]) -> str | None:
     """Why the baseline commit's move of ``derived_from`` is no re-derivation, or None.
 
     Moving ``derived_from`` re-baselines the probe: every change of that commit
@@ -884,26 +1079,33 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, prior: tuple[str, 
     ``derived_from`` to the then-HEAD would launder its own weakening (spec: a
     guard disarmed through its own entry).
 
-    The anchor is read from the probe's *previous* revision, so re-pointing the
-    anchor at some other, recently changed file in the same commit proves
-    nothing. A path anchor needs its latest commit as of the new ``derived_from``
-    to lie outside the previous one's ancestry; an inherited spec needs the pin in
+    The anchor is read from the probe's *previous* revision (``earlier[0]``; the
+    older revisions follow it, newest first), so re-pointing the anchor at some
+    other, recently changed file in the same commit proves nothing. A path anchor
+    needs its latest commit as of the new ``derived_from`` to lie outside the
+    previous one's ancestry; an inherited spec needs the pin in
     spec/.spec-config.yml to have moved to the new value; an external anchor can't
-    show a change, so its re-baseline is never accepted.
+    show a change, so its re-baseline is never accepted. A move onto a content
+    anchor is judged by content instead (_content_rebaseline_problem); ``new_doc``
+    is the probe document the baseline recorded.
     """
-    prior_commit, prior_path = prior
+    prior_commit, _ = earlier[0]
     moved = f"{baseline[:12]} moved derived_from"
-    try:
-        prior_doc = yaml.safe_load(git.show(prior_commit, prior_path) or "")
-    except yaml.YAMLError:
-        prior_doc = None
-    prev_df = prior_doc.get("derived_from") if isinstance(prior_doc, dict) else None
-    if not isinstance(prev_df, str) or not prev_df:
+    prior_doc = _probe_doc(git, earlier[0], yaml)
+    prev_df = prior_doc.get("derived_from") if prior_doc else None
+    if not isinstance(prev_df, str) or not prev_df or prior_doc is None:
         return (f"{moved} to {safe_text(new_df, 40)}, but the probe's previous revision "
                 f"({prior_commit[:12]}) carries no readable derived_from, so no declaration change can justify it")
-    moved += f" from {safe_text(prev_df[:12], 40)} to {safe_text(new_df[:12], 40)}"
     decl = prior_doc.get("declaration")
     decl = decl if isinstance(decl, dict) else {}
+    new_decl = new_doc.get("declaration")
+    if prev_df == new_df:
+        # Only a content anchor gets here: its key includes declaration.path.
+        moved = (f"{baseline[:12]} moved the declaration of {safe_text(new_df[:12], 40)} "
+                 f"from {safe_text(decl.get('path'), 80)} to "
+                 f"{safe_text(new_decl.get('path') if isinstance(new_decl, dict) else None, 80)}")
+    else:
+        moved += f" from {safe_text(prev_df[:12], 40)} to {safe_text(new_df[:12], 40)}"
     if decl.get("inherited_spec"):
         before, _ = _pinned_ref(git.show(prior_commit, SPEC_CONFIG.as_posix()), decl, yaml)
         after, _ = _pinned_ref(git.show(baseline, SPEC_CONFIG.as_posix()), decl, yaml)
@@ -914,6 +1116,9 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, prior: tuple[str, 
     rel = _repo_relative(raw) if isinstance(raw, str) and raw else None
     if rel is None:
         return f"{moved} for an anchor outside the repository, whose change the runner cannot confirm"
+    if _is_content_anchor(new_df):
+        return _content_rebaseline_problem(git, moved, prev_df, new_df, baseline, rel, earlier, yaml,
+                                           prior_doc, new_doc)
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
     if prev_commit is None or new_commit is None:
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
@@ -927,7 +1132,7 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
     """Classify one valid probe's change state from the target's history."""
     data = probe.data or {}
     derived_from = data["derived_from"]
-    baseline, later, dirty, prior = probe_changes(git, probe, yaml)
+    baseline, later, dirty, earlier = probe_changes(git, probe, yaml)
     if baseline is None:
         return ChangeState(
             STATE_UNCOMMITTED,
@@ -938,7 +1143,7 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
     # The probe itself: any change after the recorded derivation is a weakening,
     # whether or not the declaration moved too (spec: "whether or not both changed
     # together"). Checked first so a combined change is surfaced as a finding.
-    rebaseline = _rebaseline_problem(git, derived_from, baseline, prior, yaml) if prior else None
+    rebaseline = _rebaseline_problem(git, derived_from, baseline, earlier, yaml, data) if earlier else None
     if later or dirty or rebaseline:
         parts = []
         if rebaseline:
@@ -950,6 +1155,10 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
         return ChangeState(STATE_WEAKENED, "; ".join(parts))
 
     declaration = data["declaration"]
+    content_anchor = _is_content_anchor(derived_from)
+    if content_anchor and "inherited_spec" in declaration:
+        return ChangeState(STATE_UNRESOLVED, f"derived_from {safe_text(derived_from[:17], 40)} is a content anchor, "
+                           "but an inherited spec is anchored by its pinned inherits[].ref")
     if "inherited_spec" in declaration:
         ref, why = _inherited_ref(repo, declaration, yaml)
         if ref is None:
@@ -962,7 +1171,12 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
     rel = _repo_relative(raw_path) if raw_path else None
     if rel is None:
         where = f"anchor {raw_path!r} lies outside the repository" if raw_path else "anchor has no path"
+        if content_anchor:
+            return ChangeState(STATE_UNRESOLVED, f"derived_from {safe_text(derived_from[:17], 40)} is a content anchor, "
+                               f"but {where}; a content anchor needs a declaration file inside the repository")
         return ChangeState(STATE_UNMONITORED, f"{where}; change is not monitored, re-derive on request")
+    if content_anchor:
+        return _content_change(git, derived_from, rel)
 
     derived_commit = git.resolve_commit(derived_from)
     if derived_commit is None:
@@ -978,6 +1192,33 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
     # or split declaration reads as changed, which is the safe answer.
     if not git.is_ancestor_or_equal(declaration_commit, derived_commit):
         return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} last changed in {declaration_commit[:12]}")
+    return ChangeState(STATE_CLEAN)
+
+
+def _content_change(git: Git, derived_from: str, rel: str) -> ChangeState:
+    """Change state of an in-repository declaration under a content anchor.
+
+    No ancestry check: the anchor names content, not a commit, so it holds after
+    a squash merge. The declaration is stale when its working-tree file carries
+    uncommitted changes or its content at HEAD is not the anchored blob; a
+    renamed or deleted declaration has no content at HEAD and so reads as
+    changed. An edit reverted to the anchored content reads as unchanged.
+    """
+    if not _BLOB_ANCHOR_RE.match(derived_from):
+        return ChangeState(STATE_UNRESOLVED,
+                           f"derived_from {safe_text(derived_from, 60)!r} is not a content anchor of the form {BLOB_FORM}")
+    if git.last_commit(rel) is None:
+        return ChangeState(STATE_UNRESOLVED, f"declaration {rel} has no history in the target repository")
+    if git.is_dirty(rel):
+        return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} has uncommitted changes")
+    entry = git.entry_at("HEAD", rel)
+    if entry is None:
+        return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} no longer exists at HEAD")
+    if entry[0] != "blob":
+        return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} is not a regular file at HEAD")
+    current = entry[1]
+    if current != derived_from[len(BLOB_PREFIX):]:
+        return ChangeState(STATE_STALE, f"{REASON_STALE}: the content of {rel} at HEAD is no longer {derived_from[:17]}")
     return ChangeState(STATE_CLEAN)
 
 

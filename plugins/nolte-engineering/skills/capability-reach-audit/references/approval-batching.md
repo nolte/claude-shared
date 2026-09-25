@@ -19,8 +19,8 @@ Render each batch as one table, followed by the `assumes[]` of every row that ha
 
 | # | id | declaration | tier | expected | environment | teardown | observe (full argv) | derived_from |
 |---|---|---|---|---|---|---|---|---|
-| 1 | endpoint-scan-workflow-dispatch-runs | .github/workflows/scan.yml (on.workflow_dispatch) | T0 | 300 runs | – | – | `gh run list --workflow scan.yml --event workflow_dispatch --limit 300 --json conclusion --jq length` | 9feca6a8d2c1 |
-| 2 | requirement-ranking-endpoint-answers | project/requirements/ranking.md (L14) | T1 | 1 answers | `db:up` | `db:down` | **[inline code]** `python3` `-c` `<the full program text, one line per element>` | 9feca6a8d2c1 |
+| 1 | endpoint-scan-workflow-dispatch-runs | .github/workflows/scan.yml (on.workflow_dispatch) | T0 | 300 runs | – | – | `gh run list --workflow scan.yml --event workflow_dispatch --limit 300 --json conclusion --jq length` | blob:3b18e512dba7 |
+| 2 | requirement-ranking-endpoint-answers | project/requirements/ranking.md (L14) | T1 | 1 answers | `db:up` | `db:down` | **[inline code]** `python3` `-c` `<the full program text, one line per element>` | blob:3b18e512dba7 |
 | 3 | … | … | … | … | … | … | … | … |
 
 Assumes:
@@ -64,7 +64,7 @@ summary: <as drafted, if present>
 declaration: {<as drafted>}
 tier: <as drafted>
 expected: {<as drafted>}
-derived_from: "<as drafted>"
+derived_from: "<as drafted>"  # blob:<40-hex> for an in-repository declaration; pinned ref or commit otherwise
 environment: [<as drafted, if present>]
 teardown: [<as drafted, if present>]
 observe: {<as drafted>}
@@ -74,7 +74,7 @@ approval:
   observation_digest: "<64 lowercase hex characters>"
 ```
 
-- Copy the draft **as returned**: same keys, same values, no additions except `approval`. The schema (`schemas/reach-probe-v1.0.schema.yaml`) has `additionalProperties: false` at every level.
+- Copy the draft **as returned**: same keys, same values, no additions except `approval`. The schema (`schemas/reach-probe-v1.1.schema.yaml`) has `additionalProperties: false` at every level.
 - `approved_at` is the current UTC time in `YYYY-MM-DDTHH:MM:SSZ` form and **quoted**; unquoted, the loader turns it into a timestamp object and the probe fails the schema.
 - `approved_by` is `git -C <target> config user.name`. When that is empty, ask the operator for the name to record; never write an empty string (schema `minLength: 1`) and never fall back to a generic label.
 - `observation_digest` is **mandatory**: the SHA-256 hex digest (64 lowercase hex digits) of the canonical JSON of an object with exactly the three keys `observe`, `environment`, and `teardown`, where an absent `environment` or `teardown` counts as an empty list, serialised with `sort_keys=True` and `separators=(",", ":")` as UTF-8; the runner's implementation is the authority on the byte form. Treating an absent list as empty means that adding an explicit `environment: []` later leaves the digest unchanged, as it leaves behaviour unchanged. Compute it from the draft you are about to persist, never from memory of the batch table. The runner recomputes it on every `run` and refuses a probe whose current fields no longer match, reporting `approval does not cover the current observation step`. This protects against a later commit that swaps `argv` (or a target) while leaving the old approval block in place, which git-history weakening detection alone can't distinguish from a legitimate re-approval when history is shallow or rewritten.
@@ -96,7 +96,7 @@ entries:
     declaration: {source: <entry.source>, path: <anchor.path> | inherited_spec: <anchor.inherited_spec> [, hub: <anchor.hub>], location: "<entry.location>"}
     reason: <scope_not_countable | needs_model_judgement | effect_in_third_party | missing_environment_target | missing_observation_helper>
     detail: <the scanner's detail, if any>
-    derived_from: "<as returned>"
+    derived_from: "<as returned>"  # blob:<40-hex> for an in-repository declaration
     recorded_at: "2026-09-23T14:30:12Z"
 ```
 

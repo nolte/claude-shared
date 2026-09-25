@@ -8,8 +8,9 @@
 # below are the ones kamerplanter would have to declare: `reach:stack:up` starts
 # the full stack, `reach:seed:privacy-subject` seeds one data subject into every
 # declared collection, `reach:stack:down` removes the stack and its volumes.
-# PLACEHOLDER derived_from: the all-zero commit stands in for the kamerplanter
-# commit the probe is derived at; replace it when deriving.
+# PLACEHOLDER derived_from: the all-zero value stands in for the anchor the
+# probe is derived at; when deriving, replace it with the declaration's content
+# anchor blob:<sha1> (`git rev-parse HEAD:<path>`, schema v1.1).
 # UNAPPROVED ON PURPOSE: this file carries no `approval` block. The runner
 # reports it `not probed` (reason `not approved`) until an operator who read it
 # adds approval, so copying it never runs anything by accident. As a T2 probe it

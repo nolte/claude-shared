@@ -28,7 +28,7 @@ from jsonschema import Draft202012Validator
 from tests.conftest import REPO_ROOT, SCRIPTS, Target, ra, row_of, validate
 
 SCRIPT_PATH = SCRIPTS / "reach_audit.py"
-SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.0.schema.yaml"
+SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.1.schema.yaml"
 EXAMPLES = SCRIPTS.parent / "examples"
 FIXED_NOW = datetime(2026, 9, 23, 10, 0, 0, tzinfo=timezone.utc)
 PY = sys.executable
@@ -123,7 +123,7 @@ def test_example_probes_validate():
 def test_schemas_config_binds_the_example_glob():
     config = yaml.safe_load((REPO_ROOT / ".schemas-config.yaml").read_text())
     bound = {glob: schema for glob, schema in config["mappings"].items() if list(REPO_ROOT.glob(glob))}
-    assert "schemas/reach-probe-v1.0.schema.yaml" in bound.values()
+    assert "schemas/reach-probe-v1.1.schema.yaml" in bound.values()
 
 
 def _valid() -> dict:
@@ -1461,3 +1461,513 @@ def test_S2_probe_file_name_with_rlo_is_rendered_stripped(target):
     row = row_of(report, "p1")
     assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
     assert code == ra.EXIT_FINDINGS
+
+
+# --------------------------------------------------------------------------- #
+# Content anchors (#668): derived_from: "blob:<sha1>" survives a squash merge
+# --------------------------------------------------------------------------- #
+def _blob(target: Target, rev: str = "HEAD", path: str = DECL) -> str:
+    """The content anchor of ``path`` at ``rev``: what the derivation records."""
+    return "blob:" + target.git("rev-parse", f"{rev}:{path}")
+
+
+def _has_commit(target: Target, sha: str) -> bool:
+    res = subprocess.run(["git", "-C", str(target.path), "cat-file", "-e", f"{sha}^{{commit}}"],
+                         capture_output=True, check=False)
+    return res.returncode == 0
+
+
+def _squash_merge(target: Target, branch: str) -> str:
+    """Squash ``branch`` onto main as a new commit, then drop every trace of the branch."""
+    target.git("checkout", "-q", "main")
+    target.git("merge", "--squash", "-q", branch)
+    squashed = target.commit(f"squash {branch}")
+    target.git("branch", "-D", branch)
+    target.git("reflog", "expire", "--expire=now", "--all")
+    target.git("gc", "-q", "--prune=now")
+    return squashed
+
+
+def _plain(cell_text: str) -> str:
+    """A report cell with its markdown escapes removed."""
+    return cell_text.replace("\\", "")
+
+
+def _content_probe(target: Target, **kw) -> str:
+    """Derive with a content anchor at HEAD, then commit the probe."""
+    rel = target.write_probe(make_probe(derived_from=_blob(target), **kw))
+    target.commit("approve probe")
+    return rel
+
+
+def _pr_re_deriving(target: Target, rel: str, branch: str, text: str) -> list[str]:
+    """On ``branch``: edit the declaration, re-derive the probe. Returns the branch commits."""
+    target.git("checkout", "-q", "-b", branch)
+    target.write(DECL, text)
+    edit = target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from=_blob(target))
+    return [edit, target.commit("re-derive the probe")]
+
+
+def test_668_squash_merged_re_derivation_is_clean(target):
+    """(a) The PR's own commits never reach main; the content anchor does not need them."""
+    rel = _content_probe(target)
+    branch_commits = _pr_re_deriving(target, rel, "feat/reword", "# Requirements\n\nExports 3 collections.\n")
+    _squash_merge(target, "feat/reword")
+    assert not any(_has_commit(target, c) for c in branch_commits)
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK, row[7:]
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+
+
+def test_668_declaration_edit_after_content_anchor_is_stale(target, tmp_path):
+    """(b)"""
+    marker = tmp_path / "ran"
+    _content_probe(target, argv=marker_argv(marker))
+    anchor = _blob(target)
+    target.write(DECL, "# Requirements\n\nExports 4 collections.\n")
+    target.commit("move the declaration")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_STALE
+    assert f"declaration changed since derivation: the content of {DECL} at HEAD is no longer {anchor[:17]}" in row[9]
+    assert not marker.exists()
+
+
+def test_668_uncommitted_declaration_edit_under_content_anchor_is_stale(target):
+    _content_probe(target)
+    target.write(DECL, "edited, not committed\n")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE and f"{DECL} has uncommitted changes" in row[9]
+
+
+@pytest.mark.parametrize("bogus", ["blob:" + "b" * 40, "blob:" + "0" * 40])
+def test_668_content_anchor_bump_without_content_change_is_weakened(target, tmp_path, bogus):
+    """(c) Lowering `expected` and moving the anchor, while the declaration stays put."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    _rewrite(target, rel, expected_value=1, derived_from=bogus)
+    laundering = target.commit("lower the bar and move the anchor")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS and not marker.exists()
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED
+    assert f"re-baselined without a declaration change: {laundering[:12]} moved derived_from" in row[9]
+    assert f"but {bogus[:12]} is not the content of {DECL} at {laundering[:12]}" in row[9]
+
+
+def test_668_content_anchor_bump_to_another_file_does_not_launder(target):
+    """Re-pointing the anchor at a changed file and naming its content proves nothing."""
+    rel = _content_probe(target)
+    target.write("docs/other.md", "recently changed\n")
+    target.commit("unrelated file changes")
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/other.md",
+             derived_from=_blob(target, path="docs/other.md"))
+    target.commit("re-point, weaken, re-anchor")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED and f"but {DECL} did not change in between" in row[9]
+
+
+def test_668_content_anchor_bump_with_content_change_needs_no_old_commit(target):
+    """(d) Two squashed PRs: neither the first nor the second derivation's commit survives."""
+    rel = _content_probe(target)
+    gone = _pr_re_deriving(target, rel, "feat/one", "# Requirements\n\nExports 3 collections, v2.\n")
+    _squash_merge(target, "feat/one")
+    gone += _pr_re_deriving(target, rel, "feat/two", "# Requirements\n\nExports 3 collections, v3.\n")
+    _squash_merge(target, "feat/two")
+    assert not any(_has_commit(target, c) for c in gone)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+@pytest.mark.parametrize("how", ["rename", "delete"])
+def test_668_renamed_or_deleted_declaration_under_content_anchor_is_stale(target, how):
+    """(e)"""
+    _content_probe(target)
+    if how == "rename":
+        target.git("mv", DECL, "docs/requirements-v2.md")
+    else:
+        target.git("rm", "-q", DECL)
+    target.commit(how)
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE
+    assert f"declaration changed since derivation: {DECL} no longer exists at HEAD" in row[9]
+
+
+def test_668_re_derivation_after_a_renamed_declaration_under_content_anchor_is_clean(target):
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/requirements-v2.md")
+    target.commit("rename the declaration")
+    _rewrite(target, rel, declaration_path="docs/requirements-v2.md",
+             derived_from=_blob(target, path="docs/requirements-v2.md"))
+    target.commit("re-derive against the renamed file")
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK, row[7:]
+    assert row[7] == ra.STATE_CLEAN
+
+
+def test_668_re_pointing_a_content_anchor_at_an_identical_copy_does_not_launder(target):
+    """Same blob, other file: the anchor value stays, the path moves, the original stays put."""
+    rel = _content_probe(target)
+    target.write("docs/copy.md", (target.path / DECL).read_text())
+    target.commit("copy the declaration")
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/copy.md")
+    laundering = target.commit("re-point at the copy and weaken")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED
+    assert f"{laundering[:12]} moved the declaration of blob:" in row[9]
+    assert f"from {DECL} to docs/copy.md, but {DECL} did not change in between" in row[9]
+
+
+def test_668_declaration_edited_and_restored_is_clean(target):
+    """(f) A -> B -> A: the content is what was derived from. Accepted trade-off: the
+    content anchor judges the declaration's text, not the path it took."""
+    _content_probe(target)
+    original = (target.path / DECL).read_text()
+    target.write(DECL, "# Requirements\n\nExports 4 collections.\n")
+    target.commit("edit")
+    target.write(DECL, original)
+    target.commit("revert")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+def test_668_content_anchor_on_an_inherited_spec_is_unresolved(target, tmp_path):
+    """(g) An inherited spec is anchored by its pinned ref; a blob names no pin."""
+    marker = tmp_path / "ran"
+    _spec_config(target, ("nolte-shared", "v0.1.8"))
+    probe = make_probe(derived_from="blob:" + "a" * 40, path=None, argv=marker_argv(marker))
+    probe["declaration"]["inherited_spec"] = "project/rest-api-design"
+    target.write_probe(probe)
+    target.commit("probe")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_UNRESOLVED
+    assert "is a content anchor, but an inherited spec is anchored by its pinned inherits[].ref" in _plain(row[9])
+    assert not marker.exists()
+
+
+def test_668_content_anchor_on_an_external_anchor_is_unresolved(target):
+    target.write_probe(make_probe(derived_from="blob:" + "a" * 40, path=None))
+    target.commit("probe")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_UNRESOLVED
+    assert "a content anchor needs a declaration file inside the repository" in row[9]
+
+
+@pytest.mark.parametrize("bad", ["blob:abc", "blob:" + "A" * 40, "blob:"])
+def test_668_malformed_content_anchor_is_unresolved(target, bad):
+    target.write_probe(make_probe(derived_from=bad))
+    target.commit("probe")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_UNRESOLVED
+    assert "is not a content anchor of the form blob:<40 hex digits>" in _plain(row[9])
+
+
+def test_668_commit_to_content_anchor_migration_after_a_declaration_change_is_clean(target):
+    """(h) A probe derived before v1.1 re-derives onto a content anchor."""
+    _, rel = derived_probe(target)
+    target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
+    _rewrite(target, rel, derived_from="blob:" + target.git("hash-object", DECL))
+    target.commit("edit the declaration and re-derive onto a content anchor")
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK, row[7:]
+    assert row[7] == ra.STATE_CLEAN
+
+
+def test_668_commit_to_content_anchor_migration_without_a_change_is_weakened(target):
+    _, rel = derived_probe(target)
+    _rewrite(target, rel, expected_value=1, derived_from=_blob(target))
+    target.commit("migrate the anchor and lower the bar")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED and f"but {DECL} did not change in between" in row[9]
+
+
+def test_668_commit_to_content_anchor_migration_without_the_old_commit_needs_a_change(target):
+    """An unresolvable commit anchor is judged by the content where it was recorded (#673 R2)."""
+    rel = target.write_probe(make_probe(derived_from="0" * 40))
+    target.commit("probe under an unknown commit")
+    _rewrite(target, rel, expected_value=1, derived_from=_blob(target))
+    target.commit("re-derive onto a content anchor and lower the bar")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED
+    assert f"but {DECL} did not change in between" in row[9]
+
+
+def test_668_unresolvable_commit_anchor_on_a_then_missing_declaration_is_weakened(target):
+    rel = target.write_probe(make_probe(derived_from="0" * 40, path="docs/later.md"))
+    recorded = target.commit("probe under an unknown commit, for a file that does not exist yet")
+    target.write("docs/later.md", "# Later\n\nExports 3 collections.\n")
+    _rewrite(target, rel, derived_from="blob:" + target.git("hash-object", "docs/later.md"))
+    target.commit("write the declaration, re-derive onto a content anchor")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_WEAKENED
+    assert ("but the previous derived_from cannot be resolved to a commit and docs/later.md did not exist at "
+            f"{recorded[:12]}, where it was recorded, so no declaration change can be shown") in _plain(row[9])
+
+
+def test_668_schema_admits_a_content_anchor():
+    assert validate(_valid() | {"derived_from": "blob:" + "a" * 40}) == []
+
+
+# --------------------------------------------------------------------------- #
+# Independent-review findings on #668 (F1-F4): laundering through unproven anchors
+# --------------------------------------------------------------------------- #
+def _weakened_reason(target: Target, marker: Path | None = None) -> str:
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_FINDINGS, row[7:]
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED, row[7:]
+    assert marker is None or not marker.exists()
+    return _plain(row[9])
+
+
+def _assert_clean(target: Target) -> None:
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK, row[7:]
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+
+
+def test_668_F1_laundering_through_an_unproven_content_anchor_is_weakened(target, tmp_path):
+    """Y lowers `expected` and records a blob that never existed; Z restores the real blob."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    anchor = _blob(target)
+    _rewrite(target, rel, expected_value=1, derived_from="blob:" + "b" * 40)
+    weakening = target.commit("lower the bar under a made-up anchor")
+    _rewrite(target, rel, derived_from=anchor)
+    target.commit("restore the real anchor")
+    reason = _weakened_reason(target, marker)
+    assert (f"but the previous derived_from blob:bbbbbbb is not the content of {DECL} at {weakening[:12]}, "
+            "where it was recorded, so no declaration change can be shown") in reason
+
+
+def test_668_F1_laundering_through_an_unproven_commit_anchor_is_weakened(target, tmp_path):
+    """Same laundering with a commit anchor whose declaration content is another one."""
+    marker = tmp_path / "ran"
+    old = target.git("rev-parse", "HEAD")
+    target.write(DECL, "# Requirements\n\nExports 3 collections, v2.\n")
+    target.commit("edit the declaration")
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    anchor = _blob(target)
+    _rewrite(target, rel, expected_value=1, derived_from=old)
+    weakening = target.commit("lower the bar under an old commit anchor")
+    _rewrite(target, rel, derived_from=anchor)
+    target.commit("restore the real anchor")
+    reason = _weakened_reason(target, marker)
+    assert (f"but the content of {DECL} at the previous derived_from {old[:12]} is not its content at "
+            f"{weakening[:12]}, where it was recorded, so no declaration change can be shown") in reason
+
+
+@pytest.mark.parametrize("flow", ["later-commit", "same-commit"])
+def test_668_F1_re_derivation_after_a_real_declaration_change_stays_clean(target, flow):
+    rel = _content_probe(target)
+    target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
+    if flow == "later-commit":
+        target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from="blob:" + target.git("hash-object", DECL))
+    target.commit("re-derive")
+    _assert_clean(target)
+
+
+def test_668_F2_rename_and_weakening_in_one_commit_is_weakened(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/v2.md")
+    laundering = target.commit("rename the declaration and lower the bar")
+    reason = _weakened_reason(target, marker)
+    assert f"{laundering[:12]} moved the declaration of blob:" in reason
+    assert (f"from {DECL} to docs/v2.md, but the same commit changed the probe beyond declaration.path, "
+            "which a pure move of the declaration does not justify") in reason
+
+
+def test_668_F2_rename_and_path_update_in_one_commit_stays_clean(target):
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, declaration_path="docs/v2.md")
+    target.commit("rename the declaration and follow it")
+    _assert_clean(target)
+
+
+def _restamp(target: Target, rel: str) -> dict:
+    """The approval block a re-derive writes: new time and operator, same observation digest."""
+    approval = dict(yaml.safe_load((target.path / rel).read_text())["approval"])
+    approval.update(approved_at="2026-09-25T08:00:00Z", approved_by="another operator")
+    return approval
+
+
+def test_668_F2_rename_path_update_and_re_approval_in_one_commit_stays_clean(target):
+    """A re-derive after a rename re-approves the probe, so `approval` moves with the path."""
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, declaration_path="docs/v2.md", approval=_restamp(target, rel))
+    target.commit("rename the declaration, re-derive and re-approve")
+    _assert_clean(target)
+
+
+def test_668_F2_re_approval_does_not_cover_a_weakening_in_the_rename_commit(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/v2.md", approval=_restamp(target, rel))
+    target.commit("rename, re-approve and lower the bar")
+    assert "the same commit changed the probe beyond declaration.path" in _weakened_reason(target, marker)
+
+
+def test_668_F2_delete_and_re_point_at_an_existing_file_is_weakened(target, tmp_path):
+    marker = tmp_path / "ran"
+    target.write("docs/other.md", "# Other\n\nExports 1 collection.\n")
+    target.commit("an unrelated document")
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    recorded = target.git("rev-parse", "HEAD")
+    other = _blob(target, path="docs/other.md")
+    target.git("rm", "-q", DECL)
+    _rewrite(target, rel, expected_value=1, declaration_path="docs/other.md", derived_from=other)
+    target.commit("delete the declaration, re-point and lower the bar")
+    reason = _weakened_reason(target, marker)
+    assert (f"but docs/other.md already held {other[:12]} when the previous derivation was recorded in "
+            f"{recorded[:12]}, so re-pointing at it shows no declaration change") in reason
+
+
+def test_668_F2_path_only_commit_cannot_adopt_an_earlier_weakening(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    recorded = target.git("rev-parse", "HEAD")
+    _rewrite(target, rel, expected_value=1)
+    weakening = target.commit("lower the bar")
+    target.git("mv", DECL, "docs/v2.md")
+    _rewrite(target, rel, declaration_path="docs/v2.md")
+    target.commit("rename the declaration and follow it")
+    reason = _weakened_reason(target, marker)
+    assert (f"but the probe changed in {weakening[:12]} after its previous derivation was recorded in "
+            f"{recorded[:12]}") in reason
+
+
+def test_668_F3_pure_commit_to_content_anchor_migration_is_clean(target):
+    _, rel = derived_probe(target)
+    _rewrite(target, rel, derived_from=_blob(target))
+    target.commit("migrate the anchor, nothing else")
+    _assert_clean(target)
+
+
+def test_668_F3_migration_cannot_adopt_an_earlier_weakening(target, tmp_path):
+    marker = tmp_path / "ran"
+    sha, rel = derived_probe(target, argv=marker_argv(marker, "1"))
+    recorded = target.git("rev-parse", "HEAD")
+    _rewrite(target, rel, expected_value=1)
+    weakening = target.commit("lower the bar")
+    _rewrite(target, rel, derived_from=_blob(target))
+    target.commit("migrate the anchor")
+    reason = _weakened_reason(target, marker)
+    assert (f"but the probe changed in {weakening[:12]} after its previous derivation was recorded in "
+            f"{recorded[:12]}") in reason
+
+
+@pytest.mark.parametrize("kind", ["directory", "submodule"])
+def test_668_F4_declaration_replaced_by_a_non_file_is_named_so(target, kind):
+    _content_probe(target)
+    target.git("rm", "-q", DECL)
+    if kind == "directory":
+        target.write(f"{DECL}/part.md", "a directory now\n")
+        target.git("add", "-A")
+    else:
+        head = target.git("rev-parse", "HEAD")
+        target.git("update-index", "--add", "--cacheinfo", f"160000,{head},{DECL}")
+        (target.path / DECL).mkdir(parents=True)  # an uninitialised submodule: an empty directory, not dirty
+    target.git("commit", "-q", "-m", f"replace the declaration with a {kind}")
+    _, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE
+    assert f"declaration changed since derivation: {DECL} is not a regular file at HEAD" in row[9]
+
+
+# --------------------------------------------------------------------------- #
+# Pre-merge review findings on #673 (R1, R2): commit-to-content migration
+# --------------------------------------------------------------------------- #
+def test_668_R1_pure_migration_with_the_approval_stamp_derive_writes_is_clean(target):
+    """`derive` always re-stamps `approval`; a pure migration is still only a re-label."""
+    _, rel = derived_probe(target)
+    _rewrite(target, rel, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("migrate the anchor and re-approve, nothing else")
+    _assert_clean(target)
+
+
+def test_668_R1_re_approval_does_not_cover_a_weakening_in_the_migration_commit(target, tmp_path):
+    marker = tmp_path / "ran"
+    _, rel = derived_probe(target, argv=marker_argv(marker, "1"))
+    _rewrite(target, rel, expected_value=1, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("migrate, re-approve and lower the bar")
+    assert f"but {DECL} did not change in between" in _weakened_reason(target, marker)
+
+
+def _squash_lost_commit_anchor(target: Target, *, probe_on_main: bool, **kw) -> str:
+    """A v1.0 commit anchor recorded on a branch whose commits a squash merge dropped."""
+    rel = derived_probe(target, **kw)[1] if probe_on_main else None
+    target.git("checkout", "-q", "-b", "feat/v1")
+    target.write(DECL, "# Requirements\n\nExports 3 collections, on a branch.\n")
+    edit = target.commit("edit the declaration")
+    if rel is None:
+        rel = target.write_probe(make_probe(derived_from=edit, **kw))
+    else:
+        _rewrite(target, rel, derived_from=edit)
+    target.commit("derive the probe at the branch commit")
+    _squash_merge(target, "feat/v1")
+    assert not _has_commit(target, edit)
+    return rel
+
+
+@pytest.mark.parametrize("probe_on_main", [False, True])
+def test_668_R2_re_derivation_after_a_squash_lost_commit_anchor_is_clean(target, probe_on_main):
+    """runner-exit-codes: re-derive, which records a content anchor."""
+    rel = _squash_lost_commit_anchor(target, probe_on_main=probe_on_main)
+    target.write(DECL, "# Requirements\n\nExports 3 collections, after the squash.\n")
+    _rewrite(target, rel, derived_from="blob:" + target.git("hash-object", DECL), approval=_restamp(target, rel))
+    target.commit("edit the declaration, re-derive onto a content anchor")
+    _assert_clean(target)
+
+
+def test_668_R2_pure_migration_of_a_squash_lost_commit_anchor_is_clean(target):
+    rel = _squash_lost_commit_anchor(target, probe_on_main=False)
+    _, report = run_audit(target)
+    assert row_of(report, "p1")[7] == ra.STATE_UNRESOLVED
+    _rewrite(target, rel, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("migrate the anchor and re-approve, nothing else")
+    _assert_clean(target)
+
+
+def test_668_R2_squash_lost_anchor_migration_does_not_cover_a_weakening(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _squash_lost_commit_anchor(target, probe_on_main=False, argv=marker_argv(marker, "1"))
+    _rewrite(target, rel, expected_value=1, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("migrate the anchor and lower the bar")
+    assert f"but {DECL} did not change in between" in _weakened_reason(target, marker)
+
+
+def test_668_R2_fabricated_unresolvable_anchor_cannot_launder_a_weakening(target, tmp_path):
+    """Y lowers the bar under a commit that never existed; Z migrates without a declaration change."""
+    marker = tmp_path / "ran"
+    _, rel = derived_probe(target, argv=marker_argv(marker, "1"))
+    _rewrite(target, rel, expected_value=1, derived_from="0" * 40)
+    weakening = target.commit("lower the bar under a made-up commit anchor")
+    _rewrite(target, rel, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("migrate onto the real content anchor")
+    reason = _weakened_reason(target, marker)
+    assert (f"its previous derivation was no re-derivation either: {weakening[:12]} moved derived_from "
+            "from ") in reason
+    assert "cannot both be resolved to commits" in reason

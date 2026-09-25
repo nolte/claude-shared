@@ -3,5 +3,5 @@
 # to the repository root, each value the schema the matching files must satisfy.
 mappings:
   # Probe examples only: the leading-underscore companion manifest has its own schema.
-  "plugins/nolte-engineering/skills/capability-reach-audit/examples/[!_]*.yml": schemas/reach-probe-v1.0.schema.yaml
+  "plugins/nolte-engineering/skills/capability-reach-audit/examples/[!_]*.yml": schemas/reach-probe-v1.1.schema.yaml
   "plugins/nolte-engineering/skills/capability-reach-audit/examples/_not-constructible.yml": schemas/reach-not-constructible-v1.0.schema.yaml

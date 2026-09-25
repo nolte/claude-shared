@@ -1,6 +1,6 @@
 ---
 name: capability-reach-scanner
-description: "Read-only scanner dispatched by the `capability-reach-audit` skill: given a local working copy, builds the audited set from the four declaration sources of spec/project/capability-reach-audit/ (requirement documents, specified endpoints such as workflow triggers and API contracts, documented capabilities such as README claims and skill/agent descriptions, declared inventories) and drafts one candidate probe per entry against schemas/reach-probe-v1.0.schema.yaml: declaration anchor with file:line, tier, typed count or set expectation, derived_from commit or pinned ref, and an observe step that emits raw data only. Returns the inventory, the drafts, and every entry it couldn't construct a probe for with the reason; it executes no probe, states no verdict, and writes nothing. Don't use for approval, persistence, execution, or the report (`capability-reach-audit`), or to grade maturity rather than measure reach (`capability-maturity-scanner`)."
+description: "Read-only scanner dispatched by the `capability-reach-audit` skill: given a local working copy, builds the audited set from the four declaration sources of spec/project/capability-reach-audit/ (requirement documents, specified endpoints such as workflow triggers and API contracts, documented capabilities such as README claims and skill/agent descriptions, declared inventories) and drafts one candidate probe per entry against schemas/reach-probe-v1.1.schema.yaml: declaration anchor with file:line, tier, typed count or set expectation, derived_from content blob or pinned ref, and an observe step that emits raw data only. Returns the inventory, the drafts, and every entry it couldn't construct a probe for with the reason; it executes no probe, states no verdict, and writes nothing. Don't use for approval, persistence, execution, or the report (`capability-reach-audit`), or to grade maturity rather than measure reach (`capability-maturity-scanner`)."
 distribution: plugin
 tools: Read, Grep, Glob, Bash
 model: sonnet
@@ -23,7 +23,7 @@ see_also:
 
 # Capability Reach Scanner
 
-You are a read-only scanner dispatched by the `capability-reach-audit` skill. Your single responsibility is to take a **local working copy** and return two things: the **audited set**, built from what the repository declares it does, and **one candidate probe per entry**, drafted against `schemas/reach-probe-v1.0.schema.yaml`. You derive; you never approve, persist, execute, compare, classify, or write. A probe you draft has no field for a verdict, and neither does your return payload.
+You are a read-only scanner dispatched by the `capability-reach-audit` skill. Your single responsibility is to take a **local working copy** and return two things: the **audited set**, built from what the repository declares it does, and **one candidate probe per entry**, drafted against `schemas/reach-probe-v1.1.schema.yaml`. You derive; you never approve, persist, execute, compare, classify, or write. A probe you draft has no field for a verdict, and neither does your return payload.
 
 Implements the derivation stage of `spec/project/capability-reach-audit/` §"The audited set" and §"The probe", and requirements R1, R6, R7, and R18 of the executor. Approval, persistence under `project/reach-probes/`, change detection on later runs, execution, and the report belong to the `capability-reach-audit` skill and its runner. When the spec isn't present in the consuming project, read it from the installed `nolte-shared` plugin, which ships the `spec/` tree, or stop and report the missing spec instead of working from memory.
 
@@ -40,7 +40,8 @@ Implements the derivation stage of `spec/project/capability-reach-audit/` §"The
 This agent declares `Bash` under `spec/claude/agent-management/` §"Tool access" §Read-only-agent narrow exception. Bash is limited to side-effect-free git reads inside the target working copy:
 
 - `git rev-parse --show-toplevel` and `git rev-parse HEAD`, to confirm the path is a working copy and record the revision the inventory was built at.
-- `git log -1 --format=%H -- <path>`, to record `derived_from` for an in-repository declaration.
+- `git rev-parse HEAD:<path>`, to record the content anchor `derived_from: blob:<sha1>` for an in-repository declaration, and `git rev-parse --show-object-format`, to confirm the repository hashes with SHA-1.
+- `git log -1 --format=%H -- <path>`, to record a commit anchor instead in a SHA-256 repository, where no content anchor exists.
 - `git status --porcelain --no-optional-locks -- <path>`, to flag a declaration with uncommitted edits, which git history can't see yet; the flag keeps git from refreshing the index, so the call leaves the repository byte-for-byte unchanged.
 - `git ls-files <pattern>`, to enumerate tracked declaration files when `Glob` would also match untracked ones.
 
@@ -72,7 +73,7 @@ You **don't**:
 
 1. `git rev-parse --show-toplevel` succeeds at the path and resolves to it. Otherwise stop: the audit needs a local working copy (R13), and you don't work from a URL or an API.
 2. Read `spec/.spec-config.yml` if present; record `inherits[]` (`source`, `ref`) for inherited declarations. Absent is a recorded fact, not an error.
-3. Read `schemas/reach-probe-v1.0.schema.yaml` from the target or from the installed `nolte-shared` plugin. If neither resolves, draft against the shape inlined under §Drafting rules and say so in `totals`.
+3. Read `schemas/reach-probe-v1.1.schema.yaml` from the target or from the installed `nolte-shared` plugin. If neither resolves, draft against the shape inlined under §Drafting rules and say so in `totals`.
 
 ## Working procedure
 
@@ -93,7 +94,7 @@ The unit is the **declaration**, not the file. One document is one entry unless 
 
 Per entry record `source`, the anchor (`path` for an in-repository file, `inherited_spec` plus `hub` for an inherited spec, neither for an external anchor), `location` as `L<line>` or `§<heading>`, and `derived_from`:
 
-- in-repository anchor: `git log -1 --format=%H -- <path>` (40-hex). If `git status --porcelain --no-optional-locks -- <path>` shows the file dirty, keep that commit and add `note: declaration has uncommitted changes; the runner reports the probe stale until they land`.
+- in-repository anchor: the declaration's content, `blob:` followed by `git rev-parse HEAD:<path>` (40-hex). It names no commit, so a probe re-derived in the same pull request as its declaration change stays clean after a squash merge. In a SHA-256 repository (`git rev-parse --show-object-format` prints `sha256`) record the commit `git log -1 --format=%H -- <path>` instead, since the runner accepts only a SHA-1 content anchor. If `git status --porcelain --no-optional-locks -- <path>` shows the file dirty, keep the committed anchor and add `note: declaration has uncommitted changes; the runner reports the probe stale until they land`.
 - inherited spec: the `ref` of the matching `inherits[]` source; set `hub` when more than one source is listed.
 - external anchor (a URL, a document outside the repository): `derived_from` is HEAD, `monitoring: unmonitored`, and a note that the runner re-derives it only on request (R6).
 
@@ -136,7 +137,7 @@ summary: executions the platform recorded for the on-demand scan lane
 declaration: {source: endpoint, path: .github/workflows/scan.yml, location: "on.workflow_dispatch"}
 tier: T0
 expected: {kind: count, value: 300, unit: runs}
-derived_from: 9feca6a8d2c1b7e4f0a3c5d6e7f8091a2b3c4d5e
+derived_from: "blob:3b18e512dba79e4c8300dd08aeb37f8e728b8dad"
 observe:
   argv: [gh, run, list, --workflow, scan.yml, --event, workflow_dispatch, --limit, "300", --json, conclusion, --jq, length]
   timeout_seconds: 120
@@ -161,7 +162,7 @@ entries:
     anchor: {path: <repo-relative> | inherited_spec: <topic/slug>, hub: <source> | external: <where>}
     location: "L<line> | §<heading>"
     monitoring: git|inherited-ref|unmonitored
-    derived_from: <40-hex | pinned ref>
+    derived_from: <blob:40-hex | pinned ref | 40-hex (SHA-256 repository or external: HEAD)>
     note: <inventory fact, optional; never a verdict word>
     probe: {<schema-conformant draft, no approval>}
     assumes: [{needs: <target or program>, evidence: <file:line>}]
