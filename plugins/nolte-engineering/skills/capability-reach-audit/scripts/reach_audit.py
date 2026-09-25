@@ -864,18 +864,25 @@ _FENCE_RE = re.compile(r"^ {0,3}(`{3,}|~{3,})(.*)$")
 _ATX_RE = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]+(.*?))?[ \t]*$")
 _ATX_CLOSING_RE = re.compile(r"(?:^|[ \t]+)#+$")
 _ROW_RE = re.compile(r"^ {0,3}\|(.*)$")
+_COMMENT_RE = re.compile(r"^ {0,3}<!--")
 _CELL_SPLIT_RE = re.compile(r"(?<!\\)\|")
 
 
 def _markdown_structure(lines: list[bytes]) -> tuple[list[tuple[int, int, str]], list[tuple[int, str]]]:
     """``(index, level, first token)`` of each ATX heading and ``(index, first cell)`` of each pipe row.
 
-    Lines inside fenced code blocks and a leading front-matter block are neither.
-    A setext heading is no heading here, and a table row must start with a pipe:
-    a locator that only hits one of them does not resolve, rather than cutting a
-    section by a rule the document's renderer may not share.
+    Lines inside fenced code blocks, inside an HTML comment block (from a line
+    opening with ``<!--`` through the line holding ``-->``), and in a leading
+    front-matter block are neither. Front matter opens on the first line, after a
+    UTF-8 byte order mark if there is one, and needs a closing ``---`` or ``...``
+    line; without one, the first line is a thematic break. A setext heading is no
+    heading here, and a table row must start with a pipe: a locator that only
+    hits one of them does not resolve, rather than cutting a section by a rule
+    the document's renderer may not share.
     """
     text = [raw.decode("utf-8", "replace").rstrip("\r\n") for raw in lines]
+    if text:
+        text[0] = text[0].removeprefix("\ufeff")
     start = 0
     if text and text[0].rstrip() == "---":
         closing = next((i for i in range(1, len(text)) if text[i].rstrip() in ("---", "...")), None)
@@ -883,8 +890,12 @@ def _markdown_structure(lines: list[bytes]) -> tuple[list[tuple[int, int, str]],
     headings: list[tuple[int, int, str]] = []
     rows: list[tuple[int, str]] = []
     fence: tuple[str, int] | None = None
+    comment = False
     for index in range(start, len(text)):
         line = text[index]
+        if comment:
+            comment = "-->" not in line
+            continue
         opener = _FENCE_RE.match(line)
         if fence is not None:
             if opener and opener.group(1)[0] == fence[0] and len(opener.group(1)) >= fence[1] \
@@ -893,6 +904,9 @@ def _markdown_structure(lines: list[bytes]) -> tuple[list[tuple[int, int, str]],
             continue
         if opener and not (opener.group(1)[0] == "`" and "`" in opener.group(2)):
             fence = (opener.group(1)[0], len(opener.group(1)))
+            continue
+        if _COMMENT_RE.match(line):
+            comment = "-->" not in line[line.index("<!--") + 4:]
             continue
         heading = _ATX_RE.match(line)
         if heading:
@@ -1175,13 +1189,17 @@ def _run_length(git: Git, revisions: list[tuple[str, str]], yaml: Any) -> int:
 
 def _continuation_problem(git: Git, moved: str, earlier: list[tuple[str, str]], span: int,
                           yaml: Any) -> str | None:
-    """Why a move that re-approves nothing cannot inherit the previous derivation.
+    """Why the move cannot build on the previous derivation, or None.
 
-    A pure move of the declaration and a pure commit-to-content migration only
-    re-label the previous derivation; they are clean exactly when that derivation
-    was. So the previous revision must still be the document its derivation
-    recorded, and that recording must itself have been a re-derivation. Otherwise
-    one relabelling commit would adopt a weakening committed before it.
+    Every move of a content or section anchor (a re-derivation, a
+    re-confirmation, a migration, a relabel) and of an inherited pin builds on
+    the derivation it replaces. So the probe must still be the document that
+    derivation recorded (no commit in between changed it: an intermediate plain
+    probe change is never adopted), and that recording must itself have been
+    legitimate, checked by the same rule, back to the probe's first commit or to
+    a commit-anchor derivation, which keeps its pre-v1.1 rules. Otherwise one
+    commit could weaken the probe under a self-made anchor and the next move,
+    though justified on its own, would adopt that weakening.
     """
     recording = earlier[span - 1]
     recording_doc = _probe_doc(git, recording, yaml)
@@ -1304,20 +1322,23 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
         relabel = (("derived_from",), ("approval",))
         pure = new_blob == before
     if pure and new_rel == rel and _without(new_doc, *relabel) == _without(prior_doc, *relabel):
-        return _continuation_problem(git, moved, earlier, span, yaml)
+        return None  # a relabel: _rebaseline_problem holds it to the previous derivation
     if not changed:
         return f"{moved}, but {_unchanged_since(prev_df, rel)}"
     if prev_df == new_df:
-        return _pure_move_problem(git, moved, earlier, span, yaml, prior_doc, new_doc)
-    if new_rel != rel and git.blob_at(recording, new_rel) == new_blob:
+        return _pure_move_problem(moved, prior_doc, new_doc)
+    # The move must answer to a change of what the new anchor anchors on, not
+    # only of something the previous anchor happened to cite.
+    if git.blob_at(recording, new_rel) == new_blob:
         return (f"{moved}, but {safe_text(new_rel)} already held {safe_text(new_df[:12], 40)} when the previous "
                 f"derivation was recorded in {recording[:12]}, so re-pointing at it shows no declaration change")
     return None
 
 
-def _pure_move_problem(git: Git, moved: str, earlier: list[tuple[str, str]], span: int, yaml: Any,
-                       prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
-    """Same anchor, new declaration path: clean only as a continuation that changed nothing else.
+def _pure_move_problem(moved: str, prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
+    """Same anchor, new declaration path: clean only when it changed nothing else.
+
+    Like every move it is also held to the previous derivation (_continuation_problem).
 
     The re-derive that follows a rename re-approves the probe, so the approval
     stamp may move with the path; the observation digest inside it is still
@@ -1327,7 +1348,7 @@ def _pure_move_problem(git: Git, moved: str, earlier: list[tuple[str, str]], spa
     if _without(new_doc, *pure_move) != _without(prior_doc, *pure_move):
         return (f"{moved}, but the same commit changed the probe beyond declaration.path, "
                 "which a pure move of the declaration does not justify")
-    return _continuation_problem(git, moved, earlier, span, yaml)
+    return None
 
 
 def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str, baseline: str, rel: str,
@@ -1367,14 +1388,19 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
     if (not changed and not _is_section_anchor(prev_df) and new_rel == rel
             and _without(new_doc, *relabel) == _without(prior_doc, *relabel)):
-        return _continuation_problem(git, moved, earlier, span, yaml)
+        return None  # a relabel: _rebaseline_problem holds it to the previous derivation
     if not changed:
         return f"{moved}, but {_unchanged_since(prev_df, rel)}"
     if prev_df == new_df:
-        return _pure_move_problem(git, moved, earlier, span, yaml, prior_doc, new_doc)
-    if new_rel != rel and not _section_mismatches(git, recording, new_rel, locators):
-        return (f"{moved}, but {safe_text(new_rel)} already held these sections when the previous derivation "
-                f"was recorded in {recording[:12]}, so re-pointing at it shows no declaration change")
+        return _pure_move_problem(moved, prior_doc, new_doc)
+    # The move must answer to a change of what the new anchor anchors on: at
+    # least one of its sections differs from the recording commit.
+    if not _section_mismatches(git, recording, new_rel, locators):
+        if new_rel != rel:
+            return (f"{moved}, but {safe_text(new_rel)} already held these sections when the previous derivation "
+                    f"was recorded in {recording[:12]}, so re-pointing at it shows no declaration change")
+        return (f"{moved}, but none of the sections it now anchors on changed since the previous derivation "
+                f"was recorded in {recording[:12]}")
     return None
 
 
@@ -1398,9 +1424,8 @@ def _reconfirmation_problem(git: Git, moved: str, earlier: list[tuple[str, str]]
     after its declaration changed. So against the derivation it re-confirms,
     only derived_from, the section digests, and the approval may differ; a
     changed expected, observe, tier, environment, or declaration target
-    (path, location, locators) is a weakening. It inherits that derivation, so
-    it is clean only as a continuation of it (_continuation_problem), which
-    also keeps a weakening committed in between from being adopted.
+    (path, location, locators) is a weakening. Like every move it is also held
+    to the previous derivation (_continuation_problem).
     """
     span = _run_length(git, earlier, yaml)
     recording = earlier[span - 1]
@@ -1416,7 +1441,7 @@ def _reconfirmation_problem(git: Git, moved: str, earlier: list[tuple[str, str]]
         return (f"{moved}, but a re-confirmation may change only derived_from, the section digests and approval, "
                 f"and it also changed {safe_text(', '.join(changed), 200)} against the derivation recorded in "
                 f"{recording[0][:12]}")
-    return _continuation_problem(git, moved, earlier, span, yaml)
+    return None
 
 
 def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
@@ -1441,7 +1466,9 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     a section anchor by its sections (_section_rebaseline_problem); ``new_doc``
     is the probe document the baseline recorded. A move recorded as a
     re-confirmation must, on top, leave the probe itself as it was
-    (_reconfirmation_problem).
+    (_reconfirmation_problem). Every move but one onto a commit anchor must
+    finally build on a legitimate previous derivation with no probe change in
+    between (_continuation_problem).
     """
     prior_commit, _ = earlier[0]
     moved = f"{baseline[:12]} moved derived_from"
@@ -1461,13 +1488,19 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     else:
         moved += f" from {safe_text(prev_df[:12], 40)} to {safe_text(new_df[:12], 40)}"
     problem = _anchor_move_problem(git, moved, decl, prior_doc, prev_df, new_df, baseline, earlier, yaml, new_doc)
+    if problem:
+        return problem
     approval = new_doc.get("approval")
-    if (problem is None and prev_df != new_df and isinstance(approval, dict)
-            and approval.get("mode") == MODE_RECONFIRMED):
+    reconfirmed = isinstance(approval, dict) and approval.get("mode") == MODE_RECONFIRMED
+    if reconfirmed and prev_df != new_df:
         # A pure move (prev_df == new_df) is already held to "nothing but the path
         # and the approval changed", whatever mode the approval carries over.
-        return _reconfirmation_problem(git, moved, earlier, yaml, new_doc)
-    return problem
+        problem = _reconfirmation_problem(git, moved, earlier, yaml, new_doc)
+        if problem:
+            return problem
+    if not (reconfirmed or decl.get("inherited_spec") or _is_content_anchor(new_df) or _is_section_anchor(new_df)):
+        return None  # a move onto a commit anchor keeps the pre-v1.1 rules
+    return _continuation_problem(git, moved, earlier, _run_length(git, earlier, yaml), yaml)
 
 
 def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: dict[str, Any], prev_df: str,
@@ -1492,10 +1525,21 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         return _section_rebaseline_problem(git, moved, prev_df, new_df, baseline, rel, earlier, yaml,
                                            prior_doc, new_doc)
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
-    if prev_commit is None or new_commit is None:
+    if prev_commit is not None and new_commit is not None:
+        last = git.last_commit(rel, new_commit)
+        if last is not None and not git.is_ancestor_or_equal(last, prev_commit):
+            return None
+        return f"{moved}, but {safe_text(rel)} did not change in between"
+    # A squash merge drops the commits a v1.0 derivation named, but the commits
+    # that recorded them are still here (as in _prior_anchor): the declaration's
+    # content there stands in for an anchor that no longer resolves. The walk
+    # back over earlier derivations (_continuation_problem) reaches such moves.
+    recording = earlier[_run_length(git, earlier, yaml) - 1][0]
+    before = git.blob_at(prev_commit or recording, rel)
+    after = git.blob_at(new_commit or baseline, rel)
+    if before is None or after is None:
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
-    last = git.last_commit(rel, new_commit)
-    if last is not None and not git.is_ancestor_or_equal(last, prev_commit):
+    if before != after:
         return None
     return f"{moved}, but {safe_text(rel)} did not change in between"
 
