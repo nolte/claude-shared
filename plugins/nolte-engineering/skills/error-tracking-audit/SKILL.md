@@ -99,16 +99,15 @@ Every check in the scanner's `### Tool contract` traces to a MUST in the spec's 
 
 The scanner reports these as multi-state on purpose; the split is this skill's to own.
 
-- **`default-PII off`**: one finding per non-PASS category, grouped under the component, so an SDK bump adding a category surfaces as a new `UNSET→ON` line. The scanner's category source establishes a default.
+- **`default-PII off`**: one finding per non-`OFF` category, grouped under the component, so an SDK bump adding a category surfaces as a new `UNSET→ON` line. The scanner's category source establishes a default.
 
   | State | Severity |
   |---|---|
   | `PASS: every category OFF` | **PASS** |
-  | `EXPLICIT TRUE`; a category `ON`, `UNSET→ON`, or `RESTRICTED` (allow/deny list: not off, the rest is still collected); `UNSET` on a legacy-flag SDK defaulting on | **Critical**; the MUST is unconditional |
-  | `UNSET→UNKNOWN`; `UNSET` on a legacy-flag SDK with no established default | **Warning** + operator action "establish the pinned SDK's documented default" |
-  | `UNSET`, legacy-flag SDK defaulting off | **Warning**: unasserted; a major can flip it |
+  | `EXPLICIT TRUE`; a category `ON`, `UNSET→ON`, or `RESTRICTED` (with or without `via default`; allow/deny list: not off, the rest is still collected) | **Critical**; the MUST is unconditional |
+  | `UNSET`; a category `UNSET→UNKNOWN` (no SDK mapping known, or a non-literal value) | **Warning** + operator action "establish the pinned SDK's documented default" |
 
-  `NOT ALL OFF` and other `UNSET` follow their categories (JS ≥ 11 without a block: all `UNSET→ON`). A `legacy flag ignored` note never yields PASS; the structured block, or its absence on JS ≥ 11, decides. A missing before-send hook is its own hard fail; don't double-count it.
+  `NOT ALL OFF` follows its categories, whether the evidence is a spelling or `none` (an absent flag resolves like an explicit off one). A `legacy flag ignored` note never yields PASS; the structured block, or its absence on JS ≥ 11, decides. A missing before-send hook is its own hard fail; don't double-count it.
 - **DSN source**: deployment environment → **PASS**. Runtime-injected config (secret manager, config service, a container entrypoint writing a served runtime config) → **PASS**; that is deployment configuration by another mechanism, and it keeps the value out of the source tree. **Build-baked** (a build-time bundler variable such as `VITE_*` or `NEXT_PUBLIC_*` frozen into the artifact) → **Warning for every component type**, never Critical: read literally, the spec's rule has two halves — injected via environment/deployment configuration, and no literal in the source tree — and a build-time deployment variable satisfies both. What it costs is stage portability, since one artifact then serves one stage and cannot be redeployed without a rebuild; that is a real concern the spec does not currently mandate, so it is reported and not hard-failed. Don't split by component type: that would enforce an unwritten requirement server-side or demote a MUST for browsers. **Hardcoded literal in the source tree** → **Critical** always; that is the spec's explicit MUST NOT.
 - **`release`**: present and moving per build (release tag or commit SHA injected at build/deploy) → **PASS**. **Static constant that never moves** → **Critical**, reported distinctly as a *stale release constant*: every event lands in one bucket forever, so regression detection and deploy attribution — the whole point of the MUST — are defeated exactly as by a missing value, while the remediation differs (wire the build to inject it, do not add the field). One exemption: a version constant the project's release automation bumps per release *is* resolvable to a unique code state; confirm the file is a declared version-bearing file of that flow first. **Missing** → **Critical**.
 
