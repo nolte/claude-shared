@@ -165,9 +165,14 @@ Filled during implementation. Each entry records the dispatched specialist and t
 | #665 | `nolte-claude-dev:claude-plugin-developer` | `git diff --stat` | `skills/requirements-elicit/SKILL.md \| 2 +-`, `skills/requirements-elicit/examples/01-vague-greenfield-elicit.md \| 3 ++-` — 2 files changed, 3 insertions(+), 2 deletions(-) |
 | #665 | `nolte-claude-dev:claude-plugin-developer` | `grep -c CLAUDE_PLUGIN_ROOT skills/requirements-elicit/SKILL.md` | `1` |
 | #665 | `nolte-claude-dev:claude-plugin-developer` | `task lint` (Agent-Lauf) + `pre-commit` beim Commit | alle Hooks Passed |
+| #666 | `nolte-claude-dev:claude-plugin-developer` | `python3 scripts/validate_skills.py plugins/nolte-engineering/agents/` | `validate_skills: 39 artifacts; 0C / 0W / 0S / 1I` (Info: spec-fallback-backlog, vorbestehend); `agent-description-budget`-Treffer: 0; Description 886 → 942 Zeichen |
+| #666 | `nolte-claude-dev:claude-plugin-developer` | `grep -n 'four sanctioned\|one of four' plugins/nolte-engineering/agents/implementation-plan-author.md` | leer, Exit 1 |
+| #666 | `nolte-claude-dev:claude-plugin-developer` | `git diff --stat` | `plugins/nolte-engineering/agents/implementation-plan-author.md \| 42 +++++++++++++++-------` — 1 file changed, 29 insertions(+), 13 deletions(-) |
+| #666 | `nolte-claude-dev:claude-plugin-developer` | `pre-commit` beim Commit | alle Hooks Passed |
 
 ## Deviations
 
 | Member | Kind | What changed |
 |---|---|---|
 | #665 | local adaptation | Zweite Gate-Restatement-Stelle `skills/requirements-elicit/examples/01-vague-greenfield-elicit.md:16` mitgezogen (skill-management §Progressive disclosure); Matrix-Zelle „Plugin artefacts" um die Beispieldatei erweitert. Admission, Mode und Ordering unverändert. |
+| #666 | local adaptation | Ein erster `use_when`-Eintrag mit 126 Zeichen löste `agent-management.frontmatter-use-case-field` (Critical, Katalog-Limit 120) aus und wurde auf 116 Zeichen gekürzt; Step 1 und die Write-effects-Zeilen Preconditions/Idempotency wurden für die issue-lose Quelle mit nachgezogen. Admission, Mode und Ordering unverändert. |
