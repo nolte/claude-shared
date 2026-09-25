@@ -11,6 +11,10 @@
 # PLACEHOLDER derived_from: the all-zero value stands in for the anchor the
 # probe is derived at; when deriving, replace it with the declaration's content
 # anchor blob:<sha1> (`git rev-parse HEAD:<path>`, schema v1.1).
+# The declaration is Markdown and the location cites a section number, so a
+# derivation that resolves `3.4` exactly once records a section anchor instead:
+# declaration.sections [{heading: "3.4", digest: <sha256>}] and derived_from
+# sections:<sha256> (schema v1.2). A file anchor is kept when it doesn't.
 # UNAPPROVED ON PURPOSE: this file carries no `approval` block. The runner
 # reports it `not probed` (reason `not approved`) until an operator who read it
 # adds approval, so copying it never runs anything by accident. As a T2 probe it

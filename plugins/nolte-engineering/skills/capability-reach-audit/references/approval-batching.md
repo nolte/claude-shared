@@ -30,7 +30,7 @@ Assumes:
 Answer: approve all | approve <ids or #s> | reject <ids or #s> [reason] | skip
 ```
 
-- `declaration` is `path (location)` for an in-repository anchor, `inherited <topic/slug> @ <ref>` for an inherited spec, `external: <where>` for the rest. Show `monitoring: unmonitored` in the same cell when the scanner set it, so the operator knows this probe re-derives only on request (R6).
+- `declaration` is `path (location)` for an in-repository anchor, `inherited <topic/slug> @ <ref>` for an inherited spec, `external: <where>` for the rest. Show `monitoring: unmonitored` in the same cell when the scanner set it, so the operator knows this probe re-derives only on request (R6). When the draft carries `declaration.sections`, append the locators (`sections: heading 3.1.1, row AK-OS-07`), so the operator approves what the anchor covers; a scanner `note` saying why a Markdown declaration kept the file anchor goes under the table.
 - `expected` is `<value> <unit>` for a count and `<n> values, <unit>` for a set; the full set is shown on request.
 - `observe` is the **full** argv, never truncated and never paraphrased: the argv is what the operator approves, and a cut-off cell hides exactly the part that runs. Join short argvs with spaces; when the joined form exceeds one line, render one element per line inside the cell (`<br>`-separated, or as a fenced block under the table keyed by row number).
 - `environment` and `teardown` list the Taskfile targets as drafted, `–` when absent. They run on the operator's machine like any `task` invocation in that repository; they belong in the row the operator approves, not in a footnote.
@@ -61,10 +61,18 @@ For each approved draft write `<target>/project/reach-probes/<id>.yml`:
 # Never edit in place: any later commit to this file is reported as weakened. Re-derive instead.
 id: <id>
 summary: <as drafted, if present>
-declaration: {<as drafted>}
+declaration:
+  source: <as drafted>
+  path: <as drafted>
+  location: "<as drafted; stays the human-readable citation>"
+  sections:  # only when drafted: a Markdown declaration whose cited sections each resolve once
+    - heading: "3.1.1"
+      digest: <64 lowercase hex, as drafted>
+    - row: AK-OS-07
+      digest: <64 lowercase hex, as drafted>
 tier: <as drafted>
 expected: {<as drafted>}
-derived_from: "<as drafted>"  # blob:<40-hex> for an in-repository declaration; pinned ref or commit otherwise
+derived_from: "<as drafted>"  # sections:<64-hex> with declaration.sections; blob:<40-hex> otherwise in the repository; pinned ref or commit elsewhere
 environment: [<as drafted, if present>]
 teardown: [<as drafted, if present>]
 observe: {<as drafted>}
@@ -72,9 +80,10 @@ approval:
   approved_at: "2026-09-23T14:30:12Z"
   approved_by: "<operator>"
   observation_digest: "<64 lowercase hex characters>"
+  mode: derived  # optional, derived when absent; reconfirmed only via `reconfirm` (reconfirm-and-migrate.md)
 ```
 
-- Copy the draft **as returned**: same keys, same values, no additions except `approval`. The schema (`schemas/reach-probe-v1.1.schema.yaml`) has `additionalProperties: false` at every level.
+- Copy the draft **as returned**: same keys, same values, no additions except `approval`. The schema (`schemas/reach-probe-v1.2.schema.yaml`) has `additionalProperties: false` at every level. Keep `declaration.sections` in the drafted order and never recompute a digest here: `derived_from` covers the list in that order, and a mismatch reads `unresolved`. A `derive` round writes `mode: derived` or omits `mode`; it never writes `reconfirmed`.
 - `approved_at` is the current UTC time in `YYYY-MM-DDTHH:MM:SSZ` form and **quoted**; unquoted, the loader turns it into a timestamp object and the probe fails the schema.
 - `approved_by` is `git -C <target> config user.name`. When that is empty, ask the operator for the name to record; never write an empty string (schema `minLength: 1`) and never fall back to a generic label.
 - `observation_digest` is **mandatory**: the SHA-256 hex digest (64 lowercase hex digits) of the canonical JSON of an object with exactly the three keys `observe`, `environment`, and `teardown`, where an absent `environment` or `teardown` counts as an empty list, serialised with `sort_keys=True` and `separators=(",", ":")` as UTF-8; the runner's implementation is the authority on the byte form. Treating an absent list as empty means that adding an explicit `environment: []` later leaves the digest unchanged, as it leaves behaviour unchanged. Compute it from the draft you are about to persist, never from memory of the batch table. The runner recomputes it on every `run` and refuses a probe whose current fields no longer match, reporting `approval does not cover the current observation step`. This protects against a later commit that swaps `argv` (or a target) while leaving the old approval block in place, which git-history weakening detection alone can't distinguish from a legitimate re-approval when history is shallow or rewritten.
@@ -96,7 +105,7 @@ entries:
     declaration: {source: <entry.source>, path: <anchor.path> | inherited_spec: <anchor.inherited_spec> [, hub: <anchor.hub>], location: "<entry.location>"}
     reason: <scope_not_countable | needs_model_judgement | effect_in_third_party | missing_environment_target | missing_observation_helper>
     detail: <the scanner's detail, if any>
-    derived_from: "<as returned>"  # blob:<40-hex> for an in-repository declaration
+    derived_from: "<as returned>"  # blob:<40-hex> for an in-repository declaration; the manifest has no sections field
     recorded_at: "2026-09-23T14:30:12Z"
 ```
 
