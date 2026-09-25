@@ -1,0 +1,293 @@
+# Schema for one capability-reach probe: a file under project/reach-probes/ in an
+# audited repository, executed by the capability-reach-audit runner
+# (plugins/nolte-engineering/skills/capability-reach-audit/scripts/reach_audit.py).
+#
+# A probe is a declarative head plus an observation step whose stdout is the raw
+# observation. The load-bearing property of this schema is what it FORBIDS: every
+# object is closed (additionalProperties: false), so a probe has no field in
+# which to state a verdict: no passed, no status, no result, no reached. The
+# comparison that yields reached / partially reached / not reached / not probed
+# happens in the runner, never in the probe. A schema that admitted a
+# self-asserting probe would reintroduce the defect the audit exists to catch
+# (spec/project/capability-reach-audit/ §"The probe": a self-reported success is
+# never a measurement of reach).
+#
+# The runner embeds the structural part of this document (everything except
+# title, description, and examples) because the schemas/ tree ships with the
+# nolte-shared payload, not with nolte-engineering; tests/test_reach_audit.py
+# fails when the two drift apart.
+#
+# Rules this schema cannot express and the runner enforces instead: a T0 probe
+# declares no environment, probe ids are unique within one probe set, and a
+# derived_from starting with blob: is a well-formed content anchor on an
+# in-repository declaration.
+#
+# v1.1 (backwards compatible with v1.0): derived_from also takes the content
+# anchor blob:<sha1> for an in-repository declaration. v1.0 stays in place,
+# byte-identical, for consumers pinned to it.
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/nolte/claude-shared/blob/main/schemas/reach-probe-v1.1.schema.yaml
+title: Capability Reach Probe
+description: >-
+  Validates one probe file under project/reach-probes/ in an audited repository.
+  The probe carries a declaration anchor, exactly one environment tier, the
+  expected observation as a typed count or set, approval metadata, the
+  derivation anchor, and an observation command whose stdout is the raw
+  observation. It carries no verdict field. Refs spec/project/capability-reach-audit/
+  §"The probe", §"Environment tiers", and §"Derivation, approval, and durability".
+type: object
+required:
+  - id
+  - declaration
+  - tier
+  - expected
+  - derived_from
+  - observe
+additionalProperties: false
+properties:
+  id:
+    type: string
+    description: >-
+      Stable kebab-case probe identifier, unique within the probe set.
+    pattern: "^[a-z0-9]+(-[a-z0-9]+)*$"
+  summary:
+    type: string
+    minLength: 1
+    description: >-
+      Optional one-line human description of what the probe observes. Never a
+      verdict: the runner neither reads nor reports it as one.
+  declaration:
+    $ref: "#/$defs/Declaration"
+  tier:
+    type: string
+    enum: [T0, T1, T2]
+    description: >-
+      Exactly one environment tier: T0 needs no environment, T1 one ephemeral
+      dependency, T2 a full stack with seeded data.
+  expected:
+    description: >-
+      The expected observation, typed as a count or a set. Free text is rejected:
+      a finding needs a ratio, and a ratio needs a number or a set.
+    oneOf:
+      - $ref: "#/$defs/CountExpectation"
+      - $ref: "#/$defs/SetExpectation"
+  approval:
+    $ref: "#/$defs/Approval"
+  derived_from:
+    type: string
+    minLength: 1
+    description: >-
+      The derivation anchor change detection compares against. For an
+      in-repository declaration (declaration.path), write blob:<40 lowercase
+      hex digits>: the git blob hash of the declaration file at derivation, as
+      printed by `git rev-parse <commit>:<path>`. A content anchor names no
+      commit, so it survives a squash merge that discards the commit the probe
+      was derived at. A commit of the target repository is still accepted for a
+      probe derived before v1.1 and keeps its commit-ancestry check. For an
+      inherited spec, the pinned inherits[].ref at derivation; a content anchor
+      is refused there. An external anchor is never compared. No pattern is
+      declared, so every v1.0-valid value stays valid; the runner refuses a
+      value that starts with blob: but is not of the documented form.
+  environment:
+    type: array
+    description: >-
+      Taskfile target names of the audited repository, run as `task <name>`
+      before the observation step. The runner brings no runtime of its own.
+    uniqueItems: true
+    items:
+      $ref: "#/$defs/TaskName"
+  teardown:
+    type: array
+    description: >-
+      Taskfile target names run as `task <name>` after the observation step,
+      whether or not it succeeded.
+    uniqueItems: true
+    items:
+      $ref: "#/$defs/TaskName"
+  observe:
+    $ref: "#/$defs/Observe"
+$defs:
+  Declaration:
+    type: object
+    description: >-
+      The anchor the probe was derived from. `path` names a file relative to the
+      audited repository; `inherited_spec` names a spec inherited through
+      spec/.spec-config.yml; neither marks an external anchor, which the runner
+      reports as unmonitored for change.
+    required:
+      - source
+      - location
+    additionalProperties: false
+    not:
+      required: [path, inherited_spec]
+    dependentRequired:
+      hub: [inherited_spec]
+    properties:
+      source:
+        type: string
+        enum: [requirement, endpoint, capability, inventory]
+        description: >-
+          Which of the four declaration sources declared the entry.
+      path:
+        type: string
+        minLength: 1
+        description: >-
+          Declaration file, relative to the audited repository's root.
+      inherited_spec:
+        type: string
+        description: >-
+          Logical key <topic>/<slug> of a spec inherited through
+          spec/.spec-config.yml inherits[].
+        pattern: "^([a-z0-9]+(-[a-z0-9]+)*/)?[a-z0-9]+(-[a-z0-9]+)*$"
+      hub:
+        type: string
+        minLength: 1
+        description: >-
+          The inherits[].source whose ref pins the inherited spec. Needed only
+          when spec/.spec-config.yml lists more than one inherits[] entry.
+      location:
+        type: string
+        minLength: 1
+        description: >-
+          Human-readable place inside the declaration, such as a heading or a
+          line number.
+  CountExpectation:
+    type: object
+    description: >-
+      The declaration is a count: the observation step prints one non-negative
+      integer.
+    required:
+      - kind
+      - value
+      - unit
+    additionalProperties: false
+    properties:
+      kind:
+        const: count
+        description: Discriminator for a count expectation.
+      value:
+        type: integer
+        minimum: 1
+        description: The declared count.
+      unit:
+        type: string
+        minLength: 1
+        description: What is counted, such as collections or runs.
+  SetExpectation:
+    type: object
+    description: >-
+      The declaration is a set: the observation step prints one member per line.
+    required:
+      - kind
+      - values
+    additionalProperties: false
+    properties:
+      kind:
+        const: set
+        description: Discriminator for a set expectation.
+      values:
+        type: array
+        description: The declared members.
+        minItems: 1
+        uniqueItems: true
+        items:
+          type: string
+          minLength: 1
+      unit:
+        type: string
+        minLength: 1
+        description: What the members are, such as endpoints or collections.
+  Approval:
+    type: object
+    description: >-
+      Operator approval. A probe without it is reported not probed and never
+      executed.
+    required:
+      - approved_at
+      - approved_by
+    additionalProperties: false
+    properties:
+      approved_at:
+        type: string
+        description: >-
+          UTC approval timestamp in ISO 8601 form. Quote it in YAML, or the
+          loader turns it into a timestamp object.
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z$"
+      approved_by:
+        type: string
+        minLength: 1
+        description: The approving operator.
+      observation_digest:
+        type: string
+        pattern: "^[0-9a-f]{64}$"
+        description: >-
+          Binds the approval to what the runner executes. SHA-256, as 64
+          lowercase hex digits, of the UTF-8 encoding of
+          json.dumps({"observe": ..., "environment": ..., "teardown": ...},
+          sort_keys=True, separators=(",", ":"), ensure_ascii=False), with an
+          absent environment or teardown taken as []. The runner's
+          observation_digest() computes it. When the committed observation step
+          no longer matches, the probe is not probed and the mismatch is a
+          finding; when the field is absent, the probe runs with a note saying
+          so.
+  Observe:
+    type: object
+    description: >-
+      The observation step: an argv list run without a shell in the audited
+      repository. Its stdout is the raw observation; its exit code alone never is.
+    required:
+      - argv
+    additionalProperties: false
+    properties:
+      argv:
+        type: array
+        description: Program and arguments.
+        minItems: 1
+        items:
+          type: string
+          minLength: 1
+      timeout_seconds:
+        type: integer
+        minimum: 1
+        maximum: 3600
+        description: >-
+          Wall-clock bound on the observation step. Default 300.
+  TaskName:
+    type: string
+    description: >-
+      A Taskfile target name. A leading dash is refused so a name cannot be read
+      as an option of `task`.
+    pattern: "^[A-Za-z0-9_][A-Za-z0-9_:.-]*$"
+examples:
+  - id: scan-lane-runs
+    declaration:
+      source: endpoint
+      path: .github/workflows/scan.yml
+      location: "on.workflow_dispatch"
+    tier: T0
+    expected:
+      kind: count
+      value: 300
+      unit: runs
+    approval:
+      approved_at: "2026-09-23T10:00:00Z"
+      approved_by: nolte
+    derived_from: "blob:3b18e512dba79e4c8300dd08aeb37f8e728b8dad"
+    observe:
+      argv: [task, --silent, reach:scan-lane-runs]
+      timeout_seconds: 120
+  - id: ranking-endpoint-answers
+    declaration:
+      source: capability
+      inherited_spec: project/rest-api-design
+      location: "§Ranking"
+    tier: T1
+    expected:
+      kind: set
+      values: [ordering-a, ordering-b]
+      unit: distinct orderings
+    derived_from: v0.1.8
+    environment: [ranking:up]
+    teardown: [ranking:down]
+    observe:
+      argv: [python3, scripts/probe_ranking.py]
