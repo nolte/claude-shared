@@ -28,7 +28,8 @@ from jsonschema import Draft202012Validator
 from tests.conftest import REPO_ROOT, SCRIPTS, Target, ra, row_of, validate
 
 SCRIPT_PATH = SCRIPTS / "reach_audit.py"
-SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.1.schema.yaml"
+SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.2.schema.yaml"
+PRIOR_SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.1.schema.yaml"
 EXAMPLES = SCRIPTS.parent / "examples"
 FIXED_NOW = datetime(2026, 9, 23, 10, 0, 0, tzinfo=timezone.utc)
 PY = sys.executable
@@ -123,7 +124,7 @@ def test_example_probes_validate():
 def test_schemas_config_binds_the_example_glob():
     config = yaml.safe_load((REPO_ROOT / ".schemas-config.yaml").read_text())
     bound = {glob: schema for glob, schema in config["mappings"].items() if list(REPO_ROOT.glob(glob))}
-    assert "schemas/reach-probe-v1.1.schema.yaml" in bound.values()
+    assert "schemas/reach-probe-v1.2.schema.yaml" in bound.values()
 
 
 def _valid() -> dict:
@@ -1970,4 +1971,861 @@ def test_668_R2_fabricated_unresolvable_anchor_cannot_launder_a_weakening(target
     reason = _weakened_reason(target, marker)
     assert (f"its previous derivation was no re-derivation either: {weakening[:12]} moved derived_from "
             "from ") in reason
-    assert "cannot both be resolved to commits" in reason
+    # The made-up commit does not resolve, so the commit that recorded it stands in: the declaration there
+    # is the one the previous derivation saw.
+    assert f"to 000000000000, but {DECL} did not change in between" in reason
+
+
+# --------------------------------------------------------------------------- #
+# Section anchors and re-confirmation (#674)
+# Requirement ids R1-R10 refer to project/requirements/reach-probe-section-anchor.md.
+# --------------------------------------------------------------------------- #
+SECTIONED = (
+    "# Requirements\n\n"
+    "## 3 Export\n\n"
+    "### 3.1 Collections\n\nExports 3 collections.\n\n"
+    "#### 3.1.1 Format\n\nJSON.\n\n"
+    "### 3.2 Schedules\n\nNightly.\n\n"
+    "## 4. Rules\n\n"
+    "| Id | Rule |\n|---|---|\n| AK-OS-07 | Delete on request |\n| AK-OS-08 | Export on request |\n"
+)
+LOCATORS = (("heading", "3.1"), ("row", "AK-OS-07"))
+
+
+def _found(text: str, kind: str, locator: str) -> list[bytes]:
+    return ra.find_sections(text.encode(), kind, locator)
+
+
+def test_674_heading_section_runs_to_the_next_heading_of_the_same_or_a_higher_level():
+    """R2: a heading's section keeps its deeper headings and ends at the next peer or parent."""
+    assert _found(SECTIONED, "heading", "3.1") == [
+        b"### 3.1 Collections\n\nExports 3 collections.\n\n#### 3.1.1 Format\n\nJSON.\n\n"]
+    assert _found(SECTIONED, "heading", "3.1.1") == [b"#### 3.1.1 Format\n\nJSON.\n\n"]
+    three = _found(SECTIONED, "heading", "3")
+    assert len(three) == 1 and three[0].startswith(b"## 3 Export\n") and three[0].endswith(b"Nightly.\n\n")
+    four = _found(SECTIONED, "heading", "4")  # "4." with the trailing dot stripped
+    assert len(four) == 1 and four[0].startswith(b"## 4. Rules\n") and four[0].endswith(b"| AK-OS-08 | Export on request |\n")
+
+
+def test_674_whitespace_and_line_endings_are_part_of_the_section():
+    assert _found("## 3.1 A\r\nx \r\n## 3.2 B\r\n", "heading", "3.1") == [b"## 3.1 A\r\nx \r\n"]
+
+
+def test_674_headings_inside_fenced_code_blocks_are_ignored():
+    text = ("## 3.1 Real\n\nbody\n\n```md\n## 3.1 Fake\n## 5 Not a heading\n```\n\nmore\n\n"
+            "~~~\n# 3.2 fenced\n~~~\n## 3.2 Next\n")
+    assert _found(text, "heading", "3.1") == [
+        b"## 3.1 Real\n\nbody\n\n```md\n## 3.1 Fake\n## 5 Not a heading\n```\n\nmore\n\n~~~\n# 3.2 fenced\n~~~\n"]
+    assert _found(text, "heading", "5") == []
+    assert len(_found(text, "heading", "3.2")) == 1
+
+
+def test_674_front_matter_is_not_a_heading():
+    assert _found("---\ntitle: x\n# 3.1 a comment\n---\n## 3.1 Real\n", "heading", "3.1") == [b"## 3.1 Real\n"]
+
+
+def test_674_S1_a_byte_order_mark_does_not_hide_front_matter_or_the_first_heading():
+    assert _found("\ufeff---\ntitle: x\n# 3.1 a comment\n---\n## 3.1 Real\n", "heading", "3.1") == [
+        b"## 3.1 Real\n"]
+    assert _found("\ufeff# 3.1 First\nbody\n# 3.2 Next\n", "heading", "3.1") == [
+        "\ufeff# 3.1 First\nbody\n".encode()]
+
+
+def test_674_S1_front_matter_needs_the_first_line_and_a_closing_line():
+    # Unclosed: no front matter, so the heading after the rule counts.
+    assert _found("---\n# 3.1 A\ntext\n", "heading", "3.1") == [b"# 3.1 A\ntext\n"]
+    # Not on the first line: a thematic break, and the heading between the rules counts.
+    assert _found("intro\n---\n# 3.1 A\n---\n", "heading", "3.1") == [b"# 3.1 A\n---\n"]
+
+
+def test_674_S1_headings_and_rows_inside_html_comments_are_ignored():
+    text = ("<!--\n## 3.1 Commented out\n| AK-OS-07 | old |\n-->\n"
+            "## 3.1 Real\n\nbody <!-- inline -->\n\n<!-- one line -->\n"
+            "<!-- starts\n## 3.2 still a comment\nends -->\n| AK-OS-07 | new |\n## 3.2 Next\n")
+    assert _found(text, "heading", "3.1") == [
+        b"## 3.1 Real\n\nbody <!-- inline -->\n\n<!-- one line -->\n"
+        b"<!-- starts\n## 3.2 still a comment\nends -->\n| AK-OS-07 | new |\n"]
+    assert _found(text, "heading", "3.2") == [b"## 3.2 Next\n"]
+    assert _found(text, "row", "AK-OS-07") == [b"| AK-OS-07 | new |\n"]
+    # A comment opener inside a fence opens nothing.
+    assert len(_found("```\n<!--\n```\n## 3.1 A\n", "heading", "3.1")) == 1
+
+
+@pytest.mark.parametrize("underline", ["=========", "---------"])
+def test_674_setext_heading_is_not_a_heading(underline):
+    assert _found(f"3.1 Title\n{underline}\n\ntext\n", "heading", "3.1") == []
+
+
+def test_674_row_resolution():
+    """R2: a row locator selects the single pipe-table row whose first cell is the id."""
+    assert _found(SECTIONED, "row", "AK-OS-07") == [b"| AK-OS-07 | Delete on request |\n"]
+    assert _found("AK-OS-09 | no leading pipe |\n", "row", "AK-OS-09") == []
+    assert _found("```\n| AK-OS-07 | fenced |\n```\n", "row", "AK-OS-07") == []
+    assert _found("| AK-OS-07 | x |\n", "row", "AK-OS") == []
+
+
+def test_674_repeated_heading_or_row_is_ambiguous():
+    assert len(_found("## 3.1 A\n## 3.1 B\n", "heading", "3.1")) == 2
+    assert len(_found("| AK-OS-07 | a |\n| AK-OS-07 | b |\n", "row", "AK-OS-07")) == 2
+
+
+def _sections_now(target: Target, locators=LOCATORS, path: str = DECL) -> list[dict]:
+    """Locators with the digests of their sections in the working tree (the derivation's view)."""
+    content = (target.path / path).read_bytes()
+    sections = []
+    for kind, locator in locators:
+        found = ra.find_sections(content, kind, locator)
+        digest = hashlib.sha256(found[0]).hexdigest() if len(found) == 1 else "0" * 64
+        sections.append({kind: locator, "digest": digest})
+    return sections
+
+
+@pytest.fixture
+def sectioned(tmp_path) -> Target:
+    t = Target(tmp_path / "target")
+    t.write(DECL, SECTIONED)
+    t.commit("declare")
+    return t
+
+
+def _section_probe(target: Target, locators=LOCATORS, **kw) -> str:
+    sections = _sections_now(target, locators)
+    probe = make_probe(derived_from=ra.section_anchor(sections), **kw)
+    probe["declaration"]["sections"] = sections
+    rel = target.write_probe(probe)
+    target.commit("approve probe")
+    return rel
+
+
+def _reanchor(target: Target, rel: str, *, mode: str | None = None, locators=None, sections=None,
+              **changes) -> dict:
+    """Re-record the section anchor from the working tree; ``mode`` re-stamps the approval."""
+    data = yaml.safe_load((target.path / rel).read_text())
+    for key, value in changes.items():
+        if key == "expected_value":
+            data["expected"]["value"] = value
+        elif key.startswith("declaration_"):
+            data["declaration"][key[len("declaration_"):]] = value
+        else:
+            data[key] = value
+    if locators is None:
+        locators = [next((k, v) for k, v in s.items() if k != "digest") for s in data["declaration"]["sections"]]
+    data["declaration"]["sections"] = sections or _sections_now(target, locators, data["declaration"]["path"])
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    if mode is not None:
+        data["approval"] = dict(data["approval"], approved_at="2026-09-25T08:00:00Z", mode=mode)
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+    return data
+
+
+def _edit(target: Target, old: str, new: str, path: str = DECL) -> None:
+    text = (target.path / path).read_text()
+    assert old in text
+    target.write(path, text.replace(old, new))
+
+
+OUTSIDE = ("Nightly.", "Weekly.")          # in 3.2: outside every default locator
+INSIDE = ("JSON.", "JSON and CSV.")        # in 3.1.1, so inside 3.1
+IN_ROW = ("Delete on request", "Delete within 30 days")
+
+
+def test_674_schema_admits_sections_and_the_approval_mode():
+    probe = _valid() | {"derived_from": "sections:" + "a" * 64}
+    probe["declaration"]["sections"] = [{"heading": "3.1.1", "digest": "b" * 64}, {"row": "AK-OS-07", "digest": "c" * 64}]
+    probe["approval"]["mode"] = "reconfirmed"
+    assert validate(probe) == []
+
+
+@pytest.mark.parametrize("section", [
+    {"heading": "3.1", "row": "AK-OS-07", "digest": "b" * 64},
+    {"heading": "3.1", "digest": "B" * 64},
+    {"heading": "3.1"},
+    {"digest": "b" * 64},
+    {"heading": "3.1 Collections", "digest": "b" * 64},
+    {"row": "AK | x", "digest": "b" * 64},
+])
+def test_674_schema_rejects_a_malformed_locator(section):
+    probe = _valid()
+    probe["declaration"]["sections"] = [section]
+    assert validate(probe)
+
+
+def test_674_schema_rejects_sections_without_a_path_and_an_unknown_mode():
+    probe = make_probe(derived_from="x", path=None)
+    probe["declaration"]["sections"] = [{"heading": "3.1", "digest": "b" * 64}]
+    assert validate(probe)
+    probe = _valid()
+    probe["approval"]["mode"] = "rubber-stamped"
+    assert validate(probe)
+
+
+def test_674_R9_every_v1_1_example_stays_valid():
+    for example in yaml.safe_load(PRIOR_SCHEMA_PATH.read_text())["examples"]:
+        assert validate(example) == []
+
+
+def test_674_edit_outside_every_anchored_section_is_clean(sectioned):
+    """R3: the point of the section anchor; a file anchor would read this as stale."""
+    _section_probe(sectioned)
+    _edit(sectioned, *OUTSIDE)
+    sectioned.commit("edit another section")
+    _assert_clean(sectioned)
+
+
+def test_674_edit_inside_one_of_two_sections_is_stale_naming_that_locator(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    _section_probe(sectioned, argv=marker_argv(marker))
+    _edit(sectioned, *INSIDE)
+    sectioned.commit("edit 3.1.1, inside 3.1")
+    _, report = run_audit(sectioned)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_STALE and not marker.exists()
+    assert f"declaration changed since derivation: in {DECL}, heading 3.1 changed" in row[9]
+    assert "AK-OS-07" not in row[9]
+
+
+def test_674_row_edit_is_stale_naming_the_row(sectioned):
+    _section_probe(sectioned)
+    _edit(sectioned, *IN_ROW)
+    sectioned.commit("edit the row")
+    _, report = run_audit(sectioned)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE and f"in {DECL}, row AK-OS-07 changed" in row[9]
+
+
+def test_674_uncommitted_edit_under_a_section_anchor_is_stale(sectioned):
+    _section_probe(sectioned)
+    _edit(sectioned, *OUTSIDE)
+    _, report = run_audit(sectioned)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE and f"{DECL} has uncommitted changes" in row[9]
+
+
+def test_674_renumbered_section_is_stale_not_followed(sectioned):
+    """R3: a renumbered section is not found; the runner does not guess where it went."""
+    _section_probe(sectioned)
+    _edit(sectioned, "### 3.1 Collections", "### 3.9 Collections")
+    sectioned.commit("renumber")
+    _, report = run_audit(sectioned)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE and f"in {DECL}, heading 3.1 not found" in row[9]
+
+
+def test_674_locator_turned_ambiguous_is_stale_naming_it(sectioned):
+    _section_probe(sectioned)
+    _edit(sectioned, "## 4. Rules", "### 3.1 Duplicate\n\n## 4. Rules")
+    sectioned.commit("a second 3.1")
+    _, report = run_audit(sectioned)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_STALE and f"in {DECL}, heading 3.1 is ambiguous (2 matches)" in row[9]
+
+
+def test_674_R4_re_derivation_onto_an_ambiguous_locator_cannot_anchor(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "3"))
+    _edit(sectioned, "## 4. Rules", "### 3.1 Duplicate\n\n## 4. Rules")
+    _reanchor(sectioned, rel)
+    sectioned.commit("a second 3.1 and a re-derivation onto it")
+    reason = _weakened_reason(sectioned, marker)
+    assert f"the recorded sections are not the content of {DECL} at" in reason
+    assert "heading 3.1 is ambiguous (2 matches)" in reason
+
+
+@pytest.mark.parametrize("case, expected", [
+    ("digest-edited", "does not match the digests in declaration.sections"),
+    ("no-sections", "is a section anchor, but declaration.sections is absent"),
+    ("blob-with-sections", "declaration.sections needs derived_from of the form sections:<64 hex digits>"),
+    ("malformed", "is not a section anchor of the form sections:<64 hex digits>"),
+    ("duplicate-locator", "declaration.sections lists heading 3.1 more than once"),
+])
+def test_674_inconsistent_section_anchor_is_unresolved(sectioned, tmp_path, case, expected):
+    marker = tmp_path / "ran"
+    sections = _sections_now(sectioned)
+    probe = make_probe(derived_from=ra.section_anchor(sections), argv=marker_argv(marker))
+    probe["declaration"]["sections"] = sections
+    if case == "digest-edited":
+        sections[1]["digest"] = "d" * 64
+    elif case == "no-sections":
+        del probe["declaration"]["sections"]
+    elif case == "blob-with-sections":
+        probe["derived_from"] = _blob(sectioned)
+    elif case == "malformed":
+        probe["derived_from"] = "sections:abc"
+    else:
+        sections.append(dict(sections[0]))
+        probe["derived_from"] = ra.section_anchor(sections)
+    sectioned.write_probe(probe)
+    sectioned.commit("probe")
+    _, report = run_audit(sectioned)
+    row = row_of(report, "p1")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_UNRESOLVED and not marker.exists()
+    assert expected in _plain(row[9])
+
+
+@pytest.mark.parametrize("flow", ["later-commit", "same-commit"])
+def test_674_R5_R6_re_confirmation_after_a_section_change_is_clean_and_reported(sectioned, flow):
+    rel = _section_probe(sectioned)
+    _edit(sectioned, *INSIDE)
+    if flow == "later-commit":
+        sectioned.commit("edit 3.1.1")
+    _reanchor(sectioned, rel, mode="reconfirmed")
+    sectioned.commit("re-confirm the probe")
+    code, report = run_audit(sectioned)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK, row[7:]
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN
+    assert ra.NOTE_RECONFIRMED in row[9]
+    assert f"{ra.PROVENANCE_RECONFIRMED}: 1 (p1)" in report
+
+
+def test_674_R6_a_re_derivation_carries_no_re_confirmation_note(sectioned):
+    rel = _section_probe(sectioned)
+    _edit(sectioned, *INSIDE)
+    _reanchor(sectioned, rel, mode="derived", expected_value=2)
+    sectioned.commit("re-derive with a new expectation")
+    _, report = run_audit(sectioned)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_CLEAN and ra.NOTE_RECONFIRMED not in row[9]
+    assert ra.PROVENANCE_RECONFIRMED not in report
+
+
+@pytest.mark.parametrize("change, named", [
+    ({"expected_value": 1}, "expected"),
+    ({"tier": "T2"}, "tier"),
+    ({"observe": {"argv": [PY, "-c", "print(1)"], "timeout_seconds": 30}}, "observe"),
+    ({"declaration_location": "§Elsewhere"}, "declaration.location"),
+])
+def test_674_R7_re_confirmation_that_changes_the_probe_is_weakened(sectioned, tmp_path, change, named):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _edit(sectioned, *INSIDE)
+    sectioned.commit("edit 3.1.1")
+    _reanchor(sectioned, rel, mode="reconfirmed", **change)
+    sectioned.commit("re-confirm and change the probe")
+    reason = _weakened_reason(sectioned, marker)
+    assert (f"but a re-confirmation may change only derived_from, the section digests and approval, "
+            f"and it also changed {named}") in reason
+
+
+def test_674_R7_re_confirmation_cannot_swap_the_locators(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _edit(sectioned, *INSIDE)
+    sectioned.commit("edit 3.1.1")
+    # 3.1.1 changed with 3.1, so the new anchor shows a change of its own; only the re-confirmation rule
+    # refuses the swapped locator.
+    _reanchor(sectioned, rel, mode="reconfirmed", locators=[("heading", "3.1.1"), ("row", "AK-OS-07")])
+    sectioned.commit("re-confirm onto another section")
+    assert "and it also changed declaration.sections" in _weakened_reason(sectioned, marker)
+
+
+def test_674_re_confirmation_without_a_section_change_is_weakened(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    recorded = sectioned.git("rev-parse", "HEAD")
+    _edit(sectioned, *OUTSIDE)
+    sectioned.commit("edit another section")
+    _reanchor(sectioned, rel, mode="reconfirmed")
+    stamp = sectioned.commit("re-confirm although nothing anchored changed")
+    # The digests are the recorded ones, so derived_from does not move: the stamp is
+    # a plain later edit of the probe, never a re-derivation or a re-confirmation.
+    assert _weakened_reason(sectioned, marker) == (
+        f"weakened: probe changed in {stamp[:12]} after its derivation was recorded in {recorded[:12]}")
+
+
+def test_674_R7_re_derivation_onto_other_locators_without_a_section_change_is_weakened(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _edit(sectioned, *OUTSIDE)
+    sectioned.commit("edit 3.2")
+    _reanchor(sectioned, rel, locators=[("heading", "3.2")], expected_value=1)
+    laundering = sectioned.commit("re-point at the edited section and lower the bar")
+    reason = _weakened_reason(sectioned, marker)
+    assert f"{laundering[:12]} moved derived_from" in reason
+    assert f"but the anchored sections of {DECL} did not change in between" in reason
+
+
+def test_674_R7_made_up_digests_in_one_commit_are_weakened(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _reanchor(sectioned, rel, expected_value=1,
+              sections=[{"heading": "3.1", "digest": "c" * 64}, {"row": "AK-OS-07", "digest": "c" * 64}])
+    laundering = sectioned.commit("lower the bar under made-up digests")
+    reason = _weakened_reason(sectioned, marker)
+    assert f"but the recorded sections are not the content of {DECL} at {laundering[:12]}: heading 3.1 changed" in reason
+
+
+def test_674_F1_laundering_through_an_unproven_section_anchor_is_weakened(sectioned, tmp_path):
+    """Mirror of #673 F1: Y lowers the bar under made-up digests, Z restores the real ones."""
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    real = yaml.safe_load((sectioned.path / rel).read_text())["declaration"]["sections"]
+    fake = _reanchor(sectioned, rel, expected_value=1, sections=[
+        {"heading": "3.1", "digest": "c" * 64}, {"row": "AK-OS-07", "digest": "c" * 64}])["derived_from"][len("sections:"):]
+    weakening = sectioned.commit("lower the bar under made-up digests")
+    _reanchor(sectioned, rel, sections=real)
+    sectioned.commit("restore the real digests")
+    reason = _weakened_reason(sectioned, marker)
+    assert (f"but the previous derived_from sections:{fake[:3]} is not the content of its sections of {DECL} at "
+            f"{weakening[:12]}, where it was recorded, so no declaration change can be shown") in reason
+
+
+def test_674_R7_re_confirmation_cannot_adopt_an_earlier_weakening(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    recorded = sectioned.git("rev-parse", "HEAD")
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["expected"]["value"] = 1
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    weakening = sectioned.commit("lower the bar")
+    _edit(sectioned, *INSIDE)
+    _reanchor(sectioned, rel, mode="reconfirmed")
+    sectioned.commit("edit 3.1.1 and re-confirm")
+    reason = _weakened_reason(sectioned, marker)
+    assert (f"and it also changed expected against the derivation recorded in {recorded[:12]}") in reason
+    assert weakening != recorded
+
+
+def test_674_R8_blob_to_section_migration_without_a_content_change_is_clean(sectioned):
+    rel = _content_probe(sectioned)
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"]["sections"] = _sections_now(sectioned)
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    data["approval"] = _restamp(sectioned, rel)
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("migrate onto section anchors")
+    _assert_clean(sectioned)
+    _edit(sectioned, *OUTSIDE)
+    sectioned.commit("edit another section")
+    _assert_clean(sectioned)
+
+
+def test_674_R8_migration_that_lowers_the_expectation_is_weakened(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(sectioned, argv=marker_argv(marker, "1"))
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"]["sections"] = _sections_now(sectioned)
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    data["expected"]["value"] = 1
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("migrate and lower the bar")
+    assert f"but {DECL} did not change in between" in _weakened_reason(sectioned, marker)
+
+
+def test_674_R8_migration_cannot_adopt_an_earlier_weakening(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(sectioned, argv=marker_argv(marker, "1"))
+    _rewrite(sectioned, rel, expected_value=1)
+    weakening = sectioned.commit("lower the bar")
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"]["sections"] = _sections_now(sectioned)
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("migrate onto section anchors")
+    assert f"but the probe changed in {weakening[:12]}" in _weakened_reason(sectioned, marker)
+
+
+# --------------------------------------------------------------------------- #
+# Independent review of #674: laundering through a self-made intermediate anchor
+# (C1), adoption of an intermediate weakening (W1), the new anchor's own change.
+# --------------------------------------------------------------------------- #
+def _to_blob(target: Target, rel: str, **changes) -> dict:
+    """Re-anchor on the whole file at the working tree, dropping the section locators."""
+    data = yaml.safe_load((target.path / rel).read_text())
+    data["declaration"].pop("sections", None)
+    data["derived_from"] = "blob:" + target.git("hash-object", DECL)
+    if "expected_value" in changes:
+        data["expected"]["value"] = changes.pop("expected_value")
+    data.update(changes)
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+    return data
+
+
+@pytest.mark.parametrize("edit", ["outside-3.1", "inside-3.1"])
+def test_674_C1_a_self_made_section_anchor_cannot_launder_a_weakening(sectioned, tmp_path, edit):
+    """C2 adds locator 3.2 and lowers the bar (weakened alone); C3 moves back onto 3.1 and AK-OS-07.
+
+    With the edit outside 3.1 the new anchor shows no change of its own; with the
+    edit inside 3.1 it does, and only the recursion into C2 refuses the move.
+    """
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _reanchor(sectioned, rel, locators=[*LOCATORS, ("heading", "3.2")], expected_value=1)
+    weakening = sectioned.commit("anchor 3.2 too and lower the bar")
+    _edit(sectioned, *(OUTSIDE if edit == "outside-3.1" else INSIDE))
+    _reanchor(sectioned, rel, locators=list(LOCATORS))
+    sectioned.commit("edit and move back onto the old sections")
+    reason = _weakened_reason(sectioned, marker)
+    if edit == "outside-3.1":
+        assert (f"but none of the sections it now anchors on changed since the previous derivation was recorded "
+                f"in {weakening[:12]}") in reason
+    else:
+        assert (f"but its previous derivation was no re-derivation either: {weakening[:12]} moved derived_from "
+                f"from sections:") in reason
+        assert f"but the anchored sections of {DECL} did not change in between" in reason
+
+
+@pytest.mark.parametrize("edit", ["outside-3.1", "inside-3.1"])
+def test_674_C1_a_self_made_blob_anchor_cannot_launder_a_weakening(sectioned, tmp_path, edit):
+    """C2 records the file's blob and lowers the bar; C3 edits the file and moves back onto sections."""
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _to_blob(sectioned, rel, expected_value=1)
+    weakening = sectioned.commit("fall back to the file anchor and lower the bar")
+    _edit(sectioned, *(OUTSIDE if edit == "outside-3.1" else INSIDE))
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"]["sections"] = _sections_now(sectioned)
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("edit and switch back to the sections")
+    reason = _weakened_reason(sectioned, marker)
+    if edit == "outside-3.1":
+        assert (f"but none of the sections it now anchors on changed since the previous derivation was recorded "
+                f"in {weakening[:12]}") in reason
+    else:
+        assert (f"but its previous derivation was no re-derivation either: {weakening[:12]} moved derived_from "
+                f"from sections:") in reason
+        assert f"but the anchored sections of {DECL} did not change in between" in reason
+
+
+def test_674_C1_re_anchoring_on_sections_that_did_not_change_is_weakened(sectioned, tmp_path):
+    """One commit edits 3.2 and moves a file anchor onto 3.1 and AK-OS-07, lowering the bar.
+
+    The file changed, so the previous anchor did; the sections the probe now
+    anchors on did not, and those are what a re-derivation must answer to.
+    """
+    marker = tmp_path / "ran"
+    rel = _content_probe(sectioned, argv=marker_argv(marker, "1"))
+    recorded = sectioned.git("rev-parse", "HEAD")
+    _edit(sectioned, *OUTSIDE)
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"]["sections"] = _sections_now(sectioned)
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    data["expected"]["value"] = 1
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("edit 3.2, narrow onto 3.1 and AK-OS-07, lower the bar")
+    assert (f"but none of the sections it now anchors on changed since the previous derivation was recorded "
+            f"in {recorded[:12]}") in _weakened_reason(sectioned, marker)
+
+
+def test_674_C1_a_legitimate_chain_of_re_derivations_stays_clean(sectioned):
+    """Two real re-derivations in a row: the recursion accepts each previous one."""
+    rel = _section_probe(sectioned)
+    _edit(sectioned, *INSIDE)
+    sectioned.commit("edit 3.1.1")
+    _reanchor(sectioned, rel, approval=_restamp(sectioned, rel))
+    sectioned.commit("re-derive")
+    _edit(sectioned, *IN_ROW)
+    _to_blob(sectioned, rel)
+    sectioned.commit("edit AK-OS-07 and re-derive onto the file")
+    _edit(sectioned, "JSON and CSV.", "JSON, CSV.")
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"]["sections"] = _sections_now(sectioned)
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("edit 3.1.1 and re-derive onto sections")
+    _assert_clean(sectioned)
+
+
+@pytest.mark.parametrize("mode", [None, "reconfirmed"])
+def test_674_W1_a_section_re_anchor_cannot_adopt_an_intermediate_weakening(sectioned, tmp_path, mode):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    recorded = sectioned.git("rev-parse", "HEAD")
+    _rewrite(sectioned, rel, expected_value=1)
+    weakening = sectioned.commit("lower the bar")
+    _edit(sectioned, *INSIDE)
+    _reanchor(sectioned, rel, mode=mode)
+    sectioned.commit("edit 3.1.1 and re-anchor")
+    reason = _weakened_reason(sectioned, marker)
+    if mode is None:
+        assert (f"but the probe changed in {weakening[:12]} after its previous derivation was recorded in "
+                f"{recorded[:12]}") in reason
+    else:
+        assert f"and it also changed expected against the derivation recorded in {recorded[:12]}" in reason
+
+
+@pytest.mark.parametrize("mode", [None, "reconfirmed"])
+def test_674_W1_a_blob_re_anchor_cannot_adopt_an_intermediate_weakening(target, tmp_path, mode):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    recorded = target.git("rev-parse", "HEAD")
+    _rewrite(target, rel, expected_value=1)
+    weakening = target.commit("lower the bar")
+    target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
+    approval = _restamp(target, rel) | ({"mode": mode} if mode else {})
+    _rewrite(target, rel, derived_from="blob:" + target.git("hash-object", DECL), approval=approval)
+    target.commit("edit the declaration and re-anchor")
+    reason = _weakened_reason(target, marker)
+    if mode is None:
+        assert (f"but the probe changed in {weakening[:12]} after its previous derivation was recorded in "
+                f"{recorded[:12]}") in reason
+    else:
+        assert f"and it also changed expected against the derivation recorded in {recorded[:12]}" in reason
+
+
+def test_674_S3_re_confirming_an_unchanged_file_onto_sections_is_refused_by_the_re_confirmation_rule(sectioned, tmp_path):
+    """A migration of an unchanged file passes the anchor check as a relabel; labelled a
+    re-confirmation it adds locators, which only a derivation may do."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(sectioned, argv=marker_argv(marker, "1"))
+    recorded = sectioned.git("rev-parse", "HEAD")
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"]["sections"] = _sections_now(sectioned)
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    data["approval"] = _restamp(sectioned, rel) | {"mode": "reconfirmed"}
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    migration = sectioned.commit("migrate onto sections, labelled a re-confirmation")
+    reason = _weakened_reason(sectioned, marker)
+    assert reason == (
+        f"weakened: re-baselined without a declaration change: {migration[:12]} moved derived_from from "
+        f"{_blob(sectioned)[:12]} to {data['derived_from'][:12]}, but a re-confirmation may change only "
+        "derived_from, the section digests and approval, and it also changed declaration.sections against the "
+        f"derivation recorded in {recorded[:12]}")
+
+
+def test_674_squash_merged_re_confirmation_of_a_section_anchor_is_clean(sectioned):
+    rel = _section_probe(sectioned)
+    sectioned.git("checkout", "-q", "-b", "feat/reword")
+    _edit(sectioned, *INSIDE)
+    edit = sectioned.commit("edit 3.1.1")
+    _reanchor(sectioned, rel, mode="reconfirmed")
+    confirm = sectioned.commit("re-confirm")
+    _squash_merge(sectioned, "feat/reword")
+    assert not _has_commit(sectioned, edit) and not _has_commit(sectioned, confirm)
+    _assert_clean(sectioned)
+
+
+def test_674_pure_move_of_a_section_anchored_declaration_is_clean(sectioned):
+    rel = _section_probe(sectioned)
+    sectioned.git("mv", DECL, "docs/v2.md")
+    _reanchor(sectioned, rel, declaration_path="docs/v2.md")
+    sectioned.commit("rename the declaration and follow it")
+    _assert_clean(sectioned)
+
+
+def test_674_section_to_file_anchor_after_a_section_change_is_clean(sectioned):
+    rel = _section_probe(sectioned)
+    _edit(sectioned, *INSIDE)
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    del data["declaration"]["sections"]
+    data["derived_from"] = "blob:" + sectioned.git("hash-object", DECL)
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("edit 3.1.1 and fall back to the file anchor")
+    _assert_clean(sectioned)
+
+
+def test_674_section_to_file_anchor_without_a_section_change_is_weakened(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _edit(sectioned, *OUTSIDE)
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    del data["declaration"]["sections"]
+    data["derived_from"] = "blob:" + sectioned.git("hash-object", DECL)
+    data["expected"]["value"] = 1
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("edit 3.2, fall back to the file anchor, lower the bar")
+    assert f"but the anchored sections of {DECL} did not change in between" in _weakened_reason(sectioned, marker)
+
+
+def test_674_R5_re_confirmation_of_a_file_anchor_is_clean_and_reported(target):
+    rel = _content_probe(target)
+    target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
+    target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from=_blob(target), approval=_restamp(target, rel) | {"mode": "reconfirmed"})
+    target.commit("re-confirm")
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK and row[7] == ra.STATE_CLEAN and ra.NOTE_RECONFIRMED in row[9]
+
+
+def test_674_R7_re_confirmation_of_a_file_anchor_that_lowers_the_bar_is_weakened(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
+    target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from=_blob(target), expected_value=1,
+             approval=_restamp(target, rel) | {"mode": "reconfirmed"})
+    target.commit("re-confirm and lower the bar")
+    assert "and it also changed expected" in _weakened_reason(target, marker)
+
+
+# --------------------------------------------------------------------------- #
+# Replay (R10)
+# --------------------------------------------------------------------------- #
+def test_674_R10_replay_counts_file_and_section_stale_events(sectioned, capsys):
+    import reach_replay
+
+    commits = [sectioned.git("rev-parse", "HEAD")]
+    for old, new in (OUTSIDE, INSIDE, IN_ROW):
+        _edit(sectioned, old, new)
+        commits.append(sectioned.commit(f"edit {old}"))
+    sectioned.write("docs/other.md", "unrelated\n")
+    sectioned.commit("touch another file")
+    _edit(sectioned, "Weekly.", "Monthly.")
+    commits.append(sectioned.commit("edit 3.2 again"))
+    _edit(sectioned, "### 3.1 Collections", "### 3.9 Collections")
+    commits.append(sectioned.commit("renumber 3.1"))
+    # A side branch changes the declaration and is merged: the replay walks the
+    # first-parent history, so it sees the merge commit, never the side commit.
+    sectioned.git("checkout", "-q", "-b", "side")
+    _edit(sectioned, "Monthly.", "Yearly.")
+    side = sectioned.commit("edit 3.2 on a side branch")
+    sectioned.git("checkout", "-q", "main")
+    sectioned.git("merge", "-q", "--no-ff", "-m", "merge side", "side")
+    commits.append(sectioned.git("rev-parse", "HEAD"))
+    assert side != commits[-1]
+    code = reach_replay.main(["--repo", str(sectioned.path), "--declaration", DECL,
+                              "--probe", "p1=heading:3.1", "--probe", "p2=row:AK-OS-07",
+                              "--probe", "p3=heading:3.1,row:AK-OS-07"])
+    assert code == 0
+    c = [sha[:12] for sha in commits]
+    assert capsys.readouterr().out.splitlines() == [
+        f"replay of {DECL} at {sectioned.git('rev-parse', 'HEAD')[:12]}: 7 commits, 3 probes",
+        f"{c[0]} first",
+        f"{c[1]} file changed; sections changed: none; stale probes: file 3, section 0",
+        f"{c[2]} file changed; sections changed: heading:3.1; stale probes: file 3, section 2",
+        f"{c[3]} file changed; sections changed: row:AK-OS-07; stale probes: file 3, section 2",
+        f"{c[4]} file changed; sections changed: none; stale probes: file 3, section 0",
+        f"{c[5]} file changed; sections changed: heading:3.1 (not found); stale probes: file 3, section 2",
+        f"{c[6]} file changed; sections changed: none; stale probes: file 3, section 0",
+        "file-anchor stale events: 18",
+        "section-anchor stale events: 6",
+    ]
+
+
+def test_674_R10_replay_refuses_a_malformed_locator(sectioned, capsys):
+    import reach_replay
+
+    assert reach_replay.main(["--repo", str(sectioned.path), "--declaration", DECL,
+                              "--probe", "p1=chapter:3.1"]) == ra.EXIT_USAGE
+    assert "chapter:3.1" in capsys.readouterr().err
+
+
+# --------------------------------------------------------------------------- #
+# Exit path after an intermediate weakening (follow-up to W1)
+# --------------------------------------------------------------------------- #
+def _weakened_chain(target: Target) -> str:
+    """C1 derives, C2 lowers the bar, C3 edits 3.1.1 and re-anchors: weakened for good (W1)."""
+    rel = _section_probe(target)
+    _rewrite(target, rel, expected_value=1)
+    target.commit("lower the bar")
+    _edit(target, *INSIDE)
+    _reanchor(target, rel)
+    target.commit("edit 3.1.1 and re-anchor")
+    assert "but the probe changed in" in _weakened_reason(target)
+    return rel
+
+
+def _fresh(target: Target, pid: str = "p1") -> dict:
+    sections = _sections_now(target)
+    probe = make_probe(pid, derived_from=ra.section_anchor(sections))
+    probe["declaration"]["sections"] = sections
+    probe["approval"] = {"approved_at": "2026-09-25T08:00:00Z", "approved_by": "another operator"}
+    return probe
+
+
+def _state(target: Target, pid: str = "p1") -> tuple[str, str]:
+    _, report = run_audit(target)
+    row = row_of(report, pid)
+    return row[7], _plain(row[9])
+
+
+def test_674_exit_a_derive_overwrites_the_same_file(sectioned):
+    rel = _weakened_chain(sectioned)
+    sectioned.write(rel, yaml.safe_dump(_fresh(sectioned), sort_keys=False))
+    sectioned.commit("derive afresh into the same file")
+    state, reason = _state(sectioned)
+    assert state == ra.STATE_WEAKENED, reason
+
+
+def test_674_exit_b_delete_then_re_add_at_the_same_path(sectioned):
+    rel = _weakened_chain(sectioned)
+    (sectioned.path / rel).unlink()
+    sectioned.commit("drop the weakened probe")
+    sectioned.write(rel, yaml.safe_dump(_fresh(sectioned), sort_keys=False))
+    sectioned.commit("derive afresh at the same path")
+    state, reason = _state(sectioned)
+    assert state == ra.STATE_WEAKENED and "carries no readable derived_from" in reason, reason
+
+
+@pytest.mark.parametrize("flow, expected", [
+    # In one commit git pairs the deletion and the new file as a rename, and the
+    # history walk (--follow) carries the weakened chain over.
+    ("one-commit", ra.STATE_WEAKENED),
+    ("two-commits", ra.STATE_CLEAN),
+])
+def test_674_exit_c_fresh_probe_under_a_new_id_and_file(sectioned, flow, expected):
+    """The documented exit: drop the weakened probe, then derive a new one under a new file name."""
+    rel = _weakened_chain(sectioned)
+    (sectioned.path / rel).unlink()
+    if flow == "two-commits":
+        sectioned.commit("drop the weakened probe")
+    sectioned.write_probe(_fresh(sectioned, "p1-rederived"))
+    sectioned.commit("derive afresh under a new id")
+    state, reason = _state(sectioned, "p1-rederived")
+    assert state == expected, reason
+
+
+# --------------------------------------------------------------------------- #
+# Pre-merge review of #675: moves onto a commit anchor (F1), SHA-256 repositories (F2)
+# --------------------------------------------------------------------------- #
+NO_COMMIT_PAIR = "the two cannot both be resolved to commits, so no declaration change can be shown"
+
+
+def test_675_F1_section_to_commit_anchor_move_cannot_launder_a_weakening(sectioned, tmp_path):
+    """A anchors on sections; B edits outside them (clean); C re-points at B's commit and lowers the bar."""
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, argv=marker_argv(marker, "1"))
+    _edit(sectioned, *OUTSIDE)
+    outside = sectioned.commit("edit another section")
+    assert _state(sectioned)[0] == ra.STATE_CLEAN
+    marker.unlink()
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    data["declaration"].pop("sections")
+    data["derived_from"] = outside
+    data["expected"]["value"] = 1
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("re-point at the edit commit and lower the bar")
+    assert NO_COMMIT_PAIR in _weakened_reason(sectioned, marker)
+
+
+def test_675_F1_blob_to_commit_anchor_move_cannot_launder_a_weakening(target, tmp_path):
+    """A anchors on the file's content; B edits it (stale); C re-points at B's commit and lowers the bar."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"))
+    target.write(DECL, "# Requirements\n\nExports 3 collections, edited.\n")
+    edit = target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from=edit, expected_value=1)
+    target.commit("re-point at the edit commit and lower the bar")
+    assert NO_COMMIT_PAIR in _weakened_reason(target, marker)
+
+
+@pytest.fixture
+def sha256_sectioned(tmp_path) -> Target:
+    path = tmp_path / "target"
+    path.mkdir()
+    res = subprocess.run(["git", "init", "-q", "--object-format=sha256", str(path)],
+                         capture_output=True, text=True, check=False)
+    if res.returncode != 0:
+        pytest.skip(f"local git cannot create a SHA-256 repository: {res.stderr.strip()}")
+    t = Target(path)
+    assert t.git("rev-parse", "--show-object-format") == "sha256"
+    t.write(DECL, SECTIONED)
+    t.commit("declare")
+    return t
+
+
+def test_675_F2_section_anchor_works_in_a_sha256_repository(sha256_sectioned):
+    """The scanner records section anchors in SHA-256 repositories: the runner must read their blobs."""
+    git = ra.Git(sha256_sectioned.path)
+    assert git.file_bytes("HEAD", DECL) == SECTIONED.encode()
+    _section_probe(sha256_sectioned)
+    _assert_clean(sha256_sectioned)
+    _edit(sha256_sectioned, *OUTSIDE)
+    sha256_sectioned.commit("edit another section")
+    _assert_clean(sha256_sectioned)
+    _edit(sha256_sectioned, *INSIDE)
+    sha256_sectioned.commit("edit 3.1.1, inside 3.1")
+    state, reason = _state(sha256_sectioned)
+    assert state == ra.STATE_STALE and "heading 3.1 changed" in reason, reason
