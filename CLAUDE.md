@@ -16,19 +16,17 @@ All five version in **lockstep** — one release line equal to the repository's 
 
 ## Layout
 
-- `.claude-plugin/plugin.json` — `nolte-shared` plugin manifest (name, version, author)
-- `.claude-plugin/marketplace.json` — marketplace catalog listing **all five** plugins (downstream install source)
-- `skills/<name>/SKILL.md` — `nolte-shared` skills; each folder is one skill
-- `agents/<name>.md` — `nolte-shared` sub-agents
-- `plugins/nolte-media/`, `plugins/nolte-engineering/`, `plugins/nolte-claude-dev/`, `plugins/nolte-planning/` — the second through fifth plugins: each with its own `.claude-plugin/plugin.json`, `skills/`, and `agents/`, scoped to that root
-- `spec/` — bilingual specifications governing all five plugins' skill/agent authoring and project conventions (repo-wide; shipped inside the `nolte-shared` payload because that plugin's root is the repository root, and with none of the other four plugins)
-- `docs/` — MkDocs source, bilingual (`docs/de/`, `docs/en/`); the catalog renders each plugin under its own `{skills,agents}/<plugin>/` subtree, configured in `docs/catalog-sources.yml`
-- `project/` — this repo's own planning surface: `mission.md`, `goals.md`, `roadmap.md`, plus `features/`, `sprints/`, and `blog-triggers/` (driven by the `nolte-planning` skills `sprint-execute`, `feature-decompose`, `roadmap-plan` — this repo runs the cadence, so it dogfoods that plugin too)
+- `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` — `nolte-shared` manifest; marketplace catalog listing **all five** plugins (downstream install source)
+- `skills/<name>/SKILL.md`, `agents/<name>.md` — `nolte-shared` skills (one folder each) and sub-agents
+- `plugins/nolte-{media,engineering,claude-dev,planning}/` — the other four plugins, each with its own `.claude-plugin/plugin.json`, `skills/`, and `agents/`
+- `spec/` — bilingual specifications governing all five plugins and project conventions (repo-wide; shipped only inside the `nolte-shared` payload)
+- `docs/` — bilingual MkDocs source (`docs/de/`, `docs/en/`); the catalog renders each plugin under `{skills,agents}/<plugin>/`, configured in `docs/catalog-sources.yml`
+- `project/` — this repo's own planning surface: `mission.md`, `goals.md`, `roadmap.md`, `features/`, `sprints/`, `blog-triggers/` (driven by the `nolte-planning` skills; this repo dogfoods that plugin)
 - `portfolio/` — portfolio-level data (`tech-stack.yml`, `aggregate.yml`, `schemas/`)
-- `scripts/` — repo automation behind the Taskfile targets (`validate_skills.py`, `wip_journal.py`, `check_links.py`, `worktree_add.sh`, …); `validate_skills.py` auto-discovers every in-repo plugin under `plugins/`
-- `.claude/` — this repo's own Claude Code config (not shipped with any plugin): `settings.json` wires the journal/guard/validate hooks and permission allowlist; `rules/*.md` are session-loaded instruction rules — a rule with no `paths:` loads every session like `CLAUDE.md`, a `paths:`-scoped rule loads only when a matching file is touched
+- `scripts/` — automation behind the Taskfile targets (`validate_skills.py`, `wip_journal.py`, `check_links.py`, `worktree_add.sh`, …); `validate_skills.py` auto-discovers every plugin under `plugins/`
+- `.claude/` — this repo's own Claude Code config (not shipped): `settings.json` wires the journal/guard/validate hooks and permission allowlist; `rules/*.md` are instruction rules, loaded every session when they have no `paths:`, otherwise only when a matching file is touched
 
-Plugin skills are namespaced by plugin name — e.g. `/nolte-shared:spec`, `/nolte-media:image-generate`, `/nolte-engineering:quality-gate`, `/nolte-claude-dev:skill-management`, `/nolte-planning:sprint-plan`.
+Plugin skills are namespaced by plugin name, e.g. `/nolte-shared:spec`, `/nolte-media:image-generate`, `/nolte-engineering:quality-gate`, `/nolte-claude-dev:skill-management`, `/nolte-planning:sprint-plan`.
 
 ## Command entry points
 
