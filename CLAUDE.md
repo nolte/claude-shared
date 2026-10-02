@@ -8,11 +8,11 @@ Orientation for Claude Code and contributors working inside this repository.
 
 - **`nolte-shared`** (repo root) — common delivery lifecycle: planning, specs, PR & release workflow, docs/prose, portfolio. Every adopting repo installs it.
 - **`nolte-media`** (`plugins/nolte-media/`) — image generation and media processing. Split on **runtime/dependency**: needs Cloudflare / Gemini / Pollinations credentials and `vtracer`.
-- **`nolte-engineering`** (`plugins/nolte-engineering/`) — implementation, test tiers/cycle, quality gate, frontend optimization, code-security/dependency/license audits. Split on **consumer audience**: code repos only.
-- **`nolte-claude-dev`** (`plugins/nolte-claude-dev/`) — skill/agent authoring (`skill-management`, `skill-review`, `agent-review`, `skills-agents-sweep`, `skill-agent-catalog-apply`, `claude-plugin-developer`). Split on **consumer audience**; the `spec/claude/` corpus governing authoring stays repo-wide.
+- **`nolte-engineering`** (`plugins/nolte-engineering/`) — implementation, test tiers/cycle, quality gate, frontend optimization, code-security/dependency/license audits. Split on **consumer audience**: code repos install it on top of `nolte-shared`; non-code repos take `nolte-shared` alone.
+- **`nolte-claude-dev`** (`plugins/nolte-claude-dev/`) — skill/agent authoring (`skill-management`, `skill-review`, `agent-review`, `skills-agents-sweep`, `skill-agent-catalog-apply`, `claude-plugin-developer`). Split on **consumer audience**: only adopters who author skills/agents install it, on top of `nolte-shared`; the `spec/claude/` corpus governing authoring stays repo-wide.
 - **`nolte-planning`** (`plugins/nolte-planning/`) — the whole mission→roadmap→feature→sprint chain (`mission-*`, `roadmap-*`, `feature-decompose`, `sprint-*`, plus the three reviewer agents). Split on **consumer audience**; kept whole because the chain's skills reference each other. The `spec/project/{mission,roadmap,feature,sprint}/` corpus stays repo-wide.
 
-All five version in **lockstep** — one release line equal to the repository's release tag. `.github/release-automation.yml` declares each `plugin.json` `version` plus `marketplace.json` `metadata.version`; the `chore(release): <tag>` alignment bumps all together. Marketplace `plugins[].version` entries are intentionally absent.
+All five version in **lockstep** — one release line equal to the repository's release tag. `.github/release-automation.yml` declares each `plugin.json` `version` plus `marketplace.json` `metadata.version`; the `chore(release): <tag>` alignment bumps all together. Marketplace `plugins[].version` entries are intentionally absent; plugin-version resolution takes each plugin's own `plugin.json` first.
 
 ## Layout
 
