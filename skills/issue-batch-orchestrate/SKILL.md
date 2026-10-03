@@ -41,8 +41,8 @@ triggers it and never re-derives its mechanics.
 
 ## Why this is a skill, not an agent
 
-Six mid-flow operator gates (admission, mode, artifact approval, each member dispatch,
-the bundle PR, each issue closure), a persistent on-disk artifact as the deliverable,
+Operator gates at the plan approval and the bundle PR plus one closure confirmation, a
+persistent on-disk artifact as the deliverable,
 and state spanning phases across prompts. An agent's fire-and-forget contract would
 lose every gate.
 
@@ -89,8 +89,9 @@ trail is grep-able portfolio-wide; its prose body follows the issues' own langua
 
 ## Operations
 
-Seven operations form a forward pipeline; each gates on the previous one's operator
-approval. Checkpoint at every gate per *Resumability*.
+Seven operations form a forward pipeline. The operator gates sit at the plan approval
+(operation 3), the bundle PR (operation 6), and the closure (operation 7); checkpoint at
+every phase boundary per *Resumability*.
 
 ### 1. admit
 
@@ -109,7 +110,7 @@ planning pipeline instead.
 
 State the group's single logical change **in one sentence**. If it cannot be stated,
 this is not a group; process the issues individually and stop. Assign the group id
-`<YYYY-MM-DD>-<slug>`. Confirm the membership with the operator.
+`<YYYY-MM-DD>-<slug>`. Membership is confirmed at the plan gate (operation 3), not separately.
 
 When the group arrives from `issue-backlog-partition` with its per-group and per-issue
 records, keep its group id verbatim and **re-check** the recorded predicates, classes, and
@@ -162,8 +163,12 @@ Anchor every load-bearing claim to a `file:line`, a path, or a command with its 
 Prefer running the Research of operations 1–2 in an isolated context that returns a
 condensed summary, so the implementing context does not pay for the search.
 
-**Present the artifact for operator approval. This is the write gate; implementing
-against an unapproved group plan is forbidden.**
+**Present the artifact for operator approval. This is the plan gate and the write gate;
+implementing against an unapproved group plan is forbidden.** It also fixes membership,
+mode, and member order, and authorises the dispatch of every listed member as
+`authorised_by: <group-id>/plan-approval`. For a class cluster, elicit one group-wide
+requirement artifact before this gate. Read `references/group-authorisation.md` for what
+the approval covers, what revokes it, and the requirement artifact.
 
 ### 4. branch
 
@@ -180,9 +185,11 @@ release notes. The primary checkout stays on `develop`.
 
 ### 5. implement
 
-Walk members in the dependency order the artifact records. For each, gate on operator
-confirmation, then dispatch `issue-orchestrate` with the issue and the group context,
-and record its result before a dependent member starts. The delegated run owns its
+Walk members in the dependency order the artifact records. Dispatch `issue-orchestrate`
+for each with the issue, the group context, `authorised_by`, and for a class cluster
+`requirement_artifact`; no confirmation is asked per member. Record each result before a
+dependent member starts, then verify the member's slice with a context that didn't produce
+it and triage every finding. Read `references/finding-triage.md` for both. The delegated run owns its
 member's Implement phase and verification; it must not open a pull request or merge.
 
 Run every check the completeness matrix declares and record the check's **actual
@@ -192,7 +199,8 @@ reads as evidence and is worse than no record.
 When a deviation appears, decide whether it is a **local adaptation** (the group's
 admission, mode and ordering still hold — record it and continue) or a **structural
 regression** (an admission predicate, the mode or the ordering is invalidated — stop,
-name the failed assumption, return to operation 3 for re-approval).
+name the failed assumption, return to operation 3 for re-approval, which renews the authorisation of undispatched
+members).
 
 Before the bundle opens, run `quality-gate` against the **integration branch tip**. A
 green gate on a member sub-branch is not evidence for the bundle.
@@ -215,7 +223,7 @@ merge.
 ### 7. close
 
 After the bundle's squash-commit lands on `develop`, close every member issue with
-explicit operator confirmation — the closing keyword does not fire on a `develop` merge.
+one explicit operator confirmation for the set of open members, naming each — the closing keyword does not fire on a `develop` merge.
 Each closure comment names the bundle pull request, the merge-commit SHA, and the group
 id. Never close a member that was dropped. Retire the integration branch and every
 member worktree per `parallel-working-copies` §"Lifecycle: Retire".
@@ -246,12 +254,14 @@ a member whose result is already recorded in the artifact.
   window is not coupling and produces the bundle `pull-request-workflow` forbids.
 - **Never** form a group whose logical change cannot be stated in one sentence.
 - **Never** implement a member before the operator approves the group artifact; that
-  approval is the write gate.
+  approval is the write gate. **Never** ask per member for what that approval already
+  covers, and never dispatch after a structural regression until it is re-approved.
 - **Never** open a pull request whose base is the integration branch. Every pull request
   targets `develop`; the bundle is the group's single review surface.
 - **Never** re-derive `issue-orchestrate`'s comprehension, classification, requirements
   gate, decomposition, or dispatch; delegate them.
-- **Never** record a check as passed without running it and capturing its actual output.
+- **Never** record a check as passed without running it and capturing its actual output,
+  and never fix a finding on the reviewer's word alone: reproduce it or file it.
 - **Never** let a member's first tracked change land while a cause its issue asserts is
   unverified; the delegated run verifies it or records the refuting measurement, and the
   group artifact carries the result.

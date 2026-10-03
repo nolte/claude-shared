@@ -138,6 +138,7 @@ Spezialisten-Remediation nie selbst aus, wenn ein passender Spezialist existiert
   verstandene Anforderungen zu dekomponieren ist verboten. Ein `question`-Issue (das
   keine Arbeitspakete liefert) und ein bereits durch einen gemergten Fix
   selbst-aufgelöstes Issue sind ausgenommen, da beide die Dekomposition nicht erreichen
+- **MUSS [MUST]**, wenn ein Gruppenprozess nach `spec/project/issue-batch-integration/` §F ein `requirement_artifact` liefert, das Anforderungs-Gate für das Issue erst als erfüllt behandeln, nachdem er nachgeprüft hat, dass das Artefakt die Abnahmebedingungen des Issues deckt und sein `U_gate` `τ_high` erreicht. Der Lauf **MUSS NICHT [MUST NOT]** für ein gedecktes Issue erneut erheben und **MUSS [MUST]** `requirements-elicit` für ein Issue dispatchen, das das Artefakt nicht deckt
 - **DARF NICHT [MUST NOT]** mit der Dekomposition beginnen, bevor der Operator das
   akquirierte Issue und seinen aufgelösten Scope bestätigt hat, sodass eine
   fehlgelesene Issue-Referenz vor Arbeitsbeginn abgefangen wird
@@ -449,7 +450,9 @@ verifiziert und gemergt ist.
 - **MUSS [MUST]** jede extern sichtbare Aktion (das Schreiben des
   Voranalyse-Artefakts, jeden Spezialisten-Dispatch, den Issue-Kommentar, die
   PR-Erstellung) auf Operator-Bestätigung gaten; der Orchestrator feuert nie einen
-  mutierenden Schritt ohne ein festgehaltenes „Ja"
+  mutierenden Schritt ohne ein festgehaltenes „Ja" oder eine festgehaltene Gruppen-Autorisierung nach dem nächsten Punkt
+- **MUSS [MUST]**, wenn ein Gruppenprozess nach `spec/project/issue-batch-integration/` §F den Lauf delegiert und eine `authorised_by`-Referenz übergibt, diese Referenz als Entscheidung für jede Bestätigung festhalten, die er sonst einholen würde: den Mitglieds-Dispatch, jeden Paketgrenzen-Dispatch, die Freigabe der Zerlegung, solange sie innerhalb der Zeile des Mitglieds in der Vollständigkeitsmatrix der Gruppe bleibt, und die Klassifikations-Bestätigung, außer die Klasse ist `security`. Der Lauf **MUSS NICHT [MUST NOT]** dafür erneut fragen. Die Referenz deckt nie eine Änderung außerhalb dieser Zeile, einen Pull Request, einen Merge oder einen Issue-Kommentar; eine Zerlegung, die die Zeile verlässt, ist eine strukturelle Regression, die der Lauf an die Gruppe zurückmeldet, statt zu dispatchen
+- **MUSS NICHT [MUST NOT]** eine `authorised_by`-Referenz, die er nicht zu einem freigegebenen Gruppen-Artefakt auflösen kann, als Autorisierung behandeln; er fragt dann wie ohne sie
 
 ## Akzeptanzkriterien
 
@@ -542,7 +545,9 @@ Diese Kriterien gelten für Läufe, die begonnen haben, nachdem die Transient-Re
 - [ ] Für jeden abgeschlossenen Orchestrierungslauf hält der Checkpoint-Zustand unter
   `.resume/issue-orchestrate/` einen Entscheidungs-Eintrag für jedes extern sichtbare
   Gate fest — das Schreiben des Artefakts, jeden Spezialisten-Dispatch, den
-  Issue-Kommentar und die PR-Erstellung
+  Issue-Kommentar und die PR-Erstellung; ein unter einer Gruppen-Autorisierung gestarteter Lauf hält die `authorised_by`-Referenz anstelle jeder nicht eingeholten Bestätigung fest
+- [ ] Für jedes Issue, das ein Gruppenprozess mit einem `requirement_artifact` lieferte, hält das Voranalyse-Artefakt die Deckungsprüfung gegen dieses Artefakt fest, und `requirements-elicit` lief nur für ein Issue, das das Artefakt nicht deckte
+- [ ] Für jeden unter einer Gruppen-Autorisierung gestarteten Lauf trägt der Checkpoint die `authorised_by`-Referenz, und kein Lauf fragte nach einer Bestätigung, die diese Referenz deckt
 - [ ] Für jedes orchestrierte Issue, das eine Ursache behauptet, hält das Voranalyse-Artefakt vor der ersten getrackten Änderung die Beobachtung fest, die sie verifiziert oder widerlegt hat, und eine widerlegte Ursache wird mit der Messung festgehalten, die sie widerlegte. Auf die fünf Fälle in `nolte/claude-shared#641` angewandt (ein Fixture-Größen-Flake, ein Login-Gate, ein Favoriten-Resolver, eine Favoriten-Fehlerklausel, ein Abhängigkeits-Sweep), greift die Regel bei jedem; ein Regelwerk, das sie als konform bewertet, ist falsch
 
 ## Open Questions
