@@ -40,6 +40,8 @@ This repository is a **plugin monorepo** shipping five plugins: **`nolte-shared`
 | `spec-drift-audit` | Reconcile every spec against the repository implementation and persist a traceable audit artifact. |
 | `requirements-elicit` | Run the elicitation interview that captures a requirement precisely before anything is built. |
 | `issue-orchestrate` | Take a raw GitHub issue end-to-end to an open, audit-trailed pull request. |
+| `issue-batch-orchestrate` | Take a cluster of related issues as one group: analyse once, develop on one integration branch, bundle into one pull request. |
+| `issue-backlog-partition` | Survey the whole open backlog once and partition it into predicate-admitted groups, singles, and pipeline issues before any is worked on. |
 | `pull-request-create` | Create a GitHub PR that conforms to the repository's pull-request-workflow spec. |
 | `pull-request-merge` | Promote an open draft PR to merged on `develop`, applying repository-declared labels and every workflow gate. |
 | `project-structure-apply` | Audit the repo against the project-structure spec and scaffold or patch missing artefacts (README, `.github/*`, Taskfile, Renovate, …). |

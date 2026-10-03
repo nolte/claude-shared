@@ -25,6 +25,8 @@ see_also:
   - requirements-elicit
   - pull-request-create
   - workflow-health-triage
+  - issue-batch-orchestrate
+  - issue-backlog-partition
 resumable: true
 ---
 
@@ -116,7 +118,8 @@ source, and `docs/` paths the issue plausibly touches, and check for prior art â
 existing `project/features/` entries, `project/roadmap.md` items, and open PRs that
 already address it in whole or in part. If a merged fix already closes the issue,
 report it as self-resolved and stop. Confirm the acquired issue and its resolved
-scope with the operator before proceeding.
+scope with the operator before proceeding. A record handed over by
+`issue-backlog-partition` is re-checked against the live issue, never re-derived.
 
 A claim found in prior art is **input, not evidence**: re-measure any inherited claim
 the decomposition will rest on, or carry it forward marked unestablished. Where the
