@@ -36,8 +36,8 @@ The artifact records `authorised_by: <group-id>/plan-approval`. The hand-off to
 - any change outside the member's matrix row: that is a **structural regression**, the
   run stops and reports back instead of dispatching
 - a pull request or a merge: the delegated run never opens one
-- an issue comment: a group-delegated run posts none; the closure comments of operation 7
-  carry the trail
+- issue comments: a group-delegated run posts none, so there is nothing to authorise; the
+  closure comments of operation 7 carry the trail
 
 ## What revokes it
 

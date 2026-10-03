@@ -17,12 +17,13 @@ reference as its decision instead of asking, for:
   member's row of the group's completeness matrix
 - the classification confirmation (operation 2), unless the class is `security`
 
-It never covers a change outside that row, a pull request, a merge, or an issue comment.
-A group-delegated run posts no issue comment; the group's closure comments carry the trail.
+It never covers a change outside that row, a pull request, or a merge. A group-delegated
+run posts no issue comment at all; the group's closure comments carry the trail.
 
-Resolve the reference before trusting it: the group artifact must exist on the integration
-branch and carry the approval. A reference that doesn't resolve is no authorisation, and
-the run asks as it would without one.
+Resolve the reference before trusting it: the group artifact at
+`.audits/issue-batch-integration/<group-id>/analysis.md` in the group's working copy must
+exist, carry the plan approval, and list this member. A reference that doesn't resolve is
+no authorisation, and the run asks as it would without one.
 
 When the decomposition leaves the member's matrix row, don't dispatch. That is a structural
 regression of the group, so report it back with the files that fell outside the row and

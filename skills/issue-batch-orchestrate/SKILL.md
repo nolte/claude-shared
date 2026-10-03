@@ -181,7 +181,9 @@ Create one dedicated **integration branch** off `origin/develop` via
 `task worktree:add -- <type>/<group-id> <slug>`, where `<type>` is the
 Conventional-Commits type of the group's dominant change. Never default to `exp/` for a
 group carrying shipped work: `branching-model` excludes `exp` titles from user-facing
-release notes. The primary checkout stays on `develop`.
+release notes. The primary checkout stays on `develop`. Commit the approved group artifact on the
+integration branch before the first dispatch, so every delegated run resolves
+`authorised_by` against it.
 
 ### 5. implement
 

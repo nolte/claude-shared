@@ -319,6 +319,8 @@ recorded in the artifact.
   behind: a guard, or a written note saying why none is possible. A closure resting
   on the unwritten judgement that the defect can't recur is the shape that produced
   the predecessor-naming chains `spec/project/defect-class-guards/` §Context records.
+- **Never** freeze specialist names as an inline dispatch table; resolve the catalog by
+  `Glob` each run.
 - **Never** decompose an issue that belongs in the formal pipeline (more than one
   outcome, more than one PR strand, or a new/retargeted roadmap item) for direct
   implementation; route it to `feature-decompose` or `roadmap-plan` instead, never
