@@ -98,7 +98,9 @@ Before any operation:
 ## Operations
 
 The six operations are a forward pipeline: each gates on the previous one's
-operator approval. State checkpoints at every gate per *Resumability*.
+operator approval. State checkpoints at every gate per *Resumability*. When
+`issue-batch-orchestrate` delegates the run with `authorised_by` or
+`requirement_artifact`, read `references/group-delegation.md` first.
 
 ### 1. acquire
 
@@ -317,8 +319,8 @@ recorded in the artifact.
   behind: a guard, or a written note saying why none is possible. A closure resting
   on the unwritten judgement that the defect can't recur is the shape that produced
   the predecessor-naming chains `spec/project/defect-class-guards/` §Context records.
-- **Never** freeze an inline snapshot of specialist names as a dispatch table; the
-  catalog is resolved by runtime `Glob` each run.
+- **Never** freeze specialist names as an inline dispatch table; resolve the catalog by
+  `Glob` each run.
 - **Never** decompose an issue that belongs in the formal pipeline (more than one
   outcome, more than one PR strand, or a new/retargeted roadmap item) for direct
   implementation; route it to `feature-decompose` or `roadmap-plan` instead, never
@@ -359,7 +361,5 @@ as the single list; don't mirror a count of its entries here.
 
 ## Multi-model testing
 
-Verified on Claude Sonnet as the default model; spot-checked on Haiku for
-cost-sensitive intake runs; Opus suits high-stakes issues (security, spec-change,
-wide blast radius). No model-specific assumptions beyond standard tool-call
-semantics.
+Verified on Sonnet; spot-checked on Haiku for cost-sensitive intake; Opus suits
+high-stakes issues (security, spec-change, wide blast radius).

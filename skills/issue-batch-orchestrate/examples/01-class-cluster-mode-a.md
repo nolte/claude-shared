@@ -19,7 +19,7 @@ One-sentence logical change: *"Make `.github/settings.yml` loadable by the setti
 by removing every construct the app rejects."*
 
 Group id `2026-09-14-settings-drift`. None is `question`-class, all three are bounded.
-Operator confirms membership.
+Membership is confirmed together with the plan in operation 3.
 
 ## 2. analyze
 
@@ -50,8 +50,11 @@ work ships and must appear in the release notes.
 
 ## 5. implement
 
-`issue-orchestrate` is dispatched per member, in order, each gated. Every matrix check
-is run and its real output recorded — for example the settings-app sync returning
+`issue-orchestrate` is dispatched per member, in order, under the plan approval
+(`authorised_by: 2026-09-14-settings-drift/plan-approval`); no member asks again. After
+each member a read-only reviewer verifies its slice; a finding that reproduces and stays
+in the member's files is fixed directly, any other is filed with the group id. Every
+matrix check is run and its real output recorded — for example the settings-app sync returning
 `200 OK` rather than the note "settings applied".
 
 `quality-gate` is run against the integration branch tip, not against any member's
@@ -67,6 +70,6 @@ same thing.
 
 ## 7. close
 
-After the squash-commit lands, each of #623, #624 and #625 is closed on operator
-confirmation, with a comment naming the bundle pull request and the merge SHA. The
+After the squash-commit lands, each of #623, #624 and #625 is closed on one operator
+confirmation for the set, with a comment naming the bundle pull request and the merge SHA. The
 process finding stays open: repairing the members did not add the missing validation.

@@ -137,6 +137,7 @@ specialist exists.
   decomposing against unstated or weakly-understood requirements is forbidden. A
   `question`-class issue (which yields no work packages) and an issue already
   self-resolved by a merged fix are exempt, since neither reaches decomposition
+- **MUST**, when a group process per `spec/project/issue-batch-integration/` §F supplies a `requirement_artifact`, treat the requirements gate as met for the issue only after re-checking that the artifact covers the issue's acceptance conditions and that its `U_gate` meets `τ_high`. The run **MUST NOT** elicit again for a covered issue and **MUST** dispatch `requirements-elicit` for an issue the artifact doesn't cover
 - **MUST NOT** begin decomposition until the operator confirms the acquired issue
   and its resolved scope, so a misread issue reference is caught before work starts
 
@@ -415,7 +416,9 @@ readership once the capability it describes is implemented, verified, and merged
   resumes from the last checkpoint rather than re-running dispatched specialists
 - **MUST** gate every externally-visible action (the pre-analysis artifact write,
   each specialist dispatch, the issue comment, the PR creation) on operator
-  confirmation; the orchestrator never fires a mutating step without a recorded "yes"
+  confirmation; the orchestrator never fires a mutating step without a recorded "yes" or a recorded group authorisation per the next bullet
+- **MUST**, when a group process per `spec/project/issue-batch-integration/` §F delegates the run and passes an `authorised_by` reference, record that reference as the decision for each confirmation it would otherwise ask: the member dispatch, each package-boundary dispatch, the decomposition approval while the decomposition stays inside the member's row of the group's completeness matrix, and the classification confirmation unless the class is `security`. The run **MUST NOT** ask again for those. The reference never covers a change outside that row, a pull request, or a merge, and a group-delegated run posts no issue comment, since the closure comments of `spec/project/issue-batch-integration/` §H carry that trail; a decomposition that leaves the row is a structural regression the run reports back to the group instead of dispatching
+- **MUST NOT** treat an `authorised_by` reference it can't resolve to an approved group artifact as authorisation; it asks as it would without one
 
 ## Acceptance Criteria
 
@@ -501,7 +504,10 @@ These criteria apply to runs started after the transient pre-analysis rule becam
 - [ ] For each completed orchestration run, the checkpoint state under
   `.resume/issue-orchestrate/` records a decision entry for every externally-visible
   gate—the artifact write, each specialist dispatch, the issue comment, and the PR
-  creation
+  creation; a run started under a group authorisation records the `authorised_by`
+  reference in place of each confirmation it didn't ask
+- [ ] For every issue a group process supplied with a `requirement_artifact`, the pre-analysis artifact records the coverage check against that artifact, and `requirements-elicit` ran only for an issue the artifact didn't cover
+- [ ] For every run started under a group authorisation, the checkpoint carries the `authorised_by` reference, and no run asked for a confirmation that reference covers
 - [ ] For every orchestrated issue that asserts a cause, the pre-analysis artifact records the observation that verified or refuted it before the first tracked change, and a refuted cause is recorded with the measurement that refuted it. Applied to the five cases in `nolte/claude-shared#641` (a fixture-size flake, a login gate, a favourites resolver, a favourites error clause, a dependency sweep), the rule fires on each; a rule set that grades them as conformant is wrong
 
 ## Open Questions

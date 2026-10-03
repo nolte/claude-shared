@@ -48,6 +48,14 @@ group from arising}}
 
 **Recurrence fed to the portfolio loop:** {{finding class and its recurrence count}}
 
+## Plan approval
+
+**Authorised by:** `{{group-id}}/plan-approval`, covering the members, mode, and order
+above. Revoked for undispatched members by any structural regression until re-approved.
+
+**Group requirement artifact (class cluster only):** {{path under `project/requirements/`
+and its `U_gate`, or "not applicable — symptom cluster, per-member elicitation"}}
+
 ## Completeness matrix
 
 One row per member, one column per artifact class this repository ships. Every cell
@@ -80,3 +88,19 @@ Filled during implementation. Each entry records the dispatched specialist and t
 | Member | Kind | What changed |
 |---|---|---|
 | #{{n}} | {{local adaptation / structural regression}} | {{what differed, and for a regression: which assumption failed and when the plan was re-approved}} |
+
+## Requirement coverage
+
+Only for a group with a group requirement artifact. One row per member.
+
+| Member | Covered or fallback | Coverage check or the requirement it added |
+|---|---|---|
+| #{{n}} | {{covered / fallback}} | {{each acceptance condition → requirement id, or the requirement the artifact lacks}} |
+
+## Findings
+
+One row per finding a reviewer, verification pass, or check raised against a member.
+
+| Finding | Source | Outcome | Reproduction | Issue |
+|---|---|---|---|---|
+| {{file:line and claim}} | {{pre-merge review / member verification pass / check}} | {{fixed directly / filed}} | {{command and actual output}} | {{#n, or —}} |
