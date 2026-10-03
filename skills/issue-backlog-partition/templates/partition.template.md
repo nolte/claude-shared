@@ -8,7 +8,7 @@
 
 - **Repository:** {{owner/repo}}
 - **Surveyed at:** {{ISO timestamp}}
-- **Open issues at survey time:** {{n}} (`gh issue list --state open --json number | jq length`)
+- **Open issues at survey time:** {{n}} (`gh api "repos/{owner}/{repo}/issues?state=open&per_page=100" --paginate --jq '.[] | select(has("pull_request")|not) | .number' | wc -l`)
 - **Exclusion rules applied:** {{X-QUESTION, X-BOT, X-TEMPLATE, X-RESOLVED, X-INFLIGHT}}
 - **Trusted-author set resolved via:** {{command and result count}}
 - **Research question:** Which of the {{n}} open issues form groups under the three

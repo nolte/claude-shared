@@ -85,11 +85,13 @@ Six operations form a forward pipeline. Checkpoint at every boundary per *Resuma
 
 ### 1. collect
 
-Fetch the complete open set: `gh issue list --state open --limit 100 --json
-number,title,author,labels,createdAt,url` and page until the result is shorter than the
-limit. Prefer a connected GitHub MCP server's read tools, falling back to `gh`, per
-`spec/claude/mcp-tool-preference/`; `gh` stays authoritative. Record the count and the
-timestamp; the artifact's per-issue table must later account for exactly this set.
+Fetch the complete open set with `gh api "repos/{owner}/{repo}/issues?state=open&per_page=100"
+--paginate`, keeping only entries without a `pull_request` key (that endpoint returns pull
+requests too). `gh issue list` has no paging and stops at its `--limit`, so it can't prove
+completeness. Prefer a connected GitHub MCP server's read tools paged to exhaustion, falling
+back to `gh`, per `spec/claude/mcp-tool-preference/`; `gh` stays authoritative. Record the
+count and the timestamp; the artifact's per-issue table must later account for exactly this
+set.
 
 Apply the exclusion rules of `references/exclusion-rules.md` **mechanically** and record
 the rule that fired per excluded issue. An issue that no rule fires on stays in the survey;
@@ -147,7 +149,8 @@ or a command with its output.
 **Present the artifact for one operator approval covering the whole partition —
 membership, outcomes, and ordering.** Bundle the approval into a single question; don't
 ask per group. This approval is not any group's write gate and not any single's dispatch
-gate; those stay downstream.
+gate; those stay downstream. A partition with no group, single, or pipeline outcome is still
+presented and approved, so the operator can challenge each exclusion.
 
 ### 6. dispatch
 
@@ -173,9 +176,9 @@ implements, branches, or opens a pull request.
 
 Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to
 `.resume/issue-backlog-partition/<run-id>.yml` after each operation boundary (`collect`,
-`classify`, `partition`, `sequence`, `approve`) and after every hand-off in `dispatch`,
-with the per-issue records inside the checkpoint so a resumed survey re-fetches no issue
-it already holds. On re-invocation, scan that directory for `status: in_progress` files
+`classify`, `partition`, `sequence`, `approve`), after every completed exploration batch
+inside `classify`, and after every hand-off in `dispatch`, with the per-issue records inside
+the checkpoint so a resumed survey re-fetches no issue it already holds. On re-invocation, scan that directory for `status: in_progress` files
 whose `inputs:` snapshot (repository and survey date) matches; if one matches, prompt
 `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume /
 start-new / discard]`.
@@ -202,9 +205,9 @@ start-new / discard]`.
 
 ## Gotchas
 
-- `gh issue list` defaults to 30 results and caps `--limit` per page; a backlog larger than
-  one page silently truncates unless you page. Compare the artifact's row count against the
-  count from operation 1 before approval.
+- `gh issue list` defaults to 30 results, takes no page or offset, and silently truncates at
+  its `--limit`; only `gh api --paginate` reads past it. Compare the artifact's row count
+  against the paginated count from operation 1 before approval.
 - A label shared by every member looks like thematic coupling and often is — but the
   evidence has to be the issues' content, or a label applied by habit forms a group that
   isn't one logical change.

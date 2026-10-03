@@ -4,10 +4,9 @@ Illustrative repository with 11 open issues on survey day 2026-10-03.
 
 ## collect
 
-`gh issue list --state open --limit 100 --json number,title,author,labels,createdAt`
-returns 11 rows; a second page isn't needed. Mechanical exclusions on the list output:
+The paginated `gh api` read of the open issues, pull requests filtered out, returns 11 rows. Mechanical exclusions on the list output:
 
-- Issue 393 "Dependency Dashboard" — `author.login` is `renovate[bot]` → `X-BOT`.
+- Issue 393 "Dependency Dashboard" — `user.login` is `renovate[bot]` → `X-BOT`.
 - Issue 676 "Quarterly portfolio audit — 2026 Q4" — labels `chore,audit`, title matches
   the pattern that `.github/workflows/quarterly-audit.yml` opens → `X-TEMPLATE`.
 

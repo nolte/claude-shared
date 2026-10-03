@@ -1,6 +1,6 @@
 # Example 2: the survey forms no group and says so checkably
 
-This repository, 2026-10-03: `gh issue list --state open --json number,title,author,labels`
+This repository, 2026-10-03: the paginated `gh api` read of the open issues, pull requests filtered out,
 returns three rows.
 
 ## collect
@@ -9,7 +9,7 @@ returns three rows.
 |---|---|---|
 | 677 | Quarterly dependency & license audit — 2026 Q4 | `X-TEMPLATE` — labels `chore,dependencies,audit`; the title pattern recurs across closed issues (`gh issue list --state closed --search "Quarterly dependency"` returns three prior quarters) |
 | 676 | Quarterly portfolio audit — 2026 Q4 | `X-TEMPLATE` — labels `chore,audit`; same recurrence check |
-| 393 | Dependency Dashboard | `X-BOT` — `author.login` is `renovate[bot]` |
+| 393 | Dependency Dashboard | `X-BOT` — `user.login` is `renovate[bot]` |
 
 Zero issues survive to classification.
 
@@ -40,9 +40,10 @@ candidate graph is empty. The three exclusions are listed above with the rule an
 evidence; each can be challenged by name.
 ```
 
-The operator is told in one line: three open issues, all excluded by rule, no group
-formed, nothing handed on. No approval question is asked, because there is no membership
-or ordering to approve — the skill records the run as completed with an empty hand-off log.
+The operator is shown the table in one line: three open issues, all excluded by rule, no
+group formed, nothing to hand on. The skill still asks for the one approval, so the operator
+can challenge any exclusion by name, and records it as the single checkpoint decision. The
+run then completes with an empty hand-off log.
 
 ## Why the artifact is written anyway
 

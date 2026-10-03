@@ -9,7 +9,7 @@ exclusion rule; that issue stays in and ends up **single** at worst.
 | Rule id | Predicate | Typical case | Evidence to record |
 |---|---|---|---|
 | `X-QUESTION` | Primary class is `question` (established in operation 2, applied retroactively) | "How do I…?" issues | the class rationale |
-| `X-BOT` | `author.is_bot` is true, or the login matches a known app account (`renovate[bot]`, `dependabot[bot]`, `github-actions[bot]`) | Dependency Dashboard | the author login |
+| `X-BOT` | `user.type` is `Bot`, or the login matches a known app account (`renovate[bot]`, `dependabot[bot]`, `github-actions[bot]`) | Dependency Dashboard | the author login |
 | `X-TEMPLATE` | The label set and title pattern match a recurring template the repository ships (a quarterly audit, a release checklist) | "Quarterly portfolio audit — 2026 Q4" | the matching label set and the title pattern |
 | `X-RESOLVED` | `closedByPullRequestsReferences` names a **merged** pull request whose diff covers the issue | fixed but not closed, autolink didn't fire | the PR number and merge SHA |
 | `X-INFLIGHT` | An **open** pull request already references and carries the issue | someone is on it | the PR number and its branch |
