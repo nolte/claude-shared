@@ -50,10 +50,15 @@ Exit codes:
      manifest entry, a manifest id listed twice, or an id that is both a probe
      file and a manifest entry. Takes precedence over 3.
   5  PyYAML or jsonschema is not installed
+  6  --check-migration only: a migration candidate is not clean (stale,
+     weakened, invalid, also a manifest entry, or otherwise not executable as
+     approved) or the manifest is unreadable, so the migration to section
+     anchors is refused; nothing is written
 
 Usage:
   python reach_audit.py --repo ~/repos/github/kamerplanter
   python reach_audit.py --repo . --include-t2
+  python reach_audit.py --repo . --check-migration
 """
 from __future__ import annotations
 
@@ -157,6 +162,7 @@ EXIT_USAGE = 2  # argparse's own code for a bad invocation; reused for semantic 
 EXIT_NO_PROBES = 3
 EXIT_FINDINGS = 4
 EXIT_MISSING_DEPENDENCY = 5
+EXIT_MIGRATION_REFUSED = 6
 
 INSTALL_HINT = (
     "reach_audit: dependency missing ({err}). The runner validates every probe "
@@ -192,6 +198,7 @@ STATE_APPROVAL_MISMATCH = "approval mismatch"
 DECLARATION_SOURCES = ("requirement", "endpoint", "capability", "inventory")
 
 REASON_NOT_APPROVED = "not approved"
+REASON_INVALID_PROBE = "probe fails the probe schema"
 REASON_T2 = "tier T2 not requested"
 REASON_STALE = "declaration changed since derivation"
 REASON_NOT_CONSTRUCTIBLE = "not constructible"
@@ -1849,7 +1856,7 @@ def evaluate(repo: Path, git: Git, probe: Probe, yaml: Any, include_t2: bool, en
     if not probe.constructible:
         return not_constructible_entry(probe)
     if probe.errors:
-        return Entry(probe, ChangeState(STATE_INVALID), Outcome(NOT_PROBED, reason="probe fails the probe schema: " + "; ".join(probe.errors)))
+        return Entry(probe, ChangeState(STATE_INVALID), Outcome(NOT_PROBED, reason=f"{REASON_INVALID_PROBE}: " + "; ".join(probe.errors)))
     data = probe.data or {}
     change = detect_change(repo, git, probe, yaml)
     if change.state == STATE_WEAKENED:
@@ -2106,14 +2113,107 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
     return EXIT_OK, out
 
 
+# --------------------------------------------------------------------------- #
+# Migration gate (reconfirm-and-migrate.md §Migration step 1)
+# --------------------------------------------------------------------------- #
+ROUTE_STALE = ("reconfirm it after the diff (references/reconfirm-and-migrate.md §Re-confirmation) "
+               "or derive it again, then check again; a migration must not hide a declaration change")
+ROUTE_WEAKENED = ("not healable in place: neither a re-confirmation nor a migration clears it; "
+                  "re-derive it under a new id (references/runner-exit-codes.md §Re-baseline rule, "
+                  "nolte/claude-shared#685)")
+ROUTE_REDERIVE = "re-derive the entry (references/runner-exit-codes.md §Findings), then check again"
+ROUTE_OTHER = "resolve it as references/runner-exit-codes.md routes this reason, then check again"
+
+
+def is_migration_candidate(probe: Probe) -> bool:
+    """A probe file on a Markdown declaration that is not yet section-anchored.
+
+    An invalid probe file is a candidate too, so the gate refuses it as ``run``
+    flags it; one whose declaration can't be read at all (unparseable, a
+    symlink) can't be ruled out and is a candidate as well (fail closed).
+    """
+    if not probe.constructible:
+        return False
+    declaration = probe.data.get("declaration") if isinstance(probe.data, dict) else None
+    if not isinstance(declaration, dict):
+        return bool(probe.errors)
+    path = declaration.get("path")
+    return isinstance(path, str) and path.endswith(".md") and "sections" not in declaration
+
+
+def migration_state(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
+    """The candidate's state as ``run`` would judge it before executing; only clean may migrate.
+
+    Reuses detect_change and the approval check of evaluate(), so this gate has
+    no definition of stale or weakened of its own.
+    """
+    change = detect_change(repo, git, probe, yaml)
+    if change.state != STATE_CLEAN:
+        return change
+    data = probe.data or {}
+    if "approval" not in data:
+        return ChangeState(REASON_NOT_APPROVED, "the probe was never approved through the gate")
+    approved_digest = data["approval"].get("observation_digest")
+    if approved_digest is not None and approved_digest != observation_digest(data):
+        return ChangeState(STATE_APPROVAL_MISMATCH, REASON_DIGEST_MISMATCH)
+    return change
+
+
+def check_migration(repo_arg: str) -> tuple[int, list[str]]:
+    """Refuse the migration while any candidate is not clean; write nothing.
+
+    Returns the exit code and the lines to print: one ``refused`` line per
+    candidate that is not clean (id, state, reason, route), otherwise one
+    ``migratable`` line per candidate.
+    """
+    yaml, validator_cls = _load_dependencies()
+    repo = require_local_working_copy(repo_arg)
+    git = Git(repo)
+    candidates = [p for p in load_probes(repo, yaml, validator_cls) if is_migration_candidate(p)]
+    # As in run(): an id that is also a manifest entry is a contradiction, judged
+    # before the probe itself; an unreadable manifest can't rule one out.
+    manifest = load_manifest(repo, yaml, validator_cls)
+    listed = {e.pid: e for e in manifest.entries} if manifest else {}
+    refused: list[str] = []
+    if manifest is not None and not manifest.readable:
+        refused.append(f"refused {manifest.file}: invalid manifest: {safe_text('; '.join(manifest.errors))}; "
+                       f"route: {ROUTE_REDERIVE}")
+    migratable: list[str] = []
+    for probe in candidates:
+        if probe.pid in listed:
+            state = contradiction_entry(probe, listed[probe.pid]).change
+        elif probe.errors:
+            state = ChangeState(STATE_INVALID, f"{REASON_INVALID_PROBE}: " + "; ".join(probe.errors))
+        else:
+            state = migration_state(repo, git, probe, yaml)
+        pid = safe_text(probe.pid, 120)
+        if state.state == STATE_CLEAN:
+            migratable.append(f"migratable {pid}")
+            continue
+        route = {STATE_STALE: ROUTE_STALE, STATE_WEAKENED: ROUTE_WEAKENED, STATE_INVALID: ROUTE_REDERIVE,
+                 STATE_CONTRADICTION: ROUTE_REDERIVE}.get(state.state, ROUTE_OTHER)
+        refused.append(f"refused {pid}: {state.state}: {safe_text(state.reason)}; route: {route}")
+    if refused:
+        return EXIT_MIGRATION_REFUSED, refused
+    return EXIT_OK, migratable
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Execute the stored capability-reach probes of a local repository and write the report.",
         epilog="Exit codes: 0 report written, 1 runtime error, 2 usage error or non-local target, "
-        "3 no probe file (nothing executed), 4 report written with findings, 5 PyYAML/jsonschema missing.",
+        "3 no probe file (nothing executed), 4 report written with findings, 5 PyYAML/jsonschema missing, "
+        "6 --check-migration refused: a migration candidate is not clean (nothing written).",
     )
     parser.add_argument("--repo", required=True, help="Path to the local git working copy to audit (R13: no remote mode).")
     parser.add_argument("--include-t2", action="store_true", help="Also execute T2 probes (full stack with seeded data).")
+    parser.add_argument(
+        "--check-migration",
+        action="store_true",
+        help="Execute nothing and write nothing: judge every probe on a Markdown declaration without "
+        "declaration.sections; list them as migratable when all are clean, otherwise refuse with each "
+        "probe's state, reason, and route (exit 6).",
+    )
     parser.add_argument(
         "--environment-timeout",
         type=float,
@@ -2129,6 +2229,19 @@ def main(argv: list[str] | None = None) -> int:
     if args.environment_timeout <= 0:
         sys.stderr.write("reach_audit: --environment-timeout must be positive.\n")
         return EXIT_USAGE
+    if args.check_migration:
+        try:
+            code, lines = check_migration(args.repo)
+        except AuditError as exc:
+            sys.stderr.write(f"reach_audit: {exc}\n")
+            return exc.code
+        for line in lines:
+            print(line)
+        if code == EXIT_MIGRATION_REFUSED:
+            print(f"reach_audit: migration refused: {len(lines)} candidate(s) not clean; nothing written")
+        else:
+            print(f"reach_audit: migration check passed: {len(lines)} candidate(s) migratable; nothing written")
+        return code
     try:
         code, out = run(args.repo, args.include_t2, args.environment_timeout)
     except AuditError as exc:

@@ -12,6 +12,7 @@ Loaded by `capability-reach-audit` `run` step 2. The runner is `scripts/reach_au
 | `3` | no probe file: `project/reach-probes/` is absent, empty, or holds only the manifest; nothing was executed | **not** a clean result. Without a manifest the report says "no probe set"; with manifest entries it is a full report in which every entry is not probed. Either way route to `derive` (with a manifest, the actionable entries are the work to do first) |
 | `4` | report written with findings (weakened or invalid probes, approval mismatches, contradictions, manifest defects); takes precedence over 3 | run `report` leading with the Findings section, then the headline; see §Findings |
 | `5` | PyYAML or jsonschema missing | relay the runner's `pip install` hint verbatim and stop; never parse or validate probes yourself |
+| `6` | `--check-migration` only: a migration candidate (a `.md` declaration without `declaration.sections`) isn't clean, is invalid, or is also a manifest entry, or the manifest is unreadable; nothing written | stop `migrate`; relay each `refused` line and follow its route (`references/reconfirm-and-migrate.md` §Migration step 1) |
 
 A negative or zero `--environment-timeout` also exits `2` before anything runs.
 
