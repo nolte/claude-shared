@@ -51,8 +51,9 @@ Exit codes:
      file and a manifest entry. Takes precedence over 3.
   5  PyYAML or jsonschema is not installed
   6  --check-migration only: a migration candidate is not clean (stale,
-     weakened, or otherwise not executable as approved), so the migration to
-     section anchors is refused; nothing is written
+     weakened, invalid, also a manifest entry, or otherwise not executable as
+     approved) or the manifest is unreadable, so the migration to section
+     anchors is refused; nothing is written
 
 Usage:
   python reach_audit.py --repo ~/repos/github/kamerplanter
@@ -197,6 +198,7 @@ STATE_APPROVAL_MISMATCH = "approval mismatch"
 DECLARATION_SOURCES = ("requirement", "endpoint", "capability", "inventory")
 
 REASON_NOT_APPROVED = "not approved"
+REASON_INVALID_PROBE = "probe fails the probe schema"
 REASON_T2 = "tier T2 not requested"
 REASON_STALE = "declaration changed since derivation"
 REASON_NOT_CONSTRUCTIBLE = "not constructible"
@@ -1854,7 +1856,7 @@ def evaluate(repo: Path, git: Git, probe: Probe, yaml: Any, include_t2: bool, en
     if not probe.constructible:
         return not_constructible_entry(probe)
     if probe.errors:
-        return Entry(probe, ChangeState(STATE_INVALID), Outcome(NOT_PROBED, reason="probe fails the probe schema: " + "; ".join(probe.errors)))
+        return Entry(probe, ChangeState(STATE_INVALID), Outcome(NOT_PROBED, reason=f"{REASON_INVALID_PROBE}: " + "; ".join(probe.errors)))
     data = probe.data or {}
     change = detect_change(repo, git, probe, yaml)
     if change.state == STATE_WEAKENED:
@@ -2119,14 +2121,22 @@ ROUTE_STALE = ("reconfirm it after the diff (references/reconfirm-and-migrate.md
 ROUTE_WEAKENED = ("not healable in place: neither a re-confirmation nor a migration clears it; "
                   "re-derive it under a new id (references/runner-exit-codes.md §Re-baseline rule, "
                   "nolte/claude-shared#685)")
+ROUTE_REDERIVE = "re-derive the entry (references/runner-exit-codes.md §Findings), then check again"
 ROUTE_OTHER = "resolve it as references/runner-exit-codes.md routes this reason, then check again"
 
 
 def is_migration_candidate(probe: Probe) -> bool:
-    """A valid probe on a Markdown declaration that is not yet section-anchored."""
-    if not probe.constructible or probe.errors or not probe.data:
+    """A probe file on a Markdown declaration that is not yet section-anchored.
+
+    An invalid probe file is a candidate too, so the gate refuses it as ``run``
+    flags it; one whose declaration can't be read at all (unparseable, a
+    symlink) can't be ruled out and is a candidate as well (fail closed).
+    """
+    if not probe.constructible:
         return False
-    declaration = probe.data.get("declaration") or {}
+    declaration = probe.data.get("declaration") if isinstance(probe.data, dict) else None
+    if not isinstance(declaration, dict):
+        return bool(probe.errors)
     path = declaration.get("path")
     return isinstance(path, str) and path.endswith(".md") and "sections" not in declaration
 
@@ -2160,15 +2170,28 @@ def check_migration(repo_arg: str) -> tuple[int, list[str]]:
     repo = require_local_working_copy(repo_arg)
     git = Git(repo)
     candidates = [p for p in load_probes(repo, yaml, validator_cls) if is_migration_candidate(p)]
+    # As in run(): an id that is also a manifest entry is a contradiction, judged
+    # before the probe itself; an unreadable manifest can't rule one out.
+    manifest = load_manifest(repo, yaml, validator_cls)
+    listed = {e.pid: e for e in manifest.entries} if manifest else {}
     refused: list[str] = []
+    if manifest is not None and not manifest.readable:
+        refused.append(f"refused {manifest.file}: invalid manifest: {safe_text('; '.join(manifest.errors))}; "
+                       f"route: {ROUTE_REDERIVE}")
     migratable: list[str] = []
     for probe in candidates:
-        state = migration_state(repo, git, probe, yaml)
+        if probe.pid in listed:
+            state = contradiction_entry(probe, listed[probe.pid]).change
+        elif probe.errors:
+            state = ChangeState(STATE_INVALID, f"{REASON_INVALID_PROBE}: " + "; ".join(probe.errors))
+        else:
+            state = migration_state(repo, git, probe, yaml)
         pid = safe_text(probe.pid, 120)
         if state.state == STATE_CLEAN:
             migratable.append(f"migratable {pid}")
             continue
-        route = {STATE_STALE: ROUTE_STALE, STATE_WEAKENED: ROUTE_WEAKENED}.get(state.state, ROUTE_OTHER)
+        route = {STATE_STALE: ROUTE_STALE, STATE_WEAKENED: ROUTE_WEAKENED, STATE_INVALID: ROUTE_REDERIVE,
+                 STATE_CONTRADICTION: ROUTE_REDERIVE}.get(state.state, ROUTE_OTHER)
         refused.append(f"refused {pid}: {state.state}: {safe_text(state.reason)}; route: {route}")
     if refused:
         return EXIT_MIGRATION_REFUSED, refused

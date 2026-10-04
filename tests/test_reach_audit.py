@@ -2928,6 +2928,53 @@ def test_686_section_anchored_and_non_markdown_probes_are_no_candidates(sectione
     assert "0 candidate(s) migratable" in out
 
 
+def test_686_candidate_that_is_also_a_manifest_entry_is_refused_as_run_refuses_it(target, capsys):
+    """run reports the id as a contradiction (exit 4); the migration must not list it as migratable."""
+    _content_probe(target)
+    target.write(MANIFEST_REL, yaml.safe_dump({"entries": [manifest_entry("p1")]}, sort_keys=False))
+    target.commit("list p1 as not constructible too")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED, out
+    assert (f"refused p1: {ra.STATE_CONTRADICTION}: id is both the probe file project/reach-probes/p1.yml "
+            "and a not-constructible manifest entry") in out
+    assert "route: re-derive the entry" in out and "migratable" not in out
+
+
+def test_686_unreadable_manifest_refuses_the_migration(target, capsys):
+    _content_probe(target)
+    target.write(MANIFEST_REL, "entries: [unclosed\n")
+    target.commit("break the manifest")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED, out
+    assert f"refused {MANIFEST_REL}: invalid manifest: not parseable as YAML" in out
+
+
+@pytest.mark.parametrize("raw", [False, True])
+def test_686_invalid_candidate_is_refused_as_run_flags_it(target, capsys, raw):
+    """A schema-invalid probe on a .md declaration, or one that can't be parsed at all (fail closed)."""
+    if raw:
+        target.write("project/reach-probes/p1.yml", "id: p1\nderived_from: [unclosed\n")
+    else:
+        target.write_probe(make_probe(derived_from=_blob(target), verdict="reached"))
+    target.commit("approve an invalid probe")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED, out
+    assert f"refused p1: {ra.STATE_INVALID}: " in out and "route: re-derive the entry" in out
+    if not raw:
+        assert f"{ra.REASON_INVALID_PROBE}: <root>: Additional properties" in out
+
+
+def test_686_invalid_probe_on_a_non_markdown_declaration_is_no_candidate(target, capsys):
+    target.write("docs/api.yaml", "paths: {}\n")
+    target.commit("declare an endpoint")
+    target.write_probe(make_probe(derived_from=_blob(target, path="docs/api.yaml"), path="docs/api.yaml",
+                                  verdict="reached"))
+    target.commit("approve an invalid probe")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_OK, out
+    assert "p1" not in out
+
+
 def test_686_help_names_the_mode_and_its_exit_code():
     text = ra.build_parser().format_help()
     assert "--check-migration" in text and "6 --check-migration refused" in " ".join(text.split())
