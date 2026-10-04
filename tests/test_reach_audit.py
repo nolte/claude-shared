@@ -10,6 +10,7 @@ stands up a real loopback HTTP server through that shim.
 """
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import re
@@ -28,7 +29,8 @@ from jsonschema import Draft202012Validator
 from tests.conftest import REPO_ROOT, SCRIPTS, Target, ra, row_of, validate
 
 SCRIPT_PATH = SCRIPTS / "reach_audit.py"
-SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.2.schema.yaml"
+SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.3.schema.yaml"
+V12_SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.2.schema.yaml"
 PRIOR_SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-probe-v1.1.schema.yaml"
 EXAMPLES = SCRIPTS.parent / "examples"
 FIXED_NOW = datetime(2026, 9, 23, 10, 0, 0, tzinfo=timezone.utc)
@@ -124,7 +126,7 @@ def test_example_probes_validate():
 def test_schemas_config_binds_the_example_glob():
     config = yaml.safe_load((REPO_ROOT / ".schemas-config.yaml").read_text())
     bound = {glob: schema for glob, schema in config["mappings"].items() if list(REPO_ROOT.glob(glob))}
-    assert "schemas/reach-probe-v1.2.schema.yaml" in bound.values()
+    assert "schemas/reach-probe-v1.3.schema.yaml" in bound.values()
 
 
 def _valid() -> dict:
@@ -2717,8 +2719,8 @@ def _weakened_chain(target: Target) -> str:
     return rel
 
 
-def _fresh(target: Target, pid: str = "p1") -> dict:
-    sections = _sections_now(target)
+def _fresh(target: Target, pid: str = "p1", locators=LOCATORS) -> dict:
+    sections = _sections_now(target, locators)
     probe = make_probe(pid, derived_from=ra.section_anchor(sections))
     probe["declaration"]["sections"] = sections
     probe["approval"] = {"approved_at": "2026-09-25T08:00:00Z", "approved_by": "another operator"}
@@ -2887,7 +2889,7 @@ def test_686_weakened_candidate_is_refused_as_not_healable_in_place(target, caps
     code, out = _check_migration(target, capsys)
     assert code == ra.EXIT_MIGRATION_REFUSED
     assert f"refused p1: {ra.STATE_WEAKENED}: probe changed in" in out
-    assert "not healable in place" in out and "nolte/claude-shared#685" in out
+    assert "not healable in place" in out and "that lists it in supersedes" in out
 
 
 def test_686_one_stale_candidate_refuses_even_beside_a_clean_one(target, capsys):
@@ -2978,3 +2980,655 @@ def test_686_invalid_probe_on_a_non_markdown_declaration_is_no_candidate(target,
 def test_686_help_names_the_mode_and_its_exit_code():
     text = ra.build_parser().format_help()
     assert "--check-migration" in text and "6 --check-migration refused" in " ".join(text.split())
+
+
+# --------------------------------------------------------------------------- #
+# Supersede (#685): a recorded replacement of a weakened probe
+# --------------------------------------------------------------------------- #
+ROW_08 = ("Export on request", "Export within 7 days")   # the AK-OS-08 row
+WIDE = (*LOCATORS, ("row", "AK-OS-08"))
+
+
+def _weakened_rebaseline(target: Target, **kw) -> str:
+    """The kamerplanter case: C2 widens the locators without a declaration change (a weakened
+    re-baseline), C3 really changes AK-OS-08 and re-derives. The chain stays weakened."""
+    rel = _section_probe(target, **kw)
+    _reanchor(target, rel, locators=WIDE)
+    target.commit("re-anchor onto AK-OS-08 without a declaration change")
+    _edit(target, *ROW_08)
+    _reanchor(target, rel)
+    target.commit("change AK-OS-08 and re-derive")
+    return rel
+
+
+def test_685_re_derivation_after_a_real_change_on_a_weakened_chain_stays_weakened(sectioned):
+    """AC1: documents the behaviour the chain rule keeps; supersede does not relax it."""
+    _weakened_rebaseline(sectioned)
+    reason = _weakened_reason(sectioned)
+    assert reason.startswith("weakened: re-baselined without a declaration change: "), reason
+    assert "but its previous derivation was no re-derivation either: " in reason
+    assert reason.endswith(f"but the anchored sections of {DECL} did not change in between")
+
+
+def test_685_a_new_id_beside_the_kept_weakened_file_inherits_its_chain_by_copy_detection(sectioned):
+    """Measured with git 2.43: --follow pairs a new file with a kept, similar one as a copy.
+
+    So keeping the weakened probe and adding a fresh one under a new id does not
+    escape the chain on its own; without a supersede record this stays so.
+    """
+    _weakened_rebaseline(sectioned)
+    sectioned.write_probe(_fresh(sectioned, "p1-rederived", WIDE))
+    sectioned.commit("derive afresh under a new id, keep the weakened probe")
+    follow = sectioned.git("log", "--follow", "--format=%H", "--", "project/reach-probes/p1-rederived.yml")
+    assert len(follow.splitlines()) > 1, "git no longer pairs the copy; revisit the supersede history cut"
+    state, reason = _state(sectioned, "p1-rederived")
+    assert state == ra.STATE_WEAKENED, reason
+    assert _state(sectioned)[0] == ra.STATE_WEAKENED
+
+
+def _replacement(target: Target, pid: str = "p2", supersedes=("p1",), commit: bool = True, locators=WIDE,
+                 **kw) -> dict:
+    """A fresh probe on the same entry, derived and approved under a new id, listing what it replaces."""
+    probe = _fresh(target, pid, locators)
+    probe["observe"]["argv"] = kw.pop("argv", probe["observe"]["argv"])
+    probe.update(kw)
+    probe["supersedes"] = list(supersedes)
+    _digested(probe)
+    target.write_probe(probe)
+    if commit:
+        target.commit(f"derive {pid} to supersede {', '.join(supersedes)}")
+    return probe
+
+
+def _superseded(target: Target, marker: Path | None = None) -> str:
+    """Weakened p1 plus a clean, approved p2 superseding it; returns the report."""
+    _weakened_rebaseline(target, argv=marker_argv(marker) if marker else None)
+    _replacement(target)
+    return run_audit(target)[1]
+
+
+def test_685_AC2_a_superseded_probe_is_reported_superseded_and_not_executed(sectioned, tmp_path):
+    marker = tmp_path / "p1-ran"
+    _weakened_rebaseline(sectioned, argv=marker_argv(marker))
+    _replacement(sectioned)
+    # git pairs p2 with the kept p1 as a copy: the record must end p2's walk there.
+    assert len(sectioned.git("log", "--follow", "--format=%H", "--", "project/reach-probes/p2.yml").splitlines()) > 1
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_OK, report
+    old, new = row_of(report, "p1"), row_of(report, "p2")
+    assert old[1] == ra.NOT_PROBED and old[5] == "not executed" and old[7] == ra.STATE_SUPERSEDED, old
+    assert _plain(old[9]).startswith("superseded by p2; it was weakened: re-baselined without a declaration change")
+    assert not marker.exists()
+    assert new[1] == ra.REACHED and new[7] == ra.STATE_CLEAN, new
+    assert f"- {ra.PROVENANCE_SUPERSEDED}: 1 (p1)." in report
+    assert "## Findings\n\n- none\n" in report
+
+
+def test_685_AC2_the_replacement_is_judged_on_its_own_later_history(sectioned, tmp_path):
+    """After the supersede, lowering p2's bar weakens p2, and p1 is weakened again."""
+    _superseded(sectioned)
+    _rewrite(sectioned, "project/reach-probes/p2.yml", expected_value=1)
+    sectioned.commit("lower p2's bar")
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
+    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_WEAKENED and "supersede by p2 not in effect: it is weakened" in _plain(old[9]), old
+
+
+def test_685_AC2_renaming_the_replacement_keeps_its_own_weakening(sectioned):
+    """The cut drops only the superseded probe's revisions, not the replacement's under an earlier name."""
+    _superseded(sectioned)
+    _rewrite(sectioned, "project/reach-probes/p2.yml", expected_value=1)
+    sectioned.commit("lower p2's bar")
+    sectioned.git("mv", "project/reach-probes/p2.yml", "project/reach-probes/p2-renamed.yml")
+    sectioned.commit("rename p2's file")
+    _, report = run_audit(sectioned)
+    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+@pytest.mark.parametrize("how, state", [
+    ("unapproved", ra.REASON_NOT_APPROVED),
+    ("digest", ra.STATE_APPROVAL_MISMATCH),
+    ("anchor", ra.STATE_UNRESOLVED),
+    ("stale", ra.STATE_STALE),
+])
+def test_685_AC3_a_replacement_that_does_not_run_as_approved_supersedes_nothing(sectioned, tmp_path, how, state):
+    """Own approval and own anchor: without both, p1 stays a weakened finding."""
+    marker = tmp_path / "p1-ran"
+    _weakened_rebaseline(sectioned, argv=marker_argv(marker))
+    probe = _replacement(sectioned, commit=False)
+    if how == "unapproved":
+        probe.pop("approval")
+    elif how == "digest":
+        probe["approval"]["observation_digest"] = "0" * 64
+    elif how == "anchor":
+        probe["derived_from"] = "sections:" + "0" * 64
+    sectioned.write_probe(probe)
+    sectioned.commit("derive p2")
+    if how == "stale":
+        _edit(sectioned, *IN_ROW)
+        sectioned.commit("change AK-OS-07")
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_WEAKENED and f"supersede by p2 not in effect: it is {state}" in _plain(old[9]), old
+    assert not marker.exists()
+    # The record took no effect, so p2 keeps its uncut verdict: git pairs it with p1 as a copy (SEC-002).
+    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED
+
+
+def test_685_AC3_deleting_the_replacement_leaves_the_superseded_probe_weakened(sectioned):
+    _superseded(sectioned)
+    (sectioned.path / "project/reach-probes/p2.yml").unlink()
+    sectioned.commit("drop p2")
+    _weakened_reason(sectioned)
+
+
+def test_685_AC3_adding_the_record_to_an_approved_probe_later_weakens_that_probe(sectioned):
+    _weakened_rebaseline(sectioned)
+    probe = _fresh(sectioned, "p2", WIDE)
+    sectioned.write_probe(probe)
+    sectioned.commit("derive p2 without a record")
+    sectioned.write_probe(probe | {"supersedes": ["p1"]})
+    sectioned.commit("add the record afterwards")
+    _, report = run_audit(sectioned)
+    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED
+    assert "supersede by p2 not in effect: it is weakened" in _plain(row_of(report, "p1")[9])
+
+
+def _supersede_finding(report: str, pid: str) -> str:
+    found = [ln for ln in report.splitlines() if ln.startswith(f"- **{ra.FINDING_SUPERSEDE}** `{pid}`")]
+    assert len(found) == 1, report
+    return _plain(found[0])
+
+
+def test_685_a_probe_that_is_not_weakened_cannot_be_superseded(sectioned, tmp_path):
+    """The laundering the record must not allow: hiding a healthy probe behind a new one."""
+    marker = tmp_path / "p1-ran"
+    _section_probe(sectioned, argv=marker_argv(marker))
+    _replacement(sectioned, locators=LOCATORS)
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
+    assert "supersedes p1, which is clean, not weakened" in _supersede_finding(report, "p2")
+    assert row_of(report, "p1")[1] == ra.REACHED and marker.exists()
+    # A record that takes no effect never changes p2's verdict (SEC-002): p2 keeps its uncut history,
+    # in which git pairs it with p1 as a copy, and so is not executed.
+    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED and row_of(report, "p2")[5] == "not executed"
+
+
+def test_685_self_supersede_is_a_finding(sectioned):
+    _replacement(sectioned, supersedes=("p2",))
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
+    assert "supersedes lists the probe's own id" in _supersede_finding(report, "p2")
+
+
+def test_685_a_cycle_is_a_finding_for_every_record_in_it(sectioned):
+    a = _replacement(sectioned, "p2", supersedes=("p3",), commit=False)
+    b = _replacement(sectioned, "p3", supersedes=("p2",), commit=False)
+    _approve_together(sectioned, a, b)
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
+    for pid, other in (("p2", "p3"), ("p3", "p2")):
+        assert f"supersedes {other}, which leads back to it through supersedes (a cycle)" in _supersede_finding(report, pid)
+
+
+@pytest.mark.parametrize("target_id, what", [
+    ("p9", "no valid probe file"),
+    ("nc1", "a not-constructible manifest entry"),
+])
+def test_685_a_record_without_a_probe_to_supersede_is_a_finding(sectioned, target_id, what):
+    sectioned.write(MANIFEST_REL, yaml.safe_dump({"entries": [manifest_entry("nc1")]}, sort_keys=False))
+    probe = _fresh(sectioned, "p2", WIDE) | {"supersedes": [target_id]}
+    sectioned.write_probe(probe, name="p2‮")
+    sectioned.commit("derive p2")
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
+    line = _supersede_finding(report, "p2")
+    assert f"supersedes {target_id}, which is {what} under project/reach-probes/" in line
+    assert "‮" not in report
+
+
+def test_685_a_replacement_on_another_declaration_entry_is_a_finding(sectioned):
+    _weakened_rebaseline(sectioned)
+    probe = _fresh(sectioned, "p2", WIDE)
+    probe["declaration"]["location"] = "§Rules"
+    sectioned.write_probe(probe | {"supersedes": ["p1"]})
+    sectioned.commit("derive p2 on another entry")
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
+    assert "which declares another entry" in _supersede_finding(report, "p2")
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+def test_685_schema_admits_supersedes_and_rejects_a_malformed_one():
+    assert validate(_valid() | {"supersedes": ["p0", "p0-old"]}) == []
+    for bad in ([], ["p0", "p0"], ["P0"], "p0", [""]):
+        assert validate(_valid() | {"supersedes": bad}), bad
+
+
+def test_685_every_v1_2_example_stays_valid():
+    for example in yaml.safe_load(V12_SCHEMA_PATH.read_text())["examples"]:
+        assert validate(example) == []
+
+
+def _file_anchored_weakened(target: Target) -> None:
+    rel = _content_probe(target)
+    _weaken(target, rel)
+    target.commit("lower the bar")
+
+
+def test_685_migration_skips_a_superseded_probe_and_judges_the_replacement(target, capsys):
+    _file_anchored_weakened(target)
+    target.write_probe(_digested(make_probe("p2", derived_from=_blob(target), supersedes=["p1"])))
+    target.commit("derive p2 to supersede p1")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_OK, out
+    assert "migratable p2\n" in out and "p1" not in out.replace("p2", "")
+
+
+def test_685_migration_refuses_a_candidate_with_an_invalid_record(target, capsys):
+    _content_probe(target)
+    target.write_probe(make_probe("p2", derived_from=_blob(target), supersedes=["p1"]))
+    target.commit("derive p2 to supersede a clean p1")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED, out
+    assert f"refused p2: {ra.FINDING_SUPERSEDE}: supersedes p1, which is clean, not weakened" in out
+    assert "migratable p1\n" in out or "refused p1" not in out
+
+
+# --------------------------------------------------------------------------- #
+# Pre-merge security review of the supersede record (SEC-001 to SEC-004)
+# --------------------------------------------------------------------------- #
+H_REL = "project/reach-probes/h.yml"
+
+
+def _digested(probe: dict) -> dict:
+    probe["approval"]["observation_digest"] = ra.observation_digest(probe)
+    return probe
+
+
+def _approved_h(target: Target, marker: Path) -> dict:
+    """c1: probe h, approved with a matching digest, clean."""
+    probe = _digested(make_probe("h", derived_from=_blob(target), argv=marker_argv(marker, "1")))
+    target.write_probe(probe)
+    target.commit("approve h")
+    return probe
+
+
+def _h_verdict(target: Target, marker: Path) -> tuple[int, list[str], str]:
+    code, report = run_audit(target)
+    return code, row_of(report, "h"), report
+
+
+def test_685_SEC001_A_a_copy_of_the_claimant_cannot_cut_away_its_own_history(target, tmp_path):
+    """One commit lowers h's bar, adds supersedes, and adds h-old as a copy of h's approved text."""
+    marker = tmp_path / "h-ran"
+    approved = _approved_h(target, marker)
+    _rewrite(target, H_REL, expected_value=1, supersedes=["h-old"])
+    target.write_probe(dict(approved, id="h-old"))
+    target.commit("lower h's bar, supersede a copy of it")
+    code, row, report = _h_verdict(target, marker)
+    assert row[7] == ra.STATE_WEAKENED, row[7:]
+    assert code == ra.EXIT_FINDINGS and not marker.exists()
+    assert row_of(report, "h-old")[7] == ra.STATE_WEAKENED
+    assert "descends from" in _supersede_finding(report, "h")
+
+
+def test_685_SEC001_A_the_migration_gate_refuses_it_too(target, tmp_path, capsys):
+    approved = _approved_h(target, tmp_path / "h-ran")
+    _rewrite(target, H_REL, expected_value=1, supersedes=["h-old"])
+    target.write_probe(dict(approved, id="h-old"))
+    target.commit("lower h's bar, supersede a copy of it")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED, out
+    assert "migratable h\n" not in out
+
+
+@pytest.mark.parametrize("summary_words", [8, 400])
+def test_685_SEC001_B_a_probe_at_the_claimants_earlier_path_cannot_cut_its_history(target, tmp_path, summary_words):
+    """c2 renames h and lowers its bar with supersedes; c3 adds h-old at h's old path.
+
+    Measured: with a short summary git pairs h-old with h2 as a copy, so h-old's
+    history holds h2's newest revision; with a long one h-old is dissimilar,
+    and --follow walks the reused path back into h's revision at c1.
+    """
+    marker = tmp_path / "h-ran"
+    _approved_h(target, marker)
+    target.git("mv", H_REL, "project/reach-probes/h2.yml")
+    _rewrite(target, "project/reach-probes/h2.yml", expected_value=1, supersedes=["h-old"])
+    renamed = target.commit("rename h, lower its bar")
+    other = make_probe("h-old", derived_from=_blob(target), tier="T1",
+                       summary=" ".join(f"unrelated{i}" for i in range(summary_words)),
+                       argv=[PY, "-c", "print('different observation step entirely')"])
+    target.write(H_REL, yaml.safe_dump(other, sort_keys=False))
+    target.commit("add h-old at h's old path")
+    follow = ra.Git(target.path).file_history(H_REL)
+    paired_with_h2 = (renamed, "project/reach-probes/h2.yml") in follow
+    assert paired_with_h2 == (summary_words == 8), follow
+    code, row, report = _h_verdict(target, marker)
+    assert row[7] == ra.STATE_WEAKENED, row[7:]
+    assert code == ra.EXIT_FINDINGS and not marker.exists()
+    assert row_of(report, "h-old")[7] != ra.STATE_SUPERSEDED
+
+
+def test_685_SEC001_a_target_that_once_held_the_claimants_path_is_refused(target):
+    """Fail closed on path reuse: w once lived at the path r is created at, so the walk can't tell them apart."""
+    w = _digested(make_probe("w", derived_from=_blob(target)))
+    target.write("project/reach-probes/r.yml", yaml.safe_dump(w, sort_keys=False))
+    target.commit("approve w under r.yml")
+    target.git("mv", "project/reach-probes/r.yml", "project/reach-probes/w.yml")
+    _rewrite(target, "project/reach-probes/w.yml", expected_value=1)
+    target.commit("move w away and lower its bar")
+    target.write("project/reach-probes/r.yml",
+                 yaml.safe_dump(_digested(make_probe("r", derived_from=_blob(target), supersedes=["w"])),
+                                sort_keys=False))
+    target.commit("derive r at w's old path")
+    _, report = run_audit(target)
+    assert "descends from this probe or sits on its earlier path" in _supersede_finding(report, "r")
+    assert row_of(report, "w")[7] == ra.STATE_WEAKENED
+
+
+def test_685_SEC002_a_dropped_record_does_not_change_the_claimants_verdict(target, tmp_path):
+    """Scenario A, but h-old declares another entry: the record is a finding, and h is weakened."""
+    marker = tmp_path / "h-ran"
+    approved = _approved_h(target, marker)
+    _rewrite(target, H_REL, expected_value=1, supersedes=["h-old"])
+    elsewhere = copy.deepcopy(approved) | {"id": "h-old"}
+    elsewhere["declaration"]["location"] = "§Elsewhere"
+    target.write_probe(elsewhere)
+    target.commit("lower h's bar, supersede a copy of it on another entry")
+    code, row, report = _h_verdict(target, marker)
+    assert row[7] == ra.STATE_WEAKENED, row[7:]
+    assert code == ra.EXIT_FINDINGS and not marker.exists()
+    assert "declares another entry" in _supersede_finding(report, "h")
+
+
+def test_685_SEC002_a_claimant_whose_newest_revision_lies_in_the_target_reads_weakened(target, tmp_path):
+    """c2 lowers h's bar with supersedes; c3 copies h to h-old without touching h."""
+    marker = tmp_path / "h-ran"
+    _approved_h(target, marker)
+    data = _rewrite(target, H_REL, expected_value=1, supersedes=["h-old"])
+    target.commit("lower h's bar")
+    target.write_probe({k: v for k, v in data.items() if k != "supersedes"} | {"id": "h-old"})
+    target.commit("copy h to h-old")
+    code, row, _ = _h_verdict(target, marker)
+    assert row[7] == ra.STATE_WEAKENED, row[7:]
+    assert code == ra.EXIT_FINDINGS and not marker.exists()
+
+
+def test_685_SEC003_a_replacement_without_an_observation_digest_supersedes_nothing(sectioned):
+    _weakened_rebaseline(sectioned)
+    probe = _replacement(sectioned, commit=False)
+    probe["approval"].pop("observation_digest")
+    sectioned.write_probe(probe)
+    sectioned.commit("derive p2 without a digest")
+    _, report = run_audit(sectioned)
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_WEAKENED
+    assert "supersede by p2 not in effect: its approval carries no observation digest" in _plain(old[9]), old
+
+
+def test_685_SEC004_a_replacement_on_another_declaration_file_is_a_finding(sectioned):
+    sectioned.write("docs/other.md", SECTIONED)
+    sectioned.commit("another declaration file with the same sections")
+    _weakened_rebaseline(sectioned)
+    probe = _fresh(sectioned, "p2", WIDE)
+    probe["declaration"]["path"] = "docs/other.md"
+    probe["declaration"]["sections"] = _sections_now(sectioned, WIDE, "docs/other.md")
+    probe["derived_from"] = ra.section_anchor(probe["declaration"]["sections"])
+    sectioned.write_probe(_digested(probe | {"supersedes": ["p1"]}))
+    sectioned.commit("derive p2 on another file")
+    _, report = run_audit(sectioned)
+    assert "which declares another entry" in _supersede_finding(report, "p2")
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+# --------------------------------------------------------------------------- #
+# Second security review of the supersede record (SEC-101 to SEC-103)
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("summary_words", [8, 400])
+def test_685_SEC101_rename_and_path_reuse_in_one_commit_cannot_cut_the_claimants_history(
+        target, tmp_path, capsys, summary_words):
+    """c2 renames h to h2, lowers its bar, adds supersedes, and writes h-old at h's old path."""
+    marker = tmp_path / "h-ran"
+    _approved_h(target, marker)
+    target.git("mv", H_REL, "project/reach-probes/h2.yml")
+    _rewrite(target, "project/reach-probes/h2.yml", expected_value=1, supersedes=["h-old"])
+    other = make_probe("h-old", derived_from=_blob(target),
+                       summary=" ".join(f"unrelated{i}" for i in range(summary_words)))
+    target.write(H_REL, yaml.safe_dump(other, sort_keys=False))
+    target.commit("rename h, lower its bar, reuse its path for h-old")
+    code, row, report = _h_verdict(target, marker)
+    assert row[7] != ra.STATE_CLEAN and not marker.exists(), row[7:]
+    assert code == ra.EXIT_FINDINGS
+    assert row_of(report, "h-old")[7] != ra.STATE_SUPERSEDED
+    code, out = _check_migration(target, capsys)
+    assert "migratable h\n" not in out
+
+
+def test_685_SEC102_a_reconfirmed_approval_supersedes_nothing(sectioned):
+    _weakened_rebaseline(sectioned)
+    probe = _replacement(sectioned, commit=False)
+    probe["approval"]["mode"] = ra.MODE_RECONFIRMED
+    sectioned.write_probe(probe)
+    sectioned.commit("derive p2 under a re-confirmed approval")
+    _, report = run_audit(sectioned)
+    assert "approval.mode reconfirmed" in _supersede_finding(report, "p2")
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+def test_685_SEC102_a_replacement_moved_to_T2_supersedes_nothing(sectioned):
+    """T2 is the one tier a default run withholds, so moving there drops the entry from the default audit."""
+    _weakened_rebaseline(sectioned)
+    probe = _replacement(sectioned, commit=False, tier="T2")
+    sectioned.write_probe(_digested(probe))
+    sectioned.commit("derive p2 at T2")
+    _, report = run_audit(sectioned)
+    assert "tier T2, but p1 is T0" in _supersede_finding(report, "p2")
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+def test_685_SEC102_an_effective_supersede_shows_both_expectations_and_tiers(sectioned):
+    _weakened_rebaseline(sectioned)
+    _replacement(sectioned, expected={"kind": "count", "value": 2, "unit": "collections"})
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_OK, report
+    assert ("- Supersede p1 by p2: now expected count 2 `collections`, tier T0; before expected count 3 "
+            "`collections`, tier T0; the replacement's approval is the only check of this change.") in report
+
+
+def test_685_SEC102_the_schema_example_does_not_combine_supersedes_with_a_re_confirmation():
+    for example in yaml.safe_load(SCHEMA_PATH.read_text())["examples"]:
+        if "supersedes" in example:
+            assert example.get("approval", {}).get("mode", "derived") == "derived", example
+
+
+class _NoHistory:
+    """A Git stand-in for the graph part of resolve_supersedes: no file has history."""
+
+    def file_history(self, path):
+        return []
+
+
+def _graph(n: int, targets) -> list:
+    probes = []
+    for i in range(n):
+        data = make_probe(f"n{i}", derived_from="x")
+        if targets(i):
+            data["supersedes"] = list(targets(i))
+        probes.append(ra.Probe(f"project/reach-probes/n{i}.yml", data))
+    return probes
+
+
+@pytest.mark.parametrize("n, targets", [
+    (1000, lambda i: [f"n{i + 1}"] if i + 1 < 1000 else []),                 # a long chain
+    (100, lambda i: [f"n{(i + k) % 100}" for k in range(1, ra.MAX_SUPERSEDES + 1)]),  # dense, cyclic
+])
+def test_685_SEC103_a_long_chain_and_a_dense_graph_resolve_without_recursion_or_stalling(monkeypatch, n, targets):
+    probes = _graph(n, targets)
+    monkeypatch.setattr(ra, "detect_change", lambda *a, **k: ra.ChangeState(ra.STATE_WEAKENED, "w"))
+    started = time.monotonic()
+    result = ra.resolve_supersedes(Path("."), _NoHistory(), probes, set(), yaml)
+    assert time.monotonic() - started < 10
+    assert len(result.changes) == n
+
+
+def test_685_SEC103_schema_caps_supersedes():
+    assert validate(_valid() | {"supersedes": [f"p{i}" for i in range(ra.MAX_SUPERSEDES)]}) == []
+    assert validate(_valid() | {"supersedes": [f"p{i}" for i in range(ra.MAX_SUPERSEDES + 1)]})
+
+
+def test_685_SEC101_a_replacement_created_in_a_merge_commit_is_judged_without_a_cut(sectioned):
+    """Measured (git 2.43): `git log --follow` lists no commit for a file a merge commit adds, so p2
+    has no history, reads uncommitted, and supersedes nothing; the merge can't serve as a creating commit."""
+    _weakened_rebaseline(sectioned)
+    sectioned.git("checkout", "-q", "-b", "side")
+    sectioned.write("README.md", "side\n")
+    sectioned.commit("side")
+    sectioned.git("checkout", "-q", "main")
+    sectioned.write("NOTES.md", "main\n")
+    sectioned.commit("main")
+    sectioned.git("merge", "-q", "--no-commit", "--no-ff", "side")
+    _replacement(sectioned, commit=False)
+    sectioned.git("add", "-A")
+    sectioned.git("commit", "-q", "-m", "merge side and add p2 in the merge")
+    follow = ra.Git(sectioned.path).file_history("project/reach-probes/p2.yml")
+    assert follow == [], follow
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS and row_of(report, "p2")[7] == ra.STATE_UNCOMMITTED
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_WEAKENED and "supersede by p2 not in effect: it is uncommitted" in _plain(old[9])
+
+
+def test_685_SEC101_a_claimant_renamed_and_re_id_d_over_a_rewritten_path_is_refused(target, tmp_path):
+    """SEC-101 with a new id for the claimant too: no cut revision carries its id, but h.yml is rewritten
+    in the creating commit, so h2 is no copy of an untouched h-old."""
+    marker = tmp_path / "h-ran"
+    _approved_h(target, marker)
+    target.git("mv", H_REL, "project/reach-probes/h2.yml")
+    _rewrite(target, "project/reach-probes/h2.yml", id="h2", expected_value=1, supersedes=["h-old"])
+    target.write(H_REL, yaml.safe_dump(make_probe("h-old", derived_from=_blob(target)), sort_keys=False))
+    target.commit("rename h to h2 under a new id, reuse its path for h-old")
+    _, report = run_audit(target)
+    assert "descends from this probe or sits on its earlier path" in _supersede_finding(report, "h2")
+    assert row_of(report, "h2")[7] != ra.STATE_CLEAN and not marker.exists()
+
+
+def test_685_SEC101_a_claimant_taking_the_id_the_target_once_had_is_refused(target, tmp_path):
+    """h-old was h until c2; c3 copies it, untouched, to h2.yml under the id h: the cut would reach h's revisions."""
+    marker = tmp_path / "h-ran"
+    _approved_h(target, marker)
+    _rewrite(target, H_REL, id="h-old")
+    target.commit("rename the id of h to h-old")
+    data = _digested(yaml.safe_load((target.path / H_REL).read_text()) | {"id": "h", "supersedes": ["h-old"]})
+    target.write("project/reach-probes/h2.yml", yaml.safe_dump(data, sort_keys=False))
+    target.commit("derive h again as a copy, superseding h-old")
+    _, report = run_audit(target)
+    assert "descends from this probe or sits on its earlier path" in _supersede_finding(report, "h")
+    assert row_of(report, "h-old")[7] == ra.STATE_WEAKENED
+
+
+# --------------------------------------------------------------------------- #
+# Third security review of the supersede record (SEC-201 to SEC-205)
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("kind", ["duplicate", "symlink", "unparseable", "schema-invalid"])
+def test_685_SEC201_a_second_file_under_a_superseded_id_keeps_its_own_finding(sectioned, tmp_path, kind):
+    _superseded(sectioned)
+    if kind == "duplicate":
+        sectioned.write_probe(_fresh(sectioned, "p1", WIDE), name="p1-copy")
+    elif kind == "symlink":
+        (sectioned.path / "project/reach-probes/p1.yaml").symlink_to(tmp_path)
+    elif kind == "unparseable":
+        sectioned.write("project/reach-probes/p1.yaml", "id: p1\nderived_from: [unclosed\n")
+    else:
+        sectioned.write_probe(_fresh(sectioned, "p1", WIDE) | {"verdict": "reached"}, name="p1-copy")
+    sectioned.commit(f"add a {kind} file under the id p1")
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS, report
+    assert f"- {ra.PROVENANCE_SUPERSEDED}: 1 (p1)." in report
+    rows = [ln for ln in report.splitlines() if ln.startswith("| p1 |")]
+    assert sorted(r.split(" | ")[7] for r in rows) == sorted([ra.STATE_SUPERSEDED, ra.STATE_INVALID]), rows
+    assert "- **invalid probe** `p1`" in report
+
+
+def test_685_SEC201_the_migration_gate_refuses_a_second_file_under_a_superseded_id(target, capsys):
+    _file_anchored_weakened(target)
+    target.write_probe(_digested(make_probe("p2", derived_from=_blob(target), supersedes=["p1"])))
+    target.write("project/reach-probes/p1.yaml", "id: p1\nderived_from: [unclosed\n")
+    target.commit("derive p2 to supersede p1, add an unparseable p1.yaml")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED, out
+    assert f"refused p1: {ra.STATE_INVALID}: " in out
+
+
+def test_685_SEC202_a_replacement_on_another_hub_is_a_finding(target):
+    _spec_config(target, ("nolte-shared", "v0.1.8"), ("other-hub", "v2.0.0"))
+    _inherited_probe(target, "v0.1.8", hub="nolte-shared")
+    target.commit("approve p1 on nolte-shared")
+    _weaken(target, "project/reach-probes/p1.yml")
+    target.commit("lower p1's bar")
+    probe = make_probe("p2", derived_from="v2.0.0", path=None, supersedes=["p1"])
+    probe["declaration"] |= {"inherited_spec": "project/rest-api-design", "hub": "other-hub"}
+    target.write_probe(_digested(probe))
+    target.commit("derive p2 on other-hub")
+    _, report = run_audit(target)
+    assert "which declares another entry" in _supersede_finding(report, "p2")
+    assert row_of(report, "p1")[7] == ra.STATE_WEAKENED
+
+
+PATHS_50 = [f"src/module_{i:02d}/a/rather/long/path/to/the/collection/file.py" for i in range(50)]
+
+
+def test_685_SEC203_the_supersede_line_never_loses_the_new_side_to_a_long_old_side(sectioned):
+    _weakened_rebaseline(sectioned, expected={"kind": "set", "values": PATHS_50, "unit": "paths"})
+    _replacement(sectioned, expected={"kind": "count", "value": 1, "unit": "paths"})
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_OK, report
+    line = next(ln for ln in report.splitlines() if ln.startswith("- Supersede p1 by p2:"))
+    assert "now expected count 1 `paths`, tier T0" in line, line
+    assert "before expected set of 50 `paths`, tier T0" in line, line
+    assert "… and 40 more (shortened)" in line and line.endswith("the only check of this change."), line
+    assert f"`{PATHS_50[0]}`" in line and f"`{PATHS_50[9]}`" in line and PATHS_50[10] not in line
+
+
+def test_685_SEC203_a_set_replacement_shows_added_and_removed_members(sectioned):
+    _weakened_rebaseline(sectioned, expected={"kind": "set", "values": ["a, b", "c"], "unit": "names"})
+    _replacement(sectioned, expected={"kind": "set", "values": ["c", "d"], "unit": "names"})
+    _, report = run_audit(sectioned)
+    line = next(ln for ln in report.splitlines() if ln.startswith("- Supersede p1 by p2:"))
+    assert "members added: `d`; removed: `a, b`" in line, line
+
+
+def test_685_SEC204_a_claimant_that_is_also_a_manifest_entry_supersedes_nothing(sectioned):
+    _superseded(sectioned)
+    sectioned.write(MANIFEST_REL, yaml.safe_dump({"entries": [manifest_entry("p2")]}, sort_keys=False))
+    sectioned.commit("list p2 as not constructible too")
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_WEAKENED and "supersede by p2 not in effect: it is a contradiction" in _plain(old[9])
+    assert "- Supersede p1 by p2" not in report
+
+
+def test_685_SEC204_a_target_that_is_also_a_manifest_entry_gets_no_supersede_line(sectioned):
+    _superseded(sectioned)
+    sectioned.write(MANIFEST_REL, yaml.safe_dump({"entries": [manifest_entry("p1")]}, sort_keys=False))
+    sectioned.commit("list p1 as not constructible too")
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS and row_of(report, "p1")[7] == ra.STATE_CONTRADICTION
+    assert "- Supersede p1 by p2" not in report
+
+
+def test_685_SEC205_a_superseded_row_keeps_the_notes_of_unmet_records(sectioned):
+    _superseded(sectioned)
+    probe = _replacement(sectioned, "p3", commit=False)
+    probe.pop("approval")
+    sectioned.write_probe(probe)
+    sectioned.commit("derive p3 without approval")
+    _, report = run_audit(sectioned)
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_SUPERSEDED
+    assert "supersede by p3 not in effect: it is not approved" in _plain(old[9]), old

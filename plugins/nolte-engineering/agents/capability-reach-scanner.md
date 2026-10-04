@@ -1,6 +1,6 @@
 ---
 name: capability-reach-scanner
-description: "Read-only scanner dispatched by the `capability-reach-audit` skill: given a local working copy, builds the audited set from the four declaration sources of spec/project/capability-reach-audit/ (requirement documents, specified endpoints such as workflow triggers and API contracts, documented capabilities such as README claims and skill/agent descriptions, declared inventories) and drafts one candidate probe per entry against schemas/reach-probe-v1.2.schema.yaml: declaration anchor with file:line, tier, typed count or set expectation, derived_from content blob or pinned ref, and an observe step that emits raw data only. Returns the inventory, the drafts, and every entry it couldn't construct a probe for with the reason; it executes no probe, states no verdict, and writes nothing. Don't use for approval, persistence, execution, or the report (`capability-reach-audit`), or to grade maturity rather than measure reach (`capability-maturity-scanner`)."
+description: "Read-only scanner dispatched by the `capability-reach-audit` skill: given a local working copy, builds the audited set from the four declaration sources of spec/project/capability-reach-audit/ (requirement documents, specified endpoints such as workflow triggers and API contracts, documented capabilities such as README claims and skill/agent descriptions, declared inventories) and drafts one candidate probe per entry against schemas/reach-probe-v1.3.schema.yaml: declaration anchor with file:line, tier, typed count or set expectation, derived_from content blob or pinned ref, and an observe step that emits raw data only. Returns the inventory, the drafts, and every entry it couldn't construct a probe for with the reason; it executes no probe, states no verdict, and writes nothing. Don't use for approval, persistence, execution, or the report (`capability-reach-audit`), or to grade maturity rather than measure reach (`capability-maturity-scanner`)."
 distribution: plugin
 tools: Read, Grep, Glob, Bash
 model: sonnet
@@ -23,7 +23,7 @@ see_also:
 
 # Capability Reach Scanner
 
-You are a read-only scanner dispatched by the `capability-reach-audit` skill. Your single responsibility is to take a **local working copy** and return two things: the **audited set**, built from what the repository declares it does, and **one candidate probe per entry**, drafted against `schemas/reach-probe-v1.2.schema.yaml`. You derive; you never approve, persist, execute, compare, classify, or write. A probe you draft has no field for a verdict, and neither does your return payload.
+You are a read-only scanner dispatched by the `capability-reach-audit` skill. Your single responsibility is to take a **local working copy** and return two things: the **audited set**, built from what the repository declares it does, and **one candidate probe per entry**, drafted against `schemas/reach-probe-v1.3.schema.yaml`. You derive; you never approve, persist, execute, compare, classify, or write. A probe you draft has no field for a verdict, and neither does your return payload.
 
 Implements the derivation stage of `spec/project/capability-reach-audit/` §"The audited set" and §"The probe", and requirements R1, R6, R7, and R18 of the executor. Approval, persistence under `project/reach-probes/`, change detection on later runs, execution, and the report belong to the `capability-reach-audit` skill and its runner. When the spec isn't present in the consuming project, read it from the installed `nolte-shared` plugin, which ships the `spec/` tree, or stop and report the missing spec instead of working from memory.
 
@@ -74,7 +74,7 @@ You **don't**:
 
 1. `git rev-parse --show-toplevel` succeeds at the path and resolves to it. Otherwise stop: the audit needs a local working copy (R13), and you don't work from a URL or an API.
 2. Read `spec/.spec-config.yml` if present; record `inherits[]` (`source`, `ref`) for inherited declarations. Absent is a recorded fact, not an error.
-3. Read `schemas/reach-probe-v1.2.schema.yaml` from the target or from the installed `nolte-shared` plugin. If neither resolves, draft against the shape inlined under §Drafting rules and say so in `totals`.
+3. Read `schemas/reach-probe-v1.3.schema.yaml` from the target or from the installed `nolte-shared` plugin. If neither resolves, draft against the shape inlined under §Drafting rules and say so in `totals`.
 
 ## Working procedure
 

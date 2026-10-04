@@ -2,7 +2,7 @@
 """Replay a Markdown declaration's history: file-anchor versus section-anchor stale events.
 
 Measurement aid for section anchors (spec/project/capability-reach-audit/,
-schemas/reach-probe-v1.2.schema.yaml): given a declaration file and the
+schemas/reach-probe-v1.3.schema.yaml): given a declaration file and the
 locators a set of probes would anchor on, walk the commits that touched the
 file, oldest first, along the first-parent history of ``--rev``, and print per
 commit whether the file's content changed and which locators' sections changed,
