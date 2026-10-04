@@ -2829,3 +2829,105 @@ def test_675_F2_section_anchor_works_in_a_sha256_repository(sha256_sectioned):
     sha256_sectioned.commit("edit 3.1.1, inside 3.1")
     state, reason = _state(sha256_sectioned)
     assert state == ra.STATE_STALE and "heading 3.1 changed" in reason, reason
+
+
+# --------------------------------------------------------------------------- #
+# Migration gate (#686): reconfirm-and-migrate.md §Migration step 1
+# --------------------------------------------------------------------------- #
+def _tree_state(target: Target) -> tuple[str, dict[str, bytes]]:
+    """Everything a write could touch: git status (ignored files too) and every file's bytes."""
+    status = target.git("status", "--porcelain", "--ignored", "--untracked-files=all")
+    files = {p.relative_to(target.path).as_posix(): p.read_bytes()
+             for p in target.path.rglob("*") if p.is_file() and ".git" not in p.relative_to(target.path).parts}
+    return status, files
+
+
+def _check_migration(target: Target, capsys) -> tuple[int, str]:
+    before = _tree_state(target)
+    code = ra.main(["--repo", str(target.path), "--check-migration"])
+    assert _tree_state(target) == before, "the migration check wrote to the target"
+    return code, capsys.readouterr().out
+
+
+def _approve_together(target: Target, *probes: dict) -> None:
+    """Commit several probes in one commit, so the history walk can't pair one with another as a rename."""
+    for probe in probes:
+        target.write_probe(probe)
+    target.commit("approve probes")
+
+
+def test_686_stale_candidate_refuses_the_migration_with_the_reconfirm_route(target, capsys):
+    _approve_together(target, make_probe("p1", derived_from=_blob(target)), make_probe("p2", derived_from=_blob(target)))
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 4 collections.\n")
+    target.commit("change the declaration")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED
+    for pid in ("p1", "p2"):
+        assert f"refused {pid}: {ra.STATE_STALE}: declaration changed since derivation: the content of {DECL}" in out
+    assert "route: reconfirm it after the diff (references/reconfirm-and-migrate.md §Re-confirmation)" in out
+    assert "migratable" not in out
+
+
+def test_686_clean_candidates_are_listed_as_migratable(target, capsys):
+    # A pre-v1.1 commit anchor (p2) is a candidate too.
+    _approve_together(target, make_probe("p1", derived_from=_blob(target)),
+                      make_probe("p2", derived_from=target.git("rev-parse", "HEAD")))
+    target.write("README.md", "unrelated\n")
+    target.commit("unrelated")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_OK, out
+    assert "migratable p1\n" in out and "migratable p2\n" in out
+    assert "refused" not in out
+
+
+def test_686_weakened_candidate_is_refused_as_not_healable_in_place(target, capsys):
+    rel = _content_probe(target)
+    _weaken(target, rel)
+    target.commit("lower the bar")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED
+    assert f"refused p1: {ra.STATE_WEAKENED}: probe changed in" in out
+    assert "not healable in place" in out and "nolte/claude-shared#685" in out
+
+
+def test_686_one_stale_candidate_refuses_even_beside_a_clean_one(target, capsys):
+    target.write("docs/other.md", "# Other\n")
+    target.commit("another declaration")
+    _approve_together(target, make_probe("p1", derived_from=_blob(target)),
+                      make_probe("p2", derived_from=_blob(target, path="docs/other.md"), path="docs/other.md"))
+    target.write(DECL, "# Requirements\n\nchanged\n")
+    target.commit("change the first declaration")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED
+    assert "refused p1: stale" in out and "p2" not in out
+
+
+def test_686_unapproved_candidate_is_refused(target, capsys):
+    _content_probe(target, approved=False)
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED
+    assert f"refused p1: {ra.REASON_NOT_APPROVED}:" in out
+
+
+def test_686_section_anchored_and_non_markdown_probes_are_no_candidates(sectioned, capsys):
+    """Both are stale here, so they would be refused if the gate selected them."""
+    sectioned.write("docs/api.yaml", "paths: {}\n")
+    sectioned.commit("declare an endpoint")
+    sections = _sections_now(sectioned)
+    on_sections = make_probe("p1", derived_from=ra.section_anchor(sections))
+    on_sections["declaration"]["sections"] = sections
+    on_yaml = make_probe("p2", derived_from=_blob(sectioned, path="docs/api.yaml"), path="docs/api.yaml")
+    _approve_together(sectioned, on_sections, on_yaml)
+    _edit(sectioned, *INSIDE)
+    sectioned.write("docs/api.yaml", "paths: {/x: {}}\n")
+    sectioned.commit("change both declarations")
+    assert {_state(sectioned, pid)[0] for pid in ("p1", "p2")} == {ra.STATE_STALE}
+    code, out = _check_migration(sectioned, capsys)
+    assert code == ra.EXIT_OK, out
+    assert "p1" not in out and "p2" not in out
+    assert "0 candidate(s) migratable" in out
+
+
+def test_686_help_names_the_mode_and_its_exit_code():
+    text = ra.build_parser().format_help()
+    assert "--check-migration" in text and "6 --check-migration refused" in " ".join(text.split())
