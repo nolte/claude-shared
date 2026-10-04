@@ -9,7 +9,7 @@ that may, compares each raw observation against the probe's typed expectation,
 and writes ``<repo>/.audits/capability-reach/<YYYY-MM-DD>.md``.
 
 The runner, never the probe, decides the class. A probe file has no field in
-which to state a verdict (schemas/reach-probe-v1.2.schema.yaml), and the
+which to state a verdict (schemas/reach-probe-v1.3.schema.yaml), and the
 observation step's exit code alone is never read as success: only its stdout,
 parsed as a count or a set, is the observation.
 
@@ -47,13 +47,15 @@ Exit codes:
   4  report written, and it carries findings: weakened or invalid probes
      (a symlinked probe file included), an approval whose observation digest no
      longer matches the observation step, an unreadable manifest or an invalid
-     manifest entry, a manifest id listed twice, or an id that is both a probe
-     file and a manifest entry. Takes precedence over 3.
+     manifest entry, a manifest id listed twice, an id that is both a probe
+     file and a manifest entry, or an invalid supersedes record. A superseded
+     probe is no finding. Takes precedence over 3.
   5  PyYAML or jsonschema is not installed
   6  --check-migration only: a migration candidate is not clean (stale,
-     weakened, invalid, also a manifest entry, or otherwise not executable as
-     approved) or the manifest is unreadable, so the migration to section
-     anchors is refused; nothing is written
+     weakened, invalid, also a manifest entry, carrying an invalid supersedes
+     record, or otherwise not executable as approved) or the manifest is
+     unreadable, so the migration to section anchors is refused; a superseded
+     probe is no candidate; nothing is written
 
 Usage:
   python reach_audit.py --repo ~/repos/github/kamerplanter
@@ -170,6 +172,11 @@ INSTALL_HINT = (
     "Install them with:  pip install 'PyYAML>=6' 'jsonschema>=4.21'"
 )
 
+# Ids one probe may supersede (schema maxItems): a replacement covers one
+# declaration entry, so a few weakened predecessors at most; the cap bounds the
+# record graph the runner resolves.
+MAX_SUPERSEDES = 8
+
 # Classes (spec §Reporting: exactly one per entry).
 REACHED = "reached"
 PARTIAL = "partially reached"
@@ -194,6 +201,11 @@ STATE_NOT_CONSTRUCTIBLE = "not constructible"
 STATE_CONTRADICTION = "contradiction"
 # The approval's observation digest does not match the current observation step.
 STATE_APPROVAL_MISMATCH = "approval mismatch"
+# A weakened probe that a clean, approved probe lists in ``supersedes`` (v1.3).
+STATE_SUPERSEDED = "superseded"
+# The finding kind of a supersedes record that takes no effect for a reason the
+# record itself carries (no such probe, itself, a cycle, not weakened, another entry).
+FINDING_SUPERSEDE = "invalid supersede"
 
 DECLARATION_SOURCES = ("requirement", "endpoint", "capability", "inventory")
 
@@ -207,6 +219,7 @@ NOTE_NO_DIGEST = "approval carries no observation digest"
 REASON_SILENT = "observation step printed nothing"
 NOTE_RECONFIRMED = "approval is a re-confirmation, not a re-derivation"
 PROVENANCE_RECONFIRMED = "Probes whose approval is a re-confirmation rather than a re-derivation"
+PROVENANCE_SUPERSEDED = "Weakened probes superseded by a clean, approved probe, not executed"
 
 NOT_CONSTRUCTIBLE_REASONS = (
     "scope_not_countable",
@@ -218,14 +231,14 @@ NOT_CONSTRUCTIBLE_REASONS = (
 # Per-tier table bucket of the entries that have no tier because they have no probe.
 TIER_NONE = "none (not constructible)"
 
-# The structural part of schemas/reach-probe-v1.2.schema.yaml (annotations
+# The structural part of schemas/reach-probe-v1.3.schema.yaml (annotations
 # stripped). The schemas/ tree ships with the nolte-shared payload, not with this
 # plugin, so the runner carries its own copy; tests/test_reach_audit.py fails when
 # the two drift apart.
 _TASK_NAME = {"type": "string", "pattern": "^[A-Za-z0-9_][A-Za-z0-9_:.-]*$"}
 PROBE_SCHEMA: dict[str, Any] = {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://github.com/nolte/claude-shared/blob/main/schemas/reach-probe-v1.2.schema.yaml",
+    "$id": "https://github.com/nolte/claude-shared/blob/main/schemas/reach-probe-v1.3.schema.yaml",
     "type": "object",
     "required": ["id", "declaration", "tier", "expected", "derived_from", "observe"],
     "additionalProperties": False,
@@ -241,6 +254,13 @@ PROBE_SCHEMA: dict[str, Any] = {
             ]
         },
         "approval": {"$ref": "#/$defs/Approval"},
+        "supersedes": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": True,
+            "maxItems": MAX_SUPERSEDES,
+            "items": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
+        },
         "derived_from": {"type": "string", "minLength": 1},
         "environment": {"type": "array", "uniqueItems": True, "items": {"$ref": "#/$defs/TaskName"}},
         "teardown": {"type": "array", "uniqueItems": True, "items": {"$ref": "#/$defs/TaskName"}},
@@ -1078,7 +1098,8 @@ def _anchor_key(doc: dict[str, Any]) -> object:
     return derived_from
 
 
-def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[str], bool, list[tuple[str, str]]]:
+def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, str]] = frozenset(),
+                  ) -> tuple[str | None, list[str], bool, list[tuple[str, str]]]:
     """The probe's derivation baseline, the commits that touched it since, dirtiness,
     and the revisions before the baseline.
 
@@ -1094,8 +1115,17 @@ def probe_changes(git: Git, probe: Probe, yaml: Any) -> tuple[str | None, list[s
     commit. When it is not, the baseline commit moved ``derived_from``, and
     detect_change must check that the move was a re-derivation rather than a
     re-baseline; the older revisions let that check prove the previous anchor.
+
+    ``cut`` holds the ``(commit, path)`` revisions of the probes this one
+    supersedes (supersede_cut()). The history ends before the first of them:
+    git --follow pairs a new file with a similar kept one as a copy, and a
+    replacement must be judged on its own derivation, not on the chain of the
+    probe it replaces. Only those revisions end it, so the replacement's own
+    revisions, under any earlier name, stay in the walk.
     """
     history = git.file_history(probe.file)
+    if cut:
+        history = history[:next((i for i, rev in enumerate(history) if rev in cut), len(history))]
     if not history:
         return None, [], False, []
     current = _anchor_key(probe.data) if probe.data else None
@@ -1561,11 +1591,12 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
     return f"{moved}, but {safe_text(rel)} did not change in between"
 
 
-def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
-    """Classify one valid probe's change state from the target's history."""
+def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
+                  cut: frozenset[tuple[str, str]] = frozenset()) -> ChangeState:
+    """Classify one valid probe's change state from the target's history (``cut``: see probe_changes)."""
     data = probe.data or {}
     derived_from = data["derived_from"]
-    baseline, later, dirty, earlier = probe_changes(git, probe, yaml)
+    baseline, later, dirty, earlier = probe_changes(git, probe, yaml, cut)
     if baseline is None:
         return ChangeState(
             STATE_UNCOMMITTED,
@@ -1852,13 +1883,16 @@ def contradiction_entry(probe: Probe, listed: Probe) -> Entry:
     return Entry(probe, ChangeState(STATE_CONTRADICTION, why), Outcome(NOT_PROBED, reason=f"contradiction: {why}"))
 
 
-def evaluate(repo: Path, git: Git, probe: Probe, yaml: Any, include_t2: bool, env_timeout: float, clock: Callable[[], datetime]) -> Entry:
+def evaluate(repo: Path, git: Git, probe: Probe, yaml: Any, include_t2: bool, env_timeout: float,
+             clock: Callable[[], datetime], change: ChangeState | None = None) -> Entry:
+    """Judge and, when it may run, execute one entry; ``change``: its change state when already known."""
     if not probe.constructible:
         return not_constructible_entry(probe)
     if probe.errors:
         return Entry(probe, ChangeState(STATE_INVALID), Outcome(NOT_PROBED, reason=f"{REASON_INVALID_PROBE}: " + "; ".join(probe.errors)))
     data = probe.data or {}
-    change = detect_change(repo, git, probe, yaml)
+    if change is None:
+        change = detect_change(repo, git, probe, yaml)
     if change.state == STATE_WEAKENED:
         return Entry(probe, change, Outcome(NOT_PROBED, reason=f"weakened: {change.reason}"))
     if change.state in (STATE_STALE, STATE_UNRESOLVED, STATE_UNCOMMITTED):
@@ -1878,6 +1912,314 @@ def evaluate(repo: Path, git: Git, probe: Probe, yaml: Any, include_t2: bool, en
     if is_reconfirmed(data):
         notes = [*notes, NOTE_RECONFIRMED]
     return Entry(probe, change, outcome, executed_at, notes)
+
+
+def superseded_entry(probe: Probe, change: ChangeState, by: list[str], unmet: list[str] | None = None) -> Entry:
+    """A weakened probe replaced by a clean, approved probe: not probed, not executed, no finding.
+
+    The reason keeps the weakening, so the report still says what was replaced
+    and why; ``unmet`` notes the other records on it that take no effect.
+    """
+    why = f"superseded by {safe_text(', '.join(by), 200)}; it was weakened: {change.reason}"
+    return Entry(probe, ChangeState(STATE_SUPERSEDED, why), Outcome(NOT_PROBED, reason=why), notes=list(unmet or []))
+
+
+@dataclass
+class Supersession:
+    """The ``supersedes`` records of a probe set, resolved against the history (schema v1.3).
+
+    ``replaced_by`` maps each superseded id to the ids of its clean, approved
+    replacements; ``findings`` lists ``(probe, why)`` per record that takes no
+    effect for a reason of its own; ``unmet`` notes, per weakened probe, a
+    replacement that is not clean or approved, so the probe stays weakened;
+    ``changes`` is each valid probe's change state as run judges it;
+    ``notes`` has one line per effective record, with both expectations and tiers;
+    ``probes`` maps each id to the valid probe file the records were resolved on.
+    """
+
+    replaced_by: dict[str, list[str]] = field(default_factory=dict)
+    findings: list[tuple[Probe, str]] = field(default_factory=list)
+    unmet: dict[str, list[str]] = field(default_factory=dict)
+    changes: dict[str, ChangeState] = field(default_factory=dict)
+    notes: list[str] = field(default_factory=list)
+    probes: dict[str, Probe] = field(default_factory=dict)
+
+    def superseded(self, probe: Probe) -> bool:
+        """Whether this very probe file is superseded: not another file that only shares its id."""
+        return self.probes.get(probe.pid) is probe and probe.pid in self.replaced_by
+
+
+def _claims(probe: Probe) -> list[str]:
+    """The ids a schema-valid probe file lists in ``supersedes``."""
+    if probe.errors or not probe.constructible or not isinstance(probe.data, dict):
+        return []
+    return list(probe.data.get("supersedes") or [])
+
+
+def _approved_state(data: dict[str, Any], change: ChangeState) -> ChangeState:
+    """``change`` when it is clean and the approval covers the observation step, else why not."""
+    if change.state != STATE_CLEAN:
+        return change
+    if "approval" not in data:
+        return ChangeState(REASON_NOT_APPROVED, "the probe was never approved through the gate")
+    approved_digest = data["approval"].get("observation_digest")
+    if approved_digest is not None and approved_digest != observation_digest(data):
+        return ChangeState(STATE_APPROVAL_MISMATCH, REASON_DIGEST_MISMATCH)
+    return change
+
+
+def _entry_key(data: dict[str, Any]) -> tuple[object, ...]:
+    """The declaration entry a probe answers to: source, location, and the anchor it reads."""
+    declaration = data.get("declaration")
+    declaration = declaration if isinstance(declaration, dict) else {}
+    return tuple(declaration.get(k) for k in ("source", "location", "path", "inherited_spec", "hub"))
+
+
+def _lineage_problem(git: Git, claimant: str, history: list[tuple[str, str]], target: list[tuple[str, str]],
+                     doc_of: Callable[[tuple[str, str]], dict[str, Any] | None]) -> str | None:
+    """Why ending ``history`` (the claimant's, uncut) before ``target``'s revisions would cut its own, or None.
+
+    The cut is sound only one way: the claimant was created as a copy of the
+    superseded probe, which stays in place untouched. So the kept part must be
+    nonempty and end at a single-parent commit that added the claimant's path;
+    the path of the first cut revision must hold the same blob there as in the
+    parent (a true copy: not a rename into the claimant, not a file rewritten
+    in the creating commit); no cut revision may carry the claimant's id; and
+    the target's history must not hold any path the claimant itself had.
+    Otherwise the target descends from the claimant or sits on its earlier
+    path, and its history holds the claimant's own revisions.
+    """
+    cut = set(target)
+    kept = history[:next((i for i, rev in enumerate(history) if rev in cut), len(history))]
+    if len(kept) == len(history):
+        return None  # git pairs nothing: there is nothing to cut
+    descends = ("whose history git pairs with this probe's own revisions (it descends from this probe or "
+                "sits on its earlier path), so the record can't end this probe's history there")
+    if not kept:
+        return descends
+    own_paths = {path for _, path in kept}
+    created, path = kept[-1]
+    _, source = history[len(kept)]
+    parents = git.out("rev-list", "--parents", "-n", "1", created).split()[1:]
+    if (len(parents) != 1 or any(p in own_paths for _, p in target)
+            or git.entry_at(parents[0], path) is not None
+            or git.blob_at(created, source) != git.blob_at(parents[0], source)):
+        return descends
+    for revision in history[len(kept):]:
+        doc = doc_of(revision)
+        if doc is not None and doc.get("id") == claimant:
+            return descends
+    return None
+
+
+MAX_NOTE_VALUE_CHARS = 120
+
+
+def _members(values: list[str]) -> str:
+    """Up to MAX_LISTED_MEMBERS values as code spans, the rest counted and marked shortened."""
+    shown = ", ".join(code_span(safe_text(v, MAX_NOTE_VALUE_CHARS)) for v in values[:MAX_LISTED_MEMBERS])
+    rest = len(values) - MAX_LISTED_MEMBERS
+    return (shown or "none") + (f" … and {rest} more (shortened)" if rest > 0 else "")
+
+
+def _expected_side(data: dict[str, Any]) -> tuple[str, list[str] | None]:
+    """One side of a supersede note: its expectation in short form, and its set members if it is a set."""
+    expected = data.get("expected")
+    expected = expected if isinstance(expected, dict) else {}
+    tier = safe_text(data.get("tier"), 8)
+    if expected.get("kind") == "count":
+        unit = code_span(safe_text(expected.get("unit"), MAX_NOTE_VALUE_CHARS))
+        return f"expected count {safe_text(expected.get('value'), 20)} {unit}, tier {tier}", None
+    values = sorted(str(v) for v in expected.get("values") or [] if isinstance(expected.get("values"), list))
+    unit = code_span(safe_text(expected.get("unit", "members"), MAX_NOTE_VALUE_CHARS))
+    return f"expected set of {len(values)} {unit}, tier {tier}", values
+
+
+def _supersede_note(old_id: str, old: dict[str, Any], new_id: str, new: dict[str, Any]) -> str:
+    """The Provenance line of an effective record: the new side first, each side with its own budget.
+
+    Values are code spans, so a comma inside a member can't read as a separator;
+    a list longer than MAX_LISTED_MEMBERS is marked shortened. The line is
+    built from safe parts and is never cut as a whole, so the new expectation
+    can't vanish behind a long old one.
+    """
+    now, now_values = _expected_side(new)
+    before, before_values = _expected_side(old)
+    if now_values is not None and before_values is not None:
+        added = [v for v in now_values if v not in set(before_values)]
+        removed = [v for v in before_values if v not in set(now_values)]
+        members = f"; members added: {_members(added)}; removed: {_members(removed)}"
+    else:
+        members = "".join(f"; {label} members: {_members(values)}"
+                          for label, values in (("new", now_values), ("old", before_values)) if values is not None)
+    return (f"Supersede {safe_text(old_id, 120)} by {safe_text(new_id, 120)}: now {now}; before {before}"
+            f"{members}; the replacement's approval is the only check of this change.")
+
+
+def _components(edges: dict[str, list[str]]) -> dict[str, int]:
+    """Strongly connected component per node (iterative Tarjan): an edge inside one is part of a cycle."""
+    index: dict[str, int] = {}
+    low: dict[str, int] = {}
+    component: dict[str, int] = {}
+    stack: list[str] = []
+    on_stack: set[str] = set()
+    for root in edges:
+        if root in index:
+            continue
+        work = [(root, 0)]
+        while work:
+            node, child = work.pop()
+            if child == 0:
+                index[node] = low[node] = len(index)
+                stack.append(node)
+                on_stack.add(node)
+            successors = edges.get(node, [])
+            if child < len(successors):
+                work.append((node, child + 1))
+                nxt = successors[child]
+                if nxt not in index:
+                    work.append((nxt, 0))
+                elif nxt in on_stack:
+                    low[node] = min(low[node], index[nxt])
+                continue
+            for succ in successors:
+                if succ in on_stack:
+                    low[node] = min(low[node], low[succ])
+            if low[node] == index[node]:
+                while True:
+                    member = stack.pop()
+                    on_stack.discard(member)
+                    component[member] = index[node]
+                    if member == node:
+                        break
+    return component
+
+
+def _post_order(edges: dict[str, list[str]]) -> list[str]:
+    """Every node after the nodes it reaches, except along a cycle (iterative depth-first search)."""
+    order: list[str] = []
+    seen: set[str] = set()
+    for root in edges:
+        if root in seen:
+            continue
+        seen.add(root)
+        work = [(root, iter(edges.get(root, [])))]
+        while work:
+            node, successors = work[-1]
+            nxt = next((s for s in successors if s not in seen), None)
+            if nxt is None:
+                work.pop()
+                order.append(node)
+            else:
+                seen.add(nxt)
+                work.append((nxt, iter(edges.get(nxt, []))))
+    return order
+
+
+TIER_T2 = "T2"
+
+
+def resolve_supersedes(repo: Path, git: Git, probes: list[Probe], listed: set[str], yaml: Any) -> Supersession:
+    """Decide which ``supersedes`` records take effect; the chain rule itself is untouched.
+
+    Every probe is first judged on its uncut history. A record of probe R
+    listing id W passes only when W is another valid probe file on disk, no
+    cycle runs back from W to R, both answer to the same declaration entry
+    (_entry_key), R's approval is a derivation (not a re-confirmation), R
+    does not move the entry to T2 (the tier a default run withholds) unless W
+    was T2, W's own verdict is weakened, and the cut is a one-way lineage
+    (_lineage_problem); each failure is a finding. Only then is R judged on its
+    history ended before W's revisions (probe_changes), since git --follow
+    pairs a similar new file with the kept one; the records take effect when R
+    is then clean, approved, and its approval carries a matching observation
+    digest, and are otherwise noted on W, which stays weakened. A record that
+    takes no effect never changes R's verdict: R keeps its uncut one. Every
+    effective record is listed with both expectations and tiers, since the
+    replacement's approval is the only check of what changed.
+
+    Iterative throughout: records are resolved in post order, so a target's
+    verdict is known before its claimant's, and cycles are found as strongly
+    connected components, so a long chain neither recurses nor repeats work.
+    """
+    by_id = {p.pid: p for p in probes if p.constructible and not p.errors and isinstance(p.data, dict)}
+    result = Supersession(probes=by_id)
+    edges = {pid: [t for t in _claims(p) if t != pid and t in by_id] for pid, p in by_id.items()}
+    component = _components(edges)
+    histories: dict[str, list[tuple[str, str]]] = {}
+
+    def history(pid: str) -> list[tuple[str, str]]:
+        if pid not in histories:
+            histories[pid] = git.file_history(by_id[pid].file)
+        return histories[pid]
+
+    docs: dict[tuple[str, str], dict[str, Any] | None] = {}
+
+    def doc_of(revision: tuple[str, str]) -> dict[str, Any] | None:
+        if revision not in docs:
+            docs[revision] = _probe_doc(git, revision, yaml)
+        return docs[revision]
+
+    for pid in _post_order(edges):
+        probe = by_id[pid]
+        data = probe.data
+        uncut = detect_change(repo, git, probe, yaml)
+        passed: list[str] = []
+        for target in _claims(probe):
+            shown = safe_text(target, 120)
+            other = by_id.get(target)
+            if target == pid:
+                result.findings.append((probe, "supersedes lists the probe's own id"))
+            elif other is None:
+                what = "a not-constructible manifest entry" if target in listed else "no valid probe file"
+                result.findings.append((probe, f"supersedes {shown}, which is {what} under "
+                                               f"{PROBE_DIR.as_posix()}/; keep the superseded probe file, it is "
+                                               "the record of what was replaced"))
+            elif target in listed:
+                result.findings.append((probe, f"supersedes {shown}, which is also a not-constructible manifest "
+                                               "entry (a contradiction, reported as such)"))
+            elif component[target] == component[pid]:
+                result.findings.append((probe, f"supersedes {shown}, which leads back to it through supersedes "
+                                               "(a cycle); no record in the cycle takes effect"))
+            elif _entry_key(data) != _entry_key(other.data):
+                result.findings.append((probe, f"supersedes {shown}, which declares another entry "
+                                               "(declaration.source, location, path, inherited_spec or hub differ); "
+                                               "a replacement answers to the same declaration entry"))
+            elif is_reconfirmed(data):
+                result.findings.append((probe, f"supersedes {shown} under approval.mode reconfirmed; a "
+                                               "replacement is a new derivation and is approved as one"))
+            elif data.get("tier") == TIER_T2 and other.data.get("tier") != TIER_T2:
+                result.findings.append((probe, f"supersedes {shown} at tier T2, but {shown} is "
+                                               f"{safe_text(other.data.get('tier'), 8)}; a default run withholds "
+                                               "T2, so the replacement would drop the entry from it"))
+            elif (replaced := result.changes[target]).state != STATE_WEAKENED:
+                result.findings.append((probe, f"supersedes {shown}, which is {replaced.state}, not weakened; "
+                                               "only a weakened probe can be superseded, and it keeps running"))
+            elif lineage := _lineage_problem(git, pid, history(pid), history(target), doc_of):
+                result.findings.append((probe, f"supersedes {shown}, {lineage}"))
+            else:
+                passed.append(target)
+        result.changes[pid] = uncut
+        if not passed:
+            continue
+        cut = frozenset(rev for target in passed for rev in history(target))
+        cut_change = detect_change(repo, git, probe, yaml, cut)
+        state = _approved_state(data, cut_change)
+        why = None
+        if pid in listed:
+            why = f"it is a {STATE_CONTRADICTION} (also a not-constructible manifest entry) and never runs"
+        elif state.state != STATE_CLEAN:
+            why = f"it is {state.state}"
+        elif not data["approval"].get("observation_digest"):
+            why = "its approval carries no observation digest"  # SEC-003: bound to what runs
+        for target in passed:
+            if why:
+                result.unmet.setdefault(target, []).append(f"supersede by {safe_text(pid, 120)} not in effect: {why}")
+                continue
+            result.replaced_by.setdefault(target, []).append(pid)
+            result.notes.append(_supersede_note(target, by_id[target].data, pid, data))
+        if why is None:
+            result.changes[pid] = cut_change
+    return result
 
 
 def _utc_now() -> datetime:
@@ -1969,7 +2311,9 @@ def _headline(not_probed: int, total: int, listed: int, manifest: Manifest | Non
 
 
 def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at: str, empty_reason: str | None,
-           manifest: Manifest | None = None, manifest_findings: list[str] | None = None) -> str:
+           manifest: Manifest | None = None, manifest_findings: list[str] | None = None,
+           supersede_findings: list[tuple[Probe, str]] | None = None,
+           supersede_notes: list[str] | None = None) -> str:
     lines = [f"# Capability reach audit — {repo.name}", ""]
     lines.append(
         "<!-- Generated by reach_audit.py on every run; never edit by hand "
@@ -2013,6 +2357,10 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
     reconfirmed = [e.probe.pid for e in probe_rows if not e.probe.errors and is_reconfirmed(e.probe.data)]
     if reconfirmed:
         lines.append(f"- {PROVENANCE_RECONFIRMED}: {len(reconfirmed)} ({md_text(', '.join(reconfirmed))}).")
+    superseded = [e.probe.pid for e in probe_rows if e.change.state == STATE_SUPERSEDED]
+    if superseded:
+        lines.append(f"- {PROVENANCE_SUPERSEDED}: {len(superseded)} ({md_text(', '.join(superseded))}).")
+    lines += [f"- {note}" for note in supersede_notes or []]  # built from safe_text and code spans
     lines.append(f"- Tier T2: {'requested (--include-t2)' if include_t2 else 'not requested; every T2 probe is not probed'}.")
     lines.append(f"- Run at: {run_at} (UTC).")
     lines.append("")
@@ -2030,6 +2378,8 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
     lines += ["## Findings", ""]
     for text in manifest_findings or []:
         lines.append(f"- **invalid manifest** ({cell(MANIFEST_PATH.as_posix())}): {md_text(text)}")
+    for probe, text in supersede_findings or []:
+        lines.append(f"- **{FINDING_SUPERSEDE}** {code_span(probe.pid)} ({cell(probe.file)}): {md_text(text)}")
     for e in findings:
         if e.change.state == STATE_WEAKENED:
             kind, detail = "weakened", e.change.reason
@@ -2041,7 +2391,7 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
             kind = "invalid probe" if e.probe.constructible else "invalid manifest entry"
             detail = "; ".join(e.probe.errors)
         lines.append(f"- **{kind}** {code_span(e.probe.pid)} ({cell(e.probe.file)}): {md_text(detail)}")
-    if not findings and not manifest_findings:
+    if not findings and not manifest_findings and not supersede_findings:
         lines.append("- none")
     lines.append("")
 
@@ -2093,19 +2443,29 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
     elif not probes and not listed and not manifest_findings:
         empty_reason = f"`{PROBE_DIR.as_posix()}/` holds no probe file (*.yml, *.yaml besides `{MANIFEST_NAME}`)."
 
+    supersession = resolve_supersedes(repo, git, probes, set(listed), yaml)
     entries: list[Entry] = []
     for probe in probes:
         twin = listed.pop(probe.pid, None)
         if twin is not None:
             # Counted once, as not probed; the manifest row is folded into this one.
             entries.append(contradiction_entry(probe, twin))
+        elif supersession.superseded(probe):
+            entries.append(superseded_entry(probe, supersession.changes[probe.pid],
+                                            supersession.replaced_by[probe.pid],
+                                            supersession.unmet.get(probe.pid)))
         else:
-            entries.append(evaluate(repo, git, probe, yaml, include_t2, env_timeout, clock))
+            known = supersession.changes.get(probe.pid) if supersession.probes.get(probe.pid) is probe else None
+            entry = evaluate(repo, git, probe, yaml, include_t2, env_timeout, clock, known)
+            if supersession.probes.get(probe.pid) is probe:
+                entry.notes += supersession.unmet.get(probe.pid, [])
+            entries.append(entry)
     entries += [not_constructible_entry(item) for item in listed.values()]
-    text = render(repo, head, entries, include_t2, run_at, empty_reason, manifest, manifest_findings)
+    text = render(repo, head, entries, include_t2, run_at, empty_reason, manifest, manifest_findings,
+                  supersession.findings, supersession.notes)
     write_report(out, text)
 
-    if manifest_findings or any(e.change.state in FINDING_STATES for e in entries):
+    if manifest_findings or supersession.findings or any(e.change.state in FINDING_STATES for e in entries):
         return EXIT_FINDINGS, out
     if not probes:
         # Nothing was executed, whether or not the manifest lists entries.
@@ -2119,8 +2479,8 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
 ROUTE_STALE = ("reconfirm it after the diff (references/reconfirm-and-migrate.md §Re-confirmation) "
                "or derive it again, then check again; a migration must not hide a declaration change")
 ROUTE_WEAKENED = ("not healable in place: neither a re-confirmation nor a migration clears it; "
-                  "re-derive it under a new id (references/runner-exit-codes.md §Re-baseline rule, "
-                  "nolte/claude-shared#685)")
+                  "keep it, derive and approve a replacement under a new id that lists it in supersedes "
+                  "(references/runner-exit-codes.md §Re-baseline rule)")
 ROUTE_REDERIVE = "re-derive the entry (references/runner-exit-codes.md §Findings), then check again"
 ROUTE_OTHER = "resolve it as references/runner-exit-codes.md routes this reason, then check again"
 
@@ -2141,22 +2501,15 @@ def is_migration_candidate(probe: Probe) -> bool:
     return isinstance(path, str) and path.endswith(".md") and "sections" not in declaration
 
 
-def migration_state(repo: Path, git: Git, probe: Probe, yaml: Any) -> ChangeState:
+def migration_state(repo: Path, git: Git, probe: Probe, yaml: Any,
+                    change: ChangeState | None = None) -> ChangeState:
     """The candidate's state as ``run`` would judge it before executing; only clean may migrate.
 
     Reuses detect_change and the approval check of evaluate(), so this gate has
-    no definition of stale or weakened of its own.
+    no definition of stale or weakened of its own. ``change``: the state
+    resolve_supersedes() already computed, on the history ``run`` uses.
     """
-    change = detect_change(repo, git, probe, yaml)
-    if change.state != STATE_CLEAN:
-        return change
-    data = probe.data or {}
-    if "approval" not in data:
-        return ChangeState(REASON_NOT_APPROVED, "the probe was never approved through the gate")
-    approved_digest = data["approval"].get("observation_digest")
-    if approved_digest is not None and approved_digest != observation_digest(data):
-        return ChangeState(STATE_APPROVAL_MISMATCH, REASON_DIGEST_MISMATCH)
-    return change
+    return _approved_state(probe.data or {}, change or detect_change(repo, git, probe, yaml))
 
 
 def check_migration(repo_arg: str) -> tuple[int, list[str]]:
@@ -2169,11 +2522,19 @@ def check_migration(repo_arg: str) -> tuple[int, list[str]]:
     yaml, validator_cls = _load_dependencies()
     repo = require_local_working_copy(repo_arg)
     git = Git(repo)
-    candidates = [p for p in load_probes(repo, yaml, validator_cls) if is_migration_candidate(p)]
+    probes = load_probes(repo, yaml, validator_cls)
     # As in run(): an id that is also a manifest entry is a contradiction, judged
     # before the probe itself; an unreadable manifest can't rule one out.
     manifest = load_manifest(repo, yaml, validator_cls)
     listed = {e.pid: e for e in manifest.entries} if manifest else {}
+    # As in run(): a superseded probe is not executed, so it is no candidate; an
+    # invalid supersedes record is a finding there, so it refuses here.
+    supersession = resolve_supersedes(repo, git, probes, set(listed), yaml)
+    invalid_records: dict[str, list[str]] = {}
+    for claimant, why in supersession.findings:
+        invalid_records.setdefault(claimant.pid, []).append(why)
+    candidates = [p for p in probes if is_migration_candidate(p)
+                  and (p.pid in listed or not supersession.superseded(p))]
     refused: list[str] = []
     if manifest is not None and not manifest.readable:
         refused.append(f"refused {manifest.file}: invalid manifest: {safe_text('; '.join(manifest.errors))}; "
@@ -2184,14 +2545,17 @@ def check_migration(repo_arg: str) -> tuple[int, list[str]]:
             state = contradiction_entry(probe, listed[probe.pid]).change
         elif probe.errors:
             state = ChangeState(STATE_INVALID, f"{REASON_INVALID_PROBE}: " + "; ".join(probe.errors))
+        elif probe.pid in invalid_records and supersession.probes.get(probe.pid) is probe:
+            state = ChangeState(FINDING_SUPERSEDE, "; ".join(invalid_records[probe.pid]))
         else:
-            state = migration_state(repo, git, probe, yaml)
+            state = migration_state(repo, git, probe, yaml, supersession.changes.get(probe.pid)
+                                    if supersession.probes.get(probe.pid) is probe else None)
         pid = safe_text(probe.pid, 120)
         if state.state == STATE_CLEAN:
             migratable.append(f"migratable {pid}")
             continue
         route = {STATE_STALE: ROUTE_STALE, STATE_WEAKENED: ROUTE_WEAKENED, STATE_INVALID: ROUTE_REDERIVE,
-                 STATE_CONTRADICTION: ROUTE_REDERIVE}.get(state.state, ROUTE_OTHER)
+                 STATE_CONTRADICTION: ROUTE_REDERIVE, FINDING_SUPERSEDE: ROUTE_REDERIVE}.get(state.state, ROUTE_OTHER)
         refused.append(f"refused {pid}: {state.state}: {safe_text(state.reason)}; route: {route}")
     if refused:
         return EXIT_MIGRATION_REFUSED, refused
@@ -2250,7 +2614,8 @@ def main(argv: list[str] | None = None) -> int:
     messages = {
         EXIT_OK: "report written",
         EXIT_NO_PROBES: "no probe file, nothing executed; the report says so (not a clean result)",
-        EXIT_FINDINGS: "report written with findings (weakened, invalid, or unapproved-content probes, or a manifest finding)",
+        EXIT_FINDINGS: "report written with findings (weakened, invalid, or unapproved-content probes, "
+                       "a manifest finding, or an invalid supersedes record)",
     }
     print(f"reach_audit: {messages[code]}: {out}")
     return code
