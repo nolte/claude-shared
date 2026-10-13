@@ -70,8 +70,11 @@ English so the trail is grep-able portfolio-wide; its prose follows the issues' 
 ## Preconditions
 
 - The working directory is a git repository and `gh auth status` reports authenticated.
-- `spec/project/issue-batch-integration/<canonical_language>.md` exists in the project.
-  If missing, stop and report; this skill implements that spec's §J, it doesn't replace it.
+- `spec/project/issue-batch-integration/<canonical_language>.md` is reachable — in the
+  project or, when absent there, at
+  `${CLAUDE_PLUGIN_ROOT}/spec/project/issue-batch-integration/<canonical_language>.md`
+  (the copy shipped inside the installed `nolte-shared` plugin). If neither is
+  reachable, stop and report; this skill implements that spec's §J, it doesn't replace it.
 - `issue-batch-orchestrate` and `issue-orchestrate` are reachable; they ship in the same
   plugin. The planning pipeline (`feature-decompose`, `roadmap-plan`) ships in
   `nolte-planning`; when it isn't installed, the **pipeline** outcome is recorded as

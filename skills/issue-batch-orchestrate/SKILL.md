@@ -78,8 +78,11 @@ trail is grep-able portfolio-wide; its prose body follows the issues' own langua
 ## Preconditions
 
 - The working directory is a git repository and `gh auth status` reports authenticated.
-- `spec/project/issue-batch-integration/<canonical_language>.md` exists in the project.
-  If missing, stop and report: this skill is the spec's implementer, not its
+- `spec/project/issue-batch-integration/<canonical_language>.md` is reachable — in the
+  project or, when absent there, at
+  `${CLAUDE_PLUGIN_ROOT}/spec/project/issue-batch-integration/<canonical_language>.md`
+  (the copy shipped inside the installed `nolte-shared` plugin). If neither is
+  reachable, stop and report: this skill is the spec's implementer, not its
   replacement.
 - `issue-orchestrate` is reachable. It ships in the same plugin, so a session that
   loaded this skill has it; if a runtime lookup cannot find it, stop rather than
