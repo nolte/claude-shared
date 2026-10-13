@@ -66,10 +66,9 @@ Before any operation:
 
 - Confirm the working directory is a git repository and `gh auth status` reports
   authenticated.
-- Confirm `spec/project/issue-orchestration/<canonical_language>.md` exists in the
-  current project. If missing, stop and report — without it the classifications and
-  routing rules are ad-hoc; this skill is the spec's implementer, not its
-  replacement.
+- Confirm `spec/project/issue-orchestration/<canonical_language>.md` is reachable in the
+  project or at `${CLAUDE_PLUGIN_ROOT}/spec/project/issue-orchestration/<canonical_language>.md`.
+  If neither is, stop and report: this skill implements the spec, not replaces it.
 - The operator supplies the target issue (a `gh issue view <n>` URL, an issue
   number, or an unambiguous reference). If nothing is supplied, run
   `gh issue list --state open --limit 20` and ask which issue to orchestrate. If the
