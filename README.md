@@ -44,6 +44,7 @@ This repository is a **plugin monorepo** shipping five plugins: **`nolte-shared`
 | `issue-backlog-partition` | Survey the whole open backlog once and partition it into predicate-admitted groups, singles, and pipeline issues before any is worked on. |
 | `pull-request-create` | Create a GitHub PR that conforms to the repository's pull-request-workflow spec. |
 | `pull-request-merge` | Promote an open draft PR to merged on `develop`, applying repository-declared labels and every workflow gate. |
+| `pull-request-runner-sweep` | Find the current PR among the open ones and cancel the runs of all others, so runners serve only the PR that merges next. |
 | `project-structure-apply` | Audit the repo against the project-structure spec and scaffold or patch missing artefacts (README, `.github/*`, Taskfile, Renovate, …). |
 | `cicd-pipeline-design` | Design, scaffold and audit a repository's CI/CD pipeline against the CI, CD and GitHub Actions specs. |
 | `lektorat-apply` | Review Markdown prose against the six editorial dimensions and apply the agreed revisions. |
