@@ -41,6 +41,7 @@ This repository is a **plugin monorepo** shipping five plugins: **`nolte-shared`
 | `requirements-elicit` | Run the elicitation interview that captures a requirement precisely before anything is built. |
 | `issue-orchestrate` | Take a raw GitHub issue end-to-end to an open, audit-trailed pull request. |
 | `issue-batch-orchestrate` | Take a cluster of related issues as one group: analyse once, develop on one integration branch, bundle into one pull request. |
+| `backlog-delivery-orchestrate` | Drive the open backlog to merged PRs: partition, up to three parallel lanes via the expert skills, then serial merges with run cancellation and optional session restarts. |
 | `issue-backlog-partition` | Survey the whole open backlog once and partition it into predicate-admitted groups, singles, and pipeline issues before any is worked on. |
 | `pull-request-create` | Create a GitHub PR that conforms to the repository's pull-request-workflow spec. |
 | `pull-request-merge` | Promote an open draft PR to merged on `develop`, applying repository-declared labels and every workflow gate. |
