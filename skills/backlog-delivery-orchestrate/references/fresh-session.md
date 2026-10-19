@@ -10,7 +10,7 @@ A long run fills the context with lane summaries and merge logs that no later st
 
 - `never` (default): no restart.
 - `per-merge`: restart after every merge.
-- `every=<N>`: restart after every N-th merge.
+- `every=<N>`: restart after every N-th merge. `merges_since_restart` counts them and is reset to 0 on every restart; `merged_count` is only the total.
 
 A restart is only offered at a **boundary**: a merge is verified, the checkpoint is written, and no lane agent is running. Never mid-round.
 
@@ -28,4 +28,4 @@ Start a fresh session and paste:
 
 ## What the new session does
 
-`--resume` is the explicit non-interactive choice, so it doesn't prompt. It re-hydrates `decisions:` (the gate is **not** asked again, the authorisation stands), then re-reads GitHub for every lane PR before acting. A PR the file calls open but GitHub reports merged is recorded as merged. A file with a newer `schema_version` or broken YAML is refused with `start-new` or `discard` as the only follow-ups.
+`--resume` is the explicit non-interactive choice, so it doesn't prompt. It re-hydrates `decisions:` (the gate is **not** asked again, the authorisation stands), then re-reads GitHub for every lane PR before acting. A PR the file calls open but GitHub reports merged is recorded as merged. From `phase: ready-to-restart` the session skips the gate and goes straight to work: if the merge train still holds open lane PRs, it continues the train; if the train is empty and `planned` lanes remain, it plans the next round (`lanes.md`). A file with a newer `schema_version` or broken YAML is refused with `start-new` or `discard` as the only follow-ups.

@@ -8,7 +8,7 @@ Invocation: `/nolte-shared:backlog-delivery-orchestrate --refresh=per-merge`.
 
 ## round 1
 
-Ready lanes: A, B, C, D (E waits for A). The first three run in parallel: A, B, C. D is deferred to round 2 because three is the cap. Each agent ends at an open PR: #701, #702, #703.
+Ready lanes: A, B, C, D (E waits for A). The first three run in parallel: A, B, C. D is deferred to round 2 because three is the cap. The cap counts running lane agents, so D waits only while three agents run; E waits for A's merge. Each agent ends at an open PR: 701, 702, 703. Round 2 is planned once the train has drained these three.
 
 ## merge train
 
