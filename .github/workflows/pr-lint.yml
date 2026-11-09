@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   pr-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # The body checks run in the pr-body job below (#577); this job checks the
     # title prose with Vale and needs no more than read access to the sources.
     permissions:
