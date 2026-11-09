@@ -3482,8 +3482,9 @@ def test_685_SEC103_schema_caps_supersedes():
 
 
 def test_685_SEC101_a_replacement_created_in_a_merge_commit_is_judged_without_a_cut(sectioned):
-    """Measured (git 2.43): `git log --follow` lists no commit for a file a merge commit adds, so p2
-    has no history, reads uncommitted, and supersedes nothing; the merge can't serve as a creating commit."""
+    """Measured (git 2.43, 2.53): `git log --follow` lists no commit for a file a merge commit adds, so p2
+    has no history, reads uncommitted, and supersedes nothing; the merge can't serve as a creating commit.
+    Git 2.56 follows p2 into p1 by copy detection on the merge; file_history's --no-merges keeps it empty."""
     _weakened_rebaseline(sectioned)
     sectioned.git("checkout", "-q", "-b", "side")
     sectioned.write("README.md", "side\n")

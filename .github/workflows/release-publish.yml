@@ -71,7 +71,7 @@ jobs:
   # refused while the latest persisted license-check verdict isn't `Pass`
   # (2026-Q3 audit finding license-check.ci-cadence-unwired, #496).
   license-verdict:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Latest license-check record must carry verdict Pass
