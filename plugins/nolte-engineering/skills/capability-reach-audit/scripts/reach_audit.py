@@ -640,8 +640,17 @@ class Git:
 
         Following renames matters: without it, renaming a weakened probe would make
         the rename commit look like the probe's first appearance.
+
+        ``--no-merges`` pins the walk to non-merge commits on every git version. Up to
+        git 2.55 ``--follow`` never diffed a merge, so a file a merge commit adds had no
+        history and a merge was never a creating commit (SEC-101). Git 2.56 runs copy
+        detection on merges while following: a probe added in a merge silently took
+        over the history of a similar kept probe, without the merge itself, and so
+        escaped the supersede cut. A merge that only edits a probe was already absent
+        from ``--follow`` output on every version, so excluding merges drops nothing
+        the walk listed before.
         """
-        raw = self.out("log", "--follow", "--format=%x00%H", "--name-only", "--", path)
+        raw = self.out("log", "--follow", "--no-merges", "--format=%x00%H", "--name-only", "--", path)
         history: list[tuple[str, str]] = []
         for block in raw.split("\x00")[1:]:
             lines = [ln for ln in block.splitlines() if ln.strip()]
