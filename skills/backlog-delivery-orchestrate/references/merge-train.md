@@ -1,23 +1,47 @@
 # Merge train
 
-Read at operation 4. One PR at a time; the order is dependency first, then partition order.
+Read at operation 4. Rule owner: `spec/project/pull-request-workflow/` §"Serial pull-request flow". Exactly one PR against `develop` is open at a time; the lanes' work waits as local, unpushed branches until it is the head.
 
-## Per PR
+## Each turn
 
-1. **Re-read live state**: `gh pr view <n> --json state,isDraft,headRefOid,mergeStateStatus,labels`. If it was merged or closed meanwhile, record that and move on. Only PRs recorded in this run's lanes enter the train; any other PR is left alone. Compare `headRefOid` with the `head` the lane recorded when it returned: a different head means someone else pushed, so set this PR aside and report it. Never rebase over a commit the lane didn't make.
-2. **Re-sync.** `git -C <worktree> fetch origin develop <branch>` (the branch too, so the lease has a fresh remote ref); if the branch lags, `git -C <worktree> rebase origin/develop`, then `git -C <worktree> push --force-with-lease=<branch>:<recorded-head>`, and record the new head. Rebase conflicts stop this PR (blocked, reported). The rebased head is a new commit: its required checks must report success again.
-3. **Focus the runners.** Run `pull-request-runner-sweep` with this PR as the explicit current PR. Approve the rows of PRs recorded in this run's lanes and deselect every other row: runs of foreign PRs are left untouched, listed in the final report, and never asked about. The sweep has no scope argument, so the deselection is this skill's job.
-4. **Merge.** Run `pull-request-merge` with wait mode for this PR, from its worktree. Its own `review` and `security-review` delegation stays; a blocking finding stops this PR and is shown verbatim. Its label, ready, and `automerge` steps are covered by the authorisation.
-5. **Verify** `state == MERGED` and the merge commit on `origin/develop` (the skill's step 7). If wait mode times out with the PR still `OPEN`, the outcome is **pending**, not handled: set `phase: awaiting-ci`, checkpoint, and halt the train. The next PR must not be rebased onto a `develop` tip the pending PR is about to move. Report the PR and its checks; a `--resume` continues the wait.
-6. **Close** the merged lane's member issues listed in the approved partition, with the cross-reference comment `pull-request-merge` prescribes.
-7. **Clean up** the lane worktree only if it is clean and its branch is merged; otherwise leave it and say so. The remote branch is the platform's job (`delete_branch_on_merge`): confirm it is gone with a `404` on the ref, never delete it, and report it if it survives.
-8. Checkpoint, then the refresh check (operation 5).
+1. **Read the slot live**: `gh pr list --base develop --state open --json number,headRefName,author,isCrossRepository,createdAt --limit 200`. Sort each open PR into exactly one class:
+   - **own**: a PR recorded in this run's lanes
+   - **bot**: author login on the dependency-bot allowlist (Renovate) and `isCrossRepository == false`
+   - **foreign**: everything else, including another session's PR and any fork PR
+2. **Foreign PR open** → don't promote. Set `phase: awaiting-slot`, report the PR and what it needs, checkpoint, and halt the train; never touch it. Lane rounds may continue locally. `--resume` re-reads the slot.
+3. **Own PR open** (after a crash or restart) → land it (step 6) before anything else.
+4. **Bot PRs open, nothing else** → drain them: run the script with the bot PRs, oldest first, and act on its exit (below). The script ticks a `BEHIND` bot PR's rebase checkbox and squash-merges it on `CLEAN`.
+5. **Slot free** → promote the next `committed-locally` lane, in dependency order, then partition order:
+   1. Check `git -C <worktree> rev-parse HEAD` equals the lane's `commit` and the tree is clean; otherwise set the lane aside and report it.
+   2. `git -C <worktree> fetch origin develop` then `git -C <worktree> rebase origin/develop`. A conflict: `git -C <worktree> rebase --abort`, mark the lane `blocked`, set aside its dependents too, and promote the next independent lane.
+   3. Run the repository's lint target in the worktree (§Pre-push verification). Don't re-run the full suite: the lane verified it once, and after the rebase CI is the verification.
+   4. Run `pull-request-create --orchestrated` from the worktree with the lane's drafted title and body; its slot check refuses if the slot filled meanwhile, and the turn starts over at step 1; it pushes and opens the PR as Draft. Its title/body confirmation is answered by the standing authorisation; the body goes into the run report. Record `pr` and set the lane `merge-train`.
+6. **Land the head.** Start the script in the background with the head PR, `${CLAUDE_PLUGIN_ROOT}/skills/backlog-delivery-orchestrate/scripts/merge-train.sh <pr>`, from the primary checkout. While it keeps the runners for the head, run `pull-request-merge` in wait mode from the lane worktree: its `review` and `security-review` delegation stays, and a blocking finding stops this PR and is shown verbatim. If the script reported `branch rebased onto develop`, first bring the worktree to the remote head: `git -C <worktree> fetch origin <branch>` and `git -C <worktree> reset --keep origin/<branch>` (the tree is clean, so nothing is lost). When wait mode ends with the head still pending, re-invoke it; the script keeps running until its own cap.
+7. **After the merge**: verify `state == MERGED` and the merge commit on `origin/develop`, close the lane's member issues with the cross-reference comment `pull-request-merge` prescribes, and remove the lane worktree only if it is clean (`git worktree remove` without `--force`). The remote branch is the platform's job (`delete_branch_on_merge`): confirm a `404` on the ref, never delete it.
+8. Checkpoint, then the refresh check (operation 5), then the next turn.
 
-## Stop conditions (this PR is set aside, the train continues with independent PRs)
+## Acting on the script's exit
 
-- a required check is red after one classification via `workflow-health-triage` (no blind rerun)
+| Exit | Last line | Action |
+|---|---|---|
+| 0 | `train done` | every queued PR merged; continue with step 7 for own PRs, then the next turn |
+| 1 | `#N FAIL <checks>` | classify once with `workflow-health-triage`. A real defect: fix it with a follow-up commit on the same branch in the lane worktree (no amend, no force-push), lint, push, restart the script. Flake or infrastructure: one `gh run rerun --failed`, then restart the script. A second red stops this PR |
+| 1 | `#N DIRTY …` | stop the train, set the lane `blocked`, report the conflict; the slot stays occupied until the operator resolves it |
+| 1 | `#N CLOSED …` | record it; a closed own PR sets its lane `blocked` |
+| 2 | usage or environment error | fix the invocation (a cross-repository PR in the queue is refused by design); never work around the refusal |
+| 3 | `#N PENDING …` | set `phase: awaiting-ci`, checkpoint, halt; never promote the next branch onto a `develop` tip the pending head is about to move. `--resume` restarts the script |
+
+A cancelled run is not a failure and never reaches this table: the script ignores it.
+
+## When the script is not running
+
+After a crash or a restart, runs of other branches may have been queued meanwhile. Restarting the script for the head cleans them up on its first poll. Without a head (all lanes still local), there is nothing to cancel. `pull-request-runner-sweep` in its non-interactive mode is the manual equivalent when the operator wants a one-off cleanup under the recorded authorisation.
+
+## Stop conditions (this lane is set aside; the train continues with independent lanes once the slot is free)
+
+- a required check is red again after one classification and one repair
 - a blocking review or security finding
-- a rebase conflict
+- a rebase conflict at promotion
 - the merge skill refuses (unresolved authorship, missing `automerge` label, `merge_failed` in the automerge run)
 
-A PR that depends on a set-aside PR is set aside with it. Report both at close.
+A set-aside lane whose PR is still open keeps the slot: close nothing on the operator's behalf, report it, and halt the train until it lands or is closed. A lane that depends on a set-aside lane is set aside with it. Report both at close.

@@ -138,6 +138,7 @@ GitHub-gehostete Runner führen Jobs aus einem Kontingent gleichzeitiger Jobs pr
 - **SOLLTE** Arbeit, die deutlich unter einer Minute endet, in einem bestehenden Job halten, statt einen eigenen dafür auszugeben, es sei denn, sie braucht ein anderes Runner-Image, andere `permissions`, Matrix-Parallelität oder muss unter eigenem Namen als Required Status Check berichten — die vier Gründe, die einen eigenen Job wirklich erfordern
 - **SOLLTE** einen Gate-Job unter einer Minute aus `needs:` vor den teuren Jobs heraushalten: Unter einem gesättigten Pool kostet jeder Abhängigkeitssprung eine volle Slot-Wartezeit, sodass ein 14-Sekunden-Linter allem dahinter 20 Minuten hinzufügen kann
 - **KANN** beratende Checks zu einem Job zusammenlegen, sofern jeder zusammengelegte Schritt weiterhin sein eigenes Urteil berichtet (`if: always()` auf den Folgeschritten, eine Step-Summary je Check), damit die Konsolidierung Durchsatz nicht mit einem Urteil bezahlt, das niemand mehr zuordnen kann
+- **MUSS** in einem orchestrierten Lauf, der mehrere Pull Requests erzeugt, genau einen davon zugleich offen halten, gemäß `spec/project/pull-request-workflow/` §"Serieller Pull-Request-Fluss": Mit `strict: true` macht jeder Merge die CI jedes anderen offenen Pull Requests hinfällig, sodass die Zahl offener Pull Requests die Runs vervielfacht, die ein einziger Fortschritt von `develop` einreiht. Die wartende Arbeit bleibt lokal und ungepusht, und der Merge-Train bricht die `pull_request`-Runs wartender und Dependency-Bot-Branches ab, solange der Head läuft
 
 ## Akzeptanzkriterien
 

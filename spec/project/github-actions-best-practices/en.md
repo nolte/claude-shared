@@ -138,6 +138,7 @@ GitHub-hosted runners run jobs from one concurrent-job allotment per GitHub plan
 - **SHOULD** keep work that finishes in well under a minute inside an existing job rather than spending a separate one on it, unless it needs a different runner image, different `permissions`, matrix parallelism, or has to report under its own name as a required status check—the four reasons that genuinely require a separate job
 - **SHOULD** keep a sub-minute gate job out of `needs:` ahead of the expensive jobs: under a saturated pool each dependency hop costs a full slot wait, so a 14-second linter can add 20 minutes to everything behind it
 - **MAY** merge advisory checks into one job provided each merged step still reports its own verdict (`if: always()` on the following steps, one step summary per check), so consolidation doesn't buy throughput at the price of a verdict nobody can attribute
+- **MUST**, in an orchestrated run that produces several pull requests, keep exactly one of them open at a time per `spec/project/pull-request-workflow/` §"Serial pull-request flow": with `strict: true` every merge invalidates the CI of each other open pull request, so the pull-request count multiplies the runs a single `develop` advance queues. The waiting work stays local and isn't pushed, and the merge train cancels the `pull_request` runs of waiting and dependency-bot branches while the head runs
 
 ## Acceptance Criteria
 

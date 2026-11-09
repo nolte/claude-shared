@@ -28,7 +28,20 @@ Two things that look like shortcuts and aren't:
   durable by design and outlives the run; the spec requires it to still be on the
   default branch after the merge.
 
-## 2. Open the pull request
+## 2. Open the pull request, or return `committed-locally` as a lane
+
+**As a lane** — the caller's brief or hand-off payload carries `lane: true`
+(`backlog-delivery-orchestrate`, or an `issue-backlog-partition` dispatch) — don't
+push and don't open a pull request: per `pull-request-workflow` §"Serial pull-request
+flow" the orchestrating run opens it when the branch reaches the head of its merge
+train. Commit the verified work (step 1's removal included), skip step 3, and return
+the lane payload below. The title and body this section specifies are drafted anyway
+and returned, so the promotion opens the pull request without re-deriving them.
+
+**Standalone**, open it via `pull-request-create`, whose precondition checks the slot:
+when another pull request against `develop` is open, report which one and wait, or
+hand the branch to a running train; open a second one only on the operator's explicit
+override.
 
 Via `pull-request-create`, so the operator confirms title and body under that skill's
 externally-visible-action gate. The pull request must carry:
@@ -53,7 +66,12 @@ it's what a later reader finds first.
 
 ## Report-back
 
-The orchestration stops at an open, audit-trailed pull request. **The merge belongs to
+**As a lane**, return: status `committed-locally`, branch, worktree, the commit SHA
+of the branch tip, this run's id (`.resume/issue-orchestrate/<run-id>.yml`), the
+drafted pull-request title and body, the classification, the dispatched specialists,
+and anything blocked. Nothing is pushed.
+
+**Standalone**, the orchestration stops at an open, audit-trailed pull request. **The merge belongs to
 `pull-request-merge`**, which re-validates the gate.
 
 Report: the issue number, the classification, the route taken, the dispatched

@@ -222,12 +222,24 @@ notes** the group id, the admitting predicate per member, the mode with its reas
 per member the dispatched specialist or the explicit no-matching-specialist note. On a
 `fix`-typed bundle, carry exactly **one** `## Class sweep` for the group's defect class.
 
-The skill stops at an open, audit-trailed pull request; `pull-request-merge` owns the
-merge.
+**As a lane** — the caller's brief or hand-off payload carries `lane: true`
+(`backlog-delivery-orchestrate`, or an `issue-backlog-partition` dispatch) — don't push
+and don't open the pull request: per `spec/project/pull-request-workflow/` §"Serial
+pull-request flow" the orchestrating run opens it at the head of its merge train.
+Commit the integration branch tip after the `git rm` above and return `committed-locally`
+with the branch, worktree, commit SHA, this run's id, the drafted title and body, and
+anything blocked. **Standalone**, `pull-request-create`'s precondition checks the slot:
+while another pull request against `develop` is open, report it and wait, or hand the
+branch to a running train; never open a second one without the operator's explicit
+override.
+
+The skill stops at an open, audit-trailed pull request (as a lane: at the unpushed
+integration branch); `pull-request-merge` owns the merge.
 
 ### 7. close
 
-After the bundle's squash-commit lands on `develop`, close every member issue with
+After the bundle's squash-commit lands on `develop`, close every member issue (as a
+lane, the orchestrating run does this under its standing authorisation) with
 one explicit operator confirmation for the set of open members, naming each — the closing keyword does not fire on a `develop` merge.
 Each closure comment names the bundle pull request, the merge-commit SHA, and the group
 id. Never close a member that was dropped. Retire the integration branch and every

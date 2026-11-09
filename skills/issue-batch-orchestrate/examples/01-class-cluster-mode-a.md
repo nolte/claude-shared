@@ -62,8 +62,9 @@ intermediate state.
 
 ## 6. bundle
 
-The artifact is removed with a fix-forward `git rm`. One pull request opens against
-`develop`, listing all three issues under `## Linked issues`, with the group id,
+The artifact is removed with a fix-forward `git rm`. This run is standalone, and
+`pull-request-create`'s slot check finds no other pull request against `develop` open, so
+one pull request opens against `develop`, listing all three issues under `## Linked issues`, with the group id,
 per-member predicate and mode in **Risk / rollout notes**, and exactly **one**
 `## Class sweep` whose predicate matched the whole class — not three sweeps saying the
 same thing.

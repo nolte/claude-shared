@@ -34,7 +34,10 @@ rule at the end of the skill body states this; it isn't softened here.
 
 ## The serial-flow reminder
 
-After cleanup, surface what's still queued:
+After cleanup, surface what still holds the slot. Under `pull-request-workflow`
+§"Serial pull-request flow" an orchestrated run has no other PR of its own open; its next
+branch is opened only now, by the run. What this lists is therefore usually another
+author's or a dependency bot's PR:
 
 ```bash
 gh pr list --state open --base develop --json number,title,headRefName,isDraft,labels
@@ -45,6 +48,6 @@ rebased onto it, and its required checks must go green again on the rebased head
 before this skill is re-invoked for it — in dependency order where a dependency
 exists.
 
-Don't rebase and don't re-invoke automatically. The next pull request is a separate,
-operator-driven run; that separation is what keeps a failed rebase from cascading
+Don't rebase and don't re-invoke automatically. The next pull request is a separate
+run, driven by the operator or by an orchestrating run's merge train; that separation is what keeps a failed rebase from cascading
 through the queue unattended.

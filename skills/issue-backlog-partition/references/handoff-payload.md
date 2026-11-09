@@ -80,5 +80,13 @@ ordering:
 | `issue-orchestrate` | the per-issue record | class, bounded verdict, self-resolution, trust set; its requirements gate still runs |
 | `feature-decompose` / `roadmap-plan` | the per-issue record with `bounded: false` and its rationale | whether an existing roadmap item covers it |
 
+Every group and single hand-off also carries `lane: true`. The receiver then stops at
+`committed-locally` (verified, committed, not pushed, no pull request) and returns its
+branch, worktree, commit SHA, run id, and drafted pull-request title and body, per
+`spec/project/issue-batch-integration/` §J and `spec/project/pull-request-workflow/`
+§"Serial pull-request flow". The partition's pull requests go through that serial
+train: at most one of them is open at a time, and each is opened only when it is the
+head.
+
 The receiving skill owns its own gates. The partition approval authorises the hand-off,
 nothing after it.

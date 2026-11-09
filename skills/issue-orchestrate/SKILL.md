@@ -266,11 +266,12 @@ contract:
    fix-forward. Never `.gitignore` it instead, and never remove
    `project/requirements/`, which stays durable.
 2. Open the PR via `pull-request-create`, linking the issue and carrying the
-   **Risk / rollout notes** section that reference specifies.
+   **Risk / rollout notes** section that reference specifies; as a lane, return
+   `committed-locally` instead.
 3. On operator confirmation, post the artifact's summary back to the issue.
 
-The orchestration stops at an open, audit-trailed PR; the merge belongs to
-`pull-request-merge`, which re-validates the gate. Report back per that reference.
+It stops at an open, audit-trailed PR (as a lane: unpushed); `pull-request-merge`
+owns the merge. Report back per that reference.
 
 ## Examples
 
@@ -343,8 +344,8 @@ recorded in the artifact.
 - **Never** publish an externally-visible artefact resting on this run's own
   measurement before the verify gate is green.
 - **Never** report a corrected factual claim as done without searching the corpus
-  for the same wording. A false statement that reached documentation has usually
-  reached it more than once, and finding the copies costs one `grep`.
+  for the same wording: a false statement in documentation usually recurs, and
+  finding the copies costs one `grep`.
 - **Always** prefer a plugin-distributed specialist over the generalist when one
   matches; the spec's §Specialist dispatch makes this a hard contract for the
   dispatch step.

@@ -432,6 +432,11 @@ verifiziert und gemergt ist.
 - **DARF NICHT [MUST NOT]** den Pull Request mergen; die Orchestrierung stoppt bei
   einem offenen, audit-getrailten PR und übergibt den Merge an `pull-request-merge`,
   das das Gate neu validiert
+- **MUSS [MUST]**, wenn die Orchestrierung als Lane eines orchestrierten Laufs läuft
+  (`issue-batch-integration` §J), nach dem Verifikations-Gate mit committeter, nicht
+  gepushter Branch (`committed-locally`) enden, statt den Pull Request zu öffnen; der
+  orchestrierende Lauf öffnet ihn an der Spitze seines Merge-Trains gemäß
+  `pull-request-workflow` §"Serieller Pull-Request-Fluss"
 - **DARF NICHT [MUST NOT]** ein Gate aus `pull-request-workflow` oder
   `branching-model` umgehen: kein `--admin`-Override, kein
   `continue-on-error`-Maskieren eines Required-Checks, kein Entfernen eines
