@@ -73,6 +73,10 @@ Print one row per run (PR, workflow, status, run id) and the count, then wait fo
 
 State the current PR and why, the runs cancelled per PR, and what was left alone. Remind the operator that a later push to a non-current PR queues new runs, so the skill is re-invoked, not looped; and that after the current PR merges the others need a rebase, which starts fresh runs.
 
+## Examples
+
+- Read `examples/01-three-prs-one-current.md` when several PRs are open and the current one has to be picked and confirmed interactively.
+
 ## Hard rules
 
 - **Never** cancel without the confirmation in step 4, except in `--non-interactive` mode after its authorisation check passed.

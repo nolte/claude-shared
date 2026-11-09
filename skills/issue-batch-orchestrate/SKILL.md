@@ -238,8 +238,8 @@ integration branch); `pull-request-merge` owns the merge.
 
 ### 7. close
 
-After the bundle's squash-commit lands on `develop`, close every member issue (as a
-lane, the orchestrating run does this under its standing authorisation) with
+As a lane, the orchestrating run closes the members under its standing authorisation.
+Standalone, after the bundle's squash-commit lands on `develop`, close every member issue with
 one explicit operator confirmation for the set of open members, naming each — the closing keyword does not fire on a `develop` merge.
 Each closure comment names the bundle pull request, the merge-commit SHA, and the group
 id. Never close a member that was dropped. Retire the integration branch and every

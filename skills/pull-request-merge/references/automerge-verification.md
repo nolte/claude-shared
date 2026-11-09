@@ -2,6 +2,8 @@
 
 The step-7b audit for `pull-request-merge`, reached when step 7a leaves the PR `OPEN` with all required checks green and the `automerge` label applied. The most recent `automerge.yaml` run on the head SHA is suspect—treat its `SUCCESS` conclusion as unverified until the logs say otherwise, because `pascalgn/automerge-action` exits `0` even when its internal `mergeResult` is `merge_failed`.
 
+Two known causes: the reusable workflow's `MERGE_METHOD` default doesn't match the repository's allowed strategy, or the `uses:` tag points to a `nolte/gh-plumbing` version that lacks the `MERGE_METHOD: squash` override.
+
 ## Surface the internal `mergeResult`
 
 Run the following commands (execute, not read-as-reference) to pull the workflow's internal `mergeResult` out of the run logs:

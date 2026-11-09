@@ -26,10 +26,7 @@ Creates a GitHub pull request that conforms to `spec/project/pull-request-workfl
 
 ## Why this is a skill, not an agent
 
-- **Externally-visible action requires explicit confirmation.** `gh pr create` opens a PR that other humans see; the spec mandates presenting the title and body to the user and iterating until approval before invoking it. That gate is core to the contract.
-- **Mid-flow interactivity.** Branch-freshness resolution (rebase vs merge), force-push confirmation, and the title/body iteration are per-step user dialogues an agent's structured-report shape can't carry.
-- **Output flows back into the main conversation.** The diffed PR body, the touched-spec autolinks, and the resulting PR URL all live in the user's working context; isolating them behind an agent boundary would obscure the iterative drafting.
-- Counter-dimension considered: a narrower agent could sharpen Conventional-Commits-title generation, but the load-bearing dimension here is the externally-visible-action gating, not title-prose quality; skill wins.
+`gh pr create` is an externally visible action gated on the user's approval, and the title/body iteration, freshness resolution, and force-push confirmation are mid-flow dialogues. Read `references/skill-vs-agent-rationale.md` when challenging the choice.
 
 ## User-language policy
 
@@ -132,14 +129,7 @@ Rules for the body:
 - **Summary**, **Changes**, and **Testing** must not be empty and must not contain only `None`: if the user can't fill them in, stop and ask.
 - Use imperative mood in Summary and Changes (`Add …`, not `Added …`).
 - If the diff touches any file under `spec/`, append a `Refs spec/<path>` line in **Linked issues** for each touched spec topic (deduplicated by `<area>/<slug>/`), unless the user explicitly declines.
-- **Audit-triggered remediation PRs carry two extra lines in Risk / rollout notes.** When this PR remediates an in-scope finding from a portfolio audit (`spec-drift-audit`, `workflow-health`, `project-structure-apply`, `vocab-drift-audit`, `portfolio-audit`, `portfolio-inflight-triage`, `dependency-audit`, `prose-style`/`markdown-formatting` lint, or a manual review Issue), `spec/project/continuous-improvement/<canonical_language>.md` §"Traceability in remediation artifacts" **MUST**-requires **Risk / rollout notes** to additionally record both lines:
-  - `Originating source: <named finding source>` — the finding source listed above that triggered the fix (with a link where available), so the PR is traceable back to its trigger.
-  - `Dispatched specialist: <display-name> (subagent_type: <plugin>:<agent> | skill: <name>)` — the specialised agent or skill that produced the fix; or, when none matched, the literal `no matching specialist existed — generalist handled`.
-  Ask the user for both values whenever the branch name, commit log, or a linked audit artifact indicates an audit-triggered remediation; never invent them. Non-audit PRs omit both lines.
-- **Audit-remediation checklist (tick before `gh pr create`).** On such a PR, confirm all three before opening it, so both grep-stable fields are present by construction:
-  - [ ] **Risk / rollout notes** carries an `Originating source:` line naming the finding source.
-  - [ ] **Risk / rollout notes** carries a `Dispatched specialist:` line naming the specialist, or the literal `no matching specialist existed — generalist handled`.
-  - [ ] Both lines use those exact field labels verbatim, so they stay grep-stable portfolio-wide.
+- **Audit-triggered remediation PRs carry `Originating source:` and `Dispatched specialist:` lines in Risk / rollout notes** (`spec/project/continuous-improvement/<canonical_language>.md` §"Traceability in remediation artifacts"). Read `references/audit-remediation.md` when the branch name, commit log, or a linked audit artifact indicates such a PR; it carries the trigger sources, both line formats, and the checklist to tick before `gh pr create`. Never invent either value.
 - **A `fix`-typed PR carries the class sweep.** `spec/project/pull-request-workflow/<canonical_language>.md` §"Class sweep (Conventional-Commits type `fix`)" **MUST**-requires the sixth `## Class sweep` section on type `fix` and forbids it on every other type. Read `references/class-sweep.md` and follow it before drafting the body: the predicate has to be runnable, and `Hits` has to be the count that running it produced, not an estimate.
 - **Load-bearing claims state their provenance** per `spec/claude/claim-provenance/`: a Summary, Changes, Testing, or Risk statement about a cause, state, existence, or absence in the working copy is either **established**, naming the command output or `file:line` behind it, or **unestablished**, naming the observation that would settle it and stating it wasn't made. Make a cheap observation instead of taking the unestablished exit.
 - Repository-specific sections **may** be appended *after* the five required sections, never interleaved.

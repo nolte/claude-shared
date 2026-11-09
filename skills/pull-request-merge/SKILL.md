@@ -27,7 +27,7 @@ Promotes an open draft pull request (typically the one opened by `pull-request-c
 
 ## Why this is a skill, not an agent
 
-Read `references/skill-vs-agent-rationale.md` when reviewing or challenging the artifact-type choice — in short: externally-visible PR mutations (draft → ready, `automerge` label, fallback merge) gate on mid-flow user confirmation, the skill orchestrates `review`/`security-review`/`workflow-health`, and wait mode needs a visible per-round status line, all of which default the orchestrator to skill form.
+Externally visible PR mutations gate on mid-flow confirmation, and the skill orchestrates `review`/`security-review`/`workflow-health`; read `references/skill-vs-agent-rationale.md` when challenging the choice.
 
 ## User-language policy
 
@@ -45,11 +45,7 @@ Before running any `git` or `gh` command, confirm:
 
 ## One open PR at a time
 
-This skill merges **one** PR — the one on the current branch. Under `spec/project/pull-request-workflow/<canonical_language>.md` §"Serial pull-request flow", an orchestrated run keeps exactly one PR against `develop` open, so the next PR doesn't exist yet when this one merges: the run opens it afterwards. Other open PRs (another author's, a dependency bot's) still merge one at a time per §"Sequential merge of multiple open PRs":
-
-- Merge in **dependency order** when one PR builds on another — the prerequisite first.
-- The Preconditions lag-check (`git merge-base --is-ancestor origin/develop HEAD`) enforces the rebase-between-merges rule: once another PR lands on `develop`, this branch lags, and the skill stops and hands back until it is rebased and its required checks are green on the rebased head (a green signal from before the rebase doesn't authorize the merge).
-- Step 9 surfaces any PR still open after a merge, so the operator or the orchestrating run knows what holds the slot.
+This skill merges one PR, the current branch's; per `spec/project/pull-request-workflow/<canonical_language>.md` §"Serial pull-request flow" an orchestrated run opens its next PR only afterwards. Read `references/one-open-pr.md` when other PRs against `develop` are open.
 
 ## Operations
 
@@ -121,7 +117,7 @@ gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=automerg
 
 ### 7. Verify the merge landed
 
-The `automerge.yaml` workflow exits `SUCCESS` even when `pascalgn/automerge-action`'s internal `mergeResult` is `merge_failed` (for example when the reusable workflow's `MERGE_METHOD` default doesn't match the repo's allowed strategy, or when the `uses:` tag points to a `nolte/gh-plumbing` version that lacks the `MERGE_METHOD: squash` override). A green check rollup is **not** proof the merge happened. Verify in two passes:
+A green `automerge.yaml` run is **not** proof the merge happened: the action exits `SUCCESS` even when its internal `mergeResult` is `merge_failed` (`references/automerge-verification.md` names the causes). Verify in two passes:
 
 **7a. Confirm PR and `develop` state directly.**
 
@@ -154,7 +150,7 @@ Once the PR is merged, offer (don't automatically execute) the following cleanup
 
 The **remote** branch is the platform's job, not this skill's: `delete_branch_on_merge: true` removes it after the squash-merge, and step 7 confirms it by expecting a `404` from the ref. Never delete it manually without explicit user confirmation, and never fold that into the automatic flow.
 
-Finally, surface what still holds the slot (`gh pr list --state open --base develop`) per §"One open PR at a time"; in an orchestrated run the next branch is opened only now. Every remaining PR now lags the advanced `develop` tip and **must** be rebased and go green again before this skill runs for it. Don't rebase or re-invoke automatically.
+Finally, surface what still holds the slot (`gh pr list --state open --base develop`); every remaining PR now lags `develop` and must be rebased and go green before this skill runs for it. Don't rebase or re-invoke automatically.
 
 `references/branch-cleanup.md` carries the confirmation call, the one-off catch-up case when the branch survives, and why the serial flow stays operator-driven.
 
