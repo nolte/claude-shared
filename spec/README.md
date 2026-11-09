@@ -71,11 +71,11 @@ Canonical language: `en` · Translations: `de`
 | project | error-tracking | Error Tracking | Error Tracking | draft | portfolio | 2026-08-01 |
 | project | feature | Project Feature | Projekt-Feature | draft | local | unversioned |
 | project | gdpr-audit-process | Whole-Repository GDPR Data-Protection Audit | Repository-weites DSGVO-Datenschutzaudit | draft | local | unversioned |
-| project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-09-19 |
+| project | github-actions-best-practices | GitHub Actions Best Practices | GitHub-Actions-Best-Practices | draft | portfolio | 2026-11-09 |
 | project | github-issue-templates | GitHub Issue Templates | GitHub-Issue-Templates | draft | local | unversioned |
 | project | i18n-completeness | i18n Completeness Audit | i18n-Vollständigkeits-Audit | draft | local | unversioned |
-| project | issue-batch-integration | Issue Batch Integration | Issue-Bündel-Integration | draft | local | 2026-09-19 |
-| project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | 2026-09-19 |
+| project | issue-batch-integration | Issue Batch Integration | Issue-Bündel-Integration | draft | local | 2026-11-09 |
+| project | issue-orchestration | Issue Orchestration | Issue-Orchestrierung | draft | local | 2026-11-09 |
 | project | kpi-definition-process | KPI Definition Process | KPI-Definitionsprozess | draft | portfolio | unversioned |
 | project | kubernetes-deployment-best-practices | Kubernetes Deployment Best Practices | Kubernetes-Deployment-Best-Practices | draft | local | unversioned |
 | project | lektorat | Lektorat | Lektorat | accepted | local | unversioned |
@@ -92,7 +92,7 @@ Canonical language: `en` · Translations: `de`
 | project | post-writing-style | Post writing style | Post-Schreibstil | accepted | local | unversioned |
 | project | project-structure | Repository Project Structure | Repository-Projektstruktur | draft | local | 2026-05-01 |
 | project | prose-style | Prose Style | Textstil | draft | local | 2026-04-24 |
-| project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | portfolio | 2026-08-01 |
+| project | pull-request-workflow | Pull Request Workflow | Pull-Request-Workflow | draft | portfolio | 2026-11-09 |
 | project | quality-gate | Quality Gate | Quality-Gate | draft | portfolio | unversioned |
 | project | readability-lix | Readability (LIX) | Lesbarkeit (LIX) | draft | local | unversioned |
 | project | readme-structure | Repository README Structure | Repository-README-Struktur | draft | local | 2026-04-23 |
