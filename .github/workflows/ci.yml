@@ -76,7 +76,7 @@ env:
 # of spec/project/quality-gate/, outside §A's code stages.
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       # Pinned to match the asdf-managed local version; the prose-style spec
       # requires local and CI to produce identical alerts. Bump in lock-step.
@@ -110,7 +110,7 @@ jobs:
           MISSION_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
@@ -128,7 +128,7 @@ jobs:
       - run: task --yes test
 
   docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
@@ -169,7 +169,7 @@ jobs:
   # non-deterministic; it runs as the link-rot-scanner agent's periodic /
   # pre-release audit instead.
   links:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
@@ -206,6 +206,6 @@ jobs:
   # pre-PR job is not mistaken for an oversight.
   docs-freshness:
     if: false # deferred — see comment above
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - run: 'echo "docs-freshness pre-PR gate is the agent run; deferred in CI"'
