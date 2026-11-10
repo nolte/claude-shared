@@ -5149,7 +5149,7 @@ def test_688_SECR5_a_rename_restored_then_migrated_cannot_launder_a_lowering(tar
     target.write_probe(make_probe("yid", derived_from=renamed, path="docs/y.md", expected=dict(LOW)), name="y")
     target.commit("follow the rename and lower")
     _migrate_onto_content(target, path="docs/y.md", expected=dict(LOW))
-    assert "but the content of" in _commit_move_reason(target)
+    assert "but the same commit changed the probe beyond declaration.path" in _commit_move_reason(target)
 
 
 def test_688_SECR5_a_decoy_path_then_migrated_cannot_launder_a_lowering(target):
@@ -5204,3 +5204,35 @@ def test_688_SECR5_an_unresolvable_commit_anchor_in_a_sha256_repository_keeps_th
     target.commit("move onto a commit that does not resolve")
     _, reason = _state(target, "yid")
     assert ra.REASON_COMMIT_MOVE not in reason, reason
+
+
+def test_688_SECR6_a_decoy_path_and_back_cannot_launder_a_lowering(target):
+    """Measured before the fix: clean, exit 0. Comparing two files' contents read the decoy as a change."""
+    target.write("README.txt", "q\n")
+    a = target.commit("an unrelated file")
+    target.write_probe(make_probe("yid", derived_from=a, expected=dict(HI)), name="y")
+    c1 = target.commit("record")
+    target.write_probe(make_probe("yid", derived_from=c1, path="README.txt", expected=dict(LOW)), name="y")
+    target.commit("move onto the decoy and lower")
+    target.write_probe(make_probe("yid", derived_from=a, expected=dict(LOW)), name="y")
+    back = target.commit("move back onto the declaration")
+    _migrate_onto_content(target, expected=dict(LOW))
+    reason = _commit_move_reason(target)
+    # The walk refuses the newest of the two path moves first.
+    assert (f"{back[:12]} moved derived_from from {c1[:12]} to {a[:12]}, but it also moved the declaration "
+            f"from README.txt to {DECL}, and only a pure move of an unchanged declaration can change its path"
+            ) in reason, reason
+
+
+def test_688_SECR6_a_pure_rename_under_a_commit_anchor_then_migrated_stays_clean(target):
+    """Positive control: an earlier move that followed a rename and changed nothing else heals by re-deriving."""
+    c0 = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.git("mv", DECL, "docs/y.md")
+    renamed = target.commit("rename")
+    target.write_probe(make_probe("yid", derived_from=renamed, path="docs/y.md", expected=dict(HI)), name="y")
+    target.commit("follow the rename")
+    _migrate_onto_content(target, path="docs/y.md", expected=dict(HI))
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK and row_of(report, "yid")[7] == ra.STATE_CLEAN, report
