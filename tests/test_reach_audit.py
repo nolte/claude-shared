@@ -4986,7 +4986,7 @@ def test_688_SECR3_2_a_forward_commit_anchor_jump_without_a_declaration_change_r
                              f"from {sha[:12]} to {later[:12]}, but {DECL} did not change in between"), reason
 
 
-def _repoint_then_lower(target, *, decoy_at_anchor: bool) -> tuple[str, str, str, str]:
+def _repoint_then_lower(target, *, decoy_at_anchor: bool) -> tuple[str, str, str, str, str]:
     """R1 records anchor X on DECL; I re-points only declaration.path at a decoy; E edits the decoy;
     W moves the anchor to E, restores DECL and lowers the bar. DECL itself never changes."""
     if decoy_at_anchor:
@@ -4994,29 +4994,69 @@ def _repoint_then_lower(target, *, decoy_at_anchor: bool) -> tuple[str, str, str
         target.commit("decoy exists at the anchor")
     x = target.git("rev-parse", "HEAD")
     target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
-    target.commit("R1 record")
+    recorded = target.commit("R1 record")
     target.write_probe(make_probe("yid", derived_from=x, path="decoy.txt", expected=dict(HI)), name="y")
     repoint = target.commit("I re-point the declaration only")
     target.write("decoy.txt", "b\n")
     e = target.commit("E edit the decoy")
     target.write_probe(make_probe("yid", derived_from=e, expected=dict(LOW)), name="y")
     lowered = target.commit("W move the anchor and lower")
-    return x, repoint, e, lowered
+    return x, recorded, repoint, e, lowered
 
 
 @pytest.mark.parametrize("decoy_at_anchor", [False, True])
 def test_688_SECR4_1_a_declaration_path_re_pointed_inside_a_commit_anchor_run_cannot_prove_a_move(
         target, decoy_at_anchor):
     """Measured before the fix (also on origin/develop): yid read clean, exit 0."""
-    x, repoint, e, lowered = _repoint_then_lower(target, decoy_at_anchor=decoy_at_anchor)
+    x, recorded, repoint, e, lowered = _repoint_then_lower(target, decoy_at_anchor=decoy_at_anchor)
     code, report = run_audit(target)
     assert code == ra.EXIT_FINDINGS, report
     row = row_of(report, "yid")
     assert row[7] == ra.STATE_WEAKENED, row
     assert _plain(row[9]) == (
         f"weakened: re-baselined without a declaration change: {lowered[:12]} moved derived_from from {x[:12]} "
-        f"to {e[:12]}, but {repoint[:12]} changed "
-        f"declaration.path under the previous derived_from {x[:12]}, so no declaration change can be shown"), row[9]
+        f"to {e[:12]}, but the probe changed in {repoint[:12]} after its previous derivation was recorded in "
+        f"{recorded[:12]}"), row[9]
+
+
+def test_688_SECR4_1_a_path_re_pointed_by_the_recording_commit_must_be_a_legitimate_derivation(target):
+    """The re-pointing commit records a derivation of its own (an abbreviated anchor), so it opens the run.
+
+    Measured before the fix: yid read clean, exit 0."""
+    target.write("decoy.txt", "a\n")
+    c0 = target.commit("decoy exists at the anchor")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write_probe(make_probe("yid", derived_from=c0[:12], path="decoy.txt", expected=dict(HI)), name="y")
+    repoint = target.commit("re-point under an abbreviated anchor")
+    target.write("decoy.txt", "b\n")
+    z1 = target.commit("edit the decoy")
+    target.write_probe(make_probe("yid", derived_from=z1, path="decoy.txt", expected=dict(LOW)), name="y")
+    target.commit("move the anchor and lower")
+    state, reason = _state(target, "yid")
+    assert state == ra.STATE_WEAKENED, reason
+    assert f"but its previous derivation was no re-derivation either: {repoint[:12]} moved derived_from" in reason
+    assert reason.endswith(f"{repoint[:12]} moved derived_from from {c0[:12]} to {c0[:12]}, but {DECL} did not "
+                           "change in between"), reason
+
+
+def test_688_SECR4_1_a_move_cannot_re_point_the_declaration_beside_one_that_still_exists(target):
+    """A justified move that also re-points the path would leave the probe watching the decoy.
+
+    Measured before the fix: the next move, proven by the decoy's change, read clean, exit 0."""
+    target.write("decoy.txt", "a\n")
+    c0 = target.commit("decoy exists")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    x1 = target.commit("a real declaration change")
+    target.write_probe(make_probe("yid", derived_from=x1, path="decoy.txt", expected=dict(HI)), name="y")
+    moved = target.commit("re-derive and re-point")
+    state, reason = _state(target, "yid")
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(f"{moved[:12]} moved derived_from from {c0[:12]} to {x1[:12]}, but it also moved "
+                           f"declaration.path from {DECL} to decoy.txt while {DECL} still exists at {x1[:12]}, "
+                           "so no declaration change can be shown"), reason
 
 
 def test_688_SECR4_1_a_commit_anchor_absent_at_both_commits_proves_nothing(target):

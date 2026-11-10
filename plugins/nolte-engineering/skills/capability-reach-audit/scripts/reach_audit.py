@@ -1846,17 +1846,21 @@ def _continuation_problem(git: Git, moved: str, baseline: str, earlier: list[tup
     return None
 
 
-def _repointed_declaration(git: Git, run: list[tuple[str, str]], yaml: Any) -> str | None:
-    """The newest commit in ``run`` (newest first) whose declaration.path differs from its predecessor's, or None."""
-    def path_of(revision: tuple[str, str]) -> object:
-        doc = _probe_doc(git, revision, yaml)
-        decl = doc.get("declaration") if doc else None
-        return decl.get("path") if isinstance(decl, dict) else None
-    paths = [path_of(revision) for revision in run]
-    for i in range(len(run) - 1):
-        if paths[i] != paths[i + 1]:
-            return run[i][0]
-    return None
+def _decl_rel(doc: dict[str, Any] | None) -> str | None:
+    """The normalised declaration.path of a probe document, or None."""
+    raw = _declaration_path(doc)
+    return _repo_relative(raw) if isinstance(raw, str) and raw else None
+
+
+def _declaration_path(doc: dict[str, Any] | None) -> object:
+    """The raw declaration.path of a probe document, or None."""
+    decl = doc.get("declaration") if isinstance(doc, dict) else None
+    return decl.get("path") if isinstance(decl, dict) else None
+
+
+def _declaration_repointed(git: Git, revisions: list[tuple[str, str]], yaml: Any) -> bool:
+    """Whether the normalised declaration.path differs anywhere among ``revisions``."""
+    return len({_decl_rel(_probe_doc(git, revision, yaml)) for revision in revisions}) > 1
 
 
 def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], rel: str, recording: str,
@@ -2216,17 +2220,30 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         # here it would compare the whole file for an anchor that never covered it
         # and skip proving the previous anchor, which launders a weakening.
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
-    # A commit anchor keys on derived_from alone (_anchor_key), so a commit that
-    # changes only declaration.path stays inside the previous derivation's run and
-    # nothing judges it. Every proof below reads one path: the run must have kept
-    # the one the derivation was recorded with, or a commit re-points the proof at
-    # a decoy file whose change then stands in for a declaration that never changed.
+    # A commit anchor keys on derived_from alone (_anchor_key), and a move onto
+    # one keeps the pre-v1.1 rules, so nothing else judges a change of
+    # declaration.path. Every proof below reads the path the previous derivation
+    # recorded: when that derivation's run, or the commit that recorded it,
+    # re-pointed the path, the run must be the unchanged recording of a
+    # legitimate derivation (_continuation_problem); otherwise a decoy file's
+    # change stands in for a declaration that never changed.
     span = _run_length(git, earlier, yaml)
-    repointed = _repointed_declaration(git, earlier[:span], yaml)
-    if repointed:
-        return (f"{moved}, but {repointed[:12]} changed declaration.path under the previous derived_from "
-                f"{safe_text(prev_df[:12], 40)}, so no declaration change can be shown")
+    if _declaration_repointed(git, earlier[:span + 1], yaml):
+        problem = _continuation_problem(git, moved, baseline, earlier, span, yaml)
+        if problem:
+            return problem
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
+    # A move may follow the declaration to a new path only where the old one is
+    # gone, a rename; re-pointing it beside a declaration that still exists would
+    # leave the probe watching the new file and prove its next move against it.
+    new_raw = _declaration_path(new_doc)
+    new_rel = _repo_relative(new_raw) if isinstance(new_raw, str) and new_raw else None
+    at = new_commit or baseline
+    repointed = None
+    if new_rel != rel and (new_rel is None or git.blob_at(at, rel) is not None or git.blob_at(at, new_rel) is None):
+        repointed = (f"{moved}, but it also moved declaration.path from {safe_text(rel)} to "
+                     f"{safe_text(new_raw, 80)} while {safe_text(rel)} still exists at {at[:12]}, "
+                     "so no declaration change can be shown")
     if prev_commit is not None and new_commit is not None:
         # The previous anchor must be proven where it was recorded (_prior_anchor),
         # as for every other anchor kind: otherwise one commit re-points the
@@ -2239,7 +2256,7 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
             return problem
         last = git.last_commit(rel, new_commit)
         if last is not None and not git.is_ancestor_or_equal(last, prev_commit):
-            return None
+            return repointed
         return f"{moved}, but {safe_text(rel)} did not change in between"
     # A squash merge drops the commits a v1.0 derivation named, but the commits
     # that recorded them are still here (as in _prior_anchor): the declaration's
@@ -2251,7 +2268,7 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
     if before is None or after is None:
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
     if before != after:
-        return None
+        return repointed
     return f"{moved}, but {safe_text(rel)} did not change in between"
 
 
