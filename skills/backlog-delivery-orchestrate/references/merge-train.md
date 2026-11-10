@@ -30,6 +30,7 @@ Read at operation 4. Rule owner: `spec/project/pull-request-workflow/` §"Serial
 | 1 | `#N CLOSED …` | record it; a closed own PR sets its lane `blocked` |
 | 2 | usage or environment error | fix the invocation (a cross-repository PR in the queue is refused by design); never work around the refusal |
 | 3 | `#N PENDING …` | set `phase: awaiting-ci`, checkpoint, halt; never promote the next branch onto a `develop` tip the pending head is about to move. `--resume` restarts the script |
+| 4 | `#N UNSTABLE non-required red: <checks> …` | a bot head whose required checks are green while a non-required check is red: the script merges bot PRs on `CLEAN` only, so it stops instead of waiting out the cap. Report the red checks and halt in `awaiting-slot`; the operator either fixes the cause on `develop` (the bot PR then rebases and goes `CLEAN`) or merges the bot PR by hand. For an own head the same line is only reported, once per head commit, and the train keeps waiting |
 
 A cancelled run is not a failure and never reaches this table: the script ignores it.
 
