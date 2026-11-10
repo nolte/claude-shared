@@ -12,6 +12,7 @@
 #   1  train stopped: a failed required check, a merge conflict (DIRTY), or a PR closed unmerged
 #   2  usage or environment error
 #   3  wait cap reached with the head still open (pending, not handled)
+#   4  a dependency-bot head is UNSTABLE: required checks green, a non-required check red
 #
 # Environment (all optional):
 #   TRAIN_POLL_SECONDS    poll interval, default 60
@@ -36,7 +37,7 @@ tmpdir=$(mktemp -d) && [ -d "$tmpdir" ] || exit 2
 trap 'rm -rf -- "${tmpdir:?}"' EXIT
 
 queue=("$@")
-declare -A branch isbot ticked lastms
+declare -A branch isbot ticked lastms reported
 
 for p in "${queue[@]}"; do
   meta=$(gh pr view "$p" --json headRefName,author,isCrossRepository,baseRefName 2>/dev/null) \
@@ -118,6 +119,23 @@ for head in "${queue[@]}"; do
     fails=$(gh pr checks "$head" --required --json name,bucket \
               --jq '.[] | select(.bucket == "fail") | .name' 2>/dev/null | paste -sd, -)
     if [ -n "$fails" ]; then echo "#$head FAIL $fails - train stops"; exit 1; fi
+
+    # UNSTABLE with every required check passed means a non-required check is red or still running.
+    # The train merges a bot PR on CLEAN only, so a red non-required check would hold it until the cap
+    # without a word: report it instead. A bot head stops the train (the operator decides whether the
+    # red check matters); an own head is merged by pull-request-merge, so the script only reports it.
+    if [ "$ms" = UNSTABLE ]; then
+      hsha=$(jq -r .headRefOid <<<"$j")
+      optfails=$(gh pr checks "$head" --json name,bucket \
+                   --jq '.[] | select(.bucket == "fail") | .name' 2>/dev/null | paste -sd, -)
+      if [ -n "$optfails" ]; then
+        if [ "${isbot[$head]}" = 1 ]; then
+          echo "#$head UNSTABLE non-required red: $optfails - bot PR not merged, train stops"; exit 4
+        elif [ "${reported[$head]:-}" != "$hsha" ]; then
+          echo "#$head UNSTABLE non-required red: $optfails"; reported[$head]=$hsha
+        fi
+      fi
+    fi
 
     others=$(for p in "${queue[@]}"; do [ "$p" != "$head" ] && echo "${branch[$p]}"; done)
     cancel_waiting "${branch[$head]}" "$others"
