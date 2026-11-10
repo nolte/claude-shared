@@ -84,3 +84,7 @@ a group}}
 | Outcome | Receiver | Handed at | Receiver's correction (if any) |
 |---|---|---|---|
 | {{group id}} | issue-batch-orchestrate | {{timestamp}} | {{—}} |
+
+An outcome ordered after another one whose pull request hasn't merged yet is logged with
+`waiting-on <id>` in **Handed at** and handed on by a later re-invocation. Every handed-on
+group or single carries `lane: true` and returns `committed-locally`.

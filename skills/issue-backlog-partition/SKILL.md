@@ -165,8 +165,16 @@ type, member records), a single to `issue-orchestrate` (its record), a pipeline 
 never re-derives it; a record it finds wrong is corrected by measurement and the correction
 flows back into this artifact. Record each hand-off in the checkpoint before the next.
 
-The skill stops when every outcome is handed on or recorded as unhandable. It never
-implements, branches, or opens a pull request.
+Every group and single is handed on as a **lane** (`lane: true`): the receiver returns
+`committed-locally`, never an open pull request, and the partition's pull requests go
+through the serial train of `spec/project/pull-request-workflow/` §"Serial pull-request
+flow" — `backlog-delivery-orchestrate` runs it; without it, promote one branch at a time
+via `pull-request-create`, whose precondition checks the slot. An outcome ordered after
+another is handed on only once the predecessor's pull request has merged; until then it
+is recorded as `waiting-on <id>`, and a re-invocation resumes the dispatch.
+
+The skill stops when every outcome is handed on or recorded as unhandable or waiting. It
+never implements, branches, or opens a pull request.
 
 ## Examples
 

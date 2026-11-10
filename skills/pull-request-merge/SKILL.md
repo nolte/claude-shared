@@ -27,7 +27,7 @@ Promotes an open draft pull request (typically the one opened by `pull-request-c
 
 ## Why this is a skill, not an agent
 
-Read `references/skill-vs-agent-rationale.md` when reviewing or challenging the artifact-type choice — in short: externally-visible PR mutations (draft → ready, `automerge` label, fallback merge) gate on mid-flow user confirmation, the skill orchestrates `review`/`security-review`/`workflow-health`, and wait mode needs a visible per-round status line, all of which default the orchestrator to skill form.
+Externally visible PR mutations gate on mid-flow confirmation, and the skill orchestrates `review`/`security-review`/`workflow-health`; read `references/skill-vs-agent-rationale.md` when challenging the choice.
 
 ## User-language policy
 
@@ -43,13 +43,9 @@ Before running any `git` or `gh` command, confirm:
 - Working tree is clean (`git status --porcelain` returns no lines). Uncommitted changes block the skill; commit, stash, or hand back to the user.
 - The feature branch contains `origin/develop`'s tip (`git fetch origin develop && git merge-base --is-ancestor origin/develop HEAD`). If the branch lags, report the lag and hand back to the user; the skill doesn't silently rebase or merge `develop` into the feature branch.
 
-## Sequential merge of multiple ready PRs
+## One open PR at a time
 
-This skill merges **one** PR — the one on the current branch. When several PRs are ready at the same time, it's invoked once per PR, serially, never in parallel, per `spec/project/pull-request-workflow/<canonical_language>.md` §"Sequential merge of multiple open PRs":
-
-- Merge in **dependency order** when one ready PR builds on another — the prerequisite PR first; where no dependency exists, the operator picks the order among the remaining ready PRs.
-- The Preconditions lag-check (`git merge-base --is-ancestor origin/develop HEAD`) is the enforcement point for the spec's rebase-between-merges rule: once a sibling PR lands on `develop`, every other ready PR's branch lags, so this skill stops and hands back until the operator rebases that PR onto the new `develop` tip and its required checks report green again on the rebased head (a green signal recorded before the rebase doesn't authorize the merge).
-- Step 9 surfaces any remaining open, ready sibling PRs after a merge so the operator can rebase and re-invoke for the next one in order.
+This skill merges one PR, the current branch's; per `spec/project/pull-request-workflow/<canonical_language>.md` §"Serial pull-request flow" an orchestrated run opens its next PR only afterwards. Read `references/one-open-pr.md` when other PRs against `develop` are open.
 
 ## Operations
 
@@ -121,7 +117,7 @@ gh api -X POST repos/<owner>/<repo>/issues/<number>/labels -f "labels[]=automerg
 
 ### 7. Verify the merge landed
 
-The `automerge.yaml` workflow exits `SUCCESS` even when `pascalgn/automerge-action`'s internal `mergeResult` is `merge_failed` (for example when the reusable workflow's `MERGE_METHOD` default doesn't match the repo's allowed strategy, or when the `uses:` tag points to a `nolte/gh-plumbing` version that lacks the `MERGE_METHOD: squash` override). A green check rollup is **not** proof the merge happened. Verify in two passes:
+A green `automerge.yaml` run is **not** proof the merge happened: the action exits `SUCCESS` even when its internal `mergeResult` is `merge_failed` (`references/automerge-verification.md` names the causes). Verify in two passes:
 
 **7a. Confirm PR and `develop` state directly.**
 
@@ -154,7 +150,7 @@ Once the PR is merged, offer (don't automatically execute) the following cleanup
 
 The **remote** branch is the platform's job, not this skill's: `delete_branch_on_merge: true` removes it after the squash-merge, and step 7 confirms it by expecting a `404` from the ref. Never delete it manually without explicit user confirmation, and never fold that into the automatic flow.
 
-Finally, surface what's still queued (`gh pr list --state open --base develop`) so the operator can continue the serial flow per §"Sequential merge of multiple ready PRs". Every remaining PR now lags the advanced `develop` tip and **must** be rebased and go green again before this skill runs for it. Don't rebase or re-invoke automatically.
+Finally, surface what still holds the slot (`gh pr list --state open --base develop`); every remaining PR now lags `develop` and must be rebased and go green before this skill runs for it. Don't rebase or re-invoke automatically.
 
 `references/branch-cleanup.md` carries the confirmation call, the one-off catch-up case when the branch survives, and why the serial flow stays operator-driven.
 
@@ -185,7 +181,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** create a new GitHub label from this skill. Label candidates that don't exist in the repository are reported as a gap, not silently added.
 - **Never** skip the `review` skill delegation. A final review is the cheapest pre-merge gate; only an explicit user override bypasses it.
 - **Never** rebase or merge `develop` into the feature branch silently to fix a lag. Branch-freshness gaps return control to the user, consistent with `pull-request-create`.
-- **Never** merge multiple ready PRs in parallel. Per the pull-request-workflow spec they merge one at a time; after each merge every remaining ready PR lags `develop` and must be rebased onto the new tip (enforced by the Preconditions lag-check) before this skill proceeds, in dependency order where one PR builds on another.
+- **Never** merge two PRs at once. Per the pull-request-workflow spec they merge one at a time; after each merge every remaining open PR lags `develop` and must be rebased onto the new tip (enforced by the Preconditions lag-check) before this skill proceeds, in dependency order where one PR builds on another.
 - **Never** poll, sleep, or loop waiting for checks to complete **unless the user has opted in to wait mode** (see "Wait mode" below). Outside wait mode, report the outstanding state and stop; the user re-invokes the skill when ready. Inside wait mode, polling is permitted but bounded by the documented retry / interval / timeout caps and **never** silently in the background — every wait round produces a visible status line.
 - **Never** treat the `automerge.yaml` workflow's `SUCCESS` conclusion as proof the merge happened. `pascalgn/automerge-action` exits 0 on `mergeResult: 'merge_failed'`. Always confirm `state == MERGED` on the PR itself (step 7a), and when the PR is still open with green checks, audit the action's logs for `merge_failed` (step 7b) before declaring the merge complete.
 - **Never** delete the remote feature branch as part of the automatic merge flow. Post-merge branch cleanup is the platform's job via `delete_branch_on_merge: true`; a manual `gh api -X DELETE` call is only a one-off catch-up and requires explicit user confirmation.

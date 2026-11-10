@@ -15,6 +15,11 @@ has, plus one confirmation to close the member issues afterwards:
 | **Bundle gate** | the bundle pull request, opened from the integration branch tip | the pull request only; the merge stays with `pull-request-merge` |
 | **Closure** | the set of open member issues, named | closing exactly those issues |
 
+As a lane of an orchestrated run (`lane: true`), the bundle gate and the closure are not
+asked here: the group stops at `committed-locally`, and the orchestrating run's standing
+authorisation (`spec/project/pull-request-workflow/` §"Serial pull-request flow") covers
+opening the bundle at the head of its train and closing the members after the merge.
+
 Before this rule a group asked `4 + 2n` times. A member dispatch, the package dispatches
 inside it, and the mode decision no longer ask on their own; the artifact records the mode
 and the approval covers it.

@@ -71,12 +71,13 @@ open question, not a change to the partition.
 ## dispatch
 
 - `issue-batch-orchestrate` receives `2026-10-03-settings-drift` with its three member
-  records; its operation 1 re-checks the predicates against the records instead of
-  re-fetching the issues.
+  records and `lane: true`; its operation 1 re-checks the predicates against the records
+  instead of re-fetching the issues, and it returns `committed-locally`, not a pull request.
 - `issue-batch-orchestrate` receives `2026-10-03-release-guide-parity` the same way.
-- `issue-orchestrate` receives 833, then 834, each with its record; 834's verified cause
-  arrives with the command output attached.
+- `issue-orchestrate` receives 833, then 834, each with its record and `lane: true`; 834's
+  verified cause arrives with the command output attached.
 - `roadmap-plan` receives 830 with `bounded: false` and the two-outcome rationale.
 
 Each hand-off is appended to the checkpoint before the next starts. The skill stops; no
-branch, no pull request.
+branch, no pull request. The four `committed-locally` branches then reach `develop` through
+the serial train, one open pull request at a time.

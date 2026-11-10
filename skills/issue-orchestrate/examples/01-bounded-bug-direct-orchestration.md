@@ -70,7 +70,8 @@ Repository state when the skill is invoked:
    - `Issue: #312 — classification: bug`
    - `P1 dispatched specialist: nolte-shared:spec`
    - `P2 dispatched specialist: nolte-claude-dev:claude-plugin-developer`
-   and `Closes #312` in the body. The operator confirms title and body before push.
+   and `Closes #312` in the body. Its slot check finds no other pull request against
+   `develop` open (standalone run), and the operator confirms title and body before push.
 10. **Stop before merge.** The skill posts the artifact summary back to #312 as a
     comment (operator-confirmed), then reports the issue number, classification
     (`bug`), route (`direct`), the two dispatched specialists, the artifact path, the

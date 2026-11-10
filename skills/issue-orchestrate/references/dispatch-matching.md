@@ -44,3 +44,24 @@ That's a portfolio gap, not a reason to improvise. Operation 5 step 3 carries th
 rule (`continuous-improvement` §Portfolio gap closure, the three-recurrence
 threshold, and the explicit "no matching specialised agent — generalist remediation"
 note the pull request must record).
+
+## Gap closure and the dispatch brief (steps 3 and 4)
+
+**No match is a portfolio gap.** When no candidate matches, apply
+`continuous-improvement` §Portfolio gap closure: record the no-match, count
+generalist-handled recurrences of the class, and at three or more (or with a recorded
+high-impact justification) offer to dispatch
+`Agent(subagent_type="nolte-claude-dev:claude-plugin-developer")` (if nolte-claude-dev is
+installed; else record the gap for the operator) to author a new specialist. Until the
+gap closes, the generalist may handle the package and the PR records the explicit
+"no matching specialised agent — generalist remediation" note.
+
+**Dispatch in dependency order.** Walk the packages in their DAG ordering. For each,
+gate on operator confirmation, then dispatch via `Agent(subagent_type="<plugin>:<agent>")`
+or the matching skill invocation, passing the package's problem statement, acceptance
+criteria, touched files, and the issue reference. A package's problem statement is a
+hypothesis, so its dispatch brief **MUST** authorise refutation per
+`spec/claude/dispatch-brief/`: state the hypothesis, tell the specialist it may refute
+it, and treat a returned refutation (contradicting evidence plus what it did instead) as
+a first-class result recorded in the artifact, not a failed dispatch. Collect and record
+each specialist's result in the artifact before dispatching a dependent package.

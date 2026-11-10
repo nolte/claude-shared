@@ -402,6 +402,11 @@ readership once the capability it describes is implemented, verified, and merged
 - **MUST NOT** merge the pull request; the orchestration stops at an open,
   audit-trailed PR and hands the merge to `pull-request-merge`, which re-validates the
   gate
+- **MUST**, when the orchestration runs as a lane of an orchestrated run
+  (`issue-batch-integration` §J), stop after the verification gate with the branch
+  committed and not pushed (`committed-locally`) instead of opening the pull request;
+  the orchestrating run opens it at the head of its merge train per
+  `pull-request-workflow` §"Serial pull-request flow"
 - **MUST NOT** bypass any gate from `pull-request-workflow` or `branching-model`: no
   `--admin` override, no `continue-on-error` masking of a required check, no
   required-check removal

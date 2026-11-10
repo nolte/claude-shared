@@ -1,6 +1,6 @@
 ---
 name: pull-request-runner-sweep
-description: Finds the current pull request among the open ones targeting `develop` and cancels the in-flight and queued pull-request workflow runs of every other open PR, so the shared runner pool serves only the PR that merges next. Ranks candidates deterministically (explicit operator pick, then ready over draft, then `automerge`, then newest head commit), shows the run list, and cancels only after operator confirmation. Never touches runs on `develop`/`main`, merge-group, dispatch, schedule, or release runs. Invoke when the user asks to "cancel the runs of the other PRs", "free the runners", "only run CI for the current PR", or equivalent German-language requests. Don't use to triage a red run (use `workflow-health-triage`), to merge (use `pull-request-merge`), or to fix a lane's cancel-in-progress setting (use `cicd-pipeline-design`).
+description: Finds the current pull request among the open ones targeting `develop` and cancels the in-flight and queued pull-request workflow runs of every other open PR, so the shared runner pool serves only the PR that merges next. Ranks candidates deterministically (explicit operator pick, then ready over draft, then `automerge`, then newest head commit), shows the run list, and cancels only after operator confirmation, or, with `--non-interactive`, under a merge train's recorded standing authorisation. Never touches runs on `develop`/`main`, merge-group, dispatch, schedule, or release runs. Invoke when the user asks to "cancel the runs of the other PRs", "free the runners", "only run CI for the current PR", or equivalent German-language requests. Don't use to triage a red run (use `workflow-health-triage`), to merge (use `pull-request-merge`), or to fix a lane's cancel-in-progress setting (use `cicd-pipeline-design`).
 tags: [pull-request, triage]
 phase: quality
 summary: "Identifies the current PR among the open ones and cancels the runs of all other PRs, so runners serve only the PR that merges next."
@@ -35,6 +35,11 @@ Picking the current PR is a judgement the operator must confirm, and cancelling 
 
 Respond in the user's language. All `gh` invocations and run/PR identifiers stay English.
 
+## Arguments
+
+- `--current <N>`: names the current PR and skips the ranking.
+- `--non-interactive --current <N> --authorisation <state-file>`: for a merge train under a recorded standing authorisation; no per-run confirmation, narrowed to waiting train and dependency-bot branches. Read `references/non-interactive.md` when this flag is present. The interactive mode stays the default.
+
 ## Preconditions
 
 - Inside a git repository, `gh auth status` authenticated, remote resolves to GitHub, and the token can read and cancel Actions runs (`actions: write`). If the cancel call returns 403, stop and report the missing scope.
@@ -68,9 +73,13 @@ Print one row per run (PR, workflow, status, run id) and the count, then wait fo
 
 State the current PR and why, the runs cancelled per PR, and what was left alone. Remind the operator that a later push to a non-current PR queues new runs, so the skill is re-invoked, not looped; and that after the current PR merges the others need a rebase, which starts fresh runs.
 
+## Examples
+
+- Read `examples/01-three-prs-one-current.md` when several PRs are open and the current one has to be picked and confirmed interactively.
+
 ## Hard rules
 
-- **Never** cancel without the confirmation in step 4.
+- **Never** cancel without the confirmation in step 4, except in `--non-interactive` mode after its authorisation check passed.
 - **Never** cancel runs of the current PR, runs on `develop`/`main`, or runs triggered by `push`, `merge_group`, `schedule`, `workflow_dispatch`, or `release`, and **never** runs of a delivery workflow (identified by workflow path, see the reference): cancelling a delivery run can leave a partially published artifact (`github-actions-best-practices` §F).
 - **Never** close, relabel, or edit a PR, and never push or rebase a branch from this skill.
 - **Never** remove a check from the required set or set `cancel-in-progress: false` to make a cancellation stick.
