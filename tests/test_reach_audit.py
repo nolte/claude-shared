@@ -5236,3 +5236,70 @@ def test_688_SECR6_a_pure_rename_under_a_commit_anchor_then_migrated_stays_clean
     _migrate_onto_content(target, path="docs/y.md", expected=dict(HI))
     code, report = run_audit(target)
     assert code == ra.EXIT_OK and row_of(report, "yid")[7] == ra.STATE_CLEAN, report
+
+
+# -- #688 SEC-R7: a rename that also changes the anchor form; a switch of declaration kind ------ #
+NEW_DECL = "docs/new.md"
+
+
+def _renamed_and_relabelled(target: Target, rel: str, form: str, **changes) -> str:
+    target.git("mv", DECL, NEW_DECL)
+    target.commit("rename the declaration")
+    doc = yaml.safe_load((target.path / rel).read_text())
+    doc["declaration"]["path"] = NEW_DECL
+    if form == "blob":
+        doc["declaration"].pop("sections", None)
+        doc["derived_from"] = _blob(target, path=NEW_DECL)
+    else:
+        sections = _sections_now(target, path=NEW_DECL)
+        doc["declaration"]["sections"] = sections
+        doc["derived_from"] = ra.section_anchor(sections)
+    if "expected_value" in changes:
+        doc["expected"]["value"] = changes["expected_value"]
+    target.write(rel, yaml.safe_dump(doc, sort_keys=False))
+    return target.commit("follow the rename onto another anchor form")
+
+
+@pytest.mark.parametrize(("start", "form"), [("commit", "blob"), ("commit", "sections"), ("blob", "sections"),
+                                             ("sections", "blob")])
+def test_688_SECR7_a_rename_with_another_anchor_form_cannot_lower_the_bar(sectioned, start, form):
+    """Measured before the fix (also on origin/develop): clean, exit 0, the declaration unchanged."""
+    target = sectioned
+    if start == "commit":
+        _, rel = derived_probe(target)
+    elif start == "blob":
+        rel = _content_probe(target)
+    else:
+        rel = _section_probe(target)
+    moved = _renamed_and_relabelled(target, rel, form, expected_value=1)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.startswith(f"weakened: re-baselined without a declaration change: {moved[:12]} moved"), reason
+    assert reason.endswith("but the same commit changed the probe beyond declaration.path, which a pure move of "
+                           "the declaration does not justify"), reason
+
+
+@pytest.mark.parametrize(("start", "form"), [("blob", "sections"), ("sections", "blob")])
+def test_688_SECR7_a_rename_with_another_anchor_form_and_nothing_else_stays_clean(sectioned, start, form):
+    """Positive control: the honest rename-and-re-derive."""
+    target = sectioned
+    rel = _content_probe(target) if start == "blob" else _section_probe(target)
+    _renamed_and_relabelled(target, rel, form)
+    _assert_clean(target)
+
+
+def test_688_SECR7_a_switch_from_an_inherited_spec_to_a_file_is_no_re_derivation(target):
+    """Measured before the fix (also on origin/develop): clean, exit 0, with the config restored afterwards."""
+    _spec_config(target, ("nolte-shared", "v0.1.8"))
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    parent = target.git("rev-parse", "HEAD")
+    _spec_config(target, ("nolte-shared", parent))
+    target.write_probe(make_probe(derived_from=parent, expected=dict(LOW)))
+    target.commit("move the pin, switch to a file anchor, lower")
+    _spec_config(target, ("nolte-shared", "v0.1.8"))
+    target.commit("restore the pin")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(f"but it also changed which declaration the probe anchors on (project/rest-api-design "
+                           f"to {DECL}), which no re-derivation can show; derive a new probe instead"), reason

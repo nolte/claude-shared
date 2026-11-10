@@ -1951,6 +1951,11 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     problem, before, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
     if problem:
         return problem
+    if new_rel != rel and changed and _moved_unchanged(git, prev_df, prior_doc, before, baseline, new_rel):
+        # The old path changed or is gone (a copy beside an unchanged original is
+        # refused below); the content it anchored is unchanged at the new path,
+        # which makes this a pure move whichever anchor form it records.
+        return _pure_move_problem(moved, prior_doc, new_doc, *_RE_ANCHOR)
     # `derive` re-stamps the approval on every run, a migration included.
     if _is_section_anchor(prev_df):
         relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
@@ -1972,7 +1977,28 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     return None
 
 
-def _pure_move_problem(moved: str, prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
+def _moved_unchanged(git: Git, prev_df: str, prior_doc: dict[str, Any], before: str | None, baseline: str,
+                     new_rel: str) -> bool:
+    """Whether the previously anchored content is, unchanged, at ``new_rel`` in ``baseline``.
+
+    That is a rename of the declaration, whichever anchor form either side has:
+    the sections the previous anchor named all resolve there with their digests,
+    or the file holds the previously anchored blob.
+    """
+    if _is_section_anchor(prev_df):
+        decl = prior_doc.get("declaration")
+        locators = _locators(decl.get("sections")) if isinstance(decl, dict) else None
+        return bool(locators) and not _section_mismatches(git, baseline, new_rel, locators)
+    return before is not None and git.blob_at(baseline, new_rel) == before
+
+
+# What a pure move may change besides declaration.path and the approval stamp: a
+# change of anchor form that comes with it (the new anchor names the same content).
+_RE_ANCHOR = (("derived_from",), ("declaration", "sections"))
+
+
+def _pure_move_problem(moved: str, prior_doc: dict[str, Any], new_doc: dict[str, Any],
+                       *also: tuple[str, ...]) -> str | None:
     """Same anchor, new declaration path: clean only when it changed nothing else.
 
     Like every move it is also held to the previous derivation (_continuation_problem).
@@ -1981,7 +2007,7 @@ def _pure_move_problem(moved: str, prior_doc: dict[str, Any], new_doc: dict[str,
     stamp may move with the path; the observation digest inside it is still
     checked on every run.
     """
-    pure_move = (("declaration", "path"), ("approval",))
+    pure_move = (("declaration", "path"), ("approval",), *also)
     if _without(new_doc, *pure_move) != _without(prior_doc, *pure_move):
         return (f"{moved}, but the same commit changed the probe beyond declaration.path, "
                 "which a pure move of the declaration does not justify")
@@ -2019,9 +2045,11 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
                 f"{baseline[:12]}: {'; '.join(mismatches)}")
     span = _run_length(git, earlier, yaml)
     recording = earlier[span - 1][0]
-    problem, _, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
+    problem, before, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
     if problem:
         return problem
+    if new_rel != rel and changed and _moved_unchanged(git, prev_df, prior_doc, before, baseline, new_rel):
+        return _pure_move_problem(moved, prior_doc, new_doc, *_RE_ANCHOR)  # as for a content anchor
     relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
     if (not changed and not _is_section_anchor(prev_df) and new_rel == rel
             and _without(new_doc, *relabel) == _without(prior_doc, *relabel)):
@@ -2186,6 +2214,18 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
     declaration changed after it, up to the new derived_from.
     """
     prior_commit, _ = earlier[0]
+    new_decl = new_doc.get("declaration")
+    new_decl = new_decl if isinstance(new_decl, dict) else {}
+    if decl.get("inherited_spec") or new_decl.get("inherited_spec"):
+        # Each side is judged by its own declaration's anchor: a move that also
+        # switches between an inherited spec and a file (or to another inherited
+        # spec) would be proven by the old pin and judged later by the new kind's
+        # rules, which neither side's check covers.
+        if (decl.get("inherited_spec"), decl.get("hub")) != (new_decl.get("inherited_spec"), new_decl.get("hub")):
+            return (f"{moved}, but it also changed which declaration the probe anchors on "
+                    f"({safe_text(decl.get('inherited_spec') or decl.get('path'), 80)} to "
+                    f"{safe_text(new_decl.get('inherited_spec') or new_decl.get('path'), 80)}), "
+                    "which no re-derivation can show; derive a new probe instead")
     if decl.get("inherited_spec"):
         before, _ = _pinned_ref(git.show(prior_commit, SPEC_CONFIG.as_posix()), decl, yaml)
         after, _ = _pinned_ref(git.show(baseline, SPEC_CONFIG.as_posix()), decl, yaml)
