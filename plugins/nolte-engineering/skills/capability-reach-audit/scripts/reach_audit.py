@@ -22,6 +22,15 @@ probed with reason ``not constructible: <code>`` and counts in the headline; an
 absent manifest is stated in the headline and the provenance, because the runner
 can't tell "every entry was constructible" from "the manifest was never written".
 
+The probe set also has to answer for what it no longer contains. Every probe id
+that a committed file under ``project/reach-probes/`` carried anywhere in the
+history of HEAD (merges included) and that no probe file carries now is reported
+``removed``, and so is the earlier probe of an exchange under the same id (an id
+whose current file's own history took it only after another file had it). The
+one exit is an approved, committed record in the retirement manifest
+``project/reach-probes/_retired.yml`` (schemas/reach-retired-v1.0.schema.yaml);
+every report lists the retired ids. The runner writes neither manifest.
+
 Every file the runner reads from the target's working tree (probe files, the
 manifest, spec/.spec-config.yml) must be a regular file that resolves inside the
 repository: a symlink is refused and never followed, so a probe set cannot pull
@@ -37,7 +46,8 @@ Exit codes:
   0  report written; at least one probe file, every entry classified (any
      class), no finding
   1  runtime error (git failed, report not writable)
-  2  usage error: bad arguments, or the target is not a local git working copy
+  2  usage error: bad arguments, the target is not a local git working copy, or
+     its probe directory (or project/ above it) is a symlink
   3  no probe file: project/reach-probes/ is absent or holds no probe file
      besides the manifest, so nothing was executed and it is never a clean
      result. A manifest listing entries does not change the code: the report
@@ -48,7 +58,9 @@ Exit codes:
      (a symlinked probe file included), an approval whose observation digest no
      longer matches the observation step, an unreadable manifest or an invalid
      manifest entry, a manifest id listed twice, an id that is both a probe
-     file and a manifest entry, or an invalid supersedes record. A superseded
+     file and a manifest entry, an invalid supersedes record, a removed probe
+     id, or a retirement record that is invalid, contradicts a probe file, or
+     sits in an unreadable retirement manifest. A superseded or a retired
      probe is no finding. Takes precedence over 3.
   5  PyYAML or jsonschema is not installed
   6  --check-migration only: a migration candidate is not clean (stale,
@@ -80,8 +92,8 @@ import sys
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from pathlib import Path
-from typing import Any, Callable
+from pathlib import Path, PurePosixPath
+from typing import Any, Callable, Iterator
 
 # --------------------------------------------------------------------------- #
 # Paths inside the audited repository (R11, R12). Nothing else is ever written.
@@ -94,6 +106,12 @@ PROBE_SUFFIXES = (".yml", ".yaml")
 # in the probe directory, so the probe loader skips exactly this name.
 MANIFEST_NAME = "_not-constructible.yml"
 MANIFEST_PATH = PROBE_DIR / MANIFEST_NAME
+# The retirement manifest (schemas/reach-retired-v1.0.schema.yaml): the probe ids
+# that left the probe set through an approved record. The probe loader and the
+# history scan skip both manifest names.
+RETIRED_NAME = "_retired.yml"
+RETIRED_PATH = PROBE_DIR / RETIRED_NAME
+MANIFEST_NAMES = (MANIFEST_NAME, RETIRED_NAME)
 REPORT_DIR = Path(".audits") / "capability-reach"
 SPEC_CONFIG = Path("spec") / ".spec-config.yml"
 
@@ -112,6 +130,15 @@ DEFAULT_OBSERVE_TIMEOUT_SECONDS = 300
 # identifiers stays far below this; anything above it is a runaway command, so the
 # probe is refused rather than parsed from a truncated stream.
 MAX_OBSERVATION_BYTES = 4 * 1024 * 1024
+# How many bytes of historical probe revisions one `git cat-file --batch` call
+# returns. Every revision is read and parsed for its id, whatever its size (as the
+# probe loader reads a file at HEAD); the bound only keeps the runner from holding
+# a long history in memory at once. A revision larger than it is read on its own.
+MAX_HISTORY_BATCH_BYTES = 1024 * 1024
+# Git modes of the tree entries the probe loader would read: regular files (by
+# suffix) and symlinks (any name, reported and never read).
+_FILE_MODES = ("100644", "100755")
+_SYMLINK_MODE = "120000"
 # Cap on any tool output quoted in the report (a failed environment target's log).
 MAX_REASON_CHARS = 600
 TRUNCATION_MARKER = " [truncated]"
@@ -206,6 +233,17 @@ STATE_SUPERSEDED = "superseded"
 # The finding kind of a supersedes record that takes no effect for a reason the
 # record itself carries (no such probe, itself, a cycle, not weakened, another entry).
 FINDING_SUPERSEDE = "invalid supersede"
+# A probe id that left the probe set without an effective retirement record: a
+# committed probe file carried it in HEAD's history and no probe file carries it
+# now, or the file carrying it now took it over from another one (an exchange).
+STATE_REMOVED = "removed"
+# The finding kinds of the retirement manifest: a record for an id a probe file
+# still carries; a record that fails the schema, repeats an id, or names an id no
+# committed probe file ever carried; a manifest that can't be read at all.
+FINDING_RETIRED_CONTRADICTION = "retirement contradiction"
+FINDING_RETIRED_INVALID = "invalid retirement record"
+FINDING_RETIRED_MANIFEST = "invalid retirement manifest"
+RETIREMENT_REASONS = ("capability-removed", "declaration-removed", "duplicate", "derived-in-error")
 
 DECLARATION_SOURCES = ("requirement", "endpoint", "capability", "inventory")
 
@@ -220,6 +258,7 @@ REASON_SILENT = "observation step printed nothing"
 NOTE_RECONFIRMED = "approval is a re-confirmation, not a re-derivation"
 PROVENANCE_RECONFIRMED = "Probes whose approval is a re-confirmation rather than a re-derivation"
 PROVENANCE_SUPERSEDED = "Weakened probes superseded by a clean, approved probe, not executed"
+NEW_SINCE_PREVIOUS = "new since the manifest's previous commit"
 
 NOT_CONSTRUCTIBLE_REASONS = (
     "scope_not_countable",
@@ -230,6 +269,8 @@ NOT_CONSTRUCTIBLE_REASONS = (
 )
 # Per-tier table bucket of the entries that have no tier because they have no probe.
 TIER_NONE = "none (not constructible)"
+# Per-tier table bucket of the removed probe ids: no probe file is left to run.
+TIER_REMOVED = "none (removed)"
 
 # The structural part of schemas/reach-probe-v1.3.schema.yaml (annotations
 # stripped). The schemas/ tree ships with the nolte-shared payload, not with this
@@ -387,6 +428,40 @@ NOT_CONSTRUCTIBLE_SCHEMA: dict[str, Any] = {
 }
 
 
+# The structural part of schemas/reach-retired-v1.0.schema.yaml, embedded for the
+# same reason as PROBE_SCHEMA and pinned to it by the same parity test. The
+# approval is the probe's Approval definition.
+RETIRED_SCHEMA: dict[str, Any] = {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://github.com/nolte/claude-shared/blob/main/schemas/reach-retired-v1.0.schema.yaml",
+    "type": "object",
+    "required": ["entries"],
+    "additionalProperties": False,
+    "properties": {
+        "entries": {"type": "array", "items": {"$ref": "#/$defs/RetiredEntry"}},
+    },
+    "$defs": {
+        "RetiredEntry": {
+            "type": "object",
+            "required": ["id", "reason", "detail", "recorded_at", "last_revision"],
+            "additionalProperties": False,
+            "properties": {
+                "id": {"type": "string", "minLength": 1},
+                "reason": {"type": "string", "enum": list(RETIREMENT_REASONS)},
+                "detail": {"type": "string", "minLength": 1},
+                "recorded_at": {
+                    "type": "string",
+                    "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z$",
+                },
+                "last_revision": {"type": "string", "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"},
+                "approval": {"$ref": "#/$defs/Approval"},
+            },
+        },
+        "Approval": copy.deepcopy(PROBE_SCHEMA["$defs"]["Approval"]),
+    },
+}
+
+
 class AuditError(Exception):
     """Terminal error carrying an operator-facing message and an exit code."""
 
@@ -448,6 +523,18 @@ def code_cell(command: str) -> str:
     command widens the code-span delimiter instead of ending it.
     """
     return code_span(command.replace("\r", "\\r").replace("\n", "\\n"), table=True)
+
+
+def load_yaml(yaml: Any, text: str) -> Any:
+    """Parse ``text`` with the one YAML loader of this runner, for every document it reads.
+
+    libyaml's safe loader where PyYAML has it, the pure-Python safe loader
+    otherwise; both build only plain data. The two disagree on some input (a tab
+    after ``id:`` is an error to one and a separator to the other), so a probe's
+    id read from history and the id read from the working tree must come from
+    the same loader, or one file could carry two ids at once and hide a removal.
+    """
+    return yaml.load(text, Loader=getattr(yaml, "CSafeLoader", yaml.SafeLoader))  # noqa: S506 - a safe loader
 
 
 def _load_dependencies() -> tuple[Any, Any]:
@@ -588,6 +675,9 @@ def _output_tail(result: CommandResult) -> str:
 class Git:
     def __init__(self, repo: Path) -> None:
         self.repo = repo
+        # file_log() per path: the history does not change during a run, and the
+        # removal check reads the same followed histories as change detection.
+        self._file_logs: dict[str, list[tuple[str, str, str, str]]] = {}
 
     def run(self, *args: str) -> subprocess.CompletedProcess:
         """Run git read-only. Output is decoded as UTF-8 with replacement: a historical
@@ -683,6 +773,8 @@ class Git:
         literal pathspecs keep a probe named like ``w[x].yml`` from matching the
         history of ``wx.yml``.
         """
+        if path in self._file_logs:
+            return list(self._file_logs[path])
         raw = self.out("--literal-pathspecs", "log", "--follow", "--no-merges", "--no-show-signature", "--no-color", "--format=%x00%H",
                        "--name-status", "--", path)
         history: list[tuple[str, str, str, str]] = []
@@ -698,7 +790,122 @@ class Git:
             status = fields[0][:1]
             source = fields[1] if status in ("R", "C") and len(fields) > 2 else ""
             history.append((lines[0].strip(), fields[-1], status, source))
-        return history
+        self._file_logs[path] = history
+        return list(history)
+
+    def probe_dir_log(self) -> str:
+        """Every change under the probe directory in HEAD's history, merges included, newest first.
+
+        One walk, read by probe_set_history(): ``-z`` records, each commit as
+        ``\\x01<commit> <parents>`` followed by raw diff records
+        ``:<old mode> <new mode> <old blob> <new blob> <status>`` and the path.
+        ``--full-history`` walks every parent of every merge, so a probe that
+        lived only on a merged side branch is seen; ``--diff-merges=separate``
+        diffs a merge against each parent it differs from, so a file a merge
+        added, changed, or dropped is seen too; ``--root`` diffs the root commit
+        whatever ``log.showRoot`` says. ``--no-renames`` reports a rename as a
+        deletion and an addition (identity is the id, not the path),
+        ``--no-follow`` keeps ``log.follow`` out, ``--topo-order`` lists every
+        commit before its parents, and literal pathspecs keep the directory name
+        from being read as a pattern.
+        """
+        return self.out("--literal-pathspecs", "log", "-z", "--no-follow", "--full-history", "--topo-order",
+                        "--diff-merges=separate", "--root", "--no-renames", "--raw", "--no-abbrev",
+                        "--no-show-signature", "--no-color", "--format=%x01%H %P", "HEAD", "--",
+                        PROBE_DIR.as_posix())
+
+    def tree_entries(self, commit: str, directory: str) -> list[tuple[str, str, str, str]]:
+        """``(mode, type, hash, path)`` of each entry directly under ``directory`` at ``commit``."""
+        if commit.startswith("-"):
+            raise AuditError(f"refusing the revision {safe_text(commit)}")
+        res = self.run("--literal-pathspecs", "ls-tree", "-z", commit, "--", directory.rstrip("/") + "/")
+        if res.returncode != 0:
+            return []
+        entries = []
+        for record in res.stdout.split("\x00"):
+            meta, _, name = record.partition("\t")
+            parts = meta.split()
+            if name and len(parts) == 3:
+                entries.append((parts[0], parts[1], parts[2], name))
+        return entries
+
+    def parents(self, commit: str) -> list[str]:
+        """The parents of ``commit``, first parent first."""
+        if commit.startswith("-"):
+            raise AuditError(f"refusing the revision {safe_text(commit)}")
+        return self.out("rev-list", "--parents", "-n", "1", commit, "--").split()[1:]
+
+    def iter_blobs(self, blobs: list[str], batch_bytes: int) -> Iterator[tuple[str, bytes]]:
+        """``(blob, bytes)`` for each blob, every one of them, a bounded batch at a time.
+
+        The sizes come first (``cat-file --batch-check``); a blob the repository
+        does not have, as in a partial clone, stops the run (AuditError): an id
+        read from the file name in its place could hide a removal. Blobs are then
+        read in batches of at most ``batch_bytes`` (``cat-file --batch``), one
+        larger than that on its own, so the caller can parse and drop each batch
+        instead of holding the whole history. The ids go through stdin, never
+        through argv.
+        """
+        wanted = [b for b in dict.fromkeys(blobs) if _OBJECT_ID_RE.match(b)]
+        if not wanted:
+            return
+        sizes: dict[str, int] = {}
+        listing = self._batch(["cat-file", "--batch-check=%(objectname) %(objecttype) %(objectsize)"], wanted)
+        for line in listing.decode("ascii", "replace").splitlines():
+            parts = line.split()
+            if len(parts) == 3 and parts[1] == "blob" and parts[2].isdigit():
+                sizes[parts[0]] = int(parts[2])
+        missing = [b for b in wanted if b not in sizes]
+        if missing:
+            raise AuditError(
+                f"the history of {PROBE_DIR.as_posix()}/ names {len(missing)} probe revision(s) this repository "
+                f"does not hold (first: {missing[0]}); a partial or incomplete clone hides which probe ids existed. "
+                "Fetch the full history and objects (`git fetch --refetch`, or a clone without --filter) and run again."
+            )
+        chunk: list[str] = []
+        total = 0
+        for blob in wanted + [""]:
+            if blob and sizes[blob] > batch_bytes:
+                content = self.read_blob(blob)
+                if content is None:
+                    raise AuditError(f"`git cat-file blob {blob}` failed")
+                yield blob, content
+                continue
+            if chunk and (not blob or total + sizes[blob] > batch_bytes):
+                yield from self._read_batch(chunk)
+                chunk, total = [], 0
+            if blob:
+                chunk.append(blob)
+                total += sizes[blob]
+
+    def _read_batch(self, blobs: list[str]) -> Iterator[tuple[str, bytes]]:
+        data = self._batch(["cat-file", "--batch"], blobs)
+        pos = 0
+        for blob in blobs:
+            end = data.find(b"\n", pos)
+            header = data[pos:end].split() if end >= 0 else []
+            if len(header) != 3 or header[0].decode("ascii", "replace") != blob or not header[2].isdigit():
+                raise AuditError(f"`git cat-file --batch` returned an unexpected record for {blob}")
+            size = int(header[2])
+            yield blob, data[end + 1:end + 1 + size]
+            pos = end + 1 + size + 1
+
+    def _batch(self, args: list[str], ids: list[str]) -> bytes:
+        try:
+            res = subprocess.run(  # noqa: S603 - fixed argv, no shell
+                ["git", "-C", str(self.repo), *args],
+                input=("\n".join(ids) + "\n").encode("ascii"),
+                capture_output=True,
+                timeout=GIT_TIMEOUT_SECONDS,
+                check=False,
+            )
+        except FileNotFoundError as exc:
+            raise AuditError("`git` not found on PATH; the runner reads the target's history with it.") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise AuditError(f"`git {' '.join(args)}` timed out after {GIT_TIMEOUT_SECONDS}s.") from exc
+        if res.returncode != 0:
+            raise AuditError(f"`git {' '.join(args)}` failed: {safe_text(res.stderr.decode('utf-8', 'replace'))}")
+        return res.stdout
 
     def merges_changing(self, since: str, until: str, path: str) -> list[str]:
         """Merge commits in ``since..until`` whose ``path`` differs from every parent, newest first.
@@ -780,6 +987,27 @@ class Git:
         """The bytes of the file ``path`` at ``commit``, or None when it is absent or no file."""
         blob = self.blob_at(commit, path)
         return self.read_blob(blob) if blob is not None else None
+
+
+def require_real_probe_dir(repo: Path) -> None:
+    """Refuse a probe directory reached through a symlink (exit 2).
+
+    load_probes() would read the files the link points to, while git records the
+    link and nothing under project/reach-probes/: the history scan would see
+    every probe deleted, and the files on disk would carry no history to judge.
+    Any symlink among ``project`` and ``project/reach-probes`` is refused before
+    anything is read, whatever it points to.
+    """
+    current = repo
+    for part in PROBE_DIR.parts:
+        current = current / part
+        if current.is_symlink():
+            raise AuditError(
+                f"{safe_text(current.relative_to(repo).as_posix())} is a symlink. The probe set must live in "
+                f"{PROBE_DIR.as_posix()}/ as a real directory under version control; the runner does not follow "
+                "links in the audited tree. Replace the link with the directory and commit it.",
+                code=EXIT_USAGE,
+            )
 
 
 def require_local_working_copy(raw: str) -> Path:
@@ -890,7 +1118,7 @@ def load_probes(repo: Path, yaml: Any, validator_cls: Any) -> list[Probe]:
     validator = validator_cls(PROBE_SCHEMA)
     probes: list[Probe] = []
     for file in sorted(directory.iterdir()):
-        if file.name == MANIFEST_NAME:
+        if file.name in MANIFEST_NAMES:
             continue
         rel = file.relative_to(repo).as_posix()
         if file.is_symlink():
@@ -901,7 +1129,7 @@ def load_probes(repo: Path, yaml: Any, validator_cls: Any) -> list[Probe]:
         if file.suffix not in PROBE_SUFFIXES or not file.is_file():
             continue
         try:
-            data = yaml.safe_load(read_inside(repo, file))
+            data = load_yaml(yaml, read_inside(repo, file))
         except UnsafePathError as exc:
             probes.append(Probe(rel, None, [f"refused and not read: {exc}"]))
             continue
@@ -953,7 +1181,7 @@ def load_manifest(repo: Path, yaml: Any, validator_cls: Any) -> Manifest | None:
         return None
     rel = MANIFEST_PATH.as_posix()
     try:
-        data = yaml.safe_load(read_inside(repo, path))
+        data = load_yaml(yaml, read_inside(repo, path))
     except UnsafePathError as exc:
         return Manifest(rel, errors=[f"refused and not read: {exc}"], readable=False)
     except (yaml.YAMLError, UnicodeDecodeError) as exc:
@@ -1171,7 +1399,7 @@ def _derived_from_of(text: str | None, yaml: Any) -> object:
     if text is None:
         return None
     try:
-        doc = yaml.safe_load(text)
+        doc = load_yaml(yaml, text)
     except yaml.YAMLError:
         return None
     return _anchor_key(doc) if isinstance(doc, dict) else None
@@ -1363,7 +1591,7 @@ def _pinned_ref(text: str | None, declaration: dict[str, Any], yaml: Any) -> tup
     if text is None:
         return None, f"{SPEC_CONFIG.as_posix()} not found, so the pinned ref of the inherited spec is unknown"
     try:
-        config = yaml.safe_load(text) or {}
+        config = load_yaml(yaml, text) or {}
     except yaml.YAMLError as exc:
         return None, f"{SPEC_CONFIG.as_posix()} is not parseable: {safe_text(exc)}"
     inherits = config.get("inherits") if isinstance(config, dict) else None
@@ -1390,7 +1618,7 @@ def _is_content_anchor(derived_from: str) -> bool:
 def _probe_doc(git: Git, revision: tuple[str, str], yaml: Any) -> dict[str, Any] | None:
     """The probe document at ``(commit, path)``, or None when it is unreadable."""
     try:
-        doc = yaml.safe_load(git.show(*revision) or "")
+        doc = load_yaml(yaml, git.show(*revision) or "")
     except yaml.YAMLError:
         return None
     return doc if isinstance(doc, dict) else None
@@ -2453,6 +2681,431 @@ def resolve_supersedes(repo: Path, git: Git, probes: list[Probe], listed: set[st
     return result
 
 
+# --------------------------------------------------------------------------- #
+# Removal and retirement (spec §"Derivation, approval, and durability")
+# --------------------------------------------------------------------------- #
+# Why a removed id has no effective retirement record; the last part of its reason.
+WHY_NO_RECORD = "no retirement record accounts for it"
+WHY_MANIFEST_UNREADABLE = "the retirement manifest is unreadable (see Findings), so no record in it takes effect"
+WHY_RECORD_INVALID = "its retirement record is invalid (see Findings), so it takes no effect"
+WHY_RECORD_UNAPPROVED = "its retirement record carries no approval, so it takes no effect"
+WHY_RECORD_UNCOMMITTED = "its retirement record is not committed, so it takes no effect"
+WHY_REMOVAL_UNCOMMITTED = "a retirement record can't account for a removal that is not committed"
+EXCHANGE_EXIT = ("a retirement record can't account for an exchange under the same id: give the replacement a "
+                 "new id and retire this one, or restore the earlier file and supersede it")
+
+
+@dataclass
+class Removal:
+    """One change that took an id off a probe path.
+
+    ``commit`` changed ``path`` so that it no longer carries the id (deleted it,
+    replaced it, or edited the id); ``carrier`` is the parent of ``commit`` in
+    which ``path`` still carried it, so the last commit in which the probe existed.
+    """
+
+    commit: str
+    path: str
+    carrier: str
+
+
+@dataclass
+class ProbeHistory:
+    """Every probe id a committed file under the probe directory carried in HEAD's history.
+
+    ``writes`` lists per id the ``(commit, path)`` changes whose result carries
+    it; ``removals`` the changes that took it off a path, newest first
+    (``--topo-order``: a commit before its parents); ``at_head`` the paths that
+    carry it in HEAD's own tree. ``commits`` and ``blobs`` count what the walk
+    read, for the measurement of its cost.
+    """
+
+    head: str
+    writes: dict[str, list[tuple[str, str]]] = field(default_factory=dict)
+    removals: dict[str, list[Removal]] = field(default_factory=dict)
+    at_head: dict[str, list[str]] = field(default_factory=dict)
+    commits: int = 0
+    blobs: int = 0
+
+    @property
+    def ids(self) -> set[str]:
+        return set(self.writes) | set(self.removals) | set(self.at_head)
+
+    def last(self, pid: str, paths: set[str] | None = None) -> tuple[str, str, bool] | None:
+        """``(commit, path, uncommitted)``: where ``pid`` last existed, on ``paths`` only when given.
+
+        HEAD itself when its tree still carries the id (the removal is then only
+        in the working tree), otherwise the carrier of the newest removal.
+        """
+        for path in self.at_head.get(pid, []):
+            if paths is None or path in paths:
+                return self.head, path, True
+        for removal in self.removals.get(pid, []):
+            if paths is None or removal.path in paths:
+                return removal.carrier, removal.path, False
+        return None
+
+
+def _probe_path(mode: str, path: str) -> bool:
+    """Whether the tree entry ``(mode, path)`` is one the probe loader reads as a probe file.
+
+    A regular file directly under the probe directory with a probe suffix, or a
+    symlink there under any name (load_probes() lists it as a finding), and
+    never one of the two manifests.
+    """
+    directory, _, name = path.rpartition("/")
+    if directory != PROBE_DIR.as_posix() or name in MANIFEST_NAMES:
+        return False
+    if mode == _SYMLINK_MODE:
+        return True
+    return mode in _FILE_MODES and posixpath.splitext(name)[1] in PROBE_SUFFIXES
+
+
+def _declared_id(content: bytes, yaml: Any) -> str | None:
+    """The ``id`` a probe revision declares, or None when the file name stem stands in (R11).
+
+    None exactly where Probe.pid falls back to the stem: content that is not
+    UTF-8 YAML of a mapping with a string ``id``. Parsed with load_yaml(), the
+    loader load_probes() uses at HEAD, and never cut off by size, so a revision
+    reads as the same id in history as in the working tree.
+    """
+    try:
+        doc = load_yaml(yaml, content.decode("utf-8"))
+    except (yaml.YAMLError, UnicodeDecodeError, ValueError, RecursionError):
+        return None
+    return doc["id"] if isinstance(doc, dict) and isinstance(doc.get("id"), str) else None
+
+
+_ZERO_OBJECT = re.compile(r"^0+$")
+
+
+def probe_set_history(git: Git, yaml: Any, head: str) -> ProbeHistory:
+    """Read every probe id ever carried in HEAD's history from one walk and two blob reads.
+
+    Git.probe_dir_log() lists each change under the probe directory with the
+    blob before and after it, merges diffed against every parent they differ
+    from. Every blob a probe path held at any commit of the history is the
+    result of one of those changes, so their union is every probe revision that
+    ever existed; each distinct blob is read once (Git.iter_blobs()). A change
+    whose earlier blob carried an id that its later blob does not carry (or that
+    deleted the path) is a removal of that id at that path; its carrier is the
+    parent holding the earlier blob, which for a merge is looked up per parent.
+    """
+    raw = git.probe_dir_log()
+    tokens = raw.split("\x00")
+    changes: list[tuple[str, list[str], str, str, str, str, str]] = []
+    commits: set[str] = set()
+    commit, parents = "", []
+    i = 0
+    while i < len(tokens):
+        token = tokens[i].lstrip("\n")
+        if token.startswith("\x01"):
+            fields = token[1:].split()
+            commit, parents = (fields[0], fields[1:]) if fields else ("", [])
+            commits.add(commit)
+            i += 1
+        elif token.startswith(":") and i + 1 < len(tokens):
+            meta = token[1:].split()
+            if len(meta) >= 5 and commit:
+                changes.append((commit, parents, meta[0], meta[1], meta[2], meta[3], tokens[i + 1]))
+            i += 2
+        else:
+            i += 1
+    head_entries = [(mode, blob, path) for mode, kind, blob, path in git.tree_entries(head, PROBE_DIR.as_posix())
+                    if kind == "blob" and _probe_path(mode, path)]
+
+    def present(mode: str, blob: str, path: str) -> bool:
+        return not _ZERO_OBJECT.match(blob) and _probe_path(mode, path)
+
+    wanted = [blob for _, _, old_mode, new_mode, old, new, path in changes
+              for mode, blob in ((old_mode, old), (new_mode, new))
+              if present(mode, blob, path) and mode != _SYMLINK_MODE]
+    wanted += [blob for mode, blob, _ in head_entries if mode != _SYMLINK_MODE]
+    # Per blob the id its content declares, or None when the stem stands in; the
+    # bytes themselves are dropped batch by batch.
+    declared: dict[str, str | None] = {}
+    for blob, content in git.iter_blobs(wanted, MAX_HISTORY_BATCH_BYTES):
+        declared[blob] = _declared_id(content, yaml)
+    history = ProbeHistory(head, commits=len(commits), blobs=len(declared))
+
+    def carried(mode: str, blob: str, path: str) -> str:
+        """A symlink is never read (load_probes() lists it under its stem)."""
+        found = declared.get(blob) if mode != _SYMLINK_MODE else None
+        return found if found is not None else PurePosixPath(path).stem
+
+    for commit, parents, old_mode, new_mode, old, new, path in changes:
+        before = carried(old_mode, old, path) if present(old_mode, old, path) else None
+        after = carried(new_mode, new, path) if present(new_mode, new, path) else None
+        if after is not None and (commit, path) not in history.writes.setdefault(after, []):
+            history.writes[after].append((commit, path))
+        if before is None or before == after:
+            continue
+        carrier = parents[0] if parents else commit
+        if len(parents) > 1:
+            carrier = next((p for p in parents if git.blob_at(p, path) == old), parents[0])
+        removal = Removal(commit, path, carrier)
+        if removal not in history.removals.setdefault(before, []):
+            history.removals[before].append(removal)
+    for mode, blob, path in head_entries:
+        history.at_head.setdefault(carried(mode, blob, path), []).append(path)
+    return history
+
+
+@dataclass
+class RetiredManifest:
+    """The retirement manifest as read from the working tree.
+
+    ``records`` holds the first schema-valid record per id; ``invalid`` the ids
+    whose first record fails the schema; ``findings`` lists ``(kind, id, text)``
+    per defect. When the document itself is unreadable, ``readable`` is False
+    and no record in it takes effect.
+    """
+
+    file: str
+    records: dict[str, dict[str, Any]] = field(default_factory=dict)
+    invalid: set[str] = field(default_factory=set)
+    findings: list[tuple[str, str, str]] = field(default_factory=list)
+    readable: bool = True
+
+
+def load_retired(repo: Path, yaml: Any, validator_cls: Any) -> RetiredManifest | None:
+    """Read project/reach-probes/_retired.yml, or None when it is absent."""
+    path = repo / RETIRED_PATH
+    if not path.is_file() and not path.is_symlink():
+        return None
+    rel = RETIRED_PATH.as_posix()
+    try:
+        data = load_yaml(yaml, read_inside(repo, path))
+    except UnsafePathError as exc:
+        return RetiredManifest(rel, findings=[(FINDING_RETIRED_MANIFEST, "", f"refused and not read: {exc}")],
+                               readable=False)
+    except (yaml.YAMLError, UnicodeDecodeError, ValueError) as exc:
+        return RetiredManifest(rel, findings=[(FINDING_RETIRED_MANIFEST, "", f"not parseable as YAML: {safe_text(exc)}")],
+                               readable=False)
+    per_entry: dict[int, list[str]] = {}
+    document_errors: list[str] = []
+    for err in sorted(validator_cls(RETIRED_SCHEMA).iter_errors(data), key=lambda e: list(e.absolute_path)):
+        where = list(err.absolute_path)
+        if len(where) >= 2 and where[0] == "entries" and isinstance(where[1], int):
+            per_entry.setdefault(where[1], []).append(_schema_error_text(err))
+        else:
+            document_errors.append(_schema_error_text(err))
+    if document_errors:
+        return RetiredManifest(rel, findings=[(FINDING_RETIRED_MANIFEST, "", e) for e in document_errors],
+                               readable=False)
+    manifest = RetiredManifest(rel)
+    seen: set[str] = set()
+    for index, item in enumerate(data["entries"]):
+        pid = item.get("id") if isinstance(item, dict) and isinstance(item.get("id"), str) else f"entries-{index}"
+        if pid in seen:
+            manifest.findings.append((FINDING_RETIRED_INVALID, pid, "listed more than once; only the first record is read"))
+            continue
+        seen.add(pid)
+        if index in per_entry:
+            manifest.invalid.add(pid)
+            manifest.findings.append((FINDING_RETIRED_INVALID, pid,
+                                      "fails the retirement schema: " + "; ".join(per_entry[index])))
+            continue
+        manifest.records[pid] = item
+    return manifest
+
+
+def _records_at(git: Git, commit: str, yaml: Any) -> dict[str, Any] | None:
+    """The first record per id in the retirement manifest at ``commit``.
+
+    Empty when the manifest is absent there; None when it is present but can't
+    be read as a mapping with an ``entries`` list, so nobody can tell which
+    records it held.
+    """
+    text = git.show(commit, RETIRED_PATH.as_posix())
+    if text is None:
+        return {}
+    try:
+        data = load_yaml(yaml, text)
+    except (yaml.YAMLError, ValueError, RecursionError):
+        return None
+    entries = data.get("entries") if isinstance(data, dict) else None
+    if not isinstance(entries, list):
+        return None
+    records: dict[str, Any] = {}
+    for item in entries:
+        if isinstance(item, dict) and isinstance(item.get("id"), str):
+            records.setdefault(item["id"], item)
+    return records
+
+
+@dataclass
+class Retirement:
+    """What the probe set no longer contains, judged against the retirement manifest.
+
+    ``entries`` holds one ``removed`` row per probe id that left the set without
+    an effective record (and per earlier probe of an exchange); ``retired`` one
+    ``(id, record, new)`` per effective record, ``new`` when the manifest's
+    previous commit did not hold that record; ``findings`` one ``(kind, id,
+    text)`` per defect of the manifest or of a record in it.
+    """
+
+    manifest: RetiredManifest | None
+    history: ProbeHistory
+    entries: list[Entry] = field(default_factory=list)
+    retired: list[tuple[str, dict[str, Any], bool]] = field(default_factory=list)
+    findings: list[tuple[str, str, str]] = field(default_factory=list)
+
+
+def removed_entry(pid: str, path: str, reason: str) -> Entry:
+    """A probe id that left the set: not probed, never executed, a finding."""
+    return Entry(Probe(path, {"id": pid}), ChangeState(STATE_REMOVED, reason), Outcome(NOT_PROBED, reason=f"removed: {reason}"))
+
+
+def _exchange(git: Git, history: ProbeHistory, pid: str, holders: list[Probe]) -> tuple[Probe, str | None, set[str]] | None:
+    """The file that took ``pid`` over from another one, when ``pid`` was exchanged under the same id.
+
+    A file carrying ``pid`` now keeps it as its own when every other committed
+    revision that carried ``pid`` lies on its own followed history
+    (Git.file_log(), so a rename that git pairs keeps the id), or was written
+    after the file first carried it (a later duplicate, since removed). Otherwise
+    the id was carried elsewhere before or beside it, by a file that is gone:
+    the file now carrying it took it over. "First carried" is the oldest
+    revision of the file's followed history whose content carries the id; a file
+    with no such revision (uncommitted, or created in a merge, which the walk
+    does not list) took it over from any other carrier at all. Returns the file,
+    that revision (or None), and the other paths that carried the id.
+    """
+    writes = history.writes.get(pid, [])
+    own = {holder.file for holder in holders}
+    if all(path in own for _, path in writes):
+        return None
+    logs = {holder.file: git.file_log(holder.file) for holder in holders}
+    for log in logs.values():
+        own |= {path for _, path, _, _ in log}
+    foreign = [(commit, path) for commit, path in writes if path not in own]
+    if not foreign:
+        return None
+    written = set(writes)
+    for holder in holders:
+        revisions = [commit for commit, path, _, _ in logs[holder.file] if (commit, path) in written]
+        adopted = revisions[-1] if revisions else None
+        if adopted is None or any(not git.is_ancestor_or_equal(adopted, commit) for commit, _ in foreign):
+            return holder, adopted, {path for _, path in foreign}
+    return None
+
+
+def _where(last: tuple[str, str, bool] | None) -> str:
+    """Where a removed probe last existed, as the reason states it."""
+    if last is None:
+        return "no commit that removed it was found"
+    commit, path, uncommitted = last
+    if uncommitted:
+        return f"it last existed in {safe_text(path)} at HEAD {commit}, and its removal is not committed"
+    return f"it last existed in {safe_text(path)} at {commit}"
+
+
+def _retirement_problem(git: Git, history: ProbeHistory, manifest: RetiredManifest | None,
+                        records: dict[str, dict[str, Any]], committed: dict[str, Any], pid: str,
+                        yaml: Any) -> str | None:
+    """Why no retirement record takes effect for the removed ``pid``, or None when one does.
+
+    A record takes effect only when it is schema-valid, approved, committed
+    (identical in HEAD's manifest, as an uncommitted probe is never run either),
+    the removal itself is committed, and no removal of the id happened while the
+    manifest already held this very record: a record can't account for a removal
+    it predates, so a probe retired once, restored, and removed again needs a
+    record of its own.
+    """
+    if manifest is None:
+        return WHY_NO_RECORD
+    if not manifest.readable:
+        return WHY_MANIFEST_UNREADABLE
+    if pid in manifest.invalid:
+        return WHY_RECORD_INVALID
+    record = records.get(pid)
+    if record is None:
+        return WHY_NO_RECORD
+    if "approval" not in record:
+        return WHY_RECORD_UNAPPROVED
+    if committed.get(pid) != record:
+        return WHY_RECORD_UNCOMMITTED
+    if pid in history.at_head:
+        return WHY_REMOVAL_UNCOMMITTED
+    cache: dict[str, dict[str, Any] | None] = {}
+    for removal in history.removals.get(pid, []):
+        if removal.carrier not in cache:
+            cache[removal.carrier] = _records_at(git, removal.carrier, yaml)
+        before = cache[removal.carrier]
+        if before is None:
+            # Fail closed: the record may have been there already.
+            return (f"{RETIRED_PATH.as_posix()} can't be read at {removal.carrier[:12]}, before the removal in "
+                    f"{removal.commit[:12]}, so it can't be shown that the record postdates that removal")
+        if before.get(pid) == record:
+            return (f"its retirement record was already in {RETIRED_PATH.as_posix()} at {removal.carrier[:12]}, "
+                    f"before the removal in {removal.commit[:12]}, so it can't account for that removal")
+    return None
+
+
+def judge_removals(repo: Path, git: Git, probes: list[Probe], yaml: Any, validator_cls: Any) -> Retirement:
+    """Report every probe id that left the set without an effective retirement record (R1, R2, R4-R8).
+
+    The probe set at HEAD is what load_probes() read, every file under any id
+    (an invalid or unparseable one carries its file name stem, as Probe.pid
+    says). Ids a committed probe file carried in HEAD's history but no file
+    carries now are removed unless a record takes effect
+    (_retirement_problem()); an id a file carries now that it took over from
+    another file (_exchange()) reports the earlier probe removed, whatever the
+    manifest says, since a record for an id still carried is a contradiction.
+    A record for an id never carried is invalid.
+    """
+    head = git.resolve_commit("HEAD") or ""
+    history = probe_set_history(git, yaml, head)
+    manifest = load_retired(repo, yaml, validator_cls)
+    result = Retirement(manifest, history)
+    holders: dict[str, list[Probe]] = {}
+    for probe in probes:
+        holders.setdefault(probe.pid, []).append(probe)
+    seen = history.ids
+    records: dict[str, dict[str, Any]] = {}
+    if manifest is not None:
+        result.findings += manifest.findings
+        for pid, record in manifest.records.items():
+            if pid in holders:
+                files = ", ".join(safe_text(p.file) for p in holders[pid])
+                result.findings.append((FINDING_RETIRED_CONTRADICTION, pid, (
+                    f"the probe file {files} still carries this id; a retirement record accounts only for a probe "
+                    "that left the set, and an exchange under the same id can't be retired: the replacement takes "
+                    "a new id")))
+            elif pid not in seen:
+                result.findings.append((FINDING_RETIRED_INVALID, pid, (
+                    f"no committed probe file under {PROBE_DIR.as_posix()}/ in the history of HEAD ever carried "
+                    "this id")))
+            else:
+                records[pid] = record
+    committed = (_records_at(git, "HEAD", yaml) or {}) if records else {}
+    previous: dict[str, Any] = {}
+    if records:
+        last_change = git.last_commit(RETIRED_PATH.as_posix())
+        parents = git.parents(last_change) if last_change else []
+        previous = (_records_at(git, parents[0], yaml) or {}) if parents else {}
+    for pid in sorted(seen - set(holders)):
+        why = _retirement_problem(git, history, manifest, records, committed, pid, yaml)
+        if why is None:
+            result.retired.append((pid, records[pid], previous.get(pid) != records[pid]))
+            continue
+        last = history.last(pid)
+        reason = f"no probe file carries this id any more; {_where(last)}; {why}"
+        result.entries.append(removed_entry(pid, last[1] if last else PROBE_DIR.as_posix(), reason))
+    for pid in sorted(set(holders) & seen):
+        exchange = _exchange(git, history, pid, holders[pid])
+        if exchange is None:
+            continue
+        holder, adopted, paths = exchange
+        last = history.last(pid, paths)
+        since = (f"first carries it in {adopted[:12]}" if adopted else
+                 "holds no committed revision that carries it")
+        reason = (f"exchange under the same id: {_where(last)}, and {safe_text(holder.file)} carries it now, but "
+                  f"that file's own history {since}; {EXCHANGE_EXIT}")
+        result.entries.append(removed_entry(pid, last[1] if last else sorted(paths)[0], reason))
+    return result
+
+
 def _utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -2491,10 +3144,12 @@ def write_report(out: Path, text: str) -> None:
         raise AuditError(f"cannot write the report {safe_text(out)}: {exc.strerror}") from exc
 
 
-FINDING_STATES = (STATE_WEAKENED, STATE_INVALID, STATE_CONTRADICTION, STATE_APPROVAL_MISMATCH)
+FINDING_STATES = (STATE_WEAKENED, STATE_INVALID, STATE_CONTRADICTION, STATE_APPROVAL_MISMATCH, STATE_REMOVED)
 
 
 def _tier_bucket(e: Entry) -> str:
+    if e.change.state == STATE_REMOVED:
+        return TIER_REMOVED
     if not e.probe.constructible:
         return TIER_NONE
     if e.probe.errors and e.change.state != STATE_CONTRADICTION:
@@ -2527,24 +3182,49 @@ def _manifest_provenance(manifest: Manifest | None, listed: int) -> str:
     return f"The not-constructible manifest {where} lists {listed} entr{'y' if listed == 1 else 'ies'} no probe could be constructed for; each is not probed."
 
 
-def _headline(not_probed: int, total: int, listed: int, manifest: Manifest | None) -> str:
+def _headline(not_probed: int, total: int, listed: int, manifest: Manifest | None, removed: int = 0) -> str:
+    gone = f", {removed} of them removed" if removed else ""
     if manifest is None:
         return (
-            f"**Not probed: {not_probed} of {total} probes.** No not-constructible manifest, so entries "
+            f"**Not probed: {not_probed} of {total} probes{gone}.** No not-constructible manifest, so entries "
             "the derivation could not probe are not counted here."
         )
     if not manifest.readable:
         return (
-            f"**Not probed: {not_probed} of {total} probes.** The not-constructible manifest is unreadable, "
+            f"**Not probed: {not_probed} of {total} probes{gone}.** The not-constructible manifest is unreadable, "
             "so entries the derivation could not probe are not counted here."
         )
-    return f"**Not probed: {not_probed} of {total} entries, {listed} of them not constructible.**"
+    return (f"**Not probed: {not_probed} of {total} entries, {listed} of them not constructible"
+            f"{f', {removed} removed' if removed else ''}.**")
+
+
+def _retired_provenance(retirement: Retirement | None) -> list[str]:
+    """The Provenance lines of the retirement manifest: one per retired id, new records marked (R8)."""
+    if retirement is None:
+        return []
+    where = f"`{RETIRED_PATH.as_posix()}`"
+    manifest = retirement.manifest
+    if manifest is None:
+        return [f"- No retirement manifest {where}: no probe id is retired."]
+    if not manifest.readable:
+        return [f"- The retirement manifest {where} is present but unreadable (see Findings); no record in it takes effect."]
+    fresh = sum(1 for _, _, new in retirement.retired if new)
+    lines = [f"- Retired probe ids in {where}: {len(retirement.retired)}, {fresh} of them {NEW_SINCE_PREVIOUS}."]
+    for pid, record, new in retirement.retired:
+        approval = record.get("approval") or {}
+        mark = f", **{NEW_SINCE_PREVIOUS}**" if new else ""
+        lines.append(
+            f"- Retired {code_span(pid)} ({md_text(record.get('reason'), 40)}){mark}: {md_text(record.get('detail'), 300)}; "
+            f"last existed at {md_text(str(record.get('last_revision'))[:12], 20)}; approved by "
+            f"{md_text(approval.get('approved_by'), 80)} at {md_text(approval.get('approved_at'), 40)}."
+        )
+    return lines
 
 
 def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at: str, empty_reason: str | None,
            manifest: Manifest | None = None, manifest_findings: list[str] | None = None,
            supersede_findings: list[tuple[Probe, str]] | None = None,
-           supersede_notes: list[str] | None = None) -> str:
+           supersede_notes: list[str] | None = None, retirement: Retirement | None = None) -> str:
     lines = [f"# Capability reach audit — {repo.name}", ""]
     lines.append(
         "<!-- Generated by reach_audit.py on every run; never edit by hand "
@@ -2562,20 +3242,25 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
             "declarations (requirements, endpoints, documented capabilities, inventories) first.",
             "",
             f"- {_manifest_provenance(manifest, 0)}",
+            *_retired_provenance(retirement),
             f"- Run at: {run_at} (UTC), HEAD {head[:12]}",
         ]
         return "\n".join(lines) + "\n"
 
-    probe_rows = [e for e in entries if e.probe.constructible]
-    listed = total - len(probe_rows)
-    lines += [_headline(not_probed, total, listed, manifest), ""]
+    removed = sum(1 for e in entries if e.change.state == STATE_REMOVED)
+    probe_rows = [e for e in entries if e.probe.constructible and e.change.state != STATE_REMOVED]
+    listed = total - len(probe_rows) - removed
+    lines += [_headline(not_probed, total, listed, manifest, removed), ""]
     lines += ["## Provenance", ""]
+    gone = (f", plus {removed} removed probe id(s) that no effective retirement record accounts for"
+            if removed else "")
     lines.append(
         f"- Audited set: the {len(probe_rows)} probe file(s) on disk under `{PROBE_DIR.as_posix()}/` plus "
-        f"{listed} not-constructible manifest entr{'y' if listed == 1 else 'ies'}, {total} in all, at HEAD "
+        f"{listed} not-constructible manifest entr{'y' if listed == 1 else 'ies'}{gone}, {total} in all, at HEAD "
         f"{head[:12]}. This run executed stored probes; it read no declaration to find new entries."
     )
     lines.append(f"- {_manifest_provenance(manifest, listed)}")
+    lines += _retired_provenance(retirement)
     by_source = _source_counts(probe_rows)
     covered = ", ".join(f"{s} ({n})" for s, n in by_source.items() if n)
     uncovered = [s for s, n in by_source.items() if not n]
@@ -2597,9 +3282,9 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
     lines.append("")
 
     lines += ["## Reach per tier", "", "| Tier | reached | partially reached | not reached | not probed |", "|---|---|---|---|---|"]
-    for tier in ("T0", "T1", "T2", "invalid", TIER_NONE):
+    for tier in ("T0", "T1", "T2", "invalid", TIER_NONE, TIER_REMOVED):
         subset = [e for e in entries if _tier_bucket(e) == tier]
-        if tier in ("invalid", TIER_NONE) and not subset:
+        if tier in ("invalid", TIER_NONE, TIER_REMOVED) and not subset:
             continue
         counts = [sum(1 for e in subset if e.outcome.cls == c) for c in CLASSES]
         lines.append(f"| {tier} | " + " | ".join(str(c) for c in counts) + " |")
@@ -2611,9 +3296,13 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
         lines.append(f"- **invalid manifest** ({cell(MANIFEST_PATH.as_posix())}): {md_text(text)}")
     for probe, text in supersede_findings or []:
         lines.append(f"- **{FINDING_SUPERSEDE}** {code_span(probe.pid)} ({cell(probe.file)}): {md_text(text)}")
+    retirement_findings = retirement.findings if retirement is not None else []
+    for kind, pid, text in retirement_findings:
+        named = f" {code_span(pid)}" if pid else ""
+        lines.append(f"- **{kind}**{named} ({cell(RETIRED_PATH.as_posix())}): {md_text(text)}")
     for e in findings:
-        if e.change.state == STATE_WEAKENED:
-            kind, detail = "weakened", e.change.reason
+        if e.change.state in (STATE_WEAKENED, STATE_REMOVED):
+            kind, detail = e.change.state, e.change.reason
         elif e.change.state == STATE_CONTRADICTION:
             kind, detail = "contradiction", e.change.reason
         elif e.change.state == STATE_APPROVAL_MISMATCH:
@@ -2622,7 +3311,7 @@ def render(repo: Path, head: str, entries: list[Entry], include_t2: bool, run_at
             kind = "invalid probe" if e.probe.constructible else "invalid manifest entry"
             detail = "; ".join(e.probe.errors)
         lines.append(f"- **{kind}** {code_span(e.probe.pid)} ({cell(e.probe.file)}): {md_text(detail)}")
-    if not findings and not manifest_findings and not supersede_findings:
+    if not findings and not manifest_findings and not supersede_findings and not retirement_findings:
         lines.append("- none")
     lines.append("")
 
@@ -2658,6 +3347,7 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
         clock: Callable[[], datetime] = _utc_now) -> tuple[int, Path]:
     yaml, validator_cls = _load_dependencies()
     repo = require_local_working_copy(repo_arg)
+    require_real_probe_dir(repo)
     git = Git(repo)
     head = git.resolve_commit("HEAD") or ""
     now = clock()
@@ -2668,11 +3358,16 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
     manifest = load_manifest(repo, yaml, validator_cls)
     listed = {e.pid: e for e in manifest.entries} if manifest else {}
     manifest_findings = list(manifest.errors) if manifest else []
+    # What the set no longer contains is judged before anything runs: a probe set
+    # that lost every file still reports each removed id instead of "no probe set".
+    retirement = judge_removals(repo, git, probes, yaml, validator_cls)
     empty_reason = None
-    if not (repo / PROBE_DIR).is_dir():
-        empty_reason = f"`{PROBE_DIR.as_posix()}/` does not exist in this repository."
-    elif not probes and not listed and not manifest_findings:
-        empty_reason = f"`{PROBE_DIR.as_posix()}/` holds no probe file (*.yml, *.yaml besides `{MANIFEST_NAME}`)."
+    if not probes and not listed and not manifest_findings and not retirement.entries and not retirement.findings:
+        if not (repo / PROBE_DIR).is_dir():
+            empty_reason = f"`{PROBE_DIR.as_posix()}/` does not exist in this repository."
+        else:
+            empty_reason = (f"`{PROBE_DIR.as_posix()}/` holds no probe file (*.yml, *.yaml besides `{MANIFEST_NAME}` "
+                            f"and `{RETIRED_NAME}`).")
 
     supersession = resolve_supersedes(repo, git, probes, set(listed), yaml)
     entries: list[Entry] = []
@@ -2692,11 +3387,13 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
                 entry.notes += supersession.unmet.get(probe.pid, [])
             entries.append(entry)
     entries += [not_constructible_entry(item) for item in listed.values()]
+    entries += retirement.entries
     text = render(repo, head, entries, include_t2, run_at, empty_reason, manifest, manifest_findings,
-                  supersession.findings, supersession.notes)
+                  supersession.findings, supersession.notes, retirement)
     write_report(out, text)
 
-    if manifest_findings or supersession.findings or any(e.change.state in FINDING_STATES for e in entries):
+    if (manifest_findings or supersession.findings or retirement.findings
+            or any(e.change.state in FINDING_STATES for e in entries)):
         return EXIT_FINDINGS, out
     if not probes:
         # Nothing was executed, whether or not the manifest lists entries.
@@ -2752,6 +3449,7 @@ def check_migration(repo_arg: str) -> tuple[int, list[str]]:
     """
     yaml, validator_cls = _load_dependencies()
     repo = require_local_working_copy(repo_arg)
+    require_real_probe_dir(repo)
     git = Git(repo)
     probes = load_probes(repo, yaml, validator_cls)
     # As in run(): an id that is also a manifest entry is a contradiction, judged
@@ -2796,7 +3494,8 @@ def check_migration(repo_arg: str) -> tuple[int, list[str]]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Execute the stored capability-reach probes of a local repository and write the report.",
-        epilog="Exit codes: 0 report written, 1 runtime error, 2 usage error, non-local or shallow target, "
+        epilog="Exit codes: 0 report written, 1 runtime error, 2 usage error, non-local or shallow target or "
+        "symlinked probe directory, "
         "3 no probe file (nothing executed), 4 report written with findings, 5 PyYAML/jsonschema missing, "
         "6 --check-migration refused: a migration candidate is not clean (nothing written).",
     )
@@ -2845,8 +3544,8 @@ def main(argv: list[str] | None = None) -> int:
     messages = {
         EXIT_OK: "report written",
         EXIT_NO_PROBES: "no probe file, nothing executed; the report says so (not a clean result)",
-        EXIT_FINDINGS: "report written with findings (weakened, invalid, or unapproved-content probes, "
-                       "a manifest finding, or an invalid supersedes record)",
+        EXIT_FINDINGS: "report written with findings (weakened, invalid, removed, or unapproved-content probes, "
+                       "a manifest finding, an invalid supersedes record, or a retirement-manifest finding)",
     }
     print(f"reach_audit: {messages[code]}: {out}")
     return code

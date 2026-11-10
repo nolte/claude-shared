@@ -4060,3 +4060,548 @@ def test_702_a_plain_rename_out_of_a_path_a_merge_created_is_weakened(target, tm
     assert target.git("cat-file", "-t", f"{renamed}^:{interim}") == "blob"
     reason = _weakened_reason(target, marker)
     assert reason == ("weakened: " + _incomplete(renamed, MOVED, f"a rename from {interim}")), reason
+
+
+# --------------------------------------------------------------------------- #
+# #704: a probe that left the probe set is removed unless an approved
+# retirement record accounts for it (project/requirements/reach-probe-removal.md)
+# --------------------------------------------------------------------------- #
+RETIRED_SCHEMA_PATH = REPO_ROOT / "schemas" / "reach-retired-v1.0.schema.yaml"
+RETIRED_REL = "project/reach-probes/_retired.yml"
+P1_REL = "project/reach-probes/p1.yml"
+
+
+def retirement(pid: str = "p1", *, last: str = "a" * 40, reason: str = "capability-removed",
+               approved: bool = True, **extra) -> dict:
+    record: dict = {"id": pid, "reason": reason, "detail": "the export it measured was dropped",
+                    "recorded_at": "2026-11-10T09:00:00Z", "last_revision": last}
+    if approved:
+        record["approval"] = {"approved_at": "2026-11-10T09:05:00Z", "approved_by": "nolte"}
+    return record | extra
+
+
+def _retire(target: Target, *records: dict, commit: bool = True, raw: str | None = None) -> None:
+    target.write(RETIRED_REL, raw if raw is not None else yaml.safe_dump({"entries": list(records)}, sort_keys=False))
+    if commit:
+        target.commit("retire probes")
+
+
+def _validate_retired(doc: object) -> list[str]:
+    return [e.message for e in Draft202012Validator(ra.RETIRED_SCHEMA).iter_errors(doc)]
+
+
+def _finding(report: str, kind: str, pid: str) -> str:
+    """The text of the ``kind`` finding on ``pid``; fails when there is none."""
+    head = f"- **{kind}** `{pid}` ("
+    lines = [ln for ln in report.splitlines() if ln.startswith(head)]
+    assert lines, f"no {kind} finding on {pid}:\n{report}"
+    return _plain(lines[0].split("): ", 1)[1])
+
+
+def _second(target: Target) -> None:
+    """An approved p2 that git never pairs with p1 as a copy (dissimilar content)."""
+    derived_probe(target, pid="p2", summary="a second probe on another reading of the entry " * 12)
+
+
+def _kept_and_dropped(target: Target, **kw) -> tuple[str, str]:
+    """Approved p1 and p2; a plain commit deletes p1. Returns (the last commit with p1, the deleting commit)."""
+    derived_probe(target, **kw)
+    _second(target)
+    last = target.git("rev-parse", "HEAD")
+    target.git("rm", "-q", P1_REL)
+    return last, target.commit("drop p1")
+
+
+# -- schema ----------------------------------------------------------------- #
+def test_704_runner_copy_matches_the_shipped_retirement_schema():
+    shipped = yaml.safe_load(RETIRED_SCHEMA_PATH.read_text())
+    assert _structural(shipped) == _structural(ra.RETIRED_SCHEMA)
+    assert ra.RETIRED_SCHEMA["$defs"]["Approval"] == ra.PROBE_SCHEMA["$defs"]["Approval"]
+
+
+def test_704_shipped_retirement_schema_is_valid_and_its_examples_validate():
+    shipped = yaml.safe_load(RETIRED_SCHEMA_PATH.read_text())
+    Draft202012Validator.check_schema(shipped)
+    for example in shipped["examples"]:
+        assert _validate_retired(example) == []
+
+
+def test_704_retirement_schema_is_closed_and_its_reason_codes_are_four():
+    assert _validate_retired({"entries": [retirement(), retirement("p2", approved=False, last="b" * 64)]}) == []
+    assert any("Additional properties" in m for m in _validate_retired({"entries": [retirement() | {"status": "ok"}]}))
+    assert any("Additional properties" in m for m in _validate_retired({"entries": [], "verdict": "retired"}))
+    assert any("is not one of" in m for m in _validate_retired({"entries": [retirement(reason="replaced")]}))
+    assert any("does not match" in m for m in _validate_retired({"entries": [retirement(last="abc")]}))
+    for missing in ("id", "reason", "detail", "recorded_at", "last_revision"):
+        record = retirement()
+        del record[missing]
+        assert any("is a required property" in m for m in _validate_retired({"entries": [record]})), missing
+
+
+# -- R1, AC1/AC2: a deleted probe is removed --------------------------------- #
+def test_704_AC1_an_approved_probe_deleted_in_a_plain_commit_is_removed_naming_its_last_commit(target):
+    last, _ = _kept_and_dropped(target)
+    code, report = run_audit(target)
+    assert code == 4, report
+    text = _finding(report, "removed", "p1")
+    assert text.startswith(f"no probe file carries this id any more; it last existed in {P1_REL} at {last}"), text
+    assert text.endswith("no retirement record accounts for it"), text
+    assert "**Not probed: 1 of 2 probes, 1 of them removed.**" in report
+    assert "plus 1 removed probe id(s) that no effective retirement record accounts for, 2 in all" in report
+    assert "| none (removed) | 0 | 0 | 0 | 1 |" in report
+
+
+def test_704_AC1_an_approved_retirement_record_makes_the_run_clean_and_is_listed_as_new(target):
+    last, _ = _kept_and_dropped(target)
+    _retire(target, retirement(last=last))
+    code, report = run_audit(target)
+    assert code == 0, report
+    assert "## Findings\n\n- none\n" in report
+    assert "- Retired probe ids in `project/reach-probes/_retired.yml`: 1, 1 of them new since the manifest's previous commit." in report
+    assert (f"- Retired `p1` (capability-removed), **new since the manifest's previous commit**: the export it "
+            f"measured was dropped; last existed at {last[:12]}; approved by nolte at 2026-11-10T09:05:00Z.") in report
+    assert "removed" not in row_of(report, "p2")[7]
+
+
+def test_704_R8_a_record_is_marked_new_only_in_the_change_that_adds_it(target):
+    last, _ = _kept_and_dropped(target)
+    derived_probe(target, pid="p3", summary="a third probe, worded apart from the others " * 12)
+    target.git("rm", "-q", "project/reach-probes/p3.yml")
+    last3 = target.git("rev-parse", "HEAD~1")
+    target.commit("drop p3")
+    _retire(target, retirement(last=last))
+    _retire(target, retirement(last=last), retirement("p3", last=last3, reason="duplicate"))
+    code, report = run_audit(target)
+    assert code == 0, report
+    assert "- Retired `p1` (capability-removed): the export" in report
+    assert "- Retired `p3` (duplicate), **new since the manifest's previous commit**:" in report
+    assert ": 2, 1 of them new since the manifest's previous commit." in report
+
+
+def test_704_AC2_a_never_approved_probe_deleted_later_is_removed_the_same_way(target):
+    last, _ = _kept_and_dropped(target, approved=False)
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "p1").startswith(f"no probe file carries this id any more; it last existed in {P1_REL} at {last}")
+
+
+def test_704_R1_a_set_that_lost_every_probe_file_reports_each_removal_not_an_empty_set(target):
+    derived_probe(target)
+    target.git("rm", "-q", "-r", "project/reach-probes")
+    target.commit("drop the whole probe set")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert "No probe set" not in report
+    _finding(report, "removed", "p1")
+
+
+def test_704_R8_a_retired_set_without_probe_files_still_lists_the_retirement(target):
+    derived_probe(target)
+    last = target.git("rev-parse", "HEAD")
+    target.git("rm", "-q", P1_REL)
+    target.commit("drop p1")
+    _retire(target, retirement(last=last))
+    code, report = run_audit(target)
+    assert code == 3, report
+    assert "**Not probed: all. No probe set.**" in report
+    assert "- Retired `p1` (capability-removed), **new since the manifest's previous commit**" in report
+
+
+def test_704_R1_an_uncommitted_deletion_is_removed_and_no_record_accounts_for_it(target):
+    derived_probe(target)
+    _second(target)
+    _retire(target, retirement())
+    head = target.git("rev-parse", "HEAD")
+    (target.path / P1_REL).unlink()
+    code, report = run_audit(target)
+    assert code == 4, report
+    text = _finding(report, "removed", "p1")
+    assert f"it last existed in {P1_REL} at HEAD {head}, and its removal is not committed" in text, text
+    assert text.endswith("a retirement record can't account for a removal that is not committed"), text
+
+
+# -- R4/AC3: only an approved, committed record takes effect ------------------ #
+def test_704_AC3_a_record_without_an_approval_takes_no_effect(target):
+    last, _ = _kept_and_dropped(target)
+    _retire(target, retirement(last=last, approved=False))
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "p1").endswith("its retirement record carries no approval, so it takes no effect")
+    assert "- Retired probe ids in `project/reach-probes/_retired.yml`: 0, 0 of them new" in report
+
+
+def test_704_AC3_a_record_with_a_malformed_approval_is_invalid_and_takes_no_effect(target):
+    last, _ = _kept_and_dropped(target)
+    _retire(target, retirement(last=last, approval={"approved_by": "nolte"}))
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert "approved_at" in _finding(report, "invalid retirement record", "p1")
+    assert _finding(report, "removed", "p1").endswith("its retirement record is invalid (see Findings), so it takes no effect")
+
+
+def test_704_R4_an_uncommitted_record_takes_no_effect(target):
+    last, _ = _kept_and_dropped(target)
+    _retire(target, retirement(last=last), commit=False)
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "p1").endswith("its retirement record is not committed, so it takes no effect")
+
+
+def test_704_R4_a_record_committed_with_the_deletion_takes_effect_whatever_last_revision_names(target):
+    """The squash-merge shape: one commit deletes the probe and adds the record; last_revision may be unknown."""
+    derived_probe(target)
+    _second(target)
+    target.git("rm", "-q", P1_REL)
+    _retire(target, retirement(last="c" * 40))
+    code, report = run_audit(target)
+    assert code == 0, report
+    assert "- Retired `p1` (capability-removed), **new since" in report
+
+
+def test_704_R4_a_record_cannot_account_for_a_removal_it_predates(target):
+    """Retired once, restored, removed again: the old record names an earlier removal."""
+    last, _ = _kept_and_dropped(target)
+    _retire(target, retirement(last=last))
+    assert run_audit(target)[0] == 0
+    target.write(P1_REL, target.git("show", f"{last}:{P1_REL}") + "\n")
+    target.write(RETIRED_REL, "entries: []\n")
+    target.commit("restore p1, drop its record")
+    target.write(RETIRED_REL, yaml.safe_dump({"entries": [retirement(last=last)]}, sort_keys=False))
+    restored = target.commit("put the old record back")
+    target.git("rm", "-q", P1_REL)
+    gone = target.commit("drop p1 again")
+    shutil.rmtree(target.path / ".audits")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "p1").endswith(
+        f"its retirement record was already in {RETIRED_REL} at {restored[:12]}, before the removal in "
+        f"{gone[:12]}, so it can't account for that removal")
+
+
+def test_704_R4_an_unreadable_retirement_manifest_is_a_finding_and_retires_nothing(target):
+    last, _ = _kept_and_dropped(target)
+    _retire(target, raw="entries: [unclosed\n")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert "- **invalid retirement manifest** (project/reach-probes/_retired.yml): not parseable as YAML" in report
+    assert _finding(report, "removed", "p1").endswith(ra.WHY_MANIFEST_UNREADABLE)
+    assert "is present but unreadable (see Findings); no record in it takes effect" in report
+
+
+def test_704_R4_a_record_listed_twice_is_a_finding(target):
+    last, _ = _kept_and_dropped(target)
+    _retire(target, retirement(last=last), retirement(last=last, reason="duplicate"))
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "invalid retirement record", "p1") == "listed more than once; only the first record is read"
+
+
+# -- R2/R5, AC4: an exchange under the same id -------------------------------- #
+@pytest.mark.parametrize("flow", ["one-commit", "two-commits"])
+def test_704_AC4_an_exchange_under_the_same_id_reports_the_old_probe_removed(target, tmp_path, flow):
+    """p1 at p1.yml is dropped and a dissimilar file elsewhere takes the id: git pairs no rename."""
+    marker = tmp_path / "ran"
+    derived_probe(target)
+    last = target.git("rev-parse", "HEAD")
+    target.git("rm", "-q", P1_REL)
+    if flow == "two-commits":
+        target.commit("drop p1")
+    weaker = make_probe(derived_from=target.git("rev-parse", "HEAD"), argv=marker_argv(marker, "1"),
+                        expected={"kind": "count", "value": 1, "unit": "collections"},
+                        summary="a much shorter probe " * 30)
+    rel = target.write_probe(weaker, name="p1-replacement")
+    adopted = target.commit("a new file under the old id")
+    assert len(target.git("log", "--follow", "--format=%H", "--", rel).splitlines()) == 1
+    code, report = run_audit(target)
+    assert code == 4, report
+    text = _finding(report, "removed", "p1")
+    assert text.startswith(f"exchange under the same id: it last existed in {P1_REL} at {last}, and {rel} carries "
+                           f"it now, but that file's own history first carries it in {adopted[:12]}"), text
+    assert text.endswith("a retirement record can't account for an exchange under the same id: give the replacement "
+                         "a new id and retire this one, or restore the earlier file and supersede it"), text
+
+
+def test_704_AC4_R5_a_retirement_record_for_an_exchanged_id_is_a_contradiction(target):
+    derived_probe(target)
+    last = target.git("rev-parse", "HEAD")
+    target.git("rm", "-q", P1_REL)
+    target.write_probe(make_probe(derived_from=last, summary="unrelated text " * 40), name="p1-replacement")
+    _retire(target, retirement(last=last))
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "retirement contradiction", "p1").startswith(
+        "the probe file project/reach-probes/p1-replacement.yml still carries this id")
+    assert _finding(report, "removed", "p1").startswith("exchange under the same id")
+    assert "Retired `p1`" not in report
+
+
+def test_704_R2_an_uncommitted_file_taking_over_a_committed_id_is_an_exchange(target):
+    derived_probe(target)
+    _second(target)
+    (target.path / P1_REL).unlink()
+    target.write_probe(make_probe(derived_from="b" * 40, summary="unrelated text " * 40), name="p1-new")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert "holds no committed revision that carries it" in _finding(report, "removed", "p1")
+
+
+def test_704_R2_a_later_duplicate_of_a_kept_probe_dropped_again_is_no_exchange(target):
+    """p1 keeps its id throughout; a second file took the id later and was removed: nothing left the set."""
+    derived_probe(target)
+    target.write_probe(make_probe(derived_from="b" * 40, summary="unrelated text " * 40), name="p1-copy")
+    target.commit("a duplicate id")
+    target.git("rm", "-q", "project/reach-probes/p1-copy.yml")
+    target.commit("drop the duplicate")
+    code, report = run_audit(target)
+    assert code == 0, report
+    assert "removed" not in report.split("## Findings")[1].split("## Probes")[0]
+
+
+# -- R3, AC5: identity is the id ---------------------------------------------- #
+def test_704_AC5_a_rename_that_keeps_the_id_is_no_removal(target):
+    """The rename itself is judged as before (a later commit to the probe); it removes nothing."""
+    _, rel = derived_probe(target)
+    target.git("mv", rel, "project/reach-probes/export-populated.yml")
+    target.commit("rename the probe file")
+    _, report = run_audit(target)
+    assert "- **removed**" not in report, report
+    assert _finding(report, "weakened", "p1").startswith("probe changed in")
+
+
+def test_704_AC5_editing_the_id_in_a_kept_file_reports_the_old_id_removed(target):
+    _, rel = derived_probe(target)
+    last = target.git("rev-parse", "HEAD")
+    _rewrite(target, rel, id="p1-renamed")
+    target.commit("rename the id")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "p1").startswith(f"no probe file carries this id any more; it last existed in {P1_REL} at {last}")
+    assert "removed" not in _finding(report, "weakened", "p1-renamed")
+
+
+# -- R5/R6, AC6: records for ids carried now, or never ----------------------- #
+def test_704_AC6_a_record_for_an_id_still_carried_is_a_contradiction(target):
+    derived_probe(target)
+    _retire(target, retirement(last=target.git("rev-parse", "HEAD")))
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "retirement contradiction", "p1").startswith(f"the probe file {P1_REL} still carries this id")
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+def test_704_AC6_a_record_for_an_id_never_carried_is_invalid(target):
+    derived_probe(target)
+    _retire(target, retirement("never-a-probe"))
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "invalid retirement record", "never-a-probe") == (
+        "no committed probe file under project/reach-probes/ in the history of HEAD ever carried this id")
+
+
+def test_704_AC6_a_never_committed_id_cannot_be_retired(target):
+    derived_probe(target)
+    target.write_probe(make_probe("p9", derived_from="b" * 40))
+    (target.path / "project/reach-probes/p9.yml").unlink()
+    _retire(target, retirement("p9"))
+    code, report = run_audit(target)
+    assert code == 4, report
+    _finding(report, "invalid retirement record", "p9")
+
+
+# -- R7, AC7: a superseded probe's file stays ------------------------------- #
+def test_704_AC7_deleting_a_superseded_probes_file_reports_it_removed(sectioned):
+    _superseded(sectioned)
+    last = sectioned.git("rev-parse", "HEAD")
+    sectioned.git("rm", "-q", P1_REL)
+    sectioned.commit("drop the superseded file")
+    shutil.rmtree(sectioned.path / ".audits")
+    code, report = run_audit(sectioned)
+    assert code == 4, report
+    assert _finding(report, "removed", "p1").startswith(f"no probe file carries this id any more; it last existed in {P1_REL} at {last}")
+
+
+# -- R11: the id of a historical revision ------------------------------------ #
+def test_704_R11_an_unparseable_historical_file_is_identified_by_its_file_name_stem(target):
+    derived_probe(target)
+    target.write("project/reach-probes/broken-probe.yml", "id: [unclosed\n")
+    last = target.commit("an unparseable probe file")
+    target.git("rm", "-q", "project/reach-probes/broken-probe.yml")
+    target.commit("drop it")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "broken-probe").startswith(
+        f"no probe file carries this id any more; it last existed in project/reach-probes/broken-probe.yml at {last}")
+
+
+def test_704_R11_a_parseable_historical_file_is_identified_by_its_id_not_its_name(target):
+    derived_probe(target)
+    target.write_probe(make_probe("export-check", derived_from="b" * 40), name="file-name")
+    target.commit("a probe whose file name is not its id")
+    target.git("rm", "-q", "project/reach-probes/file-name.yml")
+    target.commit("drop it")
+    _, report = run_audit(target)
+    _finding(report, "removed", "export-check")
+    assert "`file-name`" not in report
+
+
+# -- merges: an id carried anywhere in HEAD's history counts ----------------- #
+def test_704_merge_a_probe_that_lived_only_on_a_merged_side_branch_is_removed(target):
+    derived_probe(target)
+
+    def add_and_drop() -> None:
+        target.write_probe(make_probe("side-probe", derived_from="b" * 40))
+        target.commit("side: add a probe")
+        target.git("rm", "-q", "project/reach-probes/side-probe.yml")
+
+    side, _ = _merge_side(target, on_side=add_and_drop)
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert f"at {side}~1" not in report
+    assert _finding(report, "removed", "side-probe").startswith(
+        f"no probe file carries this id any more; it last existed in project/reach-probes/side-probe.yml at "
+        f"{target.git('rev-parse', side + '~1')}")
+
+
+def test_704_merge_a_probe_added_and_dropped_only_inside_merges_is_removed(target):
+    derived_probe(target)
+    rel = "project/reach-probes/merge-only.yml"
+    _merge_side(target, "one", in_merge=lambda: target.write_probe(make_probe("merge-only", derived_from="b" * 40)))
+    _, dropped = _merge_side(target, "two", in_merge=lambda: target.git("rm", "-q", rel))
+    assert not target.git("log", "--no-merges", "--format=%H", "--", rel)
+    code, report = run_audit(target)
+    assert code == 4, report
+    # The merge that dropped it took it off its first parent, the last commit that still had it.
+    assert _finding(report, "removed", "merge-only").startswith(
+        f"no probe file carries this id any more; it last existed in {rel} at {target.git('rev-parse', dropped + '^1')}")
+
+
+def test_704_merge_the_targets_log_config_does_not_hide_a_merge_only_probe(target):
+    derived_probe(target)
+    rel = "project/reach-probes/merge-only.yml"
+    _merge_side(target, "one", in_merge=lambda: target.write_probe(make_probe("merge-only", derived_from="b" * 40)))
+    _merge_side(target, "two", in_merge=lambda: target.git("rm", "-q", rel))
+    for key, value in (("log.diffMerges", "first-parent"), ("log.follow", "true"), ("log.showRoot", "false"),
+                       ("diff.renames", "copies")):
+        target.git("config", key, value)
+    code, report = run_audit(target)
+    assert code == 4, report
+    _finding(report, "removed", "merge-only")
+
+
+def test_704_history_walk_reads_every_blob_once(target):
+    derived_probe(target)
+    for n in range(3):
+        _rewrite(target, P1_REL, summary=f"revision {n}")
+        target.commit(f"edit {n}")
+    history = ra.probe_set_history(ra.Git(target.path), yaml, target.git("rev-parse", "HEAD"))
+    assert history.ids == {"p1"}
+    assert history.blobs == 4 and history.commits == 4
+    assert history.at_head == {"p1": [P1_REL]}
+
+
+def test_704_merge_a_probe_kept_on_a_side_branch_last_existed_at_its_tip_whatever_log_diff_merges_says(target):
+    """Main drops p1, a side branch edits it, the merge keeps the deletion: only the diff against the
+    second parent shows p1 leaving, so a first-parent-only walk would name the pre-branch commit."""
+    derived_probe(target)
+    _second(target)
+    target.git("checkout", "-q", "-b", "side")
+    _rewrite(target, P1_REL, summary="edited on the side")
+    side = target.commit("side: edit p1")
+    target.git("checkout", "-q", "main")
+    target.git("rm", "-q", P1_REL)
+    target.commit("main: drop p1")
+    subprocess.run(["git", "-C", str(target.path), "merge", "-q", "--no-ff", "side"], capture_output=True, check=False)
+    target.git("rm", "-q", P1_REL)
+    merge = target.commit("merge side, keeping the deletion")
+    assert target.git("rev-list", "--parents", "-n", "1", merge).count(" ") == 2
+    target.git("config", "log.diffMerges", "first-parent")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "p1").startswith(
+        f"no probe file carries this id any more; it last existed in {P1_REL} at {side}")
+
+
+# --------------------------------------------------------------------------- #
+# #704 security verification (P4): ids read the same way in history and at HEAD
+# --------------------------------------------------------------------------- #
+BIG_SUMMARY = "x" * (1024 * 1024 + 4096)  # past the old 1 MiB cap and the batch bound
+
+
+def test_704_P4_1_an_oversize_revision_keeps_its_id_so_a_swap_to_the_stem_is_removed(target):
+    """a.yml carries `big-id` padded past the batch bound, then one commit makes it a small `a`: big-id left."""
+    derived_probe(target)
+    rel = target.write_probe(make_probe("big-id", derived_from="b" * 40, summary=BIG_SUMMARY), name="a")
+    last = target.commit("an oversize probe file")
+    target.write_probe(make_probe("a", derived_from="b" * 40), name="a")
+    target.commit("rewrite it small, under the file name's id")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "big-id").startswith(
+        f"no probe file carries this id any more; it last existed in {rel} at {last}")
+
+
+def test_704_P4_1_an_oversize_probe_at_head_is_no_removal(target):
+    derived_probe(target)
+    target.write_probe(make_probe("big-probe", derived_from="b" * 40, summary=BIG_SUMMARY), name="big")
+    target.commit("an oversize probe file")
+    _, report = run_audit(target)
+    assert "- **removed**" not in report, report
+
+
+def test_704_P4_1_a_historical_revision_missing_from_the_repository_stops_the_run(target, capsys):
+    """A partial clone: the walk names a blob the object store lacks; no stem may stand in for it."""
+    derived_probe(target)
+    rel = target.write_probe(make_probe("gone", derived_from="b" * 40, summary="a probe whose object goes missing"))
+    target.commit("add")
+    blob = target.git("rev-parse", f"HEAD:{rel}")
+    target.git("rm", "-q", rel)
+    target.commit("drop")
+    (target.path / ".git" / "objects" / blob[:2] / blob[2:]).unlink()
+    assert ra.main(["--repo", str(target.path)]) == ra.EXIT_ERROR
+    err = capsys.readouterr().err
+    assert "does not hold" in err and blob in err, err
+
+
+def test_704_P4_2_a_document_two_yaml_loaders_read_differently_has_one_id(target):
+    """`id:<TAB>value` is an error to PyYAML's pure loader and an id to libyaml's: history and HEAD must agree."""
+    derived_probe(target)
+    target.write("project/reach-probes/tabbed.yml", "id:\tp-tab\ntier: T0\n")
+    target.commit("a probe file with a tab after its key")
+    _, report = run_audit(target)
+    assert "- **removed**" not in report, report
+
+
+def test_704_P4_2_every_yaml_read_goes_through_the_one_loader():
+    source = SCRIPT_PATH.read_text()
+    assert "safe_load(" not in source
+    assert source.count("Loader=") == 1
+
+
+@pytest.mark.parametrize("linked", ["project/reach-probes", "project"])
+def test_704_P4_3_a_symlinked_probe_directory_is_refused(target, capsys, linked):
+    derived_probe(target)
+    real = target.path / "elsewhere"
+    shutil.move(str(target.path / linked), str(real))
+    (target.path / linked).parent.mkdir(parents=True, exist_ok=True)
+    (target.path / linked).symlink_to(real.relative_to((target.path / linked).parent, walk_up=True))
+    target.commit("move the probe set behind a link")
+    assert (target.path / P1_REL).is_file()
+    assert ra.main(["--repo", str(target.path)]) == ra.EXIT_USAGE
+    assert f"{linked} is a symlink" in capsys.readouterr().err
+    assert ra.main(["--repo", str(target.path), "--check-migration"]) == ra.EXIT_USAGE
+    assert not (target.path / ".audits").exists()
+
+
+def test_704_P4_4_a_record_cannot_take_effect_past_an_unreadable_manifest_before_the_removal(target):
+    derived_probe(target)
+    _second(target)
+    _retire(target, raw="entries: [unclosed\n")
+    carrier = target.git("rev-parse", "HEAD")
+    target.git("rm", "-q", P1_REL)
+    _retire(target, retirement(last=carrier), commit=False)
+    removal = target.commit("drop p1 and retire it")
+    code, report = run_audit(target)
+    assert code == 4, report
+    assert _finding(report, "removed", "p1").endswith(
+        f"{RETIRED_REL} can't be read at {carrier[:12]}, before the removal in {removal[:12]}, so it can't be "
+        "shown that the record postdates that removal")
