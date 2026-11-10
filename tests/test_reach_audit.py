@@ -5764,3 +5764,164 @@ def test_708_P2_rename_evidence_holds_with_log_follow_configured(target):
     _rename(target)
     _re_derive_onto(target, rel)
     _assert_clean(target)
+
+
+# -- #708 review round 2: a stale-born anchor whose declaration is reset to the anchored content -- #
+# The anchor names X, the first revision found Y, and the declaration is reset to X: the anchored
+# content is exactly what the probe was derived from, so nothing changed and no bar may drop.
+PURE_MOVE_REFUSED = ("but the same commit changed the probe beyond declaration.path, which a pure move of the "
+                     "declaration does not justify")
+
+
+def _reset_to_x(target: Target) -> None:
+    _edit(target, INSIDE[1], INSIDE[0])
+    target.commit("reset the declaration to the anchored content")
+
+
+def _stale_born_content_probe(target: Target, anchor: str = "blob") -> str:
+    """On ``sectioned``: the probe lands anchored on X (``blob:`` or the commit) after the declaration became Y."""
+    x = _blob(target) if anchor == "blob" else target.git("rev-parse", "HEAD")
+    _edit(target, *INSIDE)
+    target.commit("the declaration changes before the probe lands")
+    rel = target.write_probe(make_probe(derived_from=x))
+    target.commit("the probe lands")
+    return rel
+
+
+def _to_sections(target: Target, rel: str, locators=LOCATORS, **changes) -> None:
+    data = yaml.safe_load((target.path / rel).read_text())
+    if "expected_value" in changes:
+        data["expected"]["value"] = changes.pop("expected_value")
+    data.update(changes)
+    data["declaration"]["sections"] = _sections_now(target, locators, data["declaration"]["path"])
+    data["derived_from"] = ra.section_anchor(data["declaration"]["sections"])
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+
+
+def _to_blob(target: Target, rel: str, **changes) -> None:
+    _rewrite(target, rel, **changes)
+    data = yaml.safe_load((target.path / rel).read_text())
+    data["derived_from"] = _blob_now(target, data["declaration"]["path"])
+    data["declaration"].pop("sections", None)
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+
+
+def test_708_R2_1_stale_born_content_anchor_reset_renamed_and_lowered_is_weakened(sectioned):
+    target = sectioned
+    rel = _stale_born_content_probe(target)
+    _reset_to_x(target)
+    _rename(target)
+    _rewrite(target, rel, declaration_path="docs/b.md", expected_value=1)
+    target.commit("follow the rename and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED and reason.endswith(PURE_MOVE_REFUSED), reason
+
+
+def test_708_R2_2_stale_born_section_anchor_reset_renamed_and_lowered_is_weakened(sectioned):
+    target = sectioned
+    rel = _stale_born_section_probe(target)
+    _reset_to_x(target)
+    _rename(target)
+    _reanchor(target, rel, declaration_path="docs/b.md", expected_value=1)
+    target.commit("follow the rename and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED and reason.endswith(PURE_MOVE_REFUSED), reason
+
+
+@pytest.mark.parametrize("anchor", ["blob", "commit"])
+def test_708_R2_3_stale_born_file_anchor_reset_and_relabelled_lowered_is_weakened(sectioned, anchor):
+    """Onto sections (blob) or onto a content anchor (commit), at the same path."""
+    target = sectioned
+    rel = _stale_born_content_probe(target, anchor)
+    _reset_to_x(target)
+    if anchor == "blob":
+        _to_sections(target, rel, expected_value=1)
+    else:
+        _to_blob(target, rel, expected_value=1)
+    target.commit("relabel and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED and reason.endswith(f"but {DECL} did not change in between"), reason
+
+
+def test_708_R2_4_stale_born_section_anchor_reset_and_reordered_lowered_is_weakened(sectioned):
+    target = sectioned
+    rel = _stale_born_section_probe(target)
+    _reset_to_x(target)
+    _to_sections(target, rel, locators=tuple(reversed(LOCATORS)), expected_value=1)
+    target.commit("reorder the locators and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(f"but the anchored sections of {DECL} did not change in between"), reason
+
+
+def test_708_R2_5_stale_born_section_anchor_reset_and_relabelled_to_a_blob_lowered_is_weakened(sectioned):
+    target = sectioned
+    rel = _stale_born_section_probe(target)
+    _reset_to_x(target)
+    _to_blob(target, rel, expected_value=1)
+    target.commit("relabel onto the file and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(f"but the anchored sections of {DECL} did not change in between"), reason
+
+
+@pytest.mark.parametrize("anchor", ["blob", "sections"])
+def test_708_R2_a_stale_born_probe_re_derived_after_a_change_to_a_third_content_is_clean(sectioned, anchor):
+    """Positive control: the declaration becomes Z, neither X nor Y; a re-derivation keeping the bar heals."""
+    target = sectioned
+    rel = _stale_born_content_probe(target) if anchor == "blob" else _stale_born_section_probe(target)
+    _edit(target, "JSON and CSV.", "JSON, CSV and XML.")
+    target.commit("the declaration changes to Z")
+    if anchor == "blob":
+        _rewrite(target, rel, derived_from=_blob(target))
+    else:
+        _reanchor(target, rel)
+    target.commit("re-derive against Z")
+    _assert_clean(target)
+
+
+def test_708_R2_a_stale_born_commit_anchor_reset_and_migrated_unchanged_is_clean(sectioned):
+    """Positive control: the commit anchor names X, the declaration is X again; migrating onto blob:X heals."""
+    target = sectioned
+    rel = _stale_born_content_probe(target, "commit")
+    _reset_to_x(target)
+    _to_blob(target, rel)
+    target.commit("migrate onto the content anchor")
+    _assert_clean(target)
+
+
+def test_708_R2_6_a_historical_commit_move_after_a_reset_cannot_carry_a_lowered_bar(sectioned):
+    """A seventh shape: the lowering rides on a commit-anchor move that a later re-derivation's walk reaches.
+
+    M1 re-anchors the stale-born commit anchor onto the reset declaration and lowers the bar; M2
+    follows a real change to Z. M1's content is what the anchor named, so it may change nothing.
+    """
+    target = sectioned
+    rel = _stale_born_content_probe(target, "commit")
+    _reset_to_x(target)
+    _rewrite(target, rel, derived_from=target.git("rev-parse", "HEAD"), expected_value=1)
+    target.commit("M1: re-anchor onto the reset declaration and lower")
+    _edit(target, "JSON.", "JSON, CSV and XML.")
+    target.commit("the declaration changes to Z")
+    _rewrite(target, rel, derived_from=_blob(target))
+    target.commit("M2: re-derive against Z")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert "its previous derivation was no re-derivation either" in reason, reason
+    assert reason.endswith(f"but the content of {DECL} did not change in between, and a re-anchoring may change "
+                           "nothing but derived_from and the approval"), reason
+
+
+def test_708_R2_a_historical_pure_move_of_a_reset_commit_anchor_heals(sectioned):
+    """Positive control: M1 follows a rename of the reset declaration with a commit anchor and changes nothing else."""
+    target = sectioned
+    rel = _stale_born_content_probe(target, "commit")
+    _reset_to_x(target)
+    moved = _rename(target)
+    _rewrite(target, rel, derived_from=moved, declaration_path="docs/b.md")
+    target.commit("M1: follow the rename")
+    _edit(target, "JSON.", "JSON, CSV and XML.", path="docs/b.md")
+    target.commit("the declaration changes to Z")
+    _rewrite(target, rel, derived_from=_blob_now(target, "docs/b.md"))
+    target.commit("M2: re-derive against Z")
+    _assert_clean(target)

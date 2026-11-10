@@ -93,7 +93,7 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path, PurePosixPath
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Iterator, NamedTuple
 
 # --------------------------------------------------------------------------- #
 # Paths inside the audited repository (R11, R12). Nothing else is ever written.
@@ -1908,66 +1908,101 @@ def _sections_as_found(git: Git, commit: str, rel: str, locators: list[tuple[str
     return found
 
 
+class PriorAnchor(NamedTuple):
+    """What _prior_anchor proved about the previous anchor.
+
+    ``problem``: why it is unproven, or None. ``before``: the blob of the
+    declaration the previous derivation saw. ``changed``: whether the anchored
+    content differs at the baseline. ``befores`` (file anchors) and
+    ``anchored`` (section anchors, one locator list per alternative): every
+    state that counts as the anchored content. Usually one; for an anchor stale
+    from the probe's first revision (_prior_anchor's ``origin``) two: what the
+    anchor itself names and what that revision found. Content counts as
+    unchanged when it equals either, so a declaration reset to what the anchor
+    names reads unchanged, not as a change that a re-derivation could answer.
+    """
+
+    problem: str | None
+    before: str | None
+    changed: bool
+    befores: frozenset[str] = frozenset()
+    anchored: tuple[list[tuple[str, str, str]], ...] = ()
+
+
+def _unchanged_in(git: Git, prev_df: str, prior: PriorAnchor, commit: str, path: str) -> bool:
+    """Whether ``path`` at ``commit`` holds the previously anchored content, in any state that counts as it."""
+    if _is_section_anchor(prev_df):
+        return any(alt and not _section_mismatches(git, commit, path, alt) for alt in prior.anchored)
+    return git.blob_at(commit, path) in prior.befores
+
+
 def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], rel: str, recording: str,
-                  baseline: str, *, origin: bool = False,
-                  ) -> tuple[str | None, str | None, bool, list[tuple[str, str, str]] | None]:
+                  baseline: str, *, origin: bool = False) -> PriorAnchor:
     """Prove the previous anchor where it was recorded; say whether its content moved since.
 
-    Returns ``(problem, before, changed, anchored)``: why the previous anchor is
-    unproven (or None), the blob of ``rel`` the previous derivation saw, whether
-    the anchored content differs at ``baseline``, and for a section anchor the
-    locators with the digests a later change is shown against (None for any
-    other anchor form). Every later comparison of the previously anchored
-    content, a rename's included (_path_move_problem), must use those, not the
-    digests the probe recorded: for an anchor stale from the first revision
-    they never matched, and a pure rename would read as a change. A content anchor must be the
-    declaration's blob at ``recording``; a commit anchor's blob must equal it, or,
-    when a squash merge dropped the commit, the blob at ``recording`` stands in;
-    a section anchor's digests must be its sections at ``recording``, and it
-    changed when any of them differs at ``baseline`` or no longer resolves.
-    An anchor that never matched the declaration shows no change, and accepting
-    it would let one commit record a weakening under a made-up anchor and the
-    next restore the real one.
+    Returns a PriorAnchor. Every later comparison of the previously anchored
+    content, a rename's included (_path_move_problem), must use its
+    ``befores``/``anchored``, not the value the probe recorded alone. A content
+    anchor must be the declaration's blob at ``recording``; a commit anchor's
+    blob must equal it, or, when a squash merge dropped the commit, the blob at
+    ``recording`` stands in; a section anchor's digests must be its sections at
+    ``recording``, and it changed when any of them differs at ``baseline`` or no
+    longer resolves. An anchor that never matched the declaration shows no
+    change, and accepting it would let one commit record a weakening under a
+    made-up anchor and the next restore the real one.
 
     With ``origin`` the recording is the probe's first revision, which lowered
     nothing: there a previous anchor that isn't the declaration at the recording
     (the declaration changed on the default branch between the derivation and a
     squash merge, say) reads the probe as recorded against the declaration it
     found, so re-deriving or re-confirming heals the probe the runner reported
-    stale from its first commit.
+    stale from its first commit. The content the anchor itself names still
+    counts as the anchored content too: a declaration reset to it changed
+    nothing the probe was derived from, and reading the reset as a change would
+    let a re-derivation re-baseline a lowered bar.
     """
     recorded = git.blob_at(recording, rel)
-    as_found = (None, recorded, git.blob_at(baseline, rel) != recorded, None) if origin and recorded else None
+
+    def as_found(named: str | None) -> PriorAnchor | None:
+        if not (origin and recorded):
+            return None
+        befores = frozenset(b for b in (recorded, named) if b)
+        return PriorAnchor(None, recorded, git.blob_at(baseline, rel) not in befores, befores)
+
     if _is_section_anchor(prev_df):
         sections = prior_doc.get("declaration", {}).get("sections") if isinstance(
             prior_doc.get("declaration"), dict) else None
         why = _section_anchor_problem(prev_df, sections)
         shown = safe_text(prev_df[:12], 40)
         if why:
-            return (f"{moved}, but the previous derived_from {shown} is no consistent section anchor ({why}), "
-                    "so no declaration change can be shown"), None, False, None
+            return PriorAnchor(f"{moved}, but the previous derived_from {shown} is no consistent section anchor "
+                               f"({why}), so no declaration change can be shown", None, False)
         locators = _locators(sections) or []
         if _section_mismatches(git, recording, rel, locators):
             found = _sections_as_found(git, recording, rel, locators) if origin else None
             if found is not None:
                 # As for a file anchor below, but per section: what the first
-                # revision found is what a later change is shown against.
-                return None, recorded, bool(_section_mismatches(git, baseline, rel, found)), found
-            return (f"{moved}, but the previous derived_from {shown} is not the content of its sections of "
-                    f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change "
-                    "can be shown"), None, False, None
-        return None, recorded, bool(_section_mismatches(git, baseline, rel, locators)), locators
+                # revision found, and what the anchor names, is what a later
+                # change is shown against.
+                prior = PriorAnchor(None, recorded, False, anchored=(found, locators))
+                return prior._replace(changed=not _unchanged_in(git, prev_df, prior, baseline, rel))
+            return PriorAnchor(f"{moved}, but the previous derived_from {shown} is not the content of its sections "
+                               f"of {safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration "
+                               "change can be shown", None, False)
+        return PriorAnchor(None, recorded, bool(_section_mismatches(git, baseline, rel, locators)),
+                           anchored=(locators,))
     if _is_content_anchor(prev_df):
         if not _BLOB_ANCHOR_RE.match(prev_df):
-            return (f"{moved}, but the previous derived_from is not a content anchor of the form {BLOB_FORM}, "
-                    "so no declaration change can be shown"), None, False, None
+            return PriorAnchor(f"{moved}, but the previous derived_from is not a content anchor of the form "
+                               f"{BLOB_FORM}, so no declaration change can be shown", None, False)
         before: str | None = prev_df[len(BLOB_PREFIX):]
         if before != recorded:
-            if as_found:
-                return as_found
-            return (f"{moved}, but the previous derived_from {safe_text(prev_df[:12], 40)} is not the content of "
-                    f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change can be "
-                    "shown"), None, False, None
+            found_prior = as_found(before)
+            if found_prior:
+                return found_prior
+            return PriorAnchor(f"{moved}, but the previous derived_from {safe_text(prev_df[:12], 40)} is not the "
+                               f"content of {safe_text(rel)} at {recording[:12]}, where it was recorded, so no "
+                               "declaration change can be shown", None, False)
     else:
         prev_commit = git.resolve_commit(prev_df)
         if prev_commit is None:
@@ -1975,24 +2010,25 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
             # commit that recorded it is still here: the declaration's content
             # there is what the derivation saw, and what a change is shown against.
             if recorded is None:
-                return (f"{moved}, but the previous derived_from cannot be resolved to a commit and "
-                        f"{safe_text(rel)} did not exist at {recording[:12]}, where it was recorded, "
-                        "so no declaration change can be shown"), None, False, None
+                return PriorAnchor(f"{moved}, but the previous derived_from cannot be resolved to a commit and "
+                                   f"{safe_text(rel)} did not exist at {recording[:12]}, where it was recorded, "
+                                   "so no declaration change can be shown", None, False)
             before = recorded
         else:
             before = git.blob_at(prev_commit, rel)
             if before is None:
                 # Absent at both commits would "prove" any anchor for a path that
                 # holds no declaration at all.
-                return (f"{moved}, but {safe_text(rel)} did not exist at the previous derived_from "
-                        f"{prev_commit[:12]}, so no declaration change can be shown"), None, False, None
+                return PriorAnchor(f"{moved}, but {safe_text(rel)} did not exist at the previous derived_from "
+                                   f"{prev_commit[:12]}, so no declaration change can be shown", None, False)
             if before != recorded:
-                if as_found:
-                    return as_found
-                return (f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
-                        f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was recorded, "
-                        "so no declaration change can be shown"), None, False, None
-    return None, before, git.blob_at(baseline, rel) != before, None
+                found_prior = as_found(before)
+                if found_prior:
+                    return found_prior
+                return PriorAnchor(f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
+                                   f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was "
+                                   "recorded, so no declaration change can be shown", None, False)
+    return PriorAnchor(None, before, git.blob_at(baseline, rel) != before, frozenset({before}))
 
 
 def _unchanged_since(prev_df: str, rel: str) -> str:
@@ -2032,12 +2068,12 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
         return f"{moved}, but {safe_text(new_df[:12], 40)} is not the content of {safe_text(new_rel)} at {baseline[:12]}"
     span = _run_length(git, earlier, yaml)
     recording = earlier[span - 1][0]
-    problem, before, changed, anchored = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline,
-                                                       origin=span == len(earlier))
-    if problem:
-        return problem
+    prior = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline, origin=span == len(earlier))
+    if prior.problem:
+        return prior.problem
+    changed = prior.changed
     if new_rel != rel and changed:
-        return _path_move_problem(git, moved, prev_df, anchored, prior_doc, new_doc, before, baseline, recording,
+        return _path_move_problem(git, moved, prev_df, new_df, prior, prior_doc, new_doc, baseline, recording,
                                   rel, new_rel)
     # `derive` re-stamps the approval on every run, a migration included.
     if _is_section_anchor(prev_df):
@@ -2045,7 +2081,7 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
         pure = not changed
     else:
         relabel = (("derived_from",), ("approval",))
-        pure = new_blob == before
+        pure = new_blob in prior.befores
     if pure and new_rel == rel and _without(new_doc, *relabel) == _without(prior_doc, *relabel):
         return None  # a relabel: _rebaseline_problem holds it to the previous derivation
     if not changed:
@@ -2060,22 +2096,19 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     return None
 
 
-def _moved_unchanged(git: Git, prev_df: str, anchored: list[tuple[str, str, str]] | None, before: str | None,
-                     baseline: str, new_rel: str) -> bool:
+def _moved_unchanged(git: Git, prev_df: str, prior: PriorAnchor, baseline: str, new_rel: str) -> bool:
     """Whether the previously anchored content is, unchanged, at ``new_rel`` in ``baseline``.
 
     That is a rename of the declaration, whichever anchor form either side has:
     the sections the previous anchor named all resolve there with the digests
-    a change is shown against (``anchored``, from _prior_anchor), or the file
-    holds the previously anchored blob.
+    of one state that counts as the anchored content (``prior.anchored``), or
+    the file holds one such blob (``prior.befores``).
     """
-    if _is_section_anchor(prev_df):
-        return bool(anchored) and not _section_mismatches(git, baseline, new_rel, anchored or [])
-    return before is not None and git.blob_at(baseline, new_rel) == before
+    return _unchanged_in(git, prev_df, prior, baseline, new_rel)
 
 
-def _path_move_problem(git: Git, moved: str, prev_df: str, anchored: list[tuple[str, str, str]] | None,
-                       prior_doc: dict[str, Any], new_doc: dict[str, Any], before: str | None, baseline: str,
+def _path_move_problem(git: Git, moved: str, prev_df: str, new_df: str, prior: PriorAnchor,
+                       prior_doc: dict[str, Any], new_doc: dict[str, Any], baseline: str,
                        recording: str, rel: str, new_rel: str, *, unanswered: str | None = None) -> str | None:
     """A move to another declaration path, where the old one changed or is gone: a pure move or a proven rename.
 
@@ -2093,8 +2126,10 @@ def _path_move_problem(git: Git, moved: str, prev_df: str, anchored: list[tuple[
     (_rename_commit), so the declaration continues there, and the content at
     the new path differs from what the previous anchor anchored, so it changed
     since (before or after the rename). No similarity heuristic decides which
-    file the declaration became. ``anchored`` is what the previous anchor is
-    compared by (_prior_anchor). Like any re-derivation, the move must answer
+    file the declaration became. ``prior`` is what the previous anchor is
+    compared by (_prior_anchor). An unchanged ``derived_from`` is never a
+    re-derivation: with ``new_df`` equal to ``prev_df`` only the pure move
+    passes. Like any re-derivation, the move must answer
     to a change of what the new anchor anchors on: ``unanswered`` is the
     caller's reason when nothing it now anchors on differs from the old path at
     the recording (None when something does).
@@ -2103,10 +2138,10 @@ def _path_move_problem(git: Git, moved: str, prev_df: str, anchored: list[tuple[
         return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(new_rel)}, "
                 f"and that is no rename: {safe_text(rel)} still exists at {baseline[:12]} or {safe_text(new_rel)} "
                 f"already existed at {recording[:12]}, where the previous derivation was recorded")
-    if _moved_unchanged(git, prev_df, anchored, before, baseline, new_rel):
+    if _moved_unchanged(git, prev_df, prior, baseline, new_rel):
         return _pure_move_problem(moved, prior_doc, new_doc, *_RE_ANCHOR)
-    if (_rename_commit(git, baseline, recording, rel, new_rel) is not None
-            and _changed_at(git, prev_df, anchored, before, baseline, new_rel)):
+    if (prev_df != new_df and _rename_commit(git, baseline, recording, rel, new_rel) is not None
+            and _changed_at(git, prev_df, prior, baseline, new_rel)):
         return unanswered
     return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(new_rel)}, where "
             "the previously anchored content is not; record the rename as a pure move first, then re-derive "
@@ -2146,17 +2181,17 @@ def _rename_commit(git: Git, baseline: str, recording: str, rel: str, new_rel: s
     return commit
 
 
-def _changed_at(git: Git, prev_df: str, anchored: list[tuple[str, str, str]] | None, before: str | None,
-                baseline: str, new_rel: str) -> bool:
-    """Whether the content at ``new_rel`` in ``baseline`` differs from what the previous anchor anchored.
+def _changed_at(git: Git, prev_df: str, prior: PriorAnchor, baseline: str, new_rel: str) -> bool:
+    """Whether the content at ``new_rel`` in ``baseline`` differs from every state that counts as the anchored content.
 
-    For a section anchor: one of its sections (``anchored``, from _prior_anchor)
-    no longer matches there (or doesn't resolve once); for a content or commit
-    anchor: the file isn't the blob it saw.
+    For a section anchor: in each state one of its sections no longer matches
+    there (or doesn't resolve once); for a content or commit anchor: the file
+    exists and is none of the blobs that count as the one it saw.
     """
     if _is_section_anchor(prev_df):
-        return bool(anchored) and bool(_section_mismatches(git, baseline, new_rel, anchored or []))
-    return before is not None and git.blob_at(baseline, new_rel) not in (None, before)
+        return bool(prior.anchored) and not _unchanged_in(git, prev_df, prior, baseline, new_rel)
+    blob = git.blob_at(baseline, new_rel)
+    return blob is not None and blob not in prior.befores
 
 
 # What a pure move may change besides declaration.path and the approval stamp: a
@@ -2212,17 +2247,17 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
                 f"{baseline[:12]}: {'; '.join(mismatches)}")
     span = _run_length(git, earlier, yaml)
     recording = earlier[span - 1][0]
-    problem, before, changed, anchored = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline,
-                                                       origin=span == len(earlier))
-    if problem:
-        return problem
+    prior = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline, origin=span == len(earlier))
+    if prior.problem:
+        return prior.problem
+    changed = prior.changed
     if new_rel != rel and changed:
         # A renamed declaration continues the old one, so the new sections are
         # compared with the old path where the previous derivation was recorded.
         unanswered = None if _section_mismatches(git, recording, rel, locators) else (
             f"{moved}, but none of the sections it now anchors on changed since the previous derivation "
             f"was recorded in {recording[:12]}")
-        return _path_move_problem(git, moved, prev_df, anchored, prior_doc, new_doc, before, baseline, recording,
+        return _path_move_problem(git, moved, prev_df, new_df, prior, prior_doc, new_doc, baseline, recording,
                                   rel, new_rel, unanswered=unanswered)
     relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
     if (not changed and not _is_section_anchor(prev_df) and new_rel == rel
@@ -2444,17 +2479,19 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         # anchor back at an older commit without changing anything else, and the
         # next moves it forward again across a declaration change that the probe
         # had already seen, re-baselining whatever that commit lowers.
-        problem, before, _, _ = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline,
-                                           origin=span == len(earlier))
-        if problem:
-            return problem
+        prior = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline, origin=span == len(earlier))
+        if prior.problem:
+            return prior.problem
+        before, befores = prior.before, prior.befores
     else:
         # A squash merge drops the commits a v1.0 derivation named, but the commits
         # that recorded them are still here (as in _prior_anchor): the declaration's
         # content there stands in for an anchor that no longer resolves.
         before = git.blob_at(recording, rel)
+        befores = frozenset({before}) if before else frozenset()
     if len(baseline) == 40:
-        return _historical_commit_move_problem(git, moved, rel, before, new_commit or baseline, prior_doc, new_doc)
+        return _historical_commit_move_problem(git, moved, rel, before, befores, new_commit or baseline, prior_doc,
+                                               new_doc)
     # SHA-256: the pre-v1.1 rules.
     if prev_commit is not None and new_commit is not None:
         last = git.last_commit(rel, new_commit)
@@ -2464,13 +2501,13 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
     after = git.blob_at(new_commit or baseline, rel)
     if before is None or after is None:
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
-    if before != after:
+    if after not in befores:
         return None
     return f"{moved}, but {safe_text(rel)} did not change in between"
 
 
-def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str | None, new_commit: str,
-                                   prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
+def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str | None, befores: frozenset[str],
+                                   new_commit: str, prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
     """Why a SHA-1 repository's move onto a commit anchor, reached by a later move's walk, is no re-derivation.
 
     The move is held to what a content-anchor move is held to, or a lowering
@@ -2482,6 +2519,9 @@ def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str 
     to a pure move, as for a content anchor (_pure_move_problem): comparing two
     files' contents would read a decoy as a declaration change. Either way
     _rebaseline_problem then requires it to build on a legitimate derivation.
+    ``befores`` holds every blob that counts as the previously anchored content
+    (PriorAnchor): for an anchor stale from the probe's first revision both the
+    blob it names and the one that revision found.
     """
     decl = new_doc.get("declaration")
     raw = decl.get("path") if isinstance(decl, dict) else None
@@ -2490,11 +2530,11 @@ def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str 
     if before is None or after is None:
         return f"{moved}, but the declaration is missing at one of the two anchors, so no declaration change can be shown"
     if new_rel != rel:
-        if after != before or git.entry_at(new_commit, rel) is not None:
+        if after not in befores or git.entry_at(new_commit, rel) is not None:
             return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(raw, 80)}, "
                     "and only a pure move of an unchanged declaration, the old path gone, can change its path")
         return _pure_move_problem(moved, {**prior_doc, "derived_from": None}, {**new_doc, "derived_from": None})
-    if after == before:
+    if after in befores:
         relabel = (("derived_from",), ("approval",))
         if _without(new_doc, *relabel) != _without(prior_doc, *relabel):
             return (f"{moved}, but the content of {safe_text(rel)} did not change in between, and a "
