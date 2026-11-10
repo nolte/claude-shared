@@ -1840,27 +1840,10 @@ def _continuation_problem(git: Git, moved: str, baseline: str, earlier: list[tup
                 f"after its previous derivation was recorded in {recording[0][:12]}")
     if span < len(earlier) and recording_doc is not None:
         inner = _rebaseline_problem(git, str(recording_doc.get("derived_from")), recording[0], earlier[span:],
-                                    yaml, recording_doc)
+                                    yaml, recording_doc, historical=True)
         if inner:
             return f"{moved}, but its previous derivation was no re-derivation either: {inner}"
     return None
-
-
-def _decl_rel(doc: dict[str, Any] | None) -> str | None:
-    """The normalised declaration.path of a probe document, or None."""
-    raw = _declaration_path(doc)
-    return _repo_relative(raw) if isinstance(raw, str) and raw else None
-
-
-def _declaration_path(doc: dict[str, Any] | None) -> object:
-    """The raw declaration.path of a probe document, or None."""
-    decl = doc.get("declaration") if isinstance(doc, dict) else None
-    return decl.get("path") if isinstance(decl, dict) else None
-
-
-def _declaration_repointed(git: Git, revisions: list[tuple[str, str]], yaml: Any) -> bool:
-    """Whether the normalised declaration.path differs anywhere among ``revisions``."""
-    return len({_decl_rel(_probe_doc(git, revision, yaml)) for revision in revisions}) > 1
 
 
 def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], rel: str, recording: str,
@@ -2098,7 +2081,7 @@ def _reconfirmation_problem(git: Git, moved: str, earlier: list[tuple[str, str]]
 
 
 def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
-                        new_doc: dict[str, Any]) -> str | None:
+                        new_doc: dict[str, Any], *, historical: bool = False) -> str | None:
     """Why the baseline commit's move of ``derived_from`` is no re-derivation, or None.
 
     Moving ``derived_from`` re-baselines the probe: every change of that commit
@@ -2156,7 +2139,8 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     if key_moving:
         return (f"{moved}, but {_merge_names(key_moving)} changed derived_from after the previous derivation was "
                 f"recorded and before {baseline[:12]}, and a derivation recorded in a merge cannot be judged")
-    problem = _anchor_move_problem(git, moved, decl, prior_doc, prev_df, new_df, baseline, earlier, yaml, new_doc)
+    problem = _anchor_move_problem(git, moved, decl, prior_doc, prev_df, new_df, baseline, earlier, yaml, new_doc,
+                                   historical=historical)
     if problem:
         return problem
     approval = new_doc.get("approval")
@@ -2188,7 +2172,7 @@ def _key_moving_merges(git: Git, baseline: str, earlier: list[tuple[str, str]], 
 
 def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: dict[str, Any], prev_df: str,
                          new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
-                         new_doc: dict[str, Any]) -> str | None:
+                         new_doc: dict[str, Any], *, historical: bool = False) -> str | None:
     """The anchor-specific half of _rebaseline_problem: did the anchored declaration change?
 
     A move between two commit anchors is a re-derivation when the previous
@@ -2220,55 +2204,44 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         # here it would compare the whole file for an anchor that never covered it
         # and skip proving the previous anchor, which launders a weakening.
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
-    # A commit anchor keys on derived_from alone (_anchor_key), and a move onto
-    # one keeps the pre-v1.1 rules, so nothing else judges a change of
-    # declaration.path. Every proof below reads the path the previous derivation
-    # recorded: when that derivation's run, or the commit that recorded it,
-    # re-pointed the path, the run must be the unchanged recording of a
-    # legitimate derivation (_continuation_problem); otherwise a decoy file's
-    # change stands in for a declaration that never changed.
-    span = _run_length(git, earlier, yaml)
-    if _declaration_repointed(git, earlier[:span + 1], yaml):
-        problem = _continuation_problem(git, moved, baseline, earlier, span, yaml)
-        if problem:
-            return problem
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
-    # A move may follow the declaration to a new path only where the old one is
-    # gone, a rename; re-pointing it beside a declaration that still exists would
-    # leave the probe watching the new file and prove its next move against it.
-    new_raw = _declaration_path(new_doc)
-    new_rel = _repo_relative(new_raw) if isinstance(new_raw, str) and new_raw else None
-    at = new_commit or baseline
-    repointed = None
-    if new_rel != rel and (new_rel is None or git.blob_at(at, rel) is not None or git.blob_at(at, new_rel) is None):
-        repointed = (f"{moved}, but it also moved declaration.path from {safe_text(rel)} to "
-                     f"{safe_text(new_raw, 80)} while {safe_text(rel)} still exists at {at[:12]}, "
-                     "so no declaration change can be shown")
+    if not historical and (new_commit is None or len(new_commit) == 40):
+        # Since v1.1 a re-derivation in a SHA-1 repository records a content or
+        # section anchor; a commit anchor survives there only as the migration
+        # rule for a derivation made before. "The declaration changed" between two
+        # commits can only be read as "the file was touched", which a path re-pointed
+        # at a decoy, a rename that's restored, or an edit that's reverted all
+        # satisfy: no move onto one is a re-derivation. A SHA-256 repository, which
+        # has no content anchor, keeps the rules below, and so does a derivation
+        # made before this rule that a later move's walk back reaches (historical):
+        # refusing it there would leave the probe no re-derivation to recover with.
+        return (f"{moved}, but a move onto a commit anchor is never a re-derivation for a declaration "
+                "inside the repository; re-derive it, which records a content or section anchor")
     if prev_commit is not None and new_commit is not None:
         # The previous anchor must be proven where it was recorded (_prior_anchor),
         # as for every other anchor kind: otherwise one commit re-points the
         # anchor back at an older commit without changing anything else, and the
         # next moves it forward again across a declaration change that the probe
         # had already seen, re-baselining whatever that commit lowers.
-        recording = earlier[span - 1][0]
+        recording = earlier[_run_length(git, earlier, yaml) - 1][0]
         problem, _, _ = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
         if problem:
             return problem
         last = git.last_commit(rel, new_commit)
         if last is not None and not git.is_ancestor_or_equal(last, prev_commit):
-            return repointed
+            return None
         return f"{moved}, but {safe_text(rel)} did not change in between"
     # A squash merge drops the commits a v1.0 derivation named, but the commits
     # that recorded them are still here (as in _prior_anchor): the declaration's
     # content there stands in for an anchor that no longer resolves. The walk
     # back over earlier derivations (_continuation_problem) reaches such moves.
-    recording = earlier[span - 1][0]
+    recording = earlier[_run_length(git, earlier, yaml) - 1][0]
     before = git.blob_at(prev_commit or recording, rel)
     after = git.blob_at(new_commit or baseline, rel)
     if before is None or after is None:
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
     if before != after:
-        return repointed
+        return None
     return f"{moved}, but {safe_text(rel)} did not change in between"
 
 

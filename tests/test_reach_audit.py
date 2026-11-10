@@ -64,6 +64,11 @@ def make_probe(pid: str = "p1", *, derived_from: str, tier: str = "T0", path: st
     return probe
 
 
+# The reason a move onto a commit anchor reads weakened in a SHA-1 repository (#688).
+COMMIT_MOVE_REFUSED = ("a move onto a commit anchor is never a re-derivation for a declaration inside the "
+                       "repository; re-derive it, which records a content or section anchor")
+
+
 def marker_argv(marker: Path, output: str = "3") -> list[str]:
     """An observation step that leaves a trace, so a test can prove it never ran."""
     return [PY, "-c", f"open({str(marker)!r}, 'w').write('ran'); print({output!r})"]
@@ -72,6 +77,22 @@ def marker_argv(marker: Path, output: str = "3") -> list[str]:
 @pytest.fixture
 def target(tmp_path) -> Target:
     t = Target(tmp_path / "target")
+    t.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
+    t.commit("declare")
+    return t
+
+
+@pytest.fixture
+def sha256_target(tmp_path) -> Target:
+    """A SHA-256 repository: no content anchor exists there, so a commit anchor keeps the pre-v1.1 rules."""
+    path = tmp_path / "target"
+    path.mkdir()
+    res = subprocess.run(["git", "init", "-q", "--object-format=sha256", str(path)],
+                         capture_output=True, text=True, check=False)
+    if res.returncode != 0:
+        pytest.skip(f"local git cannot create a SHA-256 repository: {res.stderr.strip()}")
+    t = Target(path)
+    assert t.git("rev-parse", "--show-object-format") == "sha256"
     t.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
     t.commit("declare")
     return t
@@ -502,9 +523,9 @@ def test_R3_renaming_the_probe_does_not_launder_a_weakening(target):
 def test_R3_R5_re_derivation_after_a_declaration_change_is_clean(target):
     _, rel = derived_probe(target)
     target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
-    moved = target.commit("move declaration")
+    target.commit("move declaration")
     data = yaml.safe_load((target.path / rel).read_text())
-    data["derived_from"] = moved
+    data["derived_from"] = _blob(target)
     target.write(rel, yaml.safe_dump(data, sort_keys=False))
     target.commit("re-derive")
     code, report = run_audit(target)
@@ -1123,7 +1144,7 @@ def test_SCR001_derived_from_bump_without_declaration_change_is_weakened(target,
     row = row_of(report, "p1")
     assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED
     assert f"re-baselined without a declaration change: {laundering[:12]} moved derived_from" in row[9]
-    assert f"but {DECL} did not change in between" in row[9]
+    assert COMMIT_MOVE_REFUSED in row[9]
     assert "**weakened** `p1`" in report
 
 
@@ -1137,14 +1158,16 @@ def test_SCR001_re_pointing_the_anchor_at_a_changed_file_does_not_launder(target
     target.commit("re-point, weaken, re-record")
     _, report = run_audit(target)
     row = row_of(report, "p1")
-    assert row[7] == ra.STATE_WEAKENED and f"but {DECL} did not change in between" in row[9]
+    assert row[7] == ra.STATE_WEAKENED and COMMIT_MOVE_REFUSED in row[9]
 
 
 def test_SCR001_re_derivation_after_a_renamed_declaration_is_clean(target):
     _, rel = derived_probe(target)
     target.git("mv", DECL, "docs/requirements-v2.md")
-    renamed = target.commit("rename the declaration")
-    _rewrite(target, rel, declaration_path="docs/requirements-v2.md", derived_from=renamed)
+    target.write("docs/requirements-v2.md", "# Requirements\n\n## Export\n\nExports 3 collections, v2.\n")
+    target.commit("rename and edit the declaration")
+    _rewrite(target, rel, declaration_path="docs/requirements-v2.md",
+             derived_from=_blob(target, path="docs/requirements-v2.md"))
     target.commit("re-derive against the renamed file")
     code, report = run_audit(target)
     assert code == ra.EXIT_OK
@@ -1223,8 +1246,8 @@ def test_SCR002_latin1_byte_in_probe_history_is_classified_not_a_crash(target):
     (target.path / rel).write_bytes(first)
     target.commit("probe with a Latin-1 comment")
     target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
-    moved = target.commit("move declaration")
-    target.write_probe(make_probe(derived_from=moved))
+    target.commit("move declaration")
+    target.write_probe(make_probe(derived_from=_blob(target)))
     target.commit("re-derive as UTF-8")
     code, report = run_audit(target)
     assert code == ra.EXIT_OK
@@ -3779,10 +3802,13 @@ def test_701_a_derivation_recorded_inside_the_newest_merge_names_it_not_uncommit
 
 
 @pytest.mark.parametrize("where", ["merge", "commit"])
-def test_701_a_weakening_before_a_commit_anchor_re_derivation_is_outside_the_window(target, tmp_path, where):
+def test_701_a_weakening_before_a_commit_anchor_re_derivation_is_outside_the_window(sha256_target, tmp_path,
+                                                                                    where):
     """AC (e): a move onto a commit anchor keeps the pre-v1.1 rules and consults only the previous
     anchor, not the probe changes before it, so a plain commit there is adopted; a merge at the same
-    place is treated the same and not reported."""
+    place is treated the same and not reported. Since #688 that holds only in a SHA-256 repository;
+    in a SHA-1 one the move itself is refused (test_688_SECR4_*)."""
+    target = sha256_target
     marker = tmp_path / "ran"
     _, rel = derived_probe(target, argv=marker_argv(marker, "1"), expected=dict(BAR_OF_TWO))
     if where == "merge":
@@ -4940,8 +4966,9 @@ def test_688_SEC3_a_weakened_id_re_created_elsewhere_and_moved_back_onto_its_pat
 HI = {"kind": "count", "value": 3, "unit": "collections"}
 
 
-def test_688_SECR3_2_a_backward_commit_anchor_jump_cannot_re_baseline_a_lowering(target):
+def test_688_SECR3_2_a_backward_commit_anchor_jump_cannot_re_baseline_a_lowering(sha256_target):
     """Measured before the fix (also on origin/develop): yid read clean, exit 0."""
+    target = sha256_target
     d0 = target.git("rev-parse", "HEAD")
     target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections and more.\n")
     d = target.commit("D decl change")
@@ -4961,8 +4988,9 @@ def test_688_SECR3_2_a_backward_commit_anchor_jump_cannot_re_baseline_a_lowering
         f"content at {back[:12]}, where it was recorded, so no declaration change can be shown"), row[9]
 
 
-def test_688_SECR3_2_a_commit_anchored_re_derivation_after_a_real_declaration_change_stays_clean(target):
+def test_688_SECR3_2_a_commit_anchored_re_derivation_after_a_real_declaration_change_stays_clean(sha256_target):
     """Positive control: the previous anchor is the declaration where it was recorded, and it changed since."""
+    target = sha256_target
     derived_probe(target)
     target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
     moved = target.commit("change the declaration")
@@ -4973,8 +5001,9 @@ def test_688_SECR3_2_a_commit_anchored_re_derivation_after_a_real_declaration_ch
     assert row_of(report, "p1")[7] == ra.STATE_CLEAN
 
 
-def test_688_SECR3_2_a_forward_commit_anchor_jump_without_a_declaration_change_reads_as_before(target):
+def test_688_SECR3_2_a_forward_commit_anchor_jump_without_a_declaration_change_reads_as_before(sha256_target):
     """Unchanged by the fix: the forward move over no declaration change is refused as it was."""
+    target = sha256_target
     sha, _ = derived_probe(target)
     target.write("unrelated.txt", "x\n")
     later = target.commit("unrelated work")
@@ -4986,88 +5015,95 @@ def test_688_SECR3_2_a_forward_commit_anchor_jump_without_a_declaration_change_r
                              f"from {sha[:12]} to {later[:12]}, but {DECL} did not change in between"), reason
 
 
-def _repoint_then_lower(target, *, decoy_at_anchor: bool) -> tuple[str, str, str, str, str]:
-    """R1 records anchor X on DECL; I re-points only declaration.path at a decoy; E edits the decoy;
-    W moves the anchor to E, restores DECL and lowers the bar. DECL itself never changes."""
-    if decoy_at_anchor:
-        target.write("decoy.txt", "a\n")
-        target.commit("decoy exists at the anchor")
+# -- #688 SEC-R4: a move onto a commit anchor in a SHA-1 repository ----------- #
+def _commit_move_reason(target: Target) -> str:
+    code, report = run_audit(target)
+    row = row_of(report, "yid")
+    assert code == ra.EXIT_FINDINGS and row[7] == ra.STATE_WEAKENED, row
+    return _plain(row[9])
+
+
+def test_688_SECR4_a_commit_anchored_re_derivation_after_a_real_declaration_change_is_refused(target):
+    """Since v1.1 a re-derivation records a content anchor; a commit anchor is only a migration rule."""
     x = target.git("rev-parse", "HEAD")
     target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
-    recorded = target.commit("R1 record")
-    target.write_probe(make_probe("yid", derived_from=x, path="decoy.txt", expected=dict(HI)), name="y")
-    repoint = target.commit("I re-point the declaration only")
-    target.write("decoy.txt", "b\n")
-    e = target.commit("E edit the decoy")
-    target.write_probe(make_probe("yid", derived_from=e, expected=dict(LOW)), name="y")
-    lowered = target.commit("W move the anchor and lower")
-    return x, recorded, repoint, e, lowered
-
-
-@pytest.mark.parametrize("decoy_at_anchor", [False, True])
-def test_688_SECR4_1_a_declaration_path_re_pointed_inside_a_commit_anchor_run_cannot_prove_a_move(
-        target, decoy_at_anchor):
-    """Measured before the fix (also on origin/develop): yid read clean, exit 0."""
-    x, recorded, repoint, e, lowered = _repoint_then_lower(target, decoy_at_anchor=decoy_at_anchor)
-    code, report = run_audit(target)
-    assert code == ra.EXIT_FINDINGS, report
-    row = row_of(report, "yid")
-    assert row[7] == ra.STATE_WEAKENED, row
-    assert _plain(row[9]) == (
-        f"weakened: re-baselined without a declaration change: {lowered[:12]} moved derived_from from {x[:12]} "
-        f"to {e[:12]}, but the probe changed in {repoint[:12]} after its previous derivation was recorded in "
-        f"{recorded[:12]}"), row[9]
-
-
-def test_688_SECR4_1_a_path_re_pointed_by_the_recording_commit_must_be_a_legitimate_derivation(target):
-    """The re-pointing commit records a derivation of its own (an abbreviated anchor), so it opens the run.
-
-    Measured before the fix: yid read clean, exit 0."""
-    target.write("decoy.txt", "a\n")
-    c0 = target.commit("decoy exists at the anchor")
-    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
-    target.commit("record")
-    target.write_probe(make_probe("yid", derived_from=c0[:12], path="decoy.txt", expected=dict(HI)), name="y")
-    repoint = target.commit("re-point under an abbreviated anchor")
-    target.write("decoy.txt", "b\n")
-    z1 = target.commit("edit the decoy")
-    target.write_probe(make_probe("yid", derived_from=z1, path="decoy.txt", expected=dict(LOW)), name="y")
-    target.commit("move the anchor and lower")
-    state, reason = _state(target, "yid")
-    assert state == ra.STATE_WEAKENED, reason
-    assert f"but its previous derivation was no re-derivation either: {repoint[:12]} moved derived_from" in reason
-    assert reason.endswith(f"{repoint[:12]} moved derived_from from {c0[:12]} to {c0[:12]}, but {DECL} did not "
-                           "change in between"), reason
-
-
-def test_688_SECR4_1_a_move_cannot_re_point_the_declaration_beside_one_that_still_exists(target):
-    """A justified move that also re-points the path would leave the probe watching the decoy.
-
-    Measured before the fix: the next move, proven by the decoy's change, read clean, exit 0."""
-    target.write("decoy.txt", "a\n")
-    c0 = target.commit("decoy exists")
-    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
     target.commit("record")
     target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
-    x1 = target.commit("a real declaration change")
-    target.write_probe(make_probe("yid", derived_from=x1, path="decoy.txt", expected=dict(HI)), name="y")
-    moved = target.commit("re-derive and re-point")
-    state, reason = _state(target, "yid")
-    assert state == ra.STATE_WEAKENED, reason
-    assert reason.endswith(f"{moved[:12]} moved derived_from from {c0[:12]} to {x1[:12]}, but it also moved "
-                           f"declaration.path from {DECL} to decoy.txt while {DECL} still exists at {x1[:12]}, "
-                           "so no declaration change can be shown"), reason
+    changed = target.commit("change the declaration")
+    target.write_probe(make_probe("yid", derived_from=changed, expected=dict(HI)), name="y")
+    moved = target.commit("re-derive onto a commit anchor")
+    assert _commit_move_reason(target) == (
+        f"weakened: re-baselined without a declaration change: {moved[:12]} moved derived_from from {x[:12]} "
+        f"to {changed[:12]}, but {COMMIT_MOVE_REFUSED}")
 
 
-def test_688_SECR4_1_a_commit_anchor_absent_at_both_commits_proves_nothing(target):
-    """A path that holds no declaration where the previous anchor and its recording point cannot prove the anchor."""
+def test_688_SECR4_the_same_re_derivation_onto_a_content_anchor_is_clean(target):
+    """Positive control: the recovery the refusal names."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    target.commit("change the declaration")
+    target.write_probe(make_probe("yid", derived_from=_blob(target), expected=dict(HI)), name="y")
+    target.commit("re-derive onto a content anchor")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK and row_of(report, "yid")[7] == ra.STATE_CLEAN, report
+
+
+def test_688_SECR4_a_declaration_path_re_pointed_at_a_decoy_cannot_prove_a_move(target):
+    """Measured before the fix (also on origin/develop): clean, exit 0. The decoy changed, DECL never did."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write_probe(make_probe("yid", derived_from=x, path="decoy.txt", expected=dict(HI)), name="y")
+    target.commit("re-point the declaration only")
+    target.write_probe(make_probe("yid", derived_from=x[:12], path="decoy.txt", expected=dict(HI)), name="y")
+    target.commit("abbreviate the anchor, a run of its own")
+    target.write("decoy.txt", "b\n")
+    edit = target.commit("edit the decoy")
+    target.write_probe(make_probe("yid", derived_from=edit, path="decoy.txt", expected=dict(LOW)), name="y")
+    target.commit("move the anchor and lower")
+    assert _commit_move_reason(target).endswith(COMMIT_MOVE_REFUSED)
+
+
+def test_688_SECR4_a_rename_that_is_restored_cannot_prove_a_move(target):
+    """Measured before the fix: clean, exit 0. The original declaration is back, unchanged and unwatched."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.git("mv", DECL, "docs/y.md")
+    renamed = target.commit("rename")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
+    target.commit("restore the original")
+    target.write_probe(make_probe("yid", derived_from=renamed, path="docs/y.md", expected=dict(LOW)), name="y")
+    target.commit("follow the rename and lower")
+    assert _commit_move_reason(target).endswith(COMMIT_MOVE_REFUSED)
+
+
+def test_688_SECR4_an_edit_that_is_reverted_cannot_prove_a_move(target):
+    """Measured before the fix: clean, exit 0. The declaration was touched, not changed."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write(DECL, "tmp\n")
+    target.commit("edit")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
+    reverted = target.commit("revert")
+    target.write_probe(make_probe("yid", derived_from=reverted, expected=dict(LOW)), name="y")
+    target.commit("move onto the revert and lower")
+    assert _commit_move_reason(target).endswith(COMMIT_MOVE_REFUSED)
+
+
+def test_688_SECR4_a_commit_anchor_absent_at_both_commits_proves_nothing(sha256_target):
+    """A path holding no declaration where the previous anchor points can't prove that anchor."""
+    target = sha256_target
     x = target.git("rev-parse", "HEAD")
     target.write_probe(make_probe("yid", derived_from=x, path="ghost.md", expected=dict(HI)), name="y")
     target.commit("record against a missing file")
     target.write("ghost.md", "now it exists\n")
-    e = target.commit("create the file")
-    target.write_probe(make_probe("yid", derived_from=e, path="ghost.md", expected=dict(LOW)), name="y")
+    created = target.commit("create the file")
+    target.write_probe(make_probe("yid", derived_from=created, path="ghost.md", expected=dict(LOW)), name="y")
     target.commit("move the anchor and lower")
     state, reason = _state(target, "yid")
     assert state == ra.STATE_WEAKENED, reason
-    assert f"ghost.md did not exist at the previous derived_from {x[:12]}, so no declaration change" in reason, reason
+    assert f"ghost.md did not exist at the previous derived_from {x[:12]}, so no declaration change" in reason
