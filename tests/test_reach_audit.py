@@ -3862,11 +3862,11 @@ def test_701_the_targets_log_and_diff_config_does_not_hide_an_evil_merge(target,
 
 
 def test_701_a_search_start_that_is_no_ancestor_widens_instead_of_finding_nothing(target):
-    """Follow-up 1: file_history() orders by committer date, so with a forged date a descendant can be
-    listed as the older revision. R, an evil merge E, then A; D comes after A but is dated before R, so
-    the walk lists A, R, D and D looks like the oldest revision of a span ending at A. D..A is empty;
-    the search must fail closed and still find E, which lies in A's ancestry. D sits on a branch merged
-    back without a conflict: the walk pops commits by date only across branches."""
+    """Follow-up 1: R, an evil merge E, then A; D comes after A but is dated before R. In committer-date
+    order the walk listed A, R, D, and D looked like the oldest revision of a span ending at A. Since
+    #688 file_history() lists in topological order (D first), but a span can still start at a revision
+    that is no ancestor of its end: D..A is empty, and the search must fail closed and still find E,
+    which lies in A's ancestry. D sits on a branch merged back without a conflict."""
     rel = _content_probe(target)
     _, merge = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1))
     _rewrite(target, rel, tier="T1")
@@ -3884,8 +3884,8 @@ def test_701_a_search_start_that_is_no_ancestor_widens_instead_of_finding_nothin
     target.git("merge", "-q", "--no-ff", "--no-edit", "late")
     git = ra.Git(target.path)
     history = git.file_history(rel)
-    assert [c for c, _ in history][-1] == forged and git.is_ancestor_or_equal(after, forged)
-    span = [rev for rev in history if rev[0] != after]
+    assert [c for c, _ in history][0] == forged and git.is_ancestor_or_equal(after, forged)
+    span = [rev for rev in history if rev[0] not in (after, forged)] + [(forged, rel)]
     assert [m for m, _ in ra._merges_changing(git, span, after)] == [merge]
     assert git.merges_changing(forged, after, rel) == [merge]
 
@@ -4821,3 +4821,115 @@ def test_688_SEC1_a_copy_merged_in_from_a_side_branch_stays_clean(target):
     code, report = run_audit(target)
     assert code == ra.EXIT_OK, report
     assert row_of(report, "p2")[7] == ra.STATE_CLEAN
+
+
+# Second security review of #688: a backdated side commit hides behind the creating copy or rename.
+LOW = {"kind": "count", "value": 1, "unit": "collections"}
+
+
+def _backdated_lowering(target: Target, created: str, rel: str) -> str:
+    """On a side branch from ``created``, lower the bar of ``rel`` in a commit dated a day before
+    ``created``, then merge it back with --no-ff; returns the lowering commit."""
+    target.git("switch", "-q", "-c", "side", created)
+    data = yaml.safe_load((target.path / rel).read_text())
+    data["expected"] = dict(LOW)
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+    target.git("add", "-A")
+    when = f"@{int(target.git('log', '-1', '--format=%ct', created)) - 86400}"
+    subprocess.run(["git", "-C", str(target.path), "commit", "-q", "-m", "D"], check=True,
+                   env={**os.environ, "GIT_COMMITTER_DATE": when, "GIT_AUTHOR_DATE": when})
+    lowering = target.git("rev-parse", "HEAD")
+    target.git("switch", "-q", "-")
+    target.git("merge", "-q", "--no-ff", "-m", "M", "side")
+    return lowering
+
+
+def test_688_SEC3_a_backdated_lowering_after_a_copy_is_listed_and_weakens_the_copy(target):
+    """Measured before the fix (git 2.53): file_log(y.yml) listed only the copy and q's A; xid read clean, exit 0."""
+    d = _blob(target)
+    target.write_probe(make_probe("qid", derived_from=d), name="q")
+    target.commit("c0")
+    target.write_probe(make_probe("xid", derived_from=d), name="y")
+    created = target.commit("C")
+    y = f"{PROBES}/y.yml"
+    assert _status_of(target, y, created) == ("C", f"{PROBES}/q.yml"), "git no longer pairs the copy"
+    lowering = _backdated_lowering(target, created, y)
+    assert lowering in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    row = row_of(report, "xid")
+    assert row[7] == ra.STATE_WEAKENED, row
+    assert (f"probe changed in {lowering[:12]} after its derivation was recorded in {created[:12]}"
+            in _plain(row[9])), row[9]
+
+
+def test_688_SEC3_a_backdated_lowering_after_a_rename_names_the_lowering(target):
+    """Before the fix the rename variant read weakened only by accident: the lowering was not listed."""
+    d = _blob(target)
+    target.write_probe(make_probe("xid", derived_from=d), name="w")
+    target.commit("c0")
+    y = f"{PROBES}/y.yml"
+    target.git("mv", f"{PROBES}/w.yml", y)
+    renamed = target.commit("C'")
+    assert _status_of(target, y, renamed) == ("R", f"{PROBES}/w.yml")
+    lowering = _backdated_lowering(target, renamed, y)
+    assert lowering in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
+    state, reason = _state(target, "xid")
+    assert state == ra.STATE_WEAKENED and "probe changed in " in reason and lowering[:12] in reason, reason
+
+
+def test_688_SEC3_a_change_the_walk_does_not_list_is_reported_as_an_incomplete_history(target, monkeypatch):
+    """Defense in depth: with the walk back in committer-date order, the probe-set history still sees D."""
+    real = ra.Git.out
+
+    def date_ordered(self, *args):
+        return real(self, *(a for a in args if a != "--topo-order"))
+
+    monkeypatch.setattr(ra.Git, "out", date_ordered)
+    d = _blob(target)
+    target.write_probe(make_probe("qid", derived_from=d), name="q")
+    target.commit("c0")
+    target.write_probe(make_probe("xid", derived_from=d), name="y")
+    created = target.commit("C")
+    y = f"{PROBES}/y.yml"
+    lowering = _backdated_lowering(target, created, y)
+    assert lowering not in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    row = row_of(report, "xid")
+    assert row[7] == ra.STATE_WEAKENED, row
+    assert (f"{lowering[:12]} changed {y} under the id xid, but the probe's history walk does not list it"
+            in _plain(row[9])), row[9]
+
+
+@pytest.mark.parametrize("rename_back", [False, True])
+def test_688_SEC3_a_weakened_id_re_created_elsewhere_and_moved_back_onto_its_path_is_not_clean(target, rename_back):
+    """y.yml carries xid, lowered, then dropped; w.yml re-creates xid; a re-derivation after a real
+    declaration change moves it back onto y.yml. --follow stops at w.yml, so y.yml's earlier xid
+    revisions are unlisted: without the move it's an exchange under the same id (#706), with it the
+    listed history is incomplete."""
+    y, w = f"{PROBES}/y.yml", f"{PROBES}/w.yml"
+    target.write_probe(make_probe("xid", derived_from=_blob(target)), name="y")
+    target.commit("approve xid")
+    _weaken(target, y)
+    target.commit("lower xid's bar")
+    target.git("rm", "-q", y)
+    target.commit("drop y.yml")
+    target.write_probe(make_probe("xid", derived_from=_blob(target)), name="w")
+    target.commit("re-create xid in w.yml")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    target.commit("change the declaration")
+    if rename_back:
+        target.git("mv", w, y)
+    _rewrite(target, y if rename_back else w, derived_from=_blob(target))
+    moved = target.commit("re-derive xid" + (" back at y.yml" if rename_back else ""))
+    if rename_back:
+        assert [s for c, _, s, _ in ra.Git(target.path).file_log(y) if c == moved] == ["R"]
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    if rename_back:
+        row = row_of(report, "xid")
+        assert row[7] == ra.STATE_WEAKENED, row
+        assert f"changed {y} under the id xid, but the probe's history walk does not list it" in _plain(row[9]), row
+    else:
+        assert "exchange under the same id" in report, report

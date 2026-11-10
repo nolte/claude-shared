@@ -775,11 +775,21 @@ class Git:
         ``--no-color`` keep the repository's log configuration out of them, and
         literal pathspecs keep a probe named like ``w[x].yml`` from matching the
         history of ``wx.yml``.
+
+        ``--topo-order`` lists every commit before its parents. ``--follow``
+        switches to the source path when it reaches the rename or copy that
+        created the file, and from then on matches only that path; in the
+        default committer-date order a descendant of that commit dated before it
+        (a backdated commit on a side branch merged later) would come after the
+        switch and never be listed, so a change to the probe could hide behind
+        its own creation. Topological order emits every descendant first.
+        _own_log() still checks the listed history against the probe-set
+        history and fails closed on any revision it misses.
         """
         if path in self._file_logs:
             return list(self._file_logs[path])
-        raw = self.out("--literal-pathspecs", "log", "--follow", "--no-merges", "--no-show-signature", "--no-color", "--format=%x00%H",
-                       "--name-status", "--", path)
+        raw = self.out("--literal-pathspecs", "log", "--follow", "--no-merges", "--topo-order", "--no-show-signature",
+                       "--no-color", "--format=%x00%H", "--name-status", "--", path)
         history: list[tuple[str, str, str, str]] = []
         for block in raw.split("\x00")[1:]:
             lines = [ln for ln in block.splitlines() if ln.strip()]
@@ -919,15 +929,18 @@ class Git:
         an evil merge on it included. The combined diff (``-c``) names ``path``
         for a merge exactly when its result differs from every parent; a merge
         that took one side's version names nothing and is skipped, since that
-        side's own commit is in file_history(). ``--no-follow``,
+        side's own commit is in file_history() (listed in topological order, so
+        a backdated side commit is not lost behind a rename or copy; _own_log()
+        reports one the walk still misses). ``--no-follow``,
         ``--no-show-signature``, ``--no-color`` and ``--no-renames`` keep the
         repository's log and diff configuration from changing the output, and
         literal pathspecs keep ``path`` from matching other files.
 
         ``since..until`` is empty when ``since`` is not an ancestor of ``until``.
-        file_history() orders by committer date, which the author sets, so a
-        listed "older" revision can be a descendant of a newer one. The search
-        then fails closed: it covers every merge reachable from ``until``.
+        file_history() lists in topological order, so a listed older revision is
+        never a descendant of a newer one, but it can sit on a parallel line
+        that is no ancestor either. The search then fails closed: it covers
+        every merge reachable from ``until``.
         """
         if since.startswith("-") or until.startswith("-"):
             raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
@@ -1469,16 +1482,18 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     ends the history is a complete origin. A history the supersede cut ended is
     exempt: it ends at the cut on purpose, and the cut is only made after
     _lineage_problem() proved the kept part ends at the commit that added the
-    replacement's path.
+    replacement's path. A plain commit that changed the probe and that the walk
+    does not list (_unlisted_write) is never exempt.
     """
-    own, origin = _own_log(git, probe, git.file_log(probe.file), yaml)
+    own, origin, gap = _own_log(git, probe, git.file_log(probe.file), yaml)
     history = [(commit, path_then) for commit, path_then, _, _ in own]
     if cut:
         history = history[:next((i for i, rev in enumerate(history) if rev in cut), len(history))]
     if not history:
-        return None, [], False, [], [], None
+        return None, [], False, [], [], gap
     if len(history) < len(own):
         origin = None
+    origin = "; ".join(part for part in (gap, origin) if part) or None
     current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
     for commit, path_then in history:
@@ -1498,8 +1513,9 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
 
 
 def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml: Any,
-             ) -> tuple[list[tuple[str, str, str, str]], str | None]:
-    """The probe's own part of its followed ``log`` (Git.file_log()), and why it does not reach its origin, or None.
+             ) -> tuple[list[tuple[str, str, str, str]], str | None, str | None]:
+    """The probe's own part of its followed ``log`` (Git.file_log()), why it does not reach its origin
+    (or None), and which change to the probe the log misses (_unlisted_write(), or None).
 
     git --follow reports a file created beside a similar one that stays in place
     as a copy (``C``) and walks on into the revisions of that source. A probe
@@ -1532,6 +1548,11 @@ def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml:
 
     Without a copy that ends it, the whole log is the probe's own, and its
     oldest revision must create the probe's path (_origin_problem).
+
+    Last, the own part is checked against the probe-set history: a plain
+    commit there that wrote one of the probe's ids on one of its paths, and
+    that the walk does not list, means the listed history is incomplete. No
+    copy then ends it, and the gap is reported, fail closed.
     """
     for i, (commit, path, status, source) in enumerate(log):
         if status != "C" or not source:
@@ -1544,30 +1565,83 @@ def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml:
         if not _ids_new_at(git, shared_probe_set_history(git, yaml), commit, probe.pid,
                            {(c, p) for c, p, _, _ in own}):
             continue
+        gap = _unlisted_write(git, shared_probe_set_history(git, yaml), probe, own)
+        if gap:
+            return log, None, gap
         earlier = git.out("--literal-pathspecs", "rev-list", "-n", "1", "--full-history", parents[0], "--",
                           path).strip()
         if earlier:
             return own, (f"the probe was created in {commit[:12]} as a copy of {safe_text(source)} at "
                          f"{safe_text(path)}, which already held a file in {earlier[:12]}: git follows the copy "
                          "instead of that path, so the path's earlier revisions are not in the listed history and "
-                         "can't be judged; derive the probe under a path no earlier file used")
-        return own, None
-    return log, _origin_problem(*log[-1]) if log else None
+                         "can't be judged; derive the probe under a path no earlier file used"), None
+        return own, None, None
+    gap = _unlisted_write(git, shared_probe_set_history(git, yaml), probe, log) if log else None
+    return log, _origin_problem(*log[-1]) if log else None, gap
+
+
+def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
+                    own: list[tuple[str, str, str, str]]) -> str | None:
+    """Why the listed ``own`` revisions miss a change to the probe, or None.
+
+    The ids are the probe's id now and every id one of ``own`` carried. A
+    write of such an id (ProbeHistory.writes, which reads every probe revision
+    in HEAD's history, the file name stem standing in for a missing id) in a
+    plain commit that ``own`` does not list is a change the walk missed when it
+    lies on one of the probe's paths in a commit that does not descend from the
+    newer revision that moved the probe away from that path (the probe's
+    current path has no such revision). Then the listed history is incomplete.
+    A file placed on a path after the probe left it is not the probe's change
+    (_merges_changing() cuts its search the same way). One on a path before
+    the probe came there is counted: carrying the probe's id, it is an earlier
+    probe under that id whose revisions the walk does not list, as when a
+    probe is deleted, re-created under its id at another path, and moved back.
+    Merges are left to _merges_changing(), since the walk never lists them.
+    """
+    listed = {(commit, path) for commit, path, _, _ in own}
+    segments: list[tuple[str, str | None]] = []  # (path, the newer revision that moved the probe away)
+    for i, (_, path, _, _) in enumerate(own):
+        if i == 0 or path != own[i - 1][1]:
+            segments.append((path, own[i - 1][0] if i else None))
+    ids = {probe.pid} | {pid for pid, writes in history.writes.items() if any(w in listed for w in writes)}
+    for pid in sorted(ids):
+        for commit, path in history.writes.get(pid, []):
+            if (commit, path) in listed or commit in history.merges:
+                continue
+            if any(path == on and (end is None or not git.is_ancestor_or_equal(end, commit))
+                   for on, end in segments):
+                return (f"{commit[:12]} changed {safe_text(path)} under the id {safe_text(pid, 120)}, but the "
+                        "probe's history walk does not list it, so the listed history is incomplete and no "
+                        "derivation in it can be judged")
+    return None
 
 
 def _ids_new_at(git: Git, history: "ProbeHistory", copying: str, pid: str, own: set[tuple[str, str]]) -> bool:
     """Whether every id the probe carried in ``own`` (and ``pid``, its id now) is new at ``copying``.
 
     New: each write of the id (ProbeHistory.writes) is one of ``own``, the
-    probe's kept ``(commit, path)`` revisions, or lies in a commit that
-    descends from ``copying`` (or is it). A write anywhere else, an ancestor or
-    a side line merged later, means some probe file carried the id outside the
-    probe's own history, so a copy cut could hide that file's revisions.
+    probe's kept ``(commit, path)`` revisions, or a merge or a write on a path
+    outside ``own`` in a commit that descends from ``copying`` (or is it). A
+    plain commit on one of the probe's own paths is never excused: the walk
+    lists those, and one it misses is reported by _unlisted_write(). A write
+    anywhere else, an ancestor or a side line merged later, means some probe
+    file carried the id outside the probe's own history, so a copy cut could
+    hide that file's revisions. The descendants are read once
+    (``rev-list --ancestry-path``), not per write.
     """
     ids = {pid} | {carried for carried, writes in history.writes.items() if any(w in own for w in writes)}
+    paths = {path for _, path in own}
+    descendants: set[str] | None = None
     for carried in ids:
         for commit, path in history.writes.get(carried, []):
-            if (commit, path) not in own and not git.is_ancestor_or_equal(copying, commit):
+            if (commit, path) in own:
+                continue
+            if commit not in history.merges and path in paths:
+                return False
+            if descendants is None:
+                descendants = set(git.out("rev-list", "--ancestry-path", f"{copying}..{history.head}", "--").split())
+                descendants.add(copying)
+            if commit not in descendants:
                 return False
     return True
 
@@ -2806,8 +2880,9 @@ class ProbeHistory:
     ``writes`` lists per id the ``(commit, path)`` changes whose result carries
     it; ``removals`` the changes that took it off a path, newest first
     (``--topo-order``: a commit before its parents); ``at_head`` the paths that
-    carry it in HEAD's own tree. ``commits`` and ``blobs`` count what the walk
-    read, for the measurement of its cost.
+    carry it in HEAD's own tree; ``merges`` the merge commits among the
+    changes. ``commits`` and ``blobs`` count what the walk read, for the
+    measurement of its cost.
     """
 
     head: str
@@ -2816,6 +2891,7 @@ class ProbeHistory:
     at_head: dict[str, list[str]] = field(default_factory=dict)
     commits: int = 0
     blobs: int = 0
+    merges: set[str] = field(default_factory=set)
 
     @property
     def ids(self) -> set[str]:
@@ -2931,6 +3007,7 @@ def probe_set_history(git: Git, yaml: Any, head: str) -> ProbeHistory:
         found = declared.get(blob) if mode != _SYMLINK_MODE else None
         return found if found is not None else PurePosixPath(path).stem
 
+    history.merges = {commit for commit, parents, *_ in changes if len(parents) > 1}
     for commit, parents, old_mode, new_mode, old, new, path in changes:
         before = carried(old_mode, old, path) if present(old_mode, old, path) else None
         after = carried(new_mode, new, path) if present(new_mode, new, path) else None
