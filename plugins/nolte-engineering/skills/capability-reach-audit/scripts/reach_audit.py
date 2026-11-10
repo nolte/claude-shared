@@ -2205,7 +2205,7 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         # and skip proving the previous anchor, which launders a weakening.
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
-    if not historical and (new_commit is None or len(new_commit) == 40):
+    if not historical and len(baseline) == 40:
         # Since v1.1 a re-derivation in a SHA-1 repository records a content or
         # section anchor; a commit anchor survives there only as the migration
         # rule for a derivation made before. "The declaration changed" between two
@@ -2215,28 +2215,32 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         # has no content anchor, keeps the rules below, and so does a derivation
         # made before this rule that a later move's walk back reaches (historical):
         # refusing it there would leave the probe no re-derivation to recover with.
-        return (f"{moved}, but a move onto a commit anchor is never a re-derivation for a declaration "
-                "inside the repository; re-derive it, which records a content or section anchor")
-    if prev_commit is not None and new_commit is not None:
+        return f"{moved}, but {REASON_COMMIT_MOVE}"
+    span = _run_length(git, earlier, yaml)
+    recording = earlier[span - 1][0]
+    if prev_commit is not None:
         # The previous anchor must be proven where it was recorded (_prior_anchor),
         # as for every other anchor kind: otherwise one commit re-points the
         # anchor back at an older commit without changing anything else, and the
         # next moves it forward again across a declaration change that the probe
         # had already seen, re-baselining whatever that commit lowers.
-        recording = earlier[_run_length(git, earlier, yaml) - 1][0]
-        problem, _, _ = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
+        problem, before, _ = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
         if problem:
             return problem
+    else:
+        # A squash merge drops the commits a v1.0 derivation named, but the commits
+        # that recorded them are still here (as in _prior_anchor): the declaration's
+        # content there stands in for an anchor that no longer resolves.
+        before = git.blob_at(recording, rel)
+    if len(baseline) == 40:
+        return _historical_commit_move_problem(git, moved, rel, before, new_commit or baseline, baseline, earlier,
+                                               span, yaml, prior_doc, new_doc)
+    # SHA-256: the pre-v1.1 rules.
+    if prev_commit is not None and new_commit is not None:
         last = git.last_commit(rel, new_commit)
         if last is not None and not git.is_ancestor_or_equal(last, prev_commit):
             return None
         return f"{moved}, but {safe_text(rel)} did not change in between"
-    # A squash merge drops the commits a v1.0 derivation named, but the commits
-    # that recorded them are still here (as in _prior_anchor): the declaration's
-    # content there stands in for an anchor that no longer resolves. The walk
-    # back over earlier derivations (_continuation_problem) reaches such moves.
-    recording = earlier[_run_length(git, earlier, yaml) - 1][0]
-    before = git.blob_at(prev_commit or recording, rel)
     after = git.blob_at(new_commit or baseline, rel)
     if before is None or after is None:
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
@@ -2244,6 +2248,32 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         return None
     return f"{moved}, but {safe_text(rel)} did not change in between"
 
+
+def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str | None, new_commit: str,
+                                   baseline: str, earlier: list[tuple[str, str]], span: int, yaml: Any,
+                                   prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
+    """Why a SHA-1 repository's move onto a commit anchor, reached by a later move's walk, is no re-derivation.
+
+    The move is held to what a content-anchor move is held to, or a lowering
+    laundered here rides into the migration that follows. "Touched" isn't
+    "changed" (an edit that's reverted, a rename that's restored), so the content
+    is compared, at the path each side recorded: where it's unchanged the move is
+    only a re-anchoring (onto a squash merge's commit, say) that may change
+    nothing but derived_from and the approval. Either way it must build on a
+    legitimate derivation (_continuation_problem).
+    """
+    decl = new_doc.get("declaration")
+    raw = decl.get("path") if isinstance(decl, dict) else None
+    new_rel = _repo_relative(raw) if isinstance(raw, str) and raw else None
+    after = git.blob_at(new_commit, new_rel) if new_rel else None
+    if before is None or after is None:
+        return f"{moved}, but the declaration is missing at one of the two anchors, so no declaration change can be shown"
+    if after == before:
+        relabel = (("derived_from",), ("approval",))
+        if new_rel != rel or _without(new_doc, *relabel) != _without(prior_doc, *relabel):
+            return (f"{moved}, but the content of {safe_text(rel)} did not change in between, and a "
+                    "re-anchoring may change nothing but derived_from and the approval")
+    return _continuation_problem(git, moved, baseline, earlier, span, yaml)
 
 def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
                   cut: frozenset[tuple[str, str]] = frozenset()) -> ChangeState:
@@ -3613,6 +3643,10 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
 # --------------------------------------------------------------------------- #
 # Migration gate (reconfirm-and-migrate.md §Migration step 1)
 # --------------------------------------------------------------------------- #
+# A move onto a commit anchor in a SHA-1 repository (_anchor_move_problem): unlike
+# every other weakening, re-deriving onto a content or section anchor heals it.
+REASON_COMMIT_MOVE = ("a move onto a commit anchor is never a re-derivation for a declaration inside the "
+                      "repository; re-derive it, which records a content or section anchor")
 ROUTE_STALE = ("reconfirm it after the diff (references/reconfirm-and-migrate.md §Re-confirmation) "
                "or derive it again, then check again; a migration must not hide a declaration change")
 ROUTE_WEAKENED = ("not healable in place: neither a re-confirmation nor a migration clears it; "
@@ -3694,6 +3728,8 @@ def check_migration(repo_arg: str) -> tuple[int, list[str]]:
             continue
         route = {STATE_STALE: ROUTE_STALE, STATE_WEAKENED: ROUTE_WEAKENED, STATE_INVALID: ROUTE_REDERIVE,
                  STATE_CONTRADICTION: ROUTE_REDERIVE, FINDING_SUPERSEDE: ROUTE_REDERIVE}.get(state.state, ROUTE_OTHER)
+        if state.state == STATE_WEAKENED and (state.reason or "").endswith(REASON_COMMIT_MOVE):
+            route = ROUTE_REDERIVE
         refused.append(f"refused {pid}: {state.state}: {safe_text(state.reason)}; route: {route}")
     if refused:
         return EXIT_MIGRATION_REFUSED, refused

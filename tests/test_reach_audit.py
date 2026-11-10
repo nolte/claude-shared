@@ -1997,9 +1997,10 @@ def test_668_R2_fabricated_unresolvable_anchor_cannot_launder_a_weakening(target
     reason = _weakened_reason(target, marker)
     assert (f"its previous derivation was no re-derivation either: {weakening[:12]} moved derived_from "
             "from ") in reason
-    # The made-up commit does not resolve, so the commit that recorded it stands in: the declaration there
-    # is the one the previous derivation saw.
-    assert f"to 000000000000, but {DECL} did not change in between" in reason
+    # The made-up commit does not resolve, so the commit that made the move stands in: the declaration there
+    # is the one the previous derivation saw, and the move lowered the bar.
+    assert (f"to 000000000000, but the content of {DECL} did not change in between, and a re-anchoring may "
+            "change nothing but derived_from and the approval") in reason
 
 
 # --------------------------------------------------------------------------- #
@@ -5107,3 +5108,99 @@ def test_688_SECR4_a_commit_anchor_absent_at_both_commits_proves_nothing(sha256_
     state, reason = _state(target, "yid")
     assert state == ra.STATE_WEAKENED, reason
     assert f"ghost.md did not exist at the previous derived_from {x[:12]}, so no declaration change" in reason
+
+
+# -- #688 SEC-R5: a historical move onto a commit anchor, reached by a later migration ---------- #
+RESTORED = "# Requirements\n\n## Export\n\nExports 3 collections.\n"
+
+
+def _migrate_onto_content(target: Target, path: str = DECL, **kw) -> str:
+    target.write_probe(make_probe("yid", derived_from=_blob(target, path=path), path=path, **kw), name="y")
+    return target.commit("migrate onto a content anchor, nothing else")
+
+
+def test_688_SECR5_an_edit_reverted_then_migrated_cannot_launder_a_lowering(target):
+    """Measured before the fix: clean, exit 0. The commit move lowers; the migration makes it historical."""
+    c0 = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write(DECL, "tmp\n")
+    target.commit("edit")
+    target.write(DECL, RESTORED)
+    reverted = target.commit("revert")
+    target.write_probe(make_probe("yid", derived_from=reverted, expected=dict(LOW)), name="y")
+    lowered = target.commit("move onto the revert and lower")
+    _migrate_onto_content(target, expected=dict(LOW))
+    reason = _commit_move_reason(target)
+    assert reason.endswith(f"but its previous derivation was no re-derivation either: {lowered[:12]} moved "
+                           f"derived_from from {c0[:12]} to {reverted[:12]}, but the content of {DECL} did not "
+                           "change in between, and a re-anchoring may change nothing but derived_from and the "
+                           "approval"), reason
+
+
+def test_688_SECR5_a_rename_restored_then_migrated_cannot_launder_a_lowering(target):
+    c0 = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.git("mv", DECL, "docs/y.md")
+    renamed = target.commit("rename")
+    target.write(DECL, RESTORED)
+    target.commit("restore the original")
+    target.write_probe(make_probe("yid", derived_from=renamed, path="docs/y.md", expected=dict(LOW)), name="y")
+    target.commit("follow the rename and lower")
+    _migrate_onto_content(target, path="docs/y.md", expected=dict(LOW))
+    assert "but the content of" in _commit_move_reason(target)
+
+
+def test_688_SECR5_a_decoy_path_then_migrated_cannot_launder_a_lowering(target):
+    target.write("decoy.txt", "a\n")
+    c0 = target.commit("the decoy exists at the anchor")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write_probe(make_probe("yid", derived_from=c0, path="decoy.txt", expected=dict(HI)), name="y")
+    repoint = target.commit("re-point the declaration only")
+    target.write("decoy.txt", "b\n")
+    edit = target.commit("edit the decoy")
+    target.write_probe(make_probe("yid", derived_from=edit, path="decoy.txt", expected=dict(LOW)), name="y")
+    target.commit("move the anchor and lower")
+    _migrate_onto_content(target, path="decoy.txt", expected=dict(LOW))
+    reason = _commit_move_reason(target)
+    assert f"the probe changed in {repoint[:12]} after its previous derivation was recorded" in reason, reason
+
+
+def test_688_SECR5_a_squash_re_anchoring_then_migrated_stays_clean(target):
+    """Positive control: a re-anchoring onto the squash commit, content and probe unchanged, then a migration."""
+    _squash_lost_commit_anchor(target, probe_on_main=False)
+    squash = target.git("rev-parse", "HEAD")
+    rel = "project/reach-probes/p1.yml"
+    _rewrite(target, rel, derived_from=squash, approval=_restamp(target, rel))
+    target.commit("re-anchor onto the squash commit")
+    _rewrite(target, rel, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("migrate onto a content anchor")
+    _assert_clean(target)
+
+
+def test_688_SECR5_the_migration_gate_routes_a_commit_move_to_a_re_derivation(target, capsys):
+    """Unlike any other weakening, re-deriving onto a content or section anchor heals it."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("p1", derived_from=x))
+    target.commit("record")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    changed = target.commit("change the declaration")
+    target.write_probe(make_probe("p1", derived_from=changed))
+    target.commit("re-derive onto a commit anchor")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED
+    assert f"route: {ra.ROUTE_REDERIVE}" in out and ra.ROUTE_WEAKENED not in out, out
+
+
+def test_688_SECR5_an_unresolvable_commit_anchor_in_a_sha256_repository_keeps_the_old_rules(sha256_target):
+    """The SHA-1 refusal names a content anchor that a SHA-256 repository doesn't have."""
+    target = sha256_target
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write_probe(make_probe("yid", derived_from="f" * 64, expected=dict(HI)), name="y")
+    target.commit("move onto a commit that does not resolve")
+    _, reason = _state(target, "yid")
+    assert ra.REASON_COMMIT_MOVE not in reason, reason
