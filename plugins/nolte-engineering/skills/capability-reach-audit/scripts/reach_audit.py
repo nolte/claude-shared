@@ -2090,7 +2090,9 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     older revisions follow it, newest first), so re-pointing the anchor at some
     other, recently changed file in the same commit proves nothing. A path anchor
     needs its latest commit as of the new ``derived_from`` to lie outside the
-    previous one's ancestry; an inherited spec needs the pin in
+    previous one's ancestry, and the previous one to be the declaration's
+    content where it was recorded (_prior_anchor), so a jump back to an older
+    commit can't be undone by a jump forward over a change already seen; an inherited spec needs the pin in
     spec/.spec-config.yml to have moved to the new value; an external anchor can't
     show a change, so its re-baseline is never accepted. A move onto a content
     anchor is judged by content instead (_content_rebaseline_problem), a move onto
@@ -2165,7 +2167,13 @@ def _key_moving_merges(git: Git, baseline: str, earlier: list[tuple[str, str]], 
 def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: dict[str, Any], prev_df: str,
                          new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
                          new_doc: dict[str, Any]) -> str | None:
-    """The anchor-specific half of _rebaseline_problem: did the anchored declaration change?"""
+    """The anchor-specific half of _rebaseline_problem: did the anchored declaration change?
+
+    A move between two commit anchors is a re-derivation when the previous
+    anchor is proven at the commit that recorded it (the declaration there is
+    its content at the previous derived_from, _prior_anchor) and the
+    declaration changed after it, up to the new derived_from.
+    """
     prior_commit, _ = earlier[0]
     if decl.get("inherited_spec"):
         before, _ = _pinned_ref(git.show(prior_commit, SPEC_CONFIG.as_posix()), decl, yaml)
@@ -2192,6 +2200,15 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
     if prev_commit is not None and new_commit is not None:
+        # The previous anchor must be proven where it was recorded (_prior_anchor),
+        # as for every other anchor kind: otherwise one commit re-points the
+        # anchor back at an older commit without changing anything else, and the
+        # next moves it forward again across a declaration change that the probe
+        # had already seen, re-baselining whatever that commit lowers.
+        recording = earlier[_run_length(git, earlier, yaml) - 1][0]
+        problem, _, _ = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
+        if problem:
+            return problem
         last = git.last_commit(rel, new_commit)
         if last is not None and not git.is_ancestor_or_equal(last, prev_commit):
             return None

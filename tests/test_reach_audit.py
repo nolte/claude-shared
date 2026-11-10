@@ -4933,3 +4933,54 @@ def test_688_SEC3_a_weakened_id_re_created_elsewhere_and_moved_back_onto_its_pat
         assert f"changed {y} under the id xid, but the probe's history walk does not list it" in _plain(row[9]), row
     else:
         assert "exchange under the same id" in report, report
+
+
+# Third security review of #688 (SEC-R3-2): a commit anchor moved back, then forward across a
+# declaration change the probe had already seen, re-baselined a lowered bar.
+HI = {"kind": "count", "value": 3, "unit": "collections"}
+
+
+def test_688_SECR3_2_a_backward_commit_anchor_jump_cannot_re_baseline_a_lowering(target):
+    """Measured before the fix (also on origin/develop): yid read clean, exit 0."""
+    d0 = target.git("rev-parse", "HEAD")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections and more.\n")
+    d = target.commit("D decl change")
+    target.write_probe(make_probe("yid", derived_from=d, expected=dict(HI)), name="y")
+    target.commit("B0")
+    target.write_probe(make_probe("yid", derived_from=d0, expected=dict(HI)), name="y")
+    back = target.commit("b1 anchor back to D0")
+    target.write_probe(make_probe("yid", derived_from=d, expected=dict(LOW)), name="y")
+    lowered = target.commit("b2 anchor D, lowered")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    row = row_of(report, "yid")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED, row
+    assert _plain(row[9]) == (
+        f"weakened: re-baselined without a declaration change: {lowered[:12]} moved derived_from from "
+        f"{d0[:12]} to {d[:12]}, but the content of {DECL} at the previous derived_from {d0[:12]} is not its "
+        f"content at {back[:12]}, where it was recorded, so no declaration change can be shown"), row[9]
+
+
+def test_688_SECR3_2_a_commit_anchored_re_derivation_after_a_real_declaration_change_stays_clean(target):
+    """Positive control: the previous anchor is the declaration where it was recorded, and it changed since."""
+    derived_probe(target)
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    moved = target.commit("change the declaration")
+    _rewrite(target, P1_REL, derived_from=moved)
+    target.commit("re-derive at the declaration change")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK, report
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+def test_688_SECR3_2_a_forward_commit_anchor_jump_without_a_declaration_change_reads_as_before(target):
+    """Unchanged by the fix: the forward move over no declaration change is refused as it was."""
+    sha, _ = derived_probe(target)
+    target.write("unrelated.txt", "x\n")
+    later = target.commit("unrelated work")
+    _rewrite(target, P1_REL, derived_from=later, expected_value=1)
+    moved = target.commit("re-anchor forward and lower the bar")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.startswith(f"weakened: re-baselined without a declaration change: {moved[:12]} moved derived_from "
+                             f"from {sha[:12]} to {later[:12]}, but {DECL} did not change in between"), reason
