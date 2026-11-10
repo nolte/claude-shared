@@ -678,6 +678,9 @@ class Git:
         # file_log() per path: the history does not change during a run, and the
         # removal check reads the same followed histories as change detection.
         self._file_logs: dict[str, list[tuple[str, str, str, str]]] = {}
+        # probe_set_history() per HEAD commit (shared_probe_set_history()): one
+        # walk of the probe directory serves the copy cut and the removal check.
+        self.probe_sets: dict[str, "ProbeHistory"] = {}
 
     def run(self, *args: str) -> subprocess.CompletedProcess:
         """Run git read-only. Output is decoded as UTF-8 with replacement: a historical
@@ -1511,10 +1514,15 @@ def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml:
       rewritten in place in the same commit is read the same way, since the
       new file may then be the probe moved away from a path given to another
       file (as _lineage_problem() requires of a supersede cut).
-    - no revision past the copy carries an id the probe carried at or after
-      it. Otherwise the probe's id came from the source, which is the same
-      probe moved to a new file while a changed file stays behind under another
-      id; its history goes on.
+    - every id the probe carried from the copy on is new there: no probe file
+      carried it in any commit of HEAD's history outside the probe's own kept
+      revisions, except in commits that descend from the copying one
+      (ProbeHistory.writes, from shared_probe_set_history(), which reads every
+      probe revision under the probe directory, merges and revisions --follow
+      never lists included, with the file name stem standing in for a missing
+      id as Probe.pid does). Otherwise the id was carried before: the copy may
+      be that probe moved to a new file, or re-created after a deletion that
+      hid its earlier revisions from the walk, and its history goes on.
     - the copy's path held no file in any commit before the copying one. A file
       deleted and re-added at the same path keeps its history (git --follow
       walks on through the deletion), but one re-added as a copy of another file
@@ -1525,27 +1533,16 @@ def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml:
     Without a copy that ends it, the whole log is the probe's own, and its
     oldest revision must create the probe's path (_origin_problem).
     """
-    docs: dict[tuple[str, str], dict[str, Any] | None] = {}
-
-    def ids(revisions: list[tuple[str, str, str, str]]) -> set[str]:
-        found: set[str] = set()
-        for commit, path_then, _, _ in revisions:
-            if (commit, path_then) not in docs:
-                docs[commit, path_then] = _probe_doc(git, (commit, path_then), yaml)
-            doc = docs[commit, path_then]
-            if doc is not None and isinstance(doc.get("id"), str):
-                found.add(doc["id"])
-        return found
-
     for i, (commit, path, status, source) in enumerate(log):
         if status != "C" or not source:
             continue
-        parents = git.out("rev-list", "--parents", "-n", "1", commit).split()[1:]
+        parents = git.parents(commit)
         kept = git.blob_at(commit, source)
         if len(parents) != 1 or kept is None or kept != git.blob_at(parents[0], source):
             continue
         own = log[:i + 1]
-        if ids(log[i + 1:]) & (ids(own) | {probe.pid}):
+        if not _ids_new_at(git, shared_probe_set_history(git, yaml), commit, probe.pid,
+                           {(c, p) for c, p, _, _ in own}):
             continue
         earlier = git.out("--literal-pathspecs", "rev-list", "-n", "1", "--full-history", parents[0], "--",
                           path).strip()
@@ -1556,6 +1553,23 @@ def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml:
                          "can't be judged; derive the probe under a path no earlier file used")
         return own, None
     return log, _origin_problem(*log[-1]) if log else None
+
+
+def _ids_new_at(git: Git, history: "ProbeHistory", copying: str, pid: str, own: set[tuple[str, str]]) -> bool:
+    """Whether every id the probe carried in ``own`` (and ``pid``, its id now) is new at ``copying``.
+
+    New: each write of the id (ProbeHistory.writes) is one of ``own``, the
+    probe's kept ``(commit, path)`` revisions, or lies in a commit that
+    descends from ``copying`` (or is it). A write anywhere else, an ancestor or
+    a side line merged later, means some probe file carried the id outside the
+    probe's own history, so a copy cut could hide that file's revisions.
+    """
+    ids = {pid} | {carried for carried, writes in history.writes.items() if any(w in own for w in writes)}
+    for carried in ids:
+        for commit, path in history.writes.get(carried, []):
+            if (commit, path) not in own and not git.is_ancestor_or_equal(copying, commit):
+                return False
+    return True
 
 
 def _origin_problem(commit: str, path: str, status: str, source: str) -> str | None:
@@ -2855,6 +2869,14 @@ def _declared_id(content: bytes, yaml: Any) -> str | None:
 _ZERO_OBJECT = re.compile(r"^0+$")
 
 
+def shared_probe_set_history(git: Git, yaml: Any) -> ProbeHistory:
+    """probe_set_history() at HEAD, read once per run and Git instance (Git.probe_sets)."""
+    head = git.resolve_commit("HEAD") or ""
+    if head not in git.probe_sets:
+        git.probe_sets[head] = probe_set_history(git, yaml, head)
+    return git.probe_sets[head]
+
+
 def probe_set_history(git: Git, yaml: Any, head: str) -> ProbeHistory:
     """Read every probe id ever carried in HEAD's history from one walk and two blob reads.
 
@@ -3130,8 +3152,7 @@ def judge_removals(repo: Path, git: Git, probes: list[Probe], yaml: Any, validat
     manifest says, since a record for an id still carried is a contradiction.
     A record for an id never carried is invalid.
     """
-    head = git.resolve_commit("HEAD") or ""
-    history = probe_set_history(git, yaml, head)
+    history = shared_probe_set_history(git, yaml)
     manifest = load_retired(repo, yaml, validator_cls)
     result = Retirement(manifest, history)
     holders: dict[str, list[Probe]] = {}

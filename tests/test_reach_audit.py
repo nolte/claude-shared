@@ -4714,10 +4714,12 @@ def test_688_a_copy_of_a_probe_created_in_a_merge_gets_no_origin_finding(target,
         assert old[7] == ra.STATE_UNCOMMITTED, old
 
 
-def test_688_a_weakened_probe_re_added_at_its_path_as_a_copy_is_not_read_as_fresh(target):
+@pytest.mark.parametrize("new_id", [False, True])
+def test_688_a_weakened_probe_re_added_at_its_path_as_a_copy_is_not_read_as_fresh(target, new_id):
     """Delete-and-re-add keeps the history; re-added as a copy, git walks into the source instead of the path.
 
-    The path's earlier revisions are then not in the listed history, so the
+    Under the old id, the id is not new at the copy, so the walk goes on. Under
+    a new id, the path's earlier revisions are not in the listed history, so the
     probe fails closed instead of starting clean at the copy.
     """
     rel = P1_REL
@@ -4728,12 +4730,14 @@ def test_688_a_weakened_probe_re_added_at_its_path_as_a_copy_is_not_read_as_fres
     target.commit("lower p1's bar")
     target.git("rm", "-q", rel)
     removal = target.commit("drop p1")
-    target.write_probe(make_probe("p1", derived_from=_blob(target)))
-    readded = target.commit("re-add p1 from p3's text")
+    pid = "p9" if new_id else "p1"
+    target.write_probe(make_probe(pid, derived_from=_blob(target)), name="p1")
+    readded = target.commit("re-add p1.yml from p3's text")
     assert _status_of(target, rel, readded) == ("C", "project/reach-probes/p3.yml")
-    state, reason = _state(target)
+    state, reason = _state(target, pid)
     assert state == ra.STATE_WEAKENED, reason
-    assert (f"the probe was created in {readded[:12]} as a copy of project/reach-probes/p3.yml at {rel}, which "
+    assert not new_id or (f"the probe was created in {readded[:12]} as a copy of project/reach-probes/p3.yml at "
+                          f"{rel}, which "
             f"already held a file in {removal[:12]}") in reason, reason
 
 
@@ -4750,3 +4754,70 @@ def test_688_a_copy_that_takes_the_source_s_id_keeps_the_source_s_history(target
     target.commit("drop the old file")
     state, reason = _state(target)
     assert state == ra.STATE_WEAKENED, reason
+
+
+# Security review of #688: a copy ends the history only when its id is new there.
+LONG_ARGV = [PY, "-c", "import sys; print(3)  # decoy observation step with a long distinctive tail " + "x" * 120]
+PROBES = "project/reach-probes"
+
+
+def test_688_SEC1_an_id_hidden_behind_a_re_created_source_path_is_not_new_and_keeps_its_history(target):
+    """Measured before the fix: xid read clean, exit 0 (origin/develop: weakened, exit 4).
+
+    p.yml carried xid at c1 and was dropped; c3 re-creates p.yml as a tid
+    variant, so --follow on p.yml stops at c3 and never lists the xid revision.
+    The lowered xid copied from it at c4 carries an id a probe file carried
+    before, so the copy does not end its history.
+    """
+    d = _blob(target)
+    target.write_probe(make_probe("xid", derived_from=d), name="p")
+    target.write_probe(make_probe("tid", derived_from=d), name="t")
+    target.commit("c1")
+    target.git("rm", "-q", f"{PROBES}/p.yml")
+    target.commit("c2")
+    target.write_probe(make_probe("tid", derived_from=d, argv=LONG_ARGV), name="p")
+    target.commit("c3")
+    target.write_probe(make_probe("xid", derived_from=d, argv=LONG_ARGV,
+                                  expected={"kind": "count", "value": 1, "unit": "collections"}), name="Y")
+    c4 = target.commit("c4")
+    assert _status_of(target, f"{PROBES}/Y.yml", c4) == ("C", f"{PROBES}/p.yml"), "git no longer pairs the copy"
+    target.git("rm", "-q", f"{PROBES}/p.yml")
+    target.commit("c5")
+    code, report = run_audit(target)
+    assert code != ra.EXIT_OK, report
+    assert row_of(report, "xid")[7] != ra.STATE_CLEAN, row_of(report, "xid")
+
+
+@pytest.mark.parametrize("from_template", [False, True])
+def test_688_SEC2_a_re_created_id_moved_back_onto_its_old_path_stays_weakened(target, from_template):
+    """c1 W.yml carries xid; c2 drops it; c3 adds Y.yml with xid lowered (from_template: as a copy of the
+    untouched template probe t.yml); c4 renames Y.yml to W.yml. A regression guard: never clean."""
+    d = _blob(target)
+    target.write_probe(make_probe("xid", derived_from=d), name="W")
+    if from_template:
+        target.write_probe(make_probe("tid", derived_from=d), name="t")
+    target.commit("c1")
+    target.git("rm", "-q", f"{PROBES}/W.yml")
+    target.commit("c2")
+    target.write_probe(make_probe("xid", derived_from=d, expected={"kind": "count", "value": 1, "unit": "collections"}),
+                       name="Y")
+    c3 = target.commit("c3")
+    if from_template:
+        assert _status_of(target, f"{PROBES}/Y.yml", c3) == ("C", f"{PROBES}/t.yml"), "git no longer pairs the copy"
+    target.git("mv", f"{PROBES}/Y.yml", f"{PROBES}/W.yml")
+    target.commit("c4")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    assert row_of(report, "xid")[7] == ra.STATE_WEAKENED, row_of(report, "xid")
+
+
+def test_688_SEC1_a_copy_merged_in_from_a_side_branch_stays_clean(target):
+    """A --no-ff merge writes p2 (it differs from main's parent), after the copy: that write keeps p2's id new."""
+    derived_probe(target)
+    side, merge = _merge_side(target, on_side=lambda: target.write_probe(make_probe("p2", derived_from=_blob(target))))
+    assert _status_of(target, P2_REL, side) == ("C", P1_REL), "git no longer pairs the copy"
+    history = ra.probe_set_history(ra.Git(target.path), yaml, target.git("rev-parse", "HEAD"))
+    assert (merge, P2_REL) in history.writes["p2"], history.writes["p2"]
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK, report
+    assert row_of(report, "p2")[7] == ra.STATE_CLEAN
