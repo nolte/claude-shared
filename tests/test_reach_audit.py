@@ -3881,3 +3881,182 @@ def test_701_a_search_start_that_is_no_ancestor_widens_instead_of_finding_nothin
     span = [rev for rev in history if rev[0] != after]
     assert [m for m, _ in ra._merges_changing(git, span, after)] == [merge]
     assert git.merges_changing(forged, after, rel) == [merge]
+
+
+# --------------------------------------------------------------------------- #
+# #702: a probe whose origin lies in a merge the history walk can't follow
+# --------------------------------------------------------------------------- #
+# file_history() walks `--follow --no-merges`, so a rename or a creation made
+# inside a merge leaves the probe's listed history starting at a later plain
+# commit that only edits the file. That commit must not read as the derivation.
+MOVED = "project/reach-probes/p2.yml"
+
+
+def _touch(target: Target, rel: str) -> str:
+    """A trivial commit on ``rel`` that keeps every field, derived_from included."""
+    target.write(rel, (target.path / rel).read_text() + "# reviewed\n")
+    return target.commit(f"touch {rel}")
+
+
+def _incomplete(commit: str, path: str, what: str = "a change to it") -> str:
+    return (f"the probe's oldest listed revision {commit[:12]} does not create {path} but records {what}: the "
+            "probe's origin isn't in its listed history but in a merge the walk can't follow, and a derivation "
+            "recorded in a merge cannot be judged")
+
+
+def test_702_a_rename_and_weakening_inside_a_merge_then_a_commit_is_weakened(target, tmp_path):
+    """AC (a): measured before the fix as clean, exit 0, executed: C read as the probe's first commit."""
+    marker = tmp_path / "ran"
+    rel, _ = _probe_observing_one(target, marker)
+
+    def in_merge() -> None:
+        target.git("mv", rel, MOVED)
+        _rewrite(target, MOVED, expected_value=1)
+
+    _, merge = _merge_side(target, in_merge=in_merge)
+    later = _touch(target, MOVED)
+    assert ra.Git(target.path).file_history(MOVED) == [(later, MOVED)]
+    assert target.git("rev-parse", f"{later}^") == merge
+    reason = _weakened_reason(target, marker)
+    assert reason == "weakened: " + _incomplete(later, MOVED), reason
+
+
+def test_702_a_probe_created_inside_a_merge_then_a_commit_is_weakened(target, tmp_path):
+    """AC (b): the same shape without a rename; with no later commit it reads uncommitted (SEC-101)."""
+    marker = tmp_path / "ran"
+    blob = _blob(target)
+    _, merge = _merge_side(target, in_merge=lambda: target.write_probe(
+        make_probe(derived_from=blob, argv=marker_argv(marker))))
+    later = _touch(target, "project/reach-probes/p1.yml")
+    assert ra.Git(target.path).file_history("project/reach-probes/p1.yml") == [(later, "project/reach-probes/p1.yml")]
+    assert target.git("rev-parse", f"{later}^") == merge
+    reason = _weakened_reason(target, marker)
+    assert reason == "weakened: " + _incomplete(later, "project/reach-probes/p1.yml"), reason
+
+
+def test_702_a_replacement_created_inside_a_merge_then_a_commit_supersedes_nothing(sectioned):
+    """AC (b): before the fix p2 read clean and the record took effect, so p1 read superseded, exit 0."""
+    _weakened_rebaseline(sectioned)
+    _, merge = _merge_side(sectioned, in_merge=lambda: _replacement(sectioned, commit=False))
+    later = _touch(sectioned, MOVED)
+    assert sectioned.git("rev-parse", f"{later}^") == merge
+    code, report = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS, report
+    new = row_of(report, "p2")
+    assert new[1] == ra.NOT_PROBED and new[5] == "not executed" and new[7] == ra.STATE_WEAKENED, new
+    assert _plain(new[9]) == "weakened: " + _incomplete(later, MOVED), new[9]
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_WEAKENED and "supersede by p2 not in effect: it is weakened" in _plain(old[9]), old
+
+
+def test_702_a_plain_rename_reads_as_before(target, tmp_path):
+    """AC (c): --follow lists a rename in a non-merge commit, so the history reaches the creating commit."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+    target.git("mv", rel, MOVED)
+    renamed = target.commit("rename the probe file")
+    later = _touch(target, MOVED)
+    assert [c for c, _ in ra.Git(target.path).file_history(MOVED)] == [later, renamed, recorded]
+    reason = _weakened_reason(target, marker)
+    assert reason == (f"weakened: probe changed in {renamed[:12]}, {later[:12]} after its derivation was "
+                      f"recorded in {recorded[:12]}"), reason
+
+
+def test_702_a_probe_created_in_the_root_commit_stays_clean(tmp_path):
+    """AC (c): the oldest listed revision has no parent, so it creates the probe."""
+    marker = tmp_path / "ran"
+    root = Target(tmp_path / "rooted")
+    root.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
+    root.write_probe(make_probe(derived_from="blob:" + root.git("hash-object", DECL), argv=marker_argv(marker)))
+    root.commit("declare and approve in the root commit")
+    assert root.git("rev-list", "--max-parents=0", "HEAD") == root.git("rev-parse", "HEAD")
+    _assert_clean(root)
+    assert marker.exists()
+
+
+def _shallow_clone(target: Target, tmp_path: Path) -> Target:
+    clone = tmp_path / "shallow"
+    subprocess.run(["git", "clone", "-q", "--depth", "1", f"file://{target.path}", str(clone)], check=True,
+                   capture_output=True)
+    shallow = Target.__new__(Target)
+    shallow.path = clone
+    assert shallow.git("rev-parse", "--is-shallow-repository") == "true"
+    return shallow
+
+
+def test_702_a_shallow_clone_is_refused_before_anything_runs(target, tmp_path, capsys):
+    """Security follow-up: every boundary commit of a shallow clone reports each file as added, so at depth 1
+    a probe's history is HEAD alone and a weakening before it is invisible. Before the guard the bar lowered
+    in the full repository read clean in the clone, exit 0, executed."""
+    marker = tmp_path / "ran"
+    rel, _ = _probe_observing_one(target, marker)
+    _rewrite(target, rel, expected_value=1)
+    weakened = target.commit("lower the bar")
+    code, _ = run_audit(target)
+    assert code == ra.EXIT_FINDINGS and not marker.exists()
+    shallow = _shallow_clone(target, tmp_path)
+    assert ra.Git(shallow.path).file_history(rel) == [(weakened, rel)]
+    with pytest.raises(ra.AuditError) as exc:
+        ra.run(str(shallow.path), clock=lambda: FIXED_NOW)
+    assert exc.value.code == ra.EXIT_USAGE
+    assert "is a shallow clone" in str(exc.value) and "git fetch --unshallow" in str(exc.value)
+    assert not marker.exists()
+    assert not (shallow.path / ".audits").exists()
+    assert ra.main(["--repo", str(shallow.path)]) == ra.EXIT_USAGE
+    assert ra.main(["--repo", str(shallow.path), "--check-migration"]) == ra.EXIT_USAGE
+    assert "is a shallow clone" in capsys.readouterr().err
+    assert not marker.exists()
+
+
+def test_702_an_unshallowed_clone_is_judged_again(target, tmp_path):
+    """The remedy the refusal names: after `git fetch --unshallow` the weakening is found."""
+    marker = tmp_path / "ran"
+    rel, _ = _probe_observing_one(target, marker)
+    _rewrite(target, rel, expected_value=1)
+    target.commit("lower the bar")
+    shallow = _shallow_clone(target, tmp_path)
+    shallow.git("fetch", "-q", "--unshallow")
+    assert _weakened_reason(shallow, marker).startswith("weakened: probe changed in ")
+
+
+def test_702_a_probe_file_name_with_glob_characters_reads_only_its_own_history(target, tmp_path):
+    """Security follow-up: without literal pathspecs `w[x].yml` is a glob that also matches `wx.yml`, so
+    another probe's commits and uncommitted edits were read as this probe's."""
+    marker = tmp_path / "ran"
+    blob = _blob(target)
+    rel = target.write_probe(make_probe("wbr", derived_from=blob, argv=marker_argv(marker)), name="w[x]")
+    recorded = target.commit("approve w[x]")
+    other = target.write_probe(make_probe("wx", derived_from=blob))
+    target.commit("approve wx")
+    _rewrite(target, other, tier="T1")
+    target.commit("edit wx only")
+    _rewrite(target, other, tier="T0")
+    git = ra.Git(target.path)
+    assert git.file_history(rel) == [(recorded, rel)]
+    assert git.is_dirty(other) and not git.is_dirty(rel)
+    assert git.last_commit(rel) == recorded
+    code, report = run_audit(target)
+    row = row_of(report, "wbr")
+    assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN, row[7:]
+    assert marker.exists()
+
+
+def test_702_a_plain_rename_out_of_a_path_a_merge_created_is_weakened(target, tmp_path):
+    """Refutes the parent check alone: the merge moves the probe to an interim path and lowers the bar, a
+    plain commit D renames it on. D does create its path, but --follow stops at D's rename because the
+    interim path has no listed commit, so D read as the probe's derivation: clean, exit 0, executed."""
+    marker = tmp_path / "ran"
+    rel, _ = _probe_observing_one(target, marker)
+    interim = "project/reach-probes/interim.yml"
+
+    def in_merge() -> None:
+        target.git("mv", rel, interim)
+        _rewrite(target, interim, expected_value=1)
+
+    _merge_side(target, in_merge=in_merge)
+    target.git("mv", interim, MOVED)
+    renamed = target.commit("rename the probe file")
+    assert ra.Git(target.path).file_history(MOVED) == [(renamed, MOVED)]
+    assert target.git("cat-file", "-t", f"{renamed}^:{interim}") == "blob"
+    reason = _weakened_reason(target, marker)
+    assert reason == ("weakened: " + _incomplete(renamed, MOVED, f"a rename from {interim}")), reason
