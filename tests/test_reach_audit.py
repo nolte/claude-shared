@@ -1872,9 +1872,8 @@ def test_668_F2_delete_and_re_point_at_an_existing_file_is_weakened(target, tmp_
     _rewrite(target, rel, expected_value=1, declaration_path="docs/other.md", derived_from=other)
     target.commit("delete the declaration, re-point and lower the bar")
     reason = _weakened_reason(target, marker)
-    assert recorded  # the recording commit; the re-point is refused before the recording is consulted
-    assert (f"but it also moved the declaration from {DECL} to docs/other.md, where the previously anchored "
-            "content is not; record the rename as a pure move first, then re-derive") in reason
+    assert (f"but it also moved the declaration from {DECL} to docs/other.md, and that is no rename: {DECL} "
+            f"still exists at ") in reason or f"docs/other.md already existed at {recorded[:12]}" in reason, reason
 
 
 def test_668_F2_path_only_commit_cannot_adopt_an_earlier_weakening(target, tmp_path):
@@ -5225,8 +5224,8 @@ def test_688_SECR6_a_decoy_path_and_back_cannot_launder_a_lowering(target):
     reason = _commit_move_reason(target)
     # The walk refuses the newest of the two path moves first.
     assert (f"{back[:12]} moved derived_from from {c1[:12]} to {a[:12]}, but it also moved the declaration "
-            f"from README.txt to {DECL}, and only a pure move of an unchanged declaration can change its path"
-            ) in reason, reason
+            f"from README.txt to {DECL}, and only a pure move of an unchanged declaration, the old path gone, can "
+            "change its path") in reason, reason
 
 
 def test_688_SECR6_a_pure_rename_under_a_commit_anchor_then_migrated_stays_clean(target):
@@ -5321,8 +5320,8 @@ def test_688_SECR8_a_declaration_renamed_away_cannot_justify_a_re_point_at_a_cha
     target.commit("rename the declaration away, re-point at a changed file, lower")
     state, reason = _state(target)
     assert state == ra.STATE_WEAKENED, reason
-    assert reason.endswith(f"but it also moved the declaration from {DECL} to README.txt, where the previously "
-                           "anchored content is not; record the rename as a pure move first, then re-derive"), reason
+    assert (f"but it also moved the declaration from {DECL} to README.txt, where the previously anchored content "
+            "is not; record the rename as a pure move first, then re-derive") in reason, reason
 
 
 def test_688_SECR8_a_rename_with_an_edit_in_one_commit_is_refused(target):
@@ -5333,7 +5332,7 @@ def test_688_SECR8_a_rename_with_an_edit_in_one_commit_is_refused(target):
     _rewrite(target, rel, declaration_path="docs/v2.md", derived_from=_blob_now(target, "docs/v2.md"))
     target.commit("rename, edit and re-derive at once")
     state, reason = _state(target)
-    assert state == ra.STATE_WEAKENED and reason.endswith("record the rename as a pure move first, then re-derive")
+    assert state == ra.STATE_WEAKENED and "record the rename as a pure move first, then re-derive" in reason
 
 
 def _blob_now(target: Target, path: str) -> str:
@@ -5388,3 +5387,41 @@ def test_688_SECR8_a_probe_stale_from_its_first_commit_cannot_lower_the_bar_by_r
     target.commit("re-derive and lower")
     state, reason = _state(target)
     assert state == ra.STATE_WEAKENED and f"but {DECL} did not change in between" in reason, reason
+
+
+# -- #688 SEC-R9: a copy beside an edited original is no rename; a stale-born section anchor ------ #
+def test_688_SECR9_a_copy_of_the_old_content_beside_an_edited_original_is_no_rename(target):
+    """Measured before the fix: clean, exit 0; the probe never saw the edit."""
+    rel = _content_probe(target)
+    old = (target.path / DECL).read_text()
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, edited.\n")
+    target.commit("edit the declaration")
+    target.write("docs/b.md", old)
+    _rewrite(target, rel, declaration_path="docs/b.md")
+    moved = target.commit("copy the old content and point the probe at it")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(f"and that is no rename: {DECL} still exists at {moved[:12]} or docs/b.md already "
+                           f"existed at {target.git('rev-parse', 'HEAD~2')[:12]}, where the previous derivation "
+                           "was recorded"), reason
+
+
+def test_688_SECR9_a_section_anchor_stale_from_its_first_commit_judges_sections_not_the_file(sectioned):
+    """Measured before the fix: an edit outside the anchored sections re-baselined a lowering, exit 0."""
+    target = sectioned
+    sections = _sections_now(target)
+    _edit(target, *INSIDE)
+    target.commit("an anchored section changes before the probe lands")
+    probe = make_probe(derived_from=ra.section_anchor(sections))
+    probe["declaration"]["sections"] = sections
+    rel = target.write_probe(probe)
+    target.commit("the probe lands")
+    _edit(target, *OUTSIDE)
+    target.commit("an edit outside the anchored sections")
+    _rewrite(target, rel, derived_from=_blob(target), expected_value=1)
+    doc = yaml.safe_load((target.path / rel).read_text())
+    doc["declaration"].pop("sections", None)
+    target.write(rel, yaml.safe_dump(doc, sort_keys=False))
+    target.commit("re-derive onto the file and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason

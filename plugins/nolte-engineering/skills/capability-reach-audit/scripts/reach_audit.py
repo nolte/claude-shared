@@ -1849,6 +1849,21 @@ def _continuation_problem(git: Git, moved: str, baseline: str, earlier: list[tup
     return None
 
 
+def _sections_as_found(git: Git, commit: str, rel: str, locators: list[tuple[str, str, str]],
+                       ) -> list[tuple[str, str, str]] | None:
+    """``locators`` with the digests of their sections at ``commit``, or None when one doesn't resolve once."""
+    content = git.file_bytes(commit, rel)
+    if content is None:
+        return None
+    found = []
+    for kind, locator, _ in locators:
+        sections = find_sections(content, kind, locator)
+        if len(sections) != 1:
+            return None
+        found.append((kind, locator, section_digest(sections[0])))
+    return found
+
+
 def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], rel: str, recording: str,
                   baseline: str, *, origin: bool = False) -> tuple[str | None, str | None, bool]:
     """Prove the previous anchor where it was recorded; say whether its content moved since.
@@ -1883,8 +1898,11 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
                     "so no declaration change can be shown"), None, False
         locators = _locators(sections) or []
         if _section_mismatches(git, recording, rel, locators):
-            if as_found:
-                return as_found
+            found = _sections_as_found(git, recording, rel, locators) if origin else None
+            if found is not None:
+                # As for a file anchor below, but per section: what the first
+                # revision found is what a later change is shown against.
+                return None, recorded, bool(_section_mismatches(git, baseline, rel, found))
             return (f"{moved}, but the previous derived_from {shown} is not the content of its sections of "
                     f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change "
                     "can be shown"), None, False
@@ -1969,7 +1987,8 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     if problem:
         return problem
     if new_rel != rel and changed:
-        return _path_move_problem(git, moved, prev_df, prior_doc, new_doc, before, baseline, rel, new_rel)
+        return _path_move_problem(git, moved, prev_df, prior_doc, new_doc, before, baseline, recording, rel,
+                                  new_rel)
     # `derive` re-stamps the approval on every run, a migration included.
     if _is_section_anchor(prev_df):
         relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
@@ -2007,7 +2026,7 @@ def _moved_unchanged(git: Git, prev_df: str, prior_doc: dict[str, Any], before: 
 
 
 def _path_move_problem(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], new_doc: dict[str, Any],
-                       before: str | None, baseline: str, rel: str, new_rel: str) -> str | None:
+                       before: str | None, baseline: str, recording: str, rel: str, new_rel: str) -> str | None:
     """A move to another declaration path, where the old one changed or is gone: only a pure move.
 
     The old path gone reads as a declaration change, and a re-derivation onto
@@ -2016,13 +2035,20 @@ def _path_move_problem(git: Git, moved: str, prev_df: str, prior_doc: dict[str, 
     a weakening. A rename is accepted only as a pure move, whichever anchor form
     it records (the previously anchored content unchanged at the new path, nothing
     else changed); a rename with an edit takes two commits, the pure move first
-    and the re-derivation after it. A copy beside an unchanged original never gets
-    here: the old path didn't change.
+    and the re-derivation after it. A rename leaves the old path gone and the new
+    one new since the recording: a copy of the old content beside an original
+    that was edited would otherwise read as a rename and hide the edit.
     """
+    if git.entry_at(baseline, rel) is not None or git.entry_at(recording, new_rel) is not None:
+        return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(new_rel)}, "
+                f"and that is no rename: {safe_text(rel)} still exists at {baseline[:12]} or {safe_text(new_rel)} "
+                f"already existed at {recording[:12]}, where the previous derivation was recorded")
     if _moved_unchanged(git, prev_df, prior_doc, before, baseline, new_rel):
         return _pure_move_problem(moved, prior_doc, new_doc, *_RE_ANCHOR)
     return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(new_rel)}, where "
-            "the previously anchored content is not; record the rename as a pure move first, then re-derive")
+            "the previously anchored content is not; record the rename as a pure move first, then re-derive "
+            "(where the old content exists nowhere any more, restore the old file for that one commit, or "
+            "supersede the probe)")
 
 
 # What a pure move may change besides declaration.path and the approval stamp: a
@@ -2083,7 +2109,8 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     if problem:
         return problem
     if new_rel != rel and changed:
-        return _path_move_problem(git, moved, prev_df, prior_doc, new_doc, before, baseline, rel, new_rel)
+        return _path_move_problem(git, moved, prev_df, prior_doc, new_doc, before, baseline, recording, rel,
+                                  new_rel)
     relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
     if (not changed and not _is_section_anchor(prev_df) and new_rel == rel
             and _without(new_doc, *relabel) == _without(prior_doc, *relabel)):
@@ -2350,16 +2377,17 @@ def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str 
     if before is None or after is None:
         return f"{moved}, but the declaration is missing at one of the two anchors, so no declaration change can be shown"
     if new_rel != rel:
-        if after != before:
+        if after != before or git.entry_at(new_commit, rel) is not None:
             return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(raw, 80)}, "
-                    "and only a pure move of an unchanged declaration can change its path")
+                    "and only a pure move of an unchanged declaration, the old path gone, can change its path")
         return _pure_move_problem(moved, {**prior_doc, "derived_from": None}, {**new_doc, "derived_from": None})
     if after == before:
         relabel = (("derived_from",), ("approval",))
-        if new_rel != rel or _without(new_doc, *relabel) != _without(prior_doc, *relabel):
+        if _without(new_doc, *relabel) != _without(prior_doc, *relabel):
             return (f"{moved}, but the content of {safe_text(rel)} did not change in between, and a "
                     "re-anchoring may change nothing but derived_from and the approval")
     return None
+
 
 def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
                   cut: frozenset[tuple[str, str]] = frozenset()) -> ChangeState:
