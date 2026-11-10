@@ -646,9 +646,14 @@ class Git:
         history and a merge was never a creating commit (SEC-101). Git 2.56 runs copy
         detection on merges while following: a probe added in a merge silently took
         over the history of a similar kept probe, without the merge itself, and so
-        escaped the supersede cut. A merge that only edits a probe was already absent
-        from ``--follow`` output on every version, so excluding merges drops nothing
-        the walk listed before.
+        escaped the supersede cut.
+
+        The walk is therefore blind to a merge commit whose result for the probe
+        differs from every parent (an "evil merge": a conflict resolution, or an
+        edit made while merging). ``--follow`` never listed such a merge on any
+        version, so it falls between two listed revisions unseen. Every check that
+        relies on "no probe change between these revisions" asks merges_changing()
+        about that span instead (_merges_changing).
         """
         raw = self.out("log", "--follow", "--no-merges", "--format=%x00%H", "--name-only", "--", path)
         history: list[tuple[str, str]] = []
@@ -657,6 +662,38 @@ class Git:
             if lines:
                 history.append((lines[0], lines[1] if len(lines) > 1 else path))
         return history
+
+    def merges_changing(self, since: str, until: str, path: str) -> list[str]:
+        """Merge commits in ``since..until`` whose ``path`` differs from every parent, newest first.
+
+        ``--full-history`` walks every parent of every merge: default history
+        simplification follows only the parent a merge is TREESAME to, and so
+        drops a side branch whose net result for ``path`` matches the main line,
+        an evil merge on it included. The combined diff (``-c``) names ``path``
+        for a merge exactly when its result differs from every parent; a merge
+        that took one side's version names nothing and is skipped, since that
+        side's own commit is in file_history(). ``--no-follow``,
+        ``--no-show-signature``, ``--no-color`` and ``--no-renames`` keep the
+        repository's log and diff configuration from changing the output, and
+        literal pathspecs keep ``path`` from matching other files.
+
+        ``since..until`` is empty when ``since`` is not an ancestor of ``until``.
+        file_history() orders by committer date, which the author sets, so a
+        listed "older" revision can be a descendant of a newer one. The search
+        then fails closed: it covers every merge reachable from ``until``.
+        """
+        if since.startswith("-") or until.startswith("-"):
+            raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
+        revisions = f"{since}..{until}" if self.is_ancestor_or_equal(since, until) else until
+        raw = self.out("--literal-pathspecs", "log", "--no-follow", "--full-history", "--merges",
+                       "--no-show-signature", "--no-color", "--no-renames", "-c", "--name-only",
+                       "--format=%x00%H", revisions, "--", path)
+        merges: list[str] = []
+        for block in raw.split("\x00")[1:]:
+            lines = [ln for ln in block.splitlines() if ln.strip()]
+            if len(lines) > 1:
+                merges.append(lines[0].strip())
+        return merges
 
     def entry_at(self, commit: str, path: str) -> tuple[str, str] | None:
         """``(type, hash)`` of the tree entry ``path`` at ``commit``, or None when absent.
@@ -1108,9 +1145,9 @@ def _anchor_key(doc: dict[str, Any]) -> object:
 
 
 def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, str]] = frozenset(),
-                  ) -> tuple[str | None, list[str], bool, list[tuple[str, str]]]:
+                  ) -> tuple[str | None, list[str], bool, list[tuple[str, str]], list[str]]:
     """The probe's derivation baseline, the commits that touched it since, dirtiness,
-    and the revisions before the baseline.
+    the revisions before the baseline, and the merge commits that changed it since.
 
     The baseline is the commit that recorded the probe's current ``derived_from``:
     walking the file's history newest first, the oldest commit of the unbroken run
@@ -1131,12 +1168,16 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     replacement must be judged on its own derivation, not on the chain of the
     probe it replaces. Only those revisions end it, so the replacement's own
     revisions, under any earlier name, stay in the walk.
+
+    The fifth value lists the merge commits after the baseline whose result for
+    the probe differs from every parent (_merges_changing): file_history() never
+    lists them, and each is as much an unapproved change as a later commit.
     """
     history = git.file_history(probe.file)
     if cut:
         history = history[:next((i for i, rev in enumerate(history) if rev in cut), len(history))]
     if not history:
-        return None, [], False, []
+        return None, [], False, [], []
     current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
     for commit, path_then in history:
@@ -1145,10 +1186,54 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         run.append(commit)
     dirty = git.is_dirty(probe.file)
     if not run:
-        # HEAD's version already differs from the working tree's derived_from: the
-        # recording itself is uncommitted, and the newest commit is the baseline.
-        return history[0][0], [], True, []
-    return run[-1], run[:-1], dirty, history[len(run):]
+        # The newest listed revision already carries another derived_from than the
+        # working tree: either the recording is uncommitted, or a merge after that
+        # revision changed the probe, which file_history() cannot list. The newest
+        # commit is the baseline; with neither found, fail closed as uncommitted.
+        merges = [m for m, _ in _merges_changing(git, history[:1], "HEAD")]
+        return history[0][0], [], dirty or not merges, [], merges
+    merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
+    return run[-1], run[:-1], dirty, history[len(run):], merges
+
+
+def _merges_changing(git: Git, revisions: list[tuple[str, str]], until: str) -> list[tuple[str, str]]:
+    """``(merge, path)`` for each merge commit that changed the probe in the span of ``revisions``.
+
+    ``revisions`` are probe revisions ``(commit, path)`` newest first, as
+    file_history() lists them; the span runs from the oldest of them up to
+    ``until`` (a later revision, or HEAD). A merge whose result for the probe
+    differs from every parent sits between two listed revisions unseen, so a
+    check that relies on "no probe change in between" asks here.
+
+    The path changes with a rename, so the span is cut where it does: each run
+    of consecutive revisions under one path is searched from its oldest revision
+    up to the next newer revision, the one that moved the probe away (or
+    ``until`` for the newest run). A merge on that path before the move is
+    found; one on a path the probe had already left, such as an unrelated file
+    later placed there, is not the probe's change. A rename made inside a merge
+    is not covered: file_history() does not follow it, so the probe's revisions
+    under its earlier name are not listed in the first place.
+    """
+    segments: list[tuple[str, str, str]] = []  # (path, oldest commit, upper bound)
+    upper = until
+    for i, (commit, path) in enumerate(revisions):
+        if i == 0 or path != revisions[i - 1][1]:
+            if i:
+                upper = revisions[i - 1][0]
+            segments.append((path, commit, upper))
+        else:
+            segments[-1] = (path, commit, upper)
+    found: list[tuple[str, str]] = []
+    for path, start, end in segments:
+        for merge in git.merges_changing(start, end, path):
+            if merge not in (m for m, _ in found):
+                found.append((merge, path))
+    return found
+
+
+def _merge_names(merges: list[str]) -> str:
+    """The merge commits for a reason, each marked as a merge, oldest first per path searched."""
+    return ", ".join(f"merge {m[:12]}" for m in reversed(merges))
 
 
 def _repo_relative(path: str) -> str | None:
@@ -1236,7 +1321,7 @@ def _run_length(git: Git, revisions: list[tuple[str, str]], yaml: Any) -> int:
     return span
 
 
-def _continuation_problem(git: Git, moved: str, earlier: list[tuple[str, str]], span: int,
+def _continuation_problem(git: Git, moved: str, baseline: str, earlier: list[tuple[str, str]], span: int,
                           yaml: Any) -> str | None:
     """Why the move cannot build on the previous derivation, or None.
 
@@ -1249,12 +1334,19 @@ def _continuation_problem(git: Git, moved: str, earlier: list[tuple[str, str]], 
     a commit-anchor derivation, which keeps its pre-v1.1 rules. Otherwise one
     commit could weaken the probe under a self-made anchor and the next move,
     though justified on its own, would adopt that weakening.
+
+    "No commit in between" includes merge commits: a merge that changed the probe
+    anywhere from the recording up to ``baseline`` (the commit that made the
+    move) is a probe change as well (_merges_changing), since file_history()
+    lists none of them.
     """
     recording = earlier[span - 1]
     recording_doc = _probe_doc(git, recording, yaml)
     changed = [c for c, path in earlier[:span - 1] if _probe_doc(git, (c, path), yaml) != recording_doc]
-    if changed:
-        return (f"{moved}, but the probe changed in {', '.join(c[:12] for c in reversed(changed))} "
+    merges = [m for m, _ in _merges_changing(git, earlier[:span], baseline)]
+    if changed or merges:
+        names = [c[:12] for c in reversed(changed)] + ([_merge_names(merges)] if merges else [])
+        return (f"{moved}, but the probe changed in {', '.join(names)} "
                 f"after its previous derivation was recorded in {recording[0][:12]}")
     if span < len(earlier) and recording_doc is not None:
         inner = _rebaseline_problem(git, str(recording_doc.get("derived_from")), recording[0], earlier[span:],
@@ -1518,6 +1610,16 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     (_reconfirmation_problem). Every move but one onto a commit anchor must
     finally build on a legitimate previous derivation with no probe change in
     between (_continuation_problem).
+
+    All of this presumes the baseline itself made the move, and the revisions
+    file_history() lists hold no merge. A merge that changed the anchor key
+    between the previous derivation's revisions and the baseline recorded a
+    derivation the walk cannot see, so the move is attributed to the wrong
+    commit and the later commit's own changes would ride on it: that is refused
+    for every anchor kind (_key_moving_merges). A merge that changed only the
+    rest of the probe is a plain probe change, held to the same rule as a
+    non-merge one: refused by _continuation_problem, accepted with a move onto
+    a commit anchor as before v1.1.
     """
     prior_commit, _ = earlier[0]
     moved = f"{baseline[:12]} moved derived_from"
@@ -1536,6 +1638,10 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
                  f"{safe_text(new_decl.get('path') if isinstance(new_decl, dict) else None, 80)}")
     else:
         moved += f" from {safe_text(prev_df[:12], 40)} to {safe_text(new_df[:12], 40)}"
+    key_moving = _key_moving_merges(git, baseline, earlier, yaml)
+    if key_moving:
+        return (f"{moved}, but {_merge_names(key_moving)} changed derived_from after the previous derivation was "
+                f"recorded and before {baseline[:12]}, and a derivation recorded in a merge cannot be judged")
     problem = _anchor_move_problem(git, moved, decl, prior_doc, prev_df, new_df, baseline, earlier, yaml, new_doc)
     if problem:
         return problem
@@ -1549,7 +1655,21 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
             return problem
     if not (reconfirmed or decl.get("inherited_spec") or _is_content_anchor(new_df) or _is_section_anchor(new_df)):
         return None  # a move onto a commit anchor keeps the pre-v1.1 rules
-    return _continuation_problem(git, moved, earlier, _run_length(git, earlier, yaml), yaml)
+    return _continuation_problem(git, moved, baseline, earlier, _run_length(git, earlier, yaml), yaml)
+
+
+def _key_moving_merges(git: Git, baseline: str, earlier: list[tuple[str, str]], yaml: Any) -> list[str]:
+    """Merges from the previous derivation's recording up to ``baseline`` that changed the anchor key.
+
+    The previous derivation is the run of ``earlier`` carrying the anchor key of
+    ``earlier[0]`` (_run_length); every listed revision in it carries that key,
+    so a merge in that span whose probe carries another key (or no readable
+    probe) recorded a derivation of its own that file_history() never lists.
+    """
+    key = _derived_from_of(git.show(*earlier[0]), yaml)
+    span = _run_length(git, earlier, yaml)
+    return [merge for merge, path in _merges_changing(git, earlier[:span], baseline)
+            if _derived_from_of(git.show(merge, path), yaml) != key]
 
 
 def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: dict[str, Any], prev_df: str,
@@ -1605,7 +1725,7 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
     """Classify one valid probe's change state from the target's history (``cut``: see probe_changes)."""
     data = probe.data or {}
     derived_from = data["derived_from"]
-    baseline, later, dirty, earlier = probe_changes(git, probe, yaml, cut)
+    baseline, later, dirty, earlier, merges = probe_changes(git, probe, yaml, cut)
     if baseline is None:
         return ChangeState(
             STATE_UNCOMMITTED,
@@ -1617,12 +1737,13 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
     # whether or not the declaration moved too (spec: "whether or not both changed
     # together"). Checked first so a combined change is surfaced as a finding.
     rebaseline = _rebaseline_problem(git, derived_from, baseline, earlier, yaml, data) if earlier else None
-    if later or dirty or rebaseline:
+    if later or merges or dirty or rebaseline:
         parts = []
         if rebaseline:
             parts.append(f"re-baselined without a declaration change: {rebaseline}")
-        if later:
-            parts.append(f"probe changed in {', '.join(c[:12] for c in reversed(later))} after its derivation was recorded in {baseline[:12]}")
+        if later or merges:
+            changes = [c[:12] for c in reversed(later)] + ([_merge_names(merges)] if merges else [])
+            parts.append(f"probe changed in {', '.join(changes)} after its derivation was recorded in {baseline[:12]}")
         if dirty:
             parts.append("probe file has uncommitted changes")
         return ChangeState(STATE_WEAKENED, "; ".join(parts))
