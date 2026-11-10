@@ -678,6 +678,9 @@ class Git:
         # file_log() per path: the history does not change during a run, and the
         # removal check reads the same followed histories as change detection.
         self._file_logs: dict[str, list[tuple[str, str, str, str]]] = {}
+        # probe_set_history() per HEAD commit (shared_probe_set_history()): one
+        # walk of the probe directory serves the copy cut and the removal check.
+        self.probe_sets: dict[str, "ProbeHistory"] = {}
 
     def run(self, *args: str) -> subprocess.CompletedProcess:
         """Run git read-only. Output is decoded as UTF-8 with replacement: a historical
@@ -772,11 +775,21 @@ class Git:
         ``--no-color`` keep the repository's log configuration out of them, and
         literal pathspecs keep a probe named like ``w[x].yml`` from matching the
         history of ``wx.yml``.
+
+        ``--topo-order`` lists every commit before its parents. ``--follow``
+        switches to the source path when it reaches the rename or copy that
+        created the file, and from then on matches only that path; in the
+        default committer-date order a descendant of that commit dated before it
+        (a backdated commit on a side branch merged later) would come after the
+        switch and never be listed, so a change to the probe could hide behind
+        its own creation. Topological order emits every descendant first.
+        _own_log() still checks the listed history against the probe-set
+        history and fails closed on any revision it misses.
         """
         if path in self._file_logs:
             return list(self._file_logs[path])
-        raw = self.out("--literal-pathspecs", "log", "--follow", "--no-merges", "--no-show-signature", "--no-color", "--format=%x00%H",
-                       "--name-status", "--", path)
+        raw = self.out("--literal-pathspecs", "log", "--follow", "--no-merges", "--topo-order", "--no-show-signature",
+                       "--no-color", "--format=%x00%H", "--name-status", "--", path)
         history: list[tuple[str, str, str, str]] = []
         for block in raw.split("\x00")[1:]:
             lines = [ln for ln in block.splitlines() if ln.strip()]
@@ -916,15 +929,18 @@ class Git:
         an evil merge on it included. The combined diff (``-c``) names ``path``
         for a merge exactly when its result differs from every parent; a merge
         that took one side's version names nothing and is skipped, since that
-        side's own commit is in file_history(). ``--no-follow``,
+        side's own commit is in file_history() (listed in topological order, so
+        a backdated side commit is not lost behind a rename or copy; _own_log()
+        reports one the walk still misses). ``--no-follow``,
         ``--no-show-signature``, ``--no-color`` and ``--no-renames`` keep the
         repository's log and diff configuration from changing the output, and
         literal pathspecs keep ``path`` from matching other files.
 
         ``since..until`` is empty when ``since`` is not an ancestor of ``until``.
-        file_history() orders by committer date, which the author sets, so a
-        listed "older" revision can be a descendant of a newer one. The search
-        then fails closed: it covers every merge reachable from ``until``.
+        file_history() lists in topological order, so a listed older revision is
+        never a descendant of a newer one, but it can sit on a parallel line
+        that is no ancestor either. The search then fails closed: it covers
+        every merge reachable from ``until``.
         """
         if since.startswith("-") or until.startswith("-"):
             raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
@@ -944,8 +960,10 @@ class Git:
 
         ``ls-tree`` with literal pathspecs rather than ``rev-parse <commit>:<path>``,
         so a path is never parsed as revision syntax; the hash is the same. The type
-        is ``blob`` for a file or a symlink (whose blob is the link text), ``tree``
-        for a directory and ``commit`` for a submodule.
+        is ``blob`` for a regular file, ``link`` for a symlink, ``tree`` for a
+        directory and ``commit`` for a submodule. A symlink's blob is its link text,
+        not the declaration it points to: read as the declaration, its anchor would
+        hold while the target changes, so it is no file to anchor on.
         """
         res = self.run("--literal-pathspecs", "ls-tree", "-z", commit, "--", path)
         if res.returncode != 0:
@@ -954,11 +972,11 @@ class Git:
             meta, _, name = record.partition("\t")
             parts = meta.split()
             if name == path and len(parts) == 3:
-                return parts[1], parts[2]
+                return ("link" if parts[0] == "120000" else parts[1]), parts[2]
         return None
 
     def blob_at(self, commit: str, path: str) -> str | None:
-        """The blob hash of ``path`` at ``commit``, or None when it is absent or no file."""
+        """The blob hash of ``path`` at ``commit``, or None when it is absent or no regular file."""
         entry = self.entry_at(commit, path)
         return entry[1] if entry is not None and entry[0] == "blob" else None
 
@@ -1442,31 +1460,42 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     detect_change must check that the move was a re-derivation rather than a
     re-baseline; the older revisions let that check prove the previous anchor.
 
+    The history is the probe's own (_own_log): git --follow pairs a new file
+    with a similar one that stays in place as a copy and walks on into that
+    file's revisions, so a probe written from the same template as an earlier
+    one would take over the earlier probe's chain. The history therefore ends
+    at the revision that created the probe as a copy of another file, and the
+    probe is judged from there; a rename keeps the history.
+
     ``cut`` holds the ``(commit, path)`` revisions of the probes this one
-    supersedes (supersede_cut()). The history ends before the first of them:
-    git --follow pairs a new file with a similar kept one as a copy, and a
-    replacement must be judged on its own derivation, not on the chain of the
-    probe it replaces. Only those revisions end it, so the replacement's own
-    revisions, under any earlier name, stay in the walk.
+    supersedes (supersede_cut()). The history ends before the first of them as
+    well, since a replacement must be judged on its own derivation, not on the
+    chain of the probe it replaces. Only those revisions end it, so the
+    replacement's own revisions, under any earlier name, stay in the walk.
 
     The fifth value lists the merge commits after the baseline whose result for
     the probe differs from every parent (_merges_changing): file_history() never
     lists them, and each is as much an unapproved change as a later commit.
 
-    The sixth value says why the listed history is incomplete (_origin_problem):
-    its oldest revision does not create the probe's path, so the probe came into
-    being, or under this path, in a merge the walk can't follow. A history the
-    supersede cut ended is exempt: it ends at the cut on purpose, and the cut is
-    only made after _lineage_problem() proved the kept part ends at the commit
-    that added the replacement's path.
+    The sixth value says why the listed history is incomplete (_origin_problem,
+    _own_log): its oldest revision does not create the probe's path, so the
+    probe came into being, or under this path, in a merge the walk can't follow;
+    or the probe was copied onto a path that held an earlier file. A copy that
+    ends the history is a complete origin. A history the supersede cut ended is
+    exempt: it ends at the cut on purpose, and the cut is only made after
+    _lineage_problem() proved the kept part ends at the commit that added the
+    replacement's path. A plain commit that changed the probe and that the walk
+    does not list (_unlisted_write) is never exempt.
     """
-    log = git.file_log(probe.file)
-    history = [(commit, path_then) for commit, path_then, _, _ in log]
+    own, origin, gap = _own_log(git, probe, git.file_log(probe.file), yaml)
+    history = [(commit, path_then) for commit, path_then, _, _ in own]
     if cut:
         history = history[:next((i for i, rev in enumerate(history) if rev in cut), len(history))]
     if not history:
-        return None, [], False, [], [], None
-    origin = _origin_problem(*log[-1]) if len(history) == len(log) else None
+        return None, [], False, [], [], gap
+    if len(history) < len(own):
+        origin = None
+    origin = "; ".join(part for part in (gap, origin) if part) or None
     current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
     for commit, path_then in history:
@@ -1483,6 +1512,140 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         return history[0][0], [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
     return run[-1], run[:-1], dirty, history[len(run):], merges, origin
+
+
+def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml: Any,
+             ) -> tuple[list[tuple[str, str, str, str]], str | None, str | None]:
+    """The probe's own part of its followed ``log`` (Git.file_log()), why it does not reach its origin
+    (or None), and which change to the probe the log misses (_unlisted_write(), or None).
+
+    git --follow reports a file created beside a similar one that stays in place
+    as a copy (``C``) and walks on into the revisions of that source. A probe
+    created as a copy of another probe file starts its own history there: it
+    inherits neither the source's revisions nor its findings, and the source
+    answers for its own. The log ends at the newest such revision, which is
+    kept as the probe's origin. A copy ends it only when it is one:
+
+    - the source is left untouched by the copying commit, as in its single
+      parent. git reports a file whose source left in that commit as a rename
+      (``R``), which keeps the history; a ``C`` whose source is gone or was
+      rewritten in place in the same commit is read the same way, since the
+      new file may then be the probe moved away from a path given to another
+      file (as _lineage_problem() requires of a supersede cut).
+    - every id the probe carried from the copy on is new there: no probe file
+      carried it in any commit of HEAD's history outside the probe's own kept
+      revisions, except in commits that descend from the copying one
+      (ProbeHistory.writes, from shared_probe_set_history(), which reads every
+      probe revision under the probe directory, merges and revisions --follow
+      never lists included, with the file name stem standing in for a missing
+      id as Probe.pid does). Otherwise the id was carried before: the copy may
+      be that probe moved to a new file, or re-created after a deletion that
+      hid its earlier revisions from the walk, and its history goes on.
+    - the copy's path held no file in any commit before the copying one. A file
+      deleted and re-added at the same path keeps its history (git --follow
+      walks on through the deletion), but one re-added as a copy of another file
+      sends the walk into that file instead, so the path's earlier revisions are
+      not listed. That is reported as an incomplete history rather than read as
+      a fresh probe.
+
+    Without a copy that ends it, the whole log is the probe's own, and its
+    oldest revision must create the probe's path (_origin_problem).
+
+    Last, the own part is checked against the probe-set history: a plain
+    commit there that wrote one of the probe's ids on one of its paths, and
+    that the walk does not list, means the listed history is incomplete. No
+    copy then ends it, and the gap is reported, fail closed.
+    """
+    for i, (commit, path, status, source) in enumerate(log):
+        if status != "C" or not source:
+            continue
+        parents = git.parents(commit)
+        kept = git.blob_at(commit, source)
+        if len(parents) != 1 or kept is None or kept != git.blob_at(parents[0], source):
+            continue
+        own = log[:i + 1]
+        if not _ids_new_at(git, shared_probe_set_history(git, yaml), commit, probe.pid,
+                           {(c, p) for c, p, _, _ in own}):
+            continue
+        gap = _unlisted_write(git, shared_probe_set_history(git, yaml), probe, own)
+        if gap:
+            return log, None, gap
+        earlier = git.out("--literal-pathspecs", "rev-list", "-n", "1", "--full-history", parents[0], "--",
+                          path).strip()
+        if earlier:
+            return own, (f"the probe was created in {commit[:12]} as a copy of {safe_text(source)} at "
+                         f"{safe_text(path)}, which already held a file in {earlier[:12]}: git follows the copy "
+                         "instead of that path, so the path's earlier revisions are not in the listed history and "
+                         "can't be judged; derive the probe under a path no earlier file used"), None
+        return own, None, None
+    gap = _unlisted_write(git, shared_probe_set_history(git, yaml), probe, log) if log else None
+    return log, _origin_problem(*log[-1]) if log else None, gap
+
+
+def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
+                    own: list[tuple[str, str, str, str]]) -> str | None:
+    """Why the listed ``own`` revisions miss a change to the probe, or None.
+
+    The ids are the probe's id now and every id one of ``own`` carried. A
+    write of such an id (ProbeHistory.writes, which reads every probe revision
+    in HEAD's history, the file name stem standing in for a missing id) in a
+    plain commit that ``own`` does not list is a change the walk missed when it
+    lies on one of the probe's paths in a commit that does not descend from the
+    newer revision that moved the probe away from that path (the probe's
+    current path has no such revision). Then the listed history is incomplete.
+    A file placed on a path after the probe left it is not the probe's change
+    (_merges_changing() cuts its search the same way). One on a path before
+    the probe came there is counted: carrying the probe's id, it is an earlier
+    probe under that id whose revisions the walk does not list, as when a
+    probe is deleted, re-created under its id at another path, and moved back.
+    Merges are left to _merges_changing(), since the walk never lists them.
+    """
+    listed = {(commit, path) for commit, path, _, _ in own}
+    segments: list[tuple[str, str | None]] = []  # (path, the newer revision that moved the probe away)
+    for i, (_, path, _, _) in enumerate(own):
+        if i == 0 or path != own[i - 1][1]:
+            segments.append((path, own[i - 1][0] if i else None))
+    ids = {probe.pid} | {pid for pid, writes in history.writes.items() if any(w in listed for w in writes)}
+    for pid in sorted(ids):
+        for commit, path in history.writes.get(pid, []):
+            if (commit, path) in listed or commit in history.merges:
+                continue
+            if any(path == on and (end is None or not git.is_ancestor_or_equal(end, commit))
+                   for on, end in segments):
+                return (f"{commit[:12]} changed {safe_text(path)} under the id {safe_text(pid, 120)}, but the "
+                        "probe's history walk does not list it, so the listed history is incomplete and no "
+                        "derivation in it can be judged")
+    return None
+
+
+def _ids_new_at(git: Git, history: "ProbeHistory", copying: str, pid: str, own: set[tuple[str, str]]) -> bool:
+    """Whether every id the probe carried in ``own`` (and ``pid``, its id now) is new at ``copying``.
+
+    New: each write of the id (ProbeHistory.writes) is one of ``own``, the
+    probe's kept ``(commit, path)`` revisions, or a merge or a write on a path
+    outside ``own`` in a commit that descends from ``copying`` (or is it). A
+    plain commit on one of the probe's own paths is never excused: the walk
+    lists those, and one it misses is reported by _unlisted_write(). A write
+    anywhere else, an ancestor or a side line merged later, means some probe
+    file carried the id outside the probe's own history, so a copy cut could
+    hide that file's revisions. The descendants are read once
+    (``rev-list --ancestry-path``), not per write.
+    """
+    ids = {pid} | {carried for carried, writes in history.writes.items() if any(w in own for w in writes)}
+    paths = {path for _, path in own}
+    descendants: set[str] | None = None
+    for carried in ids:
+        for commit, path in history.writes.get(carried, []):
+            if (commit, path) in own:
+                continue
+            if commit not in history.merges and path in paths:
+                return False
+            if descendants is None:
+                descendants = set(git.out("rev-list", "--ancestry-path", f"{copying}..{history.head}", "--").split())
+                descendants.add(copying)
+            if commit not in descendants:
+                return False
+    return True
 
 
 def _origin_problem(commit: str, path: str, status: str, source: str) -> str | None:
@@ -1503,7 +1666,9 @@ def _origin_problem(commit: str, path: str, status: str, source: str) -> str | N
     deletion means the file already existed before it. A rename or copy means
     ``--follow`` switched to ``source`` and found no listed commit of it, so
     ``source`` came from a merge: checking only that the commit adds ``path``
-    would accept a plain rename out of a path a merge created.
+    would accept a plain rename out of a path a merge created. A copy reaches
+    this check only when it does not end the probe's own history (_own_log):
+    the probe's id came from its source, or the source left in that commit.
     """
     if status == "A":
         return None
@@ -1657,8 +1822,9 @@ def _continuation_problem(git: Git, moved: str, baseline: str, earlier: list[tup
     the derivation it replaces. So the probe must still be the document that
     derivation recorded (no commit in between changed it: an intermediate plain
     probe change is never adopted), and that recording must itself have been
-    legitimate, checked by the same rule, back to the probe's first commit or to
-    a commit-anchor derivation, which keeps its pre-v1.1 rules. Otherwise one
+    legitimate, checked by the same rule, back to the probe's first commit or, in
+    a SHA-256 repository, to a commit-anchor derivation, which keeps its pre-v1.1
+    rules there. Otherwise one
     commit could weaken the probe under a self-made anchor and the next move,
     though justified on its own, would adopt that weakening.
 
@@ -1677,14 +1843,29 @@ def _continuation_problem(git: Git, moved: str, baseline: str, earlier: list[tup
                 f"after its previous derivation was recorded in {recording[0][:12]}")
     if span < len(earlier) and recording_doc is not None:
         inner = _rebaseline_problem(git, str(recording_doc.get("derived_from")), recording[0], earlier[span:],
-                                    yaml, recording_doc)
+                                    yaml, recording_doc, historical=True)
         if inner:
             return f"{moved}, but its previous derivation was no re-derivation either: {inner}"
     return None
 
 
+def _sections_as_found(git: Git, commit: str, rel: str, locators: list[tuple[str, str, str]],
+                       ) -> list[tuple[str, str, str]] | None:
+    """``locators`` with the digests of their sections at ``commit``, or None when one doesn't resolve once."""
+    content = git.file_bytes(commit, rel)
+    if content is None:
+        return None
+    found = []
+    for kind, locator, _ in locators:
+        sections = find_sections(content, kind, locator)
+        if len(sections) != 1:
+            return None
+        found.append((kind, locator, section_digest(sections[0])))
+    return found
+
+
 def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], rel: str, recording: str,
-                  baseline: str) -> tuple[str | None, str | None, bool]:
+                  baseline: str, *, origin: bool = False) -> tuple[str | None, str | None, bool]:
     """Prove the previous anchor where it was recorded; say whether its content moved since.
 
     Returns ``(problem, before, changed)``: why the previous anchor is unproven
@@ -1697,8 +1878,16 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
     An anchor that never matched the declaration shows no change, and accepting
     it would let one commit record a weakening under a made-up anchor and the
     next restore the real one.
+
+    With ``origin`` the recording is the probe's first revision, which lowered
+    nothing: there a previous anchor that isn't the declaration at the recording
+    (the declaration changed on the default branch between the derivation and a
+    squash merge, say) reads the probe as recorded against the declaration it
+    found, so re-deriving or re-confirming heals the probe the runner reported
+    stale from its first commit.
     """
     recorded = git.blob_at(recording, rel)
+    as_found = (None, recorded, git.blob_at(baseline, rel) != recorded) if origin and recorded else None
     if _is_section_anchor(prev_df):
         sections = prior_doc.get("declaration", {}).get("sections") if isinstance(
             prior_doc.get("declaration"), dict) else None
@@ -1709,6 +1898,11 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
                     "so no declaration change can be shown"), None, False
         locators = _locators(sections) or []
         if _section_mismatches(git, recording, rel, locators):
+            found = _sections_as_found(git, recording, rel, locators) if origin else None
+            if found is not None:
+                # As for a file anchor below, but per section: what the first
+                # revision found is what a later change is shown against.
+                return None, recorded, bool(_section_mismatches(git, baseline, rel, found))
             return (f"{moved}, but the previous derived_from {shown} is not the content of its sections of "
                     f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change "
                     "can be shown"), None, False
@@ -1719,6 +1913,8 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
                     "so no declaration change can be shown"), None, False
         before: str | None = prev_df[len(BLOB_PREFIX):]
         if before != recorded:
+            if as_found:
+                return as_found
             return (f"{moved}, but the previous derived_from {safe_text(prev_df[:12], 40)} is not the content of "
                     f"{safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration change can be "
                     "shown"), None, False
@@ -1735,7 +1931,14 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
             before = recorded
         else:
             before = git.blob_at(prev_commit, rel)
+            if before is None:
+                # Absent at both commits would "prove" any anchor for a path that
+                # holds no declaration at all.
+                return (f"{moved}, but {safe_text(rel)} did not exist at the previous derived_from "
+                        f"{prev_commit[:12]}, so no declaration change can be shown"), None, False
             if before != recorded:
+                if as_found:
+                    return as_found
                 return (f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
                         f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was recorded, "
                         "so no declaration change can be shown"), None, False
@@ -1779,9 +1982,13 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
         return f"{moved}, but {safe_text(new_df[:12], 40)} is not the content of {safe_text(new_rel)} at {baseline[:12]}"
     span = _run_length(git, earlier, yaml)
     recording = earlier[span - 1][0]
-    problem, before, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
+    problem, before, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline,
+                                             origin=span == len(earlier))
     if problem:
         return problem
+    if new_rel != rel and changed:
+        return _path_move_problem(git, moved, prev_df, prior_doc, new_doc, before, baseline, recording, rel,
+                                  new_rel)
     # `derive` re-stamps the approval on every run, a migration included.
     if _is_section_anchor(prev_df):
         relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
@@ -1803,7 +2010,54 @@ def _content_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     return None
 
 
-def _pure_move_problem(moved: str, prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
+def _moved_unchanged(git: Git, prev_df: str, prior_doc: dict[str, Any], before: str | None, baseline: str,
+                     new_rel: str) -> bool:
+    """Whether the previously anchored content is, unchanged, at ``new_rel`` in ``baseline``.
+
+    That is a rename of the declaration, whichever anchor form either side has:
+    the sections the previous anchor named all resolve there with their digests,
+    or the file holds the previously anchored blob.
+    """
+    if _is_section_anchor(prev_df):
+        decl = prior_doc.get("declaration")
+        locators = _locators(decl.get("sections")) if isinstance(decl, dict) else None
+        return bool(locators) and not _section_mismatches(git, baseline, new_rel, locators)
+    return before is not None and git.blob_at(baseline, new_rel) == before
+
+
+def _path_move_problem(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], new_doc: dict[str, Any],
+                       before: str | None, baseline: str, recording: str, rel: str, new_rel: str) -> str | None:
+    """A move to another declaration path, where the old one changed or is gone: only a pure move.
+
+    The old path gone reads as a declaration change, and a re-derivation onto
+    another file would answer to it, so deleting or renaming the declaration and
+    re-pointing the probe at any changed file in the same commit would re-baseline
+    a weakening. A rename is accepted only as a pure move, whichever anchor form
+    it records (the previously anchored content unchanged at the new path, nothing
+    else changed); a rename with an edit takes two commits, the pure move first
+    and the re-derivation after it. A rename leaves the old path gone and the new
+    one new since the recording: a copy of the old content beside an original
+    that was edited would otherwise read as a rename and hide the edit.
+    """
+    if git.entry_at(baseline, rel) is not None or git.entry_at(recording, new_rel) is not None:
+        return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(new_rel)}, "
+                f"and that is no rename: {safe_text(rel)} still exists at {baseline[:12]} or {safe_text(new_rel)} "
+                f"already existed at {recording[:12]}, where the previous derivation was recorded")
+    if _moved_unchanged(git, prev_df, prior_doc, before, baseline, new_rel):
+        return _pure_move_problem(moved, prior_doc, new_doc, *_RE_ANCHOR)
+    return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(new_rel)}, where "
+            "the previously anchored content is not; record the rename as a pure move first, then re-derive "
+            "(where the old content exists nowhere any more, restore the old file for that one commit, or "
+            "supersede the probe)")
+
+
+# What a pure move may change besides declaration.path and the approval stamp: a
+# change of anchor form that comes with it (the new anchor names the same content).
+_RE_ANCHOR = (("derived_from",), ("declaration", "sections"))
+
+
+def _pure_move_problem(moved: str, prior_doc: dict[str, Any], new_doc: dict[str, Any],
+                       *also: tuple[str, ...]) -> str | None:
     """Same anchor, new declaration path: clean only when it changed nothing else.
 
     Like every move it is also held to the previous derivation (_continuation_problem).
@@ -1812,7 +2066,7 @@ def _pure_move_problem(moved: str, prior_doc: dict[str, Any], new_doc: dict[str,
     stamp may move with the path; the observation digest inside it is still
     checked on every run.
     """
-    pure_move = (("declaration", "path"), ("approval",))
+    pure_move = (("declaration", "path"), ("approval",), *also)
     if _without(new_doc, *pure_move) != _without(prior_doc, *pure_move):
         return (f"{moved}, but the same commit changed the probe beyond declaration.path, "
                 "which a pure move of the declaration does not justify")
@@ -1850,9 +2104,13 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
                 f"{baseline[:12]}: {'; '.join(mismatches)}")
     span = _run_length(git, earlier, yaml)
     recording = earlier[span - 1][0]
-    problem, _, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
+    problem, before, changed = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline,
+                                             origin=span == len(earlier))
     if problem:
         return problem
+    if new_rel != rel and changed:
+        return _path_move_problem(git, moved, prev_df, prior_doc, new_doc, before, baseline, recording, rel,
+                                  new_rel)
     relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
     if (not changed and not _is_section_anchor(prev_df) and new_rel == rel
             and _without(new_doc, *relabel) == _without(prior_doc, *relabel)):
@@ -1913,7 +2171,7 @@ def _reconfirmation_problem(git: Git, moved: str, earlier: list[tuple[str, str]]
 
 
 def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
-                        new_doc: dict[str, Any]) -> str | None:
+                        new_doc: dict[str, Any], *, historical: bool = False) -> str | None:
     """Why the baseline commit's move of ``derived_from`` is no re-derivation, or None.
 
     Moving ``derived_from`` re-baselines the probe: every change of that commit
@@ -1927,15 +2185,17 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     older revisions follow it, newest first), so re-pointing the anchor at some
     other, recently changed file in the same commit proves nothing. A path anchor
     needs its latest commit as of the new ``derived_from`` to lie outside the
-    previous one's ancestry; an inherited spec needs the pin in
+    previous one's ancestry, and the previous one to be the declaration's
+    content where it was recorded (_prior_anchor), so a jump back to an older
+    commit can't be undone by a jump forward over a change already seen; an inherited spec needs the pin in
     spec/.spec-config.yml to have moved to the new value; an external anchor can't
     show a change, so its re-baseline is never accepted. A move onto a content
     anchor is judged by content instead (_content_rebaseline_problem), a move onto
     a section anchor by its sections (_section_rebaseline_problem); ``new_doc``
     is the probe document the baseline recorded. A move recorded as a
     re-confirmation must, on top, leave the probe itself as it was
-    (_reconfirmation_problem). Every move but one onto a commit anchor must
-    finally build on a legitimate previous derivation with no probe change in
+    (_reconfirmation_problem). Every move but one onto a commit anchor in a
+    SHA-256 repository must finally build on a legitimate previous derivation with no probe change in
     between (_continuation_problem).
 
     All of this presumes the baseline itself made the move, and the revisions
@@ -1969,7 +2229,8 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
     if key_moving:
         return (f"{moved}, but {_merge_names(key_moving)} changed derived_from after the previous derivation was "
                 f"recorded and before {baseline[:12]}, and a derivation recorded in a merge cannot be judged")
-    problem = _anchor_move_problem(git, moved, decl, prior_doc, prev_df, new_df, baseline, earlier, yaml, new_doc)
+    problem = _anchor_move_problem(git, moved, decl, prior_doc, prev_df, new_df, baseline, earlier, yaml, new_doc,
+                                   historical=historical)
     if problem:
         return problem
     approval = new_doc.get("approval")
@@ -1980,8 +2241,12 @@ def _rebaseline_problem(git: Git, new_df: str, baseline: str, earlier: list[tupl
         problem = _reconfirmation_problem(git, moved, earlier, yaml, new_doc)
         if problem:
             return problem
-    if not (reconfirmed or decl.get("inherited_spec") or _is_content_anchor(new_df) or _is_section_anchor(new_df)):
-        return None  # a move onto a commit anchor keeps the pre-v1.1 rules
+    if not (reconfirmed or decl.get("inherited_spec") or _is_content_anchor(new_df) or _is_section_anchor(new_df)
+            or len(baseline) == 40):
+        # A move onto a commit anchor keeps the pre-v1.1 rules in a SHA-256
+        # repository. In a SHA-1 one it only gets here as a move a later move's
+        # walk reached (_historical_commit_move_problem), held to the content rule.
+        return None
     return _continuation_problem(git, moved, baseline, earlier, _run_length(git, earlier, yaml), yaml)
 
 
@@ -2001,9 +2266,27 @@ def _key_moving_merges(git: Git, baseline: str, earlier: list[tuple[str, str]], 
 
 def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: dict[str, Any], prev_df: str,
                          new_df: str, baseline: str, earlier: list[tuple[str, str]], yaml: Any,
-                         new_doc: dict[str, Any]) -> str | None:
-    """The anchor-specific half of _rebaseline_problem: did the anchored declaration change?"""
+                         new_doc: dict[str, Any], *, historical: bool = False) -> str | None:
+    """The anchor-specific half of _rebaseline_problem: did the anchored declaration change?
+
+    A move between two commit anchors is a re-derivation when the previous
+    anchor is proven at the commit that recorded it (the declaration there is
+    its content at the previous derived_from, _prior_anchor) and the
+    declaration changed after it, up to the new derived_from.
+    """
     prior_commit, _ = earlier[0]
+    new_decl = new_doc.get("declaration")
+    new_decl = new_decl if isinstance(new_decl, dict) else {}
+    if decl.get("inherited_spec") or new_decl.get("inherited_spec"):
+        # Each side is judged by its own declaration's anchor: a move that also
+        # switches between an inherited spec and a file (or to another inherited
+        # spec) would be proven by the old pin and judged later by the new kind's
+        # rules, which neither side's check covers.
+        if (decl.get("inherited_spec"), decl.get("hub")) != (new_decl.get("inherited_spec"), new_decl.get("hub")):
+            return (f"{moved}, but it also changed which declaration the probe anchors on "
+                    f"({safe_text(decl.get('inherited_spec') or decl.get('path'), 80)} to "
+                    f"{safe_text(new_decl.get('inherited_spec') or new_decl.get('path'), 80)}), "
+                    "which no re-derivation can show; derive a new probe instead")
     if decl.get("inherited_spec"):
         before, _ = _pinned_ref(git.show(prior_commit, SPEC_CONFIG.as_posix()), decl, yaml)
         after, _ = _pinned_ref(git.show(baseline, SPEC_CONFIG.as_posix()), decl, yaml)
@@ -2028,23 +2311,82 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         # and skip proving the previous anchor, which launders a weakening.
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
+    if not historical and len(baseline) == 40:
+        # Since v1.1 a re-derivation in a SHA-1 repository records a content or
+        # section anchor; a commit anchor survives there only as the migration
+        # rule for a derivation made before. "The declaration changed" between two
+        # commits can only be read as "the file was touched", which a path re-pointed
+        # at a decoy, a rename that's restored, or an edit that's reverted all
+        # satisfy: no move onto one is a re-derivation. A SHA-256 repository, which
+        # has no content anchor, keeps the pre-v1.1 rules below. A move that a later
+        # move's walk back reaches (historical) is held to the content rule instead
+        # (_historical_commit_move_problem): refusing it outright would leave a probe
+        # with such a move in its history no re-derivation to recover with.
+        return f"{moved}, but {REASON_COMMIT_MOVE}"
+    span = _run_length(git, earlier, yaml)
+    recording = earlier[span - 1][0]
+    if prev_commit is not None:
+        # The previous anchor must be proven where it was recorded (_prior_anchor),
+        # as for every other anchor kind: otherwise one commit re-points the
+        # anchor back at an older commit without changing anything else, and the
+        # next moves it forward again across a declaration change that the probe
+        # had already seen, re-baselining whatever that commit lowers.
+        problem, before, _ = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline,
+                                           origin=span == len(earlier))
+        if problem:
+            return problem
+    else:
+        # A squash merge drops the commits a v1.0 derivation named, but the commits
+        # that recorded them are still here (as in _prior_anchor): the declaration's
+        # content there stands in for an anchor that no longer resolves.
+        before = git.blob_at(recording, rel)
+    if len(baseline) == 40:
+        return _historical_commit_move_problem(git, moved, rel, before, new_commit or baseline, prior_doc, new_doc)
+    # SHA-256: the pre-v1.1 rules.
     if prev_commit is not None and new_commit is not None:
         last = git.last_commit(rel, new_commit)
         if last is not None and not git.is_ancestor_or_equal(last, prev_commit):
             return None
         return f"{moved}, but {safe_text(rel)} did not change in between"
-    # A squash merge drops the commits a v1.0 derivation named, but the commits
-    # that recorded them are still here (as in _prior_anchor): the declaration's
-    # content there stands in for an anchor that no longer resolves. The walk
-    # back over earlier derivations (_continuation_problem) reaches such moves.
-    recording = earlier[_run_length(git, earlier, yaml) - 1][0]
-    before = git.blob_at(prev_commit or recording, rel)
     after = git.blob_at(new_commit or baseline, rel)
     if before is None or after is None:
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
     if before != after:
         return None
     return f"{moved}, but {safe_text(rel)} did not change in between"
+
+
+def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str | None, new_commit: str,
+                                   prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
+    """Why a SHA-1 repository's move onto a commit anchor, reached by a later move's walk, is no re-derivation.
+
+    The move is held to what a content-anchor move is held to, or a lowering
+    laundered here rides into the migration that follows. "Touched" isn't
+    "changed" (an edit that's reverted, a rename that's restored), so the content
+    is compared, at the path each side recorded: where it's unchanged the move is
+    only a re-anchoring (onto a squash merge's commit, say) that may change
+    nothing but derived_from and the approval. A move to another path is held
+    to a pure move, as for a content anchor (_pure_move_problem): comparing two
+    files' contents would read a decoy as a declaration change. Either way
+    _rebaseline_problem then requires it to build on a legitimate derivation.
+    """
+    decl = new_doc.get("declaration")
+    raw = decl.get("path") if isinstance(decl, dict) else None
+    new_rel = _repo_relative(raw) if isinstance(raw, str) and raw else None
+    after = git.blob_at(new_commit, new_rel) if new_rel else None
+    if before is None or after is None:
+        return f"{moved}, but the declaration is missing at one of the two anchors, so no declaration change can be shown"
+    if new_rel != rel:
+        if after != before or git.entry_at(new_commit, rel) is not None:
+            return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(raw, 80)}, "
+                    "and only a pure move of an unchanged declaration, the old path gone, can change its path")
+        return _pure_move_problem(moved, {**prior_doc, "derived_from": None}, {**new_doc, "derived_from": None})
+    if after == before:
+        relabel = (("derived_from",), ("approval",))
+        if _without(new_doc, *relabel) != _without(prior_doc, *relabel):
+            return (f"{moved}, but the content of {safe_text(rel)} did not change in between, and a "
+                    "re-anchoring may change nothing but derived_from and the approval")
+    return None
 
 
 def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
@@ -2589,7 +2931,8 @@ def resolve_supersedes(repo: Path, git: Git, probes: list[Probe], listed: set[st
     was T2, W's own verdict is weakened, and the cut is a one-way lineage
     (_lineage_problem); each failure is a finding. Only then is R judged on its
     history ended before W's revisions (probe_changes), since git --follow
-    pairs a similar new file with the kept one; the records take effect when R
+    pairs a similar new file with the kept one (a copy that is R's own already
+    ends there, _own_log; the cut also covers one that is not); the records take effect when R
     is then clean, approved, and its approval carries a matching observation
     digest, and are otherwise noted on W, which stays weakened. A record that
     takes no effect never changes R's verdict: R keeps its uncut one. Every
@@ -2716,8 +3059,9 @@ class ProbeHistory:
     ``writes`` lists per id the ``(commit, path)`` changes whose result carries
     it; ``removals`` the changes that took it off a path, newest first
     (``--topo-order``: a commit before its parents); ``at_head`` the paths that
-    carry it in HEAD's own tree. ``commits`` and ``blobs`` count what the walk
-    read, for the measurement of its cost.
+    carry it in HEAD's own tree; ``merges`` the merge commits among the
+    changes. ``commits`` and ``blobs`` count what the walk read, for the
+    measurement of its cost.
     """
 
     head: str
@@ -2726,6 +3070,7 @@ class ProbeHistory:
     at_head: dict[str, list[str]] = field(default_factory=dict)
     commits: int = 0
     blobs: int = 0
+    merges: set[str] = field(default_factory=set)
 
     @property
     def ids(self) -> set[str]:
@@ -2777,6 +3122,14 @@ def _declared_id(content: bytes, yaml: Any) -> str | None:
 
 
 _ZERO_OBJECT = re.compile(r"^0+$")
+
+
+def shared_probe_set_history(git: Git, yaml: Any) -> ProbeHistory:
+    """probe_set_history() at HEAD, read once per run and Git instance (Git.probe_sets)."""
+    head = git.resolve_commit("HEAD") or ""
+    if head not in git.probe_sets:
+        git.probe_sets[head] = probe_set_history(git, yaml, head)
+    return git.probe_sets[head]
 
 
 def probe_set_history(git: Git, yaml: Any, head: str) -> ProbeHistory:
@@ -2833,6 +3186,7 @@ def probe_set_history(git: Git, yaml: Any, head: str) -> ProbeHistory:
         found = declared.get(blob) if mode != _SYMLINK_MODE else None
         return found if found is not None else PurePosixPath(path).stem
 
+    history.merges = {commit for commit, parents, *_ in changes if len(parents) > 1}
     for commit, parents, old_mode, new_mode, old, new, path in changes:
         before = carried(old_mode, old, path) if present(old_mode, old, path) else None
         after = carried(new_mode, new, path) if present(new_mode, new, path) else None
@@ -3054,8 +3408,7 @@ def judge_removals(repo: Path, git: Git, probes: list[Probe], yaml: Any, validat
     manifest says, since a record for an id still carried is a contradiction.
     A record for an id never carried is invalid.
     """
-    head = git.resolve_commit("HEAD") or ""
-    history = probe_set_history(git, yaml, head)
+    history = shared_probe_set_history(git, yaml)
     manifest = load_retired(repo, yaml, validator_cls)
     result = Retirement(manifest, history)
     holders: dict[str, list[Probe]] = {}
@@ -3404,6 +3757,10 @@ def run(repo_arg: str, include_t2: bool = False, env_timeout: float = DEFAULT_EN
 # --------------------------------------------------------------------------- #
 # Migration gate (reconfirm-and-migrate.md §Migration step 1)
 # --------------------------------------------------------------------------- #
+# A move onto a commit anchor in a SHA-1 repository (_anchor_move_problem): unlike
+# every other weakening, re-deriving onto a content or section anchor heals it.
+REASON_COMMIT_MOVE = ("a move onto a commit anchor is never a re-derivation for a declaration inside the "
+                      "repository; re-derive it, which records a content or section anchor")
 ROUTE_STALE = ("reconfirm it after the diff (references/reconfirm-and-migrate.md §Re-confirmation) "
                "or derive it again, then check again; a migration must not hide a declaration change")
 ROUTE_WEAKENED = ("not healable in place: neither a re-confirmation nor a migration clears it; "
@@ -3485,6 +3842,8 @@ def check_migration(repo_arg: str) -> tuple[int, list[str]]:
             continue
         route = {STATE_STALE: ROUTE_STALE, STATE_WEAKENED: ROUTE_WEAKENED, STATE_INVALID: ROUTE_REDERIVE,
                  STATE_CONTRADICTION: ROUTE_REDERIVE, FINDING_SUPERSEDE: ROUTE_REDERIVE}.get(state.state, ROUTE_OTHER)
+        if state.state == STATE_WEAKENED and (state.reason or "").endswith(REASON_COMMIT_MOVE):
+            route = ROUTE_REDERIVE
         refused.append(f"refused {pid}: {state.state}: {safe_text(state.reason)}; route: {route}")
     if refused:
         return EXIT_MIGRATION_REFUSED, refused

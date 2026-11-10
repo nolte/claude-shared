@@ -64,6 +64,11 @@ def make_probe(pid: str = "p1", *, derived_from: str, tier: str = "T0", path: st
     return probe
 
 
+# The reason a move onto a commit anchor reads weakened in a SHA-1 repository (#688).
+COMMIT_MOVE_REFUSED = ("a move onto a commit anchor is never a re-derivation for a declaration inside the "
+                       "repository; re-derive it, which records a content or section anchor")
+
+
 def marker_argv(marker: Path, output: str = "3") -> list[str]:
     """An observation step that leaves a trace, so a test can prove it never ran."""
     return [PY, "-c", f"open({str(marker)!r}, 'w').write('ran'); print({output!r})"]
@@ -72,6 +77,22 @@ def marker_argv(marker: Path, output: str = "3") -> list[str]:
 @pytest.fixture
 def target(tmp_path) -> Target:
     t = Target(tmp_path / "target")
+    t.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
+    t.commit("declare")
+    return t
+
+
+@pytest.fixture
+def sha256_target(tmp_path) -> Target:
+    """A SHA-256 repository: no content anchor exists there, so a commit anchor keeps the pre-v1.1 rules."""
+    path = tmp_path / "target"
+    path.mkdir()
+    res = subprocess.run(["git", "init", "-q", "--object-format=sha256", str(path)],
+                         capture_output=True, text=True, check=False)
+    if res.returncode != 0:
+        pytest.skip(f"local git cannot create a SHA-256 repository: {res.stderr.strip()}")
+    t = Target(path)
+    assert t.git("rev-parse", "--show-object-format") == "sha256"
     t.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
     t.commit("declare")
     return t
@@ -502,9 +523,9 @@ def test_R3_renaming_the_probe_does_not_launder_a_weakening(target):
 def test_R3_R5_re_derivation_after_a_declaration_change_is_clean(target):
     _, rel = derived_probe(target)
     target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
-    moved = target.commit("move declaration")
+    target.commit("move declaration")
     data = yaml.safe_load((target.path / rel).read_text())
-    data["derived_from"] = moved
+    data["derived_from"] = _blob(target)
     target.write(rel, yaml.safe_dump(data, sort_keys=False))
     target.commit("re-derive")
     code, report = run_audit(target)
@@ -1123,7 +1144,7 @@ def test_SCR001_derived_from_bump_without_declaration_change_is_weakened(target,
     row = row_of(report, "p1")
     assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED
     assert f"re-baselined without a declaration change: {laundering[:12]} moved derived_from" in row[9]
-    assert f"but {DECL} did not change in between" in row[9]
+    assert COMMIT_MOVE_REFUSED in row[9]
     assert "**weakened** `p1`" in report
 
 
@@ -1137,14 +1158,20 @@ def test_SCR001_re_pointing_the_anchor_at_a_changed_file_does_not_launder(target
     target.commit("re-point, weaken, re-record")
     _, report = run_audit(target)
     row = row_of(report, "p1")
-    assert row[7] == ra.STATE_WEAKENED and f"but {DECL} did not change in between" in row[9]
+    assert row[7] == ra.STATE_WEAKENED and COMMIT_MOVE_REFUSED in row[9]
 
 
 def test_SCR001_re_derivation_after_a_renamed_declaration_is_clean(target):
+    """A rename with an edit takes two commits since #688: the pure move, then the re-derivation."""
     _, rel = derived_probe(target)
     target.git("mv", DECL, "docs/requirements-v2.md")
-    renamed = target.commit("rename the declaration")
-    _rewrite(target, rel, declaration_path="docs/requirements-v2.md", derived_from=renamed)
+    target.commit("rename the declaration")
+    _rewrite(target, rel, declaration_path="docs/requirements-v2.md",
+             derived_from=_blob(target, path="docs/requirements-v2.md"))
+    target.commit("follow the rename as a pure move")
+    target.write("docs/requirements-v2.md", "# Requirements\n\n## Export\n\nExports 3 collections, v2.\n")
+    target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from=_blob(target, path="docs/requirements-v2.md"))
     target.commit("re-derive against the renamed file")
     code, report = run_audit(target)
     assert code == ra.EXIT_OK
@@ -1223,8 +1250,8 @@ def test_SCR002_latin1_byte_in_probe_history_is_classified_not_a_crash(target):
     (target.path / rel).write_bytes(first)
     target.commit("probe with a Latin-1 comment")
     target.write(DECL, "# Requirements\n\nExports 3 collections, reworded.\n")
-    moved = target.commit("move declaration")
-    target.write_probe(make_probe(derived_from=moved))
+    target.commit("move declaration")
+    target.write_probe(make_probe(derived_from=_blob(target)))
     target.commit("re-derive as UTF-8")
     code, report = run_audit(target)
     assert code == ra.EXIT_OK
@@ -1845,8 +1872,8 @@ def test_668_F2_delete_and_re_point_at_an_existing_file_is_weakened(target, tmp_
     _rewrite(target, rel, expected_value=1, declaration_path="docs/other.md", derived_from=other)
     target.commit("delete the declaration, re-point and lower the bar")
     reason = _weakened_reason(target, marker)
-    assert (f"but docs/other.md already held {other[:12]} when the previous derivation was recorded in "
-            f"{recorded[:12]}, so re-pointing at it shows no declaration change") in reason
+    assert (f"but it also moved the declaration from {DECL} to docs/other.md, and that is no rename: {DECL} "
+            f"still exists at ") in reason or f"docs/other.md already existed at {recorded[:12]}" in reason, reason
 
 
 def test_668_F2_path_only_commit_cannot_adopt_an_earlier_weakening(target, tmp_path):
@@ -1974,9 +2001,10 @@ def test_668_R2_fabricated_unresolvable_anchor_cannot_launder_a_weakening(target
     reason = _weakened_reason(target, marker)
     assert (f"its previous derivation was no re-derivation either: {weakening[:12]} moved derived_from "
             "from ") in reason
-    # The made-up commit does not resolve, so the commit that recorded it stands in: the declaration there
-    # is the one the previous derivation saw.
-    assert f"to 000000000000, but {DECL} did not change in between" in reason
+    # The made-up commit does not resolve, so the commit that made the move stands in: the declaration there
+    # is the one the previous derivation saw, and the move lowered the bar.
+    assert (f"to 000000000000, but the content of {DECL} did not change in between, and a re-anchoring may "
+            "change nothing but derived_from and the approval") in reason
 
 
 # --------------------------------------------------------------------------- #
@@ -3011,20 +3039,23 @@ def test_685_re_derivation_after_a_real_change_on_a_weakened_chain_stays_weakene
     assert reason.endswith(f"but the anchored sections of {DECL} did not change in between")
 
 
-def test_685_a_new_id_beside_the_kept_weakened_file_inherits_its_chain_by_copy_detection(sectioned):
-    """Measured with git 2.43: --follow pairs a new file with a kept, similar one as a copy.
+def test_685_a_new_id_beside_the_kept_weakened_file_starts_its_own_history_and_leaves_the_kept_one_weakened(
+        sectioned):
+    """Measured with git 2.43 and 2.53: --follow pairs a new file with a kept, similar one as a copy (#688).
 
-    So keeping the weakened probe and adding a fresh one under a new id does not
-    escape the chain on its own; without a supersede record this stays so.
+    The copy starts its own history, so the new id is clean; the kept probe keeps
+    its own finding, which only a supersede record clears.
     """
     _weakened_rebaseline(sectioned)
     sectioned.write_probe(_fresh(sectioned, "p1-rederived", WIDE))
     sectioned.commit("derive afresh under a new id, keep the weakened probe")
-    follow = sectioned.git("log", "--follow", "--format=%H", "--", "project/reach-probes/p1-rederived.yml")
-    assert len(follow.splitlines()) > 1, "git no longer pairs the copy; revisit the supersede history cut"
+    log = ra.Git(sectioned.path).file_log("project/reach-probes/p1-rederived.yml")
+    assert len(log) > 1 and log[0][2] == "C", "git no longer pairs the copy; revisit the copy cut"
     state, reason = _state(sectioned, "p1-rederived")
-    assert state == ra.STATE_WEAKENED, reason
+    assert state == ra.STATE_CLEAN, reason
     assert _state(sectioned)[0] == ra.STATE_WEAKENED
+    code, _ = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
 
 
 def _replacement(target: Target, pid: str = "p2", supersedes=("p1",), commit: bool = True, locators=WIDE,
@@ -3116,8 +3147,9 @@ def test_685_AC3_a_replacement_that_does_not_run_as_approved_supersedes_nothing(
     old = row_of(report, "p1")
     assert old[7] == ra.STATE_WEAKENED and f"supersede by p2 not in effect: it is {state}" in _plain(old[9]), old
     assert not marker.exists()
-    # The record took no effect, so p2 keeps its uncut verdict: git pairs it with p1 as a copy (SEC-002).
-    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED
+    # The record took no effect, so p2 keeps its uncut verdict (SEC-002): its own history, which starts at
+    # the commit that created it as a copy of p1 (#688).
+    assert row_of(report, "p2")[7] == (ra.STATE_CLEAN if how == "unapproved" else state)
 
 
 def test_685_AC3_deleting_the_replacement_leaves_the_superseded_probe_weakened(sectioned):
@@ -3155,8 +3187,8 @@ def test_685_a_probe_that_is_not_weakened_cannot_be_superseded(sectioned, tmp_pa
     assert "supersedes p1, which is clean, not weakened" in _supersede_finding(report, "p2")
     assert row_of(report, "p1")[1] == ra.REACHED and marker.exists()
     # A record that takes no effect never changes p2's verdict (SEC-002): p2 keeps its uncut history,
-    # in which git pairs it with p1 as a copy, and so is not executed.
-    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED and row_of(report, "p2")[5] == "not executed"
+    # which starts at the commit that created it as a copy of p1 (#688), and so runs as a probe of its own.
+    assert row_of(report, "p2")[7] == ra.STATE_CLEAN and row_of(report, "p2")[1] == ra.REACHED
 
 
 def test_685_self_supersede_is_a_finding(sectioned):
@@ -3355,9 +3387,12 @@ def test_685_SEC002_a_claimant_whose_newest_revision_lies_in_the_target_reads_we
     target.commit("lower h's bar")
     target.write_probe({k: v for k, v in data.items() if k != "supersedes"} | {"id": "h-old"})
     target.commit("copy h to h-old")
-    code, row, _ = _h_verdict(target, marker)
+    code, row, report = _h_verdict(target, marker)
     assert row[7] == ra.STATE_WEAKENED, row[7:]
-    assert code == ra.EXIT_FINDINGS and not marker.exists()
+    assert code == ra.EXIT_FINDINGS and row[5] == "not executed", row
+    # h-old, a copy of h made after h's change, starts its own history there (#688); the marker is
+    # shared, so it shows h-old ran, not h.
+    assert row_of(report, "h-old")[7] == ra.STATE_CLEAN
 
 
 def test_685_SEC003_a_replacement_without_an_observation_digest_supersedes_nothing(sectioned):
@@ -3772,10 +3807,13 @@ def test_701_a_derivation_recorded_inside_the_newest_merge_names_it_not_uncommit
 
 
 @pytest.mark.parametrize("where", ["merge", "commit"])
-def test_701_a_weakening_before_a_commit_anchor_re_derivation_is_outside_the_window(target, tmp_path, where):
+def test_701_a_weakening_before_a_commit_anchor_re_derivation_is_outside_the_window(sha256_target, tmp_path,
+                                                                                    where):
     """AC (e): a move onto a commit anchor keeps the pre-v1.1 rules and consults only the previous
     anchor, not the probe changes before it, so a plain commit there is adopted; a merge at the same
-    place is treated the same and not reported."""
+    place is treated the same and not reported. Since #688 that holds only in a SHA-256 repository;
+    in a SHA-1 one the move itself is refused (test_688_SECR4_*)."""
+    target = sha256_target
     marker = tmp_path / "ran"
     _, rel = derived_probe(target, argv=marker_argv(marker, "1"), expected=dict(BAR_OF_TWO))
     if where == "merge":
@@ -3855,11 +3893,11 @@ def test_701_the_targets_log_and_diff_config_does_not_hide_an_evil_merge(target,
 
 
 def test_701_a_search_start_that_is_no_ancestor_widens_instead_of_finding_nothing(target):
-    """Follow-up 1: file_history() orders by committer date, so with a forged date a descendant can be
-    listed as the older revision. R, an evil merge E, then A; D comes after A but is dated before R, so
-    the walk lists A, R, D and D looks like the oldest revision of a span ending at A. D..A is empty;
-    the search must fail closed and still find E, which lies in A's ancestry. D sits on a branch merged
-    back without a conflict: the walk pops commits by date only across branches."""
+    """Follow-up 1: R, an evil merge E, then A; D comes after A but is dated before R. In committer-date
+    order the walk listed A, R, D, and D looked like the oldest revision of a span ending at A. Since
+    #688 file_history() lists in topological order (D first), but a span can still start at a revision
+    that is no ancestor of its end: D..A is empty, and the search must fail closed and still find E,
+    which lies in A's ancestry. D sits on a branch merged back without a conflict."""
     rel = _content_probe(target)
     _, merge = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1))
     _rewrite(target, rel, tier="T1")
@@ -3877,8 +3915,8 @@ def test_701_a_search_start_that_is_no_ancestor_widens_instead_of_finding_nothin
     target.git("merge", "-q", "--no-ff", "--no-edit", "late")
     git = ra.Git(target.path)
     history = git.file_history(rel)
-    assert [c for c, _ in history][-1] == forged and git.is_ancestor_or_equal(after, forged)
-    span = [rev for rev in history if rev[0] != after]
+    assert [c for c, _ in history][0] == forged and git.is_ancestor_or_equal(after, forged)
+    span = [rev for rev in history if rev[0] not in (after, forged)] + [(forged, rel)]
     assert [m for m, _ in ra._merges_changing(git, span, after)] == [merge]
     assert git.merges_changing(forged, after, rel) == [merge]
 
@@ -4605,3 +4643,785 @@ def test_704_P4_4_a_record_cannot_take_effect_past_an_unreadable_manifest_before
     assert _finding(report, "removed", "p1").endswith(
         f"{RETIRED_REL} can't be read at {carrier[:12]}, before the removal in {removal[:12]}, so it can't be "
         "shown that the record postdates that removal")
+
+
+# --------------------------------------------------------------------------- #
+# #688: a probe created as a copy of another probe file starts its own history
+# --------------------------------------------------------------------------- #
+# git --follow pairs a file created beside a similar one that stays in place as
+# a copy (C) and walks on into that file's revisions. A probe written from the
+# same template as an earlier one must not take over the earlier probe's chain.
+P2_REL = "project/reach-probes/p2.yml"
+
+
+def _status_of(target: Target, rel: str, commit: str) -> tuple[str, str]:
+    """git's status and source for ``rel`` at ``commit`` in its followed log."""
+    found = [(status, source) for c, _, status, source in ra.Git(target.path).file_log(rel) if c == commit]
+    assert len(found) == 1, found
+    return found[0]
+
+
+def _template_copy(target: Target, pid: str = "p2") -> str:
+    """Write ``pid`` from the same template as p1 in a commit of its own; returns that commit."""
+    target.write_probe(make_probe(pid, derived_from=_blob(target)))
+    created = target.commit(f"derive {pid} from the same template")
+    status, source = _status_of(target, f"project/reach-probes/{pid}.yml", created)
+    assert (status, source) == ("C", P1_REL), "git no longer pairs the copy; revisit the copy cut"
+    return created
+
+
+def test_688_a_probe_added_from_the_template_of_an_earlier_one_reads_clean(target):
+    """AC (a): measured before the fix as weakened, "probe changed in <p2's commit> after ... <p1's commit>"."""
+    derived_probe(target)
+    _template_copy(target)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK, report
+    for pid in ("p1", "p2"):
+        row = row_of(report, pid)
+        assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN, row
+
+
+def test_688_a_copy_edited_after_its_approval_reads_weakened_at_that_edit(target, tmp_path):
+    """AC (b): the copy's own history still holds every later change."""
+    derived_probe(target)
+    created = _template_copy(target)
+    _weaken(target, P2_REL)
+    weakening = target.commit("lower p2's bar")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    row = row_of(report, "p2")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED, row
+    assert (f"probe changed in {weakening[:12]} after its derivation was recorded in {created[:12]}"
+            in _plain(row[9])), row[9]
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+def test_688_a_new_id_beside_a_kept_weakened_probe_is_clean_and_the_kept_one_stays_weakened(target):
+    """AC (c): no supersede record, so p1 keeps its finding and the run fails."""
+    _, rel = derived_probe(target)
+    _weaken(target, rel)
+    weakening = target.commit("lower p1's bar")
+    _template_copy(target)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert row_of(report, "p2")[7] == ra.STATE_CLEAN
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_WEAKENED and f"probe changed in {weakening[:12]}" in _plain(old[9]), old
+
+
+def test_688_a_renamed_weakened_probe_stays_weakened(target):
+    """AC (d): a rename keeps the history; git reports R, not C."""
+    _, rel = derived_probe(target)
+    _weaken(target, rel)
+    target.commit("lower p1's bar")
+    target.git("mv", rel, "project/reach-probes/renamed.yml")
+    moved = target.commit("rename p1's file")
+    assert _status_of(target, "project/reach-probes/renamed.yml", moved) == ("R", rel)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+
+
+@pytest.mark.parametrize("touched", [False, True])
+def test_688_a_copy_of_a_probe_created_in_a_merge_gets_no_origin_finding(target, touched):
+    """AC (e): measured before the fix, p2 read weakened, "does not create p2.yml but records a copy from p1.yml".
+
+    The source keeps its own verdict: uncommitted when no plain commit lists it
+    (SEC-101), weakened with an incomplete history when a later commit does (#702).
+    """
+    blob = _blob(target)
+    _merge_side(target, in_merge=lambda: target.write_probe(make_probe(derived_from=blob)))
+    later = _touch(target, P1_REL) if touched else None
+    created = _template_copy(target)
+    assert ra.Git(target.path).file_history(P2_REL)[0] == (created, P2_REL)
+    code, report = run_audit(target)
+    # An uncommitted probe is not probed, but it is no finding of its own (existing behaviour).
+    assert code == (ra.EXIT_FINDINGS if touched else ra.EXIT_OK), report
+    new = row_of(report, "p2")
+    assert new[1] == ra.REACHED and new[7] == ra.STATE_CLEAN, new
+    old = row_of(report, "p1")
+    if touched:
+        assert old[7] == ra.STATE_WEAKENED and _plain(old[9]) == "weakened: " + _incomplete(later, P1_REL), old
+    else:
+        assert old[7] == ra.STATE_UNCOMMITTED, old
+
+
+@pytest.mark.parametrize("new_id", [False, True])
+def test_688_a_weakened_probe_re_added_at_its_path_as_a_copy_is_not_read_as_fresh(target, new_id):
+    """Delete-and-re-add keeps the history; re-added as a copy, git walks into the source instead of the path.
+
+    Under the old id, the id is not new at the copy, so the walk goes on. Under
+    a new id, the path's earlier revisions are not in the listed history, so the
+    probe fails closed instead of starting clean at the copy.
+    """
+    rel = P1_REL
+    # One commit, so git pairs neither with the other and p3's history holds no revision of p1.
+    blob = _blob(target)
+    _approve_together(target, make_probe("p1", derived_from=blob), make_probe("p3", derived_from=blob))
+    _weaken(target, rel)
+    target.commit("lower p1's bar")
+    target.git("rm", "-q", rel)
+    removal = target.commit("drop p1")
+    pid = "p9" if new_id else "p1"
+    target.write_probe(make_probe(pid, derived_from=_blob(target)), name="p1")
+    readded = target.commit("re-add p1.yml from p3's text")
+    assert _status_of(target, rel, readded) == ("C", "project/reach-probes/p3.yml")
+    state, reason = _state(target, pid)
+    assert state == ra.STATE_WEAKENED, reason
+    assert not new_id or (f"the probe was created in {readded[:12]} as a copy of project/reach-probes/p3.yml at "
+                          f"{rel}, which "
+            f"already held a file in {removal[:12]}") in reason, reason
+
+
+def test_688_a_copy_that_takes_the_source_s_id_keeps_the_source_s_history(target):
+    """The weakened p1 copied to a new file under its own id, then the old file dropped: the same probe, moved."""
+    _, rel = derived_probe(target)
+    _weaken(target, rel)
+    target.commit("lower p1's bar")
+    moved = "project/reach-probes/moved.yml"
+    target.write(moved, (target.path / rel).read_text())
+    copied = target.commit("copy p1 under its own id")
+    assert _status_of(target, moved, copied) == ("C", rel)
+    target.git("rm", "-q", rel)
+    target.commit("drop the old file")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+
+
+# Security review of #688: a copy ends the history only when its id is new there.
+LONG_ARGV = [PY, "-c", "import sys; print(3)  # decoy observation step with a long distinctive tail " + "x" * 120]
+PROBES = "project/reach-probes"
+
+
+def test_688_SEC1_an_id_hidden_behind_a_re_created_source_path_is_not_new_and_keeps_its_history(target):
+    """Measured before the fix: xid read clean, exit 0 (origin/develop: weakened, exit 4).
+
+    p.yml carried xid at c1 and was dropped; c3 re-creates p.yml as a tid
+    variant, so --follow on p.yml stops at c3 and never lists the xid revision.
+    The lowered xid copied from it at c4 carries an id a probe file carried
+    before, so the copy does not end its history.
+    """
+    d = _blob(target)
+    target.write_probe(make_probe("xid", derived_from=d), name="p")
+    target.write_probe(make_probe("tid", derived_from=d), name="t")
+    target.commit("c1")
+    target.git("rm", "-q", f"{PROBES}/p.yml")
+    target.commit("c2")
+    target.write_probe(make_probe("tid", derived_from=d, argv=LONG_ARGV), name="p")
+    target.commit("c3")
+    target.write_probe(make_probe("xid", derived_from=d, argv=LONG_ARGV,
+                                  expected={"kind": "count", "value": 1, "unit": "collections"}), name="Y")
+    c4 = target.commit("c4")
+    assert _status_of(target, f"{PROBES}/Y.yml", c4) == ("C", f"{PROBES}/p.yml"), "git no longer pairs the copy"
+    target.git("rm", "-q", f"{PROBES}/p.yml")
+    target.commit("c5")
+    code, report = run_audit(target)
+    assert code != ra.EXIT_OK, report
+    assert row_of(report, "xid")[7] != ra.STATE_CLEAN, row_of(report, "xid")
+
+
+@pytest.mark.parametrize("from_template", [False, True])
+def test_688_SEC2_a_re_created_id_moved_back_onto_its_old_path_stays_weakened(target, from_template):
+    """c1 W.yml carries xid; c2 drops it; c3 adds Y.yml with xid lowered (from_template: as a copy of the
+    untouched template probe t.yml); c4 renames Y.yml to W.yml. A regression guard: never clean."""
+    d = _blob(target)
+    target.write_probe(make_probe("xid", derived_from=d), name="W")
+    if from_template:
+        target.write_probe(make_probe("tid", derived_from=d), name="t")
+    target.commit("c1")
+    target.git("rm", "-q", f"{PROBES}/W.yml")
+    target.commit("c2")
+    target.write_probe(make_probe("xid", derived_from=d, expected={"kind": "count", "value": 1, "unit": "collections"}),
+                       name="Y")
+    c3 = target.commit("c3")
+    if from_template:
+        assert _status_of(target, f"{PROBES}/Y.yml", c3) == ("C", f"{PROBES}/t.yml"), "git no longer pairs the copy"
+    target.git("mv", f"{PROBES}/Y.yml", f"{PROBES}/W.yml")
+    target.commit("c4")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    assert row_of(report, "xid")[7] == ra.STATE_WEAKENED, row_of(report, "xid")
+
+
+def test_688_SEC1_a_copy_merged_in_from_a_side_branch_stays_clean(target):
+    """A --no-ff merge writes p2 (it differs from main's parent), after the copy: that write keeps p2's id new."""
+    derived_probe(target)
+    side, merge = _merge_side(target, on_side=lambda: target.write_probe(make_probe("p2", derived_from=_blob(target))))
+    assert _status_of(target, P2_REL, side) == ("C", P1_REL), "git no longer pairs the copy"
+    history = ra.probe_set_history(ra.Git(target.path), yaml, target.git("rev-parse", "HEAD"))
+    assert (merge, P2_REL) in history.writes["p2"], history.writes["p2"]
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK, report
+    assert row_of(report, "p2")[7] == ra.STATE_CLEAN
+
+
+# Second security review of #688: a backdated side commit hides behind the creating copy or rename.
+LOW = {"kind": "count", "value": 1, "unit": "collections"}
+
+
+def _backdated_lowering(target: Target, created: str, rel: str) -> str:
+    """On a side branch from ``created``, lower the bar of ``rel`` in a commit dated a day before
+    ``created``, then merge it back with --no-ff; returns the lowering commit."""
+    target.git("switch", "-q", "-c", "side", created)
+    data = yaml.safe_load((target.path / rel).read_text())
+    data["expected"] = dict(LOW)
+    target.write(rel, yaml.safe_dump(data, sort_keys=False))
+    target.git("add", "-A")
+    when = f"@{int(target.git('log', '-1', '--format=%ct', created)) - 86400}"
+    subprocess.run(["git", "-C", str(target.path), "commit", "-q", "-m", "D"], check=True,
+                   env={**os.environ, "GIT_COMMITTER_DATE": when, "GIT_AUTHOR_DATE": when})
+    lowering = target.git("rev-parse", "HEAD")
+    target.git("switch", "-q", "-")
+    target.git("merge", "-q", "--no-ff", "-m", "M", "side")
+    return lowering
+
+
+def test_688_SEC3_a_backdated_lowering_after_a_copy_is_listed_and_weakens_the_copy(target):
+    """Measured before the fix (git 2.53): file_log(y.yml) listed only the copy and q's A; xid read clean, exit 0."""
+    d = _blob(target)
+    target.write_probe(make_probe("qid", derived_from=d), name="q")
+    target.commit("c0")
+    target.write_probe(make_probe("xid", derived_from=d), name="y")
+    created = target.commit("C")
+    y = f"{PROBES}/y.yml"
+    assert _status_of(target, y, created) == ("C", f"{PROBES}/q.yml"), "git no longer pairs the copy"
+    lowering = _backdated_lowering(target, created, y)
+    assert lowering in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    row = row_of(report, "xid")
+    assert row[7] == ra.STATE_WEAKENED, row
+    assert (f"probe changed in {lowering[:12]} after its derivation was recorded in {created[:12]}"
+            in _plain(row[9])), row[9]
+
+
+def test_688_SEC3_a_backdated_lowering_after_a_rename_names_the_lowering(target):
+    """Before the fix the rename variant read weakened only by accident: the lowering was not listed."""
+    d = _blob(target)
+    target.write_probe(make_probe("xid", derived_from=d), name="w")
+    target.commit("c0")
+    y = f"{PROBES}/y.yml"
+    target.git("mv", f"{PROBES}/w.yml", y)
+    renamed = target.commit("C'")
+    assert _status_of(target, y, renamed) == ("R", f"{PROBES}/w.yml")
+    lowering = _backdated_lowering(target, renamed, y)
+    assert lowering in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
+    state, reason = _state(target, "xid")
+    assert state == ra.STATE_WEAKENED and "probe changed in " in reason and lowering[:12] in reason, reason
+
+
+def test_688_SEC3_a_change_the_walk_does_not_list_is_reported_as_an_incomplete_history(target, monkeypatch):
+    """Defense in depth: with the walk back in committer-date order, the probe-set history still sees D."""
+    real = ra.Git.out
+
+    def date_ordered(self, *args):
+        return real(self, *(a for a in args if a != "--topo-order"))
+
+    monkeypatch.setattr(ra.Git, "out", date_ordered)
+    d = _blob(target)
+    target.write_probe(make_probe("qid", derived_from=d), name="q")
+    target.commit("c0")
+    target.write_probe(make_probe("xid", derived_from=d), name="y")
+    created = target.commit("C")
+    y = f"{PROBES}/y.yml"
+    lowering = _backdated_lowering(target, created, y)
+    assert lowering not in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    row = row_of(report, "xid")
+    assert row[7] == ra.STATE_WEAKENED, row
+    assert (f"{lowering[:12]} changed {y} under the id xid, but the probe's history walk does not list it"
+            in _plain(row[9])), row[9]
+
+
+@pytest.mark.parametrize("rename_back", [False, True])
+def test_688_SEC3_a_weakened_id_re_created_elsewhere_and_moved_back_onto_its_path_is_not_clean(target, rename_back):
+    """y.yml carries xid, lowered, then dropped; w.yml re-creates xid; a re-derivation after a real
+    declaration change moves it back onto y.yml. --follow stops at w.yml, so y.yml's earlier xid
+    revisions are unlisted: without the move it's an exchange under the same id (#706), with it the
+    listed history is incomplete."""
+    y, w = f"{PROBES}/y.yml", f"{PROBES}/w.yml"
+    target.write_probe(make_probe("xid", derived_from=_blob(target)), name="y")
+    target.commit("approve xid")
+    _weaken(target, y)
+    target.commit("lower xid's bar")
+    target.git("rm", "-q", y)
+    target.commit("drop y.yml")
+    target.write_probe(make_probe("xid", derived_from=_blob(target)), name="w")
+    target.commit("re-create xid in w.yml")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    target.commit("change the declaration")
+    if rename_back:
+        target.git("mv", w, y)
+    _rewrite(target, y if rename_back else w, derived_from=_blob(target))
+    moved = target.commit("re-derive xid" + (" back at y.yml" if rename_back else ""))
+    if rename_back:
+        assert [s for c, _, s, _ in ra.Git(target.path).file_log(y) if c == moved] == ["R"]
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    if rename_back:
+        row = row_of(report, "xid")
+        assert row[7] == ra.STATE_WEAKENED, row
+        assert f"changed {y} under the id xid, but the probe's history walk does not list it" in _plain(row[9]), row
+    else:
+        assert "exchange under the same id" in report, report
+
+
+# Third security review of #688 (SEC-R3-2): a commit anchor moved back, then forward across a
+# declaration change the probe had already seen, re-baselined a lowered bar.
+HI = {"kind": "count", "value": 3, "unit": "collections"}
+
+
+def test_688_SECR3_2_a_backward_commit_anchor_jump_cannot_re_baseline_a_lowering(sha256_target):
+    """Measured before the fix (also on origin/develop): yid read clean, exit 0."""
+    target = sha256_target
+    d0 = target.git("rev-parse", "HEAD")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections and more.\n")
+    d = target.commit("D decl change")
+    target.write_probe(make_probe("yid", derived_from=d, expected=dict(HI)), name="y")
+    target.commit("B0")
+    target.write_probe(make_probe("yid", derived_from=d0, expected=dict(HI)), name="y")
+    back = target.commit("b1 anchor back to D0")
+    target.write_probe(make_probe("yid", derived_from=d, expected=dict(LOW)), name="y")
+    lowered = target.commit("b2 anchor D, lowered")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    row = row_of(report, "yid")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED, row
+    assert _plain(row[9]) == (
+        f"weakened: re-baselined without a declaration change: {lowered[:12]} moved derived_from from "
+        f"{d0[:12]} to {d[:12]}, but the content of {DECL} at the previous derived_from {d0[:12]} is not its "
+        f"content at {back[:12]}, where it was recorded, so no declaration change can be shown"), row[9]
+
+
+def test_688_SECR3_2_a_commit_anchored_re_derivation_after_a_real_declaration_change_stays_clean(sha256_target):
+    """Positive control: the previous anchor is the declaration where it was recorded, and it changed since."""
+    target = sha256_target
+    derived_probe(target)
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    moved = target.commit("change the declaration")
+    _rewrite(target, P1_REL, derived_from=moved)
+    target.commit("re-derive at the declaration change")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK, report
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+def test_688_SECR3_2_a_forward_commit_anchor_jump_without_a_declaration_change_reads_as_before(sha256_target):
+    """Unchanged by the fix: the forward move over no declaration change is refused as it was."""
+    target = sha256_target
+    sha, _ = derived_probe(target)
+    target.write("unrelated.txt", "x\n")
+    later = target.commit("unrelated work")
+    _rewrite(target, P1_REL, derived_from=later, expected_value=1)
+    moved = target.commit("re-anchor forward and lower the bar")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.startswith(f"weakened: re-baselined without a declaration change: {moved[:12]} moved derived_from "
+                             f"from {sha[:12]} to {later[:12]}, but {DECL} did not change in between"), reason
+
+
+# -- #688 SEC-R4: a move onto a commit anchor in a SHA-1 repository ----------- #
+def _commit_move_reason(target: Target) -> str:
+    code, report = run_audit(target)
+    row = row_of(report, "yid")
+    assert code == ra.EXIT_FINDINGS and row[7] == ra.STATE_WEAKENED, row
+    return _plain(row[9])
+
+
+def test_688_SECR4_a_commit_anchored_re_derivation_after_a_real_declaration_change_is_refused(target):
+    """Since v1.1 a re-derivation records a content anchor; a commit anchor is only a migration rule."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    changed = target.commit("change the declaration")
+    target.write_probe(make_probe("yid", derived_from=changed, expected=dict(HI)), name="y")
+    moved = target.commit("re-derive onto a commit anchor")
+    assert _commit_move_reason(target) == (
+        f"weakened: re-baselined without a declaration change: {moved[:12]} moved derived_from from {x[:12]} "
+        f"to {changed[:12]}, but {COMMIT_MOVE_REFUSED}")
+
+
+def test_688_SECR4_the_same_re_derivation_onto_a_content_anchor_is_clean(target):
+    """Positive control: the recovery the refusal names."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    target.commit("change the declaration")
+    target.write_probe(make_probe("yid", derived_from=_blob(target), expected=dict(HI)), name="y")
+    target.commit("re-derive onto a content anchor")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK and row_of(report, "yid")[7] == ra.STATE_CLEAN, report
+
+
+def test_688_SECR4_a_declaration_path_re_pointed_at_a_decoy_cannot_prove_a_move(target):
+    """Measured before the fix (also on origin/develop): clean, exit 0. The decoy changed, DECL never did."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write_probe(make_probe("yid", derived_from=x, path="decoy.txt", expected=dict(HI)), name="y")
+    target.commit("re-point the declaration only")
+    target.write_probe(make_probe("yid", derived_from=x[:12], path="decoy.txt", expected=dict(HI)), name="y")
+    target.commit("abbreviate the anchor, a run of its own")
+    target.write("decoy.txt", "b\n")
+    edit = target.commit("edit the decoy")
+    target.write_probe(make_probe("yid", derived_from=edit, path="decoy.txt", expected=dict(LOW)), name="y")
+    target.commit("move the anchor and lower")
+    assert _commit_move_reason(target).endswith(COMMIT_MOVE_REFUSED)
+
+
+def test_688_SECR4_a_rename_that_is_restored_cannot_prove_a_move(target):
+    """Measured before the fix: clean, exit 0. The original declaration is back, unchanged and unwatched."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.git("mv", DECL, "docs/y.md")
+    renamed = target.commit("rename")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
+    target.commit("restore the original")
+    target.write_probe(make_probe("yid", derived_from=renamed, path="docs/y.md", expected=dict(LOW)), name="y")
+    target.commit("follow the rename and lower")
+    assert _commit_move_reason(target).endswith(COMMIT_MOVE_REFUSED)
+
+
+def test_688_SECR4_an_edit_that_is_reverted_cannot_prove_a_move(target):
+    """Measured before the fix: clean, exit 0. The declaration was touched, not changed."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write(DECL, "tmp\n")
+    target.commit("edit")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections.\n")
+    reverted = target.commit("revert")
+    target.write_probe(make_probe("yid", derived_from=reverted, expected=dict(LOW)), name="y")
+    target.commit("move onto the revert and lower")
+    assert _commit_move_reason(target).endswith(COMMIT_MOVE_REFUSED)
+
+
+def test_688_SECR4_a_commit_anchor_absent_at_both_commits_proves_nothing(sha256_target):
+    """A path holding no declaration where the previous anchor points can't prove that anchor."""
+    target = sha256_target
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, path="ghost.md", expected=dict(HI)), name="y")
+    target.commit("record against a missing file")
+    target.write("ghost.md", "now it exists\n")
+    created = target.commit("create the file")
+    target.write_probe(make_probe("yid", derived_from=created, path="ghost.md", expected=dict(LOW)), name="y")
+    target.commit("move the anchor and lower")
+    state, reason = _state(target, "yid")
+    assert state == ra.STATE_WEAKENED, reason
+    assert f"ghost.md did not exist at the previous derived_from {x[:12]}, so no declaration change" in reason
+
+
+# -- #688 SEC-R5: a historical move onto a commit anchor, reached by a later migration ---------- #
+RESTORED = "# Requirements\n\n## Export\n\nExports 3 collections.\n"
+
+
+def _migrate_onto_content(target: Target, path: str = DECL, **kw) -> str:
+    target.write_probe(make_probe("yid", derived_from=_blob(target, path=path), path=path, **kw), name="y")
+    return target.commit("migrate onto a content anchor, nothing else")
+
+
+def test_688_SECR5_an_edit_reverted_then_migrated_cannot_launder_a_lowering(target):
+    """Measured before the fix: clean, exit 0. The commit move lowers; the migration makes it historical."""
+    c0 = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write(DECL, "tmp\n")
+    target.commit("edit")
+    target.write(DECL, RESTORED)
+    reverted = target.commit("revert")
+    target.write_probe(make_probe("yid", derived_from=reverted, expected=dict(LOW)), name="y")
+    lowered = target.commit("move onto the revert and lower")
+    _migrate_onto_content(target, expected=dict(LOW))
+    reason = _commit_move_reason(target)
+    assert reason.endswith(f"but its previous derivation was no re-derivation either: {lowered[:12]} moved "
+                           f"derived_from from {c0[:12]} to {reverted[:12]}, but the content of {DECL} did not "
+                           "change in between, and a re-anchoring may change nothing but derived_from and the "
+                           "approval"), reason
+
+
+def test_688_SECR5_a_rename_restored_then_migrated_cannot_launder_a_lowering(target):
+    c0 = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.git("mv", DECL, "docs/y.md")
+    renamed = target.commit("rename")
+    target.write(DECL, RESTORED)
+    target.commit("restore the original")
+    target.write_probe(make_probe("yid", derived_from=renamed, path="docs/y.md", expected=dict(LOW)), name="y")
+    target.commit("follow the rename and lower")
+    _migrate_onto_content(target, path="docs/y.md", expected=dict(LOW))
+    assert "but the same commit changed the probe beyond declaration.path" in _commit_move_reason(target)
+
+
+def test_688_SECR5_a_decoy_path_then_migrated_cannot_launder_a_lowering(target):
+    target.write("decoy.txt", "a\n")
+    c0 = target.commit("the decoy exists at the anchor")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write_probe(make_probe("yid", derived_from=c0, path="decoy.txt", expected=dict(HI)), name="y")
+    repoint = target.commit("re-point the declaration only")
+    target.write("decoy.txt", "b\n")
+    edit = target.commit("edit the decoy")
+    target.write_probe(make_probe("yid", derived_from=edit, path="decoy.txt", expected=dict(LOW)), name="y")
+    target.commit("move the anchor and lower")
+    _migrate_onto_content(target, path="decoy.txt", expected=dict(LOW))
+    reason = _commit_move_reason(target)
+    assert f"the probe changed in {repoint[:12]} after its previous derivation was recorded" in reason, reason
+
+
+def test_688_SECR5_a_squash_re_anchoring_then_migrated_stays_clean(target):
+    """Positive control: a re-anchoring onto the squash commit, content and probe unchanged, then a migration."""
+    _squash_lost_commit_anchor(target, probe_on_main=False)
+    squash = target.git("rev-parse", "HEAD")
+    rel = "project/reach-probes/p1.yml"
+    _rewrite(target, rel, derived_from=squash, approval=_restamp(target, rel))
+    target.commit("re-anchor onto the squash commit")
+    _rewrite(target, rel, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("migrate onto a content anchor")
+    _assert_clean(target)
+
+
+def test_688_SECR5_the_migration_gate_routes_a_commit_move_to_a_re_derivation(target, capsys):
+    """Unlike any other weakening, re-deriving onto a content or section anchor heals it."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("p1", derived_from=x))
+    target.commit("record")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    changed = target.commit("change the declaration")
+    target.write_probe(make_probe("p1", derived_from=changed))
+    target.commit("re-derive onto a commit anchor")
+    code, out = _check_migration(target, capsys)
+    assert code == ra.EXIT_MIGRATION_REFUSED
+    assert f"route: {ra.ROUTE_REDERIVE}" in out and ra.ROUTE_WEAKENED not in out, out
+
+
+def test_688_SECR5_an_unresolvable_commit_anchor_in_a_sha256_repository_keeps_the_old_rules(sha256_target):
+    """The SHA-1 refusal names a content anchor that a SHA-256 repository doesn't have."""
+    target = sha256_target
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.write_probe(make_probe("yid", derived_from="f" * 64, expected=dict(HI)), name="y")
+    target.commit("move onto a commit that does not resolve")
+    _, reason = _state(target, "yid")
+    assert ra.REASON_COMMIT_MOVE not in reason, reason
+
+
+def test_688_SECR6_a_decoy_path_and_back_cannot_launder_a_lowering(target):
+    """Measured before the fix: clean, exit 0. Comparing two files' contents read the decoy as a change."""
+    target.write("README.txt", "q\n")
+    a = target.commit("an unrelated file")
+    target.write_probe(make_probe("yid", derived_from=a, expected=dict(HI)), name="y")
+    c1 = target.commit("record")
+    target.write_probe(make_probe("yid", derived_from=c1, path="README.txt", expected=dict(LOW)), name="y")
+    target.commit("move onto the decoy and lower")
+    target.write_probe(make_probe("yid", derived_from=a, expected=dict(LOW)), name="y")
+    back = target.commit("move back onto the declaration")
+    _migrate_onto_content(target, expected=dict(LOW))
+    reason = _commit_move_reason(target)
+    # The walk refuses the newest of the two path moves first.
+    assert (f"{back[:12]} moved derived_from from {c1[:12]} to {a[:12]}, but it also moved the declaration "
+            f"from README.txt to {DECL}, and only a pure move of an unchanged declaration, the old path gone, can "
+            "change its path") in reason, reason
+
+
+def test_688_SECR6_a_pure_rename_under_a_commit_anchor_then_migrated_stays_clean(target):
+    """Positive control: an earlier move that followed a rename and changed nothing else heals by re-deriving."""
+    c0 = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=c0, expected=dict(HI)), name="y")
+    target.commit("record")
+    target.git("mv", DECL, "docs/y.md")
+    renamed = target.commit("rename")
+    target.write_probe(make_probe("yid", derived_from=renamed, path="docs/y.md", expected=dict(HI)), name="y")
+    target.commit("follow the rename")
+    _migrate_onto_content(target, path="docs/y.md", expected=dict(HI))
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK and row_of(report, "yid")[7] == ra.STATE_CLEAN, report
+
+
+# -- #688 SEC-R7: a rename that also changes the anchor form; a switch of declaration kind ------ #
+NEW_DECL = "docs/new.md"
+
+
+def _renamed_and_relabelled(target: Target, rel: str, form: str, **changes) -> str:
+    target.git("mv", DECL, NEW_DECL)
+    target.commit("rename the declaration")
+    doc = yaml.safe_load((target.path / rel).read_text())
+    doc["declaration"]["path"] = NEW_DECL
+    if form == "blob":
+        doc["declaration"].pop("sections", None)
+        doc["derived_from"] = _blob(target, path=NEW_DECL)
+    else:
+        sections = _sections_now(target, path=NEW_DECL)
+        doc["declaration"]["sections"] = sections
+        doc["derived_from"] = ra.section_anchor(sections)
+    if "expected_value" in changes:
+        doc["expected"]["value"] = changes["expected_value"]
+    target.write(rel, yaml.safe_dump(doc, sort_keys=False))
+    return target.commit("follow the rename onto another anchor form")
+
+
+@pytest.mark.parametrize(("start", "form"), [("commit", "blob"), ("commit", "sections"), ("blob", "sections"),
+                                             ("sections", "blob")])
+def test_688_SECR7_a_rename_with_another_anchor_form_cannot_lower_the_bar(sectioned, start, form):
+    """Measured before the fix (also on origin/develop): clean, exit 0, the declaration unchanged."""
+    target = sectioned
+    if start == "commit":
+        _, rel = derived_probe(target)
+    elif start == "blob":
+        rel = _content_probe(target)
+    else:
+        rel = _section_probe(target)
+    moved = _renamed_and_relabelled(target, rel, form, expected_value=1)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.startswith(f"weakened: re-baselined without a declaration change: {moved[:12]} moved"), reason
+    assert reason.endswith("but the same commit changed the probe beyond declaration.path, which a pure move of "
+                           "the declaration does not justify"), reason
+
+
+@pytest.mark.parametrize(("start", "form"), [("blob", "sections"), ("sections", "blob")])
+def test_688_SECR7_a_rename_with_another_anchor_form_and_nothing_else_stays_clean(sectioned, start, form):
+    """Positive control: the honest rename-and-re-derive."""
+    target = sectioned
+    rel = _content_probe(target) if start == "blob" else _section_probe(target)
+    _renamed_and_relabelled(target, rel, form)
+    _assert_clean(target)
+
+
+def test_688_SECR7_a_switch_from_an_inherited_spec_to_a_file_is_no_re_derivation(target):
+    """Measured before the fix (also on origin/develop): clean, exit 0, with the config restored afterwards."""
+    _spec_config(target, ("nolte-shared", "v0.1.8"))
+    _inherited_probe(target, "v0.1.8")
+    target.commit("probe")
+    parent = target.git("rev-parse", "HEAD")
+    _spec_config(target, ("nolte-shared", parent))
+    target.write_probe(make_probe(derived_from=parent, expected=dict(LOW)))
+    target.commit("move the pin, switch to a file anchor, lower")
+    _spec_config(target, ("nolte-shared", "v0.1.8"))
+    target.commit("restore the pin")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(f"but it also changed which declaration the probe anchors on (project/rest-api-design "
+                           f"to {DECL}), which no re-derivation can show; derive a new probe instead"), reason
+
+
+# -- #688 SEC-R8: a declaration renamed away and the probe re-pointed; a symlink declaration ---- #
+def test_688_SECR8_a_declaration_renamed_away_cannot_justify_a_re_point_at_a_changed_file(target):
+    """Measured before the fix (also on origin/develop): clean, exit 0, the content kept under another path."""
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/c.md")
+    target.write("README.txt", "new\n")
+    _rewrite(target, rel, declaration_path="README.txt", derived_from="blob:" + target.git("hash-object", "README.txt"),
+             expected_value=1)
+    target.commit("rename the declaration away, re-point at a changed file, lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert (f"but it also moved the declaration from {DECL} to README.txt, where the previously anchored content "
+            "is not; record the rename as a pure move first, then re-derive") in reason, reason
+
+
+def test_688_SECR8_a_rename_with_an_edit_in_one_commit_is_refused(target):
+    """The honest flow takes two commits; in one, it can't be told from the shape above."""
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/v2.md")
+    target.write("docs/v2.md", "# Requirements\n\n## Export\n\nExports 3 collections, v2.\n")
+    _rewrite(target, rel, declaration_path="docs/v2.md", derived_from=_blob_now(target, "docs/v2.md"))
+    target.commit("rename, edit and re-derive at once")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED and "record the rename as a pure move first, then re-derive" in reason
+
+
+def _blob_now(target: Target, path: str) -> str:
+    return "blob:" + target.git("hash-object", path)
+
+
+def test_688_SECR8_a_symlink_declaration_is_no_file_to_anchor_on(target):
+    """Measured before the fix (also on origin/develop): clean, exit 0; the link text never changes."""
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/c.md")
+    os.symlink("c.md", target.path / DECL)
+    target.git("add", DECL)
+    _rewrite(target, rel, derived_from="blob:" + target.git("rev-parse", f":{DECL}"), expected_value=1)
+    target.commit("replace the declaration by a symlink, anchor on the link text, lower")
+    state, _ = _state(target)
+    assert state == ra.STATE_WEAKENED
+
+
+def test_688_SECR8_a_symlink_declaration_at_head_reads_not_a_regular_file(target):
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/c.md")
+    os.symlink("c.md", target.path / DECL)
+    target.git("add", DECL)
+    target.commit("replace the declaration by a symlink")
+    assert rel
+    state, reason = _state(target)
+    assert state == ra.STATE_STALE and reason.endswith(f"{DECL} is not a regular file at HEAD"), reason
+
+
+def _stale_from_its_first_commit(target: Target, **kw) -> tuple[str, str]:
+    """Derived against the declaration's old content, committed after the declaration changed (a squash, say)."""
+    old = _blob(target)
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, changed on develop.\n")
+    target.commit("the declaration changes before the probe lands")
+    rel = target.write_probe(make_probe(derived_from=old, **kw))
+    target.commit("the probe lands")
+    return old, rel
+
+
+def test_688_SECR8_a_probe_stale_from_its_first_commit_heals_by_re_deriving(target):
+    """Before the fix the re-derivation the stale route names read weakened, healable only by a supersede."""
+    _, rel = _stale_from_its_first_commit(target)
+    assert _state(target)[0] == ra.STATE_STALE
+    _rewrite(target, rel, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("re-derive against the declaration as it landed")
+    _assert_clean(target)
+
+
+def test_688_SECR8_a_probe_stale_from_its_first_commit_cannot_lower_the_bar_by_re_deriving(target):
+    _, rel = _stale_from_its_first_commit(target)
+    _rewrite(target, rel, derived_from=_blob(target), expected_value=1)
+    target.commit("re-derive and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED and f"but {DECL} did not change in between" in reason, reason
+
+
+# -- #688 SEC-R9: a copy beside an edited original is no rename; a stale-born section anchor ------ #
+def test_688_SECR9_a_copy_of_the_old_content_beside_an_edited_original_is_no_rename(target):
+    """Measured before the fix: clean, exit 0; the probe never saw the edit."""
+    rel = _content_probe(target)
+    old = (target.path / DECL).read_text()
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, edited.\n")
+    target.commit("edit the declaration")
+    target.write("docs/b.md", old)
+    _rewrite(target, rel, declaration_path="docs/b.md")
+    moved = target.commit("copy the old content and point the probe at it")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(f"and that is no rename: {DECL} still exists at {moved[:12]} or docs/b.md already "
+                           f"existed at {target.git('rev-parse', 'HEAD~2')[:12]}, where the previous derivation "
+                           "was recorded"), reason
+
+
+def test_688_SECR9_a_section_anchor_stale_from_its_first_commit_judges_sections_not_the_file(sectioned):
+    """Measured before the fix: an edit outside the anchored sections re-baselined a lowering, exit 0."""
+    target = sectioned
+    sections = _sections_now(target)
+    _edit(target, *INSIDE)
+    target.commit("an anchored section changes before the probe lands")
+    probe = make_probe(derived_from=ra.section_anchor(sections))
+    probe["declaration"]["sections"] = sections
+    rel = target.write_probe(probe)
+    target.commit("the probe lands")
+    _edit(target, *OUTSIDE)
+    target.commit("an edit outside the anchored sections")
+    _rewrite(target, rel, derived_from=_blob(target), expected_value=1)
+    doc = yaml.safe_load((target.path / rel).read_text())
+    doc["declaration"].pop("sections", None)
+    target.write(rel, yaml.safe_dump(doc, sort_keys=False))
+    target.commit("re-derive onto the file and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
