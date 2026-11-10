@@ -1162,12 +1162,16 @@ def test_SCR001_re_pointing_the_anchor_at_a_changed_file_does_not_launder(target
 
 
 def test_SCR001_re_derivation_after_a_renamed_declaration_is_clean(target):
+    """A rename with an edit takes two commits since #688: the pure move, then the re-derivation."""
     _, rel = derived_probe(target)
     target.git("mv", DECL, "docs/requirements-v2.md")
-    target.write("docs/requirements-v2.md", "# Requirements\n\n## Export\n\nExports 3 collections, v2.\n")
-    target.commit("rename and edit the declaration")
+    target.commit("rename the declaration")
     _rewrite(target, rel, declaration_path="docs/requirements-v2.md",
              derived_from=_blob(target, path="docs/requirements-v2.md"))
+    target.commit("follow the rename as a pure move")
+    target.write("docs/requirements-v2.md", "# Requirements\n\n## Export\n\nExports 3 collections, v2.\n")
+    target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from=_blob(target, path="docs/requirements-v2.md"))
     target.commit("re-derive against the renamed file")
     code, report = run_audit(target)
     assert code == ra.EXIT_OK
@@ -1868,8 +1872,9 @@ def test_668_F2_delete_and_re_point_at_an_existing_file_is_weakened(target, tmp_
     _rewrite(target, rel, expected_value=1, declaration_path="docs/other.md", derived_from=other)
     target.commit("delete the declaration, re-point and lower the bar")
     reason = _weakened_reason(target, marker)
-    assert (f"but docs/other.md already held {other[:12]} when the previous derivation was recorded in "
-            f"{recorded[:12]}, so re-pointing at it shows no declaration change") in reason
+    assert recorded  # the recording commit; the re-point is refused before the recording is consulted
+    assert (f"but it also moved the declaration from {DECL} to docs/other.md, where the previously anchored "
+            "content is not; record the rename as a pure move first, then re-derive") in reason
 
 
 def test_668_F2_path_only_commit_cannot_adopt_an_earlier_weakening(target, tmp_path):
@@ -5303,3 +5308,83 @@ def test_688_SECR7_a_switch_from_an_inherited_spec_to_a_file_is_no_re_derivation
     assert state == ra.STATE_WEAKENED, reason
     assert reason.endswith(f"but it also changed which declaration the probe anchors on (project/rest-api-design "
                            f"to {DECL}), which no re-derivation can show; derive a new probe instead"), reason
+
+
+# -- #688 SEC-R8: a declaration renamed away and the probe re-pointed; a symlink declaration ---- #
+def test_688_SECR8_a_declaration_renamed_away_cannot_justify_a_re_point_at_a_changed_file(target):
+    """Measured before the fix (also on origin/develop): clean, exit 0, the content kept under another path."""
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/c.md")
+    target.write("README.txt", "new\n")
+    _rewrite(target, rel, declaration_path="README.txt", derived_from="blob:" + target.git("hash-object", "README.txt"),
+             expected_value=1)
+    target.commit("rename the declaration away, re-point at a changed file, lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(f"but it also moved the declaration from {DECL} to README.txt, where the previously "
+                           "anchored content is not; record the rename as a pure move first, then re-derive"), reason
+
+
+def test_688_SECR8_a_rename_with_an_edit_in_one_commit_is_refused(target):
+    """The honest flow takes two commits; in one, it can't be told from the shape above."""
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/v2.md")
+    target.write("docs/v2.md", "# Requirements\n\n## Export\n\nExports 3 collections, v2.\n")
+    _rewrite(target, rel, declaration_path="docs/v2.md", derived_from=_blob_now(target, "docs/v2.md"))
+    target.commit("rename, edit and re-derive at once")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED and reason.endswith("record the rename as a pure move first, then re-derive")
+
+
+def _blob_now(target: Target, path: str) -> str:
+    return "blob:" + target.git("hash-object", path)
+
+
+def test_688_SECR8_a_symlink_declaration_is_no_file_to_anchor_on(target):
+    """Measured before the fix (also on origin/develop): clean, exit 0; the link text never changes."""
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/c.md")
+    os.symlink("c.md", target.path / DECL)
+    target.git("add", DECL)
+    _rewrite(target, rel, derived_from="blob:" + target.git("rev-parse", f":{DECL}"), expected_value=1)
+    target.commit("replace the declaration by a symlink, anchor on the link text, lower")
+    state, _ = _state(target)
+    assert state == ra.STATE_WEAKENED
+
+
+def test_688_SECR8_a_symlink_declaration_at_head_reads_not_a_regular_file(target):
+    rel = _content_probe(target)
+    target.git("mv", DECL, "docs/c.md")
+    os.symlink("c.md", target.path / DECL)
+    target.git("add", DECL)
+    target.commit("replace the declaration by a symlink")
+    assert rel
+    state, reason = _state(target)
+    assert state == ra.STATE_STALE and reason.endswith(f"{DECL} is not a regular file at HEAD"), reason
+
+
+def _stale_from_its_first_commit(target: Target, **kw) -> tuple[str, str]:
+    """Derived against the declaration's old content, committed after the declaration changed (a squash, say)."""
+    old = _blob(target)
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, changed on develop.\n")
+    target.commit("the declaration changes before the probe lands")
+    rel = target.write_probe(make_probe(derived_from=old, **kw))
+    target.commit("the probe lands")
+    return old, rel
+
+
+def test_688_SECR8_a_probe_stale_from_its_first_commit_heals_by_re_deriving(target):
+    """Before the fix the re-derivation the stale route names read weakened, healable only by a supersede."""
+    _, rel = _stale_from_its_first_commit(target)
+    assert _state(target)[0] == ra.STATE_STALE
+    _rewrite(target, rel, derived_from=_blob(target), approval=_restamp(target, rel))
+    target.commit("re-derive against the declaration as it landed")
+    _assert_clean(target)
+
+
+def test_688_SECR8_a_probe_stale_from_its_first_commit_cannot_lower_the_bar_by_re_deriving(target):
+    _, rel = _stale_from_its_first_commit(target)
+    _rewrite(target, rel, derived_from=_blob(target), expected_value=1)
+    target.commit("re-derive and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED and f"but {DECL} did not change in between" in reason, reason
