@@ -1221,10 +1221,12 @@ def test_SCR001_delete_and_re_add_does_not_launder(target):
     (target.path / rel).unlink()
     target.commit("drop the probe")
     target.write(rel, text.replace("value: 3", "value: 1"))
-    target.commit("re-add it weakened")
+    readded = target.commit("re-add it weakened")
     _, report = run_audit(target)
     row = row_of(report, "p1")
-    assert row[7] == ra.STATE_WEAKENED and "carries no readable derived_from" in row[9]
+    # #708: the deletion is no probe revision; the re-add is judged against the
+    # revision before it, under the same anchor, so it is a later probe change.
+    assert row[7] == ra.STATE_WEAKENED and f"probe changed in {readded[:12]} after its derivation" in row[9]
 
 
 def test_SCR002_count_of_5000_digits_is_not_probed_not_a_traceback(target):
@@ -2775,9 +2777,11 @@ def test_674_exit_b_delete_then_re_add_at_the_same_path(sectioned):
     (sectioned.path / rel).unlink()
     sectioned.commit("drop the weakened probe")
     sectioned.write(rel, yaml.safe_dump(_fresh(sectioned), sort_keys=False))
-    sectioned.commit("derive afresh at the same path")
+    readded = sectioned.commit("derive afresh at the same path")
     state, reason = _state(sectioned)
-    assert state == ra.STATE_WEAKENED and "carries no readable derived_from" in reason, reason
+    # #708: the re-add is judged against the weakened chain before the deletion.
+    assert state == ra.STATE_WEAKENED and f"probe changed in {readded[:12]} after its derivation" in reason, reason
+    assert "its previous derivation was recorded in" in reason, reason
 
 
 @pytest.mark.parametrize("flow, expected", [
@@ -5425,3 +5429,235 @@ def test_688_SECR9_a_section_anchor_stale_from_its_first_commit_judges_sections_
     target.commit("re-derive onto the file and lower")
     state, reason = _state(target)
     assert state == ra.STATE_WEAKENED, reason
+
+
+# -- #708: honest recovery flows (delete and restore a probe; edit, then rename the declaration) -- #
+def _drop(target: Target, rel: str) -> tuple[str, str]:
+    """Delete the probe file in a commit of its own; returns its text and the deleting commit."""
+    text = (target.path / rel).read_text()
+    (target.path / rel).unlink()
+    return text, target.commit("drop the probe")
+
+
+def test_708_P1_a_probe_deleted_and_restored_unchanged_is_clean(target):
+    """Measured before the fix: weakened, the deletion read as a revision with no readable derived_from."""
+    rel = _content_probe(target)
+    text, _ = _drop(target, rel)
+    target.write(rel, text)
+    target.commit("restore the probe")
+    _assert_clean(target)
+
+
+def test_708_P1_a_restore_with_a_lowered_bar_is_weakened(target):
+    rel = _content_probe(target)
+    text, _ = _drop(target, rel)
+    target.write(rel, text)
+    _rewrite(target, rel, expected_value=1)
+    restored = target.commit("restore the probe with a lower bar")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert f"probe changed in {restored[:12]} after its derivation was recorded in" in reason, reason
+
+
+def test_708_P1_a_restore_with_a_moved_anchor_and_no_declaration_change_is_weakened(sectioned):
+    """The restore moves the section anchor onto another, unchanged section and lowers the bar."""
+    target = sectioned
+    rel = _section_probe(target)
+    _drop(target, rel)
+    probe = make_probe(expected={"kind": "count", "value": 1, "unit": "collections"},
+                       derived_from=ra.section_anchor(_sections_now(target, (("heading", "3.2"),))))
+    probe["declaration"]["sections"] = _sections_now(target, (("heading", "3.2"),))
+    target.write_probe(probe)
+    restored = target.commit("restore the probe re-anchored and lowered")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert f"{restored[:12]} moved derived_from" in reason, reason
+    assert reason.endswith(f"but the anchored sections of {DECL} did not change in between"), reason
+
+
+def test_708_P1_a_restore_re_derived_after_a_declaration_change_is_clean(target):
+    """The restore is judged against the revision before the deletion, as a re-derivation."""
+    rel = _content_probe(target)
+    text, _ = _drop(target, rel)
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, edited.\n")
+    target.commit("edit the declaration")
+    target.write(rel, text)
+    _rewrite(target, rel, derived_from=_blob(target))
+    target.commit("restore the probe re-derived")
+    _assert_clean(target)
+
+
+def test_708_P1_two_delete_and_restore_cycles_are_clean(target):
+    rel = _content_probe(target)
+    for _ in range(2):
+        text, _ = _drop(target, rel)
+        target.write(rel, text)
+        target.commit("restore the probe")
+    _assert_clean(target)
+
+
+def test_708_P1_a_lowered_bar_restored_in_the_second_cycle_is_weakened(target):
+    """The first cycle cancels; the second restore is judged against the first restore."""
+    rel = _content_probe(target)
+    text, _ = _drop(target, rel)
+    target.write(rel, text)
+    target.commit("restore the probe")
+    _drop(target, rel)
+    target.write(rel, text)
+    _rewrite(target, rel, expected_value=1)
+    restored = target.commit("restore the probe with a lower bar")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert f"probe changed in {restored[:12]} after its derivation" in reason, reason
+
+
+def _edited(target: Target, path: str = DECL) -> None:
+    target.write(path, "# Requirements\n\n## Export\n\nExports 3 collections, edited.\n")
+    target.commit("edit the declaration")
+
+
+def _rename(target: Target, new: str = "docs/b.md") -> str:
+    target.git("mv", DECL, new)
+    return target.commit("rename the declaration")
+
+
+def _re_derive_onto(target: Target, rel: str, new: str = "docs/b.md", **changes) -> str:
+    _rewrite(target, rel, declaration_path=new, derived_from=_blob_now(target, new), **changes)
+    return target.commit("re-derive onto the renamed declaration")
+
+
+def test_708_P2_edit_then_rename_then_re_derive_is_clean(target):
+    """Measured before the fix: weakened, `record the rename as a pure move first`."""
+    rel = _content_probe(target)
+    _edited(target)
+    _rename(target)
+    _re_derive_onto(target, rel)
+    _assert_clean(target)
+
+
+def test_708_P2_rename_then_edit_then_re_derive_is_clean(target):
+    rel = _content_probe(target)
+    _rename(target)
+    _edited(target, "docs/b.md")
+    _re_derive_onto(target, rel)
+    _assert_clean(target)
+
+
+def test_708_P2_a_section_anchor_edited_then_renamed_then_re_derived_is_clean(sectioned):
+    target = sectioned
+    rel = _section_probe(target)
+    _edit(target, *INSIDE)
+    target.commit("edit an anchored section")
+    _rename(target)
+    _reanchor(target, rel, declaration_path="docs/b.md")
+    target.commit("re-derive onto the renamed declaration")
+    _assert_clean(target)
+
+
+def test_708_P2_a_section_anchor_renamed_with_an_edit_outside_its_sections_and_lowered_is_weakened(sectioned):
+    """The anchored sections are unchanged at the new path: only a pure move, which may not lower the bar."""
+    target = sectioned
+    rel = _section_probe(target)
+    _rename(target)
+    _edit(target, *OUTSIDE, path="docs/b.md")
+    target.commit("edit outside the anchored sections")
+    _reanchor(target, rel, declaration_path="docs/b.md", expected_value=1)
+    target.commit("re-derive onto the renamed declaration and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith("but the same commit changed the probe beyond declaration.path, which a pure move "
+                           "of the declaration does not justify"), reason
+
+
+@pytest.mark.parametrize("again", ["kept", "removed again"])
+def test_708_P2_the_old_path_recreated_after_the_rename_is_weakened(target, again):
+    rel = _content_probe(target)
+    _edited(target)
+    _rename(target)
+    target.write(DECL, "# Requirements\n\nSomething else.\n")
+    target.commit("recreate the old path")
+    if again == "removed again":
+        (target.path / DECL).unlink()
+        target.commit("remove the old path again")
+    moved = _re_derive_onto(target, rel, expected_value=1)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    if again == "kept":
+        assert f"and that is no rename: {DECL} still exists at {moved[:12]}" in reason, reason
+    else:
+        assert "where the previously anchored content is not; record the rename as a pure move first" in reason
+
+
+@pytest.mark.parametrize("shape", ["added in another commit", "added with another blob"])
+def test_708_P2_a_new_path_not_added_by_the_removal_with_its_blob_is_weakened(target, shape):
+    rel = _content_probe(target)
+    _edited(target)
+    edited = (target.path / DECL).read_text()
+    (target.path / DECL).unlink()
+    if shape == "added in another commit":
+        target.commit("remove the declaration")
+        target.write("docs/b.md", edited)
+    else:
+        target.write("docs/b.md", edited + "\nAnd more.\n")
+    target.commit("add the new declaration")
+    _re_derive_onto(target, rel, expected_value=1)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert (f"but it also moved the declaration from {DECL} to docs/b.md, where the previously anchored content "
+            "is not; record the rename as a pure move first, then re-derive") in reason, reason
+
+
+def test_708_P2_a_re_point_at_an_unrelated_changed_file_after_a_rename_is_weakened(target):
+    rel = _content_probe(target)
+    _edited(target)
+    _rename(target)
+    target.write("README.txt", "new\n")
+    _rewrite(target, rel, declaration_path="README.txt", derived_from=_blob_now(target, "README.txt"),
+             expected_value=1)
+    target.commit("re-point at an unrelated file and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert (f"but it also moved the declaration from {DECL} to README.txt, where the previously anchored content "
+            "is not") in reason, reason
+
+
+def test_708_P2_a_rename_with_the_anchored_content_and_other_probe_changes_is_weakened(target):
+    """The content at the new path equals what the previous anchor anchored: a pure move, nothing else."""
+    rel = _content_probe(target)
+    _rename(target)
+    _rewrite(target, rel, declaration_path="docs/b.md", expected_value=1)
+    target.commit("follow the rename and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith("but the same commit changed the probe beyond declaration.path, which a pure move "
+                           "of the declaration does not justify"), reason
+
+
+def test_708_P2_a_rename_before_the_recording_proves_nothing_for_a_later_move(target):
+    """The old path was renamed once before the derivation and later dropped in a merge.
+
+    The only plain commit that removed it is that earlier rename, an ancestor of
+    the recording: it says nothing about where the declaration went since.
+    """
+    target.git("branch", "-M", "main")
+    target.git("mv", DECL, "docs/b.md")
+    target.commit("an early rename")
+    target.git("mv", "docs/b.md", DECL)
+    target.commit("and back")
+    rel = _content_probe(target)
+    target.git("checkout", "-q", "-b", "side")
+    target.write("side.txt", "side\n")
+    target.commit("side work")
+    target.git("checkout", "-q", "main")
+    target.write("main.txt", "main\n")
+    target.commit("main work")
+    target.git("merge", "-q", "--no-commit", "--no-ff", "side")
+    target.git("rm", "-q", DECL)
+    target.write("docs/b.md", "# Requirements\n\n## Export\n\nExports 1 collection.\n")
+    target.git("add", "docs/b.md")
+    target.git("commit", "-q", "-m", "merge side, dropping the declaration and writing docs/b.md")
+    _re_derive_onto(target, rel, expected_value=1)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert (f"but it also moved the declaration from {DECL} to docs/b.md, where the previously anchored content "
+            "is not") in reason, reason

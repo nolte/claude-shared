@@ -1473,6 +1473,12 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     chain of the probe it replaces. Only those revisions end it, so the
     replacement's own revisions, under any earlier name, stay in the walk.
 
+    A commit that deleted the probe is no probe revision, and a restore that
+    brings back the document the deletion took is none either
+    (_without_deletions): the run and the earlier revisions are formed without
+    them, so a probe deleted and restored is judged as if it had never been
+    gone.
+
     The fifth value lists the merge commits after the baseline whose result for
     the probe differs from every parent (_merges_changing): file_history() never
     lists them, and each is as much an unapproved change as a later commit.
@@ -1488,13 +1494,14 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     does not list (_unlisted_write) is never exempt.
     """
     own, origin, gap = _own_log(git, probe, git.file_log(probe.file), yaml)
-    history = [(commit, path_then) for commit, path_then, _, _ in own]
+    kept = own
     if cut:
-        history = history[:next((i for i, rev in enumerate(history) if rev in cut), len(history))]
+        kept = own[:next((i for i, (c, p, _, _) in enumerate(own) if (c, p) in cut), len(own))]
+    if len(kept) < len(own):
+        origin = None
+    history = _without_deletions(git, kept, yaml)
     if not history:
         return None, [], False, [], [], gap
-    if len(history) < len(own):
-        origin = None
     origin = "; ".join(part for part in (gap, origin) if part) or None
     current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
@@ -1512,6 +1519,43 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         return history[0][0], [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
     return run[-1], run[:-1], dirty, history[len(run):], merges, origin
+
+
+def _without_deletions(git: Git, log: list[tuple[str, str, str, str]], yaml: Any) -> list[tuple[str, str]]:
+    """``(commit, path)`` of the probe revisions in ``log`` (newest first), without deletions and undone restores.
+
+    git --follow walks on through a deletion of the probe's path and lists the
+    deleting commit (status ``D``). That commit holds no probe, so it's no
+    probe revision: read as one, it would end every run with a revision that
+    carries no derived_from, and a probe deleted and restored could never build
+    on its previous derivation again. It's dropped.
+
+    The revision right after a deletion (the restore, an addition of the same
+    path) is dropped too when its document equals the one right before the
+    deletion: the pair changed nothing. Any other restore stays a probe
+    revision and is judged against the revision before the deletion, as if the
+    file had never been gone: the same anchor with any other change reads as a
+    later probe change, a moved anchor as a re-derivation that must show a
+    declaration change. Each cycle is judged on its own neighbours, so repeated
+    deletions and restores work the same. A deletion with no restore after it
+    or no revision before it leaves its neighbour as it is.
+
+    Only the revisions change detection reads are filtered: _own_log() has
+    already checked the full log for its origin and for writes it misses, and
+    the removal check (judge_removals) reads its own history.
+    """
+    dropped: set[int] = set()
+    for i, (_, path, status, _) in enumerate(log):
+        if status != "D":
+            continue
+        dropped.add(i)
+        if 0 < i < len(log) - 1:
+            restore, before = log[i - 1], log[i + 1]
+            if restore[2] == "A" and restore[1] == path == before[1]:
+                restored = _probe_doc(git, (restore[0], restore[1]), yaml)
+                if restored is not None and restored == _probe_doc(git, (before[0], before[1]), yaml):
+                    dropped.add(i - 1)
+    return [(commit, path) for i, (commit, path, _, _) in enumerate(log) if i not in dropped]
 
 
 def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml: Any,
@@ -2027,17 +2071,23 @@ def _moved_unchanged(git: Git, prev_df: str, prior_doc: dict[str, Any], before: 
 
 def _path_move_problem(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], new_doc: dict[str, Any],
                        before: str | None, baseline: str, recording: str, rel: str, new_rel: str) -> str | None:
-    """A move to another declaration path, where the old one changed or is gone: only a pure move.
+    """A move to another declaration path, where the old one changed or is gone: a pure move or a proven rename.
 
     The old path gone reads as a declaration change, and a re-derivation onto
     another file would answer to it, so deleting or renaming the declaration and
     re-pointing the probe at any changed file in the same commit would re-baseline
-    a weakening. A rename is accepted only as a pure move, whichever anchor form
-    it records (the previously anchored content unchanged at the new path, nothing
-    else changed); a rename with an edit takes two commits, the pure move first
-    and the re-derivation after it. A rename leaves the old path gone and the new
-    one new since the recording: a copy of the old content beside an original
-    that was edited would otherwise read as a rename and hide the edit.
+    a weakening. A rename leaves the old path gone and the new one new since the
+    recording: a copy of the old content beside an original that was edited
+    would otherwise read as a rename and hide the edit.
+
+    Two moves pass. A pure move, whichever anchor form it records: the
+    previously anchored content unchanged at the new path, nothing else
+    changed. And a re-derivation of the same declaration under its new name:
+    the commit that removed the old path renamed it to the new one exactly
+    (_rename_commit), so the declaration continues there, and the content at
+    the new path differs from what the previous anchor anchored, so it changed
+    since (before or after the rename). No similarity heuristic decides which
+    file the declaration became.
     """
     if git.entry_at(baseline, rel) is not None or git.entry_at(recording, new_rel) is not None:
         return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(new_rel)}, "
@@ -2045,10 +2095,56 @@ def _path_move_problem(git: Git, moved: str, prev_df: str, prior_doc: dict[str, 
                 f"already existed at {recording[:12]}, where the previous derivation was recorded")
     if _moved_unchanged(git, prev_df, prior_doc, before, baseline, new_rel):
         return _pure_move_problem(moved, prior_doc, new_doc, *_RE_ANCHOR)
+    if (_rename_commit(git, baseline, recording, rel, new_rel) is not None
+            and _changed_at(git, prev_df, prior_doc, before, baseline, new_rel)):
+        return None
     return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(new_rel)}, where "
             "the previously anchored content is not; record the rename as a pure move first, then re-derive "
             "(where the old content exists nowhere any more, restore the old file for that one commit, or "
             "supersede the probe)")
+
+
+def _rename_commit(git: Git, baseline: str, recording: str, rel: str, new_rel: str) -> str | None:
+    """The commit that renamed the declaration ``rel`` to ``new_rel`` up to ``baseline``, or None.
+
+    The candidate is the latest commit up to ``baseline`` that removed ``rel``
+    (``--full-history`` so a side branch isn't simplified away, ``--no-renames``
+    so a rename reads as the removal it is). It's a rename only when it has
+    exactly one parent, ``rel`` held a regular file there, ``new_rel`` didn't
+    exist there, the commit added ``new_rel`` with exactly that blob, and it
+    isn't the recording commit or one before it. Anything else, an error of git
+    included, proves no rename: the caller then refuses the move.
+    """
+    if baseline.startswith("-"):
+        return None
+    res = git.run("--literal-pathspecs", "log", "-1", "--full-history", "--topo-order", "--no-renames",
+                  "--diff-filter=D", "--no-show-signature", "--no-color", "--format=%H", baseline, "--", rel)
+    commit = res.stdout.strip() if res.returncode == 0 else ""
+    if not _OBJECT_ID_RE.match(commit):
+        return None
+    parents = git.parents(commit)
+    if len(parents) != 1:
+        return None
+    blob = git.blob_at(parents[0], rel)
+    if blob is None or git.entry_at(parents[0], new_rel) is not None or git.blob_at(commit, new_rel) != blob:
+        return None
+    if git.is_ancestor_or_equal(commit, recording):
+        return None
+    return commit
+
+
+def _changed_at(git: Git, prev_df: str, prior_doc: dict[str, Any], before: str | None, baseline: str,
+                new_rel: str) -> bool:
+    """Whether the content at ``new_rel`` in ``baseline`` differs from what the previous anchor anchored.
+
+    For a section anchor: one of its sections no longer matches there (or doesn't
+    resolve once); for a content or commit anchor: the file isn't the blob it saw.
+    """
+    if _is_section_anchor(prev_df):
+        decl = prior_doc.get("declaration")
+        locators = _locators(decl.get("sections")) if isinstance(decl, dict) else None
+        return bool(locators) and bool(_section_mismatches(git, baseline, new_rel, locators or []))
+    return before is not None and git.blob_at(baseline, new_rel) not in (None, before)
 
 
 # What a pure move may change besides declaration.path and the approval stamp: a
