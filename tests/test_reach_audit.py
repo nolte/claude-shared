@@ -3011,20 +3011,23 @@ def test_685_re_derivation_after_a_real_change_on_a_weakened_chain_stays_weakene
     assert reason.endswith(f"but the anchored sections of {DECL} did not change in between")
 
 
-def test_685_a_new_id_beside_the_kept_weakened_file_inherits_its_chain_by_copy_detection(sectioned):
-    """Measured with git 2.43: --follow pairs a new file with a kept, similar one as a copy.
+def test_685_a_new_id_beside_the_kept_weakened_file_starts_its_own_history_and_leaves_the_kept_one_weakened(
+        sectioned):
+    """Measured with git 2.43 and 2.53: --follow pairs a new file with a kept, similar one as a copy (#688).
 
-    So keeping the weakened probe and adding a fresh one under a new id does not
-    escape the chain on its own; without a supersede record this stays so.
+    The copy starts its own history, so the new id is clean; the kept probe keeps
+    its own finding, which only a supersede record clears.
     """
     _weakened_rebaseline(sectioned)
     sectioned.write_probe(_fresh(sectioned, "p1-rederived", WIDE))
     sectioned.commit("derive afresh under a new id, keep the weakened probe")
-    follow = sectioned.git("log", "--follow", "--format=%H", "--", "project/reach-probes/p1-rederived.yml")
-    assert len(follow.splitlines()) > 1, "git no longer pairs the copy; revisit the supersede history cut"
+    log = ra.Git(sectioned.path).file_log("project/reach-probes/p1-rederived.yml")
+    assert len(log) > 1 and log[0][2] == "C", "git no longer pairs the copy; revisit the copy cut"
     state, reason = _state(sectioned, "p1-rederived")
-    assert state == ra.STATE_WEAKENED, reason
+    assert state == ra.STATE_CLEAN, reason
     assert _state(sectioned)[0] == ra.STATE_WEAKENED
+    code, _ = run_audit(sectioned)
+    assert code == ra.EXIT_FINDINGS
 
 
 def _replacement(target: Target, pid: str = "p2", supersedes=("p1",), commit: bool = True, locators=WIDE,
@@ -3116,8 +3119,9 @@ def test_685_AC3_a_replacement_that_does_not_run_as_approved_supersedes_nothing(
     old = row_of(report, "p1")
     assert old[7] == ra.STATE_WEAKENED and f"supersede by p2 not in effect: it is {state}" in _plain(old[9]), old
     assert not marker.exists()
-    # The record took no effect, so p2 keeps its uncut verdict: git pairs it with p1 as a copy (SEC-002).
-    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED
+    # The record took no effect, so p2 keeps its uncut verdict (SEC-002): its own history, which starts at
+    # the commit that created it as a copy of p1 (#688).
+    assert row_of(report, "p2")[7] == (ra.STATE_CLEAN if how == "unapproved" else state)
 
 
 def test_685_AC3_deleting_the_replacement_leaves_the_superseded_probe_weakened(sectioned):
@@ -3155,8 +3159,8 @@ def test_685_a_probe_that_is_not_weakened_cannot_be_superseded(sectioned, tmp_pa
     assert "supersedes p1, which is clean, not weakened" in _supersede_finding(report, "p2")
     assert row_of(report, "p1")[1] == ra.REACHED and marker.exists()
     # A record that takes no effect never changes p2's verdict (SEC-002): p2 keeps its uncut history,
-    # in which git pairs it with p1 as a copy, and so is not executed.
-    assert row_of(report, "p2")[7] == ra.STATE_WEAKENED and row_of(report, "p2")[5] == "not executed"
+    # which starts at the commit that created it as a copy of p1 (#688), and so runs as a probe of its own.
+    assert row_of(report, "p2")[7] == ra.STATE_CLEAN and row_of(report, "p2")[1] == ra.REACHED
 
 
 def test_685_self_supersede_is_a_finding(sectioned):
@@ -3355,9 +3359,12 @@ def test_685_SEC002_a_claimant_whose_newest_revision_lies_in_the_target_reads_we
     target.commit("lower h's bar")
     target.write_probe({k: v for k, v in data.items() if k != "supersedes"} | {"id": "h-old"})
     target.commit("copy h to h-old")
-    code, row, _ = _h_verdict(target, marker)
+    code, row, report = _h_verdict(target, marker)
     assert row[7] == ra.STATE_WEAKENED, row[7:]
-    assert code == ra.EXIT_FINDINGS and not marker.exists()
+    assert code == ra.EXIT_FINDINGS and row[5] == "not executed", row
+    # h-old, a copy of h made after h's change, starts its own history there (#688); the marker is
+    # shared, so it shows h-old ran, not h.
+    assert row_of(report, "h-old")[7] == ra.STATE_CLEAN
 
 
 def test_685_SEC003_a_replacement_without_an_observation_digest_supersedes_nothing(sectioned):
@@ -4605,3 +4612,141 @@ def test_704_P4_4_a_record_cannot_take_effect_past_an_unreadable_manifest_before
     assert _finding(report, "removed", "p1").endswith(
         f"{RETIRED_REL} can't be read at {carrier[:12]}, before the removal in {removal[:12]}, so it can't be "
         "shown that the record postdates that removal")
+
+
+# --------------------------------------------------------------------------- #
+# #688: a probe created as a copy of another probe file starts its own history
+# --------------------------------------------------------------------------- #
+# git --follow pairs a file created beside a similar one that stays in place as
+# a copy (C) and walks on into that file's revisions. A probe written from the
+# same template as an earlier one must not take over the earlier probe's chain.
+P2_REL = "project/reach-probes/p2.yml"
+
+
+def _status_of(target: Target, rel: str, commit: str) -> tuple[str, str]:
+    """git's status and source for ``rel`` at ``commit`` in its followed log."""
+    found = [(status, source) for c, _, status, source in ra.Git(target.path).file_log(rel) if c == commit]
+    assert len(found) == 1, found
+    return found[0]
+
+
+def _template_copy(target: Target, pid: str = "p2") -> str:
+    """Write ``pid`` from the same template as p1 in a commit of its own; returns that commit."""
+    target.write_probe(make_probe(pid, derived_from=_blob(target)))
+    created = target.commit(f"derive {pid} from the same template")
+    status, source = _status_of(target, f"project/reach-probes/{pid}.yml", created)
+    assert (status, source) == ("C", P1_REL), "git no longer pairs the copy; revisit the copy cut"
+    return created
+
+
+def test_688_a_probe_added_from_the_template_of_an_earlier_one_reads_clean(target):
+    """AC (a): measured before the fix as weakened, "probe changed in <p2's commit> after ... <p1's commit>"."""
+    derived_probe(target)
+    _template_copy(target)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_OK, report
+    for pid in ("p1", "p2"):
+        row = row_of(report, pid)
+        assert row[1] == ra.REACHED and row[7] == ra.STATE_CLEAN, row
+
+
+def test_688_a_copy_edited_after_its_approval_reads_weakened_at_that_edit(target, tmp_path):
+    """AC (b): the copy's own history still holds every later change."""
+    derived_probe(target)
+    created = _template_copy(target)
+    _weaken(target, P2_REL)
+    weakening = target.commit("lower p2's bar")
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    row = row_of(report, "p2")
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_WEAKENED, row
+    assert (f"probe changed in {weakening[:12]} after its derivation was recorded in {created[:12]}"
+            in _plain(row[9])), row[9]
+    assert row_of(report, "p1")[7] == ra.STATE_CLEAN
+
+
+def test_688_a_new_id_beside_a_kept_weakened_probe_is_clean_and_the_kept_one_stays_weakened(target):
+    """AC (c): no supersede record, so p1 keeps its finding and the run fails."""
+    _, rel = derived_probe(target)
+    _weaken(target, rel)
+    weakening = target.commit("lower p1's bar")
+    _template_copy(target)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS
+    assert row_of(report, "p2")[7] == ra.STATE_CLEAN
+    old = row_of(report, "p1")
+    assert old[7] == ra.STATE_WEAKENED and f"probe changed in {weakening[:12]}" in _plain(old[9]), old
+
+
+def test_688_a_renamed_weakened_probe_stays_weakened(target):
+    """AC (d): a rename keeps the history; git reports R, not C."""
+    _, rel = derived_probe(target)
+    _weaken(target, rel)
+    target.commit("lower p1's bar")
+    target.git("mv", rel, "project/reach-probes/renamed.yml")
+    moved = target.commit("rename p1's file")
+    assert _status_of(target, "project/reach-probes/renamed.yml", moved) == ("R", rel)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+
+
+@pytest.mark.parametrize("touched", [False, True])
+def test_688_a_copy_of_a_probe_created_in_a_merge_gets_no_origin_finding(target, touched):
+    """AC (e): measured before the fix, p2 read weakened, "does not create p2.yml but records a copy from p1.yml".
+
+    The source keeps its own verdict: uncommitted when no plain commit lists it
+    (SEC-101), weakened with an incomplete history when a later commit does (#702).
+    """
+    blob = _blob(target)
+    _merge_side(target, in_merge=lambda: target.write_probe(make_probe(derived_from=blob)))
+    later = _touch(target, P1_REL) if touched else None
+    created = _template_copy(target)
+    assert ra.Git(target.path).file_history(P2_REL)[0] == (created, P2_REL)
+    code, report = run_audit(target)
+    # An uncommitted probe is not probed, but it is no finding of its own (existing behaviour).
+    assert code == (ra.EXIT_FINDINGS if touched else ra.EXIT_OK), report
+    new = row_of(report, "p2")
+    assert new[1] == ra.REACHED and new[7] == ra.STATE_CLEAN, new
+    old = row_of(report, "p1")
+    if touched:
+        assert old[7] == ra.STATE_WEAKENED and _plain(old[9]) == "weakened: " + _incomplete(later, P1_REL), old
+    else:
+        assert old[7] == ra.STATE_UNCOMMITTED, old
+
+
+def test_688_a_weakened_probe_re_added_at_its_path_as_a_copy_is_not_read_as_fresh(target):
+    """Delete-and-re-add keeps the history; re-added as a copy, git walks into the source instead of the path.
+
+    The path's earlier revisions are then not in the listed history, so the
+    probe fails closed instead of starting clean at the copy.
+    """
+    rel = P1_REL
+    # One commit, so git pairs neither with the other and p3's history holds no revision of p1.
+    blob = _blob(target)
+    _approve_together(target, make_probe("p1", derived_from=blob), make_probe("p3", derived_from=blob))
+    _weaken(target, rel)
+    target.commit("lower p1's bar")
+    target.git("rm", "-q", rel)
+    removal = target.commit("drop p1")
+    target.write_probe(make_probe("p1", derived_from=_blob(target)))
+    readded = target.commit("re-add p1 from p3's text")
+    assert _status_of(target, rel, readded) == ("C", "project/reach-probes/p3.yml")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert (f"the probe was created in {readded[:12]} as a copy of project/reach-probes/p3.yml at {rel}, which "
+            f"already held a file in {removal[:12]}") in reason, reason
+
+
+def test_688_a_copy_that_takes_the_source_s_id_keeps_the_source_s_history(target):
+    """The weakened p1 copied to a new file under its own id, then the old file dropped: the same probe, moved."""
+    _, rel = derived_probe(target)
+    _weaken(target, rel)
+    target.commit("lower p1's bar")
+    moved = "project/reach-probes/moved.yml"
+    target.write(moved, (target.path / rel).read_text())
+    copied = target.commit("copy p1 under its own id")
+    assert _status_of(target, moved, copied) == ("C", rel)
+    target.git("rm", "-q", rel)
+    target.commit("drop the old file")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason

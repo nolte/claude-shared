@@ -1442,31 +1442,40 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     detect_change must check that the move was a re-derivation rather than a
     re-baseline; the older revisions let that check prove the previous anchor.
 
+    The history is the probe's own (_own_log): git --follow pairs a new file
+    with a similar one that stays in place as a copy and walks on into that
+    file's revisions, so a probe written from the same template as an earlier
+    one would take over the earlier probe's chain. The history therefore ends
+    at the revision that created the probe as a copy of another file, and the
+    probe is judged from there; a rename keeps the history.
+
     ``cut`` holds the ``(commit, path)`` revisions of the probes this one
-    supersedes (supersede_cut()). The history ends before the first of them:
-    git --follow pairs a new file with a similar kept one as a copy, and a
-    replacement must be judged on its own derivation, not on the chain of the
-    probe it replaces. Only those revisions end it, so the replacement's own
-    revisions, under any earlier name, stay in the walk.
+    supersedes (supersede_cut()). The history ends before the first of them as
+    well, since a replacement must be judged on its own derivation, not on the
+    chain of the probe it replaces. Only those revisions end it, so the
+    replacement's own revisions, under any earlier name, stay in the walk.
 
     The fifth value lists the merge commits after the baseline whose result for
     the probe differs from every parent (_merges_changing): file_history() never
     lists them, and each is as much an unapproved change as a later commit.
 
-    The sixth value says why the listed history is incomplete (_origin_problem):
-    its oldest revision does not create the probe's path, so the probe came into
-    being, or under this path, in a merge the walk can't follow. A history the
-    supersede cut ended is exempt: it ends at the cut on purpose, and the cut is
-    only made after _lineage_problem() proved the kept part ends at the commit
-    that added the replacement's path.
+    The sixth value says why the listed history is incomplete (_origin_problem,
+    _own_log): its oldest revision does not create the probe's path, so the
+    probe came into being, or under this path, in a merge the walk can't follow;
+    or the probe was copied onto a path that held an earlier file. A copy that
+    ends the history is a complete origin. A history the supersede cut ended is
+    exempt: it ends at the cut on purpose, and the cut is only made after
+    _lineage_problem() proved the kept part ends at the commit that added the
+    replacement's path.
     """
-    log = git.file_log(probe.file)
-    history = [(commit, path_then) for commit, path_then, _, _ in log]
+    own, origin = _own_log(git, probe, git.file_log(probe.file), yaml)
+    history = [(commit, path_then) for commit, path_then, _, _ in own]
     if cut:
         history = history[:next((i for i, rev in enumerate(history) if rev in cut), len(history))]
     if not history:
         return None, [], False, [], [], None
-    origin = _origin_problem(*log[-1]) if len(history) == len(log) else None
+    if len(history) < len(own):
+        origin = None
     current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
     for commit, path_then in history:
@@ -1483,6 +1492,70 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         return history[0][0], [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
     return run[-1], run[:-1], dirty, history[len(run):], merges, origin
+
+
+def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml: Any,
+             ) -> tuple[list[tuple[str, str, str, str]], str | None]:
+    """The probe's own part of its followed ``log`` (Git.file_log()), and why it does not reach its origin, or None.
+
+    git --follow reports a file created beside a similar one that stays in place
+    as a copy (``C``) and walks on into the revisions of that source. A probe
+    created as a copy of another probe file starts its own history there: it
+    inherits neither the source's revisions nor its findings, and the source
+    answers for its own. The log ends at the newest such revision, which is
+    kept as the probe's origin. A copy ends it only when it is one:
+
+    - the source is left untouched by the copying commit, as in its single
+      parent. git reports a file whose source left in that commit as a rename
+      (``R``), which keeps the history; a ``C`` whose source is gone or was
+      rewritten in place in the same commit is read the same way, since the
+      new file may then be the probe moved away from a path given to another
+      file (as _lineage_problem() requires of a supersede cut).
+    - no revision past the copy carries an id the probe carried at or after
+      it. Otherwise the probe's id came from the source, which is the same
+      probe moved to a new file while a changed file stays behind under another
+      id; its history goes on.
+    - the copy's path held no file in any commit before the copying one. A file
+      deleted and re-added at the same path keeps its history (git --follow
+      walks on through the deletion), but one re-added as a copy of another file
+      sends the walk into that file instead, so the path's earlier revisions are
+      not listed. That is reported as an incomplete history rather than read as
+      a fresh probe.
+
+    Without a copy that ends it, the whole log is the probe's own, and its
+    oldest revision must create the probe's path (_origin_problem).
+    """
+    docs: dict[tuple[str, str], dict[str, Any] | None] = {}
+
+    def ids(revisions: list[tuple[str, str, str, str]]) -> set[str]:
+        found: set[str] = set()
+        for commit, path_then, _, _ in revisions:
+            if (commit, path_then) not in docs:
+                docs[commit, path_then] = _probe_doc(git, (commit, path_then), yaml)
+            doc = docs[commit, path_then]
+            if doc is not None and isinstance(doc.get("id"), str):
+                found.add(doc["id"])
+        return found
+
+    for i, (commit, path, status, source) in enumerate(log):
+        if status != "C" or not source:
+            continue
+        parents = git.out("rev-list", "--parents", "-n", "1", commit).split()[1:]
+        kept = git.blob_at(commit, source)
+        if len(parents) != 1 or kept is None or kept != git.blob_at(parents[0], source):
+            continue
+        own = log[:i + 1]
+        if ids(log[i + 1:]) & (ids(own) | {probe.pid}):
+            continue
+        earlier = git.out("--literal-pathspecs", "rev-list", "-n", "1", "--full-history", parents[0], "--",
+                          path).strip()
+        if earlier:
+            return own, (f"the probe was created in {commit[:12]} as a copy of {safe_text(source)} at "
+                         f"{safe_text(path)}, which already held a file in {earlier[:12]}: git follows the copy "
+                         "instead of that path, so the path's earlier revisions are not in the listed history and "
+                         "can't be judged; derive the probe under a path no earlier file used")
+        return own, None
+    return log, _origin_problem(*log[-1]) if log else None
 
 
 def _origin_problem(commit: str, path: str, status: str, source: str) -> str | None:
@@ -1503,7 +1576,9 @@ def _origin_problem(commit: str, path: str, status: str, source: str) -> str | N
     deletion means the file already existed before it. A rename or copy means
     ``--follow`` switched to ``source`` and found no listed commit of it, so
     ``source`` came from a merge: checking only that the commit adds ``path``
-    would accept a plain rename out of a path a merge created.
+    would accept a plain rename out of a path a merge created. A copy reaches
+    this check only when it does not end the probe's own history (_own_log):
+    the probe's id came from its source, or the source left in that commit.
     """
     if status == "A":
         return None
@@ -2589,7 +2664,8 @@ def resolve_supersedes(repo: Path, git: Git, probes: list[Probe], listed: set[st
     was T2, W's own verdict is weakened, and the cut is a one-way lineage
     (_lineage_problem); each failure is a finding. Only then is R judged on its
     history ended before W's revisions (probe_changes), since git --follow
-    pairs a similar new file with the kept one; the records take effect when R
+    pairs a similar new file with the kept one (a copy that is R's own already
+    ends there, _own_log; the cut also covers one that is not); the records take effect when R
     is then clean, approved, and its approval carries a matching observation
     digest, and are otherwise noted on W, which stays weakened. A record that
     takes no effect never changes R's verdict: R keeps its uncut one. Every
