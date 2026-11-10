@@ -2260,8 +2260,8 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
         return _path_move_problem(git, moved, prev_df, new_df, prior, prior_doc, new_doc, baseline, recording,
                                   rel, new_rel, unanswered=unanswered)
     relabel = (("derived_from",), ("approval",), ("declaration", "sections"))
-    if (not changed and not _is_section_anchor(prev_df) and new_rel == rel
-            and _without(new_doc, *relabel) == _without(prior_doc, *relabel)):
+    if (not changed and new_rel == rel and _without(new_doc, *relabel) == _without(prior_doc, *relabel)
+            and (not _is_section_anchor(prev_df) or _heals_as_found(prior, locators))):
         return None  # a relabel: _rebaseline_problem holds it to the previous derivation
     if not changed:
         return f"{moved}, but {_unchanged_since(prev_df, rel)}"
@@ -2276,6 +2276,20 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
         return (f"{moved}, but none of the sections it now anchors on changed since the previous derivation "
                 f"was recorded in {recording[:12]}")
     return None
+
+
+def _heals_as_found(prior: PriorAnchor, locators: list[tuple[str, str, str]]) -> bool:
+    """Whether a section anchor stale from the probe's first revision is re-recorded on the same sections.
+
+    Only then may sections move onto sections without a declaration change: the
+    previous anchor never matched what that revision found (``prior.anchored``
+    holds both states, _prior_anchor), and the new digests (already checked
+    against the baseline) re-record the same locators as found, in any order.
+    Any other change of the probe still reads weakened.
+    """
+    if len(prior.anchored) != 2:
+        return False
+    return {(kind, loc) for kind, loc, _ in locators} == {(kind, loc) for kind, loc, _ in prior.anchored[1]}
 
 
 def _reconfirm_view(doc: dict[str, Any] | None) -> dict[str, Any]:
@@ -2490,8 +2504,8 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         before = git.blob_at(recording, rel)
         befores = frozenset({before}) if before else frozenset()
     if len(baseline) == 40:
-        return _historical_commit_move_problem(git, moved, rel, before, befores, new_commit or baseline, prior_doc,
-                                               new_doc)
+        return _historical_commit_move_problem(git, moved, rel, before, befores, new_commit or baseline, baseline,
+                                               recording, prior_doc, new_doc)
     # SHA-256: the pre-v1.1 rules.
     if prev_commit is not None and new_commit is not None:
         last = git.last_commit(rel, new_commit)
@@ -2507,7 +2521,8 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
 
 
 def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str | None, befores: frozenset[str],
-                                   new_commit: str, prior_doc: dict[str, Any], new_doc: dict[str, Any]) -> str | None:
+                                   new_commit: str, baseline: str, recording: str, prior_doc: dict[str, Any],
+                                   new_doc: dict[str, Any]) -> str | None:
     """Why a SHA-1 repository's move onto a commit anchor, reached by a later move's walk, is no re-derivation.
 
     The move is held to what a content-anchor move is held to, or a lowering
@@ -2517,7 +2532,12 @@ def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str 
     only a re-anchoring (onto a squash merge's commit, say) that may change
     nothing but derived_from and the approval. A move to another path is held
     to a pure move, as for a content anchor (_pure_move_problem): comparing two
-    files' contents would read a decoy as a declaration change. Either way
+    files' contents would read a decoy as a declaration change. The evidence
+    for it is the one _path_move_problem asks of a content anchor, read at the
+    move commit ``baseline`` and the ``recording`` of the previous derivation,
+    not only at ``new_commit``: the new anchor can name any commit, one where
+    the old path happened to be gone included, while the move re-pointed the
+    probe at a copy beside the kept original. Either way
     _rebaseline_problem then requires it to build on a legitimate derivation.
     ``befores`` holds every blob that counts as the previously anchored content
     (PriorAnchor): for an anchor stale from the probe's first revision both the
@@ -2530,7 +2550,9 @@ def _historical_commit_move_problem(git: Git, moved: str, rel: str, before: str 
     if before is None or after is None:
         return f"{moved}, but the declaration is missing at one of the two anchors, so no declaration change can be shown"
     if new_rel != rel:
-        if after not in befores or git.entry_at(new_commit, rel) is not None:
+        if (after not in befores or git.entry_at(new_commit, rel) is not None
+                or git.entry_at(baseline, rel) is not None or git.entry_at(recording, new_rel) is not None
+                or git.blob_at(baseline, new_rel) not in befores):
             return (f"{moved}, but it also moved the declaration from {safe_text(rel)} to {safe_text(raw, 80)}, "
                     "and only a pure move of an unchanged declaration, the old path gone, can change its path")
         return _pure_move_problem(moved, {**prior_doc, "derived_from": None}, {**new_doc, "derived_from": None})
