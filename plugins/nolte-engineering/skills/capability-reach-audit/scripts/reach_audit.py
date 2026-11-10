@@ -630,10 +630,12 @@ class Git:
 
     def last_commit(self, path: str, rev: str = "HEAD") -> str | None:
         """The latest commit reachable from ``rev`` (a resolved commit) that touched ``path``."""
-        return self.out("log", "-1", "--format=%H", rev, "--", path).strip() or None
+        return self.out("--literal-pathspecs", "log", "-1", "--format=%H", rev, "--", path).strip() or None
 
     def is_dirty(self, path: str) -> bool:
-        return bool(self.out("status", "--porcelain", "--untracked-files=no", "--", path).strip())
+        """Uncommitted changes to ``path``; literal pathspecs keep a name like ``w[x].yml`` from matching ``wx.yml``."""
+        return bool(self.out("--literal-pathspecs", "status", "--porcelain", "--untracked-files=no", "--",
+                             path).strip())
 
     def file_history(self, path: str) -> list[tuple[str, str]]:
         """(commit, path at that commit), newest first, following renames.
@@ -654,13 +656,48 @@ class Git:
         version, so it falls between two listed revisions unseen. Every check that
         relies on "no probe change between these revisions" asks merges_changing()
         about that span instead (_merges_changing).
+
+        Nor does the walk follow a rename made inside a merge, or start at a file a
+        merge created: the history then begins at a later plain commit that edits
+        the file, or renames it out of a path that merge made. file_log() keeps the
+        status git reports for each listed revision, and _origin_problem() reports
+        a history whose oldest revision is no addition as incomplete instead of
+        reading that commit as the probe's first.
         """
-        raw = self.out("log", "--follow", "--no-merges", "--format=%x00%H", "--name-only", "--", path)
-        history: list[tuple[str, str]] = []
+        return [(commit, path_then) for commit, path_then, _, _ in self.file_log(path)]
+
+    def file_log(self, path: str) -> list[tuple[str, str, str, str]]:
+        """file_history() with git's status per revision: ``(commit, path, status, source)``.
+
+        ``status`` is the letter ``--name-status`` reports for the followed file
+        (``A`` added, ``M`` modified, ``R``/``C`` renamed or copied, ``D``
+        deleted, ``T`` type change; empty when the commit lists no change of it),
+        and ``source`` the path a rename or copy came from. ``--follow`` reports
+        the status of the comparison it used to follow the file, so an ``A`` at
+        the oldest listed revision means the walk reached the commit that brought
+        the file into being; a root commit is compared against the empty tree and
+        reports ``A`` as well. So would every boundary commit of a shallow clone,
+        which require_local_working_copy() therefore refuses. Only
+        lines carrying a tab are file lines; ``--no-show-signature`` and
+        ``--no-color`` keep the repository's log configuration out of them, and
+        literal pathspecs keep a probe named like ``w[x].yml`` from matching the
+        history of ``wx.yml``.
+        """
+        raw = self.out("--literal-pathspecs", "log", "--follow", "--no-merges", "--no-show-signature", "--no-color", "--format=%x00%H",
+                       "--name-status", "--", path)
+        history: list[tuple[str, str, str, str]] = []
         for block in raw.split("\x00")[1:]:
             lines = [ln for ln in block.splitlines() if ln.strip()]
-            if lines:
-                history.append((lines[0], lines[1] if len(lines) > 1 else path))
+            if not lines:
+                continue
+            files = [ln.split("\t") for ln in lines[1:] if "\t" in ln]
+            if not files:
+                history.append((lines[0].strip(), path, "", ""))
+                continue
+            fields = files[0]
+            status = fields[0][:1]
+            source = fields[1] if status in ("R", "C") and len(fields) > 2 else ""
+            history.append((lines[0].strip(), fields[-1], status, source))
         return history
 
     def merges_changing(self, since: str, until: str, path: str) -> list[str]:
@@ -746,7 +783,7 @@ class Git:
 
 
 def require_local_working_copy(raw: str) -> Path:
-    """R13: the target must be a local git working copy, checked out, with history."""
+    """R13: the target must be a local git working copy, checked out, with its full history (not shallow)."""
     path = Path(raw).expanduser()
     if re.match(r"^[a-z][a-z0-9+.-]*://", raw) or re.match(r"^[\w.-]+@[\w.-]+:", raw):
         raise AuditError(
@@ -780,6 +817,20 @@ def require_local_working_copy(raw: str) -> Path:
         raise AuditError(
             f"--repo {raw!r} has no commit yet; change detection reads the history, so "
             "the probe set must be committed first.",
+            code=EXIT_USAGE,
+        )
+    # A shallow clone's boundary commits are compared against the empty tree, so
+    # every file reads as added there: at depth 1 each probe's history is HEAD
+    # alone and no later change to it can be seen. Refused before any change
+    # detection; anything but a plain "false" (an old git echoing the option)
+    # fails closed.
+    shallow = git.run("rev-parse", "--is-shallow-repository")
+    if shallow.returncode != 0 or shallow.stdout.strip() != "false":
+        raise AuditError(
+            f"--repo {raw!r} is a shallow clone (or its shallowness can't be determined: "
+            f"{safe_text(shallow.stdout.strip() or shallow.stderr.strip(), 80)}). Change detection reads each "
+            "probe's full history, and a shallow clone hides every change before its boundary; fetch the full "
+            "history (`git fetch --unshallow`, or `fetch-depth: 0` in CI) and run again.",
             code=EXIT_USAGE,
         )
     return path
@@ -1145,9 +1196,10 @@ def _anchor_key(doc: dict[str, Any]) -> object:
 
 
 def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, str]] = frozenset(),
-                  ) -> tuple[str | None, list[str], bool, list[tuple[str, str]], list[str]]:
+                  ) -> tuple[str | None, list[str], bool, list[tuple[str, str]], list[str], str | None]:
     """The probe's derivation baseline, the commits that touched it since, dirtiness,
-    the revisions before the baseline, and the merge commits that changed it since.
+    the revisions before the baseline, the merge commits that changed it since, and
+    why its listed history does not reach its origin (or None).
 
     The baseline is the commit that recorded the probe's current ``derived_from``:
     walking the file's history newest first, the oldest commit of the unbroken run
@@ -1172,12 +1224,21 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     The fifth value lists the merge commits after the baseline whose result for
     the probe differs from every parent (_merges_changing): file_history() never
     lists them, and each is as much an unapproved change as a later commit.
+
+    The sixth value says why the listed history is incomplete (_origin_problem):
+    its oldest revision does not create the probe's path, so the probe came into
+    being, or under this path, in a merge the walk can't follow. A history the
+    supersede cut ended is exempt: it ends at the cut on purpose, and the cut is
+    only made after _lineage_problem() proved the kept part ends at the commit
+    that added the replacement's path.
     """
-    history = git.file_history(probe.file)
+    log = git.file_log(probe.file)
+    history = [(commit, path_then) for commit, path_then, _, _ in log]
     if cut:
         history = history[:next((i for i, rev in enumerate(history) if rev in cut), len(history))]
     if not history:
-        return None, [], False, [], []
+        return None, [], False, [], [], None
+    origin = _origin_problem(*log[-1]) if len(history) == len(log) else None
     current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
     for commit, path_then in history:
@@ -1191,9 +1252,43 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         # revision changed the probe, which file_history() cannot list. The newest
         # commit is the baseline; with neither found, fail closed as uncommitted.
         merges = [m for m, _ in _merges_changing(git, history[:1], "HEAD")]
-        return history[0][0], [], dirty or not merges, [], merges
+        return history[0][0], [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
-    return run[-1], run[:-1], dirty, history[len(run):], merges
+    return run[-1], run[:-1], dirty, history[len(run):], merges, origin
+
+
+def _origin_problem(commit: str, path: str, status: str, source: str) -> str | None:
+    """Why the probe's oldest listed revision is not where it came into being, or None.
+
+    file_history() lists non-merge commits only and follows no rename made
+    inside a merge, so a probe created in a merge, or moved there in one (with
+    any edit made in the same merge), has a history that starts at a later
+    plain commit. Read as the first commit, that commit would become the
+    derivation baseline and launder the merge.
+
+    The oldest listed revision is complete only when git reports it as an
+    addition (``status`` ``A``, from Git.file_log()): a commit that brought the
+    file into being from nothing, or a root commit. A shallow clone's boundary
+    reports ``A`` for every file too and would hide any change before it, so a
+    shallow clone is refused before change detection runs
+    (require_local_working_copy()). A modification or a
+    deletion means the file already existed before it. A rename or copy means
+    ``--follow`` switched to ``source`` and found no listed commit of it, so
+    ``source`` came from a merge: checking only that the commit adds ``path``
+    would accept a plain rename out of a path a merge created.
+    """
+    if status == "A":
+        return None
+    what = {
+        "M": "a change to it",
+        "R": f"a rename from {safe_text(source)}",
+        "C": f"a copy from {safe_text(source)}",
+        "D": "its deletion",
+        "T": "a change of its type",
+    }.get(status, "no change to it")
+    return (f"the probe's oldest listed revision {commit[:12]} does not create {safe_text(path)} but records {what}: "
+            "the probe's origin isn't in its listed history but in a merge the walk can't follow, and a "
+            "derivation recorded in a merge cannot be judged")
 
 
 def _merges_changing(git: Git, revisions: list[tuple[str, str]], until: str) -> list[tuple[str, str]]:
@@ -1211,8 +1306,12 @@ def _merges_changing(git: Git, revisions: list[tuple[str, str]], until: str) -> 
     ``until`` for the newest run). A merge on that path before the move is
     found; one on a path the probe had already left, such as an unrelated file
     later placed there, is not the probe's change. A rename made inside a merge
-    is not covered: file_history() does not follow it, so the probe's revisions
-    under its earlier name are not listed in the first place.
+    is not searched here: file_history() does not follow it, so the probe's
+    revisions under its earlier name are not listed in the first place. It is
+    caught by the history's start instead: git then reports the oldest listed
+    revision as no addition (a change, or a rename out of the merge's path), and
+    probe_changes() reports the history as incomplete (_origin_problem), which
+    detect_change() surfaces as weakened.
     """
     segments: list[tuple[str, str, str]] = []  # (path, oldest commit, upper bound)
     upper = until
@@ -1725,7 +1824,7 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
     """Classify one valid probe's change state from the target's history (``cut``: see probe_changes)."""
     data = probe.data or {}
     derived_from = data["derived_from"]
-    baseline, later, dirty, earlier, merges = probe_changes(git, probe, yaml, cut)
+    baseline, later, dirty, earlier, merges, origin = probe_changes(git, probe, yaml, cut)
     if baseline is None:
         return ChangeState(
             STATE_UNCOMMITTED,
@@ -1736,9 +1835,11 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
     # The probe itself: any change after the recorded derivation is a weakening,
     # whether or not the declaration moved too (spec: "whether or not both changed
     # together"). Checked first so a combined change is surfaced as a finding.
+    # A history that does not reach the probe's origin (_origin_problem) can't
+    # show which state was approved, so it fails closed the same way.
     rebaseline = _rebaseline_problem(git, derived_from, baseline, earlier, yaml, data) if earlier else None
-    if later or merges or dirty or rebaseline:
-        parts = []
+    if later or merges or dirty or rebaseline or origin:
+        parts = [origin] if origin else []
         if rebaseline:
             parts.append(f"re-baselined without a declaration change: {rebaseline}")
         if later or merges:
@@ -2695,7 +2796,7 @@ def check_migration(repo_arg: str) -> tuple[int, list[str]]:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Execute the stored capability-reach probes of a local repository and write the report.",
-        epilog="Exit codes: 0 report written, 1 runtime error, 2 usage error or non-local target, "
+        epilog="Exit codes: 0 report written, 1 runtime error, 2 usage error, non-local or shallow target, "
         "3 no probe file (nothing executed), 4 report written with findings, 5 PyYAML/jsonschema missing, "
         "6 --check-migration refused: a migration candidate is not clean (nothing written).",
     )
