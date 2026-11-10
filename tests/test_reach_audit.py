@@ -4984,3 +4984,50 @@ def test_688_SECR3_2_a_forward_commit_anchor_jump_without_a_declaration_change_r
     assert state == ra.STATE_WEAKENED, reason
     assert reason.startswith(f"weakened: re-baselined without a declaration change: {moved[:12]} moved derived_from "
                              f"from {sha[:12]} to {later[:12]}, but {DECL} did not change in between"), reason
+
+
+def _repoint_then_lower(target, *, decoy_at_anchor: bool) -> tuple[str, str, str, str]:
+    """R1 records anchor X on DECL; I re-points only declaration.path at a decoy; E edits the decoy;
+    W moves the anchor to E, restores DECL and lowers the bar. DECL itself never changes."""
+    if decoy_at_anchor:
+        target.write("decoy.txt", "a\n")
+        target.commit("decoy exists at the anchor")
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, expected=dict(HI)), name="y")
+    target.commit("R1 record")
+    target.write_probe(make_probe("yid", derived_from=x, path="decoy.txt", expected=dict(HI)), name="y")
+    repoint = target.commit("I re-point the declaration only")
+    target.write("decoy.txt", "b\n")
+    e = target.commit("E edit the decoy")
+    target.write_probe(make_probe("yid", derived_from=e, expected=dict(LOW)), name="y")
+    lowered = target.commit("W move the anchor and lower")
+    return x, repoint, e, lowered
+
+
+@pytest.mark.parametrize("decoy_at_anchor", [False, True])
+def test_688_SECR4_1_a_declaration_path_re_pointed_inside_a_commit_anchor_run_cannot_prove_a_move(
+        target, decoy_at_anchor):
+    """Measured before the fix (also on origin/develop): yid read clean, exit 0."""
+    x, repoint, e, lowered = _repoint_then_lower(target, decoy_at_anchor=decoy_at_anchor)
+    code, report = run_audit(target)
+    assert code == ra.EXIT_FINDINGS, report
+    row = row_of(report, "yid")
+    assert row[7] == ra.STATE_WEAKENED, row
+    assert _plain(row[9]) == (
+        f"weakened: re-baselined without a declaration change: {lowered[:12]} moved derived_from from {x[:12]} "
+        f"to {e[:12]}, but {repoint[:12]} changed "
+        f"declaration.path under the previous derived_from {x[:12]}, so no declaration change can be shown"), row[9]
+
+
+def test_688_SECR4_1_a_commit_anchor_absent_at_both_commits_proves_nothing(target):
+    """A path that holds no declaration where the previous anchor and its recording point cannot prove the anchor."""
+    x = target.git("rev-parse", "HEAD")
+    target.write_probe(make_probe("yid", derived_from=x, path="ghost.md", expected=dict(HI)), name="y")
+    target.commit("record against a missing file")
+    target.write("ghost.md", "now it exists\n")
+    e = target.commit("create the file")
+    target.write_probe(make_probe("yid", derived_from=e, path="ghost.md", expected=dict(LOW)), name="y")
+    target.commit("move the anchor and lower")
+    state, reason = _state(target, "yid")
+    assert state == ra.STATE_WEAKENED, reason
+    assert f"ghost.md did not exist at the previous derived_from {x[:12]}, so no declaration change" in reason, reason

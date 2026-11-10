@@ -1846,6 +1846,19 @@ def _continuation_problem(git: Git, moved: str, baseline: str, earlier: list[tup
     return None
 
 
+def _repointed_declaration(git: Git, run: list[tuple[str, str]], yaml: Any) -> str | None:
+    """The newest commit in ``run`` (newest first) whose declaration.path differs from its predecessor's, or None."""
+    def path_of(revision: tuple[str, str]) -> object:
+        doc = _probe_doc(git, revision, yaml)
+        decl = doc.get("declaration") if doc else None
+        return decl.get("path") if isinstance(decl, dict) else None
+    paths = [path_of(revision) for revision in run]
+    for i in range(len(run) - 1):
+        if paths[i] != paths[i + 1]:
+            return run[i][0]
+    return None
+
+
 def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any], rel: str, recording: str,
                   baseline: str) -> tuple[str | None, str | None, bool]:
     """Prove the previous anchor where it was recorded; say whether its content moved since.
@@ -1898,6 +1911,11 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
             before = recorded
         else:
             before = git.blob_at(prev_commit, rel)
+            if before is None:
+                # Absent at both commits would "prove" any anchor for a path that
+                # holds no declaration at all.
+                return (f"{moved}, but {safe_text(rel)} did not exist at the previous derived_from "
+                        f"{prev_commit[:12]}, so no declaration change can be shown"), None, False
             if before != recorded:
                 return (f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
                         f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was recorded, "
@@ -2198,6 +2216,16 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         # here it would compare the whole file for an anchor that never covered it
         # and skip proving the previous anchor, which launders a weakening.
         return f"{moved}, but the two cannot both be resolved to commits, so no declaration change can be shown"
+    # A commit anchor keys on derived_from alone (_anchor_key), so a commit that
+    # changes only declaration.path stays inside the previous derivation's run and
+    # nothing judges it. Every proof below reads one path: the run must have kept
+    # the one the derivation was recorded with, or a commit re-points the proof at
+    # a decoy file whose change then stands in for a declaration that never changed.
+    span = _run_length(git, earlier, yaml)
+    repointed = _repointed_declaration(git, earlier[:span], yaml)
+    if repointed:
+        return (f"{moved}, but {repointed[:12]} changed declaration.path under the previous derived_from "
+                f"{safe_text(prev_df[:12], 40)}, so no declaration change can be shown")
     prev_commit, new_commit = git.resolve_commit(prev_df), git.resolve_commit(new_df)
     if prev_commit is not None and new_commit is not None:
         # The previous anchor must be proven where it was recorded (_prior_anchor),
@@ -2205,7 +2233,7 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
         # anchor back at an older commit without changing anything else, and the
         # next moves it forward again across a declaration change that the probe
         # had already seen, re-baselining whatever that commit lowers.
-        recording = earlier[_run_length(git, earlier, yaml) - 1][0]
+        recording = earlier[span - 1][0]
         problem, _, _ = _prior_anchor(git, moved, prev_df, prior_doc, rel, recording, baseline)
         if problem:
             return problem
@@ -2217,7 +2245,7 @@ def _anchor_move_problem(git: Git, moved: str, decl: dict[str, Any], prior_doc: 
     # that recorded them are still here (as in _prior_anchor): the declaration's
     # content there stands in for an anchor that no longer resolves. The walk
     # back over earlier derivations (_continuation_problem) reaches such moves.
-    recording = earlier[_run_length(git, earlier, yaml) - 1][0]
+    recording = earlier[span - 1][0]
     before = git.blob_at(prev_commit or recording, rel)
     after = git.blob_at(new_commit or baseline, rel)
     if before is None or after is None:
