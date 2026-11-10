@@ -13,6 +13,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 import re
 import shutil
 import signal
@@ -3633,3 +3634,250 @@ def test_685_SEC205_a_superseded_row_keeps_the_notes_of_unmet_records(sectioned)
     old = row_of(report, "p1")
     assert old[7] == ra.STATE_SUPERSEDED
     assert "supersede by p3 not in effect: it is not approved" in _plain(old[9]), old
+
+
+# --------------------------------------------------------------------------- #
+# #701: a probe changed inside a merge commit (an "evil merge")
+# --------------------------------------------------------------------------- #
+# file_history() walks `--follow --no-merges`, which never lists a merge whose
+# result differs from every parent. Each test pairs the merge with what the
+# runner says about the same change made in a plain commit at the same place.
+BAR_OF_TWO = {"kind": "count", "value": 2, "unit": "collections"}
+
+
+def _probe_observing_one(target: Target, marker: Path, **kw) -> tuple[str, str]:
+    """An approved p1 under a content anchor that observes 1 against a bar of 2: lowering the bar clears it."""
+    rel = _content_probe(target, argv=marker_argv(marker, "1"), expected=dict(BAR_OF_TWO), **kw)
+    return rel, target.git("rev-parse", "HEAD")
+
+
+def _merge_side(target: Target, branch: str = "side", *, on_side=None, in_merge=None) -> tuple[str, str]:
+    """Merge ``branch`` into main with --no-ff; ``on_side`` edits on the branch, ``in_merge`` the merge result.
+
+    Both lines carry an unrelated commit, so the merge is a real one. Returns
+    ``(side commit, merge commit)``.
+    """
+    target.git("checkout", "-q", "-b", branch)
+    target.write(f"{branch}.txt", f"{branch}\n")
+    if on_side:
+        on_side()
+    side = target.commit(f"{branch} work")
+    target.git("checkout", "-q", "main")
+    target.write(f"main-beside-{branch}.txt", "main\n")
+    target.commit(f"main work beside {branch}")
+    target.git("merge", "-q", "--no-ff", "--no-commit", branch)
+    if in_merge:
+        in_merge()
+    merge = target.commit(f"merge {branch}")
+    assert target.git("rev-list", "--parents", "-n", "1", merge).count(" ") == 2
+    return side, merge
+
+
+def test_701_a_bar_lowered_inside_a_merge_after_approval_is_weakened(target, tmp_path):
+    """AC (a): measured before the fix as clean, exit 0, executed."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+    _, merge = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1))
+    assert ra.Git(target.path).file_history(rel) == [(recorded, rel)]
+    reason = _weakened_reason(target, marker)
+    assert reason == (f"weakened: probe changed in merge {merge[:12]} after its derivation was recorded in "
+                      f"{recorded[:12]}"), reason
+
+
+def test_701_a_merge_after_approval_that_leaves_the_probe_alone_stays_clean(target, tmp_path):
+    """AC (b)."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker))
+    _merge_side(target)
+    _merge_side(target, "docs", on_side=lambda: target.write("README.md", "docs\n"))
+    assert ra.Git(target.path).merges_changing(target.git("rev-list", "--max-parents=0", "HEAD"), "HEAD", rel) == []
+    _assert_clean(target)
+    assert marker.exists()
+
+
+def test_701_a_side_branch_probe_edit_merged_without_conflict_reads_as_before(target, tmp_path):
+    """AC (c): the merge takes the side's version, so the side commit alone is the change, named once."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+    side, merge = _merge_side(target, on_side=lambda: _rewrite(target, rel, expected_value=1))
+    assert ra.Git(target.path).merges_changing(recorded, "HEAD", rel) == []
+    reason = _weakened_reason(target, marker)
+    assert reason == f"weakened: probe changed in {side[:12]} after its derivation was recorded in {recorded[:12]}"
+    assert merge[:12] not in reason
+
+
+def test_701_two_clean_edits_combined_by_a_merge_name_the_merge_too(target, tmp_path):
+    """Both lines edit the probe on different lines and git merges them cleanly: the result is
+    neither side's approved text, so the merge is named beside both edits."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+
+    def on_main() -> None:
+        _rewrite(target, rel, tier="T1")
+
+    target.git("checkout", "-q", "-b", "side")
+    _rewrite(target, rel, expected_value=1)
+    side = target.commit("lower the bar on side")
+    target.git("checkout", "-q", "main")
+    on_main()
+    main = target.commit("move to T1 on main")
+    target.git("merge", "-q", "--no-ff", "--no-edit", "side")
+    merge = target.git("rev-parse", "HEAD")
+    reason = _weakened_reason(target, marker)
+    assert f"merge {merge[:12]}" in reason and side[:12] in reason and main[:12] in reason, reason
+
+
+def test_701_a_weakening_in_a_merge_is_not_adopted_by_a_later_re_derivation(target, tmp_path):
+    """AC (d), the Critical case: R approves, a merge lowers the bar, M changes the declaration and
+    re-derives. Measured before the fix as clean, exit 0, executed: M absorbed the merge."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+    _, merge = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1))
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    _rewrite(target, rel, derived_from="blob:" + target.git("hash-object", DECL))
+    moved = target.commit("edit the declaration and re-derive")
+    reason = _weakened_reason(target, marker)
+    assert f"re-baselined without a declaration change: {moved[:12]} moved derived_from" in reason
+    assert (f"but the probe changed in merge {merge[:12]} after its previous derivation was recorded in "
+            f"{recorded[:12]}") in reason
+
+
+def test_701_a_derivation_recorded_inside_a_merge_is_not_credited_to_a_later_commit(target, tmp_path):
+    """Audit item (3): a merge moves a commit anchor and lowers the bar; a later plain commit edits the
+    probe. file_history() lists only that commit, which would read as the move and carry both changes."""
+    marker = tmp_path / "ran"
+    sha, rel = derived_probe(target, argv=marker_argv(marker, "1"), expected=dict(BAR_OF_TWO))
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    changed = target.commit("edit the declaration")
+    _, merge = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1, derived_from=changed))
+    _rewrite(target, rel, tier="T1")
+    later = target.commit("a later edit")
+    reason = _weakened_reason(target, marker)
+    assert (f"{later[:12]} moved derived_from from {sha[:12]} to {changed[:12]}, but merge {merge[:12]} "
+            f"changed derived_from after the previous derivation was recorded and before {later[:12]}, "
+            "and a derivation recorded in a merge cannot be judged") in reason, reason
+
+
+def test_701_a_derivation_recorded_inside_the_newest_merge_names_it_not_uncommitted_changes(target, tmp_path):
+    """No listed revision carries today's derived_from: before the fix this read as uncommitted changes."""
+    marker = tmp_path / "ran"
+    _, rel = derived_probe(target, argv=marker_argv(marker, "1"), expected=dict(BAR_OF_TWO))
+    recorded = target.git("rev-parse", "HEAD")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    changed = target.commit("edit the declaration")
+    _, merge = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1, derived_from=changed))
+    reason = _weakened_reason(target, marker)
+    assert reason == (f"weakened: probe changed in merge {merge[:12]} after its derivation was recorded in "
+                      f"{recorded[:12]}"), reason
+
+
+@pytest.mark.parametrize("where", ["merge", "commit"])
+def test_701_a_weakening_before_a_commit_anchor_re_derivation_is_outside_the_window(target, tmp_path, where):
+    """AC (e): a move onto a commit anchor keeps the pre-v1.1 rules and consults only the previous
+    anchor, not the probe changes before it, so a plain commit there is adopted; a merge at the same
+    place is treated the same and not reported."""
+    marker = tmp_path / "ran"
+    _, rel = derived_probe(target, argv=marker_argv(marker, "1"), expected=dict(BAR_OF_TWO))
+    if where == "merge":
+        _, weakening = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1))
+    else:
+        _rewrite(target, rel, expected_value=1)
+        weakening = target.commit("lower the bar")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    changed = target.commit("edit the declaration")
+    _rewrite(target, rel, derived_from=changed)
+    target.commit("re-derive")
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK and row[7] == ra.STATE_CLEAN and marker.exists(), row[7:]
+    assert weakening[:12] not in report
+
+
+def test_701_merges_changing_refuses_an_option_shaped_revision(target):
+    with pytest.raises(ra.AuditError):
+        ra.Git(target.path).merges_changing("--output=x", "HEAD", DECL)
+
+
+def test_701_a_merge_on_a_path_the_probe_left_is_not_the_probes_change(target):
+    """Follow-up 2: R approves p1.yml, X renames it, an unrelated file later placed at p1.yml gets an
+    add/add conflict resolved in a merge, M changes the declaration and re-derives. The probe never lived
+    at p1.yml after X, so that merge is not its change (searching p1.yml up to M marked it weakened)."""
+    rel = _content_probe(target)
+    moved_rel = "project/reach-probes/renamed.yml"
+    target.git("mv", rel, moved_rel)
+    target.commit("rename the probe file")
+    target.git("checkout", "-q", "-b", "reuse")
+    target.write(rel, "side: 1\n")
+    target.commit("an unrelated file at the old path")
+    target.git("checkout", "-q", "main")
+    target.write(rel, "main: 1\n")
+    target.commit("another unrelated file at the old path")
+    subprocess.run(["git", "-C", str(target.path), "merge", "-q", "--no-ff", "reuse"], capture_output=True, check=False)
+    target.write(rel, "resolved: 1\n")
+    merge = target.commit("resolve the add/add conflict")
+    assert ra.Git(target.path).merges_changing(merge + "^", merge, rel) == [merge]
+    target.git("rm", "-q", rel)
+    target.commit("drop the unrelated file")
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    _rewrite(target, moved_rel, derived_from="blob:" + target.git("hash-object", DECL))
+    target.commit("edit the declaration and re-derive")
+    _assert_clean(target)
+
+
+def test_701_an_octopus_merge_that_edits_the_probe_is_weakened(target, tmp_path):
+    """Follow-up 3: a merge with three parents is judged like any other merge."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+    for branch in ("one", "two"):
+        target.git("checkout", "-q", "-b", branch, "main")
+        target.write(f"{branch}.txt", f"{branch}\n")
+        target.commit(f"{branch} work")
+    target.git("checkout", "-q", "main")
+    target.git("merge", "-q", "--no-ff", "--no-commit", "one", "two")
+    _rewrite(target, rel, expected_value=1)
+    merge = target.commit("octopus merge lowering the bar")
+    assert target.git("rev-list", "--parents", "-n", "1", merge).count(" ") == 3
+    reason = _weakened_reason(target, marker)
+    assert reason == (f"weakened: probe changed in merge {merge[:12]} after its derivation was recorded in "
+                      f"{recorded[:12]}"), reason
+
+
+@pytest.mark.parametrize("config", [("log.follow", "true"), ("diff.renames", "copies")])
+def test_701_the_targets_log_and_diff_config_does_not_hide_an_evil_merge(target, tmp_path, config):
+    """Follow-up 3: the target's own git config cannot switch the merge search to --follow or copies."""
+    marker = tmp_path / "ran"
+    target.git("config", *config)
+    rel, recorded = _probe_observing_one(target, marker)
+    _, merge = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1))
+    reason = _weakened_reason(target, marker)
+    assert reason == (f"weakened: probe changed in merge {merge[:12]} after its derivation was recorded in "
+                      f"{recorded[:12]}"), reason
+
+
+def test_701_a_search_start_that_is_no_ancestor_widens_instead_of_finding_nothing(target):
+    """Follow-up 1: file_history() orders by committer date, so with a forged date a descendant can be
+    listed as the older revision. R, an evil merge E, then A; D comes after A but is dated before R, so
+    the walk lists A, R, D and D looks like the oldest revision of a span ending at A. D..A is empty;
+    the search must fail closed and still find E, which lies in A's ancestry. D sits on a branch merged
+    back without a conflict: the walk pops commits by date only across branches."""
+    rel = _content_probe(target)
+    _, merge = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=1))
+    _rewrite(target, rel, tier="T1")
+    after = target.commit("a later edit")
+    target.git("checkout", "-q", "-b", "late")
+    _rewrite(target, rel, tier="T0")
+    target.git("add", "-A")
+    subprocess.run(["git", "-C", str(target.path), "commit", "-q", "-m", "back-dated edit"], check=True,
+                   env={**os.environ, "GIT_COMMITTER_DATE": "2001-01-01T00:00:00Z",
+                        "GIT_AUTHOR_DATE": "2001-01-01T00:00:00Z"})
+    forged = target.git("rev-parse", "HEAD")
+    target.git("checkout", "-q", "main")
+    target.write("unrelated.txt", "main\n")
+    target.commit("main work")
+    target.git("merge", "-q", "--no-ff", "--no-edit", "late")
+    git = ra.Git(target.path)
+    history = git.file_history(rel)
+    assert [c for c, _ in history][-1] == forged and git.is_ancestor_or_equal(after, forged)
+    span = [rev for rev in history if rev[0] != after]
+    assert [m for m, _ in ra._merges_changing(git, span, after)] == [merge]
+    assert git.merges_changing(forged, after, rel) == [merge]
