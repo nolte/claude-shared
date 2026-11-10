@@ -5661,3 +5661,106 @@ def test_708_P2_a_rename_before_the_recording_proves_nothing_for_a_later_move(ta
     assert state == ra.STATE_WEAKENED, reason
     assert (f"but it also moved the declaration from {DECL} to docs/b.md, where the previously anchored content "
             "is not") in reason, reason
+
+
+# -- #708 review: the stale-born section anchor, the new sections, the side-branch removal ------- #
+def _stale_born_section_probe(target: Target) -> str:
+    """The probe lands with the section digests from before an edit of an anchored section (R0)."""
+    sections = _sections_now(target)
+    _edit(target, *INSIDE)
+    target.commit("an anchored section changes before the probe lands")
+    probe = make_probe(derived_from=ra.section_anchor(sections))
+    probe["declaration"]["sections"] = sections
+    rel = target.write_probe(probe)
+    target.commit("the probe lands")
+    return rel
+
+
+def test_708_P2_a_section_anchor_stale_from_its_first_commit_renamed_and_lowered_is_weakened(sectioned):
+    """Review finding 1, measured on e65753bc: clean, exit 0. The rename is pure against what R0 held."""
+    target = sectioned
+    rel = _stale_born_section_probe(target)
+    _rename(target)
+    _reanchor(target, rel, declaration_path="docs/b.md", expected_value=1)
+    target.commit("re-anchor onto the renamed declaration and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith("but the same commit changed the probe beyond declaration.path, which a pure move "
+                           "of the declaration does not justify"), reason
+
+
+def test_708_P2_a_stale_born_section_anchor_renamed_onto_a_content_anchor_and_lowered_is_weakened(sectioned):
+    """Review finding 1, content-anchor target, measured on e65753bc: clean, exit 0."""
+    target = sectioned
+    rel = _stale_born_section_probe(target)
+    _rename(target)
+    _rewrite(target, rel, declaration_path="docs/b.md", derived_from=_blob_now(target, "docs/b.md"),
+             expected_value=1)
+    doc = yaml.safe_load((target.path / rel).read_text())
+    doc["declaration"].pop("sections", None)
+    target.write(rel, yaml.safe_dump(doc, sort_keys=False))
+    target.commit("re-derive onto the renamed file and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith("but the same commit changed the probe beyond declaration.path, which a pure move "
+                           "of the declaration does not justify"), reason
+
+
+def test_708_P2_a_rename_re_derived_onto_only_unchanged_sections_and_lowered_is_weakened(sectioned):
+    """Review finding 2, measured on e65753bc: clean, exit 0. The edited row is dropped from the anchor."""
+    target = sectioned
+    rel = _section_probe(target)
+    _rename(target)
+    _edit(target, *IN_ROW, path="docs/b.md")
+    target.commit("edit the anchored row")
+    _reanchor(target, rel, declaration_path="docs/b.md", locators=[("heading", "3.1")], expected_value=1)
+    moved = target.commit("re-anchor onto the unchanged heading only and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert f"{moved[:12]} moved derived_from" in reason, reason
+    assert reason.endswith("but none of the sections it now anchors on changed since the previous derivation "
+                           f"was recorded in {target.git('rev-parse', 'HEAD~3')[:12]}"), reason
+
+
+def test_708_P2_a_rename_on_a_branch_forked_before_the_recording_is_no_rename_evidence(target):
+    """Review finding 4: the rename happened to the declaration as it was before the derivation.
+
+    Measured on e65753bc: clean, exit 0. The honest way to follow such a merged
+    rename is a pure move first, then a re-derivation (see the companion test).
+    """
+    target.git("branch", "-M", "main")
+    target.git("checkout", "-q", "-b", "side")
+    _rename(target)
+    target.git("checkout", "-q", "main")
+    rel = _content_probe(target)
+    target.git("merge", "-q", "--no-ff", "-m", "merge the rename", "side")
+    _edited(target, "docs/b.md")
+    _re_derive_onto(target, rel, expected_value=1)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert (f"but it also moved the declaration from {DECL} to docs/b.md, where the previously anchored content "
+            "is not") in reason, reason
+
+
+def test_708_P2_a_rename_merged_from_before_the_recording_heals_by_a_pure_move_first(target):
+    target.git("branch", "-M", "main")
+    target.git("checkout", "-q", "-b", "side")
+    _rename(target)
+    target.git("checkout", "-q", "main")
+    rel = _content_probe(target)
+    target.git("merge", "-q", "--no-ff", "-m", "merge the rename", "side")
+    _rewrite(target, rel, declaration_path="docs/b.md")
+    target.commit("follow the rename as a pure move")
+    _edited(target, "docs/b.md")
+    _re_derive_onto(target, rel)
+    _assert_clean(target)
+
+
+def test_708_P2_rename_evidence_holds_with_log_follow_configured(target):
+    """Review finding 3: the repository's log.follow must not change the removal search."""
+    target.git("config", "log.follow", "true")
+    rel = _content_probe(target)
+    _edited(target)
+    _rename(target)
+    _re_derive_onto(target, rel)
+    _assert_clean(target)
