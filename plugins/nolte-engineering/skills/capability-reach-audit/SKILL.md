@@ -1,6 +1,6 @@
 ---
 name: capability-reach-audit
-description: Measures capability reach per spec/project/capability-reach-audit/ in a local working copy. `derive` drafts probes via the read-only capability-reach-scanner and persists only approved ones under project/reach-probes/; `run` executes them through bundled reach_audit.py (T0, T1; T2 on request), surfacing changed declarations and weakened probes; `report` reads .audits/capability-reach/<date>.md, not-probed count first; `reconfirm` re-anchors a stale probe the operator has reviewed, per probe, without re-deriving; `migrate` moves Markdown-declaration probes to section anchors once. Reach is a ratio with its measuring command, never a grade; the runner compares, never the model. Invoke to audit capability reach, derive, approve, or run probes, re-confirm stale probes, or read the report; also German. Don't use to grade maturity (maturity-assess), as a merge gate (quality-gate), or for inventory and drafts alone (capability-reach-scanner). Supports resume per spec/claude/resumable-work/.
+description: Measures capability reach per spec/project/capability-reach-audit/ in a local working copy. `derive` drafts probes via the read-only capability-reach-scanner and persists only approved ones under project/reach-probes/; `run` executes them through bundled reach_audit.py (T0, T1; T2 on request), surfacing changed declarations and weakened probes; `report` reads .audits/capability-reach/<date>.md, not-probed count first; `reconfirm` re-anchors a stale probe the operator has reviewed, per probe, without re-deriving; `migrate` moves Markdown-declaration probes to section anchors once. Reach is a ratio with its measuring command, never a grade; the runner compares, never the model. Invoke to audit capability reach, derive, approve, or run probes, re-confirm stale or retire removed probes, or read the report; also German. Don't use to grade maturity (maturity-assess), as a merge gate (quality-gate), or for inventory and drafts alone (capability-reach-scanner). Supports resume per spec/claude/resumable-work/.
 distribution: plugin
 tags: [audit]
 phase: quality
@@ -47,7 +47,7 @@ Detect the user's language from their message and respond in it. Probe files, th
 ## Inputs
 
 - **Target**: the path of a **local working copy** of the audited repository. Default: the current working directory. A remote address is never accepted (see Preconditions).
-- **Operation**: `derive`, `run` (default), `report`, `reconfirm`, or `migrate`. When `run` finds no probe set, it routes to `derive`.
+- **Operation**: `derive`, `run` (default), `report`, `reconfirm`, `migrate`, or `retire`. When `run` finds no probe set, it routes to `derive`.
 - **T2 opt-in**: off by default. Only an explicit operator request ("include T2", "full stack too") turns it on.
 - **Entry filter** (`derive` only): the **declaration paths** to re-derive, which is what the scanner accepts. The operator names probe ids; the skill maps each to the `declaration.path` (or `declaration.inherited_spec`) read from `project/reach-probes/<id>.yml` and passes the set of paths. Every entry of a re-derived declaration comes back, since a changed declaration makes all its probes stale.
 - **Environment timeout** (`run` only): forwarded as `--environment-timeout SECONDS` when the operator names one; otherwise the runner's default applies.
@@ -77,9 +77,9 @@ Detect the user's language from their message and respond in it. Probe files, th
    python3 "${CLAUDE_PLUGIN_ROOT}/skills/capability-reach-audit/scripts/reach_audit.py" --repo <path>
    ```
 
-   Append `--include-t2` only when the operator asked for T2 (R8), and `--environment-timeout SECONDS` only when the operator named a bound. The runner loads the set, decides per probe from git history whether it may run (declaration changed → stale, probe changed → weakened), runs environment targets and observation steps, classifies, and writes the report. Never reimplement any of that, and never invoke it by a repo-relative path.
+   Append `--include-t2` only when the operator asked for T2 (R8), and `--environment-timeout SECONDS` only when the operator named a bound. The runner loads the set, decides per probe from git history whether it may run (declaration changed → stale, probe changed → weakened, probe gone → removed), runs environment targets and observation steps, classifies, and writes the report. Never reimplement any of that, and never invoke it by a repo-relative path.
 2. **Map the exit code.** Read `references/runner-exit-codes.md` when the runner exits non-zero or when the report lists not-probed reasons: it maps each exit code (0 report, 3 derive, 4 findings first, 5 the `pip install` hint verbatim) and each not-probed reason to its next step.
-3. **Surface the report** as in `report`. For stale probes, offer `reconfirm` first and `derive` with the entry filter set to exactly their declaration paths (mapped as under Inputs) for the rest (R5: re-derive only what changed).
+3. **Surface the report** as in `report`. For stale probes, offer `reconfirm` first and `derive` with the entry filter set to exactly their declaration paths (mapped as under Inputs) for the rest (R5: re-derive only what changed). For `removed` findings, offer `retire`.
 
 ### `reconfirm` (re-approve a stale probe without re-deriving it)
 
@@ -89,33 +89,42 @@ For each stale probe, show the declaration's change since its anchor (the whole 
 
 Propose `declaration.sections` for every clean probe on a Markdown declaration from the section numbers and row ids its `location` cites, approve per probe, and record them as a derivation (`mode: derived` or none). A locator that matches nothing or more than once keeps the file anchor. Read `references/reconfirm-and-migrate.md` §Migration for the procedure and §Replay measurement for `reach_replay.py`, which counts file- against section-anchor stale events over a declaration's history.
 
+### `retire` (account for a removed probe)
+
+Per the spec's §"Derivation, approval, and durability", a probe id that left the set reads `removed` (exit 4) until an approved, committed record in `project/reach-probes/_retired.yml` accounts for it; the runner only reads that file. Read `references/retirement.md` before the first proposal: it maps each `removed` reason to its next step and fixes the record shape and the answers.
+
+1. Take the ids from the `removed` findings of a current report, never from your own reading of the history. Never propose a record for an `exchange under the same id`: the exit is a new id for the replacement plus `retire` for the old id, or restoring the earlier file and superseding it.
+2. Per id, show the proposal: `id`, a `reason` chosen with the operator (`capability-removed`, `declaration-removed`, `duplicate`, `derived-in-error`), `detail`, quoted `recorded_at`, `last_revision` (the full hash the finding's reason names), and an `approval` block.
+3. Write a record only on an answer naming its id; checkpoint `retired-<id>`. The operator commits `_retired.yml` with the deletion or after it, never before; a probe restored and deleted again needs a new record.
+
 ### `report` (read the latest report)
 
 1. Locate the newest `<target>/.audits/capability-reach/<YYYY-MM-DD>.md`. If none exists, route to `run`.
-2. Lead with the headline exactly as the runner wrote it, including the `<k> of them not constructible` clause and, when present, the sentence that the manifest is absent or unreadable, then the Provenance section verbatim, then the reach-per-tier table and the Findings section. Quote the reach ratio and the `Measured by` command per probe as written.
+2. Lead with the headline exactly as the runner wrote it, including the `not constructible` and `removed` clauses and, when present, the sentence that the manifest is absent or unreadable, then the Provenance section verbatim, then the reach-per-tier table and the Findings section. Quote the reach ratio and the `Measured by` command per probe as written.
 3. Never edit that file, never recompute a ratio, and never restate a class the runner did not assign. The report is the runner's; the summary is yours.
 
 ## Examples
 
 Read `examples/scan-lane-runs.yml` (T0), `examples/ranking-endpoint-answers.yml` (T1), `examples/data-export-populated.yml`, `examples/erasure-finalisation.yml`, and `examples/personal-data-inventories.yml` (T2) when the operator asks what a conformant probe looks like or when judging whether a draft's observation point sits outside the artefact. They encode the five rows of the spec's §"Worked acceptance: The five defects", carry placeholder anchors and no `approval` block on purpose, and are never copied into `project/reach-probes/` unchanged. Read `examples/_not-constructible.yml` when writing the manifest in `derive` step 5 for the first time.
 
-Read `examples/01-first-derive.md` when running `derive` on a repository that declares capabilities but holds no probe set yet, `examples/02-run-weakened-probe.md` when `run` exits 4 with a weakened probe, and `examples/03-run-no-declarations.md` when the target declares nothing in any source; each is one evaluation scenario (prompt, input files, expected behaviour).
+Read `examples/01-first-derive.md` when running `derive` on a repository that declares capabilities but holds no probe set yet, `examples/02-run-weakened-probe.md` when `run` exits 4 with a weakened probe, `examples/03-run-no-declarations.md` when the target declares nothing in any source, and `examples/04-retire-removed-probe.md` when `run` reports a `removed` probe; each is one evaluation scenario (prompt, input files, expected behaviour).
 
 ## Gotchas
 
-- **`${CLAUDE_PLUGIN_ROOT}` is load-bearing.** The runner lives in the installed plugin directory, not in the audited repository. A bare `skills/capability-reach-audit/scripts/…` path works only inside `claude-shared` and breaks in every consumer. Data paths (`--repo`) stay relative to the operator's working directory; only the script path is plugin-rooted.
+- **`${CLAUDE_PLUGIN_ROOT}` is load-bearing.** The runner lives in the installed plugin, not in the audited repository; a bare `skills/…` path breaks in every consumer. Only the script path is plugin-rooted; `--repo` stays relative to the working directory.
 - **The runner needs PyYAML and jsonschema.** Exit 5 prints the install hint; relay it verbatim and stop. Never parse or validate probes yourself as a fallback.
 - **Any later commit to a probe file is a weakening; moving `derived_from` clears it only when the declaration changed in between.** An in-repository anchor is the declaration's content (`blob:<sha1>`, or `sections:<sha256>` over the cited Markdown sections), so a squash merge keeps it valid. A re-confirmation and a migration are the two sanctioned edits, each with its own proof. A corrected typo in `derived_from`, or a probe with an external anchor, stays weakened until its declaration changes; the fix is a re-derive after a real declaration change, never an edit. Read `references/runner-exit-codes.md` §Re-baseline rule when a probe stays weakened after its `derived_from` moved; it also states the rule's limits.
 - **`observation_digest` catches a swapped step.** A commit that changes `argv`, `environment`, or `teardown` under the old approval is refused (`approval does not cover the current observation step`); re-derive and re-approve, never paste a digest.
 - **Stale is not an error.** `declaration changed since derivation` means the declaration moved; the probe is withheld, not failed. Route to `derive` with the entry filter set to the probe's declaration path.
 - **`approved_at` is quoted.** Unquoted, the YAML loader turns it into a timestamp object and the probe fails the schema.
 - **An absent manifest is not an empty one.** The headline counts not-constructible entries only when `project/reach-probes/_not-constructible.yml` exists; every derive round writes it, even empty. An id that is both a probe file and a manifest entry is a `contradiction` finding, and that probe is not executed.
+- **Deleting a probe file is a removal.** Any id a committed probe file once carried and none carries now reads `removed`, approved or not; `retire` is the only exit that keeps it deleted. Restore a deleted superseded file instead: retiring it leaves the replacement's `supersedes` record an `invalid supersede`.
 - **T2 is silent unless requested.** Without `--include-t2` every T2 probe is `not probed` with reason `tier T2 not requested`, stated in Provenance; that is honest output, not a defect to fix by adding the flag yourself.
 - **A T0 result establishes that something ran, never that it works.** Don't read a reached T0 probe as correctness.
 
 ## Resumability
 
-Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/capability-reach-audit/<run-id>.yml` after each named phase boundary (`derived`, `approved-<source>` after each batch, `persisted` once probes and manifest are written, `executed`, `reported`, and `reconfirmed-<id>` or `migrated-<id>` per answered probe), with the scanner payload and the decisions under `state:` and `decisions[]`; on resume no batch or probe already answered is asked again. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot (target path, operation, T2 opt-in, entry filter) matches; if one matches, prompt `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The envelope and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate them here.
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/capability-reach-audit/<run-id>.yml` after each named phase boundary (`derived`, `approved-<source>` after each batch, `persisted` once probes and manifest are written, `executed`, `reported`, and `reconfirmed-<id>`, `migrated-<id>`, or `retired-<id>` per answered probe), with the scanner payload and the decisions under `state:` and `decisions[]`; on resume no batch or probe already answered is asked again. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot (target path, operation, T2 opt-in, entry filter) matches; if one matches, prompt `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The envelope and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate them here.
 
 ## Hard rules
 
@@ -127,9 +136,10 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** invoke the runner by a repo-relative path; only `"${CLAUDE_PLUGIN_ROOT}/skills/capability-reach-audit/scripts/reach_audit.py"`.
 - **Never** accept a remote address, a bare repository, or a subdirectory as the target; there is no remote mode.
 - **Never** drop a `not_constructible` entry from the manifest or present it as reached, not reached, or a gap in the inventory; never list a rejected or skipped draft in the manifest; never skip writing the manifest on a derive round.
+- **Never** write a retirement record without an answer naming its id, for an id a probe file still carries, or for an `exchange under the same id`.
 - **Never** write a probe whose `approved_by` is empty; ask for the operator identity instead.
 - **Never** re-confirm or migrate a probe without an answer naming it, and never let a re-confirmation touch `expected`, `observe`, `tier`, or a locator.
-- **Never** write an `approval` block without `observation_digest`, and never present approval as a proof: approving means accepting that the target's `task` targets and the `observe` command run on the operator's machine with their environment, `PATH` and tokens included, as running `task` there already would. A block found in the repository records that someone approved, not that this operator did; the runner can't tell the two apart and doesn't try.
+- **Never** write a probe's `approval` block without `observation_digest` (a retirement record's carries none), and never present approval as a proof: approving means accepting that the target's `task` targets and the `observe` command run on the operator's machine with their environment, `PATH` and tokens included, as running `task` there already would. A block found in the repository records that someone approved, not that this operator did; the runner can't tell the two apart and doesn't try.
 - When `spec/project/capability-reach-audit/` and this skill disagree, the spec wins; this skill needs the update.
 
 ## Why this is a skill, not an agent

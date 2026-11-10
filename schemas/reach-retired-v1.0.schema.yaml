@@ -1,0 +1,154 @@
+# Schema for the retirement manifest of a capability-reach probe set: the one
+# file project/reach-probes/_retired.yml in an audited repository, written by
+# the capability-reach-audit skill's retire operation next to the approved
+# probes and read by the runner
+# (plugins/nolte-engineering/skills/capability-reach-audit/scripts/reach_audit.py).
+#
+# A probe id that a committed probe file carried anywhere in the history of the
+# audited revision, and that no probe file carries now, is reported removed
+# (spec/project/capability-reach-audit/
+# §"Derivation, approval, and durability").
+# A record in this manifest is the only way to account for such a removal, and
+# only a record with an approval of its own takes effect. An empty `entries`
+# list is meaningful: it records that no probe id was retired.
+#
+# Like the probe schema, every object is closed, so a record has no field in
+# which to state a verdict. The reason is one of four closed codes; the detail
+# says what happened in the operator's words.
+#
+# The runner embeds the structural part of this document (everything except
+# title, description, and examples) because the schemas/ tree ships with the
+# nolte-shared payload, not with nolte-engineering; tests/test_reach_audit.py
+# fails when the two drift apart.
+#
+# Rules this schema cannot express and the runner enforces instead: record ids
+# are unique within the manifest; a record for an id that a probe file still
+# carries is a contradiction, and one for an id no committed probe file in the
+# history of the audited revision ever carried is invalid, both reported as
+# findings; a record takes effect only once it is committed, and not when the
+# manifest already listed it before a removal of its id (it can't account for a
+# removal it predates). `last_revision` is not checked against the history: a
+# squash merge drops the commit it names.
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/nolte/claude-shared/blob/main/schemas/reach-retired-v1.0.schema.yaml
+title: Capability Reach Retirement Manifest
+description: >-
+  Validates project/reach-probes/_retired.yml in an audited repository: the
+  probe ids that left the probe set on purpose, each with one of four closed
+  reason codes, a free-text detail, the recording time, the last revision in
+  which the probe existed, and an approval of its own. It carries no verdict
+  field. Refs spec/project/capability-reach-audit/ §"Derivation, approval, and
+  durability".
+type: object
+required:
+  - entries
+additionalProperties: false
+properties:
+  entries:
+    type: array
+    description: >-
+      One item per retired probe id. Empty when no probe id was retired.
+    items:
+      $ref: "#/$defs/RetiredEntry"
+$defs:
+  RetiredEntry:
+    type: object
+    description: >-
+      One retired probe id. With a valid approval, committed, and not predating
+      a removal of its id, it accounts for that removal: the runner then lists
+      it in the report's Provenance instead of reporting the id removed.
+    required:
+      - id
+      - reason
+      - detail
+      - recorded_at
+      - last_revision
+    additionalProperties: false
+    properties:
+      id:
+        type: string
+        minLength: 1
+        description: >-
+          The retired probe id: the `id` a probe file carried, or the file name
+          stem of a probe file that did not parse. No kebab-case pattern, since
+          the stem of an unparseable file need not be one.
+      reason:
+        type: string
+        enum:
+          - capability-removed
+          - declaration-removed
+          - duplicate
+          - derived-in-error
+        description: >-
+          Why the probe left the set, as exactly one of four closed codes: the
+          capability it measured is gone, the declaration it answered to is
+          gone, it duplicated another probe, or it should never have been
+          derived. Replacing a probe by another under the same id is none of them: the
+          replacement takes a new id.
+      detail:
+        type: string
+        minLength: 1
+        description: >-
+          The specifics behind the code, in the operator's words: which change
+          removed the capability or the declaration, which probe it duplicated.
+          Never a verdict.
+      recorded_at:
+        type: string
+        description: >-
+          UTC time the retire operation recorded the entry, in ISO 8601 form.
+          Quote it in YAML, or the loader turns it into a timestamp object.
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z$"
+      last_revision:
+        type: string
+        description: >-
+          The commit in which the probe last existed, as the runner's removed
+          finding names it: a full object id, SHA-1 (40 hex) or SHA-256
+          (64 hex).
+          Recorded for the reader; a squash merge may drop it from the history.
+        pattern: "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+      approval:
+        $ref: "#/$defs/Approval"
+  Approval:
+    type: object
+    description: >-
+      The operator's approval of this retirement, in the probe schema's shape.
+      A record without one takes no effect: the id stays removed.
+    required:
+      - approved_at
+      - approved_by
+    additionalProperties: false
+    properties:
+      approved_at:
+        type: string
+        description: >-
+          UTC time of the approval, in ISO 8601 form; quote it in YAML.
+        pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?Z$"
+      approved_by:
+        type: string
+        minLength: 1
+        description: Who approved the retirement.
+      observation_digest:
+        type: string
+        description: >-
+          Carried over from the probe's approval shape; a retirement executes
+          nothing, so the runner does not read it.
+        pattern: "^[0-9a-f]{64}$"
+      mode:
+        type: string
+        enum: [derived, reconfirmed]
+        description: >-
+          Carried over from the probe's approval shape; the runner does not read
+          it for a retirement.
+examples:
+  - entries:
+      - id: legacy-csv-export
+        reason: capability-removed
+        detail: >-
+          The CSV export was removed with the v3 API; no declaration names it
+          any more.
+        recorded_at: "2026-11-10T09:00:00Z"
+        last_revision: 9feca6a8d2c1b7e4f0a3c5d6e7f8091a2b3c4d5e
+        approval:
+          approved_at: "2026-11-10T09:05:00Z"
+          approved_by: nolte
+  - entries: []
