@@ -2264,6 +2264,90 @@ def test_674_R4_re_derivation_onto_an_ambiguous_locator_cannot_anchor(sectioned,
     assert "heading 3.1 is ambiguous (2 matches)" in reason
 
 
+# #710: a locator turned ambiguous by a duplicate elsewhere is invalid as an
+# anchor (stale at HEAD, can't be recorded), but its own section is untouched,
+# so it is no declaration change a re-derivation could answer.
+DUPLICATE_31 = ("## 4. Rules", "### 3.1 Duplicate\n\n## 4. Rules")
+BULK_5 = "\n## 5 Bulk\n\nExports 1 collection.\n"
+
+
+def _duplicate_and_bulk(target: Target) -> None:
+    _edit(target, *DUPLICATE_31)
+    target.write(DECL, (target.path / DECL).read_text() + BULK_5)
+
+
+def test_710_re_derivation_after_only_a_duplicate_heading_is_weakened(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, locators=(("heading", "3.1"),), argv=marker_argv(marker, "3"))
+    _duplicate_and_bulk(sectioned)
+    sectioned.commit("a second 3.1 heading and a new section 5")
+    _reanchor(sectioned, rel, locators=[("heading", "5")], expected_value=1)
+    sectioned.commit("re-derive onto section 5 and lower the bar")
+    reason = _weakened_reason(sectioned, marker)
+    assert "weakened: re-baselined without a declaration change" in reason, reason
+
+
+def test_710_re_derivation_through_a_rename_after_only_a_duplicate_heading_is_weakened(sectioned, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, locators=(("heading", "3.1"),), argv=marker_argv(marker, "3"))
+    _duplicate_and_bulk(sectioned)
+    sectioned.commit("a second 3.1 heading and a new section 5")
+    sectioned.git("mv", DECL, "docs/v2.md")
+    _reanchor(sectioned, rel, locators=[("heading", "5")], expected_value=1, declaration_path="docs/v2.md")
+    sectioned.commit("rename the declaration, re-derive onto section 5 and lower the bar")
+    reason = _weakened_reason(sectioned, marker)
+    assert "weakened: re-baselined without a declaration change" in reason, reason
+
+
+def test_710_re_derivation_after_a_real_change_beside_a_duplicate_heading_is_clean(sectioned, tmp_path):
+    rel = _section_probe(sectioned, locators=(("heading", "3.1"),), argv=marker_argv(tmp_path / "ran", "1"))
+    _duplicate_and_bulk(sectioned)
+    _edit(sectioned, "Exports 3 collections.", "Exports 1 collection.")
+    sectioned.commit("a second 3.1 heading, section 3.1 really changed, a new section 5")
+    _reanchor(sectioned, rel, locators=[("heading", "5")], expected_value=1)
+    sectioned.commit("re-derive onto section 5 and lower the bar")
+    _assert_clean(sectioned)
+
+
+def test_710_fall_back_to_a_file_anchor_after_only_a_duplicate_heading_cannot_lower_the_bar(sectioned, tmp_path):
+    """Sections to a blob: anchor answers to the same change question as sections to sections."""
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, locators=(("heading", "3.1"),), argv=marker_argv(marker, "3"))
+    _edit(sectioned, *DUPLICATE_31)
+    sectioned.commit("a second 3.1 heading")
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    del data["declaration"]["sections"]
+    data["derived_from"] = "blob:" + sectioned.git("hash-object", DECL)
+    data["expected"]["value"] = 1
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("fall back to the file anchor and lower the bar")
+    assert f"but the anchored sections of {DECL} did not change in between" in _weakened_reason(sectioned, marker)
+
+
+@pytest.mark.parametrize("rename", [False, True])
+def test_710_re_derivation_onto_a_section_that_was_only_ambiguous_at_the_recording_is_weakened(
+        sectioned, tmp_path, rename):
+    """The new anchor's section 5 was duplicated at the recording; dropping the copy changes nothing in it.
+
+    Section 3.1 really changed, so the previous anchor moved; but the bar is
+    lowered onto section 5, whose bytes are the recording's, as without the copy.
+    """
+    marker = tmp_path / "ran"
+    sectioned.write(DECL, SECTIONED + BULK_5 + BULK_5)
+    sectioned.commit("section 5 twice")
+    rel = _section_probe(sectioned, locators=(("heading", "3.1"),), argv=marker_argv(marker, "3"))
+    path = DECL
+    if rename:
+        path = "docs/v2.md"
+        sectioned.git("mv", DECL, path)
+        sectioned.commit("rename the declaration")
+    sectioned.write(path, SECTIONED.replace("Exports 3 collections.", "Exports 1 collection.") + BULK_5)
+    _reanchor(sectioned, rel, locators=[("heading", "5")], expected_value=1, declaration_path=path)
+    sectioned.commit("change 3.1, drop the copy of 5, re-derive onto 5 and lower the bar")
+    reason = _weakened_reason(sectioned, marker)
+    assert "but none of the sections it now anchors on changed since the previous derivation" in reason, reason
+
+
 @pytest.mark.parametrize("case, expected", [
     ("digest-edited", "does not match the digests in declaration.sections"),
     ("no-sections", "is a section anchor, but declaration.sections is absent"),
