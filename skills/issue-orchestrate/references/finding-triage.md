@@ -16,8 +16,8 @@ Every finding lands in exactly one outcome.
 
 | Condition | Test |
 |---|---|
-| (a) in scope | the finding lies in the issue's touch surface, or it's a same-pattern sibling of the defect the run fixes |
-| (b) plan stays valid | fixing it needs no operator decision and leaves the bounded verdict, the route, and the approved decomposition valid |
+| (a) in scope | the finding lies in the files or artifacts the issue's work packages touch, or it's a same-pattern sibling of the defect the run fixes |
+| (b) plan stays valid | fixing it needs no operator decision and leaves the bounded scope, the route, and the approved decomposition valid |
 | (c) reproduced | the run records a command with its actual output, or a `file:line` that shows it, per `spec/claude/claim-provenance/` |
 
 **Otherwise file it as its own issue** and reference it in the pull request's
@@ -33,12 +33,23 @@ has shown to be needed is a change without evidence.
 
 ## Who makes the fix
 
-The fix is part of the package whose touch surface it lies in, so the specialist that
+The fix is part of the package whose touched files it lies in, so the specialist that
 owns that package makes it. The dispatch brief already authorises it (next section), and
 condition (b) keeps it inside the approved decomposition, so it needs no new package and
 no new confirmation. A finding raised after the package returned goes back to the same
-specialist with the finding and its reproduction. The generalist fixes it only where the
-package itself had no matching specialist.
+specialist with the finding and its reproduction. A same-pattern sibling outside every
+package's touched files goes to the specialist of the package that fixed the defect, and
+the artifact adds the file to that package's touched files; that keeps the approved
+decomposition valid, because the package's problem statement already covers the class.
+The generalist fixes it only where the package itself had no matching specialist.
+
+## Under group delegation
+
+When `issue-batch-orchestrate` delegates the run (`references/group-delegation.md`), the
+group rule governs instead: `spec/project/issue-batch-integration/` §F conditions (a) and
+(b) bind, so the fix stays inside the member's matrix row. A sibling outside that row is
+reported back to the group run, never fixed here, and a filed issue references the group
+id. The delegated run has no pull request of its own; its findings go into its result.
 
 ## The dispatch-brief clause
 

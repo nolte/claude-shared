@@ -395,9 +395,10 @@ readership once the capability it describes is implemented, verified, and merged
   defect's class), into exactly one of two outcomes, aligned with
   `spec/project/issue-batch-integration/` §F. **Fix directly** in the same change,
   listed under the pull request's **Changes**, when all three hold: (a) the finding
-  lies in the issue's touch surface or is a same-pattern sibling of the defect the
-  run fixes; (b) fixing it needs no operator decision and leaves the bounded verdict,
-  the route, and the approved decomposition valid; (c) it's **reproduced**, meaning
+  lies in the files or artifacts the issue's work packages touch (§Decomposition
+  into work packages) or is a same-pattern sibling of the defect the run fixes;
+  (b) fixing it needs no operator decision and leaves the bounded scope (§Routing to
+  the formal pipeline), the route, and the approved decomposition valid; (c) it's **reproduced**, meaning
   the run records a command with its actual output or a `file:line` that shows it,
   per `spec/claude/claim-provenance/`. **Otherwise file it as its own issue** and
   reference it in the pull request's **Risk / rollout notes**. A new issue for a
@@ -413,8 +414,8 @@ readership once the capability it describes is implemented, verified, and merged
 - **MUST**, when `Repaired` is less than `Hits`, repair in the same change every
   remaining site that meets the finding-triage conditions above, and, where no guard
   holds what remains, file those sites as their own issues and reference them
-  under the four fields before the orchestration closes. Leaving them named only in the
-  pull-request body loses them at merge, which is the failure mode that produced
+  under the four fields before the orchestration closes. Leaving them named only in
+  the pull-request body loses them at merge, which is the failure mode that produced
   the predecessor-naming chains this rule answers
 - **MUST** remove the pre-analysis artifact from the feature branch per
   §Pre-analysis artifact lifecycle once every package is implemented and the gate
@@ -461,10 +462,12 @@ These criteria apply to runs started after the transient pre-analysis rule becam
 - [ ] For every orchestration run that produced a `fix`-typed pull request, that
   pull request carries a completed `## Class sweep` section, its `Predicate` was
   actually run, and either `Repaired` equals `Hits`, a guard is named, or the
-  remaining sites exist as referenced issues
+  remaining sites exist as referenced issues, none of which met conditions (a) to
+  (c) of the finding-triage rule
 - [ ] For every orchestration run, each finding raised beside the work packages is
   recorded with its outcome: fixed directly (listed under **Changes**, with its
-  reproduction) or filed as a referenced issue; no reproduced finding that meets
+  reproduction), filed as a referenced issue, or, when not reproduced, dismissed with
+  the observation that would settle it; no reproduced finding that meets
   conditions (a) to (c) of the finding-triage rule was filed instead of fixed
 - [ ] For every orchestration run classified `security` or `spec-change`, the
   pre-analysis artifact records an explicit operator classification-confirmation step
