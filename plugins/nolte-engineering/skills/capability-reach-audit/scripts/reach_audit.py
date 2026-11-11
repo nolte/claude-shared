@@ -1404,6 +1404,26 @@ def _section_mismatches(git: Git, commit: str, rel: str, locators: list[tuple[st
     return problems
 
 
+def _sections_changed(git: Git, commit: str, rel: str, locators: list[tuple[str, str, str]]) -> bool:
+    """Whether the anchored content of ``locators`` differs at ``commit``: the change question, not validity.
+
+    A locator's content changed when it is not found there, or when none of its
+    matches carries the recorded digest. An ambiguous locator one of whose
+    matches still carries it did not change: a duplicate added elsewhere in the
+    file leaves the anchored bytes as they were, so it can't count as the
+    declaration change a re-derivation answers to. Whether the anchor is still
+    valid (each locator resolving exactly once) is _section_mismatches' question,
+    asked where an anchor is proven, recorded, or reported at HEAD.
+    """
+    content = git.file_bytes(commit, rel)
+    if content is None:
+        return bool(locators)
+    for kind, locator, digest in locators:
+        if not any(section_digest(found) == digest for found in find_sections(content, kind, locator)):
+            return True
+    return False
+
+
 # --------------------------------------------------------------------------- #
 # Change detection (R2, R3, R6)
 # --------------------------------------------------------------------------- #
@@ -1919,7 +1939,10 @@ class PriorAnchor(NamedTuple):
 
     ``problem``: why it is unproven, or None. ``before``: the blob of the
     declaration the previous derivation saw. ``changed``: whether the anchored
-    content differs at the baseline. ``befores`` (file anchors) and
+    content differs at the baseline (for a section anchor per _sections_changed:
+    a locator not found, or none of whose matches carries its digest; an
+    ambiguous locator one match of which still carries it is unchanged).
+    ``befores`` (file anchors) and
     ``anchored`` (section anchors, one locator list per alternative): every
     state that counts as the anchored content. Usually one; for an anchor stale
     from the probe's first revision (_prior_anchor's ``origin``) two: what the
@@ -1938,7 +1961,7 @@ class PriorAnchor(NamedTuple):
 def _unchanged_in(git: Git, prev_df: str, prior: PriorAnchor, commit: str, path: str) -> bool:
     """Whether ``path`` at ``commit`` holds the previously anchored content, in any state that counts as it."""
     if _is_section_anchor(prev_df):
-        return any(alt and not _section_mismatches(git, commit, path, alt) for alt in prior.anchored)
+        return any(alt and not _sections_changed(git, commit, path, alt) for alt in prior.anchored)
     return git.blob_at(commit, path) in prior.befores
 
 
@@ -1952,8 +1975,11 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
     anchor must be the declaration's blob at ``recording``; a commit anchor's
     blob must equal it, or, when a squash merge dropped the commit, the blob at
     ``recording`` stands in; a section anchor's digests must be its sections at
-    ``recording``, and it changed when any of them differs at ``baseline`` or no
-    longer resolves. An anchor that never matched the declaration shows no
+    ``recording`` (each resolving exactly once, _section_mismatches), and it
+    changed when any of them is not found at ``baseline`` or none of its matches
+    there carries its digest (_sections_changed): a locator turned ambiguous by
+    a duplicate elsewhere, its own section untouched, is no change a
+    re-derivation could answer. An anchor that never matched the declaration shows no
     change, and accepting it would let one commit record a weakening under a
     made-up anchor and the next restore the real one.
 
@@ -2001,7 +2027,7 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
             return unproven(f"{moved}, but the previous derived_from {shown} is not the content of its sections "
                             f"of {safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration "
                             "change can be shown")
-        return PriorAnchor(None, recorded, bool(_section_mismatches(git, baseline, rel, locators)),
+        return PriorAnchor(None, recorded, _sections_changed(git, baseline, rel, locators),
                            anchored=(locators,))
     if _is_content_anchor(prev_df):
         if not _BLOB_ANCHOR_RE.match(prev_df):
@@ -2112,8 +2138,9 @@ def _moved_unchanged(git: Git, prev_df: str, prior: PriorAnchor, baseline: str, 
     """Whether the previously anchored content is, unchanged, at ``new_rel`` in ``baseline``.
 
     That is a rename of the declaration, whichever anchor form either side has:
-    the sections the previous anchor named all resolve there with the digests
-    of one state that counts as the anchored content (``prior.anchored``), or
+    the sections the previous anchor named are all there with the digests of
+    one state that counts as the anchored content (``prior.anchored``; a match
+    carrying the digest suffices, _sections_changed), or
     the file holds one such blob (``prior.befores``).
     """
     return _unchanged_in(git, prev_df, prior, baseline, new_rel)
@@ -2197,8 +2224,8 @@ def _rename_commit(git: Git, baseline: str, recording: str, rel: str, new_rel: s
 def _changed_at(git: Git, prev_df: str, prior: PriorAnchor, baseline: str, new_rel: str) -> bool:
     """Whether the content at ``new_rel`` in ``baseline`` differs from every state that counts as the anchored content.
 
-    For a section anchor: in each state one of its sections no longer matches
-    there (or doesn't resolve once); for a content or commit anchor: the file
+    For a section anchor: in each state one of its locators is not found there
+    or none of its matches carries the digest (_sections_changed); for a content or commit anchor: the file
     exists and is none of the blobs that count as the one it saw.
     """
     if _is_section_anchor(prev_df):
@@ -2238,7 +2265,11 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     the sections at the recording commit (each locator resolving to exactly one
     section, so an ambiguous locator cannot anchor), the previous anchor must be
     proven where it was recorded (_prior_anchor), and the previously anchored
-    content must have changed since. Two moves re-approve nothing and are clean
+    content must have changed since. Each "changed since" is the change
+    question (_sections_changed), not the validity one: a locator that turned
+    ambiguous while one of its matches still carries the recorded digest did
+    not change, so a duplicate heading added elsewhere can't justify lowering
+    the bar. Two moves re-approve nothing and are clean
     only as continuations of a clean previous derivation: the migration of a
     content or commit anchor onto sections while the file is unchanged (only
     derived_from, declaration.sections, and the approval stamp may differ), and
@@ -2267,7 +2298,7 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     if new_rel != rel and changed:
         # A renamed declaration continues the old one, so the new sections are
         # compared with the old path where the previous derivation was recorded.
-        unanswered = None if _section_mismatches(git, recording, rel, locators) else (
+        unanswered = None if _sections_changed(git, recording, rel, locators) else (
             f"{moved}, but none of the sections it now anchors on changed since the previous derivation "
             f"was recorded in {recording[:12]}")
         return _path_move_problem(git, moved, prev_df, new_df, prior, prior_doc, new_doc, baseline, recording,
@@ -2282,7 +2313,7 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
         return _pure_move_problem(moved, prior_doc, new_doc)
     # The move must answer to a change of what the new anchor anchors on: at
     # least one of its sections differs from the recording commit.
-    if not _section_mismatches(git, recording, new_rel, locators):
+    if not _sections_changed(git, recording, new_rel, locators):
         if new_rel != rel:
             return (f"{moved}, but {safe_text(new_rel)} already held these sections when the previous derivation "
                     f"was recorded in {recording[:12]}, so re-pointing at it shows no declaration change")
