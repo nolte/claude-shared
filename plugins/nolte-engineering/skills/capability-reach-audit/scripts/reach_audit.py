@@ -704,6 +704,21 @@ def _git_env() -> dict[str, str]:
     return env
 
 
+def _same_bytes(working: bytes, committed: bytes) -> bool:
+    """Whether a working-tree file holds the committed blob.
+
+    Byte for byte, with one exception: the exact rendering ``core.autocrlf``
+    (or ``eol=crlf``) checks out, every LF of a blob that holds no CR written
+    as CRLF. That is no change: the runner reads every probe and declaration
+    with universal newlines, so it parses the same text either way, and
+    refusing it would read every checkout on a CRLF platform as uncommitted.
+    Nothing else is normalised; a clean filter's rewrite is a change.
+    """
+    if working == committed:
+        return True
+    return b"\r" not in committed and working == committed.replace(b"\n", b"\r\n")
+
+
 class Git:
     def __init__(self, repo: Path) -> None:
         self.repo = repo
@@ -761,9 +776,45 @@ class Git:
         return self.out("--literal-pathspecs", "log", "-1", "--format=%H", rev, "--", path).strip() or None
 
     def is_dirty(self, path: str) -> bool:
-        """Uncommitted changes to ``path``; literal pathspecs keep a name like ``w[x].yml`` from matching ``wx.yml``."""
-        return bool(self.out("--literal-pathspecs", "status", "--porcelain", "--untracked-files=no", "--",
-                             path).strip())
+        """Uncommitted changes to ``path``: staged, or in the working tree against HEAD.
+
+        ``git status`` would answer from the index's view of the working tree,
+        which the target controls: a clean filter (``filter.<name>.clean`` with
+        an attribute, from any config file or ``.git/info/attributes``) hands
+        git the approved text instead of the edited file, and
+        ``update-index --assume-unchanged`` or ``--skip-worktree`` stops git
+        from looking at the file at all. Either way an uncommitted lowering read
+        as unchanged. So the index is compared with HEAD by object id
+        (``diff-index --cached``, which reads no working tree), and the working
+        tree file's bytes with HEAD's blob directly (``cat-file blob``, no
+        filter): any other byte is a change (_same_bytes()).
+
+        A path HEAD doesn't hold is dirty only when it is staged, as before: an
+        untracked file is no uncommitted change of a committed one. A symlink
+        matches only a link at HEAD with the same target; a directory or
+        submodule at HEAD falls back to ``git status``.
+        """
+        staged = self.run("--literal-pathspecs", "diff-index", "--cached", "--quiet", "HEAD", "--", path)
+        if staged.returncode not in (0, 1):
+            raise AuditError(f"`git diff-index --cached HEAD -- {safe_text(path)}` failed: {safe_text(staged.stderr)}")
+        if staged.returncode == 1:
+            return True
+        entry = self.entry_at("HEAD", path)
+        if entry is None:
+            return False
+        kind, blob = entry
+        file = self.repo / path
+        if kind not in ("blob", "link"):
+            return bool(self.out("--literal-pathspecs", "status", "--porcelain", "--untracked-files=no", "--",
+                                 path).strip())
+        committed = self.read_blob(blob)
+        if committed is None:
+            raise AuditError(f"`git cat-file blob {blob}` failed for {safe_text(path)} at HEAD")
+        if kind == "link":
+            return not file.is_symlink() or os.fsencode(os.readlink(file)) != committed
+        if file.is_symlink() or not file.is_file():
+            return True
+        return not _same_bytes(file.read_bytes(), committed)
 
     def file_history(self, path: str) -> list[tuple[str, str]]:
         """(commit, path at that commit), newest first, following renames.
@@ -1590,7 +1641,7 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         kept = own[:next((i for i, (c, p, _, _) in enumerate(own) if (c, p) in cut), len(own))]
     if len(kept) < len(own):
         origin = None
-    history = _without_deletions(git, kept, yaml)
+    history = _lineage(git, _without_deletions(git, kept, yaml), probe.file)
     if not history:
         if not own:
             gap = gap or _merge_origin(git, probe.file)
@@ -1618,6 +1669,76 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         return newest, [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
     return run[-1], run[:-1], dirty, history[len(run):], merges, origin
+
+
+def _lineage(git: Git, history: list[tuple[str, str]], current: str) -> list[tuple[str, str]]:
+    """The probe revisions in ``history`` (newest first) that each one before it was made from.
+
+    git --follow --topo-order lists every commit before its parents, but the
+    list is no chain of parents: a revision on a side branch that a merge
+    dropped (``-s ours``, ``-X ours``, a conflict resolved to the main line's
+    side) sits between two main-line revisions. Read as the next revision's
+    predecessor, it would stand in for the approved state that revision was
+    really made from: a lowering after a re-derivation would read as a
+    re-derivation of the dropped side revision. Every check that reads the
+    list as a chain (the run carrying today's anchor, ``earlier[0]`` as the
+    previous derivation, _run_length() and the recording it finds, the spans
+    _merges_changing() searches) therefore reads this chain instead.
+
+    The chain starts at the revision HEAD's probe (at ``current``) was made
+    from: the first listed revision holding HEAD's file that no listed
+    revision descends from. Topological order lists two parallel lines in
+    either order, so the newest listed revision can be one whose content a
+    merge dropped, while the line the merge kept, a lowering after its own
+    re-derivation included, would never be read. A revision some listed
+    revision descends from was changed after it, so HEAD holding its file again
+    is a restore, and the chain starts at the newest listed revision as before
+    (probe_changes() then names the merge that restored it). When no listed
+    revision holds HEAD's file, a merge made it out of more than one line
+    (_merges_changing() names it, and the edits it combined are as much
+    changes as the merge): the list is read in its own order, as before. The
+    predecessor of a
+    revision made in commit ``c`` is the first later-listed revision ``(y,
+    p)`` that is an ancestor of ``c``'s parent and whose file is the one that
+    parent holds at ``p``: the content ``c`` was made from. A revision skipped
+    on the way is not the probe's content on this line; topological order
+    lists no ancestor of the predecessor before it, so none of the chain is
+    skipped. When no listed revision holds the parent's content (a merge
+    changed it in between, which _merges_changing() names; or the path was
+    deleted there and restored, see _without_deletions()), the predecessor is
+    the first later-listed ancestor of ``c``, as close to the list as the
+    ancestry allows; failing that, the next listed revision.
+    """
+    if len(history) < 2:
+        return list(history)
+    blobs: dict[tuple[str, str], str | None] = {}
+
+    def blob(commit: str, path: str) -> str | None:
+        if (commit, path) not in blobs:
+            blobs[(commit, path)] = git.blob_at(commit, path)
+        return blobs[(commit, path)]
+
+    at_head = git.blob_at("HEAD", current)
+    start = next((i for i, (c, p) in enumerate(history) if at_head is not None and blob(c, p) == at_head), None)
+    if start is None:
+        return list(history)
+    if any(git.is_ancestor_or_equal(history[start][0], c) for c, _ in history[:start]):
+        start = 0
+    chain = [history[start]]
+    rest = history[start + 1:]
+    while rest:
+        commit = chain[-1][0]
+        parents = git.parents(commit)
+        found = None
+        if len(parents) == 1:
+            found = next((i for i, (c, p) in enumerate(rest)
+                          if blob(c, p) is not None and blob(c, p) == blob(parents[0], p)
+                          and git.is_ancestor_or_equal(c, parents[0])), None)
+        if found is None:
+            found = next((i for i, (c, _) in enumerate(rest) if git.is_ancestor_or_equal(c, commit)), 0)
+        chain.append(rest[found])
+        rest = rest[found + 1:]
+    return chain
 
 
 def _without_deletions(git: Git, log: list[tuple[str, str, str, str]], yaml: Any) -> list[tuple[str, str]]:
