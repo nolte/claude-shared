@@ -419,10 +419,37 @@ verifiziert und gemergt ist.
   festhalten. Ein Sweep, dessen Prädikat nie ausgeführt wurde, berichtet eine Zahl,
   die niemand gemessen hat — schlimmer als kein Abschnitt, weil sie sich als Evidenz
   liest
-- **MUSS [MUST]**, wenn `Repaired` kleiner als `Hits` ist und kein Guard den Rest
-  hält, die Out-of-Scope-Stellen als eigene Issues anlegen und unter den vier Feldern
-  referenzieren, bevor die Orchestrierung schließt. Sie nur im Pull-Request-Body zu
-  benennen verliert sie beim Merge — genau der Fehlermodus, der die
+- **MUSS [MUST]** jeden Befund, der neben den eigenen Arbeitspaketen des Issues
+  auftaucht, ob von einem Reviewer, einem Verifikationsdurchlauf, dem Klassen-Sweep
+  oder einem dispatchten Spezialisten (ein veralteter Kommentar, eine falsche
+  Statuszeile, eine fehlende Assertion, eine Geschwister-Aufrufstelle der
+  Defektklasse), genau einem von zwei Ergebnissen zuordnen, abgestimmt auf
+  `spec/project/issue-batch-integration/` §F. **Direkt beheben** in derselben
+  Änderung, aufgeführt unter **Changes** des Pull Requests, wenn alle drei Bedingungen
+  gelten: (a) der Befund liegt in den Dateien oder Artefakten, die die Arbeitspakete
+  des Issues berühren (§Zerlegung in Arbeitspakete), oder ist ein Geschwister
+  desselben Musters wie der Defekt, den der Lauf behebt; (b) seine Behebung braucht
+  keine Operator-Entscheidung und lässt den begrenzten Umfang (§Routing in die formale
+  Pipeline), die Route und die freigegebene Zerlegung gültig; (c) er ist **reproduziert**, das heißt,
+  der Lauf hält einen Befehl mit seiner tatsächlichen Ausgabe oder eine `file:line`
+  fest, die ihn zeigt, gemäß `spec/claude/claim-provenance/`. **Andernfalls als eigenes
+  Issue anlegen** und in den **Risk / rollout notes** des Pull Requests referenzieren.
+  Ein neues Issue für einen reproduzierten Befund, der (a) bis (c) erfüllt, ist das
+  falsche Ergebnis, nicht das vorsichtige: Jedes solche Issue kostet später eine
+  Partitionszeile, eine Lane, einen Pull Request und ein Schließen für eine Änderung,
+  die dieser Lauf hätte mitnehmen können. Ein Befund, der behauptet, aber nicht
+  reproduziert ist, wird mit der Beobachtung angelegt oder verworfen, die ihn
+  entscheiden würde, und nie allein auf das Wort des Reviewers hin behoben. Jeder
+  Dispatch-Brief **MUSS [MUST]** den Spezialisten ermächtigen, Befunde, die (a) bis
+  (c) erfüllen, zu beheben und in seinem Ergebnis aufzulisten, statt sie unbehoben
+  aufzulisten. Ein Guard, der für die Änderung zu groß ist, bleibt gemäß
+  `spec/project/defect-class-guards/` ein eigenes Issue; die Triage holt nur kleine
+  Behebungen in die Änderung
+- **MUSS [MUST]**, wenn `Repaired` kleiner als `Hits` ist, in derselben Änderung jede
+  verbleibende Stelle reparieren, die die obigen Triage-Bedingungen erfüllt, und, wo
+  kein Guard das dann noch Verbleibende hält, diese Stellen als eigene Issues anlegen
+  und unter den vier Feldern referenzieren, bevor die Orchestrierung schließt. Sie
+  nur im Pull-Request-Body zu benennen verliert sie beim Merge — genau der Fehlermodus, der die
   Vorgänger-Nennungsketten erzeugt hat, auf die diese Regel antwortet
 - **MUSS [MUST]** das Voranalyse-Artefakt gemäß §Lebenszyklus des
   Voranalyse-Artefakts vom Feature-Branch entfernen, sobald jedes Paket umgesetzt und
@@ -466,7 +493,14 @@ Diese Kriterien gelten für Läufe, die begonnen haben, nachdem die Transient-Re
   produziert hat, trägt dieser Pull Request einen ausgefüllten Abschnitt
   `## Class sweep`, sein `Predicate` wurde tatsächlich ausgeführt, und entweder ist
   `Repaired` gleich `Hits`, ein Guard ist benannt, oder die verbleibenden Stellen
-  existieren als referenzierte Issues
+  existieren als referenzierte Issues, von denen keines die Bedingungen (a) bis (c)
+  der Triage-Regel erfüllte
+- [ ] Für jeden Orchestrierungslauf ist jeder Befund, der neben den Arbeitspaketen
+  auftauchte, mit seinem Ergebnis festgehalten: direkt behoben (unter **Changes**
+  aufgeführt, mit seiner Reproduktion), als referenziertes Issue angelegt oder, wenn
+  nicht reproduziert, mit der Beobachtung verworfen, die ihn entscheiden würde; kein
+  reproduzierter Befund, der die Bedingungen (a) bis (c) der Triage-Regel erfüllt,
+  wurde angelegt statt behoben
 - [ ] Für ein akquiriertes Issue existierte das Voranalyse-Artefakt unter
   `.audits/issue-orchestrate/<issue-number>/analysis.md` zur Dispatch-Zeit auf dem
   Feature-Branch des Laufs — nachträglich rekonstruierbar mit

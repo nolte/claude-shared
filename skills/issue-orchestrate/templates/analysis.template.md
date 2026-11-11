@@ -76,6 +76,16 @@ created: ""
 
 <!-- Questions for the operator that block or shape dispatch, or "none". -->
 
+## Findings
+
+<!-- One row per finding raised beside the work packages (reviewer, verification pass,
+     class sweep, specialist result), triaged per references/finding-triage.md.
+     Outcome: fixed directly (listed under the PR's Changes) | filed (referenced in
+     Risk / rollout notes) | dismissed (unreproduced, with the settling observation).
+| Finding | Source | Outcome | Reproduction | Issue |
+|---|---|---|---|---|
+-->
+
 ## Dispatch log
 
 <!-- Appended during operation 5; one line per package once its specialist reports.

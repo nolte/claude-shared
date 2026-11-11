@@ -389,10 +389,33 @@ readership once the capability it describes is implemented, verified, and merged
   the issue title, run it, and record the resulting `Hits` count. A sweep whose
   predicate was never executed reports a number nobody measured, which is worse
   than no section, because it reads as evidence
-- **MUST**, when `Repaired` is less than `Hits` and no guard holds the remainder,
-  file the out-of-scope sites as their own issues and reference them under the
-  four fields before the orchestration closes. Leaving them named only in the
-  pull-request body loses them at merge, which is the failure mode that produced
+- **MUST** triage every finding raised beside the issue's own work packages, by a
+  reviewer, a verification pass, the class sweep, or a dispatched specialist (a stale
+  comment, a wrong status row, a missing assertion, a sibling call site of the
+  defect's class), into exactly one of two outcomes, aligned with
+  `spec/project/issue-batch-integration/` §F. **Fix directly** in the same change,
+  listed under the pull request's **Changes**, when all three hold: (a) the finding
+  lies in the files or artifacts the issue's work packages touch (§Decomposition
+  into work packages) or is a same-pattern sibling of the defect the run fixes;
+  (b) fixing it needs no operator decision and leaves the bounded scope (§Routing to
+  the formal pipeline), the route, and the approved decomposition valid; (c) it's **reproduced**, meaning
+  the run records a command with its actual output or a `file:line` that shows it,
+  per `spec/claude/claim-provenance/`. **Otherwise file it as its own issue** and
+  reference it in the pull request's **Risk / rollout notes**. A new issue for a
+  reproduced finding that meets (a) to (c) is the wrong outcome, not the cautious
+  one: each such issue later costs a partition row, a lane, a pull request, and a
+  close for a change this run could have carried. A finding that's asserted but not
+  reproduced is filed or dismissed with the observation that would settle it, and
+  never fixed on the reviewer's word alone. Every dispatch brief **MUST** authorise
+  the specialist to fix findings that meet (a) to (c) and list them in its result,
+  rather than to list them unfixed. A guard too large for the change stays its own
+  issue per `spec/project/defect-class-guards/`; the triage moves only small fixes
+  into the change
+- **MUST**, when `Repaired` is less than `Hits`, repair in the same change every
+  remaining site that meets the finding-triage conditions above, and, where no guard
+  holds what remains, file those sites as their own issues and reference them
+  under the four fields before the orchestration closes. Leaving them named only in
+  the pull-request body loses them at merge, which is the failure mode that produced
   the predecessor-naming chains this rule answers
 - **MUST** remove the pre-analysis artifact from the feature branch per
   §Pre-analysis artifact lifecycle once every package is implemented and the gate
@@ -439,7 +462,13 @@ These criteria apply to runs started after the transient pre-analysis rule becam
 - [ ] For every orchestration run that produced a `fix`-typed pull request, that
   pull request carries a completed `## Class sweep` section, its `Predicate` was
   actually run, and either `Repaired` equals `Hits`, a guard is named, or the
-  remaining sites exist as referenced issues
+  remaining sites exist as referenced issues, none of which met conditions (a) to
+  (c) of the finding-triage rule
+- [ ] For every orchestration run, each finding raised beside the work packages is
+  recorded with its outcome: fixed directly (listed under **Changes**, with its
+  reproduction), filed as a referenced issue, or, when not reproduced, dismissed with
+  the observation that would settle it; no reproduced finding that meets
+  conditions (a) to (c) of the finding-triage rule was filed instead of fixed
 - [ ] For every orchestration run classified `security` or `spec-change`, the
   pre-analysis artifact records an explicit operator classification-confirmation step
   taken before the work-package table was populated

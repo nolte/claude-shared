@@ -173,6 +173,11 @@ via `pull-request-create`, whose precondition checks the slot. An outcome ordere
 another is handed on only once the predecessor's pull request has merged; until then it
 is recorded as `waiting-on <id>`, and a re-invocation resumes the dispatch.
 
+The partition doesn't grow during delivery. A lane triages its own findings per
+`spec/project/issue-orchestration/` §"Verification and traceability": it fixes a small,
+reproduced in-scope finding in the lane, and files anything else as a new issue that a
+later survey picks up, never as a member of this partition.
+
 The skill stops when every outcome is handed on or recorded as unhandable or waiting. It
 never implements, branches, or opens a pull request.
 

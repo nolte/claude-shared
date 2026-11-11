@@ -17,7 +17,10 @@ diff is a failed pass.
 
 ## The triage
 
-Every finding lands in exactly one of two outcomes.
+Every finding lands in exactly one of two outcomes. A single-issue run applies the same
+triage shape (in scope, plan stays valid, reproduced) with its conditions scoped to the
+issue, per `spec/project/issue-orchestration/` §"Verification and traceability"; the
+spec carries each rule's exact wording.
 
 **Fix directly**, recorded as a local adaptation, when **all three** hold:
 
