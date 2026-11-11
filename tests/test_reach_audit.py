@@ -3623,9 +3623,10 @@ def test_685_SEC101_a_replacement_created_in_a_merge_commit_is_judged_without_a_
     follow = ra.Git(sectioned.path).file_history("project/reach-probes/p2.yml")
     assert follow == [], follow
     code, report = run_audit(sectioned)
-    assert code == ra.EXIT_FINDINGS and row_of(report, "p2")[7] == ra.STATE_UNCOMMITTED
+    # Since #709 (K3) a probe created in a merge reads weakened, not uncommitted: it is committed.
+    assert code == ra.EXIT_FINDINGS and row_of(report, "p2")[7] == ra.STATE_WEAKENED
     old = row_of(report, "p1")
-    assert old[7] == ra.STATE_WEAKENED and "supersede by p2 not in effect: it is uncommitted" in _plain(old[9])
+    assert old[7] == ra.STATE_WEAKENED and "supersede by p2 not in effect: it is weakened" in _plain(old[9])
 
 
 def test_685_SEC101_a_claimant_renamed_and_re_id_d_over_a_rewritten_path_is_refused(target, tmp_path):
@@ -4813,24 +4814,24 @@ def test_688_a_renamed_weakened_probe_stays_weakened(target):
 def test_688_a_copy_of_a_probe_created_in_a_merge_gets_no_origin_finding(target, touched):
     """AC (e): measured before the fix, p2 read weakened, "does not create p2.yml but records a copy from p1.yml".
 
-    The source keeps its own verdict: uncommitted when no plain commit lists it
-    (SEC-101), weakened with an incomplete history when a later commit does (#702).
+    The source keeps its own verdict: weakened, naming the merge that created it, when no plain commit
+    lists it (SEC-101; uncommitted before #709), and weakened with an incomplete history when a later
+    commit does (#702).
     """
     blob = _blob(target)
-    _merge_side(target, in_merge=lambda: target.write_probe(make_probe(derived_from=blob)))
+    _, merge = _merge_side(target, in_merge=lambda: target.write_probe(make_probe(derived_from=blob)))
     later = _touch(target, P1_REL) if touched else None
     created = _template_copy(target)
     assert ra.Git(target.path).file_history(P2_REL)[0] == (created, P2_REL)
     code, report = run_audit(target)
-    # An uncommitted probe is not probed, but it is no finding of its own (existing behaviour).
-    assert code == (ra.EXIT_FINDINGS if touched else ra.EXIT_OK), report
+    assert code == ra.EXIT_FINDINGS, report
     new = row_of(report, "p2")
     assert new[1] == ra.REACHED and new[7] == ra.STATE_CLEAN, new
     old = row_of(report, "p1")
     if touched:
         assert old[7] == ra.STATE_WEAKENED and _plain(old[9]) == "weakened: " + _incomplete(later, P1_REL), old
     else:
-        assert old[7] == ra.STATE_UNCOMMITTED, old
+        assert old[7] == ra.STATE_WEAKENED and _plain(old[9]) == "weakened: " + _created_in_merge(merge), old
 
 
 @pytest.mark.parametrize("new_id", [False, True])
@@ -5017,8 +5018,9 @@ def test_688_SEC3_a_change_the_walk_does_not_list_is_reported_as_an_incomplete_h
     assert code == ra.EXIT_FINDINGS, report
     row = row_of(report, "xid")
     assert row[7] == ra.STATE_WEAKENED, row
-    assert (f"{lowering[:12]} changed {y} under the id xid, but the probe's history walk does not list it"
-            in _plain(row[9])), row[9]
+    # Since #709 (K5) the write lies off HEAD's first-parent line, so the reason names the merge that took it in.
+    assert (f"changed the probe against its first parent after {lowering[:12]} changed {y} under the id xid on a "
+            "merged line the probe's history walk does not list" in _plain(row[9])), row[9]
 
 
 @pytest.mark.parametrize("rename_back", [False, True])
@@ -6190,3 +6192,448 @@ def test_708_R4_a_stale_born_content_anchor_whose_file_was_missing_names_superse
     state, reason = _state(target)
     assert state == ra.STATE_WEAKENED, reason
     assert reason.endswith("no re-derivation heals it; supersede the probe"), reason
+
+
+# --------------------------------------------------------------------------- #
+# #709: runner hardening candidates from the #688 review (K1-K5)
+# --------------------------------------------------------------------------- #
+def _lowered_after_approval(target: Target, marker: Path) -> tuple[str, str, str]:
+    """p1 approved against a bar of 2 (observing 1), then a plain commit W lowers the bar to 1.
+
+    Returns ``(probe path, recording commit, W)``. Judged honestly this reads weakened, naming W;
+    a history that makes W the probe's first commit would read it clean and executed.
+    """
+    rel, recorded = _probe_observing_one(target, marker)
+    _rewrite(target, rel, expected_value=1)
+    return rel, recorded, target.commit("lower the bar")
+
+
+def _weakened_at(recorded: str, change: str) -> str:
+    return f"weakened: probe changed in {change[:12]} after its derivation was recorded in {recorded[:12]}"
+
+
+def test_709_K1_a_replace_ref_that_makes_the_weakening_a_root_commit_changes_nothing(target, tmp_path):
+    """Measured before the fix: `git replace W W'` (W' = W's tree, no parent) made W' the probe's
+    creating commit, so the lowered bar read clean, exit 0, executed."""
+    marker = tmp_path / "ran"
+    _, recorded, weakened = _lowered_after_approval(target, marker)
+    forged = target.git("commit-tree", f"{weakened}^{{tree}}", "-m", "forged root")
+    target.git("replace", weakened, forged)
+    assert target.git("log", "--format=%H", "HEAD").split() == [weakened]
+    assert _weakened_reason(target, marker) == _weakened_at(recorded, weakened)
+
+
+def test_709_K1_a_replace_ref_that_swaps_the_probe_blob_changes_nothing(target, tmp_path):
+    """A replaced probe blob reads the approved text wherever git shows W's probe."""
+    marker = tmp_path / "ran"
+    rel, recorded, weakened = _lowered_after_approval(target, marker)
+    target.git("replace", target.git("rev-parse", f"{weakened}:{rel}"), target.git("rev-parse", f"{recorded}:{rel}"))
+    assert "value: 2" in target.git("show", f"{weakened}:{rel}")
+    assert ra.Git(target.path).show(weakened, rel) == (target.path / rel).read_text()
+    assert _weakened_reason(target, marker) == _weakened_at(recorded, weakened)
+
+
+def test_709_K1_a_graft_file_that_makes_the_weakening_a_root_commit_changes_nothing(target, tmp_path):
+    """Measured on git 2.53: --no-replace-objects leaves info/grafts in force (the same W read clean, exit 0,
+    executed with it alone); GIT_GRAFT_FILE pointed at the null device neutralises it."""
+    marker = tmp_path / "ran"
+    _, recorded, weakened = _lowered_after_approval(target, marker)
+    (target.path / ".git" / "info").mkdir(exist_ok=True)
+    (target.path / ".git" / "info" / "grafts").write_text(weakened + "\n")
+    probe = subprocess.run(["git", "-C", str(target.path), "--no-replace-objects", "rev-list", "HEAD"],
+                           capture_output=True, text=True, check=True)
+    assert probe.stdout.split() == [weakened], "the flag alone no longer honours grafts: re-measure K1"
+    assert _weakened_reason(target, marker) == _weakened_at(recorded, weakened)
+
+
+def _single_commit_copy(target: Target, tmp_path: Path) -> Path:
+    """Another repository whose one root commit holds ``target``'s working tree: every probe reads clean there."""
+    other = Target(tmp_path / "other")
+    for path in (target.path / "project").rglob("*"):
+        if path.is_file():
+            other.write(path.relative_to(target.path).as_posix(), path.read_text())
+    other.write(DECL, (target.path / DECL).read_text())
+    other.commit("everything at once")
+    return other.path
+
+
+@pytest.mark.parametrize("variables", [("GIT_DIR",), ("GIT_DIR", "GIT_WORK_TREE"), ("GIT_DIR", "GIT_INDEX_FILE")])
+def test_709_K1_an_inherited_git_dir_does_not_redirect_the_audit(target, tmp_path, monkeypatch, variables):
+    """Measured before the fix: GIT_DIR naming a repository that holds the working tree in one root commit
+    made the audit read that history, so the lowered bar read clean, exit 0, executed."""
+    marker = tmp_path / "ran"
+    _, recorded, weakened = _lowered_after_approval(target, marker)
+    other = _single_commit_copy(target, tmp_path)
+    values = {"GIT_DIR": str(other / ".git"), "GIT_WORK_TREE": str(target.path),
+              "GIT_INDEX_FILE": str(other / ".git" / "index")}
+    for name in variables:
+        monkeypatch.setenv(name, values[name])
+    assert _weakened_reason(target, marker) == _weakened_at(recorded, weakened)
+
+
+@pytest.mark.parametrize("name", ["GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY"])
+def test_709_K1_an_inherited_index_or_object_store_does_not_change_a_clean_verdict(target, tmp_path, monkeypatch,
+                                                                                   name):
+    """Measured before the fix: an empty index read every file as staged for deletion (weakened, uncommitted
+    changes), and an empty object store hid the history (exit 2)."""
+    marker = tmp_path / "ran"
+    _content_probe(target, argv=marker_argv(marker))
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    monkeypatch.setenv(name, str(empty / "index") if name == "GIT_INDEX_FILE" else str(empty))
+    _assert_clean(target)
+    assert marker.exists()
+
+
+def test_709_K1_the_git_environment_keeps_only_the_config_file_choice(monkeypatch):
+    redirecting = ["GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY",
+                   "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE", "GIT_COMMON_DIR", "GIT_REPLACE_REF_BASE",
+                   "GIT_SHALLOW_FILE", "GIT_CONFIG_PARAMETERS", "GIT_CONFIG_COUNT", "GIT_CONFIG_KEY_0",
+                   "GIT_CONFIG_VALUE_0", "GIT_CEILING_DIRECTORIES", "GIT_TRACE"]
+    for name in redirecting:
+        monkeypatch.setenv(name, "/elsewhere")
+    monkeypatch.setenv("GIT_NO_REPLACE_OBJECTS", "0")
+    monkeypatch.setenv("GIT_GRAFT_FILE", "/elsewhere/grafts")
+    env = ra._git_env()
+    assert not [name for name in redirecting if name in env]
+    assert env["GIT_NO_REPLACE_OBJECTS"] == "1" and env["GIT_GRAFT_FILE"] == os.devnull
+    assert env["GIT_CONFIG_GLOBAL"] == os.environ["GIT_CONFIG_GLOBAL"] and env["GIT_CONFIG_NOSYSTEM"] == "1"
+    assert env["PATH"] == os.environ["PATH"]
+
+
+def test_709_K1_injected_config_does_not_reach_the_history_reads(target, tmp_path, monkeypatch):
+    """Config a surrounding `git -c` exports (GIT_CONFIG_COUNT/KEY/VALUE) reaches no git call of the runner.
+
+    Measured before the fix: an injected clean filter that writes the approved bar back made `git status`
+    read the uncommitted lowered bar as unchanged, so it read clean, exit 0, executed.
+    """
+    marker = tmp_path / "ran"
+    rel, _ = _probe_observing_one(target, marker)
+    _rewrite(target, rel, expected_value=1)
+    attributes = tmp_path / "attributes"
+    attributes.write_text("*.yml filter=approved\n")
+    injected = {"core.attributesFile": str(attributes), "filter.approved.clean": "sed 's/value: 1$/value: 2/'"}
+    monkeypatch.setenv("GIT_CONFIG_COUNT", str(len(injected)))
+    for i, (key, value) in enumerate(injected.items()):
+        monkeypatch.setenv(f"GIT_CONFIG_KEY_{i}", key)
+        monkeypatch.setenv(f"GIT_CONFIG_VALUE_{i}", value)
+    assert _weakened_reason(target, marker) == "weakened: probe file has uncommitted changes"
+
+
+def test_709_K2_a_probe_directory_listing_that_fails_stops_the_run(target, tmp_path, monkeypatch, capsys):
+    """Measured before the fix: a failing `ls-tree` read as an empty probe directory at HEAD."""
+    marker = tmp_path / "ran"
+    _content_probe(target, argv=marker_argv(marker))
+    real = ra.Git.run
+
+    def failing_listing(self, *args):
+        if "ls-tree" in args and args[-1] == ra.PROBE_DIR.as_posix() + "/":
+            return subprocess.CompletedProcess(["git", *args], 128, "", "fatal: not a tree object")
+        return real(self, *args)
+
+    monkeypatch.setattr(ra.Git, "run", failing_listing)
+    with pytest.raises(ra.AuditError) as exc:
+        ra.run(str(target.path), clock=lambda: FIXED_NOW)
+    assert exc.value.code == ra.EXIT_ERROR and "fatal: not a tree object" in str(exc.value), exc.value
+    assert ra.main(["--repo", str(target.path)]) == ra.EXIT_ERROR
+    assert "ls-tree" in capsys.readouterr().err
+    assert not marker.exists()
+
+
+def test_709_K2_a_probe_directory_head_does_not_hold_lists_nothing(target):
+    """`ls-tree` on a path the commit does not hold exits 0: an absent directory stays an empty listing."""
+    assert ra.Git(target.path).tree_entries("HEAD", ra.PROBE_DIR.as_posix()) == []
+
+
+
+def _created_in_merge(merge: str, path: str = P1_REL) -> str:
+    return (f"{path} is committed, but the probe's history walk lists no commit that creates it, and it was "
+            f"created inside merge {merge[:12]}: the probe's origin isn't in its listed history but in a merge the "
+            "walk can't follow, and a derivation recorded in a merge cannot be judged")
+
+
+def test_709_K3_a_probe_created_only_inside_a_merge_is_weakened_naming_the_merge(target, tmp_path):
+    """Measured before the fix: exit 0, `uncommitted`, "probe file is not committed", although the merge
+    committed it (the walk lists no revision, so probe_changes() returned no baseline)."""
+    marker = tmp_path / "ran"
+    blob = _blob(target)
+    _, merge = _merge_side(target, in_merge=lambda: target.write_probe(
+        make_probe(derived_from=blob, argv=marker_argv(marker))))
+    assert ra.Git(target.path).file_history(P1_REL) == []
+    assert _weakened_reason(target, marker) == "weakened: " + _created_in_merge(merge)
+
+
+def test_709_K3_a_probe_created_inside_a_merge_and_changed_in_a_later_one_names_both(target, tmp_path):
+    marker = tmp_path / "ran"
+    blob = _blob(target)
+    _, created = _merge_side(target, in_merge=lambda: target.write_probe(
+        make_probe(derived_from=blob, argv=marker_argv(marker, "1"), expected=dict(BAR_OF_TWO))))
+    _, lowered = _merge_side(target, "later", in_merge=lambda: _rewrite(target, P1_REL, expected_value=1))
+    reason = _weakened_reason(target, marker)
+    assert reason == "weakened: " + _created_in_merge(created).replace(
+        f"merge {created[:12]}:", f"merge {created[:12]} and changed in merge {lowered[:12]}:"), reason
+
+
+def test_709_K3_a_probe_created_inside_a_merge_with_uncommitted_edits_says_both(target, tmp_path):
+    marker = tmp_path / "ran"
+    blob = _blob(target)
+    _, merge = _merge_side(target, in_merge=lambda: target.write_probe(
+        make_probe(derived_from=blob, argv=marker_argv(marker))))
+    _rewrite(target, P1_REL, tier="T1")
+    assert _weakened_reason(target, marker) == ("weakened: " + _created_in_merge(merge)
+                                                + "; probe file has uncommitted changes")
+
+
+@pytest.mark.parametrize("staged", [False, True])
+def test_709_K3_an_untracked_or_only_staged_probe_still_reads_uncommitted(target, tmp_path, staged):
+    marker = tmp_path / "ran"
+    target.write_probe(make_probe(derived_from=_blob(target), argv=marker_argv(marker)))
+    if staged:
+        target.git("add", P1_REL)
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_OK, row[7:]
+    assert row[1] == ra.NOT_PROBED and row[7] == ra.STATE_UNCOMMITTED, row[7:]
+    assert _plain(row[9]).startswith("probe file is not committed"), row[9]
+    assert not marker.exists()
+
+
+def _restored_by_a_merge(target: Target, marker: Path, *, old_declaration: bool) -> tuple[str, str]:
+    """v1 approved at R; branch `old` forks there. Main changes the declaration and re-derives (C, clean);
+    `old` gets an unrelated commit; the merge M takes main's tree but sets the probe back to v1 (and, with
+    ``old_declaration``, the declaration too), so M's probe equals its second parent's. Returns ``(C, M)``."""
+    rel = _content_probe(target, argv=marker_argv(marker))
+    target.git("branch", "old")
+    old_text = (target.path / DECL).read_text()
+    v1 = (target.path / rel).read_text()
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    _rewrite(target, rel, derived_from=_blob_now(target, DECL))
+    rederived = target.commit("edit the declaration and re-derive")
+    target.git("checkout", "-q", "old")
+    target.write("old.txt", "old\n")
+    target.commit("unrelated work on old")
+    target.git("checkout", "-q", "main")
+    target.git("merge", "-q", "--no-ff", "--no-commit", "old")
+    target.write(rel, v1)
+    if old_declaration:
+        target.write(DECL, old_text)
+    merge = target.commit("merge old, restoring the probe")
+    assert target.git("rev-parse", f"{merge}^2:{rel}") == target.git("rev-parse", f"{merge}:{rel}")
+    assert target.git("status", "--porcelain") == ""
+    return rederived, merge
+
+
+@pytest.mark.parametrize("old_declaration", [False, True])
+def test_709_K4_a_merge_restoring_a_pre_baseline_probe_names_the_merge(target, tmp_path, old_declaration):
+    """Measured before the fix: weakened, but "probe file has uncommitted changes" on a clean tree: the
+    merge equals one parent for the probe, so the combined-diff search did not find it."""
+    marker = tmp_path / "ran"
+    rederived, merge = _restored_by_a_merge(target, marker, old_declaration=old_declaration)
+    assert _weakened_reason(target, marker) == (f"weakened: probe changed in merge {merge[:12]} after its "
+                                                f"derivation was recorded in {rederived[:12]}")
+
+
+def test_709_K4_the_same_restore_left_uncommitted_still_says_uncommitted(target, tmp_path):
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker))
+    v1 = (target.path / rel).read_text()
+    target.write(DECL, "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n")
+    _rewrite(target, rel, derived_from=_blob_now(target, DECL))
+    rederived = target.commit("edit the declaration and re-derive")
+    target.write(rel, v1)
+    assert _weakened_reason(target, marker) == "weakened: probe file has uncommitted changes"
+    assert rederived[:12] not in _weakened_reason(target, marker)
+
+
+RENAMED = "project/reach-probes/renamed.yml"
+DECL_V2 = "# Requirements\n\n## Export\n\nExports 3 collections, reworded.\n"
+
+
+def _backport(target: Target, marker: Path, shape: str) -> dict[str, str]:
+    """GitFlow across a rename. R approves p1 at P1_REL on main; `release` forks there. Main renames the
+    probe to RENAMED (N). Then, by ``shape``:
+
+    - ``decl-then-pick``: main changes the declaration and re-derives in one commit C; release commits the
+      same declaration change itself, then cherry-picks C (the probe change lands at P1_REL).
+    - ``pick``: release cherry-picks C alone, declaration and re-derivation together.
+    - ``reverse``: release changes the declaration and re-derives at P1_REL (W); main cherry-picks W, which
+      lands at RENAMED.
+    - ``no-pick``: main only renames; release changes the declaration and re-derives at P1_REL; the merge
+      combines the new path with the new content, which neither side had.
+
+    Release is then merged back into main (M). Returns the named commits.
+    """
+    _content_probe(target, argv=marker_argv(marker))
+    target.git("branch", "release")
+    target.git("mv", P1_REL, RENAMED)
+    named = {"N": target.commit("rename the probe")}
+
+    def rederive(path: str) -> str:
+        target.write(DECL, DECL_V2)
+        _rewrite(target, path, derived_from=_blob_now(target, DECL))
+        return target.commit("change the declaration and re-derive")
+
+    if shape in ("decl-then-pick", "pick"):
+        named["C"] = rederive(RENAMED)
+        target.git("checkout", "-q", "release")
+        if shape == "decl-then-pick":
+            target.write(DECL, DECL_V2)
+            target.commit("change the declaration on release")
+        target.git("cherry-pick", "-x", named["C"])
+        named["picked"] = target.git("rev-parse", "HEAD")
+    elif shape == "reverse":
+        target.git("checkout", "-q", "release")
+        named["W"] = rederive(P1_REL)
+        target.git("checkout", "-q", "main")
+        target.git("cherry-pick", "-x", named["W"])
+        named["C"] = target.git("rev-parse", "HEAD")
+        target.git("checkout", "-q", "release")
+    else:
+        target.git("checkout", "-q", "release")
+        named["W"] = rederive(P1_REL)
+    assert target.git("ls-tree", "--name-only", "HEAD", "--", P1_REL) == P1_REL
+    target.git("checkout", "-q", "main")
+    target.git("merge", "-q", "--no-ff", "--no-edit", "release")
+    named["M"] = target.git("rev-parse", "HEAD")
+    assert target.git("status", "--porcelain") == ""
+    assert target.git("ls-tree", "--name-only", "HEAD", "--", "project/reach-probes/") == RENAMED
+    return named
+
+
+@pytest.mark.parametrize("shape", ["decl-then-pick", "pick", "reverse"])
+def test_709_K5_a_backport_across_a_rename_merged_back_unchanged_is_clean(target, tmp_path, shape):
+    """Measured before the fix: exit 4, "<picked> changed project/reach-probes/p1.yml under the id p1, but the
+    probe's history walk does not list it, so the listed history is incomplete …" although the merge leaves
+    the probe byte-identical to main's."""
+    marker = tmp_path / "ran"
+    named = _backport(target, marker, shape)
+    assert target.git("rev-parse", f"{named['M']}^1:{RENAMED}") == target.git("rev-parse", f"{named['M']}:{RENAMED}")
+    unlisted = named["W"] if shape == "reverse" else named["picked"]
+    assert unlisted not in [c for c, _ in ra.Git(target.path).file_history(RENAMED)]
+    _assert_clean(target)
+    assert marker.exists()
+
+
+def _merge_named(merge: str, write: str) -> str:
+    return (f"merge {merge[:12]} on HEAD's first-parent line changed the probe against its first parent after "
+            f"{write[:12]} changed {P1_REL} under the id p1 on a merged line the probe's history walk does not "
+            "list, so no derivation a merge carried in can be judged")
+
+
+def test_709_K5_a_merge_combining_a_rename_and_a_release_re_derivation_stays_weakened_naming_the_merge(target,
+                                                                                                    tmp_path):
+    """5d, the #701 design line: neither side had the merged result, so the merge is named. Measured before the
+    fix with the reason "<W> changed … but the probe's history walk does not list it, so the listed history is
+    incomplete …" in front of the merge."""
+    marker = tmp_path / "ran"
+    named = _backport(target, marker, "no-pick")
+    reason = _weakened_reason(target, marker)
+    assert reason == (f"weakened: {_merge_named(named['M'], named['W'])}; probe changed in merge "
+                      f"{named['M'][:12]} after its derivation was recorded in {named['N'][:12]}"), reason
+    assert "listed history is incomplete" not in reason
+
+
+def _lowered_on_release(target: Target, marker: Path) -> dict[str, str]:
+    """R approves p1 against a bar of 2 (observing 1); `release` forks there; main renames the probe (N),
+    changes the declaration and re-derives (C, clean on its own); release lowers the bar at the old path (W)."""
+    rel, recorded = _probe_observing_one(target, marker)
+    target.git("branch", "release")
+    target.git("mv", rel, RENAMED)
+    named = {"R": recorded, "N": target.commit("rename the probe")}
+    target.write(DECL, DECL_V2)
+    _rewrite(target, RENAMED, derived_from=_blob_now(target, DECL))
+    named["C"] = target.commit("change the declaration and re-derive")
+    target.git("checkout", "-q", "release")
+    _rewrite(target, rel, expected_value=1)
+    named["W"] = target.commit("lower the bar on release")
+    target.git("checkout", "-q", "main")
+    return named
+
+
+def _merge_release_keeping_main(target: Target) -> str:
+    target.git("merge", "-q", "--no-ff", "--no-commit", "release")
+    target.git("checkout", "HEAD", "--", RENAMED)
+    if (target.path / P1_REL).exists():
+        target.git("rm", "-q", "-f", P1_REL)
+    merge = target.commit("merge release, keeping main's probe")
+    assert target.git("rev-parse", f"{merge}^1:{RENAMED}") == target.git("rev-parse", f"{merge}:{RENAMED}")
+    return merge
+
+
+def test_709_K5_ADV_a_lowered_bar_on_the_merged_line_that_the_merge_takes_is_weakened(target, tmp_path):
+    """(a) The merge takes release's lowered bar under main's new name."""
+    marker = tmp_path / "ran"
+    named = _lowered_on_release(target, marker)
+    target.git("merge", "-q", "--no-ff", "--no-edit", "release")
+    merge = target.git("rev-parse", "HEAD")
+    assert "value: 1" in target.git("show", f"HEAD:{RENAMED}")
+    reason = _weakened_reason(target, marker)
+    assert _merge_named(merge, named["W"]) in reason, reason
+
+
+def test_709_K5_ADV_a_lowered_bar_dropped_by_the_merge_and_taken_later_in_a_commit_is_weakened(target, tmp_path):
+    """(b) The merge keeps main's probe (W is excused there), a later plain commit takes the lowered bar."""
+    marker = tmp_path / "ran"
+    named = _lowered_on_release(target, marker)
+    _merge_release_keeping_main(target)
+    _rewrite(target, RENAMED, expected_value=1)
+    later = target.commit("take release's bar")
+    assert _weakened_reason(target, marker) == _weakened_at(named["C"], later)
+
+
+def test_709_K5_ADV_a_lowered_bar_dropped_by_one_merge_and_taken_by_a_later_merge_is_weakened(target, tmp_path):
+    """(c) W is excused at the first merge; a second merge of a branch that still carries it takes the
+    lowered bar. That merge descends from W and changes the probe against its first parent."""
+    marker = tmp_path / "ran"
+    named = _lowered_on_release(target, marker)
+    _merge_release_keeping_main(target)
+    target.git("checkout", "-q", "-b", "again", "release")
+    target.write("again.txt", "again\n")
+    target.commit("more release work")
+    target.git("checkout", "-q", "main")
+    target.git("merge", "-q", "--no-ff", "--no-commit", "again")
+    _rewrite(target, RENAMED, expected_value=1)
+    if (target.path / P1_REL).exists():
+        target.git("rm", "-q", "-f", P1_REL)
+    second = target.commit("merge again, taking its bar")
+    reason = _weakened_reason(target, marker)
+    assert _merge_named(second, named["W"]) in reason, reason
+
+
+def test_709_K5_ADV_a_lowered_bar_dropped_by_the_merge_reads_as_main_had_it(target, tmp_path):
+    """The excused case itself: the merge keeps main's approved probe, so release's lowered bar never reached
+    it, and the probe reads as main had it: clean, executed (observing 1 against 2: not reached)."""
+    marker = tmp_path / "ran"
+    _lowered_on_release(target, marker)
+    _merge_release_keeping_main(target)
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert row[7] == ra.STATE_CLEAN, row[7:]
+    assert "value: 2" in (target.path / RENAMED).read_text() and marker.exists()
+
+
+def test_709_K5_an_unlisted_write_on_heads_own_line_stays_a_gap(target):
+    """The excuse is only for a write off HEAD's first-parent line."""
+    git = ra.Git(target.path)
+    line = git.out("rev-list", "--first-parent", "HEAD", "--").split()
+    assert ra._merges_bringing(git, line[-1], line, {P1_REL}) == []
+
+
+def test_709_K5_ADV_a_dropped_lowered_bar_renamed_on_its_line_and_merged_again_as_is_is_weakened(target, tmp_path):
+    """(c) without any merge edit: a branch off release renames the lowered probe to main's name and a second
+    merge takes that file as it is, so the merge equals its second parent and no combined diff names it."""
+    marker = tmp_path / "ran"
+    named = _lowered_on_release(target, marker)
+    _merge_release_keeping_main(target)
+    target.git("checkout", "-q", "-b", "again", "release")
+    target.git("mv", P1_REL, RENAMED)
+    target.write(DECL, DECL_V2)
+    moved = target.commit("rename on the release line")
+    target.git("checkout", "-q", "main")
+    target.git("merge", "-q", "--no-ff", "--no-commit", "again")
+    target.git("checkout", "again", "--", RENAMED)
+    second = target.commit("merge again, taking its probe")
+    assert target.git("rev-parse", f"{second}^2:{RENAMED}") == target.git("rev-parse", f"{second}:{RENAMED}")
+    assert "value: 1" in target.git("show", f"HEAD:{RENAMED}")
+    reason = _weakened_reason(target, marker)
+    assert f"probe changed in {named['W'][:12]}, {moved[:12]} after its derivation was recorded in " in reason, reason

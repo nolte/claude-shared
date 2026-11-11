@@ -672,6 +672,38 @@ def _output_tail(result: CommandResult) -> str:
 # --------------------------------------------------------------------------- #
 # Git access (read-only)
 # --------------------------------------------------------------------------- #
+# Every git call reads the target's own objects, refs, and history, whatever the
+# repository or the caller's environment says. A ``refs/replace/*`` ref swaps one
+# object for another in every read, so a probe blob or commit could be judged by a
+# substitute: ``--no-replace-objects`` (and GIT_NO_REPLACE_OBJECTS for good
+# measure) turns replacement off. That flag does not turn off a legacy graft file
+# (``info/grafts``, which rewrites a commit's parents): measured on git 2.53, a
+# graft still cut the history under --no-replace-objects. GIT_GRAFT_FILE pointed
+# at the empty null device neutralises it; the variable is git's own
+# (environment.h) but undocumented, so test_709_K1_* pins the measurement, and
+# the advice it prints is switched off so it never reaches a reason.
+_GIT_ARGV = ("git", "--no-replace-objects", "-c", "advice.graftFileDeprecated=false")
+# The caller's environment may point git elsewhere: GIT_DIR, GIT_WORK_TREE,
+# GIT_INDEX_FILE, GIT_OBJECT_DIRECTORY, GIT_ALTERNATE_OBJECT_DIRECTORIES,
+# GIT_COMMON_DIR, GIT_NAMESPACE, GIT_REPLACE_REF_BASE, GIT_SHALLOW_FILE, and
+# GIT_CONFIG_PARAMETERS / GIT_CONFIG_COUNT / GIT_CONFIG_KEY_<n> (config a
+# surrounding `git -c` or a hook exports to every child, invisible in the
+# operator's config files). Every GIT_* variable is dropped except the three
+# that only choose which config files the operator's git reads; those govern
+# every other git command the operator runs too, and the history reads pin the
+# log and diff options that matter on the command line.
+_GIT_ENV_KEPT = frozenset({"GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM", "GIT_CONFIG_NOSYSTEM"})
+
+
+def _git_env() -> dict[str, str]:
+    """The environment for a git call: the caller's, without any GIT_* variable but the config-file choice."""
+    env = {key: value for key, value in os.environ.items()
+           if not key.upper().startswith("GIT_") or key.upper() in _GIT_ENV_KEPT}
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
+    env["GIT_GRAFT_FILE"] = os.devnull
+    return env
+
+
 class Git:
     def __init__(self, repo: Path) -> None:
         self.repo = repo
@@ -683,14 +715,17 @@ class Git:
         self.probe_sets: dict[str, "ProbeHistory"] = {}
 
     def run(self, *args: str) -> subprocess.CompletedProcess:
-        """Run git read-only. Output is decoded as UTF-8 with replacement: a historical
-        probe revision or a path that is not UTF-8 must yield a classified entry, not
-        a crash. core.quotePath is off so non-ASCII paths come back verbatim and can
-        be passed to ``git show`` again."""
+        """Run git read-only, on the target's own objects (_GIT_ARGV, _git_env()).
+
+        Output is decoded as UTF-8 with replacement: a historical probe revision
+        or a path that is not UTF-8 must yield a classified entry, not a crash.
+        core.quotePath is off so non-ASCII paths come back verbatim and can be
+        passed to ``git show`` again."""
         try:
             return subprocess.run(  # noqa: S603 - fixed argv, no shell
-                ["git", "-c", "core.quotePath=false", "-C", str(self.repo), *args],
+                [*_GIT_ARGV, "-c", "core.quotePath=false", "-C", str(self.repo), *args],
                 capture_output=True,
+                env=_git_env(),
                 text=True,
                 encoding="utf-8",
                 errors="replace",
@@ -828,12 +863,19 @@ class Git:
                         PROBE_DIR.as_posix())
 
     def tree_entries(self, commit: str, directory: str) -> list[tuple[str, str, str, str]]:
-        """``(mode, type, hash, path)`` of each entry directly under ``directory`` at ``commit``."""
+        """``(mode, type, hash, path)`` of each entry directly under ``directory`` at ``commit``.
+
+        A directory ``commit`` does not hold lists nothing (``ls-tree`` exits 0).
+        A failing ``ls-tree`` (a missing or corrupt tree object) stops the run
+        (AuditError): read as an empty directory, it would report every probe at
+        HEAD removed, or hide that HEAD carries one.
+        """
         if commit.startswith("-"):
             raise AuditError(f"refusing the revision {safe_text(commit)}")
         res = self.run("--literal-pathspecs", "ls-tree", "-z", commit, "--", directory.rstrip("/") + "/")
         if res.returncode != 0:
-            return []
+            raise AuditError(f"`git ls-tree {safe_text(commit)} -- {safe_text(directory)}/` failed: "
+                             f"{safe_text(res.stderr)}")
         entries = []
         for record in res.stdout.split("\x00"):
             meta, _, name = record.partition("\t")
@@ -906,9 +948,10 @@ class Git:
     def _batch(self, args: list[str], ids: list[str]) -> bytes:
         try:
             res = subprocess.run(  # noqa: S603 - fixed argv, no shell
-                ["git", "-C", str(self.repo), *args],
+                [*_GIT_ARGV, "-C", str(self.repo), *args],
                 input=("\n".join(ids) + "\n").encode("ascii"),
                 capture_output=True,
+                env=_git_env(),
                 timeout=GIT_TIMEOUT_SECONDS,
                 check=False,
             )
@@ -920,7 +963,7 @@ class Git:
             raise AuditError(f"`git {' '.join(args)}` failed: {safe_text(res.stderr.decode('utf-8', 'replace'))}")
         return res.stdout
 
-    def merges_changing(self, since: str, until: str, path: str) -> list[str]:
+    def merges_changing(self, since: str | None, until: str, path: str) -> list[str]:
         """Merge commits in ``since..until`` whose ``path`` differs from every parent, newest first.
 
         ``--full-history`` walks every parent of every merge: default history
@@ -940,11 +983,11 @@ class Git:
         file_history() lists in topological order, so a listed older revision is
         never a descendant of a newer one, but it can sit on a parallel line
         that is no ancestor either. The search then fails closed: it covers
-        every merge reachable from ``until``.
+        every merge reachable from ``until``, as it does when ``since`` is None.
         """
-        if since.startswith("-") or until.startswith("-"):
+        if (since or "").startswith("-") or until.startswith("-"):
             raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
-        revisions = f"{since}..{until}" if self.is_ancestor_or_equal(since, until) else until
+        revisions = f"{since}..{until}" if since and self.is_ancestor_or_equal(since, until) else until
         raw = self.out("--literal-pathspecs", "log", "--no-follow", "--full-history", "--merges",
                        "--no-show-signature", "--no-color", "--no-renames", "-c", "--name-only",
                        "--format=%x00%H", revisions, "--", path)
@@ -954,6 +997,33 @@ class Git:
             if len(lines) > 1:
                 merges.append(lines[0].strip())
         return merges
+
+    def merges_restoring(self, since: str, until: str, path: str) -> list[str]:
+        """Merge commits in ``since..until`` whose ``path`` differs from their first parent, newest first.
+
+        merges_changing() names a merge only when its result differs from every
+        parent, since a merge that took one side's version has that side's own
+        commit in file_history(). That commit can sit before ``since``: merging a
+        branch forked before ``since`` and taking its version for ``path`` brings
+        back an older revision, and the walk lists the older revision's commit
+        behind ``since``. Measured against its first parent, the line the merge
+        lands on, such a merge is a change of ``path``. ``rev-list
+        --full-history`` lists every merge not identical for ``path`` to all its
+        parents; each is then compared with its first parent by blob. The span
+        widens to every merge reachable from ``until`` when ``since`` is no
+        ancestor of it, as in merges_changing().
+        """
+        if since.startswith("-") or until.startswith("-"):
+            raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
+        revisions = f"{since}..{until}" if self.is_ancestor_or_equal(since, until) else until
+        merges = self.out("--literal-pathspecs", "rev-list", "--full-history", "--merges", revisions, "--",
+                          path).split()
+        changed = []
+        for merge in merges:
+            parents = self.parents(merge)
+            if parents and self.entry_at(merge, path) != self.entry_at(parents[0], path):
+                changed.append(merge)
+        return changed
 
     def entry_at(self, commit: str, path: str) -> tuple[str, str] | None:
         """``(type, hash)`` of the tree entry ``path`` at ``commit``, or None when absent.
@@ -990,8 +1060,9 @@ class Git:
             return None
         try:
             res = subprocess.run(  # noqa: S603 - fixed argv, no shell
-                ["git", "-C", str(self.repo), "cat-file", "blob", blob],
+                [*_GIT_ARGV, "-C", str(self.repo), "cat-file", "blob", blob],
                 capture_output=True,
+                env=_git_env(),
                 timeout=GIT_TIMEOUT_SECONDS,
                 check=False,
             )
@@ -1521,7 +1592,9 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         origin = None
     history = _without_deletions(git, kept, yaml)
     if not history:
-        return None, [], False, [], [], gap
+        if not own:
+            gap = gap or _merge_origin(git, probe.file)
+        return None, [], bool(gap) and git.is_dirty(probe.file), [], [], gap
     origin = "; ".join(part for part in (gap, origin) if part) or None
     current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
@@ -1533,10 +1606,16 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     if not run:
         # The newest listed revision already carries another derived_from than the
         # working tree: either the recording is uncommitted, or a merge after that
-        # revision changed the probe, which file_history() cannot list. The newest
-        # commit is the baseline; with neither found, fail closed as uncommitted.
+        # revision changed the probe, which file_history() cannot list. That merge
+        # differs from every parent (an evil merge), or it took the probe from a
+        # parent whose version the walk lists only further back, such as an older
+        # approved revision restored by merging a branch forked before the newest
+        # one (merges_restoring). The newest commit is the baseline; with none of
+        # these found, fail closed as uncommitted.
+        newest, path = history[0]
         merges = [m for m, _ in _merges_changing(git, history[:1], "HEAD")]
-        return history[0][0], [], dirty or not merges, [], merges, origin
+        merges += [m for m in git.merges_restoring(newest, "HEAD", path) if m not in merges]
+        return newest, [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
     return run[-1], run[:-1], dirty, history[len(run):], merges, origin
 
@@ -1663,23 +1742,70 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
     probe under that id whose revisions the walk does not list, as when a
     probe is deleted, re-created under its id at another path, and moved back.
     Merges are left to _merges_changing(), since the walk never lists them.
+
+    A write off HEAD's first-parent line that no merge on that line took into
+    the probe is no gap either (_merges_bringing()): HEAD's probe is what that
+    line made of it, and a merge that kept the line's version for every one of
+    the probe's paths dropped the write's content there. A backport is the
+    usual case: a change cherry-picked onto a release branch forked before a
+    rename lands at the old path, where the walk, following the new name, does
+    not list it, and merging the release branch back leaves the probe as main
+    had it. A merge on that line that did change the probe against its first
+    parent keeps the write a gap, now naming that merge.
     """
     listed = {(commit, path) for commit, path, _, _ in own}
     segments: list[tuple[str, str | None]] = []  # (path, the newer revision that moved the probe away)
     for i, (_, path, _, _) in enumerate(own):
         if i == 0 or path != own[i - 1][1]:
             segments.append((path, own[i - 1][0] if i else None))
+    paths = {path for path, _ in segments}
     ids = {probe.pid} | {pid for pid, writes in history.writes.items() if any(w in listed for w in writes)}
+    line: list[str] | None = None
     for pid in sorted(ids):
         for commit, path in history.writes.get(pid, []):
             if (commit, path) in listed or commit in history.merges:
                 continue
             if any(path == on and (end is None or not git.is_ancestor_or_equal(end, commit))
                    for on, end in segments):
+                if line is None:
+                    line = git.out("rev-list", "--first-parent", history.head, "--").split()
+                bringing = None if commit in line else _merges_bringing(git, commit, line, paths | {path})
+                if bringing == []:
+                    continue
+                if bringing:
+                    return (f"{_merge_names(bringing)} on HEAD's first-parent line changed the probe against its "
+                            f"first parent after {commit[:12]} changed {safe_text(path)} under the id "
+                            f"{safe_text(pid, 120)} on a merged line the probe's history walk does not list, so no "
+                            "derivation a merge carried in can be judged")
                 return (f"{commit[:12]} changed {safe_text(path)} under the id {safe_text(pid, 120)}, but the "
                         "probe's history walk does not list it, so the listed history is incomplete and no "
                         "derivation in it can be judged")
     return None
+
+
+def _merges_bringing(git: Git, commit: str, line: list[str], paths: set[str]) -> list[str]:
+    """The merges on HEAD's first-parent ``line`` descending from ``commit`` that change one of ``paths``.
+
+    ``commit`` lies off ``line`` (HEAD's ``rev-list --first-parent``, newest
+    first), so its content reaches HEAD's probe only through a merge on the
+    line whose other parents descend from it. Every commit of the line from
+    HEAD down to the first such merge descends from ``commit``
+    (``rev-list --ancestry-path``). A merge among them whose entry for one of
+    ``paths`` (every path the probe had, and the written one) differs from its
+    first parent may have taken the write in; one that kept its first parent's
+    entries for all of them took nothing from its other parents into the
+    probe. A plain commit of the line is in the walk, or a write that is never
+    excused.
+    """
+    descendants = set(git.out("rev-list", "--ancestry-path", f"{commit}..{line[0]}", "--").split()) if line else set()
+    bringing = []
+    for merge in line:
+        if merge not in descendants:
+            break
+        parents = git.parents(merge)
+        if len(parents) > 1 and any(git.entry_at(merge, p) != git.entry_at(parents[0], p) for p in sorted(paths)):
+            bringing.append(merge)
+    return bringing
 
 
 def _ids_new_at(git: Git, history: "ProbeHistory", copying: str, pid: str, own: set[tuple[str, str]]) -> bool:
@@ -1744,6 +1870,29 @@ def _origin_problem(commit: str, path: str, status: str, source: str) -> str | N
         "T": "a change of its type",
     }.get(status, "no change to it")
     return (f"the probe's oldest listed revision {commit[:12]} does not create {safe_text(path)} but records {what}: "
+            "the probe's origin isn't in its listed history but in a merge the walk can't follow, and a "
+            "derivation recorded in a merge cannot be judged")
+
+
+def _merge_origin(git: Git, path: str) -> str | None:
+    """Why a probe that HEAD holds but whose history walk lists no revision has no judgeable origin, or None.
+
+    file_history() lists no merge, so a probe created inside a merge and never
+    changed in a plain commit since has an empty history. Read as "not
+    committed", it would only be withheld, with no finding, although the merge
+    committed it without a derivation anyone can judge (SEC-101). When HEAD
+    holds the path, the merges whose result for it differs from every parent
+    (Git.merges_changing() over all of HEAD's history) are named, the one that
+    created it among them; a file HEAD does not hold is genuinely uncommitted
+    (None).
+    """
+    if git.blob_at("HEAD", path) is None:
+        return None
+    merges = git.merges_changing(None, "HEAD", path)
+    where = f", and it was created inside merge {merges[-1][:12]}" if merges else ""
+    if len(merges) > 1:
+        where += f" and changed in {_merge_names(merges[:-1])}"
+    return (f"{safe_text(path)} is committed, but the probe's history walk lists no commit that creates it{where}: "
             "the probe's origin isn't in its listed history but in a merge the walk can't follow, and a "
             "derivation recorded in a merge cannot be judged")
 
@@ -2651,6 +2800,11 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
     data = probe.data or {}
     derived_from = data["derived_from"]
     baseline, later, dirty, earlier, merges, origin = probe_changes(git, probe, yaml, cut)
+    if baseline is None and origin:
+        # Committed, but the walk lists no revision of it: created inside a merge
+        # (_merge_origin), or a write the walk misses (_unlisted_write).
+        return ChangeState(STATE_WEAKENED, "; ".join([origin] + (["probe file has uncommitted changes"]
+                                                                  if dirty else [])))
     if baseline is None:
         return ChangeState(
             STATE_UNCOMMITTED,
