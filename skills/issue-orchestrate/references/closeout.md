@@ -53,6 +53,9 @@ externally-visible-action gate. The pull request must carry:
   things: the issue reference, the issue classification **verbatim**, and — per work
   package — the dispatched specialist as its `subagent_type` literal, or the explicit
   `no matching specialised agent — generalist remediation` note.
+- **every triaged finding** per `references/finding-triage.md`: a finding fixed
+  directly is listed under **Changes** with its reproduction, a filed one is referenced
+  in **Risk / rollout notes**.
 
 The per-package line is what makes the run auditable after the fact. A reader must be
 able to tell which specialist produced which part of the diff without replaying the

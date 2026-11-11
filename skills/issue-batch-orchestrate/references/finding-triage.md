@@ -17,7 +17,10 @@ diff is a failed pass.
 
 ## The triage
 
-Every finding lands in exactly one of two outcomes.
+Every finding lands in exactly one of two outcomes. A single-issue run applies the same
+triage with the same three conditions, scoped to its issue, per
+`spec/project/issue-orchestration/` §"Verification and traceability"; both rules read the
+same way.
 
 **Fix directly**, recorded as a local adaptation, when **all three** hold:
 

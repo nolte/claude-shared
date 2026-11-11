@@ -210,9 +210,10 @@ body.
    §Portfolio gap closure; the generalist may handle the package meanwhile, with the
    explicit "no matching specialised agent — generalist remediation" note.
 4. **Dispatch in dependency order**, gating each package on operator confirmation,
-   with a brief that authorises refutation per `spec/claude/dispatch-brief/`; record
-   each result before a dependent package starts. Read `references/dispatch-matching.md`
-   §"Gap closure and the dispatch brief" before the first dispatch.
+   with a brief authorising refutation per `spec/claude/dispatch-brief/` and
+   fixing small related findings; record each result before a dependent package
+   starts. Read `references/dispatch-matching.md` §"Gap closure and the dispatch
+   brief" and `references/finding-triage.md` before the first dispatch.
 
 ### 6. verify
 
@@ -229,17 +230,16 @@ origin/develop...HEAD` first; an empty capture is a failed gate, never a pass. R
 Before declaring a package done, apply the corpus-grep and publication-hold rules in
 `references/measurement-discipline.md`.
 
-**When the run closes a defect, what its class leaves behind is a closing
-condition.** Per `spec/project/defect-class-guards/`, decide before the PR opens
-whether the fix leaves a mechanical guard that refuses the class (G1), whether that
-guard enumerates the class rather than the sites the defect was found at (G3), and
-whether its selector is as wide as the property it asserts (G6), and whether it asserts
-nothing the fix didn't repair (G7). Where no guard is
-possible, the note saying why is the deliverable and goes in the issue. Where the
-guard is too large for this change, it becomes its own referenced issue, never an
-intention in the PR body, which is lost at merge. Record the decision in the
-`## Class sweep` section `pull-request-workflow` requires on a `fix` PR, and run the
-predicate rather than estimating its count.
+**When the run closes a defect, what its class leaves behind is a closing condition.**
+Per `spec/project/defect-class-guards/`, decide before the PR opens whether the fix
+leaves a mechanical guard refusing the class (G1) that enumerates the class, not the
+reported sites (G3), whose selector is as wide as the property it asserts (G6), and
+that asserts nothing the fix didn't repair (G7). Where none is possible, the
+deliverable is a note in the issue saying why. A guard too large for this change
+becomes its own referenced issue, never a PR-body intention, lost at merge. Record the
+decision in the `fix` PR's `## Class sweep` section and run the predicate, never
+estimate it. Triage side findings and the sweep's remainder per
+`references/finding-triage.md`.
 
 Then close out in this order, following `references/closeout.md` for each step's
 contract:

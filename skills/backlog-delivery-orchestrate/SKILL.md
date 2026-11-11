@@ -67,6 +67,8 @@ A lane is one group (`issue-batch-orchestrate`) or one single (`issue-orchestrat
 
 A lane that returns blocked is recorded and skipped; the other lanes continue. Checkpoint after every round.
 
+Lanes apply `issue-orchestrate`'s finding triage (`spec/project/issue-orchestration/` §"Verification and traceability"): a small, reproduced in-scope finding is fixed in the lane, anything else is filed as a new issue outside this run's partition. The partition never grows from in-lane findings.
+
 ### 4. merge train (one open PR)
 
 Exactly one PR against `develop` is open at a time. Each turn of the train: read the open PRs live; drain the slot holders (open Renovate PRs through the train, a foreign PR reported and waited for); then **promote** the next `committed-locally` branch in dependency order, then partition order: rebase onto the `develop` tip, push, open it via `pull-request-create`, and land it with `pull-request-merge` while `scripts/merge-train.sh` runs in the background, keeping the runners for the head. Act on the script's exit. Read `references/merge-train.md` for the loop, the exit handling, and the stop conditions; see `scripts/merge-train.sh` for the train semantics and exit codes, and run it as `${CLAUDE_PLUGIN_ROOT}/skills/backlog-delivery-orchestrate/scripts/merge-train.sh` from the primary checkout. Checkpoint after every merge.

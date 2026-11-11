@@ -65,3 +65,10 @@ hypothesis, so its dispatch brief **MUST** authorise refutation per
 it, and treat a returned refutation (contradicting evidence plus what it did instead) as
 a first-class result recorded in the artifact, not a failed dispatch. Collect and record
 each specialist's result in the artifact before dispatching a dependent package.
+
+**Authorise the finding triage in the same brief.** Beside the refutation clause, every
+brief authorises the specialist to fix small related findings that meet conditions (a)
+to (c) of `spec/project/issue-orchestration/` §"Verification and traceability" directly,
+and to list each with its reproduction, rather than to list them unfixed; anything else
+comes back listed unfixed with why. The clause wording and the conditions are in
+`references/finding-triage.md`.
