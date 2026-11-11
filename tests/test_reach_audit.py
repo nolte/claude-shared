@@ -2309,6 +2309,21 @@ def test_710_re_derivation_after_a_real_change_beside_a_duplicate_heading_is_cle
     _assert_clean(sectioned)
 
 
+def test_710_fall_back_to_a_file_anchor_after_only_a_duplicate_heading_cannot_lower_the_bar(sectioned, tmp_path):
+    """Sections to a blob: anchor answers to the same change question as sections to sections."""
+    marker = tmp_path / "ran"
+    rel = _section_probe(sectioned, locators=(("heading", "3.1"),), argv=marker_argv(marker, "3"))
+    _edit(sectioned, *DUPLICATE_31)
+    sectioned.commit("a second 3.1 heading")
+    data = yaml.safe_load((sectioned.path / rel).read_text())
+    del data["declaration"]["sections"]
+    data["derived_from"] = "blob:" + sectioned.git("hash-object", DECL)
+    data["expected"]["value"] = 1
+    sectioned.write(rel, yaml.safe_dump(data, sort_keys=False))
+    sectioned.commit("fall back to the file anchor and lower the bar")
+    assert f"but the anchored sections of {DECL} did not change in between" in _weakened_reason(sectioned, marker)
+
+
 @pytest.mark.parametrize("rename", [False, True])
 def test_710_re_derivation_onto_a_section_that_was_only_ambiguous_at_the_recording_is_weakened(
         sectioned, tmp_path, rename):
