@@ -1908,6 +1908,12 @@ def _sections_as_found(git: Git, commit: str, rel: str, locators: list[tuple[str
     return found
 
 
+# The exit a probe has when its first revision recorded an anchor that can't be
+# proven there, nor read as that revision found the declaration.
+_ORIGIN_UNPROVEN = ("; the probe recorded it in its first revision, which every later move builds on, so no "
+                    "re-derivation heals it; supersede the probe")
+
+
 class PriorAnchor(NamedTuple):
     """What _prior_anchor proved about the previous anchor.
 
@@ -1963,6 +1969,12 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
     """
     recorded = git.blob_at(recording, rel)
 
+    def unproven(text: str) -> PriorAnchor:
+        # In the probe's first revision the anchor can't be read as found either
+        # (a locator doesn't resolve once there, or the file is missing), and
+        # every later move builds on that revision.
+        return PriorAnchor(text + (_ORIGIN_UNPROVEN if origin else ""), None, False)
+
     def as_found(named: str | None) -> PriorAnchor | None:
         if not (origin and recorded):
             return None
@@ -1986,9 +1998,9 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
                 # change is shown against.
                 prior = PriorAnchor(None, recorded, False, anchored=(found, locators))
                 return prior._replace(changed=not _unchanged_in(git, prev_df, prior, baseline, rel))
-            return PriorAnchor(f"{moved}, but the previous derived_from {shown} is not the content of its sections "
-                               f"of {safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration "
-                               "change can be shown", None, False)
+            return unproven(f"{moved}, but the previous derived_from {shown} is not the content of its sections "
+                            f"of {safe_text(rel)} at {recording[:12]}, where it was recorded, so no declaration "
+                            "change can be shown")
         return PriorAnchor(None, recorded, bool(_section_mismatches(git, baseline, rel, locators)),
                            anchored=(locators,))
     if _is_content_anchor(prev_df):
@@ -2000,9 +2012,9 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
             found_prior = as_found(before)
             if found_prior:
                 return found_prior
-            return PriorAnchor(f"{moved}, but the previous derived_from {safe_text(prev_df[:12], 40)} is not the "
-                               f"content of {safe_text(rel)} at {recording[:12]}, where it was recorded, so no "
-                               "declaration change can be shown", None, False)
+            return unproven(f"{moved}, but the previous derived_from {safe_text(prev_df[:12], 40)} is not the "
+                            f"content of {safe_text(rel)} at {recording[:12]}, where it was recorded, so no "
+                            "declaration change can be shown")
     else:
         prev_commit = git.resolve_commit(prev_df)
         if prev_commit is None:
@@ -2010,9 +2022,9 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
             # commit that recorded it is still here: the declaration's content
             # there is what the derivation saw, and what a change is shown against.
             if recorded is None:
-                return PriorAnchor(f"{moved}, but the previous derived_from cannot be resolved to a commit and "
-                                   f"{safe_text(rel)} did not exist at {recording[:12]}, where it was recorded, "
-                                   "so no declaration change can be shown", None, False)
+                return unproven(f"{moved}, but the previous derived_from cannot be resolved to a commit and "
+                                f"{safe_text(rel)} did not exist at {recording[:12]}, where it was recorded, "
+                                "so no declaration change can be shown")
             before = recorded
         else:
             before = git.blob_at(prev_commit, rel)
@@ -2025,9 +2037,9 @@ def _prior_anchor(git: Git, moved: str, prev_df: str, prior_doc: dict[str, Any],
                 found_prior = as_found(before)
                 if found_prior:
                     return found_prior
-                return PriorAnchor(f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
-                                   f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was "
-                                   "recorded, so no declaration change can be shown", None, False)
+                return unproven(f"{moved}, but the content of {safe_text(rel)} at the previous derived_from "
+                                f"{prev_commit[:12]} is not its content at {recording[:12]}, where it was "
+                                "recorded, so no declaration change can be shown")
     return PriorAnchor(None, before, git.blob_at(baseline, rel) != before, frozenset({before}))
 
 
@@ -2139,7 +2151,8 @@ def _path_move_problem(git: Git, moved: str, prev_df: str, new_df: str, prior: P
                 f"and that is no rename: {safe_text(rel)} still exists at {baseline[:12]} or {safe_text(new_rel)} "
                 f"already existed at {recording[:12]}, where the previous derivation was recorded")
     if _moved_unchanged(git, prev_df, prior, baseline, new_rel):
-        return _pure_move_problem(moved, prior_doc, new_doc, *_RE_ANCHOR)
+        return (_scope_problem(moved, prev_df, new_df, prior, new_doc)
+                or _pure_move_problem(moved, prior_doc, new_doc, *_RE_ANCHOR))
     if (prev_df != new_df and _rename_commit(git, baseline, recording, rel, new_rel) is not None
             and _changed_at(git, prev_df, prior, baseline, new_rel)):
         return unanswered
@@ -2278,6 +2291,37 @@ def _section_rebaseline_problem(git: Git, moved: str, prev_df: str, new_df: str,
     return None
 
 
+def _locator_keys(locators: list[tuple[str, str, str]] | None) -> set[tuple[str, str]]:
+    """The ``(kind, locator)`` pairs of ``locators``, without their digests and order."""
+    return {(kind, loc) for kind, loc, _ in locators or []}
+
+
+def _scope_problem(moved: str, prev_df: str, new_df: str, prior: PriorAnchor, new_doc: dict[str, Any]) -> str | None:
+    """Why a pure move from sections onto sections also changed which sections it anchors on, or None.
+
+    A pure move may re-record the digests (the same sections as found at the
+    new path), never the locators: a move that swaps, narrows, or widens them
+    re-points the probe at content nobody showed to change, and a later edit of
+    a newly chosen section would re-baseline a lowered bar. The locators are
+    compared with the previous anchor's (``prior.anchored``; every state there
+    names the same ones), in any order. A move between a file anchor and
+    sections keeps the rules it had.
+    """
+    if not (_is_section_anchor(prev_df) and _is_section_anchor(new_df) and prior.anchored):
+        return None
+    decl = new_doc.get("declaration")
+    new = _locator_keys(_locators(decl.get("sections")) if isinstance(decl, dict) else None)
+    old = _locator_keys(prior.anchored[-1])
+    if new == old:
+        return None
+
+    def shown(keys: set[tuple[str, str]]) -> str:
+        return safe_text(", ".join(f"{kind} {loc}" for kind, loc in sorted(keys)), 160)
+
+    return (f"{moved}, but the same commit changed which sections the probe anchors on ({shown(old)} to "
+            f"{shown(new)}), which a pure move of the declaration does not justify")
+
+
 def _heals_as_found(prior: PriorAnchor, locators: list[tuple[str, str, str]]) -> bool:
     """Whether a section anchor stale from the probe's first revision is re-recorded on the same sections.
 
@@ -2289,18 +2333,24 @@ def _heals_as_found(prior: PriorAnchor, locators: list[tuple[str, str, str]]) ->
     """
     if len(prior.anchored) != 2:
         return False
-    return {(kind, loc) for kind, loc, _ in locators} == {(kind, loc) for kind, loc, _ in prior.anchored[1]}
+    return _locator_keys(locators) == _locator_keys(prior.anchored[1])
 
 
 def _reconfirm_view(doc: dict[str, Any] | None) -> dict[str, Any]:
-    """What a re-confirmation must leave as it was: the probe without its anchor, approval, and digests."""
+    """What a re-confirmation must leave as it was: the probe without its anchor, approval, and digests.
+
+    The sections are compared as a set of locators: their order names no other
+    content (_heals_as_found accepts a stale-born heal in any order), so a
+    re-confirmation that lists them in another order changes nothing.
+    """
     view = copy.deepcopy(doc) if isinstance(doc, dict) else {}
     view.pop("derived_from", None)
     view.pop("approval", None)
     declaration = view.get("declaration")
     if isinstance(declaration, dict) and isinstance(declaration.get("sections"), list):
-        declaration["sections"] = [{k: v for k, v in item.items() if k != "digest"} if isinstance(item, dict)
-                                   else item for item in declaration["sections"]]
+        declaration["sections"] = sorted(([{k: v for k, v in item.items() if k != "digest"} if isinstance(item, dict)
+                                           else item for item in declaration["sections"]]),
+                                         key=lambda item: json.dumps(item, sort_keys=True, default=str))
     return view
 
 

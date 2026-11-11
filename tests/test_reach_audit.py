@@ -6017,3 +6017,92 @@ def test_708_R3_a_historical_commit_move_onto_a_copy_older_than_the_recording_is
     assert state == ra.STATE_WEAKENED, reason
     assert reason.endswith(f"but it also moved the declaration from {DECL} to docs/b.md, and only a pure move of "
                            "an unchanged declaration, the old path gone, can change its path"), reason
+
+
+# -- #708 review round 4: a pure move keeps the anchored sections; order-blind re-confirmation ---- #
+SCOPE_REFUSED = "which a pure move of the declaration does not justify"
+X_SECTION = ("heading", "3.2")   # Schedules: no default locator covers it
+
+
+def _rename_and_reanchor(target: Target, rel: str, locators) -> str:
+    target.git("mv", DECL, "docs/b.md")
+    _reanchor(target, rel, declaration_path="docs/b.md", locators=locators)
+    return target.commit("rename the declaration and follow it")
+
+
+def test_708_R4_a_pure_move_that_swaps_the_sections_cannot_carry_a_later_lowering(sectioned):
+    """Measured on f5cad19d: both steps clean, exit 0, although 3.1 and AK-OS-07 never changed."""
+    target = sectioned
+    rel = _section_probe(target)
+    _rename_and_reanchor(target, rel, [X_SECTION])
+    _edit(target, *OUTSIDE, path="docs/b.md")
+    _reanchor(target, rel, expected_value=1)
+    target.commit("edit the unrelated section, re-derive and lower")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert "its previous derivation was no re-derivation either" in reason, reason
+    assert reason.endswith(SCOPE_REFUSED), reason
+
+
+@pytest.mark.parametrize("locators", [[X_SECTION], [("heading", "3.1")], [*LOCATORS, X_SECTION],
+                                      [LOCATORS[0], X_SECTION]],
+                         ids=["swapped", "narrowed", "widened", "exchanged"])
+def test_708_R4_a_pure_move_that_changes_the_locator_set_is_weakened(sectioned, locators):
+    target = sectioned
+    rel = _section_probe(target)
+    _rename_and_reanchor(target, rel, locators)
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(SCOPE_REFUSED), reason
+
+
+def test_708_R4_a_stale_born_section_anchor_renamed_onto_other_sections_is_weakened(sectioned):
+    target = sectioned
+    rel = _stale_born_section_probe(target)
+    _rename_and_reanchor(target, rel, [X_SECTION])
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith(SCOPE_REFUSED), reason
+
+
+@pytest.mark.parametrize("shape", ["same order", "reordered", "stale-born, as found"])
+def test_708_R4_a_pure_rename_keeping_the_locators_stays_clean(sectioned, shape):
+    target = sectioned
+    rel = _stale_born_section_probe(target) if shape.startswith("stale") else _section_probe(target)
+    _rename_and_reanchor(target, rel, tuple(reversed(LOCATORS)) if shape == "reordered" else LOCATORS)
+    _assert_clean(target)
+
+
+def test_708_R4_a_stale_born_section_anchor_heals_by_a_reordered_re_confirmation(sectioned):
+    """Measured on f5cad19d: weakened, `a re-confirmation may change only …, and it also changed declaration.sections`."""
+    target = sectioned
+    rel = _stale_born_section_probe(target)
+    _reanchor(target, rel, mode="reconfirmed", locators=tuple(reversed(LOCATORS)))
+    target.commit("re-confirm against the sections as found, in another order")
+    _assert_clean(target)
+
+
+def test_708_R4_a_stale_born_section_anchor_whose_locator_never_resolved_names_supersede(sectioned):
+    target = sectioned
+    sections = [{"heading": "3.9", "digest": "0" * 64}]
+    probe = make_probe(derived_from=ra.section_anchor(sections))
+    probe["declaration"]["sections"] = sections
+    rel = target.write_probe(probe)
+    target.commit("the probe lands on a section the declaration doesn't hold")
+    _reanchor(target, rel, locators=LOCATORS)
+    target.commit("re-derive onto real sections")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith("no re-derivation heals it; supersede the probe"), reason
+
+
+def test_708_R4_a_stale_born_content_anchor_whose_file_was_missing_names_supersede(target):
+    rel = target.write_probe(make_probe(derived_from=_blob(target), path="docs/later.md"))
+    target.commit("the probe lands before its declaration file")
+    target.write("docs/later.md", "# Later\n")
+    target.commit("the declaration file arrives")
+    _rewrite(target, rel, derived_from=_blob_now(target, "docs/later.md"))
+    target.commit("re-derive")
+    state, reason = _state(target)
+    assert state == ra.STATE_WEAKENED, reason
+    assert reason.endswith("no re-derivation heals it; supersede the probe"), reason
