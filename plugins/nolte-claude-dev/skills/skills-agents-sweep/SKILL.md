@@ -53,8 +53,8 @@ This skill also triggers on equivalent German-language requests, including:
 Before any operation, verify:
 
 1. `spec/.spec-config.yml` is present — read it to determine `canonical_language` (fall back to `en`).
-2. `spec/claude/skills-agents-sweep/<canonical_language>.md` is present — this is the governing spec; stop if missing.
-3. `spec/claude/skill-review/<canonical_language>.md` and `spec/claude/agent-review/<canonical_language>.md` are present — the sweep dispatches these procedures; without them phase 1 cannot run.
+2. `spec/claude/skills-agents-sweep/<canonical_language>.md` is present — this is the governing spec. When it's absent from the project, read it from the installed `nolte-shared` plugin, which ships the `spec/` tree; stop if neither has it.
+3. `spec/claude/skill-review/<canonical_language>.md` and `spec/claude/agent-review/<canonical_language>.md` are present, in the project or the installed `nolte-shared` plugin — the sweep dispatches these procedures; without them phase 1 cannot run.
 4. `.audits/skills-agents-sweep/` exists or can be created. Check `git ls-files .audits/skills-agents-sweep/.gitkeep`; create `.gitkeep` if the folder is absent.
 5. No other consolidated sweep report exists under `.audits/skills-agents-sweep/` with `status: open` — the spec requires exactly one open sweep at a time. If one is open, tell the user and offer to resume (`update`) or close it first.
 

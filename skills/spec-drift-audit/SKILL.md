@@ -51,7 +51,7 @@ This skill also triggers on equivalent German-language requests, including:
 Before any operation, verify:
 
 1. `spec/.spec-config.yml` is present — read it to determine `canonical_language` (fall back to `en`).
-2. `spec/project/spec-drift-audit/<canonical_language>.md` is present — this is the governing spec; stop if missing.
+2. `spec/project/spec-drift-audit/<canonical_language>.md` is present — this is the governing spec. When it's absent from the project, read `${CLAUDE_PLUGIN_ROOT}/spec/project/spec-drift-audit/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin); stop if neither is reachable.
 3. `.audits/spec-drift/` exists or can be created (check `git ls-files .audits/spec-drift/.gitkeep`); create `.audits/spec-drift/.gitkeep` if the folder is absent.
 
 ## Operations

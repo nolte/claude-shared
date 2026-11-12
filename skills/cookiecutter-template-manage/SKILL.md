@@ -40,7 +40,7 @@ Orchestrates the full Cookiecutter template lifecycle. The skill owns all mid-fl
 Before entering any operation, verify:
 
 1. **`cookiecutter` is importable** (`python3 -c 'import cookiecutter'`). If missing: stop and report `pip install cookiecutter` (or `pipx install cookiecutter`); do not install it yourself.
-2. **Bound spec corpus is reachable.** The agent reads the specs at runtime; confirm that `spec/project/cookiecutter-template-authoring/` exists in the caller's repository. If it is absent, stop and report the missing spec — the agent cannot run without it.
+2. **Bound spec corpus is reachable.** The agent reads the specs at runtime; confirm that `spec/project/cookiecutter-template-authoring/` exists in the caller's repository. If it is absent, stop and report the missing spec — the agent cannot run without it. The skill deliberately has no plugin-copy fallback: the `cookiecutter-template-author` agent treats the caller's repository as the source of truth for the bound corpus and refuses a cached copy.
 3. **Caller intent is unambiguous for every one-way decision** before dispatching the agent. Variable renames, new choice defaults, and hook additions that alter generated output are surfaced here, confirmed interactively, and locked into the dispatch payload. The agent receives a fully resolved set of decisions and never asks for approval itself.
 
 ## Operations
@@ -85,7 +85,7 @@ Add or harden a hook, extend the test harness, or add a CI matrix to an existing
 ## Gotchas
 
 - **The agent never asks for variable-name or choice-default approval** — that dialogue happens here, in this skill, before the dispatch. If the agent surfaces a question mid-run, it indicates a missing decision in the dispatch payload; stop, resolve it here, and re-dispatch.
-- **The spec corpus is read by the agent at runtime from the caller's repository** — if `spec/project/cookiecutter-template-authoring/` is missing, the agent stops immediately. Resolve the missing spec before retrying the dispatch.
+- **The spec corpus is read by the agent at runtime from the caller's repository** — if `spec/project/cookiecutter-template-authoring/` is missing, the agent stops immediately; the skill deliberately has no plugin-copy fallback. Resolve the missing spec before retrying the dispatch.
 - **One-way decisions (variable rename, choice reorder, hook addition that alters output) are irreversible once the agent writes files** — the confirmation step in every operation is not optional; skipping it risks breaking existing `.cookiecutterrc` files and CI invocations in downstream consumers.
 - **`cookiecutter-template-author` is not a top-level entry point** — it is designed to receive a fully resolved preconditions payload from this skill. Invoking it directly from the main conversation bypasses the variable-name and choice-default approval flow and may produce a template that diverges from the caller's actual intent.
 - **Local bake verification is the agent's responsibility** — this skill does not re-run `cookiecutter --no-input` after the agent returns; trust the agent's bake result. If the agent reports a bake failure, relay the raw error to the user and do not mark the operation complete.

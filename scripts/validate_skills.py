@@ -54,7 +54,7 @@ def _display(path: Path) -> str:
 # detect validator drift (`spec/claude/skill-review/` §"Checks derived from
 # external skill-structure validation", #588). Bump the minor version when a
 # check is added or its severity changes, the major version when one is removed.
-VALIDATOR_VERSION = "1.0.0"
+VALIDATOR_VERSION = "1.1.0"
 
 STARTER_TAGS = {
     "pull-request", "review", "audit", "scaffolding", "prose",
@@ -819,6 +819,73 @@ def check_skill(path: Path) -> list[Finding]:
     findings += check_rationale_heading(body, rel, "skill")
     findings += check_description_lead_voice(fm.get("description"), rel, "skill")
     findings += check_description_headroom(fm.get("description"), rel, "skill")
+    findings += check_spec_precondition_fallback(body, rel, _in_subdirectory_plugin(path))
+    return findings
+
+
+def _in_subdirectory_plugin(path: Path) -> bool:
+    """True for `plugins/<name>/skills/<skill>/SKILL.md`, whose `${CLAUDE_PLUGIN_ROOT}`
+    is the subdirectory plugin's root, not the `nolte-shared` root that ships `spec/`."""
+    try:
+        parts = path.resolve().relative_to(Path.cwd().resolve()).parts
+    except ValueError:
+        parts = path.parts
+    return len(parts) >= 5 and parts[-5] == "plugins"
+
+
+# A spec path the skill checks for presence: the object of a presence verb, the subject
+# of a presence predicate, or a bare list item under a "these files exist" lead-in.
+_SPEC_PATH = r"`(spec/([a-z0-9-]+)/([a-z0-9-]+)/[^`]*)`"
+_SPEC_PRESENCE = re.compile(
+    r"(?:\b(?:confirm|confirm that|verify|verify that|locate|carries|read)\s+" + _SPEC_PATH + r")"
+    r"|(?:" + _SPEC_PATH + r"\s+(?:is present|is reachable|exists|is absent|is missing))"
+    r"|(?:^\s*[-*]\s+" + _SPEC_PATH + r"\s*$)",
+    re.I | re.M)
+_STOP = re.compile(r"\bstop\b", re.I)
+_PLUGIN_ROOT_SPEC = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/spec/")
+_SHARED_PLUGIN_COPY = re.compile(r"nolte-shared`? plugin", re.I)
+# The one recorded way to keep a stop without a fallback (cookiecutter-template-manage).
+_DELIBERATE_NO_FALLBACK = "deliberately has no plugin-copy fallback"
+SHIPPED_SPEC = REPO / "spec"
+
+
+def check_spec_precondition_fallback(body: str, target: str, subdirectory_plugin: bool) -> list[Finding]:
+    """A skill that stops on a missing shipped spec names the plugin copy it falls back to.
+
+    Guard origin (spec/project/defect-class-guards/ G1/G3): #690/#691. A consuming
+    project rarely carries `spec/`, so a precondition that stops when the project lacks a
+    spec the `nolte-shared` plugin ships blocks the skill everywhere but this hub. Scope:
+    each heading-delimited section that checks a shipped spec's presence and says `stop`
+    must name the installed `nolte-shared` copy. In a subdirectory plugin the
+    `${CLAUDE_PLUGIN_ROOT}/spec/` form can't resolve (that plugin carries no `spec/`), so
+    only the installed-plugin form counts there, and the unresolvable path is refused.
+    """
+    findings: list[Finding] = []
+    if subdirectory_plugin and _PLUGIN_ROOT_SPEC.search(body):
+        findings.append(Finding(
+            "Critical", target, "skill-management.spec-fallback-unresolvable",
+            "`${CLAUDE_PLUGIN_ROOT}/spec/` doesn't resolve in a subdirectory plugin, which "
+            "carries no `spec/`; read the spec from the installed `nolte-shared` plugin instead"))
+    for section in re.split(r"(?m)^#{1,6} ", body):
+        if not _STOP.search(section) or _DELIBERATE_NO_FALLBACK in section:
+            continue
+        shipped = sorted({
+            m.group(i) for m in _SPEC_PRESENCE.finditer(section)
+            for i in (1, 4, 7) if m.group(i)
+            and (SHIPPED_SPEC / m.group(i + 1) / m.group(i + 2)).is_dir()})
+        if not shipped:
+            continue
+        has_fallback = _SHARED_PLUGIN_COPY.search(section) or (
+            not subdirectory_plugin and _PLUGIN_ROOT_SPEC.search(section))
+        if not has_fallback:
+            heading = section.splitlines()[0].strip() if section.strip() else "(preamble)"
+            findings.append(Finding(
+                "Critical", target, "skill-management.spec-precondition-no-fallback",
+                f"section `{heading}` stops when the project lacks {', '.join(shipped)} "
+                f"but names no plugin copy; read the spec from "
+                + ("the installed `nolte-shared` plugin" if subdirectory_plugin else
+                   "`${CLAUDE_PLUGIN_ROOT}/spec/...` (the installed `nolte-shared` plugin)")
+                + f" before stopping, or state that the skill {_DELIBERATE_NO_FALLBACK}"))
     return findings
 
 

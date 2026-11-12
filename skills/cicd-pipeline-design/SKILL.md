@@ -54,13 +54,13 @@ The frontmatter `description` keeps its trigger lexicon English-only per `spec/c
 
 ## Precondition
 
-Verify that all three canonical spec files are reachable in the current project:
+Verify that all three canonical spec files are reachable in the current project or, for each one absent there, at `${CLAUDE_PLUGIN_ROOT}/spec/project/<topic>/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin):
 
 - `spec/project/continuous-integration/<canonical_language>.md`
 - `spec/project/continuous-delivery/<canonical_language>.md`
 - `spec/project/github-actions-best-practices/<canonical_language>.md`
 
-If any is missing, stop and say so. These specs are the input; without them there's no authoritative stage sequence, no securing-stage vocabulary, and no platform rule set. Don't improvise a replacement.
+If any is reachable at neither location, stop and say so. These specs are the input; without them there's no authoritative stage sequence, no securing-stage vocabulary, and no platform rule set. Don't improvise a replacement.
 
 ## Operations
 

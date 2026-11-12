@@ -44,7 +44,7 @@ Detect the user's language and respond in it. Feature files themselves (frontmat
 
 Before any write, confirm:
 
-- The current repository carries `spec/project/feature/<canonical_language>.md`. If absent, stop — the spec is the input to this skill, not optional.
+- The current repository carries `spec/project/feature/<canonical_language>.md`; when it doesn't, read it from the installed `nolte-shared` plugin, which ships the `spec/` tree. If neither has it, stop — the spec is the input to this skill, not optional.
 - `project/roadmap.md` exists and the target `roadmap_item` (passed by the user as `R-<n>`) is present in it; resolve its `outcomes`, `detail`, `target_sprint`, and `mvp` fields so they can be quoted into per-feature context.
 - `project/goals.md` exists and the roadmap item's `outcomes` list resolves; if not, stop and surface the broken outcome reference rather than guessing.
 - An audience artefact exists when the project carries `project/mission.md`; missing audiences block feature authoring the same way they block outcome and mission authoring (per `spec/project/roadmap/` and `spec/project/mission/`). Dispatch `audience-identify` first if needed.
