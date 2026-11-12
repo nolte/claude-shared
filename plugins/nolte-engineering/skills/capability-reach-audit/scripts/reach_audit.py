@@ -121,10 +121,6 @@ SPEC_CONFIG = Path("spec") / ".spec-config.yml"
 # git answers local history queries in milliseconds; a hang means a lock or a
 # credential prompt, and waiting longer would not help.
 GIT_TIMEOUT_SECONDS = 30
-# How far _Lineage walks to place a probe version: commits crossed per probe, and
-# merges nested inside each other. Past either the probe reads weakened.
-MAX_ORIGIN_STEPS = 1000
-MAX_ORIGIN_DEPTH = 50
 # An environment target may pull and start a container; a cold image pull on a slow
 # link takes minutes, so the default is generous. Overridable per run.
 DEFAULT_ENVIRONMENT_TIMEOUT_SECONDS = 900
@@ -732,10 +728,6 @@ class Git:
         # probe_set_history() per HEAD commit (shared_probe_set_history()): one
         # walk of the probe directory serves the copy cut and the removal check.
         self.probe_sets: dict[str, "ProbeHistory"] = {}
-        # Per probe path, the merges _Lineage found changing the probe (a restore, a
-        # dropped main-line revision, an evil merge): _merges_changing() counts each
-        # as a change of the probe in every span it lies in.
-        self.restoring: dict[str, set[str]] = {}
 
     def run(self, *args: str) -> subprocess.CompletedProcess:
         """Run git read-only, on the target's own objects (_GIT_ARGV, _git_env()).
@@ -1639,7 +1631,7 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
 
     A commit that deleted the probe is no probe revision, and a restore that
     brings back the document the deletion took is none either
-    (_Lineage.chain()): the run and the earlier revisions are formed without
+    (_without_deletions): the run and the earlier revisions are formed without
     them, so a probe deleted and restored is judged as if it had never been
     gone.
 
@@ -1663,18 +1655,7 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         kept = own[:next((i for i, (c, p, _, _) in enumerate(own) if (c, p) in cut), len(own))]
     if len(kept) < len(own):
         origin = None
-    lineage = _Lineage(git, yaml, own, cut)
-    try:
-        history = lineage.chain(probe.file) if own else []
-    except _Unplaceable as exc:
-        # Never read the list's order instead. A reason the history walk already
-        # gives (an origin in a merge, an unlisted write) says it; otherwise this.
-        why = "; ".join(part for part in (gap, origin) if part) or (
-            f"the probe's origin can't be placed: {exc}; a derivation whose history can't be read as a chain "
-            "of parents cannot be judged")
-        return None, [], git.is_dirty(probe.file), [], [], why
-    for merge, path in lineage.changes:
-        git.restoring.setdefault(path, set()).add(merge)
+    history = _without_deletions(git, kept, yaml)
     if not history:
         if not own:
             gap = gap or _merge_origin(git, probe.file)
@@ -1701,268 +1682,44 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         merges += [m for m in git.merges_restoring(newest, "HEAD", path) if m not in merges]
         return newest, [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
-    # The versions an evil merge combined (_Lineage) are changes of their own
-    # when they come after the baseline, as #701 names them beside the merge.
-    later = run[:-1] + [c for c in dict.fromkeys(lineage.combined)
-                        if c not in run and c != run[-1] and git.is_ancestor_or_equal(run[-1], c)]
-    return run[-1], later, dirty, history[len(run):], merges, origin
+    return run[-1], run[:-1], dirty, history[len(run):], merges, origin
 
 
-class _Unplaceable(Exception):
-    """The origin of a probe revision can't be placed by parentage (_Lineage)."""
+def _without_deletions(git: Git, log: list[tuple[str, str, str, str]], yaml: Any) -> list[tuple[str, str]]:
+    """``(commit, path)`` of the probe revisions in ``log`` (newest first), without deletions and undone restores.
 
+    git --follow walks on through a deletion of the probe's path and lists the
+    deleting commit (status ``D``). That commit holds no probe, so it's no
+    probe revision: read as one, it would end every run with a revision that
+    carries no derived_from, and a probe deleted and restored could never build
+    on its previous derivation again. It's dropped.
 
-class _Lineage:
-    """The probe's revisions as a chain of parents, read from content and parentage alone.
+    The revision right after a deletion (the restore, an addition of the same
+    path) is dropped too when its document equals the one right before the
+    deletion: the pair changed nothing. Any other restore stays a probe
+    revision and is judged against the revision before the deletion, as if the
+    file had never been gone: the same anchor with any other change reads as a
+    later probe change, a moved anchor as a re-derivation that must show a
+    declaration change. Each cycle is judged on its own neighbours, so repeated
+    deletions and restores work the same. A deletion with no restore after it
+    or no revision before it leaves its neighbour as it is.
 
-    git --follow --topo-order lists every commit before its parents, but the
-    list is no chain of parents: a revision on a side branch that a merge
-    dropped (``-s ours``, ``-X ours``, a conflict resolved to the main line's
-    side) sits between two main-line revisions, and a dropped line can hold a
-    byte-identical twin of a main-line revision. Read as the next revision's
-    predecessor, either would stand in for the approved state that revision
-    was made from. Every check that reads the revisions as a chain (the run
-    carrying today's anchor, ``earlier[0]`` as the previous derivation,
-    _run_length() and the recording it finds, the spans _merges_changing()
-    searches) reads this chain instead, and nothing in it falls back to the
-    list's order or to a list neighbour.
-
-    origin() places the commit a file version was made in. It walks back along
-    first parents (``log -1 --first-parent -- path``, the newest commit of the
-    line whose file differs from its first parent's); a plain commit there made
-    it. A merge there either holds a version one of its other parents holds,
-    and the walk goes on along that parent's line, or it holds none (an evil
-    merge: it made the version itself), and the walk goes on along its first
-    parent with the merge recorded as a change.
-
-    A merge that took the file from another parent is a change of the probe
-    (recorded in ``changes``, which _merges_changing() counts in every span it
-    lies in) unless the version it took builds on the one its first parent
-    held and drops no stretch of the main line (_keeps_main()): the taken
-    chain reaches that file, and either the main line changed nothing after
-    that point, or its version is the same revision or a step-for-step twin
-    (cherry-pick, squash) of the point's. That opens no laundering path: the
-    taken version's chain is the chain HEAD's probe is judged on, so every
-    change on it is judged like any other, and every change the main line
-    made is either on that chain or copied onto it step for step; a main line
-    that reached the file again after changes of its own (a step back, a
-    lowering and its undoing) never counts as kept. A merge whose taken version doesn't
-    build on its first parent's file drops or restores a revision (a version
-    from before the main line's latest change, or a side revision the main
-    line had dropped). Where the first parent lacks the file, the file the
-    line deleted (the deleting commit's first parent's, a plain commit or a
-    merge) stands in for it.
-
-    The walk is iterative along every line and asks nothing of the first
-    parent's origin, so its cost and depth don't grow with the number of
-    merges on the main line; only octopus parents, evil merges and a
-    _keeps_main() that has to look past the cheap check nest.
-
-    Whatever can't be placed raises _Unplaceable, and the probe reads
-    weakened: several parents holding the version, made in different commits;
-    a version made in a commit the history walk doesn't list; more than
-    MAX_ORIGIN_STEPS commits to cross for one version; or MAX_ORIGIN_DEPTH
-    nested walks.
+    Only the revisions change detection reads are filtered: _own_log() has
+    already checked the full log for its origin and for writes it misses, and
+    the removal check (judge_removals) reads its own history.
     """
-
-    def __init__(self, git: Git, yaml: Any, own: list[tuple[str, str, str, str]],
-                 cut: frozenset[tuple[str, str]]) -> None:
-        self.git = git
-        self.yaml = yaml
-        self.own = own
-        self.cut = cut  # the superseded probes' revisions: the chain ends where it reaches one
-        self.index = {(c, p): i for i, (c, p, _, _) in enumerate(own)}
-        self.blobs: dict[tuple[str, str], str | None] = {}
-        self.origins: dict[tuple[str, str], str] = {}
-        self.changes: list[tuple[str, str]] = []  # (merge, path)
-        self.combined: list[str] = []  # the commits whose versions an evil merge combined
-
-    def blob(self, commit: str, path: str) -> str | None:
-        if (commit, path) not in self.blobs:
-            self.blobs[(commit, path)] = self.git.blob_at(commit, path)
-        return self.blobs[(commit, path)]
-
-    def made(self, commit: str, path: str) -> str:
-        """The commit holding the change that brought ``path`` at ``commit`` (a plain commit or a merge)."""
-        return self.git.out("--literal-pathspecs", "log", "-1", "--first-parent", "--no-follow",
-                            "--no-show-signature", "--format=%H", commit, "--", path).strip()
-
-    def origin(self, start: str, path: str, depth: int = 0) -> str:
-        """The plain commit the version of ``path`` at ``start`` was made in."""
-        if (start, path) in self.origins:
-            return self.origins[(start, path)]
-        if depth > MAX_ORIGIN_DEPTH:
-            raise _Unplaceable(f"more than {MAX_ORIGIN_DEPTH} nested walks to place it")
-        commit = start
-        pending: list[tuple[str, str]] = []  # (merge, the file its first parent's line held)
-        for _ in range(MAX_ORIGIN_STEPS):
-            made = self.made(commit, path)
-            if not made:
-                raise _Unplaceable(f"no commit on the first-parent line of {start[:12]} made {safe_text(path)}")
-            parents = self.git.parents(made)
-            if len(parents) < 2:
-                break
-            held = self.blob(made, path)
-            if held is None:
-                raise _Unplaceable(f"merge {made[:12]} deleted {safe_text(path)}")
-            sources = [p for p in parents[1:] if self.blob(p, path) == held]
-            if not sources:
-                self.changes.append((made, path))
-                for side in parents[1:]:
-                    if self.blob(side, path) is not None:
-                        try:
-                            self.combined.append(self.origin(side, path, depth + 1))
-                        except _Unplaceable:
-                            pass
-                if self.blob(parents[0], path) is None:
-                    raise _Unplaceable(f"merge {made[:12]} wrote {safe_text(path)} over a line that held none")
-                commit = parents[0]
-                continue
-            if len(sources) > 1 and len({self.origin(p, path, depth + 1) for p in sources}) > 1:
-                raise _Unplaceable(f"merge {made[:12]} holds the version of {len(sources)} parents, made in "
-                                   "different commits")
-            first = self.blob(parents[0], path)
-            if first is None:
-                first = self.deleted_file(parents[0], path)
-            if first is not None:
-                pending.append((made, parents[0], first))
-            commit = sources[0]
-        else:
-            raise _Unplaceable(f"more than {MAX_ORIGIN_STEPS} commits to cross to place it")
-        self.origins[(start, path)] = made
-        for merge, main, first in pending:
-            if not self._keeps_main(made, path, main, first, depth + 1):
-                self.changes.append((merge, path))
-        return made
-
-    def _keeps_main(self, origin: str, path: str, main: str, first: str, depth: int) -> bool:
-        """Whether a merge taking the version made in ``origin`` drops nothing of its first parent ``main``'s line.
-
-        ``first`` is the file ``main`` holds (or, when ``main`` lacks it, the file
-        its line deleted). The taken version's chain is searched for a point
-        holding ``first``: the version itself, then each predecessor (the file
-        its commit's first parent held, then the origin of that file). Such a
-        point keeps the main line when either
-
-        - no commit reachable from ``main`` but not from the point changed the
-          file (``rev-list --full-history point..main -- path`` is empty): the
-          main line has no stretch of its own after it, so the taken chain holds
-          all of it; or
-        - the main line's version is the same revision as the point's
-          (_same_revision()): the same commit, or a cherry-picked or squashed
-          twin whose every step back to a common revision is byte for byte the
-          same, so the taken chain judges a copy of each of the main line's
-          steps.
-
-        Anything else (no such point, or the main line reached ``first`` again
-        after changes of its own, a step back to an older file, a lowering and
-        its undoing, a deletion) drops a stretch of the main line, and the merge
-        is a change.
-        """
-        point: str = origin
-        made: str | None = origin  # the origin of point's file, computed only when needed
-        for _ in range(MAX_ORIGIN_STEPS):
-            if self.blob(point, path) == first:
-                if not self.git.out("--literal-pathspecs", "rev-list", "-n", "1", "--full-history",
-                                    f"{point}..{main}", "--", path).strip():
-                    return True
-                made = made or self.origin(point, path, depth)
-                kept = (self.origin(main, path, depth) if self.blob(main, path) is not None
-                        else self.deleted_origin(main, path))
-                if kept is not None and self._same_revision(made, kept, path, depth):
-                    return True
-            made = made or self.origin(point, path, depth)
-            parents = self.git.parents(made)
-            if not parents or self.blob(parents[0], path) is None:
-                return False
-            point, made = parents[0], None
-        return False
-
-    def _same_revision(self, one: str, other: str, path: str, depth: int) -> bool:
-        """Whether two origins of the same file are one revision, or twins back to a common one.
-
-        Twins: both hold the same file, and so do their predecessors, pairwise,
-        until the two chains meet in one commit. A creation on either side, or
-        any pair that differs, ends it without a match.
-        """
-        for _ in range(MAX_ORIGIN_STEPS):
-            if one == other:
-                return True
-            if self.blob(one, path) != self.blob(other, path):
-                return False
-            befores = []
-            for commit in (one, other):
-                parents = self.git.parents(commit)
-                if not parents or self.blob(parents[0], path) is None:
-                    return False
-                befores.append(self.origin(parents[0], path, depth))
-            one, other = befores
-        return False
-
-    def deleted_file(self, start: str, path: str) -> str | None:
-        """The blob that the newest deletion of ``path`` on ``start``'s first-parent line took away.
-
-        The deleting commit's first parent's file, whether the deletion is a
-        plain commit or a merge that dropped the line's file. None when the line
-        never held ``path``: a merge bringing the file to it is an addition.
-        """
-        deleting = self.made(start, path)
-        if not deleting:
-            return None
-        parents = self.git.parents(deleting)
-        deleted = self.blob(parents[0], path) if parents else None
-        if deleted is None:
-            raise _Unplaceable(f"{deleting[:12]} deleted {safe_text(path)}, which its first parent didn't hold")
-        return deleted
-
-    def deleted_origin(self, start: str, path: str) -> str | None:
-        """The origin of the file the newest deletion on ``start``'s first-parent line took away (deleted_file())."""
-        deleting = self.made(start, path)
-        if not deleting:
-            return None
-        self.deleted_file(start, path)
-        return self.origin(self.git.parents(deleting)[0], path)
-
-    def revision(self, commit: str, path: str) -> int:
-        """The index in ``own`` of the revision ``commit`` made at ``path``."""
-        if (commit, path) not in self.index:
-            raise _Unplaceable(f"it was made in {commit[:12]}, which the probe's history walk does not list")
-        return self.index[(commit, path)]
-
-    def chain(self, current: str) -> list[tuple[str, str]]:
-        """``(commit, path)`` from the revision HEAD's file was made in back to the probe's creation.
-
-        A deletion is no revision. A restore (an addition after a deletion on
-        the same line) whose document equals the deleted one is none either;
-        any other restore is judged against the deleted revision, as if the
-        file had never been gone.
-        """
-        chain = [self.revision(self.origin("HEAD", current), current)]
-        while chain[-1] < len(self.own) - 1:  # the oldest listed revision is where the history starts
-            commit, path, status, source = self.own[chain[-1]]
-            before = source if status in ("R", "C") and source else path
-            parent = (self.git.parents(commit) or [None])[0]
-            if parent is None:
-                break
-            if self.blob(parent, before) is not None:
-                found = self.revision(self.origin(parent, before), before)
-            else:
-                deleting = self.made(parent, before)
-                if not deleting:
-                    break  # the probe's creation
-                deleted = self.deleted_origin(parent, before)
-                if deleted is None:
-                    raise _Unplaceable(f"{commit[:12]} restored {safe_text(before)}, which its line never held")
-                found = self.revision(deleted, before)
-                restored = _probe_doc(self.git, (commit, path), self.yaml)
-                if restored is not None and restored == _probe_doc(self.git, self.own[found][:2], self.yaml):
-                    chain.pop()
-            if self.own[found][:2] in self.cut:
-                break  # the supersede cut ends the history here, where the parentage reaches it
-            if found in chain:
-                raise _Unplaceable(f"its revisions in {self.own[found][0][:12]} lead back to themselves")
-            chain.append(found)
-        return [self.own[i][:2] for i in chain]
+    dropped: set[int] = set()
+    for i, (_, path, status, _) in enumerate(log):
+        if status != "D":
+            continue
+        dropped.add(i)
+        if 0 < i < len(log) - 1:
+            restore, before = log[i - 1], log[i + 1]
+            if restore[2] == "A" and restore[1] == path == before[1]:
+                restored = _probe_doc(git, (restore[0], restore[1]), yaml)
+                if restored is not None and restored == _probe_doc(git, (before[0], before[1]), yaml):
+                    dropped.add(i - 1)
+    return [(commit, path) for i, (commit, path, _, _) in enumerate(log) if i not in dropped]
 
 
 def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml: Any,
@@ -2240,10 +1997,6 @@ def _merges_changing(git: Git, revisions: list[tuple[str, str]], until: str) -> 
     for path, start, end in segments:
         for merge in git.merges_changing(start, end, path):
             if merge not in (m for m, _ in found):
-                found.append((merge, path))
-        for merge in sorted(git.restoring.get(path, ())):
-            if (merge not in (m for m, _ in found) and merge != start and git.is_ancestor_or_equal(start, merge)
-                    and git.is_ancestor_or_equal(merge, end)):
                 found.append((merge, path))
     return found
 
