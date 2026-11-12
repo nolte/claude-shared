@@ -870,19 +870,24 @@ class Git:
         Following renames matters: without it, renaming a weakened probe would make
         the rename commit look like the probe's first appearance.
 
-        ``--no-merges`` pins the walk to non-merge commits on every git version. Up to
-        git 2.55 ``--follow`` never diffed a merge, so a file a merge commit adds had no
-        history and a merge was never a creating commit (SEC-101). Git 2.56 runs copy
-        detection on merges while following: a probe added in a merge silently took
-        over the history of a similar kept probe, without the merge itself, and so
-        escaped the supersede cut.
+        The walk follows HEAD's first-parent line only (``--first-parent``, #720):
+        the probe is judged by what that line did to it, in plain commits. A
+        revision made on a merged line is not listed, whatever the merge did
+        with it; reconstructing a probe's lineage across merges is what let a
+        lowering be laundered through merge topology (a revision a merge
+        dropped, read as the predecessor of the line the merge kept). Which
+        line is the first parent is the committer's choice, so a repository
+        that accepts pushed merges on its audited branch lets the pusher pick
+        the judged line; _unlisted_write() still reports every plain write of
+        the probe's id that this walk does not list.
 
-        The walk is therefore blind to a merge commit whose result for the probe
-        differs from every parent (an "evil merge": a conflict resolution, or an
-        edit made while merging). ``--follow`` never listed such a merge on any
-        version, so it falls between two listed revisions unseen. Every check that
-        relies on "no probe change between these revisions" asks merges_changing()
-        about that span instead (_merges_changing).
+        ``--no-merges`` keeps merges out of the list on every git version (git
+        2.56 runs copy detection on merges while following, so a probe added in
+        a merge silently took over the history of a similar kept probe). A merge
+        on the line whose result for the probe differs from its first parent is
+        therefore unseen here: every check that relies on "no probe change
+        between these revisions" asks merges_changing() about that span instead
+        (_merges_changing), and each such merge is a change of the probe.
 
         Nor does the walk follow a rename made inside a merge, or start at a file a
         merge created: the history then begins at a later plain commit that edits
@@ -910,19 +915,15 @@ class Git:
         literal pathspecs keep a probe named like ``w[x].yml`` from matching the
         history of ``wx.yml``.
 
-        ``--topo-order`` lists every commit before its parents. ``--follow``
-        switches to the source path when it reaches the rename or copy that
-        created the file, and from then on matches only that path; in the
-        default committer-date order a descendant of that commit dated before it
-        (a backdated commit on a side branch merged later) would come after the
-        switch and never be listed, so a change to the probe could hide behind
-        its own creation. Topological order emits every descendant first.
-        _own_log() still checks the listed history against the probe-set
-        history and fails closed on any revision it misses.
+        ``--first-parent`` makes the walk linear, so the order is the parent
+        chain; ``--topo-order`` is kept so that no date can reorder it.
+        _own_log() checks the listed history against the probe-set history and
+        fails closed on a plain write of the probe's id it does not list.
         """
         if path in self._file_logs:
             return list(self._file_logs[path])
-        raw = self.out("--literal-pathspecs", "log", "--follow", "--no-merges", "--topo-order", "--no-show-signature",
+        raw = self.out("--literal-pathspecs", "log", "--follow", "--first-parent", "--no-merges", "--topo-order",
+                       "--no-show-signature",
                        "--no-color", "--format=%x00%H", "--name-status", "--", path)
         history: list[tuple[str, str, str, str]] = []
         for block in raw.split("\x00")[1:]:
@@ -1063,66 +1064,41 @@ class Git:
         return res.stdout
 
     def merges_changing(self, since: str | None, until: str, path: str) -> list[str]:
-        """Merge commits in ``since..until`` whose ``path`` differs from every parent, newest first.
+        """Merges on the first-parent line of ``since..until`` whose ``path`` differs from their first parent.
 
-        ``--full-history`` walks every parent of every merge: default history
-        simplification follows only the parent a merge is TREESAME to, and so
-        drops a side branch whose net result for ``path`` matches the main line,
-        an evil merge on it included. The combined diff (``-c``) names ``path``
-        for a merge exactly when its result differs from every parent; a merge
-        that took one side's version names nothing and is skipped, since that
-        side's own commit is in file_history() (listed in topological order, so
-        a backdated side commit is not lost behind a rename or copy; _own_log()
-        reports one the walk still misses). ``--no-follow``,
-        ``--no-show-signature``, ``--no-color`` and ``--no-renames`` keep the
-        repository's log and diff configuration from changing the output, and
-        literal pathspecs keep ``path`` from matching other files.
+        Newest first. Under the first-parent policy (#720) such a merge is a
+        change of the probe: it took another line's version, combined two, or
+        edited while merging, and the walk lists none of that. ``rev-list
+        --first-parent`` follows first parents only and, with a path, keeps a
+        merge exactly when it is not TREESAME to its first parent for it (content,
+        type or mode). Literal pathspecs keep ``path`` from matching other files.
+
+        A merge anywhere else in the span whose result differs from every parent
+        (a conflict resolution, or an edit made while merging; found with
+        ``--full-history -c``, which walks every parent of every merge) is
+        listed as well: it is a probe revision made on a merged line, and since
+        it is a merge, _unlisted_write(), which reads plain commits, does not
+        report it. Without it a line that edited the probe in a merge could be
+        dropped by a later merge that keeps another line as its first parent.
 
         ``since..until`` is empty when ``since`` is not an ancestor of ``until``.
-        file_history() lists in topological order, so a listed older revision is
-        never a descendant of a newer one, but it can sit on a parallel line
-        that is no ancestor either. The search then fails closed: it covers
-        every merge reachable from ``until``, as it does when ``since`` is None.
+        The listed revisions all lie on HEAD's first-parent line, so that only
+        happens for a caller's own span; the search then fails closed and covers
+        every merge on the line from ``until``, as it does when ``since`` is None.
         """
         if (since or "").startswith("-") or until.startswith("-"):
             raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
         revisions = f"{since}..{until}" if since and self.is_ancestor_or_equal(since, until) else until
+        merges = self.out("--literal-pathspecs", "rev-list", "--first-parent", "--merges", revisions, "--",
+                          path).split()
         raw = self.out("--literal-pathspecs", "log", "--no-follow", "--full-history", "--merges",
                        "--no-show-signature", "--no-color", "--no-renames", "-c", "--name-only",
                        "--format=%x00%H", revisions, "--", path)
-        merges: list[str] = []
         for block in raw.split("\x00")[1:]:
             lines = [ln for ln in block.splitlines() if ln.strip()]
-            if len(lines) > 1:
+            if len(lines) > 1 and lines[0].strip() not in merges:
                 merges.append(lines[0].strip())
         return merges
-
-    def merges_restoring(self, since: str, until: str, path: str) -> list[str]:
-        """Merge commits in ``since..until`` whose ``path`` differs from their first parent, newest first.
-
-        merges_changing() names a merge only when its result differs from every
-        parent, since a merge that took one side's version has that side's own
-        commit in file_history(). That commit can sit before ``since``: merging a
-        branch forked before ``since`` and taking its version for ``path`` brings
-        back an older revision, and the walk lists the older revision's commit
-        behind ``since``. Measured against its first parent, the line the merge
-        lands on, such a merge is a change of ``path``. ``rev-list
-        --full-history`` lists every merge not identical for ``path`` to all its
-        parents; each is then compared with its first parent by blob. The span
-        widens to every merge reachable from ``until`` when ``since`` is no
-        ancestor of it, as in merges_changing().
-        """
-        if since.startswith("-") or until.startswith("-"):
-            raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
-        revisions = f"{since}..{until}" if self.is_ancestor_or_equal(since, until) else until
-        merges = self.out("--literal-pathspecs", "rev-list", "--full-history", "--merges", revisions, "--",
-                          path).split()
-        changed = []
-        for merge in merges:
-            parents = self.parents(merge)
-            if parents and self.entry_at(merge, path) != self.entry_at(parents[0], path):
-                changed.append(merge)
-        return changed
 
     def entry_at(self, commit: str, path: str) -> tuple[str, str] | None:
         """``(type, hash)`` of the tree entry ``path`` at ``commit``, or None when absent.
@@ -1675,8 +1651,8 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     gone.
 
     The fifth value lists the merge commits after the baseline whose result for
-    the probe differs from every parent (_merges_changing): file_history() never
-    lists them, and each is as much an unapproved change as a later commit.
+    the probe differs from their first parent (_merges_changing): file_history()
+    never lists them, and each is as much an unapproved change as a later commit.
 
     The sixth value says why the listed history is incomplete (_origin_problem,
     _own_log): its oldest revision does not create the probe's path, so the
@@ -1706,20 +1682,17 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         if _derived_from_of(git.show(commit, path_then), yaml) != current:
             break
         run.append(commit)
-    dirty = git.is_dirty(probe.file)
+    # A probe the history lists but HEAD doesn't hold was deleted in a commit; the file on disk is then an
+    # uncommitted re-creation, which is_dirty() (staged changes only, for a path HEAD lacks) doesn't see.
+    dirty = git.is_dirty(probe.file) or git.entry_at("HEAD", probe.file) is None
     if not run:
         # The newest listed revision already carries another derived_from than the
         # working tree: either the recording is uncommitted, or a merge after that
-        # revision changed the probe, which file_history() cannot list. That merge
-        # differs from every parent (an evil merge), or it took the probe from a
-        # parent whose version the walk lists only further back, such as an older
-        # approved revision restored by merging a branch forked before the newest
-        # one (merges_restoring). The newest commit is the baseline; with none of
-        # these found, fail closed as uncommitted.
-        newest, path = history[0]
+        # revision changed the probe against its first parent, which file_history()
+        # cannot list. The newest commit is the baseline; with no such merge found,
+        # fail closed as uncommitted.
         merges = [m for m, _ in _merges_changing(git, history[:1], "HEAD")]
-        merges += [m for m in git.merges_restoring(newest, "HEAD", path) if m not in merges]
-        return newest, [], dirty or not merges, [], merges, origin
+        return history[0][0], [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
     return run[-1], run[:-1], dirty, history[len(run):], merges, origin
 
@@ -1833,18 +1806,22 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
                     own: list[tuple[str, str, str, str]]) -> str | None:
     """Why the listed ``own`` revisions miss a change to the probe, or None.
 
-    The ids are the probe's id now and every id one of ``own`` carried. A
-    write of such an id (ProbeHistory.writes, which reads every probe revision
-    in HEAD's history, the file name stem standing in for a missing id) in a
-    plain commit that ``own`` does not list is a change the walk missed when it
+    A write of a probe file under any id (ProbeHistory.writes, which reads
+    every probe revision in HEAD's history, the file name stem standing in for
+    a missing id) in a plain commit that ``own`` does not list is a change the
+    walk missed when it
     lies on one of the probe's paths in a commit that does not descend from the
     newer revision that moved the probe away from that path (the probe's
     current path has no such revision). Then the listed history is incomplete.
     A file placed on a path after the probe left it is not the probe's change
     (_merges_changing() cuts its search the same way). One on a path before
-    the probe came there is counted: carrying the probe's id, it is an earlier
-    probe under that id whose revisions the walk does not list, as when a
-    probe is deleted, re-created under its id at another path, and moved back.
+    the probe came there is counted: it is an earlier probe file whose
+    revisions the walk does not list, as when a probe is deleted, re-created
+    under its id at another path, and moved back. The id does not matter: the
+    walk follows first parents only (#720), so a revision of the file on a
+    merged line is unlisted under whichever id it was written, and a line
+    that holds the approved probe under another id than HEAD's is as much a
+    dropped revision as one under the same id.
     Merges are left to _merges_changing(), since the walk never lists them.
     """
     listed = {(commit, path) for commit, path, _, _ in own}
@@ -1852,8 +1829,7 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
     for i, (_, path, _, _) in enumerate(own):
         if i == 0 or path != own[i - 1][1]:
             segments.append((path, own[i - 1][0] if i else None))
-    ids = {probe.pid} | {pid for pid, writes in history.writes.items() if any(w in listed for w in writes)}
-    for pid in sorted(ids):
+    for pid in sorted(history.writes):
         for commit, path in history.writes.get(pid, []):
             if (commit, path) in listed or commit in history.merges:
                 continue
@@ -1938,8 +1914,8 @@ def _merge_origin(git: Git, path: str) -> str | None:
     changed in a plain commit since has an empty history. Read as "not
     committed", it would only be withheld, with no finding, although the merge
     committed it without a derivation anyone can judge (SEC-101). When HEAD
-    holds the path, the merges whose result for it differs from every parent
-    (Git.merges_changing() over all of HEAD's history) are named, the one that
+    holds the path, the merges on HEAD's first-parent line whose result for it
+    differs from their first parent (Git.merges_changing()) are named, the one that
     created it among them; a file HEAD does not hold is genuinely uncommitted
     (None).
     """
@@ -1960,8 +1936,8 @@ def _merges_changing(git: Git, revisions: list[tuple[str, str]], until: str) -> 
     ``revisions`` are probe revisions ``(commit, path)`` newest first, as
     file_history() lists them; the span runs from the oldest of them up to
     ``until`` (a later revision, or HEAD). A merge whose result for the probe
-    differs from every parent sits between two listed revisions unseen, so a
-    check that relies on "no probe change in between" asks here.
+    differs from its first parent sits between two listed revisions unseen, so
+    a check that relies on "no probe change in between" asks here.
 
     The path changes with a rename, so the span is cut where it does: each run
     of consecutive revisions under one path is searched from its oldest revision

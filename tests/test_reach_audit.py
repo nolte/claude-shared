@@ -3819,15 +3819,17 @@ def test_701_a_merge_after_approval_that_leaves_the_probe_alone_stays_clean(targ
     assert marker.exists()
 
 
-def test_701_a_side_branch_probe_edit_merged_without_conflict_reads_as_before(target, tmp_path):
-    """AC (c): the merge takes the side's version, so the side commit alone is the change, named once."""
+def test_701_a_side_branch_probe_edit_merged_without_conflict_names_the_merge(target, tmp_path):
+    """Since #720 the probe is judged along HEAD's first-parent line: the merge that takes the side's version
+    is the change, and the side commit is a write the walk doesn't list."""
     marker = tmp_path / "ran"
     rel, recorded = _probe_observing_one(target, marker)
     side, merge = _merge_side(target, on_side=lambda: _rewrite(target, rel, expected_value=1))
-    assert ra.Git(target.path).merges_changing(recorded, "HEAD", rel) == []
+    assert ra.Git(target.path).merges_changing(recorded, "HEAD", rel) == [merge]
+    assert side not in [c for c, _ in ra.Git(target.path).file_history(rel)]
     reason = _weakened_reason(target, marker)
-    assert reason == f"weakened: probe changed in {side[:12]} after its derivation was recorded in {recorded[:12]}"
-    assert merge[:12] not in reason
+    assert reason == (f"weakened: {_unlisted(side)}; probe changed in merge {merge[:12]} after its derivation "
+                      f"was recorded in {recorded[:12]}"), reason
 
 
 def test_701_two_clean_edits_combined_by_a_merge_name_the_merge_too(target, tmp_path):
@@ -4002,11 +4004,14 @@ def test_701_a_search_start_that_is_no_ancestor_widens_instead_of_finding_nothin
     target.write("unrelated.txt", "main\n")
     target.commit("main work")
     target.git("merge", "-q", "--no-ff", "--no-edit", "late")
+    late = target.git("rev-parse", "HEAD")
     git = ra.Git(target.path)
     history = git.file_history(rel)
-    assert [c for c, _ in history][0] == forged and git.is_ancestor_or_equal(after, forged)
-    span = [rev for rev in history if rev[0] not in (after, forged)] + [(forged, rel)]
-    assert [m for m, _ in ra._merges_changing(git, span, after)] == [merge]
+    # Since #720 the walk follows first parents only: D, on the merged branch, is not listed at all, and the
+    # merge that took its version is found as a change against its first parent.
+    assert forged not in [c for c, _ in history] and history[0][0] == after
+    assert [m for m, _ in ra._merges_changing(git, history, "HEAD")] == [late, merge]
+    assert git.is_ancestor_or_equal(after, forged) and not git.is_ancestor_or_equal(forged, after)
     assert git.merges_changing(forged, after, rel) == [merge]
 
 
@@ -4856,9 +4861,9 @@ def test_688_a_weakened_probe_re_added_at_its_path_as_a_copy_is_not_read_as_fres
     assert _status_of(target, rel, readded) == ("C", "project/reach-probes/p3.yml")
     state, reason = _state(target, pid)
     assert state == ra.STATE_WEAKENED, reason
-    assert not new_id or (f"the probe was created in {readded[:12]} as a copy of project/reach-probes/p3.yml at "
-                          f"{rel}, which "
-            f"already held a file in {removal[:12]}") in reason, reason
+    # Since #720 the path's earlier revisions, under whichever id, are writes the walk must list.
+    assert removal and (not new_id or f"changed {rel} under the id p1, but the probe's history walk does not list "
+                        "it" in reason), reason
 
 
 def test_688_a_copy_that_takes_the_source_s_id_keeps_the_source_s_history(target):
@@ -4931,16 +4936,16 @@ def test_688_SEC2_a_re_created_id_moved_back_onto_its_old_path_stays_weakened(ta
     assert row_of(report, "xid")[7] == ra.STATE_WEAKENED, row_of(report, "xid")
 
 
-def test_688_SEC1_a_copy_merged_in_from_a_side_branch_stays_clean(target):
-    """A --no-ff merge writes p2 (it differs from main's parent), after the copy: that write keeps p2's id new."""
+def test_688_SEC1_a_copy_merged_in_from_a_side_branch_has_its_origin_in_the_merge(target):
+    """Since #720 the walk follows first parents: a probe a --no-ff merge brings in has no listed creating
+    commit, so its origin is the merge and it reads weakened. Read clean before #720, by following the side."""
     derived_probe(target)
     side, merge = _merge_side(target, on_side=lambda: target.write_probe(make_probe("p2", derived_from=_blob(target))))
-    assert _status_of(target, P2_REL, side) == ("C", P1_REL), "git no longer pairs the copy"
+    assert ra.Git(target.path).file_log(P2_REL) == []
     history = ra.probe_set_history(ra.Git(target.path), yaml, target.git("rev-parse", "HEAD"))
     assert (merge, P2_REL) in history.writes["p2"], history.writes["p2"]
-    code, report = run_audit(target)
-    assert code == ra.EXIT_OK, report
-    assert row_of(report, "p2")[7] == ra.STATE_CLEAN
+    state, reason = _state(target, "p2")
+    assert state == ra.STATE_WEAKENED and f"it was created inside merge {merge[:12]}" in reason, reason
 
 
 # Second security review of #688: a backdated side commit hides behind the creating copy or rename.
@@ -4974,13 +4979,17 @@ def test_688_SEC3_a_backdated_lowering_after_a_copy_is_listed_and_weakens_the_co
     y = f"{PROBES}/y.yml"
     assert _status_of(target, y, created) == ("C", f"{PROBES}/q.yml"), "git no longer pairs the copy"
     lowering = _backdated_lowering(target, created, y)
-    assert lowering in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
+    merge = target.git("rev-parse", "HEAD")
+    # Since #720 the walk follows first parents: the lowering on the merged branch is an unlisted write, and
+    # the merge that took it is the change.
+    assert lowering not in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
     code, report = run_audit(target)
     assert code == ra.EXIT_FINDINGS, report
     row = row_of(report, "xid")
     assert row[7] == ra.STATE_WEAKENED, row
-    assert (f"probe changed in {lowering[:12]} after its derivation was recorded in {created[:12]}"
-            in _plain(row[9])), row[9]
+    assert _plain(row[9]).startswith(f"weakened: {lowering[:12]} changed {y} under the id xid, but the probe's "
+                                     "history walk does not list it"), row[9]
+    assert f"merge {merge[:12]} after its derivation was recorded in " in _plain(row[9]), row[9]
 
 
 def test_688_SEC3_a_backdated_lowering_after_a_rename_names_the_lowering(target):
@@ -4993,9 +5002,11 @@ def test_688_SEC3_a_backdated_lowering_after_a_rename_names_the_lowering(target)
     renamed = target.commit("C'")
     assert _status_of(target, y, renamed) == ("R", f"{PROBES}/w.yml")
     lowering = _backdated_lowering(target, renamed, y)
-    assert lowering in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
+    merge = target.git("rev-parse", "HEAD")
+    assert lowering not in [c for c, _, _, _ in ra.Git(target.path).file_log(y)]
     state, reason = _state(target, "xid")
-    assert state == ra.STATE_WEAKENED and "probe changed in " in reason and lowering[:12] in reason, reason
+    assert state == ra.STATE_WEAKENED and f"merge {merge[:12]} after its derivation was recorded in " in reason
+    assert reason.startswith(f"weakened: {lowering[:12]} changed {y} under the id xid"), reason
 
 
 def test_688_SEC3_a_change_the_walk_does_not_list_is_reported_as_an_incomplete_history(target, monkeypatch):
@@ -6424,7 +6435,6 @@ def _restored_by_a_merge(target: Target, marker: Path, *, old_declaration: bool)
 
 # The probe-lineage reconstruction from #709 rounds 2-6 was cut (it didn't converge): a lowering can still be
 # laundered through merge topology. Scenarios that read clean on the cut runner (= develop) name that gap.
-XFAIL_720 = pytest.mark.xfail(strict=True, reason="laundering through merge topology, #720")
 
 
 @pytest.mark.parametrize("old_declaration", [False, True])
@@ -6504,11 +6514,10 @@ def _backport(target: Target, marker: Path, shape: str) -> dict[str, str]:
     return named
 
 
-@pytest.mark.xfail(strict=True, reason="a backport across a rename reads weakened: telling it from a dropped "
-                                        "approved revision needs a rule for which line counts, #720")
 @pytest.mark.parametrize("shape", ["decl-then-pick", "pick", "reverse"])
-def test_709_K5_a_backport_across_a_rename_merged_back_unchanged_is_clean(target, tmp_path, shape):
-    """Candidate 5 of #709, measured and left as it is on develop: exit 4, "<picked> changed project/reach-probes/p1.yml under the id p1, but the
+def test_709_K5_a_backport_across_a_rename_merged_back_unchanged_reads_weakened(target, tmp_path, shape):
+    """Candidate 5 of #709, a known false positive kept by #720 (the unlisted-write rule can't tell it from
+    an approved revision a merge dropped): exit 4, "<picked> changed project/reach-probes/p1.yml under the id p1, but the
     probe's history walk does not list it, so the listed history is incomplete …" although the merge leaves
     the probe byte-identical to main's."""
     marker = tmp_path / "ran"
@@ -6516,8 +6525,7 @@ def test_709_K5_a_backport_across_a_rename_merged_back_unchanged_is_clean(target
     assert target.git("rev-parse", f"{named['M']}^1:{RENAMED}") == target.git("rev-parse", f"{named['M']}:{RENAMED}")
     unlisted = named["W"] if shape == "reverse" else named["picked"]
     assert unlisted not in [c for c, _ in ra.Git(target.path).file_history(RENAMED)]
-    _assert_clean(target)
-    assert marker.exists()
+    assert _weakened_reason(target, marker) == f"weakened: {_unlisted(unlisted)}"
 
 
 def _unlisted(write: str) -> str:
@@ -6673,7 +6681,7 @@ def test_709_K5_ADV_a_dropped_lowered_bar_renamed_on_its_line_and_merged_again_a
     """(c) without any merge edit: a branch off release renames the lowered probe to main's name and a second
     merge takes that file as it is, so the merge equals its second parent and no combined diff names it."""
     marker = tmp_path / "ran"
-    named = _lowered_on_release(target, marker)
+    _lowered_on_release(target, marker)
     _merge_release_keeping_main(target)
     target.git("checkout", "-q", "-b", "again", "release")
     target.git("mv", P1_REL, RENAMED)
@@ -6686,7 +6694,7 @@ def test_709_K5_ADV_a_dropped_lowered_bar_renamed_on_its_line_and_merged_again_a
     assert target.git("rev-parse", f"{second}^2:{RENAMED}") == target.git("rev-parse", f"{second}:{RENAMED}")
     assert "value: 1" in target.git("show", f"HEAD:{RENAMED}")
     reason = _weakened_reason(target, marker)
-    assert f"probe changed in {named['W'][:12]}, {moved[:12]} after its derivation was recorded in " in reason, reason
+    assert moved[:12] in reason and f"probe changed in merge {second[:12]} after its derivation" in reason, reason
 
 
 # --------------------------------------------------------------------------- #
@@ -6725,19 +6733,14 @@ def _side_revision_then_lowering(target: Target, marker: Path, merge: str, side_
     return {"R0": r0, "S": s, "R1": r1, "M": m, "L": lowered, "rel": rel}
 
 
-@pytest.mark.parametrize("merge,side_anchor", [pytest.param("s-ours", "same", marks=XFAIL_720),
-                                               pytest.param("X-ours", "same", marks=XFAIL_720),
-                                               pytest.param("octopus", "same", marks=XFAIL_720),
+@pytest.mark.parametrize("merge,side_anchor", [("s-ours", "same"), ("X-ours", "same"), ("octopus", "same"),
                                                ("s-ours", "other")])
 def test_709_F1_a_side_revision_a_merge_dropped_does_not_launder_a_later_lowering(target, tmp_path, merge,
                                                                                 side_anchor):
     marker = tmp_path / "ran"
     named = _side_revision_then_lowering(target, marker, merge, side_anchor)
-    walk = [c for c, _ in ra.Git(target.path).file_history(named["rel"])]
-    print(merge, side_anchor, [ {v: k for k, v in named.items()}.get(c, c[:8]) for c in walk])
-    reason = _weakened_reason(target, marker)
-    if side_anchor == "same":
-        assert reason == _weakened_at(named["R1"], named["L"]), reason
+    assert [c for c, _ in ra.Git(target.path).file_history(named["rel"])] == [named["L"], named["R1"], named["R0"]]
+    assert _weakened_reason(target, marker) == _unlisted_and(named["S"], _weakened_at(named["R1"], named["L"]))
 
 
 @pytest.mark.parametrize("lowering_on", ["side", "main"])
@@ -7001,12 +7004,11 @@ def test_709_A2_an_uncommitted_pin_file_proves_nothing(target):
 # --------------------------------------------------------------------------- #
 # #709 round 4 (adversarial review 3): H1, H2, L1, and the honest chains that must stay clean
 # --------------------------------------------------------------------------- #
-def _cannot_place(why: str) -> str:
-    return (f"weakened: the probe's origin can't be placed: {why}; a derivation whose history can't be read as "
-            "a chain of parents cannot be judged")
+def _unlisted_and(write: str, weakened: str) -> str:
+    """The reason of a probe with an unlisted write on a merged line and a weakening on HEAD's own line."""
+    return f"weakened: {_unlisted(write)}; " + weakened.removeprefix("weakened: ")
 
 
-@XFAIL_720
 def test_709_H1a_a_plain_delete_and_restore_after_the_lowering_does_not_launder_it(target, tmp_path):
     """Measured on 442cd24c: clean, exit 0, executed. The restore was dropped as a no-op, the walk then
     stopped at a plain commit it doesn't list and fell back to the list's order."""
@@ -7017,10 +7019,9 @@ def test_709_H1a_a_plain_delete_and_restore_after_the_lowering_does_not_launder_
     target.commit("delete the probe")
     target.write(named["rel"], text)
     target.commit("restore the same bytes")
-    assert _weakened_reason(target, marker) == _weakened_at(named["R1"], named["L"])
+    assert _weakened_reason(target, marker) == _unlisted_and(named["S"], _weakened_at(named["R1"], named["L"]))
 
 
-@XFAIL_720
 @pytest.mark.parametrize("holding", ["L", "R1"])
 def test_709_H1b_a_delete_and_a_restore_by_merge_does_not_launder_the_lowering(target, tmp_path, holding):
     """Measured on 442cd24c (holding L's version): clean, exit 0, executed. Restoring the deleted revision
@@ -7038,15 +7039,12 @@ def test_709_H1b_a_delete_and_a_restore_by_merge_does_not_launder_the_lowering(t
     target.git("merge", "-q", "--no-ff", "--no-commit", "keep")
     target.git("checkout", "keep", "--", rel)
     merge = target.commit("merge keep, restoring the probe")
-    reason = _weakened_reason(target, marker)
-    if holding == "L":
-        assert reason == _weakened_at(named["R1"], named["L"]), reason
-    else:
-        assert reason == f"weakened: probe changed in merge {merge[:12]} after its derivation was recorded in " \
-                         f"{named['R1'][:12]}", reason
+    # Since #720 a restore by merge is a change against the merge's first parent, whichever revision it holds.
+    assert _weakened_reason(target, marker) == _unlisted_and(
+        named["S"], f"probe changed in {named['L'][:12]}, merge {merge[:12]} after its derivation was recorded in "
+                    f"{named['R1'][:12]}")
 
 
-@XFAIL_720
 @pytest.mark.parametrize("merges", [3, 1001])
 def test_709_H1c_merges_past_the_step_limit_read_weakened_not_the_list_order(target, tmp_path, merges):
     """Measured on 442cd24c: 1001 plumbing merges (tree of L, parents R1 and the previous one) read clean,
@@ -7058,11 +7056,12 @@ def test_709_H1c_merges_past_the_step_limit_read_weakened_not_the_list_order(tar
     for i in range(merges):
         previous = target.git("commit-tree", tree, "-p", named["R1"], "-p", previous, "-m", f"plumbing {i}")
     target.git("reset", "-q", "--hard", previous)
+    # Since #720: the plumbing merges have R1 as first parent, so L is off HEAD's first-parent line and the
+    # newest merge is the change against it, however many there are.
     reason = _weakened_reason(target, marker)
-    if merges <= 1000:
-        assert reason == _weakened_at(named["R1"], named["L"]), reason
-    else:
-        assert reason == _cannot_place("more than 1000 commits to cross to place it"), reason
+    assert "the probe's history walk does not list it" in reason, reason
+    assert reason.endswith(f"probe changed in merge {previous[:12]} after its derivation was recorded in "
+                           f"{named['R1'][:12]}"), reason
 
 
 def _approved_bar_one(target: Target, marker: Path) -> tuple[str, str, str]:
@@ -7081,7 +7080,6 @@ def _approved_bar_one(target: Target, marker: Path) -> tuple[str, str, str]:
     return rel, r0, d
 
 
-@XFAIL_720
 @pytest.mark.parametrize("shape", ["plain", "criss-cross"])
 def test_709_H2_a_restore_through_a_branch_that_merged_main_with_ours_is_weakened(target, tmp_path, shape):
     """Measured on 442cd24c: clean, exit 0, executed (bar 2 back to 1, the declaration V1 both times). The
@@ -7106,7 +7104,7 @@ def test_709_H2_a_restore_through_a_branch_that_merged_main_with_ours_is_weakene
     assert target.git("rev-parse", f"HEAD:{DECL}") == target.git("rev-parse", f"{r0}:{DECL}")
     reason = _weakened_reason(target, marker)
     assert reason == f"weakened: probe changed in merge {merge[:12]} after its derivation was recorded in " \
-                     f"{r0[:12]}", reason
+                     f"{d[:12]}", reason
 
 
 @pytest.mark.parametrize("order", [["launder", "honest"], ["honest", "launder"]])
@@ -7149,14 +7147,18 @@ def _honest(target: Target, marker: Path, shape: str) -> None:
     elif shape == "unrelated-merge-then-re-derive":
         _merge_side(target)
         _rederive(target, rel, next(texts), "re-derive")
-    elif shape in ("feature-branch", "six-prs"):
-        for n in range(6 if shape == "six-prs" else 1):
+    elif shape.startswith(("feature-branch", "six-prs")):
+        for n in range(6 if shape.startswith("six-prs") else 1):
             target.git("checkout", "-q", "-b", f"pr{n}")
             _rederive(target, rel, next(texts), f"re-derive in pr{n}")
             target.git("checkout", "-q", "main")
             target.write(f"main{n}.txt", "main\n")
             target.commit(f"main moves on beside pr{n}")
-            target.git("merge", "-q", "--no-ff", "-m", f"merge pr{n}", f"pr{n}")
+            if shape.endswith("-squashed"):
+                target.git("merge", "-q", "--squash", f"pr{n}")
+                target.commit(f"squash pr{n}")
+            else:
+                target.git("merge", "-q", "--no-ff", "-m", f"merge pr{n}", f"pr{n}")
     elif shape == "delete-and-restore":
         text = (target.path / rel).read_text()
         target.git("rm", "-q", rel)
@@ -7177,17 +7179,28 @@ def _honest(target: Target, marker: Path, shape: str) -> None:
 
 
 @pytest.mark.parametrize("shape", ["re-derive", "lower-with-declaration", "unrelated-merge-then-re-derive",
-                                   "feature-branch", "six-prs", "delete-and-restore",
-                                   "delete-and-restore-by-merge"])
+                                   "feature-branch-squashed", "six-prs-squashed", "delete-and-restore"])
 def test_709_H_honest_chains_stay_clean(target, tmp_path, shape):
-    """Fail-closed must not make the runner unusable: every honest form reads clean and runs."""
+    """Fail-closed must not make the runner unusable: every honest form whose probe changes land in plain
+    commits on HEAD's first-parent line reads clean and runs."""
     marker = tmp_path / "ran"
     _honest(target, marker, shape)
     _assert_clean(target)
     assert marker.exists()
 
 
-@XFAIL_720
+@pytest.mark.parametrize("shape", ["feature-branch", "six-prs", "delete-and-restore-by-merge"])
+def test_720_a_probe_change_carried_by_a_merge_reads_weakened_naming_the_merge(target, tmp_path, shape):
+    """#720, the first-parent policy: the same honest chains as above, with the probe change carried in by a
+    --no-ff merge instead of a squash. The runner doesn't follow merged lines, so each such merge is a change
+    against its first parent. Read clean before #720."""
+    marker = tmp_path / "ran"
+    _honest(target, marker, shape)
+    merges = target.git("rev-list", "--first-parent", "--merges", "HEAD").split()
+    reason = _weakened_reason(target, marker)
+    assert all(f"merge {merge[:12]}" in reason for merge in merges) and merges, reason
+
+
 def test_709_H_a_committed_deletion_with_an_untracked_file_back_in_place_is_weakened(target, tmp_path):
     """HEAD holds no file at the probe's path, but its history does: the file on disk is an uncommitted change."""
     marker = tmp_path / "ran"
@@ -7246,18 +7259,106 @@ def _gitflow(target: Target, marker: Path, shape: str) -> None:
     assert target.git("status", "--porcelain") == ""
 
 
+def _keep_as_first_parent(target: Target, start: str) -> str:
+    """`evil` forks at ``start``, does unrelated work, merges main with `-s ours`, and main is moved to that
+    merge: main's own line is now a merged branch that the merge dropped. Returns the merge."""
+    target.git("checkout", "-q", "-b", "evil", start)
+    target.write("evil.txt", "evil\n")
+    target.commit("work on evil")
+    target.git("merge", "-q", "--no-ff", "-s", "ours", "-m", "merge main, keeping evil", "main")
+    target.git("checkout", "-q", "-B", "main")
+    return target.git("rev-parse", "HEAD")
+
+
+def test_720_a_probe_revision_made_in_a_merge_on_a_dropped_line_is_still_a_change(target, tmp_path):
+    """Pre-PR review of #720. A approves bar 1; main raises the bar to 2 inside a merge (E); a line forked at
+    A merges main with `-s ours` and becomes main's tip, so HEAD holds bar 1 again. E is off HEAD's
+    first-parent line, and as a merge no plain-commit rule reports it. Measured with the first-parent walk
+    alone: clean, exit 0, executed; on develop weakened with this reason."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"),
+                         expected={"kind": "count", "value": 1, "unit": "collections"})
+    approved = target.git("rev-parse", "HEAD")
+    _, raising = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=2))
+    _keep_as_first_parent(target, approved)
+    assert "value: 1" in target.git("show", f"HEAD:{rel}")
+    assert _weakened_reason(target, marker) == (f"weakened: probe changed in merge {raising[:12]} after its "
+                                                f"derivation was recorded in {approved[:12]}")
+
+
+def test_720_a_merge_that_changes_only_the_probes_file_mode_is_named(target, tmp_path):
+    """Pre-PR review of #720: weakened on develop (the merge differs from every parent); a first-parent
+    comparison by blob alone read it clean."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+    _, merge = _merge_side(target, in_merge=lambda: os.chmod(target.path / rel, 0o755))
+    assert target.git("ls-tree", "HEAD", "--", rel).startswith("100755")
+    assert _weakened_reason(target, marker) == (f"weakened: probe changed in merge {merge[:12]} after its "
+                                                f"derivation was recorded in {recorded[:12]}")
+
+
+def test_720_an_approved_probe_on_a_dropped_line_under_another_id_is_an_unlisted_write(target, tmp_path):
+    """Pre-PR review of #720. main approves p1 at p1.yml (bar 2); a line forked before writes p1.yml under
+    the id p2 with bar 1, merges main with `-s ours` and becomes main's tip. Measured with the rule keyed on
+    the probe's own ids: the p2 row clean (develop: weakened); p1 reads removed either way."""
+    marker = tmp_path / "ran"
+    start = target.git("rev-parse", "HEAD")
+    _, approved = _probe_observing_one(target, marker)
+    target.git("checkout", "-q", "-b", "evil", start)
+    target.write(P1_REL, yaml.safe_dump(make_probe("p2", derived_from=_blob_now(target, DECL),
+                                                   argv=marker_argv(marker, "1"),
+                                                   expected={"kind": "count", "value": 1, "unit": "collections"}),
+                                        sort_keys=False))
+    target.commit("another id at the same path, bar 1")
+    target.git("merge", "-q", "--no-ff", "-s", "ours", "-m", "merge main, keeping evil", "main")
+    target.git("checkout", "-q", "-B", "main")
+    state, reason = _state(target, "p2")
+    assert state == ra.STATE_WEAKENED and reason == f"weakened: {_unlisted(approved)}", reason
+    assert not marker.exists()
+
+
+@pytest.mark.parametrize("landing", ["on-the-branch", "fast-forwarded", "squashed"])
+def test_720_a_branch_that_merged_the_main_line_reads_its_probe_changes_as_merged_in(target, tmp_path, landing):
+    """#720: main re-derives honestly (C); `feature`, forked before, merges main into itself ("Update
+    branch"). Audited on the feature branch, or after main is fast-forwarded to it, the main line is the
+    merged branch: C is a write the walk doesn't list and the update merge is the change. Squash-merged
+    into main instead, main's own line holds C and the probe reads clean."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker))
+    target.git("branch", "feature")
+    c = _rederive(target, rel, DECL_V2, "C: re-derive on main")
+    target.git("checkout", "-q", "feature")
+    target.write("feature.txt", "feature\n")
+    target.commit("feature work")
+    target.git("merge", "-q", "--no-ff", "-m", "update branch", "main")
+    update = target.git("rev-parse", "HEAD")
+    if landing == "squashed":
+        target.git("checkout", "-q", "main")
+        target.git("merge", "-q", "--squash", "feature")
+        target.commit("squash feature")
+        _assert_clean(target)
+        assert marker.exists()
+        return
+    if landing == "fast-forwarded":
+        target.git("checkout", "-q", "main")
+        target.git("merge", "-q", "--ff-only", "feature")
+    reason = _weakened_reason(target, marker)
+    assert _unlisted(c) in reason and f"probe changed in merge {update[:12]}" in reason, reason
+
+
 @pytest.mark.parametrize("shape", ["hotfix", "release", "squash-then-merge", "by-merge"])
-def test_709_FP1_a_cherry_picked_or_squashed_twin_of_the_main_lines_revision_stays_clean(target, tmp_path, shape):
-    """Measured on 78418bf0: hotfix, release and squash-then-merge weakened ("probe changed in merge …"),
-    by-merge clean. The taken version builds on a byte-identical twin of the main line's file."""
+def test_709_FP1_a_gitflow_merge_that_carries_a_probe_change_reads_weakened(target, tmp_path, shape):
+    """Since #720 (first-parent policy): the merge into develop takes a re-derivation made on another line, so
+    it differs from its first parent and is named. Read clean before #720, by following the merged line."""
     marker = tmp_path / "ran"
     _gitflow(target, marker, shape)
-    _assert_clean(target)
-    assert marker.exists()
+    merge = target.git("rev-parse", "HEAD")
+    assert f"merge {merge[:12]}" in _weakened_reason(target, marker)
 
 
-def test_709_FP2_a_hundred_and_twenty_honest_no_ff_prs_stay_clean(target, tmp_path):
-    """Measured on 78418bf0: 55 PRs read "merges nest more than 50 deep" (weakened, exit 4)."""
+def test_709_FP2_a_hundred_and_twenty_honest_squashed_prs_stay_clean(target, tmp_path):
+    """The squash-merge workflow at length (and a run-time check). As --no-ff merges the same PRs read
+    weakened since #720 (test_720_a_probe_change_carried_by_a_merge_reads_weakened_naming_the_merge)."""
     marker = tmp_path / "ran"
     rel = _content_probe(target, argv=marker_argv(marker))
     for n in range(120):
@@ -7265,7 +7366,8 @@ def test_709_FP2_a_hundred_and_twenty_honest_no_ff_prs_stay_clean(target, tmp_pa
         _rederive(target, rel, f"# Requirements\n\n## Export\n\nExports 3 collections, wording {n}.\n",
                   f"re-derive in pr{n}")
         target.git("checkout", "-q", "main")
-        target.git("merge", "-q", "--no-ff", "-m", f"merge pr{n}", f"pr{n}")
+        target.git("merge", "-q", "--squash", f"pr{n}")
+        target.commit(f"squash pr{n}")
     started = time.monotonic()
     _assert_clean(target)
     print(f"FP2: 120 PRs audited in {time.monotonic() - started:.1f}s")
@@ -7273,8 +7375,10 @@ def test_709_FP2_a_hundred_and_twenty_honest_no_ff_prs_stay_clean(target, tmp_pa
 
 
 @pytest.mark.parametrize("then", ["nothing", "re-derive"])
-def test_709_FP3_a_reverted_merge_that_deleted_the_probe_stays_clean(target, tmp_path, then):
-    """Measured on 78418bf0: weakened for good ("merge … deleted …"), also after an honest re-derivation."""
+def test_709_FP3_a_reverted_merge_that_deleted_the_probe_reads_weakened(target, tmp_path, then):
+    """Since #720 (first-parent policy): the merge that deleted the probe is a change against its first
+    parent, and no later re-derivation clears it. A deletion and its revert in plain commits stay clean
+    (test_709_H_honest_chains_stay_clean[delete-and-restore])."""
     marker = tmp_path / "ran"
     rel = _content_probe(target, argv=marker_argv(marker))
     target.git("checkout", "-q", "-b", "drop")
@@ -7288,8 +7392,7 @@ def test_709_FP3_a_reverted_merge_that_deleted_the_probe_stays_clean(target, tmp
     target.git("revert", "--no-edit", "-m", "1", merge)
     if then == "re-derive":
         _rederive(target, rel, DECL_V2, "an honest re-derivation")
-    _assert_clean(target)
-    assert marker.exists()
+    assert merge[:12] in _weakened_reason(target, marker)
 
 
 def test_709_FP3_a_reverted_deletion_merge_restoring_other_bytes_is_judged(target, tmp_path):
@@ -7304,12 +7407,13 @@ def test_709_FP3_a_reverted_deletion_merge_restoring_other_bytes_is_judged(targe
     target.write("main.txt", "main\n")
     target.commit("main work")
     target.git("merge", "-q", "--no-ff", "-m", "merge drop", "drop")
+    merge = target.git("rev-parse", "HEAD")
     target.write(rel, text.replace("value: 2", "value: 1"))
     restored = target.commit("restore with a lowered bar")
-    assert _weakened_reason(target, marker) == _weakened_at(recorded, restored)
+    assert _weakened_reason(target, marker) == (f"weakened: probe changed in {restored[:12]}, merge {merge[:12]} "
+                                                f"after its derivation was recorded in {recorded[:12]}")
 
 
-@XFAIL_720
 def test_709_FP3_an_unplaceable_spot_is_not_healed_by_a_later_re_derivation(target, tmp_path):
     """Refutes healing an unplaceable spot before the recording: the octopus of L1 followed by an honest
     re-derivation stays weakened, as a named weakening does (test_701_a_weakening_in_a_merge_is_not_adopted…).
@@ -7331,8 +7435,7 @@ def test_709_FP3_an_unplaceable_spot_is_not_healed_by_a_later_re_derivation(targ
     target.git("merge", "-q", "--no-ff", "-m", "octopus", "honest", "launder")
     merge = target.git("rev-parse", "HEAD")
     _rederive(target, rel, DECL_V3, "an honest re-derivation after it")
-    assert _weakened_reason(target, marker) == _cannot_place(
-        f"merge {merge[:12]} holds the version of 2 parents, made in different commits")
+    assert f"merge {merge[:12]}" in _weakened_reason(target, marker)
 
 
 # --------------------------------------------------------------------------- #
