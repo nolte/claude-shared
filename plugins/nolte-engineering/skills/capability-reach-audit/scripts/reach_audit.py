@@ -831,11 +831,14 @@ class Git:
         committed = self.read_blob(blob)
         if committed is None:
             raise AuditError(f"`git cat-file blob {blob}` failed for {safe_text(path)} at HEAD")
-        if kind == "link":
-            return not file.is_symlink() or os.fsencode(os.readlink(file)) != committed
-        if file.is_symlink() or not file.is_file():
-            return True
-        working = file.read_bytes()
+        try:
+            if kind == "link":
+                return not file.is_symlink() or os.fsencode(os.readlink(file)) != committed
+            if file.is_symlink() or not file.is_file():
+                return True
+            working = file.read_bytes()
+        except OSError:
+            return True  # a file the runner can't read can't be shown to equal HEAD's
         if _same_bytes(working, committed):
             return False
         return not checkout_form or working != self.checkout_bytes(blob, path)
@@ -1844,15 +1847,19 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
     probe is deleted, re-created under its id at another path, and moved back.
     Merges are left to _merges_changing(), since the walk never lists them.
 
-    A write off HEAD's first-parent line that no merge on that line took into
-    the probe is no gap either (_merges_bringing()): HEAD's probe is what that
-    line made of it, and a merge that kept the line's version for every one of
-    the probe's paths dropped the write's content there. A backport is the
-    usual case: a change cherry-picked onto a release branch forked before a
-    rename lands at the old path, where the walk, following the new name, does
-    not list it, and merging the release branch back leaves the probe as main
-    had it. A merge on that line that did change the probe against its first
-    parent keeps the write a gap, now naming that merge.
+    A write off HEAD's first-parent line is no gap either when it wrote a
+    blob one of ``own`` holds and no merge on that line took it into the probe
+    (_merges_bringing()). That is a backport: a change cherry-picked onto a
+    release branch forked before a rename lands at the old path, where the
+    walk, following the new name, does not list it, and merging the release
+    branch back leaves the probe as main had it. The write hides nothing: its
+    content is a revision the walk lists and judges. A write of any other
+    content stays a gap, whatever the merge did with it: the committer picks
+    the order of a merge's parents, so "off the first-parent line" does not
+    say which line held the approved probe, and a merge that keeps a lowered
+    line as its first parent would otherwise excuse the approved revision it
+    dropped. A merge on that line that did change the probe against its first
+    parent keeps the write a gap as well, naming that merge.
     """
     listed = {(commit, path) for commit, path, _, _ in own}
     segments: list[tuple[str, str | None]] = []  # (path, the newer revision that moved the probe away)
@@ -1862,6 +1869,7 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
     paths = {path for path, _ in segments}
     ids = {probe.pid} | {pid for pid, writes in history.writes.items() if any(w in listed for w in writes)}
     line: list[str] | None = None
+    held: set[str] | None = None  # the blobs the listed revisions hold
     for pid in sorted(ids):
         for commit, path in history.writes.get(pid, []):
             if (commit, path) in listed or commit in history.merges:
@@ -1872,7 +1880,11 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
                     line = git.out("rev-list", "--first-parent", history.head, "--").split()
                 bringing = None if commit in line else _merges_bringing(git, commit, line, paths | {path})
                 if bringing == []:
-                    continue
+                    if held is None:
+                        held = {git.blob_at(c, p) for c, p in listed} - {None}
+                    if git.blob_at(commit, path) in held:
+                        continue
+                    bringing = None
                 if bringing:
                     return (f"{_merge_names(bringing)} on HEAD's first-parent line changed the probe against its "
                             f"first parent after {commit[:12]} changed {safe_text(path)} under the id "

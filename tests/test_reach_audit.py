@@ -6519,6 +6519,11 @@ def test_709_K5_a_backport_across_a_rename_merged_back_unchanged_is_clean(target
     assert marker.exists()
 
 
+def _unlisted(write: str) -> str:
+    return (f"{write[:12]} changed {P1_REL} under the id p1, but the probe's history walk does not list it, so "
+            "the listed history is incomplete and no derivation in it can be judged")
+
+
 def _merge_named(merge: str, write: str) -> str:
     return (f"merge {merge[:12]} on HEAD's first-parent line changed the probe against its first parent after "
             f"{write[:12]} changed {P1_REL} under the id p1 on a merged line the probe's history walk does not "
@@ -6577,13 +6582,15 @@ def test_709_K5_ADV_a_lowered_bar_on_the_merged_line_that_the_merge_takes_is_wea
 
 
 def test_709_K5_ADV_a_lowered_bar_dropped_by_the_merge_and_taken_later_in_a_commit_is_weakened(target, tmp_path):
-    """(b) The merge keeps main's probe (W is excused there), a later plain commit takes the lowered bar."""
+    """(b) The merge keeps main's probe, a later plain commit takes the lowered bar: both the unlisted write
+    (its content is no listed revision, so it is no backport) and the later change are named."""
     marker = tmp_path / "ran"
     named = _lowered_on_release(target, marker)
     _merge_release_keeping_main(target)
     _rewrite(target, RENAMED, expected_value=1)
     later = target.commit("take release's bar")
-    assert _weakened_reason(target, marker) == _weakened_at(named["C"], later)
+    assert _weakened_reason(target, marker) == (
+        f"weakened: {_unlisted(named['W'])}; " + _weakened_at(named["C"], later).removeprefix("weakened: "))
 
 
 def test_709_K5_ADV_a_lowered_bar_dropped_by_one_merge_and_taken_by_a_later_merge_is_weakened(target, tmp_path):
@@ -6605,16 +6612,57 @@ def test_709_K5_ADV_a_lowered_bar_dropped_by_one_merge_and_taken_by_a_later_merg
     assert _merge_named(second, named["W"]) in reason, reason
 
 
-def test_709_K5_ADV_a_lowered_bar_dropped_by_the_merge_reads_as_main_had_it(target, tmp_path):
-    """The excused case itself: the merge keeps main's approved probe, so release's lowered bar never reached
-    it, and the probe reads as main had it: clean, executed (observing 1 against 2: not reached)."""
+def test_709_K5_ADV_a_lowered_bar_dropped_by_the_merge_stays_a_gap(target, tmp_path):
+    """The merge keeps main's approved probe, but release's write is no backport: its content is no revision
+    the walk lists. It stays a gap, as on develop. Excusing it because the merge dropped it would excuse the
+    approved revision just as well when the lowered line is the merge's first parent (the test below)."""
     marker = tmp_path / "ran"
-    _lowered_on_release(target, marker)
+    named = _lowered_on_release(target, marker)
     _merge_release_keeping_main(target)
-    code, report = run_audit(target)
-    row = row_of(report, "p1")
-    assert row[7] == ra.STATE_CLEAN, row[7:]
-    assert "value: 2" in (target.path / RENAMED).read_text() and marker.exists()
+    assert "value: 2" in (target.path / RENAMED).read_text()
+    assert _weakened_reason(target, marker) == f"weakened: {_unlisted(named['W'])}"
+
+
+def _approved_revision_dropped_by_a_merge(target: Target, marker: Path, merge: str) -> str:
+    """R approves p1 (bar 2, observing 1) on main. `evil` forks before R: L1 drafts the declaration and adds
+    p1 anchored on the draft; L2 restores the declaration byte for byte, renames the probe and re-derives it
+    with a bar of 1. `evil` then merges main as its second parent and drops R's probe (``merge``: `ours`
+    strategy, or a normal merge that deletes R's file), and main is moved to that merge. Returns R."""
+    start = target.git("rev-parse", "HEAD")
+    approved_text = (target.path / DECL).read_text()
+    _, recorded = _probe_observing_one(target, marker)
+    target.git("checkout", "-q", "-b", "evil", start)
+    target.write(DECL, approved_text + "\nDraft wording.\n")
+    target.write(P1_REL, yaml.safe_dump(make_probe(derived_from=_blob_now(target, DECL), argv=marker_argv(marker, "1"),
+                                                   expected=dict(BAR_OF_TWO)), sort_keys=False))
+    target.commit("draft the declaration, add the probe")
+    target.git("mv", P1_REL, RENAMED)
+    target.write(DECL, approved_text)
+    _rewrite(target, RENAMED, derived_from=_blob_now(target, DECL), expected_value=1)
+    target.commit("restore the declaration, rename and re-derive with a lower bar")
+    if merge == "ours":
+        target.git("merge", "-q", "--no-ff", "-s", "ours", "-m", "merge main", "main")
+    else:
+        target.git("merge", "-q", "--no-ff", "--no-commit", "main")
+        target.git("rm", "-q", "-f", P1_REL)
+        target.commit("merge main, dropping its probe")
+    target.git("checkout", "-q", "-B", "main")
+    assert target.git("rev-parse", f"HEAD:{DECL}") == target.git("rev-parse", f"{recorded}:{DECL}")
+    assert "value: 1" in target.git("show", f"HEAD:{RENAMED}") and target.git("status", "--porcelain") == ""
+    assert target.git("ls-tree", "--name-only", "HEAD", "--", "project/reach-probes/") == RENAMED
+    return recorded
+
+
+@pytest.mark.parametrize("merge", ["ours", "delete"])
+def test_709_K5_ADV_an_approved_revision_dropped_by_a_merge_whose_first_parent_lowered_the_bar_is_a_gap(
+        target, tmp_path, merge):
+    """Pre-merge review of #723. The committer picks the order of a merge's parents: with the lowered line as
+    first parent, the approved revision R lies off HEAD's first-parent line and the merge keeps its first
+    parent's probe. Measured before the fix: clean, exit 0, executed and reached 1/1; on develop weakened
+    with this reason. R's content is no revision the walk lists, so it is no backport."""
+    marker = tmp_path / "ran"
+    recorded = _approved_revision_dropped_by_a_merge(target, marker, merge)
+    assert _unlisted(recorded) in _weakened_reason(target, marker)
 
 
 def test_709_K5_an_unlisted_write_on_heads_own_line_stays_a_gap(target):
@@ -7472,3 +7520,16 @@ def test_709_X2_an_unreadable_tree_entry_stops_the_run(target, tmp_path, monkeyp
     assert ra.main(["--repo", str(target.path)]) == ra.EXIT_ERROR
     assert "ls-tree" in capsys.readouterr().err
     assert not marker.exists()
+
+
+@pytest.mark.skipif(os.name != "posix" or os.geteuid() == 0, reason="needs a file the process can't read")
+def test_709_a_declaration_the_runner_cannot_read_is_an_uncommitted_change_not_a_crash(target):
+    """Pre-merge review of #723. Measured before the fix: PermissionError out of Git.is_dirty(); on develop
+    `git status` reported the file and the probe read stale."""
+    _content_probe(target)
+    os.chmod(target.path / DECL, 0)
+    try:
+        state, reason = _state(target)
+    finally:
+        os.chmod(target.path / DECL, 0o644)
+    assert state == ra.STATE_STALE and f"{DECL} has uncommitted changes" in reason, reason
