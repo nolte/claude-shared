@@ -866,7 +866,8 @@ _PLUGIN_ROOT_SPEC = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/spec/")
 # The copy has to be located ("installed", "via the", "in the", "from the" plugin); a bare
 # "part of the `nolte-shared` plugin" names the owner, not a fallback.
 _SHARED_PLUGIN_COPY = re.compile(r"\b(?:installed|via the|in the|from the)\s+`?nolte-shared`? plugin", re.I)
-# The one recorded way to keep a stop without a fallback (cookiecutter-template-manage).
+# The one recorded way to keep a stop without a fallback. No shipped skill uses it since
+# #716 gave cookiecutter-template-manage its fallback; the escape hatch stays tested.
 _DELIBERATE_NO_FALLBACK = "deliberately has no plugin-copy fallback"
 SHIPPED_SPEC = REPO / "spec"
 
