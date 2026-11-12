@@ -6861,9 +6861,10 @@ def test_709_R1_a_restore_merge_bringing_back_a_dropped_lowering_is_weakened(tar
     m2 = target.commit("M2: take k's probe")
     assert "value: 1" in target.git("show", f"HEAD:{rel}")
     reason = _weakened_reason(target, marker)
-    # Since round 5 M2 is no restore of its own: R2's file is byte-identical to R1, which k builds on, so
-    # the chain reads k after R1, and k is the change. Before, M2 was named beside it.
-    assert reason == f"weakened: probe changed in {k[:12]} after its derivation was recorded in {r1[:12]}", reason
+    # Round 5 read M2 as no change (R2's file is byte-identical to R1, which k builds on); since round 6 it
+    # is one again: main reached that file only after changes of its own (X, R2), which M2 drops.
+    assert reason == f"weakened: probe changed in {k[:12]}, merge {m2[:12]} after its derivation was recorded " \
+                     f"in {r1[:12]}", reason
     assert target.git("rev-parse", f"{m2}^1:{rel}") == target.git("rev-parse", f"{r1}:{rel}")
 
 
@@ -7287,3 +7288,102 @@ def test_709_FP3_an_unplaceable_spot_is_not_healed_by_a_later_re_derivation(targ
     _rederive(target, rel, DECL_V3, "an honest re-derivation after it")
     assert _weakened_reason(target, marker) == _cannot_place(
         f"merge {merge[:12]} holds the version of 2 parents, made in different commits")
+
+
+# --------------------------------------------------------------------------- #
+# #709 round 6 (review 5): a merge must never drop the main line's own stretch
+# --------------------------------------------------------------------------- #
+def _merge_keeping_side(target: Target, branch: str, rel: str) -> str:
+    target.git("merge", "-q", "--no-ff", "--no-commit", "-X", "theirs", branch)
+    target.git("checkout", branch, "--", rel)
+    return target.commit(f"merge {branch}")
+
+
+def test_709_RS1_a_main_line_back_at_the_fork_file_does_not_launder_its_lowering(target, tmp_path):
+    """Measured on bf4dcd4b: clean, exit 0, executed (develop: exit 4, naming L). Main re-derives to V2 (C)
+    and back to V1 (D, bar 2), then L checks out R0's probe (bar 1, no declaration change); `old`, forked at
+    R0, re-derives to Y. The taken chain reaches R0's file, which main only reached again after C, D, L."""
+    marker = tmp_path / "ran"
+    rel, r0, _ = _approved_bar_one(target, marker)
+    target.git("checkout", r0, "--", rel)
+    target.commit("L: back to R0's probe, bar 1")
+    target.git("checkout", "-q", "-b", "old", r0)
+    s2 = _rederive(target, rel, DECL_V3, "S2: re-derive on Y")
+    target.git("checkout", "-q", "main")
+    target.git("merge", "-q", "--no-ff", "-m", "merge old", "old")
+    merge = target.git("rev-parse", "HEAD")
+    assert target.git("rev-parse", f"{merge}:{rel}") == target.git("rev-parse", f"{s2}:{rel}")
+    reason = _weakened_reason(target, marker)
+    assert reason == f"weakened: probe changed in merge {merge[:12]} after its derivation was recorded in " \
+                     f"{s2[:12]}", reason
+
+
+def test_709_RS1_P1b_a_lowering_undone_on_main_stays_a_finding_after_the_merge(target, tmp_path):
+    """Measured on bf4dcd4b: clean, exit 0 (develop: exit 4 for L/U). Main lowers (L) and raises back to R0's
+    file (U); side, forked at R0, re-derives to Y."""
+    marker = tmp_path / "ran"
+    rel, r0 = _probe_observing_one(target, marker)
+    _rewrite(target, rel, expected_value=1)
+    target.commit("L: lower the bar")
+    target.git("checkout", r0, "--", rel)
+    target.commit("U: back to R0's probe")
+    target.git("checkout", "-q", "-b", "side", r0)
+    s2 = _rederive(target, rel, DECL_V2, "S2: re-derive on side")
+    target.git("checkout", "-q", "main")
+    merge = _merge_keeping_side(target, "side", rel)
+    reason = _weakened_reason(target, marker)
+    assert reason == f"weakened: probe changed in merge {merge[:12]} after its derivation was recorded in " \
+                     f"{s2[:12]}", reason
+
+
+def _twin_of_lowering(target: Target, rel: str, r0: str, x_text: str) -> str:
+    """On `side` from R0: P re-derives on ``x_text``, T re-derives back onto R0's declaration with bar 1,
+    byte-identical to main's lowering. Returns T."""
+    original = target.git("show", f"{r0}:{DECL}") + "\n"
+    target.git("checkout", "-q", "-b", "side", r0)
+    _rederive(target, rel, x_text, "P: re-derive on X")
+    target.write(DECL, original)
+    _rewrite(target, rel, derived_from=_blob_now(target, DECL), expected_value=1)
+    return target.commit("T: re-derive back, bar 1")
+
+
+def test_709_RS1_A6_a_deleted_lowering_restored_from_a_twin_on_side_is_weakened(target, tmp_path):
+    """Measured on bf4dcd4b: clean, exit 0 (develop: exit 4). Main lowers (L) and deletes; side holds a
+    byte-identical twin T made by a declaration cycle A to X to A; the merge restores T."""
+    marker = tmp_path / "ran"
+    rel, r0 = _probe_observing_one(target, marker)
+    _rewrite(target, rel, expected_value=1)
+    lowered = target.commit("L: lower the bar")
+    target.git("rm", "-q", rel)
+    target.commit("delete the probe")
+    twin = _twin_of_lowering(target, rel, r0, DECL_V2)
+    assert target.git("rev-parse", f"{twin}:{rel}") == target.git("rev-parse", f"{lowered}:{rel}")
+    target.git("checkout", "-q", "main")
+    # modify/delete conflict: resolved by taking side's file
+    subprocess.run(["git", "-C", str(target.path), "merge", "-q", "--no-ff", "--no-commit", "side"],
+                   capture_output=True, check=False)
+    target.git("checkout", "side", "--", rel)
+    target.commit("merge side, restoring the probe")
+    assert target.git("rev-list", "--parents", "-n", "1", "HEAD").count(" ") == 2
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_FINDINGS and row[7] == ra.STATE_WEAKENED, row[7:]
+    assert not marker.exists()
+
+
+def test_709_RS1_A7_a_lowering_on_main_with_a_twin_on_side_is_weakened_after_the_merge(target, tmp_path):
+    """Measured on bf4dcd4b: clean, exit 0 (develop: exit 4). Side R0, P (X), T (A, bar 1) byte-identical to
+    main's lowering L, then S2 (Y); the merge takes S2."""
+    marker = tmp_path / "ran"
+    rel, r0 = _probe_observing_one(target, marker)
+    _rewrite(target, rel, expected_value=1)
+    lowered = target.commit("L: lower the bar")
+    twin = _twin_of_lowering(target, rel, r0, DECL_V2)
+    assert target.git("rev-parse", f"{twin}:{rel}") == target.git("rev-parse", f"{lowered}:{rel}")
+    _rederive(target, rel, DECL_V3, "S2: re-derive on Y")
+    target.git("checkout", "-q", "main")
+    _merge_keeping_side(target, "side", rel)
+    code, report = run_audit(target)
+    row = row_of(report, "p1")
+    assert code == ra.EXIT_FINDINGS and row[7] == ra.STATE_WEAKENED, row[7:]
+    assert not marker.exists()

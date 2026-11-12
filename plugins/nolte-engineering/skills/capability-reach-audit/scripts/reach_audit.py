@@ -1738,14 +1738,15 @@ class _Lineage:
     A merge that took the file from another parent is a change of the probe
     (recorded in ``changes``, which _merges_changing() counts in every span it
     lies in) unless the version it took builds on the one its first parent
-    held (_builds_on()): that version's own chain of predecessors reaches the
-    first parent's file, byte for byte. Content, not commit ancestry, decides,
-    so a cherry-picked or squashed twin of the main line's revision counts as
-    the revision it copies. That opens no laundering path: the taken version's
-    chain is the chain HEAD's probe is judged on, so every change on it after
-    that file, and the twin's own step onto it, is a revision of the chain and
-    judged like any other; what the merge drops is only the main line's copy
-    of a file the chain holds anyway. A merge whose taken version doesn't
+    held and drops no stretch of the main line (_keeps_main()): the taken
+    chain reaches that file, and either the main line changed nothing after
+    that point, or its version is the same revision or a step-for-step twin
+    (cherry-pick, squash) of the point's. That opens no laundering path: the
+    taken version's chain is the chain HEAD's probe is judged on, so every
+    change on it is judged like any other, and every change the main line
+    made is either on that chain or copied onto it step for step; a main line
+    that reached the file again after changes of its own (a step back, a
+    lowering and its undoing) never counts as kept. A merge whose taken version doesn't
     build on its first parent's file drops or restores a revision (a version
     from before the main line's latest change, or a side revision the main
     line had dropped). Where the first parent lacks the file, the file the
@@ -1755,7 +1756,7 @@ class _Lineage:
     The walk is iterative along every line and asks nothing of the first
     parent's origin, so its cost and depth don't grow with the number of
     merges on the main line; only octopus parents, evil merges and a
-    _builds_on() that has to look past the first predecessor nest.
+    _keeps_main() that has to look past the cheap check nest.
 
     Whatever can't be placed raises _Unplaceable, and the probe reads
     weakened: several parents holding the version, made in different commits;
@@ -1823,37 +1824,79 @@ class _Lineage:
             first = self.blob(parents[0], path)
             if first is None:
                 first = self.deleted_file(parents[0], path)
-            if first is not None and first != held:
-                # A merge that brings back exactly the file its line deleted changes nothing.
-                pending.append((made, first))
+            if first is not None:
+                pending.append((made, parents[0], first))
             commit = sources[0]
         else:
             raise _Unplaceable(f"more than {MAX_ORIGIN_STEPS} commits to cross to place it")
         self.origins[(start, path)] = made
-        for merge, first in pending:
-            if not self._builds_on(made, path, first, depth + 1):
+        for merge, main, first in pending:
+            if not self._keeps_main(made, path, main, first, depth + 1):
                 self.changes.append((merge, path))
         return made
 
-    def _builds_on(self, origin: str, path: str, wanted: str, depth: int) -> bool:
-        """Whether a predecessor in the chain of the version made in ``origin`` holds the blob ``wanted``.
+    def _keeps_main(self, origin: str, path: str, main: str, first: str, depth: int) -> bool:
+        """Whether a merge taking the version made in ``origin`` drops nothing of its first parent ``main``'s line.
 
-        Each predecessor is the file the previous one's commit was made from (its
-        first parent's), then the origin of that file. A predecessor that held
-        no file at ``path`` (a creation, a deletion, a rename) ends the search
-        without a match; so does MAX_ORIGIN_STEPS predecessors.
+        ``first`` is the file ``main`` holds (or, when ``main`` lacks it, the file
+        its line deleted). The taken version's chain is searched for a point
+        holding ``first``: the version itself, then each predecessor (the file
+        its commit's first parent held, then the origin of that file). Such a
+        point keeps the main line when either
+
+        - no commit reachable from ``main`` but not from the point changed the
+          file (``rev-list --full-history point..main -- path`` is empty): the
+          main line has no stretch of its own after it, so the taken chain holds
+          all of it; or
+        - the main line's version is the same revision as the point's
+          (_same_revision()): the same commit, or a cherry-picked or squashed
+          twin whose every step back to a common revision is byte for byte the
+          same, so the taken chain judges a copy of each of the main line's
+          steps.
+
+        Anything else (no such point, or the main line reached ``first`` again
+        after changes of its own, a step back to an older file, a lowering and
+        its undoing, a deletion) drops a stretch of the main line, and the merge
+        is a change.
         """
-        commit = origin
+        point: str = origin
+        made: str | None = origin  # the origin of point's file, computed only when needed
         for _ in range(MAX_ORIGIN_STEPS):
-            parents = self.git.parents(commit)
-            if not parents:
+            if self.blob(point, path) == first:
+                if not self.git.out("--literal-pathspecs", "rev-list", "-n", "1", "--full-history",
+                                    f"{point}..{main}", "--", path).strip():
+                    return True
+                made = made or self.origin(point, path, depth)
+                kept = (self.origin(main, path, depth) if self.blob(main, path) is not None
+                        else self.deleted_origin(main, path))
+                if kept is not None and self._same_revision(made, kept, path, depth):
+                    return True
+            made = made or self.origin(point, path, depth)
+            parents = self.git.parents(made)
+            if not parents or self.blob(parents[0], path) is None:
                 return False
-            before = self.blob(parents[0], path)
-            if before is None:
-                return False
-            if before == wanted:
+            point, made = parents[0], None
+        return False
+
+    def _same_revision(self, one: str, other: str, path: str, depth: int) -> bool:
+        """Whether two origins of the same file are one revision, or twins back to a common one.
+
+        Twins: both hold the same file, and so do their predecessors, pairwise,
+        until the two chains meet in one commit. A creation on either side, or
+        any pair that differs, ends it without a match.
+        """
+        for _ in range(MAX_ORIGIN_STEPS):
+            if one == other:
                 return True
-            commit = self.origin(parents[0], path, depth)
+            if self.blob(one, path) != self.blob(other, path):
+                return False
+            befores = []
+            for commit in (one, other):
+                parents = self.git.parents(commit)
+                if not parents or self.blob(parents[0], path) is None:
+                    return False
+                befores.append(self.origin(parents[0], path, depth))
+            one, other = befores
         return False
 
     def deleted_file(self, start: str, path: str) -> str | None:
