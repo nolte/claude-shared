@@ -1737,17 +1737,31 @@ class _Lineage:
 
     A merge that took the file from another parent is a change of the probe
     (recorded in ``changes``, which _merges_changing() counts in every span it
-    lies in) unless the commit that made its first parent's version is an
-    ancestor of the commit that made the version it took: a later revision
-    replacing an earlier one is a normal merge, anything else drops or restores
-    a revision. Where the first parent lacks the file, the merge restores it,
-    and is no change only when it brings back the revision the line deleted.
+    lies in) unless the version it took builds on the one its first parent
+    held (_builds_on()): that version's own chain of predecessors reaches the
+    first parent's file, byte for byte. Content, not commit ancestry, decides,
+    so a cherry-picked or squashed twin of the main line's revision counts as
+    the revision it copies. That opens no laundering path: the taken version's
+    chain is the chain HEAD's probe is judged on, so every change on it after
+    that file, and the twin's own step onto it, is a revision of the chain and
+    judged like any other; what the merge drops is only the main line's copy
+    of a file the chain holds anyway. A merge whose taken version doesn't
+    build on its first parent's file drops or restores a revision (a version
+    from before the main line's latest change, or a side revision the main
+    line had dropped). Where the first parent lacks the file, the file the
+    line deleted (the deleting commit's first parent's, a plain commit or a
+    merge) stands in for it.
+
+    The walk is iterative along every line and asks nothing of the first
+    parent's origin, so its cost and depth don't grow with the number of
+    merges on the main line; only octopus parents, evil merges and a
+    _builds_on() that has to look past the first predecessor nest.
 
     Whatever can't be placed raises _Unplaceable, and the probe reads
     weakened: several parents holding the version, made in different commits;
-    a version made in a commit the history walk doesn't list; a deletion inside
-    a merge; or more than MAX_ORIGIN_STEPS commits to cross or MAX_ORIGIN_DEPTH
-    merges nested inside each other.
+    a version made in a commit the history walk doesn't list; more than
+    MAX_ORIGIN_STEPS commits to cross for one version; or MAX_ORIGIN_DEPTH
+    nested walks.
     """
 
     def __init__(self, git: Git, yaml: Any, own: list[tuple[str, str, str, str]],
@@ -1761,7 +1775,6 @@ class _Lineage:
         self.origins: dict[tuple[str, str], str] = {}
         self.changes: list[tuple[str, str]] = []  # (merge, path)
         self.combined: list[str] = []  # the commits whose versions an evil merge combined
-        self.steps = 0
 
     def blob(self, commit: str, path: str) -> str | None:
         if (commit, path) not in self.blobs:
@@ -1770,9 +1783,6 @@ class _Lineage:
 
     def made(self, commit: str, path: str) -> str:
         """The commit holding the change that brought ``path`` at ``commit`` (a plain commit or a merge)."""
-        self.steps += 1
-        if self.steps > MAX_ORIGIN_STEPS:
-            raise _Unplaceable(f"more than {MAX_ORIGIN_STEPS} commits to cross to place it")
         return self.git.out("--literal-pathspecs", "log", "-1", "--first-parent", "--no-follow",
                             "--no-show-signature", "--format=%H", commit, "--", path).strip()
 
@@ -1781,10 +1791,10 @@ class _Lineage:
         if (start, path) in self.origins:
             return self.origins[(start, path)]
         if depth > MAX_ORIGIN_DEPTH:
-            raise _Unplaceable(f"merges nest more than {MAX_ORIGIN_DEPTH} deep on the way to it")
+            raise _Unplaceable(f"more than {MAX_ORIGIN_DEPTH} nested walks to place it")
         commit = start
-        pending: list[tuple[str, str | None, str | None]] = []  # (merge, its first parent's origin, pre-deletion)
-        while True:
+        pending: list[tuple[str, str]] = []  # (merge, the file its first parent's line held)
+        for _ in range(MAX_ORIGIN_STEPS):
             made = self.made(commit, path)
             if not made:
                 raise _Unplaceable(f"no commit on the first-parent line of {start[:12]} made {safe_text(path)}")
@@ -1810,34 +1820,65 @@ class _Lineage:
             if len(sources) > 1 and len({self.origin(p, path, depth + 1) for p in sources}) > 1:
                 raise _Unplaceable(f"merge {made[:12]} holds the version of {len(sources)} parents, made in "
                                    "different commits")
-            if self.blob(parents[0], path) is None:
-                pending.append((made, None, self.deleted_origin(parents[0], path, depth + 1)))
-            else:
-                pending.append((made, self.origin(parents[0], path, depth + 1), None))
+            first = self.blob(parents[0], path)
+            if first is None:
+                first = self.deleted_file(parents[0], path)
+            if first is not None and first != held:
+                # A merge that brings back exactly the file its line deleted changes nothing.
+                pending.append((made, first))
             commit = sources[0]
+        else:
+            raise _Unplaceable(f"more than {MAX_ORIGIN_STEPS} commits to cross to place it")
         self.origins[(start, path)] = made
-        for merge, first, deleted in pending:
-            if first is not None and not self.git.is_ancestor_or_equal(first, made):
-                self.changes.append((merge, path))
-            elif first is None and deleted is not None and deleted != made:
+        for merge, first in pending:
+            if not self._builds_on(made, path, first, depth + 1):
                 self.changes.append((merge, path))
         return made
 
-    def deleted_origin(self, start: str, path: str, depth: int) -> str | None:
-        """The origin of the version a plain commit on ``start``'s first-parent line deleted.
+    def _builds_on(self, origin: str, path: str, wanted: str, depth: int) -> bool:
+        """Whether a predecessor in the chain of the version made in ``origin`` holds the blob ``wanted``.
 
-        None when that line never held ``path``: a merge bringing the file to it
-        is an addition, no restore.
+        Each predecessor is the file the previous one's commit was made from (its
+        first parent's), then the origin of that file. A predecessor that held
+        no file at ``path`` (a creation, a deletion, a rename) ends the search
+        without a match; so does MAX_ORIGIN_STEPS predecessors.
+        """
+        commit = origin
+        for _ in range(MAX_ORIGIN_STEPS):
+            parents = self.git.parents(commit)
+            if not parents:
+                return False
+            before = self.blob(parents[0], path)
+            if before is None:
+                return False
+            if before == wanted:
+                return True
+            commit = self.origin(parents[0], path, depth)
+        return False
+
+    def deleted_file(self, start: str, path: str) -> str | None:
+        """The blob that the newest deletion of ``path`` on ``start``'s first-parent line took away.
+
+        The deleting commit's first parent's file, whether the deletion is a
+        plain commit or a merge that dropped the line's file. None when the line
+        never held ``path``: a merge bringing the file to it is an addition.
         """
         deleting = self.made(start, path)
         if not deleting:
             return None
         parents = self.git.parents(deleting)
-        if len(parents) != 1:
-            raise _Unplaceable(f"merge {deleting[:12]} deleted {safe_text(path)}")
-        if self.blob(parents[0], path) is None:
-            raise _Unplaceable(f"{deleting[:12]} deleted {safe_text(path)}, which its parent didn't hold")
-        return self.origin(parents[0], path, depth)
+        deleted = self.blob(parents[0], path) if parents else None
+        if deleted is None:
+            raise _Unplaceable(f"{deleting[:12]} deleted {safe_text(path)}, which its first parent didn't hold")
+        return deleted
+
+    def deleted_origin(self, start: str, path: str) -> str | None:
+        """The origin of the file the newest deletion on ``start``'s first-parent line took away (deleted_file())."""
+        deleting = self.made(start, path)
+        if not deleting:
+            return None
+        self.deleted_file(start, path)
+        return self.origin(self.git.parents(deleting)[0], path)
 
     def revision(self, commit: str, path: str) -> int:
         """The index in ``own`` of the revision ``commit`` made at ``path``."""
@@ -1866,7 +1907,7 @@ class _Lineage:
                 deleting = self.made(parent, before)
                 if not deleting:
                     break  # the probe's creation
-                deleted = self.deleted_origin(parent, before, 0)
+                deleted = self.deleted_origin(parent, before)
                 if deleted is None:
                     raise _Unplaceable(f"{commit[:12]} restored {safe_text(before)}, which its line never held")
                 found = self.revision(deleted, before)

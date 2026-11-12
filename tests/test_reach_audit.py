@@ -6861,8 +6861,10 @@ def test_709_R1_a_restore_merge_bringing_back_a_dropped_lowering_is_weakened(tar
     m2 = target.commit("M2: take k's probe")
     assert "value: 1" in target.git("show", f"HEAD:{rel}")
     reason = _weakened_reason(target, marker)
-    assert reason == f"weakened: probe changed in {k[:12]}, merge {m2[:12]} after its derivation was recorded in " \
-                     f"{r1[:12]}", reason
+    # Since round 5 M2 is no restore of its own: R2's file is byte-identical to R1, which k builds on, so
+    # the chain reads k after R1, and k is the change. Before, M2 was named beside it.
+    assert reason == f"weakened: probe changed in {k[:12]} after its derivation was recorded in {r1[:12]}", reason
+    assert target.git("rev-parse", f"{m2}^1:{rel}") == target.git("rev-parse", f"{r1}:{rel}")
 
 
 def test_709_R2_a_byte_identical_twin_on_a_dropped_line_does_not_launder_a_lowering(target, tmp_path):
@@ -7150,3 +7152,138 @@ def test_709_H_a_committed_deletion_with_an_untracked_file_back_in_place_is_weak
     target.commit("delete the probe")
     target.write(rel, text.replace("value: 2", "value: 1"))
     assert _weakened_reason(target, marker) == "weakened: probe file has uncommitted changes"
+
+
+# --------------------------------------------------------------------------- #
+# #709 round 5 (review 4): honest merge-commit histories that must stay clean
+# --------------------------------------------------------------------------- #
+DECL_V4 = "# Requirements\n\n## Export\n\nExports 3 collections, fourth wording.\n"
+
+
+def _gitflow(target: Target, marker: Path, shape: str) -> None:
+    """FP1. main plays develop; `master` forks at the approval R0."""
+    rel = _content_probe(target, argv=marker_argv(marker))
+    target.git("branch", "master")
+    if shape == "hotfix":
+        c = _rederive(target, rel, DECL_V2, "c: re-derive on develop")
+        target.git("checkout", "-q", "master")
+        target.git("cherry-pick", "-x", c)
+        _rederive(target, rel, DECL_V3, "hotfix: re-derive on master")
+        target.git("checkout", "-q", "main")
+        target.git("merge", "-q", "--no-ff", "-X", "theirs", "-m", "merge master into develop", "master")
+    elif shape == "release":
+        c = _rederive(target, rel, DECL_V2, "c: re-derive on develop")
+        target.git("checkout", "-q", "master")
+        target.git("cherry-pick", "-x", c)
+        target.git("checkout", "-q", "-b", "release2", "main")
+        _rederive(target, rel, DECL_V3, "re-derive on release2")
+        target.git("checkout", "-q", "master")
+        target.git("merge", "-q", "--no-ff", "-X", "theirs", "-m", "release2 into master", "release2")
+        target.git("checkout", "-q", "main")
+        target.git("merge", "-q", "--no-ff", "-m", "master into develop", "master")
+    elif shape == "squash-then-merge":
+        target.git("checkout", "-q", "-b", "feature")
+        _rederive(target, rel, DECL_V2, "f2: re-derive on feature")
+        target.git("checkout", "-q", "main")
+        target.git("merge", "-q", "--squash", "feature")
+        target.commit("squash feature")
+        target.git("checkout", "-q", "feature")
+        _rederive(target, rel, DECL_V3, "f3: re-derive again on feature")
+        target.git("checkout", "-q", "main")
+        target.git("merge", "-q", "--no-ff", "-X", "theirs", "-m", "merge feature", "feature")
+    else:  # by-merge: the counter-check, V2 reaches master by a merge instead of a cherry-pick
+        _rederive(target, rel, DECL_V2, "c: re-derive on develop")
+        target.git("checkout", "-q", "master")
+        target.git("merge", "-q", "--no-ff", "-m", "develop into master", "main")
+        _rederive(target, rel, DECL_V3, "hotfix: re-derive on master")
+        target.git("checkout", "-q", "main")
+        target.git("merge", "-q", "--no-ff", "-m", "merge master into develop", "master")
+    assert target.git("status", "--porcelain") == ""
+
+
+@pytest.mark.parametrize("shape", ["hotfix", "release", "squash-then-merge", "by-merge"])
+def test_709_FP1_a_cherry_picked_or_squashed_twin_of_the_main_lines_revision_stays_clean(target, tmp_path, shape):
+    """Measured on 78418bf0: hotfix, release and squash-then-merge weakened ("probe changed in merge …"),
+    by-merge clean. The taken version builds on a byte-identical twin of the main line's file."""
+    marker = tmp_path / "ran"
+    _gitflow(target, marker, shape)
+    _assert_clean(target)
+    assert marker.exists()
+
+
+def test_709_FP2_a_hundred_and_twenty_honest_no_ff_prs_stay_clean(target, tmp_path):
+    """Measured on 78418bf0: 55 PRs read "merges nest more than 50 deep" (weakened, exit 4)."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker))
+    for n in range(120):
+        target.git("checkout", "-q", "-b", f"pr{n}")
+        _rederive(target, rel, f"# Requirements\n\n## Export\n\nExports 3 collections, wording {n}.\n",
+                  f"re-derive in pr{n}")
+        target.git("checkout", "-q", "main")
+        target.git("merge", "-q", "--no-ff", "-m", f"merge pr{n}", f"pr{n}")
+    started = time.monotonic()
+    _assert_clean(target)
+    print(f"FP2: 120 PRs audited in {time.monotonic() - started:.1f}s")
+    assert marker.exists()
+
+
+@pytest.mark.parametrize("then", ["nothing", "re-derive"])
+def test_709_FP3_a_reverted_merge_that_deleted_the_probe_stays_clean(target, tmp_path, then):
+    """Measured on 78418bf0: weakened for good ("merge … deleted …"), also after an honest re-derivation."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker))
+    target.git("checkout", "-q", "-b", "drop")
+    target.git("rm", "-q", rel)
+    target.commit("drop the probe")
+    target.git("checkout", "-q", "main")
+    target.write("main.txt", "main\n")
+    target.commit("main work")
+    target.git("merge", "-q", "--no-ff", "-m", "merge drop", "drop")
+    merge = target.git("rev-parse", "HEAD")
+    target.git("revert", "--no-edit", "-m", "1", merge)
+    if then == "re-derive":
+        _rederive(target, rel, DECL_V2, "an honest re-derivation")
+    _assert_clean(target)
+    assert marker.exists()
+
+
+def test_709_FP3_a_reverted_deletion_merge_restoring_other_bytes_is_judged(target, tmp_path):
+    """Only the exact restore is transparent: restoring with a lowered bar after the deletion merge reads weakened."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+    text = (target.path / rel).read_text()
+    target.git("checkout", "-q", "-b", "drop")
+    target.git("rm", "-q", rel)
+    target.commit("drop the probe")
+    target.git("checkout", "-q", "main")
+    target.write("main.txt", "main\n")
+    target.commit("main work")
+    target.git("merge", "-q", "--no-ff", "-m", "merge drop", "drop")
+    target.write(rel, text.replace("value: 2", "value: 1"))
+    restored = target.commit("restore with a lowered bar")
+    assert _weakened_reason(target, marker) == _weakened_at(recorded, restored)
+
+
+def test_709_FP3_an_unplaceable_spot_is_not_healed_by_a_later_re_derivation(target, tmp_path):
+    """Refutes healing an unplaceable spot before the recording: the octopus of L1 followed by an honest
+    re-derivation stays weakened, as a named weakening does (test_701_a_weakening_in_a_merge_is_not_adopted…).
+    The re-derivation rule judges every earlier derivation in the chain, so a chain that can't be read has
+    no previous derivation to build on."""
+    marker = tmp_path / "ran"
+    rel, r0 = _probe_observing_one(target, marker)
+    target.git("checkout", "-q", "-b", "honest")
+    target.write(DECL, DECL_V2)
+    _rewrite(target, rel, derived_from=_blob_now(target, DECL), expected_value=1)
+    target.commit("re-derive on V2 with bar 1")
+    lowered = (target.path / rel).read_text()
+    target.git("checkout", "-q", "-b", "launder", r0)
+    target.write(rel, lowered)
+    target.commit("copy the bytes")
+    target.git("checkout", "-q", "main")
+    target.write("main.txt", "main\n")
+    target.commit("main work")
+    target.git("merge", "-q", "--no-ff", "-m", "octopus", "honest", "launder")
+    merge = target.git("rev-parse", "HEAD")
+    _rederive(target, rel, DECL_V3, "an honest re-derivation after it")
+    assert _weakened_reason(target, marker) == _cannot_place(
+        f"merge {merge[:12]} holds the version of 2 parents, made in different commits")
