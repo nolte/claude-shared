@@ -1846,79 +1846,23 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
     probe under that id whose revisions the walk does not list, as when a
     probe is deleted, re-created under its id at another path, and moved back.
     Merges are left to _merges_changing(), since the walk never lists them.
-
-    A write off HEAD's first-parent line is no gap either when it wrote a
-    blob one of ``own`` holds and no merge on that line took it into the probe
-    (_merges_bringing()). That is a backport: a change cherry-picked onto a
-    release branch forked before a rename lands at the old path, where the
-    walk, following the new name, does not list it, and merging the release
-    branch back leaves the probe as main had it. The write hides nothing: its
-    content is a revision the walk lists and judges. A write of any other
-    content stays a gap, whatever the merge did with it: the committer picks
-    the order of a merge's parents, so "off the first-parent line" does not
-    say which line held the approved probe, and a merge that keeps a lowered
-    line as its first parent would otherwise excuse the approved revision it
-    dropped. A merge on that line that did change the probe against its first
-    parent keeps the write a gap as well, naming that merge.
     """
     listed = {(commit, path) for commit, path, _, _ in own}
     segments: list[tuple[str, str | None]] = []  # (path, the newer revision that moved the probe away)
     for i, (_, path, _, _) in enumerate(own):
         if i == 0 or path != own[i - 1][1]:
             segments.append((path, own[i - 1][0] if i else None))
-    paths = {path for path, _ in segments}
     ids = {probe.pid} | {pid for pid, writes in history.writes.items() if any(w in listed for w in writes)}
-    line: list[str] | None = None
-    held: set[str] | None = None  # the blobs the listed revisions hold
     for pid in sorted(ids):
         for commit, path in history.writes.get(pid, []):
             if (commit, path) in listed or commit in history.merges:
                 continue
             if any(path == on and (end is None or not git.is_ancestor_or_equal(end, commit))
                    for on, end in segments):
-                if line is None:
-                    line = git.out("rev-list", "--first-parent", history.head, "--").split()
-                bringing = None if commit in line else _merges_bringing(git, commit, line, paths | {path})
-                if bringing == []:
-                    if held is None:
-                        held = {git.blob_at(c, p) for c, p in listed} - {None}
-                    if git.blob_at(commit, path) in held:
-                        continue
-                    bringing = None
-                if bringing:
-                    return (f"{_merge_names(bringing)} on HEAD's first-parent line changed the probe against its "
-                            f"first parent after {commit[:12]} changed {safe_text(path)} under the id "
-                            f"{safe_text(pid, 120)} on a merged line the probe's history walk does not list, so no "
-                            "derivation a merge carried in can be judged")
                 return (f"{commit[:12]} changed {safe_text(path)} under the id {safe_text(pid, 120)}, but the "
                         "probe's history walk does not list it, so the listed history is incomplete and no "
                         "derivation in it can be judged")
     return None
-
-
-def _merges_bringing(git: Git, commit: str, line: list[str], paths: set[str]) -> list[str]:
-    """The merges on HEAD's first-parent ``line`` descending from ``commit`` that change one of ``paths``.
-
-    ``commit`` lies off ``line`` (HEAD's ``rev-list --first-parent``, newest
-    first), so its content reaches HEAD's probe only through a merge on the
-    line whose other parents descend from it. Every commit of the line from
-    HEAD down to the first such merge descends from ``commit``
-    (``rev-list --ancestry-path``). A merge among them whose entry for one of
-    ``paths`` (every path the probe had, and the written one) differs from its
-    first parent may have taken the write in; one that kept its first parent's
-    entries for all of them took nothing from its other parents into the
-    probe. A plain commit of the line is in the walk, or a write that is never
-    excused.
-    """
-    descendants = set(git.out("rev-list", "--ancestry-path", f"{commit}..{line[0]}", "--").split()) if line else set()
-    bringing = []
-    for merge in line:
-        if merge not in descendants:
-            break
-        parents = git.parents(merge)
-        if len(parents) > 1 and any(git.entry_at(merge, p) != git.entry_at(parents[0], p) for p in sorted(paths)):
-            bringing.append(merge)
-    return bringing
 
 
 def _ids_new_at(git: Git, history: "ProbeHistory", copying: str, pid: str, own: set[tuple[str, str]]) -> bool:

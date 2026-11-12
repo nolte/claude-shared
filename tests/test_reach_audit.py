@@ -6505,9 +6505,11 @@ def _backport(target: Target, marker: Path, shape: str) -> dict[str, str]:
     return named
 
 
+@pytest.mark.xfail(strict=True, reason="a backport across a rename reads weakened: telling it from a dropped "
+                                        "approved revision needs a rule for which line counts, #720")
 @pytest.mark.parametrize("shape", ["decl-then-pick", "pick", "reverse"])
 def test_709_K5_a_backport_across_a_rename_merged_back_unchanged_is_clean(target, tmp_path, shape):
-    """Measured before the fix: exit 4, "<picked> changed project/reach-probes/p1.yml under the id p1, but the
+    """Candidate 5 of #709, measured and left as it is on develop: exit 4, "<picked> changed project/reach-probes/p1.yml under the id p1, but the
     probe's history walk does not list it, so the listed history is incomplete …" although the merge leaves
     the probe byte-identical to main's."""
     marker = tmp_path / "ran"
@@ -6524,23 +6526,15 @@ def _unlisted(write: str) -> str:
             "the listed history is incomplete and no derivation in it can be judged")
 
 
-def _merge_named(merge: str, write: str) -> str:
-    return (f"merge {merge[:12]} on HEAD's first-parent line changed the probe against its first parent after "
-            f"{write[:12]} changed {P1_REL} under the id p1 on a merged line the probe's history walk does not "
-            "list, so no derivation a merge carried in can be judged")
-
-
-def test_709_K5_a_merge_combining_a_rename_and_a_release_re_derivation_stays_weakened_naming_the_merge(target,
-                                                                                                    tmp_path):
+def test_709_K5_a_merge_combining_a_rename_and_a_release_re_derivation_stays_weakened(target, tmp_path):
     """5d, the #701 design line: neither side had the merged result, so the merge is named. Measured before the
     fix with the reason "<W> changed … but the probe's history walk does not list it, so the listed history is
     incomplete …" in front of the merge."""
     marker = tmp_path / "ran"
     named = _backport(target, marker, "no-pick")
     reason = _weakened_reason(target, marker)
-    assert reason == (f"weakened: {_merge_named(named['M'], named['W'])}; probe changed in merge "
+    assert reason == (f"weakened: {_unlisted(named['W'])}; probe changed in merge "
                       f"{named['M'][:12]} after its derivation was recorded in {named['N'][:12]}"), reason
-    assert "listed history is incomplete" not in reason
 
 
 def _lowered_on_release(target: Target, marker: Path) -> dict[str, str]:
@@ -6578,12 +6572,12 @@ def test_709_K5_ADV_a_lowered_bar_on_the_merged_line_that_the_merge_takes_is_wea
     merge = target.git("rev-parse", "HEAD")
     assert "value: 1" in target.git("show", f"HEAD:{RENAMED}")
     reason = _weakened_reason(target, marker)
-    assert _merge_named(merge, named["W"]) in reason, reason
+    assert _unlisted(named["W"]) in reason and merge[:12] in reason, reason
 
 
 def test_709_K5_ADV_a_lowered_bar_dropped_by_the_merge_and_taken_later_in_a_commit_is_weakened(target, tmp_path):
     """(b) The merge keeps main's probe, a later plain commit takes the lowered bar: both the unlisted write
-    (its content is no listed revision, so it is no backport) and the later change are named."""
+    and the later change are named."""
     marker = tmp_path / "ran"
     named = _lowered_on_release(target, marker)
     _merge_release_keeping_main(target)
@@ -6609,13 +6603,13 @@ def test_709_K5_ADV_a_lowered_bar_dropped_by_one_merge_and_taken_by_a_later_merg
         target.git("rm", "-q", "-f", P1_REL)
     second = target.commit("merge again, taking its bar")
     reason = _weakened_reason(target, marker)
-    assert _merge_named(second, named["W"]) in reason, reason
+    assert _unlisted(named["W"]) in reason and second[:12] in reason, reason
 
 
 def test_709_K5_ADV_a_lowered_bar_dropped_by_the_merge_stays_a_gap(target, tmp_path):
-    """The merge keeps main's approved probe, but release's write is no backport: its content is no revision
-    the walk lists. It stays a gap, as on develop. Excusing it because the merge dropped it would excuse the
-    approved revision just as well when the lowered line is the merge's first parent (the test below)."""
+    """The merge keeps main's approved probe; release's unlisted write stays a gap, as on develop. Excusing it
+    because the merge dropped it would excuse the approved revision just as well when the lowered line is the
+    merge's first parent (the tests below)."""
     marker = tmp_path / "ran"
     named = _lowered_on_release(target, marker)
     _merge_release_keeping_main(target)
@@ -6623,20 +6617,29 @@ def test_709_K5_ADV_a_lowered_bar_dropped_by_the_merge_stays_a_gap(target, tmp_p
     assert _weakened_reason(target, marker) == f"weakened: {_unlisted(named['W'])}"
 
 
-def _approved_revision_dropped_by_a_merge(target: Target, marker: Path, merge: str) -> str:
-    """R approves p1 (bar 2, observing 1) on main. `evil` forks before R: L1 drafts the declaration and adds
-    p1 anchored on the draft; L2 restores the declaration byte for byte, renames the probe and re-derives it
+def _approved_revision_dropped_by_a_merge(target: Target, marker: Path, merge: str, twin: bool = False) -> str:
+    """R approves p1 (bar 2, observing 1) on main. `evil` forks before R (``twin``: and first commits R's
+    probe byte for byte, then renames it, so R's content is a revision the walk lists): L1 drafts the
+    declaration and adds (re-derives) p1 anchored on the draft; L2 restores the declaration byte for byte, renames the probe and re-derives it
     with a bar of 1. `evil` then merges main as its second parent and drops R's probe (``merge``: `ours`
     strategy, or a normal merge that deletes R's file), and main is moved to that merge. Returns R."""
     start = target.git("rev-parse", "HEAD")
     approved_text = (target.path / DECL).read_text()
     _, recorded = _probe_observing_one(target, marker)
     target.git("checkout", "-q", "-b", "evil", start)
+    at = P1_REL
+    if twin:
+        target.git("checkout", recorded, "--", P1_REL)
+        target.commit("the approved probe, byte for byte")
+        target.git("mv", P1_REL, RENAMED)
+        target.commit("rename it")
+        at = RENAMED
     target.write(DECL, approved_text + "\nDraft wording.\n")
-    target.write(P1_REL, yaml.safe_dump(make_probe(derived_from=_blob_now(target, DECL), argv=marker_argv(marker, "1"),
+    target.write(at, yaml.safe_dump(make_probe(derived_from=_blob_now(target, DECL), argv=marker_argv(marker, "1"),
                                                    expected=dict(BAR_OF_TWO)), sort_keys=False))
     target.commit("draft the declaration, add the probe")
-    target.git("mv", P1_REL, RENAMED)
+    if not twin:
+        target.git("mv", P1_REL, RENAMED)
     target.write(DECL, approved_text)
     _rewrite(target, RENAMED, derived_from=_blob_now(target, DECL), expected_value=1)
     target.commit("restore the declaration, rename and re-derive with a lower bar")
@@ -6653,23 +6656,18 @@ def _approved_revision_dropped_by_a_merge(target: Target, marker: Path, merge: s
     return recorded
 
 
+@pytest.mark.parametrize("twin", [False, True])
 @pytest.mark.parametrize("merge", ["ours", "delete"])
 def test_709_K5_ADV_an_approved_revision_dropped_by_a_merge_whose_first_parent_lowered_the_bar_is_a_gap(
-        target, tmp_path, merge):
+        target, tmp_path, merge, twin):
     """Pre-merge review of #723. The committer picks the order of a merge's parents: with the lowered line as
     first parent, the approved revision R lies off HEAD's first-parent line and the merge keeps its first
-    parent's probe. Measured before the fix: clean, exit 0, executed and reached 1/1; on develop weakened
-    with this reason. R's content is no revision the walk lists, so it is no backport."""
+    parent's probe. Measured with the backport exception this branch had: clean, exit 0, executed and reached
+    1/1; on develop weakened with this reason. ``twin`` defeated the exception narrowed to "the write's
+    content is a listed revision"; both are why the exception was cut."""
     marker = tmp_path / "ran"
-    recorded = _approved_revision_dropped_by_a_merge(target, marker, merge)
+    recorded = _approved_revision_dropped_by_a_merge(target, marker, merge, twin)
     assert _unlisted(recorded) in _weakened_reason(target, marker)
-
-
-def test_709_K5_an_unlisted_write_on_heads_own_line_stays_a_gap(target):
-    """The excuse is only for a write off HEAD's first-parent line."""
-    git = ra.Git(target.path)
-    line = git.out("rev-list", "--first-parent", "HEAD", "--").split()
-    assert ra._merges_bringing(git, line[-1], line, {P1_REL}) == []
 
 
 def test_709_K5_ADV_a_dropped_lowered_bar_renamed_on_its_line_and_merged_again_as_is_is_weakened(target, tmp_path):
