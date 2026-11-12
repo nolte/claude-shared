@@ -5018,9 +5018,8 @@ def test_688_SEC3_a_change_the_walk_does_not_list_is_reported_as_an_incomplete_h
     assert code == ra.EXIT_FINDINGS, report
     row = row_of(report, "xid")
     assert row[7] == ra.STATE_WEAKENED, row
-    # Since #709 (K5) the write lies off HEAD's first-parent line, so the reason names the merge that took it in.
-    assert (f"changed the probe against its first parent after {lowering[:12]} changed {y} under the id xid on a "
-            "merged line the probe's history walk does not list" in _plain(row[9])), row[9]
+    assert (f"{lowering[:12]} changed {y} under the id xid, but the probe's history walk does not list it"
+            in _plain(row[9])), row[9]
 
 
 @pytest.mark.parametrize("rename_back", [False, True])
