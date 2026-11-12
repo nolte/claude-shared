@@ -47,7 +47,7 @@ The frontmatter `description` keeps the trigger lexicon English-only per `spec/c
 
 ## Precondition
 
-Before any operation, verify that `spec/project/audience-identification/<canonical_language>.md` is reachable in the current project. If the spec is missing, stop and tell the user the methodology spec is the input to this skill — without it there is no authoritative list of requirements to run against. Do not improvise a replacement.
+Before any operation, verify that `spec/project/audience-identification/<canonical_language>.md` is reachable in the current project or, when absent there, at `${CLAUDE_PLUGIN_ROOT}/spec/project/audience-identification/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin). If neither is, stop and tell the user the methodology spec is the input to this skill — without it there is no authoritative list of requirements to run against. Do not improvise a replacement.
 
 ## Operations
 

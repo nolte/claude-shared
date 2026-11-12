@@ -35,7 +35,7 @@ Detect the user's language and respond in it. The committed `.claude/settings.js
 Before any edit:
 
 - Confirm the working directory is a git repository, the current branch isn't `develop` or `main`, and `git status --porcelain` is clean (or the only dirty path is `.claude/settings.json` itself).
-- Confirm `spec/claude/permission-allowlist/<canonical_language>.md` is reachable. If missing, stop and report—without it the selection criteria are ad-hoc; this skill is the spec's implementer, not its replacement.
+- Confirm `spec/claude/permission-allowlist/<canonical_language>.md` is reachable in the project or, when absent there, at `${CLAUDE_PLUGIN_ROOT}/spec/claude/permission-allowlist/<canonical_language>.md` (the copy shipped inside the installed `nolte-shared` plugin). If neither is, stop and report—without it the selection criteria are ad-hoc; this skill is the spec's implementer, not its replacement.
 - Confirm `.claude/settings.json` exists (per the spec's AC #1) or scaffold it with an empty `permissions.allow` array if the user explicitly asks the skill to create the file from scratch. Never create it silently.
 - Verify `.gitignore` doesn't list `.claude/settings.json` itself (the file is committed); it MAY list `.claude/settings.local.json` (which is developer-owned).
 

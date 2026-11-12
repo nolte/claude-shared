@@ -15,6 +15,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import pytest
+
 SCRIPTS = Path(__file__).resolve().parent.parent / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 
@@ -484,3 +486,177 @@ def test_agent_tree_scan_runs_once_for_several_file_targets(monkeypatch, tmp_pat
     ) == 1
     out = capsys.readouterr().out
     assert out.count("agent-management.nested-companion-markdown") == 1
+
+
+# --- spec precondition without a plugin-copy fallback (#690/#691) ----------
+
+_NO_FALLBACK = "skill-management.spec-precondition-no-fallback"
+_UNRESOLVABLE = "skill-management.spec-fallback-unresolvable"
+
+# The pre-fix shapes of the class, one per phrasing found in the tree (#691).
+_STOPPING_SHAPES = {
+    "verify-that-reachable": (
+        "## Precondition\n\nBefore any operation, verify that "
+        "`spec/project/audience-identification/<canonical_language>.md` is reachable in the "
+        "current project. If the spec is missing, stop and tell the user.\n"),
+    "bare-list-under-lead-in": (
+        "## Precondition\n\nVerify that all three canonical spec files are reachable:\n\n"
+        "- `spec/project/continuous-integration/<canonical_language>.md`\n\n"
+        "If any is missing, stop and say so.\n"),
+    "is-present-stop-if-missing": (
+        "## Preconditions\n\n2. `spec/project/spec-drift-audit/<canonical_language>.md` is "
+        "present — this is the governing spec; stop if missing.\n"),
+    "carries-if-absent": (
+        "## Preconditions\n\n- The current repository carries "
+        "`spec/project/feature/<canonical_language>.md`. If absent, stop.\n"),
+    "confirm-that-exists": (
+        "## Preconditions\n\n2. Confirm that `spec/project/cookiecutter-template-authoring/` "
+        "exists in the caller's repository. If it is absent, stop and report.\n"),
+    "spec-claude-confirm": (
+        "## Preconditions\n\n- Confirm `spec/claude/permission-allowlist/<canonical_language>.md` "
+        "is reachable. If missing, stop and report.\n"),
+}
+
+
+@pytest.mark.parametrize("shape", sorted(_STOPPING_SHAPES))
+@pytest.mark.parametrize("subdirectory_plugin", [False, True])
+def test_stop_on_missing_shipped_spec_without_fallback_fires(shape, subdirectory_plugin):
+    findings = v.check_spec_precondition_fallback(
+        _STOPPING_SHAPES[shape], "x/SKILL.md", subdirectory_plugin)
+    assert _rules(findings) == {_NO_FALLBACK}
+    assert findings[0].severity == "Critical"
+
+
+def test_root_plugin_root_fallback_passes():
+    body = _STOPPING_SHAPES["is-present-stop-if-missing"].replace(
+        "stop if missing", "else read `${CLAUDE_PLUGIN_ROOT}/spec/project/spec-drift-audit/en.md`; "
+        "stop if neither is reachable")
+    assert v.check_spec_precondition_fallback(body, "skills/x/SKILL.md", False) == []
+
+
+def test_installed_shared_plugin_fallback_passes_in_both_roots():
+    body = _STOPPING_SHAPES["carries-if-absent"].replace(
+        "If absent, stop.", "When it doesn't, read it from the installed `nolte-shared` plugin. "
+        "If neither has it, stop.")
+    for nested in (False, True):
+        assert v.check_spec_precondition_fallback(body, "x/SKILL.md", nested) == []
+
+
+def test_plugin_root_spec_path_is_unresolvable_in_a_subdirectory_plugin():
+    # plugins/<name>/ carries no spec/, so ${CLAUDE_PLUGIN_ROOT}/spec/ can't resolve there
+    # and doesn't count as the fallback either.
+    body = _STOPPING_SHAPES["carries-if-absent"].replace(
+        "If absent, stop.", "Else read `${CLAUDE_PLUGIN_ROOT}/spec/project/feature/en.md`. "
+        "If neither has it, stop.")
+    assert _rules(v.check_spec_precondition_fallback(body, "x/SKILL.md", True)) == {
+        _UNRESOLVABLE, _NO_FALLBACK}
+
+
+def test_deliberate_no_fallback_statement_passes():
+    body = _STOPPING_SHAPES["confirm-that-exists"] + (
+        "The skill deliberately has no plugin-copy fallback: the caller's repo is the source.\n")
+    assert v.check_spec_precondition_fallback(body, "x/SKILL.md", False) == []
+
+
+def test_spec_the_plugin_doesnt_ship_is_out_of_class():
+    # A consumer's own spec has no plugin copy to fall back to; stopping is correct.
+    body = ("## Preconditions\n\n- Confirm `spec/project/no-such-local-topic/en.md` is "
+            "reachable. If missing, stop.\n")
+    assert v.check_spec_precondition_fallback(body, "x/SKILL.md", False) == []
+
+
+def test_citing_a_spec_without_a_stop_is_out_of_class():
+    body = ("## Precondition\n\nCreates a PR that conforms to "
+            "`spec/project/pull-request-workflow/<canonical_language>.md` when present; "
+            "otherwise the embedded baseline applies.\n")
+    assert v.check_spec_precondition_fallback(body, "x/SKILL.md", False) == []
+
+
+def test_unrelated_stop_beside_a_cited_spec_is_out_of_class():
+    # The spec is cited, not presence-checked; the stop is about a project artefact.
+    body = ("## Preconditions\n\n- `project/sprints/` holds the shape declared by "
+            "`spec/project/sprint/`. When the directory is missing, stop and report.\n")
+    assert v.check_spec_precondition_fallback(body, "x/SKILL.md", False) == []
+
+
+@pytest.mark.parametrize("rel, expected", [
+    ("plugins/nolte-planning/skills/feature-decompose/SKILL.md", True),
+    ("skills/audience-identify/SKILL.md", False),
+])
+def test_subdirectory_plugin_classification(monkeypatch, tmp_path, rel, expected):
+    monkeypatch.chdir(tmp_path)
+    assert v._in_subdirectory_plugin(tmp_path / rel) is expected
+
+
+def test_no_shipped_skill_stops_on_a_spec_without_a_fallback(monkeypatch):
+    # The class sweep's regression guard over the real tree (#691).
+    monkeypatch.chdir(v.REPO)
+    paths = sorted(v.REPO.glob("skills/*/SKILL.md")) + sorted(
+        v.REPO.glob("plugins/*/skills/*/SKILL.md"))
+    assert len(paths) > 50
+    offenders = [
+        str(f) for p in paths
+        for f in v.check_spec_precondition_fallback(
+            v._split_body(p.read_text(encoding="utf-8")), str(p), v._in_subdirectory_plugin(p))]
+    assert offenders == []
+
+
+# Review of #717: the selector has to be as wide as the property (G6).
+_P = "`spec/project/feature/en.md`"
+_WIDER_SHAPES = {
+    "abort": f"## Preconditions\n\n- Verify {_P} exists. If missing, abort.\n",
+    "halt": f"## Preconditions\n\n- Verify {_P} exists. If missing, halt.\n",
+    "refuse-to-run": f"## Preconditions\n\n- Verify {_P} exists. If missing, refuse to run.\n",
+    "do-not-proceed": f"## Preconditions\n\n- Verify {_P} exists; otherwise do not proceed.\n",
+    "stops-otherwise": f"## Preconditions\n\n- Verify {_P} exists; the skill stops otherwise.\n",
+    "check-that": f"## Preconditions\n\n- Check that {_P} exists. If missing, stop.\n",
+    "ensure": f"## Preconditions\n\n- Ensure {_P} exists. If missing, stop.\n",
+    "must-exist": f"## Preconditions\n\n- {_P} must exist. If missing, stop.\n",
+    "is-not-present": f"## Preconditions\n\n- If {_P} is not present, stop.\n",
+    "doesnt-exist": f"## Preconditions\n\n- If {_P} doesn't exist, stop.\n",
+    "no-backticks": "## Preconditions\n\n- Verify spec/project/feature/en.md exists. If missing, stop.\n",
+    "list-item-trailing-text": (
+        f"## Preconditions\n\nThese must exist:\n\n- {_P} (governing spec)\n\nIf any is missing, stop.\n"),
+    "numbered-list": f"## Preconditions\n\nThese must exist:\n\n1. {_P}\n\nIf any is missing, stop.\n",
+    "stop-in-subsection": f"## Preconditions\n\n- Verify {_P} exists.\n\n### Failure\n\nIf missing, stop.\n",
+    "heading-in-code-fence": (
+        f"## Preconditions\n\nThese must exist:\n\n- {_P}\n\n```bash\n## not a heading\nls spec/\n```\n\n"
+        "If any is missing, stop.\n"),
+    "fallback-in-other-section": (
+        f"## Preconditions\n\n- Verify {_P} exists. If missing, stop.\n\n## Notes\n\n"
+        "Read it from the installed `nolte-shared` plugin.\n"),
+    "owner-mention-isnt-a-fallback": (
+        f"## Preconditions\n\n- Verify {_P} exists. If missing, stop. "
+        "This skill is part of the `nolte-shared` plugin.\n"),
+}
+
+
+@pytest.mark.parametrize("shape", sorted(_WIDER_SHAPES))
+@pytest.mark.parametrize("subdirectory_plugin", [False, True])
+def test_wider_stop_and_presence_forms_fire(shape, subdirectory_plugin):
+    findings = v.check_spec_precondition_fallback(
+        _WIDER_SHAPES[shape], "x/SKILL.md", subdirectory_plugin)
+    assert _rules(findings) == {_NO_FALLBACK}
+
+
+@pytest.mark.parametrize("body", [
+    f"## Steps\n\nRead {_P} for the rules. Stop the server afterwards.\n",
+    f"## Preconditions\n\n- Verify {_P} exists. Stop the server afterwards.\n",
+    f"## Preconditions\n\n- Verify {_P} exists.\n- If `cookiecutter` is missing: stop and report.\n",
+])
+def test_a_stop_not_bound_to_the_spec_check_is_silent(body):
+    assert v.check_spec_precondition_fallback(body, "x/SKILL.md", False) == []
+
+
+@pytest.mark.parametrize("located", [
+    "via the `nolte-shared` plugin", "in the nolte-shared plugin", "from the installed `nolte-shared` plugin"])
+def test_located_shared_plugin_copy_counts_as_fallback(located):
+    body = f"## Preconditions\n\n- Verify {_P} exists in the project or {located}. If neither, stop.\n"
+    assert v.check_spec_precondition_fallback(body, "x/SKILL.md", True) == []
+
+
+def test_check_is_inert_without_the_hub_spec_tree(monkeypatch, tmp_path):
+    # A pip-installed validator has no spec/ beside it, so nothing counts as shipped.
+    monkeypatch.setattr(v, "SHIPPED_SPEC", tmp_path / "spec")
+    assert v.check_spec_precondition_fallback(
+        _WIDER_SHAPES["must-exist"], "x/SKILL.md", False) == []

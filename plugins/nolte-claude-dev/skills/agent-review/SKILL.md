@@ -48,14 +48,14 @@ This skill also triggers on equivalent German-language requests, including:
 
 ## Preconditions
 
-Before any operation, verify with `Read` that these files exist in the current repository:
+Before any operation, verify with `Read` that these files exist in the current repository or, for each one absent there, in the installed `nolte-shared` plugin, which ships the `spec/` tree:
 
 - `spec/claude/agent-management/<canonical>.md`
 - `spec/claude/skill-vs-agent/<canonical>.md`
 - `spec/claude/review-plan/<canonical>.md`
 - `spec/claude/agent-review/<canonical>.md`
 
-`<canonical>` comes from `spec/.spec-config.yml` (`canonical_language`); fall back to `en` if the config is absent. If any of the four is missing, stop and tell the user — the specs are the input; without them there is nothing to review against. Do not improvise replacements, do not read a translation when the canonical file exists.
+`<canonical>` comes from `spec/.spec-config.yml` (`canonical_language`); fall back to `en` if the config is absent. If any of the four is missing from both, stop and tell the user — the specs are the input; without them there is nothing to review against. Do not improvise replacements, do not read a translation when the canonical file exists.
 
 Also verify `.audits/` exists and is tracked by git. If absent, create `.audits/agent-review/.gitkeep` as part of the first plan write so the folder is not lost.
 
