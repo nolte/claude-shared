@@ -21,8 +21,10 @@ Usage:
 Targets resolve against the current working directory, and findings name paths
 relative to it, so the same script validates a consuming repository when it
 runs there (the `validate-skills` pre-commit hook in `.pre-commit-hooks.yaml`).
-Only the hub-only checks (the per-plugin description budget) stay keyed to this
-repository's own layout and are inert elsewhere.
+Only the hub-only checks stay keyed to this repository's own layout and are inert
+elsewhere: the per-plugin description budget, and the spec-precondition-fallback
+check, which counts a spec as shipped only when it exists under this script's own
+`spec/` tree (the hub's), so it stays silent in a pip-installed consumer hook.
 
 Output is one finding per line, prefixed with severity in Title Case so
 downstream tooling can grep deterministically.
@@ -833,20 +835,90 @@ def _in_subdirectory_plugin(path: Path) -> bool:
     return len(parts) >= 5 and parts[-5] == "plugins"
 
 
-# A spec path the skill checks for presence: the object of a presence verb, the subject
-# of a presence predicate, or a bare list item under a "these files exist" lead-in.
-_SPEC_PATH = r"`(spec/([a-z0-9-]+)/([a-z0-9-]+)/[^`]*)`"
-_SPEC_PRESENCE = re.compile(
-    r"(?:\b(?:confirm|confirm that|verify|verify that|locate|carries|read)\s+" + _SPEC_PATH + r")"
-    r"|(?:" + _SPEC_PATH + r"\s+(?:is present|is reachable|exists|is absent|is missing))"
-    r"|(?:^\s*[-*]\s+" + _SPEC_PATH + r"\s*$)",
-    re.I | re.M)
-_STOP = re.compile(r"\bstop\b", re.I)
+# A spec path, backticked or bare: groups are the full path, the area, and the slug.
+_SPEC_PATH = r"`?(spec/([a-z0-9-]+)/([a-z0-9-]+)/[A-Za-z0-9<>_.-]*)`?"
+# The spec is the object of a presence check: a verb right before the path, or a
+# presence predicate right after it. A plain "Read `spec/...` for the rules" is a
+# citation, not a check, so `read` counts only as "read `spec/...` from <location>".
+_PRESENCE_VERB = re.compile(
+    r"\b(?:confirm|verify|check|ensure|locate|carries|carry|requires?|if)"
+    r"(?:\s+that)?(?:\s+the)?\s+" + _SPEC_PATH
+    + r"|\bread\s+" + _SPEC_PATH + r"\s+from\b", re.I)
+_PRESENCE_PREDICATE = re.compile(
+    _SPEC_PATH + r"\s+(?:must exist|exists?|is present|is reachable|resolves?|"
+    r"is absent|is missing|is not present|isn't present|doesn't exist|does not exist|"
+    r"is not reachable|isn't reachable)\b", re.I)
+# A list item that leads with a spec path checks it when its lead-in paragraph does.
+_LIST_ITEM = re.compile(r"^\s*(?:[-*]|\d+[.)])\s+")
+_LEAD_ITEM_PATH = re.compile(r"^\s*(?:[-*]|\d+[.)])\s+(?:\*\*)?" + _SPEC_PATH)
+_LEAD_IN_PRESENCE = re.compile(r"\b(?:exists?|present|reachable|resolves?)\b", re.I)
+# A stop sentence names both a stop and the condition it fires on, so "Stop the server
+# afterwards" next to a checked spec isn't one.
+_STOP = re.compile(
+    r"\b(?:stops?|abort|aborts|halt|halts|refuse to run|refuses to run|"
+    r"do not proceed|don't proceed|doesn't proceed|cannot run|can't run)\b", re.I)
+_STOP_CONDITION = re.compile(
+    r"\b(?:missing|absent|not present|isn't present|doesn't exist|does not exist|"
+    r"unreachable|not reachable|isn't reachable|neither|otherwise|without (?:it|them))\b", re.I)
+_SENTENCE = re.compile(r"(?<=[.;!?])\s+")
+_CODE_FENCE = re.compile(r"(?ms)^\s*(```|~~~).*?^\s*\1[^\n]*$")
 _PLUGIN_ROOT_SPEC = re.compile(r"\$\{CLAUDE_PLUGIN_ROOT\}/spec/")
-_SHARED_PLUGIN_COPY = re.compile(r"nolte-shared`? plugin", re.I)
+# The copy has to be located ("installed", "via the", "in the", "from the" plugin); a bare
+# "part of the `nolte-shared` plugin" names the owner, not a fallback.
+_SHARED_PLUGIN_COPY = re.compile(r"\b(?:installed|via the|in the|from the)\s+`?nolte-shared`? plugin", re.I)
 # The one recorded way to keep a stop without a fallback (cookiecutter-template-manage).
 _DELIBERATE_NO_FALLBACK = "deliberately has no plugin-copy fallback"
 SHIPPED_SPEC = REPO / "spec"
+
+
+def _units(section: str) -> list[tuple[bool, str]]:
+    """Split a section into (is_list_item, text) units: list items with their
+    continuation lines, and blank-line-separated paragraphs."""
+    units: list[tuple[bool, list[str]]] = []
+    for line in section.splitlines():
+        if not line.strip():
+            if units and not units[-1][0]:
+                units.append((False, []))
+            continue
+        if _LIST_ITEM.match(line):
+            units.append((True, [line]))
+        elif units and units[-1][1] and (units[-1][0] or not line.lstrip().startswith("#")):
+            units[-1][1].append(line)
+        else:
+            units.append((False, [line]))
+    return [(is_item, "\n".join(lines)) for is_item, lines in units if lines]
+
+
+def _is_stop_sentence(sentence: str) -> bool:
+    return bool(_STOP.search(sentence) and _STOP_CONDITION.search(sentence))
+
+
+def _checked_shipped_specs(section: str) -> tuple[set[str], bool]:
+    """The shipped specs a section presence-checks, and whether a stop binds to them."""
+    shipped: set[str] = set()
+    stops = False
+    lead_in = ""
+    for is_item, unit in _units(section):
+        paths = [m for rx in (_PRESENCE_VERB, _PRESENCE_PREDICATE) for m in rx.finditer(unit)]
+        found = set()
+        for m in paths:
+            for i in range(1, len(m.groups()) + 1, 3):
+                if m.group(i) and (SHIPPED_SPEC / m.group(i + 1) / m.group(i + 2)).is_dir():
+                    found.add(m.group(i).rstrip("."))
+        lead = _LEAD_ITEM_PATH.match(unit) if is_item else None
+        if lead and _LEAD_IN_PRESENCE.search(lead_in) and (
+                SHIPPED_SPEC / lead.group(2) / lead.group(3)).is_dir():
+            found.add(lead.group(1).rstrip("."))
+        if not is_item:
+            lead_in = unit
+        stop_here = any(_is_stop_sentence(s) for s in _SENTENCE.split(unit))
+        if found:
+            shipped |= found
+            stops = stops or stop_here
+        elif stop_here and not is_item and not re.search(r"spec/[a-z0-9-]+/", unit):
+            # "If any is missing, stop." after the checked list binds to it.
+            stops = stops or bool(shipped)
+    return shipped, stops
 
 
 def check_spec_precondition_fallback(body: str, target: str, subdirectory_plugin: bool) -> list[Finding]:
@@ -855,10 +927,13 @@ def check_spec_precondition_fallback(body: str, target: str, subdirectory_plugin
     Guard origin (spec/project/defect-class-guards/ G1/G3): #690/#691. A consuming
     project rarely carries `spec/`, so a precondition that stops when the project lacks a
     spec the `nolte-shared` plugin ships blocks the skill everywhere but this hub. Scope:
-    each heading-delimited section that checks a shipped spec's presence and says `stop`
-    must name the installed `nolte-shared` copy. In a subdirectory plugin the
+    each `#`/`##` section (deeper headings fold into their parent; code fences are
+    dropped) that presence-checks a shipped spec and binds a stop sentence to it must
+    locate the installed `nolte-shared` copy. In a subdirectory plugin the
     `${CLAUDE_PLUGIN_ROOT}/spec/` form can't resolve (that plugin carries no `spec/`), so
     only the installed-plugin form counts there, and the unresolvable path is refused.
+    Known gap: one fallback in a section covers every spec that section checks. Agents
+    are out of scope; `check_spec_fallback` reports them as a backlog.
     """
     findings: list[Finding] = []
     if subdirectory_plugin and _PLUGIN_ROOT_SPEC.search(body):
@@ -866,14 +941,11 @@ def check_spec_precondition_fallback(body: str, target: str, subdirectory_plugin
             "Critical", target, "skill-management.spec-fallback-unresolvable",
             "`${CLAUDE_PLUGIN_ROOT}/spec/` doesn't resolve in a subdirectory plugin, which "
             "carries no `spec/`; read the spec from the installed `nolte-shared` plugin instead"))
-    for section in re.split(r"(?m)^#{1,6} ", body):
-        if not _STOP.search(section) or _DELIBERATE_NO_FALLBACK in section:
+    for section in re.split(r"(?m)^#{1,2} ", _CODE_FENCE.sub("", body)):
+        if _DELIBERATE_NO_FALLBACK in section:
             continue
-        shipped = sorted({
-            m.group(i) for m in _SPEC_PRESENCE.finditer(section)
-            for i in (1, 4, 7) if m.group(i)
-            and (SHIPPED_SPEC / m.group(i + 1) / m.group(i + 2)).is_dir()})
-        if not shipped:
+        shipped, stops = _checked_shipped_specs(section)
+        if not (shipped and stops):
             continue
         has_fallback = _SHARED_PLUGIN_COPY.search(section) or (
             not subdirectory_plugin and _PLUGIN_ROOT_SPEC.search(section))
@@ -881,7 +953,7 @@ def check_spec_precondition_fallback(body: str, target: str, subdirectory_plugin
             heading = section.splitlines()[0].strip() if section.strip() else "(preamble)"
             findings.append(Finding(
                 "Critical", target, "skill-management.spec-precondition-no-fallback",
-                f"section `{heading}` stops when the project lacks {', '.join(shipped)} "
+                f"section `{heading}` stops when the project lacks {', '.join(sorted(shipped))} "
                 f"but names no plugin copy; read the spec from "
                 + ("the installed `nolte-shared` plugin" if subdirectory_plugin else
                    "`${CLAUDE_PLUGIN_ROOT}/spec/...` (the installed `nolte-shared` plugin)")

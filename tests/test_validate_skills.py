@@ -599,3 +599,64 @@ def test_no_shipped_skill_stops_on_a_spec_without_a_fallback(monkeypatch):
         for f in v.check_spec_precondition_fallback(
             v._split_body(p.read_text(encoding="utf-8")), str(p), v._in_subdirectory_plugin(p))]
     assert offenders == []
+
+
+# Review of #717: the selector has to be as wide as the property (G6).
+_P = "`spec/project/feature/en.md`"
+_WIDER_SHAPES = {
+    "abort": f"## Preconditions\n\n- Verify {_P} exists. If missing, abort.\n",
+    "halt": f"## Preconditions\n\n- Verify {_P} exists. If missing, halt.\n",
+    "refuse-to-run": f"## Preconditions\n\n- Verify {_P} exists. If missing, refuse to run.\n",
+    "do-not-proceed": f"## Preconditions\n\n- Verify {_P} exists; otherwise do not proceed.\n",
+    "stops-otherwise": f"## Preconditions\n\n- Verify {_P} exists; the skill stops otherwise.\n",
+    "check-that": f"## Preconditions\n\n- Check that {_P} exists. If missing, stop.\n",
+    "ensure": f"## Preconditions\n\n- Ensure {_P} exists. If missing, stop.\n",
+    "must-exist": f"## Preconditions\n\n- {_P} must exist. If missing, stop.\n",
+    "is-not-present": f"## Preconditions\n\n- If {_P} is not present, stop.\n",
+    "doesnt-exist": f"## Preconditions\n\n- If {_P} doesn't exist, stop.\n",
+    "no-backticks": "## Preconditions\n\n- Verify spec/project/feature/en.md exists. If missing, stop.\n",
+    "list-item-trailing-text": (
+        f"## Preconditions\n\nThese must exist:\n\n- {_P} (governing spec)\n\nIf any is missing, stop.\n"),
+    "numbered-list": f"## Preconditions\n\nThese must exist:\n\n1. {_P}\n\nIf any is missing, stop.\n",
+    "stop-in-subsection": f"## Preconditions\n\n- Verify {_P} exists.\n\n### Failure\n\nIf missing, stop.\n",
+    "heading-in-code-fence": (
+        f"## Preconditions\n\nThese must exist:\n\n- {_P}\n\n```bash\n## not a heading\nls spec/\n```\n\n"
+        "If any is missing, stop.\n"),
+    "fallback-in-other-section": (
+        f"## Preconditions\n\n- Verify {_P} exists. If missing, stop.\n\n## Notes\n\n"
+        "Read it from the installed `nolte-shared` plugin.\n"),
+    "owner-mention-isnt-a-fallback": (
+        f"## Preconditions\n\n- Verify {_P} exists. If missing, stop. "
+        "This skill is part of the `nolte-shared` plugin.\n"),
+}
+
+
+@pytest.mark.parametrize("shape", sorted(_WIDER_SHAPES))
+@pytest.mark.parametrize("subdirectory_plugin", [False, True])
+def test_wider_stop_and_presence_forms_fire(shape, subdirectory_plugin):
+    findings = v.check_spec_precondition_fallback(
+        _WIDER_SHAPES[shape], "x/SKILL.md", subdirectory_plugin)
+    assert _rules(findings) == {_NO_FALLBACK}
+
+
+@pytest.mark.parametrize("body", [
+    f"## Steps\n\nRead {_P} for the rules. Stop the server afterwards.\n",
+    f"## Preconditions\n\n- Verify {_P} exists. Stop the server afterwards.\n",
+    f"## Preconditions\n\n- Verify {_P} exists.\n- If `cookiecutter` is missing: stop and report.\n",
+])
+def test_a_stop_not_bound_to_the_spec_check_is_silent(body):
+    assert v.check_spec_precondition_fallback(body, "x/SKILL.md", False) == []
+
+
+@pytest.mark.parametrize("located", [
+    "via the `nolte-shared` plugin", "in the nolte-shared plugin", "from the installed `nolte-shared` plugin"])
+def test_located_shared_plugin_copy_counts_as_fallback(located):
+    body = f"## Preconditions\n\n- Verify {_P} exists in the project or {located}. If neither, stop.\n"
+    assert v.check_spec_precondition_fallback(body, "x/SKILL.md", True) == []
+
+
+def test_check_is_inert_without_the_hub_spec_tree(monkeypatch, tmp_path):
+    # A pip-installed validator has no spec/ beside it, so nothing counts as shipped.
+    monkeypatch.setattr(v, "SHIPPED_SPEC", tmp_path / "spec")
+    assert v.check_spec_precondition_fallback(
+        _WIDER_SHAPES["must-exist"], "x/SKILL.md", False) == []
