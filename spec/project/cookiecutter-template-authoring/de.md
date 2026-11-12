@@ -77,6 +77,17 @@ Das Template **DARF NICHT [MUST NOT]** eines der folgenden rendern:
 - **MUSS [MUST]** den Agent, der dieses Template verfasst (`cookiecutter-template-author`), als kanonisches Authoring-Tool im Template-Level-README deklarieren
 - **SOLLTE [SHOULD]** eine `docs/` MkDocs-Site für das Template selbst ausliefern, wenn das Template mehr als ~20 Variablen rendert, sodass die Variablenoberfläche auffindbar bleibt
 
+### Spec-Quelle
+
+Diese Anforderungen binden den `cookiecutter-template-author`-Agent, der diese Spec und das gebundene Spec-Korpus (`project-structure`, `pull-request-workflow`, `branching-model`, `release-automation`, `release-skill-layer`, `audience-identification`) zur Laufzeit liest.
+
+- **MUSS [MUST]** diese Spec und das gesamte gebundene Korpus aus dem aufrufenden Repository lesen, sobald dieses `spec/project/cookiecutter-template-authoring/` enthält; das Repository des Aufrufers ist die maßgebliche Quelle, und seine Kopie gilt überall dort, wo sie von einer anderen abweicht
+- **MUSS [MUST]** diese Spec und das gesamte gebundene Korpus nur dann aus dem Spec-Baum des installierten `nolte-shared`-Plugins lesen, wenn das aufrufende Repository überhaupt kein `spec/project/cookiecutter-template-authoring/` enthält, und zwar als versionierte Portfolio-Basis
+- **DARF NICHT [MUST NOT]** beide Quellen in einem Lauf mischen, auch nicht in einem aus einem Checkpoint fortgesetzten Lauf, der die zu Beginn gewählte Quelle beibehält: Enthält der Aufrufer diese Spec, aber fehlt ihm ein Thema des gebundenen Korpus, hält der Agent an und meldet das fehlende Thema, statt die Lücke aus der Plugin-Kopie zu füllen
+- **MUSS [MUST]** in jedem Bericht die verwendete Quelle nennen, `caller repository` oder `nolte-shared plugin copy`, und bei der Plugin-Kopie die Plugin-Version aus der `.claude-plugin/plugin.json` des Plugins (`unknown`, wenn sie nicht lesbar ist), sodass sich ein gerendertes Template auf die Spec-Version zurückführen lässt, gegen die es geprüft wurde
+- **MUSS [MUST]**, wenn er die Plugin-Kopie liest, obwohl das aufrufende Repository eigene Themen des gebundenen Korpus enthält (zum Beispiel `spec/project/project-structure/`), diese Themen des Aufrufers im Bericht als nicht verwendet auflisten, sodass der Operator sieht, dass sie den Lauf nicht bestimmt haben
+- **DARF NICHT [MUST NOT]** aus Trainingswissen oder aus einem Spec-Stand außerhalb dieser beiden Quellen arbeiten; enthält keine der beiden Quellen eine benötigte Spec, hält der Agent an und meldet sie
+
 ## Akzeptanzkriterien
 <!-- Testbare, prüfbare Bedingungen. Ein Reviewer kann jedes als erledigt/nicht erledigt markieren. -->
 - [ ] Jedes Cookiecutter-Template im Portfolio rendert ein Projekt, dessen Initial-Commit jeden anwendbaren MUSS in `project-structure`, `pull-request-workflow`, `branching-model`, `release-automation` und `release-skill-layer` erfüllt; verifizierbar dadurch, dass die `pytest-cookies`-Test-Suite des Templates grün läuft
@@ -87,6 +98,7 @@ Das Template **DARF NICHT [MUST NOT]** eines der folgenden rendern:
 - [ ] Das gerenderte `Taskfile.yml` jedes Templates ist konform zu `spec/project/taskfile/` und aus den dort ausgelieferten `templates/` abgeleitet. Ein Template, das keinen Remote-Include rendert, erfüllt dieses Kriterium weiterhin: Die Sammlung deckt zwar einen CI-gatenden Doku-Build ab, aber nur an Refs, die ihn tragen — `lint` / `test` / `docs` lokal zu schreiben bleibt also konform, wo der Ref, den das Template pinnen würde, kein nutzbares Target bereitstellt. Ein Template, das Remote-Includes rendert, pinnt sie zusätzlich über eine einzige Basis-Variable und rendert einen CI-Workflow, der `TASK_X_REMOTE_TASKFILES` setzt und jedes Target mit `task --yes` aufruft; verifizierbar durch eine `pytest-cookies`-Assertion, die davon abhängt, ob das gerenderte Taskfile einen `includes:`-Block trägt
 - [ ] Kein Template im Portfolio rendert eines der gelisteten Anti-Pattern-Artefakte (committete `.venv/`, `__pycache__/`, hartcodierte Credentials, User-spezifische Pfade, …); die CI des Templates fängt jedes mechanisch
 - [ ] Der `cookiecutter-template-author`-Agent zitiert in seinem Body diese Spec als normative Quelle, statt die Anforderungen zu wiederholen
+- [ ] Der `cookiecutter-template-author`-Agent liest sein Spec-Korpus aus dem aufrufenden Repository, sobald dieses diese Spec enthält, liest die Kopie des installierten `nolte-shared`-Plugins nur, wenn nicht, mischt beide nie in einem Lauf (ein fortgesetzter Lauf behält seine Quelle), nennt in jedem Bericht die verwendete Quelle (bei der Plugin-Kopie samt Plugin-Version) und listet Themen des gebundenen Korpus auf Aufruferseite auf, die ein Lauf mit der Plugin-Kopie nicht verwendet hat
 
 ## Offene Fragen
 
