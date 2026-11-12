@@ -118,7 +118,7 @@ Mirrors `agent-management` §"Subagent boundaries" and `skill-vs-agent` §"Hybri
 ### Review procedure
 
 - **MUST** begin by reading the canonical `agent-management`, `skill-vs-agent`, and `review-plan` specs before producing any finding; findings without an anchor in one of those specs aren't valid output of this procedure
-- **MUST** produce findings in this order: frontmatter → description/triggers → distribution → model → tools/scope → prompt structure → rationale section → referenced assets → duplicate-prevention check → INFO observations
+- **MUST** produce findings in this order: frontmatter → description/triggers → distribution → model → tools/scope → prompt structure → rationale section → referenced assets → duplicate-prevention check → spec-anchor check → INFO observations
 - **MUST** emit exactly one `review-plan` file at `.audits/agent-review/<agent-name>.md`; the reviewer **MUST** follow every lifecycle rule from `review-plan`, including the single-plan-per-target invariant and the deletion-commit message format
 - **SHOULD** embed, in the plan's `## Scope` section, the git SHAs of the spec versions applied so a later re-review can tell whether findings may have become outdated by a spec revision
 - **MAY** fold purely stylistic observations (Vale, markdown linting) into `Info` findings when they aid the author, but **MUST NOT** promote them to `Warning` or `Critical`: those stay with their own tooling

@@ -118,7 +118,7 @@ Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hyb
 ### Review-Prozedur
 
 - **MUSS [MUST]** damit beginnen, die kanonischen Specs `agent-management`, `skill-vs-agent` und `review-plan` zu lesen, bevor ein Finding erzeugt wird; Findings ohne Anker in einer dieser Specs sind keine gültige Ausgabe dieser Prozedur
-- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: Frontmatter → Description/Trigger → Distribution → Model → Tools/Scope → Prompt-Struktur → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → INFO-Beobachtungen
+- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: Frontmatter → Description/Trigger → Distribution → Model → Tools/Scope → Prompt-Struktur → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → Spec-Anchor-Check → INFO-Beobachtungen
 - **MUSS [MUST]** genau eine `review-plan`-Datei unter `.audits/agent-review/<agent-name>.md` emittieren; der Reviewer **MUSS [MUST]** jede Lifecycle-Regel aus `review-plan` befolgen, einschließlich der Single-Plan-pro-Ziel-Invariante und des Löschungs-Commit-Message-Formats
 - **SOLLTE [SHOULD]** im `## Scope`-Abschnitt des Plans die Git-SHAs der angewandten Spec-Versionen einbetten, damit ein späteres Re-Review erkennen kann, ob Findings durch eine Spec-Revision veraltet sein könnten
 - **KANN [MAY]** rein stilistische Beobachtungen (Vale, Markdown-Linting) als `Info`-Findings aufnehmen, wenn sie dem Autor helfen, **MUSS NICHT [MUST NOT]** sie aber zu `Warning` oder `Critical` erheben — die bleiben bei ihrem eigenen Tooling

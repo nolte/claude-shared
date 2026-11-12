@@ -678,7 +678,9 @@ def test_unmirrored_trailing_token_still_suggests():
 
 # --- spec-anchor scope override can't apply inside claude-shared (#696) ----
 # spec/claude/skill-review/ §"Checks derived from spec-driven-development" honours
-# the override only when neither the plugin root nor its repository
+# the override for skills, and spec/claude/agent-review/ §"Checks derived from
+# spec-driven-development" applies the same conditions to agents, in both cases
+# only when neither the plugin root nor its repository
 # (`git -C <plugin-root> rev-parse --show-toplevel`) has a top-level `spec/`, and
 # fails it for a plugin root outside any git working tree. The validator runs no
 # spec-anchor check (the review procedure does), so this guard pins the
