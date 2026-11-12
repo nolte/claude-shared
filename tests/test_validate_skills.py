@@ -676,16 +676,30 @@ def test_unmirrored_trailing_token_still_suggests():
     assert findings[0].severity == "Suggestion"
 
 
-# --- spec-anchor scope override can't apply inside this repository (#696) ---
+# --- spec-anchor scope override can't apply inside claude-shared (#696) ----
 # spec/claude/skill-review/ §"Checks derived from spec-driven-development" honours
-# the override only for a plugin whose repository has no top-level `spec/`
-# directory. The validator runs no spec-anchor check (the review procedure does),
-# so the guard here pins the precondition that keeps every plugin of this
-# repository out of the override: the hub's own `spec/` tree, and every in-repo
-# plugin root resolving inside it.
+# the override only when neither the plugin root nor its repository
+# (`git -C <plugin-root> rev-parse --show-toplevel`) has a top-level `spec/`, and
+# fails it for a plugin root outside any git working tree. The validator runs no
+# spec-anchor check (the review procedure does), so this guard pins the
+# precondition for every plugin of this repository: the root plugin and each
+# plugins/<name>/ root resolve to this repository, which carries spec/.
+
+def _plugin_roots():
+    roots = [v.REPO] + sorted(
+        m.parent.parent for m in (v.REPO / "plugins").glob("*/.claude-plugin/plugin.json"))
+    return roots
+
 
 def test_override_precondition_excludes_every_plugin_of_this_repository():
+    import subprocess
+    roots = _plugin_roots()
+    assert len(roots) >= 2  # the root plugin plus at least one plugins/<name>/
     assert (v.REPO / "spec").is_dir()
-    # The root plugin's manifest makes the repository root itself a plugin root,
-    # so condition one fails for every skill here: its repository carries spec/.
-    assert (v.REPO / ".claude-plugin" / "plugin.json").is_file()
+    for root in roots:
+        assert (root / ".claude-plugin" / "plugin.json").is_file()
+        toplevel = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=True).stdout.strip()
+        assert Path(toplevel).resolve() == v.REPO.resolve(), root
+        assert (Path(toplevel) / "spec").is_dir(), root
