@@ -672,6 +672,53 @@ def _output_tail(result: CommandResult) -> str:
 # --------------------------------------------------------------------------- #
 # Git access (read-only)
 # --------------------------------------------------------------------------- #
+# Every git call reads the target's own objects, refs, and history, whatever the
+# repository or the caller's environment says. A ``refs/replace/*`` ref swaps one
+# object for another in every read, so a probe blob or commit could be judged by a
+# substitute: ``--no-replace-objects`` (and GIT_NO_REPLACE_OBJECTS for good
+# measure) turns replacement off. That flag does not turn off a legacy graft file
+# (``info/grafts``, which rewrites a commit's parents): measured on git 2.53, a
+# graft still cut the history under --no-replace-objects. GIT_GRAFT_FILE pointed
+# at the empty null device neutralises it; the variable is git's own
+# (environment.h) but undocumented, so test_709_K1_* pins the measurement, and
+# the advice it prints is switched off so it never reaches a reason.
+_GIT_ARGV = ("git", "--no-replace-objects", "-c", "advice.graftFileDeprecated=false")
+# The caller's environment may point git elsewhere: GIT_DIR, GIT_WORK_TREE,
+# GIT_INDEX_FILE, GIT_OBJECT_DIRECTORY, GIT_ALTERNATE_OBJECT_DIRECTORIES,
+# GIT_COMMON_DIR, GIT_NAMESPACE, GIT_REPLACE_REF_BASE, GIT_SHALLOW_FILE, and
+# GIT_CONFIG_PARAMETERS / GIT_CONFIG_COUNT / GIT_CONFIG_KEY_<n> (config a
+# surrounding `git -c` or a hook exports to every child, invisible in the
+# operator's config files). Every GIT_* variable is dropped except the three
+# that only choose which config files the operator's git reads; those govern
+# every other git command the operator runs too, and the history reads pin the
+# log and diff options that matter on the command line.
+_GIT_ENV_KEPT = frozenset({"GIT_CONFIG_GLOBAL", "GIT_CONFIG_SYSTEM", "GIT_CONFIG_NOSYSTEM"})
+
+
+def _git_env() -> dict[str, str]:
+    """The environment for a git call: the caller's, without any GIT_* variable but the config-file choice."""
+    env = {key: value for key, value in os.environ.items()
+           if not key.upper().startswith("GIT_") or key.upper() in _GIT_ENV_KEPT}
+    env["GIT_NO_REPLACE_OBJECTS"] = "1"
+    env["GIT_GRAFT_FILE"] = os.devnull
+    return env
+
+
+def _same_bytes(working: bytes, committed: bytes) -> bool:
+    """Whether a working-tree file holds the committed blob.
+
+    Byte for byte, with one exception: the exact rendering ``core.autocrlf``
+    (or ``eol=crlf``) checks out, every LF of a blob that holds no CR written
+    as CRLF. That is no change: the runner reads every probe and declaration
+    with universal newlines, so it parses the same text either way, and
+    refusing it would read every checkout on a CRLF platform as uncommitted.
+    Nothing else is normalised; a clean filter's rewrite is a change.
+    """
+    if working == committed:
+        return True
+    return b"\r" not in committed and working == committed.replace(b"\n", b"\r\n")
+
+
 class Git:
     def __init__(self, repo: Path) -> None:
         self.repo = repo
@@ -683,14 +730,17 @@ class Git:
         self.probe_sets: dict[str, "ProbeHistory"] = {}
 
     def run(self, *args: str) -> subprocess.CompletedProcess:
-        """Run git read-only. Output is decoded as UTF-8 with replacement: a historical
-        probe revision or a path that is not UTF-8 must yield a classified entry, not
-        a crash. core.quotePath is off so non-ASCII paths come back verbatim and can
-        be passed to ``git show`` again."""
+        """Run git read-only, on the target's own objects (_GIT_ARGV, _git_env()).
+
+        Output is decoded as UTF-8 with replacement: a historical probe revision
+        or a path that is not UTF-8 must yield a classified entry, not a crash.
+        core.quotePath is off so non-ASCII paths come back verbatim and can be
+        passed to ``git show`` again."""
         try:
             return subprocess.run(  # noqa: S603 - fixed argv, no shell
-                ["git", "-c", "core.quotePath=false", "-C", str(self.repo), *args],
+                [*_GIT_ARGV, "-c", "core.quotePath=false", "-C", str(self.repo), *args],
                 capture_output=True,
+                env=_git_env(),
                 text=True,
                 encoding="utf-8",
                 errors="replace",
@@ -725,10 +775,94 @@ class Git:
         """The latest commit reachable from ``rev`` (a resolved commit) that touched ``path``."""
         return self.out("--literal-pathspecs", "log", "-1", "--format=%H", rev, "--", path).strip() or None
 
-    def is_dirty(self, path: str) -> bool:
-        """Uncommitted changes to ``path``; literal pathspecs keep a name like ``w[x].yml`` from matching ``wx.yml``."""
-        return bool(self.out("--literal-pathspecs", "status", "--porcelain", "--untracked-files=no", "--",
-                             path).strip())
+    def is_dirty(self, path: str, checkout_form: bool = False) -> bool:
+        """Uncommitted changes to ``path``: staged, or in the working tree against HEAD.
+
+        ``checkout_form`` (declarations, never probes) also accepts the file git
+        writes on checkout (``cat-file --filters``): an ``ident`` keyword
+        expanded, a smudge filter's output, ``eol=crlf`` on a blob with a lone
+        CR. A declaration rewritten that way is no edit. A probe is compared raw
+        only: a smudge filter that writes a lowered bar would otherwise make the
+        lowered file match HEAD.
+
+        ``git status`` would answer from the index's view of the working tree,
+        which the target controls: a clean filter (``filter.<name>.clean`` with
+        an attribute, from any config file or ``.git/info/attributes``) hands
+        git the approved text instead of the edited file, and
+        ``update-index --assume-unchanged`` or ``--skip-worktree`` stops git
+        from looking at the file at all. Either way an uncommitted lowering read
+        as unchanged. So the index is compared with HEAD by object id
+        (``diff-index --cached``, which reads no working tree), and the working
+        tree file's bytes with HEAD's blob directly (``cat-file blob``, no
+        filter): any other byte is a change (_same_bytes()).
+
+        A path HEAD doesn't hold is dirty only when it is staged, as before: an
+        untracked file is no uncommitted change of a committed one. A symlink
+        matches only a link at HEAD with the same target. Where HEAD holds a
+        directory or a submodule, a regular file or a symlink in the working
+        tree is uncommitted whatever the index says (a skip-worktree flag on a
+        file inside the directory hid it from ``git status``); a directory
+        there falls back to ``git status``, which compares its contents.
+
+        A file HEAD holds and the working tree lacks is a deletion, unless the
+        index marks it skip-worktree (``ls-files -t`` tag ``S``): a sparse
+        checkout leaves such files out without deleting anything. Only absence
+        is excused: a skip-worktree file that is present is compared like any
+        other.
+        """
+        staged = self.run("--literal-pathspecs", "diff-index", "--cached", "--quiet", "HEAD", "--", path)
+        if staged.returncode not in (0, 1):
+            raise AuditError(f"`git diff-index --cached HEAD -- {safe_text(path)}` failed: {safe_text(staged.stderr)}")
+        if staged.returncode == 1:
+            return True
+        entry = self.entry_at("HEAD", path)
+        if entry is None:
+            return False
+        kind, blob = entry
+        file = self.repo / path
+        if kind not in ("blob", "link"):
+            if file.is_symlink() or file.is_file():
+                return True
+            return bool(self.out("--literal-pathspecs", "status", "--porcelain", "--untracked-files=no", "--",
+                                 path).strip())
+        if not file.is_symlink() and not file.exists():
+            tags = self.out("--literal-pathspecs", "ls-files", "-t", "--", path).split("\n")
+            return not any(line.startswith("S ") and line[2:] == path for line in tags)
+        committed = self.read_blob(blob)
+        if committed is None:
+            raise AuditError(f"`git cat-file blob {blob}` failed for {safe_text(path)} at HEAD")
+        try:
+            if kind == "link":
+                return not file.is_symlink() or os.fsencode(os.readlink(file)) != committed
+            if file.is_symlink() or not file.is_file():
+                return True
+            working = file.read_bytes()
+        except OSError:
+            return True  # a file the runner can't read can't be shown to equal HEAD's
+        if _same_bytes(working, committed):
+            return False
+        return not checkout_form or working != self.checkout_bytes(blob, path)
+
+    def checkout_bytes(self, blob: str, path: str) -> bytes:
+        """The bytes git writes for ``blob`` at ``path`` on checkout (``cat-file --filters --path``)."""
+        if not _OBJECT_ID_RE.match(blob):
+            raise AuditError(f"refusing the object {safe_text(blob)}")
+        try:
+            res = subprocess.run(  # noqa: S603 - fixed argv, no shell
+                [*_GIT_ARGV, "-C", str(self.repo), "cat-file", "--filters", f"--path={path}", blob],
+                capture_output=True,
+                timeout=GIT_TIMEOUT_SECONDS,
+                check=False,
+                env=_git_env(),
+            )
+        except FileNotFoundError as exc:
+            raise AuditError("`git` not found on PATH; the runner reads the target's history with it.") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise AuditError(f"`git cat-file --filters` timed out after {GIT_TIMEOUT_SECONDS}s.") from exc
+        if res.returncode != 0:
+            raise AuditError(f"`git cat-file --filters --path={safe_text(path)} {blob}` failed: "
+                             f"{safe_text(res.stderr.decode('utf-8', 'replace'))}")
+        return res.stdout
 
     def file_history(self, path: str) -> list[tuple[str, str]]:
         """(commit, path at that commit), newest first, following renames.
@@ -828,12 +962,19 @@ class Git:
                         PROBE_DIR.as_posix())
 
     def tree_entries(self, commit: str, directory: str) -> list[tuple[str, str, str, str]]:
-        """``(mode, type, hash, path)`` of each entry directly under ``directory`` at ``commit``."""
+        """``(mode, type, hash, path)`` of each entry directly under ``directory`` at ``commit``.
+
+        A directory ``commit`` does not hold lists nothing (``ls-tree`` exits 0).
+        A failing ``ls-tree`` (a missing or corrupt tree object) stops the run
+        (AuditError): read as an empty directory, it would report every probe at
+        HEAD removed, or hide that HEAD carries one.
+        """
         if commit.startswith("-"):
             raise AuditError(f"refusing the revision {safe_text(commit)}")
         res = self.run("--literal-pathspecs", "ls-tree", "-z", commit, "--", directory.rstrip("/") + "/")
         if res.returncode != 0:
-            return []
+            raise AuditError(f"`git ls-tree {safe_text(commit)} -- {safe_text(directory)}/` failed: "
+                             f"{safe_text(res.stderr)}")
         entries = []
         for record in res.stdout.split("\x00"):
             meta, _, name = record.partition("\t")
@@ -906,9 +1047,10 @@ class Git:
     def _batch(self, args: list[str], ids: list[str]) -> bytes:
         try:
             res = subprocess.run(  # noqa: S603 - fixed argv, no shell
-                ["git", "-C", str(self.repo), *args],
+                [*_GIT_ARGV, "-C", str(self.repo), *args],
                 input=("\n".join(ids) + "\n").encode("ascii"),
                 capture_output=True,
+                env=_git_env(),
                 timeout=GIT_TIMEOUT_SECONDS,
                 check=False,
             )
@@ -920,7 +1062,7 @@ class Git:
             raise AuditError(f"`git {' '.join(args)}` failed: {safe_text(res.stderr.decode('utf-8', 'replace'))}")
         return res.stdout
 
-    def merges_changing(self, since: str, until: str, path: str) -> list[str]:
+    def merges_changing(self, since: str | None, until: str, path: str) -> list[str]:
         """Merge commits in ``since..until`` whose ``path`` differs from every parent, newest first.
 
         ``--full-history`` walks every parent of every merge: default history
@@ -940,11 +1082,11 @@ class Git:
         file_history() lists in topological order, so a listed older revision is
         never a descendant of a newer one, but it can sit on a parallel line
         that is no ancestor either. The search then fails closed: it covers
-        every merge reachable from ``until``.
+        every merge reachable from ``until``, as it does when ``since`` is None.
         """
-        if since.startswith("-") or until.startswith("-"):
+        if (since or "").startswith("-") or until.startswith("-"):
             raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
-        revisions = f"{since}..{until}" if self.is_ancestor_or_equal(since, until) else until
+        revisions = f"{since}..{until}" if since and self.is_ancestor_or_equal(since, until) else until
         raw = self.out("--literal-pathspecs", "log", "--no-follow", "--full-history", "--merges",
                        "--no-show-signature", "--no-color", "--no-renames", "-c", "--name-only",
                        "--format=%x00%H", revisions, "--", path)
@@ -955,6 +1097,33 @@ class Git:
                 merges.append(lines[0].strip())
         return merges
 
+    def merges_restoring(self, since: str, until: str, path: str) -> list[str]:
+        """Merge commits in ``since..until`` whose ``path`` differs from their first parent, newest first.
+
+        merges_changing() names a merge only when its result differs from every
+        parent, since a merge that took one side's version has that side's own
+        commit in file_history(). That commit can sit before ``since``: merging a
+        branch forked before ``since`` and taking its version for ``path`` brings
+        back an older revision, and the walk lists the older revision's commit
+        behind ``since``. Measured against its first parent, the line the merge
+        lands on, such a merge is a change of ``path``. ``rev-list
+        --full-history`` lists every merge not identical for ``path`` to all its
+        parents; each is then compared with its first parent by blob. The span
+        widens to every merge reachable from ``until`` when ``since`` is no
+        ancestor of it, as in merges_changing().
+        """
+        if since.startswith("-") or until.startswith("-"):
+            raise AuditError(f"refusing the revision range {safe_text(since)}..{safe_text(until)}")
+        revisions = f"{since}..{until}" if self.is_ancestor_or_equal(since, until) else until
+        merges = self.out("--literal-pathspecs", "rev-list", "--full-history", "--merges", revisions, "--",
+                          path).split()
+        changed = []
+        for merge in merges:
+            parents = self.parents(merge)
+            if parents and self.entry_at(merge, path) != self.entry_at(parents[0], path):
+                changed.append(merge)
+        return changed
+
     def entry_at(self, commit: str, path: str) -> tuple[str, str] | None:
         """``(type, hash)`` of the tree entry ``path`` at ``commit``, or None when absent.
 
@@ -963,11 +1132,16 @@ class Git:
         is ``blob`` for a regular file, ``link`` for a symlink, ``tree`` for a
         directory and ``commit`` for a submodule. A symlink's blob is its link text,
         not the declaration it points to: read as the declaration, its anchor would
-        hold while the target changes, so it is no file to anchor on.
+        hold while the target changes, so it is no file to anchor on. A failing
+        ``ls-tree`` (an unreadable commit or tree) stops the run (AuditError).
         """
+        if commit.startswith("-"):
+            raise AuditError(f"refusing the revision {safe_text(commit)}")
         res = self.run("--literal-pathspecs", "ls-tree", "-z", commit, "--", path)
         if res.returncode != 0:
-            return None
+            # An unreadable tree is no absent file: read as None, two failures would
+            # compare equal and a failing HEAD would read as an unchanged file.
+            raise AuditError(f"`git ls-tree {safe_text(commit)} -- {safe_text(path)}` failed: {safe_text(res.stderr)}")
         for record in res.stdout.split("\x00"):
             meta, _, name = record.partition("\t")
             parts = meta.split()
@@ -990,8 +1164,9 @@ class Git:
             return None
         try:
             res = subprocess.run(  # noqa: S603 - fixed argv, no shell
-                ["git", "-C", str(self.repo), "cat-file", "blob", blob],
+                [*_GIT_ARGV, "-C", str(self.repo), "cat-file", "blob", blob],
                 capture_output=True,
+                env=_git_env(),
                 timeout=GIT_TIMEOUT_SECONDS,
                 check=False,
             )
@@ -1521,7 +1696,9 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
         origin = None
     history = _without_deletions(git, kept, yaml)
     if not history:
-        return None, [], False, [], [], gap
+        if not own:
+            gap = gap or _merge_origin(git, probe.file)
+        return None, [], bool(gap) and git.is_dirty(probe.file), [], [], gap
     origin = "; ".join(part for part in (gap, origin) if part) or None
     current = _anchor_key(probe.data) if probe.data else None
     run: list[str] = []
@@ -1533,10 +1710,16 @@ def probe_changes(git: Git, probe: Probe, yaml: Any, cut: frozenset[tuple[str, s
     if not run:
         # The newest listed revision already carries another derived_from than the
         # working tree: either the recording is uncommitted, or a merge after that
-        # revision changed the probe, which file_history() cannot list. The newest
-        # commit is the baseline; with neither found, fail closed as uncommitted.
+        # revision changed the probe, which file_history() cannot list. That merge
+        # differs from every parent (an evil merge), or it took the probe from a
+        # parent whose version the walk lists only further back, such as an older
+        # approved revision restored by merging a branch forked before the newest
+        # one (merges_restoring). The newest commit is the baseline; with none of
+        # these found, fail closed as uncommitted.
+        newest, path = history[0]
         merges = [m for m, _ in _merges_changing(git, history[:1], "HEAD")]
-        return history[0][0], [], dirty or not merges, [], merges, origin
+        merges += [m for m in git.merges_restoring(newest, "HEAD", path) if m not in merges]
+        return newest, [], dirty or not merges, [], merges, origin
     merges = [m for m, _ in _merges_changing(git, history[:len(run)], "HEAD")]
     return run[-1], run[:-1], dirty, history[len(run):], merges, origin
 
@@ -1744,6 +1927,29 @@ def _origin_problem(commit: str, path: str, status: str, source: str) -> str | N
         "T": "a change of its type",
     }.get(status, "no change to it")
     return (f"the probe's oldest listed revision {commit[:12]} does not create {safe_text(path)} but records {what}: "
+            "the probe's origin isn't in its listed history but in a merge the walk can't follow, and a "
+            "derivation recorded in a merge cannot be judged")
+
+
+def _merge_origin(git: Git, path: str) -> str | None:
+    """Why a probe that HEAD holds but whose history walk lists no revision has no judgeable origin, or None.
+
+    file_history() lists no merge, so a probe created inside a merge and never
+    changed in a plain commit since has an empty history. Read as "not
+    committed", it would only be withheld, with no finding, although the merge
+    committed it without a derivation anyone can judge (SEC-101). When HEAD
+    holds the path, the merges whose result for it differs from every parent
+    (Git.merges_changing() over all of HEAD's history) are named, the one that
+    created it among them; a file HEAD does not hold is genuinely uncommitted
+    (None).
+    """
+    if git.blob_at("HEAD", path) is None:
+        return None
+    merges = git.merges_changing(None, "HEAD", path)
+    where = f", and it was created inside merge {merges[-1][:12]}" if merges else ""
+    if len(merges) > 1:
+        where += f" and changed in {_merge_names(merges[:-1])}"
+    return (f"{safe_text(path)} is committed, but the probe's history walk lists no commit that creates it{where}: "
             "the probe's origin isn't in its listed history but in a merge the walk can't follow, and a "
             "derivation recorded in a merge cannot be judged")
 
@@ -2651,6 +2857,11 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
     data = probe.data or {}
     derived_from = data["derived_from"]
     baseline, later, dirty, earlier, merges, origin = probe_changes(git, probe, yaml, cut)
+    if baseline is None and origin:
+        # Committed, but the walk lists no revision of it: created inside a merge
+        # (_merge_origin), or a write the walk misses (_unlisted_write).
+        return ChangeState(STATE_WEAKENED, "; ".join([origin] + (["probe file has uncommitted changes"]
+                                                                  if dirty else [])))
     if baseline is None:
         return ChangeState(
             STATE_UNCOMMITTED,
@@ -2692,6 +2903,14 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
             return ChangeState(STATE_UNRESOLVED, why)
         if ref != derived_from:
             return ChangeState(STATE_STALE, f"{REASON_STALE}: pinned ref moved from {derived_from} to {ref}")
+        # The pin is read from the working tree, like a declaration file, and
+        # held to the same rule: a pin HEAD doesn't carry proves nothing.
+        config = SPEC_CONFIG.as_posix()
+        if git.entry_at("HEAD", config) is None:
+            return ChangeState(STATE_UNRESOLVED, f"{config} is not committed, so the pinned ref of the inherited "
+                               "spec is unknown")
+        if git.is_dirty(config, checkout_form=True):
+            return ChangeState(STATE_STALE, f"{REASON_STALE}: {config} has uncommitted changes")
         return ChangeState(STATE_CLEAN)
 
     raw_path = declaration.get("path")
@@ -2718,7 +2937,7 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
     declaration_commit = git.last_commit(rel)
     if declaration_commit is None:
         return ChangeState(STATE_UNRESOLVED, f"declaration {rel} has no history in the target repository")
-    if git.is_dirty(rel):
+    if git.is_dirty(rel, checkout_form=True):
         return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} has uncommitted changes")
     # A rename or a deletion is itself the declaration's latest commit, so a moved
     # or split declaration reads as changed, which is the safe answer.
@@ -2741,7 +2960,7 @@ def _content_change(git: Git, derived_from: str, rel: str) -> ChangeState:
                            f"derived_from {safe_text(derived_from, 60)!r} is not a content anchor of the form {BLOB_FORM}")
     if git.last_commit(rel) is None:
         return ChangeState(STATE_UNRESOLVED, f"declaration {rel} has no history in the target repository")
-    if git.is_dirty(rel):
+    if git.is_dirty(rel, checkout_form=True):
         return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} has uncommitted changes")
     entry = git.entry_at("HEAD", rel)
     if entry is None:
@@ -2770,7 +2989,7 @@ def _section_change(git: Git, derived_from: str, sections: object, rel: str) -> 
         return ChangeState(STATE_UNRESOLVED, why)
     if git.last_commit(rel) is None:
         return ChangeState(STATE_UNRESOLVED, f"declaration {rel} has no history in the target repository")
-    if git.is_dirty(rel):
+    if git.is_dirty(rel, checkout_form=True):
         return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} has uncommitted changes")
     entry = git.entry_at("HEAD", rel)
     if entry is None:
