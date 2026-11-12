@@ -83,8 +83,9 @@ These requirements bind the `cookiecutter-template-author` agent, which reads th
 
 - **MUST** read this spec and the whole bound corpus from the calling repository whenever that repository carries `spec/project/cookiecutter-template-authoring/`; the caller's repository is the source of truth, and its copy wins wherever it diverges from any other
 - **MUST**, only when the calling repository carries no `spec/project/cookiecutter-template-authoring/` at all, read this spec and the whole bound corpus from the spec tree shipped by the installed `nolte-shared` plugin, as a versioned portfolio baseline
-- **MUST NOT** mix the two sources in one run: when the caller carries this spec but lacks a bound-corpus topic, the agent stops and reports the missing topic instead of filling it from the plugin copy
+- **MUST NOT** mix the two sources in one run, including a run resumed from a checkpoint, which keeps the source chosen at its start: when the caller carries this spec but lacks a bound-corpus topic, the agent stops and reports the missing topic instead of filling it from the plugin copy
 - **MUST** name the source it used in every report, `caller repository` or `nolte-shared plugin copy`, and for the plugin copy the plugin version read from the plugin's `.claude-plugin/plugin.json` (`unknown` when unreadable), so a rendered template is traceable to the spec version it was checked against
+- **MUST**, when it reads the plugin copy while the calling repository carries some bound-corpus topics of its own (for example `spec/project/project-structure/`), list those caller topics in the report as unused, so the operator sees that they didn't govern the run
 - **MUST NOT** work from training data or from any spec snapshot outside these two sources; when neither source carries a required spec, the agent stops and reports it
 
 ## Acceptance Criteria
@@ -97,7 +98,7 @@ These requirements bind the `cookiecutter-template-author` agent, which reads th
 - [ ] Every template's rendered `Taskfile.yml` conforms to `spec/project/taskfile/` and is derived from that spec's shipped `templates/`. A template that renders no remote include still passes this criterion: the collection covers a CI-gating documentation build, but only at refs that carry it, so writing `lint` / `test` / `docs` locally remains conformant wherever the ref the template would pin doesn't expose a usable target. A template that *does* render remote includes additionally pins them through a single base variable and renders a CI workflow that sets `TASK_X_REMOTE_TASKFILES` and calls each target with `task --yes`; verifiable by a `pytest-cookies` assertion that's conditional on the rendered Taskfile carrying an `includes:` block
 - [ ] No template in the portfolio renders any of the listed anti-pattern artefacts (committed `.venv/`, `__pycache__/`, hard-coded credentials, user-specific paths, …); the template's own CI catches every one mechanically
 - [ ] The `cookiecutter-template-author` agent's body cites this spec as its normative source instead of restating the requirements
-- [ ] The `cookiecutter-template-author` agent reads its spec corpus from the calling repository whenever that repository carries this spec, reads the installed `nolte-shared` plugin's copy only when it doesn't, never mixes the two in one run, and names the source used (plus the plugin version for the plugin copy) in every report
+- [ ] The `cookiecutter-template-author` agent reads its spec corpus from the calling repository whenever that repository carries this spec, reads the installed `nolte-shared` plugin's copy only when it doesn't, never mixes the two in one run (a resumed run keeps its source), names the source used (plus the plugin version for the plugin copy) in every report, and lists any caller-side bound-corpus topics left unused by a plugin-copy run
 
 ## Open Questions
 
