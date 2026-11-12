@@ -775,8 +775,15 @@ class Git:
         """The latest commit reachable from ``rev`` (a resolved commit) that touched ``path``."""
         return self.out("--literal-pathspecs", "log", "-1", "--format=%H", rev, "--", path).strip() or None
 
-    def is_dirty(self, path: str) -> bool:
+    def is_dirty(self, path: str, checkout_form: bool = False) -> bool:
         """Uncommitted changes to ``path``: staged, or in the working tree against HEAD.
+
+        ``checkout_form`` (declarations, never probes) also accepts the file git
+        writes on checkout (``cat-file --filters``): an ``ident`` keyword
+        expanded, a smudge filter's output, ``eol=crlf`` on a blob with a lone
+        CR. A declaration rewritten that way is no edit. A probe is compared raw
+        only: a smudge filter that writes a lowered bar would otherwise make the
+        lowered file match HEAD.
 
         ``git status`` would answer from the index's view of the working tree,
         which the target controls: a clean filter (``filter.<name>.clean`` with
@@ -828,7 +835,31 @@ class Git:
             return not file.is_symlink() or os.fsencode(os.readlink(file)) != committed
         if file.is_symlink() or not file.is_file():
             return True
-        return not _same_bytes(file.read_bytes(), committed)
+        working = file.read_bytes()
+        if _same_bytes(working, committed):
+            return False
+        return not checkout_form or working != self.checkout_bytes(blob, path)
+
+    def checkout_bytes(self, blob: str, path: str) -> bytes:
+        """The bytes git writes for ``blob`` at ``path`` on checkout (``cat-file --filters --path``)."""
+        if not _OBJECT_ID_RE.match(blob):
+            raise AuditError(f"refusing the object {safe_text(blob)}")
+        try:
+            res = subprocess.run(  # noqa: S603 - fixed argv, no shell
+                [*_GIT_ARGV, "-C", str(self.repo), "cat-file", "--filters", f"--path={path}", blob],
+                capture_output=True,
+                timeout=GIT_TIMEOUT_SECONDS,
+                check=False,
+                env=_git_env(),
+            )
+        except FileNotFoundError as exc:
+            raise AuditError("`git` not found on PATH; the runner reads the target's history with it.") from exc
+        except subprocess.TimeoutExpired as exc:
+            raise AuditError(f"`git cat-file --filters` timed out after {GIT_TIMEOUT_SECONDS}s.") from exc
+        if res.returncode != 0:
+            raise AuditError(f"`git cat-file --filters --path={safe_text(path)} {blob}` failed: "
+                             f"{safe_text(res.stderr.decode('utf-8', 'replace'))}")
+        return res.stdout
 
     def file_history(self, path: str) -> list[tuple[str, str]]:
         """(commit, path at that commit), newest first, following renames.
@@ -1098,11 +1129,16 @@ class Git:
         is ``blob`` for a regular file, ``link`` for a symlink, ``tree`` for a
         directory and ``commit`` for a submodule. A symlink's blob is its link text,
         not the declaration it points to: read as the declaration, its anchor would
-        hold while the target changes, so it is no file to anchor on.
+        hold while the target changes, so it is no file to anchor on. A failing
+        ``ls-tree`` (an unreadable commit or tree) stops the run (AuditError).
         """
+        if commit.startswith("-"):
+            raise AuditError(f"refusing the revision {safe_text(commit)}")
         res = self.run("--literal-pathspecs", "ls-tree", "-z", commit, "--", path)
         if res.returncode != 0:
-            return None
+            # An unreadable tree is no absent file: read as None, two failures would
+            # compare equal and a failing HEAD would read as an unchanged file.
+            raise AuditError(f"`git ls-tree {safe_text(commit)} -- {safe_text(path)}` failed: {safe_text(res.stderr)}")
         for record in res.stdout.split("\x00"):
             meta, _, name = record.partition("\t")
             parts = meta.split()
@@ -2917,7 +2953,7 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
         if git.entry_at("HEAD", config) is None:
             return ChangeState(STATE_UNRESOLVED, f"{config} is not committed, so the pinned ref of the inherited "
                                "spec is unknown")
-        if git.is_dirty(config):
+        if git.is_dirty(config, checkout_form=True):
             return ChangeState(STATE_STALE, f"{REASON_STALE}: {config} has uncommitted changes")
         return ChangeState(STATE_CLEAN)
 
@@ -2945,7 +2981,7 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
     declaration_commit = git.last_commit(rel)
     if declaration_commit is None:
         return ChangeState(STATE_UNRESOLVED, f"declaration {rel} has no history in the target repository")
-    if git.is_dirty(rel):
+    if git.is_dirty(rel, checkout_form=True):
         return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} has uncommitted changes")
     # A rename or a deletion is itself the declaration's latest commit, so a moved
     # or split declaration reads as changed, which is the safe answer.
@@ -2968,7 +3004,7 @@ def _content_change(git: Git, derived_from: str, rel: str) -> ChangeState:
                            f"derived_from {safe_text(derived_from, 60)!r} is not a content anchor of the form {BLOB_FORM}")
     if git.last_commit(rel) is None:
         return ChangeState(STATE_UNRESOLVED, f"declaration {rel} has no history in the target repository")
-    if git.is_dirty(rel):
+    if git.is_dirty(rel, checkout_form=True):
         return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} has uncommitted changes")
     entry = git.entry_at("HEAD", rel)
     if entry is None:
@@ -2997,7 +3033,7 @@ def _section_change(git: Git, derived_from: str, sections: object, rel: str) -> 
         return ChangeState(STATE_UNRESOLVED, why)
     if git.last_commit(rel) is None:
         return ChangeState(STATE_UNRESOLVED, f"declaration {rel} has no history in the target repository")
-    if git.is_dirty(rel):
+    if git.is_dirty(rel, checkout_form=True):
         return ChangeState(STATE_STALE, f"{REASON_STALE}: {rel} has uncommitted changes")
     entry = git.entry_at("HEAD", rel)
     if entry is None:

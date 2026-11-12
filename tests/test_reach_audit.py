@@ -7405,3 +7405,70 @@ def test_709_cut_a_lowering_undone_on_main_then_an_update_branch_merge_stays_wea
     else:
         target.git("merge", "-q", "--ff-only", "side")
     _weakened_reason(target, marker)
+
+
+# --------------------------------------------------------------------------- #
+# #709 fix-forward: declarations in their checkout form; entry_at fails closed
+# --------------------------------------------------------------------------- #
+def _recheckout(target: Target, rel: str) -> None:
+    (target.path / rel).unlink()
+    target.git("checkout", "--", rel)
+
+
+@pytest.mark.parametrize("form", ["ident", "smudge", "eol-crlf-lone-cr"])
+def test_709_X1_a_declaration_rewritten_on_checkout_is_no_uncommitted_change(target, tmp_path, form):
+    """Measured on 27a7ee0b: stale, "docs/requirements.md has uncommitted changes" with `git status` empty
+    (develop: clean). The working-tree file is the checkout form of HEAD's blob."""
+    marker = tmp_path / "ran"
+    if form == "ident":
+        target.write(".gitattributes", "*.md ident\n")
+        target.write(DECL, "# Requirements\n\n$Id$\n\n## Export\n\nExports 3 collections.\n")
+    elif form == "smudge":
+        target.git("config", "filter.up.smudge", "sed s/collections/COLLECTIONS/")
+        target.git("config", "filter.up.clean", "sed s/COLLECTIONS/collections/")
+        target.write(".gitattributes", "*.md filter=up\n")
+    else:
+        target.write(".gitattributes", "*.md text eol=crlf\n")
+        (target.path / DECL).write_bytes(b"# Requirements\n\n## Export\n\nExports 3\rcollections.\n")
+    target.commit("the declaration under checkout attributes")
+    _content_probe(target, argv=marker_argv(marker))
+    _recheckout(target, DECL)
+    committed = subprocess.run(["git", "-C", str(target.path), "cat-file", "blob", f"HEAD:{DECL}"],
+                               capture_output=True, check=True).stdout
+    assert (target.path / DECL).read_bytes() != committed
+    assert target.git("status", "--porcelain") == ""
+    _assert_clean(target)
+    assert marker.exists()
+
+
+def test_709_X1_a_smudge_filter_that_lowers_a_probe_is_still_an_uncommitted_change(target, tmp_path):
+    """Probes are compared raw: a smudge filter writing a lowered bar on checkout is a lowering, not HEAD."""
+    marker = tmp_path / "ran"
+    rel, _ = _probe_observing_one(target, marker)
+    target.git("config", "filter.low.smudge", "sed 's/value: 2$/value: 1/'")
+    target.git("config", "filter.low.clean", "cat")
+    (target.path / ".git" / "info").mkdir(exist_ok=True)
+    (target.path / ".git" / "info" / "attributes").write_text("*.yml filter=low\n")
+    _recheckout(target, rel)
+    assert "value: 1" in (target.path / rel).read_text()
+    assert _weakened_reason(target, marker) == "weakened: probe file has uncommitted changes"
+
+
+def test_709_X2_an_unreadable_tree_entry_stops_the_run(target, tmp_path, monkeypatch, capsys):
+    """Measured on 27a7ee0b: a failing `ls-tree` for one path read as an absent file (None)."""
+    marker = tmp_path / "ran"
+    _content_probe(target, argv=marker_argv(marker))
+    real = ra.Git.run
+
+    def failing(self, *args):
+        if "ls-tree" in args and args[-1] == DECL:
+            return subprocess.CompletedProcess(["git", *args], 128, "", "fatal: not a tree object")
+        return real(self, *args)
+
+    monkeypatch.setattr(ra.Git, "run", failing)
+    with pytest.raises(ra.AuditError) as exc:
+        ra.Git(target.path).entry_at("HEAD", DECL)
+    assert exc.value.code == ra.EXIT_ERROR and "fatal: not a tree object" in str(exc.value)
+    assert ra.main(["--repo", str(target.path)]) == ra.EXIT_ERROR
+    assert "ls-tree" in capsys.readouterr().err
+    assert not marker.exists()
