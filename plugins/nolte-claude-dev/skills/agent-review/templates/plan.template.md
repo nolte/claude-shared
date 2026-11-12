@@ -22,6 +22,7 @@ status: open
 
 Target: `agents/{{agent-name}}.md` ({{frontmatter + body + referenced-assets-summary}}).
 Specs applied: `agent-management`, `skill-vs-agent`, `review-plan`, `agent-review` (revisions recorded in frontmatter).
+<!-- Only when the spec-anchor check honoured a scope override for a plugin from another repository, add: `Spec anchor: override — <path> §"<section>"` per `agent-review` §Checks derived from spec-driven-development. -->
 Narrowing: {{none | frontmatter-only | tools-only | rationale-only | …}}.
 Explicitly out of scope: runtime behavior of the agent, Vale/markdown style (handled by `task lint`), the orchestrating skill beyond confirming the dispatch direction.
 

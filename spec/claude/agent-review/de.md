@@ -71,7 +71,11 @@ Die `agent-management`-Spec definiert, wie ein Agent *erstellt* wird — Dateina
 
 - **MUSS [MUST]** einen Spec-Anchor-Check fahren: verifizieren, dass der Agent-Body mindestens eine Referenz auf einen `spec/...`-Pfad enthält. Ein Agent ohne jegliche Spec-Zitation ist ein `Critical`-Finding gemäß MUST aus `spec/project/spec-driven-development/`
 - **KANN [MAY]** diesen Check mit einer dokumentierten Ausnahme im `## Scope`-Abschnitt des Plans unterdrücken, wenn ein Agent ausdrücklich als „implementation-only" klassifiziert ist — die Unterdrückung selbst muss aber in einer Spec oder einer festgehaltenen Projektentscheidung verankert sein
-- Begründung: Dieser Check operationalisiert das MUST aus Spec-Driven-Development, das bisher nur operator-enforced war
+- **KANN [MAY]** für einen Agent eines Plugins, das aus einem anderen Repository als `claude-shared` ausgeliefert wird, statt der `spec/...`-Zitation einen dokumentierten Scope-Override per Projektentscheidung akzeptieren, unter den drei Bedingungen, die `skill-review` §„Checks aus Spec-Driven-Development" für Skills festlegt, jede auf der Platte geprüft. Der Reviewer liest sie für den Agent wie folgt; scheitert eine, bleibt das `Critical` stehen und das Finding nennt die gescheiterte Bedingung:
+  - der Plugin-Root ist das nächste übergeordnete Verzeichnis der Agent-Datei, das `.claude-plugin/plugin.json` enthält; weder er noch sein Repository — das Verzeichnis, das `git -C <plugin-root> rev-parse --show-toplevel` ausgibt — hat ein `spec/`-Verzeichnis auf oberster Ebene, und ein Plugin-Root außerhalb jedes Git-Arbeitsbaums, etwa eine Marketplace-Installation, scheitert. Jedes Plugin von `claude-shared` scheitert an der Bedingung, der Override kann den Check dort also nicht stummschalten
+  - der zitierte Abschnitt der Entscheidungsdatei existiert unter dem repository-relativen Pfad, den der Plan zitiert, mit einer Überschrift, die exakt dem zitierten Abschnitt entspricht, und begründet, warum die Agents des Plugins keinen `spec/`-Pfad zitieren und wo ihre maßgebliche Spec stattdessen liegt. Ein Abschnitt, der nur von den Skills des Plugins spricht, scheitert an der Bedingung: Die Entscheidung muss Agents abdecken
+  - der `## Scope` des Plans hält den Override als eine Zeile fest, `Spec anchor: override — <path> §"<section>"`
+- Begründung: Dieser Check operationalisiert das MUST aus Spec-Driven-Development, das bisher nur operator-enforced war. Der Override spiegelt den Skill-Override, weil ein Agent eines Plugins, dessen maßgebliche Spec in einem anderen Layout liegt, in dieselbe Sackgasse läuft wie dessen Skills; die Pflicht, dass die Entscheidung Agents nennt, verhindert, dass sich eine reine Skill-Entscheidung stillschweigend auf Agents ausweitet
 
 ### Tool-Scope-Checks
 
@@ -114,7 +118,7 @@ Spiegelt `agent-management` §„Subagent-Grenzen" und `skill-vs-agent` §„Hyb
 ### Review-Prozedur
 
 - **MUSS [MUST]** damit beginnen, die kanonischen Specs `agent-management`, `skill-vs-agent` und `review-plan` zu lesen, bevor ein Finding erzeugt wird; Findings ohne Anker in einer dieser Specs sind keine gültige Ausgabe dieser Prozedur
-- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: Frontmatter → Description/Trigger → Distribution → Model → Tools/Scope → Prompt-Struktur → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → INFO-Beobachtungen
+- **MUSS [MUST]** Findings in dieser Reihenfolge erzeugen: Frontmatter → Description/Trigger → Distribution → Model → Tools/Scope → Prompt-Struktur → Rationale-Abschnitt → referenzierte Assets → Duplikat-Prävention-Check → Spec-Anchor-Check → INFO-Beobachtungen
 - **MUSS [MUST]** genau eine `review-plan`-Datei unter `.audits/agent-review/<agent-name>.md` emittieren; der Reviewer **MUSS [MUST]** jede Lifecycle-Regel aus `review-plan` befolgen, einschließlich der Single-Plan-pro-Ziel-Invariante und des Löschungs-Commit-Message-Formats
 - **SOLLTE [SHOULD]** im `## Scope`-Abschnitt des Plans die Git-SHAs der angewandten Spec-Versionen einbetten, damit ein späteres Re-Review erkennen kann, ob Findings durch eine Spec-Revision veraltet sein könnten
 - **KANN [MAY]** rein stilistische Beobachtungen (Vale, Markdown-Linting) als `Info`-Findings aufnehmen, wenn sie dem Autor helfen, **MUSS NICHT [MUST NOT]** sie aber zu `Warning` oder `Critical` erheben — die bleiben bei ihrem eigenen Tooling
@@ -146,6 +150,7 @@ In diesen Kriterien meint `agents/` jede Agent-Wurzel, die das Repository auslie
 - [ ] Jeder Plan unter `.audits/agent-review/` führt die Subagent-Grenzen-Checks (kein Agent-Spawning, kein Skill-Tool-Aufruf) gegen den Ziel-Agent aus
 - [ ] Jeder Plan unter `.audits/agent-review/` führt den Proaktive-Delegation-Absicht-Check gegen jeden Agent aus, dessen `description` „use proactively" oder eine äquivalente Phrase enthält
 - [ ] Kein Agent lässt das `tools`-Feld weg, während er eine Research- / Review- / Audit- / Report-Verantwortlichkeit deklariert (null `Critical` auf dem neuen Permission-Sprawl-Check)
+- [ ] Ein Spec-Anchor-Scope-Override wird nur für einen Agent anerkannt, dessen Plugin-Repository kein `spec/`-Verzeichnis auf oberster Ebene hat und dessen Plan im `## Scope` einen existierenden Abschnitt einer Entscheidungsdatei zitiert, der die Agents des Plugins abdeckt; derselbe Override, für einen Agent von `claude-shared` festgehalten, ob im Checkout oder in einer installierten Kopie, lässt das `Critical` stehen
 
 ## Referenzen
 
