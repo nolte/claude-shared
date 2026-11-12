@@ -121,6 +121,9 @@ SPEC_CONFIG = Path("spec") / ".spec-config.yml"
 # git answers local history queries in milliseconds; a hang means a lock or a
 # credential prompt, and waiting longer would not help.
 GIT_TIMEOUT_SECONDS = 30
+# Merges _content_origin() follows back from one probe revision before it gives up
+# and reads the history walk's own order.
+MAX_ORIGIN_STEPS = 1000
 # An environment target may pull and start a container; a cold image pull on a slow
 # link takes minutes, so the default is generous. Overridable per run.
 DEFAULT_ENVIRONMENT_TIMEOUT_SECONDS = 900
@@ -728,6 +731,11 @@ class Git:
         # probe_set_history() per HEAD commit (shared_probe_set_history()): one
         # walk of the probe directory serves the copy cut and the removal check.
         self.probe_sets: dict[str, "ProbeHistory"] = {}
+        # Per probe path, the merges _content_origin() found taking the probe from
+        # another parent over a first-parent version changed since the two lines
+        # forked (a restore or a drop of the main line's revision): _merges_changing()
+        # counts each as a change of the probe in every span it lies in.
+        self.restoring: dict[str, set[str]] = {}
 
     def run(self, *args: str) -> subprocess.CompletedProcess:
         """Run git read-only, on the target's own objects (_GIT_ARGV, _git_env()).
@@ -791,8 +799,17 @@ class Git:
 
         A path HEAD doesn't hold is dirty only when it is staged, as before: an
         untracked file is no uncommitted change of a committed one. A symlink
-        matches only a link at HEAD with the same target; a directory or
-        submodule at HEAD falls back to ``git status``.
+        matches only a link at HEAD with the same target. Where HEAD holds a
+        directory or a submodule, a regular file or a symlink in the working
+        tree is uncommitted whatever the index says (a skip-worktree flag on a
+        file inside the directory hid it from ``git status``); a directory
+        there falls back to ``git status``, which compares its contents.
+
+        A file HEAD holds and the working tree lacks is a deletion, unless the
+        index marks it skip-worktree (``ls-files -t`` tag ``S``): a sparse
+        checkout leaves such files out without deleting anything. Only absence
+        is excused: a skip-worktree file that is present is compared like any
+        other.
         """
         staged = self.run("--literal-pathspecs", "diff-index", "--cached", "--quiet", "HEAD", "--", path)
         if staged.returncode not in (0, 1):
@@ -805,8 +822,13 @@ class Git:
         kind, blob = entry
         file = self.repo / path
         if kind not in ("blob", "link"):
+            if file.is_symlink() or file.is_file():
+                return True
             return bool(self.out("--literal-pathspecs", "status", "--porcelain", "--untracked-files=no", "--",
                                  path).strip())
+        if not file.is_symlink() and not file.exists():
+            tags = self.out("--literal-pathspecs", "ls-files", "-t", "--", path).split("\n")
+            return not any(line.startswith("S ") and line[2:] == path for line in tags)
         committed = self.read_blob(blob)
         if committed is None:
             raise AuditError(f"`git cat-file blob {blob}` failed for {safe_text(path)} at HEAD")
@@ -1686,28 +1708,29 @@ def _lineage(git: Git, history: list[tuple[str, str]], current: str) -> list[tup
     _merges_changing() searches) therefore reads this chain instead.
 
     The chain starts at the revision HEAD's probe (at ``current``) was made
-    from: the first listed revision holding HEAD's file that no listed
-    revision descends from. Topological order lists two parallel lines in
-    either order, so the newest listed revision can be one whose content a
-    merge dropped, while the line the merge kept, a lowering after its own
-    re-derivation included, would never be read. A revision some listed
-    revision descends from was changed after it, so HEAD holding its file again
-    is a restore, and the chain starts at the newest listed revision as before
-    (probe_changes() then names the merge that restored it). When no listed
-    revision holds HEAD's file, a merge made it out of more than one line
-    (_merges_changing() names it, and the edits it combined are as much
-    changes as the merge): the list is read in its own order, as before. The
-    predecessor of a
-    revision made in commit ``c`` is the first later-listed revision ``(y,
-    p)`` that is an ancestor of ``c``'s parent and whose file is the one that
-    parent holds at ``p``: the content ``c`` was made from. A revision skipped
+    in, found by parentage, not by the list's order or by equal content
+    (_content_origin()): topological order lists two parallel lines in either
+    order, and a dropped side line can hold a byte-identical twin of a main-line
+    revision, so neither the newest listed revision nor the first one holding
+    HEAD's file is necessarily it. The predecessor of a revision made in a plain
+    commit ``c`` is found the same way from ``c``'s parent, at ``c``'s path or,
+    after a rename, at the path a later-listed revision has. A revision skipped
     on the way is not the probe's content on this line; topological order
     lists no ancestor of the predecessor before it, so none of the chain is
-    skipped. When no listed revision holds the parent's content (a merge
-    changed it in between, which _merges_changing() names; or the path was
-    deleted there and restored, see _without_deletions()), the predecessor is
-    the first later-listed ancestor of ``c``, as close to the list as the
-    ancestry allows; failing that, the next listed revision.
+    skipped.
+
+    A merge that took the probe from another parent over a version its first
+    parent had changed since the lines forked (a restore of an older revision,
+    or a dropped side revision brought back) is recorded in Git.restoring, and
+    _merges_changing() counts it as a probe change in every span it lies in:
+    the chain then reads the restored revision's own line, and the merge is
+    named after it.
+
+    When the walk can't place the file (a merge that holds no parent's version,
+    which _merges_changing() names; a plain commit the walk doesn't list,
+    which _unlisted_write() reports), the head falls back to the list's own
+    order, and a predecessor to the first later-listed ancestor of ``c``, or
+    failing that the next listed revision.
     """
     if len(history) < 2:
         return list(history)
@@ -1718,27 +1741,70 @@ def _lineage(git: Git, history: list[tuple[str, str]], current: str) -> list[tup
             blobs[(commit, path)] = git.blob_at(commit, path)
         return blobs[(commit, path)]
 
-    at_head = git.blob_at("HEAD", current)
-    start = next((i for i, (c, p) in enumerate(history) if at_head is not None and blob(c, p) == at_head), None)
+    def origin(start: str, paths: list[str], among: list[tuple[str, str]]) -> int | None:
+        """The index in ``among`` of the revision ``start``'s probe came from (_content_origin)."""
+        for path in dict.fromkeys(paths):
+            if blob(start, path) is None:
+                continue
+            found, switched = _content_origin(git, start, path, {c for c, p in among if p == path}, blob)
+            if found is not None:
+                git.restoring.setdefault(path, set()).update(switched)
+                return next(i for i, (c, p) in enumerate(among) if c == found and p == path)
+            return None
+        return None
+
+    start = origin("HEAD", [current], history)
     if start is None:
         return list(history)
-    if any(git.is_ancestor_or_equal(history[start][0], c) for c, _ in history[:start]):
-        start = 0
     chain = [history[start]]
     rest = history[start + 1:]
     while rest:
-        commit = chain[-1][0]
+        commit, path = chain[-1]
         parents = git.parents(commit)
-        found = None
-        if len(parents) == 1:
-            found = next((i for i, (c, p) in enumerate(rest)
-                          if blob(c, p) is not None and blob(c, p) == blob(parents[0], p)
-                          and git.is_ancestor_or_equal(c, parents[0])), None)
+        found = origin(parents[0], [path] + [p for _, p in rest], rest) if len(parents) == 1 else None
         if found is None:
             found = next((i for i, (c, _) in enumerate(rest) if git.is_ancestor_or_equal(c, commit)), 0)
         chain.append(rest[found])
         rest = rest[found + 1:]
     return chain
+
+
+def _content_origin(git: Git, start: str, path: str, listed: set[str], blob: Callable[[str, str], str | None],
+                    ) -> tuple[str | None, list[str]]:
+    """The listed commit ``start``'s file at ``path`` was made in, and the merges that took it in over a change.
+
+    Walks back along first parents (``log -1 --first-parent -- path``, the newest
+    commit of the line whose file differs from its first parent's): a plain
+    commit there made the file. A merge there took it from another parent that
+    holds the same file, and the walk goes on along that parent's line. The
+    merge is a change of the probe when the line it lands on had changed the
+    file since the two lines forked (its first parent's file differs from the
+    merge base's): it dropped that line's revision for an older or a parallel
+    one, a restore. A merge that only brings a side branch's edit to an
+    untouched line is none; that edit is a listed revision. Returns
+    ``(None, …)`` when the walk can't place the file: a merge that holds no
+    parent's version (_merges_changing() names it), or a plain commit the
+    history walk doesn't list (_unlisted_write()).
+    """
+    switched: list[str] = []
+    commit = start
+    for _ in range(MAX_ORIGIN_STEPS):
+        made = git.out("--literal-pathspecs", "log", "-1", "--first-parent", "--no-follow", "--no-show-signature",
+                       "--format=%H", commit, "--", path).strip()
+        if not made:
+            return None, switched
+        if made in listed:
+            return made, switched
+        parents = git.parents(made)
+        held = blob(made, path)
+        source = next((p for p in parents[1:] if held is not None and blob(p, path) == held), None)
+        if source is None:
+            return None, switched
+        base = git.run("merge-base", parents[0], source).stdout.strip()
+        if not base or blob(base, path) != blob(parents[0], path):
+            switched.append(made)
+        commit = source
+    return None, switched
 
 
 def _without_deletions(git: Git, log: list[tuple[str, str, str, str]], yaml: Any) -> list[tuple[str, str]]:
@@ -2053,6 +2119,10 @@ def _merges_changing(git: Git, revisions: list[tuple[str, str]], until: str) -> 
     for path, start, end in segments:
         for merge in git.merges_changing(start, end, path):
             if merge not in (m for m, _ in found):
+                found.append((merge, path))
+        for merge in sorted(git.restoring.get(path, ())):
+            if (merge not in (m for m, _ in found) and merge != start and git.is_ancestor_or_equal(start, merge)
+                    and git.is_ancestor_or_equal(merge, end)):
                 found.append((merge, path))
     return found
 
@@ -2967,6 +3037,14 @@ def detect_change(repo: Path, git: Git, probe: Probe, yaml: Any,
             return ChangeState(STATE_UNRESOLVED, why)
         if ref != derived_from:
             return ChangeState(STATE_STALE, f"{REASON_STALE}: pinned ref moved from {derived_from} to {ref}")
+        # The pin is read from the working tree, like a declaration file, and
+        # held to the same rule: a pin HEAD doesn't carry proves nothing.
+        config = SPEC_CONFIG.as_posix()
+        if git.entry_at("HEAD", config) is None:
+            return ChangeState(STATE_UNRESOLVED, f"{config} is not committed, so the pinned ref of the inherited "
+                               "spec is unknown")
+        if git.is_dirty(config):
+            return ChangeState(STATE_STALE, f"{REASON_STALE}: {config} has uncommitted changes")
         return ChangeState(STATE_CLEAN)
 
     raw_path = declaration.get("path")
