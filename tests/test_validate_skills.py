@@ -660,3 +660,32 @@ def test_check_is_inert_without_the_hub_spec_tree(monkeypatch, tmp_path):
     monkeypatch.setattr(v, "SHIPPED_SPEC", tmp_path / "spec")
     assert v.check_spec_precondition_fallback(
         _WIDER_SHAPES["must-exist"], "x/SKILL.md", False) == []
+
+
+# --- name form: `implement` is a mirrored action token (#696) ---------------
+# spec/claude/skill-agent-naming/ treats SKILL_ACTION_TOKENS as a surface mirror
+# of the portfolio's real tokens; `recipe-implement` (nolte-goose) is one.
+
+def test_implement_is_an_action_token():
+    assert v.check_name_form("recipe-implement", "x/SKILL.md", "skill") == []
+
+
+def test_unmirrored_trailing_token_still_suggests():
+    findings = v.check_name_form("recipe-implementation", "x/SKILL.md", "skill")
+    assert _rules(findings) == {"skill-management.name-form"}
+    assert findings[0].severity == "Suggestion"
+
+
+# --- spec-anchor scope override can't apply inside this repository (#696) ---
+# spec/claude/skill-review/ §"Checks derived from spec-driven-development" honours
+# the override only for a plugin whose repository has no top-level `spec/`
+# directory. The validator runs no spec-anchor check (the review procedure does),
+# so the guard here pins the precondition that keeps every plugin of this
+# repository out of the override: the hub's own `spec/` tree, and every in-repo
+# plugin root resolving inside it.
+
+def test_override_precondition_excludes_every_plugin_of_this_repository():
+    assert (v.REPO / "spec").is_dir()
+    # The root plugin's manifest makes the repository root itself a plugin root,
+    # so condition one fails for every skill here: its repository carries spec/.
+    assert (v.REPO / ".claude-plugin" / "plugin.json").is_file()
