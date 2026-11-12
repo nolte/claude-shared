@@ -4861,9 +4861,9 @@ def test_688_a_weakened_probe_re_added_at_its_path_as_a_copy_is_not_read_as_fres
     assert _status_of(target, rel, readded) == ("C", "project/reach-probes/p3.yml")
     state, reason = _state(target, pid)
     assert state == ra.STATE_WEAKENED, reason
-    assert not new_id or (f"the probe was created in {readded[:12]} as a copy of project/reach-probes/p3.yml at "
-                          f"{rel}, which "
-            f"already held a file in {removal[:12]}") in reason, reason
+    # Since #720 the path's earlier revisions, under whichever id, are writes the walk must list.
+    assert removal and (not new_id or f"changed {rel} under the id p1, but the probe's history walk does not list "
+                        "it" in reason), reason
 
 
 def test_688_a_copy_that_takes_the_source_s_id_keeps_the_source_s_history(target):
@@ -7257,6 +7257,64 @@ def _gitflow(target: Target, marker: Path, shape: str) -> None:
         target.git("checkout", "-q", "main")
         target.git("merge", "-q", "--no-ff", "-m", "merge master into develop", "master")
     assert target.git("status", "--porcelain") == ""
+
+
+def _keep_as_first_parent(target: Target, start: str) -> str:
+    """`evil` forks at ``start``, does unrelated work, merges main with `-s ours`, and main is moved to that
+    merge: main's own line is now a merged branch that the merge dropped. Returns the merge."""
+    target.git("checkout", "-q", "-b", "evil", start)
+    target.write("evil.txt", "evil\n")
+    target.commit("work on evil")
+    target.git("merge", "-q", "--no-ff", "-s", "ours", "-m", "merge main, keeping evil", "main")
+    target.git("checkout", "-q", "-B", "main")
+    return target.git("rev-parse", "HEAD")
+
+
+def test_720_a_probe_revision_made_in_a_merge_on_a_dropped_line_is_still_a_change(target, tmp_path):
+    """Pre-PR review of #720. A approves bar 1; main raises the bar to 2 inside a merge (E); a line forked at
+    A merges main with `-s ours` and becomes main's tip, so HEAD holds bar 1 again. E is off HEAD's
+    first-parent line, and as a merge no plain-commit rule reports it. Measured with the first-parent walk
+    alone: clean, exit 0, executed; on develop weakened with this reason."""
+    marker = tmp_path / "ran"
+    rel = _content_probe(target, argv=marker_argv(marker, "1"),
+                         expected={"kind": "count", "value": 1, "unit": "collections"})
+    approved = target.git("rev-parse", "HEAD")
+    _, raising = _merge_side(target, in_merge=lambda: _rewrite(target, rel, expected_value=2))
+    _keep_as_first_parent(target, approved)
+    assert "value: 1" in target.git("show", f"HEAD:{rel}")
+    assert _weakened_reason(target, marker) == (f"weakened: probe changed in merge {raising[:12]} after its "
+                                                f"derivation was recorded in {approved[:12]}")
+
+
+def test_720_a_merge_that_changes_only_the_probes_file_mode_is_named(target, tmp_path):
+    """Pre-PR review of #720: weakened on develop (the merge differs from every parent); a first-parent
+    comparison by blob alone read it clean."""
+    marker = tmp_path / "ran"
+    rel, recorded = _probe_observing_one(target, marker)
+    _, merge = _merge_side(target, in_merge=lambda: os.chmod(target.path / rel, 0o755))
+    assert target.git("ls-tree", "HEAD", "--", rel).startswith("100755")
+    assert _weakened_reason(target, marker) == (f"weakened: probe changed in merge {merge[:12]} after its "
+                                                f"derivation was recorded in {recorded[:12]}")
+
+
+def test_720_an_approved_probe_on_a_dropped_line_under_another_id_is_an_unlisted_write(target, tmp_path):
+    """Pre-PR review of #720. main approves p1 at p1.yml (bar 2); a line forked before writes p1.yml under
+    the id p2 with bar 1, merges main with `-s ours` and becomes main's tip. Measured with the rule keyed on
+    the probe's own ids: the p2 row clean (develop: weakened); p1 reads removed either way."""
+    marker = tmp_path / "ran"
+    start = target.git("rev-parse", "HEAD")
+    _, approved = _probe_observing_one(target, marker)
+    target.git("checkout", "-q", "-b", "evil", start)
+    target.write(P1_REL, yaml.safe_dump(make_probe("p2", derived_from=_blob_now(target, DECL),
+                                                   argv=marker_argv(marker, "1"),
+                                                   expected={"kind": "count", "value": 1, "unit": "collections"}),
+                                        sort_keys=False))
+    target.commit("another id at the same path, bar 1")
+    target.git("merge", "-q", "--no-ff", "-s", "ours", "-m", "merge main, keeping evil", "main")
+    target.git("checkout", "-q", "-B", "main")
+    state, reason = _state(target, "p2")
+    assert state == ra.STATE_WEAKENED and reason == f"weakened: {_unlisted(approved)}", reason
+    assert not marker.exists()
 
 
 @pytest.mark.parametrize("landing", ["on-the-branch", "fast-forwarded", "squashed"])

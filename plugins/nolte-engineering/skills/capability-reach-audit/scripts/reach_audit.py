@@ -1070,10 +1070,16 @@ class Git:
         change of the probe: it took another line's version, combined two, or
         edited while merging, and the walk lists none of that. ``rev-list
         --first-parent`` follows first parents only and, with a path, keeps a
-        merge exactly when it is not TREESAME to its first parent; each is
-        compared again by tree entry, so the result does not rest on git's
-        history simplification. Literal pathspecs keep ``path`` from matching
-        other files.
+        merge exactly when it is not TREESAME to its first parent for it (content,
+        type or mode). Literal pathspecs keep ``path`` from matching other files.
+
+        A merge anywhere else in the span whose result differs from every parent
+        (a conflict resolution, or an edit made while merging; found with
+        ``--full-history -c``, which walks every parent of every merge) is
+        listed as well: it is a probe revision made on a merged line, and since
+        it is a merge, _unlisted_write(), which reads plain commits, does not
+        report it. Without it a line that edited the probe in a merge could be
+        dropped by a later merge that keeps another line as its first parent.
 
         ``since..until`` is empty when ``since`` is not an ancestor of ``until``.
         The listed revisions all lie on HEAD's first-parent line, so that only
@@ -1085,8 +1091,14 @@ class Git:
         revisions = f"{since}..{until}" if since and self.is_ancestor_or_equal(since, until) else until
         merges = self.out("--literal-pathspecs", "rev-list", "--first-parent", "--merges", revisions, "--",
                           path).split()
-        return [merge for merge in merges
-                if self.entry_at(merge, path) != self.entry_at(self.parents(merge)[0], path)]
+        raw = self.out("--literal-pathspecs", "log", "--no-follow", "--full-history", "--merges",
+                       "--no-show-signature", "--no-color", "--no-renames", "-c", "--name-only",
+                       "--format=%x00%H", revisions, "--", path)
+        for block in raw.split("\x00")[1:]:
+            lines = [ln for ln in block.splitlines() if ln.strip()]
+            if len(lines) > 1 and lines[0].strip() not in merges:
+                merges.append(lines[0].strip())
+        return merges
 
     def entry_at(self, commit: str, path: str) -> tuple[str, str] | None:
         """``(type, hash)`` of the tree entry ``path`` at ``commit``, or None when absent.
@@ -1794,18 +1806,22 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
                     own: list[tuple[str, str, str, str]]) -> str | None:
     """Why the listed ``own`` revisions miss a change to the probe, or None.
 
-    The ids are the probe's id now and every id one of ``own`` carried. A
-    write of such an id (ProbeHistory.writes, which reads every probe revision
-    in HEAD's history, the file name stem standing in for a missing id) in a
-    plain commit that ``own`` does not list is a change the walk missed when it
+    A write of a probe file under any id (ProbeHistory.writes, which reads
+    every probe revision in HEAD's history, the file name stem standing in for
+    a missing id) in a plain commit that ``own`` does not list is a change the
+    walk missed when it
     lies on one of the probe's paths in a commit that does not descend from the
     newer revision that moved the probe away from that path (the probe's
     current path has no such revision). Then the listed history is incomplete.
     A file placed on a path after the probe left it is not the probe's change
     (_merges_changing() cuts its search the same way). One on a path before
-    the probe came there is counted: carrying the probe's id, it is an earlier
-    probe under that id whose revisions the walk does not list, as when a
-    probe is deleted, re-created under its id at another path, and moved back.
+    the probe came there is counted: it is an earlier probe file whose
+    revisions the walk does not list, as when a probe is deleted, re-created
+    under its id at another path, and moved back. The id does not matter: the
+    walk follows first parents only (#720), so a revision of the file on a
+    merged line is unlisted under whichever id it was written, and a line
+    that holds the approved probe under another id than HEAD's is as much a
+    dropped revision as one under the same id.
     Merges are left to _merges_changing(), since the walk never lists them.
     """
     listed = {(commit, path) for commit, path, _, _ in own}
@@ -1813,8 +1829,7 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
     for i, (_, path, _, _) in enumerate(own):
         if i == 0 or path != own[i - 1][1]:
             segments.append((path, own[i - 1][0] if i else None))
-    ids = {probe.pid} | {pid for pid, writes in history.writes.items() if any(w in listed for w in writes)}
-    for pid in sorted(ids):
+    for pid in sorted(history.writes):
         for commit, path in history.writes.get(pid, []):
             if (commit, path) in listed or commit in history.merges:
                 continue
