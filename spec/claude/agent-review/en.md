@@ -71,7 +71,11 @@ The `agent-management` spec defines how an agent is *authored*: filename, YAML f
 
 - **MUST** run a spec-anchor check: verify the agent body contains at least one reference to a `spec/...` path. An agent without any spec citation is a `Critical` finding per `spec/project/spec-driven-development/` MUST
 - **MAY** suppress this check with a documented exception in the plan's `## Scope` section when an agent is explicitly classified as "implementation-only"; suppression must be anchored in a spec or a recorded project decision
-- Rationale: this check operationalises the MUST from spec-driven-development that has so far been operator-only
+- **MAY** accept, for an agent of a plugin that ships from a repository other than `claude-shared`, a documented project-decision scope override in place of the `spec/...` citation, under the three conditions `skill-review` §"Checks derived from spec-driven-development" fixes for skills, each checked on disk. The reviewer reads them for the agent as follows; when one fails, the `Critical` stands and the finding names the failed condition:
+  - the plugin root is the nearest ancestor directory of the agent file holding `.claude-plugin/plugin.json`; neither it nor its repository, the directory `git -C <plugin-root> rev-parse --show-toplevel` prints, has a top-level `spec/` directory, and a plugin root outside any git working tree, such as a marketplace install, fails. Every plugin of `claude-shared` fails the condition, so the override can't silence the check there
+  - the cited decision-file section exists under the repository-relative path the plan cites, with a heading matching the cited section exactly, and states why the plugin's agents cite no `spec/` path and where their governing spec lives instead. A section that speaks only of the plugin's skills fails the condition: the decision has to cover agents
+  - the plan's `## Scope` records the override as one line, `Spec anchor: override — <path> §"<section>"`
+- Rationale: this check operationalises the MUST from spec-driven-development that has so far been operator-only. The override mirrors the skill override because an agent of a plugin whose governing spec lives in another layout hits the same dead end as its skills; requiring the decision to name agents keeps a skills-only decision from silently widening to agents
 
 ### Tool-scope checks
 
@@ -146,6 +150,7 @@ In these criteria, `agents/` means every agent root the repository ships: the ro
 - [ ] Every plan under `.audits/agent-review/` runs the subagent-boundary checks (no agent-spawning, no Skill-tool invocation) against the target agent
 - [ ] Every plan under `.audits/agent-review/` runs the proactive-delegation-intent check against any agent whose `description` contains "use proactively" or an equivalent phrase
 - [ ] No agent omits the `tools` field while declaring a research / review / audit / report responsibility (zero `Critical`s on the new permission-sprawl check)
+- [ ] A spec-anchor scope override is honoured only for an agent whose plugin's repository has no top-level `spec/` directory and whose plan's `## Scope` cites an existing decision-file section that covers the plugin's agents; the same override recorded for an agent of `claude-shared`, in a checkout or an installed copy, leaves the `Critical` in place
 
 ## References
 
