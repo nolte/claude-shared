@@ -660,3 +660,46 @@ def test_check_is_inert_without_the_hub_spec_tree(monkeypatch, tmp_path):
     monkeypatch.setattr(v, "SHIPPED_SPEC", tmp_path / "spec")
     assert v.check_spec_precondition_fallback(
         _WIDER_SHAPES["must-exist"], "x/SKILL.md", False) == []
+
+
+# --- name form: `implement` is a mirrored action token (#696) ---------------
+# spec/claude/skill-agent-naming/ treats SKILL_ACTION_TOKENS as a surface mirror
+# of the portfolio's real tokens; `recipe-implement` (nolte-goose) is one.
+
+def test_implement_is_an_action_token():
+    assert v.check_name_form("recipe-implement", "x/SKILL.md", "skill") == []
+
+
+def test_unmirrored_trailing_token_still_suggests():
+    findings = v.check_name_form("recipe-implementation", "x/SKILL.md", "skill")
+    assert _rules(findings) == {"skill-management.name-form"}
+    assert findings[0].severity == "Suggestion"
+
+
+# --- spec-anchor scope override can't apply inside claude-shared (#696) ----
+# spec/claude/skill-review/ §"Checks derived from spec-driven-development" honours
+# the override only when neither the plugin root nor its repository
+# (`git -C <plugin-root> rev-parse --show-toplevel`) has a top-level `spec/`, and
+# fails it for a plugin root outside any git working tree. The validator runs no
+# spec-anchor check (the review procedure does), so this guard pins the
+# precondition for every plugin of this repository: the root plugin and each
+# plugins/<name>/ root resolve to this repository, which carries spec/.
+
+def _plugin_roots():
+    roots = [v.REPO] + sorted(
+        m.parent.parent for m in (v.REPO / "plugins").glob("*/.claude-plugin/plugin.json"))
+    return roots
+
+
+def test_override_precondition_excludes_every_plugin_of_this_repository():
+    import subprocess
+    roots = _plugin_roots()
+    assert len(roots) >= 2  # the root plugin plus at least one plugins/<name>/
+    assert (v.REPO / "spec").is_dir()
+    for root in roots:
+        assert (root / ".claude-plugin" / "plugin.json").is_file()
+        toplevel = subprocess.run(
+            ["git", "-C", str(root), "rev-parse", "--show-toplevel"],
+            capture_output=True, text=True, check=True).stdout.strip()
+        assert Path(toplevel).resolve() == v.REPO.resolve(), root
+        assert (Path(toplevel) / "spec").is_dir(), root
