@@ -1100,6 +1100,16 @@ class Git:
                 merges.append(lines[0].strip())
         return merges
 
+    def merges_editing(self, until: str, path: str) -> list[str]:
+        """Merges reachable from ``until`` whose ``path`` differs from every parent."""
+        if until.startswith("-"):
+            raise AuditError(f"refusing the revision {safe_text(until)}")
+        raw = self.out("--literal-pathspecs", "log", "--no-follow", "--full-history", "--merges",
+                       "--no-show-signature", "--no-color", "--no-renames", "-c", "--name-only",
+                       "--format=%x00%H", until, "--", path)
+        return [lines[0].strip() for block in raw.split("\x00")[1:]
+                if len(lines := [ln for ln in block.splitlines() if ln.strip()]) > 1]
+
     def entry_at(self, commit: str, path: str) -> tuple[str, str] | None:
         """``(type, hash)`` of the tree entry ``path`` at ``commit``, or None when absent.
 
@@ -1787,7 +1797,7 @@ def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml:
         if not _ids_new_at(git, shared_probe_set_history(git, yaml), commit, probe.pid,
                            {(c, p) for c, p, _, _ in own}):
             continue
-        gap = _unlisted_write(git, shared_probe_set_history(git, yaml), probe, own)
+        gap = _unlisted_write(git, shared_probe_set_history(git, yaml), probe, own, yaml)
         if gap:
             return log, None, gap
         earlier = git.out("--literal-pathspecs", "rev-list", "-n", "1", "--full-history", parents[0], "--",
@@ -1798,12 +1808,12 @@ def _own_log(git: Git, probe: Probe, log: list[tuple[str, str, str, str]], yaml:
                          "instead of that path, so the path's earlier revisions are not in the listed history and "
                          "can't be judged; derive the probe under a path no earlier file used"), None
         return own, None, None
-    gap = _unlisted_write(git, shared_probe_set_history(git, yaml), probe, log) if log else None
+    gap = _unlisted_write(git, shared_probe_set_history(git, yaml), probe, log, yaml) if log else None
     return log, _origin_problem(*log[-1]) if log else None, gap
 
 
 def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
-                    own: list[tuple[str, str, str, str]]) -> str | None:
+                    own: list[tuple[str, str, str, str]], yaml: Any) -> str | None:
     """Why the listed ``own`` revisions miss a change to the probe, or None.
 
     A write of a probe file under any id (ProbeHistory.writes, which reads
@@ -1822,19 +1832,65 @@ def _unlisted_write(git: Git, history: "ProbeHistory", probe: Probe,
     merged line is unlisted under whichever id it was written, and a line
     that holds the approved probe under another id than HEAD's is as much a
     dropped revision as one under the same id.
-    Merges are left to _merges_changing(), since the walk never lists them.
+
+    Three writes count beyond that (#724), each only when the file it wrote
+    declares one of the probe's ids in its document, so an unrelated file at
+    a probe's old path is never read as the probe's change:
+
+    - a plain commit off HEAD's first-parent line that wrote the probe's id on
+      any path, or on a path the probe left before that line wrote there: an
+      approved probe that a merge dropped, kept on its line under another
+      path than the one HEAD's probe has;
+    - a merge that edited the file on one of the probe's paths (it differs
+      from every parent) and that no span _merges_changing() searches holds:
+      one before the probe's oldest listed revision, or one on a dropped line
+      outside a renamed path's span. A merge before the oldest listed revision
+      is skipped when _origin_problem() already names the probe's origin.
+
+    Every other merge is left to _merges_changing(), since the walk never
+    lists merges.
     """
     listed = {(commit, path) for commit, path, _, _ in own}
     segments: list[tuple[str, str | None]] = []  # (path, the newer revision that moved the probe away)
     for i, (_, path, _, _) in enumerate(own):
         if i == 0 or path != own[i - 1][1]:
             segments.append((path, own[i - 1][0] if i else None))
+    line = set(git.out("rev-list", "--first-parent", history.head, "--").split())
+    ids = {probe.pid} | {pid for pid, writes in history.writes.items() if any(w in listed for w in writes)}
+    # Merges that edited a file on one of the probe's paths and that no judged span reports: an ancestor of
+    # the probe's oldest revision on that path, or a merge on a dropped line outside the span of a renamed
+    # path. _merges_changing() searches only from the oldest listed revision of each path onward.
+    judged = {(merge, path) for merge, path in _merges_changing(git, [(c, p) for c, p, _, _ in own], history.head)}
+    edited = {(merge, path) for path in {on for on, _ in segments}
+              for merge in git.merges_editing(history.head, path)} - judged
+    if own and _origin_problem(*own[-1]):
+        # The origin finding already names the merge the probe came from: a merge before the oldest listed
+        # revision is that origin, not a second gap.
+        edited = {(merge, path) for merge, path in edited if not git.is_ancestor_or_equal(merge, own[-1][0])}
+
+    def declares_own_id(commit: str, path: str) -> bool:
+        """Whether the file ``commit`` wrote at ``path`` declares one of the probe's ids in its document.
+
+        The new reach of this rule (merges, other paths, a path the probe left) counts only probe revisions,
+        never a file whose id is just its name's stem: an unrelated file placed at a probe's old path is not
+        the probe's change."""
+        content = git.file_bytes(commit, path)
+        return content is not None and _declared_id(content, yaml) in ids
+
     for pid in sorted(history.writes):
         for commit, path in history.writes.get(pid, []):
-            if (commit, path) in listed or commit in history.merges:
+            if (commit, path) in listed:
                 continue
-            if any(path == on and (end is None or not git.is_ancestor_or_equal(end, commit))
-                   for on, end in segments):
+            off = commit not in line
+            if commit in history.merges:
+                found = (commit, path) in edited and declares_own_id(commit, path)
+            elif any(path == on and (end is None or not git.is_ancestor_or_equal(end, commit)) for on, end in segments):
+                found = True
+            else:
+                # A plain write off HEAD's first-parent line: on a path the probe never had on HEAD's line, or
+                # on one it left before the merged line wrote there.
+                found = off and declares_own_id(commit, path)
+            if found:
                 return (f"{commit[:12]} changed {safe_text(path)} under the id {safe_text(pid, 120)}, but the "
                         "probe's history walk does not list it, so the listed history is incomplete and no "
                         "derivation in it can be judged")
