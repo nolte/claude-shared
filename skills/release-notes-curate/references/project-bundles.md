@@ -76,6 +76,19 @@ All section headings stay in English regardless of the repo's documentation lang
 - **Behaviour & fail-open semantics** — changes to a hook's default values (for example the integration branch), its `CI` fail-open short-circuit, exit-code semantics, or `stages` wiring. Mark each as a soft or hard break for consumers pinning a tag.
 - **Consumer migration notes** — only when a hook ID is renamed / removed or an `args:` contract changes such that a consumer must edit its `.pre-commit-config.yaml`. Include the tag-pin bump guidance (consumers pin `rev:` to a release tag).
 
+## Bootable OS appliance
+
+**Detection.** A `Containerfile` whose base image is a bootable container image (for example `FROM quay.io/fedora/fedora-bootc:<n>`), delivered to its users as a disk image or installer ISO rather than as a package. Application containers usually run as Quadlet units baked into that image. Autodetection has no signal for this shape (a `mkdocs.yml` may be present while the image is the deliverable), so declare this type explicitly via `.github/release-skill-layer.yml` `project_type: bootable-appliance`.
+
+**Sections to compose:**
+
+- **Packaged application** — versions and digests of the application images since the previous release tag. Source: `git diff <prev-tag>..<draft-sha>` of the `Image=` lines in the Quadlet units (`*.container`, `*.image`) or equivalent image references.
+- **Base system** — the base image and the version label it carries (`org.opencontainers.image.version`), plus base-distribution majors or kernel changes. Source: the `FROM` line of the `Containerfile` at both refs and the label of the pinned digest.
+- **Verified targets** — the targets this release passed, and any target dropped or newly added. Source: the repository's boot or compatibility test results for the draft SHA; never claim a target the results do not show.
+- **Artifacts & verification** — every release asset with its size, the checksum file, and the exact command a user runs to verify a download before writing or booting it.
+- **Configuration changes** — configuration keys added, renamed, or removed, changed defaults, and newly generated secrets. Flag every value that must not change once the appliance has started with it. Source: diff of the default configuration files and the configuration tooling.
+- **Upgrade notes** — only when an update needs the operator's attention: data migrations after which a rollback no longer works, database majors, changed protected values, or a required manual step.
+
 ## Documentation-only repo
 
 **Detection.** `mkdocs.yml`, `docusaurus.config.*`, or similar exists; no application source.
