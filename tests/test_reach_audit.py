@@ -7633,3 +7633,161 @@ def test_709_a_declaration_the_runner_cannot_read_is_an_uncommitted_change_not_a
     finally:
         os.chmod(target.path / DECL, 0o644)
     assert state == ra.STATE_STALE and f"{DECL} has uncommitted changes" in reason, reason
+
+
+# --------------------------------------------------------------------------- #
+# #724: an approved probe on a line a merge dropped (shapes found by the #720 review)
+# --------------------------------------------------------------------------- #
+def _bar(target: Target, marker: Path, value: int, *, pid: str = "p1", derived: str | None = None,
+         supersedes: list[str] | None = None) -> str:
+    """A probe document with bar ``value`` that observes 1: bar 2 is not reached, bar 1 is."""
+    data = make_probe(pid, derived_from=derived or _blob_now(target, DECL), argv=marker_argv(marker, "1"),
+                      expected={"kind": "count", "value": value, "unit": "collections"})
+    if supersedes:
+        data["supersedes"] = supersedes
+        data["approval"]["observation_digest"] = ra.observation_digest(data)
+    return yaml.safe_dump(data, sort_keys=False)
+
+
+def _side_work(target: Target, name: str, start: str) -> None:
+    """A branch ``name`` from ``start`` with one unrelated commit, so a later merge of it is a real one."""
+    current = target.git("rev-parse", "--abbrev-ref", "HEAD")
+    target.git("checkout", "-q", "-b", name, start)
+    target.write(f"{name}.txt", f"{name}\n")
+    target.commit(f"work on {name}")
+    target.git("checkout", "-q", current)
+
+
+def _merge_editing(target: Target, branch: str, edit) -> str:
+    target.git("merge", "-q", "--no-ff", "--no-commit", branch)
+    edit()
+    return target.commit(f"merge {branch}, editing the probe")
+
+
+def _evil_takes_main(target: Target, then=None) -> None:
+    """On `evil`: merge main with `-s ours` (``then`` runs after it), and move main to evil's tip."""
+    target.git("checkout", "-q", "evil")
+    target.write("evil.txt", "evil\n")
+    target.commit("work on evil")
+    target.git("merge", "-q", "--no-ff", "-s", "ours", "-m", "merge main, keeping evil", "main")
+    if then:
+        then()
+    target.git("checkout", "-q", "-B", "main")
+
+
+def _dropped_line_shape(target: Target, marker: Path, shape: str) -> None:
+    start = target.git("rev-parse", "HEAD")
+    approved_text = (target.path / DECL).read_text()
+    if shape == "created-in-merge-then-ours-then-add":
+        _side_work(target, "side", start)
+        _merge_editing(target, "side", lambda: target.write(P1_REL, _bar(target, marker, 2)))
+        target.git("branch", "evil", start)
+
+        def add_low() -> None:
+            target.write(P1_REL, _bar(target, marker, 1))
+            target.commit("add the probe, bar 1")
+        _evil_takes_main(target, then=add_low)
+    elif shape == "created-and-deleted-in-merges-then-re-added":
+        _side_work(target, "side", start)
+        _merge_editing(target, "side", lambda: target.write(P1_REL, _bar(target, marker, 2)))
+        _side_work(target, "drop", start)
+        _merge_editing(target, "drop", lambda: target.git("rm", "-q", P1_REL))
+        target.write(P1_REL, _bar(target, marker, 1))
+        target.commit("re-add the probe, bar 1")
+    elif shape == "replacement-in-merge-then-ours-then-add":
+        target.write(P1_REL, _bar(target, marker, 2))
+        target.commit("approve p1")
+        target.write(P1_REL, _bar(target, marker, 1))
+        lowered = target.commit("lower p1")
+        r1 = "project/reach-probes/r1.yml"
+        _side_work(target, "side", lowered)
+        _merge_editing(target, "side", lambda: target.write(r1, _bar(target, marker, 2, pid="r1",
+                                                                      supersedes=["p1"])))
+        target.git("branch", "evil", lowered)
+
+        def add_low() -> None:
+            target.write(r1, _bar(target, marker, 1, pid="r1", supersedes=["p1"]))
+            target.commit("add the replacement, bar 1")
+        _evil_takes_main(target, then=add_low)
+    elif shape == "raised-in-merge-on-a-path-evil-renames-away":
+        target.write(RENAMED, _bar(target, marker, 1))
+        low = target.commit("add the probe at renamed.yml, bar 1")
+        target.git("branch", "evil", low)
+        _side_work(target, "side", low)
+        _merge_editing(target, "side", lambda: target.write(RENAMED, _bar(target, marker, 2)))
+        target.git("checkout", "-q", "evil")
+        target.git("mv", RENAMED, P1_REL)
+        target.write(DECL, approved_text + "\nAlso exports nothing else.\n")
+        target.write(P1_REL, _bar(target, marker, 1))
+        target.commit("rename, change the declaration, re-derive with bar 1")
+        target.git("checkout", "-q", "main")
+        _evil_takes_main(target)
+    elif shape in ("raised-at-a-new-path", "raised-in-merge-at-a-new-path"):
+        target.write(P1_REL, _bar(target, marker, 1))
+        low = target.commit("add the probe, bar 1")
+        target.git("branch", "evil", low)
+        if shape == "raised-at-a-new-path":
+            target.git("mv", P1_REL, RENAMED)
+            target.write(RENAMED, _bar(target, marker, 2))
+            target.commit("rename and raise the bar")
+        else:
+            target.git("mv", P1_REL, RENAMED)
+            target.commit("rename")
+            _side_work(target, "side", low)
+            _merge_editing(target, "side", lambda: target.write(RENAMED, _bar(target, marker, 2)))
+        _evil_takes_main(target)
+    else:  # put back at the old path after the judged line renamed it away
+        target.write(RENAMED, _bar(target, marker, 1))
+        target.commit("add the probe at renamed.yml, bar 1")
+        target.git("mv", RENAMED, P1_REL)
+        target.write(DECL, approved_text + "\nAlso exports nothing else.\n")
+        target.write(P1_REL, _bar(target, marker, 1))
+        moved = target.commit("rename, change the declaration, re-derive")
+        target.git("branch", "evil", moved)
+        if shape == "renamed-back-strict":
+            target.git("mv", P1_REL, RENAMED)
+            target.write(RENAMED, _bar(target, marker, 2))
+            target.commit("rename back with bar 2")
+        else:  # "re-added-at-the-old-path-strict"
+            target.write(RENAMED, _bar(target, marker, 2))
+            target.commit("add the probe again at renamed.yml, bar 2")
+            target.git("rm", "-q", P1_REL)
+            target.commit("drop p1.yml")
+        _evil_takes_main(target)
+
+
+DROPPED_LINE_SHAPES = ["created-in-merge-then-ours-then-add", "created-and-deleted-in-merges-then-re-added",
+                       "replacement-in-merge-then-ours-then-add", "raised-in-merge-on-a-path-evil-renames-away",
+                       "raised-at-a-new-path", "raised-in-merge-at-a-new-path", "renamed-back-strict",
+                       "re-added-at-the-old-path-strict"]
+
+
+@pytest.mark.parametrize("shape", DROPPED_LINE_SHAPES)
+def test_724_an_approved_probe_on_a_dropped_line_is_a_finding(target, tmp_path, shape):
+    """#724, found by the second #720 review: each shape read clean, exit 0, executed, on develop c3c5ecd6 and
+    before #720. HEAD's probe is the lowered one; the approved one sits in a merge or on a path the judged
+    line doesn't hold, on a line a merge dropped."""
+    marker = tmp_path / "ran"
+    _dropped_line_shape(target, marker, shape)
+    pid = "r1" if shape.startswith("replacement") else "p1"
+    code, report = run_audit(target)
+    row = row_of(report, pid)
+    assert code == ra.EXIT_FINDINGS and row[7] == ra.STATE_WEAKENED, row[7:]
+    assert "the probe's history walk does not list it" in _plain(row[9]), row[9]
+    assert not marker.exists()
+
+
+def test_724_a_line_that_kept_the_renamed_probe_lowered_without_a_drop_stays_clean(target, tmp_path):
+    """The control of renamed-back-strict: the same history without the line that held bar 2 reads clean."""
+    marker = tmp_path / "ran"
+    approved_text = (target.path / DECL).read_text()
+    target.write(RENAMED, _bar(target, marker, 1))
+    target.commit("add the probe at renamed.yml, bar 1")
+    target.git("mv", RENAMED, P1_REL)
+    target.write(DECL, approved_text + "\nAlso exports nothing else.\n")
+    target.write(P1_REL, _bar(target, marker, 1))
+    target.commit("rename, change the declaration, re-derive")
+    _side_work(target, "side", target.git("rev-parse", "HEAD"))
+    target.git("merge", "-q", "--no-ff", "-m", "merge side", "side")
+    _assert_clean(target)
+    assert marker.exists()
