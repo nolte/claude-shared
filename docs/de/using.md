@@ -53,6 +53,9 @@ Das Plugin ist für diese Szenarien ausgelegt:
   Sprints (`/nolte-planning:sprint-plan`, `/nolte-planning:roadmap-plan`) —,
   wenn dein Repository so plant; Repositories, die Arbeit als Issues führen,
   installieren dieses Plugin gar nicht erst.
+- **Linux-Images und Appliances** prüfen und bauen und nachweisen, dass sie
+  booten (`/nolte-linux:linux-image-audit`, `/nolte-linux:image-boot-verify`),
+  wenn dein Repository Betriebssystem-Images baut.
 - **Skills, Agents und Specs** gegen geteilte Autorenschafts-Regeln verfassen und
   reviewen (`/nolte-claude-dev:skill-management`, `/nolte-shared:spec` sowie die
   Review-Skills).
@@ -83,6 +86,7 @@ Die Companion-Plugins sind optional und werden genauso zusätzlich zu
 /plugin install nolte-planning@nolte-shared     # Repositories, die in project/ planen
 /plugin install nolte-media@nolte-shared        # braucht Bildgenerierungs-Credentials
 /plugin install nolte-claude-dev@nolte-shared   # nur beim Autorisieren von Skills/Agents
+/plugin install nolte-linux@nolte-shared        # Repositories, die Linux-Images bauen
 ```
 
 Nach der Installation ist jeder Skill als `/<plugin>:<name>` aufrufbar (zum

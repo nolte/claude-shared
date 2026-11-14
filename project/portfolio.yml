@@ -118,6 +118,28 @@ capabilities:
       - vale-style:vale-style-package
     since: 2026-04-24
 
+  - name: linux-image-appliance-plugin
+    description: >-
+      Ships the nolte-linux plugin: a toolchain-neutral audit of Linux image
+      definitions (mkosi, Yocto/Buildroot, Debian builders, NixOS/OSTree,
+      bootc), an image-definition developer agent, and VM boot verification
+      with an update-and-rollback scenario, governed by
+      spec/project/linux-image-best-practices/ and
+      spec/project/image-boot-verification/.
+    audience:
+      - linux-image-consumer
+    status: experimental
+    rationale: >-
+      Distribution contract: consumer audience, with runtime dependency as the
+      secondary signal. Only repositories that build Linux images or appliances
+      install nolte-linux, on top of nolte-shared; its boot verification needs
+      QEMU and UEFI firmware on the host, which most consumers can't satisfy.
+      Topic alone isn't the split rationale (spec/claude/plugin-scoping/).
+    peers:
+      - claude-shared:shared-claude-code-skills
+      - claude-shared:shared-claude-code-agents
+    since: 2026-11-14
+
 # Schema for tech_stack: spec/portfolio/tech-stack/ §Per-repository tech-stack block.
 # Inheritance is additive: the entries in portfolio/tech-stack.yml are implicitly
 # inherited unless explicitly overridden below. claude-shared inherits the

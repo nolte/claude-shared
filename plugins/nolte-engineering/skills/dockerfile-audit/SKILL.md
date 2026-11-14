@@ -54,7 +54,7 @@ Detect the user's language from their message and respond in it. The audit artif
 
 2. **Apply the hard-fail policy.** Per `spec/project/dockerfile-best-practices/`, mark a Dockerfile **fail** when any of these is true; otherwise **pass** (advisory findings never flip a pass to fail):
    - Any of the six mandatory OCI core labels (`source`, `title`, `description`, `version`, `revision`, `created`) is present in **neither** the final stage **nor** CI injection. A label that is a static literal, `ARG`-wired, or CI-injected counts as present. Do **not** hard-fail a required label the scanner credited to CI (`docker/metadata-action` / `docker build --label`).
-   - The final stage has **no** non-root numeric `USER` — either because no `USER` instruction exists at all (the check beyond hadolint `DL3002`) or because the effective user is root.
+   - The final stage has **no** non-root numeric `USER` — either because no `USER` instruction exists at all (the check beyond hadolint `DL3002`) or because the effective user is root. A bootc image (named by an `image-declaration.yaml` with `image.toolchain: bootc`, or with a final stage labelled `containers.bootc 1`) is exempt: the scanner reports `N/A (bootc)`, which never fails the Dockerfile.
    - A secret is introduced into a layer (secret via `ARG`/`ENV`, or a credential file `COPY`ed in).
    - A `FROM` base image is not pinned by **tag + digest** (floats on `:latest`, an untagged image, or a tag with no digest).
    - No `.dockerignore` ships in the build context.
@@ -111,7 +111,7 @@ Git revision: <sha>
 ## <path/to/Dockerfile>  (final stage: <name or index>) — <PASS | FAIL>
 ### Mandatory (hard-fail on any FAIL)
 - OCI labels: source <ok/MISSING>, title <...>, description <...>, version <...>, revision <...>, created <...>
-- USER (non-root numeric): <PASS | FAIL: no USER instruction | FAIL: USER root> [<file:line>]
+- USER (non-root numeric): <PASS | FAIL: no USER instruction | FAIL: USER root | N/A: bootc> [<file:line>]
 - Secrets in layers: <PASS | FAIL: <what>> [<file:line>]
 - Base pinned tag+digest: <PASS | FAIL: <FROM ref>> [<file:line>]
 - .dockerignore present: <PASS | FAIL>

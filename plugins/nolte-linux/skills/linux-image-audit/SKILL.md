@@ -1,0 +1,121 @@
+---
+name: linux-image-audit
+description: Audits a repository's Linux image definitions against spec/project/linux-image-best-practices/ and writes a severity-classified audit artifact. Dispatches the read-only linux-image-scanner agent, then triages its per-requirement results; a fail in a mandatory pillar (pinned inputs and reproducibility, no per-machine identity or secrets, update and rollback, SBOM) is a hard failure, a not-decidable result blocks only when a named boot scenario can resolve it, and other requirements are Warnings or Suggestions. Covers mkosi, Yocto, Buildroot, Debian builders, NixOS, OSTree, and bootc. Invoke when the user asks to "audit the image definition," "run the Linux image audit," or equivalent German-language requests. Don't use to boot or roll back an image (image-boot-verify), to change the image definition (linux-image-developer), or for Dockerfile content (dockerfile-audit). Supports resume per spec/claude/resumable-work/.
+tags: [audit]
+phase: quality
+summary: "Audits Linux image definitions against the image best-practices spec across five toolchain families and writes a severity-classified report."
+summary_de: "Auditiert Linux-Image-Definitionen gegen die Image-Best-Practices-Spec über fünf Toolchain-Familien und schreibt einen nach Schweregrad klassifizierten Bericht."
+use_when:
+  - "you want to audit image definitions for pinned inputs, per-machine identity, update and rollback, and SBOM"
+  - "you want a pre-PR or pre-release gate for an appliance or image-building repository"
+dont_use_when:
+  - situation: "You want to prove that a built image boots or rolls back"
+    alternative: image-boot-verify
+  - situation: "You want to change or scaffold the image definition"
+    alternative: linux-image-developer
+  - situation: "You want a Dockerfile or Containerfile content audit"
+    alternative: dockerfile-audit
+see_also:
+  - linux-image-scanner
+  - image-boot-verify
+  - linux-image-developer
+resumable: true
+---
+
+# Linux Image Audit
+
+Audit every Linux image a repository builds against the image-definition contract and produce one severity-classified audit artifact. The skill reports and recommends; it never changes an image definition.
+
+Implements `spec/project/linux-image-best-practices/`: the spec defines the image declaration, the four mandatory pillars, the toolchain profiles, and which requirements a static audit can decide (§J). This skill binds those rules to the on-disk procedure and owns severity, the gate verdict, and the report. Detection is delegated to the `linux-image-scanner` agent.
+
+## German trigger phrases
+
+This skill also triggers on equivalent German-language requests, including:
+
+- "Image-Definition auditieren" / "Linux-Image prüfen"
+- "Appliance-Image gegen Best Practices prüfen"
+- "Image-Audit laufen lassen"
+
+## User-language policy
+
+Detect the user's language from their message and respond in it. The audit artifact uses English section headings so it stays diffable across runs; the findings' prose follows the user's language.
+
+## Inputs
+
+- **Repository root**: default the current working directory.
+- **Scope** (optional): a subpath or a list of `image-declaration.yaml` files to narrow the audit.
+- **Boot protocols** (optional): `protocol.json` files from `image-boot-verify` runs, used to resolve blocking results (step 4). A protocol counts only when its image-definition commit and image name match the audited revision and image; otherwise it's listed under Health as ignored.
+
+## Preconditions
+
+1. Locate `spec/project/linux-image-best-practices/<canonical_language>.md` in the repository, or else in the installed `nolte-shared` plugin's `spec/` tree. When neither is reachable, stop and tell the user which file is missing; don't audit against remembered rules.
+2. Confirm the repository root is a git working copy; the scanner reads tracked state.
+
+## Operations
+
+### 1. audit (read-only)
+
+1. **Dispatch the scanner.** Call the `linux-image-scanner` agent with the repository root and scope. Wait for its inventory; don't re-scan inline.
+2. **Check the inventory.** When the scanner reports no image definition, stop and say so. When it lists files it couldn't read, surface them before triage.
+3. **Triage each result** per the spec's severity rule and §J:
+   - `fail` of a requirement in §C, §D, §F, or §G, or of a requirement another section assigns to one of them (the private signing key of §E falls under §D): **Critical** (hard failure).
+   - Declaration block: a schema violation is a §A **Warning**, and §F then applies as for a missing declaration; a violated conditional rule (`field-updated` without `update` or `failure_switch`, `reflash-only` with `update`) is a §F **Critical**.
+   - `not-decidable` in a mandatory pillar, by its cause: `resolvable: <scenario>` is **blocking**; `unverified` and `spec-gap` are **Warnings** that don't block; `delegated` is listed for information only and names the owning audit. When the scanner gives no cause, treat the result as blocking and say so.
+   - `fail` or `not-decidable` of a MUST outside the pillars: **Warning**; of a SHOULD: **Suggestion**.
+4. **Resolve against boot protocols**, when given: a scenario `pass` resolves the blocking results it names (rollback for the §F install, reboot, and rollback behaviour; identity for §D's fixed machine identity), a scenario `fail` turns them into Critical, and `not-run` leaves them blocking. Use each scenario's own verdict, not the run's overall verdict, since the identity scenario doesn't count toward the overall one.
+5. **Compute the gate verdict** per image: `FAIL` with any Critical; `INCOMPLETE` with any blocking not-decidable and no Critical; `PASS` otherwise. Never report `PASS` for an image with a blocking not-decidable.
+6. **Write the artifact** to `.audits/linux-image-audit/<YYYY-MM-DD-HHMM>.md` in the report shape below, recording the git revision and the spec path read.
+7. **Hand back** the per-image verdicts, the Critical list, and, when a blocking not-decidable exists, the suggestion to run `image-boot-verify` with the scenario named. For a bootc image, also point to `dockerfile-audit` for the delegated checks of its build file.
+
+## Report shape
+
+```text
+# Linux Image Audit — <repository> @ <git revision>
+
+Spec: <path> · Scanner: linux-image-scanner · Run: <timestamp>
+
+## Verdict
+| Image | Toolchain | Verdict | Critical | Blocking | Warning | Suggestion |
+
+## <image.name> — <PASS | INCOMPLETE | FAIL>
+### Critical
+- <§X requirement> — <evidence> [<file:line>] — <remediation in one line>
+### Blocking (not decidable statically)
+- <§X requirement> — resolved by image-boot-verify <scenario>
+### Warnings
+- <§X requirement> — <cause: unverified: entry | spec-gap: reason, or the finding> — <evidence> [<file:line>]
+### Delegated (information only)
+- <§X requirement> — delegated: <spec>, decided by <owning audit>
+### Suggestions
+- <§X requirement> — <evidence> [<file:line>]
+
+## Health
+- Images audited, unverified entries relied on, boot protocols used or ignored, unreadable files
+```
+
+## Gotchas
+
+- **A missing declaration makes §F apply.** The spec treats an image without a valid `image-declaration.yaml` as updated in the field, so it usually fails §F as well as §A. Report both; the fix is one declaration file.
+- **`not-decidable` isn't a pass, and isn't always blocking.** Only the cause `resolvable` blocks; `unverified` and `spec-gap` are the spec's own gaps, not the repository's defects, and `delegated` is information that belongs to another audit.
+- **bootc build files belong to `dockerfile-audit`.** This audit covers the image as an operating system (declaration, update, SBOM); the `Containerfile` content (labels, base pinning, secrets in layers) is audited there.
+
+## Resumability
+
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/linux-image-audit/<run-id>.yml` after each named phase boundary (detection, triage, artifact). On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+
+## Hard rules
+
+- **Never** write to an image definition, a declaration, or a build file; this skill is read-only apart from its audit artifact.
+- **Never** report `PASS` for an image with a Critical or a blocking not-decidable.
+- **Never** turn a result that rests only on an [unverified] toolchain entry into a Critical.
+- **Never** promote a SHOULD to a hard failure, or demote a mandatory pillar, without a spec change.
+- **Always** persist the artifact under `.audits/linux-image-audit/` with the git revision and the spec path read.
+- When `spec/project/linux-image-best-practices/` and this skill disagree, the spec wins; this skill needs the update.
+
+## Why this is a skill, not an agent
+
+This skill follows the hybrid pattern: the read-only detection is delegated to the `linux-image-scanner` agent (context-window isolation, tool restriction), while severity, the gate verdict, and the report stay in the skill.
+
+- **Orchestration role**: callers run it inside a larger flow (pre-PR gate, release cut), and the verdict flows back into the conversation for triage.
+- **Persistent artifact**: the deliverable is an audit file under `.audits/linux-image-audit/`; skills own persistent state.
+- **Counter-dimension**: the detection half is self-contained and verbose, which favours an agent; that half is delegated, while the triage and the artifact keep the orchestrating surface a skill.

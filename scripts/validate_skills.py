@@ -91,7 +91,7 @@ SKILL_ACTION_TOKENS = {
     "orchestrate", "plan", "refactor", "refine", "review", "revise",
     "scope", "start", "sweep", "triage", "trigger",
     "add", "augment", "scaffold", "migrate", "sync", "determine", "release", "map",
-    "design", "partition", "implement",
+    "design", "partition", "implement", "verify",
 }
 # Closed exception list: established skill names whose trailing token is not an
 # action token and that predate or otherwise outweigh a breaking rename. Kept in
@@ -1069,6 +1069,7 @@ AGENT_DESC_BASELINE_CHARS = {
     "plugins/nolte-claude-dev/agents": 386,    # nolte-claude-dev (1 agent: claude-plugin-developer)
     "plugins/nolte-engineering/agents": 21869,  # nolte-engineering (37 agents; re-baselined 2026-08-01: error-tracking-audit-scanner added, #516 — the 2026-07-24 baseline of 30 agents had 159 chars of headroom left, so a deliberate new capability tripped a gate meant to catch regression, not growth; platform-wide agent-description weight across all four plugins is ~8.6k est. tokens against the ~15k routing budget)
     "plugins/nolte-media/agents": 1108,        # nolte-media (2 agents)
+    "plugins/nolte-linux/agents": 1188,        # nolte-linux (2 agents: linux-image-scanner, linux-image-developer; baseline captured at carve-out 2026-11-14)
 }
 
 
