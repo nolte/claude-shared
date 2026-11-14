@@ -71,7 +71,7 @@ Ask for anything missing before booting; a missing input is a failed preconditio
 
 - **The kernel banner isn't health.** Only the image's own report line counts; a login prompt or a `READY=1` notification never does.
 - **Don't fix the image to make it boot.** Rebuilding, patching, re-signing, enrolling broader keys, or disabling Secure Boot invalidates the run (§B, §K).
-- **Not a pipeline gate yet.** This skill runs interactively and records the verdict in `protocol.json`. Two requirements of the boot spec need a non-interactive runner it doesn't ship yet: the exit statuses `0`/`1`/`2` of §H and the local entry point shared with the pipeline of §D. That runner is a follow-up, to be filed as an issue with this plugin's pull request, together with the first real run against a consumer image. Until it exists, no pipeline gate can run this skill, and its verdict is evidence for a person, read from `protocol.json`.
+- **Not a pipeline gate yet.** This skill runs interactively and records the verdict in `protocol.json`. Two requirements of the boot spec need a non-interactive runner it doesn't ship yet: the exit statuses `0`/`1`/`2` of §H and the local entry point shared with the pipeline of §D. That runner is a follow-up, tracked together with the first real run against a consumer image in nolte/claude-shared#728. Until it exists, no pipeline gate can run this skill, and its verdict is evidence for a person, read from `protocol.json`.
 
 ## Resumability
 
