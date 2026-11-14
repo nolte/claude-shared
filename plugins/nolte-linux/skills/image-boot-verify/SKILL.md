@@ -41,7 +41,7 @@ Detect the user's language from their message and respond in it. `protocol.json`
 Ask for anything missing before booting; a missing input is a failed precondition, not a guess.
 
 - **Declaration**: path of the image's `image-declaration.yaml`.
-- **Artifact under test** and its **expected version**.
+- **Artifact under test**, its **expected version**, and the **commit of the image definition** it was built from. Record the commit as given; never substitute the working copy's current commit, since the artifact may predate it.
 - **Next-version artifact** and its **expected version**: only for the rollback and positive scenarios.
 - **Scenarios**: default smoke, plus rollback and positive for `update_model: field-updated`, plus identity. The user may drop a scenario; a dropped required scenario (smoke, or rollback when `field-updated`) is recorded as `not-run` with the reason "excluded by the operator" and still counts toward the overall verdict.
 - **Requirement or TC-IDs** (optional): the consumer's identifiers per scenario. Default: smoke names the image's health definition (image spec §A), rollback its §F rollback requirement, positive §F, identity §D.
@@ -59,7 +59,7 @@ Ask for anything missing before booting; a missing input is a failed preconditio
 ### 1. verify
 
 1. **Plan the scenarios** from the declaration and the inputs, and show the plan (scenarios, timeouts from §J, acceleration mode) before the first boot. Under emulation, say so and scale every timeout by the factor of §J.
-2. **Smoke scenario:** boot a disposable copy-on-write overlay of the artifact with the serial console captured to the run directory. Wait, bounded by the readiness timeout, for the first line that begins with `IMAGE-HEALTH-REPORT` followed by a space. Apply the §F assertions: status, `system_state`, `failed_units` against `health.tolerated_units`, `image_id` against `image.name`, `image_version` against the expected version.
+2. **Smoke scenario:** boot a disposable copy-on-write overlay of the artifact with the serial console captured to the run directory. Wait, bounded by the readiness timeout, for the first line that begins with `IMAGE-HEALTH-REPORT` followed by a space, after stripping a trailing carriage return, other control characters, and terminal escape sequences from each captured line (serial consoles usually send CRLF). Apply the §F assertions: status, `system_state`, `failed_units` against `health.tolerated_units`, `image_id` against `image.name`, `image_version` against the expected version.
 3. **Rollback scenario** (`field-updated` only): serve the next-version artifact from the local source, boot N from a fresh copy with `update.source_switch` set to that source's URL and `health.failure_switch` set to N+1's expected version, both once at launch, and follow §I steps 1–4 by reading reports only. Give the VM network access to the local source only, and no network beyond that in any scenario (§B). Never alter the next-version artifact. Power the VM off after N's healthy report.
 4. **Positive scenario** (`field-updated` only): the same steps from a fresh copy without the failure switch; assert that N+1 reports healthy, reset the VM through the hypervisor, and assert that N+1 is still the reported version.
 5. **Identity scenario:** boot two fresh copies with distinct machine UUIDs and no switches, and hold each boot to the smoke assertions; an unhealthy or missing report fails the scenario. Compare `machine_id_app`: equal values fail it, and a report with `machine_id_app=-` makes it `not-run`.

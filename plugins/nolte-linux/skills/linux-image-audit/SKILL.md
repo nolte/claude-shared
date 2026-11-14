@@ -44,7 +44,8 @@ Detect the user's language from their message and respond in it. The audit artif
 
 - **Repository root**: default the current working directory.
 - **Scope** (optional): a subpath or a list of `image-declaration.yaml` files to narrow the audit.
-- **Boot protocols** (optional): `protocol.json` files from `image-boot-verify` runs, used to resolve blocking results (step 4). A protocol counts only when its image-definition commit and image name match the audited revision and image; otherwise it's listed under Health as ignored.
+- **Boot protocols** (optional): `protocol.json` files from `image-boot-verify` runs, used to resolve blocking results (step 4). A protocol counts only when its image name matches and its recorded image-definition commit equals the last commit that touched the image's declaration or definition at the audited revision (`git log -1 --format=%H -- <declaration> <definition>`); otherwise it's listed under Health as ignored, with the reason.
+- **Dockerfile audit** (optional): the `dockerfile-audit` artifact for the same revision, which decides the `delegated` results of a bootc image (step 4).
 
 ## Preconditions
 
@@ -60,9 +61,11 @@ Detect the user's language from their message and respond in it. The audit artif
 3. **Triage each result** per the spec's severity rule and §J:
    - `fail` of a requirement in §C, §D, §F, or §G, or of a requirement another section assigns to one of them (the private signing key of §E falls under §D): **Critical** (hard failure).
    - Declaration block: a schema violation is a §A **Warning**, and §F then applies as for a missing declaration; a violated conditional rule (`field-updated` without `update` or `failure_switch`, `reflash-only` with `update`) is a §F **Critical**.
-   - `not-decidable` in a mandatory pillar, by its cause: `resolvable: <scenario>` is **blocking**; `unverified` and `spec-gap` are **Warnings** that don't block; `delegated` is listed for information only and names the owning audit. When the scanner gives no cause, treat the result as blocking and say so.
+   - `not-decidable` in a mandatory pillar, by its cause: `resolvable: <scenario>` is **blocking**; `unverified` and `spec-gap` are **Warnings** that don't block; `delegated` is **blocking** until the owning audit's result is at hand (step 4), and names that audit. When the scanner gives no cause, treat the result as blocking and say so.
    - `fail` or `not-decidable` of a MUST outside the pillars: **Warning**; of a SHOULD: **Suggestion**.
-4. **Resolve against boot protocols**, when given: a scenario `pass` resolves the blocking results it names (rollback for the §F install, reboot, and rollback behaviour; identity for §D's fixed machine identity), a scenario `fail` turns them into Critical, and `not-run` leaves them blocking. Use each scenario's own verdict, not the run's overall verdict, since the identity scenario doesn't count toward the overall one.
+4. **Resolve blocking results**, when evidence is given:
+   - Boot protocols: a rollback `pass` resolves the §F install, reboot, and rollback results, and a rollback `fail` turns them into Critical. An identity `pass` resolves §D's fixed machine identity; an identity `fail` is a §D Critical only when the protocol records equal `machine_id_app` values, and an identity `fail` from a smoke assertion leaves §D blocking and is reported as a failed boot (Warning, naming the scenario). `not-run` leaves the results blocking. Use each scenario's own verdict, not the run's overall verdict, since the identity scenario doesn't count toward the overall one.
+   - Dockerfile audit: a `dockerfile-audit` pass on base pinning or secrets in layers resolves the matching `delegated` result, and a fail there is a §C or §D Critical here. Without that artifact, the `delegated` results stay blocking; when `nolte-engineering` isn't installed, say that installing it, or reviewing the build file by hand, is the way to resolve them.
 5. **Compute the gate verdict** per image: `FAIL` with any Critical; `INCOMPLETE` with any blocking not-decidable and no Critical; `PASS` otherwise. Never report `PASS` for an image with a blocking not-decidable.
 6. **Write the artifact** to `.audits/linux-image-audit/<YYYY-MM-DD-HHMM>.md` in the report shape below, recording the git revision and the spec path read.
 7. **Hand back** the per-image verdicts, the Critical list, and, when a blocking not-decidable exists, the suggestion to run `image-boot-verify` with the scenario named. For a bootc image, also point to `dockerfile-audit` for the delegated checks of its build file.

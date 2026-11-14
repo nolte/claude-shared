@@ -2,11 +2,10 @@
 #
 # This repository is a plugin monorepo shipping six Claude Code plugins from
 # one release line (lockstep): nolte-shared (root), nolte-media,
-# nolte-engineering, nolte-claude-dev, nolte-planning, and nolte-linux. The plugins were
-# split on
-# distribution-contract differences (consumer audience / runtime dependency) —
-# NOT on a different release cadence — so all six carry the same version, equal
-# to the repository's release tag.
+# nolte-engineering, nolte-claude-dev, nolte-planning, and nolte-linux. The
+# plugins were split on distribution-contract differences (consumer audience /
+# runtime dependency) — NOT on a different release cadence — so all six carry
+# the same version, equal to the repository's release tag.
 #
 # The default Claude-plugin convention only covers the root .claude-plugin/
 # plugin.json and marketplace.json metadata.version, which would leave the five

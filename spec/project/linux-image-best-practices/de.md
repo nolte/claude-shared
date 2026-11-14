@@ -158,7 +158,7 @@ Die Profile bilden den Kern auf jede Toolchain ab. Sie nennen Erkennungssignale 
   - `resolvable: <scenario>`: eine Anforderung der Klasse `needs-built-artifact`, die ein benanntes Szenario der Boot-Verifikation auflöst. Sie blockiert das Gate wie ein `fail`, bis dieses Szenario besteht
   - `unverified: <§I entry>`: Die Entscheidung hängt an einem **[unverified]**-§I-Eintrag. Sie ist eine Warning, die nicht blockiert, da die Lücke in der Recherche dieser Spec liegt, nicht im Repository
   - `spec-gap: <reason>`: Weder ein §I-Schalter noch ein Szenario der Boot-Verifikation deckt die Anforderung bisher ab (die Tabelle sagt das in ihrer Zeile). Sie ist aus demselben Grund eine Warning, die nicht blockiert
-  - `delegated: <spec>`: Eine andere Spec besitzt die Prüfung für diese Toolchain (die bootc-Build-Datei). Sie wird zur Information gemeldet und blockiert nicht; das zuständige Audit entscheidet sie
+  - `delegated: <spec>`: Eine andere Spec besitzt die Prüfung für diese Toolchain (die bootc-Build-Datei), und deren Audit entscheidet sie. Sie blockiert nicht, sobald das Ergebnis dieses Audits für dieselbe Revision vorliegt; solange es fehlt (das zuständige Audit lief nicht oder sein Plugin ist nicht installiert), blockiert sie wie `resolvable`, sodass eine Pflichtsäule nie ungeprüft besteht
 - Jede Anforderung einer Pflichtsäule gehört zu einer Entscheidbarkeitsklasse, die festlegt, was ein statisches Audit schließen kann:
 
   | Anforderung | Klasse | Was das statische Audit prüft |

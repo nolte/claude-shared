@@ -39,9 +39,10 @@ Implements the detection stage of `spec/project/linux-image-best-practices/` (§
 
 ## Read-only Bash justification
 
-This agent declares `Bash` as a deliberate exception under `spec/claude/agent-management/` §"Tool access" §Read-only-agent narrow exception, limited to one side-effect-free `git` read:
+This agent declares `Bash` as a deliberate exception under `spec/claude/agent-management/` §"Tool access" §Read-only-agent narrow exception, limited to side-effect-free reads:
 
 - `git ls-files --error-unmatch <path>`: whether a lock or manifest file is tracked (§C)
+- `python3 -c` with the already-installed `jsonschema` and `yaml` modules: validate a declaration against `schemas/image-declaration-v1.0.schema.yaml` (Phase 2). When those modules aren't installed, validate by reading the schema and record that in Health; never install them
 
 File discovery and content checks use `Glob`, `Grep`, and `Read`. The agent **MUST NOT** run a build, a toolchain command, a container runtime, or any command that writes to the working tree or mutates git state.
 
@@ -84,7 +85,7 @@ You **don't**:
 
 ### Phase 2: Validate declarations
 
-For each declaration, check the schema (required fields, enums, `schema_version: "1.0"`) and the rules the schema can't express: `field-updated` requires the `update` block and `health.failure_switch`; `reflash-only` forbids the `update` block. Record each violation with `file:line`.
+For each declaration, validate it against the schema with the `python3` check above, falling back to a careful read (required fields, enums, `schema_version` as the string `"1.0"`, no extra keys under `additionalProperties: false`), and check the rules the schema can't express: `field-updated` requires the `update` block and `health.failure_switch`; `reflash-only` forbids the `update` block. Record each violation with `file:line`.
 
 ### Phase 3: Check requirements per image
 

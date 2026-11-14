@@ -158,7 +158,7 @@ The profiles map the core onto each toolchain. They name detection signals and t
   - `resolvable: <scenario>`: a `needs-built-artifact` requirement that a named boot-verification scenario resolves. It blocks the gate like a `fail` until that scenario passes
   - `unverified: <§I entry>`: the decision rests on an **[unverified]** §I entry. It's a Warning that doesn't block, since the gap lies in this spec's research, not in the repository
   - `spec-gap: <reason>`: neither a §I knob nor a boot-verification scenario covers the requirement yet (the table says so in its row). It's a Warning that doesn't block, for the same reason
-  - `delegated: <spec>`: another spec owns the check for this toolchain (the bootc build file). It's reported for information and doesn't block; the owning audit decides it
+  - `delegated: <spec>`: another spec owns the check for this toolchain (the bootc build file), and its audit decides it. It doesn't block once that audit's result for the same revision is at hand; while it isn't (the owning audit wasn't run, or its plugin isn't installed), it blocks like `resolvable`, so a pillar is never passed unchecked
 - Each mandatory-pillar requirement belongs to one decidability class, which fixes what a static audit can conclude:
 
   | Requirement | Class | What the static audit checks |
