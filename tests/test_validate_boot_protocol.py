@@ -294,6 +294,22 @@ V12_NEGATIVES = {
     "fw_cfg name over 55 characters": (lambda d: _switch(d, name="opt/org.example.gateway/" + "x" * 32),
                                        "schema.maxLength", "/health/failure_switch/name"),
 }
+# Each name below breaks exactly one part of the pattern: the dot in the
+# reverse-domain segment, the item segment, the start anchor, the end anchor,
+# the per-segment character class, the line-break guard, the ".." guard, and the "."-segment guard.
+for _label, _name in {
+    "fw_cfg name without a dot in the reverse domain": "opt/example/x",
+    "fw_cfg name without an item segment": "opt/org.example",
+    "fw_cfg name with text before opt/": "xopt/org.a/b",
+    "fw_cfg name with a trailing slash": "opt/org.a/b/",
+    "fw_cfg name with a comma": "opt/org.a/b,c",
+    "fw_cfg name with a space": "opt/org.a/b c",
+    "fw_cfg name with a trailing line break": "opt/org.a/b\n",
+    "fw_cfg name with a dot-dot segment": "opt/org.a/../b",
+    "fw_cfg name with a single-dot segment": "opt/org.a/./b",
+}.items():
+    V12_NEGATIVES[_label] = ((lambda n: lambda d: _switch(d, name=n))(_name), "schema.pattern",
+                             "/health/failure_switch/name")
 
 
 @pytest.mark.parametrize("case", list(V12_NEGATIVES), ids=list(V12_NEGATIVES))
@@ -307,6 +323,12 @@ def test_v12_negatives(tmp_path, capsys, case):
 def test_v12_fw_cfg_name_at_55_characters_is_valid(tmp_path, capsys):
     name = "opt/org.example.gateway/" + "x" * 31
     assert len(name) == 55
+    code, payload = _run_declaration(tmp_path, _mutate(V12_UBOOT_FW_CFG, lambda d: _switch(d, name=name)), capsys)
+    assert code == 0, payload
+
+
+@pytest.mark.parametrize("name", ["opt/org.example.gateway/sub/fail", "opt/org.example_gw-1/fail.v2"])
+def test_v12_fw_cfg_name_character_class_accepts_valid_names(tmp_path, capsys, name):
     code, payload = _run_declaration(tmp_path, _mutate(V12_UBOOT_FW_CFG, lambda d: _switch(d, name=name)), capsys)
     assert code == 0, payload
 

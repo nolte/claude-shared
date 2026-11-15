@@ -29,7 +29,10 @@
 # which alters no signed boot component; a systemd image keeps
 # systemd-credential, which the host then delivers through fw_cfg too. The
 # end-to-end chain is [unverified] until a real run confirms it (#728). A v1.0
-# or v1.1 declaration stays valid against its own schema.
+# or v1.1 declaration stays valid against its own schema. The #740 decision
+# named the v1.1 enum as the place for the new type, but v1.1 shipped with #744
+# and spec/project/yaml-json-schema/ forbids editing a committed schema in
+# place, so the type arrives in this new version instead.
 $schema: https://json-schema.org/draft/2020-12/schema
 $id: https://github.com/nolte/claude-shared/blob/main/schemas/image-declaration-v1.2.schema.yaml
 title: Image Declaration
@@ -244,7 +247,9 @@ $defs:
       A value the host passes to the guest without altering any signed boot
       component. A qemu-fw-cfg name is the full fw_cfg item name
       opt/<reverse-domain>/<name>, at most 55 characters, outside the prefix
-      opt/org.qemu/ that QEMU reserves for itself.
+      opt/org.qemu/ that QEMU reserves for itself. Its segments use only
+      ASCII letters, digits, dot, underscore, and hyphen, so every character is
+      one byte and the name holds no comma, space, line break, or "..".
     additionalProperties: false
     required:
       - name
@@ -275,7 +280,7 @@ $defs:
       properties:
         name:
           maxLength: 55
-          pattern: "^opt/(?!org\\.qemu/)[^/]+\\.[^/]+/[^/]+(/[^/]+)*$"
+          pattern: "^(?![^\\n]*\\n)(?!.*\\.\\.)(?!.*/\\.(?:/|$))opt/(?!org\\.qemu/)[A-Za-z0-9._-]+\\.[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)+$"
 examples:
   - schema_version: "1.2"
     image:
