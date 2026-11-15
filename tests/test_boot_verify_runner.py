@@ -630,8 +630,30 @@ def test_harness_uboot_skips_switch_and_uuid_scenarios(tmp_path, fake_bin):
                                     "identity": "not-run"}
     assert code == 2  # the required rollback scenario is not-run
     causes = {s["name"]: s.get("not_run_cause", {}).get("reason", "") for s in protocol["scenarios"]}
-    assert "no switch transport" in causes["rollback"] and "no switch transport" in causes["positive"]
+    assert "switch transport unverified" in causes["rollback"] and "switch transport unverified" in causes["positive"]
     assert "no machine-UUID transport" in causes["identity"]
+
+
+def test_harness_uefi_qemu_fw_cfg_switch_is_not_run(tmp_path, fake_bin):
+    """A v1.2 qemu-fw-cfg switch under UEFI must never be delivered over SMBIOS:
+    its fw_cfg transport is unconfirmed, so rollback and positive are not-run (§H)."""
+    def fw_cfg(doc):
+        doc["schema_version"] = "1.2"
+        doc["update"]["source_switch"] = {"type": "qemu-fw-cfg", "name": "opt/org.example.appliance/update-source"}
+    decl = _write_declaration(tmp_path, fw_cfg)
+    code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), *_fw(tmp_path),
+                              *_next_artifact(tmp_path))
+    assert summary["scenarios"]["rollback"] == "not-run" and summary["scenarios"]["positive"] == "not-run"
+    assert code == 2
+    protocol = json.loads((out / "protocol.json").read_text(encoding="utf-8"))
+    causes = {s["name"]: s.get("not_run_cause", {}).get("reason", "") for s in protocol["scenarios"]}
+    assert "switch transport unverified" in causes["rollback"]
+
+
+def test_declared_switches_lists_source_and_failure_switch():
+    assert [s["type"] for s in bv.declared_switches(UEFI_FIELD_UPDATED)] == \
+        [UEFI_FIELD_UPDATED["update"]["source_switch"]["type"], UEFI_FIELD_UPDATED["health"]["failure_switch"]["type"]]
+    assert bv.declared_switches({"update_model": "reflash-only", "health": {}}) == []
 
 
 def test_harness_readiness_timeout_is_fail_with_a_valid_protocol_and_no_report_line(tmp_path, fake_bin):

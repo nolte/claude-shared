@@ -48,7 +48,7 @@ The runner asks nothing. A missing input is a failed precondition: the affected 
 
 ## What the runner does
 
-1. It reads the declaration once, validates that copy, and checks every §H precondition. Under `u-boot` firmware, rollback, positive, and identity are `not-run` (§I, #740).
+1. It reads the declaration once, validates that copy, and checks every §H precondition. Under `u-boot` firmware, rollback, positive, and identity are `not-run`, and so are rollback and positive whenever a declared switch is a `qemu-fw-cfg` switch: the QEMU `fw_cfg` transport stays unconfirmed until a real run (§H, §I, #728).
 2. It refuses a qcow2 artifact or next artifact that refers to another file: a backing file (a nonzero backing-file offset in the header) or an external data file (incompatible-feature bit 2 of a version 3 header). Either would let the hypervisor read a host file or fetch a URL outside the isolation of §B, so the affected scenarios are `not-run` with that cause.
 3. It builds the QEMU command line per §L. The artifact is attached with `snapshot=on`, and the serial console goes to `<scenario>.serial.log`.
 4. Before each boot, it asserts the network configuration (§B): `-nodefaults` and `-no-user-config`, plus `-nic none` for smoke and identity, or exactly one `-netdev user` with `restrict=on` and exactly one `guestfwd` to the local source for rollback and positive. It refuses any other configuration before boot and records the scenario as `not-run`.

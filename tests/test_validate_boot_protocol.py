@@ -1,4 +1,4 @@
-"""Tests for the boot-protocol schemas (#733, v1.1 for #728) and the v1.1 declaration schema (#740).
+"""Tests for the boot-protocol schemas (#733, v1.1 for #728) and the v1.1 and v1.2 declaration schemas (#740).
 
 Both go through the existing bundled validator
 (``plugins/nolte-linux/skills/linux-image-audit/scripts/validate_declaration.py``):
@@ -36,6 +36,9 @@ DECL_V11_PATH = REPO_ROOT / "schemas" / "image-declaration-v1.1.schema.yaml"
 DECL_V10 = yaml.safe_load(DECL_V10_PATH.read_text(encoding="utf-8"))
 DECL_V11 = yaml.safe_load(DECL_V11_PATH.read_text(encoding="utf-8"))
 UEFI_X86, UBOOT_ARM = DECL_V11["examples"]
+DECL_V12_PATH = REPO_ROOT / "schemas" / "image-declaration-v1.2.schema.yaml"
+DECL_V12 = yaml.safe_load(DECL_V12_PATH.read_text(encoding="utf-8"))
+V12_UEFI, V12_UBOOT_REFLASH, V12_UBOOT_FW_CFG, V12_UBOOT_SYSTEMD = DECL_V12["examples"]
 
 
 def _run_protocol(tmp_path: Path, doc, capsys, *extra: str) -> tuple[int, dict]:
@@ -246,6 +249,104 @@ def test_v11_firmware_fields_rejected_by_v10(tmp_path, capsys):
     doc = _mutate(UEFI_X86, lambda d: d.__setitem__("schema_version", "1.0"))
     code, payload = _run_declaration(tmp_path, doc, capsys)
     assert code == 1 and _hits(payload, "schema.additionalProperties", "/image")
+
+
+# --------------------------------------------------------------------------- #
+# Declaration v1.2 (#740 part b): the qemu-fw-cfg switch transport for U-Boot
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("example", DECL_V12["examples"],
+                         ids=["uefi-x86_64", "u-boot-reflash-only", "u-boot-qemu-fw-cfg", "u-boot-systemd-credential"])
+def test_v12_examples_are_valid(tmp_path, capsys, example):
+    # The validator picks v1.2 from schema_version alone: no code change needed.
+    code, payload = _run_declaration(tmp_path, example, capsys)
+    assert code == 0, payload
+    assert payload["result"] == "valid"
+    assert Path(payload["schema"]).resolve() == DECL_V12_PATH.resolve()
+
+
+def test_v12_examples_cover_both_u_boot_switch_types():
+    assert V12_UBOOT_FW_CFG["image"]["firmware"] == "u-boot"
+    assert {V12_UBOOT_FW_CFG["health"]["failure_switch"]["type"],
+            V12_UBOOT_FW_CFG["update"]["source_switch"]["type"]} == {"qemu-fw-cfg"}
+    assert V12_UBOOT_SYSTEMD["image"]["firmware"] == "u-boot"
+    assert {V12_UBOOT_SYSTEMD["health"]["failure_switch"]["type"],
+            V12_UBOOT_SYSTEMD["update"]["source_switch"]["type"]} == {"systemd-credential"}
+
+
+@pytest.mark.parametrize("example", DECL_V11["examples"], ids=["uefi-x86_64", "u-boot-aarch64"])
+def test_v11_declarations_still_validate_next_to_v12(tmp_path, capsys, example):
+    code, payload = _run_declaration(tmp_path, example, capsys)
+    assert code == 0, payload
+    assert Path(payload["schema"]).resolve() == DECL_V11_PATH.resolve()
+
+
+def _switch(doc: dict, **fields) -> None:
+    doc["health"]["failure_switch"].update(fields)
+
+
+V12_NEGATIVES = {
+    "unknown switch type": (lambda d: _switch(d, type="kernel-cmdline"), "schema.enum",
+                            "/health/failure_switch/type"),
+    "fw_cfg name without opt/ prefix": (lambda d: _switch(d, name="org.example.gateway/fail"), "schema.pattern",
+                                        "/health/failure_switch/name"),
+    "fw_cfg name under the QEMU-reserved prefix": (lambda d: _switch(d, name="opt/org.qemu/fail"), "schema.pattern",
+                                                   "/health/failure_switch/name"),
+    "fw_cfg name over 55 characters": (lambda d: _switch(d, name="opt/org.example.gateway/" + "x" * 32),
+                                       "schema.maxLength", "/health/failure_switch/name"),
+}
+# Each name below breaks exactly one part of the pattern: the dot in the
+# reverse-domain segment, the item segment, the start anchor, the end anchor,
+# the per-segment character class, the line-break guard, the ".." guard, and the "."-segment guard.
+for _label, _name in {
+    "fw_cfg name without a dot in the reverse domain": "opt/example/x",
+    "fw_cfg name without an item segment": "opt/org.example",
+    "fw_cfg name with text before opt/": "xopt/org.a/b",
+    "fw_cfg name with a trailing slash": "opt/org.a/b/",
+    "fw_cfg name with a comma": "opt/org.a/b,c",
+    "fw_cfg name with a space": "opt/org.a/b c",
+    "fw_cfg name with a trailing line break": "opt/org.a/b\n",
+    "fw_cfg name with a dot-dot segment": "opt/org.a/../b",
+    "fw_cfg name with a single-dot segment": "opt/org.a/./b",
+}.items():
+    V12_NEGATIVES[_label] = ((lambda n: lambda d: _switch(d, name=n))(_name), "schema.pattern",
+                             "/health/failure_switch/name")
+
+
+@pytest.mark.parametrize("case", list(V12_NEGATIVES), ids=list(V12_NEGATIVES))
+def test_v12_negatives(tmp_path, capsys, case):
+    fn, rule, path = V12_NEGATIVES[case]
+    code, payload = _run_declaration(tmp_path, _mutate(V12_UBOOT_FW_CFG, fn), capsys)
+    assert code == 1 and payload["result"] == "invalid"
+    assert _hits(payload, rule, path), payload
+
+
+def test_v12_fw_cfg_name_at_55_characters_is_valid(tmp_path, capsys):
+    name = "opt/org.example.gateway/" + "x" * 31
+    assert len(name) == 55
+    code, payload = _run_declaration(tmp_path, _mutate(V12_UBOOT_FW_CFG, lambda d: _switch(d, name=name)), capsys)
+    assert code == 0, payload
+
+
+@pytest.mark.parametrize("name", ["opt/org.example.gateway/sub/fail", "opt/org.example_gw-1/fail.v2"])
+def test_v12_fw_cfg_name_character_class_accepts_valid_names(tmp_path, capsys, name):
+    code, payload = _run_declaration(tmp_path, _mutate(V12_UBOOT_FW_CFG, lambda d: _switch(d, name=name)), capsys)
+    assert code == 0, payload
+
+
+def test_v12_name_rules_bind_only_qemu_fw_cfg(tmp_path, capsys):
+    # A systemd credential keeps its plain name; the opt/ pattern applies to qemu-fw-cfg only.
+    code, payload = _run_declaration(tmp_path, V12_UBOOT_SYSTEMD, capsys)
+    assert code == 0, payload
+    assert not V12_UBOOT_SYSTEMD["health"]["failure_switch"]["name"].startswith("opt/")
+
+
+@pytest.mark.parametrize("version,path", [("1.0", DECL_V10_PATH), ("1.1", DECL_V11_PATH)])
+def test_qemu_fw_cfg_rejected_by_older_schemas(tmp_path, capsys, version, path):
+    base = DECL_V10["examples"][0] if version == "1.0" else UEFI_X86
+    doc = _mutate(base, lambda d: _switch(d, type="qemu-fw-cfg", name="opt/org.example.gateway/fail"))
+    code, payload = _run_declaration(tmp_path, doc, capsys)
+    assert code == 1 and _hits(payload, "schema.enum", "/health/failure_switch/type"), payload
+    assert Path(payload["schema"]).resolve() == path.resolve()
 
 
 # --------------------------------------------------------------------------- #
