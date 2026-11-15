@@ -16,7 +16,8 @@ checks: []
 results:
   - id: a-declaration
     section: "§A"
+    row: "§A image declaration"
     match: ["declaration|definition"]
-    exclude: [health, "entry point", toolchain]
+    exclude: [health, "entry point", toolchain, "version control"]
     expected: fail
     spec: "§A image declaration next to the image definition; scanner Phase 1 step 3: an image.definition path that doesn't exist is a §A fail"

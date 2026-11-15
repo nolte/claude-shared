@@ -26,17 +26,20 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: pass
     spec: "§C Nix inputs through a committed lock file; §I.4 committed flake.lock; §I table NixOS 'supported'"
   - id: c-lock-committed
     section: "§C"
+    row: "§C lock file committed"
     match: [lock]
     expected: pass
     spec: "§C; §J row static-file: flake.lock exists and is tracked; §I table NixOS 'supported'"
   - id: f-payload-signature
     section: "§F"
+    row: "§F payload signature verified"
     match: [signature]
     expected: not-decidable
     cause: resolvable
@@ -44,21 +47,25 @@ results:
     spec: "§I.4 NixOS require-sigs [unverified]; §J payload-signature exception: cause resolvable: signature-rejection, not unverified"
   - id: f-install-reboot
     section: "§F"
-    match: [reboot]
-    exclude: [health]
+    row: "§F install and reboot without input, unhealthy reboot"
+    match: ["install|reboot"]
+    exclude: [gates, "health definition"]
     expected: not-decidable
     cause: resolvable
     scenario: rollback
     spec: "§J row '§F install and reboot without input, unhealthy reboot' (needs-built-artifact): resolved by the rollback scenario"
   - id: f-downgrade
     section: "§F"
+    row: "§F refuses a version that isn't newer"
     match: ["downgrade|newer"]
+    exclude: [install]
     expected: not-decidable
     cause: resolvable
     scenario: downgrade
     spec: "§J row '§F refuses a version that isn't newer' (needs-built-artifact): cause resolvable: downgrade"
   - id: f-commit-boundary
     section: "§F"
+    row: "§F failure switch ignored once committed"
     match: ["committed|commit-boundary|commit boundary"]
     expected: not-decidable
     cause: resolvable
@@ -66,13 +73,15 @@ results:
     spec: "§J row '§F failure switch ignored once committed' (needs-built-artifact): cause resolvable: commit-boundary"
   - id: d-machine-id
     section: "§D"
-    match: [machine]
+    row: "§D no populated machine-id"
+    match: ["machine-id|machine id|machine identity"]
     expected: not-decidable
     cause: resolvable
     scenario: identity
     spec: "§J row '§D no populated machine-id' (needs-built-artifact): no overlay or recipe step writes the file, so the identity scenario resolves it"
   - id: g-sbom-produced
     section: "§G"
+    row: "§G SBOM produced"
     match: ["produc"]
     expected: pass
     spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"

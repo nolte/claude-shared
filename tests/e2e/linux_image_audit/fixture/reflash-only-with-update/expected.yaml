@@ -11,7 +11,7 @@ declaration:
   exit_code: 1
   violations: [conditional.reflash-only-forbids-update]
   spec: "§F preamble: a reflash-only declaration MUST NOT carry an update block; §J row '§F no update block on reflash-only'"
-checks: []
+checks: [f-applies]
 results:
   - id: declaration-schema
     section: declaration

@@ -8,8 +8,8 @@
 # below is pinned to a snapshot.
 #
 set -eu
-MIRROR="http://deb.debian.org/debian"
 SOURCE_DATE_EPOCH="$(git log -1 --format=%ct)"
+MIRROR="http://deb.debian.org/debian"
 export SOURCE_DATE_EPOCH
 mkdir -p dist
 mmdebstrap --variant=minbase --include="$(paste -sd, packages.list)" \

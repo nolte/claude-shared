@@ -126,8 +126,32 @@ def test_weakening_an_expectation_unbacks_its_tag():
 # --------------------------------------------------------------------------- #
 # Dispatch inputs and prompt (pure, no LLM call)
 # --------------------------------------------------------------------------- #
-def test_prepared_fixture_tracks_the_fixture_tree_only(tmp_path):
-    repo = scenario.prepare_fixture("bootc-pass", tmp_path)
+@pytest.fixture
+def prepared():
+    made = []
+
+    def _prepare(case):
+        repo = scenario.prepare_fixture(case)
+        made.append(repo)
+        return repo
+
+    yield _prepare
+    for repo in made:
+        shutil.rmtree(repo.parent, ignore_errors=True)
+
+
+@pytest.mark.parametrize("case", CASES)
+def test_prepared_path_names_no_case(case, prepared):
+    repo = prepared(case)
+    path = str(repo).lower()
+    assert repo.name == "repo"
+    for name in CASES:
+        assert name not in path, name
+    assert "pass" not in path and "fail" not in path
+
+
+def test_prepared_fixture_tracks_the_fixture_tree_only(prepared):
+    repo = prepared("bootc-pass")
     src = scenario.CASES_DIR / "bootc-pass" / "repo"
     on_disk = sorted(p.relative_to(src).as_posix() for p in src.rglob("*") if p.is_file())
     assert scenario.tracked_files(repo) == on_disk
@@ -137,13 +161,49 @@ def test_prepared_fixture_tracks_the_fixture_tree_only(tmp_path):
     assert list(checks) == ["image-declaration.yaml"] and checks["image-declaration.yaml"]["result"] == "valid"
 
 
-def test_prompt_carries_the_dispatch_inputs(tmp_path):
-    repo = scenario.prepare_fixture("reflash-only-with-update", tmp_path)
+def test_prompt_carries_the_dispatch_inputs(prepared):
+    repo = prepared("reflash-only-with-update")
     prompt = scenario.make_prompt(repo)
     assert scenario.AGENT in prompt
     assert "mkosi.conf" in prompt and "conditional.reflash-only-forbids-update" in prompt
-    repo = scenario.prepare_fixture("signal-without-declaration", tmp_path)
+    assert not any(name in prompt for name in CASES)
+    repo = prepared("signal-without-declaration")
     assert "none (no declaration is tracked)" in scenario.make_prompt(repo)
+
+
+def test_headless_runs_skip_user_settings():
+    from evals.harness import runner
+
+    cmd = runner.build_cli_command("x", str(scenario.PLUGIN_DIR), allowed_tools=("Read",),
+                                   permission_mode="plan", model="m", extra_args=scenario.HEADLESS_ARGS)
+    assert cmd[cmd.index("--setting-sources") + 1] == "project" and "--strict-mcp-config" in cmd
+
+
+# --------------------------------------------------------------------------- #
+# Matchers against the verbatim requirement labels
+# --------------------------------------------------------------------------- #
+J_ROWS = scenario.j_rows()
+ALL_LABELS = (*J_ROWS, *scenario.A_ROWS, *scenario.SHOULD_ROWS)
+
+
+def _label_line(label):
+    return scenario.Line(label[:2], label[3:], "pass", None, None, f"- {label} — pass")
+
+
+def test_j_table_is_read_verbatim():
+    assert len(J_ROWS) == 20
+    assert "§F install and reboot without input, unhealthy reboot" in J_ROWS
+    assert "§D no populated machine-id" in J_ROWS
+
+
+@pytest.mark.parametrize("case", CASES)
+def test_every_matcher_hits_exactly_its_row(case):
+    for spec in scenario.load_expected(case)["results"]:
+        if spec["section"] == "declaration":
+            continue
+        assert spec["row"] in (*J_ROWS, *scenario.A_ROWS), spec["row"]
+        hits = {label for label in ALL_LABELS if scenario._matches(_label_line(label), spec)}
+        assert hits == {spec["row"]}, (spec["id"], hits)
 
 
 # --------------------------------------------------------------------------- #
@@ -224,6 +284,26 @@ def test_scorer_catches_a_wrong_inventory(old, new, assertion):
 def test_scorer_rejects_a_contradicting_duplicate_line():
     text = CANNED.replace("### Other sections", "- §G SBOM produced — pass — syft\n\n### Other sections")
     assert scenario.score(text, scenario.load_expected("buildroot-fail"))["g-sbom-produced=fail"] is False
+
+
+def test_result_word_is_read_at_its_position():
+    nd = scenario.parse_inventory(
+        "- §F payload signature verified — not-decidable (cause: resolvable: signature-rejection; "
+        "a pass or fail needs the scenario) — Verify=yes [x.transfer:2]")[0]
+    assert (nd.result, nd.cause) == ("not-decidable", "resolvable") and "signature-rejection" in nd.detail
+    failed = scenario.parse_inventory("- §C inputs pinned — fail (static-heuristic) — the comment claims a pass")[0]
+    assert (failed.result, failed.cause) == ("fail", None)
+    passed = scenario.parse_inventory("- §C inputs pinned — **pass** (static-heuristic) — fail-safe mirror")[0]
+    assert passed.result == "pass"
+
+
+def test_no_pillar_fail_ignores_should_requirements():
+    should = "- §C pins paired with an automated updater (SHOULD) — fail — no renovate.json"
+    assert scenario.check_output(should, "no-pillar-fail", {}) is True
+    assert scenario.check_output("- §C reproducibility checked by building twice — fail — none",
+                                 "no-pillar-fail", {}) is True
+    must = "- §C inputs pinned — fail (static-heuristic) — live mirror; renovate.json present"
+    assert scenario.check_output(must, "no-pillar-fail", {}) is False
 
 
 def test_scenario_and_output_checks():

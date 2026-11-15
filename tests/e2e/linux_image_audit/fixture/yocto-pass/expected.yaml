@@ -26,48 +26,57 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: pass
     spec: "§C pinned inputs; §I.2 every layer pinned to a commit (kas); §I table Yocto 4.0 or later 'supported'"
   - id: c-lock-committed
     section: "§C"
+    row: "§C lock file committed"
     match: [lock]
     expected: pass
     spec: "§C lock file committed; §J row static-file: kas.lock.yml exists and is tracked; §I table 'supported'"
   - id: c-source-date-epoch
     section: "§C"
+    row: "§C SOURCE_DATE_EPOCH from source"
     match: ["SOURCE_DATE_EPOCH|epoch"]
     expected: [pass, not-decidable]
     cause: unverified
     spec: "§I.2 Yocto 4.0 or later derives SOURCE_DATE_EPOCH on its own, [unverified]; §I table 'experimental'"
   - id: d-host-keys
     section: "§D"
+    row: "§D no host keys or secrets"
     match: ["host key"]
     expected: pass
     spec: "§D no SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): no committed key file in the overlay"
   - id: f-payload-signature
     section: "§F"
+    row: "§F payload signature verified"
     match: [signature]
     expected: pass
     spec: "§I.2 RAUC: a trust anchor in [keyring] (path=) is a pass ([R21] at tier); §J row '§F payload signature verified'"
   - id: f-install-reboot
     section: "§F"
-    match: [reboot]
-    exclude: [health]
+    row: "§F install and reboot without input, unhealthy reboot"
+    match: ["install|reboot"]
+    exclude: [gates, "health definition"]
     expected: not-decidable
     cause: resolvable
     scenario: rollback
     spec: "§J row '§F install and reboot without input, unhealthy reboot' (needs-built-artifact): resolved by the rollback scenario"
   - id: f-downgrade
     section: "§F"
+    row: "§F refuses a version that isn't newer"
     match: ["downgrade|newer"]
+    exclude: [install]
     expected: not-decidable
     cause: resolvable
     scenario: downgrade
     spec: "§J row '§F refuses a version that isn't newer' (needs-built-artifact): cause resolvable: downgrade"
   - id: f-commit-boundary
     section: "§F"
+    row: "§F failure switch ignored once committed"
     match: ["committed|commit-boundary|commit boundary"]
     expected: not-decidable
     cause: resolvable
@@ -75,6 +84,7 @@ results:
     spec: "§J row '§F failure switch ignored once committed' (needs-built-artifact): cause resolvable: commit-boundary"
   - id: g-sbom-produced
     section: "§G"
+    row: "§G SBOM produced"
     match: ["produc"]
     expected: pass
     spec: "§G; §I.2 Yocto create-spdx (INHERIT += create-spdx in the kas local_conf_header); §J row '§G SBOM produced'"

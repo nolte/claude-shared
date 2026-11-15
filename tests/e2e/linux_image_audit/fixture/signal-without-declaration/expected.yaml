@@ -10,7 +10,8 @@ checks: [f-applies]
 results:
   - id: a-declaration
     section: "§A"
+    row: "§A image declaration"
     match: [declaration]
-    exclude: [health]
+    exclude: [health, toolchain]
     expected: fail
     spec: "§A one image declaration per image; scanner Phase 1 step 3: a detection signal without a declaration is a §A fail"

@@ -26,11 +26,13 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: c-lock-committed
     section: "§C"
+    row: "§C lock file committed"
     match: [lock]
     expected: fail
     spec: "§C commit the lock file; §I.4 committed flake.lock; §J row '§C lock file committed' (static-file); §I table NixOS 'supported'"
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: fail

@@ -14,3 +14,4 @@ packages:
 add-files:
   - ["appliance-remote.conf", "/etc/ostree/remotes.d/appliance.conf"]
   - ["greenboot/check/required.d/10-appliance.sh", "/etc/greenboot/check/required.d/10-appliance.sh"]
+  - ["appliance.gpg", "/etc/pki/ostree/appliance.gpg"]

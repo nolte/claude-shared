@@ -62,8 +62,14 @@ def build_cli_command(
     permission_mode: str,
     model: str | None = None,
     output_format: str = "json",
+    extra_args: tuple[str, ...] | list[str] = (),
 ) -> list[str]:
-    """Pure construction of the ``claude -p`` argv (no execution)."""
+    """Pure construction of the ``claude -p`` argv (no execution).
+
+    ``extra_args`` is appended verbatim (default none), so a scenario can opt
+    into further CLI flags such as ``--setting-sources project`` without
+    changing any other scenario's command.
+    """
     return [
         "claude",
         "-p",
@@ -78,6 +84,7 @@ def build_cli_command(
         model or eval_model(),
         "--output-format",
         output_format,
+        *extra_args,
     ]
 
 
@@ -116,6 +123,7 @@ def run_headless(
     model: str | None = None,
     cwd: str | None = None,
     timeout: int = 600,
+    extra_args: tuple[str, ...] | list[str] = (),
 ) -> RunResult:
     """Execute one headless ``claude -p`` run. Gated behind RUN_EVALS=1."""
     if not evals_enabled():
@@ -126,6 +134,7 @@ def run_headless(
         allowed_tools=allowed_tools,
         permission_mode=permission_mode,
         model=model,
+        extra_args=extra_args,
     )
     proc = subprocess.run(
         cmd, capture_output=True, text=True, cwd=cwd, timeout=timeout, check=False

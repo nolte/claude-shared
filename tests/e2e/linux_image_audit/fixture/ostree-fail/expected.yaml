@@ -26,6 +26,7 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: f-payload-signature
     section: "§F"
+    row: "§F payload signature verified"
     match: [signature]
     expected: fail
     spec: "§F verify the payload signature; §I.4: gpg-verify=false and no sign-verify counts as verification disabled (verified part of [R24]); §J row: disabled is a fail"

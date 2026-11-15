@@ -26,6 +26,7 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: not-decidable
@@ -33,28 +34,33 @@ results:
     spec: "§I table Buildroot: inputs pinned 'not covered'; §J row '§C inputs pinned': a profile without a named pinning knob yields spec-gap"
   - id: c-lock-committed
     section: "§C"
+    row: "§C lock file committed"
     match: [lock]
     expected: not-decidable
     cause: spec-gap
     spec: "§I table Buildroot: lock file committed 'not covered'; §J cause spec-gap"
   - id: c-reproducibility-switch
     section: "§C"
+    row: "§C reproducibility switch"
     match: [switch]
     expected: [pass, not-decidable]
     cause: unverified
     spec: "§I.2 Buildroot BR2_REPRODUCIBLE=y [unverified]; §I table 'experimental'"
   - id: d-host-keys
     section: "§D"
+    row: "§D no host keys or secrets"
     match: ["host key"]
     expected: pass
     spec: "§D no SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): no committed key file in the overlay"
   - id: g-sbom-produced
     section: "§G"
+    row: "§G SBOM produced"
     match: ["produc"]
     expected: pass
     spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"
   - id: g-not-legal-info-alone
     section: "§G"
+    row: "§G not legal-info alone"
     match: ["legal"]
     expected: pass
     spec: "§G MUST NOT count make legal-info alone; §J row '§G not legal-info alone': a generator runs besides it"

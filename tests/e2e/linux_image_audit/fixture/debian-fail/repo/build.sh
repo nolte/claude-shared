@@ -1,8 +1,8 @@
 #!/bin/sh
 # Single build entry point for the kiosk image (CI runs the same command).
 set -eu
-MIRROR="http://deb.debian.org/debian"
 SOURCE_DATE_EPOCH="$(date +%s)"
+MIRROR="http://deb.debian.org/debian"
 export SOURCE_DATE_EPOCH
 mkdir -p dist
 mmdebstrap --variant=minbase --include="$(paste -sd, packages.list)" \

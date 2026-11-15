@@ -26,12 +26,14 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: fail
     spec: "§C: a build resolving the newest version is a hard failure; §I.2 every layer pinned to a commit; §I table Yocto 'supported'; §J static-heuristic"
   - id: c-source-date-epoch
     section: "§C"
+    row: "§C SOURCE_DATE_EPOCH from source"
     match: ["SOURCE_DATE_EPOCH|epoch"]
     expected: not-decidable
     cause: unverified

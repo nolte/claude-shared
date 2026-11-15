@@ -1,0 +1,2 @@
+enable appliance-health.service
+enable systemd-firstboot.service

@@ -26,11 +26,13 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: c-source-date-epoch
     section: "§C"
+    row: "§C SOURCE_DATE_EPOCH from source"
     match: ["SOURCE_DATE_EPOCH|epoch"]
     expected: fail
     spec: "§J row '§C SOURCE_DATE_EPOCH from source': a committed literal goes stale with the next commit and is a fail (Open Question 'Constant SOURCE_DATE_EPOCH literals' undecided, so §J applies as written); §I.5 bootc 'supported'"
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: not-decidable
@@ -38,7 +40,7 @@ results:
     spec: "§C bootc base-image pinning delegated to spec/project/dockerfile-best-practices/; §J cause delegated"
   - id: g-spdx-for-oci
     section: "§G"
-    match: ["SPDX|OCI"]
-    exclude: ["produc", "publish"]
+    row: "§G SPDX for OCI images"
+    match: [OCI]
     expected: fail
     spec: "§G MUST produce SPDX for an OCI (bootc) image; §J row '§G SPDX for OCI images': the generator writes cyclonedx-json only"

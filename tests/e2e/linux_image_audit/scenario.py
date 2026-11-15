@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -39,6 +40,12 @@ SPEC_REL = Path("spec/project/linux-image-best-practices/en.md")
 SPEC = REPO_ROOT / SPEC_REL
 AGENT = "nolte-linux:linux-image-scanner"
 SCENARIO_PREFIX = "linux-image-audit"
+# Load no user or local settings (their plugins, hooks, and permission rules)
+# and no MCP server into the headless run, so nothing outside this plugin sees
+# the fixture text or shapes the inventory. Known limitation: whether the CLI
+# still reads the user's global CLAUDE.md under --setting-sources isn't
+# documented in `claude --help`; this eval doesn't rely on either way.
+HEADLESS_ARGS = ("--setting-sources", "project", "--strict-mcp-config")
 
 RESULTS = ("pass", "fail", "not-decidable")
 DECLARATION_RESULTS = ("valid", "invalid", "not-decidable", "ok", "violation")
@@ -80,6 +87,45 @@ PILLAR_RESULTS = {
     "pillar:d-ssh-host-key": ("§D", "d-host-keys"),
     "pillar:g-legal-info-only": ("§G", "g-not-legal-info-alone"),
 }
+
+# §A has no §J table; its requirement labels as the scanner reports them.
+A_ROWS = (
+    "§A image definition under version control",
+    "§A image declaration",
+    "§A exactly one primary toolchain",
+    "§A single build entry point",
+    "§A health definition",
+    "§A health report line",
+)
+# Pillar requirements at SHOULD level (§C, §D, §F): the audit skill triages a
+# failed SHOULD as a Suggestion, so they never count as a pillar fail.
+SHOULD_ROWS = (
+    "§C pins paired with an automated updater",
+    "§C reproducibility checked by building twice",
+    "§D systemd-firstboot for per-machine setup",
+    "§F A/B partition layout",
+    "§F keep a previous generation",
+)
+_SHOULD_MARKERS = ("updater", "renovate", "twice", "diffoscope", "non-determinism", "nondeterminism",
+                   "firstboot", "a/b", "partition layout", "previous generation")
+
+
+def j_rows(spec_text: str | None = None) -> tuple[str, ...]:
+    """The verbatim requirement labels of the §J decidability table (backticks removed)."""
+    text = spec_text if spec_text is not None else SPEC.read_text(encoding="utf-8")
+    rows = []
+    for line in text.splitlines():
+        m = re.match(r"^\s*\|\s*(§[A-J][^|]*?)\s*\|", line)
+        if m:
+            rows.append(m.group(1).replace("`", ""))
+    return tuple(rows)
+
+
+def is_should_line(line: "Line") -> bool:
+    """A SHOULD-level line: marked (SHOULD), or its requirement names a SHOULD row (never its evidence)."""
+    head = line.requirement.lower()
+    return "SHOULD" in line.raw or any(marker in head for marker in _SHOULD_MARKERS)
+
 
 _STR_OR_LIST = {"oneOf": [{"type": "string", "minLength": 1},
                           {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}]}
@@ -123,6 +169,7 @@ EXPECTED_SCHEMA = {
                 "properties": {
                     "id": {"type": "string", "pattern": "^[a-z0-9-]+$"},
                     "section": {"enum": ["declaration", *(f"§{c}" for c in "ABCDEFGH")]},
+                    "row": {"type": "string", "pattern": "^§[A-H] "},
                     "match": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
                     "exclude": {"type": "array", "items": {"type": "string", "minLength": 1}},
                     "expected": _STR_OR_LIST,
@@ -178,6 +225,11 @@ def semantic_errors(expected: dict, case_dir: Path) -> list[str]:
             errors.append(f"{r['id']}: a cause or scenario needs not-decidable among the expected results")
         if r.get("scenario") and as_list(r.get("cause")) != ["resolvable"]:
             errors.append(f"{r['id']}: a scenario belongs to cause resolvable only")
+        if r["section"] != "declaration":
+            if not r.get("row"):
+                errors.append(f"{r['id']}: a § result names the verbatim row it targets")
+            elif not r["row"].startswith(r["section"] + " "):
+                errors.append(f"{r['id']}: row {r['row']!r} isn't in section {r['section']}")
     decl = expected.get("declaration")
     if decl is not None:
         if (decl["result"] == "valid") != (decl["exit_code"] == 0) or (
@@ -280,16 +332,18 @@ def declaration_mismatches(expected: dict, repo: Path) -> list[str]:
     return out
 
 
-def prepare_fixture(case: str, tmp_root: Path) -> Path:
-    """Copy ``repo/`` to ``tmp_root/<case>``, make it a git working copy, add the spec.
+def prepare_fixture(case: str) -> Path:
+    """Copy the case's ``repo/`` to a neutral ``<tmp>/image-scan-XXXX/repo``; return it.
 
-    Every fixture file is staged, so the tracked-file list is the fixture tree.
-    The spec is copied after staging: the scanner reads it from the repository
-    (its "Spec source" rule) without it counting as part of the image definition.
+    The path names no case: pytest's ``tmp_path`` carries the parametrised case
+    id, and names like ``debian-fail`` or ``injection-comment`` would hand the
+    scanner the answer through its working directory. The caller removes
+    ``path.parent`` when done. Every fixture file is staged, so the tracked-file
+    list is the fixture tree. The spec is copied after staging: the scanner reads
+    it from the repository (its "Spec source" rule) without it counting as part
+    of the image definition.
     """
-    dst = Path(tmp_root) / case
-    if dst.exists():
-        shutil.rmtree(dst)
+    dst = Path(tempfile.mkdtemp(prefix="image-scan-")) / "repo"
     shutil.copytree(CASES_DIR / case / "repo", dst)
     git = ["git", "-C", str(dst), "-c", "init.defaultBranch=main"]
     subprocess.run([*git, "init", "-q"], check=True)
@@ -345,7 +399,8 @@ class Line:
 _BULLET = re.compile(r"^\s*[-*]\s+(.*\S)\s*$")
 _SEP = re.compile(r"\s+(?:—|–|--)\s+")
 _SECTION = re.compile(r"^(§[A-J])\b\s*(.*)$")
-_RESULT = re.compile(r"(?<![\w-])(not-decidable|pass|fail|valid|invalid|ok|violation)(?![\w-])", re.I)
+# The result word stands right after the separator (an optional "(" or "**" aside).
+_RESULT = re.compile(r"^\W*(not-decidable|pass|fail|valid|invalid|ok|violation)(?![\w-])", re.I)
 _CAUSE_TAGGED = re.compile(r"cause:\s*(resolvable|unverified|spec-gap|delegated|evidence)\b\s*:?\s*([^)\]—]*)", re.I)
 _CAUSE_BARE = re.compile(r"(?<![\w-])(resolvable|unverified|spec-gap|delegated|evidence)\s*:\s*([^)\]—]*)", re.I)
 
@@ -369,9 +424,10 @@ def parse_inventory(text: str) -> list[Line]:
             section, requirement = "declaration", head
         else:
             continue
-        rm = _RESULT.search(rest)
-        cm = _CAUSE_TAGGED.search(rest) or _CAUSE_BARE.search(rest)
+        rm = _RESULT.match(rest)
         result = rm.group(1).lower() if rm else None
+        tail = rest[rm.end():] if rm else rest
+        cm = _CAUSE_TAGGED.search(tail) or _CAUSE_BARE.search(tail)
         if result is None and cm:
             result = "not-decidable"  # a "Not decidable statically" bullet names only its cause
         cause = detail = None
@@ -409,14 +465,14 @@ def check_result(lines: list[Line], spec: dict) -> tuple[bool, str]:
     return True, "ok"
 
 
-_PILLAR_FAIL = re.compile(r"^\s*[-*]\s+\**§[CDFG]\b[^\n]*?\s(?:—|–|--)\s+\**fail\b", re.M)
 _F_EXEMPT = re.compile(r"§F\s+n/a", re.I)
 _F_LINE = re.compile(r"^\s*[-*]\s+\**§F\b", re.M)
 
 
 def check_output(text: str, check: str, expected: dict) -> bool:
-    if check == "no-pillar-fail":
-        return _PILLAR_FAIL.search(text) is None
+    if check == "no-pillar-fail":  # a failed MUST of §C/§D/§F/§G; SHOULDs are Suggestions
+        return not any(ln.section in ("§C", "§D", "§F", "§G") and ln.result == "fail"
+                       and not is_should_line(ln) for ln in parse_inventory(text))
     if check == "f-applies":
         return _F_EXEMPT.search(text) is None and _F_LINE.search(text) is not None
     if check == "f-exempt":
@@ -462,8 +518,9 @@ def explain(text: str, expected: dict) -> list[str]:
     return out
 
 
-def run_one_sample(plugin_dir: str, repo: Path, model: str | None = None) -> tuple[str, dict[str, bool]]:
-    """Drive one live scanner run; return its text and per-assertion booleans."""
+def run_one_sample(plugin_dir: str, repo: Path, case: str,
+                   model: str | None = None) -> tuple[str, dict[str, bool]]:
+    """Drive one live scanner run on the prepared ``repo`` of ``case``; return text and booleans."""
     from evals.harness import runner
 
     text = runner.run_headless(
@@ -473,5 +530,6 @@ def run_one_sample(plugin_dir: str, repo: Path, model: str | None = None) -> tup
         allowed_tools=(*runner.READONLY_TOOLS, "Agent"),
         permission_mode="plan",
         model=model,
+        extra_args=HEADLESS_ARGS,
     ).text
-    return text, score(text, load_expected(repo.name))
+    return text, score(text, load_expected(case))

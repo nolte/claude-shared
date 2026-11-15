@@ -2,20 +2,28 @@
 
 One parametrised scenario per case (`linux-image-audit/<case>`). Each sample is
 one headless ``claude -p`` run with only the nolte-linux plugin loaded and the
-read-only tool set; the dispatch inputs (tracked files, validator results) are
-computed beforehand by `scenario.prepare_fixture` and `scenario.make_prompt`.
-The inventory is scored deterministically against the case's expected.yaml
-(`scenario.score`); ``EVAL_JUDGE=1`` adds an LLM-judge assertion per sample.
+read-only tool set, in a working directory whose path names no case; the
+dispatch inputs (tracked files, validator results) are computed beforehand by
+`scenario.prepare_fixture` and `scenario.make_prompt`. The inventory is scored
+deterministically against the case's expected.yaml (`scenario.score`);
+``EVAL_JUDGE=1`` adds an LLM-judge call per sample (off by default).
 
-Skipped unless RUN_EVALS=1. One full run:
+Each run passes `scenario.HEADLESS_ARGS` (``--setting-sources project
+--strict-mcp-config``), so the operator's user settings, plugins, hooks, and
+MCP servers stay out of it. Known limitation: whether the CLI still loads the
+user's global CLAUDE.md under that flag isn't documented.
+
+Skipped unless RUN_EVALS=1. One full run, 19 headless runs (one per case):
 
     RUN_EVALS=1 EVAL_SAMPLES=1 python3 -m pytest tests/e2e/linux_image_audit
 
-writes the scorecard to evals/out/scorecard.json (or $EVAL_SCORECARD).
+writes the scorecard to evals/out/scorecard.json (or $EVAL_SCORECARD). Without
+EVAL_SAMPLES the harness default of 3 samples applies (57 runs).
 """
 from __future__ import annotations
 
 import os
+import shutil
 
 import pytest
 
@@ -39,20 +47,23 @@ Score on the continuous scale [0, 1] by how many of these hold:
 
 @pytest.mark.behavioural
 @pytest.mark.parametrize("case", scenario.case_names())
-def test_scanner_inventory(case, tmp_path, record_scorecard, n_samples, threshold):
+def test_scanner_inventory(case, record_scorecard, n_samples, threshold):
     expected = scenario.load_expected(case)
-    repo = scenario.prepare_fixture(case, tmp_path)
+    repo = scenario.prepare_fixture(case)  # neutral path: the case id never reaches the run
     plugin_dir = str(scenario.PLUGIN_DIR)
     use_judge = os.environ.get("EVAL_JUDGE") == "1"
 
     samples, reasons = [], []
-    for _ in range(n_samples):
-        text, sample = scenario.run_one_sample(plugin_dir, repo)
-        if use_judge:
-            rubric = RUBRIC.format(summary=" ".join(expected["summary"].split()))
-            sample["judge:rubric"] = judge.judge_score(text, rubric) >= 0.5
-        samples.append(sample)
-        reasons.extend(scenario.explain(text, expected))
+    try:
+        for _ in range(n_samples):
+            text, sample = scenario.run_one_sample(plugin_dir, repo, case)
+            if use_judge:
+                rubric = RUBRIC.format(summary=" ".join(expected["summary"].split()))
+                sample["judge:rubric"] = judge.judge_score(text, rubric) >= 0.5
+            samples.append(sample)
+            reasons.extend(scenario.explain(text, expected))
+    finally:
+        shutil.rmtree(repo.parent, ignore_errors=True)
 
     result = aggregate_samples(f"{scenario.SCENARIO_PREFIX}/{case}", samples)
     record_scorecard(result)

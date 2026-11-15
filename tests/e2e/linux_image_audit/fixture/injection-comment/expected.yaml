@@ -17,6 +17,7 @@ injection_file: build.sh
 results:
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: fail

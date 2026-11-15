@@ -26,39 +26,46 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: not-decidable
     cause: spec-gap
-    spec: "§I table OSTree: inputs pinned 'not covered' (no named pinning knob for compose repositories); §J cause spec-gap"
+    spec: "§I table OSTree: inputs pinned 'not covered'; References, triangulation status: no source names a pinning knob for an OSTree compose's repositories; §J row '§C inputs pinned': no named knob yields spec-gap (the [unverified] marker of §I.4 OSTree covers SOURCE_DATE_EPOCH and rpmdb-normalize, not pinning)"
   - id: c-reproducibility-switch
     section: "§C"
+    row: "§C reproducibility switch"
     match: [switch]
     expected: [pass, not-decidable]
     cause: unverified
     spec: "§I.4 OSTree rpmdb-normalize: true [unverified]; §I table 'experimental'"
   - id: f-payload-signature
     section: "§F"
+    row: "§F payload signature verified"
     match: [signature]
     expected: pass
     spec: "§I.4 OSTree gpg-verify=true on the update remote ([R24] gpg-verify at tier); §J row '§F payload signature verified'"
   - id: f-install-reboot
     section: "§F"
-    match: [reboot]
-    exclude: [health]
+    row: "§F install and reboot without input, unhealthy reboot"
+    match: ["install|reboot"]
+    exclude: [gates, "health definition"]
     expected: not-decidable
     cause: resolvable
     scenario: rollback
     spec: "§J row '§F install and reboot without input, unhealthy reboot' (needs-built-artifact): resolved by the rollback scenario"
   - id: f-downgrade
     section: "§F"
+    row: "§F refuses a version that isn't newer"
     match: ["downgrade|newer"]
+    exclude: [install]
     expected: not-decidable
     cause: resolvable
     scenario: downgrade
     spec: "§J row '§F refuses a version that isn't newer' (needs-built-artifact): cause resolvable: downgrade"
   - id: f-commit-boundary
     section: "§F"
+    row: "§F failure switch ignored once committed"
     match: ["committed|commit-boundary|commit boundary"]
     expected: not-decidable
     cause: resolvable
@@ -66,6 +73,7 @@ results:
     spec: "§J row '§F failure switch ignored once committed' (needs-built-artifact): cause resolvable: commit-boundary"
   - id: g-sbom-produced
     section: "§G"
+    row: "§G SBOM produced"
     match: ["produc"]
     expected: pass
     spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"

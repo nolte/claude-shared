@@ -26,6 +26,7 @@ results:
     spec: "§F preamble; validator conditional.* rules all hold"
   - id: c-inputs-pinned
     section: "§C"
+    row: "§C inputs pinned"
     match: [pin]
     exclude: [lock, updat, renovate]
     expected: not-decidable
@@ -33,6 +34,7 @@ results:
     spec: "§I.1: an absent Snapshot= on a listed distribution counts as unpinned, [unverified]; §J: an [unverified] entry yields not-decidable (unverified), never fail"
   - id: d-machine-id
     section: "§D"
-    match: [machine]
+    row: "§D no populated machine-id"
+    match: ["machine-id|machine id|machine identity"]
     expected: fail
     spec: "§D no populated /etc/machine-id; §J row '§D no populated machine-id': the overlay tree writes the file (mkosi.extra/etc/machine-id)"
