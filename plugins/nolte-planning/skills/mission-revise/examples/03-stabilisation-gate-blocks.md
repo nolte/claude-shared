@@ -46,8 +46,9 @@ revised_at: 2026-05-10
 `status: active` — the planned post-MVP sprint is in flight, not yet
 closed. No defect-fix feature against an MVP item is currently
 `in_progress`. The oldest commit that added `project/mission.md`
-(`git log --diff-filter=A --format=%H -- project/mission.md | tail -1`)
-carried `mvp_status: defining`.
+(`git log --follow --diff-filter=A --format=%H -- project/mission.md | tail -1`,
+full clone) carried `mvp_status: defining`, as `mission-define`
+writes every new mission.
 
 ## Expected behaviour
 
@@ -77,12 +78,13 @@ carried `mvp_status: defining`.
    subsequent-sprint condition is unsatisfied. Skill does **not**
    accept "we're nearly done" or any operator framing as a substitute
    — the spec's "never silently infer satisfaction" rule applies.
-   The skill then checks the retroactive-MVP exemption: the earliest
+   The skill then checks the retroactive-MVP exemption. The clone
+   isn't shallow, so the history is readable, but the earliest
    committed `project/mission.md` carried `mvp_status: defining`, not
-   `achieved`, so the MVP was delivered under this mission rather than
-   recorded retroactively, and the exemption doesn't apply. (Sprint 7
-   being `active` would make the flip wait regardless.) The condition
-   stays failed.
+   `achieved`. The MVP was delivered under this mission rather than
+   recorded retroactively, so the exemption isn't available and the
+   remaining exemption checks are moot. (Sprint 7 being `active` would
+   make the flip wait regardless.) The condition stays failed.
 6. **Block the flip with a verbatim error.** Skill emits a
    structured-message in German (operator's language) along the lines
    of:
