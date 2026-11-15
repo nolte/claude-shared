@@ -1,0 +1,17 @@
+[Transfer]
+Verify=yes
+
+[Source]
+Type=url-file
+Path=https://updates.example.org/edge-appliance/
+MatchPattern=edge-appliance_@v.efi
+
+[Target]
+Type=regular-file
+Path=/EFI/Linux
+PathRelativeTo=boot
+MatchPattern=edge-appliance_@v+@l-@d.efi edge-appliance_@v+@l.efi edge-appliance_@v.efi
+Mode=0444
+TriesLeft=3
+TriesDone=0
+InstancesMax=2

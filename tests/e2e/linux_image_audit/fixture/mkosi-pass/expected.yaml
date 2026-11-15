@@ -1,0 +1,91 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: mkosi-pass
+summary: >-
+  mkosi image updated in the field through systemd-sysupdate (url-file
+  transfers with Verify=yes), A/B partitions and boot counting, a mirror pinned
+  with Snapshot=, a source-derived SOURCE_DATE_EPOCH, and an SPDX SBOM
+  published with the image.
+covers: [family:mkosi:pass, cause:resolvable, cause:spec-gap]
+declaration:
+  path: image-declaration.yaml
+  result: valid
+  exit_code: 0
+  violations: []
+  spec: "§A image declaration (schema v1.2); validator §F conditional rules"
+checks: [no-pillar-fail, f-applies]
+results:
+  - id: declaration-schema
+    section: declaration
+    match: [schema]
+    expected: valid
+    spec: "§A image declaration; scanner Phase 2 relays the validator result unchanged"
+  - id: declaration-conditional
+    section: declaration
+    match: [conditional]
+    expected: ok
+    spec: "§F preamble; validator conditional.* rules all hold"
+  - id: c-reproducibility-switch
+    section: "§C"
+    match: [switch]
+    expected: not-decidable
+    cause: spec-gap
+    spec: "§I support-status table, mkosi row: reproducibility switch 'not covered'; §J cause spec-gap"
+  - id: c-inputs-pinned
+    section: "§C"
+    match: [pin]
+    exclude: [lock, updat, renovate]
+    expected: [pass, not-decidable]
+    cause: unverified
+    spec: "§I.1 Snapshot= (mkosi v26 or later) [unverified]; §I table mkosi 'experimental'; §J: never fail on an [unverified] entry"
+  - id: c-source-date-epoch
+    section: "§C"
+    match: ["SOURCE_DATE_EPOCH|epoch"]
+    expected: [pass, not-decidable]
+    cause: unverified
+    spec: "§I.1 SOURCE_DATE_EPOCH via the build environment [unverified]; §I table mkosi 'experimental'"
+  - id: d-host-keys
+    section: "§D"
+    match: ["host key"]
+    expected: pass
+    spec: "§D no SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): no committed key file in the overlay"
+  - id: d-machine-id
+    section: "§D"
+    match: [machine]
+    expected: not-decidable
+    cause: resolvable
+    scenario: identity
+    spec: "§J row '§D no populated machine-id' (needs-built-artifact): no overlay or recipe step writes the file, so the identity scenario resolves it"
+  - id: f-payload-signature
+    section: "§F"
+    match: [signature]
+    expected: pass
+    spec: "§F payload signature; §I.1 sysupdate.d Verify= (default yes, [R20] at tier); every transfer is url-file, so the [unverified] source-type scope doesn't decide; §J row '§F payload signature verified'"
+  - id: f-install-reboot
+    section: "§F"
+    match: [reboot]
+    exclude: [health]
+    expected: not-decidable
+    cause: resolvable
+    scenario: rollback
+    spec: "§J row '§F install and reboot without input, unhealthy reboot' (needs-built-artifact): resolved by the rollback scenario"
+  - id: f-downgrade
+    section: "§F"
+    match: ["downgrade|newer"]
+    expected: not-decidable
+    cause: resolvable
+    scenario: downgrade
+    spec: "§J row '§F refuses a version that isn't newer' (needs-built-artifact): cause resolvable: downgrade"
+  - id: f-commit-boundary
+    section: "§F"
+    match: ["committed|commit-boundary|commit boundary"]
+    expected: not-decidable
+    cause: resolvable
+    scenario: commit-boundary
+    spec: "§J row '§F failure switch ignored once committed' (needs-built-artifact): cause resolvable: commit-boundary"
+  - id: g-sbom-produced
+    section: "§G"
+    match: ["produc"]
+    expected: pass
+    spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"

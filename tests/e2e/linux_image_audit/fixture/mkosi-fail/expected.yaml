@@ -1,0 +1,38 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: mkosi-fail
+summary: >-
+  reflash-only mkosi image (pinned to mkosi v26) without Snapshot= on a listed
+  distribution, and a populated /etc/machine-id in the mkosi.extra overlay.
+covers: [family:mkosi:fail, pillar:d-machine-id, cause:unverified]
+declaration:
+  path: image-declaration.yaml
+  result: valid
+  exit_code: 0
+  violations: []
+  spec: "§A image declaration (schema v1.2); validator §F conditional rules"
+checks: [f-exempt]
+results:
+  - id: declaration-schema
+    section: declaration
+    match: [schema]
+    expected: valid
+    spec: "§A image declaration; scanner Phase 2 relays the validator result unchanged"
+  - id: declaration-conditional
+    section: declaration
+    match: [conditional]
+    expected: ok
+    spec: "§F preamble; validator conditional.* rules all hold"
+  - id: c-inputs-pinned
+    section: "§C"
+    match: [pin]
+    exclude: [lock, updat, renovate]
+    expected: not-decidable
+    cause: unverified
+    spec: "§I.1: an absent Snapshot= on a listed distribution counts as unpinned, [unverified]; §J: an [unverified] entry yields not-decidable (unverified), never fail"
+  - id: d-machine-id
+    section: "§D"
+    match: [machine]
+    expected: fail
+    spec: "§D no populated /etc/machine-id; §J row '§D no populated machine-id': the overlay tree writes the file (mkosi.extra/etc/machine-id)"

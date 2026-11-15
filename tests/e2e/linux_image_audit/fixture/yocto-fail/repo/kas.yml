@@ -1,0 +1,23 @@
+header:
+  version: 14
+machine: qemux86-64
+distro: appliance
+target: appliance-image
+repos:
+  meta-appliance:
+    layers:
+      .:
+  poky:
+    url: https://git.yoctoproject.org/poky
+    branch: scarthgap
+    layers:
+      meta:
+      meta-poky:
+  meta-rauc:
+    url: https://github.com/rauc/meta-rauc.git
+    branch: scarthgap
+local_conf_header:
+  sbom: |
+    INHERIT += "create-spdx"
+  site: |
+    SOURCE_DATE_EPOCH = "${@time.time()}"

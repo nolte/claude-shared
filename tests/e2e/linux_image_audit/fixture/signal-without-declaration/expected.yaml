@@ -1,0 +1,16 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: signal-without-declaration
+summary: >-
+  mkosi.conf (a §I.1 detection signal) with no image-declaration.yaml.
+covers: [discovery:signal-without-declaration]
+declaration: null
+checks: [f-applies]
+results:
+  - id: a-declaration
+    section: "§A"
+    match: [declaration]
+    exclude: [health]
+    expected: fail
+    spec: "§A one image declaration per image; scanner Phase 1 step 3: a detection signal without a declaration is a §A fail"

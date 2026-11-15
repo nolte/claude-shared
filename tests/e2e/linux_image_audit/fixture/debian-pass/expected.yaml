@@ -1,0 +1,58 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: debian-pass
+summary: >-
+  reflash-only mmdebstrap image from a snapshot.debian.org timestamp kept in a
+  committed lock file, SOURCE_DATE_EPOCH from the last commit, per-machine
+  state removed at the end of the build, SPDX SBOM published with the image.
+covers: [family:debian:pass]
+declaration:
+  path: image-declaration.yaml
+  result: valid
+  exit_code: 0
+  violations: []
+  spec: "§A image declaration (schema v1.2); validator §F conditional rules"
+checks: [no-pillar-fail, f-exempt]
+results:
+  - id: declaration-schema
+    section: declaration
+    match: [schema]
+    expected: valid
+    spec: "§A image declaration; scanner Phase 2 relays the validator result unchanged"
+  - id: declaration-conditional
+    section: declaration
+    match: [conditional]
+    expected: ok
+    spec: "§F preamble; validator conditional.* rules all hold"
+  - id: c-inputs-pinned
+    section: "§C"
+    match: [pin]
+    exclude: [lock, updat, renovate]
+    expected: pass
+    spec: "§C; §I.3 archive pinned to a snapshot.debian.org timestamp; §I table Debian 'supported'"
+  - id: c-lock-committed
+    section: "§C"
+    match: [lock]
+    expected: pass
+    spec: "§C lock file committed; §J row static-file: snapshot.lock is tracked"
+  - id: c-source-date-epoch
+    section: "§C"
+    match: ["SOURCE_DATE_EPOCH|epoch"]
+    expected: pass
+    spec: "§C; §J row '§C SOURCE_DATE_EPOCH from source': git log -1 --format=%ct in the entry point; §I table Debian 'supported'"
+  - id: c-reproducibility-switch
+    section: "§C"
+    match: [switch]
+    expected: pass
+    spec: "§I.3: SOURCE_DATE_EPOCH set for mmdebstrap is the reproducibility switch; §I table Debian 'supported'"
+  - id: d-host-keys
+    section: "§D"
+    match: ["host key"]
+    expected: pass
+    spec: "§D no SSH host keys; §J row '§D no host keys or secrets' (static-heuristic): no committed key file in the overlay"
+  - id: g-sbom-produced
+    section: "§G"
+    match: ["produc"]
+    expected: pass
+    spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"

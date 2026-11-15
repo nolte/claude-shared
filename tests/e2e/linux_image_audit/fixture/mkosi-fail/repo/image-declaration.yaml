@@ -1,0 +1,18 @@
+schema_version: "1.2"
+image:
+  name: edge-appliance
+  toolchain: mkosi
+  definition: mkosi.conf
+  architectures: [x86_64]
+  firmware: uefi
+update_model: reflash-only
+boot_chain:
+  secure_boot: omitted
+  uki: omitted
+  dm_verity: omitted
+  measured_boot: omitted
+health:
+  definition:
+    kind: unit
+    name: appliance-health.service
+  tolerated_units: []

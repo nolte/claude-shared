@@ -1,0 +1,13 @@
+[Unit]
+Description=Appliance health definition
+Before=boot-complete.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ImportCredential=image.health.fail-version
+ExecStart=/usr/libexec/appliance-health
+FailureAction=reboot
+
+[Install]
+RequiredBy=boot-complete.target

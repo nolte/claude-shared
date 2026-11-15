@@ -1,0 +1,16 @@
+ref: appliance/x86_64/stable
+automatic-version-prefix: "4.2"
+repos:
+  - appliance-base
+selinux: true
+boot-location: modules
+packages:
+  - kernel
+  - systemd
+  - ostree
+  - rpm-ostree
+  - greenboot
+  - greenboot-default-health-checks
+add-files:
+  - ["appliance-remote.conf", "/etc/ostree/remotes.d/appliance.conf"]
+  - ["greenboot/check/required.d/10-appliance.sh", "/etc/greenboot/check/required.d/10-appliance.sh"]

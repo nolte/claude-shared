@@ -1,0 +1,61 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: bootc-pass
+summary: >-
+  bootc image (digest-pinned base, containers.bootc label) built with podman
+  5.6 --source-date-epoch from the last commit and --rewrite-timestamp, a
+  sigstoreSigned policy.json with a reject default, and an attested SPDX SBOM.
+covers: [family:bootc:pass, cause:delegated]
+declaration:
+  path: image-declaration.yaml
+  result: valid
+  exit_code: 0
+  violations: []
+  spec: "§A image declaration (schema v1.2); validator §F conditional rules"
+checks: [no-pillar-fail, f-applies]
+results:
+  - id: declaration-schema
+    section: declaration
+    match: [schema]
+    expected: valid
+    spec: "§A image declaration; scanner Phase 2 relays the validator result unchanged"
+  - id: declaration-conditional
+    section: declaration
+    match: [conditional]
+    expected: ok
+    spec: "§F preamble; validator conditional.* rules all hold"
+  - id: c-inputs-pinned
+    section: "§C"
+    match: [pin]
+    exclude: [lock, updat, renovate]
+    expected: not-decidable
+    cause: delegated
+    spec: "§C bootc base-image pinning governed by spec/project/dockerfile-best-practices/; §I table bootc 'delegated'; §J cause delegated"
+  - id: d-credentials-in-layers
+    section: "§D"
+    match: ["credential|layer"]
+    expected: not-decidable
+    cause: delegated
+    spec: "§D secrets in layers for bootc governed by spec/project/dockerfile-best-practices/; scanner cause rule: delegated, never pass"
+  - id: c-source-date-epoch
+    section: "§C"
+    match: ["SOURCE_DATE_EPOCH|epoch"]
+    expected: pass
+    spec: "§I.5 podman build --source-date-epoch from git log (podman 5.6); §I table bootc 'supported'"
+  - id: c-reproducibility-switch
+    section: "§C"
+    match: [switch]
+    expected: pass
+    spec: "§I.5 --rewrite-timestamp with podman 5.6; §I table bootc 'supported'"
+  - id: f-payload-signature
+    section: "§F"
+    match: [signature]
+    expected: pass
+    spec: "§I.5 policy.json: sigstoreSigned for the update image, global default reject (no insecureAcceptAnything fallback); [R25] at tier; §J row"
+  - id: g-spdx-for-oci
+    section: "§G"
+    match: ["SPDX|OCI"]
+    exclude: ["produc", "publish"]
+    expected: pass
+    spec: "§G SPDX for an OCI (bootc) image; §J row '§G SPDX for OCI images': syft -o spdx-json"

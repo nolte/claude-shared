@@ -1,0 +1,78 @@
+# Expected linux-image-scanner results for this fixture. Schema and scoring:
+# tests/e2e/linux_image_audit/scenario.py. Each result cites the rule of
+# spec/project/linux-image-best-practices/en.md it is derived from.
+case: nixos-pass
+summary: >-
+  NixOS flake updated in the field (update mechanism nixos) with a committed
+  flake.lock, boot counting, require-sigs, and an sbomnix SPDX SBOM.
+covers: [family:nixos:pass, cause:resolvable]
+declaration:
+  path: image-declaration.yaml
+  result: valid
+  exit_code: 0
+  violations: []
+  spec: "§A image declaration (schema v1.2); validator §F conditional rules"
+checks: [no-pillar-fail, f-applies]
+results:
+  - id: declaration-schema
+    section: declaration
+    match: [schema]
+    expected: valid
+    spec: "§A image declaration; scanner Phase 2 relays the validator result unchanged"
+  - id: declaration-conditional
+    section: declaration
+    match: [conditional]
+    expected: ok
+    spec: "§F preamble; validator conditional.* rules all hold"
+  - id: c-inputs-pinned
+    section: "§C"
+    match: [pin]
+    exclude: [lock, updat, renovate]
+    expected: pass
+    spec: "§C Nix inputs through a committed lock file; §I.4 committed flake.lock; §I table NixOS 'supported'"
+  - id: c-lock-committed
+    section: "§C"
+    match: [lock]
+    expected: pass
+    spec: "§C; §J row static-file: flake.lock exists and is tracked; §I table NixOS 'supported'"
+  - id: f-payload-signature
+    section: "§F"
+    match: [signature]
+    expected: not-decidable
+    cause: resolvable
+    scenario: signature-rejection
+    spec: "§I.4 NixOS require-sigs [unverified]; §J payload-signature exception: cause resolvable: signature-rejection, not unverified"
+  - id: f-install-reboot
+    section: "§F"
+    match: [reboot]
+    exclude: [health]
+    expected: not-decidable
+    cause: resolvable
+    scenario: rollback
+    spec: "§J row '§F install and reboot without input, unhealthy reboot' (needs-built-artifact): resolved by the rollback scenario"
+  - id: f-downgrade
+    section: "§F"
+    match: ["downgrade|newer"]
+    expected: not-decidable
+    cause: resolvable
+    scenario: downgrade
+    spec: "§J row '§F refuses a version that isn't newer' (needs-built-artifact): cause resolvable: downgrade"
+  - id: f-commit-boundary
+    section: "§F"
+    match: ["committed|commit-boundary|commit boundary"]
+    expected: not-decidable
+    cause: resolvable
+    scenario: commit-boundary
+    spec: "§J row '§F failure switch ignored once committed' (needs-built-artifact): cause resolvable: commit-boundary"
+  - id: d-machine-id
+    section: "§D"
+    match: [machine]
+    expected: not-decidable
+    cause: resolvable
+    scenario: identity
+    spec: "§J row '§D no populated machine-id' (needs-built-artifact): no overlay or recipe step writes the file, so the identity scenario resolves it"
+  - id: g-sbom-produced
+    section: "§G"
+    match: ["produc"]
+    expected: pass
+    spec: "§G SBOM per build; §J row '§G SBOM produced': an SPDX generator runs from the build entry point"
