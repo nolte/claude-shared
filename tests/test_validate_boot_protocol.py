@@ -536,14 +536,9 @@ V12_PROTOCOL_NEGATIVES = {
         d, "unsigned").update(verdict="not-run", reason="unsigned payload not given"),
     "signature-rejection pass with a failing unsigned variant": lambda d: _variant(d, "unsigned").__setitem__(
         "verdict", "fail"),
-    "untrusted-key variant not-producible": lambda d: _variant(d, "untrusted-key").update(
-        verdict="not-producible", reason="format"),
     "not-producible variant without a reason": lambda d: _variant(d, "unsigned").__setitem__(
         "verdict", "not-producible"),
     "passing variant with a reason": lambda d: _variant(d, "unsigned").__setitem__("reason", "x"),
-    "duplicate untrusted-key variant": lambda d: _scenario(d, "signature-rejection")["signature_variants"].__setitem__(
-        1, copy.deepcopy(_variant(d, "untrusted-key"))),
-    "single signature variant": lambda d: _scenario(d, "signature-rejection")["signature_variants"].pop(),
     "signature-rejection fail without a failing variant": lambda d: _fail_overall(d, "signature-rejection"),
     "downgrade pass without a positive control": lambda d: _drop_passes(
         d, ["rollback", "positive", "commit-boundary", "signature-rejection"]),
@@ -636,3 +631,45 @@ def test_v12_positive_control_from_positive_alone_is_enough(tmp_path, capsys):
     # A rollback not-run leaves the positive pass as the control for downgrade and signature-rejection.
     code, payload = _run_protocol(tmp_path, _mutate(PASS_V12, lambda d: _drop_passes(d, ["rollback"])), capsys)
     assert code == 0, payload
+
+
+# Rules on the variant list, falsified on a failing signature-rejection scenario
+# (both variants fail), so the pass derivation can't reject first.
+def _sr_fail_base(doc: dict) -> None:
+    _fail_overall(doc, "signature-rejection")
+    for name in ("untrusted-key", "unsigned"):
+        _variant(doc, name)["verdict"] = "fail"
+
+
+SR_FAIL_BASE = _mutate(PASS_V12, _sr_fail_base)
+
+SR_VARIANT_NEGATIVES = {
+    "untrusted-key variant not-producible": lambda d: _variant(d, "untrusted-key").update(
+        verdict="not-producible", reason="format"),
+    "duplicate untrusted-key variant": lambda d: _scenario(d, "signature-rejection")["signature_variants"].append(
+        copy.deepcopy(_variant(d, "untrusted-key"))),
+    "missing untrusted-key variant": lambda d: _scenario(d, "signature-rejection")["signature_variants"].pop(0),
+    "missing unsigned variant": lambda d: _scenario(d, "signature-rejection")["signature_variants"].pop(),
+    "third variant": lambda d: _scenario(d, "signature-rejection")["signature_variants"].append(
+        copy.deepcopy(_variant(d, "unsigned"))),
+}
+
+
+def test_sr_fail_base_is_valid(tmp_path, capsys):
+    code, payload = _run_protocol(tmp_path, SR_FAIL_BASE, capsys)
+    assert code == 0, payload
+
+
+@pytest.mark.parametrize("case", list(SR_VARIANT_NEGATIVES), ids=list(SR_VARIANT_NEGATIVES))
+def test_signature_variant_list_negatives(tmp_path, capsys, case):
+    code, payload = _run_protocol(tmp_path, _mutate(SR_FAIL_BASE, SR_VARIANT_NEGATIVES[case]), capsys)
+    assert code == 1 and payload["result"] == "invalid", payload
+
+
+def test_failing_variant_forces_a_failing_scenario(tmp_path, capsys):
+    # n2: a scenario not-run (or pass) with a failing variant contradicts the derivation of §I.
+    def not_run(doc):
+        _drop_passes(doc, ["signature-rejection"])
+        _variant(doc, "untrusted-key")["verdict"] = "fail"
+    code, payload = _run_protocol(tmp_path, _mutate(PASS_V12, not_run), capsys)
+    assert code == 1 and payload["result"] == "invalid", payload

@@ -726,6 +726,8 @@ $defs:
         minLength: 1
         description: >-
           Why the variant is not-run or not-producible; present exactly then.
+          For not-producible it names why the payload format of the declared
+          update.mechanism can't carry an unsigned payload (§I).
     if:
       properties:
         verdict:
@@ -1048,12 +1050,11 @@ $defs:
       signature_variants:
         description: >-
           The two payload variants of the signature-rejection scenario, each
-          once; only on signature-rejection, and unavailable when nothing
+          exactly once (the two names, each contained once, fix the length at
+          two); only on signature-rejection, and unavailable when nothing
           booted.
         oneOf:
           - type: array
-            minItems: 2
-            maxItems: 2
             items:
               $ref: "#/$defs/SignatureVariant"
             allOf:
@@ -1219,7 +1220,7 @@ $defs:
                   minimum: 1
           # A signature-rejection verdict follows its variants (§I): pass needs
           # an untrusted-key pass and an unsigned pass or not-producible; fail
-          # needs a failing variant.
+          # needs a failing variant, and a failing variant needs fail.
           - if:
               required: [verdict]
               properties:
@@ -1259,6 +1260,22 @@ $defs:
                     properties:
                       verdict:
                         const: fail
+          # The converse: a failing variant makes the scenario fail.
+          - if:
+              required: [signature_variants]
+              properties:
+                name:
+                  const: signature-rejection
+                signature_variants:
+                  type: array
+                  contains:
+                    properties:
+                      verdict:
+                        const: fail
+            then:
+              properties:
+                verdict:
+                  const: fail
 examples:
   # pass: a UEFI x86_64 image updated in the field, all eight scenarios.
   - schema_version: "1.2"
