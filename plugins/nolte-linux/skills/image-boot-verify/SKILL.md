@@ -69,11 +69,15 @@ Ask for anything missing before booting; a missing input is a failed preconditio
 7. **Write `protocol.json`** with `schema_version: "1.0"` and every field of `schemas/image-boot-protocol-v1.0.schema.yaml` (normative per §G), `{"status": "unavailable", "reason": "…"}` for anything not collected, never `null`, next to the serial logs. Then validate it with `python3 "${CLAUDE_PLUGIN_ROOT}/skills/linux-image-audit/scripts/validate_declaration.py" --kind boot-protocol <run directory>/protocol.json`. On exit `1`, correct the protocol from the run's records and validate again; on exit `2`, don't hand it on as evidence: report it unvalidated, with the install hint (§G requires validation before hand-off). Never hand back an invalid protocol as evidence.
 8. **Hand back** the overall verdict, the per-scenario verdicts with their evidence lines, and the path of the run directory.
 
+## Runner
+
+For a pipeline gate, or a run without questions, use the non-interactive runner `python3 "${CLAUDE_PLUGIN_ROOT}/skills/image-boot-verify/scripts/boot_verify.py"`. It implements the operation above and is the local entry point the pipeline shares (§D). Read `references/runner.md` for its inputs, outputs, and exit statuses before you run it.
+
 ## Gotchas
 
 - **The kernel banner isn't health.** Only the image's own report line counts; a login prompt or a `READY=1` notification never does.
 - **Don't fix the image to make it boot.** Rebuilding, patching, re-signing, enrolling broader keys, or disabling Secure Boot invalidates the run (§B, §K).
-- **Not a pipeline gate yet.** This skill runs interactively and records the verdict in `protocol.json`. Two requirements of the boot spec need a non-interactive runner it doesn't ship yet: the exit statuses `0`/`1`/`2` of §H and the local entry point shared with the pipeline of §D. That runner is a follow-up, tracked together with the first real run against a consumer image in nolte/claude-shared#728. Until it exists, no pipeline gate can run this skill, and its verdict is evidence for a person, read from `protocol.json`.
+- **The runner hasn't booted a real image yet.** `scripts/boot_verify.py` ships and exits `0`/`1`/`2` per §H, but its tests use a fake hypervisor that boots nothing. The §L command line, the `restrict=on` isolation, and the §J timeouts stay **[unverified]** until the first real run of nolte/claude-shared#728. Never present a harness run as a boot verdict.
 
 ## Resumability
 
