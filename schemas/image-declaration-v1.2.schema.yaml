@@ -1,0 +1,379 @@
+# Schema for image-declaration.yaml; consumed by the nolte-linux plugin's
+# linux-image-audit skill, linux-image-scanner agent, and image-boot-verify skill.
+#
+# One declaration sits next to each image definition in an image-building
+# repository. It records the facts about an image that neither a static scan
+# nor a boot can infer reliably: the toolchain, whether the image is updated in
+# the field, which boot-chain steps it implements, and the switches a boot
+# verification uses to drive the update and rollback scenario.
+#
+# Rules the consumers enforce instead of this schema: an image with
+# update_model field-updated MUST carry the update block and
+# health.failure_switch, and an image with update_model reflash-only MUST NOT
+# carry an update block (spec/project/linux-image-best-practices/ §F). JSON
+# Schema 2020-12 could express this with a top-level allOf/if, but
+# spec/project/yaml-json-schema/ §Document skeleton admits exactly ten
+# top-level keys and no allOf, so the conditional lives in the spec and the
+# audit, not here.
+#
+# v1.1 (additive over v1.0): the required image.architectures and image.firmware
+# declare the architecture and firmware scope boot verification needs
+# (spec/project/image-boot-verification/ §A). A v1.0 declaration stays valid
+# against its own schema; boot verification treats it as uefi and takes the
+# architecture from the artifact or an operator input.
+#
+# v1.2 (additive over v1.1): HostSwitch.type gains qemu-fw-cfg, a QEMU fw_cfg
+# item that an image without systemd reads from
+# /sys/firmware/qemu_fw_cfg/by_name/<name>/raw. It's the switch transport for
+# U-Boot images under QEMU (spec/project/image-boot-verification/ §H, §I, §L),
+# which alters no signed boot component; a systemd image keeps
+# systemd-credential, which the host then delivers through fw_cfg too. The
+# end-to-end chain is [unverified] until a real run confirms it (#728). A v1.0
+# or v1.1 declaration stays valid against its own schema.
+$schema: https://json-schema.org/draft/2020-12/schema
+$id: https://github.com/nolte/claude-shared/blob/main/schemas/image-declaration-v1.2.schema.yaml
+title: Image Declaration
+description: >-
+  Validates the image-declaration.yaml file that sits next to each image
+  definition: toolchain, update model, boot-chain steps, health definition, and
+  the update switches boot verification uses, plus the image's architectures
+  and firmware type. Refs spec/project/linux-image-best-practices/ §A and §F,
+  and spec/project/image-boot-verification/ §A, §F, §H, and §I.
+type: object
+required:
+  - boot_chain
+  - health
+  - image
+  - schema_version
+  - update_model
+additionalProperties: false
+properties:
+  schema_version:
+    type: string
+    const: "1.2"
+    description: >-
+      The declaration format version this file is written against.
+  image:
+    type: object
+    description: >-
+      Which image this declaration describes and which toolchain builds it.
+    additionalProperties: false
+    required:
+      - architectures
+      - definition
+      - firmware
+      - name
+      - toolchain
+    properties:
+      name:
+        type: string
+        minLength: 1
+        description: >-
+          The image's name as it appears in os-release IMAGE_ID.
+      toolchain:
+        type: string
+        enum:
+          - mkosi
+          - yocto
+          - buildroot
+          - debian
+          - nixos
+          - ostree
+          - bootc
+        description: >-
+          The image's primary toolchain; selects the profile in
+          spec/project/linux-image-best-practices/ §I.
+      definition:
+        type: string
+        minLength: 1
+        description: >-
+          Path of the image definition's entry file or directory, relative to
+          the repository root.
+      architectures:
+        type: array
+        minItems: 1
+        uniqueItems: true
+        description: >-
+          Every CPU architecture the image is built for, in `uname -m`
+          spelling; boot verification derives the hypervisor binary from it.
+        items:
+          type: string
+          enum:
+            - x86_64
+            - aarch64
+            - armv7l
+            - riscv64
+            - ppc64le
+            - s390x
+      firmware:
+        type: string
+        enum:
+          - uefi
+          - u-boot
+          - bios
+          - other
+        description: >-
+          The firmware the image boots from. uefi and u-boot are in scope of
+          boot verification under a virtual machine; bios and other are out of
+          scope, and the audit reports their boot-resolved results as a spec
+          gap (spec/project/linux-image-best-practices/ §J).
+  update_model:
+    type: string
+    enum:
+      - field-updated
+      - reflash-only
+    description: >-
+      field-updated means a complete new version is installed on the running
+      device and the update-and-rollback pillar applies; reflash-only means
+      it's only ever rebuilt and flashed as a whole.
+  boot_chain:
+    type: object
+    description: >-
+      Which boot-chain integrity steps the image implements and which it
+      deliberately omits, so an omission is a recorded decision.
+    additionalProperties: false
+    required:
+      - dm_verity
+      - measured_boot
+      - secure_boot
+      - uki
+    properties:
+      secure_boot:
+        type: string
+        enum: [implemented, omitted]
+        description: UEFI Secure Boot signing of the boot path.
+      uki:
+        type: string
+        enum: [implemented, omitted]
+        description: Boot through a Unified Kernel Image.
+      dm_verity:
+        type: string
+        enum: [implemented, omitted]
+        description: dm-verity protection of the read-only root or /usr.
+      measured_boot:
+        type: string
+        enum: [implemented, omitted]
+        description: Secrets bound to signed TPM2 PCR policies.
+  health:
+    type: object
+    description: >-
+      The image's health definition as the audit locates it and boot
+      verification observes it.
+    additionalProperties: false
+    required:
+      - definition
+    properties:
+      definition:
+        type: object
+        description: >-
+          Where the image decides that a boot is healthy: a systemd unit
+          ordered before boot-complete.target, or an update framework's
+          health hook.
+        additionalProperties: false
+        required:
+          - kind
+          - name
+        properties:
+          kind:
+            type: string
+            enum:
+              - unit
+              - framework-hook
+            description: >-
+              unit for a systemd unit; framework-hook for a hook of RAUC,
+              SWUpdate, Mender, or greenboot.
+          name:
+            type: string
+            minLength: 1
+            description: >-
+              The unit name, or the hook's path relative to the image
+              definition.
+      tolerated_units:
+        type: array
+        description: >-
+          Units whose failure doesn't fail the boot. Empty or absent means no
+          failed unit is tolerated.
+        items:
+          type: string
+          minLength: 1
+      failure_switch:
+        $ref: "#/$defs/HostSwitch"
+        description: >-
+          The host-injectable switch that makes the health definition report
+          unhealthy for the image version named in the switch's value.
+          Required when update_model is field-updated.
+  update:
+    type: object
+    description: >-
+      How boot verification drives an update. Required when update_model is
+      field-updated, absent otherwise.
+    additionalProperties: false
+    required:
+      - max_boot_attempts
+      - mechanism
+      - source_switch
+    properties:
+      mechanism:
+        type: string
+        enum:
+          - systemd-sysupdate
+          - rauc
+          - swupdate
+          - mender
+          - ostree
+          - bootc
+          - nixos
+        description: >-
+          The update mechanism the image ships. An OSTree image whose health
+          checks run through greenboot declares ostree.
+      source_switch:
+        $ref: "#/$defs/HostSwitch"
+        description: >-
+          The host-injectable switch whose value is the URL the image's update
+          mechanism installs the next version from.
+      max_boot_attempts:
+        type: integer
+        minimum: 1
+        description: >-
+          How many boots of an unhealthy version the rollback mechanism allows
+          before it returns to the previous version.
+$defs:
+  HostSwitch:
+    type: object
+    description: >-
+      A value the host passes to the guest without altering any signed boot
+      component. A qemu-fw-cfg name is the full fw_cfg item name
+      opt/<reverse-domain>/<name>, at most 55 characters, outside the prefix
+      opt/org.qemu/ that QEMU reserves for itself.
+    additionalProperties: false
+    required:
+      - name
+      - type
+    properties:
+      type:
+        type: string
+        enum:
+          - systemd-credential
+          - smbios-type11
+          - qemu-fw-cfg
+        description: >-
+          systemd-credential is a systemd system credential; smbios-type11 is an
+          SMBIOS Type 11 OEM string read directly by an image without systemd;
+          qemu-fw-cfg is a QEMU fw_cfg item read directly by an image without
+          systemd, the transport under U-Boot.
+      name:
+        type: string
+        minLength: 1
+        description: >-
+          The credential name, the OEM string key, or the full fw_cfg item
+          name.
+    if:
+      properties:
+        type:
+          const: qemu-fw-cfg
+    then:
+      properties:
+        name:
+          maxLength: 55
+          pattern: "^opt/(?!org\\.qemu/)[^/]+\\.[^/]+/[^/]+(/[^/]+)*$"
+examples:
+  - schema_version: "1.2"
+    image:
+      name: edge-appliance
+      toolchain: mkosi
+      definition: images/edge-appliance/mkosi.conf
+      architectures: [x86_64]
+      firmware: uefi
+    update_model: field-updated
+    boot_chain:
+      secure_boot: implemented
+      uki: implemented
+      dm_verity: implemented
+      measured_boot: omitted
+    health:
+      definition:
+        kind: unit
+        name: appliance-health.service
+      tolerated_units: []
+      failure_switch:
+        type: systemd-credential
+        name: image.health.fail-version
+    update:
+      mechanism: systemd-sysupdate
+      source_switch:
+        type: systemd-credential
+        name: image.update.source
+      max_boot_attempts: 3
+  - schema_version: "1.2"
+    image:
+      name: lab-kiosk-arm
+      toolchain: yocto
+      definition: images/lab-kiosk-arm/kas.yml
+      architectures: [aarch64]
+      firmware: u-boot
+    update_model: reflash-only
+    boot_chain:
+      secure_boot: omitted
+      uki: omitted
+      dm_verity: omitted
+      measured_boot: omitted
+    health:
+      definition:
+        kind: unit
+        name: kiosk-health.service
+      tolerated_units:
+        - plymouth-quit-wait.service
+  - schema_version: "1.2"
+    image:
+      name: gateway-arm
+      toolchain: buildroot
+      definition: images/gateway-arm/configs/gateway_defconfig
+      architectures: [aarch64]
+      firmware: u-boot
+    update_model: field-updated
+    boot_chain:
+      secure_boot: implemented
+      uki: omitted
+      dm_verity: implemented
+      measured_boot: omitted
+    health:
+      definition:
+        kind: framework-hook
+        name: board/gateway/rootfs-overlay/usr/lib/swupdate/health-check
+      tolerated_units: []
+      failure_switch:
+        type: qemu-fw-cfg
+        name: opt/org.example.gateway/health-fail-version
+    update:
+      mechanism: swupdate
+      source_switch:
+        type: qemu-fw-cfg
+        name: opt/org.example.gateway/update-source
+      max_boot_attempts: 3
+  - schema_version: "1.2"
+    image:
+      name: edge-appliance-arm
+      toolchain: yocto
+      definition: images/edge-appliance-arm/kas.yml
+      architectures: [aarch64]
+      firmware: u-boot
+    update_model: field-updated
+    boot_chain:
+      secure_boot: implemented
+      uki: omitted
+      dm_verity: implemented
+      measured_boot: omitted
+    health:
+      definition:
+        kind: unit
+        name: appliance-health.service
+      tolerated_units: []
+      failure_switch:
+        type: systemd-credential
+        name: image.health.fail-version
+    update:
+      mechanism: rauc
+      source_switch:
+        type: systemd-credential
+        name: image.update.source
+      max_boot_attempts: 3
