@@ -18,6 +18,8 @@ dont_use_when:
     alternative: image-boot-verify
   - situation: "You want a Dockerfile or Containerfile content audit"
     alternative: dockerfile-audit-scanner
+  - situation: "You want to scaffold or change an image definition"
+    alternative: linux-image-developer
 see_also:
   - linux-image-audit
   - image-boot-verify
@@ -105,7 +107,7 @@ Return the output shape below. Don't summarise across images and don't compute a
 # Linux Image Audit Inventory
 
 Scope: <repository root>, <n> images (declarations: <n>; definitions without a declaration: <list>)
-Spec: <path read> · Schema: <path read>
+Spec: <path read> · Declaration checks: <validator results as dispatched | missing>
 
 ## <image.name>  (toolchain: <toolchain> <pinned version | unpinned>, profile §I.<n>, declaration: <path>, definition: <path>)
 
@@ -116,16 +118,16 @@ Definition files: <every path of the image's definition, repository-relative>
 - conditional rules — <ok | VIOLATION: <rule> <what> | not-decidable (cause: evidence: <reason>)> [<file:line>]
 
 ### Mandatory pillars
-- §C <requirement> — <pass | fail | not-decidable (cause: <resolvable: scenario | unverified: entry | spec-gap: reason | delegated: spec>)> (<class>) — <evidence> [<file:line>]
+- §C <requirement> — <pass | fail | not-decidable (cause: <resolvable: scenario | unverified: entry | spec-gap: reason | delegated: spec | evidence: reason>)> (<class>) — <evidence> [<file:line>]
 - §D <requirement> — …
 - §F <requirement> — … (or "§F n/a: reflash-only" once)
 - §G <requirement> — …
 
 ### Other sections
-- §A/§B/§E/§H <requirement> — <pass | fail | not-decidable> (<MUST | SHOULD>) — <evidence> [<file:line>]
+- §A/§B/§E/§H <requirement> — <pass | fail | not-decidable (cause: <…>)> (<MUST | SHOULD>) — <evidence> [<file:line>]
 
 ### Not decidable statically
-- <requirement> — cause: <resolvable: scenario | unverified: entry | spec-gap: reason | delegated: spec>
+- <requirement> — cause: <resolvable: scenario | unverified: entry | spec-gap: reason | delegated: spec | evidence: reason>
 
 ## Health
 - Images audited: <list>
