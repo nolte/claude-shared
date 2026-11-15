@@ -18,12 +18,20 @@ and also checks that the protocol commit is an ancestor of the revision
 (``git merge-base --is-ancestor``) and, when the revision is ``HEAD``, that the
 path has no uncommitted change (``git status --porcelain``).
 
+Guards, each yielding ``not-decidable`` rather than ``fresh``: the protocol
+commit must be a full hexadecimal object name (a symbolic name such as ``HEAD``
+or a branch would resolve to the audited revision itself); every path must exist
+at the revision (``git cat-file -e``), since ``git log`` on a path that never
+existed is silently empty; and no path may be or contain a symbolic link
+(``git ls-tree -r``), since history follows the link, not its target. Paths are
+literal pathspecs (``GIT_LITERAL_PATHSPECS=1``).
+
 Output, one line per finding on stdout:
   ``fresh``                                    every path unchanged since the commit
   ``stale: <path> changed in <sha>``           a commit after the protocol touched it
   ``stale: <path> has uncommitted changes``    the working tree differs
   ``stale: <commit> isn't an ancestor of <rev>``
-  ``not-decidable: <reason>``                  git or the commit is unavailable
+  ``not-decidable: <reason>``                  git, the commit, or a path is unusable
 
 Exit codes: 0 fresh, 1 stale, 2 not decidable.
 
@@ -35,15 +43,21 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import os
+import re
 import subprocess
 import sys
 from pathlib import Path
+
+
+FULL_SHA = re.compile(r"[0-9a-f]{40}(?:[0-9a-f]{24})?")
 
 
 def _git(repo: Path, *args: str) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["git", "-C", str(repo), "-c", "core.quotepath=off", *args],
         capture_output=True, text=True, check=False,
+        env={**os.environ, "GIT_LITERAL_PATHSPECS": "1"},
     )
 
 
@@ -55,6 +69,8 @@ def _verify_commit(repo: Path, ref: str) -> str | None:
 def check(repo: Path, commit: str, rev: str, paths: list[str]) -> tuple[int, list[str]]:
     if not paths:
         return 2, ["not-decidable: empty path set"]
+    if not FULL_SHA.fullmatch(commit):
+        return 2, [f"not-decidable: protocol commit {commit!r} isn't a full commit id"]
     try:
         protocol_sha = _verify_commit(repo, commit)
     except FileNotFoundError:
@@ -70,6 +86,16 @@ def check(repo: Path, commit: str, rev: str, paths: list[str]) -> tuple[int, lis
         return 1, [f"stale: {commit} isn't an ancestor of {rev}"]
     if ancestor.returncode != 0:
         return 2, [f"not-decidable: git merge-base failed: {ancestor.stderr.strip()}"]
+
+    for path in paths:
+        if _git(repo, "cat-file", "-e", f"{rev_sha}:{path}").returncode != 0:
+            return 2, [f"not-decidable: {path} doesn't exist at {rev}"]
+        tree = _git(repo, "ls-tree", "-r", rev_sha, "--", path)
+        if tree.returncode != 0:
+            return 2, [f"not-decidable: git ls-tree failed for {path}: {tree.stderr.strip()}"]
+        links = [line.split("\t", 1)[1] for line in tree.stdout.splitlines() if line.startswith("120000 ")]
+        if links:
+            return 2, [f"not-decidable: {links[0]} is a symbolic link; its target's history isn't covered"]
 
     findings: list[str] = []
     for path in paths:

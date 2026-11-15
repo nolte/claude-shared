@@ -39,7 +39,7 @@ def _run(tmp_path: Path, doc, capsys, *extra: str) -> tuple[int, dict]:
         path.write_text(doc, encoding="utf-8")
     else:
         path.write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
-    code = vd.main([str(path), "--repo-root", str(REPO_ROOT), *extra])
+    code = vd.main([str(path), *extra])
     return code, json.loads(capsys.readouterr().out)
 
 
@@ -151,8 +151,8 @@ def test_unquoted_schema_version_is_invalid(tmp_path, capsys):
     assert "schema_version.unknown" in _rules(payload)
 
 
-def test_schema_picked_from_schema_version(tmp_path, capsys):
-    # A v1.1 schema in the audited repository is used without a new code path.
+def test_schema_picked_from_schema_version(tmp_path, capsys, monkeypatch):
+    # A v1.1 schema in the installed schema tree is used without a new code path.
     repo = tmp_path / "repo"
     (repo / "schemas").mkdir(parents=True)
     v11 = copy.deepcopy(SCHEMA)
@@ -161,7 +161,8 @@ def test_schema_picked_from_schema_version(tmp_path, capsys):
     doc = _mutate(FIELD_UPDATED, lambda d: d.__setitem__("schema_version", "1.1"))
     decl = tmp_path / "image-declaration.yaml"
     decl.write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
-    code = vd.main([str(decl), "--repo-root", str(repo)])
+    monkeypatch.setattr(vd, "installed_schema_dirs", lambda: [repo / "schemas"])
+    code = vd.main([str(decl)])
     payload = json.loads(capsys.readouterr().out)
     assert code == 0 and payload["result"] == "valid"
     assert payload["schema"].endswith("image-declaration-v1.1.schema.yaml")
@@ -169,16 +170,41 @@ def test_schema_picked_from_schema_version(tmp_path, capsys):
 
 def test_no_schema_reachable_is_not_decidable(tmp_path, capsys, monkeypatch):
     monkeypatch.setattr(vd, "installed_schema_dirs", lambda: [])
-    code, payload = _run_in(tmp_path, FIELD_UPDATED, capsys, repo_root=tmp_path)
+    code, payload = _run(tmp_path, FIELD_UPDATED, capsys)
     assert code == 2
     assert payload["result"] == "not-decidable"
 
 
-def _run_in(tmp_path, doc, capsys, repo_root):
-    path = tmp_path / "image-declaration.yaml"
-    path.write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
-    code = vd.main([str(path), "--repo-root", str(repo_root)])
-    return code, json.loads(capsys.readouterr().out)
+def test_audited_repository_schema_is_never_used(tmp_path, capsys, monkeypatch):
+    # A permissive schema shipped by the audited repository must not judge its own declaration.
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "schemas").mkdir()
+    for version in ("1.0", "7.0"):
+        (tmp_path / "schemas" / f"image-declaration-v{version}.schema.yaml").write_text("{}\n", encoding="utf-8")
+    doc = _mutate(REFLASH_ONLY, lambda d: d.__setitem__("anything", "goes"))
+    code, payload = _run(tmp_path, doc, capsys)
+    assert code == 1 and "schema.additionalProperties" in _rules(payload)
+    assert Path(payload["schema"]).resolve() == SCHEMA_PATH.resolve()
+    code, payload = _run(tmp_path, _mutate(doc, lambda d: d.__setitem__("schema_version", "7.0")), capsys)
+    assert code == 1 and "schema_version.unknown" in _rules(payload)
+
+
+def test_yaml_alias_is_rejected(tmp_path, capsys):
+    bomb = "a0: &a0 [x, x, x, x, x, x, x, x, x, x]\n" + "".join(
+        f"a{i}: &a{i} [{', '.join([f'*a{i - 1}'] * 10)}]\n" for i in range(1, 8))
+    code, payload = _run(tmp_path, bomb, capsys)
+    assert code == 1 and _rules(payload) == {"yaml.alias"}
+
+
+def test_deep_nesting_is_invalid_with_json(tmp_path, capsys):
+    code, payload = _run(tmp_path, "x: " + "[" * 5000 + "]" * 5000 + "\n", capsys)
+    assert code == 1 and payload["result"] == "invalid"
+    assert _rules(payload) <= {"yaml.depth", "yaml.parse"}
+
+
+def test_oversized_declaration_is_invalid(tmp_path, capsys):
+    code, payload = _run(tmp_path, "# " + "x" * (vd.MAX_BYTES + 1) + "\n", capsys)
+    assert code == 1 and _rules(payload) == {"declaration.too-large"}
 
 
 # --------------------------------------------------------------------------- #
@@ -192,7 +218,7 @@ def test_unparseable_yaml_is_invalid(tmp_path, capsys):
 
 
 def test_missing_file_is_invalid(tmp_path, capsys):
-    code = vd.main([str(tmp_path / "absent.yaml"), "--repo-root", str(REPO_ROOT)])
+    code = vd.main([str(tmp_path / "absent.yaml")])
     payload = json.loads(capsys.readouterr().out)
     assert code == 1
     assert _rules(payload) == {"declaration.unreadable"}
@@ -210,7 +236,7 @@ def test_missing_dependencies_exit_2_never_valid(tmp_path, blocked):
     bootstrap = (
         "import runpy, sys\n"
         f"sys.modules[{blocked!r}] = None\n"
-        f"sys.argv = [{str(VALIDATOR)!r}, {str(decl)!r}, '--repo-root', {str(REPO_ROOT)!r}]\n"
+        f"sys.argv = [{str(VALIDATOR)!r}, {str(decl)!r}]\n"
         f"runpy.run_path({str(VALIDATOR)!r}, run_name='__main__')\n"
     )
     proc = subprocess.run(
@@ -293,6 +319,53 @@ def test_unknown_protocol_commit_is_not_decidable(image_repo):
     repo, _ = image_repo
     code, lines = pf.check(repo, "0" * 40, "HEAD", _path_set())
     assert code == 2 and lines[0].startswith("not-decidable:")
+
+
+@pytest.mark.parametrize("symbolic", ["HEAD", "main", "HEAD~0", "@"])
+def test_symbolic_protocol_commit_is_not_decidable(image_repo, symbolic):
+    repo, x = image_repo
+    (repo / CONF).write_text("[Output]\n", encoding="utf-8")
+    _git(repo, "commit", "-q", "-am", "Y")
+    assert pf.check(repo, x, "HEAD", [CONF])[0] == 1
+    code, lines = pf.check(repo, symbolic, "HEAD", [CONF])
+    assert code == 2 and lines[0].startswith("not-decidable:")
+
+
+def test_non_ancestor_protocol_commit_is_stale(image_repo):
+    repo, x = image_repo
+    _git(repo, "checkout", "-q", "-b", "side")
+    (repo / CONF).write_text("[Output]\nside\n", encoding="utf-8")
+    _git(repo, "commit", "-q", "-am", "side")
+    side = _git(repo, "rev-parse", "HEAD")
+    _git(repo, "checkout", "-q", "main")
+    code, lines = pf.check(repo, side, "HEAD", [CONF])
+    assert code == 1 and "isn't an ancestor" in lines[0]
+
+
+def test_explicit_revision_is_judged(image_repo):
+    repo, x = image_repo
+    (repo / CONF).write_text("[Output]\n", encoding="utf-8")
+    _git(repo, "commit", "-q", "-am", "Y")
+    assert pf.check(repo, x, x, [CONF]) == (0, ["fresh"])
+    assert pf.check(repo, x, "HEAD", [CONF])[0] == 1
+
+
+def test_path_missing_at_revision_is_not_decidable(image_repo):
+    repo, x = image_repo
+    code, lines = pf.check(repo, x, "HEAD", ["images/edge-appliance/mkosi.cnf"])
+    assert code == 2 and "doesn't exist" in lines[0]
+
+
+def test_symlinked_overlay_is_not_decidable(image_repo):
+    repo, x = image_repo
+    (repo / "shared").mkdir()
+    (repo / "shared" / "unit.service").write_text("[Unit]\n", encoding="utf-8")
+    (repo / "images/edge-appliance/extra").symlink_to("../../shared")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "link")
+    head = _git(repo, "rev-parse", "HEAD")
+    code, lines = pf.check(repo, head, "HEAD", ["images/edge-appliance"])
+    assert code == 2 and "symbolic link" in lines[0]
 
 
 def test_freshness_cli_prints_result(image_repo, capsys):

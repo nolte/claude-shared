@@ -11,15 +11,22 @@ One validator decides both halves of the declaration contract of
   ``field-updated`` requires the ``update`` block and ``health.failure_switch``,
   and ``reflash-only`` forbids the ``update`` block.
 
-Schema lookup order: ``--schema <file>``; else ``schemas/`` under
-``--repo-root`` (default: the current directory); else the installed
-``nolte-shared`` plugin's ``schemas/`` tree, found next to this plugin (the
-monorepo layout and the marketplace cache layout).
+Schema lookup order: ``--schema <file>`` (an operator choice); else the
+installed ``nolte-shared`` plugin's ``schemas/`` tree, found next to this plugin
+(the monorepo layout and the marketplace cache layout). The audited
+repository's own ``schemas/`` is never consulted: a repository can't supply the
+schema that judges its own declaration.
+
+The declaration is read with PyYAML's safe loader after two guards: files over
+1 MiB and YAML aliases are rejected as ``invalid`` (an alias can expand a few
+hundred bytes into gigabytes), and nesting too deep to load is ``invalid`` too,
+always with the JSON output below.
 
 Output: one JSON object on stdout,
 ``{"result": "valid|invalid|not-decidable", "violations": [...], ...}``, where
 each violation carries a stable ``rule`` identifier (``schema.<keyword>``,
 ``conditional.<rule>``, ``schema_version.unknown``, ``yaml.parse``,
+``yaml.alias``, ``yaml.depth``, ``declaration.too-large``,
 ``declaration.unreadable``), the JSON-pointer ``path``, a ``message``, and the
 1-based ``line`` in the declaration when it's known.
 
@@ -32,7 +39,7 @@ Exit codes (mirroring scripts/validate_schemas.py):
 
 Usage:
   python3 "${CLAUDE_PLUGIN_ROOT}/skills/linux-image-audit/scripts/validate_declaration.py" \\
-      images/edge-appliance/image-declaration.yaml [--repo-root .] [--schema FILE]
+      images/edge-appliance/image-declaration.yaml [--schema FILE]
 """
 
 from __future__ import annotations
@@ -59,6 +66,9 @@ PLUGIN_ROOT = Path(__file__).resolve().parents[3]
 RULE_UPDATE = "conditional.field-updated-requires-update"
 RULE_FAILURE_SWITCH = "conditional.field-updated-requires-failure-switch"
 RULE_REFLASH = "conditional.reflash-only-forbids-update"
+
+
+MAX_BYTES = 1 << 20
 
 
 def installed_schema_dirs(plugin_root: Path = PLUGIN_ROOT) -> list[Path]:
@@ -125,10 +135,10 @@ def _violation(rule: str, parts, message: str, index: dict[tuple, int]) -> dict:
     return entry
 
 
-def resolve_schema(version: str, repo_root: Path, extra_dirs: list[Path]) -> tuple[Path | None, bool]:
+def resolve_schema(version: str, schema_dirs: list[Path]) -> tuple[Path | None, bool]:
     """Return (schema file, any schema corpus seen) for ``version``."""
     corpus_seen = False
-    for directory in [repo_root / "schemas", *extra_dirs]:
+    for directory in schema_dirs:
         if not directory.is_dir():
             continue
         if any(directory.glob(SCHEMA_GLOB)):
@@ -165,9 +175,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("declaration", type=Path, help="Path of the image-declaration.yaml.")
     parser.add_argument("--schema", type=Path, default=None,
                         help="Explicit schema file; skips the lookup.")
-    parser.add_argument("--repo-root", type=Path, default=Path.cwd(),
-                        help="Audited repository root whose schemas/ is searched first.")
     args = parser.parse_args(argv)
+    try:
+        return _validate(args)
+    except RecursionError:
+        _emit("invalid", [{"rule": "yaml.depth", "path": "/",
+                           "message": "the declaration nests too deeply to validate"}])
+        return 1
+
+
+def _validate(args: argparse.Namespace) -> int:
 
     try:
         import yaml
@@ -183,7 +200,17 @@ def main(argv: list[str] | None = None) -> int:
         _emit("invalid", [{"rule": "declaration.unreadable", "path": "/",
                            "message": f"can't read {args.declaration}: {exc}"}])
         return 1
+    if len(text.encode("utf-8")) > MAX_BYTES:
+        _emit("invalid", [{"rule": "declaration.too-large", "path": "/",
+                           "message": f"declaration exceeds {MAX_BYTES} bytes"}])
+        return 1
     try:
+        for event in yaml.parse(text, Loader=yaml.SafeLoader):
+            if isinstance(event, yaml.AliasEvent):
+                _emit("invalid", [{"rule": "yaml.alias", "path": "/",
+                                   "line": event.start_mark.line + 1,
+                                   "message": "YAML aliases aren't allowed in a declaration"}])
+                return 1
         doc = yaml.safe_load(text)
     except yaml.YAMLError as exc:
         mark = getattr(exc, "problem_mark", None)
@@ -213,8 +240,7 @@ def main(argv: list[str] | None = None) -> int:
                 violations.extend(conditional_violations(doc, index))
             _emit("invalid", violations)
             return 1
-        schema_path, corpus_seen = resolve_schema(
-            version, args.repo_root.resolve(), installed_schema_dirs())
+        schema_path, corpus_seen = resolve_schema(version, installed_schema_dirs())
         if schema_path is None:
             if corpus_seen:
                 violations = [_violation(
@@ -224,7 +250,7 @@ def main(argv: list[str] | None = None) -> int:
                 violations.extend(conditional_violations(doc, index))
                 _emit("invalid", violations)
                 return 1
-            cause = "no image-declaration schema reachable (repository schemas/ or the installed nolte-shared plugin)"
+            cause = "no image-declaration schema reachable in the installed nolte-shared plugin"
             sys.stderr.write(f"validate_declaration: {cause}; pass --schema <file>\n")
             _emit("not-decidable", [], cause=cause)
             return 2
