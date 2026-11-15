@@ -59,7 +59,7 @@ The runner asks nothing. A missing input is a failed precondition: the affected 
 
 The run directory holds:
 
-- `protocol.json`: written only when the protocol validates against `schemas/image-boot-protocol-v1.0.schema.yaml`. Uncollected fields hold `{"status": "unavailable", "reason": "…"}`.
+- `protocol.json`: written only when the protocol validates against `schemas/image-boot-protocol-v1.1.schema.yaml`. Uncollected fields hold `{"status": "unavailable", "reason": "…"}`. A `fail` without any health report, such as a readiness timeout (§F), carries `report_lines: []` and is a valid protocol.
 - `protocol.invalid.json` (validator exit `1`) or `protocol.unvalidated.json` (validator exit `2`): kept for diagnosis, never evidence (§G).
 - Per boot: `<boot>.serial.log` and `<boot>.hypervisor.log`. Per update scenario: `<scenario>.update-source.log` with the source's requests.
 
@@ -74,7 +74,3 @@ On standard output, the runner prints a JSON summary: the overall verdict, the e
 | `2` | `not-run`: a required scenario is `not-run`. A run whose protocol isn't valid never exits `0`; a `pass` becomes `2`. |
 
 A gate **MUST** treat `2` as not green (§H).
-
-## Known gap
-
-§F makes a missing report before the readiness timeout a `fail`. The v1.0 schema rejects a `fail` scenario without a report line (§G). For such a run, the runner exits `1` but writes `protocol.invalid.json`, not `protocol.json`. Resolving the gap is part of the §F/§H follow-up of #728.

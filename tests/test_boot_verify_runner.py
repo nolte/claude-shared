@@ -578,15 +578,25 @@ def test_harness_uboot_skips_switch_and_uuid_scenarios(tmp_path, fake_bin):
     assert "no machine-UUID transport" in causes["identity"]
 
 
-def test_harness_readiness_timeout_is_fail_but_the_schema_cannot_carry_it(tmp_path, fake_bin):
-    """Pins a spec/schema gap: §F makes a missing report a fail, but the v1.0
-    protocol schema rejects a fail scenario without a report line (§G). The
-    runner keeps exit 1 and refuses to publish protocol.json."""
+def test_harness_readiness_timeout_is_fail_with_a_valid_protocol_and_no_report_line(tmp_path, fake_bin):
+    """§F makes a missing report a fail. Protocol schema v1.1 lets a fail scenario
+    carry no report line (§G), so the runner publishes a valid protocol.json with
+    report_lines [] and exits 1."""
     decl = _write_declaration(tmp_path, _reflash_only)
     code, summary, out = _run(tmp_path, fake_bin, "--declaration", str(decl), "--scenarios", "smoke",
                               "--firmware-code", str(tmp_path / "CODE.fd"), "--firmware-vars",
                               str(tmp_path / "VARS.fd"), "--timeout-readiness", "1",
                               env_extra={"FAKE_MODE": "silent"})
     assert code == 1 and summary["scenarios"] == {"smoke": "fail"}
-    assert summary["protocol_valid"] is False
-    assert not (out / "protocol.json").exists() and (out / "protocol.invalid.json").exists()
+    protocol_path = out / "protocol.json"
+    assert summary["protocol_valid"] is True and Path(summary["protocol"]) == protocol_path
+    assert not (out / "protocol.invalid.json").exists()
+    assert _validate(protocol_path) == 0
+    protocol = json.loads(protocol_path.read_text(encoding="utf-8"))
+    assert protocol["schema_version"] == "1.1"
+    assert protocol["outcome"] == {"overall_verdict": "fail", "exit_status": 1}
+    (smoke,) = protocol["scenarios"]
+    assert smoke["verdict"] == "fail" and smoke["report_lines"] == []
+    assert smoke["network"] == {"mode": "none", "config": "-nic none"}
+    (readiness,) = smoke["phases"]
+    assert readiness["name"] == "readiness" and readiness["duration_s"]["status"] == "unavailable"

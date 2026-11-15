@@ -1,4 +1,4 @@
-"""Tests for the boot-protocol schema (#733) and the v1.1 declaration schema (#740).
+"""Tests for the boot-protocol schemas (#733, v1.1 for #728) and the v1.1 declaration schema (#740).
 
 Both go through the existing bundled validator
 (``plugins/nolte-linux/skills/linux-image-audit/scripts/validate_declaration.py``):
@@ -24,9 +24,12 @@ sys.path.insert(0, str(SCRIPTS))
 
 import validate_declaration as vd  # noqa: E402
 
-PROTOCOL_SCHEMA_PATH = REPO_ROOT / "schemas" / "image-boot-protocol-v1.0.schema.yaml"
+PROTOCOL_SCHEMA_PATH = REPO_ROOT / "schemas" / "image-boot-protocol-v1.1.schema.yaml"
 PROTOCOL_SCHEMA = yaml.safe_load(PROTOCOL_SCHEMA_PATH.read_text(encoding="utf-8"))
-PASS, FAIL, NOT_RUN = PROTOCOL_SCHEMA["examples"]
+PASS, FAIL, NOT_RUN, FAIL_NO_REPORT = PROTOCOL_SCHEMA["examples"]
+PROTOCOL_V10_SCHEMA_PATH = REPO_ROOT / "schemas" / "image-boot-protocol-v1.0.schema.yaml"
+PROTOCOL_V10_SCHEMA = yaml.safe_load(PROTOCOL_V10_SCHEMA_PATH.read_text(encoding="utf-8"))
+PASS_V10, FAIL_V10, NOT_RUN_V10 = PROTOCOL_V10_SCHEMA["examples"]
 
 DECL_V10_PATH = REPO_ROOT / "schemas" / "image-declaration-v1.0.schema.yaml"
 DECL_V11_PATH = REPO_ROOT / "schemas" / "image-declaration-v1.1.schema.yaml"
@@ -60,9 +63,10 @@ def _hits(payload: dict, rule: str, path: str) -> bool:
 
 
 # --------------------------------------------------------------------------- #
-# Boot protocol: the three examples validate through the validator
+# Boot protocol: the four examples validate through the validator
 # --------------------------------------------------------------------------- #
-@pytest.mark.parametrize("example", [PASS, FAIL, NOT_RUN], ids=["pass", "fail", "not-run"])
+@pytest.mark.parametrize("example", [PASS, FAIL, NOT_RUN, FAIL_NO_REPORT],
+                         ids=["pass", "fail", "not-run", "fail-without-report"])
 def test_protocol_examples_are_valid(tmp_path, capsys, example):
     code, payload = _run_protocol(tmp_path, example, capsys)
     assert code == 0, payload
@@ -72,7 +76,7 @@ def test_protocol_examples_are_valid(tmp_path, capsys, example):
 
 def test_examples_cover_every_overall_verdict():
     verdicts = [e["outcome"]["overall_verdict"] for e in PROTOCOL_SCHEMA["examples"]]
-    assert verdicts == ["pass", "fail", "not-run"]
+    assert verdicts == ["pass", "fail", "not-run", "fail"]
 
 
 def test_not_run_example_marks_uncollected_fields_unavailable():
@@ -140,7 +144,7 @@ def test_protocol_violation_carries_line(tmp_path, capsys):
 # Boot protocol: the shared guards of the validator
 # --------------------------------------------------------------------------- #
 def test_protocol_duplicate_key_is_invalid(tmp_path, capsys):
-    text = json.dumps(FAIL)[:-1] + ', "schema_version": "1.0"}'
+    text = json.dumps(FAIL)[:-1] + ', "schema_version": "1.1"}'
     code, payload = _run_protocol(tmp_path, text, capsys)
     assert code == 1 and {v["rule"] for v in payload["violations"]} == {"json.duplicate-key"}
 
@@ -188,7 +192,7 @@ def test_protocol_without_reachable_schema_is_not_decidable(tmp_path, capsys, mo
 def test_audited_repository_protocol_schema_is_never_used(tmp_path, capsys, monkeypatch):
     monkeypatch.chdir(tmp_path)
     (tmp_path / "schemas").mkdir()
-    (tmp_path / "schemas" / "image-boot-protocol-v1.0.schema.yaml").write_text("{}\n", encoding="utf-8")
+    (tmp_path / "schemas" / "image-boot-protocol-v1.1.schema.yaml").write_text("{}\n", encoding="utf-8")
     code, payload = _run_protocol(tmp_path, _mutate(PASS, lambda d: d.pop("firmware")), capsys)
     assert code == 1
     assert Path(payload["schema"]).resolve() == PROTOCOL_SCHEMA_PATH.resolve()
@@ -271,6 +275,51 @@ def test_pass_without_report_lines_is_invalid(tmp_path, capsys):
     code, payload = _run_protocol(
         tmp_path, _mutate(PASS, lambda d: _scenario(d, "smoke").__setitem__("report_lines", [])), capsys)
     assert code == 1 and payload["result"] == "invalid"
+    assert _hits(payload, "schema.minItems", "/scenarios/0/report_lines"), payload
+
+
+# --------------------------------------------------------------------------- #
+# Protocol v1.1: a fail may carry no report line (§F missing report); v1.0 stays
+# accepted against its own schema
+# --------------------------------------------------------------------------- #
+def test_v11_fail_without_report_lines_is_valid(tmp_path, capsys):
+    def no_report(doc):
+        smoke = _scenario(doc, "smoke")
+        smoke["report_lines"] = []
+        smoke["phases"][0]["duration_s"] = {"status": "unavailable", "reason": "no report before the timeout"}
+    code, payload = _run_protocol(tmp_path, _mutate(FAIL, no_report), capsys)
+    assert code == 0, payload
+    assert Path(payload["schema"]).resolve() == PROTOCOL_SCHEMA_PATH.resolve()
+
+
+def test_v11_fail_example_without_report_is_a_readiness_timeout():
+    (smoke,) = FAIL_NO_REPORT["scenarios"]
+    assert smoke["verdict"] == "fail" and smoke["report_lines"] == []
+    (readiness,) = smoke["phases"]
+    assert readiness["name"] == "readiness" and readiness["duration_s"]["status"] == "unavailable"
+
+
+def test_v11_fail_without_report_lines_still_needs_an_isolated_network(tmp_path, capsys):
+    def unavailable(doc):
+        _scenario(doc, "smoke")["network"] = {"status": "unavailable", "reason": "isolation not established"}
+    code, payload = _run_protocol(tmp_path, _mutate(FAIL_NO_REPORT, unavailable), capsys)
+    assert code == 1 and payload["result"] == "invalid"
+
+
+@pytest.mark.parametrize("example", [PASS_V10, FAIL_V10, NOT_RUN_V10], ids=["pass", "fail", "not-run"])
+def test_v10_protocols_still_validate(tmp_path, capsys, example):
+    assert example["schema_version"] == "1.0"
+    code, payload = _run_protocol(tmp_path, example, capsys)
+    assert code == 0, payload
+    assert Path(payload["schema"]).resolve() == PROTOCOL_V10_SCHEMA_PATH.resolve()
+
+
+def test_v10_fail_without_report_lines_stays_invalid_under_v10(tmp_path, capsys):
+    # v1.0 is not edited in place: the relaxation exists only under schema_version "1.1".
+    code, payload = _run_protocol(
+        tmp_path, _mutate(FAIL_V10, lambda d: _scenario(d, "smoke").__setitem__("report_lines", [])), capsys)
+    assert code == 1 and payload["result"] == "invalid"
+    assert Path(payload["schema"]).resolve() == PROTOCOL_V10_SCHEMA_PATH.resolve()
 
 
 def test_smoke_with_forwarded_network_is_invalid(tmp_path, capsys):

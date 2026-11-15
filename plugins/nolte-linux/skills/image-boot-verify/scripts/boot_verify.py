@@ -3,7 +3,7 @@
 
 Boots a built Linux image under QEMU per ``spec/project/image-boot-verification/``
 and exposes the verdict two ways: ``protocol.json`` in the run directory
-(``schemas/image-boot-protocol-v1.0.schema.yaml``, validated before hand-off) and
+(``schemas/image-boot-protocol-v1.1.schema.yaml``, validated before hand-off) and
 the process exit status (§H): ``0`` pass, ``1`` fail, ``2`` not-run.
 
 The run checks every §H precondition first. A missing hypervisor, firmware, TPM
@@ -1078,7 +1078,7 @@ class Run:
             firmware["secure_boot"] = bool(self.secure_boot_ran)
         names = [s["name"] for s in scenarios]
         return {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "run_timestamp": self.started.strftime("%Y-%m-%dT%H:%M:%SZ"),
             "outcome": {"overall_verdict": verdict, "exit_status": exit_status},
             "host": {"os": host_os(), "kernel": platform.release() or unavailable("kernel release unknown"),
