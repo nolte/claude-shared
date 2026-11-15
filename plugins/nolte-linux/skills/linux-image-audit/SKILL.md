@@ -74,7 +74,7 @@ Detect the user's language from their message and respond in it. The audit artif
    - Boot protocols: a rollback `pass` resolves the §F install, reboot, and rollback results, and a rollback `fail` turns them into Critical. An identity `pass` resolves §D's fixed machine identity; an identity `fail` is a §D Critical only when the protocol records equal `machine_id_app` values, and an identity `fail` from a smoke assertion leaves §D blocking and is reported as a failed boot (Warning, naming the scenario). `not-run` leaves the results blocking. Use each scenario's own verdict, not the run's overall verdict, since the identity scenario doesn't count toward the overall one.
    - Dockerfile audit: a `dockerfile-audit` pass on base pinning or secrets in layers resolves the matching `delegated` result, and a fail there is a §C or §D Critical here. Without that artifact, the `delegated` results stay blocking; when `nolte-engineering` isn't installed, say that installing it, or reviewing the build file by hand, is the way to resolve them.
 6. **Compute the gate verdict** per image: `FAIL` with any Critical; `INCOMPLETE` with any blocking not-decidable and no Critical; `PASS` otherwise. Never report `PASS` for an image with a blocking not-decidable, or for one whose declaration the validator didn't decide.
-7. **Write the artifact** to `.audits/linux-image-audit/<YYYY-MM-DD-HHMM>.md` in the report shape below, recording the git revision and the spec path read.
+7. **Write the artifact** to `.audits/linux-image-audit/<YYYY-MM-DD-HHMM>.md` in the report shape below, recording the git revision and the spec path read. Fill the line below the verdict table from the scanner's `Unverified entries relied on` Health line, keeping only entries a mandatory-pillar result rests on, add each §C result with cause `spec-gap` as `§C (<toolchain>: spec-gap: <reason>)`, and write `none` when nothing is left; the line is always present, so a `PASS` isn't taken to mean that the build is reproducible.
 8. **Hand back** the per-image verdicts, the Critical list, and, when a blocking not-decidable exists, the suggestion to run `image-boot-verify` with the scenario named. For a bootc image, also point to `dockerfile-audit` for the delegated checks of its build file.
 
 ## Report shape
@@ -86,6 +86,8 @@ Spec: <path> · Scanner: linux-image-scanner · Run: <timestamp>
 
 ## Verdict
 | Image | Toolchain | Verdict | Critical | Blocking | Warning | Suggestion |
+
+Pillars resting on unverified entries: <§X (<toolchain>: <§I entry>), §C (<toolchain>: spec-gap: <reason>), … | none>
 
 ## <image.name> — <PASS | INCOMPLETE | FAIL>
 ### Critical
