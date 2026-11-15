@@ -85,11 +85,12 @@ For each requested flip:
 2. **For `achieved → stabilised` only, run the stabilisation-gate verification:**
    - **Every `mvp: true` roadmap item is `status: done`** — parse each item's YAML block in `project/roadmap.md` and confirm `status: done`. Any other status blocks the flip with a verbatim error citing the failing item ID.
    - **The MVP-closing sprint is `status: closed`** — the MVP-closing sprint is the sprint whose closure moved the last `mvp: true` roadmap item to `status: done` (identify it via the roadmap items' `target_sprint` history or, if ambiguous, ask the user to confirm). Read its file under `project/sprints/<NNNN>-<slug>.md` and verify `status: closed`. `cancelled` is not equivalent to `closed` for this condition.
-   - **One full subsequent sprint has reached `closed` without regression** — find the sprint whose `number` is `MVP-closing-sprint-number + 1`. Verify its `status` is `closed` (or `cancelled` only when the `## Review notes` rationale states the cancellation was "no-fault-of-MVP"). Confirm no MVP item flipped back to `status: active` during this subsequent sprint. If no subsequent sprint has yet closed, block the flip and report that the gate isn't yet satisfied — never silently infer satisfaction.
+   - **One full subsequent sprint has reached `closed` without regression** — find the sprint whose `number` is `MVP-closing-sprint-number + 1`. Verify its `status` is `closed` (or `cancelled` only when the `## Review notes` rationale states the cancellation was "no-fault-of-MVP"). Confirm no MVP item flipped back to `status: active` during this subsequent sprint.
+   - **If no subsequent sprint qualifies, evaluate the retroactive-MVP exemption** — read `references/retroactive-exemption.md` and run its five conditions. Any failed or unevaluable condition blocks the flip with a report that the gate isn't yet satisfied; never silently infer satisfaction.
    - **No defect-fix work is currently `status: in_progress` against an MVP item** — read every feature under `project/features/` whose `roadmap_item` references an `mvp: true` item and confirm none is in `status: in_progress` per the sibling `feature` spec. Open defect-fix work blocks the flip.
 3. **Require the operator's explicit confirmation** for the flip itself. The conditions justify the decision; they never make it. Refuse to proceed without an explicit user "yes".
 4. **For `stabilised → in_progress` (regression)** — record which MVP item re-opened and on what date in `## Source` so the audit trail is unbroken. Post-MVP items already in `status: active` at the moment of the revert **MAY** finish per the spec; don't touch them. Surface to the user that no new post-MVP item may start until stabilisation is restored.
-5. After the flip is confirmed: update `mvp_status`, update `revised_at` to today's ISO date, and append a one-line entry to `## Source` (date, transition, evidence summary).
+5. **Re-verify, then write.** For an exemption flip, first block until the operator supplies the rationale paragraph (never auto-generate it, as with operation 3). Then, for every flip, re-run every step 2 check immediately before writing — always, not only on resume; any condition that no longer holds blocks the write. Only then update `mvp_status`, set `revised_at` to today's ISO date, and append a one-line entry to `## Source` (date, transition, evidence summary). An exemption flip adds exactly one more item: the rationale paragraph with the evidence `references/retroactive-exemption.md` names.
 
 ### 3. Revise after `mvp_status: stabilised` (rationale-required path)
 
@@ -108,6 +109,7 @@ For every operation: present the diff (frontmatter delta plus body delta) back t
 ## Gotchas
 
 - The "one full subsequent sprint" check looks for the sprint whose `number` is `MVP-closing-sprint-number + 1`, **not** simply the most recently closed sprint. If sprints have been opened out of order, walk by `number`, not by `ended` date.
+- The retroactive-MVP exemption is decided from the full git history of `project/mission.md` and `project/roadmap.md`, never from `created` or other frontmatter dates; it waives only the subsequent-sprint condition.
 - A `cancelled` subsequent sprint **only** counts toward stabilisation when its `## Review notes` rationale states the cancellation was unrelated to MVP work. Read the rationale; never assume.
 - The MVP-closing sprint is identified by which sprint moved the **last** `mvp: true` roadmap item to `status: done` — not the sprint with the largest count of MVP items. When the closure is split across sprints, the one carrying the final transition is the gate-relevant one.
 - A regression flip (`stabilised → in_progress`) does **not** automatically halt post-MVP roadmap items already in `status: active` — the spec lets in-flight work finish. The skill only blocks **new** post-MVP starts via the audit trail; never edit roadmap-item status from this skill.
@@ -118,10 +120,11 @@ For every operation: present the diff (frontmatter delta plus body delta) back t
 - Read `examples/01-revise-statement.md` when revising the mission statement wording while keeping the lifecycle status unchanged.
 - Read `examples/02-flip-mvp-status-to-achieved.md` when flipping `mvp_status` from `in_progress` to `achieved` after all MVP items land.
 - Read `examples/03-stabilisation-gate-blocks.md` when the stabilisation gate blocks a post-MVP revision and you need to see how to handle the refusal.
+- Read `examples/04-retroactive-mvp-exemption.md` when a retroactively recorded MVP has no closed subsequent sprint and the flip to `stabilised` uses the exemption.
 
 ## Resumability
 
-Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/mission-revise/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
+Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is persisted to `.resume/mission-revise/<run-id>.yml` after every successful user-approval gate and after each named phase boundary. On re-invocation, scan that directory for files with `status: in_progress` whose `inputs:` snapshot matches the current invocation; if one matches, prompt the operator with `Resume run <run_id> from phase <phase> (last checkpoint <last_checkpoint_at>)? [resume / start-new / discard]`. A resumed run never writes on persisted gate evidence: operation 2 step 5 always re-verifies the gate immediately before the write. The state-file envelope (`schema_version`, `run_id`, `inputs`, `phase`, `decisions[]`, `status`, ...) and the fail-closed semantics on schema or YAML errors are load-bearing in the spec; don't duplicate those rules here.
 
 ## Hard rules
 
@@ -130,7 +133,7 @@ Per `spec/claude/resumable-work/`, this skill is `resumable: true`. State is per
 - **Never** allow an illegal lifecycle transition (anything outside `defining → in_progress → achieved → stabilised` plus the regression path `stabilised → in_progress`).
 - **Never** flip to `stabilised` before every gate condition is verified against the actual artefacts. Cite the evidence inline; never accept the user's word as a substitute for the check.
 - **Never** edit `created`. The field is set once on first-write and frozen.
-- **Never** auto-generate the post-stabilisation rationale paragraph. The operator writes it.
+- **Never** auto-generate the post-stabilisation rationale paragraph or the retroactive-MVP exemption rationale. The operator writes both.
 - **Never** name an audience in `## Audiences` that's absent from `audiences`, or vice versa. The two surfaces are bidirectionally validated after every revision.
 - **Never** invent audience identifiers, outcome IDs, or feature-acceptance pairs in a revision. Every reference **MUST** resolve to an existing artefact at write time.
 - **Never** allow a post-MVP roadmap item (`mvp: false`) to start while `mvp_status` is `defining`, `in_progress`, or `achieved`. After any `mvp_status` read or write, proactively scan `project/roadmap.md` yourself for a post-MVP item in `status: active` that the gate forbids — do not wait for the user to report it — and surface every such item as a violation citing `spec/project/mission/` §Stabilisation gate. Never alter the roadmap from this skill, though: `roadmap-plan` §4 (`transition`) is the canonical write authority for roadmap-item status.

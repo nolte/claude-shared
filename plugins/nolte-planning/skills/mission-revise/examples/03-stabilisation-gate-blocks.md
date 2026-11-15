@@ -41,11 +41,14 @@ revised_at: 2026-05-10
 `project/roadmap.md` confirms `R-2`, `R-5`, `R-9` (every
 `mvp: true` item) at `status: done`. The MVP-closing sprint is
 `project/sprints/0006-cross-skill-consistency.md` (`status: closed`,
-carried the final `mvp: true` item R-9). `project/sprints/`
-**also** contains `0007-post-mvp-polish.md` with
+`ended: 2026-05-08`, carried the final `mvp: true` item R-9).
+`project/sprints/` **also** contains `0007-post-mvp-polish.md` with
 `status: active` — the planned post-MVP sprint is in flight, not yet
 closed. No defect-fix feature against an MVP item is currently
-`in_progress`.
+`in_progress`. The oldest commit that added `project/mission.md`
+(`git log --full-history --diff-filter=A --format=%H -- project/mission.md | tail -1`,
+full clone) carried `mvp_status: defining`, as `mission-define`
+writes every new mission.
 
 ## Expected behaviour
 
@@ -75,6 +78,13 @@ closed. No defect-fix feature against an MVP item is currently
    subsequent-sprint condition is unsatisfied. Skill does **not**
    accept "we're nearly done" or any operator framing as a substitute
    — the spec's "never silently infer satisfaction" rule applies.
+   The skill then evaluates the retroactive-MVP exemption per
+   `references/retroactive-exemption.md`. The clone isn't shallow, but
+   C1 fails: the first-add version of `project/mission.md` carried
+   `mvp_status: defining`, not `achieved`, so the MVP was delivered
+   under this mission rather than recorded retroactively. (C5 would
+   fail too, because sprint 7 is `active`.) The condition stays
+   failed.
 6. **Block the flip with a verbatim error.** Skill emits a
    structured-message in German (operator's language) along the lines
    of:
@@ -83,6 +93,8 @@ closed. No defect-fix feature against an MVP item is currently
    > Die Bedingung "ein vollständiger Folge-Sprint ist ohne
    > Regression geschlossen" verlangt `status: closed` (oder
    > `cancelled` mit `## Review notes`-Begründung "no-fault-of-MVP").
+   > Die Retroaktiv-MVP-Ausnahme greift nicht: die erste committete
+   > Fassung von `project/mission.md` trug `mvp_status: defining`.
    > Der Flip nach `stabilised` wird verweigert, bis Sprint 7 in den
    > Status `closed` übergeht.
    Skill cites the spec rule and does not present a "force-write"
