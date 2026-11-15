@@ -61,27 +61,33 @@ feature against an MVP item is `in_progress`.
 2. **Conditions 1 and 2 pass.** `R-1` to `R-3` are `done` and sprint 1
    is `closed`; the skill shows both inline as evidence.
 3. **Condition 3: no subsequent sprint has closed.** Sprint
-   `1 + 1 = 2` is `planned`, so the skill runs the exemption checks
+   `1 + 1 = 2` is `planned`, so the skill reads
+   `references/retroactive-exemption.md` and evaluates the exemption
    instead of blocking immediately:
-   - **History guard.** `git rev-parse --is-shallow-repository` prints
-     `false`. A `true` here would block the flip.
-   - **Retroactive test.**
-     `git log --follow --diff-filter=A --format=%H -- project/mission.md | tail -1`
-     returns the backfill commit (say `5ffdca5`), and
-     `git show 5ffdca5:project/mission.md` shows `mvp_status: achieved`.
-     `## Source` says the MVP is recorded retroactively. The skill
-     doesn't consult `created` or `revised_at`.
-   - **Never stabilised before.**
-     `git log --follow -G '^mvp_status: *stabilised' --format=%H -- project/mission.md`
-     prints nothing.
-   - **Scope at the time of the flip.** Sprint 2 is `planned`.
-   - **No regression since closure.**
-     `git log --follow --reverse --format=%H -- project/sprints/0001-shared-cicd-baseline.md`
-     shows that `5ffdca5` is the oldest version with `status: closed`.
-     The skill reads `project/roadmap.md` at `5ffdca5` and at every
-     commit from `git log --format=%H 5ffdca5..HEAD -- project/roadmap.md`.
-     It parses each item's YAML block and confirms that, by ID, `R-1`,
-     `R-2`, and `R-3` never carry `status: active`.
+   - **Preconditions.** `git rev-parse --is-shallow-repository` prints
+     `false` (`true` would block). The project files have no
+     uncommitted changes.
+   - **C1: retroactive first write.**
+     `git log --full-history --diff-filter=A --format=%H -- project/mission.md | tail -1`
+     returns the backfill commit `5ffdca5`. The frontmatter of
+     `git show 5ffdca5:project/mission.md` parses to
+     `mvp_status: achieved`. The skill quotes the `## Source` sentence
+     "The cascade models the minimum viable product retroactively", and
+     the operator confirms it's the retroactive-recording statement.
+     The skill doesn't consult `created` or `revised_at`.
+   - **C2: never stabilised.**
+     `git log --full-history --format=%H -- project/mission.md` lists
+     only `5ffdca5`, whose `mvp_status` is `achieved`.
+   - **C3: MVP set unchanged.** The `mvp: true` IDs are
+     `{R-1, R-2, R-3}` at `5ffdca5` and at `HEAD`, and all three are
+     `done` at `5ffdca5`.
+   - **C4: no regression.** The skill parses `project/roadmap.md` at
+     `5ffdca5` and at every commit from
+     `git log --full-history --format=%H 5ffdca5..HEAD -- project/roadmap.md`,
+     here just one later commit. No `mvp: true` item carries
+     `status: active` in any of them.
+   - **C5: later sprints untouched.** Sprint 2 is the only sprint with
+     `number` greater than 1, and it's `planned`.
 
    The skill reports condition 3 as satisfied **via the retroactive-MVP
    exemption** and lists this evidence.
@@ -102,10 +108,9 @@ feature against an MVP item is `in_progress`.
      - the one-line transition entry;
      - the operator's rationale paragraph with its evidence: sprint 1
        ended 2026-07-02, commit `5ffdca5` first added
-       `project/mission.md` with `mvp_status: achieved`, and the
-       operator decision date.
+       `project/mission.md`, and the operator decision date.
    - `created` stays untouched.
 8. **Closing message.** It notes that R-4 and sprint 2 may now start
    through `sprint-execute`. If an MVP item re-opens later,
    `mvp_status` reverts to `in_progress`, and the exemption can't be
-   used again because a committed version now carries `stabilised`.
+   used again once a committed version carries `stabilised` (C2).
