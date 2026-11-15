@@ -101,8 +101,11 @@ STOP_GRACE_S = 10.0  # after QMP quit, before SIGTERM to the process group
 STOP_TERM_S = 5.0  # after SIGTERM, before SIGKILL
 INTERRUPT_SIGNALS = (signal.SIGTERM, signal.SIGHUP)
 _received_signals: list[int] = []  # filled by the signal handler, read at the polling points
-UBOOT_SWITCH_REASON = ("no switch transport is established for u-boot firmware "
-                       "(spec/project/image-boot-verification/ §I, #740)")
+# §H switch-transport check 5: the QEMU fw_cfg transport is prepared but no real
+# run has confirmed it yet, so no verdict rests on it.
+SWITCH_UNVERIFIED_REASON = ("switch transport unverified until a real run confirms it (#728) "
+                            "(spec/project/image-boot-verification/ §H)")
+UBOOT_SWITCH_REASON = SWITCH_UNVERIFIED_REASON
 UBOOT_UUID_REASON = ("no machine-UUID transport is established for u-boot firmware "
                      "(spec/project/image-boot-verification/ §H, §I, #740)")
 NO_TOOL = "no tool closes the gap"
@@ -303,6 +306,12 @@ def network_record(forward: Forward | None) -> dict:
 
 def _qemu_escape(value: str) -> str:
     return value.replace(",", ",,")
+
+
+def declared_switches(decl: dict) -> list[dict]:
+    """The host switches a declaration names (source and failure switch)."""
+    found = [(decl.get("update") or {}).get("source_switch"), (decl.get("health") or {}).get("failure_switch")]
+    return [s for s in found if isinstance(s, dict)]
 
 
 def switch_value(switch: dict, value: str) -> str:
@@ -1141,6 +1150,9 @@ class Run:
             if fw_type == "u-boot":
                 self._cause(f"precondition failed: {UBOOT_SWITCH_REASON}", scenarios=("rollback", "positive"))
                 self._cause(f"precondition failed: {UBOOT_UUID_REASON}", scenarios=("identity",))
+            elif any(s.get("type") == "qemu-fw-cfg" for s in declared_switches(self.decl)):
+                # A qemu-fw-cfg switch under UEFI travels over the same unconfirmed fw_cfg (§H).
+                self._cause(f"precondition failed: {SWITCH_UNVERIFIED_REASON}", scenarios=("rollback", "positive"))
             if self.hypervisor is None:
                 hyp["name"] = unavailable(f"{binary} not found on PATH")
                 self._cause(f"precondition failed: hypervisor {binary} not found", self.qemu_hint)
