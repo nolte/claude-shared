@@ -58,6 +58,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -209,7 +210,13 @@ def _load_json(text: str):
     def constant(name):
         raise ValueError(f"non-JSON constant {name}")
 
-    return json.loads(text, object_pairs_hook=pairs, parse_constant=constant)
+    def finite(literal):
+        value = float(literal)
+        if not math.isfinite(value):
+            raise ValueError(f"number {literal} overflows to a non-finite value")
+        return value
+
+    return json.loads(text, object_pairs_hook=pairs, parse_constant=constant, parse_float=finite)
 
 
 def main(argv: list[str] | None = None) -> int:

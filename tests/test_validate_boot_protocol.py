@@ -242,3 +242,46 @@ def test_v11_firmware_fields_rejected_by_v10(tmp_path, capsys):
     doc = _mutate(UEFI_X86, lambda d: d.__setitem__("schema_version", "1.0"))
     code, payload = _run_declaration(tmp_path, doc, capsys)
     assert code == 1 and _hits(payload, "schema.additionalProperties", "/image")
+
+
+# --------------------------------------------------------------------------- #
+# Pre-merge review: per-scenario rules the schema now expresses
+# --------------------------------------------------------------------------- #
+def _scenario(doc: dict, name: str) -> dict:
+    return next(s for s in doc["scenarios"] if s["name"] == name)
+
+
+def test_duplicate_scenario_name_is_invalid(tmp_path, capsys):
+    def dup(doc):
+        twin = copy.deepcopy(_scenario(doc, "smoke"))
+        twin["verdict"] = "fail"
+        doc["scenarios"].append(twin)
+    code, payload = _run_protocol(tmp_path, _mutate(PASS, dup), capsys)
+    assert code == 1 and payload["result"] == "invalid"
+
+
+def test_pass_with_unavailable_network_is_invalid(tmp_path, capsys):
+    def unavailable(doc):
+        _scenario(doc, "rollback")["network"] = {"status": "unavailable", "reason": "isolation not established"}
+    code, payload = _run_protocol(tmp_path, _mutate(PASS, unavailable), capsys)
+    assert code == 1 and payload["result"] == "invalid"
+
+
+def test_pass_without_report_lines_is_invalid(tmp_path, capsys):
+    code, payload = _run_protocol(
+        tmp_path, _mutate(PASS, lambda d: _scenario(d, "smoke").__setitem__("report_lines", [])), capsys)
+    assert code == 1 and payload["result"] == "invalid"
+
+
+def test_smoke_with_forwarded_network_is_invalid(tmp_path, capsys):
+    def forward(doc):
+        _scenario(doc, "smoke")["network"] = copy.deepcopy(_scenario(doc, "rollback")["network"])
+    code, payload = _run_protocol(tmp_path, _mutate(PASS, forward), capsys)
+    assert code == 1 and payload["result"] == "invalid"
+
+
+def test_overflowing_float_is_invalid(tmp_path, capsys):
+    text = json.dumps(FAIL).replace('"timeout_factor": 5', '"timeout_factor": 1e999')
+    assert "1e999" in text
+    code, payload = _run_protocol(tmp_path, text, capsys)
+    assert code == 1 and payload["result"] == "invalid"
