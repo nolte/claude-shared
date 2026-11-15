@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
-"""Validate an image-declaration.yaml deterministically, failing closed.
+"""Validate an image-declaration.yaml or a boot protocol.json, failing closed.
 
-One validator decides both halves of the declaration contract of
+``--kind declaration`` (the default) decides both halves of the declaration
+contract of
 ``spec/project/linux-image-best-practices/`` §A and §F:
 
 - the JSON Schema ``schemas/image-declaration-v<schema_version>.schema.yaml``
@@ -11,35 +12,46 @@ One validator decides both halves of the declaration contract of
   ``field-updated`` requires the ``update`` block and ``health.failure_switch``,
   and ``reflash-only`` forbids the ``update`` block.
 
+``--kind boot-protocol`` validates the ``protocol.json`` of a boot
+verification run against ``schemas/image-boot-protocol-v<schema_version>.schema.yaml``
+(``spec/project/image-boot-verification/`` §G), through the same lookup, size,
+depth, and exit-code guards; it has no conditional half.
+
 Schema lookup order: ``--schema <file>`` (an operator choice); else the
 installed ``nolte-shared`` plugin's ``schemas/`` tree, found next to this plugin
 (the monorepo layout and the marketplace cache layout). The audited
 repository's own ``schemas/`` is never consulted: a repository can't supply the
-schema that judges its own declaration.
+schema that judges its own declaration or protocol.
 
-The declaration is read with PyYAML's safe loader after two guards: files over
+A declaration is read with PyYAML's safe loader after two guards: files over
 1 MiB and YAML aliases are rejected as ``invalid`` (an alias can expand a few
 hundred bytes into gigabytes), and nesting too deep to load is ``invalid`` too,
-always with the JSON output below.
+always with the JSON output below. A protocol is read as strict JSON: the same
+size and depth guards, and a duplicate key or a non-JSON constant (``NaN``,
+``Infinity``) is ``invalid``.
 
 Output: one JSON object on stdout,
 ``{"result": "valid|invalid|not-decidable", "violations": [...], ...}``, where
 each violation carries a stable ``rule`` identifier (``schema.<keyword>``,
 ``conditional.<rule>``, ``schema_version.unknown``, ``yaml.parse``,
 ``yaml.alias``, ``yaml.depth``, ``declaration.too-large``,
-``declaration.unreadable``), the JSON-pointer ``path``, a ``message``, and the
-1-based ``line`` in the declaration when it's known.
+``declaration.unreadable``; for a protocol ``json.parse``,
+``json.duplicate-key``, ``json.depth``, ``protocol.too-large``,
+``protocol.unreadable``), the JSON-pointer ``path``, a ``message``, and the
+1-based ``line`` in the file when it's known.
 
 Exit codes (mirroring scripts/validate_schemas.py):
   0  valid
   1  invalid
   2  not decidable: jsonschema/PyYAML missing (install hint on stderr) or no
-     image-declaration schema reachable. Never reported as valid
+     schema of the kind reachable. Never reported as valid
      (spec/project/yaml-json-schema/ §Validation contract).
 
 Usage:
   python3 "${CLAUDE_PLUGIN_ROOT}/skills/linux-image-audit/scripts/validate_declaration.py" \\
       images/edge-appliance/image-declaration.yaml [--schema FILE]
+  python3 "${CLAUDE_PLUGIN_ROOT}/skills/linux-image-audit/scripts/validate_declaration.py" \\
+      --kind boot-protocol .image-boot-verify/<run>/protocol.json
 """
 
 from __future__ import annotations
@@ -53,11 +65,20 @@ from pathlib import Path
 INSTALL_HINT = (
     "validate_declaration: dependencies missing ({err}).\n"
     "Install them with:  pip install jsonschema pyyaml\n"
-    "The declaration check stays not-decidable until they're installed; it is "
+    "The check stays not-decidable until they're installed; it is "
     "never reported as passing (spec/project/yaml-json-schema/ §Validation contract).\n"
 )
 SCHEMA_NAME = "image-declaration-v{version}.schema.yaml"
 SCHEMA_GLOB = "image-declaration-v*.schema.yaml"
+# Per kind: schema file name and glob, the noun in rule ids and messages, and
+# the parser. Only the declaration has the §F conditional half.
+KINDS = {
+    "declaration": {"name": SCHEMA_NAME, "glob": SCHEMA_GLOB, "label": "image-declaration",
+                    "noun": "declaration", "format": "yaml"},
+    "boot-protocol": {"name": "image-boot-protocol-v{version}.schema.yaml",
+                      "glob": "image-boot-protocol-v*.schema.yaml", "label": "image-boot-protocol",
+                      "noun": "protocol", "format": "json"},
+}
 VERSION_RE = re.compile(r"^[0-9]+\.[0-9]+$")
 
 # scripts/ -> linux-image-audit/ -> skills/ -> <nolte-linux plugin root>
@@ -135,15 +156,16 @@ def _violation(rule: str, parts, message: str, index: dict[tuple, int]) -> dict:
     return entry
 
 
-def resolve_schema(version: str, schema_dirs: list[Path]) -> tuple[Path | None, bool]:
-    """Return (schema file, any schema corpus seen) for ``version``."""
+def resolve_schema(version: str, schema_dirs: list[Path],
+                   kind: str = "declaration") -> tuple[Path | None, bool]:
+    """Return (schema file, any schema corpus of ``kind`` seen) for ``version``."""
     corpus_seen = False
     for directory in schema_dirs:
         if not directory.is_dir():
             continue
-        if any(directory.glob(SCHEMA_GLOB)):
+        if any(directory.glob(KINDS[kind]["glob"])):
             corpus_seen = True
-        candidate = directory / SCHEMA_NAME.format(version=version)
+        candidate = directory / KINDS[kind]["name"].format(version=version)
         if candidate.is_file():
             return candidate, corpus_seen
     return None, corpus_seen
@@ -170,21 +192,49 @@ def conditional_violations(doc: dict, index: dict[tuple, int]) -> list[dict]:
     return out
 
 
+class _DuplicateKey(ValueError):
+    pass
+
+
+def _load_json(text: str):
+    """Strict JSON: a duplicate key or NaN/Infinity is an error, not a guess."""
+    def pairs(items):
+        out: dict = {}
+        for key, value in items:
+            if key in out:
+                raise _DuplicateKey(key)
+            out[key] = value
+        return out
+
+    def constant(name):
+        raise ValueError(f"non-JSON constant {name}")
+
+    return json.loads(text, object_pairs_hook=pairs, parse_constant=constant)
+
+
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Validate an image-declaration.yaml.")
-    parser.add_argument("declaration", type=Path, help="Path of the image-declaration.yaml.")
+    parser = argparse.ArgumentParser(
+        description="Validate an image-declaration.yaml or a boot protocol.json.")
+    parser.add_argument("declaration", type=Path,
+                        help="Path of the image-declaration.yaml, or of the protocol.json "
+                             "with --kind boot-protocol.")
+    parser.add_argument("--kind", choices=sorted(KINDS), default="declaration",
+                        help="What the file is (default: declaration).")
     parser.add_argument("--schema", type=Path, default=None,
                         help="Explicit schema file; skips the lookup.")
     args = parser.parse_args(argv)
+    kind = KINDS[args.kind]
     try:
         return _validate(args)
     except RecursionError:
-        _emit("invalid", [{"rule": "yaml.depth", "path": "/",
-                           "message": "the declaration nests too deeply to validate"}])
+        _emit("invalid", [{"rule": f"{kind['format']}.depth", "path": "/",
+                           "message": f"the {kind['noun']} nests too deeply to validate"}])
         return 1
 
 
 def _validate(args: argparse.Namespace) -> int:
+    kind = KINDS[args.kind]
+    noun = kind["noun"]
 
     try:
         import yaml
@@ -197,13 +247,27 @@ def _validate(args: argparse.Namespace) -> int:
     try:
         text = args.declaration.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError) as exc:
-        _emit("invalid", [{"rule": "declaration.unreadable", "path": "/",
+        _emit("invalid", [{"rule": f"{noun}.unreadable", "path": "/",
                            "message": f"can't read {args.declaration}: {exc}"}])
         return 1
     if len(text.encode("utf-8")) > MAX_BYTES:
-        _emit("invalid", [{"rule": "declaration.too-large", "path": "/",
-                           "message": f"declaration exceeds {MAX_BYTES} bytes"}])
+        _emit("invalid", [{"rule": f"{noun}.too-large", "path": "/",
+                           "message": f"{noun} exceeds {MAX_BYTES} bytes"}])
         return 1
+    if kind["format"] == "json":
+        try:
+            doc = _load_json(text)
+        except _DuplicateKey as exc:
+            _emit("invalid", [{"rule": "json.duplicate-key", "path": "/",
+                               "message": f"duplicate key {exc.args[0]!r} in the {noun}"}])
+            return 1
+        except ValueError as exc:  # JSONDecodeError is a ValueError
+            entry = {"rule": "json.parse", "path": "/", "message": str(exc).splitlines()[0]}
+            if isinstance(exc, json.JSONDecodeError):
+                entry["line"] = exc.lineno
+            _emit("invalid", [entry])
+            return 1
+        return _check(args, doc, _line_index(yaml, text), kind, Draft202012Validator, yaml)
     try:
         for event in yaml.parse(text, Loader=yaml.SafeLoader):
             if isinstance(event, yaml.AliasEvent):
@@ -220,7 +284,16 @@ def _validate(args: argparse.Namespace) -> int:
             entry["line"] = mark.line + 1
         _emit("invalid", [entry])
         return 1
-    index = _line_index(yaml, text)
+    return _check(args, doc, _line_index(yaml, text), kind, Draft202012Validator, yaml)
+
+
+def _check(args: argparse.Namespace, doc, index: dict[tuple, int], kind: dict,
+           Draft202012Validator, yaml) -> int:
+    noun = kind["noun"]
+    is_declaration = kind is KINDS["declaration"]
+
+    def conditional(doc_) -> list[dict]:
+        return conditional_violations(doc_, index) if is_declaration and isinstance(doc_, dict) else []
 
     # ---- Pick the schema.
     if args.schema is not None:
@@ -234,23 +307,22 @@ def _validate(args: argparse.Namespace) -> int:
         if not isinstance(version, str) or not VERSION_RE.match(version):
             violations = [_violation(
                 "schema_version.unknown", ("schema_version",),
-                f"schema_version {version!r} names no declaration schema; expected a "
+                f"schema_version {version!r} names no {noun} schema; expected a "
                 "quoted string such as \"1.0\"", index)]
-            if isinstance(doc, dict):
-                violations.extend(conditional_violations(doc, index))
+            violations.extend(conditional(doc))
             _emit("invalid", violations)
             return 1
-        schema_path, corpus_seen = resolve_schema(version, installed_schema_dirs())
+        schema_path, corpus_seen = resolve_schema(version, installed_schema_dirs(), args.kind)
         if schema_path is None:
             if corpus_seen:
                 violations = [_violation(
                     "schema_version.unknown", ("schema_version",),
-                    f"no schema {SCHEMA_NAME.format(version=version)} exists for "
+                    f"no schema {kind['name'].format(version=version)} exists for "
                     f"schema_version {version!r}", index)]
-                violations.extend(conditional_violations(doc, index))
+                violations.extend(conditional(doc))
                 _emit("invalid", violations)
                 return 1
-            cause = "no image-declaration schema reachable in the installed nolte-shared plugin"
+            cause = f"no {kind['label']} schema reachable in the installed nolte-shared plugin"
             sys.stderr.write(f"validate_declaration: {cause}; pass --schema <file>\n")
             _emit("not-decidable", [], cause=cause)
             return 2
@@ -271,9 +343,8 @@ def _validate(args: argparse.Namespace) -> int:
         violations.append(_violation(
             f"schema.{err.validator}", list(err.absolute_path), err.message, index))
 
-    # ---- §F conditional half.
-    if isinstance(doc, dict):
-        violations.extend(conditional_violations(doc, index))
+    # ---- §F conditional half (declarations only).
+    violations.extend(conditional(doc))
 
     result = "invalid" if violations else "valid"
     _emit(result, violations, schema=str(schema_path))
