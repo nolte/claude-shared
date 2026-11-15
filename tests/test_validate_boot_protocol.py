@@ -495,18 +495,67 @@ def _duplicate(name: str):
     return fn
 
 
+def _variant(doc: dict, name: str) -> dict:
+    return next(v for v in _scenario(doc, "signature-rejection")["signature_variants"] if v["name"] == name)
+
+
+def _fail_overall(doc: dict, name: str) -> None:
+    doc["outcome"] = {"overall_verdict": "fail", "exit_status": 1}
+    _scenario(doc, name)["verdict"] = "fail"
+
+
+def _drop_passes(doc: dict, names: list) -> None:
+    # Mark the named scenarios not-run, so the protocol carries no pass of them.
+    for name in names:
+        s = _scenario(doc, name)
+        s.update(verdict="not-run", not_run_cause={"reason": "excluded by the operator",
+                                                    "install_hint": {"status": "unavailable", "reason": "n/a"}})
+    doc["outcome"] = {"overall_verdict": "not-run", "exit_status": 2}
+
+
 V12_PROTOCOL_NEGATIVES = {
     "downgrade marked recommended": _set("downgrade", "required", False),
     "signature-rejection marked recommended": _set("signature-rejection", "required", False),
     "commit-boundary marked required": _set("commit-boundary", "required", True),
     "interrupted-update marked required": _set("interrupted-update", "required", True),
     "downgrade without observed versions": _drop("downgrade", "observed_versions"),
-    "signature-rejection without source requests": _drop("signature-rejection", "source_requests"),
+    "signature-rejection without its variants": _drop("signature-rejection", "signature_variants"),
     "commit-boundary without observed versions": _drop("commit-boundary", "observed_versions"),
     "interrupted-update without its interruption": _drop("interrupted-update", "interruption"),
     "downgrade pass without a contacted source": _set("downgrade", "source_requests", 0),
-    "signature-rejection pass with unavailable request count": _set(
-        "signature-rejection", "source_requests", {"status": "unavailable", "reason": "log lost"}),
+    "signature-rejection with scenario-level source requests": _set("signature-rejection", "source_requests", 1),
+    "signature variants on downgrade": lambda d: _scenario(d, "downgrade").__setitem__(
+        "signature_variants", copy.deepcopy(_scenario(d, "signature-rejection")["signature_variants"])),
+    "untrusted-key variant pass without a contacted source": lambda d: _variant(d, "untrusted-key").__setitem__(
+        "source_requests", 0),
+    "unsigned variant pass with unavailable observed versions": lambda d: _variant(d, "unsigned").__setitem__(
+        "observed_versions", {"status": "unavailable", "reason": "log lost"}),
+    "signature-rejection pass with the untrusted-key variant not-run": lambda d: _variant(
+        d, "untrusted-key").update(verdict="not-run", reason="test payload not given"),
+    "signature-rejection pass with the unsigned variant not-run": lambda d: _variant(
+        d, "unsigned").update(verdict="not-run", reason="unsigned payload not given"),
+    "signature-rejection pass with a failing unsigned variant": lambda d: _variant(d, "unsigned").__setitem__(
+        "verdict", "fail"),
+    "untrusted-key variant not-producible": lambda d: _variant(d, "untrusted-key").update(
+        verdict="not-producible", reason="format"),
+    "not-producible variant without a reason": lambda d: _variant(d, "unsigned").__setitem__(
+        "verdict", "not-producible"),
+    "passing variant with a reason": lambda d: _variant(d, "unsigned").__setitem__("reason", "x"),
+    "duplicate untrusted-key variant": lambda d: _scenario(d, "signature-rejection")["signature_variants"].__setitem__(
+        1, copy.deepcopy(_variant(d, "untrusted-key"))),
+    "single signature variant": lambda d: _scenario(d, "signature-rejection")["signature_variants"].pop(),
+    "signature-rejection fail without a failing variant": lambda d: _fail_overall(d, "signature-rejection"),
+    "downgrade pass without a positive control": lambda d: _drop_passes(
+        d, ["rollback", "positive", "commit-boundary", "signature-rejection"]),
+    "signature-rejection pass without a positive control": lambda d: _drop_passes(
+        d, ["rollback", "positive", "commit-boundary", "downgrade"]),
+    "commit-boundary pass without a positive pass": lambda d: _drop_passes(d, ["positive"]),
+    "commit-boundary fail without a positive pass": lambda d: (_drop_passes(d, ["positive"]), _fail_overall(
+        d, "commit-boundary")),
+    "duplicate signature-rejection": _duplicate("signature-rejection"),
+    "duplicate commit-boundary": _duplicate("commit-boundary"),
+    "missing unsigned_payload": lambda d: d.pop("unsigned_payload"),
+    "unsigned payload without its production": lambda d: d["unsigned_payload"].pop("production"),
     "interrupted-update pass without a contacted source": _set("interrupted-update", "source_requests", 0),
     "downgrade pass with unavailable observed versions": _set(
         "downgrade", "observed_versions", {"status": "unavailable", "reason": "log lost"}),
@@ -563,3 +612,27 @@ def test_v12_test_payload_example_names_its_production():
     payload = PASS_V12["test_payload"]
     assert payload["production"] and payload["signing_key"]
     assert payload["path"] != PASS_V12["next_artifact"]["path"]
+
+
+def test_v12_unsigned_variant_not_producible_still_lets_signature_rejection_pass(tmp_path, capsys):
+    # The unsigned variant may be not-producible with a reason; the untrusted-key variant still has to pass.
+    doc = _mutate(PASS_V12, lambda d: _variant(d, "unsigned").update(
+        verdict="not-producible", reason="payload format requires a signature",
+        observed_versions={"status": "unavailable", "reason": "not produced"},
+        source_requests={"status": "unavailable", "reason": "not produced"}))
+    code, payload = _run_protocol(tmp_path, doc, capsys)
+    assert code == 0, payload
+
+
+def test_v12_signature_rejection_fail_with_a_failing_variant_is_valid(tmp_path, capsys):
+    def fail(doc):
+        _fail_overall(doc, "signature-rejection")
+        _variant(doc, "unsigned")["verdict"] = "fail"
+    code, payload = _run_protocol(tmp_path, _mutate(PASS_V12, fail), capsys)
+    assert code == 0, payload
+
+
+def test_v12_positive_control_from_positive_alone_is_enough(tmp_path, capsys):
+    # A rollback not-run leaves the positive pass as the control for downgrade and signature-rejection.
+    code, payload = _run_protocol(tmp_path, _mutate(PASS_V12, lambda d: _drop_passes(d, ["rollback"])), capsys)
+    assert code == 0, payload

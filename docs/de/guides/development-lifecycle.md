@@ -169,7 +169,7 @@ Quality-Skills und -Agents laufen vorrangig in CI- und Pre-Push-Kontexten, einig
 | [`quality-gate`](../skills/nolte-engineering/quality-gate.md) | Skill | Lint, Typecheck und Test parallel vor Commit, PR oder Release ausführen. |
 | [`dependency-audit`](../skills/nolte-engineering/dependency-audit.md) | Skill | Dependency-Tree auf CVEs scannen, optional Lizenz-Issues; Pre-PR- oder Pre-Release-Gate. |
 | [`linux-image-audit`](../skills/nolte-linux/linux-image-audit.md) | Skill | Eine Linux-Image-Definition (gepinnte Eingaben, Maschinenidentität, Update und Rollback, SBOM) vor einem PR oder Release auditieren; nur `nolte-linux`. |
-| [`image-boot-verify`](../skills/nolte-linux/image-boot-verify.md) | Skill | Ein gebautes Image in einer UEFI-VM booten und Health-Report, Rollback und Identität verifizieren; nur `nolte-linux`. |
+| [`image-boot-verify`](../skills/nolte-linux/image-boot-verify.md) | Skill | Ein gebautes Image in einer UEFI- oder U-Boot-VM booten und Health-Report, Rollback, Update-Sicherheits-Szenarien und Identität verifizieren; nur `nolte-linux`. |
 | [`portfolio-audit`](../skills/nolte-shared/portfolio-audit.md) | Skill | Cross-Repository-Capability-Portfolio auf Duplikate und Lücken prüfen. |
 | [`vocab-drift-audit`](../skills/nolte-shared/vocab-drift-audit.md) | Skill | Lokales Vale-Vokabular gegen das gepinnte `nolte/vale-style`-Release diffen. |
 | [`workflow-health-triage`](../skills/nolte-shared/workflow-health-triage.md) | Skill | Einen failing-required-Workflow auf `develop` oder `main` triagen und in die passende Fix-Lane dispatchen. |

@@ -19,8 +19,11 @@
 # carries no report line, and requires smoke, identity, and commit-boundary to
 # run without a network device. It fixes the required flag of the four
 # update-security scenarios (downgrade and signature-rejection required,
-# commit-boundary and interrupted-update recommended) and admits their
-# per-scenario fields only on them.
+# commit-boundary and interrupted-update recommended), admits their
+# per-scenario fields only on them, derives a signature-rejection verdict from
+# its two payload variants (untrusted-key, unsigned), and enforces the positive
+# control: a downgrade or signature-rejection pass needs a rollback or positive
+# pass in the same protocol, and a commit-boundary pass or fail a positive pass.
 #
 # Rules that span several fields stay with the consumers (§G): the overall
 # verdict is the worst verdict of the required scenarios in the order fail,
@@ -29,13 +32,13 @@
 # version from (§B); an identity pass needs two different machine_id_app values;
 # a pass or fail scenario needs the image-definition commit and the artifact it
 # booted; a firmware out of scope (bios, other), or the identity scenario
-# under u-boot, carries only not-run (§A, §I); a downgrade or
-# signature-rejection pass observed only N's expected version; an
+# under u-boot, carries only not-run (§A, §I); a downgrade pass, or a passing
+# signature-rejection variant, observed only N's expected version; an
 # interrupted-update pass ends on N's or N+1's expected version; a
-# commit-boundary pass or fail needs a positive pass in the same protocol and,
-# for a pass, observed only N+1's expected version; and a pass or fail of the
-# downgrade or signature-rejection scenario records the payload it served
-# (previous_artifact, test_payload), not unavailable.
+# commit-boundary pass observed only N+1's expected version; and a pass or fail
+# of the downgrade scenario, or a variant of the signature-rejection scenario
+# that booted, records the payload it served (previous_artifact, test_payload,
+# unsigned_payload), not unavailable.
 #
 # v1.1 (relaxing over v1.0): a fail scenario may carry an empty report_lines.
 # §F makes a missing health report a fail (a readiness timeout, or a VM that
@@ -49,9 +52,10 @@
 # v1.2 (extending v1.1, nolte/claude-shared#737): the update-security
 # scenarios downgrade, signature-rejection, commit-boundary, and
 # interrupted-update (§I), their per-scenario fields observed_versions,
-# source_requests, and interruption, the top-level previous_artifact and
-# test_payload, and the update_window and recovery timeouts (§J). A run that
-# plans any of these scenarios writes v1.2 (§G). A v1.0 or v1.1 protocol stays
+# source_requests, interruption, and signature_variants, the top-level
+# previous_artifact, test_payload, and unsigned_payload, and the update_window
+# and recovery timeouts (§J). A run for an image updated in the field always
+# plans downgrade and signature-rejection and writes v1.2 (§G). A v1.0 or v1.1 protocol stays
 # valid input against its own schema, but it can't name these scenarios, so a
 # consumer treats each of them as absent: the requirement it resolves stays
 # not-decidable with cause resolvable: <scenario> (§G).
@@ -86,6 +90,7 @@ required:
   - test_payload
   - timeouts
   - tpm_emulated
+  - unsigned_payload
 additionalProperties: false
 properties:
   schema_version:
@@ -180,12 +185,23 @@ properties:
       - $ref: "#/$defs/Unavailable"
   test_payload:
     description: >-
-      The separately produced N+1 payload, signed with a key the image doesn't
-      trust, which the local source served in the signature-rejection scenario
-      (§B, §H, §I); unavailable, with the reason, when the input wasn't given
-      or the scenario wasn't planned.
+      The untrusted-key variant's payload of the signature-rejection scenario:
+      a bootable image of a version newer than N, built through the image
+      definition's own build entry point and differing from the release only
+      in being signed with a key the image doesn't trust (§B, §H, §I);
+      unavailable, with the reason, when the input wasn't given or the
+      scenario wasn't planned.
     oneOf:
       - $ref: "#/$defs/TestPayload"
+      - $ref: "#/$defs/Unavailable"
+  unsigned_payload:
+    description: >-
+      The unsigned variant's payload of the signature-rejection scenario: the
+      same build without any signature (§H, §I); unavailable, with the reason,
+      when the update framework's payload format admits no unsigned payload,
+      the input wasn't given, or the scenario wasn't planned.
+    oneOf:
+      - $ref: "#/$defs/UnsignedPayload"
       - $ref: "#/$defs/Unavailable"
   image_definition_commit:
     description: >-
@@ -403,8 +419,8 @@ properties:
       update_window:
         $ref: "#/$defs/Timeout"
         description: >-
-          From N's first healthy report to the VM reset that ends the
-          observation in the downgrade and signature-rejection scenarios.
+          From N's first report to the VM reset that ends the observation in
+          the downgrade scenario and in each signature-rejection variant.
       recovery:
         $ref: "#/$defs/Timeout"
         description: >-
@@ -475,6 +491,45 @@ properties:
               const: interrupted-update
         minContains: 0
         maxContains: 1
+      # Positive control (§I): a refusal counts only where the same source
+      # arrangement installed a validly signed newer version.
+      - if:
+          contains:
+            type: object
+            required: [name, verdict]
+            properties:
+              name:
+                enum: [downgrade, signature-rejection]
+              verdict:
+                const: pass
+        then:
+          contains:
+            type: object
+            required: [name, verdict]
+            properties:
+              name:
+                enum: [rollback, positive]
+              verdict:
+                const: pass
+      # Commit boundary continues from the positive scenario's committed state.
+      - if:
+          contains:
+            type: object
+            required: [name, verdict]
+            properties:
+              name:
+                const: commit-boundary
+              verdict:
+                enum: [pass, fail]
+        then:
+          contains:
+            type: object
+            required: [name, verdict]
+            properties:
+              name:
+                const: positive
+              verdict:
+                const: pass
   rollback_observed_versions:
     description: >-
       The image version each boot of the rollback scenario reported, in boot
@@ -598,6 +653,111 @@ $defs:
         description: >-
           How the payload was produced, for example the build entry point and
           the throwaway key it signed with (§I).
+  UnsignedPayload:
+    type: object
+    description: >-
+      The signature-rejection scenario's unsigned payload: the test build of a
+      version newer than N with no signature at all, never published (§I).
+    additionalProperties: false
+    required:
+      - digest
+      - expected_version
+      - path
+      - production
+    properties:
+      path:
+        type: string
+        minLength: 1
+        description: The unsigned payload's path as the caller passed it.
+      digest:
+        $ref: "#/$defs/Digest"
+        description: The digest of the unsigned payload file.
+      expected_version:
+        type: string
+        minLength: 1
+        description: >-
+          The version the unsigned payload offers and would report if
+          installed, newer than N.
+      production:
+        type: string
+        minLength: 1
+        description: How the unsigned payload was produced (§I).
+  SignatureVariant:
+    type: object
+    description: >-
+      One payload variant of the signature-rejection scenario, each booted
+      from its own fresh copy (§I).
+    additionalProperties: false
+    required:
+      - name
+      - observed_versions
+      - source_requests
+      - verdict
+    properties:
+      name:
+        type: string
+        enum: [untrusted-key, unsigned]
+        description: Which payload the local source served.
+      verdict:
+        type: string
+        enum: [pass, fail, not-run, not-producible]
+        description: >-
+          The variant's verdict; not-producible only for the unsigned variant
+          whose update framework's payload format admits no unsigned payload.
+      observed_versions:
+        description: >-
+          The image version each report of this variant named, in order;
+          unavailable when nothing booted.
+        oneOf:
+          - type: array
+            minItems: 1
+            items:
+              type: string
+              minLength: 1
+          - $ref: "#/$defs/Unavailable"
+      source_requests:
+        description: How many guest requests the local source recorded.
+        oneOf:
+          - type: integer
+            minimum: 0
+          - $ref: "#/$defs/Unavailable"
+      reason:
+        type: string
+        minLength: 1
+        description: >-
+          Why the variant is not-run or not-producible; present exactly then.
+    if:
+      properties:
+        verdict:
+          enum: [not-run, not-producible]
+    then:
+      required:
+        - reason
+    else:
+      not:
+        required:
+          - reason
+      if:
+        properties:
+          verdict:
+            const: pass
+      then:
+        properties:
+          observed_versions:
+            type: array
+          source_requests:
+            type: integer
+            minimum: 1
+    dependentSchemas:
+      name:
+        if:
+          properties:
+            name:
+              const: untrusted-key
+        then:
+          properties:
+            verdict:
+              enum: [pass, fail, not-run]
   Interruption:
     type: object
     description: >-
@@ -860,8 +1020,8 @@ $defs:
       observed_versions:
         description: >-
           The image version each report of the scenario named, in order; only on
-          downgrade, signature-rejection, commit-boundary, and
-          interrupted-update, and unavailable when nothing booted.
+          downgrade, commit-boundary, and interrupted-update, and unavailable
+          when nothing booted.
         oneOf:
           - type: array
             minItems: 1
@@ -871,9 +1031,9 @@ $defs:
           - $ref: "#/$defs/Unavailable"
       source_requests:
         description: >-
-          How many guest requests the local source recorded; only on downgrade,
-          signature-rejection, and interrupted-update. A pass needs at least
-          one, since a source the guest never contacted verifies nothing (§I).
+          How many guest requests the local source recorded; only on downgrade
+          and interrupted-update. A pass needs at least one, since a source the
+          guest never contacted verifies nothing (§I).
         oneOf:
           - type: integer
             minimum: 0
@@ -884,6 +1044,31 @@ $defs:
           when the reset wasn't reached.
         oneOf:
           - $ref: "#/$defs/Interruption"
+          - $ref: "#/$defs/Unavailable"
+      signature_variants:
+        description: >-
+          The two payload variants of the signature-rejection scenario, each
+          once; only on signature-rejection, and unavailable when nothing
+          booted.
+        oneOf:
+          - type: array
+            minItems: 2
+            maxItems: 2
+            items:
+              $ref: "#/$defs/SignatureVariant"
+            allOf:
+              - contains:
+                  properties:
+                    name:
+                      const: untrusted-key
+                minContains: 1
+                maxContains: 1
+              - contains:
+                  properties:
+                    name:
+                      const: unsigned
+                minContains: 1
+                maxContains: 1
           - $ref: "#/$defs/Unavailable"
     if:
       properties:
@@ -932,7 +1117,6 @@ $defs:
                 name:
                   enum: [downgrade, signature-rejection, interrupted-update]
             then:
-              required: [observed_versions, source_requests]
               properties:
                 network:
                   oneOf:
@@ -945,9 +1129,28 @@ $defs:
           - if:
               properties:
                 name:
+                  enum: [downgrade, interrupted-update]
+            then:
+              required: [observed_versions, source_requests]
+          - if:
+              properties:
+                name:
                   const: commit-boundary
             then:
               required: [observed_versions]
+          - if:
+              properties:
+                name:
+                  const: signature-rejection
+            then:
+              required: [signature_variants]
+              not:
+                anyOf:
+                  - required: [observed_versions]
+                  - required: [source_requests]
+            else:
+              not:
+                required: [signature_variants]
           - if:
               properties:
                 name:
@@ -995,7 +1198,7 @@ $defs:
               required: [verdict]
               properties:
                 name:
-                  enum: [downgrade, signature-rejection, commit-boundary, interrupted-update]
+                  enum: [downgrade, commit-boundary, interrupted-update]
                 verdict:
                   const: pass
             then:
@@ -1006,7 +1209,7 @@ $defs:
               required: [verdict]
               properties:
                 name:
-                  enum: [downgrade, signature-rejection, interrupted-update]
+                  enum: [downgrade, interrupted-update]
                 verdict:
                   const: pass
             then:
@@ -1014,6 +1217,48 @@ $defs:
                 source_requests:
                   type: integer
                   minimum: 1
+          # A signature-rejection verdict follows its variants (§I): pass needs
+          # an untrusted-key pass and an unsigned pass or not-producible; fail
+          # needs a failing variant.
+          - if:
+              required: [verdict]
+              properties:
+                name:
+                  const: signature-rejection
+                verdict:
+                  const: pass
+            then:
+              properties:
+                signature_variants:
+                  type: array
+                  allOf:
+                    - contains:
+                        properties:
+                          name:
+                            const: untrusted-key
+                          verdict:
+                            const: pass
+                    - contains:
+                        properties:
+                          name:
+                            const: unsigned
+                          verdict:
+                            enum: [pass, not-producible]
+          - if:
+              required: [verdict]
+              properties:
+                name:
+                  const: signature-rejection
+                verdict:
+                  const: fail
+            then:
+              properties:
+                signature_variants:
+                  type: array
+                  contains:
+                    properties:
+                      verdict:
+                        const: fail
 examples:
   # pass: a UEFI x86_64 image updated in the field, all eight scenarios.
   - schema_version: "1.2"
@@ -1038,6 +1283,11 @@ examples:
       expected_version: "1.5.0"
       signing_key: "SHA256:3f1c5e7a9b2d4f6a8c0e2b4d6f8a1c3e5b7d9f2a4c6e8b0d"
       production: "build entry point run for 1.5.0 with a throwaway key generated for this run; never published"
+    unsigned_payload:
+      path: test-payloads/edge-appliance_1.5.0.unsigned.raw
+      digest: "sha256:8b0d1f3a5c7e9b2d4f6a8c0e1b3d5f7a9c2e4b6d8f0a1c3e5b7d9f2a4c6e8b0d"
+      expected_version: "1.5.0"
+      production: "build entry point run for 1.5.0 with the signing step skipped; never published"
     image_definition_commit: 605926fb3c1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f
     declaration:
       path: images/edge-appliance/image-declaration.yaml
@@ -1158,8 +1408,9 @@ examples:
           - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
           - "IMAGE-HEALTH-REPORT status=healthy image_id=edge-appliance image_version=1.4.0 system_state=starting failed_units=- machine_id_app=0f1e2d3c4b5a69788796a5b4c3d2e1f0"
         trace_ids: [linux-image-best-practices §F payload signature]
-        observed_versions: ["1.4.0", "1.4.0"]
-        source_requests: 3
+        signature_variants:
+          - {name: untrusted-key, verdict: pass, observed_versions: ["1.4.0", "1.4.0"], source_requests: 3}
+          - {name: unsigned, verdict: pass, observed_versions: ["1.4.0", "1.4.0"], source_requests: 2}
       - name: commit-boundary
         required: false
         verdict: pass
@@ -1220,6 +1471,7 @@ examples:
     next_artifact: {status: unavailable, reason: "update_model is reflash-only; no next version applies"}
     previous_artifact: {status: unavailable, reason: "update_model is reflash-only; no downgrade scenario applies"}
     test_payload: {status: unavailable, reason: "update_model is reflash-only; no signature-rejection scenario applies"}
+    unsigned_payload: {status: unavailable, reason: "update_model is reflash-only; no signature-rejection scenario applies"}
     image_definition_commit: 8599a1013c1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f
     declaration:
       path: images/lab-kiosk-arm/image-declaration.yaml
@@ -1283,6 +1535,7 @@ examples:
     next_artifact: {status: unavailable, reason: "next-version artifact not given"}
     previous_artifact: {status: unavailable, reason: "previous-version artifact not given"}
     test_payload: {status: unavailable, reason: "untrusted-key test payload not given"}
+    unsigned_payload: {status: unavailable, reason: "unsigned test payload not given"}
     image_definition_commit: 605926fb3c1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f
     declaration:
       path: images/edge-appliance/image-declaration.yaml
@@ -1357,8 +1610,7 @@ examples:
         phases: []
         report_lines: []
         trace_ids: [linux-image-best-practices §F payload signature]
-        observed_versions: {status: unavailable, reason: "scenario not-run"}
-        source_requests: {status: unavailable, reason: "scenario not-run"}
+        signature_variants: {status: unavailable, reason: "scenario not-run"}
         not_run_cause:
           reason: "precondition failed: hypervisor not found; untrusted-key test payload not given"
           install_hint: "Install the QEMU system emulator for x86_64 and pass a test payload signed with a key the image doesn't trust."
@@ -1377,6 +1629,7 @@ examples:
     next_artifact: {status: unavailable, reason: "next-version artifact not given"}
     previous_artifact: {status: unavailable, reason: "previous-version artifact not given"}
     test_payload: {status: unavailable, reason: "untrusted-key test payload not given"}
+    unsigned_payload: {status: unavailable, reason: "unsigned test payload not given"}
     image_definition_commit: 605926fb3c1d2e4f5a6b7c8d9e0f1a2b3c4d5e6f
     declaration:
       path: images/edge-appliance/image-declaration.yaml
