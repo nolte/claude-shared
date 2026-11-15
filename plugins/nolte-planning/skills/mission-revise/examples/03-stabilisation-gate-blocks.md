@@ -41,7 +41,8 @@ revised_at: 2026-05-10
 `project/roadmap.md` confirms `R-2`, `R-5`, `R-9` (every
 `mvp: true` item) at `status: done`. The MVP-closing sprint is
 `project/sprints/0006-cross-skill-consistency.md` (`status: closed`,
-carried the final `mvp: true` item R-9). `project/sprints/`
+`ended: 2026-05-08`, carried the final `mvp: true` item R-9).
+`project/sprints/`
 **also** contains `0007-post-mvp-polish.md` with
 `status: active` — the planned post-MVP sprint is in flight, not yet
 closed. No defect-fix feature against an MVP item is currently
@@ -75,6 +76,11 @@ closed. No defect-fix feature against an MVP item is currently
    subsequent-sprint condition is unsatisfied. Skill does **not**
    accept "we're nearly done" or any operator framing as a substitute
    — the spec's "never silently infer satisfaction" rule applies.
+   The skill then checks the retroactive-MVP exemption: the mission's
+   `created: 2026-02-14` lies **before** sprint 6's `ended: 2026-05-08`,
+   so the MVP was delivered under this mission rather than recorded
+   retroactively, and the exemption doesn't apply. The condition stays
+   failed.
 6. **Block the flip with a verbatim error.** Skill emits a
    structured-message in German (operator's language) along the lines
    of:
@@ -83,6 +89,8 @@ closed. No defect-fix feature against an MVP item is currently
    > Die Bedingung "ein vollständiger Folge-Sprint ist ohne
    > Regression geschlossen" verlangt `status: closed` (oder
    > `cancelled` mit `## Review notes`-Begründung "no-fault-of-MVP").
+   > Die Retroaktiv-MVP-Ausnahme greift nicht: `created` der Mission
+   > (2026-02-14) liegt vor `ended` von Sprint 6 (2026-05-08).
    > Der Flip nach `stabilised` wird verweigert, bis Sprint 7 in den
    > Status `closed` übergeht.
    Skill cites the spec rule and does not present a "force-write"
