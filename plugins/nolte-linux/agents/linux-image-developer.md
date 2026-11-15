@@ -72,7 +72,7 @@ Return:
 - The files written or changed, each with the requirements (§ ids) it serves.
 - The declaration as written, or the draft with its missing required fields when it wasn't written.
 - **Open points:** every operator fact you didn't have and every requirement left unmet, with the reason.
-- **Runtime proof needed:** the `image-boot-verify` scenarios (smoke, rollback, identity) that the change relies on.
+- **Runtime proof needed:** the `image-boot-verify` scenarios (for example smoke, rollback, downgrade, signature-rejection, commit-boundary, interrupted-update, identity) that the change relies on.
 - A suggestion to re-run `linux-image-audit`.
 
 ## Hard rules

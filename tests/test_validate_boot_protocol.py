@@ -1,4 +1,4 @@
-"""Tests for the boot-protocol schemas (#733, v1.1 for #728) and the v1.1 and v1.2 declaration schemas (#740).
+"""Tests for the boot-protocol schemas (#733, v1.1 for #728, v1.2 for #737) and the v1.1 and v1.2 declaration schemas (#740).
 
 Both go through the existing bundled validator
 (``plugins/nolte-linux/skills/linux-image-audit/scripts/validate_declaration.py``):
@@ -30,6 +30,10 @@ PASS, FAIL, NOT_RUN, FAIL_NO_REPORT = PROTOCOL_SCHEMA["examples"]
 PROTOCOL_V10_SCHEMA_PATH = REPO_ROOT / "schemas" / "image-boot-protocol-v1.0.schema.yaml"
 PROTOCOL_V10_SCHEMA = yaml.safe_load(PROTOCOL_V10_SCHEMA_PATH.read_text(encoding="utf-8"))
 PASS_V10, FAIL_V10, NOT_RUN_V10 = PROTOCOL_V10_SCHEMA["examples"]
+PROTOCOL_V12_SCHEMA_PATH = REPO_ROOT / "schemas" / "image-boot-protocol-v1.2.schema.yaml"
+PROTOCOL_V12_SCHEMA = yaml.safe_load(PROTOCOL_V12_SCHEMA_PATH.read_text(encoding="utf-8"))
+PASS_V12, FAIL_V12, NOT_RUN_V12, FAIL_NO_REPORT_V12 = PROTOCOL_V12_SCHEMA["examples"]
+UPDATE_SECURITY = ["downgrade", "signature-rejection", "commit-boundary", "interrupted-update"]
 
 DECL_V10_PATH = REPO_ROOT / "schemas" / "image-declaration-v1.0.schema.yaml"
 DECL_V11_PATH = REPO_ROOT / "schemas" / "image-declaration-v1.1.schema.yaml"
@@ -435,3 +439,127 @@ def test_overflowing_float_is_invalid(tmp_path, capsys):
     assert "1e999" in text
     code, payload = _run_protocol(tmp_path, text, capsys)
     assert code == 1 and payload["result"] == "invalid"
+
+
+# --------------------------------------------------------------------------- #
+# Protocol v1.2 (#737): the update-security scenarios downgrade,
+# signature-rejection, commit-boundary, and interrupted-update; v1.0 and v1.1
+# stay valid input against their own schemas
+# --------------------------------------------------------------------------- #
+@pytest.mark.parametrize("example", [PASS_V12, FAIL_V12, NOT_RUN_V12, FAIL_NO_REPORT_V12],
+                         ids=["pass", "fail", "not-run", "fail-without-report"])
+def test_v12_examples_are_valid(tmp_path, capsys, example):
+    # The validator picks v1.2 from schema_version alone: no code change needed.
+    code, payload = _run_protocol(tmp_path, example, capsys)
+    assert code == 0, payload
+    assert Path(payload["schema"]).resolve() == PROTOCOL_V12_SCHEMA_PATH.resolve()
+
+
+def test_v12_pass_example_covers_every_scenario_with_the_required_set_of_section_h():
+    required = {s["name"]: s["required"] for s in PASS_V12["scenarios"]}
+    assert required == {"smoke": True, "rollback": True, "positive": False, "identity": False,
+                        "downgrade": True, "signature-rejection": True,
+                        "commit-boundary": False, "interrupted-update": False}
+
+
+@pytest.mark.parametrize("example", [PASS, FAIL, NOT_RUN, FAIL_NO_REPORT],
+                         ids=["pass", "fail", "not-run", "fail-without-report"])
+def test_v11_protocols_still_validate_next_to_v12(tmp_path, capsys, example):
+    assert example["schema_version"] == "1.1"
+    code, payload = _run_protocol(tmp_path, example, capsys)
+    assert code == 0, payload
+    assert Path(payload["schema"]).resolve() == PROTOCOL_SCHEMA_PATH.resolve()
+
+
+@pytest.mark.parametrize("name", UPDATE_SECURITY)
+def test_update_security_scenarios_rejected_by_v11(tmp_path, capsys, name):
+    # v1.1 is not edited in place: the new names exist only under schema_version "1.2".
+    def rename(doc):
+        _scenario(doc, "identity")["name"] = name
+    code, payload = _run_protocol(tmp_path, _mutate(PASS, rename), capsys)
+    assert code == 1 and payload["result"] == "invalid"
+    assert Path(payload["schema"]).resolve() == PROTOCOL_SCHEMA_PATH.resolve()
+
+
+def _set(name: str, key: str, value):
+    return lambda d: _scenario(d, name).__setitem__(key, value)
+
+
+def _drop(name: str, key: str):
+    return lambda d: _scenario(d, name).pop(key)
+
+
+def _duplicate(name: str):
+    def fn(doc):
+        doc["scenarios"].append(copy.deepcopy(_scenario(doc, name)))
+    return fn
+
+
+V12_PROTOCOL_NEGATIVES = {
+    "downgrade marked recommended": _set("downgrade", "required", False),
+    "signature-rejection marked recommended": _set("signature-rejection", "required", False),
+    "commit-boundary marked required": _set("commit-boundary", "required", True),
+    "interrupted-update marked required": _set("interrupted-update", "required", True),
+    "downgrade without observed versions": _drop("downgrade", "observed_versions"),
+    "signature-rejection without source requests": _drop("signature-rejection", "source_requests"),
+    "commit-boundary without observed versions": _drop("commit-boundary", "observed_versions"),
+    "interrupted-update without its interruption": _drop("interrupted-update", "interruption"),
+    "downgrade pass without a contacted source": _set("downgrade", "source_requests", 0),
+    "signature-rejection pass with unavailable request count": _set(
+        "signature-rejection", "source_requests", {"status": "unavailable", "reason": "log lost"}),
+    "interrupted-update pass without a contacted source": _set("interrupted-update", "source_requests", 0),
+    "downgrade pass with unavailable observed versions": _set(
+        "downgrade", "observed_versions", {"status": "unavailable", "reason": "log lost"}),
+    "commit-boundary pass with unavailable observed versions": _set(
+        "commit-boundary", "observed_versions", {"status": "unavailable", "reason": "log lost"}),
+    "commit-boundary with a forwarded network": lambda d: _scenario(d, "commit-boundary").__setitem__(
+        "network", copy.deepcopy(_scenario(d, "downgrade")["network"])),
+    "downgrade without a network device": _set("downgrade", "network", {"mode": "none", "config": "-nic none"}),
+    "commit-boundary with source requests": _set("commit-boundary", "source_requests", 1),
+    "interruption on downgrade": _set("downgrade", "interruption", {"trigger": "payload-delivered", "after_s": 0}),
+    "observed versions on smoke": _set("smoke", "observed_versions", ["1.4.0"]),
+    "source requests on rollback": _set("rollback", "source_requests", 1),
+    "duplicate downgrade": _duplicate("downgrade"),
+    "duplicate interrupted-update": _duplicate("interrupted-update"),
+    "unknown interruption trigger": _set("interrupted-update", "interruption",
+                                         {"trigger": "download-started", "after_s": 0}),
+    "missing test_payload": lambda d: d.pop("test_payload"),
+    "missing previous_artifact": lambda d: d.pop("previous_artifact"),
+    "test payload without its production": lambda d: d["test_payload"].pop("production"),
+    "test payload without its signing key": lambda d: d["test_payload"].pop("signing_key"),
+    "missing update_window timeout": lambda d: d["timeouts"].pop("update_window"),
+    "missing recovery timeout": lambda d: d["timeouts"].pop("recovery"),
+}
+
+
+@pytest.mark.parametrize("case", list(V12_PROTOCOL_NEGATIVES), ids=list(V12_PROTOCOL_NEGATIVES))
+def test_v12_protocol_negatives(tmp_path, capsys, case):
+    code, payload = _run_protocol(tmp_path, _mutate(PASS_V12, V12_PROTOCOL_NEGATIVES[case]), capsys)
+    assert code == 1 and payload["result"] == "invalid", payload
+    assert Path(payload["schema"]).resolve() == PROTOCOL_V12_SCHEMA_PATH.resolve()
+
+
+def test_v12_not_run_downgrade_with_unavailable_observations_is_valid(tmp_path, capsys):
+    # A not-run update-security scenario records its observations as unavailable.
+    (downgrade,) = [s for s in NOT_RUN_V12["scenarios"] if s["name"] == "downgrade"]
+    assert downgrade["verdict"] == "not-run"
+    assert downgrade["observed_versions"]["status"] == "unavailable"
+    code, payload = _run_protocol(tmp_path, NOT_RUN_V12, capsys)
+    assert code == 0, payload
+
+
+def test_v12_fail_downgrade_without_a_contacted_source_is_valid(tmp_path, capsys):
+    # The request minimum binds pass only: N may fail its own smoke assertions before any request.
+    def fail(doc):
+        doc["outcome"] = {"overall_verdict": "fail", "exit_status": 1}
+        s = _scenario(doc, "downgrade")
+        s["verdict"] = "fail"
+        s["source_requests"] = 0
+    code, payload = _run_protocol(tmp_path, _mutate(PASS_V12, fail), capsys)
+    assert code == 0, payload
+
+
+def test_v12_test_payload_example_names_its_production():
+    payload = PASS_V12["test_payload"]
+    assert payload["production"] and payload["signing_key"]
+    assert payload["path"] != PASS_V12["next_artifact"]["path"]
