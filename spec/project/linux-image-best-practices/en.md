@@ -159,6 +159,7 @@ The profiles map the core onto each toolchain. They name detection signals and t
   - `unverified: <§I entry>`: the decision rests on an **[unverified]** §I entry. It's a Warning that doesn't block, since the gap lies in this spec's research, not in the repository
   - `spec-gap: <reason>`: neither a §I knob nor a boot-verification scenario covers the requirement yet (the table says so in its row). It's a Warning that doesn't block, for the same reason
   - `delegated: <spec>`: another spec owns the check for this toolchain (the bootc build file), and its audit decides it. It doesn't block once that audit's result for the same revision is at hand; while it isn't (the owning audit wasn't run, or its plugin isn't installed), it blocks like `resolvable`, so a pillar is never passed unchecked
+  - `evidence: <reason>`: the audit's own input is missing (the declaration validator's result or the tracked-file list), or the only evidence for the result is a statement inside the audited content. It blocks like `resolvable` in a mandatory pillar and in the declaration check, since the gap lies in this run, not in the spec, and is a Warning elsewhere
 - Each mandatory-pillar requirement belongs to one decidability class, which fixes what a static audit can conclude:
 
   | Requirement | Class | What the static audit checks |
@@ -200,7 +201,7 @@ These criteria roll up the requirements above; every requirement stays normative
 - [ ] §G requires an SPDX or CycloneDX SBOM per build, SPDX for OCI images, publication next to the artifact, and rejects `make legal-info` alone
 - [ ] §I has one profile per in-scope toolchain (mkosi/systemd, Yocto/Buildroot, Debian/Ubuntu, NixOS/OSTree, bootc), each naming its detection signal and its §C, §F, and §G mapping, with every under-sourced entry that feeds a mandatory pillar marked **[unverified]**
 - [ ] Every toolchain-specific knob a requirement is checked against appears in §I; the core names tools only as examples or in rules that apply only while that tool is in use
-- [ ] §J assigns a decidability class to every mandatory-pillar requirement, forbids counting `not-decidable` as a pass, gives every `not-decidable` one of four causes that decide whether it blocks, routes built-artifact checks to named boot-verification scenarios, keeps an **[unverified]** entry from producing `fail` or blocking a gate, and applies the same three results outside the mandatory pillars
+- [ ] §J assigns a decidability class to every mandatory-pillar requirement, forbids counting `not-decidable` as a pass, gives every `not-decidable` one of five causes that decide whether it blocks, routes built-artifact checks to named boot-verification scenarios, keeps an **[unverified]** entry from producing `fail` or blocking a gate, and applies the same three results outside the mandatory pillars
 - [ ] `spec/project/dockerfile-best-practices/` exempts bootc images, recognised by the declaration or the label, from its non-root `USER` pillar, and the `dockerfile-audit` skill and its scanner apply that exemption
 - [ ] Signing, license classification, and boot verification are delegated to `spec/project/artifact-signing/`, `spec/project/license-check/`, and `spec/project/image-boot-verification/` without restating them
 
